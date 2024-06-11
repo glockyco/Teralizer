@@ -1,0 +1,35 @@
+## @vtlvariable name="driverClassQualifiedName" type="java.lang.String"
+## @vtlvariable name="testClassQualifiedName" type="java.lang.String"
+## @vtlvariable name="testedClassQualifiedName" type="java.lang.String"
+## @vtlvariable name="classpath" type="java.lang.String"
+## @vtlvariable name="testMethodQualifiedName" type="java.lang.String"
+## @vtlvariable name="testedMethodQualifiedName" type="java.lang.String"
+## @vtlvariable name="inputSpecificationPath" type="java.lang.String"
+## @vtlvariable name="outputSpecificationPath" type="java.lang.String"
+target=${driverClassQualifiedName}
+symbolic.class=${testedClassQualifiedName}
+#symbolic.method=...
+#symbolic.fields=...
+classpath=${classpath}
+symbolic.collect_constraints=true
+#symbolic.min_int=-100
+#symbolic.max_int=100
+#symbolic.min_long=-100
+#symbolic.max_long=100
+#symbolic.min_double=-100.0
+#symbolic.max_double=100.0
+symbolic.debug = false
+symbolic.optimizechoices = false
+symbolic.lazy=on
+symbolic.arrays=true
+symbolic.strings=true
+symbolic.dp=z3
+symbolic.string_dp_timeout_ms=3000
+test_generalization.test_class=${testClassQualifiedName}
+test_generalization.test_method=${testMethodQualifiedName}
+test_generalization.tested_class=${testedClassQualifiedName}
+test_generalization.tested_method=${testedMethodQualifiedName}
+test_generalization.input_specification_path=${inputSpecificationPath}
+test_generalization.output_specification_path=${outputSpecificationPath}
+search.depth_limit=10
+search.multiple_errors=true

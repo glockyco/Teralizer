@@ -1,0 +1,72 @@
+## @vtlvariable name="testParametersSupplierClassName" type="java.lang.String"
+## @vtlvariable name="testParametersClassName" type="java.lang.String"
+## @vtlvariable name="methodParameters" type="java.util.List<teralizer.domain.MethodParameter>"
+## @vtlvariable name="precondition" type="java.lang.String"
+##
+#macro(arbitrariesOfType $type)
+    #if(${type} == 'byte' || ${type} == 'java.lang.Byte')
+        Arbitraries.bytes()##
+    #elseif(${type} == 'short' || ${type} == 'java.lang.Short')
+        Arbitraries.shorts()##
+    #elseif(${type} == 'int' || ${type} == 'java.lang.Integer')
+        Arbitraries.integers()##
+    #elseif(${type} == 'long' || ${type} == 'java.lang.Long')
+        Arbitraries.longs()##
+    #elseif(${type} == 'float' || ${type} == 'java.lang.Float')
+        Arbitraries.floats()##
+    #elseif(${type} == 'double' || ${type} == 'java.lang.Double')
+        Arbitraries.doubles()##
+    #elseif(${type} == 'char' || ${type} == 'java.lang.Char')
+        Arbitraries.chars()##
+    #elseif(${type} == 'boolean' || ${type} == 'java.lang.Boolean')
+        Arbitraries.of(true, false)##
+    #elseif(${type} == 'String' || ${type} == 'java.lang.String')
+        Arbitraries.strings()##
+    #else
+        Arbitraries.just((${type}) null)##
+    #end
+#end
+##
+import net.jqwik.api.Arbitrary;
+import net.jqwik.api.Arbitraries;
+import net.jqwik.api.ArbitrarySupplier;
+import net.jqwik.api.Combinators;
+
+public static class ${testParametersClassName} {
+    #foreach(${methodParameter} in ${methodParameters})
+        public ${methodParameter.type} ${methodParameter.name};
+    #end
+
+    public ${testParametersClassName}(
+        #set($lastIndex = ${methodParameters.size()} - 1)
+        #foreach(${methodParameter} in ${methodParameters})
+            ${methodParameter.type} ${methodParameter.name}#if(${foreach.index} < ${lastIndex}), #end
+        #end
+    ){
+        #foreach(${methodParameter} in ${methodParameters})
+            this.${methodParameter.name} = ${methodParameter.name};
+        #end
+    }
+}
+
+public static class ${testParametersSupplierClassName} implements ArbitrarySupplier<${testParametersClassName}> {
+    @Override
+    public Arbitrary<${testParametersClassName}> get() {
+        #if(${methodParameters.size()} <= 0)
+            return Arbitraries.just((${testParametersClassName}) null);
+        #else
+            #if(${methodParameters.size()} == 1)
+                return #arbitrariesOfType(${methodParameters.get(0).type})
+                .map(${testParametersClassName}::new)
+            #else
+                return Combinators.combine(
+                    #set($lastIndex = ${methodParameters.size()} - 1)
+                    #foreach(${methodParameter} in ${methodParameters})
+                        #arbitrariesOfType(${methodParameter.type})#if(${foreach.index} < ${lastIndex}),#end
+                    #end
+                ).as(${testParametersClassName}::new)
+            #end
+            .filter(testParameters ->#if(${precondition}) $precondition #else true #end);
+        #end
+    }
+}

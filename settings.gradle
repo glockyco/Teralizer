@@ -1,0 +1,7 @@
+rootProject.name = 'test-generalization'
+
+include 'jpf-core'
+include 'jpf-symbc'
+
+project(':jpf-core').projectDir = new File('jpf-symbc/jpf-core')
+project(':jpf-symbc').projectDir = new File('jpf-symbc/jpf-symbc')

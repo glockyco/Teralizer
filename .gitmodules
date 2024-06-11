@@ -1,0 +1,4 @@
+[submodule "jpf-symbc"]
+	path = jpf-symbc
+	url = git@github.com:glockyco/jpf-symbc.git
+	branch = gradle-build
