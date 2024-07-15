@@ -15,6 +15,7 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.domain.MethodParameter;
@@ -48,11 +49,14 @@ public class TestGeneralizationTask {
     }
 
     public void run(DSLContext create, TestRecord testRecord, String tool) throws IOException {
-        this.generalizeTest(testRecord, tool);
+        GeneralizationRecord generalizationRecord = this.createGeneralizationRecord(create, testRecord, tool);
+        this.generalizeTest(testRecord, generalizationRecord);
     }
 
-    private void generalizeTest(TestRecord testRecord, String tool) throws IOException {
-        GeneralizationRecord generalizationRecord = new GeneralizationRecord();
+    private GeneralizationRecord createGeneralizationRecord(DSLContext create, TestRecord testRecord, String tool) {
+        GeneralizationRecord generalizationRecord = create.newRecord(Tables.GENERALIZATION);
+        generalizationRecord.setTestId(testRecord.getId());
+        generalizationRecord.setTool(tool);
 
         String generalizedClassName = "_" + testRecord.getTestClassName() + "_Generalized_" + testRecord.getTestMethodName();
         Path generalizedClasspath = Paths.get(testRecord.getTestClassPath()).getParent().resolve(Paths.get("teralizer", tool, generalizedClassName + ".java"));
@@ -61,6 +65,12 @@ public class TestGeneralizationTask {
         generalizationRecord.setGeneralizedClassPackage(testRecord.getTestClassPackage() + ".teralizer." + tool);
         generalizationRecord.setGeneralizedClassName(generalizedClassName);
 
+        generalizationRecord.store();
+
+        return generalizationRecord;
+    }
+
+    private void generalizeTest(TestRecord testRecord, GeneralizationRecord generalizationRecord) throws IOException {
         CompilationUnit compilationUnit = this.javaParser.parse(Paths.get(testRecord.getTestClassPath())).getResult().get();
 
         compilationUnit.setPackageDeclaration(generalizationRecord.getGeneralizedClassPackage());

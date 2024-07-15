@@ -9,6 +9,9 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeS
 import com.google.gson.Gson;
 import org.apache.velocity.app.VelocityEngine;
 import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.Result;
+import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
@@ -89,9 +92,19 @@ public class TestGeneralizationRunner {
         // @TODO: Store file paths relative to the teralizer root directory.
         //   This is necessary to ensure the portability of the collected data.
         //   Also, this makes anonymization for double-blind review easier.
-        //
+
+        Result<Record> generalizationRecords = create.select(Tables.GENERALIZATION.fields())
+            .from(Tables.PROJECT)
+            .join(Tables.TEST)
+            .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
+            .join(Tables.GENERALIZATION)
+            .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
+            .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+            .fetch();
+
         System.out.println(projectRecord);
         System.out.println(testRecords);
+        System.out.println(generalizationRecords);
 
         // @TODO: Store the pre-condition and post-condition of every test(method) in z3 representation (?).
         //   We need a z3 representation to identify duplicate tests.
