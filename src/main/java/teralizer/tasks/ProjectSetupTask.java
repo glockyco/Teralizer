@@ -17,7 +17,13 @@ public class ProjectSetupTask {
 
     private final Task task = Task.PROJECT_SETUP;
 
-    public ProjectRecord run(DSLContext create, Path projectPath) {
+    private final DSLContext create;
+
+    public ProjectSetupTask(DSLContext create) {
+        this.create = create;
+    }
+
+    public ProjectRecord run(Path projectPath) {
         File projectDirectoryFile = projectPath.toFile();
 
         if (!projectDirectoryFile.exists() || !projectDirectoryFile.isDirectory()) {
@@ -26,7 +32,7 @@ public class ProjectSetupTask {
 
         String projectClasspath = this.fetchClasspath(projectDirectoryFile);
 
-        ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
+        ProjectRecord projectRecord = this.create.newRecord(Tables.PROJECT);
         projectRecord.setPath(projectPath.toAbsolutePath().toString());
         projectRecord.setClasspath(projectClasspath);
         projectRecord.store();

@@ -57,17 +57,17 @@ public class TestGeneralizationRunner {
 
         DSLContext create = DSL.using("jdbc:sqlite:/Users/joaichberger/Projects/test-generalization/database/db.sqlite");
 
-        ProjectSetupTask projectSetupTask = new ProjectSetupTask();
+        ProjectSetupTask projectSetupTask = new ProjectSetupTask(create);
         ProjectBuildTask projectBuildTask = new ProjectBuildTask();
-        TestDetectionTask testDetectionTask = new TestDetectionTask(javaParser, gson);
+        TestDetectionTask testDetectionTask = new TestDetectionTask(create, javaParser, gson);
         JpfInstrumentationTask jpfInstrumentationTask = new JpfInstrumentationTask(velocityEngine);
         JpfExecutionTask jpfExecutionTask = new JpfExecutionTask();
-        TestGeneralizationTask testGeneralizationTask = new TestGeneralizationTask(velocityEngine, javaParser, gson);
+        TestGeneralizationTask testGeneralizationTask = new TestGeneralizationTask(create, velocityEngine, javaParser, gson);
 
         // @TODO: Add shutdown handler.
 
-        ProjectRecord projectRecord = projectSetupTask.run(create, projectPath);
-        List<TestRecord> testRecords = testDetectionTask.run(create, projectRecord);
+        ProjectRecord projectRecord = projectSetupTask.run(projectPath);
+        List<TestRecord> testRecords = testDetectionTask.run(projectRecord);
 
         // @TODO: Attempt an initial project build to see whether the project is even buildable.
         //   Note that a failed build does not necessarily imply a "broken" project.
@@ -77,12 +77,12 @@ public class TestGeneralizationRunner {
             try {
                 // @TODO: Catch errors in each task to log them.
                 //   However, still rethrow them to end the execution.
-                jpfInstrumentationTask.run(create, projectRecord, testRecord);
-                projectBuildTask.run(Task.PROJECT_BUILDING_INSTRUMENTED, create, projectRecord);
-                jpfExecutionTask.run(create, testRecord);
+                jpfInstrumentationTask.run(projectRecord, testRecord);
+                projectBuildTask.run(projectRecord, Task.PROJECT_BUILDING_INSTRUMENTED);
+                jpfExecutionTask.run(testRecord);
 
                 // @TODO: Perform generalization for all tool variants + settings.
-                testGeneralizationTask.run(create, testRecord, "naive");
+                testGeneralizationTask.run(testRecord, "naive");
             } catch (Exception e) {
                 System.out.println(e);
                 e.printStackTrace();

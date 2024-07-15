@@ -35,6 +35,7 @@ public class TestGeneralizationTask {
 
     private final Task task = Task.TEST_GENERALIZATION;
 
+    private final DSLContext create;
     private final VelocityEngine velocityEngine;
     private final JavaParser javaParser;
     private final Gson gson;
@@ -42,19 +43,20 @@ public class TestGeneralizationTask {
     public static String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
     public static String TEST_PARAMETERS_SUPPLIER_CLASS_NAME = "TestParametersSupplier";
 
-    public TestGeneralizationTask(VelocityEngine velocityEngine, JavaParser javaParser, Gson gson) {
+    public TestGeneralizationTask(DSLContext create, VelocityEngine velocityEngine, JavaParser javaParser, Gson gson) {
+        this.create = create;
         this.velocityEngine = velocityEngine;
         this.javaParser = javaParser;
         this.gson = gson;
     }
 
-    public void run(DSLContext create, TestRecord testRecord, String tool) throws IOException {
-        GeneralizationRecord generalizationRecord = this.createGeneralizationRecord(create, testRecord, tool);
+    public void run(TestRecord testRecord, String tool) throws IOException {
+        GeneralizationRecord generalizationRecord = this.createGeneralizationRecord(testRecord, tool);
         this.generalizeTest(testRecord, generalizationRecord);
     }
 
-    private GeneralizationRecord createGeneralizationRecord(DSLContext create, TestRecord testRecord, String tool) {
-        GeneralizationRecord generalizationRecord = create.newRecord(Tables.GENERALIZATION);
+    private GeneralizationRecord createGeneralizationRecord(TestRecord testRecord, String tool) {
+        GeneralizationRecord generalizationRecord = this.create.newRecord(Tables.GENERALIZATION);
         generalizationRecord.setTestId(testRecord.getId());
         generalizationRecord.setTool(tool);
 

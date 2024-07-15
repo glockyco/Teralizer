@@ -3,7 +3,6 @@ package teralizer.tasks;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.jooq.DSLContext;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 
@@ -21,7 +20,7 @@ public class JpfInstrumentationTask {
         this.velocityEngine = velocityEngine;
     }
 
-    public void run(DSLContext create, ProjectRecord projectRecord, TestRecord testRecord) throws IOException {
+    public void run(ProjectRecord projectRecord, TestRecord testRecord) throws IOException {
         // @TODO: We might have to make all existing test classes and methods public.
         //   Otherwise (if the tests have any non-public visibility),
         //   we cannot have the created driver classes in a separate namespace.

@@ -2,7 +2,6 @@ package teralizer.tasks;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
-import org.jooq.DSLContext;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.TestGeneralizationListener;
 
@@ -10,7 +9,7 @@ public class JpfExecutionTask {
 
     private final Task task = Task.JPF_EXECUTION;
 
-    public void run(DSLContext create, TestRecord testRecord) {
+    public void run(TestRecord testRecord) {
         this.runJpf(testRecord);
     }
 

@@ -26,19 +26,21 @@ public class TestDetectionTask {
 
     private final Task task = Task.TEST_DETECTION;
 
+    private final DSLContext create;
     private final JavaParser javaParser;
     private final Gson gson;
 
-    public TestDetectionTask(JavaParser javaParser, Gson gson) {
+    public TestDetectionTask(DSLContext create, JavaParser javaParser, Gson gson) {
+        this.create = create;
         this.javaParser = javaParser;
         this.gson = gson;
     }
 
-    public List<TestRecord> run(DSLContext create, ProjectRecord projectRecord) throws IOException {
-        return this.detectTests(create, projectRecord);
+    public List<TestRecord> run(ProjectRecord projectRecord) throws IOException {
+        return this.detectTests(projectRecord);
     }
 
-    private List<TestRecord> detectTests(DSLContext create, ProjectRecord projectRecord) throws IOException {
+    private List<TestRecord> detectTests(ProjectRecord projectRecord) throws IOException {
         List<TestRecord> testRecords = new ArrayList<>();
 
         try (Stream<Path> paths = Files.walk(Paths.get(projectRecord.getPath()))) {
@@ -56,7 +58,7 @@ public class TestDetectionTask {
                                     continue;
                                 }
 
-                                TestRecord testRecord = create.newRecord(Tables.TEST);
+                                TestRecord testRecord = this.create.newRecord(Tables.TEST);
                                 testRecord.setProjectId(projectRecord.getId());
 
                                 testRecord.setTestClassPath(testClassPath.toAbsolutePath().toString());
@@ -111,10 +113,10 @@ public class TestDetectionTask {
                 });
         }
 
-        create.batchStore(testRecords).execute();
+        this.create.batchStore(testRecords).execute();
 
         // Read the inserted records to get their IDs.
-        return create.selectFrom(Tables.TEST)
+        return this.create.selectFrom(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.equal(projectRecord.getId()))
             .fetch();
     }

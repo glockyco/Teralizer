@@ -3,14 +3,13 @@ package teralizer.tasks;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
-import org.jooq.DSLContext;
 import org.jooq.generated.tables.records.ProjectRecord;
 
 import java.io.File;
 
 public class ProjectBuildTask {
 
-    public void run(Task task, DSLContext create, ProjectRecord projectRecord) {
+    public void run(ProjectRecord projectRecord, Task task) {
         this.buildProject(projectRecord);
     }
 
