@@ -12,7 +12,7 @@ import org.jooq.ForeignKey;
 import org.jooq.Identity;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row6;
+import org.jooq.Row9;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -22,8 +22,12 @@ import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Keys;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.jooq.impl.DSL;
+import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.ProcessingStatus;
 
 
 /**
@@ -53,19 +57,34 @@ public class Task extends TableImpl<TaskRecord> {
     public final TableField<TaskRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>task.step</code>.
+     * The column <code>task.project_id</code>.
      */
-    public final TableField<TaskRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER, this, "");
+    public final TableField<TaskRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>task.task</code>.
+     * The column <code>task.test_id</code>.
      */
-    public final TableField<TaskRecord, String> TASK_ = createField(DSL.name("task"), SQLDataType.CLOB, this, "");
+    public final TableField<TaskRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>task.generalization_id</code>.
+     */
+    public final TableField<TaskRecord, Integer> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>task.step</code>.
+     */
+    public final TableField<TaskRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>task.stage</code>.
+     */
+    public final TableField<TaskRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStage>(String.class, ProcessingStage.class));
 
     /**
      * The column <code>task.status</code>.
      */
-    public final TableField<TaskRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.CLOB, this, "");
+    public final TableField<TaskRecord, ProcessingStatus> STATUS = createField(DSL.name("status"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStatus>(String.class, ProcessingStatus.class));
 
     /**
      * The column <code>task.runtime</code>.
@@ -157,11 +176,11 @@ public class Task extends TableImpl<TaskRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row6 type methods
+    // Row9 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row6<Integer, Integer, String, String, Float, String> fieldsRow() {
-        return (Row6) super.fieldsRow();
+    public Row9<Integer, Integer, Integer, Integer, Integer, ProcessingStage, ProcessingStatus, Float, String> fieldsRow() {
+        return (Row9) super.fieldsRow();
     }
 }

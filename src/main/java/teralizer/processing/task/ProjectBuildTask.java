@@ -1,4 +1,4 @@
-package teralizer.tasks;
+package teralizer.processing.task;
 
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
@@ -7,10 +7,15 @@ import org.jooq.generated.tables.records.ProjectRecord;
 
 import java.io.File;
 
-public class ProjectBuildTask {
+public class ProjectBuildTask extends AbstractTask {
 
-    public void run(ProjectRecord projectRecord, Task task) {
-        this.buildProject(projectRecord);
+    public TaskCallable<Void> create(ProjectRecord projectRecord) {
+        this.setProjectId(projectRecord.getId());
+
+        return new TaskCallable<>(this, () -> {
+            this.buildProject(projectRecord);
+            return null;
+        });
     }
 
     private void buildProject(ProjectRecord projectRecord) {

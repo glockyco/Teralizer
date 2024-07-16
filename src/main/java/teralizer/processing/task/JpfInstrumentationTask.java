@@ -1,4 +1,4 @@
-package teralizer.tasks;
+package teralizer.processing.task;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -10,9 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class JpfInstrumentationTask {
-
-    private final Task task = Task.JPF_INSTRUMENTATION;
+public class JpfInstrumentationTask extends AbstractTask {
 
     private final VelocityEngine velocityEngine;
 
@@ -20,13 +18,18 @@ public class JpfInstrumentationTask {
         this.velocityEngine = velocityEngine;
     }
 
-    public void run(ProjectRecord projectRecord, TestRecord testRecord) throws IOException {
-        // @TODO: We might have to make all existing test classes and methods public.
-        //   Otherwise (if the tests have any non-public visibility),
-        //   we cannot have the created driver classes in a separate namespace.
+    public TaskCallable<Void> create(ProjectRecord projectRecord, TestRecord testRecord) throws IOException {
+        this.setProjectId(projectRecord.getId());
+        this.setTestId(testRecord.getId());
 
-        this.createDriverClassFile(testRecord);
-        this.createJpfConfigFile(projectRecord, testRecord);
+        return new TaskCallable<>(this, () -> {
+            // @TODO: We might have to make all existing test classes and methods public.
+            //   Otherwise (if the tests have any non-public visibility),
+            //   we cannot have the created driver classes in a separate namespace.
+            this.createDriverClassFile(testRecord);
+            this.createJpfConfigFile(projectRecord, testRecord);
+            return null;
+        });
     }
 
     private void createDriverClassFile(TestRecord testRecord) throws IOException {

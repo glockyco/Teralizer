@@ -55,27 +55,27 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     /**
      * The column <code>generalization.test_id</code>.
      */
-    public final TableField<GeneralizationRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<GeneralizationRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>generalization.tool</code>.
      */
-    public final TableField<GeneralizationRecord, String> TOOL = createField(DSL.name("tool"), SQLDataType.CLOB, this, "");
+    public final TableField<GeneralizationRecord, String> TOOL = createField(DSL.name("tool"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>generalization.generalized_class_path</code>.
      */
-    public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_PATH = createField(DSL.name("generalized_class_path"), SQLDataType.CLOB, this, "");
+    public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_PATH = createField(DSL.name("generalized_class_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>generalization.generalized_class_package</code>.
      */
-    public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_PACKAGE = createField(DSL.name("generalized_class_package"), SQLDataType.CLOB, this, "");
+    public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_PACKAGE = createField(DSL.name("generalized_class_package"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>generalization.generalized_class_name</code>.
      */
-    public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_NAME = createField(DSL.name("generalized_class_name"), SQLDataType.CLOB, this, "");
+    public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_NAME = createField(DSL.name("generalized_class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     private Generalization(Name alias, Table<GeneralizationRecord> aliased) {
         this(alias, aliased, null);

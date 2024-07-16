@@ -1,4 +1,4 @@
-package teralizer.tasks;
+package teralizer.processing.task;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -22,9 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class TestDetectionTask {
-
-    private final Task task = Task.TEST_DETECTION;
+public class TestDetectionTask extends AbstractTask {
 
     private final DSLContext create;
     private final JavaParser javaParser;
@@ -36,8 +34,10 @@ public class TestDetectionTask {
         this.gson = gson;
     }
 
-    public List<TestRecord> run(ProjectRecord projectRecord) throws IOException {
-        return this.detectTests(projectRecord);
+    public TaskCallable<List<TestRecord>> create(ProjectRecord projectRecord) throws IOException {
+        this.setProjectId(projectRecord.getId());
+
+        return new TaskCallable<>(this, () -> this.detectTests(projectRecord));
     }
 
     private List<TestRecord> detectTests(ProjectRecord projectRecord) throws IOException {

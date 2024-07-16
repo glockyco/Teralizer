@@ -1,4 +1,4 @@
-package teralizer.tasks;
+package teralizer.processing.task;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -31,9 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class TestGeneralizationTask {
-
-    private final Task task = Task.TEST_GENERALIZATION;
+public class TestGeneralizationTask extends AbstractTask {
 
     private final DSLContext create;
     private final VelocityEngine velocityEngine;
@@ -50,9 +48,16 @@ public class TestGeneralizationTask {
         this.gson = gson;
     }
 
-    public void run(TestRecord testRecord, String tool) throws IOException {
-        GeneralizationRecord generalizationRecord = this.createGeneralizationRecord(testRecord, tool);
-        this.generalizeTest(testRecord, generalizationRecord);
+    public TaskCallable<Void> create(TestRecord testRecord, String tool) throws IOException {
+        this.setProjectId(testRecord.getProjectId());
+        this.setTestId(testRecord.getId());
+
+        return new TaskCallable<>(this, () -> {
+            GeneralizationRecord generalizationRecord = this.createGeneralizationRecord(testRecord, tool);
+            this.setGeneralizationId(generalizationRecord.getId());
+            this.generalizeTest(testRecord, generalizationRecord);
+            return null;
+        });
     }
 
     private GeneralizationRecord createGeneralizationRecord(TestRecord testRecord, String tool) {

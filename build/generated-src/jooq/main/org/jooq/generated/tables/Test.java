@@ -55,87 +55,87 @@ public class Test extends TableImpl<TestRecord> {
     /**
      * The column <code>test.project_id</code>.
      */
-    public final TableField<TestRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<TestRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>test.test_class_path</code>.
      */
-    public final TableField<TestRecord, String> TEST_CLASS_PATH = createField(DSL.name("test_class_path"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TEST_CLASS_PATH = createField(DSL.name("test_class_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.test_class_package</code>.
      */
-    public final TableField<TestRecord, String> TEST_CLASS_PACKAGE = createField(DSL.name("test_class_package"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TEST_CLASS_PACKAGE = createField(DSL.name("test_class_package"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.test_class_name</code>.
      */
-    public final TableField<TestRecord, String> TEST_CLASS_NAME = createField(DSL.name("test_class_name"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TEST_CLASS_NAME = createField(DSL.name("test_class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.test_method_name</code>.
      */
-    public final TableField<TestRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.tested_class_path</code>.
      */
-    public final TableField<TestRecord, String> TESTED_CLASS_PATH = createField(DSL.name("tested_class_path"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TESTED_CLASS_PATH = createField(DSL.name("tested_class_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.tested_class_package</code>.
      */
-    public final TableField<TestRecord, String> TESTED_CLASS_PACKAGE = createField(DSL.name("tested_class_package"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TESTED_CLASS_PACKAGE = createField(DSL.name("tested_class_package"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.tested_class_name</code>.
      */
-    public final TableField<TestRecord, String> TESTED_CLASS_NAME = createField(DSL.name("tested_class_name"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TESTED_CLASS_NAME = createField(DSL.name("tested_class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.tested_method_name</code>.
      */
-    public final TableField<TestRecord, String> TESTED_METHOD_NAME = createField(DSL.name("tested_method_name"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TESTED_METHOD_NAME = createField(DSL.name("tested_method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.tested_method_param_types</code>.
      */
-    public final TableField<TestRecord, String> TESTED_METHOD_PARAM_TYPES = createField(DSL.name("tested_method_param_types"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TESTED_METHOD_PARAM_TYPES = createField(DSL.name("tested_method_param_types"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.tested_method_return_type</code>.
      */
-    public final TableField<TestRecord, String> TESTED_METHOD_RETURN_TYPE = createField(DSL.name("tested_method_return_type"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TESTED_METHOD_RETURN_TYPE = createField(DSL.name("tested_method_return_type"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.driver_class_path</code>.
      */
-    public final TableField<TestRecord, String> DRIVER_CLASS_PATH = createField(DSL.name("driver_class_path"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> DRIVER_CLASS_PATH = createField(DSL.name("driver_class_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.driver_class_package</code>.
      */
-    public final TableField<TestRecord, String> DRIVER_CLASS_PACKAGE = createField(DSL.name("driver_class_package"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> DRIVER_CLASS_PACKAGE = createField(DSL.name("driver_class_package"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.driver_class_name</code>.
      */
-    public final TableField<TestRecord, String> DRIVER_CLASS_NAME = createField(DSL.name("driver_class_name"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> DRIVER_CLASS_NAME = createField(DSL.name("driver_class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.jpf_config_path</code>.
      */
-    public final TableField<TestRecord, String> JPF_CONFIG_PATH = createField(DSL.name("jpf_config_path"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> JPF_CONFIG_PATH = createField(DSL.name("jpf_config_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.input_specification_path</code>.
      */
-    public final TableField<TestRecord, String> INPUT_SPECIFICATION_PATH = createField(DSL.name("input_specification_path"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> INPUT_SPECIFICATION_PATH = createField(DSL.name("input_specification_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.output_specification_path</code>.
      */
-    public final TableField<TestRecord, String> OUTPUT_SPECIFICATION_PATH = createField(DSL.name("output_specification_path"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> OUTPUT_SPECIFICATION_PATH = createField(DSL.name("output_specification_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     private Test(Name alias, Table<TestRecord> aliased) {
         this(alias, aliased, null);

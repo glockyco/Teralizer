@@ -55,7 +55,7 @@ public class Project extends TableImpl<ProjectRecord> {
     /**
      * The column <code>project.path</code>.
      */
-    public final TableField<ProjectRecord, String> PATH = createField(DSL.name("path"), SQLDataType.CLOB, this, "");
+    public final TableField<ProjectRecord, String> PATH = createField(DSL.name("path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>project.classpath</code>.

@@ -1,6 +1,6 @@
-package teralizer.tasks;
+package teralizer.processing;
 
-public enum Task {
+public enum ProcessingStage {
     PROJECT_SETUP(1),
 
     TEST_DETECTION(2),
@@ -17,8 +17,12 @@ public enum Task {
 
     private final int step;
 
-    Task(int step) {
+    ProcessingStage(int step) {
         this.step = step;
+    }
+
+    public int getStep() {
+        return this.step;
     }
 
     // @TODO: Create cleanup tasks to remove created files and database entries.

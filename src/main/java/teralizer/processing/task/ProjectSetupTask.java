@@ -1,4 +1,4 @@
-package teralizer.tasks;
+package teralizer.processing.task;
 
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ModelBuilder;
@@ -13,9 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
-public class ProjectSetupTask {
-
-    private final Task task = Task.PROJECT_SETUP;
+public class ProjectSetupTask extends AbstractTask {
 
     private final DSLContext create;
 
@@ -23,21 +21,26 @@ public class ProjectSetupTask {
         this.create = create;
     }
 
-    public ProjectRecord run(Path projectPath) {
-        File projectDirectoryFile = projectPath.toFile();
+    public TaskCallable<ProjectRecord> create(Path projectPath) {
+        return new TaskCallable<>(this, () -> {
+            File projectDirectoryFile = projectPath.toFile();
 
-        if (!projectDirectoryFile.exists() || !projectDirectoryFile.isDirectory()) {
-            throw new IllegalArgumentException("Invalid project directory: " + projectDirectoryFile);
-        }
+            ProjectRecord projectRecord = this.create.newRecord(Tables.PROJECT);
+            projectRecord.setPath(projectPath.toAbsolutePath().toString());
+            projectRecord.store();
 
-        String projectClasspath = this.fetchClasspath(projectDirectoryFile);
+            this.setProjectId(projectRecord.getId());
 
-        ProjectRecord projectRecord = this.create.newRecord(Tables.PROJECT);
-        projectRecord.setPath(projectPath.toAbsolutePath().toString());
-        projectRecord.setClasspath(projectClasspath);
-        projectRecord.store();
+            if (!projectDirectoryFile.exists() || !projectDirectoryFile.isDirectory()) {
+                throw new IllegalArgumentException("Invalid project directory: " + projectDirectoryFile);
+            }
 
-        return projectRecord;
+            String projectClasspath = this.fetchClasspath(projectDirectoryFile);
+            projectRecord.setClasspath(projectClasspath);
+            projectRecord.store();
+
+            return projectRecord;
+        });
     }
 
     private String fetchClasspath(File projectDirectoryFile) {

@@ -15,7 +15,8 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
-import teralizer.tasks.*;
+import teralizer.processing.*;
+import teralizer.processing.task.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -57,6 +58,8 @@ public class TestGeneralizationRunner {
 
         DSLContext create = DSL.using("jdbc:sqlite:/Users/joaichberger/Projects/test-generalization/database/db.sqlite");
 
+        TaskRunner taskRunner = new TaskRunner(create);
+
         ProjectSetupTask projectSetupTask = new ProjectSetupTask(create);
         ProjectBuildTask projectBuildTask = new ProjectBuildTask();
         TestDetectionTask testDetectionTask = new TestDetectionTask(create, javaParser, gson);
@@ -66,8 +69,8 @@ public class TestGeneralizationRunner {
 
         // @TODO: Add shutdown handler.
 
-        ProjectRecord projectRecord = projectSetupTask.run(projectPath);
-        List<TestRecord> testRecords = testDetectionTask.run(projectRecord);
+        ProjectRecord projectRecord = taskRunner.runTask(ProcessingStage.PROJECT_SETUP, projectSetupTask.create(projectPath));
+        List<TestRecord> testRecords = taskRunner.runTask(ProcessingStage.TEST_DETECTION, testDetectionTask.create(projectRecord));
 
         // @TODO: Attempt an initial project build to see whether the project is even buildable.
         //   Note that a failed build does not necessarily imply a "broken" project.
@@ -77,12 +80,12 @@ public class TestGeneralizationRunner {
             try {
                 // @TODO: Catch errors in each task to log them.
                 //   However, still rethrow them to end the execution.
-                jpfInstrumentationTask.run(projectRecord, testRecord);
-                projectBuildTask.run(projectRecord, Task.PROJECT_BUILDING_INSTRUMENTED);
-                jpfExecutionTask.run(testRecord);
+                taskRunner.runTask(ProcessingStage.JPF_INSTRUMENTATION, jpfInstrumentationTask.create(projectRecord, testRecord));
+                taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, projectBuildTask.create(projectRecord));
+                taskRunner.runTask(ProcessingStage.JPF_EXECUTION, jpfExecutionTask.create(testRecord));
 
                 // @TODO: Perform generalization for all tool variants + settings.
-                testGeneralizationTask.run(testRecord, "naive");
+                taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
             } catch (Exception e) {
                 System.out.println(e);
                 e.printStackTrace();
