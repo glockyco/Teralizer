@@ -81,19 +81,19 @@ public class TestGeneralizationRunner {
         //   Note that a failed build does not necessarily imply a "broken" project.
         //   We might just be trying to build the project "the wrong way".
 
-        for (TestRecord testRecord : testRecords) {
-            try {
-                // @TODO: Catch errors in each task to log them.
-                //   However, still rethrow them to end the execution.
+        try {
+            for (TestRecord testRecord : testRecords) {
                 taskRunner.runTask(ProcessingStage.JPF_INSTRUMENTATION, jpfInstrumentationTask.create(projectRecord, testRecord));
-                taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, projectBuildTask.create(projectRecord));
-                taskRunner.runTask(ProcessingStage.JPF_EXECUTION, jpfExecutionTask.create(testRecord));
-
-                // @TODO: Perform generalization for all tool variants + settings.
-                taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
             }
+
+            taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, projectBuildTask.create(projectRecord));
+
+            for (TestRecord testRecord : testRecords) {
+                taskRunner.runTask(ProcessingStage.JPF_EXECUTION, jpfExecutionTask.create(testRecord));
+                taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
         }
 
         // @TODO: Store file paths relative to the teralizer root directory.
