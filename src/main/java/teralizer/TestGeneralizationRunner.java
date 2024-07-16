@@ -76,11 +76,10 @@ public class TestGeneralizationRunner {
         // @TODO: Add shutdown handler.
 
         ProjectRecord projectRecord = taskRunner.runTask(ProcessingStage.PROJECT_SETUP, projectSetupTask.create(projectPath));
-        List<TestRecord> testRecords = taskRunner.runTask(ProcessingStage.TEST_DETECTION, testDetectionTask.create(projectRecord));
 
-        // @TODO: Attempt an initial project build to see whether the project is even buildable.
-        //   Note that a failed build does not necessarily imply a "broken" project.
-        //   We might just be trying to build the project "the wrong way".
+        taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, projectBuildTask.create(projectRecord));
+
+        List<TestRecord> testRecords = taskRunner.runTask(ProcessingStage.TEST_DETECTION, testDetectionTask.create(projectRecord));
 
         List<TestRecord> successfulRecords = new ArrayList<>();
         List<TestRecord> remainingRecords = testRecords;
