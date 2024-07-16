@@ -131,6 +131,20 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     @Override
+    public List<ForeignKey<GeneralizationRecord, ?>> getReferences() {
+        return Arrays.<ForeignKey<GeneralizationRecord, ?>>asList(Keys.FK_GENERALIZATION_TEST_1);
+    }
+
+    private transient Test _test;
+
+    public Test test() {
+        if (_test == null)
+            _test = new Test(this, Keys.FK_GENERALIZATION_TEST_1);
+
+        return _test;
+    }
+
+    @Override
     public Generalization as(String alias) {
         return new Generalization(DSL.name(alias), this);
     }

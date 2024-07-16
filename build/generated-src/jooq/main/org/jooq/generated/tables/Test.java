@@ -191,6 +191,20 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     @Override
+    public List<ForeignKey<TestRecord, ?>> getReferences() {
+        return Arrays.<ForeignKey<TestRecord, ?>>asList(Keys.FK_TEST_PROJECT_1);
+    }
+
+    private transient Project _project;
+
+    public Project project() {
+        if (_project == null)
+            _project = new Project(this, Keys.FK_TEST_PROJECT_1);
+
+        return _project;
+    }
+
+    @Override
     public Test as(String alias) {
         return new Test(DSL.name(alias), this);
     }

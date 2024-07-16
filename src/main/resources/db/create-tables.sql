@@ -31,7 +31,8 @@ CREATE TABLE test
     driver_class_name         TEXT NOT NULL,
     jpf_config_path           TEXT NOT NULL,
     input_specification_path  TEXT NOT NULL,
-    output_specification_path TEXT NOT NULL
+    output_specification_path TEXT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
 );
 
 CREATE TABLE generalization
@@ -41,7 +42,8 @@ CREATE TABLE generalization
     tool                      TEXT NOT NULL,
     generalized_class_path    TEXT NOT NULL,
     generalized_class_package TEXT NOT NULL,
-    generalized_class_name    TEXT NOT NULL
+    generalized_class_name    TEXT NOT NULL,
+    FOREIGN KEY (test_id) REFERENCES test(id) ON DELETE CASCADE
 );
 
 CREATE TABLE task
@@ -54,5 +56,8 @@ CREATE TABLE task
     stage             TEXT NOT NULL,
     status            TEXT NOT NULL,
     runtime           REAL, -- can be null for failed tasks
-    error             TEXT -- can be null for successful tasks
+    error             TEXT, -- can be null for successful tasks
+    FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE,
+    FOREIGN KEY (test_id) REFERENCES  test(id) ON DELETE CASCADE,
+    FOREIGN KEY (generalization_id) REFERENCES generalization(id) ON DELETE CASCADE
 );

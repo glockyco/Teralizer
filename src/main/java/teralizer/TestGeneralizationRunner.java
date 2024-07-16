@@ -56,7 +56,7 @@ public class TestGeneralizationRunner {
 
         Gson gson = new Gson();
 
-        DSLContext create = DSL.using("jdbc:sqlite:/Users/joaichberger/Projects/test-generalization/database/db.sqlite");
+        DSLContext create = DSL.using("jdbc:sqlite:/Users/joaichberger/Projects/test-generalization/database/db.sqlite?foreign_keys=on");
 
         TaskRunner taskRunner = new TaskRunner(create);
 
