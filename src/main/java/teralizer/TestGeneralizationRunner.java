@@ -23,6 +23,7 @@ import teralizer.processing.task.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -81,20 +82,41 @@ public class TestGeneralizationRunner {
         //   Note that a failed build does not necessarily imply a "broken" project.
         //   We might just be trying to build the project "the wrong way".
 
-        try {
-            for (TestRecord testRecord : testRecords) {
+        List<TestRecord> successfulRecords = new ArrayList<>();
+        List<TestRecord> remainingRecords = testRecords;
+        for (TestRecord testRecord : remainingRecords) {
+            try {
                 taskRunner.runTask(ProcessingStage.JPF_INSTRUMENTATION, jpfInstrumentationTask.create(projectRecord, testRecord));
+                successfulRecords.add(testRecord);
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
             }
-
-            taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, projectBuildTask.create(projectRecord));
-
-            for (TestRecord testRecord : testRecords) {
-                taskRunner.runTask(ProcessingStage.JPF_EXECUTION, jpfExecutionTask.create(testRecord));
-                taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
         }
+        remainingRecords = successfulRecords;
+
+        taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, projectBuildTask.create(projectRecord));
+
+        successfulRecords = new ArrayList<>();
+        for (TestRecord testRecord : remainingRecords) {
+            try {
+                taskRunner.runTask(ProcessingStage.JPF_EXECUTION, jpfExecutionTask.create(testRecord));
+                successfulRecords.add(testRecord);
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+        remainingRecords = successfulRecords;
+
+        successfulRecords = new ArrayList<>();
+        for (TestRecord testRecord : remainingRecords) {
+            try {
+                taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
+                successfulRecords.add(testRecord);
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+        remainingRecords = successfulRecords;
 
         // @TODO: Store file paths relative to the teralizer root directory.
         //   This is necessary to ensure the portability of the collected data.
