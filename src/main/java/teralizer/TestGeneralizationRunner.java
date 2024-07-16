@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import teralizer.processing.*;
 import teralizer.processing.task.*;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -50,7 +49,7 @@ public class TestGeneralizationRunner {
     // @TODO: Decide how to deal with files that are already created (perhaps from earlier runs).
     // @TODO: Add support for Maven projects.
 
-    public void run() throws IOException {
+    public void run() {
         // @TODO: Get project directories from input args.
         // @TODO: Add support for analysis of multiple project directories in a single run.
         //   That way, we can share some of the initialization, and - more importantly - can perform
