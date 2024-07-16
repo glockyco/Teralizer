@@ -15,6 +15,8 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import teralizer.processing.*;
 import teralizer.processing.task.*;
 
@@ -25,6 +27,9 @@ import java.util.List;
 import java.util.Properties;
 
 public class TestGeneralizationRunner {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
+
     public static void main(String[] args) throws Exception {
         // Arguments: [benchmark]
         // - [benchmark]: Path to the benchmark directory, e.g., ../benchmarks/.
@@ -87,8 +92,7 @@ public class TestGeneralizationRunner {
                 // @TODO: Perform generalization for all tool variants + settings.
                 taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
             } catch (Exception e) {
-                System.out.println(e);
-                e.printStackTrace();
+                LOGGER.error(e.getMessage(), e);
             }
         }
 
@@ -96,26 +100,28 @@ public class TestGeneralizationRunner {
         //   This is necessary to ensure the portability of the collected data.
         //   Also, this makes anonymization for double-blind review easier.
 
-        Result<Record> generalizationRecords = create.select(Tables.GENERALIZATION.fields())
-            .from(Tables.PROJECT)
-            .join(Tables.TEST)
-            .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
-            .join(Tables.GENERALIZATION)
-            .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
-            .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
-            .fetch();
+        if (LOGGER.isDebugEnabled()) {
+            Result<Record> generalizationRecords = create.select(Tables.GENERALIZATION.fields())
+                .from(Tables.PROJECT)
+                .join(Tables.TEST)
+                .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
+                .join(Tables.GENERALIZATION)
+                .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
+                .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+                .fetch();
 
-        Result<Record> taskRecords = create.select(Tables.TASK.fields())
-            .from(Tables.PROJECT)
-            .join(Tables.TASK)
-            .on(Tables.PROJECT.ID.eq(Tables.TASK.PROJECT_ID))
-            .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
-            .fetch();
+            Result<Record> taskRecords = create.select(Tables.TASK.fields())
+                .from(Tables.PROJECT)
+                .join(Tables.TASK)
+                .on(Tables.PROJECT.ID.eq(Tables.TASK.PROJECT_ID))
+                .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+                .fetch();
 
-        System.out.println(projectRecord);
-        System.out.println(testRecords);
-        System.out.println(generalizationRecords);
-        System.out.println(taskRecords);
+            LOGGER.atDebug().log("Created project records:\n" + projectRecord);
+            LOGGER.atDebug().log("Created test records:\n" + testRecords);
+            LOGGER.atDebug().log("Created generalization records:\n" + generalizationRecords);
+            LOGGER.atDebug().log("Created task records:\n" + taskRecords);
+        }
 
         // @TODO: Store the pre-condition and post-condition of every test(method) in z3 representation (?).
         //   We need a z3 representation to identify duplicate tests.

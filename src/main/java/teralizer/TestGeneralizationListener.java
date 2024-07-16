@@ -11,6 +11,8 @@ import gov.nasa.jpf.vm.MethodInfo;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.VM;
 import gov.nasa.jpf.vm.bytecode.ReturnInstruction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpfToModelTransformer;
 
@@ -20,6 +22,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class TestGeneralizationListener extends PropertyListenerAdapter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
+
     private final MethodSpec testedMethodSpec;
     private final Path inputSpecificationPath;
     private final Path outputSpecificationPath;
@@ -42,9 +47,9 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             Constraint spfInput = PathCondition.getPC(vm).header;
             Expression spfOutput = (Expression) vm.getCurrentThread().getTopFrame().getOperandAttr();
 
-            System.out.println("Returning from: " + testedMethodSpec.getSource());
-            System.out.println("Input: " + PathCondition.getPC(vm).header);
-            System.out.println("Output: " + vm.getCurrentThread().getTopFrame().getOperandAttr());
+            LOGGER.atDebug().log("Returning from: " + testedMethodSpec.getSource());
+            LOGGER.atDebug().log("Input: " + PathCondition.getPC(vm).header);
+            LOGGER.atDebug().log("Output: " + vm.getCurrentThread().getTopFrame().getOperandAttr());
 
             SpfToModelTransformer spfToModelTransformer = new SpfToModelTransformer();
             ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
