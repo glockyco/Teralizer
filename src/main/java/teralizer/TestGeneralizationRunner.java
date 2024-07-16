@@ -122,28 +122,7 @@ public class TestGeneralizationRunner {
             }
             remainingRecords = successfulRecords;
 
-            if (LOGGER.isDebugEnabled()) {
-                Result<Record> generalizationRecords = create.select(Tables.GENERALIZATION.fields())
-                    .from(Tables.PROJECT)
-                    .join(Tables.TEST)
-                    .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
-                    .join(Tables.GENERALIZATION)
-                    .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
-                    .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
-                    .fetch();
-
-                Result<Record> taskRecords = create.select(Tables.TASK.fields())
-                    .from(Tables.PROJECT)
-                    .join(Tables.TASK)
-                    .on(Tables.PROJECT.ID.eq(Tables.TASK.PROJECT_ID))
-                    .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
-                    .fetch();
-
-                LOGGER.atDebug().log("Created project records:\n" + projectRecord);
-                LOGGER.atDebug().log("Created test records:\n" + testRecords);
-                LOGGER.atDebug().log("Created generalization records:\n" + generalizationRecords);
-                LOGGER.atDebug().log("Created task records:\n" + taskRecords);
-            }
+            this.logCreatedRecords(create, projectRecord);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
@@ -185,5 +164,49 @@ public class TestGeneralizationRunner {
         velocityEngine.init(properties);
 
         return velocityEngine;
+    }
+
+    private void logCreatedRecords(DSLContext create, ProjectRecord projectRecord) {
+        if (!LOGGER.isDebugEnabled()) {
+            return;
+        }
+
+        Result<Record> testRecords = this.fetchTestRecords(create, projectRecord);
+        Result<Record> generalizationRecords = this.fetchGeneralizationRecords(create, projectRecord);
+        Result<Record> taskRecords = this.fetchTaskRecords(create, projectRecord);
+
+        LOGGER.atDebug().log("Created project records:\n" + projectRecord);
+        LOGGER.atDebug().log("Created test records:\n" + testRecords);
+        LOGGER.atDebug().log("Created generalization records:\n" + generalizationRecords);
+        LOGGER.atDebug().log("Created task records:\n" + taskRecords);
+    }
+
+    private Result<Record> fetchTestRecords(DSLContext create, ProjectRecord projectRecord) {
+        return create.select(Tables.TEST.fields())
+            .from(Tables.PROJECT)
+            .join(Tables.TEST)
+            .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
+            .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+            .fetch();
+    }
+
+    private Result<Record> fetchGeneralizationRecords(DSLContext create, ProjectRecord projectRecord) {
+        return create.select(Tables.GENERALIZATION.fields())
+            .from(Tables.PROJECT)
+            .join(Tables.TEST)
+            .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
+            .join(Tables.GENERALIZATION)
+            .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
+            .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+            .fetch();
+    }
+
+    private Result<Record> fetchTaskRecords(DSLContext create, ProjectRecord projectRecord) {
+        return create.select(Tables.TASK.fields())
+            .from(Tables.PROJECT)
+            .join(Tables.TASK)
+            .on(Tables.PROJECT.ID.eq(Tables.TASK.PROJECT_ID))
+            .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+            .fetch();
     }
 }
