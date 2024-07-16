@@ -105,9 +105,17 @@ public class TestGeneralizationRunner {
             .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
             .fetch();
 
+        Result<Record> taskRecords = create.select(Tables.TASK.fields())
+            .from(Tables.PROJECT)
+            .join(Tables.TASK)
+            .on(Tables.PROJECT.ID.eq(Tables.TASK.PROJECT_ID))
+            .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+            .fetch();
+
         System.out.println(projectRecord);
         System.out.println(testRecords);
         System.out.println(generalizationRecords);
+        System.out.println(taskRecords);
 
         // @TODO: Store the pre-condition and post-condition of every test(method) in z3 representation (?).
         //   We need a z3 representation to identify duplicate tests.
