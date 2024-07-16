@@ -9,7 +9,8 @@ CREATE TABLE project
 (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     path      TEXT NOT NULL,
-    classpath TEXT -- can be null for invalid project paths
+    classpath TEXT, -- can be null for invalid project paths
+    runtime   REAL -- can be null for projects with failed project-level tasks
 );
 
 CREATE TABLE test

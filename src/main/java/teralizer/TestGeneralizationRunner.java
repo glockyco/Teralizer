@@ -55,6 +55,9 @@ public class TestGeneralizationRunner {
         // @TODO: Add support for analysis of multiple project directories in a single run.
         //   That way, we can share some of the initialization, and - more importantly - can perform
         //   the analysis tasks after ALL projects have been processed / generalized.
+
+        long startTime = System.currentTimeMillis();
+
         Path projectPath = Paths.get("/Users/joaichberger/Projects/test-generalization-example");
 
         JavaParser javaParser = this.createJavaParser(projectPath);
@@ -120,7 +123,10 @@ public class TestGeneralizationRunner {
                     LOGGER.error(e.getMessage(), e);
                 }
             }
-            remainingRecords = successfulRecords;
+
+            long endTime = System.currentTimeMillis();
+            projectRecord.setRuntime((endTime - startTime) / 1000.0f);
+            projectRecord.store();
 
             this.logCreatedRecords(create, projectRecord);
         } catch (Exception e) {

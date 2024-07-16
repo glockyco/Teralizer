@@ -12,7 +12,7 @@ import org.jooq.ForeignKey;
 import org.jooq.Identity;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row3;
+import org.jooq.Row4;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -61,6 +61,11 @@ public class Project extends TableImpl<ProjectRecord> {
      * The column <code>project.classpath</code>.
      */
     public final TableField<ProjectRecord, String> CLASSPATH = createField(DSL.name("classpath"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>project.runtime</code>.
+     */
+    public final TableField<ProjectRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL, this, "");
 
     private Project(Name alias, Table<ProjectRecord> aliased) {
         this(alias, aliased, null);
@@ -142,11 +147,11 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row3 type methods
+    // Row4 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row3<Integer, String, String> fieldsRow() {
-        return (Row3) super.fieldsRow();
+    public Row4<Integer, String, String, Float> fieldsRow() {
+        return (Row4) super.fieldsRow();
     }
 }
