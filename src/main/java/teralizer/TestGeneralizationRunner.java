@@ -75,73 +75,77 @@ public class TestGeneralizationRunner {
 
         // @TODO: Add shutdown handler.
 
-        ProjectRecord projectRecord = taskRunner.runTask(ProcessingStage.PROJECT_SETUP, projectSetupTask.create(projectPath));
-
-        taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, projectBuildTask.create(projectRecord));
-
-        List<TestRecord> testRecords = taskRunner.runTask(ProcessingStage.TEST_DETECTION, testDetectionTask.create(projectRecord));
-
-        List<TestRecord> successfulRecords = new ArrayList<>();
-        List<TestRecord> remainingRecords = testRecords;
-        for (TestRecord testRecord : remainingRecords) {
-            try {
-                taskRunner.runTask(ProcessingStage.JPF_INSTRUMENTATION, jpfInstrumentationTask.create(projectRecord, testRecord));
-                successfulRecords.add(testRecord);
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        }
-        remainingRecords = successfulRecords;
-
-        taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, projectBuildTask.create(projectRecord));
-
-        successfulRecords = new ArrayList<>();
-        for (TestRecord testRecord : remainingRecords) {
-            try {
-                taskRunner.runTask(ProcessingStage.JPF_EXECUTION, jpfExecutionTask.create(testRecord));
-                successfulRecords.add(testRecord);
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        }
-        remainingRecords = successfulRecords;
-
-        successfulRecords = new ArrayList<>();
-        for (TestRecord testRecord : remainingRecords) {
-            try {
-                taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
-                successfulRecords.add(testRecord);
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-        }
-        remainingRecords = successfulRecords;
-
         // @TODO: Store file paths relative to the teralizer root directory.
         //   This is necessary to ensure the portability of the collected data.
         //   Also, this makes anonymization for double-blind review easier.
 
-        if (LOGGER.isDebugEnabled()) {
-            Result<Record> generalizationRecords = create.select(Tables.GENERALIZATION.fields())
-                .from(Tables.PROJECT)
-                .join(Tables.TEST)
-                .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
-                .join(Tables.GENERALIZATION)
-                .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
-                .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
-                .fetch();
+        try {
+            ProjectRecord projectRecord = taskRunner.runTask(ProcessingStage.PROJECT_SETUP, projectSetupTask.create(projectPath));
 
-            Result<Record> taskRecords = create.select(Tables.TASK.fields())
-                .from(Tables.PROJECT)
-                .join(Tables.TASK)
-                .on(Tables.PROJECT.ID.eq(Tables.TASK.PROJECT_ID))
-                .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
-                .fetch();
+            taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, projectBuildTask.create(projectRecord));
 
-            LOGGER.atDebug().log("Created project records:\n" + projectRecord);
-            LOGGER.atDebug().log("Created test records:\n" + testRecords);
-            LOGGER.atDebug().log("Created generalization records:\n" + generalizationRecords);
-            LOGGER.atDebug().log("Created task records:\n" + taskRecords);
+            List<TestRecord> testRecords = taskRunner.runTask(ProcessingStage.TEST_DETECTION, testDetectionTask.create(projectRecord));
+
+            List<TestRecord> successfulRecords = new ArrayList<>();
+            List<TestRecord> remainingRecords = testRecords;
+            for (TestRecord testRecord : remainingRecords) {
+                try {
+                    taskRunner.runTask(ProcessingStage.JPF_INSTRUMENTATION, jpfInstrumentationTask.create(projectRecord, testRecord));
+                    successfulRecords.add(testRecord);
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            }
+            remainingRecords = successfulRecords;
+
+            taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, projectBuildTask.create(projectRecord));
+
+            successfulRecords = new ArrayList<>();
+            for (TestRecord testRecord : remainingRecords) {
+                try {
+                    taskRunner.runTask(ProcessingStage.JPF_EXECUTION, jpfExecutionTask.create(testRecord));
+                    successfulRecords.add(testRecord);
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            }
+            remainingRecords = successfulRecords;
+
+            successfulRecords = new ArrayList<>();
+            for (TestRecord testRecord : remainingRecords) {
+                try {
+                    taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
+                    successfulRecords.add(testRecord);
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            }
+            remainingRecords = successfulRecords;
+
+            if (LOGGER.isDebugEnabled()) {
+                Result<Record> generalizationRecords = create.select(Tables.GENERALIZATION.fields())
+                    .from(Tables.PROJECT)
+                    .join(Tables.TEST)
+                    .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
+                    .join(Tables.GENERALIZATION)
+                    .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
+                    .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+                    .fetch();
+
+                Result<Record> taskRecords = create.select(Tables.TASK.fields())
+                    .from(Tables.PROJECT)
+                    .join(Tables.TASK)
+                    .on(Tables.PROJECT.ID.eq(Tables.TASK.PROJECT_ID))
+                    .where(Tables.PROJECT.ID.eq(projectRecord.getId()))
+                    .fetch();
+
+                LOGGER.atDebug().log("Created project records:\n" + projectRecord);
+                LOGGER.atDebug().log("Created test records:\n" + testRecords);
+                LOGGER.atDebug().log("Created generalization records:\n" + generalizationRecords);
+                LOGGER.atDebug().log("Created task records:\n" + taskRecords);
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
         }
 
         // @TODO: Store the pre-condition and post-condition of every test(method) in z3 representation (?).
