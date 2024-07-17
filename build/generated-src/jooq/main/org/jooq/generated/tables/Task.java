@@ -59,7 +59,7 @@ public class Task extends TableImpl<TaskRecord> {
     /**
      * The column <code>task.project_id</code>.
      */
-    public final TableField<TaskRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<TaskRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>task.test_id</code>.

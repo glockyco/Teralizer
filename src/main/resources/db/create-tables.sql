@@ -50,7 +50,7 @@ CREATE TABLE generalization
 CREATE TABLE task
 (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id        INTEGER, -- can be null for failed project setup tasks
+    project_id        INTEGER NOT NULL,
     test_id           INTEGER, -- can be null for project-level tasks
     generalization_id INTEGER, -- can be null for project-/test-level tasks
     step              INTEGER NOT NULL,
