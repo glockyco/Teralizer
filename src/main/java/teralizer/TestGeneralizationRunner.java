@@ -101,7 +101,7 @@ public class TestGeneralizationRunner {
         // @TODO: Evaluate simplification of inputs + outputs.
     }
 
-    public JavaParser createJavaParser(Path projectPath) {
+    private JavaParser createJavaParser(Path projectPath) {
         Path mainSrcPath = projectPath.resolve("src/main/java");
         Path testSrcPath = projectPath.resolve("src/test/java");
 
@@ -117,7 +117,7 @@ public class TestGeneralizationRunner {
         return new JavaParser(configuration);
     }
 
-    public VelocityEngine createVelocityEngine() {
+    private VelocityEngine createVelocityEngine() {
         Properties properties = new Properties();
         properties.setProperty("file.resource.loader.path", "src/main/resources/templates");
 
