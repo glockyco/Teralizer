@@ -59,8 +59,9 @@ public class TestGeneralizationTask implements Task {
     public void execute(TaskContext context, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
-        JavaParser javaParser = context.get(TaskContext.JAVA_PARSER);
         VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);
+
+        JavaParser javaParser = context.get(this.getProjectId(), TaskContext.JAVA_PARSER);
 
         this.generalizationRecord = this.createGeneralizationRecord(create);
         this.generalizeTest(gson, javaParser, velocityEngine);

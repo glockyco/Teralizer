@@ -52,34 +52,40 @@ public class TestGeneralizationRunner {
         //   That way, we can share some of the initialization, and - more importantly - can perform
         //   the analysis tasks after ALL projects have been processed / generalized.
 
-        long startTime = System.currentTimeMillis();
-
-        Path projectPath = Paths.get("/Users/joaichberger/Projects/test-generalization-example");
-
-        JavaParser javaParser = this.createJavaParser(projectPath);
-        VelocityEngine velocityEngine = this.createVelocityEngine();
-
-        Gson gson = new Gson();
+        String[] projectDirectories = new String[]{
+            "/Users/joaichberger/Projects/test-generalization-example",
+        };
 
         DSLContext create = DSL.using("jdbc:sqlite:/Users/joaichberger/Projects/test-generalization/database/db.sqlite?foreign_keys=on");
 
-        TaskContext context = new TaskContext(create, gson, javaParser, velocityEngine);
-        ProcessingPipeline pipeline = new ProcessingPipeline(create, context);
+        ProcessingPipeline pipeline = new ProcessingPipeline(create);
+        pipeline.getContext().put(TaskContext.DSL_CONTEXT, create);
+        pipeline.getContext().put(TaskContext.GSON, new Gson());
+        pipeline.getContext().put(TaskContext.VELOCITY_ENGINE, this.createVelocityEngine());
 
-        ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
-        projectRecord.setPath(projectPath.toString());
-        projectRecord.store();
+        for (String projectDirectory : projectDirectories) {
+            long startTime = System.currentTimeMillis();
 
-        pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));
-        pipeline.execute();
+            Path projectPath = Paths.get(projectDirectory);
 
-        long endTime = System.currentTimeMillis();
+            ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
+            projectRecord.setPath(projectPath.toString());
+            projectRecord.store();
 
-        projectRecord.setRuntime((endTime - startTime) / 1000.0f);
-        projectRecord.store();
+            JavaParser javaParser = this.createJavaParser(projectPath);
+            pipeline.getContext().put(projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
-        if (LOGGER.isDebugEnabled()) {
-            this.logCreatedRecords(create, projectRecord);
+            pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));
+            pipeline.execute();
+
+            long endTime = System.currentTimeMillis();
+
+            projectRecord.setRuntime((endTime - startTime) / 1000.0f);
+            projectRecord.store();
+
+            if (LOGGER.isDebugEnabled()) {
+                this.logCreatedRecords(create, projectRecord);
+            }
         }
 
         // @TODO: Add shutdown handler.

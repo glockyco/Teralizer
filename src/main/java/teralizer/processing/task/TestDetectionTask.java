@@ -40,7 +40,8 @@ public class TestDetectionTask implements Task {
     public void execute(TaskContext context, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
-        JavaParser javaParser = context.get(TaskContext.JAVA_PARSER);
+
+        JavaParser javaParser = context.get(this.getProjectId(), TaskContext.JAVA_PARSER);
 
         List<TestRecord> testRecords = this.detectTests(create, gson, javaParser);
 

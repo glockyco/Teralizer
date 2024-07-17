@@ -22,11 +22,10 @@ public class ProcessingPipeline {
 
     private final Set<Task> allTasks = new HashSet<>();
     private final Queue<Task> queuedTasks = new LinkedList<>();
-    private final TaskContext context;
+    private final TaskContext context = new TaskContext();
 
-    public ProcessingPipeline(DSLContext create, TaskContext context) {
+    public ProcessingPipeline(DSLContext create) {
         this.create = create;
-        this.context = context;
     }
 
     public void addTask(Task task) {
@@ -36,6 +35,10 @@ public class ProcessingPipeline {
         } else {
             LOGGER.atDebug().log("Skipping addTask operation for task {}. Task is already in queue.", task);
         }
+    }
+
+    public TaskContext getContext() {
+        return this.context;
     }
 
     public void execute() {
