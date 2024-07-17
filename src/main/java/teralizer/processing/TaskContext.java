@@ -25,10 +25,10 @@ public class TaskContext {
     }
 
     public void put(String key, Object value) {
-        data.put(key, value);
+        this.data.put(key, value);
     }
 
     public <T> T get(String key) {
-        return (T) data.get(key);
+        return (T) this.data.get(key);
     }
 }
