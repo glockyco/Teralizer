@@ -13,7 +13,6 @@ import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
-import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,15 +21,13 @@ import teralizer.processing.task.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 public class TestGeneralizationRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         // Arguments: [benchmark]
         // - [benchmark]: Path to the benchmark directory, e.g., ../benchmarks/.
         //new TestGeneralizationRunner().run(args[0]);
@@ -66,71 +63,30 @@ public class TestGeneralizationRunner {
 
         DSLContext create = DSL.using("jdbc:sqlite:/Users/joaichberger/Projects/test-generalization/database/db.sqlite?foreign_keys=on");
 
-        TaskRunner taskRunner = new TaskRunner(create);
+        TaskContext context = new TaskContext(create, gson, javaParser, velocityEngine);
+        ProcessingPipeline pipeline = new ProcessingPipeline(create, context);
 
-        ProjectSetupTask projectSetupTask = new ProjectSetupTask(create);
-        ProjectBuildTask projectBuildTask = new ProjectBuildTask();
-        TestDetectionTask testDetectionTask = new TestDetectionTask(create, javaParser, gson);
-        JpfInstrumentationTask jpfInstrumentationTask = new JpfInstrumentationTask(velocityEngine);
-        JpfExecutionTask jpfExecutionTask = new JpfExecutionTask();
-        TestGeneralizationTask testGeneralizationTask = new TestGeneralizationTask(create, velocityEngine, javaParser, gson);
+        ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
+        projectRecord.setPath(projectPath.toString());
+        projectRecord.store();
+
+        pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));
+        pipeline.execute();
+
+        long endTime = System.currentTimeMillis();
+
+        projectRecord.setRuntime((endTime - startTime) / 1000.0f);
+        projectRecord.store();
+
+        if (LOGGER.isDebugEnabled()) {
+            this.logCreatedRecords(create, projectRecord);
+        }
 
         // @TODO: Add shutdown handler.
 
         // @TODO: Store file paths relative to the teralizer root directory.
         //   This is necessary to ensure the portability of the collected data.
         //   Also, this makes anonymization for double-blind review easier.
-
-        try {
-            ProjectRecord projectRecord = taskRunner.runTask(ProcessingStage.PROJECT_SETUP, projectSetupTask.create(projectPath));
-
-            taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, projectBuildTask.create(projectRecord));
-
-            List<TestRecord> testRecords = taskRunner.runTask(ProcessingStage.TEST_DETECTION, testDetectionTask.create(projectRecord));
-
-            List<TestRecord> successfulRecords = new ArrayList<>();
-            List<TestRecord> remainingRecords = testRecords;
-            for (TestRecord testRecord : remainingRecords) {
-                try {
-                    taskRunner.runTask(ProcessingStage.JPF_INSTRUMENTATION, jpfInstrumentationTask.create(projectRecord, testRecord));
-                    successfulRecords.add(testRecord);
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
-                }
-            }
-            remainingRecords = successfulRecords;
-
-            taskRunner.runTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, projectBuildTask.create(projectRecord));
-
-            successfulRecords = new ArrayList<>();
-            for (TestRecord testRecord : remainingRecords) {
-                try {
-                    taskRunner.runTask(ProcessingStage.JPF_EXECUTION, jpfExecutionTask.create(testRecord));
-                    successfulRecords.add(testRecord);
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
-                }
-            }
-            remainingRecords = successfulRecords;
-
-            successfulRecords = new ArrayList<>();
-            for (TestRecord testRecord : remainingRecords) {
-                try {
-                    taskRunner.runTask(ProcessingStage.TEST_GENERALIZATION, testGeneralizationTask.create(testRecord, "naive"));
-                    successfulRecords.add(testRecord);
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
-                }
-            }
-
-            long endTime = System.currentTimeMillis();
-            projectRecord.setRuntime((endTime - startTime) / 1000.0f);
-            projectRecord.store();
-
-            this.logCreatedRecords(create, projectRecord);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-        }
 
         // @TODO: Store the pre-condition and post-condition of every test(method) in z3 representation (?).
         //   We need a z3 representation to identify duplicate tests.
@@ -172,10 +128,6 @@ public class TestGeneralizationRunner {
     }
 
     private void logCreatedRecords(DSLContext create, ProjectRecord projectRecord) {
-        if (!LOGGER.isDebugEnabled()) {
-            return;
-        }
-
         Result<Record> testRecords = this.fetchTestRecords(create, projectRecord);
         Result<Record> generalizationRecords = this.fetchGeneralizationRecords(create, projectRecord);
         Result<Record> taskRecords = this.fetchTaskRecords(create, projectRecord);

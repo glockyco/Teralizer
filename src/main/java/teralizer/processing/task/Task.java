@@ -1,6 +1,15 @@
 package teralizer.processing.task;
 
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.TaskContext;
+
+import java.util.function.Consumer;
+
 public interface Task {
+    void execute(TaskContext context, Consumer<Task> scheduleTask) throws Exception;
+
+    ProcessingStage getStage();
+
     Integer getProjectId();
     Integer getTestId();
     Integer getGeneralizationId();

@@ -1,0 +1,94 @@
+package teralizer.processing;
+
+import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.TaskRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import teralizer.processing.task.Task;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
+
+public class ProcessingPipeline {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingPipeline.class);
+
+    private final DSLContext create;
+
+    private final Set<Task> allTasks = new HashSet<>();
+    private final Queue<Task> queuedTasks = new LinkedList<>();
+    private final TaskContext context;
+
+    public ProcessingPipeline(DSLContext create, TaskContext context) {
+        this.create = create;
+        this.context = context;
+    }
+
+    public void addTask(Task task) {
+        if (this.allTasks.add(task)) {
+            LOGGER.atDebug().log("Adding task {} to queue.", task);
+            this.queuedTasks.offer(task);
+        } else {
+            LOGGER.atDebug().log("Skipping addTask operation for task {}. Task is already in queue.", task);
+        }
+    }
+
+    public void execute() {
+        while (!this.queuedTasks.isEmpty()) {
+            Task task = this.queuedTasks.poll();
+            ProcessingStage stage = task.getStage();
+
+            TaskRecord taskRecord = this.create.newRecord(Tables.TASK);
+            taskRecord.setStep(stage.getStep());
+            taskRecord.setStage(stage);
+            taskRecord.setStatus(ProcessingStatus.IN_PROGRESS);
+
+            taskRecord.setProjectId(task.getProjectId());
+            taskRecord.setTestId(task.getTestId());
+            taskRecord.setGeneralizationId(task.getGeneralizationId());
+
+            taskRecord.store();
+
+            try {
+                // We are only tracking task execution time here.
+                // Total processing time of a project / test is tracked elsewhere,
+                // so we don't have to include the runtime of the DB communication here.
+                long startTime = System.currentTimeMillis();
+                task.execute(this.context, this::addTask);
+                long endTime = System.currentTimeMillis();
+
+                // Depending on the task, the project / test / generalization ID might
+                // only be available after the task's execution, so we have to set them
+                // again AFTER executing the task.
+                taskRecord.setProjectId(task.getProjectId());
+                taskRecord.setTestId(task.getTestId());
+                taskRecord.setGeneralizationId(task.getGeneralizationId());
+
+                taskRecord.setStatus(ProcessingStatus.SUCCEEDED);
+                taskRecord.setRuntime((endTime - startTime) / 1000.0f);
+
+                taskRecord.store();
+            } catch (Exception e) {
+                StringWriter stringWriter = new StringWriter();
+                PrintWriter printWriter = new PrintWriter(stringWriter);
+                e.printStackTrace(printWriter);
+
+                taskRecord.setProjectId(task.getProjectId());
+                taskRecord.setTestId(task.getTestId());
+                taskRecord.setGeneralizationId(task.getGeneralizationId());
+
+                taskRecord.setStatus(ProcessingStatus.FAILED);
+                taskRecord.setError(stringWriter.toString());
+
+                taskRecord.store();
+
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+    }
+}

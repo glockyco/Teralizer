@@ -12,6 +12,8 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.domain.MethodParameter;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.TaskContext;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,31 +21,38 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class TestDetectionTask extends AbstractTask {
+public class TestDetectionTask implements Task {
 
-    private final DSLContext create;
-    private final JavaParser javaParser;
-    private final Gson gson;
+    private final ProcessingStage stage;
+    private final ProjectRecord projectRecord;
 
-    public TestDetectionTask(DSLContext create, JavaParser javaParser, Gson gson) {
-        this.create = create;
-        this.javaParser = javaParser;
-        this.gson = gson;
+    public TestDetectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
+        this.stage = stage;
+        this.projectRecord = projectRecord;
     }
 
-    public TaskCallable<List<TestRecord>> create(ProjectRecord projectRecord) throws IOException {
-        this.setProjectId(projectRecord.getId());
+    @Override
+    public void execute(TaskContext context, Consumer<Task> scheduleTask) throws Exception {
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        Gson gson = context.get(TaskContext.GSON);
+        JavaParser javaParser = context.get(TaskContext.JAVA_PARSER);
 
-        return new TaskCallable<>(this, () -> this.detectTests(projectRecord));
+        List<TestRecord> testRecords = this.detectTests(create, gson, javaParser);
+
+        for (TestRecord testRecord : testRecords) {
+            scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord, testRecord));
+        }
     }
 
-    private List<TestRecord> detectTests(ProjectRecord projectRecord) throws IOException {
+    private List<TestRecord> detectTests(DSLContext create, Gson gson, JavaParser javaParser) throws IOException {
         List<TestRecord> testRecords = new ArrayList<>();
 
-        try (Stream<Path> paths = Files.walk(Paths.get(projectRecord.getPath()))) {
+        try (Stream<Path> paths = Files.walk(Paths.get(this.projectRecord.getPath()))) {
             paths
                 .filter(Files::isRegularFile)
                 .filter(path -> path.toString().endsWith(".java"))
@@ -58,8 +67,8 @@ public class TestDetectionTask extends AbstractTask {
                                     continue;
                                 }
 
-                                TestRecord testRecord = this.create.newRecord(Tables.TEST);
-                                testRecord.setProjectId(projectRecord.getId());
+                                TestRecord testRecord = create.newRecord(Tables.TEST);
+                                testRecord.setProjectId(this.projectRecord.getId());
 
                                 testRecord.setTestClassPath(testClassPath.toAbsolutePath().toString());
                                 testRecord.setTestClassPackage(testPackageDeclaration.getNameAsString());
@@ -113,11 +122,11 @@ public class TestDetectionTask extends AbstractTask {
                 });
         }
 
-        this.create.batchStore(testRecords).execute();
+        create.batchStore(testRecords).execute();
 
         // Read the inserted records to get their IDs.
-        return this.create.selectFrom(Tables.TEST)
-            .where(Tables.TEST.PROJECT_ID.equal(projectRecord.getId()))
+        return create.selectFrom(Tables.TEST)
+            .where(Tables.TEST.PROJECT_ID.equal(this.projectRecord.getId()))
             .fetch();
     }
 
@@ -148,5 +157,46 @@ public class TestDetectionTask extends AbstractTask {
         List<MethodCallExpr> assertEqualsCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().equals("assertEquals"));
         assert assertEqualsCalls.size() == 1;
         return assertEqualsCalls.get(0);
+    }
+
+    @Override
+    public ProcessingStage getStage() {
+        return this.stage;
+    }
+
+    @Override
+    public Integer getProjectId() {
+        return this.projectRecord.getId();
+    }
+
+    @Override
+    public Integer getTestId() {
+        return null;
+    }
+
+    @Override
+    public Integer getGeneralizationId() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "TestDetectionTask{" +
+            "stage=" + this.stage.getStep() +
+            ", projectRecord=" + this.projectRecord.getId() +
+            '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TestDetectionTask)) return false;
+        TestDetectionTask that = (TestDetectionTask) o;
+        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.stage, this.projectRecord.getId());
     }
 }
