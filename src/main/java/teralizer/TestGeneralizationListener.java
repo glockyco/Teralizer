@@ -23,7 +23,7 @@ import java.nio.file.Paths;
 
 public class TestGeneralizationListener extends PropertyListenerAdapter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationListener.class);
 
     private final MethodSpec testedMethodSpec;
     private final Path inputSpecificationPath;
