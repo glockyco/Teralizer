@@ -10,6 +10,7 @@ import java.util.List;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Identity;
+import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Row9;
@@ -19,6 +20,7 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.generated.DefaultSchema;
+import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.jooq.impl.DSL;
@@ -132,6 +134,11 @@ public class Task extends TableImpl<TaskRecord> {
     @Override
     public Schema getSchema() {
         return DefaultSchema.DEFAULT_SCHEMA;
+    }
+
+    @Override
+    public List<Index> getIndexes() {
+        return Arrays.<Index>asList(Indexes.IDX_TASK_GENERALIZATION_ID, Indexes.IDX_TASK_PROJECT_ID, Indexes.IDX_TASK_STAGE, Indexes.IDX_TASK_STATUS, Indexes.IDX_TASK_STEP, Indexes.IDX_TASK_TEST_ID);
     }
 
     @Override

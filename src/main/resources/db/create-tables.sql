@@ -13,6 +13,8 @@ CREATE TABLE project
     runtime   REAL  -- can be null until the project is fully processed
 );
 
+CREATE INDEX idx_project_path ON project (path);
+
 CREATE TABLE test
 (
     id                        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,6 +38,8 @@ CREATE TABLE test
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 
+CREATE INDEX idx_test_project_id ON test (project_id);
+
 CREATE TABLE generalization
 (
     id                        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,6 +50,9 @@ CREATE TABLE generalization
     generalized_class_name    TEXT    NOT NULL,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_generalization_test_id ON generalization (test_id);
+CREATE INDEX idx_generalization_tool ON generalization (tool);
 
 CREATE TABLE task
 (
@@ -62,3 +69,11 @@ CREATE TABLE task
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
     FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
 );
+
+CREATE INDEX idx_task_project_id ON task (project_id);
+CREATE INDEX idx_task_test_id ON task (test_id);
+CREATE INDEX idx_task_generalization_id ON task (generalization_id);
+
+CREATE INDEX idx_task_step ON task (step);
+CREATE INDEX idx_task_stage ON task (stage);
+CREATE INDEX idx_task_status ON task (status);

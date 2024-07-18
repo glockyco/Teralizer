@@ -10,6 +10,7 @@ import java.util.List;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Identity;
+import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Row4;
@@ -19,6 +20,7 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.generated.DefaultSchema;
+import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
@@ -103,6 +105,11 @@ public class Project extends TableImpl<ProjectRecord> {
     @Override
     public Schema getSchema() {
         return DefaultSchema.DEFAULT_SCHEMA;
+    }
+
+    @Override
+    public List<Index> getIndexes() {
+        return Arrays.<Index>asList(Indexes.IDX_PROJECT_PATH);
     }
 
     @Override
