@@ -1,6 +1,8 @@
 package teralizer.processing;
 
 public enum ProcessingStage {
+    CLEANUP(null),
+
     PROJECT_SETUP(1),
 
     PROJECT_BUILDING_ORIGINAL(2),
@@ -15,13 +17,13 @@ public enum ProcessingStage {
     PROJECT_BUILDING_GENERALIZED(9),
     TEST_EXECUTION_GENERALIZED(10);
 
-    private final int step;
+    private final Integer step;
 
-    ProcessingStage(int step) {
+    ProcessingStage(Integer step) {
         this.step = step;
     }
 
-    public int getStep() {
+    public Integer getStep() {
         return this.step;
     }
 

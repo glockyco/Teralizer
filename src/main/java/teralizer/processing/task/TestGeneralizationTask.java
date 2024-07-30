@@ -56,7 +56,7 @@ public class TestGeneralizationTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<Task> scheduleTask) throws Exception {
+    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
         VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);

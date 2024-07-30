@@ -136,16 +136,16 @@ public class TaskRecord extends UpdatableRecordImpl<TaskRecord> implements Recor
     }
 
     /**
-     * Setter for <code>task.error</code>.
+     * Setter for <code>task.info</code>.
      */
-    public void setError(String value) {
+    public void setInfo(String value) {
         set(8, value);
     }
 
     /**
-     * Getter for <code>task.error</code>.
+     * Getter for <code>task.info</code>.
      */
-    public String getError() {
+    public String getInfo() {
         return (String) get(8);
     }
 
@@ -214,7 +214,7 @@ public class TaskRecord extends UpdatableRecordImpl<TaskRecord> implements Recor
 
     @Override
     public Field<String> field9() {
-        return Task.TASK.ERROR;
+        return Task.TASK.INFO;
     }
 
     @Override
@@ -259,7 +259,7 @@ public class TaskRecord extends UpdatableRecordImpl<TaskRecord> implements Recor
 
     @Override
     public String component9() {
-        return getError();
+        return getInfo();
     }
 
     @Override
@@ -304,7 +304,7 @@ public class TaskRecord extends UpdatableRecordImpl<TaskRecord> implements Recor
 
     @Override
     public String value9() {
-        return getError();
+        return getInfo();
     }
 
     @Override
@@ -357,7 +357,7 @@ public class TaskRecord extends UpdatableRecordImpl<TaskRecord> implements Recor
 
     @Override
     public TaskRecord value9(String value) {
-        setError(value);
+        setInfo(value);
         return this;
     }
 
@@ -389,7 +389,7 @@ public class TaskRecord extends UpdatableRecordImpl<TaskRecord> implements Recor
     /**
      * Create a detached, initialised TaskRecord
      */
-    public TaskRecord(Integer id, Integer projectId, Integer testId, Integer generalizationId, Integer step, ProcessingStage stage, ProcessingStatus status, Float runtime, String error) {
+    public TaskRecord(Integer id, Integer projectId, Integer testId, Integer generalizationId, Integer step, ProcessingStage stage, ProcessingStatus status, Float runtime, String info) {
         super(Task.TASK);
 
         setId(id);
@@ -400,6 +400,6 @@ public class TaskRecord extends UpdatableRecordImpl<TaskRecord> implements Recor
         setStage(stage);
         setStatus(status);
         setRuntime(runtime);
-        setError(error);
+        setInfo(info);
     }
 }

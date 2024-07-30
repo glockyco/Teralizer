@@ -57,14 +57,14 @@ CREATE INDEX idx_generalization_tool ON generalization (tool);
 CREATE TABLE task
 (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id        INTEGER NOT NULL,
-    test_id           INTEGER, -- can be null for project-level tasks
-    generalization_id INTEGER, -- can be null for project-/test-level tasks
-    step              INTEGER NOT NULL,
-    stage             TEXT    NOT NULL,
-    status            TEXT    NOT NULL,
+    project_id        INTEGER, -- can be null for cross-project tasks (e.g., cleanup, data analysis)
+    test_id           INTEGER, -- can be null for cross-project and project-level tasks
+    generalization_id INTEGER, -- can be null for cross-project and project-/test-level tasks
+    step              INTEGER, -- can be null for one-off tasks that are not part of the normal processing flow (e.g., cleanup)
+    stage             TEXT NOT NULL,
+    status            TEXT NOT NULL,
     runtime           REAL,    -- can be null for failed tasks
-    error             TEXT,    -- can be null for successful tasks
+    info              TEXT,    -- can be null for tasks that have nothing special to report
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
     FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE

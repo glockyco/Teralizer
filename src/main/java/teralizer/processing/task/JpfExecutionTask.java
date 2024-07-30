@@ -24,7 +24,7 @@ public class JpfExecutionTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<Task> scheduleTask) {
+    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) {
         this.runJpf(this.testRecord);
 
         scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.TEST_GENERALIZATION, this.projectRecord, this.testRecord, "naive"));

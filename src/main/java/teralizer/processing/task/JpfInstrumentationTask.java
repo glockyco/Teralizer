@@ -27,7 +27,7 @@ public class JpfInstrumentationTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<Task> scheduleTask) throws Exception {
+    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);
 
         this.createDriverClassFile(velocityEngine);

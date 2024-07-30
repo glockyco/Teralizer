@@ -25,6 +25,8 @@ import java.util.Properties;
 
 public class TestGeneralizationRunner {
 
+    public static final Path DB_PATH = Paths.get("/Users/joaichberger/Projects/test-generalization/database/db.sqlite");
+
     private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
 
     public static void main(String[] args) {
@@ -56,7 +58,7 @@ public class TestGeneralizationRunner {
             "/Users/joaichberger/Projects/test-generalization-example",
         };
 
-        DSLContext create = DSL.using("jdbc:sqlite:/Users/joaichberger/Projects/test-generalization/database/db.sqlite?foreign_keys=on");
+        DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH + "?foreign_keys=on");
 
         ProcessingPipeline pipeline = new ProcessingPipeline(create);
         pipeline.getContext().put(TaskContext.DSL_CONTEXT, create);
@@ -74,6 +76,9 @@ public class TestGeneralizationRunner {
 
             JavaParser javaParser = this.createJavaParser(projectPath);
             pipeline.getContext().put(projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
+
+            //pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectPath, null, null));
+            //pipeline.execute();
 
             pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));
             pipeline.execute();

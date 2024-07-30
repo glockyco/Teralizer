@@ -22,7 +22,7 @@ public class ProjectBuildTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<Task> scheduleTask) {
+    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) {
         this.buildProject();
     }
 

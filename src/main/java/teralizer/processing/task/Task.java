@@ -6,7 +6,7 @@ import teralizer.processing.TaskContext;
 import java.util.function.Consumer;
 
 public interface Task {
-    void execute(TaskContext context, Consumer<Task> scheduleTask) throws Exception;
+    void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception;
 
     ProcessingStage getStage();
 

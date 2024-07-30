@@ -1,10 +1,13 @@
 package teralizer.processing;
 
 import org.jooq.DSLContext;
+import org.jooq.InsertQuery;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.TestGeneralizationRunner;
+import teralizer.processing.task.CleanupTask;
 import teralizer.processing.task.Task;
 
 import java.io.PrintWriter;
@@ -55,14 +58,24 @@ public class ProcessingPipeline {
             taskRecord.setTestId(task.getTestId());
             taskRecord.setGeneralizationId(task.getGeneralizationId());
 
-            taskRecord.store();
+            // The DB file might not have been created or might haven been removed by a `CleanupTask`.
+            // The `ProcessingPipeline` should still continue as usual in such a case to:
+            // (i)  execute tasks that do NOT require a database connection, and
+            // (ii) log errors that occur for tasks that DO require a database connection.
+            // The `ProcessingPipeline` should, however, NOT recreate a missing database
+            // to ensure that the cleaned up state is preserved after a `CleanupTask`.
+            if (TestGeneralizationRunner.DB_PATH.toFile().exists()) {
+                taskRecord.store();
+            }
 
             try {
+                LOGGER.atDebug().log("Executing task {}.", task);
+
                 // We are only tracking task execution time here.
                 // Total processing time of a project / test is tracked elsewhere,
                 // so we don't have to include the runtime of the DB communication here.
                 long startTime = System.currentTimeMillis();
-                task.execute(this.context, this::addTask);
+                task.execute(this.context, taskRecord::setInfo, this::addTask);
                 long endTime = System.currentTimeMillis();
 
                 // Depending on the task, the project / test / generalization ID might
@@ -75,7 +88,7 @@ public class ProcessingPipeline {
                 taskRecord.setStatus(ProcessingStatus.SUCCEEDED);
                 taskRecord.setRuntime((endTime - startTime) / 1000.0f);
 
-                taskRecord.store();
+                LOGGER.atDebug().log("Task {} successfully executed.", task);
             } catch (Exception e) {
                 StringWriter stringWriter = new StringWriter();
                 PrintWriter printWriter = new PrintWriter(stringWriter);
@@ -86,11 +99,21 @@ public class ProcessingPipeline {
                 taskRecord.setGeneralizationId(task.getGeneralizationId());
 
                 taskRecord.setStatus(ProcessingStatus.FAILED);
-                taskRecord.setError(stringWriter.toString());
+                taskRecord.setInfo(stringWriter.toString());
 
-                taskRecord.store();
+                LOGGER.atError().log(e.getMessage(), e);
+            }
 
-                LOGGER.error(e.getMessage(), e);
+            if (TestGeneralizationRunner.DB_PATH.toFile().exists()) {
+                // When executing a test- or generalization-level `CleanupTask`, the corresponding `TaskRecord` is
+                // deleted. Forcing an insert in such a case ensures that the task is persisted in the DB again at one
+                // level higher (project- or test-level).
+                if (!this.create.fetchExists(this.create.select().from(Tables.TASK).where(Tables.TASK.ID.eq(taskRecord.getId())))) {
+                    taskRecord.changed(true);
+                    taskRecord.insert();
+                } else {
+                    taskRecord.update();
+                }
             }
         }
     }

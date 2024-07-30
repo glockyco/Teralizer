@@ -26,7 +26,7 @@ public class ProjectSetupTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<Task> scheduleTask) {
+    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) {
         this.fetchClasspath();
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, this.projectRecord));

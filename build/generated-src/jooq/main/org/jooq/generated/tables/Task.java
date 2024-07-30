@@ -61,7 +61,7 @@ public class Task extends TableImpl<TaskRecord> {
     /**
      * The column <code>task.project_id</code>.
      */
-    public final TableField<TaskRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<TaskRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>task.test_id</code>.
@@ -76,7 +76,7 @@ public class Task extends TableImpl<TaskRecord> {
     /**
      * The column <code>task.step</code>.
      */
-    public final TableField<TaskRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<TaskRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>task.stage</code>.
@@ -94,9 +94,9 @@ public class Task extends TableImpl<TaskRecord> {
     public final TableField<TaskRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL, this, "");
 
     /**
-     * The column <code>task.error</code>.
+     * The column <code>task.info</code>.
      */
-    public final TableField<TaskRecord, String> ERROR = createField(DSL.name("error"), SQLDataType.CLOB, this, "");
+    public final TableField<TaskRecord, String> INFO = createField(DSL.name("info"), SQLDataType.CLOB, this, "");
 
     private Task(Name alias, Table<TaskRecord> aliased) {
         this(alias, aliased, null);
