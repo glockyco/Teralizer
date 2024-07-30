@@ -76,7 +76,7 @@ public class TestGeneralizationTask implements Task {
         String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName();
         Path generalizedClasspath = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get("teralizer", this.tool, generalizedClassName + ".java"));
 
-        generalizationRecord.setGeneralizedClassPath(generalizedClasspath.toAbsolutePath().toString());
+        generalizationRecord.setGeneralizedClassPath(generalizedClasspath.toString());
         generalizationRecord.setGeneralizedClassPackage(this.testRecord.getTestClassPackage() + ".teralizer." + this.tool);
         generalizationRecord.setGeneralizedClassName(generalizedClassName);
 

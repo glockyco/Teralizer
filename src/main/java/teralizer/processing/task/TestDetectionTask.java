@@ -71,7 +71,7 @@ public class TestDetectionTask implements Task {
                                 TestRecord testRecord = create.newRecord(Tables.TEST);
                                 testRecord.setProjectId(this.projectRecord.getId());
 
-                                testRecord.setTestClassPath(testClassPath.toAbsolutePath().toString());
+                                testRecord.setTestClassPath(testClassPath.toString());
                                 testRecord.setTestClassPackage(testPackageDeclaration.getNameAsString());
                                 testRecord.setTestClassName(testClassDeclaration.getNameAsString());
                                 testRecord.setTestMethodName(testMethodDeclaration.getNameAsString());
@@ -82,9 +82,9 @@ public class TestDetectionTask implements Task {
                                 ClassOrInterfaceDeclaration testedClassDeclaration = testedMethodDeclaration.findAncestor(ClassOrInterfaceDeclaration.class).get();
                                 CompilationUnit testedClassCompilationUnit = testedClassDeclaration.findCompilationUnit().get();
                                 PackageDeclaration testedPackageDeclaration = testedClassCompilationUnit.getPackageDeclaration().orElseGet(PackageDeclaration::new);
-                                Path testedClassPath = testedClassCompilationUnit.getStorage().get().getPath();
+                                Path testedClassPath = Paths.get(System.getProperty("user.dir")).relativize(testedClassCompilationUnit.getStorage().get().getPath());
 
-                                testRecord.setTestedClassPath(testedClassPath.toAbsolutePath().toString());
+                                testRecord.setTestedClassPath(testedClassPath.toString());
                                 testRecord.setTestedClassPackage(testedPackageDeclaration.getNameAsString());
                                 testRecord.setTestedClassName(testedClassDeclaration.getNameAsString());
 
@@ -99,7 +99,7 @@ public class TestDetectionTask implements Task {
                                 String driverClassName = "_" + testRecord.getTestClassName() + "_Driver_" + testRecord.getTestMethodName();
                                 Path driverClassPath = testClassPath.getParent().resolve(Paths.get("teralizer", driverClassName + ".java"));
 
-                                testRecord.setDriverClassPath(driverClassPath.toAbsolutePath().toString());
+                                testRecord.setDriverClassPath(driverClassPath.toString());
                                 testRecord.setDriverClassPackage(testRecord.getTestClassPackage() + ".teralizer");
                                 testRecord.setDriverClassName(driverClassName);
 
@@ -110,9 +110,9 @@ public class TestDetectionTask implements Task {
                                 Path inputSpecificationPath = Paths.get("data", testMethodQualifiedName + ".jpf.input.json");
                                 Path outputSpecificationPath = Paths.get("data", testMethodQualifiedName + ".jpf.output.json");
 
-                                testRecord.setJpfConfigPath(jpfConfigFilePath.toAbsolutePath().toString());
-                                testRecord.setInputSpecificationPath(inputSpecificationPath.toAbsolutePath().toString());
-                                testRecord.setOutputSpecificationPath(outputSpecificationPath.toAbsolutePath().toString());
+                                testRecord.setJpfConfigPath(jpfConfigFilePath.toString());
+                                testRecord.setInputSpecificationPath(inputSpecificationPath.toString());
+                                testRecord.setOutputSpecificationPath(outputSpecificationPath.toString());
 
                                 testRecords.add(testRecord);
                             }

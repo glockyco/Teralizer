@@ -25,7 +25,7 @@ import java.util.Properties;
 
 public class TestGeneralizationRunner {
 
-    public static final Path DB_PATH = Paths.get("/Users/joaichberger/Projects/test-generalization/database/db.sqlite");
+    public static final Path DB_PATH = Paths.get("database/db.sqlite");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
 
@@ -55,10 +55,10 @@ public class TestGeneralizationRunner {
         //   the analysis tasks after ALL projects have been processed / generalized.
 
         String[] projectDirectories = new String[]{
-            "/Users/joaichberger/Projects/test-generalization-example",
+            "../test-generalization-example",
         };
 
-        DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH + "?foreign_keys=on");
+        DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on");
 
         ProcessingPipeline pipeline = new ProcessingPipeline(create);
         pipeline.getContext().put(TaskContext.DSL_CONTEXT, create);
