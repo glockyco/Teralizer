@@ -66,9 +66,12 @@ public class TestGeneralizationRunner {
         pipeline.getContext().put(TaskContext.VELOCITY_ENGINE, this.createVelocityEngine());
 
         for (String projectDirectory : projectDirectories) {
-            long startTime = System.currentTimeMillis();
-
             Path projectPath = Paths.get(projectDirectory);
+
+            pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectPath, null, null));
+            pipeline.execute();
+
+            long startTime = System.currentTimeMillis();
 
             ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
             projectRecord.setPath(projectPath.toString());
@@ -76,9 +79,6 @@ public class TestGeneralizationRunner {
 
             JavaParser javaParser = this.createJavaParser(projectPath);
             pipeline.getContext().put(projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
-
-            //pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectPath, null, null));
-            //pipeline.execute();
 
             pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));
             pipeline.execute();
