@@ -41,7 +41,7 @@ public class JpfInstrumentationTask implements Task {
         VelocityContext context = new VelocityContext();
         context.put("driverPackageName", this.testRecord.getDriverClassPackage());
         context.put("driverClassName", this.testRecord.getDriverClassName());
-        context.put("testClassQualifiedName", this.testRecord.getTestedClassPackage() + "." + this.testRecord.getTestClassName());
+        context.put("testClassQualifiedName", this.testRecord.getTestClassPackage() + "." + this.testRecord.getTestClassName());
         context.put("testClassName", this.testRecord.getTestClassName());
         context.put("testMethodName", this.testRecord.getTestMethodName());
 
