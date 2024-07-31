@@ -1,7 +1,9 @@
-rootProject.name = 'test-generalization'
+rootProject.name = 'teralizer'
 
 include 'jpf-core'
 include 'jpf-symbc'
+include 'jpf-nhandler'
 
 project(':jpf-core').projectDir = new File('jpf-symbc/jpf-core')
 project(':jpf-symbc').projectDir = new File('jpf-symbc/jpf-symbc')
+project(':jpf-nhandler').projectDir = new File('jpf-nhandler')

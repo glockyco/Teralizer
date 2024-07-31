@@ -17,12 +17,14 @@ repositories {
 dependencies {
     def jpfCoreLibs = fileTree("${project(':jpf-core').buildDir}") { include '*.jar' }
     def jpfSymbcLibs = fileTree("${project(':jpf-symbc').buildDir}") { include '*.jar' }
+    def jpfNhandlerLibs = fileTree("${project(':jpf-nhandler').buildDir}") { include '*.jar' }
 
     ant.importBuild 'build-properties.xml'
     def jpfCoreNativeLibs = files(ant.properties['jpf-core.native_classpath'].split(';'))
     def jpfSymbcNativeLibs = files(ant.properties['jpf-symbc.native_classpath'].split(';'))
+    def jpfNhandlerNativeLibs = files(ant.properties['jpf-nhandler.native_classpath'].split(';'))
 
-    def libs = jpfCoreLibs + jpfCoreNativeLibs + jpfSymbcLibs + jpfSymbcNativeLibs
+    def libs = jpfCoreLibs + jpfCoreNativeLibs + jpfSymbcLibs + jpfSymbcNativeLibs + jpfNhandlerLibs + jpfNhandlerNativeLibs
 
     implementation libs
     testImplementation libs
@@ -52,6 +54,7 @@ dependencies {
 compileJava {
     dependsOn(':jpf-core:buildJars')
     dependsOn(':jpf-symbc:buildJars')
+    dependsOn(':jpf-nhandler:jar')
 }
 
 test {

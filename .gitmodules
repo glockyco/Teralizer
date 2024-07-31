@@ -2,3 +2,7 @@
 	path = jpf-symbc
 	url = git@github.com:glockyco/jpf-symbc.git
 	branch = gradle-build
+[submodule "jpf-nhandler"]
+	path = jpf-nhandler
+	url = git@github.com:glockyco/jpf-nhandler.git
+	branch = master
