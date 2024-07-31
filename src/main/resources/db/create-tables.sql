@@ -23,7 +23,7 @@ CREATE TABLE test
     test_class_package        TEXT    NOT NULL,
     test_class_name           TEXT    NOT NULL,
     test_method_name          TEXT    NOT NULL,
-    tested_class_path         TEXT    NOT NULL,
+    tested_class_path         TEXT, -- can be null for JDK types such as java.lang.String
     tested_class_package      TEXT    NOT NULL,
     tested_class_name         TEXT    NOT NULL,
     tested_method_name        TEXT    NOT NULL,

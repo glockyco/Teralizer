@@ -6,6 +6,7 @@ import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.google.gson.Gson;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
@@ -23,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TestDetectionTask implements Task {
@@ -77,24 +77,27 @@ public class TestDetectionTask implements Task {
                                 testRecord.setTestMethodName(testMethodDeclaration.getNameAsString());
 
                                 MethodCallExpr testedMethodCall = findTestedMethodCall(testMethodDeclaration);
-                                MethodDeclaration testedMethodDeclaration = testedMethodCall.resolve().toAst(MethodDeclaration.class).get();
+                                ResolvedMethodDeclaration testedMethodDeclaration = testedMethodCall.resolve();
 
-                                ClassOrInterfaceDeclaration testedClassDeclaration = testedMethodDeclaration.findAncestor(ClassOrInterfaceDeclaration.class).get();
-                                CompilationUnit testedClassCompilationUnit = testedClassDeclaration.findCompilationUnit().get();
-                                PackageDeclaration testedPackageDeclaration = testedClassCompilationUnit.getPackageDeclaration().orElseGet(PackageDeclaration::new);
-                                Path testedClassPath = Paths.get(System.getProperty("user.dir")).relativize(testedClassCompilationUnit.getStorage().get().getPath());
+                                String testedClassPath = testedMethodDeclaration.toAst()
+                                    .flatMap(m -> m.findCompilationUnit()
+                                        .flatMap(cu -> cu.getStorage()
+                                            .map(s -> Paths.get(System.getProperty("user.dir")).relativize(s.getPath()).toString())))
+                                    .orElse(null);
 
-                                testRecord.setTestedClassPath(testedClassPath.toString());
-                                testRecord.setTestedClassPackage(testedPackageDeclaration.getNameAsString());
-                                testRecord.setTestedClassName(testedClassDeclaration.getNameAsString());
+                                List<MethodParameter> testedMethodParameters = new ArrayList<>();
+                                for (int i = 0; i < testedMethodDeclaration.getNumberOfParams(); i++) {
+                                    String paramType = testedMethodDeclaration.getParam(i).describeType();
+                                    String paramName = testedMethodDeclaration.getParam(i).getName();
+                                    testedMethodParameters.add(new MethodParameter(paramType, paramName));
+                                }
 
-                                List<MethodParameter> testedMethodParameters = testedMethodDeclaration.getParameters().stream()
-                                    .map(p -> new MethodParameter(p.getTypeAsString(), p.getNameAsString()))
-                                    .collect(Collectors.toList());
-
-                                testRecord.setTestedMethodName(testedMethodDeclaration.getNameAsString());
+                                testRecord.setTestedClassPath(testedClassPath);
+                                testRecord.setTestedClassPackage(testedMethodDeclaration.getPackageName());
+                                testRecord.setTestedClassName(testedMethodDeclaration.getClassName());
+                                testRecord.setTestedMethodName(testedMethodDeclaration.getName());
                                 testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
-                                testRecord.setTestedMethodReturnType(testedMethodDeclaration.getTypeAsString());
+                                testRecord.setTestedMethodReturnType(testedMethodDeclaration.getReturnType().describe());
 
                                 String driverClassName = "_" + testRecord.getTestClassName() + "_Driver_" + testRecord.getTestMethodName();
                                 Path driverClassPath = testClassPath.getParent().resolve(Paths.get("teralizer", driverClassName + ".java"));

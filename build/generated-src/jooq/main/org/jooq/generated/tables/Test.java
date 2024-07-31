@@ -82,7 +82,7 @@ public class Test extends TableImpl<TestRecord> {
     /**
      * The column <code>test.tested_class_path</code>.
      */
-    public final TableField<TestRecord, String> TESTED_CLASS_PATH = createField(DSL.name("tested_class_path"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> TESTED_CLASS_PATH = createField(DSL.name("tested_class_path"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>test.tested_class_package</code>.
