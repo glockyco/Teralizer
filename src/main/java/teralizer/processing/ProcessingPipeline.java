@@ -1,13 +1,11 @@
 package teralizer.processing;
 
 import org.jooq.DSLContext;
-import org.jooq.InsertQuery;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.TestGeneralizationRunner;
-import teralizer.processing.task.CleanupTask;
 import teralizer.processing.task.Task;
 
 import java.io.PrintWriter;
