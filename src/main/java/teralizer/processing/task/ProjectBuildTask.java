@@ -1,5 +1,6 @@
 package teralizer.processing.task;
 
+import org.apache.maven.cli.MavenCli;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -8,6 +9,9 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -27,12 +31,26 @@ public class ProjectBuildTask implements Task {
     }
 
     private void buildProject() {
+        Path projectPath = Paths.get(this.projectRecord.getPath());
+        if (Files.exists(projectPath.resolve("pom.xml"))) {
+            this.buildMavenProject();
+        } else if (Files.exists(projectPath.resolve("build.gradle"))) {
+            this.buildGradleProject();
+        } else {
+            throw new RuntimeException("Cannot build project " + projectPath + ". No pom.xml / build.gradle found.");
+        }
+    }
+
+    private void buildMavenProject() {
+        MavenCli cli = new MavenCli();
+        cli.doMain(new String[]{"compile", "test-compile"}, this.projectRecord.getPath(), System.out, System.err);
+    }
+
+    private void buildGradleProject() {
         GradleConnector connector = GradleConnector.newConnector();
         connector.forProjectDirectory(new File(this.projectRecord.getPath()));
 
         try (ProjectConnection connection = connector.connect()) {
-            // @TODO: Add support for Maven projects?
-            // @TODO: Gracefully handle build failures.
             BuildLauncher build = connection.newBuild();
             build.forTasks("compileJava", "compileTestJava");
             build.run();

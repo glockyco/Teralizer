@@ -46,7 +46,6 @@ public class TestGeneralizationRunner {
     // @TODO: Store runtime information for each generalized test.
     // @TODO: Compare how much longer test execution takes with JPF compared to "normally".
     // @TODO: Decide how to deal with files that are already created (perhaps from earlier runs).
-    // @TODO: Add support for Maven projects.
 
     public void run() {
         // @TODO: Get project directories from input args.
@@ -56,6 +55,7 @@ public class TestGeneralizationRunner {
 
         String[] projectDirectories = new String[]{
             "../test-generalization-example",
+            "../test-generalization-example-maven",
         };
 
         DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on");
