@@ -44,17 +44,17 @@ public class ProcessingPipeline {
 
     public void execute() {
         while (!this.queuedTasks.isEmpty()) {
-            Task task = this.queuedTasks.poll();
-            ProcessingStage stage = task.getStage();
+            Task currentTask = this.queuedTasks.poll();
+            ProcessingStage stage = currentTask.getStage();
 
             TaskRecord taskRecord = this.create.newRecord(Tables.TASK);
             taskRecord.setStep(stage.getStep());
             taskRecord.setStage(stage);
             taskRecord.setStatus(ProcessingStatus.IN_PROGRESS);
 
-            taskRecord.setProjectId(task.getProjectId());
-            taskRecord.setTestId(task.getTestId());
-            taskRecord.setGeneralizationId(task.getGeneralizationId());
+            taskRecord.setProjectId(currentTask.getProjectId());
+            taskRecord.setTestId(currentTask.getTestId());
+            taskRecord.setGeneralizationId(currentTask.getGeneralizationId());
 
             // The DB file might not have been created or might haven been removed by a `CleanupTask`.
             // The `ProcessingPipeline` should still continue as usual in such a case to:
@@ -67,39 +67,53 @@ public class ProcessingPipeline {
             }
 
             try {
-                LOGGER.atDebug().log("Executing task {}.", task);
+                LOGGER.atDebug().log("Executing task {}.", currentTask);
 
                 // We are only tracking task execution time here.
                 // Total processing time of a project / test is tracked elsewhere,
                 // so we don't have to include the runtime of the DB communication here.
                 long startTime = System.currentTimeMillis();
-                task.execute(this.context, taskRecord::setInfo, this::addTask);
+                currentTask.execute(this.context, taskRecord::setInfo, this::addTask);
                 long endTime = System.currentTimeMillis();
 
                 // Depending on the task, the project / test / generalization ID might
                 // only be available after the task's execution, so we have to set them
                 // again AFTER executing the task.
-                taskRecord.setProjectId(task.getProjectId());
-                taskRecord.setTestId(task.getTestId());
-                taskRecord.setGeneralizationId(task.getGeneralizationId());
+                taskRecord.setProjectId(currentTask.getProjectId());
+                taskRecord.setTestId(currentTask.getTestId());
+                taskRecord.setGeneralizationId(currentTask.getGeneralizationId());
 
                 taskRecord.setStatus(ProcessingStatus.SUCCEEDED);
                 taskRecord.setRuntime((endTime - startTime) / 1000.0f);
 
-                LOGGER.atDebug().log("Task {} successfully executed.", task);
+                LOGGER.atDebug().log("Task {} successfully executed.", currentTask);
             } catch (Exception e) {
                 StringWriter stringWriter = new StringWriter();
                 PrintWriter printWriter = new PrintWriter(stringWriter);
                 e.printStackTrace(printWriter);
 
-                taskRecord.setProjectId(task.getProjectId());
-                taskRecord.setTestId(task.getTestId());
-                taskRecord.setGeneralizationId(task.getGeneralizationId());
+                taskRecord.setProjectId(currentTask.getProjectId());
+                taskRecord.setTestId(currentTask.getTestId());
+                taskRecord.setGeneralizationId(currentTask.getGeneralizationId());
 
                 taskRecord.setStatus(ProcessingStatus.FAILED);
                 taskRecord.setInfo(stringWriter.toString());
 
                 LOGGER.atError().log(e.getMessage(), e);
+
+                this.queuedTasks.removeIf(queuedTask -> {
+                    // When a task fails, any scheduled tasks that depend on it should be removed from the queue.
+                    boolean hasMatchingProjectId = currentTask.getProjectId() == null || currentTask.getProjectId().equals(queuedTask.getProjectId());
+                    boolean hasMatchingTestId = currentTask.getTestId() == null || currentTask.getTestId().equals(queuedTask.getTestId());
+                    boolean hasMatchingGeneralizationId = currentTask.getGeneralizationId() == null || currentTask.getGeneralizationId().equals(queuedTask.getGeneralizationId());
+
+                    if (hasMatchingProjectId && hasMatchingTestId && hasMatchingGeneralizationId) {
+                        LOGGER.atDebug().log("Task {} dropped from queue.", queuedTask);
+                        return true;
+                    }
+
+                    return false;
+                });
             }
 
             if (TestGeneralizationRunner.DB_PATH.toFile().exists()) {
