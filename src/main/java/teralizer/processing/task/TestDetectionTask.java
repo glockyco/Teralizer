@@ -5,11 +5,14 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.google.gson.Gson;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.domain.MethodParameter;
@@ -60,6 +63,7 @@ public class TestDetectionTask implements Task {
                 .forEach(testClassPath -> {
                     try {
                         CompilationUnit testCompilationUnit = javaParser.parse(testClassPath.toFile()).getResult().get();
+                        String[] sourceCodeLines = testCompilationUnit.toString().split("\\R");
                         PackageDeclaration testPackageDeclaration = testCompilationUnit.getPackageDeclaration().orElseGet(PackageDeclaration::new);
 
                         for (ClassOrInterfaceDeclaration testClassDeclaration : testCompilationUnit.findAll(ClassOrInterfaceDeclaration.class)) {
@@ -117,6 +121,29 @@ public class TestDetectionTask implements Task {
                                 testRecord.setInputSpecificationPath(inputSpecificationPath.toString());
                                 testRecord.setOutputSpecificationPath(outputSpecificationPath.toString());
 
+                                testRecord.store();
+
+                                List<MethodCallExpr> assertMethodCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().startsWith("assert"));
+                                for (MethodCallExpr assertMethodCall : assertMethodCalls) {
+                                    String methodName = assertMethodCall.getNameAsString();
+                                    String sourceCode = assertMethodCall.toString();
+
+                                    List<MethodParameter> assertArguments = new ArrayList<>();
+                                    for (Expression argument : assertMethodCall.getArguments()) {
+                                        assert argument instanceof NameExpr;
+                                        String paramType = argument.calculateResolvedType().describe();
+                                        String paramName = ((NameExpr) argument).getNameAsString();
+                                        assertArguments.add(new MethodParameter(paramType, paramName));
+                                    }
+
+                                    AssertionRecord assertionRecord = create.newRecord(Tables.ASSERTION);
+                                    assertionRecord.setTestId(testRecord.getId());
+                                    assertionRecord.setMethodName(methodName);
+                                    assertionRecord.setMethodArgumentTypes(gson.toJson(assertArguments));
+                                    assertionRecord.setSourceCode(sourceCode);
+                                    assertionRecord.store();
+                                }
+
                                 testRecords.add(testRecord);
                             }
                         }
@@ -126,18 +153,14 @@ public class TestDetectionTask implements Task {
                 });
         }
 
-        create.batchStore(testRecords).execute();
-
-        // Read the inserted records to get their IDs.
-        return create.selectFrom(Tables.TEST)
-            .where(Tables.TEST.PROJECT_ID.equal(this.projectRecord.getId()))
-            .fetch();
+        return testRecords;
     }
 
     public static MethodCallExpr findTestedMethodCall(MethodDeclaration testMethodDeclaration) {
         MethodCallExpr testedMethodCall = null;
 
         // @TODO: Use more sophisticated detection of tested method.
+        //   - Check whether https://github.com/joernio/joern can be useful.
 
         List<MethodCallExpr> methodCalls = testMethodDeclaration.findAll(MethodCallExpr.class);
         for (MethodCallExpr methodCall : methodCalls) {
@@ -157,6 +180,7 @@ public class TestDetectionTask implements Task {
         // @TODO: Use more sophisticated detection of generalizable assertEquals calls.
         //   What we want is the assertEquals that checks the output of the tested method.
         //   To (more) reliably identify this, we should probably do, at least, some control flow analysis.
+        //   Check whether https://github.com/joernio/joern can be useful.
 
         List<MethodCallExpr> assertEqualsCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().equals("assertEquals"));
         assert assertEqualsCalls.size() == 1;

@@ -4,6 +4,7 @@
 package org.jooq.generated;
 
 
+import org.jooq.generated.tables.Assertion;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
@@ -16,6 +17,11 @@ import org.jooq.generated.tables.Test;
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables {
+
+    /**
+     * The table <code>assertion</code>.
+     */
+    public static final Assertion ASSERTION = Assertion.ASSERTION;
 
     /**
      * The table <code>generalization</code>.

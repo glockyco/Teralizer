@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.jooq.Catalog;
 import org.jooq.Table;
+import org.jooq.generated.tables.Assertion;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
@@ -29,6 +30,11 @@ public class DefaultSchema extends SchemaImpl {
      * The reference instance of <code>DEFAULT_SCHEMA</code>
      */
     public static final DefaultSchema DEFAULT_SCHEMA = new DefaultSchema();
+
+    /**
+     * The table <code>assertion</code>.
+     */
+    public final Assertion ASSERTION = Assertion.ASSERTION;
 
     /**
      * The table <code>generalization</code>.
@@ -71,6 +77,7 @@ public class DefaultSchema extends SchemaImpl {
     @Override
     public final List<Table<?>> getTables() {
         return Arrays.<Table<?>>asList(
+            Assertion.ASSERTION,
             Generalization.GENERALIZATION,
             Project.PROJECT,
             SqliteSequence.SQLITE_SEQUENCE,

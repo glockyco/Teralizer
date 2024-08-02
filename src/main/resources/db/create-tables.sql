@@ -2,6 +2,7 @@
 
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS generalization;
+DROP TABLE IF EXISTS assertion;
 DROP TABLE IF EXISTS test;
 DROP TABLE IF EXISTS project;
 
@@ -39,6 +40,18 @@ CREATE TABLE test
 );
 
 CREATE INDEX idx_test_project_id ON test (project_id);
+
+CREATE TABLE assertion
+(
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    test_id               INTEGER NOT NULL,
+    method_name           TEXT    NOT NULL,
+    method_argument_types TEXT    NOT NULL,
+    source_code           TEXT    NOT NULL,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_assertion_test_id ON assertion (test_id);
 
 CREATE TABLE generalization
 (
