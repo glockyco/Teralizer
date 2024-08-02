@@ -1,8 +1,8 @@
 package teralizer.domain;
 
 public class MethodParameter {
-    private String type;
-    private String name;
+    private final String type;
+    private final String name;
 
     public MethodParameter(String type, String name) {
         this.type = type;
@@ -10,10 +10,10 @@ public class MethodParameter {
     }
 
     public String getType() {
-        return type;
+        return this.type;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 }
