@@ -1,11 +1,5 @@
 package teralizer;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.google.gson.Gson;
 import org.apache.velocity.app.VelocityEngine;
 import org.jooq.DSLContext;
@@ -77,9 +71,6 @@ public class TestGeneralizationRunner {
             projectRecord.setPath(projectPath.toString());
             projectRecord.store();
 
-            JavaParser javaParser = this.createJavaParser(projectPath);
-            pipeline.getContext().put(projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
-
             pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));
             pipeline.execute();
 
@@ -110,22 +101,6 @@ public class TestGeneralizationRunner {
         // @TODO: Calculate how often multiple tests cover the same path / partition.
 
         // @TODO: Evaluate simplification of inputs + outputs.
-    }
-
-    private JavaParser createJavaParser(Path projectPath) {
-        Path mainSrcPath = projectPath.resolve("src/main/java");
-        Path testSrcPath = projectPath.resolve("src/test/java");
-
-        CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver(
-            new JavaParserTypeSolver(mainSrcPath),
-            new JavaParserTypeSolver(testSrcPath),
-            new ReflectionTypeSolver()
-        );
-
-        ParserConfiguration configuration = new ParserConfiguration();
-        configuration.setSymbolResolver(new JavaSymbolSolver(combinedTypeSolver));
-
-        return new JavaParser(configuration);
     }
 
     private VelocityEngine createVelocityEngine() {

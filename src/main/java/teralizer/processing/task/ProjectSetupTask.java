@@ -1,5 +1,11 @@
 package teralizer.processing.task;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParserConfiguration;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ModelBuilder;
 import org.gradle.tooling.ProjectConnection;
@@ -48,6 +54,9 @@ public class ProjectSetupTask implements Task {
         }
 
         this.projectRecord.store();
+
+        JavaParser javaParser = this.createJavaParser(projectPath);
+        context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
@@ -130,6 +139,22 @@ public class ProjectSetupTask implements Task {
         }
 
         return String.join(":", classpathElements);
+    }
+
+    private JavaParser createJavaParser(Path projectPath) {
+        Path mainSrcPath = projectPath.resolve("src/main/java");
+        Path testSrcPath = projectPath.resolve("src/test/java");
+
+        CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver(
+            new JavaParserTypeSolver(mainSrcPath),
+            new JavaParserTypeSolver(testSrcPath),
+            new ReflectionTypeSolver()
+        );
+
+        ParserConfiguration configuration = new ParserConfiguration();
+        configuration.setSymbolResolver(new JavaSymbolSolver(combinedTypeSolver));
+
+        return new JavaParser(configuration);
     }
 
     @Override
