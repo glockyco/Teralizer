@@ -49,7 +49,7 @@ public class TestDetectionTask implements Task {
         List<TestRecord> testRecords = this.detectTests(create, gson, javaParser);
 
         for (TestRecord testRecord : testRecords) {
-            scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord, testRecord));
+            scheduleTask.accept(new TestFilteringTask(ProcessingStage.TEST_FILTERING, this.projectRecord, testRecord));
         }
     }
 

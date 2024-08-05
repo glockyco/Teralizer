@@ -1,0 +1,88 @@
+package teralizer.processing.task;
+
+import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.ProjectRecord;
+import org.jooq.generated.tables.records.TestRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.TaskContext;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
+
+public class TestFilteringTask implements Task {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestFilteringTask.class);
+
+    private final ProcessingStage stage;
+    private final ProjectRecord projectRecord;
+    private final TestRecord testRecord;
+
+    public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
+        this.stage = stage;
+        this.projectRecord = projectRecord;
+        this.testRecord = testRecord;
+    }
+
+    @Override
+    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        // Read the inserted records to get their IDs.
+        List<AssertionRecord> assertions = create.selectFrom(Tables.ASSERTION)
+            .where(Tables.ASSERTION.TEST_ID.equal(this.testRecord.getId()))
+            .fetch();
+
+        if (assertions.size() > 1) {
+            reportInfo.accept("Filtering due to assertion.size() > 1.");
+            LOGGER.atDebug().log("Filtering test with ID {} due to assertions.size() > 1.", this.testRecord.getId());
+        } else {
+            scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord, this.testRecord));
+        }
+    }
+
+    @Override
+    public ProcessingStage getStage() {
+        return this.stage;
+    }
+
+    @Override
+    public Integer getProjectId() {
+        return this.projectRecord.getId();
+    }
+
+    @Override
+    public Integer getTestId() {
+        return this.testRecord.getId();
+    }
+
+    @Override
+    public Integer getGeneralizationId() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "TestFilteringTask{" +
+            "stage=" + this.stage +
+            ", projectRecord=" + this.projectRecord.getId() +
+            ", testRecord=" + this.testRecord.getId() +
+            '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TestFilteringTask)) return false;
+        TestFilteringTask that = (TestFilteringTask) o;
+        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(this.testRecord.getId(), that.testRecord.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.stage, this.projectRecord.getId(), this.testRecord.getId());
+    }
+}
