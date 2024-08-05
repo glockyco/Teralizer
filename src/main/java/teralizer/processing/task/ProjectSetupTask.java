@@ -107,9 +107,9 @@ public class ProjectSetupTask implements Task {
         classpathElements.add(Paths.get(projectPath.toString(), "target", "test-classes").toString());
 
         Path workingPath = Paths.get(System.getProperty("user.dir"));
-        Arrays.stream(classpath.split(":")).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
+        Arrays.stream(classpath.split(File.pathSeparator)).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
 
-        return String.join(":", classpathElements);
+        return String.join(File.pathSeparator, classpathElements);
     }
 
     private String fetchGradleClasspath(Path projectPath) {
@@ -137,7 +137,7 @@ public class ProjectSetupTask implements Task {
             project.getClasspath().forEach(d -> classpathElements.add(d.getFile().toString()));
         }
 
-        return String.join(":", classpathElements);
+        return String.join(File.pathSeparator, classpathElements);
     }
 
     private JavaParser createJavaParser(Path projectPath) {
