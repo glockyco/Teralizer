@@ -1,6 +1,7 @@
 package teralizer.processing.task;
 
 import gov.nasa.jpf.Config;
+import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
@@ -8,8 +9,10 @@ import teralizer.TestGeneralizationListener;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class JpfExecutionTask implements Task {
 
@@ -36,6 +39,15 @@ public class JpfExecutionTask implements Task {
         JPF jpf = new JPF(config);
         jpf.addListener(new TestGeneralizationListener(config));
         jpf.run();
+
+        if (jpf.foundErrors()) {
+            List<Error> errors = jpf.getSearchErrors();
+            String errorMessage = "Identified " + errors.size() + " error(s) during JPF execution.\n\n--\n\n" +
+                jpf.getSearchErrors().stream().map(
+                    e -> e.getDescription() + "\n\n" + e.getDetails()
+                ).collect(Collectors.joining("\n--\n\n"));
+            throw new RuntimeException(errorMessage);
+        }
     }
 
     @Override
