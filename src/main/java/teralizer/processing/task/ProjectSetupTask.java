@@ -68,17 +68,15 @@ public class ProjectSetupTask implements Task {
         StringBuilder output = new StringBuilder();
         StringBuilder error = new StringBuilder();
 
-        // Reading console output from a separate process is not the cleanest solution,
-        // but anything based on the MavenCli etc. classes just did not work at all,
-        // seemingly due missing environment settings / information / dependencies.
-
         ProcessBuilder processBuilder = new ProcessBuilder("mvn", "dependency:build-classpath");
         processBuilder.directory(projectPath.toFile());
         Process process = processBuilder.start();
 
         try (
-            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))
+            InputStreamReader outputStream = new InputStreamReader(process.getInputStream());
+            BufferedReader outputReader = new BufferedReader(outputStream);
+            InputStreamReader errorStream = new InputStreamReader(process.getErrorStream());
+            BufferedReader errorReader = new BufferedReader(errorStream)
         ) {
             String line;
             String previousLine = "";
@@ -93,12 +91,13 @@ public class ProjectSetupTask implements Task {
             error.append(errorReader.lines().collect(Collectors.joining("\n")));
         }
 
-        process.waitFor();
+        int exitCode = process.waitFor();
 
-        LOGGER.atDebug().log(output.toString());
-
-        if (!error.toString().isEmpty()) {
-            throw new RuntimeException(error.toString());
+        if (exitCode == 0 && error.toString().isEmpty()) {
+            LOGGER.atDebug().log(output.toString());
+        } else {
+            String errorMessage = "Output:\n\n" + output + (error.toString().isEmpty() ? "" : "\n\nError:\n\n" + error);
+            throw new RuntimeException(errorMessage);
         }
 
         List<String> classpathElements = new ArrayList<>();
