@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
-import java.io.*;
-import java.nio.file.Files;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -36,14 +38,17 @@ public class ProjectBuildTask implements Task {
 
     private void buildProject() throws IOException, InterruptedException {
         Path projectPath = Paths.get(this.projectRecord.getPath());
-        if (Files.exists(projectPath.resolve("pom.xml"))) {
-            this.buildMavenProject(projectPath);
-        } else if (Files.exists(projectPath.resolve("build.gradle"))) {
-            this.buildGradleProject();
-        } else if (Files.exists(projectPath.resolve("build.xml"))) {
-            throw new RuntimeException("Cannot build project " + projectPath + ". Ant projects are not supported yet.");
-        } else {
-            throw new RuntimeException("Cannot build project " + projectPath + ". No pom.xml / build.gradle found.");
+        switch (this.projectRecord.getType()) {
+            case UNKNOWN:
+                throw new RuntimeException("Cannot build project " + projectPath + ". No pom.xml / build.gradle found.");
+            case ANT:
+                throw new RuntimeException("Cannot build project " + projectPath + ". Ant projects are not supported yet.");
+            case GRADLE:
+                this.buildGradleProject();
+                break;
+            case MAVEN:
+                this.buildMavenProject(projectPath);
+                break;
         }
     }
 

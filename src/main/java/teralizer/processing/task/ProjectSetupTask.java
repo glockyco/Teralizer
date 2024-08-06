@@ -14,6 +14,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.processing.ProcessingStage;
+import teralizer.processing.ProjectType;
 import teralizer.processing.TaskContext;
 
 import java.io.BufferedReader;
@@ -45,14 +46,19 @@ public class ProjectSetupTask implements Task {
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         Path projectPath = Paths.get(this.projectRecord.getPath());
-        if (Files.exists(projectPath.resolve("pom.xml"))) {
-            this.projectRecord.setClasspath(this.fetchMavenClasspath(projectPath));
-        } else if (Files.exists(projectPath.resolve("build.gradle"))) {
-            this.projectRecord.setClasspath(this.fetchGradleClasspath(projectPath));
-        } else if (Files.exists(projectPath.resolve("build.xml"))) {
-            throw new RuntimeException("Cannot setup project " + projectPath + ". Ant projects are not supported yet.");
-        } else {
-            throw new RuntimeException("Cannot setup project " + projectPath + ". No pom.xml / build.gradle found.");
+        this.projectRecord.setType(this.identifyProjectType(projectPath));
+
+        switch (this.projectRecord.getType()) {
+            case UNKNOWN:
+                throw new RuntimeException("Cannot setup project " + projectPath + ". No pom.xml / build.gradle found.");
+            case ANT:
+                throw new RuntimeException("Cannot setup project " + projectPath + ". Ant projects are not supported yet.");
+            case GRADLE:
+                this.projectRecord.setClasspath(this.fetchGradleClasspath(projectPath));
+                break;
+            case MAVEN:
+                this.projectRecord.setClasspath(this.fetchMavenClasspath(projectPath));
+                break;
         }
 
         this.projectRecord.store();
@@ -62,6 +68,17 @@ public class ProjectSetupTask implements Task {
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
+    }
+
+    private ProjectType identifyProjectType(Path projectPath) {
+        if (Files.exists(projectPath.resolve("build.xml"))) {
+            return ProjectType.ANT;
+        } else if (Files.exists(projectPath.resolve("build.gradle"))) {
+            return ProjectType.GRADLE;
+        } else if (Files.exists(projectPath.resolve("pom.xml"))) {
+            return ProjectType.MAVEN;
+        }
+        return ProjectType.UNKNOWN;
     }
 
     private String fetchMavenClasspath(Path projectPath) throws IOException, InterruptedException {

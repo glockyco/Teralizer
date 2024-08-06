@@ -71,6 +71,11 @@ jooq {
                         name = 'org.jooq.meta.sqlite.SQLiteDatabase'
                         forcedTypes {
                             forcedType {
+                                userType = "teralizer.processing.ProjectType"
+                                enumConverter = true
+                                includeExpression = "project.type"
+                            }
+                            forcedType {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
                                 includeExpression = "task.stage"

@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS project;
 CREATE TABLE project
 (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    type      TEXT NOT NULL,
     path      TEXT NOT NULL,
     classpath TEXT, -- can be null for invalid project paths
     runtime   REAL  -- can be null until the project is fully processed

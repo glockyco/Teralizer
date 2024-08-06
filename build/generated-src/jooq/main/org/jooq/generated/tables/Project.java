@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row4;
+import org.jooq.Row5;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -24,8 +24,11 @@ import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
+import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+
+import teralizer.processing.ProjectType;
 
 
 /**
@@ -53,6 +56,11 @@ public class Project extends TableImpl<ProjectRecord> {
      * The column <code>project.id</code>.
      */
     public final TableField<ProjectRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+
+    /**
+     * The column <code>project.type</code>.
+     */
+    public final TableField<ProjectRecord, ProjectType> TYPE = createField(DSL.name("type"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProjectType>(String.class, ProjectType.class));
 
     /**
      * The column <code>project.path</code>.
@@ -154,11 +162,11 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row4 type methods
+    // Row5 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row4<Integer, String, String, Float> fieldsRow() {
-        return (Row4) super.fieldsRow();
+    public Row5<Integer, ProjectType, String, String, Float> fieldsRow() {
+        return (Row5) super.fieldsRow();
     }
 }

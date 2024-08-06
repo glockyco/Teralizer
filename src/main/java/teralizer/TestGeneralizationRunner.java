@@ -68,6 +68,7 @@ public class TestGeneralizationRunner {
             long startTime = System.currentTimeMillis();
 
             ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
+            projectRecord.setType(ProjectType.UNKNOWN);
             projectRecord.setPath(projectPath.toString());
             projectRecord.store();
 
