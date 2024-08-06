@@ -40,6 +40,8 @@ public class ProjectBuildTask implements Task {
             this.buildMavenProject(projectPath);
         } else if (Files.exists(projectPath.resolve("build.gradle"))) {
             this.buildGradleProject();
+        } else if (Files.exists(projectPath.resolve("build.xml"))) {
+            throw new RuntimeException("Cannot build project " + projectPath + ". Ant projects are not supported yet.");
         } else {
             throw new RuntimeException("Cannot build project " + projectPath + ". No pom.xml / build.gradle found.");
         }

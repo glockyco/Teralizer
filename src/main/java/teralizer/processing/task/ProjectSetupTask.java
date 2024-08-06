@@ -49,6 +49,8 @@ public class ProjectSetupTask implements Task {
             this.projectRecord.setClasspath(this.fetchMavenClasspath(projectPath));
         } else if (Files.exists(projectPath.resolve("build.gradle"))) {
             this.projectRecord.setClasspath(this.fetchGradleClasspath(projectPath));
+        } else if (Files.exists(projectPath.resolve("build.xml"))) {
+            throw new RuntimeException("Cannot setup project " + projectPath + ". Ant projects are not supported yet.");
         } else {
             throw new RuntimeException("Cannot setup project " + projectPath + ". No pom.xml / build.gradle found.");
         }
