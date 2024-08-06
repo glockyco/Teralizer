@@ -69,7 +69,7 @@ public class TestGeneralizationRunner {
 
             ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
             projectRecord.setType(ProjectType.UNKNOWN);
-            projectRecord.setPath(projectPath.toString());
+            projectRecord.setPath(projectPath);
             projectRecord.store();
 
             pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));

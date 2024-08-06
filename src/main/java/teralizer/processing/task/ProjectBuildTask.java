@@ -37,7 +37,7 @@ public class ProjectBuildTask implements Task {
     }
 
     private void buildProject() throws IOException, InterruptedException {
-        Path projectPath = Paths.get(this.projectRecord.getPath());
+        Path projectPath = this.projectRecord.getPath();
         switch (this.projectRecord.getType()) {
             case UNKNOWN:
                 throw new RuntimeException("Cannot build project " + projectPath + ". No pom.xml / build.gradle found.");
@@ -82,7 +82,7 @@ public class ProjectBuildTask implements Task {
 
     private void buildGradleProject() {
         GradleConnector connector = GradleConnector.newConnector();
-        connector.forProjectDirectory(new File(this.projectRecord.getPath()));
+        connector.forProjectDirectory(this.projectRecord.getPath().toFile());
 
         try (ProjectConnection connection = connector.connect()) {
             BuildLauncher build = connection.newBuild();

@@ -4,6 +4,7 @@
 package org.jooq.generated.tables;
 
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
+import teralizer.jooq.PathConverter;
 import teralizer.processing.ProjectType;
 
 
@@ -65,7 +67,7 @@ public class Project extends TableImpl<ProjectRecord> {
     /**
      * The column <code>project.path</code>.
      */
-    public final TableField<ProjectRecord, String> PATH = createField(DSL.name("path"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<ProjectRecord, Path> PATH = createField(DSL.name("path"), SQLDataType.CLOB.nullable(false), this, "", new PathConverter());
 
     /**
      * The column <code>project.classpath</code>.
@@ -166,7 +168,7 @@ public class Project extends TableImpl<ProjectRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row5<Integer, ProjectType, String, String, Float> fieldsRow() {
+    public Row5<Integer, ProjectType, Path, String, Float> fieldsRow() {
         return (Row5) super.fieldsRow();
     }
 }

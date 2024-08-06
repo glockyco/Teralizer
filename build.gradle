@@ -76,6 +76,11 @@ jooq {
                                 includeExpression = "project.type"
                             }
                             forcedType {
+                                userType = "java.nio.file.Path"
+                                converter = "teralizer.jooq.PathConverter"
+                                includeExpression = "project.*_path"
+                            }
+                            forcedType {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
                                 includeExpression = "task.stage"

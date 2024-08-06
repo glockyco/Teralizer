@@ -45,7 +45,7 @@ public class ProjectSetupTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        Path projectPath = Paths.get(this.projectRecord.getPath());
+        Path projectPath = this.projectRecord.getPath();
         this.projectRecord.setType(this.identifyProjectType(projectPath));
 
         switch (this.projectRecord.getType()) {
