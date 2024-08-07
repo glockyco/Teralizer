@@ -9,12 +9,12 @@ public class PathConverter implements Converter<String, Path> {
 
     @Override
     public Path from(String s) {
-        return Paths.get(s);
+        return s == null ? null : Paths.get(s);
     }
 
     @Override
     public String to(Path path) {
-        return path.toString();
+        return path == null ? null : path.toString();
     }
 
     @Override
