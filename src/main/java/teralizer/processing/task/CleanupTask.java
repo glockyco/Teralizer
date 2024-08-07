@@ -111,7 +111,7 @@ public class CleanupTask implements Task {
             .from(Tables.PROJECT)
             .join(Tables.TEST)
             .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
-            .where(Tables.PROJECT.PATH.eq(projectPath))
+            .where(Tables.PROJECT.ROOT_PATH.eq(projectPath))
             .fetch()
             .into(TestRecord.class);
 
@@ -126,7 +126,7 @@ public class CleanupTask implements Task {
             Paths.get(testRecord.getOutputSpecificationPath()).toFile().delete();
         }
 
-        int deletedCount = create.deleteFrom(Tables.PROJECT).where(Tables.PROJECT.PATH.eq(projectPath)).execute();
+        int deletedCount = create.deleteFrom(Tables.PROJECT).where(Tables.PROJECT.ROOT_PATH.eq(projectPath)).execute();
 
         if (deletedCount == 0 && testRecords.isEmpty()) {
             LOGGER.atWarn().log("Nothing to clean up for project {}.", projectPath);

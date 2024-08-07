@@ -8,14 +8,18 @@ DROP TABLE IF EXISTS project;
 
 CREATE TABLE project
 (
-    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    type      TEXT NOT NULL,
-    path      TEXT NOT NULL,
-    classpath TEXT, -- can be null for invalid project paths
-    runtime   REAL  -- can be null until the project is fully processed
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    type               TEXT NOT NULL,
+    root_path          TEXT NOT NULL,
+    main_source_path   TEXT, -- can be null for invalid project root paths
+    test_source_path   TEXT, -- can be null for invalid project root paths
+    main_compiled_path TEXT, -- can be null for invalid project root paths
+    test_compiled_path TEXT, -- can be null for invalid project root paths
+    classpath          TEXT, -- can be null for invalid project root paths
+    runtime            REAL  -- can be null until the project is fully processed
 );
 
-CREATE INDEX idx_project_path ON project (path);
+CREATE INDEX idx_project_path ON project (root_path);
 
 CREATE TABLE test
 (

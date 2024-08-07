@@ -14,7 +14,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row5;
+import org.jooq.Row9;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -65,9 +65,29 @@ public class Project extends TableImpl<ProjectRecord> {
     public final TableField<ProjectRecord, ProjectType> TYPE = createField(DSL.name("type"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProjectType>(String.class, ProjectType.class));
 
     /**
-     * The column <code>project.path</code>.
+     * The column <code>project.root_path</code>.
      */
-    public final TableField<ProjectRecord, Path> PATH = createField(DSL.name("path"), SQLDataType.CLOB.nullable(false), this, "", new PathConverter());
+    public final TableField<ProjectRecord, Path> ROOT_PATH = createField(DSL.name("root_path"), SQLDataType.CLOB.nullable(false), this, "", new PathConverter());
+
+    /**
+     * The column <code>project.main_source_path</code>.
+     */
+    public final TableField<ProjectRecord, Path> MAIN_SOURCE_PATH = createField(DSL.name("main_source_path"), SQLDataType.CLOB, this, "", new PathConverter());
+
+    /**
+     * The column <code>project.test_source_path</code>.
+     */
+    public final TableField<ProjectRecord, Path> TEST_SOURCE_PATH = createField(DSL.name("test_source_path"), SQLDataType.CLOB, this, "", new PathConverter());
+
+    /**
+     * The column <code>project.main_compiled_path</code>.
+     */
+    public final TableField<ProjectRecord, Path> MAIN_COMPILED_PATH = createField(DSL.name("main_compiled_path"), SQLDataType.CLOB, this, "", new PathConverter());
+
+    /**
+     * The column <code>project.test_compiled_path</code>.
+     */
+    public final TableField<ProjectRecord, Path> TEST_COMPILED_PATH = createField(DSL.name("test_compiled_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
      * The column <code>project.classpath</code>.
@@ -164,11 +184,11 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row5 type methods
+    // Row9 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row5<Integer, ProjectType, Path, String, Float> fieldsRow() {
-        return (Row5) super.fieldsRow();
+    public Row9<Integer, ProjectType, Path, Path, Path, Path, Path, String, Float> fieldsRow() {
+        return (Row9) super.fieldsRow();
     }
 }

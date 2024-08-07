@@ -28,7 +28,7 @@ public class Indexes {
     public static final Index IDX_ASSERTION_TEST_ID = Internal.createIndex(DSL.name("idx_assertion_test_id"), Assertion.ASSERTION, new OrderField[] { Assertion.ASSERTION.TEST_ID }, false);
     public static final Index IDX_GENERALIZATION_TEST_ID = Internal.createIndex(DSL.name("idx_generalization_test_id"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TEST_ID }, false);
     public static final Index IDX_GENERALIZATION_TOOL = Internal.createIndex(DSL.name("idx_generalization_tool"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TOOL }, false);
-    public static final Index IDX_PROJECT_PATH = Internal.createIndex(DSL.name("idx_project_path"), Project.PROJECT, new OrderField[] { Project.PROJECT.PATH }, false);
+    public static final Index IDX_PROJECT_PATH = Internal.createIndex(DSL.name("idx_project_path"), Project.PROJECT, new OrderField[] { Project.PROJECT.ROOT_PATH }, false);
     public static final Index IDX_TASK_GENERALIZATION_ID = Internal.createIndex(DSL.name("idx_task_generalization_id"), Task.TASK, new OrderField[] { Task.TASK.GENERALIZATION_ID }, false);
     public static final Index IDX_TASK_PROJECT_ID = Internal.createIndex(DSL.name("idx_task_project_id"), Task.TASK, new OrderField[] { Task.TASK.PROJECT_ID }, false);
     public static final Index IDX_TASK_STAGE = Internal.createIndex(DSL.name("idx_task_stage"), Task.TASK, new OrderField[] { Task.TASK.STAGE }, false);

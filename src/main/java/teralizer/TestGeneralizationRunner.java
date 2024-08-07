@@ -15,6 +15,8 @@ import teralizer.processing.task.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 public class TestGeneralizationRunner {
@@ -34,23 +36,18 @@ public class TestGeneralizationRunner {
     // @TODO: Use jpf-nhandler.
 
     // @TODO: Use some workflow engine to manage the tasks.
-    // @TODO: Make individual tasks skip-able (=> "caching"?).
-    // @TODO: Store intermediate results more often than just after a full run.
     // @TODO: Allow white-/blacklisting of individual tests/classes.
-    // @TODO: Store runtime information for each generalized test.
-    // @TODO: Compare how much longer test execution takes with JPF compared to "normally".
+    // @TODO: Make individual tasks skip-able (=> "caching"?).
     // @TODO: Decide how to deal with files that are already created (perhaps from earlier runs).
+    // @TODO: Compare how much longer test execution takes with JPF compared to "normally".
 
     public void run() {
         // @TODO: Get project directories from input args.
-        // @TODO: Add support for analysis of multiple project directories in a single run.
-        //   That way, we can share some of the initialization, and - more importantly - can perform
-        //   the analysis tasks after ALL projects have been processed / generalized.
 
-        String[] projectDirectories = new String[]{
-            "../test-generalization-example",
-            "../test-generalization-example-maven",
-        };
+        List<ProjectInfo> projectInfos = Arrays.asList(
+            new ProjectInfo("../test-generalization-example"),
+            new ProjectInfo("../test-generalization-example-maven")
+        );
 
         DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on");
 
@@ -59,17 +56,19 @@ public class TestGeneralizationRunner {
         pipeline.getContext().put(TaskContext.GSON, new Gson());
         pipeline.getContext().put(TaskContext.VELOCITY_ENGINE, this.createVelocityEngine());
 
-        for (String projectDirectory : projectDirectories) {
-            Path projectPath = Paths.get(projectDirectory);
-
-            pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectPath, null, null));
+        for (ProjectInfo projectInfo : projectInfos) {
+            pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectInfo.getRootPath(), null, null));
             pipeline.execute();
 
             long startTime = System.currentTimeMillis();
 
             ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
             projectRecord.setType(ProjectType.UNKNOWN);
-            projectRecord.setPath(projectPath);
+            projectRecord.setRootPath(projectInfo.getRootPath());
+            projectRecord.setMainSourcePath(projectInfo.getMainSourcePath());
+            projectRecord.setTestSourcePath(projectInfo.getTestSourcePath());
+            projectRecord.setMainCompiledPath(projectInfo.getMainCompiledPath());
+            projectRecord.setTestCompiledPath(projectInfo.getTestCompiledPath());
             projectRecord.store();
 
             pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));

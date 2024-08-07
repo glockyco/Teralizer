@@ -10,11 +10,11 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -33,31 +33,44 @@ public class ProjectBuildTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        this.buildProject();
+        this.buildProject(this.projectRecord);
     }
 
-    private void buildProject() throws IOException, InterruptedException {
-        Path projectPath = this.projectRecord.getPath();
-        switch (this.projectRecord.getType()) {
+    private void buildProject(ProjectRecord projectRecord) throws IOException, InterruptedException {
+        switch (projectRecord.getType()) {
             case UNKNOWN:
-                throw new RuntimeException("Cannot build project " + projectPath + ". No pom.xml / build.gradle found.");
+                throw new RuntimeException("Cannot build project " + projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
+            case JAIGANTIC:
             case ANT:
-                throw new RuntimeException("Cannot build project " + projectPath + ". Ant projects are not supported yet.");
+                this.buildAnt(projectRecord.getRootPath());
+                break;
             case GRADLE:
-                this.buildGradleProject();
+                this.buildGradle(projectRecord.getRootPath());
                 break;
             case MAVEN:
-                this.buildMavenProject(projectPath);
+                this.buildMaven(projectRecord.getRootPath());
                 break;
+            default:
+                throw new RuntimeException("Cannot build project " + projectRecord.getRootPath() + ". Unsupported project type " + projectRecord.getType() + ".");
         }
     }
 
-    private void buildMavenProject(Path projectPath) throws IOException, InterruptedException {
+    private void buildAnt(Path projectRootPath) throws IOException, InterruptedException {
+        List<String> command = Arrays.asList("ant", "-f", "build.xml", "compile");
+        this.executeCommand(projectRootPath, command);
+    }
+
+    private void buildMaven(Path projectRootPath) throws IOException, InterruptedException {
+        List<String> command = Arrays.asList("mvn", "compile", "test-compile");
+        this.executeCommand(projectRootPath, command);
+    }
+
+    private void executeCommand(Path projectRootPath, List<String> command) throws IOException, InterruptedException {
         StringBuilder output = new StringBuilder();
         StringBuilder error = new StringBuilder();
 
-        ProcessBuilder processBuilder = new ProcessBuilder("mvn", "compile", "test-compile");
-        processBuilder.directory(projectPath.toFile());
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.directory(projectRootPath.toFile());
         Process process = processBuilder.start();
 
         try (
@@ -80,9 +93,9 @@ public class ProjectBuildTask implements Task {
         }
     }
 
-    private void buildGradleProject() {
+    private void buildGradle(Path projectRootPath) {
         GradleConnector connector = GradleConnector.newConnector();
-        connector.forProjectDirectory(this.projectRecord.getPath().toFile());
+        connector.forProjectDirectory(projectRootPath.toFile());
 
         try (ProjectConnection connection = connector.connect()) {
             BuildLauncher build = connection.newBuild();
