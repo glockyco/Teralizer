@@ -7,7 +7,6 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.google.gson.Gson;
 import org.jooq.DSLContext;
@@ -130,9 +129,8 @@ public class TestDetectionTask implements Task {
 
                                     List<MethodParameter> assertArguments = new ArrayList<>();
                                     for (Expression argument : assertMethodCall.getArguments()) {
-                                        assert argument instanceof NameExpr;
                                         String paramType = argument.calculateResolvedType().describe();
-                                        String paramName = ((NameExpr) argument).getNameAsString();
+                                        String paramName = argument.toString();
                                         assertArguments.add(new MethodParameter(paramType, paramName));
                                     }
 
