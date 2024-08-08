@@ -29,12 +29,12 @@ CREATE TABLE test
     test_class_package        TEXT    NOT NULL,
     test_class_name           TEXT    NOT NULL,
     test_method_name          TEXT    NOT NULL,
-    tested_class_path         TEXT, -- can be null for JDK types such as java.lang.String
-    tested_class_package      TEXT    NOT NULL,
-    tested_class_name         TEXT    NOT NULL,
-    tested_method_name        TEXT    NOT NULL,
-    tested_method_param_types TEXT    NOT NULL,
-    tested_method_return_type TEXT    NOT NULL,
+    tested_class_path         TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_class_package      TEXT, -- can be null if we cannot identify a tested class / method
+    tested_class_name         TEXT, -- can be null if we cannot identify a tested class / method
+    tested_method_name        TEXT, -- can be null if we cannot identify a tested class / method
+    tested_method_param_types TEXT, -- can be null if we cannot identify a tested class / method
+    tested_method_return_type TEXT, -- can be null if we cannot identify a tested class / method
     driver_class_path         TEXT    NOT NULL,
     driver_class_package      TEXT    NOT NULL,
     driver_class_name         TEXT    NOT NULL,

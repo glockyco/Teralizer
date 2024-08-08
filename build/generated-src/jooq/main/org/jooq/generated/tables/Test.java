@@ -87,27 +87,27 @@ public class Test extends TableImpl<TestRecord> {
     /**
      * The column <code>test.tested_class_package</code>.
      */
-    public final TableField<TestRecord, String> TESTED_CLASS_PACKAGE = createField(DSL.name("tested_class_package"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> TESTED_CLASS_PACKAGE = createField(DSL.name("tested_class_package"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>test.tested_class_name</code>.
      */
-    public final TableField<TestRecord, String> TESTED_CLASS_NAME = createField(DSL.name("tested_class_name"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> TESTED_CLASS_NAME = createField(DSL.name("tested_class_name"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>test.tested_method_name</code>.
      */
-    public final TableField<TestRecord, String> TESTED_METHOD_NAME = createField(DSL.name("tested_method_name"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> TESTED_METHOD_NAME = createField(DSL.name("tested_method_name"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>test.tested_method_param_types</code>.
      */
-    public final TableField<TestRecord, String> TESTED_METHOD_PARAM_TYPES = createField(DSL.name("tested_method_param_types"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> TESTED_METHOD_PARAM_TYPES = createField(DSL.name("tested_method_param_types"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>test.tested_method_return_type</code>.
      */
-    public final TableField<TestRecord, String> TESTED_METHOD_RETURN_TYPE = createField(DSL.name("tested_method_return_type"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> TESTED_METHOD_RETURN_TYPE = createField(DSL.name("tested_method_return_type"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>test.driver_class_path</code>.

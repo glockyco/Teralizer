@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.google.gson.Gson;
 import org.jooq.DSLContext;
@@ -62,7 +63,6 @@ public class TestDetectionTask implements Task {
                 .forEach(testClassPath -> {
                     try {
                         CompilationUnit testCompilationUnit = javaParser.parse(testClassPath.toFile()).getResult().get();
-                        String[] sourceCodeLines = testCompilationUnit.toString().split("\\R");
                         PackageDeclaration testPackageDeclaration = testCompilationUnit.getPackageDeclaration().orElseGet(PackageDeclaration::new);
 
                         for (ClassOrInterfaceDeclaration testClassDeclaration : testCompilationUnit.findAll(ClassOrInterfaceDeclaration.class)) {
@@ -73,76 +73,17 @@ public class TestDetectionTask implements Task {
 
                                 TestRecord testRecord = create.newRecord(Tables.TEST);
                                 testRecord.setProjectId(this.projectRecord.getId());
-
                                 testRecord.setTestClassPath(testClassPath.toString());
                                 testRecord.setTestClassPackage(testPackageDeclaration.getNameAsString());
                                 testRecord.setTestClassName(testClassDeclaration.getNameAsString());
                                 testRecord.setTestMethodName(testMethodDeclaration.getNameAsString());
-
-                                MethodCallExpr testedMethodCall = findTestedMethodCall(testMethodDeclaration);
-                                ResolvedMethodDeclaration testedMethodDeclaration = testedMethodCall.resolve();
-
-                                String testedClassPath = testedMethodDeclaration.toAst()
-                                    .flatMap(m -> m.findCompilationUnit()
-                                        .flatMap(cu -> cu.getStorage()
-                                            .map(s -> Paths.get(System.getProperty("user.dir")).relativize(s.getPath()).toString())))
-                                    .orElse(null);
-
-                                List<MethodParameter> testedMethodParameters = new ArrayList<>();
-                                for (int i = 0; i < testedMethodDeclaration.getNumberOfParams(); i++) {
-                                    String paramType = testedMethodDeclaration.getParam(i).describeType();
-                                    String paramName = testedMethodDeclaration.getParam(i).getName();
-                                    testedMethodParameters.add(new MethodParameter(paramType, paramName));
-                                }
-
-                                testRecord.setTestedClassPath(testedClassPath);
-                                testRecord.setTestedClassPackage(testedMethodDeclaration.getPackageName());
-                                testRecord.setTestedClassName(testedMethodDeclaration.getClassName());
-                                testRecord.setTestedMethodName(testedMethodDeclaration.getName());
-                                testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
-                                testRecord.setTestedMethodReturnType(testedMethodDeclaration.getReturnType().describe());
-
-                                String driverClassName = "_" + testRecord.getTestClassName() + "_Driver_" + testRecord.getTestMethodName();
-                                Path driverClassPath = testClassPath.getParent().resolve(Paths.get("teralizer", driverClassName + ".java"));
-
-                                testRecord.setDriverClassPath(driverClassPath.toString());
-                                testRecord.setDriverClassPackage(testRecord.getTestClassPackage() + ".teralizer");
-                                testRecord.setDriverClassName(driverClassName);
-
-                                String testClassQualifiedName = testRecord.getTestClassPackage() + "." + testRecord.getTestClassName();
-                                String testMethodQualifiedName = testClassQualifiedName + "." + testRecord.getTestMethodName();
-
-                                Path jpfConfigFilePath = Paths.get("data", testMethodQualifiedName + ".jpf");
-                                Path inputSpecificationPath = Paths.get("data", testMethodQualifiedName + ".jpf.input.json");
-                                Path outputSpecificationPath = Paths.get("data", testMethodQualifiedName + ".jpf.output.json");
-
-                                testRecord.setJpfConfigPath(jpfConfigFilePath.toString());
-                                testRecord.setInputSpecificationPath(inputSpecificationPath.toString());
-                                testRecord.setOutputSpecificationPath(outputSpecificationPath.toString());
-
+                                this.setTestedMethodData(testRecord, testMethodDeclaration, gson);
+                                this.setJpfData(testRecord);
                                 testRecord.store();
 
-                                List<MethodCallExpr> assertMethodCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().startsWith("assert"));
-                                for (MethodCallExpr assertMethodCall : assertMethodCalls) {
-                                    String methodName = assertMethodCall.getNameAsString();
-                                    String sourceCode = assertMethodCall.toString();
-
-                                    List<MethodParameter> assertArguments = new ArrayList<>();
-                                    for (Expression argument : assertMethodCall.getArguments()) {
-                                        String paramType = argument.calculateResolvedType().describe();
-                                        String paramName = argument.toString();
-                                        assertArguments.add(new MethodParameter(paramType, paramName));
-                                    }
-
-                                    AssertionRecord assertionRecord = create.newRecord(Tables.ASSERTION);
-                                    assertionRecord.setTestId(testRecord.getId());
-                                    assertionRecord.setMethodName(methodName);
-                                    assertionRecord.setMethodArgumentTypes(gson.toJson(assertArguments));
-                                    assertionRecord.setSourceCode(sourceCode);
-                                    assertionRecord.store();
-                                }
-
                                 testRecords.add(testRecord);
+
+                                this.createAssertionRecords(testRecord, testMethodDeclaration, create, gson);
                             }
                         }
                     } catch (IOException e) {
@@ -152,6 +93,98 @@ public class TestDetectionTask implements Task {
         }
 
         return testRecords;
+    }
+
+    private void createAssertionRecords(TestRecord testRecord, MethodDeclaration testMethodDeclaration, DSLContext create, Gson gson) {
+        List<AssertionRecord> assertionRecords = new ArrayList<>();
+
+        List<MethodCallExpr> assertMethodCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().startsWith("assert"));
+        for (MethodCallExpr assertMethodCall : assertMethodCalls) {
+            String methodName = assertMethodCall.getNameAsString();
+            String sourceCode = assertMethodCall.toString();
+
+            List<MethodParameter> assertArguments = new ArrayList<>();
+            for (Expression argument : assertMethodCall.getArguments()) {
+                String paramType;
+                try {
+                    paramType = argument.calculateResolvedType().describe();
+                } catch (UnsolvedSymbolException e) {
+                    paramType = null;
+                }
+                String paramName = argument.toString();
+                assertArguments.add(new MethodParameter(paramType, paramName));
+            }
+
+            AssertionRecord assertionRecord = create.newRecord(Tables.ASSERTION);
+            assertionRecord.setTestId(testRecord.getId());
+            assertionRecord.setMethodName(methodName);
+            assertionRecord.setMethodArgumentTypes(gson.toJson(assertArguments));
+            assertionRecord.setSourceCode(sourceCode);
+            assertionRecords.add(assertionRecord);
+        }
+
+        create.batchStore(assertionRecords).execute();
+    }
+
+    private void setTestedMethodData(TestRecord testRecord, MethodDeclaration testMethodDeclaration, Gson gson) {
+        MethodCallExpr testedMethodCall = findTestedMethodCall(testMethodDeclaration);
+
+        if (testedMethodCall == null) {
+            return;
+        }
+
+        ResolvedMethodDeclaration testedMethodDeclaration;
+        try {
+            testedMethodDeclaration = testedMethodCall.resolve();
+        } catch (UnsolvedSymbolException e) {
+            return;
+        }
+
+        // @TODO: Tested "methods" can be constructors.
+        // @TODO: Tested "methods" can be pairs (e.g., encrypt + decrypt).
+        // @TODO: Tested "methods" can be sequences (e.g., multiple calls that repeatedly modify object state).
+
+        String testedClassPath = testedMethodDeclaration.toAst()
+            .flatMap(m -> m.findCompilationUnit()
+                .flatMap(cu -> cu.getStorage()
+                    .map(s -> Paths.get(System.getProperty("user.dir")).relativize(s.getPath()).toString())))
+            .orElse(null);
+
+        List<MethodParameter> testedMethodParameters = new ArrayList<>();
+        for (int i = 0; i < testedMethodDeclaration.getNumberOfParams(); i++) {
+            String paramType = testedMethodDeclaration.getParam(i).describeType();
+            String paramName = testedMethodDeclaration.getParam(i).getName();
+            testedMethodParameters.add(new MethodParameter(paramType, paramName));
+        }
+
+        testRecord.setTestedClassPath(testedClassPath);
+        testRecord.setTestedClassPackage(testedMethodDeclaration.getPackageName());
+        testRecord.setTestedClassName(testedMethodDeclaration.getClassName());
+        testRecord.setTestedMethodName(testedMethodDeclaration.getName());
+        testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
+        testRecord.setTestedMethodReturnType(testedMethodDeclaration.getReturnType().describe());
+    }
+
+    private void setJpfData(TestRecord testRecord) {
+        String driverClassName = "_" + testRecord.getTestClassName() + "_Driver_" + testRecord.getTestMethodName();
+        Path driverClassPath = Paths.get(testRecord.getTestClassPath()).getParent().resolve("teralizer/" + driverClassName + ".java");
+
+        testRecord.setDriverClassPath(driverClassPath.toString());
+        testRecord.setDriverClassPackage(testRecord.getTestClassPackage() + ".teralizer");
+        testRecord.setDriverClassName(driverClassName);
+
+        String testClassQualifiedName = testRecord.getTestClassPackage() + "." + testRecord.getTestClassName();
+        String testMethodQualifiedName = testClassQualifiedName + "." + testRecord.getTestMethodName();
+
+        Path jpfConfigFilePath = Paths.get("data", testMethodQualifiedName + ".jpf");
+        Path inputSpecificationPath = Paths.get("data", testMethodQualifiedName + ".jpf.input.json");
+        Path outputSpecificationPath = Paths.get("data", testMethodQualifiedName + ".jpf.output.json");
+
+        testRecord.setJpfConfigPath(jpfConfigFilePath.toString());
+        testRecord.setInputSpecificationPath(inputSpecificationPath.toString());
+        testRecord.setOutputSpecificationPath(outputSpecificationPath.toString());
+
+        testRecord.store();
     }
 
     public static MethodCallExpr findTestedMethodCall(MethodDeclaration testMethodDeclaration) {
