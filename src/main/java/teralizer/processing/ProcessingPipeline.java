@@ -73,7 +73,7 @@ public class ProcessingPipeline {
                 // Total processing time of a project / test is tracked elsewhere,
                 // so we don't have to include the runtime of the DB communication here.
                 long startTime = System.currentTimeMillis();
-                currentTask.execute(this.context, taskRecord::setInfo, this::addTask);
+                currentTask.execute(this.context, (String s) -> taskRecord.setInfo(taskRecord.getInfo() + "\n\n" + s), this::addTask);
                 long endTime = System.currentTimeMillis();
 
                 // Depending on the task, the project / test / generalization ID might

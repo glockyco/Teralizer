@@ -15,11 +15,17 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import teralizer.domain.MethodParameter;
+import teralizer.processing.ProcessingPipeline;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,6 +36,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class TestDetectionTask implements Task {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingPipeline.class);
 
     private final ProcessingStage stage;
     private final ProjectRecord projectRecord;
@@ -46,14 +54,14 @@ public class TestDetectionTask implements Task {
 
         JavaParser javaParser = context.get(this.getProjectId(), TaskContext.JAVA_PARSER);
 
-        List<TestRecord> testRecords = this.detectTests(create, gson, javaParser);
+        List<TestRecord> testRecords = this.detectTests(create, gson, javaParser, reportInfo);
 
         for (TestRecord testRecord : testRecords) {
             scheduleTask.accept(new TestFilteringTask(ProcessingStage.TEST_FILTERING, this.projectRecord, testRecord));
         }
     }
 
-    private List<TestRecord> detectTests(DSLContext create, Gson gson, JavaParser javaParser) throws IOException {
+    private List<TestRecord> detectTests(DSLContext create, Gson gson, JavaParser javaParser, Consumer<String> reportInfo) throws IOException {
         List<TestRecord> testRecords = new ArrayList<>();
 
         try (Stream<Path> paths = Files.walk(this.projectRecord.getRootPath())) {
@@ -61,33 +69,35 @@ public class TestDetectionTask implements Task {
                 .filter(Files::isRegularFile)
                 .filter(path -> path.toString().endsWith(".java"))
                 .forEach(testClassPath -> {
+                    CompilationUnit testCompilationUnit;
                     try {
-                        CompilationUnit testCompilationUnit = javaParser.parse(testClassPath.toFile()).getResult().get();
-                        PackageDeclaration testPackageDeclaration = testCompilationUnit.getPackageDeclaration().orElseGet(PackageDeclaration::new);
-
-                        for (ClassOrInterfaceDeclaration testClassDeclaration : testCompilationUnit.findAll(ClassOrInterfaceDeclaration.class)) {
-                            for (MethodDeclaration testMethodDeclaration : testClassDeclaration.findAll(MethodDeclaration.class)) {
-                                if (!testMethodDeclaration.isAnnotationPresent("Test")) {
-                                    continue;
-                                }
-
-                                TestRecord testRecord = create.newRecord(Tables.TEST);
-                                testRecord.setProjectId(this.projectRecord.getId());
-                                testRecord.setTestClassPath(testClassPath.toString());
-                                testRecord.setTestClassPackage(testPackageDeclaration.getNameAsString());
-                                testRecord.setTestClassName(testClassDeclaration.getNameAsString());
-                                testRecord.setTestMethodName(testMethodDeclaration.getNameAsString());
-                                this.setTestedMethodData(testRecord, testMethodDeclaration, gson);
-                                this.setJpfData(testRecord);
-                                testRecord.store();
-
-                                testRecords.add(testRecord);
-
-                                this.createAssertionRecords(testRecord, testMethodDeclaration, create, gson);
-                            }
-                        }
-                    } catch (IOException e) {
+                        testCompilationUnit = javaParser.parse(testClassPath.toFile()).getResult().get();
+                    } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
+                    }
+
+                    PackageDeclaration testPackageDeclaration = testCompilationUnit.getPackageDeclaration().orElseGet(PackageDeclaration::new);
+
+                    for (ClassOrInterfaceDeclaration testClassDeclaration : testCompilationUnit.findAll(ClassOrInterfaceDeclaration.class)) {
+                        for (MethodDeclaration testMethodDeclaration : testClassDeclaration.findAll(MethodDeclaration.class)) {
+                            if (!testMethodDeclaration.isAnnotationPresent("Test")) {
+                                continue;
+                            }
+
+                            TestRecord testRecord = create.newRecord(Tables.TEST);
+                            testRecord.setProjectId(this.projectRecord.getId());
+                            testRecord.setTestClassPath(testClassPath.toString());
+                            testRecord.setTestClassPackage(testPackageDeclaration.getNameAsString());
+                            testRecord.setTestClassName(testClassDeclaration.getNameAsString());
+                            testRecord.setTestMethodName(testMethodDeclaration.getNameAsString());
+                            this.setTestedMethodData(testRecord, testMethodDeclaration, gson);
+                            this.setJpfData(testRecord);
+                            testRecord.store();
+
+                            testRecords.add(testRecord);
+
+                            this.createAssertionRecords(testRecord, testMethodDeclaration, create, gson, reportInfo);
+                        }
                     }
                 });
         }
@@ -95,7 +105,7 @@ public class TestDetectionTask implements Task {
         return testRecords;
     }
 
-    private void createAssertionRecords(TestRecord testRecord, MethodDeclaration testMethodDeclaration, DSLContext create, Gson gson) {
+    private void createAssertionRecords(TestRecord testRecord, MethodDeclaration testMethodDeclaration, DSLContext create, Gson gson, Consumer<String> reportInfo) {
         List<AssertionRecord> assertionRecords = new ArrayList<>();
 
         List<MethodCallExpr> assertMethodCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().startsWith("assert"));
@@ -108,8 +118,15 @@ public class TestDetectionTask implements Task {
                 String paramType;
                 try {
                     paramType = argument.calculateResolvedType().describe();
-                } catch (UnsolvedSymbolException e) {
+                } catch (/*UnsolvedSymbolException | */RuntimeException e) {
+                    StringWriter stringWriter = new StringWriter();
+                    PrintWriter printWriter = new PrintWriter(stringWriter);
+                    e.printStackTrace(printWriter);
+
                     paramType = null;
+                    reportInfo.accept("Could not resolve type of argument " + argument + ". \n\n" + printWriter);
+
+                    LOGGER.atError().log(e.getMessage(), e);
                 }
                 String paramName = argument.toString();
                 assertArguments.add(new MethodParameter(paramType, paramName));
@@ -136,7 +153,7 @@ public class TestDetectionTask implements Task {
         ResolvedMethodDeclaration testedMethodDeclaration;
         try {
             testedMethodDeclaration = testedMethodCall.resolve();
-        } catch (UnsolvedSymbolException e) {
+        } catch (UnsolvedSymbolException | UnsupportedOperationException  e) {
             return;
         }
 
