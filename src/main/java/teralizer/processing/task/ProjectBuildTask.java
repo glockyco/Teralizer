@@ -1,8 +1,5 @@
 package teralizer.processing.task;
 
-import org.gradle.tooling.BuildLauncher;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +61,11 @@ public class ProjectBuildTask implements Task {
         this.executeCommand(projectRootPath, command);
     }
 
+    private void buildGradle(Path projectRootPath) throws IOException, InterruptedException {
+        List<String> command = Arrays.asList("./gradlew", "compileJava", "compileTestJava");
+        this.executeCommand(projectRootPath, command);
+    }
+
     private void buildMaven(Path projectRootPath) throws IOException, InterruptedException {
         List<String> command = Arrays.asList("mvn", "compile", "test-compile");
         this.executeCommand(projectRootPath, command);
@@ -94,17 +96,6 @@ public class ProjectBuildTask implements Task {
         } else {
             String errorMessage = "Output:\n\n" + output + (error.toString().isEmpty() ? "" : "\n\nError:\n\n" + error);
             throw new RuntimeException(errorMessage);
-        }
-    }
-
-    private void buildGradle(Path projectRootPath) {
-        GradleConnector connector = GradleConnector.newConnector();
-        connector.forProjectDirectory(projectRootPath.toFile());
-
-        try (ProjectConnection connection = connector.connect()) {
-            BuildLauncher build = connection.newBuild();
-            build.forTasks("compileJava", "compileTestJava");
-            build.run();
         }
     }
 
