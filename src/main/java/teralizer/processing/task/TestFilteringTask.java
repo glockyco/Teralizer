@@ -31,6 +31,13 @@ public class TestFilteringTask implements Task {
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
+        if (this.testRecord.getTestedMethodName() == null) {
+            reportInfo.accept("Filtering because test.tested_method_name is null.");
+            LOGGER.atDebug().log("Filtering test with ID {} because test.tested_method_name is null.", this.testRecord.getId());
+            return;
+        }
+
         // Read the inserted records to get their IDs.
         List<AssertionRecord> assertions = create.selectFrom(Tables.ASSERTION)
             .where(Tables.ASSERTION.TEST_ID.equal(this.testRecord.getId()))
@@ -39,9 +46,10 @@ public class TestFilteringTask implements Task {
         if (assertions.size() > 1) {
             reportInfo.accept("Filtering due to assertion.size() > 1.");
             LOGGER.atDebug().log("Filtering test with ID {} due to assertions.size() > 1.", this.testRecord.getId());
-        } else {
-            scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord, this.testRecord));
+            return;
         }
+
+        scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord, this.testRecord));
     }
 
     @Override
