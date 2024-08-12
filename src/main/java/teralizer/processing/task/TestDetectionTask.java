@@ -79,6 +79,10 @@ public class TestDetectionTask implements Task {
                     PackageDeclaration testPackageDeclaration = testCompilationUnit.getPackageDeclaration().orElseGet(PackageDeclaration::new);
 
                     for (ClassOrInterfaceDeclaration testClassDeclaration : testCompilationUnit.findAll(ClassOrInterfaceDeclaration.class)) {
+                        if (testClassDeclaration.isInterface() || testClassDeclaration.isAbstract()) {
+                            continue;
+                        }
+
                         for (MethodDeclaration testMethodDeclaration : testClassDeclaration.findAll(MethodDeclaration.class)) {
                             if (!testMethodDeclaration.isAnnotationPresent("Test")) {
                                 continue;
