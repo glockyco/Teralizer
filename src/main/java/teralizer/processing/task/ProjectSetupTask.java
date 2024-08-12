@@ -90,12 +90,6 @@ public class ProjectSetupTask implements Task {
         if (this.projectRecord.getTestSourcePath() == null || !Files.exists(this.projectRecord.getTestSourcePath())) {
             throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Test source path '" + this.projectRecord.getTestSourcePath() + "' does not exist.");
         }
-        if (this.projectRecord.getMainCompiledPath() == null || !Files.exists(this.projectRecord.getMainCompiledPath())) {
-            throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Main compiled path '" + this.projectRecord.getMainCompiledPath() + "' does not exist.");
-        }
-        if (this.projectRecord.getTestCompiledPath() == null || !Files.exists(this.projectRecord.getTestCompiledPath())) {
-            throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Test compiled path '" + this.projectRecord.getTestCompiledPath() + "' does not exist.");
-        }
 
         JavaParser javaParser = this.createJavaParser(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath());
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);

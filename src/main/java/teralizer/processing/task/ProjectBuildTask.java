@@ -12,6 +12,7 @@ import teralizer.processing.TaskContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -33,25 +34,28 @@ public class ProjectBuildTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        this.buildProject(this.projectRecord);
-    }
-
-    private void buildProject(ProjectRecord projectRecord) throws IOException, InterruptedException {
-        switch (projectRecord.getType()) {
+        switch (this.projectRecord.getType()) {
             case UNKNOWN:
-                throw new RuntimeException("Cannot build project " + projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
+                throw new RuntimeException("Cannot build project " + this.projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
             case JAIGANTIC:
             case ANT:
-                this.buildAnt(projectRecord.getRootPath());
+                this.buildAnt(this.projectRecord.getRootPath());
                 break;
             case GRADLE:
-                this.buildGradle(projectRecord.getRootPath());
+                this.buildGradle(this.projectRecord.getRootPath());
                 break;
             case MAVEN:
-                this.buildMaven(projectRecord.getRootPath());
+                this.buildMaven(this.projectRecord.getRootPath());
                 break;
             default:
-                throw new RuntimeException("Cannot build project " + projectRecord.getRootPath() + ". Unsupported project type " + projectRecord.getType() + ".");
+                throw new RuntimeException("Cannot build project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
+        }
+
+        if (this.projectRecord.getMainCompiledPath() == null || !Files.exists(this.projectRecord.getMainCompiledPath())) {
+            throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Main compiled path '" + this.projectRecord.getMainCompiledPath() + "' does not exist.");
+        }
+        if (this.projectRecord.getTestCompiledPath() == null || !Files.exists(this.projectRecord.getTestCompiledPath())) {
+            throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Test compiled path '" + this.projectRecord.getTestCompiledPath() + "' does not exist.");
         }
     }
 
