@@ -43,9 +43,9 @@ public class TestFilteringTask implements Task {
             .where(Tables.ASSERTION.TEST_ID.equal(this.testRecord.getId()))
             .fetch();
 
-        if (assertions.size() > 1) {
-            reportInfo.accept("Filtering due to assertion.size() > 1.");
-            LOGGER.atDebug().log("Filtering test with ID {} due to assertions.size() > 1.", this.testRecord.getId());
+        if (assertions.size() != 1) {
+            reportInfo.accept("Filtering because assertion.size() != 1.");
+            LOGGER.atDebug().log("Filtering test with ID {} because assertions.size() != 1.", this.testRecord.getId());
             return;
         }
 
