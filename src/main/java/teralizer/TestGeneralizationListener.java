@@ -44,12 +44,13 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         MethodInfo mi = instructionToExecute.getMethodInfo();
 
         if (instructionToExecute instanceof ReturnInstruction && this.testedMethodSpec.matches(mi)) {
-            Constraint spfInput = PathCondition.getPC(vm).header;
+            PathCondition pathCondition = PathCondition.getPC(vm);
+            Constraint spfInput = pathCondition == null ? null : PathCondition.getPC(vm).header;
             Expression spfOutput = (Expression) vm.getCurrentThread().getTopFrame().getOperandAttr();
 
-            LOGGER.atDebug().log("Returning from: " + testedMethodSpec.getSource());
-            LOGGER.atDebug().log("Input: " + PathCondition.getPC(vm).header);
-            LOGGER.atDebug().log("Output: " + vm.getCurrentThread().getTopFrame().getOperandAttr());
+            LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
+            LOGGER.atDebug().log("Input: " + (spfInput == null ? null : spfInput.toString()));
+            LOGGER.atDebug().log("Output: " + (spfOutput == null ? null : spfOutput.toString()));
 
             SpfToModelTransformer spfToModelTransformer = new SpfToModelTransformer();
             ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
