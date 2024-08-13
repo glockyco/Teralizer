@@ -2,6 +2,7 @@ package teralizer;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.PropertyListenerAdapter;
+import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.numeric.Constraint;
 import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
@@ -33,6 +34,14 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
         this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
         this.outputSpecificationPath = Paths.get(config.getString("test_generalization.output_specification_path"));
+    }
+
+    @Override
+    public void propertyViolated(Search search) {
+        String errorDetails = search.getLastError().getDetails();
+        if (errorDetails.contains("java.lang.NullPointerException") && errorDetails.contains("at java.util.concurrent.atomic")) {
+            throw new RuntimeException("Failed JPF execution due to incomplete native peers.\n\n" + errorDetails);
+        }
     }
 
     @Override
