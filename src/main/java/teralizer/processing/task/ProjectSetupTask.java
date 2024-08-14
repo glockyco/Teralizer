@@ -14,6 +14,7 @@ import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.javaparser.JavaParserFactory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProjectType;
 import teralizer.processing.TaskContext;
@@ -91,7 +92,7 @@ public class ProjectSetupTask implements Task {
             throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Test source path '" + this.projectRecord.getTestSourcePath() + "' does not exist.");
         }
 
-        JavaParser javaParser = this.createJavaParser(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath());
+        JavaParser javaParser = JavaParserFactory.createJavaParser(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath());
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, this.projectRecord));
@@ -288,19 +289,6 @@ public class ProjectSetupTask implements Task {
         Arrays.stream(classpath.split(File.pathSeparator)).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
 
         projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
-    }
-
-    private JavaParser createJavaParser(Path mainSourcePath, Path testSourcePath) {
-        CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver(
-            new JavaParserTypeSolver(mainSourcePath),
-            new JavaParserTypeSolver(testSourcePath),
-            new ReflectionTypeSolver()
-        );
-
-        ParserConfiguration configuration = new ParserConfiguration();
-        configuration.setSymbolResolver(new JavaSymbolSolver(combinedTypeSolver));
-
-        return new JavaParser(configuration);
     }
 
     @Override
