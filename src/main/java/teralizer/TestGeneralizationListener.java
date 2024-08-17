@@ -37,6 +37,13 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     }
 
     @Override
+    public void searchConstraintHit(Search search) {
+        if (search.getDepth() >= search.getDepthLimit()) {
+            throw new RuntimeException("Failed to collect input/output specification due to depth limiting. Depth limit of " + search.getDepthLimit() + " exceeded.");
+        }
+    }
+
+    @Override
     public void propertyViolated(Search search) {
         String errorDetails = search.getLastError().getDetails();
         if (errorDetails.contains("java.lang.NullPointerException") && errorDetails.contains("at java.util.concurrent.atomic")) {
