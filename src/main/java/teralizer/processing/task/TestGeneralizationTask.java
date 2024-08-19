@@ -90,7 +90,7 @@ public class TestGeneralizationTask implements Task {
 
         compilationUnit.setPackageDeclaration(this.generalizationRecord.getGeneralizedClassPackage());
 
-        compilationUnit.addImport(this.testRecord.getTestedClassPackage() + "." + this.testRecord.getTestedClassName());
+        compilationUnit.addImport(this.testRecord.getTestClassPackage() + ".*");
 
         // @TODO: Read these additional imports from the Velocity templates.
         compilationUnit.addImport(net.jqwik.api.Arbitraries.class);
