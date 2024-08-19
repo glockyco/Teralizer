@@ -7,11 +7,9 @@ import gov.nasa.jpf.symbc.numeric.Constraint;
 import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
 import gov.nasa.jpf.util.MethodSpec;
-import gov.nasa.jpf.vm.Instruction;
 import gov.nasa.jpf.vm.MethodInfo;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.VM;
-import gov.nasa.jpf.vm.bytecode.ReturnInstruction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.transformer.ModelToJsonTransformer;
@@ -52,37 +50,44 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     }
 
     @Override
-    public void executeInstruction(VM vm, ThreadInfo currentThread, Instruction instructionToExecute) {
-        if (instructionToExecute == null) {
-            return;
+    public void methodEntered(VM vm, ThreadInfo currentThread, MethodInfo enteredMethod) {
+        if (this.testedMethodSpec.matches(enteredMethod)) {
+            LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
         }
+    }
 
-        MethodInfo mi = instructionToExecute.getMethodInfo();
+    @Override
+    public void methodExited(VM vm, ThreadInfo currentThread, MethodInfo exitedMethod) {
+        if (this.testedMethodSpec.matches(exitedMethod)) {
+            LOGGER.atDebug().log("Exiting tested method: " + exitedMethod.toString());
+            this.writeSpecificationFiles(vm);
+        }
+    }
 
-        if (instructionToExecute instanceof ReturnInstruction && this.testedMethodSpec.matches(mi)) {
-            PathCondition pathCondition = PathCondition.getPC(vm);
-            Constraint spfInput = pathCondition == null ? null : PathCondition.getPC(vm).header;
-            Expression spfOutput = (Expression) vm.getCurrentThread().getTopFrame().getOperandAttr();
+    private void writeSpecificationFiles(VM vm) {
+        PathCondition pathCondition = PathCondition.getPC(vm);
+        Constraint spfInput = pathCondition == null ? null : PathCondition.getPC(vm).header;
+        // @TODO: Add thrown exceptions to the reported output specification.
+        Expression spfOutput = (Expression) vm.getCurrentThread().getTopFrame().getOperandAttr();
 
-            LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
-            LOGGER.atDebug().log("Input: " + (spfInput == null ? null : spfInput.toString()));
-            LOGGER.atDebug().log("Output: " + (spfOutput == null ? null : spfOutput.toString()));
+        LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
+        LOGGER.atDebug().log("Input: " + (spfInput == null ? null : spfInput.toString()));
+        LOGGER.atDebug().log("Output: " + (spfOutput == null ? null : spfOutput.toString()));
 
-            SpfToModelTransformer spfToModelTransformer = new SpfToModelTransformer();
-            ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
+        SpfToModelTransformer spfToModelTransformer = new SpfToModelTransformer();
+        ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
 
-            teralizer.domain.Expression modelInput = spfToModelTransformer.transform(spfInput);
-            teralizer.domain.Expression modelOutput = spfToModelTransformer.transform(spfOutput);
+        teralizer.domain.Expression modelInput = spfToModelTransformer.transform(spfInput);
+        teralizer.domain.Expression modelOutput = spfToModelTransformer.transform(spfOutput);
 
-            String jsonInput = modelToJsonTransformer.transform(modelInput);
-            String jsonOutput = modelToJsonTransformer.transform(modelOutput);
+        String jsonInput = modelToJsonTransformer.transform(modelInput);
+        String jsonOutput = modelToJsonTransformer.transform(modelOutput);
 
-            try {
-                Files.write(this.inputSpecificationPath, jsonInput.getBytes());
-                Files.write(this.outputSpecificationPath, jsonOutput.getBytes());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            Files.write(this.inputSpecificationPath, jsonInput.getBytes());
+            Files.write(this.outputSpecificationPath, jsonOutput.getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
