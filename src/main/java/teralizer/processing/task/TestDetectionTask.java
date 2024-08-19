@@ -92,7 +92,7 @@ public class TestDetectionTask implements Task {
                             testRecord.setProjectId(this.projectRecord.getId());
                             testRecord.setTestClassPath(testClassPath.toString());
                             testRecord.setTestClassPackage(testPackageDeclaration.getNameAsString());
-                            testRecord.setTestClassName(testClassDeclaration.getNameAsString());
+                            testRecord.setTestClassName(testClassDeclaration.getNameAsString().replace(".", "$"));
                             testRecord.setTestMethodName(testMethodDeclaration.getNameAsString());
                             this.setTestedMethodData(testRecord, testMethodDeclaration, gson);
                             this.setJpfData(testRecord);
@@ -180,7 +180,7 @@ public class TestDetectionTask implements Task {
 
         testRecord.setTestedClassPath(testedClassPath);
         testRecord.setTestedClassPackage(testedMethodDeclaration.getPackageName());
-        testRecord.setTestedClassName(testedMethodDeclaration.getClassName());
+        testRecord.setTestedClassName(testedMethodDeclaration.getClassName().replace(".", "$"));
         testRecord.setTestedMethodName(testedMethodDeclaration.getName());
         testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
         testRecord.setTestedMethodReturnType(testedMethodDeclaration.getReturnType().describe());
