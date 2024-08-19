@@ -43,6 +43,10 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     @Override
     public void searchFinished(Search search) {
+        if (search.hasErrors()) {
+            return; // Nothing to do here. Errors are handled by the JpfExecutionTask.
+        }
+
         if (!Files.exists(this.inputSpecificationPath) || !Files.exists(this.outputSpecificationPath)) {
             throw new RuntimeException("Failed to collect input/output specification for unknown reason.");
         }
