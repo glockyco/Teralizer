@@ -42,6 +42,13 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     }
 
     @Override
+    public void searchFinished(Search search) {
+        if (!Files.exists(this.inputSpecificationPath) || !Files.exists(this.outputSpecificationPath)) {
+            throw new RuntimeException("Failed to collect input/output specification for unknown reason.");
+        }
+    }
+
+    @Override
     public void propertyViolated(Search search) {
         String errorDetails = search.getLastError().getDetails();
         if (errorDetails.contains("java.lang.NullPointerException") && errorDetails.contains("at java.util.concurrent.atomic")) {
