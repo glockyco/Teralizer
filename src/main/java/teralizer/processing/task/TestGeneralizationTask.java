@@ -100,6 +100,21 @@ public class TestGeneralizationTask implements Task {
         compilationUnit.addImport(net.jqwik.api.ForAll.class);
 
         ClassOrInterfaceDeclaration testClassDeclaration = compilationUnit.getClassByName(this.testRecord.getTestClassName()).get();
+
+        if (testClassDeclaration.getExtendedTypes().isNonEmpty()) {
+            // @TODO: Add generalization support for classes that implement interfaces or extend other (abstract) classes.
+            //   ---
+            //   Test classes that implement interfaces or extend other (abstract) classes might cause
+            //   problems because the implementation of the generalization task does not currently include
+            //   all the code of the original test class in the generalized class.
+            //   ---
+            //   Consequently, implementations for abstract methods might be missing in the generalized
+            //   class, thus causing build failures. Similarly, overrides of non-abstract parent methods
+            //   might be missing, thus causing unintended behavior.
+            String qualifiedTestClassName = this.testRecord.getTestClassPackage() + "." + this.testRecord.getTestClassName();
+            throw new RuntimeException("Cannot safely generalize class " + qualifiedTestClassName + " because it extends / implements " + testClassDeclaration.getExtendedTypes() + ".");
+        }
+
         testClassDeclaration.setName(this.generalizationRecord.getGeneralizedClassName());
 
         testClassDeclaration.getAllContainedComments().forEach(Comment::remove);
