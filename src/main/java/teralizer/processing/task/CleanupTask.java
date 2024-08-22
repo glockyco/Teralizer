@@ -139,6 +139,8 @@ public class CleanupTask implements Task {
         // No need to set a projectId for the overall cleanup task because
         // the project is no longer visible in the DB once the task finishes.
 
+        // @TODO: Add cleanup functionality for dependencies added via AddJqwikDependencyTask.
+
         List<TestRecord> testRecords = create.selectFrom(Tables.TEST).fetch();
         for (TestRecord testRecord : testRecords) {
             FileUtils.deleteDirectory(Paths.get(testRecord.getDriverClassPath()).getParent().toFile());

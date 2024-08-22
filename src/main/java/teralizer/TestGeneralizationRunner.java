@@ -21,6 +21,7 @@ import java.util.Properties;
 
 public class TestGeneralizationRunner {
 
+    public static final String TOOL_NAME = "Teralizer";
     public static final Path DB_PATH = Paths.get("database/db.sqlite");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
