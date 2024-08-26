@@ -31,5 +31,5 @@ test_generalization.tested_class=${testedClassQualifiedName}
 test_generalization.tested_method=${testedMethodQualifiedName}
 test_generalization.input_specification_path=${inputSpecificationPath}
 test_generalization.output_specification_path=${outputSpecificationPath}
-search.depth_limit=10
+search.depth_limit=100
 search.multiple_errors=true
