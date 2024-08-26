@@ -3,6 +3,7 @@ package teralizer.processing.task;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
+import gov.nasa.jpf.JPFNativePeerException;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.TestGeneralizationListener;
@@ -38,7 +39,14 @@ public class JpfExecutionTask implements Task {
 
         JPF jpf = new JPF(config);
         jpf.addListener(new TestGeneralizationListener(config));
-        jpf.run();
+
+        try {
+            jpf.run();
+        } catch (JPFNativePeerException e) {
+            // Exception that is (likely) due to JPFs incorrect handling of shadowing.
+            // See https://github.com/glockyco/test-generalization/issues/37 for further details
+            throw new RuntimeException("Failed JPF execution due to exception in native peers.", e);
+        }
 
         if (jpf.foundErrors()) {
             List<Error> errors = jpf.getSearchErrors();
