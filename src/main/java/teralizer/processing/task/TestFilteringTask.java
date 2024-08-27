@@ -1,5 +1,8 @@
 package teralizer.processing.task;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
@@ -10,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -57,6 +61,26 @@ public class TestFilteringTask implements Task {
         if (assertions.size() != 1) {
             reportInfo.accept("Filtering because assertion.size() != 1.");
             LOGGER.atDebug().log("Filtering test with ID {} because assertions.size() != 1.", this.testRecord.getId());
+            return;
+        }
+
+        JavaParser javaParser = context.get(this.getProjectId(), TaskContext.JAVA_PARSER);
+        CompilationUnit compilationUnit = javaParser.parse(Paths.get(this.testRecord.getTestClassPath())).getResult().get();
+        ClassOrInterfaceDeclaration testClassDeclaration = compilationUnit.getClassByName(this.testRecord.getTestClassName()).get();
+
+        if (testClassDeclaration.getExtendedTypes().isNonEmpty()) {
+            // @TODO: Add generalization support for classes that implement interfaces or extend other (abstract) classes.
+            //   ---
+            //   Test classes that implement interfaces or extend other (abstract) classes might cause
+            //   problems because the implementation of the generalization task does not currently include
+            //   all the code of the original test class in the generalized class.
+            //   ---
+            //   Consequently, implementations for abstract methods might be missing in the generalized
+            //   class, thus causing build failures. Similarly, overrides of non-abstract parent methods
+            //   might be missing, thus causing unintended behavior.
+            String qualifiedTestClassName = this.testRecord.getTestClassPackage() + "." + this.testRecord.getTestClassName();
+            reportInfo.accept("Filtering because class " + qualifiedTestClassName + " cannot be safely generalized (has parents: " + testClassDeclaration.getExtendedTypes() + ").");
+            LOGGER.atDebug().log("Filtering test with ID {} because it cannot be safely generalized.", this.testRecord.getId());
             return;
         }
 
