@@ -128,7 +128,7 @@ public class TestDetectionTask implements Task {
                     e.printStackTrace(printWriter);
 
                     paramType = null;
-                    reportInfo.accept("Could not resolve type of argument " + argument + ". \n\n" + printWriter);
+                    reportInfo.accept("Could not resolve type of argument " + argument + ". \n\n" + stringWriter);
 
                     LOGGER.atError().log(e.getMessage(), e);
                 }
