@@ -3,6 +3,10 @@ package teralizer.processing.task;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
@@ -10,9 +14,11 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
+import java.lang.reflect.Type;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
@@ -35,6 +41,7 @@ public class TestFilteringTask implements Task {
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        Gson gson = context.get(TaskContext.GSON);
 
         if (this.testRecord.getTestedClassPath() == null) {
             reportInfo.accept("Filtering because test.tested_class_path is null.");
@@ -81,6 +88,15 @@ public class TestFilteringTask implements Task {
             String qualifiedTestClassName = this.testRecord.getTestClassPackage() + "." + this.testRecord.getTestClassName();
             reportInfo.accept("Filtering because class " + qualifiedTestClassName + " cannot be safely generalized (has parents: " + testClassDeclaration.getExtendedTypes() + ").");
             LOGGER.atDebug().log("Filtering test with ID {} because it cannot be safely generalized.", this.testRecord.getId());
+            return;
+        }
+
+        Type type = new TypeToken<List<MethodParameter>>() {}.getType();
+        List<MethodParameter> testedMethodParameters = gson.fromJson(this.testRecord.getTestedMethodParamTypes(), type);
+
+        if (testedMethodParameters.stream().noneMatch(a -> a.getType().equals("int"))) {
+            reportInfo.accept("Filtering because the none of types of the tested method parameters are not supported by the generalization.");
+            LOGGER.atDebug().log("Filtering test with ID {} because none of the tested method parameters can be generalized.", this.testRecord.getId());
             return;
         }
 
