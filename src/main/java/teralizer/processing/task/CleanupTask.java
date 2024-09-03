@@ -59,7 +59,7 @@ public class CleanupTask implements Task {
         GeneralizationRecord generalizationRecord = create.selectFrom(Tables.GENERALIZATION).where(Tables.GENERALIZATION.ID.eq(generalizationId)).fetchOne();
 
         if (generalizationRecord == null) {
-            LOGGER.atWarn().log("nothing to clean up for generalization with ID {}. Generalization could not be found.", generalizationId);
+            LOGGER.atWarn().log("Nothing to clean up for generalization with ID {}. Generalization could not be found.", generalizationId);
             return;
         }
 
