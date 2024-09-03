@@ -56,7 +56,7 @@ public class ProjectBuildTask implements Task {
     }
 
     private void buildGradle(Path projectRootPath) throws IOException, InterruptedException {
-        List<String> command = Arrays.asList("./gradlew", "compileJava", "compileTestJava");
+        List<String> command = Arrays.asList("./gradlew", "compileJava", "compileTestJava", "--quiet");
         ConsoleCommand.execute(projectRootPath, command);
     }
 
