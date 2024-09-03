@@ -130,7 +130,7 @@ public class TestDetectionTask implements Task {
                     paramType = null;
                     reportInfo.accept("Could not resolve type of argument " + argument + ". \n\n" + stringWriter);
 
-                    LOGGER.atError().log(e.getMessage(), e);
+                    LOGGER.atDebug().log(e.getMessage(), e);
                 }
                 String paramName = argument.toString();
                 assertArguments.add(new MethodParameter(paramType, paramName));
