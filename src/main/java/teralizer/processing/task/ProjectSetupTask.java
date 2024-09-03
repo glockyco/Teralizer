@@ -1,11 +1,6 @@
 package teralizer.processing.task;
 
 import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import net.lingala.zip4j.ZipFile;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ModelBuilder;
