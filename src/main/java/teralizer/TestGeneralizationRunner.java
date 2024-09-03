@@ -72,7 +72,7 @@ public class TestGeneralizationRunner {
             projectRecord.setTestCompiledPath(projectInfo.getTestCompiledPath());
             projectRecord.store();
 
-            pipeline.addTask(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, projectRecord));
+            pipeline.addTask(new ProjectDownloadTask(ProcessingStage.PROJECT_DOWNLOAD, projectRecord));
             pipeline.execute();
 
             long endTime = System.currentTimeMillis();

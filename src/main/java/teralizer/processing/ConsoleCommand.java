@@ -14,12 +14,16 @@ public class ConsoleCommand {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleCommand.class);
 
+    public static void execute(List<String> command) throws IOException, InterruptedException {
+        execute(null, command);
+    }
+
     public static void execute(Path projectRootPath, List<String> command) throws IOException, InterruptedException {
         StringBuilder output = new StringBuilder();
         StringBuilder error = new StringBuilder();
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory(projectRootPath.toFile());
+        processBuilder.directory(projectRootPath == null ? null : projectRootPath.toFile());
         Process process = processBuilder.start();
 
         try (
