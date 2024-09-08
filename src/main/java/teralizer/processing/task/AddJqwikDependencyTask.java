@@ -48,7 +48,7 @@ public class AddJqwikDependencyTask implements Task {
                 this.addJqwikDependencyToGradle(projectPath);
                 break;
             case MAVEN:
-                throw new RuntimeException("Cannot build project " + projectPath + ". Ant projects are not supported yet.");
+                throw new RuntimeException("Cannot build project " + projectPath + ". Maven projects are not supported yet.");
             default:
                 throw new RuntimeException("Cannot add jqwik dependency to project " + projectPath + ". Unsupported project type " + projectRecord.getType() + ".");
         }
