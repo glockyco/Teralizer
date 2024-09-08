@@ -1,6 +1,5 @@
 package teralizer.processing.task;
 
-import com.github.javaparser.JavaParser;
 import com.google.gson.Gson;
 import org.jooq.DSLContext;
 import org.jooq.generated.tables.records.ProjectRecord;
@@ -36,14 +35,12 @@ public class TestFilteringTask implements Task {
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
-        JavaParser javaParser = context.get(this.getProjectId(), TaskContext.JAVA_PARSER);
 
         AssertionCountFilter assertionCountFilter = new AssertionCountFilter(create);
-        InheritanceFilter inheritanceFilter = new InheritanceFilter(javaParser);
         MissingValueFilter missingValueFilter = new MissingValueFilter();
         ParameterTypeFilter parameterTypeFilter = new ParameterTypeFilter(gson);
 
-        List<Filter> filters = Arrays.asList(assertionCountFilter, inheritanceFilter, missingValueFilter, parameterTypeFilter);
+        List<Filter> filters = Arrays.asList(assertionCountFilter, missingValueFilter, parameterTypeFilter);
 
         List<FilterResult> decisions = new ArrayList<>();
         for (Filter filter : filters) {

@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class TestGeneralizationTask implements Task {
 
@@ -106,9 +107,16 @@ public class TestGeneralizationTask implements Task {
 
         testClassDeclaration.getAllContainedComments().forEach(Comment::remove);
 
+        Predicate<MethodDeclaration> isTestMethod = (decl) -> decl.getNameAsString().equals(this.testRecord.getTestMethodName());
+        Predicate<MethodDeclaration> hasTestAnnotation = (decl) -> decl.isAnnotationPresent("Test");
+
         for (MethodDeclaration testMethodDeclaration : compilationUnit.findAll(MethodDeclaration.class)) {
-            if (!testMethodDeclaration.getNameAsString().equals(this.testRecord.getTestMethodName())) {
-                testMethodDeclaration.remove();
+            // Remove other @Test methods. Each one gets their own generalized test class.
+            // All other methods should be kept in case they are required by the test method.
+            if (!isTestMethod.test(testMethodDeclaration)) {
+                if (hasTestAnnotation.test(testMethodDeclaration)) {
+                    testMethodDeclaration.remove();
+                }
                 continue;
             }
 
