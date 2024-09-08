@@ -59,7 +59,7 @@ public class TestGeneralizationRunner {
 
         for (ProjectInfo projectInfo : projectInfos) {
             pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectInfo.getRootPath(), null, null));
-            pipeline.execute();
+            pipeline.executeAll();
 
             long startTime = System.currentTimeMillis();
 
@@ -73,7 +73,7 @@ public class TestGeneralizationRunner {
             projectRecord.store();
 
             pipeline.addTask(new ProjectDownloadTask(ProcessingStage.PROJECT_DOWNLOAD, projectRecord));
-            pipeline.execute();
+            pipeline.executeAll();
 
             long endTime = System.currentTimeMillis();
 
