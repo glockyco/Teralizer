@@ -2,6 +2,7 @@ package teralizer;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.PropertyListenerAdapter;
+import gov.nasa.jpf.jvm.bytecode.JVMReturnInstruction;
 import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.numeric.Constraint;
 import gov.nasa.jpf.symbc.numeric.Expression;
@@ -79,7 +80,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         PathCondition pathCondition = PathCondition.getPC(vm);
         Constraint spfInput = pathCondition == null ? null : PathCondition.getPC(vm).header;
         // @TODO: Add thrown exceptions to the reported output specification.
-        Expression spfOutput = (Expression) vm.getCurrentThread().getTopFrame().getOperandAttr();
+        Expression spfOutput = (Expression) ((JVMReturnInstruction) vm.getCurrentThread().getPC()).getReturnAttr(vm.getCurrentThread());
 
         LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
         LOGGER.atDebug().log("Input: " + (spfInput == null ? null : spfInput.toString()));
