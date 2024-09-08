@@ -180,9 +180,10 @@ public class TestGeneralizationTask implements Task {
             // Replace JUnit @Test annotations with jqwik @Property annotations.                                      //
             // ------------------------------------------------------------------------------------------------------ //
 
-            testMethodDeclaration
-                .getAnnotationByName("Test")
-                .ifPresent(a -> a.setName(net.jqwik.api.Property.class.getName()));
+            testMethodDeclaration.getAnnotationByName("Test").ifPresent(annotation -> {
+                testMethodDeclaration.remove(annotation);
+                testMethodDeclaration.addMarkerAnnotation(net.jqwik.api.Property.class.getName());
+            });
 
             // ------------------------------------------------------------------------------------------------------ //
             // Add `@ForAll(...) TestParameters testParameters` to the test method signature.                         //
