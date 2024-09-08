@@ -205,9 +205,9 @@ public class TestGeneralizationTask implements Task {
             MethodCallExpr testedMethodCall = TestDetectionTask.findTestedMethodCall(testMethodDeclaration);
 
             for (int i = 0; i < testedMethodParameters.size(); i++) {
-                // @TODO: Add support for non-int types.
+                // @TODO: Add support for non-int/-double types.
                 MethodParameter methodParameter = testedMethodParameters.get(i);
-                if (methodParameter.getType().equals("int")) {
+                if (methodParameter.getType().equals("int") || methodParameter.getType().equals("double")) {
                     testedMethodCall.getArguments().set(i, new FieldAccessExpr(new NameExpr(testParametersParameter.getNameAsString()), methodParameter.getName()));
                 }
             }
