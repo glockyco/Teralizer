@@ -87,10 +87,6 @@ public class TestGeneralizationRunner {
 
         // @TODO: Add shutdown handler.
 
-        // @TODO: Store file paths relative to the teralizer root directory.
-        //   This is necessary to ensure the portability of the collected data.
-        //   Also, this makes anonymization for double-blind review easier.
-
         // @TODO: Store the pre-condition and post-condition of every test(method) in z3 representation (?).
         //   We need a z3 representation to identify duplicate tests.
         // @TODO: Implement test duplication detection.
