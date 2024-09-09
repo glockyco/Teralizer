@@ -64,7 +64,7 @@ public class TestDetectionTask implements Task {
     private List<TestRecord> detectTests(DSLContext create, Gson gson, JavaParser javaParser, Consumer<String> reportInfo) throws IOException {
         List<TestRecord> testRecords = new ArrayList<>();
 
-        try (Stream<Path> paths = Files.walk(this.projectRecord.getRootPath())) {
+        try (Stream<Path> paths = Files.walk(this.projectRecord.getTestSourcePath())) {
             paths
                 .filter(Files::isRegularFile)
                 .filter(path -> path.toString().endsWith(".java"))
