@@ -63,6 +63,15 @@ public static class ${testParametersClassName} {
             this.${methodParameter.name} = ${methodParameter.name};
         #end
     }
+
+    @Override
+    public String toString() {
+        return "${testParametersClassName}{" +
+            #foreach(${methodParameter} in ${methodParameters})
+                "#if(${foreach.index} > 0), #end${methodParameter.name}=" + this.${methodParameter.name} +
+            #end
+        "}";
+    }
 }
 
 public static class ${testParametersSupplierClassName} implements net.jqwik.api.ArbitrarySupplier<${testParametersClassName}> {
