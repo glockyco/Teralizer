@@ -3,6 +3,28 @@
 ## @vtlvariable name="methodParameters" type="java.util.List<teralizer.domain.MethodParameter>"
 ## @vtlvariable name="precondition" type="java.lang.String"
 ##
+#set($lastParamIndex = ${methodParameters.size()} - 1)
+##
+#set($boxedTypes = {
+    "byte"   : "Byte",
+    "short"  : "Short",
+    "int"    : "Integer",
+    "long"   : "Long",
+    "float"  : "Float",
+    "double" : "Double",
+    "char"   : "Character",
+    "boolean": "Boolean",
+    "void"   : "Void"
+})
+#macro(boxedType $primitiveType)
+    #if($boxedTypes.containsKey($primitiveType))
+        #set($type = $boxedTypes.get($primitiveType))
+    #else
+        #set($type = $primitiveType)
+    #end
+    $type
+#end
+##
 #macro(arbitrariesOfType $type)
     #if(${type} == 'byte' || ${type} == 'java.lang.Byte')
         net.jqwik.api.Arbitraries.bytes()##
@@ -33,9 +55,8 @@ public static class ${testParametersClassName} {
     #end
 
     public ${testParametersClassName}(
-        #set($lastIndex = ${methodParameters.size()} - 1)
         #foreach(${methodParameter} in ${methodParameters})
-            ${methodParameter.type} ${methodParameter.name}#if(${foreach.index} < ${lastIndex}), #end
+            ${methodParameter.type} ${methodParameter.name}#if(${foreach.index} < ${lastParamIndex}), #end
         #end
     ) {
         #foreach(${methodParameter} in ${methodParameters})
@@ -54,14 +75,18 @@ public static class ${testParametersSupplierClassName} implements net.jqwik.api.
                 return #arbitrariesOfType(${methodParameters.get(0).type})
                 .map(${testParametersClassName}::new)
             #else
-                return net.jqwik.api.Combinators.combine(
-                    #set($lastIndex = ${methodParameters.size()} - 1)
+                return
                     #foreach(${methodParameter} in ${methodParameters})
-                        #arbitrariesOfType(${methodParameter.type})#if(${foreach.index} < ${lastIndex}),#end
+                        #arbitrariesOfType(${methodParameter.type}).#if(${foreach.index} < ${lastParamIndex})flatMap#{else}map#end(${methodParameter.name} ->
                     #end
-                ).as(${testParametersClassName}::new)
+                        new ${testParametersClassName}(
+                            #foreach(${methodParameter} in ${methodParameters})
+                                ${methodParameter.name}#if(${foreach.index} < ${lastParamIndex}),#end
+                            #end
+                        )
+                    #foreach(${methodParameter} in ${methodParameters}))#end
             #end
-            .filter(testParameters ->#if(${precondition}) $precondition #else true #end);
+            .filter(testParameters -> #if(${precondition})$precondition#{else}true#end);
         #end
     }
 }
