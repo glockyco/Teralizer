@@ -106,7 +106,7 @@ public class TestGeneralizationRunner {
 
     private VelocityEngine createVelocityEngine() {
         Properties properties = new Properties();
-        properties.setProperty("file.resource.loader.path", "src/main/resources/templates");
+        properties.setProperty("resource.loader.file.path", "src/main/resources/templates");
 
         VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init(properties);
