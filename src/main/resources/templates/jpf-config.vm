@@ -1,14 +1,15 @@
 ## @vtlvariable name="driverClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="testClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="testedClassQualifiedName" type="java.lang.String"
+## @vtlvariable name="symbolicMethod" type="java.lang.String"
 ## @vtlvariable name="classpath" type="java.lang.String"
 ## @vtlvariable name="testMethodQualifiedName" type="java.lang.String"
 ## @vtlvariable name="testedMethodQualifiedName" type="java.lang.String"
 ## @vtlvariable name="inputSpecificationPath" type="java.lang.String"
 ## @vtlvariable name="outputSpecificationPath" type="java.lang.String"
 target=${driverClassQualifiedName}
-symbolic.class=${testedClassQualifiedName}
-#symbolic.method=...
+#symbolic.class=${testedClassQualifiedName}
+symbolic.method=${symbolicMethod}
 #symbolic.fields=...
 classpath=${classpath}
 symbolic.collect_constraints=true

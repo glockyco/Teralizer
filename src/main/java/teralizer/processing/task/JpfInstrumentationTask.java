@@ -1,18 +1,24 @@
 package teralizer.processing.task;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class JpfInstrumentationTask implements Task {
 
@@ -28,10 +34,11 @@ public class JpfInstrumentationTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        Gson gson =  context.get(TaskContext.GSON);
         VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);
 
         this.createDriverClassFile(velocityEngine);
-        this.createJpfConfigFile(velocityEngine);
+        this.createJpfConfigFile(gson, velocityEngine);
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, this.projectRecord));
         scheduleTask.accept(new JpfExecutionTask(ProcessingStage.JPF_EXECUTION, this.projectRecord, this.testRecord));
@@ -54,7 +61,7 @@ public class JpfInstrumentationTask implements Task {
         }
     }
 
-    private void createJpfConfigFile(VelocityEngine velocityEngine) throws IOException {
+    private void createJpfConfigFile(Gson gson, VelocityEngine velocityEngine) throws IOException {
         String driverClassQualifiedName = this.testRecord.getDriverClassPackage() + "." + this.testRecord.getDriverClassName();
         String testClassQualifiedName = this.testRecord.getTestClassPackage() + "." + this.testRecord.getTestClassName();
         String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
@@ -62,8 +69,14 @@ public class JpfInstrumentationTask implements Task {
         // @TODO: Include method parameter types in the qualified name of the tested method.
         String testedMethodQualifiedName = testedClassQualifiedName + "." + this.testRecord.getTestedMethodName();
 
+        Type type = new TypeToken<List<MethodParameter>>() {}.getType();
+        List<MethodParameter> testedMethodParameters = gson.fromJson(this.testRecord.getTestedMethodParamTypes(), type);
+        String symbolicParams = testedMethodParameters.stream().map(p -> "sym").collect(Collectors.joining("#"));
+        String symbolicMethod = testedMethodQualifiedName + "(" + symbolicParams + ")";
+
         VelocityContext context = new VelocityContext();
         context.put("classpath", this.projectRecord.getClasspath());
+        context.put("symbolicMethod", symbolicMethod);
 
         context.put("driverClassQualifiedName", driverClassQualifiedName);
         context.put("testClassQualifiedName", testClassQualifiedName);
