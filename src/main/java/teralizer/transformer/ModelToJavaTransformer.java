@@ -17,6 +17,11 @@ public class ModelToJavaTransformer extends ModelVisitor {
     }
 
     public String transform(double value) {
+        if (value == Double.POSITIVE_INFINITY) {
+            return "Double.POSITIVE_INFINITY";
+        } else if (value == Double.NEGATIVE_INFINITY) {
+            return "Double.NEGATIVE_INFINITY";
+        }
         return String.valueOf(value);
     }
 
@@ -126,17 +131,17 @@ public class ModelToJavaTransformer extends ModelVisitor {
 
     @Override
     public void postVisit(ConstantInteger constant) {
-        this.stack.push(String.valueOf(constant.value));
+        this.stack.push(this.transform(constant.value));
     }
 
     @Override
     public void postVisit(ConstantReal constant) {
-        this.stack.push(String.valueOf(constant.value));
+        this.stack.push(this.transform(constant.value));
     }
 
     @Override
     public void postVisit(ConstantString constant) {
-        this.stack.push(String.valueOf(constant.value));
+        this.stack.push(this.transform(constant.value));
     }
 
     @Override
