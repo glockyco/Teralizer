@@ -32,10 +32,12 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class TestGeneralizationTask implements Task {
 
@@ -122,8 +124,7 @@ public class TestGeneralizationTask implements Task {
 
             // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
             //   Otherwise, we will have issues mapping the class names to the correct Arbitraries.
-            Type type = new TypeToken<List<MethodParameter>>() {
-            }.getType();
+            Type type = new TypeToken<List<MethodParameter>>() {}.getType();
             List<MethodParameter> testedMethodParameters = gson.fromJson(this.testRecord.getTestedMethodParamTypes(), type);
 
             String inputSpecification = new String(Files.readAllBytes(Paths.get(this.testRecord.getInputSpecificationPath())));
@@ -142,10 +143,33 @@ public class TestGeneralizationTask implements Task {
             String inputJava = modelToJavaTransformer.transform(inputModel);
             String outputJava = modelToJavaTransformer.transform(outputModel);
 
+            String regex = "\"name\": \"((?>INT|REAL)_[0-9]+)\"";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher inputMatcher = pattern.matcher(inputSpecification);
+            Matcher outputMatcher = pattern.matcher(outputSpecification);
+
+            Set<String> distinctMatches = new HashSet<>();
+
+            while (inputMatcher.find()) {
+                String match = inputMatcher.group(1);
+                distinctMatches.add(match);
+            }
+
+            while (outputMatcher.find()) {
+                String match = outputMatcher.group(1);
+                distinctMatches.add(match);
+            }
+
+            List<MethodParameter> temporaryParameters = distinctMatches.stream().map(m -> new MethodParameter(m.startsWith("INT") ? "int" : "double", m)).collect(Collectors.toList());
+
+            List<MethodParameter> allParameters = new ArrayList<>();
+            allParameters.addAll(testedMethodParameters);
+            allParameters.addAll(temporaryParameters);
+
             VelocityContext context = new VelocityContext();
             context.put("testParametersSupplierClassName", TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
             context.put("testParametersClassName", TEST_PARAMETERS_CLASS_NAME);
-            context.put("methodParameters", testedMethodParameters);
+            context.put("methodParameters", allParameters);
             context.put("precondition", inputJava);
 
             StringWriter stringWriter = new StringWriter();
