@@ -92,7 +92,7 @@ public class ModelToJavaTransformer extends ModelVisitor {
                 expr = "Math.pow(" + left + ", " + right + ")";
                 break;
             case SQRT:
-                expr = "Math.sqrt(" + left + ", " + right + ")";
+                expr = "Math.sqrt(" + left + ")";
                 break;
             case EXP:
                 expr = "Math.exp(" + left + ")";
