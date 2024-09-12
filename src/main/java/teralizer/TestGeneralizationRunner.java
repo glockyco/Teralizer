@@ -46,8 +46,7 @@ public class TestGeneralizationRunner {
         // @TODO: Get project directories from input args.
 
         List<ProjectInfo> projectInfos = Arrays.asList(
-            new ProjectInfo("../test-generalization-example"),
-            new ProjectInfo("../test-generalization-example-maven")
+            new ProjectInfo(Paths.get("projects/EqBench"), Paths.get("projects/EqBench/src/main/code"), Paths.get("projects/EqBench/src/test/code"), Paths.get("projects/EqBench/target/classes"), Paths.get("projects/EqBench/target/test-classes"))
         );
 
         DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on");

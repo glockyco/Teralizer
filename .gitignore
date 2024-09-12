@@ -343,4 +343,5 @@ gradle-app.setting
 
 /data
 /database
-/projects
+/projects/**
+!/projects/EqBench
