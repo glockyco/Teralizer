@@ -80,7 +80,7 @@ public class TestGeneralizationTask implements Task {
         generalizationRecord.setTestId(this.testRecord.getId());
         generalizationRecord.setTool(this.tool);
 
-        String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName();
+        String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_Test";
         Path generalizedClasspath = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get("teralizer", this.tool, generalizedClassName + ".java"));
 
         generalizationRecord.setGeneralizedClassPath(generalizedClasspath.toString());
