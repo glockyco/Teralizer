@@ -23,6 +23,8 @@ public class ModelToJsonTransformer {
         builder.registerTypeAdapter(VariableInteger.class, new VariableIntegerSerializer());
         builder.registerTypeAdapter(VariableReal.class, new VariableRealSerializer());
         builder.registerTypeAdapter(VariableString.class, new VariableStringSerializer());
+        builder.registerTypeAdapter(ArrayExpression.class, new ArrayExpressionSerializer());
+        builder.registerTypeAdapter(ArrayElementExpression.class, new ArrayElementExpressionSerializer());
         builder.registerTypeAdapter(SymbolicIntegerFunction.class, new SymbolicIntegerFunctionSerializer());
         builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionSerializer());
         builder.registerTypeAdapter(SymbolicStringFunction.class, new SymbolicStringFunctionSerializer());
@@ -128,6 +130,33 @@ public class ModelToJsonTransformer {
 
             jsonObject.add("_type", new JsonPrimitive(variable.getClass().getSimpleName()));
             jsonObject.add("name", new JsonPrimitive(variable.name));
+
+            return jsonObject;
+        }
+    }
+
+    private static class ArrayExpressionSerializer implements JsonSerializer<ArrayExpression> {
+        @Override
+        public JsonElement serialize(ArrayExpression expression, Type type, JsonSerializationContext context) {
+            JsonObject jsonObject = new JsonObject();
+
+            jsonObject.add("_type", new JsonPrimitive(expression.getClass().getSimpleName()));
+            jsonObject.add("name", new JsonPrimitive(expression.name));
+            jsonObject.add("elementType", new JsonPrimitive(expression.elementType));
+
+            return jsonObject;
+        }
+    }
+
+    private static class ArrayElementExpressionSerializer implements JsonSerializer<ArrayElementExpression> {
+        @Override
+        public JsonElement serialize(ArrayElementExpression expression, Type type, JsonSerializationContext context) {
+            JsonObject jsonObject = new JsonObject();
+
+            jsonObject.add("_type", new JsonPrimitive(expression.getClass().getSimpleName()));
+            jsonObject.add("arrayName", new JsonPrimitive(expression.arrayName));
+            jsonObject.add("elementType", new JsonPrimitive(expression.elementType));
+            jsonObject.add("elementSelector", context.serialize(expression.elementSelector));
 
             return jsonObject;
         }

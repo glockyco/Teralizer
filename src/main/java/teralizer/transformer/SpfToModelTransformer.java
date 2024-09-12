@@ -195,6 +195,19 @@ public class SpfToModelTransformer {
         }
 
         @Override
+        public void postVisit(gov.nasa.jpf.symbc.arrays.ArrayExpression expression) {
+            this.stack.push(new ArrayExpression(expression.getName(), expression.getElemType()));
+        }
+
+        @Override
+        public void postVisit(gov.nasa.jpf.symbc.arrays.SelectExpression expr) {
+            Expression indexExpression = this.stack.pop();
+            ArrayExpression arrayExpression = (ArrayExpression) this.stack.pop();
+
+            this.stack.push(new ArrayElementExpression(arrayExpression.name, arrayExpression.elementType, indexExpression));
+        }
+
+        @Override
         public void postVisit(gov.nasa.jpf.symbc.mixednumstrg.SpecialIntegerExpression expression) {
             // @TODO: Not sure what to do here?
             throw new UnsupportedOperationException("postVisit(SpecialIntegerExpression) is not implemented!");

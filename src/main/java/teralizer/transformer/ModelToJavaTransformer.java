@@ -166,6 +166,17 @@ public class ModelToJavaTransformer extends ModelVisitor {
     }
 
     @Override
+    public void postVisit(ArrayExpression expression) {
+        this.stack.push("testParameters." + expression.name);
+    }
+
+    @Override
+    public void postVisit(ArrayElementExpression expression) {
+        String elementSelector = this.stack.pop();
+        this.stack.push("testParameters." + expression.arrayName + "[" + elementSelector + "]");
+    }
+
+    @Override
     public void postVisit(SymbolicIntegerFunction function) {
         String[] args = this.popArgs(function.args.length);
         String expr = function.name + "(" + String.join(", ", args) + ")";

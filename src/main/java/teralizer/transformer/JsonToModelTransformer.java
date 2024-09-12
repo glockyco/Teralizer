@@ -22,6 +22,8 @@ public class JsonToModelTransformer {
         builder.registerTypeAdapter(VariableInteger.class, new VariableIntegerDeserializer());
         builder.registerTypeAdapter(VariableReal.class, new VariableRealDeserializer());
         builder.registerTypeAdapter(VariableString.class, new VariableStringDeserializer());
+        builder.registerTypeAdapter(ArrayExpression.class, new ArrayExpressionDeserializer());
+        builder.registerTypeAdapter(ArrayElementExpression.class, new ArrayElementExpressionDeserializer());
         builder.registerTypeAdapter(SymbolicIntegerFunction.class, new SymbolicIntegerFunctionDeserializer());
         builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionDeserializer());
         builder.registerTypeAdapter(SymbolicStringFunction.class, new SymbolicStringFunctionDeserializer());
@@ -110,6 +112,31 @@ public class JsonToModelTransformer {
         @Override
         public VariableString deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
             return new VariableString(jsonElement.getAsJsonObject().get("name").getAsString());
+        }
+    }
+
+    private static class ArrayExpressionDeserializer implements JsonDeserializer<ArrayExpression> {
+        @Override
+        public ArrayExpression deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            String name = jsonObject.get("name").getAsString();
+            String elementType = jsonObject.get("elementType").getAsString();
+
+            return new ArrayExpression(name, elementType);
+        }
+    }
+
+    private static class ArrayElementExpressionDeserializer implements JsonDeserializer<ArrayElementExpression> {
+        @Override
+        public ArrayElementExpression deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            String arrayName = jsonObject.get("arrayName").getAsString();
+            String elementType = jsonObject.get("elementType").getAsString();
+            Expression elementSelector = context.deserialize(jsonObject.get("elementSelector"), Expression.class);
+
+            return new ArrayElementExpression(arrayName, elementType, elementSelector);
         }
     }
 
