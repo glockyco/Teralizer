@@ -41,6 +41,8 @@ import java.util.stream.Collectors;
 
 public class TestGeneralizationTask implements Task {
 
+    private static final int MAX_SPECIFICATION_SIZE = 200000;
+
     private final ProcessingStage stage;
     private final ProjectRecord projectRecord;
     private final TestRecord testRecord;
@@ -142,6 +144,22 @@ public class TestGeneralizationTask implements Task {
             ModelToJavaTransformer modelToJavaTransformer = new ModelToJavaTransformer();
             String inputJava = modelToJavaTransformer.transform(inputModel);
             String outputJava = modelToJavaTransformer.transform(outputModel);
+
+            // The maximum allowed bytecode size of a Java method is 65535 Bytes.
+            // See: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7, "code_length".
+            // Having a method that is larger than this causes a "code too large" compiler error. To ensure we are not
+            // generating such incompilable code, we fail the generalization for any cases with a "large" input/output
+            // specification. "Large", in this case, is a very rough estimate that is only based on observed cases that
+            // have caused compilation errors. A (more) exact estimate is hard to get since there is no straightforward
+            // relationship between source code size and bytecode size.
+            // @TODO: Use a more reliable approach to check whether "code too large" errors (might) occur.
+            //   The most (and only?) reliable solution is probably to actually create the file and try to compile
+            //   it => if the error occurs, delete the created file again and mark the generalization as failed.
+            boolean isInputJavaTooLarge = inputJava != null && inputJava.length() > MAX_SPECIFICATION_SIZE;
+            boolean isOutputJavaTooLarge = outputJava != null && outputJava.length() > MAX_SPECIFICATION_SIZE;
+            if (isInputJavaTooLarge || isOutputJavaTooLarge) {
+                throw new RuntimeException("Failing generalization to avoid potential 'code too large' compilation errors.");
+            }
 
             String regex = "\"name\": \"((?>INT|REAL)_[0-9]+)\"";
             Pattern pattern = Pattern.compile(regex);
