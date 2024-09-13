@@ -80,22 +80,18 @@ public class TestGeneralizationTask implements Task {
         GeneralizationRecord generalizationRecord = create.newRecord(Tables.GENERALIZATION);
         generalizationRecord.setTestId(this.testRecord.getId());
         generalizationRecord.setTool(this.tool);
+        generalizationRecord.setGeneralizedClassPath("");
+        generalizationRecord.setGeneralizedClassPackage("");
+        generalizationRecord.setGeneralizedClassName("");
+        generalizationRecord.store();
 
-        String alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        String randomString = random.ints(10, 0, alphabet.length())
-            .mapToObj(alphabet::charAt)
-            .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
-            .toString();
-
-        String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + randomString + "_Test";
+        String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + generalizationRecord.getId() + "_Test";
         Path generalizedClassDirectory = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get("teralizer", this.tool));
         Path generalizedClassPath = generalizedClassDirectory.resolve(generalizedClassName + ".java");
 
         generalizationRecord.setGeneralizedClassPath(generalizedClassPath.toString());
         generalizationRecord.setGeneralizedClassPackage(this.testRecord.getTestClassPackage() + ".teralizer." + this.tool);
         generalizationRecord.setGeneralizedClassName(generalizedClassName);
-
         generalizationRecord.store();
 
         return generalizationRecord;
