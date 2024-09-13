@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 public class TestGeneralizationTask implements Task {
 
+    private static final int MAX_TRIES_JQWIK = 20;
     private static final int MAX_SPECIFICATION_SIZE = 200000;
 
     private final ProcessingStage stage;
@@ -232,7 +233,10 @@ public class TestGeneralizationTask implements Task {
 
             testMethodDeclaration.getAnnotationByName("Test").ifPresent(annotation -> {
                 testMethodDeclaration.remove(annotation);
-                testMethodDeclaration.addMarkerAnnotation(net.jqwik.api.Property.class.getName());
+                testMethodDeclaration.addAnnotation(
+                    new NormalAnnotationExpr(new Name(net.jqwik.api.Property.class.getName()),
+                    new NodeList<>(new MemberValuePair("tries", new IntegerLiteralExpr(Integer.toString(MAX_TRIES_JQWIK)))))
+                );
             });
 
             // ------------------------------------------------------------------------------------------------------ //
