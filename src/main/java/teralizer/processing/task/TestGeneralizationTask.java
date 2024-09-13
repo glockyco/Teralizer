@@ -81,10 +81,18 @@ public class TestGeneralizationTask implements Task {
         generalizationRecord.setTestId(this.testRecord.getId());
         generalizationRecord.setTool(this.tool);
 
-        String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_Test";
-        Path generalizedClasspath = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get("teralizer", this.tool, generalizedClassName + ".java"));
+        String alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        String randomString = random.ints(10, 0, alphabet.length())
+            .mapToObj(alphabet::charAt)
+            .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+            .toString();
 
-        generalizationRecord.setGeneralizedClassPath(generalizedClasspath.toString());
+        String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + randomString + "_Test";
+        Path generalizedClassDirectory = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get("teralizer", this.tool));
+        Path generalizedClassPath = generalizedClassDirectory.resolve(generalizedClassName + ".java");
+
+        generalizationRecord.setGeneralizedClassPath(generalizedClassPath.toString());
         generalizationRecord.setGeneralizedClassPackage(this.testRecord.getTestClassPackage() + ".teralizer." + this.tool);
         generalizationRecord.setGeneralizedClassName(generalizedClassName);
 
