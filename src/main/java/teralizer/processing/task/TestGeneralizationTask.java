@@ -97,15 +97,7 @@ public class TestGeneralizationTask implements Task {
         CompilationUnit compilationUnit = javaParser.parse(Paths.get(this.testRecord.getTestClassPath())).getResult().get();
 
         compilationUnit.setPackageDeclaration(this.generalizationRecord.getGeneralizedClassPackage());
-
         compilationUnit.addImport(this.testRecord.getTestClassPackage() + ".*");
-
-        // @TODO: Read these additional imports from the Velocity templates.
-        compilationUnit.addImport(net.jqwik.api.Arbitraries.class);
-        compilationUnit.addImport(net.jqwik.api.Arbitrary.class);
-        compilationUnit.addImport(net.jqwik.api.ArbitrarySupplier.class);
-        compilationUnit.addImport(net.jqwik.api.Combinators.class);
-        compilationUnit.addImport(net.jqwik.api.ForAll.class);
 
         ClassOrInterfaceDeclaration testClassDeclaration = compilationUnit.getClassByName(this.testRecord.getTestClassName()).get();
         testClassDeclaration.setName(this.generalizationRecord.getGeneralizedClassName());
@@ -247,7 +239,7 @@ public class TestGeneralizationTask implements Task {
             ClassOrInterfaceType testParametersSupplierClassType = new ClassOrInterfaceType(null, testParametersSupplierClassDeclaration.getNameAsString());
 
             Parameter testParametersParameter = new Parameter(testParametersClassType, "testParameters");
-            NormalAnnotationExpr forAllAnnotation = new NormalAnnotationExpr(new Name(net.jqwik.api.ForAll.class.getSimpleName()), new NodeList<>(new MemberValuePair("supplier", new ClassExpr(testParametersSupplierClassType))));
+            NormalAnnotationExpr forAllAnnotation = new NormalAnnotationExpr(new Name(net.jqwik.api.ForAll.class.getName()), new NodeList<>(new MemberValuePair("supplier", new ClassExpr(testParametersSupplierClassType))));
             testParametersParameter.addAnnotation(forAllAnnotation);
 
             testMethodDeclaration.addParameter(testParametersParameter);
