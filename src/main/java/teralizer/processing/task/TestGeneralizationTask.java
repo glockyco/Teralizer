@@ -73,6 +73,7 @@ public class TestGeneralizationTask implements Task {
         this.generalizeTest(gson, javaParser, velocityEngine);
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_GENERALIZED, this.projectRecord));
+        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.TEST_EXECUTION_GENERALIZED, this.projectRecord));
     }
 
 
