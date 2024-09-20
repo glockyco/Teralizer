@@ -91,7 +91,8 @@ public class ProjectSetupTask implements Task {
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, this.projectRecord));
-        scheduleTask.accept(new AddJqwikDependencyTask(ProcessingStage.ADD_JQWIK_DEPENDENCY, this.projectRecord));
+        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_ORIGINAL, this.projectRecord));
+        scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
     }
 
     private ProjectType identifyProjectType(Path projectRootPath) {

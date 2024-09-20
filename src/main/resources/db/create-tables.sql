@@ -1,6 +1,7 @@
 -- Dialect: SQLite
 
 DROP TABLE IF EXISTS task;
+DROP TABLE IF EXISTS test_report;
 DROP TABLE IF EXISTS generalization;
 DROP TABLE IF EXISTS assertion;
 DROP TABLE IF EXISTS test;
@@ -15,6 +16,7 @@ CREATE TABLE project
     test_source_path   TEXT, -- can be null for invalid project root paths
     main_compiled_path TEXT, -- can be null for invalid project root paths
     test_compiled_path TEXT, -- can be null for invalid project root paths
+    test_reports_path  TEXT, -- can be null for invalid project root paths
     classpath          TEXT, -- can be null for invalid project root paths
     runtime            REAL  -- can be null until the project is fully processed
 );
@@ -71,6 +73,26 @@ CREATE TABLE generalization
 
 CREATE INDEX idx_generalization_test_id ON generalization (test_id);
 CREATE INDEX idx_generalization_tool ON generalization (tool);
+
+CREATE TABLE test_report
+(
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    test_id            INTEGER, -- can be null if the report is for a generalization
+    generalization_id  INTEGER, -- can be null if the report is for a test
+    result             INTEGER NOT NULL,
+    runtime            REAL    NOT NULL,
+    failure_message    TEXT,    -- can be null for passed / skipped tests
+    failure_type       TEXT,    -- can be null for passed / skipped tests
+    failure_error_line TEXT,    -- can be null for passed / skipped tests
+    failure_detail     TEXT,    -- can be null for passed / skipped tests
+    report_path        TEXT    NOT NULL,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_test_report_test_id ON test_report (test_id);
+CREATE INDEX idx_test_report_generalization_id ON test_report (generalization_id);
+CREATE INDEX idx_test_report_result ON test_report (result);
 
 CREATE TABLE task
 (

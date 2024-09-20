@@ -11,6 +11,7 @@ import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
+import org.jooq.generated.tables.TestReport;
 import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 
@@ -36,4 +37,7 @@ public class Indexes {
     public static final Index IDX_TASK_STEP = Internal.createIndex(DSL.name("idx_task_step"), Task.TASK, new OrderField[] { Task.TASK.STEP }, false);
     public static final Index IDX_TASK_TEST_ID = Internal.createIndex(DSL.name("idx_task_test_id"), Task.TASK, new OrderField[] { Task.TASK.TEST_ID }, false);
     public static final Index IDX_TEST_PROJECT_ID = Internal.createIndex(DSL.name("idx_test_project_id"), Test.TEST, new OrderField[] { Test.TEST.PROJECT_ID }, false);
+    public static final Index IDX_TEST_REPORT_GENERALIZATION_ID = Internal.createIndex(DSL.name("idx_test_report_generalization_id"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.GENERALIZATION_ID }, false);
+    public static final Index IDX_TEST_REPORT_RESULT = Internal.createIndex(DSL.name("idx_test_report_result"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.RESULT }, false);
+    public static final Index IDX_TEST_REPORT_TEST_ID = Internal.createIndex(DSL.name("idx_test_report_test_id"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.TEST_ID }, false);
 }

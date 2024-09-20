@@ -73,9 +73,9 @@ public class TestGeneralizationTask implements Task {
         this.generalizeTest(gson, javaParser, velocityEngine);
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_GENERALIZED, this.projectRecord));
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.TEST_EXECUTION_GENERALIZED, this.projectRecord));
+        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_GENERALIZED, this.projectRecord));
+        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED, this.projectRecord, this.testRecord, this.generalizationRecord));
     }
-
 
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
         GeneralizationRecord generalizationRecord = create.newRecord(Tables.GENERALIZATION);

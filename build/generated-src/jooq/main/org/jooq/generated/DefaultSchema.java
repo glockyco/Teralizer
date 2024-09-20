@@ -15,6 +15,7 @@ import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
+import org.jooq.generated.tables.TestReport;
 import org.jooq.impl.SchemaImpl;
 
 
@@ -62,6 +63,11 @@ public class DefaultSchema extends SchemaImpl {
     public final Test TEST = Test.TEST;
 
     /**
+     * The table <code>test_report</code>.
+     */
+    public final TestReport TEST_REPORT = TestReport.TEST_REPORT;
+
+    /**
      * No further instances allowed
      */
     private DefaultSchema() {
@@ -82,6 +88,7 @@ public class DefaultSchema extends SchemaImpl {
             Project.PROJECT,
             SqliteSequence.SQLITE_SEQUENCE,
             Task.TASK,
-            Test.TEST);
+            Test.TEST,
+            TestReport.TEST_REPORT);
     }
 }

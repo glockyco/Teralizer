@@ -12,11 +12,13 @@ import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
+import org.jooq.generated.tables.TestReport;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import org.jooq.generated.tables.records.TestReportRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 
@@ -37,6 +39,7 @@ public class Keys {
     public static final UniqueKey<ProjectRecord> PK_PROJECT = Internal.createUniqueKey(Project.PROJECT, DSL.name("pk_project"), new TableField[] { Project.PROJECT.ID }, true);
     public static final UniqueKey<TaskRecord> PK_TASK = Internal.createUniqueKey(Task.TASK, DSL.name("pk_task"), new TableField[] { Task.TASK.ID }, true);
     public static final UniqueKey<TestRecord> PK_TEST = Internal.createUniqueKey(Test.TEST, DSL.name("pk_test"), new TableField[] { Test.TEST.ID }, true);
+    public static final UniqueKey<TestReportRecord> PK_TEST_REPORT = Internal.createUniqueKey(TestReport.TEST_REPORT, DSL.name("pk_test_report"), new TableField[] { TestReport.TEST_REPORT.ID }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
@@ -48,4 +51,6 @@ public class Keys {
     public static final ForeignKey<TaskRecord, ProjectRecord> FK_TASK_PROJECT_1 = Internal.createForeignKey(Task.TASK, DSL.name("fk_task_project_1"), new TableField[] { Task.TASK.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<TaskRecord, TestRecord> FK_TASK_TEST_1 = Internal.createForeignKey(Task.TASK, DSL.name("fk_task_test_1"), new TableField[] { Task.TASK.TEST_ID }, Keys.PK_TEST, new TableField[] { Test.TEST.ID }, true);
     public static final ForeignKey<TestRecord, ProjectRecord> FK_TEST_PROJECT_1 = Internal.createForeignKey(Test.TEST, DSL.name("fk_test_project_1"), new TableField[] { Test.TEST.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);
+    public static final ForeignKey<TestReportRecord, GeneralizationRecord> FK_TEST_REPORT_GENERALIZATION_1 = Internal.createForeignKey(TestReport.TEST_REPORT, DSL.name("fk_test_report_generalization_1"), new TableField[] { TestReport.TEST_REPORT.GENERALIZATION_ID }, Keys.PK_GENERALIZATION, new TableField[] { Generalization.GENERALIZATION.ID }, true);
+    public static final ForeignKey<TestReportRecord, TestRecord> FK_TEST_REPORT_TEST_1 = Internal.createForeignKey(TestReport.TEST_REPORT, DSL.name("fk_test_report_test_1"), new TableField[] { TestReport.TEST_REPORT.TEST_ID }, Keys.PK_TEST, new TableField[] { Test.TEST.ID }, true);
 }

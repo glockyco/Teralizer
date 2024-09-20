@@ -58,7 +58,7 @@ public class TestFilteringTask implements Task {
             return;
         }
 
-        scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord, this.testRecord));
+        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.TEST_DATA_COLLECTION_ORIGINAL, this.projectRecord, this.testRecord, null));
     }
 
     @Override

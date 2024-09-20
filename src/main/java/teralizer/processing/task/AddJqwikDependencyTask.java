@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class AddJqwikDependencyTask implements Task {
@@ -38,9 +39,6 @@ public class AddJqwikDependencyTask implements Task {
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         this.addJqwikDependency(this.projectRecord);
-
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_JQWIK, this.projectRecord));
-        scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
     }
 
     private void addJqwikDependency(ProjectRecord projectRecord) throws Exception {
@@ -132,5 +130,26 @@ public class AddJqwikDependencyTask implements Task {
     @Override
     public Integer getGeneralizationId() {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return "AddJqwikDependencyTask{" +
+            "stage=" + this.stage.getStep() +
+            ", projectRecord=" + this.projectRecord.getId() +
+            '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AddJqwikDependencyTask)) return false;
+        AddJqwikDependencyTask that = (AddJqwikDependencyTask) o;
+        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.stage, this.projectRecord.getId());
     }
 }

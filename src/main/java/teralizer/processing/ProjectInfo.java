@@ -10,17 +10,19 @@ public class ProjectInfo {
     private Path testSourcePath;
     private Path mainCompiledPath;
     private Path testCompiledPath;
+    private Path testReportsPath;
 
     public ProjectInfo(String rootPath) {
-        this(Paths.get(rootPath), null, null, null, null);
+        this(Paths.get(rootPath), null, null, null, null, null);
     }
 
-    public ProjectInfo(Path rootPath, Path mainSourcePath, Path testSourcePath, Path mainCompiledPath, Path testCompiledPath) {
+    public ProjectInfo(Path rootPath, Path mainSourcePath, Path testSourcePath, Path mainCompiledPath, Path testCompiledPath, Path testReportsPath) {
         this.rootPath = rootPath;
         this.mainSourcePath = mainSourcePath;
         this.testSourcePath = testSourcePath;
         this.mainCompiledPath = mainCompiledPath;
         this.testCompiledPath = testCompiledPath;
+        this.testReportsPath = testReportsPath;
     }
 
     public Path getRootPath() {
@@ -61,5 +63,13 @@ public class ProjectInfo {
 
     public void setTestCompiledPath(Path testCompiledPath) {
         this.testCompiledPath = testCompiledPath;
+    }
+
+    public Path getTestReportsPath() {
+        return this.testReportsPath;
+    }
+
+    public void setTestReportsPath(Path testReportsPath) {
+        this.testReportsPath = testReportsPath;
     }
 }

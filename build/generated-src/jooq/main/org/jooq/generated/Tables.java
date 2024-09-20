@@ -10,6 +10,7 @@ import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
+import org.jooq.generated.tables.TestReport;
 
 
 /**
@@ -47,4 +48,9 @@ public class Tables {
      * The table <code>test</code>.
      */
     public static final Test TEST = Test.TEST;
+
+    /**
+     * The table <code>test_report</code>.
+     */
+    public static final TestReport TEST_REPORT = TestReport.TEST_REPORT;
 }
