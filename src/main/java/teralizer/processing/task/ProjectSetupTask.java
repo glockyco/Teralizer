@@ -233,7 +233,9 @@ public class ProjectSetupTask implements Task {
     }
 
     private void setupGradleTestReportsPath(ProjectRecord projectRecord) {
-        throw new RuntimeException("Cannot setup test reports path for project " + this.projectRecord.getRootPath() + ". Gradle projects are not supported yet.");
+        if (projectRecord.getTestReportsPath() == null) {
+            projectRecord.setTestReportsPath(projectRecord.getRootPath().resolve("build/test-results/test"));
+        }
     }
 
     private void setupMavenSourcePaths(ProjectRecord projectRecord, Path projectRootPath) {
