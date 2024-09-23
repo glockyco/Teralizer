@@ -14,11 +14,11 @@ public class ConsoleCommand {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleCommand.class);
 
-    public static void execute(List<String> command) throws IOException, InterruptedException {
+    public static void execute(List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
         execute(null, command);
     }
 
-    public static void execute(Path projectRootPath, List<String> command) throws IOException, InterruptedException {
+    public static void execute(Path projectRootPath, List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
         StringBuilder output = new StringBuilder();
         StringBuilder error = new StringBuilder();
 
@@ -38,11 +38,10 @@ public class ConsoleCommand {
 
         int exitCode = process.waitFor();
 
-        if (exitCode == 0 && error.toString().isEmpty()) {
+        if (exitCode == 0) {
             LOGGER.atDebug().log(output.toString());
         } else {
-            String errorMessage = "Output:\n\n" + output + (error.toString().isEmpty() ? "" : "\n\nError:\n\n" + error);
-            throw new RuntimeException(errorMessage);
+            throw new ConsoleCommandException(exitCode, output.toString(), error.toString());
         }
     }
 }

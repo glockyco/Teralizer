@@ -1,18 +1,21 @@
 package teralizer.processing.task;
 
 import org.jooq.generated.tables.records.ProjectRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import teralizer.processing.ConsoleCommand;
+import teralizer.processing.ConsoleCommandException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 public class TestExecutionTask implements Task {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestExecutionTask.class);
 
     private final ProcessingStage stage;
     private final ProjectRecord projectRecord;
@@ -24,6 +27,8 @@ public class TestExecutionTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        List<String> command;
+
         switch (this.projectRecord.getType()) {
             case UNKNOWN:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
@@ -32,24 +37,25 @@ public class TestExecutionTask implements Task {
             case ANT:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
-                this.testGradle(this.projectRecord.getRootPath());
+                command = Arrays.asList("./gradlew", "test", "--quiet");
                 break;
             case MAVEN:
-                this.testMaven(this.projectRecord.getRootPath());
+                command = Arrays.asList("mvn", "test");
                 break;
             default:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
         }
-    }
 
-    private void testGradle(Path projectRootPath) throws IOException, InterruptedException {
-        List<String> command = Arrays.asList("./gradlew", "test", "--quiet");
-        ConsoleCommand.execute(projectRootPath, command);
-    }
-
-    private void testMaven(Path projectRootPath) throws IOException, InterruptedException {
-        List<String> command = Arrays.asList("mvn", "test");
-        ConsoleCommand.execute(projectRootPath, command);
+        try {
+            ConsoleCommand.execute(this.projectRecord.getRootPath(), command);
+        } catch (ConsoleCommandException e) {
+            if (e.getMessage().contains("AssertionFailedError")) {
+                LOGGER.atDebug().log(e.getMessage());
+                reportInfo.accept(e.getMessage());
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override

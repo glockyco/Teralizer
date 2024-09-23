@@ -2,6 +2,7 @@ package teralizer.processing.task;
 
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ConsoleCommand;
+import teralizer.processing.ConsoleCommandException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
@@ -50,17 +51,17 @@ public class ProjectBuildTask implements Task {
         }
     }
 
-    private void buildAnt(Path projectRootPath) throws IOException, InterruptedException {
+    private void buildAnt(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
         List<String> command = Arrays.asList("ant", "-f", "build.xml", "compile");
         ConsoleCommand.execute(projectRootPath, command);
     }
 
-    private void buildGradle(Path projectRootPath) throws IOException, InterruptedException {
+    private void buildGradle(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
         List<String> command = Arrays.asList("./gradlew", "compileJava", "compileTestJava", "--quiet");
         ConsoleCommand.execute(projectRootPath, command);
     }
 
-    private void buildMaven(Path projectRootPath) throws IOException, InterruptedException {
+    private void buildMaven(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
         List<String> command = Arrays.asList("mvn", "compile", "test-compile");
         ConsoleCommand.execute(projectRootPath, command);
     }
