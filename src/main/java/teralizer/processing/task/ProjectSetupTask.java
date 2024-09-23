@@ -58,21 +58,25 @@ public class ProjectSetupTask implements Task {
                 this.setupJaiganticSourcePaths(this.projectRecord);
                 this.setupJaiganticCompiledPaths(this.projectRecord);
                 this.setupJaiganticClasspath(this.projectRecord);
+                this.setupJaiganticTestReportsPath(this.projectRecord);
                 break;
             case ANT:
                 this.setupAntSourcePaths(this.projectRecord, this.projectRecord.getRootPath());
                 this.setupAntCompiledPaths(this.projectRecord);
                 this.setupAntClasspath(this.projectRecord);
+                this.setupAntTestReportsPath(this.projectRecord);
                 break;
             case GRADLE:
                 this.setupGradleSourcePaths(this.projectRecord, this.projectRecord.getRootPath());
                 this.setupGradleCompiledPaths(this.projectRecord);
                 this.setupGradleClasspath(this.projectRecord);
+                this.setupGradleTestReportsPath(this.projectRecord);
                 break;
             case MAVEN:
                 this.setupMavenSourcePaths(this.projectRecord, this.projectRecord.getRootPath());
                 this.setupMavenCompiledPaths(this.projectRecord);
                 this.setupMavenClasspath(this.projectRecord);
+                this.setupMavenTestReportsPath(this.projectRecord);
                 break;
             default:
                 throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
@@ -166,6 +170,10 @@ public class ProjectSetupTask implements Task {
         projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
     }
 
+    private void setupJaiganticTestReportsPath(ProjectRecord projectRecord) {
+        throw new RuntimeException("Cannot setup test reports path for project " + this.projectRecord.getRootPath() + ". Jaigantic projects are not supported yet.");
+    }
+
     private void setupAntSourcePaths(ProjectRecord projectRecord, Path projectRootPath) {
         throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
     }
@@ -176,6 +184,10 @@ public class ProjectSetupTask implements Task {
 
     private void setupAntClasspath(ProjectRecord projectRecord) {
         throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
+    }
+
+    private void setupAntTestReportsPath(ProjectRecord projectRecord) {
+        throw new RuntimeException("Cannot setup test reports path for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
     }
 
     private void setupGradleSourcePaths(ProjectRecord projectRecord, Path projectRootPath) {
@@ -218,6 +230,10 @@ public class ProjectSetupTask implements Task {
         }
 
         projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
+    }
+
+    private void setupGradleTestReportsPath(ProjectRecord projectRecord) {
+        throw new RuntimeException("Cannot setup test reports path for project " + this.projectRecord.getRootPath() + ". Gradle projects are not supported yet.");
     }
 
     private void setupMavenSourcePaths(ProjectRecord projectRecord, Path projectRootPath) {
@@ -285,6 +301,12 @@ public class ProjectSetupTask implements Task {
         Arrays.stream(classpath.split(File.pathSeparator)).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
 
         projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
+    }
+
+    private void setupMavenTestReportsPath(ProjectRecord projectRecord) {
+        if (projectRecord.getTestReportsPath() == null) {
+            projectRecord.setTestReportsPath(projectRecord.getRootPath().resolve("target/surefire-reports"));
+        }
     }
 
     @Override
