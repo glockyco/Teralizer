@@ -4,6 +4,12 @@ import org.dom4j.*;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ModelBuilder;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.GradleModuleVersion;
+import org.gradle.tooling.model.eclipse.EclipseExternalDependency;
+import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +32,8 @@ public class AddJqwikDependencyTask implements Task {
     private static final String JQWIK_GROUP_ID = "net.jqwik";
     private static final String JQWIK_ARTIFACT_ID = "jqwik";
     private static final String JQWIK_VERSION = "1.8.5";
-    private static final String DEPENDENCY_STRING = "\ndependencies { testImplementation \"" + JQWIK_GROUP_ID + ":" + JQWIK_ARTIFACT_ID + ":" + JQWIK_VERSION + "\" } // Added by " + TestGeneralizationRunner.TOOL_NAME + ".\n";
+
+    private static final String GRADLE_DEPENDENCY_STRING = String.format("\ndependencies { testImplementation '%s:%s:%s' } // Added by %s.\n", JQWIK_GROUP_ID, JQWIK_ARTIFACT_ID, JQWIK_VERSION, TestGeneralizationRunner.TOOL_NAME);
 
     private final ProcessingStage stage;
     private final ProjectRecord projectRecord;
@@ -62,19 +69,27 @@ public class AddJqwikDependencyTask implements Task {
     }
 
     private void addJqwikDependencyToGradle(Path projectPath) throws IOException {
+        // Check if a jqwik dependency already exists:
+        GradleConnector connector = GradleConnector.newConnector();
+        connector.forProjectDirectory(projectPath.toFile());
+        try (ProjectConnection connection = connector.connect()) {
+            ModelBuilder<EclipseProject> modelBuilder = connection.model(EclipseProject.class);
+            EclipseProject projectModel = modelBuilder.get();
+
+            for (EclipseExternalDependency dependency: projectModel.getClasspath()) {
+                GradleModuleVersion moduleVersion = dependency.getGradleModuleVersion();
+                if (moduleVersion.getGroup().equals(JQWIK_GROUP_ID) && moduleVersion.getName().equals(JQWIK_ARTIFACT_ID)) {
+                    LOGGER.atWarn().log("No dependencies to add for project {}. jqwik is already listed as a dependency.", projectPath);
+                    return;
+                }
+            }
+        }
+
+        // If we did not find a jqwik dependency, add one:
         Path buildFilePath = projectPath.resolve("build.gradle");
         String content = new String(Files.readAllBytes(buildFilePath));
-
-        // @TODO: Check whether ANY jqwik dependency is already present in the build.gradle file.
-        //   Currently, we are only really checking whether a Teralizer-added jqwik dependency exists
-        //   (it needs to match not only the jqwik dependency string, but also the "Added by Teralizer." comment).
-        //   Ideally, the detection should be version- and comment-agnostic, work with long and short dependency declaration styles, etc.
-        if (content.contains(DEPENDENCY_STRING)) {
-            LOGGER.atWarn().log("No dependencies to add for project {}. jqwik is already listed as a dependency.", projectPath);
-        } else {
-            content += DEPENDENCY_STRING;
-            Files.write(buildFilePath, content.getBytes());
-        }
+        content += GRADLE_DEPENDENCY_STRING;
+        Files.write(buildFilePath, content.getBytes());
     }
 
     private void addJqwikDependencyToMaven(Path projectPath) throws IOException, DocumentException {
