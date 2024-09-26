@@ -102,7 +102,7 @@ public class TestDataCollectionTask implements Task {
 
         List<ReportTestCase> testCaseReports = testSuiteReports.stream()
             .flatMap(r -> r.getTestCases().stream())
-            .filter(r -> r.getFullName().equals(testMethodQualifiedName))
+            .filter(r -> r.getFullName().equals(testMethodQualifiedName) || (r.getFullName()).equals(testMethodQualifiedName + "()"))
             .collect(Collectors.toList());
 
         if (testCaseReports.isEmpty()) {
