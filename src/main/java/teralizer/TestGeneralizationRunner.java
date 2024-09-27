@@ -54,7 +54,8 @@ public class TestGeneralizationRunner {
                 Paths.get("projects/EqBench/target/test-classes"),
                 Paths.get("projects/EqBench/target/surefire-reports")
             ),
-            new ProjectInfo("projects/example-gradle-junit5")
+            new ProjectInfo("projects/example-gradle-junit5"),
+            new ProjectInfo("projects/example-maven-junit4")
         );
 
         DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on");
