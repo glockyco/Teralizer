@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+group = 'teralizer.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/junit/junit
+    testImplementation 'junit:junit:4.13.2'
+    // https://mvnrepository.com/artifact/net.jqwik/jqwik
+    testImplementation("net.jqwik:jqwik:1.8.5")
+}
+
+test {
+    useJUnitPlatform()
+}
