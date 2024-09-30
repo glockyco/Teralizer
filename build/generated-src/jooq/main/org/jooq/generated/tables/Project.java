@@ -144,7 +144,7 @@ public class Project extends TableImpl<ProjectRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_PROJECT_PATH);
+        return Arrays.<Index>asList(Indexes.IDX_PROJECT_PATH, Indexes.IDX_PROJECT_TYPE);
     }
 
     @Override

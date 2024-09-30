@@ -22,6 +22,7 @@ CREATE TABLE project
 );
 
 CREATE INDEX idx_project_path ON project (root_path);
+CREATE INDEX idx_project_type ON project (type);
 
 CREATE TABLE test
 (
