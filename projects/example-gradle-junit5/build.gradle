@@ -12,6 +12,8 @@ repositories {
 dependencies {
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.11.0'
     // https://mvnrepository.com/artifact/net.jqwik/jqwik
     testImplementation("net.jqwik:jqwik:1.8.5")
 }
