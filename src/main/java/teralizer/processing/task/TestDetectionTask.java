@@ -95,7 +95,7 @@ public class TestDetectionTask implements Task {
                             testRecord.setTestClassName(testClassDeclaration.getNameAsString().replace(".", "$"));
                             testRecord.setTestMethodName(testMethodDeclaration.getNameAsString());
                             this.setTestedMethodData(testRecord, testMethodDeclaration, gson);
-                            this.setJpfData(testRecord);
+                            this.setJpfData(this.projectRecord.getRootPath().getFileName().toString(), testRecord);
                             testRecord.store();
 
                             testRecords.add(testRecord);
@@ -186,7 +186,7 @@ public class TestDetectionTask implements Task {
         testRecord.setTestedMethodReturnType(testedMethodDeclaration.getReturnType().describe());
     }
 
-    private void setJpfData(TestRecord testRecord) {
+    private void setJpfData(String projectName, TestRecord testRecord) {
         String driverClassName = "_" + testRecord.getTestClassName() + "_Driver_" + testRecord.getTestMethodName();
         Path driverClassPath = Paths.get(testRecord.getTestClassPath()).getParent().resolve("teralizer/" + driverClassName + ".java");
 
@@ -197,9 +197,10 @@ public class TestDetectionTask implements Task {
         String testClassQualifiedName = testRecord.getTestClassPackage() + "." + testRecord.getTestClassName();
         String testMethodQualifiedName = testClassQualifiedName + "." + testRecord.getTestMethodName();
 
-        Path jpfConfigFilePath = Paths.get("data", testMethodQualifiedName + ".jpf");
-        Path inputSpecificationPath = Paths.get("data", testMethodQualifiedName + ".jpf.input.json");
-        Path outputSpecificationPath = Paths.get("data", testMethodQualifiedName + ".jpf.output.json");
+        Path projectDataPath = Paths.get("data", projectName);
+        Path jpfConfigFilePath = projectDataPath.resolve(testMethodQualifiedName + ".jpf");
+        Path inputSpecificationPath = projectDataPath.resolve(testMethodQualifiedName + ".jpf.input.json");
+        Path outputSpecificationPath = projectDataPath.resolve(testMethodQualifiedName + ".jpf.output.json");
 
         testRecord.setJpfConfigPath(jpfConfigFilePath.toString());
         testRecord.setInputSpecificationPath(inputSpecificationPath.toString());
