@@ -95,6 +95,9 @@ public class ProjectSetupTask implements Task {
         if (this.projectRecord.getTestSourcePath() == null || !Files.exists(this.projectRecord.getTestSourcePath())) {
             throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Test source path '" + this.projectRecord.getTestSourcePath() + "' does not exist.");
         }
+        if (this.projectRecord.getTestFramework() == TestFramework.UNKNOWN) {
+            throw new RuntimeException("Cannot setup project" + this.projectRecord.getRootPath() + ". No supported test framework identified.");
+        }
 
         JavaParser javaParser = JavaParserFactory.createJavaParser(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath());
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
