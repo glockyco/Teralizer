@@ -14,7 +14,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row10;
+import org.jooq.Row12;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -31,6 +31,7 @@ import org.jooq.impl.TableImpl;
 
 import teralizer.jooq.PathConverter;
 import teralizer.processing.ProjectType;
+import teralizer.processing.TestFramework;
 
 
 /**
@@ -63,6 +64,16 @@ public class Project extends TableImpl<ProjectRecord> {
      * The column <code>project.type</code>.
      */
     public final TableField<ProjectRecord, ProjectType> TYPE = createField(DSL.name("type"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProjectType>(String.class, ProjectType.class));
+
+    /**
+     * The column <code>project.test_framework</code>.
+     */
+    public final TableField<ProjectRecord, TestFramework> TEST_FRAMEWORK = createField(DSL.name("test_framework"), SQLDataType.CLOB, this, "", new EnumConverter<String, TestFramework>(String.class, TestFramework.class));
+
+    /**
+     * The column <code>project.test_framework_version</code>.
+     */
+    public final TableField<ProjectRecord, String> TEST_FRAMEWORK_VERSION = createField(DSL.name("test_framework_version"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>project.root_path</code>.
@@ -144,7 +155,7 @@ public class Project extends TableImpl<ProjectRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_PROJECT_PATH, Indexes.IDX_PROJECT_TYPE);
+        return Arrays.<Index>asList(Indexes.IDX_PROJECT_PATH, Indexes.IDX_PROJECT_TEST_FRAMEWORK, Indexes.IDX_PROJECT_TYPE);
     }
 
     @Override
@@ -189,11 +200,11 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row10 type methods
+    // Row12 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row10<Integer, ProjectType, Path, Path, Path, Path, Path, Path, String, Float> fieldsRow() {
-        return (Row10) super.fieldsRow();
+    public Row12<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, String, Float> fieldsRow() {
+        return (Row12) super.fieldsRow();
     }
 }

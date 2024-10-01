@@ -13,6 +13,7 @@ import teralizer.javaparser.JavaParserFactory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProjectType;
 import teralizer.processing.TaskContext;
+import teralizer.processing.TestFramework;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +28,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ProjectSetupTask implements Task {
@@ -82,6 +85,8 @@ public class ProjectSetupTask implements Task {
                 throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
         }
 
+        this.setupTestFramework(this.projectRecord);
+
         this.projectRecord.store();
 
         if (this.projectRecord.getMainSourcePath() == null || !Files.exists(this.projectRecord.getMainSourcePath())) {
@@ -110,6 +115,25 @@ public class ProjectSetupTask implements Task {
             return ProjectType.MAVEN;
         }
         return ProjectType.UNKNOWN;
+    }
+
+    private void setupTestFramework(ProjectRecord projectRecord) {
+        Pattern junit4Pattern = Pattern.compile("junit-([0-9.]+)\\.jar");
+        Matcher junit4Matcher = junit4Pattern.matcher(projectRecord.getClasspath());
+
+        Pattern junit5Pattern = Pattern.compile("junit-jupiter-api-([0-9.]+)\\.jar");
+        Matcher junit5Matcher = junit5Pattern.matcher(projectRecord.getClasspath());
+
+        if (junit4Matcher.find()) {
+            projectRecord.setTestFramework(TestFramework.JUNIT_4);
+            projectRecord.setTestFrameworkVersion(junit4Matcher.group(1));
+        } else if (junit5Matcher.find()) {
+            projectRecord.setTestFramework(TestFramework.JUNIT_5);
+            projectRecord.setTestFrameworkVersion(junit5Matcher.group(1));
+        } else {
+            projectRecord.setTestFramework(TestFramework.UNKNOWN);
+            projectRecord.setTestFrameworkVersion(null);
+        }
     }
 
     private void setupJaiganticSourcePaths(ProjectRecord projectRecord) throws IOException {

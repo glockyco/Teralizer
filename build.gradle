@@ -81,6 +81,11 @@ jooq {
                                 includeExpression = "project.type"
                             }
                             forcedType {
+                                userType = "teralizer.processing.TestFramework"
+                                enumConverter = true
+                                includeExpression = "project.test_framework"
+                            }
+                            forcedType {
                                 userType = "java.nio.file.Path"
                                 converter = "teralizer.jooq.PathConverter"
                                 includeExpression = "project.*_path"
