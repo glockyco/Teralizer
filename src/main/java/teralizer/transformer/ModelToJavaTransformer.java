@@ -12,7 +12,7 @@ public class ModelToJavaTransformer extends ModelVisitor {
         return String.valueOf(value);
     }
 
-    public String transform(int value) {
+    public String transform(long value) {
         return String.valueOf(value);
     }
 
@@ -22,6 +22,10 @@ public class ModelToJavaTransformer extends ModelVisitor {
         } else if (value == Double.NEGATIVE_INFINITY) {
             return "Double.NEGATIVE_INFINITY";
         }
+        return String.valueOf(value);
+    }
+
+    public String transform(char value) {
         return String.valueOf(value);
     }
 
