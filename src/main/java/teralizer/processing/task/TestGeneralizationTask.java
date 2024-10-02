@@ -107,6 +107,19 @@ public class TestGeneralizationTask implements Task {
         ClassOrInterfaceDeclaration testClassDeclaration = compilationUnit.getClassByName(this.testRecord.getTestClassName()).get();
         testClassDeclaration.setName(this.generalizationRecord.getGeneralizedClassName());
 
+        List<AnnotationExpr> evoSuiteAnnotations = new ArrayList<>();
+        for (AnnotationExpr annotation : testClassDeclaration.getAnnotations()) {
+            if (annotation.toString().equals("@RunWith(EvoRunner.class)") || annotation.toString().startsWith("@EvoRunnerParameters")) {
+                evoSuiteAnnotations.add(annotation);
+            }
+        }
+        if (!evoSuiteAnnotations.isEmpty()) {
+            testClassDeclaration.setExtendedTypes(new NodeList<>());
+        }
+        for (AnnotationExpr annotation : evoSuiteAnnotations) {
+            annotation.remove();
+        }
+
         testClassDeclaration.getAllContainedComments().forEach(Comment::remove);
 
         Predicate<MethodDeclaration> isTestMethod = (decl) -> decl.getNameAsString().equals(this.testRecord.getTestMethodName());
