@@ -18,10 +18,12 @@ public class ProjectBuildTask implements Task {
 
     private final ProcessingStage stage;
     private final ProjectRecord projectRecord;
+    private final ConsoleCommand consoleCommand;
 
     public ProjectBuildTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
+        this.consoleCommand = new ConsoleCommand(stage, projectRecord.getDataPath());
     }
 
     @Override
@@ -53,17 +55,17 @@ public class ProjectBuildTask implements Task {
 
     private void buildAnt(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
         List<String> command = Arrays.asList("ant", "-f", "build.xml", "compile");
-        ConsoleCommand.execute(projectRootPath, command);
+        this.consoleCommand.execute(projectRootPath, command);
     }
 
     private void buildGradle(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
-        List<String> command = Arrays.asList("./gradlew", "compileJava", "compileTestJava", "--quiet");
-        ConsoleCommand.execute(projectRootPath, command);
+        List<String> command = Arrays.asList("./gradlew", "compileJava", "compileTestJava", "--info");
+        this.consoleCommand.execute(projectRootPath, command);
     }
 
     private void buildMaven(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
         List<String> command = Arrays.asList("mvn", "compile", "test-compile");
-        ConsoleCommand.execute(projectRootPath, command);
+        this.consoleCommand.execute(projectRootPath, command);
     }
 
     @Override

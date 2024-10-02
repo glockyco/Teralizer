@@ -76,6 +76,7 @@ public class TestGeneralizationRunner {
             ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
             projectRecord.setType(ProjectType.UNKNOWN);
             projectRecord.setRootPath(projectInfo.getRootPath());
+            projectRecord.setDataPath(projectInfo.getDataPath());
             projectRecord.setMainSourcePath(projectInfo.getMainSourcePath());
             projectRecord.setTestSourcePath(projectInfo.getTestSourcePath());
             projectRecord.setMainCompiledPath(projectInfo.getMainCompiledPath());

@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 public class ProjectInfo {
 
     private Path rootPath;
+    private Path dataPath;
     private Path mainSourcePath;
     private Path testSourcePath;
     private Path mainCompiledPath;
@@ -18,6 +19,7 @@ public class ProjectInfo {
 
     public ProjectInfo(Path rootPath, Path mainSourcePath, Path testSourcePath, Path mainCompiledPath, Path testCompiledPath, Path testReportsPath) {
         this.rootPath = rootPath;
+        this.dataPath = Paths.get("data", rootPath.getFileName().toString());
         this.mainSourcePath = mainSourcePath;
         this.testSourcePath = testSourcePath;
         this.mainCompiledPath = mainCompiledPath;
@@ -31,6 +33,14 @@ public class ProjectInfo {
 
     public void setRootPath(Path rootPath) {
         this.rootPath = rootPath;
+    }
+
+    public Path getDataPath() {
+        return this.dataPath;
+    }
+
+    public void setDataPath(Path dataPath) {
+        this.dataPath = dataPath;
     }
 
     public Path getMainSourcePath() {

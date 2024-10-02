@@ -1,34 +1,37 @@
 package teralizer.processing;
 
+import java.nio.file.Path;
+import java.util.List;
+
 public class ConsoleCommandException extends Exception {
 
     private final int exitCode;
-    private final String output;
-    private final String error;
+    private final Path outputPath;
+    private final Path errorPath;
 
-    public ConsoleCommandException(int exitCode, String output, String error) {
-        super(buildErrorMessage(exitCode, output, error));
+    public ConsoleCommandException(List<String> command, int exitCode, Path outputPath, Path errorPath) {
+        super(buildErrorMessage(command, exitCode, outputPath, errorPath));
         this.exitCode = exitCode;
-        this.output = output;
-        this.error = error;
+        this.outputPath = outputPath;
+        this.errorPath = errorPath;
     }
 
     public int getExitCode() {
         return this.exitCode;
     }
 
-    public String getOutput() {
-        return this.output;
+    public Path getOutputPath() {
+        return this.outputPath;
     }
 
-    public String getError() {
-        return this.error;
+    public Path getErrorPath() {
+        return this.errorPath;
     }
 
-    private static String buildErrorMessage(int exitCode, String output, String error) {
-        String errorMessage = "Output:\n\n" + output;
-        errorMessage += "\n\nError: terminated with exit code " + exitCode + ".";
-        errorMessage += error.isEmpty() ? "" : "\n\n" + error;
+    private static String buildErrorMessage(List<String> command, int exitCode, Path outputPath, Path errorPath) {
+        String errorMessage = "Command '" + String.join(" ", command) + "' terminated with exit code '" + exitCode + "'.\n";
+        errorMessage += "Output: " + outputPath + "\n";
+        errorMessage += "Error: " + errorPath;
         return errorMessage;
     }
 }

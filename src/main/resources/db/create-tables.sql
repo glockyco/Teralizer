@@ -14,6 +14,7 @@ CREATE TABLE project
     test_framework         TEXT, -- can be null for invalid project root paths
     test_framework_version TEXT, -- can be null for invalid project root paths or if the test framework is UNKNOWN
     root_path              TEXT NOT NULL,
+    data_path              TEXT NOT NULL,
     main_source_path       TEXT, -- can be null for invalid project root paths
     test_source_path       TEXT, -- can be null for invalid project root paths
     main_compiled_path     TEXT, -- can be null for invalid project root paths

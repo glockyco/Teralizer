@@ -19,10 +19,12 @@ public class TestExecutionTask implements Task {
 
     private final ProcessingStage stage;
     private final ProjectRecord projectRecord;
+    private final ConsoleCommand consoleCommand;
 
     public TestExecutionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
+        this.consoleCommand = new ConsoleCommand(stage, projectRecord.getDataPath());
     }
 
     @Override
@@ -37,7 +39,7 @@ public class TestExecutionTask implements Task {
             case ANT:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
-                command = Arrays.asList("./gradlew", "test", "--quiet");
+                command = Arrays.asList("./gradlew", "test", "--info");
                 break;
             case MAVEN:
                 command = Arrays.asList("mvn", "test");
@@ -47,7 +49,7 @@ public class TestExecutionTask implements Task {
         }
 
         try {
-            ConsoleCommand.execute(this.projectRecord.getRootPath(), command);
+            this.consoleCommand.execute(this.projectRecord.getRootPath(), command);
         } catch (ConsoleCommandException e) {
             if (e.getMessage().contains("AssertionFailedError")) {
                 LOGGER.atDebug().log(e.getMessage());
