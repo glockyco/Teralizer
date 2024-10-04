@@ -198,6 +198,7 @@ public class AddDependenciesTask implements Task {
                 dependency.addElement("groupId").addText(addedDependency.groupId);
                 dependency.addElement("artifactId").addText(addedDependency.artifactId);
                 dependency.addElement("version").addText(addedDependency.version);
+                dependency.addElement("scope").addText("test");
             }
 
             XMLWriter writer = new XMLWriter(new FileWriter(pomFilePath.toFile()), OutputFormat.createPrettyPrint());
