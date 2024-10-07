@@ -159,10 +159,14 @@ public class AddDependenciesTask implements Task {
                 ));
 
                 if (addedDependency == PITEST_DEPENDENCY) {
-                    // We assume that no PIT configuration exists if the pitest-junit5-plugin is missing. This is not
-                    // necessarily true for JUnit 4 projects, but probably "good enough" for our purposes considering
-                    // how rarely PIT is used in the first place.
-                    // @TODO: Check whether a PIT configuration exists before adding it to build.gradle.
+                    // We assume that no PIT plugin / configuration exists if the pitest-junit5-plugin is missing.
+                    // This is not necessarily true but probably "good enough" for our purposes considering how rarely
+                    // PIT is used in the first place.
+                    // @TODO: Check whether a PIT plugin / configuration exists before adding it to build.gradle.
+                    content.insert(0, String.format("// Added by %s - END.\n\n", TestGeneralizationRunner.TOOL_NAME));
+                    content.insert(0, "plugins { id 'info.solidsoft.pitest' version '1.15.0' }\n");
+                    content.insert(0, String.format("// Added by %s - START.\n", TestGeneralizationRunner.TOOL_NAME));
+
                     content.append("\n").append(new String(Files.readAllBytes(PITEST_CONFIG_PATH_GRADLE)));
                 }
             }
