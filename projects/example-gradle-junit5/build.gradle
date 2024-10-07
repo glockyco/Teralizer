@@ -30,6 +30,10 @@ pitest {
     outputFormats = ['HTML', 'XML']
 }
 
-tasks.named('test') {
-    finalizedBy('pitest')
+tasks.test {
+    finalizedBy(tasks.pitest)
+}
+
+tasks.pitest {
+    dependsOn(tasks.test)
 }
