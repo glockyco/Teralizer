@@ -31,9 +31,6 @@ public class JpfExecutionTask implements Task {
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) {
         this.runJpf(this.testRecord);
 
-        scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_WITH_DEPENDENCIES, this.projectRecord));
-
         scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.TEST_GENERALIZATION, this.projectRecord, this.testRecord, "naive"));
     }
 

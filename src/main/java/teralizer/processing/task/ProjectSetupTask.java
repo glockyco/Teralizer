@@ -104,6 +104,9 @@ public class ProjectSetupTask implements Task {
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_ORIGINAL, this.projectRecord));
+        scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
+        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_WITH_DEPENDENCIES, this.projectRecord));
+        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_WITH_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
     }
 

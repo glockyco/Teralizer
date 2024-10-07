@@ -1,0 +1,20 @@
+<plugin xmlns="http://maven.apache.org/POM/4.0.0">
+    <groupId>org.pitest</groupId>
+    <artifactId>pitest-maven</artifactId>
+    <version>1.17.0</version>
+    <configuration>
+        <outputFormats>
+            <outputFormat>HTML</outputFormat>
+            <outputFormat>XML</outputFormat>
+        </outputFormats>
+        <exportLineCoverage>true</exportLineCoverage>
+    </configuration>
+    <executions>
+        <execution>
+            <phase>test</phase>
+            <goals>
+                <goal>mutationCoverage</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>

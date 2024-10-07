@@ -1,0 +1,2 @@
+pitest { exportLineCoverage = true; outputFormats = ['HTML', 'XML'] }
+tasks.named('test') { finalizedBy('pitest') }

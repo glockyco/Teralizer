@@ -20,17 +20,19 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class AddDependenciesTask implements Task {
 
-    private static final Dependency JQWIK_DEPENDENCY = new Dependency("net.jqwik", "jqwik", "1.8.5");
     private static final Dependency VINTAGE_DEPENDENCY = new Dependency("org.junit.vintage", "junit-vintage-engine", "5.11.0");
+    private static final Dependency PITEST_DEPENDENCY = new Dependency("org.pitest", "pitest-junit5-plugin", "1.2.1");
+    private static final Dependency JQWIK_DEPENDENCY = new Dependency("net.jqwik", "jqwik", "1.8.5");
+
+    private static final Path PITEST_CONFIG_PATH_GRADLE = Paths.get("src/main/resources/pitest-config-gradle.txt");
+    private static final Path PITEST_CONFIG_PATH_MAVEN = Paths.get("src/main/resources/pitest-config-maven.txt");
 
     private static class Dependency {
         public final String groupId;
@@ -84,10 +86,12 @@ public class AddDependenciesTask implements Task {
             case UNKNOWN:
                 throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Test framework could not be identified.");
             case JUNIT_4:
-                requiredDependencies.add(JQWIK_DEPENDENCY);
                 requiredDependencies.add(VINTAGE_DEPENDENCY);
+                requiredDependencies.add(PITEST_DEPENDENCY);
+                requiredDependencies.add(JQWIK_DEPENDENCY);
                 break;
             case JUNIT_5:
+                requiredDependencies.add(PITEST_DEPENDENCY);
                 requiredDependencies.add(JQWIK_DEPENDENCY);
                 break;
             default:
@@ -139,20 +143,32 @@ public class AddDependenciesTask implements Task {
         if (!addedDependencies.isEmpty()) {
             Path buildFilePath = projectRecord.getRootPath().resolve("build.gradle");
             StringBuilder content = new StringBuilder(new String(Files.readAllBytes(buildFilePath)));
+
+            content.append(String.format("\n// Added by %s - START.", TestGeneralizationRunner.TOOL_NAME));
+
+            if (projectRecord.getTestFramework() == TestFramework.JUNIT_4) {
+                content.append("\ntest { useJUnitPlatform() }");
+            }
+
             for (Dependency addedDependency: addedDependencies) {
-                String dependencyString = String.format(
-                    "\ndependencies { testImplementation '%s:%s:%s' } // Added by %s.",
+                content.append(String.format(
+                    "\ndependencies { testImplementation '%s:%s:%s' }",
                     addedDependency.groupId,
                     addedDependency.artifactId,
-                    addedDependency.version,
-                    TestGeneralizationRunner.TOOL_NAME
-                );
-                content.append(dependencyString);
+                    addedDependency.version
+                ));
+
+                if (addedDependency == PITEST_DEPENDENCY) {
+                    // We assume that no PIT configuration exists if the pitest-junit5-plugin is missing. This is not
+                    // necessarily true for JUnit 4 projects, but probably "good enough" for our purposes considering
+                    // how rarely PIT is used in the first place.
+                    // @TODO: Check whether a PIT configuration exists before adding it to build.gradle.
+                    content.append("\n").append(new String(Files.readAllBytes(PITEST_CONFIG_PATH_GRADLE)));
+                }
             }
-            content.append("\n");
-            if (projectRecord.getTestFramework() == TestFramework.JUNIT_4) {
-                content.append(String.format("test { useJUnitPlatform() } // Added by %s.\n", TestGeneralizationRunner.TOOL_NAME));
-            }
+
+            content.append(String.format("\n// Added by %s - END.\n", TestGeneralizationRunner.TOOL_NAME));
+
             Files.write(buildFilePath, content.toString().getBytes());
         }
 
@@ -191,6 +207,7 @@ public class AddDependenciesTask implements Task {
         Set<Dependency> addedDependencies = new HashSet<>(requiredDependencies);
         addedDependencies.removeAll(identifiedDependencies);
 
+        boolean hasModifiedDocument = false;
         if (!addedDependencies.isEmpty()) {
             for (Dependency addedDependency: addedDependencies) {
                 Element dependency = dependencies.addElement("dependency");
@@ -200,7 +217,39 @@ public class AddDependenciesTask implements Task {
                 dependency.addElement("version").addText(addedDependency.version);
                 dependency.addElement("scope").addText("test");
             }
+            hasModifiedDocument = true;
+        }
 
+        // Add the PIT configuration if it does not exist yet:
+        XPath xpath = DocumentHelper.createXPath("/m:project/m:build/m:plugins/m:plugin[m:groupId='org.pitest' and m:artifactId='pitest-maven']");
+        Map<String, String> namespaceURIs = new HashMap<>();
+        namespaceURIs.put("m", "http://maven.apache.org/POM/4.0.0");
+        xpath.setNamespaceURIs(namespaceURIs);
+        List<Node> nodes = xpath.selectNodes(document);
+
+        if (nodes.isEmpty()) {
+            Element buildElement = root.element("build");
+            if (buildElement == null) {
+                buildElement = root.addElement("build");
+                buildElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+            }
+
+            Element pluginsElement = buildElement.element("plugins");
+            if (pluginsElement == null) {
+                pluginsElement = buildElement.addElement("plugins");
+                pluginsElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+            }
+
+            Document pitestConfigDocument = reader.read(PITEST_CONFIG_PATH_MAVEN.toFile());
+            Element pluginElement = pitestConfigDocument.getRootElement();
+            pluginElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+            pluginsElement.add(pluginElement.detach());
+
+            hasModifiedDocument = true;
+        }
+
+        // Write the changes to the pom.xml file:
+        if (hasModifiedDocument) {
             XMLWriter writer = new XMLWriter(new FileWriter(pomFilePath.toFile()), OutputFormat.createPrettyPrint());
             writer.write(document);
             writer.close();
