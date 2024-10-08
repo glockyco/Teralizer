@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
     id 'info.solidsoft.pitest' version '1.15.0'
 }
 
@@ -25,13 +26,25 @@ test {
     useJUnitPlatform()
 }
 
+jacocoTestReport {
+    reports {
+        csv.required = true
+        xml.required = true
+    }
+}
+
 pitest {
     exportLineCoverage = true
     outputFormats = ['HTML', 'XML']
 }
 
 tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
     finalizedBy(tasks.pitest)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
 }
 
 tasks.pitest {
