@@ -43,12 +43,14 @@ public class MavenDependencyManager {
     public void addRequiredDependencies() throws DocumentException, IOException {
         boolean hasModifiedDocument = false;
         if (this.testFramework == TestFramework.JUNIT_4) {
-            hasModifiedDocument = hasModifiedDocument || this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
+            // Deliberately using non-short-circuiting OR here. If multiple
+            // dependencies are missing, we want to add all of them.
+            hasModifiedDocument |= this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
         }
-        hasModifiedDocument = hasModifiedDocument || this.addJacocoPlugin();
-        hasModifiedDocument = hasModifiedDocument || this.addDependency(PITEST_DEPENDENCY);
-        hasModifiedDocument = hasModifiedDocument || this.addPitestPlugin();
-        hasModifiedDocument = hasModifiedDocument || this.addDependency(JQWIK_DEPENDENCY);
+        hasModifiedDocument |= this.addJacocoPlugin();
+        hasModifiedDocument |= this.addDependency(PITEST_DEPENDENCY);
+        hasModifiedDocument |= this.addPitestPlugin();
+        hasModifiedDocument |= this.addDependency(JQWIK_DEPENDENCY);
 
         if (hasModifiedDocument) {
             XMLWriter writer = new XMLWriter(new FileWriter(this.pomFilePath.toFile()), OutputFormat.createPrettyPrint());

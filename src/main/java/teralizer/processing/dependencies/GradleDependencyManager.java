@@ -48,19 +48,15 @@ public class GradleDependencyManager {
     public void addRequiredDependencies() throws IOException {
         boolean hasModifiedDocument = false;
         if (this.testFramework == TestFramework.JUNIT_4) {
-            if (this.buildFileContent.toString().contains("useJUnitPlatform")) {
-                this.reportInfo.accept("Found: useJUnitPlatform()");
-            } else {
-                this.appendToBuildFile("test { useJUnitPlatform() }");
-                this.reportInfo.accept("Added: useJUnitPlatform()");
-                hasModifiedDocument = true;
-            }
-            this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
+            // Deliberately using non-short-circuiting OR here. If multiple
+            // dependencies are missing, we want to add all of them.
+            hasModifiedDocument |= this.addUseJunitPlatform();
+            hasModifiedDocument |= this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
         }
-        hasModifiedDocument = hasModifiedDocument || this.addJacocoPlugin();
-        hasModifiedDocument = hasModifiedDocument || this.addDependency(PITEST_DEPENDENCY);
-        hasModifiedDocument = hasModifiedDocument || this.addPitestPlugin();
-        hasModifiedDocument = hasModifiedDocument || this.addDependency(JQWIK_DEPENDENCY);
+        hasModifiedDocument |= this.addJacocoPlugin();
+        hasModifiedDocument |= this.addDependency(PITEST_DEPENDENCY);
+        hasModifiedDocument |= this.addPitestPlugin();
+        hasModifiedDocument |= this.addDependency(JQWIK_DEPENDENCY);
 
         if (hasModifiedDocument) {
             Files.write(this.buildFilePath, this.buildFileContent.toString().getBytes());
@@ -91,6 +87,16 @@ public class GradleDependencyManager {
             }
         }
         return tasks;
+    }
+
+    private boolean addUseJunitPlatform() {
+        if (this.buildFileContent.toString().contains("useJUnitPlatform")) {
+            this.reportInfo.accept("Found: useJUnitPlatform()");
+            return false;
+        }
+        this.appendToBuildFile("test { useJUnitPlatform() }");
+        this.reportInfo.accept("Added: useJUnitPlatform()");
+        return true;
     }
 
     private boolean addDependency(Dependency dependency) {
