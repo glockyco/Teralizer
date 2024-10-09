@@ -39,10 +39,10 @@ public class TestExecutionTask implements Task {
             case ANT:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
-                command = Arrays.asList("./gradlew", "test", "--info");
+                command = Arrays.asList("./gradlew", "test", "--info", "-Djacoco.skip=false");
                 break;
             case MAVEN:
-                command = Arrays.asList("mvn", "test");
+                command = Arrays.asList("mvn", "test", "-Djacoco.skip=false");
                 break;
             default:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
