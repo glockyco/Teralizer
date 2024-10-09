@@ -18,6 +18,8 @@ public class AddDependenciesTask implements Task {
     public static final Dependency PITEST_DEPENDENCY = new Dependency("org.pitest", "pitest-junit5-plugin", "1.2.1");
     public static final Dependency JQWIK_DEPENDENCY = new Dependency("net.jqwik", "jqwik", "1.8.5");
 
+    public static final Path JACOCO_CONFIG_PATH_GRADLE = Paths.get("src/main/resources/jacoco-config-gradle.txt");
+    public static final Path JACOCO_CONFIG_PATH_MAVEN = Paths.get("src/main/resources/jacoco-config-maven.txt");
     public static final Path PITEST_CONFIG_PATH_GRADLE = Paths.get("src/main/resources/pitest-config-gradle.txt");
     public static final Path PITEST_CONFIG_PATH_MAVEN = Paths.get("src/main/resources/pitest-config-maven.txt");
 

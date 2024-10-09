@@ -57,6 +57,7 @@ public class GradleDependencyManager {
             }
             this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
         }
+        hasModifiedDocument = hasModifiedDocument || this.addJacocoPlugin();
         hasModifiedDocument = hasModifiedDocument || this.addDependency(PITEST_DEPENDENCY);
         hasModifiedDocument = hasModifiedDocument || this.addPitestPlugin();
         hasModifiedDocument = hasModifiedDocument || this.addDependency(JQWIK_DEPENDENCY);
@@ -109,6 +110,17 @@ public class GradleDependencyManager {
         return true;
     }
 
+    private boolean addJacocoPlugin() throws IOException {
+        if (this.tasks.contains("jacocoTestReport")) {
+            this.reportInfo.accept("Found plugin / config: jacocoTestReport");
+            return false;
+        }
+        this.prependToBuildFile("plugins { id 'jacoco' }");
+        this.appendToBuildFile(new String(Files.readAllBytes(JACOCO_CONFIG_PATH_GRADLE)));
+        this.reportInfo.accept("Added plugin / config: jacocoTestReport");
+        return true;
+    }
+
     private boolean addPitestPlugin() throws IOException {
         if (this.tasks.contains("pitest")) {
             this.reportInfo.accept("Found plugin / config: pitest");
@@ -121,14 +133,14 @@ public class GradleDependencyManager {
     }
 
     private void prependToBuildFile(String content) {
-        this.buildFileContent.insert(0, TOOL_COMMENT_END + "\n\n");
+        this.buildFileContent.insert(0, TOOL_COMMENT_END + "\n");
         this.buildFileContent.insert(0, content + "\n");
-        this.buildFileContent.insert(0, TOOL_COMMENT_START + "\n");
+        this.buildFileContent.insert(0, "+\n" + TOOL_COMMENT_START + "\n");
     }
 
     private void appendToBuildFile(String content) {
-        this.buildFileContent.append(TOOL_COMMENT_START).append("\n");
+        this.buildFileContent.append("\n").append(TOOL_COMMENT_START).append("\n");
         this.buildFileContent.append(content).append("\n");
-        this.buildFileContent.append(TOOL_COMMENT_END).append("\n\n");
+        this.buildFileContent.append(TOOL_COMMENT_END).append("\n");
     }
 }

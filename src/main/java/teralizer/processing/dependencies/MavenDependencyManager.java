@@ -45,6 +45,7 @@ public class MavenDependencyManager {
         if (this.testFramework == TestFramework.JUNIT_4) {
             hasModifiedDocument = hasModifiedDocument || this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
         }
+        hasModifiedDocument = hasModifiedDocument || this.addJacocoPlugin();
         hasModifiedDocument = hasModifiedDocument || this.addDependency(PITEST_DEPENDENCY);
         hasModifiedDocument = hasModifiedDocument || this.addPitestPlugin();
         hasModifiedDocument = hasModifiedDocument || this.addDependency(JQWIK_DEPENDENCY);
@@ -103,23 +104,39 @@ public class MavenDependencyManager {
         return true;
     }
 
+    private boolean addJacocoPlugin() throws DocumentException {
+        if (this.hasPlugin("org.jacoco", "jacoco-maven-plugin")) {
+            this.reportInfo.accept("Found plugin / config: jacoco");
+            return false;
+        }
+        this.pluginsElement.add(this.readPluginConfig(JACOCO_CONFIG_PATH_MAVEN));
+        this.reportInfo.accept("Added plugin / config: jacoco");
+        return true;
+    }
+
     private boolean addPitestPlugin() throws DocumentException {
-        XPath xpath = DocumentHelper.createXPath("/m:project/m:build/m:plugins/m:plugin[m:groupId='org.pitest' and m:artifactId='pitest-maven']");
+        if (this.hasPlugin("org.pitest", "pitest-maven")) {
+            this.reportInfo.accept("Found plugin / config: pitest");
+            return false;
+        }
+        this.pluginsElement.add(this.readPluginConfig(PITEST_CONFIG_PATH_MAVEN));
+        this.reportInfo.accept("Added plugin / config: pitest");
+        return true;
+    }
+
+    private boolean hasPlugin(String groupId, String artifactId) {
+        XPath xpath = DocumentHelper.createXPath("/m:project/m:build/m:plugins/m:plugin[m:groupId='" + groupId + "' and m:artifactId='" + artifactId+ "']");
         Map<String, String> namespaceURIs = new HashMap<>();
         namespaceURIs.put("m", "http://maven.apache.org/POM/4.0.0");
         xpath.setNamespaceURIs(namespaceURIs);
         List<Node> nodes = xpath.selectNodes(this.document);
+        return !nodes.isEmpty();
+    }
 
-        if (!nodes.isEmpty()) {
-            this.reportInfo.accept("Found plugin / config: pitest");
-            return false;
-        }
-
-        Document pitestConfigDocument = new SAXReader().read(PITEST_CONFIG_PATH_MAVEN.toFile());
+    private Node readPluginConfig(Path configPath) throws DocumentException {
+        Document pitestConfigDocument = new SAXReader().read(configPath.toFile());
         Element pluginElement = pitestConfigDocument.getRootElement();
         pluginElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
-        this.pluginsElement.add(pluginElement.detach());
-        this.reportInfo.accept("Added plugin / config: pitest");
-        return true;
+        return pluginElement.detach();
     }
 }
