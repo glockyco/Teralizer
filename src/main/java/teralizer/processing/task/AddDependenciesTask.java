@@ -1,6 +1,5 @@
 package teralizer.processing.task;
 
-import org.dom4j.DocumentException;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -8,16 +7,14 @@ import teralizer.processing.dependencies.Dependency;
 import teralizer.processing.dependencies.GradleDependencyManager;
 import teralizer.processing.dependencies.MavenDependencyManager;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class AddDependenciesTask implements Task {
 
-    public static final Dependency VINTAGE_DEPENDENCY = new Dependency("org.junit.vintage", "junit-vintage-engine", "5.11.0");
+    public static final Dependency JUNIT_VINTAGE_DEPENDENCY = new Dependency("org.junit.vintage", "junit-vintage-engine", "5.11.0");
     public static final Dependency PITEST_DEPENDENCY = new Dependency("org.pitest", "pitest-junit5-plugin", "1.2.1");
     public static final Dependency JQWIK_DEPENDENCY = new Dependency("net.jqwik", "jqwik", "1.8.5");
 
@@ -38,25 +35,7 @@ public class AddDependenciesTask implements Task {
     }
 
     private void addDependencies(ProjectRecord projectRecord, Consumer<String> reportInfo) throws Exception {
-        Path projectPath = this.projectRecord.getRootPath();
-
-        Set<Dependency> requiredDependencies = new HashSet<>();
-        switch (this.projectRecord.getTestFramework()) {
-            case UNKNOWN:
-                throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Test framework could not be identified.");
-            case JUNIT_4:
-                requiredDependencies.add(VINTAGE_DEPENDENCY);
-                requiredDependencies.add(PITEST_DEPENDENCY);
-                requiredDependencies.add(JQWIK_DEPENDENCY);
-                break;
-            case JUNIT_5:
-                requiredDependencies.add(PITEST_DEPENDENCY);
-                requiredDependencies.add(JQWIK_DEPENDENCY);
-                break;
-            default:
-                throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Unsupported test framework " + projectRecord.getTestFramework() + ".");
-        }
-
+        Path projectPath = projectRecord.getRootPath();
         switch (this.projectRecord.getType()) {
             case UNKNOWN:
                 throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". No pom.xml / build.gradle found.");
@@ -65,55 +44,22 @@ public class AddDependenciesTask implements Task {
             case ANT:
                 throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Ant projects are not supported yet.");
             case GRADLE:
-                this.addDependenciesToGradleProject(this.projectRecord, requiredDependencies, reportInfo);
+                new GradleDependencyManager(
+                    projectRecord.getRootPath(),
+                    projectRecord.getTestFramework(),
+                    reportInfo
+                ).addRequiredDependencies();
                 break;
             case MAVEN:
-                this.addDependenciesToMavenProject(this.projectRecord, requiredDependencies, reportInfo);
+                new MavenDependencyManager(
+                    projectRecord.getRootPath(),
+                    projectRecord.getTestFramework(),
+                    reportInfo
+                ).addRequiredDependencies();
                 break;
             default:
                 throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Unsupported project type " + projectRecord.getType() + ".");
         }
-    }
-
-    private void addDependenciesToGradleProject(ProjectRecord projectRecord, Set<Dependency> requiredDependencies, Consumer<String> reportInfo) throws IOException {
-        GradleDependencyManager dependencyManager = new GradleDependencyManager(projectRecord.getRootPath(), projectRecord.getTestFramework());
-        Set<Dependency> identifiedDependencies = dependencyManager.detectInProject(requiredDependencies);
-        Set<Dependency> missingDependencies = new HashSet<>(requiredDependencies);
-        missingDependencies.removeAll(identifiedDependencies);
-        dependencyManager.addToProject(missingDependencies);
-
-        this.reportDependencyInfo(requiredDependencies, identifiedDependencies, missingDependencies, reportInfo);
-    }
-
-    private void addDependenciesToMavenProject(ProjectRecord projectRecord, Set<Dependency> requiredDependencies, Consumer<String> reportInfo) throws DocumentException, IOException {
-        MavenDependencyManager dependencyManager = new MavenDependencyManager(projectRecord.getRootPath());
-        Set<Dependency> identifiedDependencies = dependencyManager.detectInProject(requiredDependencies);
-        Set<Dependency> missingDependencies = new HashSet<>(requiredDependencies);
-        missingDependencies.removeAll(identifiedDependencies);
-        dependencyManager.addToProject(missingDependencies);
-
-        this.reportDependencyInfo(requiredDependencies, identifiedDependencies, missingDependencies, reportInfo);
-    }
-
-    private void reportDependencyInfo(
-        Set<Dependency> requiredDependencies,
-        Set<Dependency> identifiedDependencies,
-        Set<Dependency> addedDependencies,
-        Consumer<String> reportInfo
-    ) {
-        String requiredString = requiredDependencies.stream().map(Dependency::toString).collect(Collectors.joining("\n"));
-        String identifiedString = identifiedDependencies.stream().map(Dependency::toString).collect(Collectors.joining("\n"));
-        String addedString = addedDependencies.stream().map(Dependency::toString).collect(Collectors.joining("\n"));
-
-        StringBuilder info = new StringBuilder();
-        info.append("Required:\n");
-        info.append(requiredString.isEmpty() ? "none" : requiredString);
-        info.append("\n\nIdentified:\n");
-        info.append(identifiedString.isEmpty() ? "none" : identifiedString);
-        info.append("\n\nAdded:\n");
-        info.append(addedString.isEmpty() ? "none" : addedString);
-
-        reportInfo.accept(info.toString());
     }
 
     @Override

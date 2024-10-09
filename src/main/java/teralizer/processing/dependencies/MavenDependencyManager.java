@@ -5,96 +5,121 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import teralizer.TestGeneralizationRunner;
+import teralizer.processing.TestFramework;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Consumer;
 
-import static teralizer.processing.task.AddDependenciesTask.PITEST_CONFIG_PATH_MAVEN;
+import static teralizer.processing.task.AddDependenciesTask.*;
 
 public class MavenDependencyManager {
 
     private final Path pomFilePath;
     private final Document document;
-    private final Element root;
-    private final Element dependencies;
+    private final Element dependenciesElement;
+    private final Element pluginsElement;
 
-    public MavenDependencyManager(Path projectPath) throws DocumentException {
+    private final Set<Dependency> dependencies;
+    private final TestFramework testFramework;
+    private final Consumer<String> reportInfo;
+
+    public MavenDependencyManager(Path projectPath, TestFramework testFramework, Consumer<String> reportInfo) throws DocumentException {
         this.pomFilePath = projectPath.resolve("pom.xml");
         this.document = new SAXReader().read(this.pomFilePath.toFile());
-        this.root = this.document.getRootElement();
 
-        Element dependencies = this.root.element("dependencies");
-        this.dependencies = dependencies != null ? dependencies : this.root.addElement("dependencies");
+        Element root = this.document.getRootElement();
+        this.dependenciesElement = this.getOrCreateDependenciesElement(root);
+        this.pluginsElement = this.getOrCreatePluginsElement(root);
+
+        this.dependencies = this.getDependencies(this.dependenciesElement);
+
+        this.testFramework = testFramework;
+        this.reportInfo = reportInfo;
     }
 
-    public Set<Dependency> detectInProject(Set<Dependency> requiredDependencies) {
-        Set<Dependency> identifiedDependencies = new HashSet<>();
+    public void addRequiredDependencies() throws DocumentException, IOException {
+        boolean hasModifiedDocument = false;
+        if (this.testFramework == TestFramework.JUNIT_4) {
+            hasModifiedDocument = hasModifiedDocument || this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
+        }
+        hasModifiedDocument = hasModifiedDocument || this.addDependency(PITEST_DEPENDENCY);
+        hasModifiedDocument = hasModifiedDocument || this.addPitestPlugin();
+        hasModifiedDocument = hasModifiedDocument || this.addDependency(JQWIK_DEPENDENCY);
 
-        for (Iterator<Element> it = this.dependencies.elementIterator(); it.hasNext(); ) {
+        if (hasModifiedDocument) {
+            XMLWriter writer = new XMLWriter(new FileWriter(this.pomFilePath.toFile()), OutputFormat.createPrettyPrint());
+            writer.write(this.document);
+            writer.close();
+        }
+    }
+
+    private Element getOrCreateDependenciesElement(Element root) {
+        return this.getOrCreateElement(root, "dependencies");
+    }
+
+    private Element getOrCreatePluginsElement(Element root) {
+        Element buildElement = this.getOrCreateElement(root, "build");
+        return this.getOrCreateElement(buildElement, "plugins");
+    }
+
+    private Element getOrCreateElement(Element parent, String name) {
+        Element element = parent.element(name);
+        if (element == null) {
+            element = parent.addElement(name);
+            element.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+        }
+        return element;
+    }
+
+    private Set<Dependency> getDependencies(Element dependenciesElement) {
+        Set<Dependency> dependencies = new HashSet<>();
+        for (Iterator<Element> it = dependenciesElement.elementIterator(); it.hasNext(); ) {
             Element dependency = it.next();
             String groupId = dependency.element("groupId").getText();
             String artifactId = dependency.element("artifactId").getText();
             String version = dependency.element("version").getText();
-
-            Dependency identifiedDependency = new Dependency(groupId, artifactId, version);
-            if (requiredDependencies.contains(identifiedDependency)) {
-                identifiedDependencies.add(identifiedDependency);
-            }
+            dependencies.add(new Dependency(groupId, artifactId, version));
         }
-
-        return identifiedDependencies;
+        return dependencies;
     }
 
-    public void addToProject(Set<Dependency> missingDependencies) throws IOException, DocumentException {
-        boolean hasModifiedDocument = false;
-
-        if (!missingDependencies.isEmpty()) {
-            for (Dependency addedDependency : missingDependencies) {
-                Element dependency = this.dependencies.addElement("dependency");
-                dependency.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
-                dependency.addElement("groupId").addText(addedDependency.groupId);
-                dependency.addElement("artifactId").addText(addedDependency.artifactId);
-                dependency.addElement("version").addText(addedDependency.version);
-                dependency.addElement("scope").addText("test");
+    private boolean addDependency(Dependency dependency) {
+        for (Dependency identifiedDependency : this.dependencies) {
+            if (identifiedDependency.equals(dependency)) {
+                this.reportInfo.accept("Found dependency: " + identifiedDependency);
+                return false;
             }
-            hasModifiedDocument = true;
         }
+        Element dependencyElement = this.dependenciesElement.addElement("dependency");
+        dependencyElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+        dependencyElement.addElement("groupId").addText(dependency.groupId);
+        dependencyElement.addElement("artifactId").addText(dependency.artifactId);
+        dependencyElement.addElement("version").addText(dependency.version);
+        dependencyElement.addElement("scope").addText("test");
+        this.reportInfo.accept("Added dependency: " + dependency);
+        return true;
+    }
 
-        // Add the PIT configuration if it does not exist yet:
+    private boolean addPitestPlugin() throws DocumentException {
         XPath xpath = DocumentHelper.createXPath("/m:project/m:build/m:plugins/m:plugin[m:groupId='org.pitest' and m:artifactId='pitest-maven']");
         Map<String, String> namespaceURIs = new HashMap<>();
         namespaceURIs.put("m", "http://maven.apache.org/POM/4.0.0");
         xpath.setNamespaceURIs(namespaceURIs);
         List<Node> nodes = xpath.selectNodes(this.document);
 
-        if (nodes.isEmpty()) {
-            Element buildElement = this.root.element("build");
-            if (buildElement == null) {
-                buildElement = this.root.addElement("build");
-                buildElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
-            }
-
-            Element pluginsElement = buildElement.element("plugins");
-            if (pluginsElement == null) {
-                pluginsElement = buildElement.addElement("plugins");
-                pluginsElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
-            }
-
-            Document pitestConfigDocument = new SAXReader().read(PITEST_CONFIG_PATH_MAVEN.toFile());
-            Element pluginElement = pitestConfigDocument.getRootElement();
-            pluginElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
-            pluginsElement.add(pluginElement.detach());
-
-            hasModifiedDocument = true;
+        if (!nodes.isEmpty()) {
+            this.reportInfo.accept("Found plugin / config: pitest");
+            return false;
         }
 
-        // Write the changes to the pom.xml file:
-        if (hasModifiedDocument) {
-            XMLWriter writer = new XMLWriter(new FileWriter(this.pomFilePath.toFile()), OutputFormat.createPrettyPrint());
-            writer.write(this.document);
-            writer.close();
-        }
+        Document pitestConfigDocument = new SAXReader().read(PITEST_CONFIG_PATH_MAVEN.toFile());
+        Element pluginElement = pitestConfigDocument.getRootElement();
+        pluginElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+        this.pluginsElement.add(pluginElement.detach());
+        this.reportInfo.accept("Added plugin / config: pitest");
+        return true;
     }
 }
