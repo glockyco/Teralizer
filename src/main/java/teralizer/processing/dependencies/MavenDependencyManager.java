@@ -139,7 +139,8 @@ public class MavenDependencyManager {
     private Node readPluginConfig(Path configPath) throws DocumentException {
         Document pitestConfigDocument = new SAXReader().read(configPath.toFile());
         Element pluginElement = pitestConfigDocument.getRootElement();
-        pluginElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+        Comment comment = DocumentHelper.createComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+        pluginElement.content().add(0, comment);
         return pluginElement.detach();
     }
 }
