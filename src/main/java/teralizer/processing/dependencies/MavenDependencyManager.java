@@ -81,7 +81,8 @@ public class MavenDependencyManager {
             Element dependency = it.next();
             String groupId = dependency.element("groupId").getText();
             String artifactId = dependency.element("artifactId").getText();
-            String version = dependency.element("version").getText();
+            Element versionElement = dependency.element("version");
+            String version = versionElement == null ? null : versionElement.getText();
             dependencies.add(new Dependency(groupId, artifactId, version));
         }
         return dependencies;
