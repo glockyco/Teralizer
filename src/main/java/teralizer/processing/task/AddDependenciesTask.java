@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 
 public class AddDependenciesTask implements Task {
 
+    public static final Dependency JUNIT_4_DEPENDENCY = new Dependency("junit", "junit", "4.12");
     public static final Dependency JUNIT_VINTAGE_DEPENDENCY = new Dependency("org.junit.vintage", "junit-vintage-engine", "5.11.0");
     public static final Dependency PITEST_DEPENDENCY = new Dependency("org.pitest", "pitest-junit5-plugin", "1.2.1");
     public static final Dependency JQWIK_DEPENDENCY = new Dependency("net.jqwik", "jqwik", "1.8.5");
@@ -46,18 +47,10 @@ public class AddDependenciesTask implements Task {
             case ANT:
                 throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Ant projects are not supported yet.");
             case GRADLE:
-                new GradleDependencyManager(
-                    projectRecord.getRootPath(),
-                    projectRecord.getTestFramework(),
-                    reportInfo
-                ).addRequiredDependencies();
+                new GradleDependencyManager(projectRecord, reportInfo).addRequiredDependencies();
                 break;
             case MAVEN:
-                new MavenDependencyManager(
-                    projectRecord.getRootPath(),
-                    projectRecord.getTestFramework(),
-                    reportInfo
-                ).addRequiredDependencies();
+                new MavenDependencyManager(projectRecord, reportInfo).addRequiredDependencies();
                 break;
             default:
                 throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Unsupported project type " + projectRecord.getType() + ".");

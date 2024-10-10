@@ -7,6 +7,7 @@ import org.gradle.tooling.model.GradleProject;
 import org.gradle.tooling.model.Task;
 import org.gradle.tooling.model.eclipse.EclipseExternalDependency;
 import org.gradle.tooling.model.eclipse.EclipseProject;
+import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.TestGeneralizationRunner;
 import teralizer.processing.TestFramework;
 
@@ -24,39 +25,42 @@ public class GradleDependencyManager {
     private static final String TOOL_COMMENT_START = String.format("// Added by %s - START.", TestGeneralizationRunner.TOOL_NAME);
     private static final String TOOL_COMMENT_END = String.format("// Added by %s - END.", TestGeneralizationRunner.TOOL_NAME);
 
+    private final ProjectRecord projectRecord;
+    private final Consumer<String> reportInfo;
+
     private final Path buildFilePath;
     private final StringBuilder buildFileContent;
 
     private final Set<Dependency> dependencies;
     private final Set<String> tasks;
-    private final TestFramework testFramework;
-    private final Consumer<String> reportInfo;
 
-    public GradleDependencyManager(Path projectPath, TestFramework testFramework, Consumer<String> reportInfo) throws IOException {
-        this.buildFilePath = projectPath.resolve("build.gradle");
+    public GradleDependencyManager(ProjectRecord projectRecord, Consumer<String> reportInfo) throws IOException {
+        this.projectRecord = projectRecord;
+        this.reportInfo = reportInfo;
+
+        this.buildFilePath = this.projectRecord.getRootPath().resolve("build.gradle");
         this.buildFileContent = new StringBuilder(new String(Files.readAllBytes(this.buildFilePath)));
 
         GradleConnector connector = GradleConnector.newConnector();
-        connector.forProjectDirectory(projectPath.toFile());
+        connector.forProjectDirectory(this.projectRecord.getRootPath().toFile());
         this.dependencies = this.getDependencies(connector);
         this.tasks = this.getTasks(connector);
 
-        this.testFramework = testFramework;
-        this.reportInfo = reportInfo;
     }
 
     public void addRequiredDependencies() throws IOException {
         boolean hasModifiedDocument = false;
-        if (this.testFramework == TestFramework.JUNIT_4) {
+        if (this.projectRecord.getTestFramework() == TestFramework.JUNIT_4) {
             // Deliberately using non-short-circuiting OR here. If multiple
             // dependencies are missing, we want to add all of them.
             hasModifiedDocument |= this.addUseJunitPlatform();
-            hasModifiedDocument |= this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
+            hasModifiedDocument |= this.addJUnitIfOutdated();
+            hasModifiedDocument |= this.addDependencyIfMissing(JUNIT_VINTAGE_DEPENDENCY);
         }
         hasModifiedDocument |= this.addJacocoPlugin();
-        hasModifiedDocument |= this.addDependency(PITEST_DEPENDENCY);
+        hasModifiedDocument |= this.addDependencyIfMissing(PITEST_DEPENDENCY);
         hasModifiedDocument |= this.addPitestPlugin();
-        hasModifiedDocument |= this.addDependency(JQWIK_DEPENDENCY);
+        hasModifiedDocument |= this.addDependencyIfMissing(JQWIK_DEPENDENCY);
 
         if (hasModifiedDocument) {
             Files.write(this.buildFilePath, this.buildFileContent.toString().getBytes());
@@ -99,21 +103,44 @@ public class GradleDependencyManager {
         return true;
     }
 
-    private boolean addDependency(Dependency dependency) {
+    private boolean addJUnitIfOutdated() {
+        String testFrameworkVersion = this.projectRecord.getTestFrameworkVersion();
+        // Check whether a recent enough version of JUnit 4 is used (JUnit
+        // Vintage requires at least JUnit 4.12). Not a very clean solution,
+        // but good enough for our purposes.
+        for (int i = 12; i < 20; i++) {
+            if (testFrameworkVersion.startsWith("4." + i)) {
+                return false;
+            }
+        }
+        // If the detected JUnit version is not supported, we just add a one
+        // that is in addition to the one that is already present. This is easy
+        // to do, but is not necessarily guaranteed to convince Maven that the
+        // newly added version should be used over the existing one.
+        // @TODO: Update the existing JUnit version instead of adding a new one.
+        this.addDependencyIfMissing(JUNIT_4_DEPENDENCY);
+        return true;
+    }
+
+    private boolean addDependencyIfMissing(Dependency dependency) {
         for (Dependency identifiedDependency : this.dependencies) {
             if (identifiedDependency.equals(dependency)) {
                 this.reportInfo.accept("Found dependency: " + identifiedDependency);
                 return false;
             }
         }
+        this.addDependency(dependency);
+        this.reportInfo.accept("Added dependency: " + dependency);
+        return true;
+    }
+
+    private void addDependency(Dependency dependency) {
         this.appendToBuildFile(String.format(
             "dependencies { testImplementation '%s:%s:%s' }",
             dependency.groupId,
             dependency.artifactId,
             dependency.version
         ));
-        this.reportInfo.accept("Added dependency: " + dependency);
-        return true;
     }
 
     private boolean addJacocoPlugin() throws IOException {

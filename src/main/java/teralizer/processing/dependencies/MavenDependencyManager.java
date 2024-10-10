@@ -4,6 +4,7 @@ import org.dom4j.*;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
+import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.TestGeneralizationRunner;
 import teralizer.processing.TestFramework;
 
@@ -17,17 +18,21 @@ import static teralizer.processing.task.AddDependenciesTask.*;
 
 public class MavenDependencyManager {
 
+    private final ProjectRecord projectRecord;
+    private final Consumer<String> reportInfo;
+
     private final Path pomFilePath;
     private final Document document;
     private final Element dependenciesElement;
     private final Element pluginsElement;
 
     private final Set<Dependency> dependencies;
-    private final TestFramework testFramework;
-    private final Consumer<String> reportInfo;
 
-    public MavenDependencyManager(Path projectPath, TestFramework testFramework, Consumer<String> reportInfo) throws DocumentException {
-        this.pomFilePath = projectPath.resolve("pom.xml");
+    public MavenDependencyManager(ProjectRecord projectRecord, Consumer<String> reportInfo) throws DocumentException {
+        this.projectRecord = projectRecord;
+        this.reportInfo = reportInfo;
+
+        this.pomFilePath = this.projectRecord.getRootPath().resolve("pom.xml");
         this.document = new SAXReader().read(this.pomFilePath.toFile());
 
         Element root = this.document.getRootElement();
@@ -35,22 +40,20 @@ public class MavenDependencyManager {
         this.pluginsElement = this.getOrCreatePluginsElement(root);
 
         this.dependencies = this.getDependencies(this.dependenciesElement);
-
-        this.testFramework = testFramework;
-        this.reportInfo = reportInfo;
     }
 
     public void addRequiredDependencies() throws DocumentException, IOException {
         boolean hasModifiedDocument = false;
-        if (this.testFramework == TestFramework.JUNIT_4) {
+        if (this.projectRecord.getTestFramework() == TestFramework.JUNIT_4) {
             // Deliberately using non-short-circuiting OR here. If multiple
             // dependencies are missing, we want to add all of them.
-            hasModifiedDocument |= this.addDependency(JUNIT_VINTAGE_DEPENDENCY);
+            hasModifiedDocument |= this.addJUnitIfOutdated();
+            hasModifiedDocument |= this.addDependencyIfMissing(JUNIT_VINTAGE_DEPENDENCY);
         }
         hasModifiedDocument |= this.addJacocoPlugin();
-        hasModifiedDocument |= this.addDependency(PITEST_DEPENDENCY);
+        hasModifiedDocument |= this.addDependencyIfMissing(PITEST_DEPENDENCY);
         hasModifiedDocument |= this.addPitestPlugin();
-        hasModifiedDocument |= this.addDependency(JQWIK_DEPENDENCY);
+        hasModifiedDocument |= this.addDependencyIfMissing(JQWIK_DEPENDENCY);
 
         if (hasModifiedDocument) {
             XMLWriter writer = new XMLWriter(new FileWriter(this.pomFilePath.toFile()), OutputFormat.createPrettyPrint());
@@ -90,21 +93,44 @@ public class MavenDependencyManager {
         return dependencies;
     }
 
-    private boolean addDependency(Dependency dependency) {
+    private boolean addJUnitIfOutdated() {
+        String testFrameworkVersion = this.projectRecord.getTestFrameworkVersion();
+        // Check whether a recent enough version of JUnit 4 is used (JUnit
+        // Vintage requires at least JUnit 4.12). Not a very clean solution,
+        // but good enough for our purposes.
+        for (int i = 12; i < 20; i++) {
+            if (testFrameworkVersion.startsWith("4." + i)) {
+                return false;
+            }
+        }
+        // If the detected JUnit version is not supported, we just add a one
+        // that is in addition to the one that is already present. This is easy
+        // to do, but is not necessarily guaranteed to convince Maven that the
+        // newly added version should be used over the existing one.
+        // @TODO: Update the existing JUnit version instead of adding a new one.
+        this.addDependency(JUNIT_4_DEPENDENCY);
+        return true;
+    }
+
+    private boolean addDependencyIfMissing(Dependency dependency) {
         for (Dependency identifiedDependency : this.dependencies) {
             if (identifiedDependency.equals(dependency)) {
                 this.reportInfo.accept("Found dependency: " + identifiedDependency);
                 return false;
             }
         }
+        this.addDependency(dependency);
+        this.reportInfo.accept("Added dependency: " + dependency);
+        return true;
+    }
+
+    private void addDependency(Dependency dependency) {
         Element dependencyElement = this.dependenciesElement.addElement("dependency");
         dependencyElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
         dependencyElement.addElement("groupId").addText(dependency.groupId);
         dependencyElement.addElement("artifactId").addText(dependency.artifactId);
         dependencyElement.addElement("version").addText(dependency.version);
         dependencyElement.addElement("scope").addText("test");
-        this.reportInfo.accept("Added dependency: " + dependency);
-        return true;
     }
 
     private boolean addJacocoPlugin() throws DocumentException {
