@@ -34,8 +34,9 @@ jacocoTestReport {
 }
 
 pitest {
-    exportLineCoverage = true
     outputFormats = ['HTML', 'XML']
+    exportLineCoverage = true
+    verbose = true
 }
 
 tasks.test {

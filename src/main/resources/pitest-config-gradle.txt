@@ -1,3 +1,3 @@
-pitest { exportLineCoverage = true; outputFormats = ['HTML', 'XML'] }
+pitest { outputFormats = ['HTML', 'XML']; exportLineCoverage = true; verbose = true }
 tasks.test { finalizedBy(tasks.pitest) }
 tasks.pitest { dependsOn(tasks.test) }

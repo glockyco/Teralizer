@@ -58,6 +58,7 @@
                         <outputFormat>XML</outputFormat>
                     </outputFormats>
                     <exportLineCoverage>true</exportLineCoverage>
+                    <verbose>true</verbose>
                 </configuration>
                 <executions>
                     <execution>
