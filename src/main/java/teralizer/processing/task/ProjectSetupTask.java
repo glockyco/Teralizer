@@ -111,14 +111,14 @@ public class ProjectSetupTask implements Task {
     }
 
     private ProjectType identifyProjectType(Path projectRootPath) {
-        if (Files.exists(projectRootPath.resolve("build.command"))) {
+        if (Files.exists(projectRootPath.resolve("pom.xml"))) {
+            return ProjectType.MAVEN;
+        } else if (Files.exists(projectRootPath.resolve("build.gradle"))) {
+            return ProjectType.GRADLE;
+        } else if (Files.exists(projectRootPath.resolve("build.command"))) {
             return ProjectType.JAIGANTIC;
         } else if (Files.exists(projectRootPath.resolve("build.xml"))) {
             return ProjectType.ANT;
-        } else if (Files.exists(projectRootPath.resolve("build.gradle"))) {
-            return ProjectType.GRADLE;
-        } else if (Files.exists(projectRootPath.resolve("pom.xml"))) {
-            return ProjectType.MAVEN;
         }
         return ProjectType.UNKNOWN;
     }
