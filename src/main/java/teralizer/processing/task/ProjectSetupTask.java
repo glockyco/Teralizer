@@ -1,7 +1,6 @@
 package teralizer.processing.task;
 
 import com.github.javaparser.JavaParser;
-import net.lingala.zip4j.ZipFile;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ModelBuilder;
 import org.gradle.tooling.ProjectConnection;
@@ -19,7 +18,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,18 +55,6 @@ public class ProjectSetupTask implements Task {
         switch (this.projectRecord.getType()) {
             case UNKNOWN:
                 throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
-            case JAIGANTIC:
-                this.setupJaiganticSourcePaths(this.projectRecord);
-                this.setupJaiganticCompiledPaths(this.projectRecord);
-                this.setupJaiganticClasspath(this.projectRecord);
-                this.setupJaiganticTestReportsPath(this.projectRecord);
-                break;
-            case ANT:
-                this.setupAntSourcePaths(this.projectRecord, this.projectRecord.getRootPath());
-                this.setupAntCompiledPaths(this.projectRecord);
-                this.setupAntClasspath(this.projectRecord);
-                this.setupAntTestReportsPath(this.projectRecord);
-                break;
             case GRADLE:
                 this.setupGradleSourcePaths(this.projectRecord, this.projectRecord.getRootPath());
                 this.setupGradleCompiledPaths(this.projectRecord);
@@ -81,6 +67,8 @@ public class ProjectSetupTask implements Task {
                 this.setupMavenClasspath(this.projectRecord);
                 this.setupMavenTestReportsPath(this.projectRecord);
                 break;
+            case JAIGANTIC:
+            case ANT:
             default:
                 throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
         }
@@ -140,84 +128,6 @@ public class ProjectSetupTask implements Task {
             projectRecord.setTestFramework(TestFramework.UNKNOWN);
             projectRecord.setTestFrameworkVersion(null);
         }
-    }
-
-    private void setupJaiganticSourcePaths(ProjectRecord projectRecord) throws IOException {
-        String directory = projectRecord.getRootPath().getFileName().toString();
-        String[] parts = directory.split("##");
-        assert parts.length == 2;
-        Path unzippedProjectRootPath = projectRecord.getRootPath().resolve(parts[1] + "-master");
-
-        if (!Files.exists(unzippedProjectRootPath)) {
-            Path projectZipPath = projectRecord.getRootPath().resolve(directory + ".zip");
-            assert Files.exists(projectZipPath);
-            try (ZipFile zipFile = new ZipFile(projectZipPath.toFile())) {
-                zipFile.extractAll(projectRecord.getRootPath().toString());
-            }
-        }
-
-        assert Files.exists(unzippedProjectRootPath);
-
-        ProjectType projectType = this.identifyProjectType(unzippedProjectRootPath);
-
-        switch (projectType) {
-            case UNKNOWN:
-                throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
-            case JAIGANTIC:
-                throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Nested JAigantic projects are not supported.");
-            case ANT:
-                this.setupAntSourcePaths(projectRecord, unzippedProjectRootPath);
-                break;
-            case GRADLE:
-                this.setupGradleSourcePaths(projectRecord, unzippedProjectRootPath);
-                break;
-            case MAVEN:
-                this.setupMavenSourcePaths(projectRecord, unzippedProjectRootPath);
-                break;
-            default:
-                throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
-        }
-    }
-
-    private void setupJaiganticCompiledPaths(ProjectRecord projectRecord) {
-        if (projectRecord.getMainCompiledPath() == null) {
-            projectRecord.setMainCompiledPath(projectRecord.getRootPath().resolve("build"));
-        }
-        if (projectRecord.getTestCompiledPath() == null) {
-            projectRecord.setTestCompiledPath(projectRecord.getRootPath().resolve("build"));
-        }
-    }
-
-    private void setupJaiganticClasspath(ProjectRecord projectRecord) throws IOException {
-        List<String> classpathElements = new ArrayList<>();
-
-        classpathElements.add(projectRecord.getRootPath().resolve("build").toString());
-
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(projectRecord.getRootPath().resolve("depends"), "*.jar")) {
-            directoryStream.forEach(path -> classpathElements.add(path.toString()));
-        }
-
-        projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
-    }
-
-    private void setupJaiganticTestReportsPath(ProjectRecord projectRecord) {
-        throw new RuntimeException("Cannot setup test reports path for project " + this.projectRecord.getRootPath() + ". Jaigantic projects are not supported yet.");
-    }
-
-    private void setupAntSourcePaths(ProjectRecord projectRecord, Path projectRootPath) {
-        throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
-    }
-
-    private void setupAntCompiledPaths(ProjectRecord projectRecord) {
-        throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
-    }
-
-    private void setupAntClasspath(ProjectRecord projectRecord) {
-        throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
-    }
-
-    private void setupAntTestReportsPath(ProjectRecord projectRecord) {
-        throw new RuntimeException("Cannot setup test reports path for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
     }
 
     private void setupGradleSourcePaths(ProjectRecord projectRecord, Path projectRootPath) {
