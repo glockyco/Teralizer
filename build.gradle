@@ -91,6 +91,16 @@ jooq {
                                 includeExpression = "project.*_path"
                             }
                             forcedType {
+                                name = "BOOLEAN"
+                                expressions = "mutation_report.is_detected"
+                                types = "INTEGER"
+                            }
+                            forcedType {
+                                userType = "teralizer.processing.MutationStatus"
+                                enumConverter = true
+                                includeExpression = "mutation_report.status"
+                            }
+                            forcedType {
                                 userType = "teralizer.processing.TestResult"
                                 enumConverter = true
                                 includeExpression = "test_report.result"

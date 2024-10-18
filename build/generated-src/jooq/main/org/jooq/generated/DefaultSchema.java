@@ -11,6 +11,7 @@ import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.generated.tables.Assertion;
 import org.jooq.generated.tables.Generalization;
+import org.jooq.generated.tables.MutationReport;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
 import org.jooq.generated.tables.Task;
@@ -41,6 +42,11 @@ public class DefaultSchema extends SchemaImpl {
      * The table <code>generalization</code>.
      */
     public final Generalization GENERALIZATION = Generalization.GENERALIZATION;
+
+    /**
+     * The table <code>mutation_report</code>.
+     */
+    public final MutationReport MUTATION_REPORT = MutationReport.MUTATION_REPORT;
 
     /**
      * The table <code>project</code>.
@@ -85,6 +91,7 @@ public class DefaultSchema extends SchemaImpl {
         return Arrays.<Table<?>>asList(
             Assertion.ASSERTION,
             Generalization.GENERALIZATION,
+            MutationReport.MUTATION_REPORT,
             Project.PROJECT,
             SqliteSequence.SQLITE_SEQUENCE,
             Task.TASK,

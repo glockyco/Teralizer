@@ -1,6 +1,7 @@
 -- Dialect: SQLite
 
 DROP TABLE IF EXISTS task;
+DROP TABLE IF EXISTS mutation_report;
 DROP TABLE IF EXISTS test_report;
 DROP TABLE IF EXISTS generalization;
 DROP TABLE IF EXISTS assertion;
@@ -20,6 +21,7 @@ CREATE TABLE project
     main_compiled_path     TEXT, -- can be null for invalid project root paths
     test_compiled_path     TEXT, -- can be null for invalid project root paths
     test_reports_path      TEXT, -- can be null for invalid project root paths
+    mutation_reports_path  TEXT, -- can be null for invalid project root paths
     classpath              TEXT, -- can be null for invalid project root paths
     runtime                REAL  -- can be null until the project is fully processed
 );
@@ -98,6 +100,34 @@ CREATE TABLE test_report
 CREATE INDEX idx_test_report_test_id ON test_report (test_id);
 CREATE INDEX idx_test_report_generalization_id ON test_report (generalization_id);
 CREATE INDEX idx_test_report_result ON test_report (result);
+
+CREATE TABLE mutation_report
+(
+    id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id             INTEGER NOT NULL,
+    generalization_variant TEXT, -- can be null if the report is for the original test suite
+    is_detected            INTEGER NOT NULL,
+    status                 TEXT    NOT NULL,
+    number_of_tests_run    INTEGER NOT NULL,
+    source_file            TEXT    NOT NULL,
+    mutated_class          TEXT    NOT NULL,
+    mutated_method         TEXT    NOT NULL,
+    method_description     TEXT    NOT NULL,
+    line_number            INTEGER NOT NULL,
+    mutator                TEXT    NOT NULL,
+    -- @TODO: indexes
+    -- @TODO: blocks
+    -- @TODO: killing_tests
+    description            TEXT    NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_mutation_report_project_id ON mutation_report (project_id);
+CREATE INDEX idx_mutation_report_generalization_variant ON mutation_report (generalization_variant);
+
+CREATE INDEX idx_mutation_report_is_detected ON mutation_report (is_detected);
+CREATE INDEX idx_mutation_report_mutated_class ON mutation_report (mutated_class);
+CREATE INDEX idx_mutation_report_mutated_method ON mutation_report (mutated_method);
 
 CREATE TABLE task
 (

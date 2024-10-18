@@ -12,12 +12,13 @@ public class ProjectInfo {
     private Path mainCompiledPath;
     private Path testCompiledPath;
     private Path testReportsPath;
+    private Path mutationReportsPath;
 
     public ProjectInfo(String rootPath) {
-        this(Paths.get(rootPath), null, null, null, null, null);
+        this(Paths.get(rootPath), null, null, null, null, null, null);
     }
 
-    public ProjectInfo(Path rootPath, Path mainSourcePath, Path testSourcePath, Path mainCompiledPath, Path testCompiledPath, Path testReportsPath) {
+    public ProjectInfo(Path rootPath, Path mainSourcePath, Path testSourcePath, Path mainCompiledPath, Path testCompiledPath, Path testReportsPath, Path mutationReportsPath) {
         this.rootPath = rootPath;
         this.dataPath = Paths.get("data", rootPath.getFileName().toString());
         this.mainSourcePath = mainSourcePath;
@@ -25,6 +26,7 @@ public class ProjectInfo {
         this.mainCompiledPath = mainCompiledPath;
         this.testCompiledPath = testCompiledPath;
         this.testReportsPath = testReportsPath;
+        this.mutationReportsPath = mutationReportsPath;
     }
 
     public Path getRootPath() {
@@ -81,5 +83,13 @@ public class ProjectInfo {
 
     public void setTestReportsPath(Path testReportsPath) {
         this.testReportsPath = testReportsPath;
+    }
+
+    public Path getMutationReportsPath() {
+        return this.mutationReportsPath;
+    }
+
+    public void setMutationReportsPath(Path mutationReportsPath) {
+        this.mutationReportsPath = mutationReportsPath;
     }
 }

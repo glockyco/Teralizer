@@ -56,16 +56,10 @@ public class ProjectSetupTask implements Task {
             case UNKNOWN:
                 throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
             case GRADLE:
-                this.setupGradleSourcePaths(this.projectRecord, this.projectRecord.getRootPath());
-                this.setupGradleCompiledPaths(this.projectRecord);
-                this.setupGradleClasspath(this.projectRecord);
-                this.setupGradleTestReportsPath(this.projectRecord);
+                this.setupGradleProjectPaths(this.projectRecord);
                 break;
             case MAVEN:
-                this.setupMavenSourcePaths(this.projectRecord, this.projectRecord.getRootPath());
-                this.setupMavenCompiledPaths(this.projectRecord);
-                this.setupMavenClasspath(this.projectRecord);
-                this.setupMavenTestReportsPath(this.projectRecord);
+                this.setupMavenProjectPaths(this.projectRecord);
                 break;
             case JAIGANTIC:
             case ANT:
@@ -96,6 +90,7 @@ public class ProjectSetupTask implements Task {
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_WITH_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_WITH_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
+        scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.MUTATION_DATA_COLLECTION_ORIGINAL, this.projectRecord));
     }
 
     private ProjectType identifyProjectType(Path projectRootPath) {
@@ -130,25 +125,29 @@ public class ProjectSetupTask implements Task {
         }
     }
 
-    private void setupGradleSourcePaths(ProjectRecord projectRecord, Path projectRootPath) {
+    private void setupGradleProjectPaths(ProjectRecord projectRecord) {
         if (projectRecord.getMainSourcePath() == null) {
-            projectRecord.setMainSourcePath(projectRootPath.resolve("src/main/java"));
+            projectRecord.setMainSourcePath(projectRecord.getRootPath().resolve("src/main/java"));
         }
         if (projectRecord.getTestSourcePath() == null) {
-            projectRecord.setTestSourcePath(projectRootPath.resolve("src/test/java"));
+            projectRecord.setTestSourcePath(projectRecord.getRootPath().resolve("src/test/java"));
         }
-    }
-
-    private void setupGradleCompiledPaths(ProjectRecord projectRecord) {
         if (projectRecord.getMainCompiledPath() == null) {
             projectRecord.setMainCompiledPath(projectRecord.getRootPath().resolve("build/classes/java/main"));
         }
         if (projectRecord.getTestCompiledPath() == null) {
             projectRecord.setTestCompiledPath(projectRecord.getRootPath().resolve("build/classes/java/test"));
         }
+        if (projectRecord.getTestReportsPath() == null) {
+            projectRecord.setTestReportsPath(projectRecord.getRootPath().resolve("build/test-results/test"));
+        }
+        if (projectRecord.getMutationReportsPath() == null) {
+            projectRecord.setMutationReportsPath(projectRecord.getRootPath().resolve("build/reports/pitest"));
+        }
+        this.setupGradleProjectClasspath(projectRecord);
     }
 
-    private void setupGradleClasspath(ProjectRecord projectRecord) {
+    private void setupGradleProjectClasspath(ProjectRecord projectRecord) {
         File projectDirectoryFile = projectRecord.getRootPath().toFile();
 
         if (!projectDirectoryFile.exists() || !projectDirectoryFile.isDirectory()) {
@@ -172,31 +171,29 @@ public class ProjectSetupTask implements Task {
         projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
     }
 
-    private void setupGradleTestReportsPath(ProjectRecord projectRecord) {
-        if (projectRecord.getTestReportsPath() == null) {
-            projectRecord.setTestReportsPath(projectRecord.getRootPath().resolve("build/test-results/test"));
-        }
-    }
-
-    private void setupMavenSourcePaths(ProjectRecord projectRecord, Path projectRootPath) {
+    private void setupMavenProjectPaths(ProjectRecord projectRecord) throws IOException, InterruptedException {
         if (projectRecord.getMainSourcePath() == null) {
-            projectRecord.setMainSourcePath(projectRootPath.resolve("src/main/java"));
+            projectRecord.setMainSourcePath(projectRecord.getRootPath().resolve("src/main/java"));
         }
         if (projectRecord.getTestSourcePath() == null) {
-            projectRecord.setTestSourcePath(projectRootPath.resolve("src/test/java"));
+            projectRecord.setTestSourcePath(projectRecord.getRootPath().resolve("src/test/java"));
         }
-    }
-
-    private void setupMavenCompiledPaths(ProjectRecord projectRecord) {
         if (projectRecord.getMainCompiledPath() == null) {
             projectRecord.setMainCompiledPath(projectRecord.getRootPath().resolve("target/classes"));
         }
         if (projectRecord.getTestCompiledPath() == null) {
             projectRecord.setTestCompiledPath(projectRecord.getRootPath().resolve("target/test-classes"));
         }
+        if (projectRecord.getTestReportsPath() == null) {
+            projectRecord.setTestReportsPath(projectRecord.getRootPath().resolve("target/surefire-reports"));
+        }
+        if (projectRecord.getMutationReportsPath() == null) {
+            projectRecord.setMutationReportsPath(projectRecord.getRootPath().resolve("target/pit-reports"));
+        }
+        this.setupMavenProjectClasspath(projectRecord);
     }
 
-    private void setupMavenClasspath(ProjectRecord projectRecord) throws IOException, InterruptedException {
+    private void setupMavenProjectClasspath(ProjectRecord projectRecord) throws IOException, InterruptedException {
         String classpath = "";
 
         StringBuilder output = new StringBuilder();
@@ -243,12 +240,6 @@ public class ProjectSetupTask implements Task {
         Arrays.stream(classpath.split(File.pathSeparator)).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
 
         projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
-    }
-
-    private void setupMavenTestReportsPath(ProjectRecord projectRecord) {
-        if (projectRecord.getTestReportsPath() == null) {
-            projectRecord.setTestReportsPath(projectRecord.getRootPath().resolve("target/surefire-reports"));
-        }
     }
 
     @Override

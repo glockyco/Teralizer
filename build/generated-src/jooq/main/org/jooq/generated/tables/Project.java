@@ -14,7 +14,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row13;
+import org.jooq.Row14;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -111,6 +111,11 @@ public class Project extends TableImpl<ProjectRecord> {
     public final TableField<ProjectRecord, Path> TEST_REPORTS_PATH = createField(DSL.name("test_reports_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
+     * The column <code>project.mutation_reports_path</code>.
+     */
+    public final TableField<ProjectRecord, Path> MUTATION_REPORTS_PATH = createField(DSL.name("mutation_reports_path"), SQLDataType.CLOB, this, "", new PathConverter());
+
+    /**
      * The column <code>project.classpath</code>.
      */
     public final TableField<ProjectRecord, String> CLASSPATH = createField(DSL.name("classpath"), SQLDataType.CLOB, this, "");
@@ -205,11 +210,11 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row13 type methods
+    // Row14 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row13<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, String, Float> fieldsRow() {
-        return (Row13) super.fieldsRow();
+    public Row14<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, String, Float> fieldsRow() {
+        return (Row14) super.fieldsRow();
     }
 }
