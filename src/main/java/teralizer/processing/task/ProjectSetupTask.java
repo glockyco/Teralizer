@@ -86,11 +86,14 @@ public class ProjectSetupTask implements Task {
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_ORIGINAL, this.projectRecord));
+
         scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_WITH_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_WITH_DEPENDENCIES, this.projectRecord));
-        scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
+
+        scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COVERAGE_DATA_COLLECTION_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.MUTATION_DATA_COLLECTION_ORIGINAL, this.projectRecord));
+        scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
     }
 
     private ProjectType identifyProjectType(Path projectRootPath) {
@@ -141,6 +144,9 @@ public class ProjectSetupTask implements Task {
         if (projectRecord.getTestReportsPath() == null) {
             projectRecord.setTestReportsPath(projectRecord.getRootPath().resolve("build/test-results/test"));
         }
+        if (projectRecord.getCoverageReportsPath() == null) {
+            projectRecord.setCoverageReportsPath(projectRecord.getRootPath().resolve("build/reports/jacoco/test"));
+        }
         if (projectRecord.getMutationReportsPath() == null) {
             projectRecord.setMutationReportsPath(projectRecord.getRootPath().resolve("build/reports/pitest"));
         }
@@ -186,6 +192,9 @@ public class ProjectSetupTask implements Task {
         }
         if (projectRecord.getTestReportsPath() == null) {
             projectRecord.setTestReportsPath(projectRecord.getRootPath().resolve("target/surefire-reports"));
+        }
+        if (projectRecord.getCoverageReportsPath() == null) {
+            projectRecord.setCoverageReportsPath(projectRecord.getRootPath().resolve("target/site/jacoco"));
         }
         if (projectRecord.getMutationReportsPath() == null) {
             projectRecord.setMutationReportsPath(projectRecord.getRootPath().resolve("target/pit-reports"));

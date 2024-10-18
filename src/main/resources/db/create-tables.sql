@@ -2,6 +2,7 @@
 
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS mutation_report;
+DROP TABLE IF EXISTS coverage_report;
 DROP TABLE IF EXISTS test_report;
 DROP TABLE IF EXISTS generalization;
 DROP TABLE IF EXISTS assertion;
@@ -21,6 +22,7 @@ CREATE TABLE project
     main_compiled_path     TEXT, -- can be null for invalid project root paths
     test_compiled_path     TEXT, -- can be null for invalid project root paths
     test_reports_path      TEXT, -- can be null for invalid project root paths
+    coverage_reports_path  TEXT, -- can be null for invalid project root paths
     mutation_reports_path  TEXT, -- can be null for invalid project root paths
     classpath              TEXT, -- can be null for invalid project root paths
     runtime                REAL  -- can be null until the project is fully processed
@@ -100,6 +102,32 @@ CREATE TABLE test_report
 CREATE INDEX idx_test_report_test_id ON test_report (test_id);
 CREATE INDEX idx_test_report_generalization_id ON test_report (generalization_id);
 CREATE INDEX idx_test_report_result ON test_report (result);
+
+CREATE TABLE coverage_report
+(
+    id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id             INTEGER NOT NULL,
+    generalization_variant TEXT, -- can be null if the report is for the original test suite
+    covered_package         TEXT    NOT NULL,
+    covered_class           TEXT    NOT NULL,
+    instruction_missed     TEXT    NOT NULL,
+    instruction_covered    TEXT    NOT NULL,
+    branch_missed          TEXT    NOT NULL,
+    branch_covered          TEXT    NOT NULL,
+    line_missed            TEXT    NOT NULL,
+    line_covered           TEXT    NOT NULL,
+    complexity_missed      TEXT    NOT NULL,
+    complexity_covered     TEXT    NOT NULL,
+    method_missed          TEXT    NOT NULL,
+    method_covered         TEXT    NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_coverage_report_project_id ON coverage_report (project_id);
+CREATE INDEX idx_coverage_report_generalization_variant ON coverage_report (generalization_variant);
+
+CREATE INDEX idx_coverage_report_package ON coverage_report (covered_package);
+CREATE INDEX idx_coverage_report_class ON coverage_report (covered_class);
 
 CREATE TABLE mutation_report
 (

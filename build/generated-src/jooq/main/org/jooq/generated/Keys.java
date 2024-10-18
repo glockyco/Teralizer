@@ -8,6 +8,7 @@ import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.CoverageReport;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.MutationReport;
 import org.jooq.generated.tables.Project;
@@ -15,6 +16,7 @@ import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
 import org.jooq.generated.tables.TestReport;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.CoverageReportRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.MutationReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
@@ -37,6 +39,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<AssertionRecord> PK_ASSERTION = Internal.createUniqueKey(Assertion.ASSERTION, DSL.name("pk_assertion"), new TableField[] { Assertion.ASSERTION.ID }, true);
+    public static final UniqueKey<CoverageReportRecord> PK_COVERAGE_REPORT = Internal.createUniqueKey(CoverageReport.COVERAGE_REPORT, DSL.name("pk_coverage_report"), new TableField[] { CoverageReport.COVERAGE_REPORT.ID }, true);
     public static final UniqueKey<GeneralizationRecord> PK_GENERALIZATION = Internal.createUniqueKey(Generalization.GENERALIZATION, DSL.name("pk_generalization"), new TableField[] { Generalization.GENERALIZATION.ID }, true);
     public static final UniqueKey<MutationReportRecord> PK_MUTATION_REPORT = Internal.createUniqueKey(MutationReport.MUTATION_REPORT, DSL.name("pk_mutation_report"), new TableField[] { MutationReport.MUTATION_REPORT.ID }, true);
     public static final UniqueKey<ProjectRecord> PK_PROJECT = Internal.createUniqueKey(Project.PROJECT, DSL.name("pk_project"), new TableField[] { Project.PROJECT.ID }, true);
@@ -49,6 +52,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final ForeignKey<AssertionRecord, TestRecord> FK_ASSERTION_TEST_1 = Internal.createForeignKey(Assertion.ASSERTION, DSL.name("fk_assertion_test_1"), new TableField[] { Assertion.ASSERTION.TEST_ID }, Keys.PK_TEST, new TableField[] { Test.TEST.ID }, true);
+    public static final ForeignKey<CoverageReportRecord, ProjectRecord> FK_COVERAGE_REPORT_PROJECT_1 = Internal.createForeignKey(CoverageReport.COVERAGE_REPORT, DSL.name("fk_coverage_report_project_1"), new TableField[] { CoverageReport.COVERAGE_REPORT.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<GeneralizationRecord, TestRecord> FK_GENERALIZATION_TEST_1 = Internal.createForeignKey(Generalization.GENERALIZATION, DSL.name("fk_generalization_test_1"), new TableField[] { Generalization.GENERALIZATION.TEST_ID }, Keys.PK_TEST, new TableField[] { Test.TEST.ID }, true);
     public static final ForeignKey<MutationReportRecord, ProjectRecord> FK_MUTATION_REPORT_PROJECT_1 = Internal.createForeignKey(MutationReport.MUTATION_REPORT, DSL.name("fk_mutation_report_project_1"), new TableField[] { MutationReport.MUTATION_REPORT.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<TaskRecord, GeneralizationRecord> FK_TASK_GENERALIZATION_1 = Internal.createForeignKey(Task.TASK, DSL.name("fk_task_generalization_1"), new TableField[] { Task.TASK.GENERALIZATION_ID }, Keys.PK_GENERALIZATION, new TableField[] { Generalization.GENERALIZATION.ID }, true);

@@ -82,6 +82,7 @@ public class TestGeneralizationRunner {
             projectRecord.setMainCompiledPath(projectInfo.getMainCompiledPath());
             projectRecord.setTestCompiledPath(projectInfo.getTestCompiledPath());
             projectRecord.setTestReportsPath(projectInfo.getTestReportsPath());
+            projectRecord.setCoverageReportsPath(projectInfo.getCoverageReportsPath());
             projectRecord.setMutationReportsPath(projectInfo.getMutationReportsPath());
             projectRecord.store();
 

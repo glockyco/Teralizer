@@ -10,6 +10,7 @@ import java.util.List;
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.CoverageReport;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.MutationReport;
 import org.jooq.generated.tables.Project;
@@ -37,6 +38,11 @@ public class DefaultSchema extends SchemaImpl {
      * The table <code>assertion</code>.
      */
     public final Assertion ASSERTION = Assertion.ASSERTION;
+
+    /**
+     * The table <code>coverage_report</code>.
+     */
+    public final CoverageReport COVERAGE_REPORT = CoverageReport.COVERAGE_REPORT;
 
     /**
      * The table <code>generalization</code>.
@@ -90,6 +96,7 @@ public class DefaultSchema extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.<Table<?>>asList(
             Assertion.ASSERTION,
+            CoverageReport.COVERAGE_REPORT,
             Generalization.GENERALIZATION,
             MutationReport.MUTATION_REPORT,
             Project.PROJECT,

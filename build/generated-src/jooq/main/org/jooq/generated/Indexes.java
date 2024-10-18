@@ -7,6 +7,7 @@ package org.jooq.generated;
 import org.jooq.Index;
 import org.jooq.OrderField;
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.CoverageReport;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.MutationReport;
 import org.jooq.generated.tables.Project;
@@ -28,6 +29,10 @@ public class Indexes {
     // -------------------------------------------------------------------------
 
     public static final Index IDX_ASSERTION_TEST_ID = Internal.createIndex(DSL.name("idx_assertion_test_id"), Assertion.ASSERTION, new OrderField[] { Assertion.ASSERTION.TEST_ID }, false);
+    public static final Index IDX_COVERAGE_REPORT_CLASS = Internal.createIndex(DSL.name("idx_coverage_report_class"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.COVERED_CLASS }, false);
+    public static final Index IDX_COVERAGE_REPORT_GENERALIZATION_VARIANT = Internal.createIndex(DSL.name("idx_coverage_report_generalization_variant"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.GENERALIZATION_VARIANT }, false);
+    public static final Index IDX_COVERAGE_REPORT_PACKAGE = Internal.createIndex(DSL.name("idx_coverage_report_package"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.COVERED_PACKAGE }, false);
+    public static final Index IDX_COVERAGE_REPORT_PROJECT_ID = Internal.createIndex(DSL.name("idx_coverage_report_project_id"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.PROJECT_ID }, false);
     public static final Index IDX_GENERALIZATION_TEST_ID = Internal.createIndex(DSL.name("idx_generalization_test_id"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TEST_ID }, false);
     public static final Index IDX_GENERALIZATION_TOOL = Internal.createIndex(DSL.name("idx_generalization_tool"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TOOL }, false);
     public static final Index IDX_MUTATION_REPORT_GENERALIZATION_VARIANT = Internal.createIndex(DSL.name("idx_mutation_report_generalization_variant"), MutationReport.MUTATION_REPORT, new OrderField[] { MutationReport.MUTATION_REPORT.GENERALIZATION_VARIANT }, false);

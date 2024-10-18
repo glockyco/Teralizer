@@ -5,6 +5,7 @@ package org.jooq.generated;
 
 
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.CoverageReport;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.MutationReport;
 import org.jooq.generated.tables.Project;
@@ -24,6 +25,11 @@ public class Tables {
      * The table <code>assertion</code>.
      */
     public static final Assertion ASSERTION = Assertion.ASSERTION;
+
+    /**
+     * The table <code>coverage_report</code>.
+     */
+    public static final CoverageReport COVERAGE_REPORT = CoverageReport.COVERAGE_REPORT;
 
     /**
      * The table <code>generalization</code>.
