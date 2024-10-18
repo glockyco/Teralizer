@@ -1,7 +1,8 @@
-package teralizer.processing;
+package teralizer.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.processing.ProcessingStage;
 
 import java.io.IOException;
 import java.nio.file.Path;

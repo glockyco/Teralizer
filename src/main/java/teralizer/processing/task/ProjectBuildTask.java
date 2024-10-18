@@ -1,8 +1,8 @@
 package teralizer.processing.task;
 
 import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.processing.ConsoleCommand;
-import teralizer.processing.ConsoleCommandException;
+import teralizer.util.ConsoleCommand;
+import teralizer.util.ConsoleCommandException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 

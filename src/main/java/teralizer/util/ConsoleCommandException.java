@@ -1,4 +1,4 @@
-package teralizer.processing;
+package teralizer.util;
 
 import java.nio.file.Path;
 import java.util.List;
