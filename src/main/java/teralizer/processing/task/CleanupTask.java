@@ -107,6 +107,9 @@ public class CleanupTask implements Task {
         // No need to set a projectId for the project-level cleanup task because
         // the project is no longer visible in the DB once the task finishes.
 
+        projectPath.resolve(ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE).toFile().delete();
+        projectPath.resolve(ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE).toFile().delete();
+
         List<TestRecord> testRecords =  create.select(Tables.TEST.asterisk())
             .from(Tables.PROJECT)
             .join(Tables.TEST)

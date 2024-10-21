@@ -10,6 +10,7 @@ import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.TestGeneralizationRunner;
 import teralizer.processing.TestFramework;
+import teralizer.processing.task.ProjectSetupTask;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,7 +39,7 @@ public class GradleDependencyManager {
         this.projectRecord = projectRecord;
         this.reportInfo = reportInfo;
 
-        this.buildFilePath = this.projectRecord.getRootPath().resolve("build.gradle");
+        this.buildFilePath = this.projectRecord.getRootPath().resolve(ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE);
         this.buildFileContent = new StringBuilder(new String(Files.readAllBytes(this.buildFilePath)));
 
         GradleConnector connector = GradleConnector.newConnector();

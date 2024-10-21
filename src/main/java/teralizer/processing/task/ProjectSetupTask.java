@@ -8,6 +8,7 @@ import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.TestGeneralizationRunner;
 import teralizer.javaparser.JavaParserFactory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProjectType;
@@ -21,6 +22,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +33,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ProjectSetupTask implements Task {
+
+    public static final String MAVEN_DEFAULT_BUILD_FILE = "pom.xml";
+    public static final String MAVEN_CUSTOM_BUILD_FILE = "pom." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + ".xml";
+
+    public static final String GRADLE_DEFAULT_BUILD_FILE = "build.gradle";
+    public static final String GRADLE_CUSTOM_BUILD_FILE = "build." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + ".gradle";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProjectSetupTask.class);
 
@@ -67,6 +75,7 @@ public class ProjectSetupTask implements Task {
                 throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
         }
 
+        this.setupBuildFile(this.projectRecord);
         this.setupTestFramework(this.projectRecord);
 
         this.projectRecord.store();
@@ -97,9 +106,9 @@ public class ProjectSetupTask implements Task {
     }
 
     private ProjectType identifyProjectType(Path projectRootPath) {
-        if (Files.exists(projectRootPath.resolve("pom.xml"))) {
+        if (Files.exists(projectRootPath.resolve(MAVEN_DEFAULT_BUILD_FILE))) {
             return ProjectType.MAVEN;
-        } else if (Files.exists(projectRootPath.resolve("build.gradle"))) {
+        } else if (Files.exists(projectRootPath.resolve(GRADLE_DEFAULT_BUILD_FILE))) {
             return ProjectType.GRADLE;
         } else if (Files.exists(projectRootPath.resolve("build.command"))) {
             return ProjectType.JAIGANTIC;
@@ -107,6 +116,26 @@ public class ProjectSetupTask implements Task {
             return ProjectType.ANT;
         }
         return ProjectType.UNKNOWN;
+    }
+
+    private void setupBuildFile(ProjectRecord projectRecord) throws IOException {
+        Path sourcePath;
+        Path destinationPath;
+        if (projectRecord.getType() == ProjectType.MAVEN) {
+            sourcePath = projectRecord.getRootPath().resolve(MAVEN_DEFAULT_BUILD_FILE);
+            destinationPath = projectRecord.getRootPath().resolve(MAVEN_CUSTOM_BUILD_FILE);
+        } else if (projectRecord.getType() == ProjectType.GRADLE) {
+            sourcePath = projectRecord.getRootPath().resolve(GRADLE_DEFAULT_BUILD_FILE);
+            destinationPath = projectRecord.getRootPath().resolve(GRADLE_CUSTOM_BUILD_FILE);
+        } else {
+            throw new RuntimeException("Failed to setup build file. Operation is not implemented for projects of type " + projectRecord.getType() + ".");
+        }
+
+        if (destinationPath.toFile().exists()) {
+            throw new RuntimeException("Failed to setup build file. " + destinationPath + " already exists.");
+        }
+
+        Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
     }
 
     private void setupTestFramework(ProjectRecord projectRecord) {

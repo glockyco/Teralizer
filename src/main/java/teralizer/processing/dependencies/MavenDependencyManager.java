@@ -7,6 +7,7 @@ import org.dom4j.io.XMLWriter;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.TestGeneralizationRunner;
 import teralizer.processing.TestFramework;
+import teralizer.processing.task.ProjectSetupTask;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class MavenDependencyManager {
         this.projectRecord = projectRecord;
         this.reportInfo = reportInfo;
 
-        this.pomFilePath = this.projectRecord.getRootPath().resolve("pom.xml");
+        this.pomFilePath = this.projectRecord.getRootPath().resolve(ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE);
         this.document = new SAXReader().read(this.pomFilePath.toFile());
 
         Element root = this.document.getRootElement();

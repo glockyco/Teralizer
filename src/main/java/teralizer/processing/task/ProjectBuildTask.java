@@ -59,12 +59,12 @@ public class ProjectBuildTask implements Task {
     }
 
     private void buildGradle(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
-        List<String> command = Arrays.asList("./gradlew", "clean", "compileJava", "compileTestJava", "--info");
+        List<String> command = Arrays.asList("./gradlew", "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE, "--info", "clean", "compileJava", "compileTestJava");
         this.consoleCommand.execute(projectRootPath, command);
     }
 
     private void buildMaven(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
-        List<String> command = Arrays.asList("mvn", "clean", "compile", "test-compile");
+        List<String> command = Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "clean", "compile", "test-compile");
         this.consoleCommand.execute(projectRootPath, command);
     }
 
