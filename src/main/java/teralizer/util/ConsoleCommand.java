@@ -37,7 +37,19 @@ public class ConsoleCommand {
         processBuilder.redirectOutput(ProcessBuilder.Redirect.to(outputPath.toFile()));
         processBuilder.redirectError(ProcessBuilder.Redirect.to(errorPath.toFile()));
         Process process = processBuilder.start();
-        int exitCode = process.waitFor();
+
+        Thread shutdownHook = new Thread(() -> {
+            LOGGER.atDebug().log("Terminating command '" + String.join(" ", command) + "' due to shutdown.");
+            process.destroy();
+        });
+
+        int exitCode;
+        try {
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            exitCode = process.waitFor();
+        } finally {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        }
 
         if (exitCode != 0) {
             throw new ConsoleCommandException(command, exitCode, outputPath, errorPath);
