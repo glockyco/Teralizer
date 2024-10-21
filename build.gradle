@@ -1,6 +1,11 @@
 plugins {
     id 'java'
+    id 'application'
     id 'nu.studer.jooq' version '5.2.2'
+    // Using old shadow version because newer versions require new Gradle
+    // versions, which the jpf-core project is not compatible with due to
+    // making use of deprecated Gradle features.
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 group = 'teralizer'
@@ -8,6 +13,8 @@ version = '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+
+mainClassName = 'teralizer.TestGeneralizationRunner'
 
 repositories {
     mavenCentral()
@@ -120,5 +127,11 @@ jooq {
                 }
             }
         }
+    }
+}
+
+jar  {
+    manifest {
+        attributes("Main-Class": "teralizer.TestGeneralizationRunner")
     }
 }
