@@ -1,19 +1,22 @@
 package teralizer.processing.task;
 
 import org.apache.commons.io.FileUtils;
-import org.jooq.DSLContext;
-import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.GeneralizationRecord;
-import org.jooq.generated.tables.records.TestRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.TestGeneralizationRunner;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class CleanupTask implements Task {
@@ -22,135 +25,65 @@ public class CleanupTask implements Task {
 
     private final ProcessingStage stage;
     private final Path projectPath;
+    private final Path testSourcePath;
 
-    private Integer projectId;
-    private Integer testId;
-    private Integer generalizationId;
-
-    public CleanupTask(ProcessingStage stage) {
-        this(stage, null, null, null);
-    }
-
-    public CleanupTask(ProcessingStage stage, Path projectPath, Integer testId, Integer generalizationId) {
+    public CleanupTask(ProcessingStage stage, Path projectPath, Path testSourcePath) {
         this.stage = stage;
         this.projectPath = projectPath;
-        this.testId = testId;
-        this.generalizationId = generalizationId;
+        this.testSourcePath = testSourcePath;
     }
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-
-        if (this.generalizationId != null) {
-            this.cleanupGeneralization(create, reportInfo, this.generalizationId);
-            this.generalizationId = null;
-        } else if (this.testId != null) {
-            this.cleanupTest(create, reportInfo, this.testId);
-            this.testId = null;
-        } else if (this.projectPath != null) {
-            this.cleanupProject(create, reportInfo, this.projectPath);
-        } else {
-            this.cleanupAll(create);
+        if (this.projectPath == null) {
+            LOGGER.atInfo().log("Skipping cleanup. Project path is null.");
+            return;
         }
-    }
-
-    private void cleanupGeneralization(DSLContext create, Consumer<String> reportInfo, int generalizationId) {
-        GeneralizationRecord generalizationRecord = create.selectFrom(Tables.GENERALIZATION).where(Tables.GENERALIZATION.ID.eq(generalizationId)).fetchOne();
-
-        if (generalizationRecord == null) {
-            LOGGER.atWarn().log("Nothing to clean up for generalization with ID {}. Generalization could not be found.", generalizationId);
+        if (!this.projectPath.toFile().exists()) {
+            LOGGER.atInfo().log("Skipping cleanup. Project path '" + this.projectPath + "' does not exist.");
             return;
         }
 
-        Paths.get(generalizationRecord.getGeneralizedClassPath()).toFile().delete();
+        // We do not know whether we are dealing with a Maven or Gradle (or some other)
+        // project. Even though this could be figured out, deleting all files that we
+        // might have created in previous runs for any project type is much easier...
 
-        if (this.projectId ==  null) {
-            this.projectId = create.select(Tables.TEST.PROJECT_ID).from(Tables.TEST).where(Tables.TEST.ID.eq(generalizationRecord.getTestId())).fetchOne().get(Tables.TEST.PROJECT_ID);
+        File mavenBuildFile = this.projectPath.resolve(ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE).toFile();
+        File gradleBuildFile =  this.projectPath.resolve(ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE).toFile();
+        List<File> buildFiles = Arrays.asList(mavenBuildFile, gradleBuildFile);
+        for (File buildFile : buildFiles) {
+            if (buildFile.exists()) {
+                LOGGER.atWarn().log("Deleting build file '" + buildFile + "'.");
+                if (!buildFile.delete()) {
+                    throw new RuntimeException("Failed to delete build file '" + buildFile + "'.");
+                }
+            }
         }
 
-        this.testId = generalizationRecord.getTestId();
-
-        generalizationRecord.delete();
-
-        String qualifiedName = generalizationRecord.getGeneralizedClassPackage() + "." + generalizationRecord.getGeneralizedClassName();
-        reportInfo.accept("Cleaned up generalization with ID " + this.generalizationId + " (" + qualifiedName + ").");
-    }
-
-    private void cleanupTest(DSLContext create, Consumer<String> reportInfo, int testId) {
-        TestRecord testRecord = create.selectFrom(Tables.TEST).where(Tables.TEST.ID.eq(testId)).fetchOne();
-
-        if (testRecord == null) {
-            LOGGER.atWarn().log("Nothing to clean up for test with ID {}. Test could not be found.", testId);
-            return;
+        Path testSourcePath = this.testSourcePath;
+        if (testSourcePath == null) {
+            testSourcePath = this.projectPath.resolve("src/test/java");
+        }
+        if (!testSourcePath.toFile().exists()) {
+            testSourcePath = this.projectPath;
         }
 
-        this.projectId = testRecord.getProjectId();
+        String dirToDelete = TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated";
+        Files.walkFileTree(testSourcePath, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                if (dir.getFileName().toString().equals(dirToDelete)) {
+                    LOGGER.atInfo().log("Deleting directory '" + dir + "'.");
+                    FileUtils.deleteDirectory(dir.toFile());
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        });
 
-        List<GeneralizationRecord> generalizationRecords = create.select().from(Tables.GENERALIZATION).where(Tables.GENERALIZATION.TEST_ID.eq(testRecord.getId())).fetch().into(Tables.GENERALIZATION);
-        for (GeneralizationRecord generalizationRecord : generalizationRecords) {
-            Paths.get(generalizationRecord.getGeneralizedClassPath()).toFile().delete();
-        }
-
-        Paths.get(testRecord.getDriverClassPath()).toFile().delete();
-        Paths.get(testRecord.getJpfConfigPath()).toFile().delete();
-        Paths.get(testRecord.getInputSpecificationPath()).toFile().delete();
-        Paths.get(testRecord.getOutputSpecificationPath()).toFile().delete();
-
-        testRecord.delete();
-
-        String qualifiedName = testRecord.getTestClassPackage() + "." + testRecord.getTestClassName() + "." + testRecord.getTestMethodName();
-        reportInfo.accept("Cleaned up test with ID " + this.testId + " (" + qualifiedName + ").");
-    }
-
-    private void cleanupProject(DSLContext create, Consumer<String> reportInfo, Path projectPath) throws IOException {
-        // No need to set a projectId for the project-level cleanup task because
-        // the project is no longer visible in the DB once the task finishes.
-
-        projectPath.resolve(ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE).toFile().delete();
-        projectPath.resolve(ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE).toFile().delete();
-
-        List<TestRecord> testRecords =  create.select(Tables.TEST.asterisk())
-            .from(Tables.PROJECT)
-            .join(Tables.TEST)
-            .on(Tables.PROJECT.ID.eq(Tables.TEST.PROJECT_ID))
-            .where(Tables.PROJECT.ROOT_PATH.eq(projectPath))
-            .fetch()
-            .into(TestRecord.class);
-
-        for (TestRecord testRecord : testRecords) {
-            FileUtils.deleteDirectory(Paths.get(testRecord.getDriverClassPath()).getParent().toFile());
-
-            // Generalized test classes are stored in a subdirectory of the driver class directory,
-            // so they are automatically removed when deleting the driver class directory.
-
-            Paths.get(testRecord.getJpfConfigPath()).toFile().delete();
-            Paths.get(testRecord.getInputSpecificationPath()).toFile().delete();
-            Paths.get(testRecord.getOutputSpecificationPath()).toFile().delete();
-        }
-
-        int deletedCount = create.deleteFrom(Tables.PROJECT).where(Tables.PROJECT.ROOT_PATH.eq(projectPath)).execute();
-
-        if (deletedCount == 0 && testRecords.isEmpty()) {
-            LOGGER.atWarn().log("Nothing to clean up for project {}.", projectPath);
-        } else {
-            reportInfo.accept("Cleaned up project " + this.projectPath + ".");
-        }
-    }
-
-    private void cleanupAll(DSLContext create) throws IOException {
-        // No need to set a projectId for the overall cleanup task because
-        // the project is no longer visible in the DB once the task finishes.
-
-        // @TODO: Add cleanup functionality for dependencies added via AddJqwikDependencyTask.
-
-        List<TestRecord> testRecords = create.selectFrom(Tables.TEST).fetch();
-        for (TestRecord testRecord : testRecords) {
-            FileUtils.deleteDirectory(Paths.get(testRecord.getDriverClassPath()).getParent().toFile());
-        }
-
-        FileUtils.deleteDirectory(Paths.get("database").toFile());
-        FileUtils.deleteDirectory(Paths.get("data").toFile());
+        // We do not automatically remove collected data in the DB and the data
+        // directory. These should be preserved even if the generalization is
+        // reverted to enable comparisons across multiple generalization runs.
     }
 
     @Override
@@ -160,16 +93,38 @@ public class CleanupTask implements Task {
 
     @Override
     public Integer getProjectId() {
-        return this.projectId;
+        return null;
     }
 
     @Override
     public Integer getTestId() {
-        return this.testId;
+        return null;
     }
 
     @Override
     public Integer getGeneralizationId() {
-        return this.generalizationId;
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "CleanupTask{" +
+            "stage=" + this.stage +
+            ", projectPath=" + this.projectPath +
+            ", testSourcePath=" + this.testSourcePath +
+            '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CleanupTask)) return false;
+        CleanupTask that = (CleanupTask) o;
+        return this.stage == that.stage && Objects.equals(this.projectPath, that.projectPath) && Objects.equals(this.testSourcePath, that.testSourcePath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.stage, this.projectPath, this.testSourcePath);
     }
 }

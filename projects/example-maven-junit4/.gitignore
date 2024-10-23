@@ -332,5 +332,6 @@ gradle-app.setting
 
 .jqwik-database
 
-**/teralizer/_*_Driver_*.java
-**/teralizer/naive/**
+pom.teralizer.xml
+build.teralizer.gradle
+**/teralizer_generated/**

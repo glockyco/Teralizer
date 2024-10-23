@@ -68,7 +68,7 @@ public class TestGeneralizationRunner {
         pipeline.getContext().put(TaskContext.VELOCITY_ENGINE, this.createVelocityEngine());
 
         for (ProjectInfo projectInfo : projectInfos) {
-            pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectInfo.getRootPath(), null, null));
+            pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectInfo.getRootPath(), projectInfo.getTestSourcePath()));
             pipeline.executeAll();
 
             long startTime = System.currentTimeMillis();

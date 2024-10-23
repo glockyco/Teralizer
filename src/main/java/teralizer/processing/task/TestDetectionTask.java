@@ -17,6 +17,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.TestGeneralizationRunner;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingPipeline;
 import teralizer.processing.ProcessingStage;
@@ -188,10 +189,10 @@ public class TestDetectionTask implements Task {
 
     private void setJpfData(Path projectDataPath, TestRecord testRecord) {
         String driverClassName = "_" + testRecord.getTestClassName() + "_Driver_" + testRecord.getTestMethodName();
-        Path driverClassPath = Paths.get(testRecord.getTestClassPath()).getParent().resolve("teralizer/" + driverClassName + ".java");
+        Path driverClassPath = Paths.get(testRecord.getTestClassPath()).getParent().resolve(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated/" + driverClassName + ".java");
 
         testRecord.setDriverClassPath(driverClassPath.toString());
-        testRecord.setDriverClassPackage(testRecord.getTestClassPackage() + ".teralizer");
+        testRecord.setDriverClassPackage(testRecord.getTestClassPackage() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated");
         testRecord.setDriverClassName(driverClassName);
 
         String testClassQualifiedName = testRecord.getTestClassPackage() + "." + testRecord.getTestClassName();

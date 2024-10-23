@@ -19,6 +19,7 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import teralizer.TestGeneralizationRunner;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.processing.ProcessingStage;
@@ -89,11 +90,11 @@ public class TestGeneralizationTask implements Task {
         generalizationRecord.store();
 
         String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + generalizationRecord.getId() + "_Test";
-        Path generalizedClassDirectory = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get("teralizer", this.tool));
+        Path generalizedClassDirectory = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated", this.tool));
         Path generalizedClassPath = generalizedClassDirectory.resolve(generalizedClassName + ".java");
 
         generalizationRecord.setGeneralizedClassPath(generalizedClassPath.toString());
-        generalizationRecord.setGeneralizedClassPackage(this.testRecord.getTestClassPackage() + ".teralizer." + this.tool);
+        generalizationRecord.setGeneralizedClassPackage(this.testRecord.getTestClassPackage() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated." + this.tool);
         generalizationRecord.setGeneralizedClassName(generalizedClassName);
         generalizationRecord.store();
 
