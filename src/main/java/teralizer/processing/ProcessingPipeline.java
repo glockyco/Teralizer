@@ -11,7 +11,7 @@ import teralizer.processing.task.Task;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
@@ -22,7 +22,7 @@ public class ProcessingPipeline {
     private final DSLContext create;
 
     private final Set<Task> allTasks = new HashSet<>();
-    private final Queue<Task> queuedTasks = new LinkedList<>();
+    private final Queue<Task> queuedTasks = new PriorityQueue<>(new TaskPriorityComparator());
     private final TaskContext context = new TaskContext();
 
     public ProcessingPipeline(DSLContext create) {
