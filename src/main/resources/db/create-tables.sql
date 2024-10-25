@@ -52,10 +52,13 @@ CREATE TABLE test
     jpf_config_path           TEXT    NOT NULL,
     input_specification_path  TEXT    NOT NULL,
     output_specification_path TEXT    NOT NULL,
+    is_included               INTEGER NOT NULL,
+    exclusion_info            TEXT, -- can be null for tests that are not excluded
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_test_project_id ON test (project_id);
+CREATE INDEX idx_test_is_included ON test (is_included);
 
 CREATE TABLE assertion
 (
@@ -77,11 +80,14 @@ CREATE TABLE generalization
     generalized_class_path    TEXT    NOT NULL,
     generalized_class_package TEXT    NOT NULL,
     generalized_class_name    TEXT    NOT NULL,
+    is_included               INTEGER NOT NULL,
+    exclusion_info            TEXT, -- can be null for generalizations that are not excluded
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_generalization_test_id ON generalization (test_id);
 CREATE INDEX idx_generalization_tool ON generalization (tool);
+CREATE INDEX idx_generalization_is_included ON generalization (is_included);
 
 CREATE TABLE test_report
 (

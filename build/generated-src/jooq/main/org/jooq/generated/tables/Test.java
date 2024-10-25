@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row18;
+import org.jooq.Row20;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -139,6 +139,16 @@ public class Test extends TableImpl<TestRecord> {
      */
     public final TableField<TestRecord, String> OUTPUT_SPECIFICATION_PATH = createField(DSL.name("output_specification_path"), SQLDataType.CLOB.nullable(false), this, "");
 
+    /**
+     * The column <code>test.is_included</code>.
+     */
+    public final TableField<TestRecord, Boolean> IS_INCLUDED = createField(DSL.name("is_included"), SQLDataType.BOOLEAN.nullable(false), this, "");
+
+    /**
+     * The column <code>test.exclusion_info</code>.
+     */
+    public final TableField<TestRecord, String> EXCLUSION_INFO = createField(DSL.name("exclusion_info"), SQLDataType.CLOB, this, "");
+
     private Test(Name alias, Table<TestRecord> aliased) {
         this(alias, aliased, null);
     }
@@ -179,7 +189,7 @@ public class Test extends TableImpl<TestRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_TEST_PROJECT_ID);
+        return Arrays.<Index>asList(Indexes.IDX_TEST_IS_INCLUDED, Indexes.IDX_TEST_PROJECT_ID);
     }
 
     @Override
@@ -238,11 +248,11 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row18 type methods
+    // Row20 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row18<Integer, Integer, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String> fieldsRow() {
-        return (Row18) super.fieldsRow();
+    public Row20<Integer, Integer, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row20) super.fieldsRow();
     }
 }

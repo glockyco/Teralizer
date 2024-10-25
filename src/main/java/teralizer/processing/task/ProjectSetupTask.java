@@ -98,11 +98,26 @@ public class ProjectSetupTask implements Task {
 
         scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_WITH_DEPENDENCIES, this.projectRecord));
-        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_WITH_DEPENDENCIES, this.projectRecord));
 
-        scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COVERAGE_DATA_COLLECTION_ORIGINAL, this.projectRecord));
-        scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.MUTATION_DATA_COLLECTION_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
+        scheduleTask.accept(new TestFilteringTask(ProcessingStage.TEST_FILTERING, this.projectRecord));
+        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_FILTERED, this.projectRecord));
+
+        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.TEST_DATA_COLLECTION_FILTERED, this.projectRecord));
+        scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COVERAGE_DATA_COLLECTION_FILTERED, this.projectRecord));
+        scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.MUTATION_DATA_COLLECTION_FILTERED, this.projectRecord));
+
+        scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord));
+        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, this.projectRecord));
+        scheduleTask.accept(new JpfExecutionTask(ProcessingStage.JPF_EXECUTION, this.projectRecord));
+
+        scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.TEST_GENERALIZATION, this.projectRecord, "naive"));
+        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_GENERALIZED, this.projectRecord));
+        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_GENERALIZED, this.projectRecord));
+
+        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED, this.projectRecord));
+        scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COVERAGE_DATA_COLLECTION_GENERALIZED, this.projectRecord, "naive"));
+        scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.MUTATION_DATA_COLLECTION_GENERALIZED, this.projectRecord, "naive"));
     }
 
     private ProjectType identifyProjectType(Path projectRootPath) {

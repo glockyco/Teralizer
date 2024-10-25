@@ -15,6 +15,7 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.jooq.DSLContext;
+import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
@@ -55,6 +56,10 @@ public class TestGeneralizationTask implements Task {
     public static String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
     public static String TEST_PARAMETERS_SUPPLIER_CLASS_NAME = "TestParametersSupplier";
 
+    public TestGeneralizationTask(ProcessingStage stage, ProjectRecord projectRecord, String tool) {
+        this(stage, projectRecord, null, tool);
+    }
+
     public TestGeneralizationTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord, String tool) {
         this.stage = stage;
         this.projectRecord = projectRecord;
@@ -64,6 +69,34 @@ public class TestGeneralizationTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        if (this.testRecord == null) {
+            this.scheduleTasks(context, scheduleTask);
+        } else {
+            try {
+                this.executeTask(context);
+            } catch (Exception e) {
+                this.testRecord.setIsIncluded(false);
+                this.testRecord.setExclusionInfo("Excluded by " + this + ".");
+                this.testRecord.store();
+                throw e;
+            }
+        }
+    }
+
+    private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
+        Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
+            .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
+            .and(Tables.TEST.IS_INCLUDED.eq(true))
+            .fetch();
+
+        for (TestRecord testRecord : testRecords) {
+            scheduleTask.accept(new TestGeneralizationTask(this.stage, this.projectRecord, testRecord, this.tool));
+        }
+    }
+
+    private void executeTask(TaskContext context) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
         VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);
@@ -72,12 +105,6 @@ public class TestGeneralizationTask implements Task {
 
         this.generalizationRecord = this.createGeneralizationRecord(create);
         this.generalizeTest(gson, javaParser, velocityEngine);
-
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_GENERALIZED, this.projectRecord));
-        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_GENERALIZED, this.projectRecord));
-        scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COVERAGE_DATA_COLLECTION_GENERALIZED, this.projectRecord, this.tool));
-        scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.MUTATION_DATA_COLLECTION_GENERALIZED, this.projectRecord, this.tool));
-        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED, this.projectRecord, this.testRecord, this.generalizationRecord));
     }
 
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
@@ -87,6 +114,7 @@ public class TestGeneralizationTask implements Task {
         generalizationRecord.setGeneralizedClassPath("");
         generalizationRecord.setGeneralizedClassPackage("");
         generalizationRecord.setGeneralizedClassName("");
+        generalizationRecord.setIsIncluded(true);
         generalizationRecord.store();
 
         String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + generalizationRecord.getId() + "_Test";
@@ -321,7 +349,7 @@ public class TestGeneralizationTask implements Task {
 
     @Override
     public Integer getTestId() {
-        return this.testRecord.getId();
+        return this.testRecord == null ? null : this.testRecord.getId();
     }
 
     @Override
@@ -331,11 +359,12 @@ public class TestGeneralizationTask implements Task {
 
     @Override
     public String toString() {
+        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
         Integer generalizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
         return "TestGeneralizationTask{" +
             "stage=" + this.stage.getStep() +
             ", projectRecord=" + this.projectRecord.getId() +
-            ", testRecord=" + this.testRecord.getId() +
+            ", testRecord=" + testRecordId +
             ", tool='" + this.tool + '\'' +
             ", generalizationRecord=" + generalizationRecordId +
             '}';
@@ -346,14 +375,17 @@ public class TestGeneralizationTask implements Task {
         if (this == o) return true;
         if (!(o instanceof TestGeneralizationTask)) return false;
         TestGeneralizationTask that = (TestGeneralizationTask) o;
+        Integer thisTestRecordId = this.testRecord == null ? null : this.testRecord.getId();
+        Integer thatTestRecordId = that.testRecord == null ? null : that.testRecord.getId();
         Integer thisGeneralizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
         Integer thatGeneralizationRecordId = that.generalizationRecord == null ? null : that.generalizationRecord.getId();
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(this.testRecord.getId(), that.testRecord.getId()) && Objects.equals(this.tool, that.tool) && Objects.equals(thisGeneralizationRecordId, thatGeneralizationRecordId);
+        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(thisTestRecordId, thatTestRecordId) && Objects.equals(this.tool, that.tool) && Objects.equals(thisGeneralizationRecordId, thatGeneralizationRecordId);
     }
 
     @Override
     public int hashCode() {
+        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
         Integer generalizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-        return Objects.hash(this.stage, this.projectRecord.getId(), this.testRecord.getId(), this.tool, generalizationRecordId);
+        return Objects.hash(this.stage, this.projectRecord.getId(), testRecordId, this.tool, generalizationRecordId);
     }
 }

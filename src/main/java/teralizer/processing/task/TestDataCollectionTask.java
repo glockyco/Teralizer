@@ -5,6 +5,7 @@ import org.apache.maven.plugins.surefire.report.ReportTestCase;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 import org.apache.maven.plugins.surefire.report.TestSuiteXmlParser;
 import org.jooq.DSLContext;
+import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
@@ -29,6 +30,14 @@ public class TestDataCollectionTask implements Task {
     private final TestRecord testRecord;
     private final GeneralizationRecord generalizationRecord;
 
+    public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
+        this(stage, projectRecord, null);
+    }
+
+    public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
+        this(stage, projectRecord, testRecord, null);
+    }
+
     public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord, GeneralizationRecord generalizationRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
@@ -38,12 +47,54 @@ public class TestDataCollectionTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        if (this.testRecord == null) {
+            this.scheduleTasks(context, scheduleTask);
+        } else {
+            try {
+                this.executeTask(context);
+            } catch (Exception e) {
+                this.testRecord.setIsIncluded(false);
+                this.testRecord.setExclusionInfo("Excluded by " + this + ".");
+                this.testRecord.store();
+                throw e;
+            }
+        }
+    }
+
+    private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
+        Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
+            .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
+            .and(Tables.TEST.IS_INCLUDED.eq(true))
+            .fetch();
+
+        if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_FILTERED) {
+            for (TestRecord testRecord : testRecords) {
+                scheduleTask.accept(new TestDataCollectionTask(this.stage, this.projectRecord, testRecord));
+            }
+        } else if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED) {
+            for (TestRecord testRecord : testRecords) {
+                // Not ideal with the n+1 querying, but we have much bigger fish to fry than that.
+                Result<GeneralizationRecord> generalizationRecords = create.selectFrom(Tables.GENERALIZATION)
+                    .where(Tables.GENERALIZATION.TEST_ID.eq(testRecord.getId()))
+                    .fetch();
+
+                for (GeneralizationRecord generalizationRecord : generalizationRecords) {
+                    scheduleTask.accept(new TestDataCollectionTask(this.stage, this.projectRecord, testRecord, generalizationRecord));
+                }
+            }
+        } else {
+            throw new RuntimeException("Cannot collect test data. Unsupported processing stage " + this.stage + ".");
+        }
+    }
+
+    private void executeTask(TaskContext context) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
         TestReportRecord testReportRecord;
-        if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_ORIGINAL) {
+        if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_FILTERED) {
             testReportRecord = createTestReportRecord(create, this.projectRecord, this.testRecord);
-            scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord, this.testRecord));
         } else if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED) {
             testReportRecord = createTestReportRecord(create, this.projectRecord, this.testRecord, this.generalizationRecord);
         } else {
@@ -142,7 +193,7 @@ public class TestDataCollectionTask implements Task {
 
     @Override
     public Integer getTestId() {
-        return this.testRecord.getId();
+        return this.testRecord == null ? null : this.testRecord.getId();
     }
 
     @Override
@@ -152,11 +203,12 @@ public class TestDataCollectionTask implements Task {
 
     @Override
     public String toString() {
+        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
         Integer generalizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
         return "TestDataCollectionTask{" +
             "stage=" + this.stage.getStep() +
             ", projectRecord=" + this.projectRecord.getId() +
-            ", testRecord=" + this.testRecord.getId() +
+            ", testRecord=" + testRecordId +
             ", generalizationRecord=" + generalizationRecordId +
             '}';
     }
@@ -166,14 +218,17 @@ public class TestDataCollectionTask implements Task {
         if (this == o) return true;
         if (!(o instanceof TestDataCollectionTask)) return false;
         TestDataCollectionTask that = (TestDataCollectionTask) o;
+        Integer thisTestRecordId = this.testRecord == null ? null : this.testRecord.getId();
+        Integer thatTestRecordId = that.testRecord == null ? null : that.testRecord.getId();
         Integer thisGeneralizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
         Integer thatGeneralizationRecordId = that.generalizationRecord == null ? null : that.generalizationRecord.getId();
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(this.testRecord.getId(), that.testRecord.getId()) && Objects.equals(thisGeneralizationRecordId, thatGeneralizationRecordId);
+        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(thisTestRecordId, thatTestRecordId) && Objects.equals(thisGeneralizationRecordId, thatGeneralizationRecordId);
     }
 
     @Override
     public int hashCode() {
+        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
         Integer generalizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-        return Objects.hash(this.stage, this.projectRecord.getId(), this.testRecord.getId(), generalizationRecordId);
+        return Objects.hash(this.stage, this.projectRecord.getId(), testRecordId, generalizationRecordId);
     }
 }

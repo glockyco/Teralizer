@@ -55,16 +55,10 @@ public class TestDetectionTask implements Task {
 
         JavaParser javaParser = context.get(this.getProjectId(), TaskContext.JAVA_PARSER);
 
-        List<TestRecord> testRecords = this.detectTests(create, gson, javaParser, reportInfo);
-
-        for (TestRecord testRecord : testRecords) {
-            scheduleTask.accept(new TestFilteringTask(ProcessingStage.TEST_FILTERING, this.projectRecord, testRecord));
-        }
+        this.detectTests(create, gson, javaParser, reportInfo);
     }
 
-    private List<TestRecord> detectTests(DSLContext create, Gson gson, JavaParser javaParser, Consumer<String> reportInfo) throws IOException {
-        List<TestRecord> testRecords = new ArrayList<>();
-
+    private void detectTests(DSLContext create, Gson gson, JavaParser javaParser, Consumer<String> reportInfo) throws IOException {
         try (Stream<Path> paths = Files.walk(this.projectRecord.getTestSourcePath())) {
             paths
                 .filter(Files::isRegularFile)
@@ -97,17 +91,14 @@ public class TestDetectionTask implements Task {
                             testRecord.setTestMethodName(testMethodDeclaration.getNameAsString());
                             this.setTestedMethodData(testRecord, testMethodDeclaration, gson);
                             this.setJpfData(this.projectRecord.getDataPath(), testRecord);
+                            testRecord.setIsIncluded(true);
                             testRecord.store();
-
-                            testRecords.add(testRecord);
 
                             this.createAssertionRecords(testRecord, testMethodDeclaration, create, gson, reportInfo);
                         }
                     }
                 });
         }
-
-        return testRecords;
     }
 
     private void createAssertionRecords(TestRecord testRecord, MethodDeclaration testMethodDeclaration, DSLContext create, Gson gson, Consumer<String> reportInfo) {
@@ -205,8 +196,6 @@ public class TestDetectionTask implements Task {
         testRecord.setJpfConfigPath(jpfConfigFilePath.toString());
         testRecord.setInputSpecificationPath(inputSpecificationPath.toString());
         testRecord.setOutputSpecificationPath(outputSpecificationPath.toString());
-
-        testRecord.store();
     }
 
     public static MethodCallExpr findTestedMethodCall(MethodDeclaration testMethodDeclaration) {

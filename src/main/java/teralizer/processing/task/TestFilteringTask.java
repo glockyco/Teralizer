@@ -2,6 +2,8 @@ package teralizer.processing.task;
 
 import com.google.gson.Gson;
 import org.jooq.DSLContext;
+import org.jooq.Result;
+import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.slf4j.Logger;
@@ -25,6 +27,10 @@ public class TestFilteringTask implements Task {
     private final ProjectRecord projectRecord;
     private final TestRecord testRecord;
 
+    public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord) {
+        this(stage, projectRecord, null);
+    }
+
     public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
@@ -33,6 +39,34 @@ public class TestFilteringTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        if (this.testRecord == null) {
+            this.scheduleTasks(context, scheduleTask);
+        } else {
+            try {
+                this.executeTask(context, reportInfo);
+            } catch (Exception e) {
+                this.testRecord.setIsIncluded(false);
+                this.testRecord.setExclusionInfo("Excluded by " + this + ".");
+                this.testRecord.store();
+                throw e;
+            }
+        }
+    }
+
+    private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
+        Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
+            .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
+            .and(Tables.TEST.IS_INCLUDED.eq(true))
+            .fetch();
+
+        for (TestRecord testRecord : testRecords) {
+            scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord));
+        }
+    }
+
+    private void executeTask(TaskContext context, Consumer<String> reportInfo) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
 
@@ -52,13 +86,15 @@ public class TestFilteringTask implements Task {
         String filterResults = decisions.stream().map(FilterResult::toString).collect(Collectors.joining("\n"));
         reportInfo.accept("Overall: " + decision + "\n\n" + filterResults);
 
-        if (!rejections.isEmpty()) {
-            String rejectingFilters = rejections.stream().map(FilterResult::getFilter).collect(Collectors.joining(", "));
-            LOGGER.atDebug().log("Filtering test with ID {} because {} rejected.", this.testRecord.getId(), rejectingFilters);
+        if (rejections.isEmpty()) {
             return;
         }
 
-        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.TEST_DATA_COLLECTION_ORIGINAL, this.projectRecord, this.testRecord, null));
+        String rejectingFilters = rejections.stream().map(FilterResult::getFilter).collect(Collectors.joining(", "));
+        LOGGER.atDebug().log("Filtering test with ID {} because {} rejected.", this.testRecord.getId(), rejectingFilters);
+        this.testRecord.setIsIncluded(false);
+        this.testRecord.setExclusionInfo("Excluded by " + this + ".");
+        this.testRecord.store();
     }
 
     @Override
@@ -73,7 +109,7 @@ public class TestFilteringTask implements Task {
 
     @Override
     public Integer getTestId() {
-        return this.testRecord.getId();
+        return this.testRecord == null ? null : this.testRecord.getId();
     }
 
     @Override
@@ -83,10 +119,11 @@ public class TestFilteringTask implements Task {
 
     @Override
     public String toString() {
+        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
         return "TestFilteringTask{" +
             "stage=" + this.stage +
             ", projectRecord=" + this.projectRecord.getId() +
-            ", testRecord=" + this.testRecord.getId() +
+            ", testRecord=" + testRecordId +
             '}';
     }
 
@@ -95,11 +132,14 @@ public class TestFilteringTask implements Task {
         if (this == o) return true;
         if (!(o instanceof TestFilteringTask)) return false;
         TestFilteringTask that = (TestFilteringTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(this.testRecord.getId(), that.testRecord.getId());
+        Integer thisTestRecordId = this.testRecord == null ? null : this.testRecord.getId();
+        Integer thatTestRecordId = that.testRecord == null ? null : that.testRecord.getId();
+        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(thisTestRecordId, thatTestRecordId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId(), this.testRecord.getId());
+        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
+        return Objects.hash(this.stage, this.projectRecord.getId(), testRecordId);
     }
 }

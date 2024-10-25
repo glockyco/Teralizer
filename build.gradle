@@ -122,6 +122,16 @@ jooq {
                                 enumConverter = true
                                 includeExpression = "task.status"
                             }
+                            forcedType {
+                                name = "BOOLEAN"
+                                expressions = "test.is_included"
+                                types = "INTEGER"
+                            }
+                            forcedType {
+                                name = "BOOLEAN"
+                                expressions = "generalization.is_included"
+                                types = "INTEGER"
+                            }
                         }
                     }
                 }

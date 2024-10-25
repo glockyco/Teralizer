@@ -4,6 +4,9 @@ import gov.nasa.jpf.Config;
 import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFNativePeerException;
+import org.jooq.DSLContext;
+import org.jooq.Result;
+import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.TestGeneralizationListener;
@@ -21,6 +24,10 @@ public class JpfExecutionTask implements Task {
     private final ProjectRecord projectRecord;
     private final TestRecord testRecord;
 
+    public JpfExecutionTask(ProcessingStage stage, ProjectRecord projectRecord) {
+        this(stage, projectRecord, null);
+    }
+
     public JpfExecutionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
@@ -29,12 +36,34 @@ public class JpfExecutionTask implements Task {
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) {
-        this.runJpf(this.testRecord);
-
-        scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.TEST_GENERALIZATION, this.projectRecord, this.testRecord, "naive"));
+        if (this.testRecord == null) {
+            this.scheduleTasks(context, scheduleTask);
+        } else {
+            try {
+                this.executeTask(context);
+            } catch (Exception e) {
+                this.testRecord.setIsIncluded(false);
+                this.testRecord.setExclusionInfo("Excluded by " + this + ".");
+                this.testRecord.store();
+                throw e;
+            }
+        }
     }
 
-    private void runJpf(TestRecord testRecord) {
+    private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
+        Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
+            .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
+            .and(Tables.TEST.IS_INCLUDED.eq(true))
+            .fetch();
+
+        for (TestRecord testRecord : testRecords) {
+            scheduleTask.accept(new JpfExecutionTask(this.stage, this.projectRecord, testRecord));
+        }
+    }
+
+    private void executeTask(TaskContext context) {
         Config config = JPF.createConfig(new String[]{testRecord.getJpfConfigPath()});
 
         JPF jpf = new JPF(config);
@@ -70,7 +99,7 @@ public class JpfExecutionTask implements Task {
 
     @Override
     public Integer getTestId() {
-        return this.testRecord.getId();
+        return this.testRecord == null ? null : this.testRecord.getId();
     }
 
     @Override
@@ -80,10 +109,11 @@ public class JpfExecutionTask implements Task {
 
     @Override
     public String toString() {
+        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
         return "JpfExecutionTask{" +
             "stage=" + this.stage.getStep() +
             ", projectRecord=" + this.projectRecord.getId() +
-            ", testRecord=" + this.testRecord.getId() +
+            ", testRecord=" + testRecordId +
             '}';
     }
 
@@ -92,11 +122,14 @@ public class JpfExecutionTask implements Task {
         if (this == o) return true;
         if (!(o instanceof JpfExecutionTask)) return false;
         JpfExecutionTask that = (JpfExecutionTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(this.testRecord.getId(), that.testRecord.getId());
+        Integer thisTestRecordId = this.testRecord == null ? null : this.testRecord.getId();
+        Integer thatTestRecordId = that.testRecord == null ? null : that.testRecord.getId();
+        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(thisTestRecordId, thatTestRecordId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId(), this.testRecord.getId());
+        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
+        return Objects.hash(this.stage, this.projectRecord.getId(), testRecordId);
     }
 }

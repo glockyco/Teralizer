@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row6;
+import org.jooq.Row8;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -79,6 +79,16 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
      */
     public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_NAME = createField(DSL.name("generalized_class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
+    /**
+     * The column <code>generalization.is_included</code>.
+     */
+    public final TableField<GeneralizationRecord, Boolean> IS_INCLUDED = createField(DSL.name("is_included"), SQLDataType.BOOLEAN.nullable(false), this, "");
+
+    /**
+     * The column <code>generalization.exclusion_info</code>.
+     */
+    public final TableField<GeneralizationRecord, String> EXCLUSION_INFO = createField(DSL.name("exclusion_info"), SQLDataType.CLOB, this, "");
+
     private Generalization(Name alias, Table<GeneralizationRecord> aliased) {
         this(alias, aliased, null);
     }
@@ -119,7 +129,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_TOOL);
+        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_TOOL);
     }
 
     @Override
@@ -178,11 +188,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row6 type methods
+    // Row8 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row6<Integer, Integer, String, String, String, String> fieldsRow() {
-        return (Row6) super.fieldsRow();
+    public Row8<Integer, Integer, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row8) super.fieldsRow();
     }
 }
