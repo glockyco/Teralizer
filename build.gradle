@@ -99,6 +99,36 @@ jooq {
                             }
                             forcedType {
                                 name = "BOOLEAN"
+                                expressions = "test.is_included"
+                                types = "INTEGER"
+                            }
+                            forcedType {
+                                userType = "teralizer.processing.GeneralizationVariant"
+                                enumConverter = true
+                                includeExpression = "generalization.variant"
+                            }
+                            forcedType {
+                                name = "BOOLEAN"
+                                expressions = "generalization.is_included"
+                                types = "INTEGER"
+                            }
+                            forcedType {
+                                userType = "teralizer.processing.TestResult"
+                                enumConverter = true
+                                includeExpression = "test_report.result"
+                            }
+                            forcedType {
+                                userType = "teralizer.processing.GeneralizationVariant"
+                                enumConverter = true
+                                includeExpression = "coverage_report.variant"
+                            }
+                            forcedType {
+                                userType = "teralizer.processing.GeneralizationVariant"
+                                enumConverter = true
+                                includeExpression = "mutation_report.variant"
+                            }
+                            forcedType {
+                                name = "BOOLEAN"
                                 expressions = "mutation_report.is_detected"
                                 types = "INTEGER"
                             }
@@ -108,29 +138,19 @@ jooq {
                                 includeExpression = "mutation_report.status"
                             }
                             forcedType {
-                                userType = "teralizer.processing.TestResult"
-                                enumConverter = true
-                                includeExpression = "test_report.result"
-                            }
-                            forcedType {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
                                 includeExpression = "task.stage"
                             }
                             forcedType {
+                                userType = "teralizer.processing.GeneralizationVariant"
+                                enumConverter = true
+                                includeExpression = "task.variant"
+                            }
+                            forcedType {
                                 userType = "teralizer.processing.ProcessingStatus"
                                 enumConverter = true
                                 includeExpression = "task.status"
-                            }
-                            forcedType {
-                                name = "BOOLEAN"
-                                expressions = "test.is_included"
-                                types = "INTEGER"
-                            }
-                            forcedType {
-                                name = "BOOLEAN"
-                                expressions = "generalization.is_included"
-                                types = "INTEGER"
                             }
                         }
                     }

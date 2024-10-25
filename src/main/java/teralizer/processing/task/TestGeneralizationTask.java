@@ -23,6 +23,7 @@ import org.jooq.generated.tables.records.TestRecord;
 import teralizer.TestGeneralizationRunner;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.transformer.JsonToModelTransformer;
@@ -52,15 +53,15 @@ public class TestGeneralizationTask extends AbstractTask {
     public static String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
     public static String TEST_PARAMETERS_SUPPLIER_CLASS_NAME = "TestParametersSupplier";
 
-    public TestGeneralizationTask(ProcessingStage stage, ProjectRecord projectRecord, String tool) {
-        this(stage, projectRecord, null, tool);
+    public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+        this(stage, variant, projectRecord, null);
     }
 
-    public TestGeneralizationTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord, String tool) {
+    public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord, TestRecord testRecord) {
         this.stage = stage;
+        this.variant = variant;
         this.projectRecord = projectRecord;
         this.testRecord = testRecord;
-        this.tool = tool;
     }
 
     @Override
@@ -81,7 +82,7 @@ public class TestGeneralizationTask extends AbstractTask {
             .fetch();
 
         for (TestRecord testRecord : testRecords) {
-            scheduleTask.accept(new TestGeneralizationTask(this.stage, this.projectRecord, testRecord, this.tool));
+            scheduleTask.accept(new TestGeneralizationTask(this.stage, this.variant, this.projectRecord, testRecord));
         }
     }
 
@@ -99,7 +100,7 @@ public class TestGeneralizationTask extends AbstractTask {
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
         GeneralizationRecord generalizationRecord = create.newRecord(Tables.GENERALIZATION);
         generalizationRecord.setTestId(this.testRecord.getId());
-        generalizationRecord.setTool(this.tool);
+        generalizationRecord.setVariant(this.variant);
         generalizationRecord.setGeneralizedClassPath("");
         generalizationRecord.setGeneralizedClassPackage("");
         generalizationRecord.setGeneralizedClassName("");
@@ -107,11 +108,11 @@ public class TestGeneralizationTask extends AbstractTask {
         generalizationRecord.store();
 
         String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + generalizationRecord.getId() + "_Test";
-        Path generalizedClassDirectory = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated", this.tool));
+        Path generalizedClassDirectory = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated", this.variant.name().toLowerCase()));
         Path generalizedClassPath = generalizedClassDirectory.resolve(generalizedClassName + ".java");
 
         generalizationRecord.setGeneralizedClassPath(generalizedClassPath.toString());
-        generalizationRecord.setGeneralizedClassPackage(this.testRecord.getTestClassPackage() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated." + this.tool);
+        generalizationRecord.setGeneralizedClassPackage(this.testRecord.getTestClassPackage() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated." + this.variant.name().toLowerCase());
         generalizationRecord.setGeneralizedClassName(generalizedClassName);
         generalizationRecord.store();
 

@@ -24,8 +24,11 @@ import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
 import org.jooq.generated.tables.records.CoverageReportRecord;
 import org.jooq.impl.DSL;
+import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+
+import teralizer.processing.GeneralizationVariant;
 
 
 /**
@@ -60,9 +63,9 @@ public class CoverageReport extends TableImpl<CoverageReportRecord> {
     public final TableField<CoverageReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>coverage_report.generalization_variant</code>.
+     * The column <code>coverage_report.variant</code>.
      */
-    public final TableField<CoverageReportRecord, String> GENERALIZATION_VARIANT = createField(DSL.name("generalization_variant"), SQLDataType.CLOB, this, "");
+    public final TableField<CoverageReportRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
 
     /**
      * The column <code>coverage_report.covered_package</code>.
@@ -164,7 +167,7 @@ public class CoverageReport extends TableImpl<CoverageReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_COVERAGE_REPORT_CLASS, Indexes.IDX_COVERAGE_REPORT_GENERALIZATION_VARIANT, Indexes.IDX_COVERAGE_REPORT_PACKAGE, Indexes.IDX_COVERAGE_REPORT_PROJECT_ID);
+        return Arrays.<Index>asList(Indexes.IDX_COVERAGE_REPORT_CLASS, Indexes.IDX_COVERAGE_REPORT_PACKAGE, Indexes.IDX_COVERAGE_REPORT_PROJECT_ID, Indexes.IDX_COVERAGE_REPORT_VARIANT);
     }
 
     @Override
@@ -227,7 +230,7 @@ public class CoverageReport extends TableImpl<CoverageReportRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row15<Integer, Integer, String, String, String, String, String, String, String, String, String, String, String, String, String> fieldsRow() {
+    public Row15<Integer, Integer, GeneralizationVariant, String, String, String, String, String, String, String, String, String, String, String, String> fieldsRow() {
         return (Row15) super.fieldsRow();
     }
 }

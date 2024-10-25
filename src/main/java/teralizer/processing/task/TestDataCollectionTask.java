@@ -5,6 +5,7 @@ import org.apache.maven.plugins.surefire.report.ReportTestCase;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
 import org.apache.maven.plugins.surefire.report.TestSuiteXmlParser;
 import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
@@ -12,6 +13,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.generated.tables.records.TestReportRecord;
 import org.xml.sax.SAXException;
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
@@ -26,15 +28,31 @@ import java.util.stream.Collectors;
 public class TestDataCollectionTask extends AbstractTask {
 
     public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
-        this(stage, projectRecord, null);
+        this(stage, null, projectRecord, null);
     }
 
-    public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
-        this(stage, projectRecord, testRecord, null);
+    public TestDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+        this(stage, variant, projectRecord, null);
     }
 
-    public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord, GeneralizationRecord generalizationRecord) {
+    public TestDataCollectionTask(
+        ProcessingStage stage,
+        GeneralizationVariant variant,
+        ProjectRecord projectRecord,
+        TestRecord testRecord
+    ) {
+        this(stage, variant, projectRecord, testRecord, null);
+    }
+
+    public TestDataCollectionTask(
+        ProcessingStage stage,
+        GeneralizationVariant variant,
+        ProjectRecord projectRecord,
+        TestRecord testRecord,
+        GeneralizationRecord generalizationRecord
+    ) {
         this.stage = stage;
+        this.variant = variant;
         this.projectRecord = projectRecord;
         this.testRecord = testRecord;
         this.generalizationRecord = generalizationRecord;
@@ -52,25 +70,30 @@ public class TestDataCollectionTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
-        Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
-            .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
-            .and(Tables.TEST.IS_INCLUDED.eq(true))
-            .fetch();
-
         if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_FILTERED) {
+            Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
+                .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
+                .and(Tables.TEST.IS_INCLUDED.eq(true))
+                .fetch();
+
             for (TestRecord testRecord : testRecords) {
-                scheduleTask.accept(new TestDataCollectionTask(this.stage, this.projectRecord, testRecord));
+                scheduleTask.accept(new TestDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord));
             }
         } else if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED) {
-            for (TestRecord testRecord : testRecords) {
-                // Not ideal with the n+1 querying, but we have much bigger fish to fry than that.
-                Result<GeneralizationRecord> generalizationRecords = create.selectFrom(Tables.GENERALIZATION)
-                    .where(Tables.GENERALIZATION.TEST_ID.eq(testRecord.getId()))
-                    .fetch();
+            Result<Record> records = create
+                .select()
+                .from(Tables.TEST)
+                .join(Tables.GENERALIZATION)
+                .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
+                .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
+                .and(Tables.TEST.IS_INCLUDED.eq(true))
+                .and(Tables.GENERALIZATION.VARIANT.eq(this.variant))
+                .fetch();
 
-                for (GeneralizationRecord generalizationRecord : generalizationRecords) {
-                    scheduleTask.accept(new TestDataCollectionTask(this.stage, this.projectRecord, testRecord, generalizationRecord));
-                }
+            for (Record record : records) {
+                TestRecord testRecord = record.into(TestRecord.class);
+                GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
+                scheduleTask.accept(new TestDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
             }
         } else {
             throw new RuntimeException("Cannot collect test data. Unsupported processing stage " + this.stage + ".");

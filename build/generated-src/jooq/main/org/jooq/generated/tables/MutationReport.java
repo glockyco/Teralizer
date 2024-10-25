@@ -28,6 +28,7 @@ import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.MutationStatus;
 
 
@@ -63,9 +64,9 @@ public class MutationReport extends TableImpl<MutationReportRecord> {
     public final TableField<MutationReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>mutation_report.generalization_variant</code>.
+     * The column <code>mutation_report.variant</code>.
      */
-    public final TableField<MutationReportRecord, String> GENERALIZATION_VARIANT = createField(DSL.name("generalization_variant"), SQLDataType.CLOB, this, "");
+    public final TableField<MutationReportRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
 
     /**
      * The column <code>mutation_report.is_detected</code>.
@@ -157,7 +158,7 @@ public class MutationReport extends TableImpl<MutationReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_MUTATION_REPORT_GENERALIZATION_VARIANT, Indexes.IDX_MUTATION_REPORT_IS_DETECTED, Indexes.IDX_MUTATION_REPORT_MUTATED_CLASS, Indexes.IDX_MUTATION_REPORT_MUTATED_METHOD, Indexes.IDX_MUTATION_REPORT_PROJECT_ID);
+        return Arrays.<Index>asList(Indexes.IDX_MUTATION_REPORT_IS_DETECTED, Indexes.IDX_MUTATION_REPORT_MUTATED_CLASS, Indexes.IDX_MUTATION_REPORT_MUTATED_METHOD, Indexes.IDX_MUTATION_REPORT_PROJECT_ID, Indexes.IDX_MUTATION_REPORT_VARIANT);
     }
 
     @Override
@@ -220,7 +221,7 @@ public class MutationReport extends TableImpl<MutationReportRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row13<Integer, Integer, String, Boolean, MutationStatus, Integer, String, String, String, String, Integer, String, String> fieldsRow() {
+    public Row13<Integer, Integer, GeneralizationVariant, Boolean, MutationStatus, Integer, String, String, String, String, Integer, String, String> fieldsRow() {
         return (Row13) super.fieldsRow();
     }
 }

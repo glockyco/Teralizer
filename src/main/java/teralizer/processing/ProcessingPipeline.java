@@ -61,6 +61,7 @@ public class ProcessingPipeline {
         TaskRecord taskRecord = this.create.newRecord(Tables.TASK);
         taskRecord.setStep(stage.getStep());
         taskRecord.setStage(stage);
+        taskRecord.setVariant(currentTask.getVariant());
         taskRecord.setStatus(ProcessingStatus.IN_PROGRESS);
 
         taskRecord.setProjectId(currentTask.getProjectId());

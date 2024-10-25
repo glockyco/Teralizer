@@ -3,6 +3,7 @@ package teralizer.processing.task;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.ConsoleCommand;
@@ -19,9 +20,14 @@ public class TestExecutionTask extends AbstractTask {
     private final ConsoleCommand consoleCommand;
 
     public TestExecutionTask(ProcessingStage stage, ProjectRecord projectRecord) {
+        this(stage, null, projectRecord);
+    }
+
+    public TestExecutionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
         this.stage = stage;
+        this.variant = variant;
         this.projectRecord = projectRecord;
-        this.consoleCommand = new ConsoleCommand(stage, projectRecord.getDataPath());
+        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getDataPath());
     }
 
     @Override

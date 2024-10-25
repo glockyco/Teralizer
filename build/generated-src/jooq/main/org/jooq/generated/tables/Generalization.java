@@ -24,8 +24,11 @@ import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.impl.DSL;
+import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+
+import teralizer.processing.GeneralizationVariant;
 
 
 /**
@@ -60,9 +63,9 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     public final TableField<GeneralizationRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.tool</code>.
+     * The column <code>generalization.variant</code>.
      */
-    public final TableField<GeneralizationRecord, String> TOOL = createField(DSL.name("tool"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<GeneralizationRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
 
     /**
      * The column <code>generalization.generalized_class_path</code>.
@@ -129,7 +132,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_TOOL);
+        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_VARIANT);
     }
 
     @Override
@@ -192,7 +195,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row8<Integer, Integer, String, String, String, String, Boolean, String> fieldsRow() {
+    public Row8<Integer, Integer, GeneralizationVariant, String, String, String, Boolean, String> fieldsRow() {
         return (Row8) super.fieldsRow();
     }
 }

@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row9;
+import org.jooq.Row10;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -28,6 +28,7 @@ import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProcessingStatus;
 
@@ -84,6 +85,11 @@ public class Task extends TableImpl<TaskRecord> {
     public final TableField<TaskRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStage>(String.class, ProcessingStage.class));
 
     /**
+     * The column <code>task.variant</code>.
+     */
+    public final TableField<TaskRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
+
+    /**
      * The column <code>task.status</code>.
      */
     public final TableField<TaskRecord, ProcessingStatus> STATUS = createField(DSL.name("status"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStatus>(String.class, ProcessingStatus.class));
@@ -138,7 +144,7 @@ public class Task extends TableImpl<TaskRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_TASK_GENERALIZATION_ID, Indexes.IDX_TASK_PROJECT_ID, Indexes.IDX_TASK_STAGE, Indexes.IDX_TASK_STATUS, Indexes.IDX_TASK_STEP, Indexes.IDX_TASK_TEST_ID);
+        return Arrays.<Index>asList(Indexes.IDX_TASK_GENERALIZATION_ID, Indexes.IDX_TASK_PROJECT_ID, Indexes.IDX_TASK_STAGE, Indexes.IDX_TASK_STATUS, Indexes.IDX_TASK_STEP, Indexes.IDX_TASK_TEST_ID, Indexes.IDX_TASK_VARIANT);
     }
 
     @Override
@@ -213,11 +219,11 @@ public class Task extends TableImpl<TaskRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row9 type methods
+    // Row10 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row9<Integer, Integer, Integer, Integer, Integer, ProcessingStage, ProcessingStatus, Float, String> fieldsRow() {
-        return (Row9) super.fieldsRow();
+    public Row10<Integer, Integer, Integer, Integer, Integer, ProcessingStage, GeneralizationVariant, ProcessingStatus, Float, String> fieldsRow() {
+        return (Row10) super.fieldsRow();
     }
 }

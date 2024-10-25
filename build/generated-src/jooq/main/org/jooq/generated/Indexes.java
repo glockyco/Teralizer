@@ -30,17 +30,17 @@ public class Indexes {
 
     public static final Index IDX_ASSERTION_TEST_ID = Internal.createIndex(DSL.name("idx_assertion_test_id"), Assertion.ASSERTION, new OrderField[] { Assertion.ASSERTION.TEST_ID }, false);
     public static final Index IDX_COVERAGE_REPORT_CLASS = Internal.createIndex(DSL.name("idx_coverage_report_class"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.COVERED_CLASS }, false);
-    public static final Index IDX_COVERAGE_REPORT_GENERALIZATION_VARIANT = Internal.createIndex(DSL.name("idx_coverage_report_generalization_variant"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.GENERALIZATION_VARIANT }, false);
     public static final Index IDX_COVERAGE_REPORT_PACKAGE = Internal.createIndex(DSL.name("idx_coverage_report_package"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.COVERED_PACKAGE }, false);
     public static final Index IDX_COVERAGE_REPORT_PROJECT_ID = Internal.createIndex(DSL.name("idx_coverage_report_project_id"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.PROJECT_ID }, false);
+    public static final Index IDX_COVERAGE_REPORT_VARIANT = Internal.createIndex(DSL.name("idx_coverage_report_variant"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.VARIANT }, false);
     public static final Index IDX_GENERALIZATION_IS_INCLUDED = Internal.createIndex(DSL.name("idx_generalization_is_included"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.IS_INCLUDED }, false);
     public static final Index IDX_GENERALIZATION_TEST_ID = Internal.createIndex(DSL.name("idx_generalization_test_id"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TEST_ID }, false);
-    public static final Index IDX_GENERALIZATION_TOOL = Internal.createIndex(DSL.name("idx_generalization_tool"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TOOL }, false);
-    public static final Index IDX_MUTATION_REPORT_GENERALIZATION_VARIANT = Internal.createIndex(DSL.name("idx_mutation_report_generalization_variant"), MutationReport.MUTATION_REPORT, new OrderField[] { MutationReport.MUTATION_REPORT.GENERALIZATION_VARIANT }, false);
+    public static final Index IDX_GENERALIZATION_VARIANT = Internal.createIndex(DSL.name("idx_generalization_variant"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.VARIANT }, false);
     public static final Index IDX_MUTATION_REPORT_IS_DETECTED = Internal.createIndex(DSL.name("idx_mutation_report_is_detected"), MutationReport.MUTATION_REPORT, new OrderField[] { MutationReport.MUTATION_REPORT.IS_DETECTED }, false);
     public static final Index IDX_MUTATION_REPORT_MUTATED_CLASS = Internal.createIndex(DSL.name("idx_mutation_report_mutated_class"), MutationReport.MUTATION_REPORT, new OrderField[] { MutationReport.MUTATION_REPORT.MUTATED_CLASS }, false);
     public static final Index IDX_MUTATION_REPORT_MUTATED_METHOD = Internal.createIndex(DSL.name("idx_mutation_report_mutated_method"), MutationReport.MUTATION_REPORT, new OrderField[] { MutationReport.MUTATION_REPORT.MUTATED_METHOD }, false);
     public static final Index IDX_MUTATION_REPORT_PROJECT_ID = Internal.createIndex(DSL.name("idx_mutation_report_project_id"), MutationReport.MUTATION_REPORT, new OrderField[] { MutationReport.MUTATION_REPORT.PROJECT_ID }, false);
+    public static final Index IDX_MUTATION_REPORT_VARIANT = Internal.createIndex(DSL.name("idx_mutation_report_variant"), MutationReport.MUTATION_REPORT, new OrderField[] { MutationReport.MUTATION_REPORT.VARIANT }, false);
     public static final Index IDX_PROJECT_PATH = Internal.createIndex(DSL.name("idx_project_path"), Project.PROJECT, new OrderField[] { Project.PROJECT.ROOT_PATH }, false);
     public static final Index IDX_PROJECT_TEST_FRAMEWORK = Internal.createIndex(DSL.name("idx_project_test_framework"), Project.PROJECT, new OrderField[] { Project.PROJECT.TEST_FRAMEWORK }, false);
     public static final Index IDX_PROJECT_TYPE = Internal.createIndex(DSL.name("idx_project_type"), Project.PROJECT, new OrderField[] { Project.PROJECT.TYPE }, false);
@@ -50,6 +50,7 @@ public class Indexes {
     public static final Index IDX_TASK_STATUS = Internal.createIndex(DSL.name("idx_task_status"), Task.TASK, new OrderField[] { Task.TASK.STATUS }, false);
     public static final Index IDX_TASK_STEP = Internal.createIndex(DSL.name("idx_task_step"), Task.TASK, new OrderField[] { Task.TASK.STEP }, false);
     public static final Index IDX_TASK_TEST_ID = Internal.createIndex(DSL.name("idx_task_test_id"), Task.TASK, new OrderField[] { Task.TASK.TEST_ID }, false);
+    public static final Index IDX_TASK_VARIANT = Internal.createIndex(DSL.name("idx_task_variant"), Task.TASK, new OrderField[] { Task.TASK.VARIANT }, false);
     public static final Index IDX_TEST_IS_INCLUDED = Internal.createIndex(DSL.name("idx_test_is_included"), Test.TEST, new OrderField[] { Test.TEST.IS_INCLUDED }, false);
     public static final Index IDX_TEST_PROJECT_ID = Internal.createIndex(DSL.name("idx_test_project_id"), Test.TEST, new OrderField[] { Test.TEST.PROJECT_ID }, false);
     public static final Index IDX_TEST_REPORT_GENERALIZATION_ID = Internal.createIndex(DSL.name("idx_test_report_generalization_id"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.GENERALIZATION_ID }, false);

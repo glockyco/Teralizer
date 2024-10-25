@@ -76,7 +76,7 @@ CREATE TABLE generalization
 (
     id                        INTEGER PRIMARY KEY AUTOINCREMENT,
     test_id                   INTEGER NOT NULL,
-    tool                      TEXT    NOT NULL,
+    variant                   TEXT    NOT NULL,
     generalized_class_path    TEXT    NOT NULL,
     generalized_class_package TEXT    NOT NULL,
     generalized_class_name    TEXT    NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE generalization
 );
 
 CREATE INDEX idx_generalization_test_id ON generalization (test_id);
-CREATE INDEX idx_generalization_tool ON generalization (tool);
+CREATE INDEX idx_generalization_variant ON generalization (variant);
 CREATE INDEX idx_generalization_is_included ON generalization (is_included);
 
 CREATE TABLE test_report
@@ -111,53 +111,53 @@ CREATE INDEX idx_test_report_result ON test_report (result);
 
 CREATE TABLE coverage_report
 (
-    id                     INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id             INTEGER NOT NULL,
-    generalization_variant TEXT, -- can be null if the report is for the original test suite
-    covered_package         TEXT    NOT NULL,
-    covered_class           TEXT    NOT NULL,
-    instruction_missed     TEXT    NOT NULL,
-    instruction_covered    TEXT    NOT NULL,
-    branch_missed          TEXT    NOT NULL,
-    branch_covered          TEXT    NOT NULL,
-    line_missed            TEXT    NOT NULL,
-    line_covered           TEXT    NOT NULL,
-    complexity_missed      TEXT    NOT NULL,
-    complexity_covered     TEXT    NOT NULL,
-    method_missed          TEXT    NOT NULL,
-    method_covered         TEXT    NOT NULL,
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id          INTEGER NOT NULL,
+    variant             TEXT, -- can be null if the report is for the original test suite
+    covered_package     TEXT    NOT NULL,
+    covered_class       TEXT    NOT NULL,
+    instruction_missed  TEXT    NOT NULL,
+    instruction_covered TEXT    NOT NULL,
+    branch_missed       TEXT    NOT NULL,
+    branch_covered      TEXT    NOT NULL,
+    line_missed         TEXT    NOT NULL,
+    line_covered        TEXT    NOT NULL,
+    complexity_missed   TEXT    NOT NULL,
+    complexity_covered  TEXT    NOT NULL,
+    method_missed       TEXT    NOT NULL,
+    method_covered      TEXT    NOT NULL,
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_coverage_report_project_id ON coverage_report (project_id);
-CREATE INDEX idx_coverage_report_generalization_variant ON coverage_report (generalization_variant);
+CREATE INDEX idx_coverage_report_variant ON coverage_report (variant);
 
 CREATE INDEX idx_coverage_report_package ON coverage_report (covered_package);
 CREATE INDEX idx_coverage_report_class ON coverage_report (covered_class);
 
 CREATE TABLE mutation_report
 (
-    id                     INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id             INTEGER NOT NULL,
-    generalization_variant TEXT, -- can be null if the report is for the original test suite
-    is_detected            INTEGER NOT NULL,
-    status                 TEXT    NOT NULL,
-    number_of_tests_run    INTEGER NOT NULL,
-    source_file            TEXT    NOT NULL,
-    mutated_class          TEXT    NOT NULL,
-    mutated_method         TEXT    NOT NULL,
-    method_description     TEXT    NOT NULL,
-    line_number            INTEGER NOT NULL,
-    mutator                TEXT    NOT NULL,
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id          INTEGER NOT NULL,
+    variant             TEXT, -- can be null if the report is for the original test suite
+    is_detected         INTEGER NOT NULL,
+    status              TEXT    NOT NULL,
+    number_of_tests_run INTEGER NOT NULL,
+    source_file         TEXT    NOT NULL,
+    mutated_class       TEXT    NOT NULL,
+    mutated_method      TEXT    NOT NULL,
+    method_description  TEXT    NOT NULL,
+    line_number         INTEGER NOT NULL,
+    mutator             TEXT    NOT NULL,
     -- @TODO: indexes
     -- @TODO: blocks
     -- @TODO: killing_tests
-    description            TEXT    NOT NULL,
+    description         TEXT    NOT NULL,
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_mutation_report_project_id ON mutation_report (project_id);
-CREATE INDEX idx_mutation_report_generalization_variant ON mutation_report (generalization_variant);
+CREATE INDEX idx_mutation_report_variant ON mutation_report (variant);
 
 CREATE INDEX idx_mutation_report_is_detected ON mutation_report (is_detected);
 CREATE INDEX idx_mutation_report_mutated_class ON mutation_report (mutated_class);
@@ -171,6 +171,7 @@ CREATE TABLE task
     generalization_id INTEGER, -- can be null for cross-project and project-/test-level tasks
     step              INTEGER, -- can be null for one-off tasks that are not part of the normal processing flow (e.g., cleanup)
     stage             TEXT NOT NULL,
+    variant           TEXT,    -- can be null for cross-variant tasks (e.g., JPF instrumentation + execution)
     status            TEXT NOT NULL,
     runtime           REAL,    -- can be null for failed tasks
     info              TEXT,    -- can be null for tasks that have nothing special to report
@@ -185,4 +186,5 @@ CREATE INDEX idx_task_generalization_id ON task (generalization_id);
 
 CREATE INDEX idx_task_step ON task (step);
 CREATE INDEX idx_task_stage ON task (stage);
+CREATE INDEX idx_task_variant ON task (variant);
 CREATE INDEX idx_task_status ON task (status);

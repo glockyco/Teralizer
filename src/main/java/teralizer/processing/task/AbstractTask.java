@@ -3,6 +3,7 @@ package teralizer.processing.task;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
@@ -14,7 +15,7 @@ public abstract class AbstractTask implements Task {
     protected abstract void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception;
 
     protected ProcessingStage stage;
-    protected String tool;
+    protected GeneralizationVariant variant;
 
     protected ProjectRecord projectRecord;
     protected TestRecord testRecord;
@@ -45,8 +46,8 @@ public abstract class AbstractTask implements Task {
     }
 
     @Override
-    public String getTool() {
-        return this.tool;
+    public GeneralizationVariant getVariant() {
+        return this.variant;
     }
 
     @Override
@@ -72,7 +73,7 @@ public abstract class AbstractTask implements Task {
 
         String str = this.getClass().getSimpleName() + "{";
         str += "stage=" + this.getStage();
-        str += this.getTool() == null ? "" : ", tool=" + this.getTool();
+        str += this.getVariant() == null ? "" : ", tool=" + this.getVariant();
         str += projectId == null ? "" : ", projectId=" + projectId;
         str += testId == null ? "" : ", testId=" + testId;
         str += generalizationId == null ? "" : ", generalizationId=" + generalizationId;
@@ -95,7 +96,7 @@ public abstract class AbstractTask implements Task {
         Integer thatGeneralizationId = that.getGeneralizationId();
 
         return this.stage == that.stage
-            && Objects.equals(this.tool, that.tool)
+            && this.variant == that.variant
             && Objects.equals(thisProjectId, thatProjectId)
             && Objects.equals(thisTestId, thatTestId)
             && Objects.equals(thisGeneralizationId, thatGeneralizationId);
@@ -107,6 +108,6 @@ public abstract class AbstractTask implements Task {
         Integer testId = this.getTestId();
         Integer generalizationId = this.getGeneralizationId();
 
-        return Objects.hash(this.stage, this.tool, projectId, testId, generalizationId);
+        return Objects.hash(this.stage, this.variant, projectId, testId, generalizationId);
     }
 }

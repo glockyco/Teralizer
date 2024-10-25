@@ -2,6 +2,7 @@ package teralizer.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 
 import java.io.IOException;
@@ -13,12 +14,14 @@ public class ConsoleCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleCommand.class);
 
     private final ProcessingStage stage;
+    private final GeneralizationVariant variant;
     private final Path commandOutputsPath;
 
     private int executionCount = 0;
 
-    public ConsoleCommand(ProcessingStage stage, Path projectDataPath) {
+    public ConsoleCommand(ProcessingStage stage, GeneralizationVariant variant, Path projectDataPath) {
         this.stage = stage;
+        this.variant = variant;
         this.commandOutputsPath = projectDataPath.resolve("command-outputs");
     }
 
@@ -28,8 +31,12 @@ public class ConsoleCommand {
 
     public void execute(Path projectRootPath, List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
         this.executionCount++;
-        Path outputPath = this.commandOutputsPath.resolve(this.stage.getStep() + "-" + this.stage + "-" + this.executionCount + ".output.txt");
-        Path errorPath = this.commandOutputsPath.resolve(this.stage.getStep() + "-" + this.stage + "-" + this.executionCount + ".error.txt");
+        String stageName = this.stage.getStep() + "-" + this.stage;
+        String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
+        String executionName = "." + this.executionCount;
+        String baseName = stageName + variantName + executionName;
+        Path outputPath = this.commandOutputsPath.resolve(baseName + ".output.txt");
+        Path errorPath = this.commandOutputsPath.resolve(baseName + ".error.txt");
         outputPath.toFile().getParentFile().mkdirs();
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);

@@ -1,6 +1,7 @@
 package teralizer.processing.task;
 
 import org.jooq.generated.tables.records.ProjectRecord;
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.ConsoleCommand;
@@ -18,9 +19,14 @@ public class ProjectBuildTask extends AbstractTask {
     private final ConsoleCommand consoleCommand;
 
     public ProjectBuildTask(ProcessingStage stage, ProjectRecord projectRecord) {
+        this(stage, null, projectRecord);
+    }
+
+    public ProjectBuildTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
-        this.consoleCommand = new ConsoleCommand(stage, projectRecord.getDataPath());
+        this.variant = variant;
+        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getDataPath());
     }
 
     @Override
