@@ -9,10 +9,9 @@ import teralizer.processing.dependencies.MavenDependencyManager;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
 import java.util.function.Consumer;
 
-public class AddDependenciesTask implements Task {
+public class AddDependenciesTask extends AbstractTask {
 
     public static final Dependency JUNIT_4_DEPENDENCY = new Dependency("junit", "junit", "4.12");
     public static final Dependency JUNIT_VINTAGE_DEPENDENCY = new Dependency("org.junit.vintage", "junit-vintage-engine", "5.11.0");
@@ -24,21 +23,14 @@ public class AddDependenciesTask implements Task {
     public static final Path PITEST_CONFIG_PATH_GRADLE = Paths.get("src/main/resources/pitest-config-gradle.txt");
     public static final Path PITEST_CONFIG_PATH_MAVEN = Paths.get("src/main/resources/pitest-config-maven.txt");
 
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
-
     public AddDependenciesTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        this.addDependencies(this.projectRecord, reportInfo);
-    }
-
-    private void addDependencies(ProjectRecord projectRecord, Consumer<String> reportInfo) throws Exception {
-        Path projectPath = projectRecord.getRootPath();
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        Path projectPath = this.projectRecord.getRootPath();
         switch (this.projectRecord.getType()) {
             case UNKNOWN:
                 throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". No pom.xml / build.gradle found.");
@@ -47,54 +39,13 @@ public class AddDependenciesTask implements Task {
             case ANT:
                 throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Ant projects are not supported yet.");
             case GRADLE:
-                new GradleDependencyManager(projectRecord, reportInfo).addRequiredDependencies();
+                new GradleDependencyManager(this.projectRecord, reportInfo).addRequiredDependencies();
                 break;
             case MAVEN:
-                new MavenDependencyManager(projectRecord, reportInfo).addRequiredDependencies();
+                new MavenDependencyManager(this.projectRecord, reportInfo).addRequiredDependencies();
                 break;
             default:
-                throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Unsupported project type " + projectRecord.getType() + ".");
+                throw new RuntimeException("Cannot add dependencies to project " + projectPath + ". Unsupported project type " + this.projectRecord.getType() + ".");
         }
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "AddDependenciesTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AddDependenciesTask)) return false;
-        AddDependenciesTask that = (AddDependenciesTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId());
     }
 }

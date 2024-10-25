@@ -34,24 +34,20 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class TestGeneralizationTask implements Task {
+public class TestGeneralizationTask extends AbstractTask {
 
     private static final int MAX_TRIES_JQWIK = 20;
     private static final int MAX_SPECIFICATION_SIZE = 200000;
-
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
-    private final TestRecord testRecord;
-    private final String tool;
-
-    private GeneralizationRecord generalizationRecord;
 
     public static String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
     public static String TEST_PARAMETERS_SUPPLIER_CLASS_NAME = "TestParametersSupplier";
@@ -68,18 +64,11 @@ public class TestGeneralizationTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (this.testRecord == null) {
             this.scheduleTasks(context, scheduleTask);
         } else {
-            try {
-                this.executeTask(context);
-            } catch (Exception e) {
-                this.testRecord.setIsIncluded(false);
-                this.testRecord.setExclusionInfo("Excluded by " + this + ".");
-                this.testRecord.store();
-                throw e;
-            }
+            this.executeTask(context);
         }
     }
 
@@ -335,57 +324,5 @@ public class TestGeneralizationTask implements Task {
 
         Paths.get(this.generalizationRecord.getGeneralizedClassPath()).toFile().getParentFile().mkdirs();
         Files.write(Paths.get(this.generalizationRecord.getGeneralizedClassPath()), compilationUnit.toString().getBytes());
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return this.testRecord == null ? null : this.testRecord.getId();
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-    }
-
-    @Override
-    public String toString() {
-        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        Integer generalizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-        return "TestGeneralizationTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            ", testRecord=" + testRecordId +
-            ", tool='" + this.tool + '\'' +
-            ", generalizationRecord=" + generalizationRecordId +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TestGeneralizationTask)) return false;
-        TestGeneralizationTask that = (TestGeneralizationTask) o;
-        Integer thisTestRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        Integer thatTestRecordId = that.testRecord == null ? null : that.testRecord.getId();
-        Integer thisGeneralizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-        Integer thatGeneralizationRecordId = that.generalizationRecord == null ? null : that.generalizationRecord.getId();
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(thisTestRecordId, thatTestRecordId) && Objects.equals(this.tool, that.tool) && Objects.equals(thisGeneralizationRecordId, thatGeneralizationRecordId);
-    }
-
-    @Override
-    public int hashCode() {
-        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        Integer generalizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-        return Objects.hash(this.stage, this.projectRecord.getId(), testRecordId, this.tool, generalizationRecordId);
     }
 }

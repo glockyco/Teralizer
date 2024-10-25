@@ -32,16 +32,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public class TestDetectionTask implements Task {
+public class TestDetectionTask extends AbstractTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingPipeline.class);
-
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
 
     public TestDetectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this.stage = stage;
@@ -49,7 +45,7 @@ public class TestDetectionTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
 
@@ -227,46 +223,5 @@ public class TestDetectionTask implements Task {
         List<MethodCallExpr> assertEqualsCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().equals("assertEquals"));
         assert assertEqualsCalls.size() == 1;
         return assertEqualsCalls.get(0);
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "TestDetectionTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TestDetectionTask)) return false;
-        TestDetectionTask that = (TestDetectionTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId());
     }
 }

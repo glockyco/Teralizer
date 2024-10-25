@@ -15,17 +15,12 @@ import teralizer.processing.filter.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class TestFilteringTask implements Task {
+public class TestFilteringTask extends AbstractTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestFilteringTask.class);
-
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
-    private final TestRecord testRecord;
 
     public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null);
@@ -38,18 +33,11 @@ public class TestFilteringTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (this.testRecord == null) {
             this.scheduleTasks(context, scheduleTask);
         } else {
-            try {
-                this.executeTask(context, reportInfo);
-            } catch (Exception e) {
-                this.testRecord.setIsIncluded(false);
-                this.testRecord.setExclusionInfo("Excluded by " + this + ".");
-                this.testRecord.store();
-                throw e;
-            }
+            this.executeTask(context, reportInfo);
         }
     }
 
@@ -95,51 +83,5 @@ public class TestFilteringTask implements Task {
         this.testRecord.setIsIncluded(false);
         this.testRecord.setExclusionInfo("Excluded by " + this + ".");
         this.testRecord.store();
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return this.testRecord == null ? null : this.testRecord.getId();
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        return "TestFilteringTask{" +
-            "stage=" + this.stage +
-            ", projectRecord=" + this.projectRecord.getId() +
-            ", testRecord=" + testRecordId +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TestFilteringTask)) return false;
-        TestFilteringTask that = (TestFilteringTask) o;
-        Integer thisTestRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        Integer thatTestRecordId = that.testRecord == null ? null : that.testRecord.getId();
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(thisTestRecordId, thatTestRecordId);
-    }
-
-    @Override
-    public int hashCode() {
-        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        return Objects.hash(this.stage, this.projectRecord.getId(), testRecordId);
     }
 }

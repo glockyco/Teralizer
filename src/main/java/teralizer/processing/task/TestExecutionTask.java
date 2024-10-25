@@ -3,22 +3,19 @@ package teralizer.processing.task;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import teralizer.util.ConsoleCommand;
-import teralizer.util.ConsoleCommandException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.util.ConsoleCommand;
+import teralizer.util.ConsoleCommandException;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
-public class TestExecutionTask implements Task {
+public class TestExecutionTask extends AbstractTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestExecutionTask.class);
 
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
     private final ConsoleCommand consoleCommand;
 
     public TestExecutionTask(ProcessingStage stage, ProjectRecord projectRecord) {
@@ -28,7 +25,7 @@ public class TestExecutionTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         List<String> command;
 
         switch (this.projectRecord.getType()) {
@@ -58,46 +55,5 @@ public class TestExecutionTask implements Task {
                 throw e;
             }
         }
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "TestExecutionTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TestExecutionTask)) return false;
-        TestExecutionTask that = (TestExecutionTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId());
     }
 }

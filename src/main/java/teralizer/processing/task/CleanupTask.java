@@ -19,11 +19,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class CleanupTask implements Task {
+public class CleanupTask extends AbstractTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTask.class);
 
-    private final ProcessingStage stage;
     private final Path projectPath;
     private final Path testSourcePath;
 
@@ -34,7 +33,7 @@ public class CleanupTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (this.projectPath == null) {
             LOGGER.atInfo().log("Skipping cleanup. Project path is null.");
             return;
@@ -84,26 +83,6 @@ public class CleanupTask implements Task {
         // We do not automatically remove collected data in the DB and the data
         // directory. These should be preserved even if the generalization is
         // reverted to enable comparisons across multiple generalization runs.
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return null;
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
     }
 
     @Override

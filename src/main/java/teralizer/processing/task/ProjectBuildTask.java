@@ -1,23 +1,20 @@
 package teralizer.processing.task;
 
 import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.util.ConsoleCommand;
-import teralizer.util.ConsoleCommandException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.util.ConsoleCommand;
+import teralizer.util.ConsoleCommandException;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
-public class ProjectBuildTask implements Task {
+public class ProjectBuildTask extends AbstractTask {
 
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
     private final ConsoleCommand consoleCommand;
 
     public ProjectBuildTask(ProcessingStage stage, ProjectRecord projectRecord) {
@@ -27,7 +24,7 @@ public class ProjectBuildTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         switch (this.projectRecord.getType()) {
             case UNKNOWN:
                 throw new RuntimeException("Cannot build project " + this.projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
@@ -66,46 +63,5 @@ public class ProjectBuildTask implements Task {
     private void buildMaven(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
         List<String> command = Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "clean", "compile", "test-compile");
         this.consoleCommand.execute(projectRootPath, command);
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "ProjectBuildTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProjectBuildTask)) return false;
-        ProjectBuildTask that = (ProjectBuildTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId());
     }
 }

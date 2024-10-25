@@ -1,10 +1,12 @@
 package teralizer.processing.task;
 
-import org.dom4j.*;
+import org.dom4j.Document;
+import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.*;
+import org.jooq.generated.tables.records.MutationReportRecord;
+import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -12,29 +14,24 @@ import teralizer.processing.TaskContext;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
-public class MutationDataCollectionTask implements Task {
-
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
-    private final String generalizationVariant;
+public class MutationDataCollectionTask extends AbstractTask {
 
     public MutationDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null);
     }
 
-    public MutationDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, String generalizationVariant) {
+    public MutationDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, String tool) {
         this.stage = stage;
         this.projectRecord = projectRecord;
-        this.generalizationVariant = generalizationVariant;
+        this.tool = tool;
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        List<MutationReportRecord> mutationReportRecords = this.createMutationReportRecords(create, this.projectRecord, this.generalizationVariant);
+        List<MutationReportRecord> mutationReportRecords = this.createMutationReportRecords(create, this.projectRecord, this.tool);
         create.batchStore(mutationReportRecords).execute();
     }
 
@@ -69,47 +66,5 @@ public class MutationDataCollectionTask implements Task {
             mutationReportRecords.add(mutationReportRecord);
         }
         return mutationReportRecords;
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "MutationDataCollectionTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            ", generalizationVariant=" + this.generalizationVariant +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MutationDataCollectionTask)) return false;
-        MutationDataCollectionTask that = (MutationDataCollectionTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(this.generalizationVariant, that.generalizationVariant);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId(), this.generalizationVariant);
     }
 }

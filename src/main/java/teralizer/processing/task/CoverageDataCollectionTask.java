@@ -12,29 +12,24 @@ import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
-public class CoverageDataCollectionTask implements Task {
-
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
-    private final String generalizationVariant;
+public class CoverageDataCollectionTask extends AbstractTask {
 
     public CoverageDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null);
     }
 
-    public CoverageDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, String generalizationVariant) {
+    public CoverageDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, String tool) {
         this.stage = stage;
         this.projectRecord = projectRecord;
-        this.generalizationVariant = generalizationVariant;
+        this.tool = tool;
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        List<CoverageReportRecord> coverageReportsRecords = this.createCoverageReportRecords(create, this.projectRecord, this.generalizationVariant);
+        List<CoverageReportRecord> coverageReportsRecords = this.createCoverageReportRecords(create, this.projectRecord, this.tool);
         create.batchStore(coverageReportsRecords).execute();
     }
 
@@ -95,47 +90,5 @@ public class CoverageDataCollectionTask implements Task {
                 throw new RuntimeException("Cannot read coverage reports for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
         }
         return projectRecord.getCoverageReportsPath().resolve(reportFileName);
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "MutationDataCollectionTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            ", generalizationVariant=" + this.generalizationVariant +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CoverageDataCollectionTask)) return false;
-        CoverageDataCollectionTask that = (CoverageDataCollectionTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(this.generalizationVariant, that.generalizationVariant);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId(), this.generalizationVariant);
     }
 }

@@ -9,6 +9,7 @@ public interface Task {
     void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception;
 
     ProcessingStage getStage();
+    String getTool();
 
     Integer getProjectId();
     Integer getTestId();

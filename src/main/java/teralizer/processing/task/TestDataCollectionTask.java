@@ -19,16 +19,11 @@ import teralizer.processing.TestResult;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class TestDataCollectionTask implements Task {
-
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
-    private final TestRecord testRecord;
-    private final GeneralizationRecord generalizationRecord;
+public class TestDataCollectionTask extends AbstractTask {
 
     public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null);
@@ -46,18 +41,11 @@ public class TestDataCollectionTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (this.testRecord == null) {
             this.scheduleTasks(context, scheduleTask);
         } else {
-            try {
-                this.executeTask(context);
-            } catch (Exception e) {
-                this.testRecord.setIsIncluded(false);
-                this.testRecord.setExclusionInfo("Excluded by " + this + ".");
-                this.testRecord.store();
-                throw e;
-            }
+            this.executeTask(context);
         }
     }
 
@@ -179,56 +167,5 @@ public class TestDataCollectionTask implements Task {
             return TestResult.ERROR;
         }
         throw new RuntimeException("Failed to collect test data. Unable to determine test result for test case " + testCaseReport.getFullName() + " in report '" + reportPath + "'.");
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return this.testRecord == null ? null : this.testRecord.getId();
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-    }
-
-    @Override
-    public String toString() {
-        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        Integer generalizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-        return "TestDataCollectionTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            ", testRecord=" + testRecordId +
-            ", generalizationRecord=" + generalizationRecordId +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TestDataCollectionTask)) return false;
-        TestDataCollectionTask that = (TestDataCollectionTask) o;
-        Integer thisTestRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        Integer thatTestRecordId = that.testRecord == null ? null : that.testRecord.getId();
-        Integer thisGeneralizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-        Integer thatGeneralizationRecordId = that.generalizationRecord == null ? null : that.generalizationRecord.getId();
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId()) && Objects.equals(thisTestRecordId, thatTestRecordId) && Objects.equals(thisGeneralizationRecordId, thatGeneralizationRecordId);
-    }
-
-    @Override
-    public int hashCode() {
-        Integer testRecordId = this.testRecord == null ? null : this.testRecord.getId();
-        Integer generalizationRecordId = this.generalizationRecord == null ? null : this.generalizationRecord.getId();
-        return Objects.hash(this.stage, this.projectRecord.getId(), testRecordId, generalizationRecordId);
     }
 }

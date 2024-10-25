@@ -26,13 +26,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class ProjectSetupTask implements Task {
+public class ProjectSetupTask extends AbstractTask {
 
     public static final String MAVEN_DEFAULT_BUILD_FILE = "pom.xml";
     public static final String MAVEN_CUSTOM_BUILD_FILE = "pom." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + ".xml";
@@ -42,16 +41,13 @@ public class ProjectSetupTask implements Task {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProjectSetupTask.class);
 
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
-
     public ProjectSetupTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (this.projectRecord.getRootPath() == null) {
             throw new RuntimeException("Cannot setup project. Project root path is null.");
         } else if (!Files.exists(this.projectRecord.getRootPath())) {
@@ -293,46 +289,5 @@ public class ProjectSetupTask implements Task {
         Arrays.stream(classpath.split(File.pathSeparator)).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
 
         projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "ProjectSetupTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProjectSetupTask)) return false;
-        ProjectSetupTask that = (ProjectSetupTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId());
     }
 }

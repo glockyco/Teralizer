@@ -3,7 +3,7 @@ package teralizer.processing.task;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.transport.*;
+import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
@@ -13,15 +13,11 @@ import teralizer.processing.TaskContext;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 import java.util.function.Consumer;
 
-public class ProjectDownloadTask implements Task {
+public class ProjectDownloadTask extends AbstractTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProjectDownloadTask.class);
-
-    private final ProcessingStage stage;
-    private final ProjectRecord projectRecord;
 
     public ProjectDownloadTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this.stage = stage;
@@ -29,7 +25,7 @@ public class ProjectDownloadTask implements Task {
     }
 
     @Override
-    public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+    protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (this.projectRecord.getRootPath() == null) {
             throw new RuntimeException("Cannot download project. Project root path is null.");
         } else if (!this.projectRecord.getRootPath().toString().endsWith(".git")) {
@@ -68,46 +64,5 @@ public class ProjectDownloadTask implements Task {
 
     public void scheduleNextTask(Consumer<Task> scheduleTask) {
         scheduleTask.accept(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, this.projectRecord));
-    }
-
-    @Override
-    public ProcessingStage getStage() {
-        return this.stage;
-    }
-
-    @Override
-    public Integer getProjectId() {
-        return this.projectRecord.getId();
-    }
-
-    @Override
-    public Integer getTestId() {
-        return null;
-    }
-
-    @Override
-    public Integer getGeneralizationId() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "ProjectDownloadTask{" +
-            "stage=" + this.stage.getStep() +
-            ", projectRecord=" + this.projectRecord.getId() +
-            '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProjectDownloadTask)) return false;
-        ProjectDownloadTask that = (ProjectDownloadTask) o;
-        return this.stage == that.stage && Objects.equals(this.projectRecord.getId(), that.projectRecord.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.stage, this.projectRecord.getId());
     }
 }
