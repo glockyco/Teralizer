@@ -38,7 +38,7 @@ public class CoverageDataCollectionTask extends AbstractTask {
         Path reportPath = this.getCoverageReportPath(projectRecord);
 
         if (!reportPath.toFile().exists()) {
-            throw new RuntimeException("Failed to collect mutation data. Report file '" + reportPath + "' does not exist.");
+            throw new RuntimeException("Failed to collect coverage data. Report file '" + reportPath + "' does not exist.");
         }
 
         List<CoverageReportRecord> coverageReportRecords = new ArrayList<>();
