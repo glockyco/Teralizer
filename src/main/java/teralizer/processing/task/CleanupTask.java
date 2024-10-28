@@ -66,7 +66,7 @@ public class CleanupTask extends AbstractTask {
             List<File> buildFiles = Arrays.asList(mavenBuildFile, gradleBuildFile);
             for (File buildFile : buildFiles) {
                 if (buildFile.exists()) {
-                    LOGGER.atWarn().log("Deleting build file '" + buildFile + "'.");
+                    LOGGER.atInfo().log("Deleting build file '" + buildFile + "'.");
                     if (!buildFile.delete()) {
                         throw new RuntimeException("Failed to delete build file '" + buildFile + "'.");
                     }
