@@ -3,22 +3,20 @@ package teralizer.processing.task;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
 
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class TestExecutionTask extends AbstractTask {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestExecutionTask.class);
 
     private final ConsoleCommand consoleCommand;
 
@@ -79,11 +77,15 @@ public class TestExecutionTask extends AbstractTask {
         try {
             this.consoleCommand.execute(this.projectRecord.getRootPath(), command);
         } catch (ConsoleCommandException e) {
-            if (e.getMessage().contains("AssertionFailedError")) {
-                LOGGER.atDebug().log(e.getMessage());
-                reportInfo.accept(e.getMessage());
-            } else {
-                throw e;
+            try (Stream<String> lines = Files.lines(e.getOutputPath())) {
+                if (lines.anyMatch(line ->
+                    /* JUnit 5 */ line.contains("AssertionFailedError") ||
+                    /* JUnit 4 */ line.contains("AssertionError"))
+                ) {
+                    reportInfo.accept(e.getMessage() + "\nFailure is caused by assertion error(s).");
+                } else {
+                    throw e;
+                }
             }
         }
     }
