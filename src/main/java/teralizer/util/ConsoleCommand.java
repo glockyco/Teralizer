@@ -6,6 +6,7 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -35,9 +36,13 @@ public class ConsoleCommand {
         String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
         String executionName = "." + this.executionCount;
         String baseName = stageName + variantName + executionName;
+        Path commandPath = this.commandOutputsPath.resolve(baseName + ".command.txt");
         Path outputPath = this.commandOutputsPath.resolve(baseName + ".output.txt");
         Path errorPath = this.commandOutputsPath.resolve(baseName + ".error.txt");
         outputPath.toFile().getParentFile().mkdirs();
+
+        String commandString = String.join(" ", command);
+        Files.write(commandPath, commandString.getBytes());
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.directory(projectRootPath == null ? null : projectRootPath.toFile());
@@ -46,7 +51,7 @@ public class ConsoleCommand {
         Process process = processBuilder.start();
 
         Thread shutdownHook = new Thread(() -> {
-            LOGGER.atDebug().log("Terminating command '" + String.join(" ", command) + "' due to shutdown.");
+            LOGGER.atDebug().log("Terminating command '" + commandString + "' due to shutdown.");
             process.destroy();
         });
 
