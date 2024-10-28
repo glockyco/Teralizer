@@ -114,9 +114,9 @@ public class GradleDependencyManager {
                 return false;
             }
         }
-        // If the detected JUnit version is not supported, we just add a one
+        // If the detected JUnit version is not supported, we just add one
         // that is in addition to the one that is already present. This is easy
-        // to do, but is not necessarily guaranteed to convince Maven that the
+        // to do, but is not necessarily guaranteed to convince Gradle that the
         // newly added version should be used over the existing one.
         // @TODO: Update the existing JUnit version instead of adding a new one.
         this.addDependencyIfMissing(JUNIT_4_DEPENDENCY);
