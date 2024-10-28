@@ -98,7 +98,7 @@ public class TestExecutionTask extends AbstractTask {
             .fetchInto(String.class);
     }
 
-    private List<String> fetchGeneralizedClasses(DSLContext create, Integer projectId, GeneralizationVariant variant) throws Exception {
+    private List<String> fetchGeneralizedClasses(DSLContext create, Integer projectId, GeneralizationVariant variant) {
         return create.selectDistinct(Tables.GENERALIZATION.GENERALIZED_CLASS_PACKAGE.concat('.').concat(Tables.GENERALIZATION.GENERALIZED_CLASS_NAME))
             .from(Tables.TEST)
             .join(Tables.GENERALIZATION)
