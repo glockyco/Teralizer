@@ -2,6 +2,7 @@ pitest {
     outputFormats = ['HTML', 'XML']
     exportLineCoverage = true
     verbose = true
+    targetTests = project.hasProperty('targetTests') ? project.getProperty('targetTests').split(',').toList() : ['*']
 }
 
 tasks.test {
