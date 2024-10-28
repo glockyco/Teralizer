@@ -1,3 +1,14 @@
-jacocoTestReport { reports { csv.required = true; xml.required = true } }
-tasks.test { finalizedBy(tasks.jacocoTestReport) }
-tasks.jacocoTestReport { dependsOn(tasks.test) }
+jacocoTestReport {
+    reports {
+        csv.required = true
+        xml.required = true
+    }
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+}
