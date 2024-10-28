@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -55,6 +56,7 @@ public class TestDetectionTask extends AbstractTask {
     }
 
     private void detectTests(DSLContext create, Gson gson, JavaParser javaParser, Consumer<String> reportInfo) throws IOException {
+        AtomicInteger testCount = new AtomicInteger();
         try (Stream<Path> paths = Files.walk(this.projectRecord.getTestSourcePath())) {
             paths
                 .filter(Files::isRegularFile)
@@ -90,10 +92,16 @@ public class TestDetectionTask extends AbstractTask {
                             testRecord.setIsIncluded(true);
                             testRecord.store();
 
+                            testCount.getAndIncrement();
+
                             this.createAssertionRecords(testRecord, testMethodDeclaration, create, gson, reportInfo);
                         }
                     }
                 });
+        }
+
+        if (testCount.get() == 0) {
+            throw new RuntimeException("Failed to detect any test classes.");
         }
     }
 
