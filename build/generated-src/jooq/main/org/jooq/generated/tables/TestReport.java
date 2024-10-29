@@ -70,7 +70,7 @@ public class TestReport extends TableImpl<TestReportRecord> {
     /**
      * The column <code>test_report.result</code>.
      */
-    public final TableField<TestReportRecord, TestResult> RESULT = createField(DSL.name("result"), SQLDataType.INTEGER.nullable(false), this, "", new EnumConverter<Integer, TestResult>(Integer.class, TestResult.class));
+    public final TableField<TestReportRecord, TestResult> RESULT = createField(DSL.name("result"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, TestResult>(String.class, TestResult.class));
 
     /**
      * The column <code>test_report.runtime</code>.

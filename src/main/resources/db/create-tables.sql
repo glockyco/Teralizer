@@ -94,13 +94,13 @@ CREATE TABLE test_report
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
     test_id            INTEGER, -- can be null if the report is for a generalization
     generalization_id  INTEGER, -- can be null if the report is for a test
-    result             INTEGER NOT NULL,
-    runtime            REAL    NOT NULL,
+    result             TEXT NOT NULL,
+    runtime            REAL NOT NULL,
     failure_message    TEXT,    -- can be null for passed / skipped tests
     failure_type       TEXT,    -- can be null for passed / skipped tests
     failure_error_line TEXT,    -- can be null for passed / skipped tests
     failure_detail     TEXT,    -- can be null for passed / skipped tests
-    report_path        TEXT    NOT NULL,
+    report_path        TEXT NOT NULL,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
     FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
 );
