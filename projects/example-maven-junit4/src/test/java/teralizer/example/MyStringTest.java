@@ -7,6 +7,11 @@ import static org.junit.Assert.*;
 public class MyStringTest {
 
     @Test
+    public void testFail() {
+        assertTrue(false);
+    }
+
+    @Test
     public void testContains() {
         boolean expected = true;
         boolean actual = MyString.contains("uiae", "uiae");

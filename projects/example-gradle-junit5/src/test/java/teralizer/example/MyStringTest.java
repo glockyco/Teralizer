@@ -2,9 +2,14 @@ package teralizer.example;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MyStringTest {
+
+    @Test
+    public void testFail() {
+        assertTrue(false);
+    }
 
     @Test
     public void testContains() {
