@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row10;
+import org.jooq.Row17;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -28,6 +28,8 @@ import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
+import teralizer.processing.GeneralizationVariant;
+import teralizer.processing.ProcessingStage;
 import teralizer.processing.TestResult;
 
 
@@ -58,6 +60,11 @@ public class TestReport extends TableImpl<TestReportRecord> {
     public final TableField<TestReportRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
 
     /**
+     * The column <code>test_report.project_id</code>.
+     */
+    public final TableField<TestReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
      * The column <code>test_report.test_id</code>.
      */
     public final TableField<TestReportRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER, this, "");
@@ -66,6 +73,36 @@ public class TestReport extends TableImpl<TestReportRecord> {
      * The column <code>test_report.generalization_id</code>.
      */
     public final TableField<TestReportRecord, Integer> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>test_report.step</code>.
+     */
+    public final TableField<TestReportRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>test_report.stage</code>.
+     */
+    public final TableField<TestReportRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStage>(String.class, ProcessingStage.class));
+
+    /**
+     * The column <code>test_report.variant</code>.
+     */
+    public final TableField<TestReportRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
+
+    /**
+     * The column <code>test_report.test_package_name</code>.
+     */
+    public final TableField<TestReportRecord, String> TEST_PACKAGE_NAME = createField(DSL.name("test_package_name"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>test_report.test_class_name</code>.
+     */
+    public final TableField<TestReportRecord, String> TEST_CLASS_NAME = createField(DSL.name("test_class_name"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>test_report.test_method_name</code>.
+     */
+    public final TableField<TestReportRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test_report.result</code>.
@@ -98,9 +135,9 @@ public class TestReport extends TableImpl<TestReportRecord> {
     public final TableField<TestReportRecord, String> FAILURE_DETAIL = createField(DSL.name("failure_detail"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>test_report.report_path</code>.
+     * The column <code>test_report.report_file_path</code>.
      */
-    public final TableField<TestReportRecord, String> REPORT_PATH = createField(DSL.name("report_path"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestReportRecord, String> REPORT_FILE_PATH = createField(DSL.name("report_file_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     private TestReport(Name alias, Table<TestReportRecord> aliased) {
         this(alias, aliased, null);
@@ -142,7 +179,7 @@ public class TestReport extends TableImpl<TestReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_TEST_REPORT_GENERALIZATION_ID, Indexes.IDX_TEST_REPORT_RESULT, Indexes.IDX_TEST_REPORT_TEST_ID);
+        return Arrays.<Index>asList(Indexes.IDX_TEST_REPORT_GENERALIZATION_ID, Indexes.IDX_TEST_REPORT_PROJECT_ID, Indexes.IDX_TEST_REPORT_RESULT, Indexes.IDX_TEST_REPORT_STAGE, Indexes.IDX_TEST_REPORT_STEP, Indexes.IDX_TEST_REPORT_TEST_ID, Indexes.IDX_TEST_REPORT_VARIANT);
     }
 
     @Override
@@ -162,11 +199,19 @@ public class TestReport extends TableImpl<TestReportRecord> {
 
     @Override
     public List<ForeignKey<TestReportRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<TestReportRecord, ?>>asList(Keys.FK_TEST_REPORT_TEST_1, Keys.FK_TEST_REPORT_GENERALIZATION_1);
+        return Arrays.<ForeignKey<TestReportRecord, ?>>asList(Keys.FK_TEST_REPORT_PROJECT_1, Keys.FK_TEST_REPORT_TEST_1, Keys.FK_TEST_REPORT_GENERALIZATION_1);
     }
 
+    private transient Project _project;
     private transient Test _test;
     private transient Generalization _generalization;
+
+    public Project project() {
+        if (_project == null)
+            _project = new Project(this, Keys.FK_TEST_REPORT_PROJECT_1);
+
+        return _project;
+    }
 
     public Test test() {
         if (_test == null)
@@ -209,11 +254,11 @@ public class TestReport extends TableImpl<TestReportRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row10 type methods
+    // Row17 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row10<Integer, Integer, Integer, TestResult, Float, String, String, String, String, String> fieldsRow() {
-        return (Row10) super.fieldsRow();
+    public Row17<Integer, Integer, Integer, Integer, Integer, ProcessingStage, GeneralizationVariant, String, String, String, TestResult, Float, String, String, String, String, String> fieldsRow() {
+        return (Row17) super.fieldsRow();
     }
 }

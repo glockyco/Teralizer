@@ -33,6 +33,7 @@ public class Indexes {
     public static final Index IDX_COVERAGE_REPORT_PACKAGE = Internal.createIndex(DSL.name("idx_coverage_report_package"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.COVERED_PACKAGE }, false);
     public static final Index IDX_COVERAGE_REPORT_PROJECT_ID = Internal.createIndex(DSL.name("idx_coverage_report_project_id"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.PROJECT_ID }, false);
     public static final Index IDX_COVERAGE_REPORT_VARIANT = Internal.createIndex(DSL.name("idx_coverage_report_variant"), CoverageReport.COVERAGE_REPORT, new OrderField[] { CoverageReport.COVERAGE_REPORT.VARIANT }, false);
+    public static final Index IDX_GENERALIZATION_GENERALIZED_FILE_PATH = Internal.createIndex(DSL.name("idx_generalization_generalized_file_path"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.GENERALIZED_FILE_PATH }, false);
     public static final Index IDX_GENERALIZATION_IS_INCLUDED = Internal.createIndex(DSL.name("idx_generalization_is_included"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.IS_INCLUDED }, false);
     public static final Index IDX_GENERALIZATION_TEST_ID = Internal.createIndex(DSL.name("idx_generalization_test_id"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TEST_ID }, false);
     public static final Index IDX_GENERALIZATION_VARIANT = Internal.createIndex(DSL.name("idx_generalization_variant"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.VARIANT }, false);
@@ -54,6 +55,14 @@ public class Indexes {
     public static final Index IDX_TEST_IS_INCLUDED = Internal.createIndex(DSL.name("idx_test_is_included"), Test.TEST, new OrderField[] { Test.TEST.IS_INCLUDED }, false);
     public static final Index IDX_TEST_PROJECT_ID = Internal.createIndex(DSL.name("idx_test_project_id"), Test.TEST, new OrderField[] { Test.TEST.PROJECT_ID }, false);
     public static final Index IDX_TEST_REPORT_GENERALIZATION_ID = Internal.createIndex(DSL.name("idx_test_report_generalization_id"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.GENERALIZATION_ID }, false);
+    public static final Index IDX_TEST_REPORT_PROJECT_ID = Internal.createIndex(DSL.name("idx_test_report_project_id"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.PROJECT_ID }, false);
     public static final Index IDX_TEST_REPORT_RESULT = Internal.createIndex(DSL.name("idx_test_report_result"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.RESULT }, false);
+    public static final Index IDX_TEST_REPORT_STAGE = Internal.createIndex(DSL.name("idx_test_report_stage"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.STAGE }, false);
+    public static final Index IDX_TEST_REPORT_STEP = Internal.createIndex(DSL.name("idx_test_report_step"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.STEP }, false);
     public static final Index IDX_TEST_REPORT_TEST_ID = Internal.createIndex(DSL.name("idx_test_report_test_id"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.TEST_ID }, false);
+    public static final Index IDX_TEST_REPORT_VARIANT = Internal.createIndex(DSL.name("idx_test_report_variant"), TestReport.TEST_REPORT, new OrderField[] { TestReport.TEST_REPORT.VARIANT }, false);
+    public static final Index IDX_TEST_TEST_CLASS_NAME = Internal.createIndex(DSL.name("idx_test_test_class_name"), Test.TEST, new OrderField[] { Test.TEST.TEST_CLASS_NAME }, false);
+    public static final Index IDX_TEST_TEST_FILE_PATH = Internal.createIndex(DSL.name("idx_test_test_file_path"), Test.TEST, new OrderField[] { Test.TEST.TEST_FILE_PATH }, false);
+    public static final Index IDX_TEST_TEST_METHOD_NAME = Internal.createIndex(DSL.name("idx_test_test_method_name"), Test.TEST, new OrderField[] { Test.TEST.TESTED_METHOD_NAME }, false);
+    public static final Index IDX_TEST_TEST_PACKAGE_NAME = Internal.createIndex(DSL.name("idx_test_test_package_name"), Test.TEST, new OrderField[] { Test.TEST.TEST_PACKAGE_NAME }, false);
 }

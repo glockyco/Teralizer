@@ -14,14 +14,16 @@ public class ParameterTypeFilter extends AbstractFilter {
     private static final List<String> SUPPORTED_TYPES = Arrays.asList("int", "double");
 
     private final Gson gson;
+    private final TestRecord testRecord;
 
-    public ParameterTypeFilter(Gson gson) {
+    public ParameterTypeFilter(Gson gson, TestRecord testRecord) {
         this.gson = gson;
+        this.testRecord = testRecord;
     }
 
     @Override
-    public FilterResult check(TestRecord testRecord) {
-        String testedMethodParamTypes = testRecord.getTestedMethodParamTypes();
+    public FilterResult check() {
+        String testedMethodParamTypes = this.testRecord.getTestedMethodParamTypes();
         if (testedMethodParamTypes == null) {
             return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_param_types column is null.");
         }

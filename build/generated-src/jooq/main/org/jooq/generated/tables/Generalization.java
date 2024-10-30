@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row8;
+import org.jooq.Row9;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -68,19 +68,24 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     public final TableField<GeneralizationRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
 
     /**
-     * The column <code>generalization.generalized_class_path</code>.
+     * The column <code>generalization.generalized_file_path</code>.
      */
-    public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_PATH = createField(DSL.name("generalized_class_path"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<GeneralizationRecord, String> GENERALIZED_FILE_PATH = createField(DSL.name("generalized_file_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.generalized_class_package</code>.
+     * The column <code>generalization.generalized_package_name</code>.
      */
-    public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_PACKAGE = createField(DSL.name("generalized_class_package"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<GeneralizationRecord, String> GENERALIZED_PACKAGE_NAME = createField(DSL.name("generalized_package_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>generalization.generalized_class_name</code>.
      */
     public final TableField<GeneralizationRecord, String> GENERALIZED_CLASS_NAME = createField(DSL.name("generalized_class_name"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>generalization.generalized_method_name</code>.
+     */
+    public final TableField<GeneralizationRecord, String> GENERALIZED_METHOD_NAME = createField(DSL.name("generalized_method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>generalization.is_included</code>.
@@ -132,7 +137,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_GENERALIZED_FILE_PATH, Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_VARIANT);
     }
 
     @Override
@@ -191,11 +196,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row8 type methods
+    // Row9 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row8<Integer, Integer, GeneralizationVariant, String, String, String, Boolean, String> fieldsRow() {
-        return (Row8) super.fieldsRow();
+    public Row9<Integer, Integer, GeneralizationVariant, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row9) super.fieldsRow();
     }
 }

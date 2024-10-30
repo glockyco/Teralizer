@@ -1,11 +1,11 @@
 package teralizer.processing.task;
 
 import org.jooq.DSLContext;
-import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.repository.SQLiteRepository;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
 
@@ -37,19 +37,19 @@ public class TestExecutionTask extends AbstractTask {
 
         List<String> includedTests;
         switch (this.stage) {
-            case TEST_EXECUTION_ORIGINAL:
+            case EXECUTE_TESTS_INITIAL:
                 // Use `null` to include all tests.
                 includedTests = null;
                 break;
-            case TEST_EXECUTION_FILTERED:
-                includedTests = this.fetchTestClasses(create, this.projectRecord.getId());
+            case EXECUTE_TESTS_WITH_DEPENDENCIES:
+                includedTests = SQLiteRepository.fetchIncludedTestClasses(create, this.projectRecord.getId());
                 break;
-            case TEST_EXECUTION_GENERALIZED:
-                includedTests = this.fetchTestClasses(create, this.projectRecord.getId());
-                includedTests.addAll(this.fetchGeneralizedClasses(create, this.projectRecord.getId(), this.variant));
+            case EXECUTE_TESTS_GENERALIZED:
+                includedTests = SQLiteRepository.fetchIncludedTestClasses(create, this.projectRecord.getId());
+                includedTests.addAll(SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.variant, this.projectRecord.getId()));
                 break;
             default:
-                throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
+                throw new RuntimeException("Cannot execute tests. Unsupported processing stage " + this.stage + ".");
         }
 
         if (includedTests != null && includedTests.isEmpty()) {
@@ -65,10 +65,10 @@ public class TestExecutionTask extends AbstractTask {
             case ANT:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
-                command = this.buildGradleCommand(includedTests);
+                command = buildGradleCommand(includedTests);
                 break;
             case MAVEN:
-                command = this.buildMavenCommand(includedTests);
+                command = buildMavenCommand(includedTests);
                 break;
             default:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
@@ -90,50 +90,22 @@ public class TestExecutionTask extends AbstractTask {
         }
     }
 
-    private List<String> fetchTestClasses(DSLContext create, Integer projectId) {
-        return create.selectDistinct(Tables.TEST.TEST_CLASS_PACKAGE.concat('.').concat(Tables.TEST.TEST_CLASS_NAME))
-            .from(Tables.TEST)
-            .where(Tables.TEST.PROJECT_ID.eq(projectId))
-            .and(Tables.TEST.IS_INCLUDED.eq(true))
-            .fetchInto(String.class);
-    }
-
-    private List<String> fetchGeneralizedClasses(DSLContext create, Integer projectId, GeneralizationVariant variant) {
-        return create.selectDistinct(Tables.GENERALIZATION.GENERALIZED_CLASS_PACKAGE.concat('.').concat(Tables.GENERALIZATION.GENERALIZED_CLASS_NAME))
-            .from(Tables.TEST)
-            .join(Tables.GENERALIZATION)
-            .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
-            .where(Tables.TEST.PROJECT_ID.eq(projectId))
-            .and(Tables.TEST.IS_INCLUDED.eq(true))
-            .and(Tables.GENERALIZATION.VARIANT.eq(variant))
-            .and(Tables.GENERALIZATION.IS_INCLUDED.eq(true))
-            .fetchInto(String.class);
-    }
-
-    private List<String> buildGradleCommand(List<String> includedTests) {
+    private static List<String> buildGradleCommand(List<String> includedTests) {
         List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE, "--info", "-Djacoco.skip=false", "test"));
         if (includedTests != null) {
-            // Set test inclusions for normal test execution and coverage reporting via JaCoCo:
             for (String includedTest : includedTests) {
                 command.add("--tests");
                 command.add(includedTest);
             }
-            // Set test inclusions for mutation testing via PIT:
-            command.add("-PtargetTests=" + String.join(",", includedTests));
         }
         return command;
     }
 
-    private List<String> buildMavenCommand(List<String> includedTests) {
-        List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "-Djacoco.skip=false"));
+    private static List<String> buildMavenCommand(List<String> includedTests) {
+        List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "-Djacoco.skip=false", "test"));
         if (includedTests != null) {
-            String includedTestsJoined = String.join(",", includedTests);
-            // Set test inclusions for normal test execution and coverage reporting via JaCoCo:
-            command.add("-Dtest=" + includedTestsJoined);
-            // Set test inclusions for mutation testing via PIT:
-            command.add("-DtargetTests=" + includedTestsJoined);
+            command.add("-Dtest=" + String.join(",", includedTests));
         }
-        command.add("test");
         return command;
     }
 }

@@ -7,23 +7,29 @@ import java.util.List;
 
 public class MissingValueFilter extends AbstractFilter {
 
+    private final TestRecord testRecord;
+
+    public MissingValueFilter(TestRecord testRecord) {
+        this.testRecord = testRecord;
+    }
+
     @Override
-    public FilterResult check(TestRecord testRecord) {
+    public FilterResult check() {
         List<String> rejectionReasons = new ArrayList<>();
 
-        if (testRecord.getTestedClassPath() == null) {
+        if (this.testRecord.getTestedFilePath() == null) {
             rejectionReasons.add("The test.tested_class_path column is null.");
         }
 
-        if (testRecord.getTestedClassName() == null) {
+        if (this.testRecord.getTestedClassName() == null) {
             rejectionReasons.add("The test.tested_class_name column is null.");
         }
 
-        if (testRecord.getTestedMethodName() == null) {
+        if (this.testRecord.getTestedMethodName() == null) {
             rejectionReasons.add("The test.tested_method_name column is null.");
         }
 
-        if (testRecord.getTestedMethodParamTypes() == null) {
+        if (this.testRecord.getTestedMethodParamTypes() == null) {
             rejectionReasons.add("The test.tested_method_param_types column is null.");
         }
 

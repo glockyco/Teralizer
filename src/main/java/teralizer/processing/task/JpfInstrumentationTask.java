@@ -66,13 +66,13 @@ public class JpfInstrumentationTask extends AbstractTask {
 
     private void createDriverClassFile(VelocityEngine velocityEngine) throws IOException {
         VelocityContext context = new VelocityContext();
-        context.put("driverPackageName", this.testRecord.getDriverClassPackage());
+        context.put("driverPackageName", this.testRecord.getDriverPackageName());
         context.put("driverClassName", this.testRecord.getDriverClassName());
-        context.put("testClassQualifiedName", this.testRecord.getTestClassPackage() + "." + this.testRecord.getTestClassName());
+        context.put("testClassQualifiedName", this.testRecord.getTestPackageName() + "." + this.testRecord.getTestClassName());
         context.put("testClassName", this.testRecord.getTestClassName());
         context.put("testMethodName", this.testRecord.getTestMethodName());
 
-        File driverClassFile = new File(this.testRecord.getDriverClassPath());
+        File driverClassFile = new File(this.testRecord.getDriverFilePath());
         driverClassFile.getParentFile().mkdirs();
 
         try (FileWriter fileWriter = new FileWriter(driverClassFile)) {
@@ -82,10 +82,10 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     private void createJpfConfigFile(Gson gson, VelocityEngine velocityEngine) throws IOException {
-        String driverClassQualifiedName = this.testRecord.getDriverClassPackage() + "." + this.testRecord.getDriverClassName();
-        String testClassQualifiedName = this.testRecord.getTestClassPackage() + "." + this.testRecord.getTestClassName();
+        String driverClassQualifiedName = this.testRecord.getDriverPackageName() + "." + this.testRecord.getDriverClassName();
+        String testClassQualifiedName = this.testRecord.getTestPackageName() + "." + this.testRecord.getTestClassName();
         String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
-        String testedClassQualifiedName = this.testRecord.getTestedClassPackage() + "." + this.testRecord.getTestedClassName();
+        String testedClassQualifiedName = this.testRecord.getTestedPackageName() + "." + this.testRecord.getTestedClassName();
         // @TODO: Include method parameter types in the qualified name of the tested method.
         String testedMethodQualifiedName = testedClassQualifiedName + "." + this.testRecord.getTestedMethodName();
 

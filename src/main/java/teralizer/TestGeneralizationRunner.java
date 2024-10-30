@@ -66,7 +66,7 @@ public class TestGeneralizationRunner {
         pipeline.getContext().put(TaskContext.VELOCITY_ENGINE, this.createVelocityEngine());
 
         for (ProjectInfo projectInfo : projectInfos) {
-            pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP, projectInfo.getRootPath(), projectInfo.getTestSourcePath()));
+            pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, projectInfo.getRootPath(), projectInfo.getTestSourcePath()));
             pipeline.executeAll();
 
             long startTime = System.currentTimeMillis();
@@ -84,7 +84,7 @@ public class TestGeneralizationRunner {
             projectRecord.setMutationReportsPath(projectInfo.getMutationReportsPath());
             projectRecord.store();
 
-            pipeline.addTask(new ProjectDownloadTask(ProcessingStage.PROJECT_DOWNLOAD, projectRecord));
+            pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord));
             pipeline.executeAll();
 
             long endTime = System.currentTimeMillis();

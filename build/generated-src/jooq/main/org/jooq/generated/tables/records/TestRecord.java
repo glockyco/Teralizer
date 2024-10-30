@@ -49,30 +49,30 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
     }
 
     /**
-     * Setter for <code>test.test_class_path</code>.
+     * Setter for <code>test.test_file_path</code>.
      */
-    public void setTestClassPath(String value) {
+    public void setTestFilePath(String value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>test.test_class_path</code>.
+     * Getter for <code>test.test_file_path</code>.
      */
-    public String getTestClassPath() {
+    public String getTestFilePath() {
         return (String) get(2);
     }
 
     /**
-     * Setter for <code>test.test_class_package</code>.
+     * Setter for <code>test.test_package_name</code>.
      */
-    public void setTestClassPackage(String value) {
+    public void setTestPackageName(String value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>test.test_class_package</code>.
+     * Getter for <code>test.test_package_name</code>.
      */
-    public String getTestClassPackage() {
+    public String getTestPackageName() {
         return (String) get(3);
     }
 
@@ -105,30 +105,30 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
     }
 
     /**
-     * Setter for <code>test.tested_class_path</code>.
+     * Setter for <code>test.tested_file_path</code>.
      */
-    public void setTestedClassPath(String value) {
+    public void setTestedFilePath(String value) {
         set(6, value);
     }
 
     /**
-     * Getter for <code>test.tested_class_path</code>.
+     * Getter for <code>test.tested_file_path</code>.
      */
-    public String getTestedClassPath() {
+    public String getTestedFilePath() {
         return (String) get(6);
     }
 
     /**
-     * Setter for <code>test.tested_class_package</code>.
+     * Setter for <code>test.tested_package_name</code>.
      */
-    public void setTestedClassPackage(String value) {
+    public void setTestedPackageName(String value) {
         set(7, value);
     }
 
     /**
-     * Getter for <code>test.tested_class_package</code>.
+     * Getter for <code>test.tested_package_name</code>.
      */
-    public String getTestedClassPackage() {
+    public String getTestedPackageName() {
         return (String) get(7);
     }
 
@@ -189,30 +189,30 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
     }
 
     /**
-     * Setter for <code>test.driver_class_path</code>.
+     * Setter for <code>test.driver_file_path</code>.
      */
-    public void setDriverClassPath(String value) {
+    public void setDriverFilePath(String value) {
         set(12, value);
     }
 
     /**
-     * Getter for <code>test.driver_class_path</code>.
+     * Getter for <code>test.driver_file_path</code>.
      */
-    public String getDriverClassPath() {
+    public String getDriverFilePath() {
         return (String) get(12);
     }
 
     /**
-     * Setter for <code>test.driver_class_package</code>.
+     * Setter for <code>test.driver_package_name</code>.
      */
-    public void setDriverClassPackage(String value) {
+    public void setDriverPackageName(String value) {
         set(13, value);
     }
 
     /**
-     * Getter for <code>test.driver_class_package</code>.
+     * Getter for <code>test.driver_package_name</code>.
      */
-    public String getDriverClassPackage() {
+    public String getDriverPackageName() {
         return (String) get(13);
     }
 
@@ -335,12 +335,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public Field<String> field3() {
-        return Test.TEST.TEST_CLASS_PATH;
+        return Test.TEST.TEST_FILE_PATH;
     }
 
     @Override
     public Field<String> field4() {
-        return Test.TEST.TEST_CLASS_PACKAGE;
+        return Test.TEST.TEST_PACKAGE_NAME;
     }
 
     @Override
@@ -355,12 +355,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public Field<String> field7() {
-        return Test.TEST.TESTED_CLASS_PATH;
+        return Test.TEST.TESTED_FILE_PATH;
     }
 
     @Override
     public Field<String> field8() {
-        return Test.TEST.TESTED_CLASS_PACKAGE;
+        return Test.TEST.TESTED_PACKAGE_NAME;
     }
 
     @Override
@@ -385,12 +385,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public Field<String> field13() {
-        return Test.TEST.DRIVER_CLASS_PATH;
+        return Test.TEST.DRIVER_FILE_PATH;
     }
 
     @Override
     public Field<String> field14() {
-        return Test.TEST.DRIVER_CLASS_PACKAGE;
+        return Test.TEST.DRIVER_PACKAGE_NAME;
     }
 
     @Override
@@ -435,12 +435,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public String component3() {
-        return getTestClassPath();
+        return getTestFilePath();
     }
 
     @Override
     public String component4() {
-        return getTestClassPackage();
+        return getTestPackageName();
     }
 
     @Override
@@ -455,12 +455,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public String component7() {
-        return getTestedClassPath();
+        return getTestedFilePath();
     }
 
     @Override
     public String component8() {
-        return getTestedClassPackage();
+        return getTestedPackageName();
     }
 
     @Override
@@ -485,12 +485,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public String component13() {
-        return getDriverClassPath();
+        return getDriverFilePath();
     }
 
     @Override
     public String component14() {
-        return getDriverClassPackage();
+        return getDriverPackageName();
     }
 
     @Override
@@ -535,12 +535,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public String value3() {
-        return getTestClassPath();
+        return getTestFilePath();
     }
 
     @Override
     public String value4() {
-        return getTestClassPackage();
+        return getTestPackageName();
     }
 
     @Override
@@ -555,12 +555,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public String value7() {
-        return getTestedClassPath();
+        return getTestedFilePath();
     }
 
     @Override
     public String value8() {
-        return getTestedClassPackage();
+        return getTestedPackageName();
     }
 
     @Override
@@ -585,12 +585,12 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public String value13() {
-        return getDriverClassPath();
+        return getDriverFilePath();
     }
 
     @Override
     public String value14() {
-        return getDriverClassPackage();
+        return getDriverPackageName();
     }
 
     @Override
@@ -637,13 +637,13 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public TestRecord value3(String value) {
-        setTestClassPath(value);
+        setTestFilePath(value);
         return this;
     }
 
     @Override
     public TestRecord value4(String value) {
-        setTestClassPackage(value);
+        setTestPackageName(value);
         return this;
     }
 
@@ -661,13 +661,13 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public TestRecord value7(String value) {
-        setTestedClassPath(value);
+        setTestedFilePath(value);
         return this;
     }
 
     @Override
     public TestRecord value8(String value) {
-        setTestedClassPackage(value);
+        setTestedPackageName(value);
         return this;
     }
 
@@ -697,13 +697,13 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
 
     @Override
     public TestRecord value13(String value) {
-        setDriverClassPath(value);
+        setDriverFilePath(value);
         return this;
     }
 
     @Override
     public TestRecord value14(String value) {
-        setDriverClassPackage(value);
+        setDriverPackageName(value);
         return this;
     }
 
@@ -782,23 +782,23 @@ public class TestRecord extends UpdatableRecordImpl<TestRecord> implements Recor
     /**
      * Create a detached, initialised TestRecord
      */
-    public TestRecord(Integer id, Integer projectId, String testClassPath, String testClassPackage, String testClassName, String testMethodName, String testedClassPath, String testedClassPackage, String testedClassName, String testedMethodName, String testedMethodParamTypes, String testedMethodReturnType, String driverClassPath, String driverClassPackage, String driverClassName, String jpfConfigPath, String inputSpecificationPath, String outputSpecificationPath, Boolean isIncluded, String exclusionInfo) {
+    public TestRecord(Integer id, Integer projectId, String testFilePath, String testPackageName, String testClassName, String testMethodName, String testedFilePath, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParamTypes, String testedMethodReturnType, String driverFilePath, String driverPackageName, String driverClassName, String jpfConfigPath, String inputSpecificationPath, String outputSpecificationPath, Boolean isIncluded, String exclusionInfo) {
         super(Test.TEST);
 
         setId(id);
         setProjectId(projectId);
-        setTestClassPath(testClassPath);
-        setTestClassPackage(testClassPackage);
+        setTestFilePath(testFilePath);
+        setTestPackageName(testPackageName);
         setTestClassName(testClassName);
         setTestMethodName(testMethodName);
-        setTestedClassPath(testedClassPath);
-        setTestedClassPackage(testedClassPackage);
+        setTestedFilePath(testedFilePath);
+        setTestedPackageName(testedPackageName);
         setTestedClassName(testedClassName);
         setTestedMethodName(testedMethodName);
         setTestedMethodParamTypes(testedMethodParamTypes);
         setTestedMethodReturnType(testedMethodReturnType);
-        setDriverClassPath(driverClassPath);
-        setDriverClassPackage(driverClassPackage);
+        setDriverFilePath(driverFilePath);
+        setDriverPackageName(driverPackageName);
         setDriverClassName(driverClassName);
         setJpfConfigPath(jpfConfigPath);
         setInputSpecificationPath(inputSpecificationPath);

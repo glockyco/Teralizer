@@ -63,6 +63,6 @@ public class ProjectDownloadTask extends AbstractTask {
     }
 
     public void scheduleNextTask(Consumer<Task> scheduleTask) {
-        scheduleTask.accept(new ProjectSetupTask(ProcessingStage.PROJECT_SETUP, this.projectRecord));
+        scheduleTask.accept(new ProjectSetupTask(ProcessingStage.SETUP_PROJECT, this.projectRecord));
     }
 }

@@ -13,35 +13,34 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.generated.tables.records.TestReportRecord;
 import org.xml.sax.SAXException;
+import teralizer.TestGeneralizationRunner;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
+import teralizer.repository.SQLiteRepository;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TestDataCollectionTask extends AbstractTask {
 
     public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
-        this(stage, null, projectRecord, null);
+        this(stage, projectRecord, null);
+    }
+
+    public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
+        this(stage, null, projectRecord, testRecord, null);
     }
 
     public TestDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
-        this(stage, variant, projectRecord, null);
-    }
-
-    public TestDataCollectionTask(
-        ProcessingStage stage,
-        GeneralizationVariant variant,
-        ProjectRecord projectRecord,
-        TestRecord testRecord
-    ) {
-        this(stage, variant, projectRecord, testRecord, null);
+        this(stage, variant, projectRecord, null, null);
     }
 
     public TestDataCollectionTask(
@@ -60,126 +59,178 @@ public class TestDataCollectionTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        if (this.testRecord == null) {
-            this.scheduleTasks(context, scheduleTask);
-        } else {
-            this.executeTask(context);
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        switch (this.stage) {
+            case COLLECT_TEST_DATA:
+                List<TestRecord> testRecords = this.collectTestData(create);
+                create.batchInsert(testRecords).execute();
+                break;
+            case COLLECT_TEST_REPORT_DATA:
+                if (this.testRecord == null) {
+                    this.scheduleTasks(create, scheduleTask);
+                    return;
+                } else {
+                    List<TestReportRecord> testReportRecords = this.collectTestReportData(create);
+                    create.batchInsert(testReportRecords).execute();
+                }
+                break;
+            case COLLECT_GENERALIZATION_REPORT_DATA:
+                if (this.testRecord == null) {
+                    this.scheduleTasks(create, scheduleTask);
+                    return;
+                } else {
+                    List<TestReportRecord> testReportRecords = this.collectGeneralizationReportData(create);
+                    create.batchInsert(testReportRecords).execute();
+                }
+                break;
+            default:
+                throw new RuntimeException("Cannot collect test data. Unsupported processing stage " + this.stage + ".");
         }
     }
 
-    private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
-        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-
-        if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_FILTERED) {
-            Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
-                .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
-                .and(Tables.TEST.IS_INCLUDED.eq(true))
-                .fetch();
-
+    private void scheduleTasks(DSLContext create, Consumer<Task> scheduleTask) {
+        if (this.stage == ProcessingStage.COLLECT_TEST_REPORT_DATA) {
+            Result<TestRecord> testRecords = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
             for (TestRecord testRecord : testRecords) {
-                scheduleTask.accept(new TestDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord));
+                scheduleTask.accept(new TestDataCollectionTask(this.stage, this.projectRecord, testRecord));
             }
-        } else if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED) {
-            Result<Record> records = create
-                .select()
-                .from(Tables.TEST)
-                .join(Tables.GENERALIZATION)
-                .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
-                .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
-                .and(Tables.TEST.IS_INCLUDED.eq(true))
-                .and(Tables.GENERALIZATION.VARIANT.eq(this.variant))
-                .fetch();
-
+        } else if (this.stage == ProcessingStage.COLLECT_GENERALIZATION_REPORT_DATA) {
+            Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
             for (Record record : records) {
                 TestRecord testRecord = record.into(TestRecord.class);
                 GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
                 scheduleTask.accept(new TestDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
             }
         } else {
-            throw new RuntimeException("Cannot collect test data. Unsupported processing stage " + this.stage + ".");
+            throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
         }
     }
 
-    private void executeTask(TaskContext context) throws Exception {
-        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-
-        TestReportRecord testReportRecord;
-        if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_FILTERED) {
-            testReportRecord = createTestReportRecord(create, this.projectRecord, this.testRecord);
-        } else if (this.stage == ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED) {
-            testReportRecord = createTestReportRecord(create, this.projectRecord, this.testRecord, this.generalizationRecord);
-        } else {
-            throw new RuntimeException("Cannot collect test data. Unsupported processing stage " + this.stage + ".");
+    private List<TestRecord> collectTestData(DSLContext create) throws IOException {
+        try (Stream<Path> paths = Files.walk(this.projectRecord.getTestReportsPath())) {
+            return paths
+                .filter(Files::isRegularFile)
+                .filter(path -> path.toString().endsWith(".xml"))
+                .flatMap(testReportPath -> this.parseTestCaseReports(testReportPath, null, null).stream())
+                .map(testCaseReport -> this.buildTestRecord(create, testCaseReport))
+                .collect(Collectors.toList());
         }
-        testReportRecord.store();
     }
 
-    private static TestReportRecord createTestReportRecord(DSLContext create, ProjectRecord projectRecord, TestRecord testRecord) throws Exception {
-        String testClassQualifiedName = testRecord.getTestClassPackage() + "." + testRecord.getTestClassName();
-        String testMethodQualifiedName = testClassQualifiedName + "." + testRecord.getTestMethodName();
-        Path reportPath = projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
-
-        if (!reportPath.toFile().exists()) {
-            throw new RuntimeException("Failed to collect test data. Report file '" + reportPath + "' does not exist.");
-        }
-
-        return createTestReportRecord(create, reportPath, readTestCaseReport(reportPath, testMethodQualifiedName), testRecord.getId(), null);
-    }
-
-    private static TestReportRecord createTestReportRecord(DSLContext create, ProjectRecord projectRecord, TestRecord testRecord, GeneralizationRecord generalizationRecord) throws Exception {
-        String testClassQualifiedName = generalizationRecord.getGeneralizedClassPackage() + "." + generalizationRecord.getGeneralizedClassName();
-        String testMethodQualifiedName = testClassQualifiedName + "." + testRecord.getTestMethodName();
-        Path reportPath = projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
-
-        if (!reportPath.toFile().exists()) {
-            throw new RuntimeException("Failed to collect test data. Report file '" + reportPath + "' does not exist.");
-        }
-
-        return createTestReportRecord(create, reportPath, readTestCaseReport(reportPath, testMethodQualifiedName), null, generalizationRecord.getId());
-    }
-
-    private static TestReportRecord createTestReportRecord(DSLContext create, Path reportPath, ReportTestCase testCaseReport, Integer testId, Integer generalizationId) {
-        TestReportRecord testReportRecord = create.newRecord(Tables.TEST_REPORT);
-        testReportRecord.setTestId(testId);
-        testReportRecord.setGeneralizationId(generalizationId);
-        testReportRecord.setResult(getTestReportResult(reportPath, testCaseReport));
-        testReportRecord.setRuntime(testCaseReport.getTime());
-        testReportRecord.setFailureMessage(testCaseReport.getFailureMessage());
-        testReportRecord.setFailureType(testCaseReport.getFailureType());
-        testReportRecord.setFailureErrorLine(testCaseReport.getFailureErrorLine());
-        testReportRecord.setFailureDetail(testCaseReport.getFailureDetail());
-        testReportRecord.setReportPath(reportPath.toString());
-        return testReportRecord;
-    }
-
-    private static ReportTestCase readTestCaseReport(Path reportPath, String testMethodQualifiedName) throws ParserConfigurationException, SAXException, IOException {
-        // In the terminology used by the test reports:
-        // - a "test _suite_ report" contains the results for all test methods of one test class,
-        // - a "test _case_ report" contains the results for all runs of one test method.
-        // Since each test record in our DB represents one test method, and we run each test
-        // method exactly once, we should get exactly one test case report for each test record.
-
-        TestSuiteXmlParser testSuiteReportParser = new TestSuiteXmlParser(new NullConsoleLogger());
-        List<ReportTestSuite> testSuiteReports = testSuiteReportParser.parse(reportPath.toString());
-
-        List<ReportTestCase> testCaseReports = testSuiteReports.stream()
-            .flatMap(r -> r.getTestCases().stream())
-            .filter(r -> r.getFullName().equals(testMethodQualifiedName) || (r.getFullName()).equals(testMethodQualifiedName + "()"))
+    private List<TestReportRecord> collectTestReportData(DSLContext create) {
+        String testClassQualifiedName = this.testRecord.getTestPackageName() + "." + this.testRecord.getTestClassName();
+        String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
+        Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
+        return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
+            .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
             .collect(Collectors.toList());
-
-        if (testCaseReports.isEmpty()) {
-            throw new RuntimeException("Failed to collect test data. No reports matching '" + testMethodQualifiedName + "' were found in report '" + reportPath + "'.");
-        } else if (testCaseReports.size() > 1) {
-            // With our current process, we should only ever get a single test case report for each test.
-            // If there are multiple reports, this indicates that either (i) the current processing logic
-            // is incorrectly implemented somehow or (ii) our assumptions about the report data are wrong.
-            throw new RuntimeException("Failed to collect test data. Multiple reports matching '" + testMethodQualifiedName + "' were found in report '" + reportPath + "'.");
-        }
-
-        return testCaseReports.get(0);
     }
 
-    private static TestResult getTestReportResult(Path reportPath, ReportTestCase testCaseReport) {
+    private List<TestReportRecord> collectGeneralizationReportData(DSLContext create) {
+        String testClassQualifiedName = this.generalizationRecord.getGeneralizedPackageName() + "." + this.generalizationRecord.getGeneralizedClassName();
+        String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
+        Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
+        return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
+            .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
+            .collect(Collectors.toList());
+    }
+
+    private List<ReportTestCase> parseTestCaseReports(Path testReportPath, String testClassQualifiedName, String testMethodQualifiedName) {
+        try {
+            TestSuiteXmlParser testSuiteReportParser = new TestSuiteXmlParser(new NullConsoleLogger());
+            List<ReportTestSuite> testSuiteReports = testSuiteReportParser.parse(testReportPath.toString());
+            return testSuiteReports.stream()
+                .flatMap(testSuiteReport -> testSuiteReport.getTestCases().stream())
+                .peek(testCaseReport -> {
+                    String fullNameOld = testCaseReport.getFullName();
+                    String fullNameNew = fullNameOld.replaceFirst("\\(\\)$", "");
+                    testCaseReport.setFullName(fullNameNew);
+                })
+                .filter(testCaseReport -> {
+                    return testClassQualifiedName == null
+                        || testMethodQualifiedName == null
+                        || testCaseReport.getFullName().equals(testMethodQualifiedName);
+                })
+                .collect(Collectors.toList());
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private TestRecord buildTestRecord(DSLContext create, ReportTestCase testCaseReport) {
+        String testMethodQualifiedName = testCaseReport.getFullName();
+        int lastDot = testMethodQualifiedName.lastIndexOf('.');
+        int penultimateDot = testMethodQualifiedName.substring(0, lastDot).lastIndexOf('.');
+
+        String testPackageName = testMethodQualifiedName.substring(0, penultimateDot);
+        String testClassName = testMethodQualifiedName.substring(penultimateDot + 1, lastDot);
+        String testMethodName = testMethodQualifiedName.substring(lastDot + 1);
+
+        TestRecord record = create.newRecord(Tables.TEST);
+        record.setProjectId(this.getProjectId());
+
+        Path testFilePath = this.projectRecord.getTestSourcePath().resolve(testPackageName.replace(".", "/") + "/" + testClassName + ".java");
+
+        if (!testFilePath.toFile().exists()) {
+            throw new RuntimeException("Test file " + testFilePath + " does not exist.");
+        }
+
+        record.setTestFilePath(testFilePath.toString());
+        record.setTestPackageName(testPackageName);
+        record.setTestClassName(testClassName);
+        record.setTestMethodName(testMethodName);
+
+        String driverPackageName = testPackageName + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated";
+        String driverClassName = "_" + testClassName + "_Driver_" + testMethodName;
+        Path driverFilePath = testFilePath.getParent().resolve(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated/" + driverClassName + ".java");
+
+        record.setDriverFilePath(driverFilePath.toString());
+        record.setDriverPackageName(driverPackageName);
+        record.setDriverClassName(driverClassName);
+
+        Path jpfConfigPath = this.projectRecord.getDataPath().resolve(testMethodQualifiedName + ".jpf");
+        Path inputSpecificationPath = this.projectRecord.getDataPath().resolve(testMethodQualifiedName + ".jpf.input.json");
+        Path outputSpecificationPath = this.projectRecord.getDataPath().resolve(testMethodQualifiedName + ".jpf.output.json");
+
+        record.setJpfConfigPath(jpfConfigPath.toString());
+        record.setInputSpecificationPath(inputSpecificationPath.toString());
+        record.setOutputSpecificationPath(outputSpecificationPath.toString());
+
+        record.setIsIncluded(true);
+
+        return record;
+    }
+
+    private TestReportRecord buildTestReportRecord(DSLContext create, Path testReportPath, ReportTestCase testCaseReport) {
+        String testMethodQualifiedName = testCaseReport.getFullName();
+        int lastDot = testMethodQualifiedName.lastIndexOf('.');
+        int penultimateDot = testMethodQualifiedName.substring(0, lastDot).lastIndexOf('.');
+
+        String packageName = testMethodQualifiedName.substring(0, penultimateDot);
+        String className = testMethodQualifiedName.substring(penultimateDot + 1, lastDot);
+        String methodName = testMethodQualifiedName.substring(lastDot + 1);
+
+        TestReportRecord record = create.newRecord(Tables.TEST_REPORT);
+        record.setProjectId(this.getProjectId());
+        record.setTestId(this.stage == ProcessingStage.COLLECT_TEST_REPORT_DATA ? this.getTestId() : null);
+        record.setGeneralizationId(this.stage == ProcessingStage.COLLECT_GENERALIZATION_REPORT_DATA ? this.getGeneralizationId() : null);
+        record.setStep(this.stage.getStep());
+        record.setStage(this.stage);
+        record.setVariant(this.variant);
+        record.setTestPackageName(packageName);
+        record.setTestClassName(className);
+        record.setTestMethodName(methodName);
+        record.setResult(getTestReportResult(testCaseReport));
+        record.setRuntime(testCaseReport.getTime());
+        record.setFailureMessage(testCaseReport.getFailureMessage());
+        record.setFailureType(testCaseReport.getFailureType());
+        record.setFailureErrorLine(testCaseReport.getFailureErrorLine());
+        record.setFailureDetail(testCaseReport.getFailureDetail());
+        record.setReportFilePath(testReportPath.toString());
+        return record;
+    }
+
+    private static TestResult getTestReportResult(ReportTestCase testCaseReport) {
         if (testCaseReport.isSuccessful()) {
             return TestResult.PASSED;
         } else if (testCaseReport.hasFailure()) {
@@ -189,6 +240,6 @@ public class TestDataCollectionTask extends AbstractTask {
         } else if (testCaseReport.hasError()) {
             return TestResult.ERROR;
         }
-        throw new RuntimeException("Failed to collect test data. Unable to determine test result for test case " + testCaseReport.getFullName() + " in report '" + reportPath + "'.");
+        throw new RuntimeException("Failed to collect test data. Unable to determine test result for test case " + testCaseReport.getFullName() + ".");
     }
 }

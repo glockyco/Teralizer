@@ -4,11 +4,3 @@ pitest {
     verbose = true
     targetTests = project.hasProperty('targetTests') ? project.getProperty('targetTests').split(',').toList() : ['*']
 }
-
-tasks.test {
-    finalizedBy(tasks.pitest)
-}
-
-tasks.pitest {
-    dependsOn(tasks.test)
-}

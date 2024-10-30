@@ -10,12 +10,4 @@
         <exportLineCoverage>true</exportLineCoverage>
         <verbose>true</verbose>
     </configuration>
-    <executions>
-        <execution>
-            <phase>test</phase>
-            <goals>
-                <goal>mutationCoverage</goal>
-            </goals>
-        </execution>
-    </executions>
 </plugin>

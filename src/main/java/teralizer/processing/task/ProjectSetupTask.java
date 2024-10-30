@@ -86,34 +86,38 @@ public class ProjectSetupTask extends AbstractTask {
         JavaParser javaParser = JavaParserFactory.createJavaParser(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath());
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_ORIGINAL, this.projectRecord));
-        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_ORIGINAL, this.projectRecord));
+        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INITIAL, this.projectRecord));
+        scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_INITIAL, this.projectRecord));
+
+        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.COLLECT_TEST_DATA, this.projectRecord));
 
         scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_WITH_DEPENDENCIES, this.projectRecord));
+        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_WITH_DEPENDENCIES, this.projectRecord));
+        scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_WITH_DEPENDENCIES, this.projectRecord));
 
-        scheduleTask.accept(new TestDetectionTask(ProcessingStage.TEST_DETECTION, this.projectRecord));
-        scheduleTask.accept(new TestFilteringTask(ProcessingStage.TEST_FILTERING, this.projectRecord));
-        scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_FILTERED, this.projectRecord));
+        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.COLLECT_TEST_REPORT_DATA, this.projectRecord));
+        scheduleTask.accept(new TestAnalysisTask(ProcessingStage.ANALYZE_TESTS, this.projectRecord));
+        scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_TESTS, this.projectRecord));
 
-        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.TEST_DATA_COLLECTION_FILTERED, this.projectRecord));
-        scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COVERAGE_DATA_COLLECTION_FILTERED, this.projectRecord));
-        scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.MUTATION_DATA_COLLECTION_FILTERED, this.projectRecord));
+        scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COLLECT_COVERAGE_DATA_INITIAL, this.projectRecord));
+        scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.COLLECT_MUTATION_DATA_INITIAL, this.projectRecord));
 
-        scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.JPF_INSTRUMENTATION, this.projectRecord));
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_INSTRUMENTED, this.projectRecord));
-        scheduleTask.accept(new JpfExecutionTask(ProcessingStage.JPF_EXECUTION, this.projectRecord));
+        scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.ADD_JPF_INSTRUMENTATION, this.projectRecord));
+        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, this.projectRecord));
+        scheduleTask.accept(new JpfExecutionTask(ProcessingStage.EXECUTE_JPF, this.projectRecord));
 
         for (GeneralizationVariant variant : GeneralizationVariant.values()) {
             scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_GENERALIZATION, variant, this.projectRecord));
 
-            scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.TEST_GENERALIZATION, variant, this.projectRecord));
-            scheduleTask.accept(new ProjectBuildTask(ProcessingStage.PROJECT_BUILDING_GENERALIZED, variant, this.projectRecord));
-            scheduleTask.accept(new TestExecutionTask(ProcessingStage.TEST_EXECUTION_GENERALIZED, variant, this.projectRecord));
+            scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.GENERALIZE_TESTS, variant, this.projectRecord));
+            scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_GENERALIZED, variant, this.projectRecord));
 
-            scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.TEST_DATA_COLLECTION_GENERALIZED, variant, this.projectRecord));
-            scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COVERAGE_DATA_COLLECTION_GENERALIZED, variant, this.projectRecord));
-            scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.MUTATION_DATA_COLLECTION_GENERALIZED, variant, this.projectRecord));
+            scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_GENERALIZED, variant, this.projectRecord));
+            scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.COLLECT_GENERALIZATION_REPORT_DATA, variant, this.projectRecord));
+            scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_GENERALIZATIONS, variant, this.projectRecord));
+
+            scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COLLECT_COVERAGE_DATA_GENERALIZED, variant, this.projectRecord));
+            scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.COLLECT_MUTATION_DATA_GENERALIZED, variant, this.projectRecord));
         }
     }
 

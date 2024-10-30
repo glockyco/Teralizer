@@ -44,7 +44,7 @@ public class CleanupTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        if (this.stage != ProcessingStage.CLEANUP && this.stage != ProcessingStage.CLEANUP_GENERALIZATION) {
+        if (this.stage != ProcessingStage.CLEANUP_PROJECT && this.stage != ProcessingStage.CLEANUP_GENERALIZATION) {
             throw new RuntimeException("Cannot preform cleanup. Unsupported processing stage " + this.stage + ".");
         }
         if (this.projectPath == null) {
@@ -60,7 +60,7 @@ public class CleanupTask extends AbstractTask {
         // project. Even though this could be figured out, deleting all files that we
         // might have created in previous runs for any project type is much easier...
 
-        if (this.stage == ProcessingStage.CLEANUP) {
+        if (this.stage == ProcessingStage.CLEANUP_PROJECT) {
             File mavenBuildFile = this.projectPath.resolve(ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE).toFile();
             File gradleBuildFile =  this.projectPath.resolve(ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE).toFile();
             List<File> buildFiles = Arrays.asList(mavenBuildFile, gradleBuildFile);
@@ -110,7 +110,7 @@ public class CleanupTask extends AbstractTask {
         }
 
         private boolean shouldDeleteDirectory(Path directory) {
-            if (this.stage == ProcessingStage.CLEANUP) {
+            if (this.stage == ProcessingStage.CLEANUP_PROJECT) {
                 return this.isGeneratedDirectory(directory);
             } else if (this.stage == ProcessingStage.CLEANUP_GENERALIZATION) {
                 return this.isGeneratedDirectory(directory.getParent()) && this.isVariantDirectory(directory);

@@ -60,14 +60,14 @@ public class Test extends TableImpl<TestRecord> {
     public final TableField<TestRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_class_path</code>.
+     * The column <code>test.test_file_path</code>.
      */
-    public final TableField<TestRecord, String> TEST_CLASS_PATH = createField(DSL.name("test_class_path"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> TEST_FILE_PATH = createField(DSL.name("test_file_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_class_package</code>.
+     * The column <code>test.test_package_name</code>.
      */
-    public final TableField<TestRecord, String> TEST_CLASS_PACKAGE = createField(DSL.name("test_class_package"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> TEST_PACKAGE_NAME = createField(DSL.name("test_package_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.test_class_name</code>.
@@ -80,14 +80,14 @@ public class Test extends TableImpl<TestRecord> {
     public final TableField<TestRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.tested_class_path</code>.
+     * The column <code>test.tested_file_path</code>.
      */
-    public final TableField<TestRecord, String> TESTED_CLASS_PATH = createField(DSL.name("tested_class_path"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TESTED_FILE_PATH = createField(DSL.name("tested_file_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>test.tested_class_package</code>.
+     * The column <code>test.tested_package_name</code>.
      */
-    public final TableField<TestRecord, String> TESTED_CLASS_PACKAGE = createField(DSL.name("tested_class_package"), SQLDataType.CLOB, this, "");
+    public final TableField<TestRecord, String> TESTED_PACKAGE_NAME = createField(DSL.name("tested_package_name"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>test.tested_class_name</code>.
@@ -110,14 +110,14 @@ public class Test extends TableImpl<TestRecord> {
     public final TableField<TestRecord, String> TESTED_METHOD_RETURN_TYPE = createField(DSL.name("tested_method_return_type"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>test.driver_class_path</code>.
+     * The column <code>test.driver_file_path</code>.
      */
-    public final TableField<TestRecord, String> DRIVER_CLASS_PATH = createField(DSL.name("driver_class_path"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> DRIVER_FILE_PATH = createField(DSL.name("driver_file_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.driver_class_package</code>.
+     * The column <code>test.driver_package_name</code>.
      */
-    public final TableField<TestRecord, String> DRIVER_CLASS_PACKAGE = createField(DSL.name("driver_class_package"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<TestRecord, String> DRIVER_PACKAGE_NAME = createField(DSL.name("driver_package_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.driver_class_name</code>.
@@ -189,7 +189,7 @@ public class Test extends TableImpl<TestRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_TEST_IS_INCLUDED, Indexes.IDX_TEST_PROJECT_ID);
+        return Arrays.<Index>asList(Indexes.IDX_TEST_IS_INCLUDED, Indexes.IDX_TEST_PROJECT_ID, Indexes.IDX_TEST_TEST_CLASS_NAME, Indexes.IDX_TEST_TEST_FILE_PATH, Indexes.IDX_TEST_TEST_METHOD_NAME, Indexes.IDX_TEST_TEST_PACKAGE_NAME);
     }
 
     @Override

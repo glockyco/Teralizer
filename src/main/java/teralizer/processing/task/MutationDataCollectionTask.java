@@ -11,13 +11,18 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.repository.SQLiteRepository;
+import teralizer.util.ConsoleCommand;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class MutationDataCollectionTask extends AbstractTask {
+
+    private final ConsoleCommand consoleCommand;
 
     public MutationDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, null, projectRecord);
@@ -27,16 +32,72 @@ public class MutationDataCollectionTask extends AbstractTask {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
+        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getDataPath());
     }
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        List<MutationReportRecord> mutationReportRecords = this.createMutationReportRecords(create, this.variant, this.projectRecord);
+        List<MutationReportRecord> mutationReportRecords = createMutationReportRecords(create, this.stage, this.variant, this.projectRecord, this.consoleCommand);
         create.batchStore(mutationReportRecords).execute();
     }
 
-    private List<MutationReportRecord> createMutationReportRecords(DSLContext create, GeneralizationVariant variant, ProjectRecord projectRecord) throws Exception {
+    private static List<MutationReportRecord> createMutationReportRecords(
+        DSLContext create,
+        ProcessingStage stage,
+        GeneralizationVariant variant,
+        ProjectRecord projectRecord,
+        ConsoleCommand consoleCommand
+    ) throws Exception {
+        executeMutationTesting(create, stage, variant, projectRecord, consoleCommand);
+        return collectMutationData(create, projectRecord, variant);
+    }
+
+    private static void executeMutationTesting(
+        DSLContext create,
+        ProcessingStage stage,
+        GeneralizationVariant variant,
+        ProjectRecord projectRecord,
+        ConsoleCommand consoleCommand
+    ) throws Exception {
+        List<String> includedTests;
+        switch (stage) {
+            case COLLECT_MUTATION_DATA_INITIAL:
+                includedTests = SQLiteRepository.fetchIncludedTestClasses(create, projectRecord.getId());
+                break;
+            case COLLECT_MUTATION_DATA_GENERALIZED:
+                includedTests = SQLiteRepository.fetchIncludedTestClasses(create, projectRecord.getId());
+                includedTests.addAll(SQLiteRepository.fetchIncludedGeneralizedClasses(create, variant, projectRecord.getId()));
+                break;
+            default:
+                throw new RuntimeException("Unsupported processing stage " + stage + ".");
+        }
+
+        if (includedTests.isEmpty()) {
+            throw new RuntimeException("Failed mutation testing. All tests of the project are excluded.");
+        }
+
+        List<String> command;
+        switch (projectRecord.getType()) {
+            case UNKNOWN:
+                throw new RuntimeException("Cannot execute mutation testing for project " + projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
+            case JAIGANTIC:
+                throw new RuntimeException("Cannot execute mutation testing for project " + projectRecord.getRootPath() + ". JAigantic projects are not supported yet.");
+            case ANT:
+                throw new RuntimeException("Cannot execute mutation testing for project " + projectRecord.getRootPath() + ". Ant projects are not supported yet.");
+            case GRADLE:
+                command = buildGradleCommand(includedTests);
+                break;
+            case MAVEN:
+                command = buildMavenCommand(includedTests);
+                break;
+            default:
+                throw new RuntimeException("Cannot execute mutation testing for project " + projectRecord.getRootPath() + ". Unsupported project type " + projectRecord.getType() + ".");
+        }
+        consoleCommand.execute(projectRecord.getRootPath(), command);
+    }
+
+    private static List<MutationReportRecord> collectMutationData(DSLContext create, ProjectRecord projectRecord, GeneralizationVariant variant) throws Exception {
         Path reportPath = projectRecord.getMutationReportsPath().resolve("mutations.xml");
 
         if (!reportPath.toFile().exists()) {
@@ -67,5 +128,21 @@ public class MutationDataCollectionTask extends AbstractTask {
             mutationReportRecords.add(mutationReportRecord);
         }
         return mutationReportRecords;
+    }
+
+    private static List<String> buildGradleCommand(List<String> includedTests) {
+        List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE, "--info", "pitest"));
+        if (includedTests != null) {
+            command.add("-PtargetTests=" + String.join(",", includedTests));
+        }
+        return command;
+    }
+
+    private static List<String> buildMavenCommand(List<String> includedTests) {
+        List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "pitest:mutationCoverage"));
+        if (includedTests != null) {
+            command.add("-DtargetTests=" + String.join(",", includedTests));
+        }
+        return command;
     }
 }

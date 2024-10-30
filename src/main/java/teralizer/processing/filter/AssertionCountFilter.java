@@ -10,15 +10,17 @@ import java.util.List;
 public class AssertionCountFilter extends AbstractFilter {
 
     private final DSLContext create;
+    private final TestRecord testRecord;
 
-    public AssertionCountFilter(DSLContext create) {
+    public AssertionCountFilter(DSLContext create, TestRecord testRecord) {
         this.create = create;
+        this.testRecord = testRecord;
     }
 
     @Override
-    public FilterResult check(TestRecord testRecord) {
+    public FilterResult check() {
         List<AssertionRecord> assertions = this.create.selectFrom(Tables.ASSERTION)
-            .where(Tables.ASSERTION.TEST_ID.equal(testRecord.getId()))
+            .where(Tables.ASSERTION.TEST_ID.equal(this.testRecord.getId()))
             .fetch();
 
         if (assertions.size() != 1) {

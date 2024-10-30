@@ -36,18 +36,18 @@ CREATE TABLE test
 (
     id                        INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id                INTEGER NOT NULL,
-    test_class_path           TEXT    NOT NULL,
-    test_class_package        TEXT    NOT NULL,
+    test_file_path            TEXT    NOT NULL,
+    test_package_name         TEXT    NOT NULL,
     test_class_name           TEXT    NOT NULL,
     test_method_name          TEXT    NOT NULL,
-    tested_class_path         TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
-    tested_class_package      TEXT, -- can be null if we cannot identify a tested class / method
-    tested_class_name         TEXT, -- can be null if we cannot identify a tested class / method
-    tested_method_name        TEXT, -- can be null if we cannot identify a tested class / method
-    tested_method_param_types TEXT, -- can be null if we cannot identify a tested class / method
-    tested_method_return_type TEXT, -- can be null if we cannot identify a tested class / method
-    driver_class_path         TEXT    NOT NULL,
-    driver_class_package      TEXT    NOT NULL,
+    tested_file_path          TEXT, -- can be null before test analysis or if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_package_name       TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_class_name         TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_method_name        TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_method_param_types TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_method_return_type TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    driver_file_path          TEXT    NOT NULL,
+    driver_package_name       TEXT    NOT NULL,
     driver_class_name         TEXT    NOT NULL,
     jpf_config_path           TEXT    NOT NULL,
     input_specification_path  TEXT    NOT NULL,
@@ -58,6 +58,12 @@ CREATE TABLE test
 );
 
 CREATE INDEX idx_test_project_id ON test (project_id);
+
+CREATE INDEX idx_test_test_file_path ON test (test_file_path);
+CREATE INDEX idx_test_test_package_name ON test (test_package_name);
+CREATE INDEX idx_test_test_class_name ON test (test_class_name);
+CREATE INDEX idx_test_test_method_name ON test (tested_method_name);
+
 CREATE INDEX idx_test_is_included ON test (is_included);
 
 CREATE TABLE assertion
@@ -74,39 +80,56 @@ CREATE INDEX idx_assertion_test_id ON assertion (test_id);
 
 CREATE TABLE generalization
 (
-    id                        INTEGER PRIMARY KEY AUTOINCREMENT,
-    test_id                   INTEGER NOT NULL,
-    variant                   TEXT    NOT NULL,
-    generalized_class_path    TEXT    NOT NULL,
-    generalized_class_package TEXT    NOT NULL,
-    generalized_class_name    TEXT    NOT NULL,
-    is_included               INTEGER NOT NULL,
-    exclusion_info            TEXT, -- can be null for generalizations that are not excluded
+    id                       INTEGER PRIMARY KEY AUTOINCREMENT,
+    test_id                  INTEGER NOT NULL,
+    variant                  TEXT    NOT NULL,
+    generalized_file_path    TEXT    NOT NULL,
+    generalized_package_name TEXT    NOT NULL,
+    generalized_class_name   TEXT    NOT NULL,
+    generalized_method_name  TEXT    NOT NULL,
+    is_included              INTEGER NOT NULL,
+    exclusion_info           TEXT, -- can be null for generalizations that are not excluded
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_generalization_test_id ON generalization (test_id);
 CREATE INDEX idx_generalization_variant ON generalization (variant);
+
+CREATE INDEX idx_generalization_generalized_file_path ON generalization (generalized_file_path);
 CREATE INDEX idx_generalization_is_included ON generalization (is_included);
 
 CREATE TABLE test_report
 (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-    test_id            INTEGER, -- can be null if the report is for a generalization
-    generalization_id  INTEGER, -- can be null if the report is for a test
-    result             TEXT NOT NULL,
-    runtime            REAL NOT NULL,
+    project_id         INTEGER NOT NULL,
+    test_id            INTEGER, -- can be null if the report is for the original test run or if the report is for a generalization
+    generalization_id  INTEGER, -- can be null if the report is for the original test run or if the report is for a test
+    step               INTEGER NOT NULL,
+    stage              TEXT    NOT NULL,
+    variant            TEXT,    -- can be null if the report is for the original test suite
+    test_package_name  TEXT    NOT NULL,
+    test_class_name    TEXT    NOT NULL,
+    test_method_name   TEXT    NOT NULL,
+    result             TEXT    NOT NULL,
+    runtime            REAL    NOT NULL,
     failure_message    TEXT,    -- can be null for passed / skipped tests
     failure_type       TEXT,    -- can be null for passed / skipped tests
     failure_error_line TEXT,    -- can be null for passed / skipped tests
     failure_detail     TEXT,    -- can be null for passed / skipped tests
-    report_path        TEXT NOT NULL,
+    report_file_path   TEXT    NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
     FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
 );
 
+CREATE INDEX idx_test_report_project_id ON test_report (project_id);
 CREATE INDEX idx_test_report_test_id ON test_report (test_id);
 CREATE INDEX idx_test_report_generalization_id ON test_report (generalization_id);
+
+CREATE INDEX idx_test_report_step ON test_report (step);
+CREATE INDEX idx_test_report_stage ON test_report (stage);
+CREATE INDEX idx_test_report_variant ON test_report (variant);
+
 CREATE INDEX idx_test_report_result ON test_report (result);
 
 CREATE TABLE coverage_report

@@ -41,16 +41,3 @@ pitest {
     verbose = true
     targetTests = project.hasProperty('targetTests') ? project.getProperty('targetTests').split(',').toList() : ['*']
 }
-
-tasks.test {
-    finalizedBy(tasks.jacocoTestReport)
-    finalizedBy(tasks.pitest)
-}
-
-tasks.jacocoTestReport {
-    dependsOn(tasks.test)
-}
-
-tasks.pitest {
-    dependsOn(tasks.test)
-}

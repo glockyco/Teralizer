@@ -101,29 +101,31 @@ public class TestGeneralizationTask extends AbstractTask {
         GeneralizationRecord generalizationRecord = create.newRecord(Tables.GENERALIZATION);
         generalizationRecord.setTestId(this.testRecord.getId());
         generalizationRecord.setVariant(this.variant);
-        generalizationRecord.setGeneralizedClassPath("");
-        generalizationRecord.setGeneralizedClassPackage("");
+        generalizationRecord.setGeneralizedFilePath("");
+        generalizationRecord.setGeneralizedPackageName("");
         generalizationRecord.setGeneralizedClassName("");
+        generalizationRecord.setGeneralizedMethodName("");
         generalizationRecord.setIsIncluded(true);
         generalizationRecord.store();
 
         String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + generalizationRecord.getId() + "_Test";
-        Path generalizedClassDirectory = Paths.get(this.testRecord.getTestClassPath()).getParent().resolve(Paths.get(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated", this.variant.name().toLowerCase()));
+        Path generalizedClassDirectory = Paths.get(this.testRecord.getTestFilePath()).getParent().resolve(Paths.get(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated", this.variant.name().toLowerCase()));
         Path generalizedClassPath = generalizedClassDirectory.resolve(generalizedClassName + ".java");
 
-        generalizationRecord.setGeneralizedClassPath(generalizedClassPath.toString());
-        generalizationRecord.setGeneralizedClassPackage(this.testRecord.getTestClassPackage() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated." + this.variant.name().toLowerCase());
+        generalizationRecord.setGeneralizedFilePath(generalizedClassPath.toString());
+        generalizationRecord.setGeneralizedPackageName(this.testRecord.getTestPackageName() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated." + this.variant.name().toLowerCase());
         generalizationRecord.setGeneralizedClassName(generalizedClassName);
+        generalizationRecord.setGeneralizedMethodName(this.testRecord.getTestMethodName());
         generalizationRecord.store();
 
         return generalizationRecord;
     }
 
     private void generalizeTest(Gson gson, JavaParser javaParser, VelocityEngine velocityEngine) throws IOException {
-        CompilationUnit compilationUnit = javaParser.parse(Paths.get(this.testRecord.getTestClassPath())).getResult().get();
+        CompilationUnit compilationUnit = javaParser.parse(Paths.get(this.testRecord.getTestFilePath())).getResult().get();
 
-        compilationUnit.setPackageDeclaration(this.generalizationRecord.getGeneralizedClassPackage());
-        compilationUnit.addImport(this.testRecord.getTestClassPackage() + ".*");
+        compilationUnit.setPackageDeclaration(this.generalizationRecord.getGeneralizedPackageName());
+        compilationUnit.addImport(this.testRecord.getTestPackageName() + ".*");
 
         ClassOrInterfaceDeclaration testClassDeclaration = compilationUnit.getClassByName(this.testRecord.getTestClassName()).get();
         testClassDeclaration.setName(this.generalizationRecord.getGeneralizedClassName());
@@ -287,7 +289,7 @@ public class TestGeneralizationTask extends AbstractTask {
             // Replace tested method arguments with values from `testParameters`.                                     //
             // ------------------------------------------------------------------------------------------------------ //
 
-            MethodCallExpr testedMethodCall = TestDetectionTask.findTestedMethodCall(testMethodDeclaration);
+            MethodCallExpr testedMethodCall = TestAnalysisTask.findTestedMethodCall(testMethodDeclaration);
 
             for (int i = 0; i < testedMethodParameters.size(); i++) {
                 // @TODO: Add support for non-int/-double types.
@@ -312,7 +314,7 @@ public class TestGeneralizationTask extends AbstractTask {
             //   It might be possible to (partially) automate this oracle generalization.
 
             if (outputJava != null) {
-                MethodCallExpr assertEqualsCall = TestDetectionTask.findAssertEqualsCall(testMethodDeclaration);
+                MethodCallExpr assertEqualsCall = TestAnalysisTask.findAssertEqualsCall(testMethodDeclaration);
                 assertEqualsCall.getArguments().set(0, javaParser.parseExpression(outputJava).getResult().get());
             }
 
@@ -323,7 +325,7 @@ public class TestGeneralizationTask extends AbstractTask {
             // @TODO: Remove setup code that is not needed anymore after generalization.
         }
 
-        Paths.get(this.generalizationRecord.getGeneralizedClassPath()).toFile().getParentFile().mkdirs();
-        Files.write(Paths.get(this.generalizationRecord.getGeneralizedClassPath()), compilationUnit.toString().getBytes());
+        Paths.get(this.generalizationRecord.getGeneralizedFilePath()).toFile().getParentFile().mkdirs();
+        Files.write(Paths.get(this.generalizationRecord.getGeneralizedFilePath()), compilationUnit.toString().getBytes());
     }
 }

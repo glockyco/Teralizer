@@ -87,7 +87,7 @@ public class ProcessingPipeline {
             long startTime = System.currentTimeMillis();
             currentTask.execute(this.context, (String s) -> {
                 String oldInfo = taskRecord.getInfo();
-                String newInfo = oldInfo == null ? s : oldInfo + "\n\n" + s;
+                String newInfo = oldInfo == null ? s : oldInfo + "\n" + s;
                 taskRecord.setInfo(newInfo);
             }, this::addTask);
             long endTime = System.currentTimeMillis();
