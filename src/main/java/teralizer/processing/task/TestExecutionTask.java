@@ -37,11 +37,11 @@ public class TestExecutionTask extends AbstractTask {
 
         List<String> includedTests;
         switch (this.stage) {
-            case EXECUTE_TESTS_INITIAL:
+            case EXECUTE_TESTS_ORIGINAL:
                 // Use `null` to include all tests.
                 includedTests = null;
                 break;
-            case EXECUTE_TESTS_WITH_DEPENDENCIES:
+            case EXECUTE_TESTS_INITIAL:
                 includedTests = SQLiteRepository.fetchIncludedTestClasses(create, this.projectRecord.getId());
                 break;
             case EXECUTE_TESTS_GENERALIZED:

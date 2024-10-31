@@ -9,9 +9,9 @@ import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
+import org.jooq.generated.tables.records.JunitTestReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
-import org.jooq.generated.tables.records.TestReportRecord;
 import org.xml.sax.SAXException;
 import teralizer.TestGeneralizationRunner;
 import teralizer.processing.GeneralizationVariant;
@@ -29,21 +29,21 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class TestDataCollectionTask extends AbstractTask {
+public class JunitDataCollectionTask extends AbstractTask {
 
-    public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
+    public JunitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null);
     }
 
-    public TestDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
+    public JunitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
         this(stage, null, projectRecord, testRecord, null);
     }
 
-    public TestDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public JunitDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
         this(stage, variant, projectRecord, null, null);
     }
 
-    public TestDataCollectionTask(
+    public JunitDataCollectionTask(
         ProcessingStage stage,
         GeneralizationVariant variant,
         ProjectRecord projectRecord,
@@ -61,25 +61,25 @@ public class TestDataCollectionTask extends AbstractTask {
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         switch (this.stage) {
-            case COLLECT_TEST_DATA:
-                List<TestRecord> testRecords = this.collectTestData(create);
+            case COLLECT_JUNIT_TESTS:
+                List<TestRecord> testRecords = this.collectTests(create);
                 create.batchInsert(testRecords).execute();
                 break;
-            case COLLECT_TEST_REPORT_DATA:
+            case COLLECT_JUNIT_REPORTS_INITIAL:
                 if (this.testRecord == null) {
                     this.scheduleTasks(create, scheduleTask);
                     return;
                 } else {
-                    List<TestReportRecord> testReportRecords = this.collectTestReportData(create);
+                    List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
                     create.batchInsert(testReportRecords).execute();
                 }
                 break;
-            case COLLECT_GENERALIZATION_REPORT_DATA:
+            case COLLECT_JUNIT_REPORTS_GENERALIZED:
                 if (this.testRecord == null) {
                     this.scheduleTasks(create, scheduleTask);
                     return;
                 } else {
-                    List<TestReportRecord> testReportRecords = this.collectGeneralizationReportData(create);
+                    List<JunitTestReportRecord> testReportRecords = this.collectGeneralizationReportData(create);
                     create.batchInsert(testReportRecords).execute();
                 }
                 break;
@@ -89,24 +89,24 @@ public class TestDataCollectionTask extends AbstractTask {
     }
 
     private void scheduleTasks(DSLContext create, Consumer<Task> scheduleTask) {
-        if (this.stage == ProcessingStage.COLLECT_TEST_REPORT_DATA) {
+        if (this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_INITIAL) {
             Result<TestRecord> testRecords = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
             for (TestRecord testRecord : testRecords) {
-                scheduleTask.accept(new TestDataCollectionTask(this.stage, this.projectRecord, testRecord));
+                scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.projectRecord, testRecord));
             }
-        } else if (this.stage == ProcessingStage.COLLECT_GENERALIZATION_REPORT_DATA) {
+        } else if (this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED) {
             Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
             for (Record record : records) {
                 TestRecord testRecord = record.into(TestRecord.class);
                 GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
-                scheduleTask.accept(new TestDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
+                scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
             }
         } else {
             throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
         }
     }
 
-    private List<TestRecord> collectTestData(DSLContext create) throws IOException {
+    private List<TestRecord> collectTests(DSLContext create) throws IOException {
         try (Stream<Path> paths = Files.walk(this.projectRecord.getTestReportsPath())) {
             return paths
                 .filter(Files::isRegularFile)
@@ -117,7 +117,7 @@ public class TestDataCollectionTask extends AbstractTask {
         }
     }
 
-    private List<TestReportRecord> collectTestReportData(DSLContext create) {
+    private List<JunitTestReportRecord> collectTestReportData(DSLContext create) {
         String testClassQualifiedName = this.testRecord.getTestPackageName() + "." + this.testRecord.getTestClassName();
         String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
         Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
@@ -126,7 +126,7 @@ public class TestDataCollectionTask extends AbstractTask {
             .collect(Collectors.toList());
     }
 
-    private List<TestReportRecord> collectGeneralizationReportData(DSLContext create) {
+    private List<JunitTestReportRecord> collectGeneralizationReportData(DSLContext create) {
         String testClassQualifiedName = this.generalizationRecord.getGeneralizedPackageName() + "." + this.generalizationRecord.getGeneralizedClassName();
         String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
         Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
@@ -201,7 +201,7 @@ public class TestDataCollectionTask extends AbstractTask {
         return record;
     }
 
-    private TestReportRecord buildTestReportRecord(DSLContext create, Path testReportPath, ReportTestCase testCaseReport) {
+    private JunitTestReportRecord buildTestReportRecord(DSLContext create, Path testReportPath, ReportTestCase testCaseReport) {
         String testMethodQualifiedName = testCaseReport.getFullName();
         int lastDot = testMethodQualifiedName.lastIndexOf('.');
         int penultimateDot = testMethodQualifiedName.substring(0, lastDot).lastIndexOf('.');
@@ -210,10 +210,10 @@ public class TestDataCollectionTask extends AbstractTask {
         String className = testMethodQualifiedName.substring(penultimateDot + 1, lastDot);
         String methodName = testMethodQualifiedName.substring(lastDot + 1);
 
-        TestReportRecord record = create.newRecord(Tables.TEST_REPORT);
+        JunitTestReportRecord record = create.newRecord(Tables.JUNIT_TEST_REPORT);
         record.setProjectId(this.getProjectId());
-        record.setTestId(this.stage == ProcessingStage.COLLECT_TEST_REPORT_DATA ? this.getTestId() : null);
-        record.setGeneralizationId(this.stage == ProcessingStage.COLLECT_GENERALIZATION_REPORT_DATA ? this.getGeneralizationId() : null);
+        record.setTestId(this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_INITIAL ? this.getTestId() : null);
+        record.setGeneralizationId(this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED ? this.getGeneralizationId() : null);
         record.setStep(this.stage.getStep());
         record.setStage(this.stage);
         record.setVariant(this.variant);

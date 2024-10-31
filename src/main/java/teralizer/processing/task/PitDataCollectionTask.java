@@ -5,7 +5,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.MutationReportRecord;
+import org.jooq.generated.tables.records.PitMutationReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.MutationStatus;
@@ -20,15 +20,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class MutationDataCollectionTask extends AbstractTask {
+public class PitDataCollectionTask extends AbstractTask {
 
     private final ConsoleCommand consoleCommand;
 
-    public MutationDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
+    public PitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, null, projectRecord);
     }
 
-    public MutationDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public PitDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
@@ -38,11 +38,11 @@ public class MutationDataCollectionTask extends AbstractTask {
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        List<MutationReportRecord> mutationReportRecords = createMutationReportRecords(create, this.stage, this.variant, this.projectRecord, this.consoleCommand);
+        List<PitMutationReportRecord> mutationReportRecords = createMutationReportRecords(create, this.stage, this.variant, this.projectRecord, this.consoleCommand);
         create.batchStore(mutationReportRecords).execute();
     }
 
-    private static List<MutationReportRecord> createMutationReportRecords(
+    private static List<PitMutationReportRecord> createMutationReportRecords(
         DSLContext create,
         ProcessingStage stage,
         GeneralizationVariant variant,
@@ -62,10 +62,10 @@ public class MutationDataCollectionTask extends AbstractTask {
     ) throws Exception {
         List<String> includedTests;
         switch (stage) {
-            case COLLECT_MUTATION_DATA_INITIAL:
+            case COLLECT_PIT_DATA_INITIAL:
                 includedTests = SQLiteRepository.fetchIncludedTestClasses(create, projectRecord.getId());
                 break;
-            case COLLECT_MUTATION_DATA_GENERALIZED:
+            case COLLECT_PIT_DATA_GENERALIZED:
                 includedTests = SQLiteRepository.fetchIncludedTestClasses(create, projectRecord.getId());
                 includedTests.addAll(SQLiteRepository.fetchIncludedGeneralizedClasses(create, variant, projectRecord.getId()));
                 break;
@@ -97,7 +97,7 @@ public class MutationDataCollectionTask extends AbstractTask {
         consoleCommand.execute(projectRecord.getRootPath(), command);
     }
 
-    private static List<MutationReportRecord> collectMutationData(DSLContext create, ProjectRecord projectRecord, GeneralizationVariant variant) throws Exception {
+    private static List<PitMutationReportRecord> collectMutationData(DSLContext create, ProjectRecord projectRecord, GeneralizationVariant variant) throws Exception {
         Path reportPath = projectRecord.getMutationReportsPath().resolve("mutations.xml");
 
         if (!reportPath.toFile().exists()) {
@@ -107,9 +107,9 @@ public class MutationDataCollectionTask extends AbstractTask {
         Document mutationsDocument = new SAXReader().read(reportPath.toFile());
         Element mutationsElement = mutationsDocument.getRootElement();
 
-        List<MutationReportRecord> mutationReportRecords = new ArrayList<>();
+        List<PitMutationReportRecord> mutationReportRecords = new ArrayList<>();
         for (Element mutationElement : mutationsElement.elements("mutation")) {
-            MutationReportRecord mutationReportRecord = create.newRecord(Tables.MUTATION_REPORT);
+            PitMutationReportRecord mutationReportRecord = create.newRecord(Tables.PIT_MUTATION_REPORT);
             mutationReportRecord.setProjectId(projectRecord.getId());
             mutationReportRecord.setVariant(variant);
 

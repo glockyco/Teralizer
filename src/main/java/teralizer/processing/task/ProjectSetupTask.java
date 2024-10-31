@@ -86,21 +86,21 @@ public class ProjectSetupTask extends AbstractTask {
         JavaParser javaParser = JavaParserFactory.createJavaParser(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath());
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
+        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_ORIGINAL, this.projectRecord));
+        scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_ORIGINAL, this.projectRecord));
+
+        scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_TESTS, this.projectRecord));
+
+        scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INITIAL, this.projectRecord));
         scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_INITIAL, this.projectRecord));
 
-        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.COLLECT_TEST_DATA, this.projectRecord));
-
-        scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_WITH_DEPENDENCIES, this.projectRecord));
-        scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_WITH_DEPENDENCIES, this.projectRecord));
-
-        scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.COLLECT_TEST_REPORT_DATA, this.projectRecord));
+        scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_INITIAL, this.projectRecord));
         scheduleTask.accept(new TestAnalysisTask(ProcessingStage.ANALYZE_TESTS, this.projectRecord));
         scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_TESTS, this.projectRecord));
 
-        scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COLLECT_COVERAGE_DATA_INITIAL, this.projectRecord));
-        scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.COLLECT_MUTATION_DATA_INITIAL, this.projectRecord));
+        scheduleTask.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, this.projectRecord));
+        scheduleTask.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_INITIAL, this.projectRecord));
 
         scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.ADD_JPF_INSTRUMENTATION, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, this.projectRecord));
@@ -113,11 +113,11 @@ public class ProjectSetupTask extends AbstractTask {
             scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_GENERALIZED, variant, this.projectRecord));
 
             scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_GENERALIZED, variant, this.projectRecord));
-            scheduleTask.accept(new TestDataCollectionTask(ProcessingStage.COLLECT_GENERALIZATION_REPORT_DATA, variant, this.projectRecord));
+            scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED, variant, this.projectRecord));
             scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_GENERALIZATIONS, variant, this.projectRecord));
 
-            scheduleTask.accept(new CoverageDataCollectionTask(ProcessingStage.COLLECT_COVERAGE_DATA_GENERALIZED, variant, this.projectRecord));
-            scheduleTask.accept(new MutationDataCollectionTask(ProcessingStage.COLLECT_MUTATION_DATA_GENERALIZED, variant, this.projectRecord));
+            scheduleTask.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED, variant, this.projectRecord));
+            scheduleTask.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_GENERALIZED, variant, this.projectRecord));
         }
     }
 

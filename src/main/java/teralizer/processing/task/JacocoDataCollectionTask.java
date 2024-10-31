@@ -2,7 +2,7 @@ package teralizer.processing.task;
 
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.CoverageReportRecord;
+import org.jooq.generated.tables.records.JacocoCoverageReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
@@ -18,15 +18,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class CoverageDataCollectionTask extends AbstractTask {
+public class JacocoDataCollectionTask extends AbstractTask {
 
     private final ConsoleCommand consoleCommand;
 
-    public CoverageDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
+    public JacocoDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, null, projectRecord);
     }
 
-    public CoverageDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public JacocoDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
@@ -36,11 +36,11 @@ public class CoverageDataCollectionTask extends AbstractTask {
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        List<CoverageReportRecord> coverageReportsRecords = createCoverageReportRecords(create, this.variant, this.projectRecord, this.consoleCommand);
+        List<JacocoCoverageReportRecord> coverageReportsRecords = createCoverageReportRecords(create, this.variant, this.projectRecord, this.consoleCommand);
         create.batchStore(coverageReportsRecords).execute();
     }
 
-    private static List<CoverageReportRecord> createCoverageReportRecords(DSLContext create, GeneralizationVariant variant, ProjectRecord projectRecord, ConsoleCommand consoleCommand) throws Exception {
+    private static List<JacocoCoverageReportRecord> createCoverageReportRecords(DSLContext create, GeneralizationVariant variant, ProjectRecord projectRecord, ConsoleCommand consoleCommand) throws Exception {
         executeCoverageReporting(projectRecord, consoleCommand);
         return collectCoverageData(create, projectRecord, variant);
     }
@@ -66,14 +66,14 @@ public class CoverageDataCollectionTask extends AbstractTask {
         consoleCommand.execute(projectRecord.getRootPath(), command);
     }
 
-    private static List<CoverageReportRecord> collectCoverageData(DSLContext create, ProjectRecord projectRecord, GeneralizationVariant variant) throws IOException {
+    private static List<JacocoCoverageReportRecord> collectCoverageData(DSLContext create, ProjectRecord projectRecord, GeneralizationVariant variant) throws IOException {
         Path reportPath = getCoverageReportPath(projectRecord);
 
         if (!reportPath.toFile().exists()) {
             throw new RuntimeException("Failed to collect coverage data. Report file '" + reportPath + "' does not exist.");
         }
 
-        List<CoverageReportRecord> coverageReportRecords = new ArrayList<>();
+        List<JacocoCoverageReportRecord> coverageReportRecords = new ArrayList<>();
         String line;
         try (BufferedReader reader = new BufferedReader(new FileReader(reportPath.toFile()))) {
             reader.readLine(); // Skip the line with the column labels.
@@ -82,7 +82,7 @@ public class CoverageDataCollectionTask extends AbstractTask {
                 // enough for the JaCoCo reports that we are reading from.
                 String[] data = line.split(",");
 
-                CoverageReportRecord coverageReportRecord = create.newRecord(Tables.COVERAGE_REPORT);
+                JacocoCoverageReportRecord coverageReportRecord = create.newRecord(Tables.JACOCO_COVERAGE_REPORT);
                 coverageReportRecord.setProjectId(projectRecord.getId());
                 coverageReportRecord.setVariant(variant);
 

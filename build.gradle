@@ -115,37 +115,37 @@ jooq {
                             forcedType {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
-                                includeExpression = "test_report.stage"
+                                includeExpression = "junit_test_report.stage"
                             }
                             forcedType {
                                 userType = "teralizer.processing.GeneralizationVariant"
                                 enumConverter = true
-                                includeExpression = "test_report.variant"
+                                includeExpression = "junit_test_report.variant"
                             }
                             forcedType {
                                 userType = "teralizer.processing.TestResult"
                                 enumConverter = true
-                                includeExpression = "test_report.result"
+                                includeExpression = "junit_test_report.result"
                             }
                             forcedType {
                                 userType = "teralizer.processing.GeneralizationVariant"
                                 enumConverter = true
-                                includeExpression = "coverage_report.variant"
+                                includeExpression = "jacoco_coverage_report.variant"
                             }
                             forcedType {
                                 userType = "teralizer.processing.GeneralizationVariant"
                                 enumConverter = true
-                                includeExpression = "mutation_report.variant"
+                                includeExpression = "pit_mutation_report.variant"
                             }
                             forcedType {
                                 name = "BOOLEAN"
-                                expressions = "mutation_report.is_detected"
+                                expressions = "pit_mutation_report.is_detected"
                                 types = "INTEGER"
                             }
                             forcedType {
                                 userType = "teralizer.processing.MutationStatus"
                                 enumConverter = true
-                                includeExpression = "mutation_report.status"
+                                includeExpression = "pit_mutation_report.status"
                             }
                             forcedType {
                                 userType = "teralizer.processing.ProcessingStage"

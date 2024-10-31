@@ -10,14 +10,14 @@ import java.util.List;
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.generated.tables.Assertion;
-import org.jooq.generated.tables.CoverageReport;
 import org.jooq.generated.tables.Generalization;
-import org.jooq.generated.tables.MutationReport;
+import org.jooq.generated.tables.JacocoCoverageReport;
+import org.jooq.generated.tables.JunitTestReport;
+import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
-import org.jooq.generated.tables.TestReport;
 import org.jooq.impl.SchemaImpl;
 
 
@@ -40,19 +40,24 @@ public class DefaultSchema extends SchemaImpl {
     public final Assertion ASSERTION = Assertion.ASSERTION;
 
     /**
-     * The table <code>coverage_report</code>.
-     */
-    public final CoverageReport COVERAGE_REPORT = CoverageReport.COVERAGE_REPORT;
-
-    /**
      * The table <code>generalization</code>.
      */
     public final Generalization GENERALIZATION = Generalization.GENERALIZATION;
 
     /**
-     * The table <code>mutation_report</code>.
+     * The table <code>jacoco_coverage_report</code>.
      */
-    public final MutationReport MUTATION_REPORT = MutationReport.MUTATION_REPORT;
+    public final JacocoCoverageReport JACOCO_COVERAGE_REPORT = JacocoCoverageReport.JACOCO_COVERAGE_REPORT;
+
+    /**
+     * The table <code>junit_test_report</code>.
+     */
+    public final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
+
+    /**
+     * The table <code>pit_mutation_report</code>.
+     */
+    public final PitMutationReport PIT_MUTATION_REPORT = PitMutationReport.PIT_MUTATION_REPORT;
 
     /**
      * The table <code>project</code>.
@@ -75,11 +80,6 @@ public class DefaultSchema extends SchemaImpl {
     public final Test TEST = Test.TEST;
 
     /**
-     * The table <code>test_report</code>.
-     */
-    public final TestReport TEST_REPORT = TestReport.TEST_REPORT;
-
-    /**
      * No further instances allowed
      */
     private DefaultSchema() {
@@ -96,13 +96,13 @@ public class DefaultSchema extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.<Table<?>>asList(
             Assertion.ASSERTION,
-            CoverageReport.COVERAGE_REPORT,
             Generalization.GENERALIZATION,
-            MutationReport.MUTATION_REPORT,
+            JacocoCoverageReport.JACOCO_COVERAGE_REPORT,
+            JunitTestReport.JUNIT_TEST_REPORT,
+            PitMutationReport.PIT_MUTATION_REPORT,
             Project.PROJECT,
             SqliteSequence.SQLITE_SEQUENCE,
             Task.TASK,
-            Test.TEST,
-            TestReport.TEST_REPORT);
+            Test.TEST);
     }
 }

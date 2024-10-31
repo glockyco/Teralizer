@@ -5,14 +5,14 @@ package org.jooq.generated;
 
 
 import org.jooq.generated.tables.Assertion;
-import org.jooq.generated.tables.CoverageReport;
 import org.jooq.generated.tables.Generalization;
-import org.jooq.generated.tables.MutationReport;
+import org.jooq.generated.tables.JacocoCoverageReport;
+import org.jooq.generated.tables.JunitTestReport;
+import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
-import org.jooq.generated.tables.TestReport;
 
 
 /**
@@ -27,19 +27,24 @@ public class Tables {
     public static final Assertion ASSERTION = Assertion.ASSERTION;
 
     /**
-     * The table <code>coverage_report</code>.
-     */
-    public static final CoverageReport COVERAGE_REPORT = CoverageReport.COVERAGE_REPORT;
-
-    /**
      * The table <code>generalization</code>.
      */
     public static final Generalization GENERALIZATION = Generalization.GENERALIZATION;
 
     /**
-     * The table <code>mutation_report</code>.
+     * The table <code>jacoco_coverage_report</code>.
      */
-    public static final MutationReport MUTATION_REPORT = MutationReport.MUTATION_REPORT;
+    public static final JacocoCoverageReport JACOCO_COVERAGE_REPORT = JacocoCoverageReport.JACOCO_COVERAGE_REPORT;
+
+    /**
+     * The table <code>junit_test_report</code>.
+     */
+    public static final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
+
+    /**
+     * The table <code>pit_mutation_report</code>.
+     */
+    public static final PitMutationReport PIT_MUTATION_REPORT = PitMutationReport.PIT_MUTATION_REPORT;
 
     /**
      * The table <code>project</code>.
@@ -60,9 +65,4 @@ public class Tables {
      * The table <code>test</code>.
      */
     public static final Test TEST = Test.TEST;
-
-    /**
-     * The table <code>test_report</code>.
-     */
-    public static final TestReport TEST_REPORT = TestReport.TEST_REPORT;
 }

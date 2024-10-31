@@ -1,9 +1,9 @@
 -- Dialect: SQLite
 
 DROP TABLE IF EXISTS task;
-DROP TABLE IF EXISTS mutation_report;
-DROP TABLE IF EXISTS coverage_report;
-DROP TABLE IF EXISTS test_report;
+DROP TABLE IF EXISTS pit_mutation_report;
+DROP TABLE IF EXISTS jacoco_coverage_report;
+DROP TABLE IF EXISTS junit_test_report;
 DROP TABLE IF EXISTS generalization;
 DROP TABLE IF EXISTS assertion;
 DROP TABLE IF EXISTS test;
@@ -98,7 +98,7 @@ CREATE INDEX idx_generalization_variant ON generalization (variant);
 CREATE INDEX idx_generalization_generalized_file_path ON generalization (generalized_file_path);
 CREATE INDEX idx_generalization_is_included ON generalization (is_included);
 
-CREATE TABLE test_report
+CREATE TABLE junit_test_report
 (
     id                 INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id         INTEGER NOT NULL,
@@ -122,17 +122,17 @@ CREATE TABLE test_report
     FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_test_report_project_id ON test_report (project_id);
-CREATE INDEX idx_test_report_test_id ON test_report (test_id);
-CREATE INDEX idx_test_report_generalization_id ON test_report (generalization_id);
+CREATE INDEX idx_junit_test_report_project_id ON junit_test_report (project_id);
+CREATE INDEX idx_junit_test_report_test_id ON junit_test_report (test_id);
+CREATE INDEX idx_junit_test_report_generalization_id ON junit_test_report (generalization_id);
 
-CREATE INDEX idx_test_report_step ON test_report (step);
-CREATE INDEX idx_test_report_stage ON test_report (stage);
-CREATE INDEX idx_test_report_variant ON test_report (variant);
+CREATE INDEX idx_junit_test_report_step ON junit_test_report (step);
+CREATE INDEX idx_junit_test_report_stage ON junit_test_report (stage);
+CREATE INDEX idx_junit_test_report_variant ON junit_test_report (variant);
 
-CREATE INDEX idx_test_report_result ON test_report (result);
+CREATE INDEX idx_junit_test_report_result ON junit_test_report (result);
 
-CREATE TABLE coverage_report
+CREATE TABLE jacoco_coverage_report
 (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id          INTEGER NOT NULL,
@@ -152,13 +152,13 @@ CREATE TABLE coverage_report
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_coverage_report_project_id ON coverage_report (project_id);
-CREATE INDEX idx_coverage_report_variant ON coverage_report (variant);
+CREATE INDEX idx_jacoco_coverage_report_project_id ON jacoco_coverage_report (project_id);
+CREATE INDEX idx_jacoco_coverage_report_variant ON jacoco_coverage_report (variant);
 
-CREATE INDEX idx_coverage_report_package ON coverage_report (covered_package);
-CREATE INDEX idx_coverage_report_class ON coverage_report (covered_class);
+CREATE INDEX idx_jacoco_coverage_report_package ON jacoco_coverage_report (covered_package);
+CREATE INDEX idx_jacoco_coverage_report_class ON jacoco_coverage_report (covered_class);
 
-CREATE TABLE mutation_report
+CREATE TABLE pit_mutation_report
 (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id          INTEGER NOT NULL,
@@ -179,12 +179,12 @@ CREATE TABLE mutation_report
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_mutation_report_project_id ON mutation_report (project_id);
-CREATE INDEX idx_mutation_report_variant ON mutation_report (variant);
+CREATE INDEX idx_pit_mutation_report_project_id ON pit_mutation_report (project_id);
+CREATE INDEX idx_pit_mutation_report_variant ON pit_mutation_report (variant);
 
-CREATE INDEX idx_mutation_report_is_detected ON mutation_report (is_detected);
-CREATE INDEX idx_mutation_report_mutated_class ON mutation_report (mutated_class);
-CREATE INDEX idx_mutation_report_mutated_method ON mutation_report (mutated_method);
+CREATE INDEX idx_pit_mutation_report_is_detected ON pit_mutation_report (is_detected);
+CREATE INDEX idx_pit_mutation_report_mutated_class ON pit_mutation_report (mutated_class);
+CREATE INDEX idx_pit_mutation_report_mutated_method ON pit_mutation_report (mutated_method);
 
 CREATE TABLE task
 (
