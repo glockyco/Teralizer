@@ -190,9 +190,10 @@ public class JunitDataCollectionTask extends AbstractTask {
         record.setDriverPackageName(driverPackageName);
         record.setDriverClassName(driverClassName);
 
-        Path jpfConfigPath = this.projectRecord.getDataPath().resolve(testMethodQualifiedName + ".jpf");
-        Path inputSpecificationPath = this.projectRecord.getDataPath().resolve(testMethodQualifiedName + ".jpf.input.json");
-        Path outputSpecificationPath = this.projectRecord.getDataPath().resolve(testMethodQualifiedName + ".jpf.output.json");
+        Path jpfDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/jpf-data");
+        Path jpfConfigPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf");
+        Path inputSpecificationPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf.input.json");
+        Path outputSpecificationPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf.output.json");
 
         record.setJpfConfigPath(jpfConfigPath.toString());
         record.setInputSpecificationPath(inputSpecificationPath.toString());

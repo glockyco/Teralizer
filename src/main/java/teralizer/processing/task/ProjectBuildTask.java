@@ -26,7 +26,7 @@ public class ProjectBuildTask extends AbstractTask {
         this.stage = stage;
         this.projectRecord = projectRecord;
         this.variant = variant;
-        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getDataPath());
+        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getId(), projectRecord.getDataPath());
     }
 
     @Override

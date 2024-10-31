@@ -16,14 +16,14 @@ public class ConsoleCommand {
 
     private final ProcessingStage stage;
     private final GeneralizationVariant variant;
-    private final Path commandOutputsPath;
+    private final Path commandDataPath;
 
     private int executionCount = 0;
 
-    public ConsoleCommand(ProcessingStage stage, GeneralizationVariant variant, Path projectDataPath) {
+    public ConsoleCommand(ProcessingStage stage, GeneralizationVariant variant, int projectId, Path projectDataPath) {
         this.stage = stage;
         this.variant = variant;
-        this.commandOutputsPath = projectDataPath.resolve("command-outputs");
+        this.commandDataPath = projectDataPath.resolve("project-id-" + projectId + "/command-data");
     }
 
     public void execute(List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
@@ -36,9 +36,9 @@ public class ConsoleCommand {
         String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
         String executionName = "." + this.executionCount;
         String baseName = stageName + variantName + executionName;
-        Path commandPath = this.commandOutputsPath.resolve(baseName + ".command.txt");
-        Path outputPath = this.commandOutputsPath.resolve(baseName + ".output.txt");
-        Path errorPath = this.commandOutputsPath.resolve(baseName + ".error.txt");
+        Path commandPath = this.commandDataPath.resolve(baseName + ".command.txt");
+        Path outputPath = this.commandDataPath.resolve(baseName + ".output.txt");
+        Path errorPath = this.commandDataPath.resolve(baseName + ".error.txt");
         outputPath.toFile().getParentFile().mkdirs();
 
         String commandString = String.join(" ", command);

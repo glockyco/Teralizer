@@ -34,7 +34,7 @@ public class PitDataCollectionTask extends AbstractTask {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
-        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getDataPath());
+        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getId(), projectRecord.getDataPath());
     }
 
     @Override
