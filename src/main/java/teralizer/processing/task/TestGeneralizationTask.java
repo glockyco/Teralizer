@@ -275,7 +275,11 @@ public class TestGeneralizationTask extends AbstractTask {
                 testMethodDeclaration.remove(annotation);
                 testMethodDeclaration.addAnnotation(
                     new NormalAnnotationExpr(new Name(net.jqwik.api.Property.class.getName()),
-                    new NodeList<>(new MemberValuePair("tries", new IntegerLiteralExpr(Integer.toString(MAX_TRIES_JQWIK)))))
+                        new NodeList<>(
+                            new MemberValuePair("tries", new IntegerLiteralExpr(Integer.toString(MAX_TRIES_JQWIK))),
+                            new MemberValuePair("seed", new StringLiteralExpr("0"))
+                        )
+                    )
                 );
             });
 
