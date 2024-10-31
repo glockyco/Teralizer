@@ -2,6 +2,7 @@
 
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS pit_mutation_report;
+DROP TABLE IF EXISTS pit_coverage_report;
 DROP TABLE IF EXISTS jacoco_coverage_report;
 DROP TABLE IF EXISTS junit_test_report;
 DROP TABLE IF EXISTS generalization;
@@ -85,6 +86,7 @@ CREATE INDEX idx_assertion_test_id ON assertion (test_id);
 CREATE TABLE generalization
 (
     id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id            INTEGER NOT NULL,
     test_id               INTEGER NOT NULL,
     variant               TEXT    NOT NULL,
     file_path             TEXT    NOT NULL,
@@ -98,6 +100,7 @@ CREATE TABLE generalization
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
 );
 
+CREATE INDEX idx_generalization_project_id ON generalization (project_id);
 CREATE INDEX idx_generalization_test_id ON generalization (test_id);
 CREATE INDEX idx_generalization_variant ON generalization (variant);
 
@@ -165,6 +168,29 @@ CREATE INDEX idx_jacoco_coverage_report_variant ON jacoco_coverage_report (varia
 
 CREATE INDEX idx_jacoco_coverage_report_package ON jacoco_coverage_report (covered_package);
 CREATE INDEX idx_jacoco_coverage_report_class ON jacoco_coverage_report (covered_class);
+
+CREATE TABLE pit_coverage_report
+(
+    id                         INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id                 INTEGER NOT NULL,
+    test_id                    INTEGER, -- can be null if the report is for a generalization
+    generalization_id          INTEGER, -- can be null if the report is for a test
+    step                       INTEGER NOT NULL,
+    stage                      TEXT    NOT NULL,
+    variant                    TEXT,    -- can be null if the report is for the original test suite
+    covered_package_name       TEXT    NOT NULL,
+    covered_class_name         TEXT    NOT NULL,
+    covered_method_name        TEXT    NOT NULL,
+    covered_method_description TEXT    NOT NULL,
+    covered_block_number       INTEGER NOT NULL,
+    test_package_name          TEXT    NOT NULL,
+    test_class_name            TEXT    NOT NULL,
+    test_method_name           TEXT    NOT NULL,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_pit_coverage_report_test_id ON pit_coverage_report (test_id);
+CREATE INDEX idx_pit_coverage_report_generalization_id ON pit_coverage_report (generalization_id);
 
 CREATE TABLE pit_mutation_report
 (

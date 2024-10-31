@@ -133,6 +133,16 @@ jooq {
                                 includeExpression = "jacoco_coverage_report.variant"
                             }
                             forcedType {
+                                userType = "teralizer.processing.ProcessingStage"
+                                enumConverter = true
+                                includeExpression = "pit_coverage_report.stage"
+                            }
+                            forcedType {
+                                userType = "teralizer.processing.GeneralizationVariant"
+                                enumConverter = true
+                                includeExpression = "pit_coverage_report.variant"
+                            }
+                            forcedType {
                                 userType = "teralizer.processing.GeneralizationVariant"
                                 enumConverter = true
                                 includeExpression = "pit_mutation_report.variant"

@@ -99,8 +99,9 @@ public class TestGeneralizationTask extends AbstractTask {
 
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
         GeneralizationRecord record = create.newRecord(Tables.GENERALIZATION);
-        record.setTestId(this.testRecord.getId());
-        record.setVariant(this.variant);
+        record.setProjectId(this.getProjectId());
+        record.setTestId(this.getTestId());
+        record.setVariant(this.getVariant());
         record.setFilePath("");
         record.setClassQualifiedName("");
         record.setMethodQualifiedName("");

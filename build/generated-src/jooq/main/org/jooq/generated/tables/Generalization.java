@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row11;
+import org.jooq.Row12;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -56,6 +56,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
      * The column <code>generalization.id</code>.
      */
     public final TableField<GeneralizationRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+
+    /**
+     * The column <code>generalization.project_id</code>.
+     */
+    public final TableField<GeneralizationRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>generalization.test_id</code>.
@@ -147,7 +152,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_CLASS_QUALIFIED_NAME, Indexes.IDX_GENERALIZATION_FILE_PATH, Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_METHOD_QUALIFIED_NAME, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_CLASS_QUALIFIED_NAME, Indexes.IDX_GENERALIZATION_FILE_PATH, Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_METHOD_QUALIFIED_NAME, Indexes.IDX_GENERALIZATION_PROJECT_ID, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_VARIANT);
     }
 
     @Override
@@ -206,11 +211,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row11 type methods
+    // Row12 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row11<Integer, Integer, GeneralizationVariant, String, String, String, String, String, String, Boolean, String> fieldsRow() {
-        return (Row11) super.fieldsRow();
+    public Row12<Integer, Integer, Integer, GeneralizationVariant, String, String, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row12) super.fieldsRow();
     }
 }

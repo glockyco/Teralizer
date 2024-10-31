@@ -10,6 +10,7 @@ import org.jooq.generated.tables.Assertion;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JunitTestReport;
+import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.Task;
@@ -33,6 +34,7 @@ public class Indexes {
     public static final Index IDX_GENERALIZATION_FILE_PATH = Internal.createIndex(DSL.name("idx_generalization_file_path"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.FILE_PATH }, false);
     public static final Index IDX_GENERALIZATION_IS_INCLUDED = Internal.createIndex(DSL.name("idx_generalization_is_included"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.IS_INCLUDED }, false);
     public static final Index IDX_GENERALIZATION_METHOD_QUALIFIED_NAME = Internal.createIndex(DSL.name("idx_generalization_method_qualified_name"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.METHOD_QUALIFIED_NAME }, false);
+    public static final Index IDX_GENERALIZATION_PROJECT_ID = Internal.createIndex(DSL.name("idx_generalization_project_id"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.PROJECT_ID }, false);
     public static final Index IDX_GENERALIZATION_TEST_ID = Internal.createIndex(DSL.name("idx_generalization_test_id"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TEST_ID }, false);
     public static final Index IDX_GENERALIZATION_VARIANT = Internal.createIndex(DSL.name("idx_generalization_variant"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.VARIANT }, false);
     public static final Index IDX_JACOCO_COVERAGE_REPORT_CLASS = Internal.createIndex(DSL.name("idx_jacoco_coverage_report_class"), JacocoCoverageReport.JACOCO_COVERAGE_REPORT, new OrderField[] { JacocoCoverageReport.JACOCO_COVERAGE_REPORT.COVERED_CLASS }, false);
@@ -46,6 +48,8 @@ public class Indexes {
     public static final Index IDX_JUNIT_TEST_REPORT_STEP = Internal.createIndex(DSL.name("idx_junit_test_report_step"), JunitTestReport.JUNIT_TEST_REPORT, new OrderField[] { JunitTestReport.JUNIT_TEST_REPORT.STEP }, false);
     public static final Index IDX_JUNIT_TEST_REPORT_TEST_ID = Internal.createIndex(DSL.name("idx_junit_test_report_test_id"), JunitTestReport.JUNIT_TEST_REPORT, new OrderField[] { JunitTestReport.JUNIT_TEST_REPORT.TEST_ID }, false);
     public static final Index IDX_JUNIT_TEST_REPORT_VARIANT = Internal.createIndex(DSL.name("idx_junit_test_report_variant"), JunitTestReport.JUNIT_TEST_REPORT, new OrderField[] { JunitTestReport.JUNIT_TEST_REPORT.VARIANT }, false);
+    public static final Index IDX_PIT_COVERAGE_REPORT_GENERALIZATION_ID = Internal.createIndex(DSL.name("idx_pit_coverage_report_generalization_id"), PitCoverageReport.PIT_COVERAGE_REPORT, new OrderField[] { PitCoverageReport.PIT_COVERAGE_REPORT.GENERALIZATION_ID }, false);
+    public static final Index IDX_PIT_COVERAGE_REPORT_TEST_ID = Internal.createIndex(DSL.name("idx_pit_coverage_report_test_id"), PitCoverageReport.PIT_COVERAGE_REPORT, new OrderField[] { PitCoverageReport.PIT_COVERAGE_REPORT.TEST_ID }, false);
     public static final Index IDX_PIT_MUTATION_REPORT_IS_DETECTED = Internal.createIndex(DSL.name("idx_pit_mutation_report_is_detected"), PitMutationReport.PIT_MUTATION_REPORT, new OrderField[] { PitMutationReport.PIT_MUTATION_REPORT.IS_DETECTED }, false);
     public static final Index IDX_PIT_MUTATION_REPORT_MUTATED_CLASS = Internal.createIndex(DSL.name("idx_pit_mutation_report_mutated_class"), PitMutationReport.PIT_MUTATION_REPORT, new OrderField[] { PitMutationReport.PIT_MUTATION_REPORT.MUTATED_CLASS }, false);
     public static final Index IDX_PIT_MUTATION_REPORT_MUTATED_METHOD = Internal.createIndex(DSL.name("idx_pit_mutation_report_mutated_method"), PitMutationReport.PIT_MUTATION_REPORT, new OrderField[] { PitMutationReport.PIT_MUTATION_REPORT.MUTATED_METHOD }, false);

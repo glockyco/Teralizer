@@ -8,6 +8,7 @@ import org.jooq.generated.tables.Assertion;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JunitTestReport;
+import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
@@ -40,6 +41,11 @@ public class Tables {
      * The table <code>junit_test_report</code>.
      */
     public static final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
+
+    /**
+     * The table <code>pit_coverage_report</code>.
+     */
+    public static final PitCoverageReport PIT_COVERAGE_REPORT = PitCoverageReport.PIT_COVERAGE_REPORT;
 
     /**
      * The table <code>pit_mutation_report</code>.
