@@ -80,9 +80,12 @@ public class TestExecutionTask extends AbstractTask {
             try (Stream<String> lines = Files.lines(e.getOutputPath())) {
                 if (lines.anyMatch(line ->
                     /* JUnit 5 */ line.contains("AssertionFailedError") ||
-                    /* JUnit 4 */ line.contains("AssertionError"))
+                    /* JUnit 4 */ line.contains("AssertionError") ||
+                    /* jqwik */ line.contains("TooManyFilterMissesException"))
                 ) {
-                    reportInfo.accept(e.getMessage() + "\nFailure is caused by assertion error(s).");
+                    // There might be other errors beyond the assertion / filtering ones,
+                    // but we just assume the best and keep going until something breaks.
+                    reportInfo.accept(e.getMessage() + "\nFailure is (partially(?)) caused by assertion / filtering error(s).");
                 } else {
                     throw e;
                 }
