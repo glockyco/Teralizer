@@ -80,52 +80,52 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     /**
      * The column <code>jacoco_coverage_report.instruction_missed</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> INSTRUCTION_MISSED = createField(DSL.name("instruction_missed"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> INSTRUCTION_MISSED = createField(DSL.name("instruction_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.instruction_covered</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> INSTRUCTION_COVERED = createField(DSL.name("instruction_covered"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> INSTRUCTION_COVERED = createField(DSL.name("instruction_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.branch_missed</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> BRANCH_MISSED = createField(DSL.name("branch_missed"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> BRANCH_MISSED = createField(DSL.name("branch_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.branch_covered</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> BRANCH_COVERED = createField(DSL.name("branch_covered"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> BRANCH_COVERED = createField(DSL.name("branch_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.line_missed</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> LINE_MISSED = createField(DSL.name("line_missed"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> LINE_MISSED = createField(DSL.name("line_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.line_covered</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> LINE_COVERED = createField(DSL.name("line_covered"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> LINE_COVERED = createField(DSL.name("line_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.complexity_missed</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> COMPLEXITY_MISSED = createField(DSL.name("complexity_missed"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> COMPLEXITY_MISSED = createField(DSL.name("complexity_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.complexity_covered</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> COMPLEXITY_COVERED = createField(DSL.name("complexity_covered"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> COMPLEXITY_COVERED = createField(DSL.name("complexity_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.method_missed</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> METHOD_MISSED = createField(DSL.name("method_missed"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> METHOD_MISSED = createField(DSL.name("method_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>jacoco_coverage_report.method_covered</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, String> METHOD_COVERED = createField(DSL.name("method_covered"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Integer> METHOD_COVERED = createField(DSL.name("method_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     private JacocoCoverageReport(Name alias, Table<JacocoCoverageReportRecord> aliased) {
         this(alias, aliased, null);
@@ -230,7 +230,7 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     // -------------------------------------------------------------------------
 
     @Override
-    public Row15<Integer, Integer, GeneralizationVariant, String, String, String, String, String, String, String, String, String, String, String, String> fieldsRow() {
+    public Row15<Integer, Integer, GeneralizationVariant, String, String, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> fieldsRow() {
         return (Row15) super.fieldsRow();
     }
 }

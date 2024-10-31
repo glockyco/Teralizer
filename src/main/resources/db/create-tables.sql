@@ -150,16 +150,16 @@ CREATE TABLE jacoco_coverage_report
     variant             TEXT, -- can be null if the report is for the original test suite
     covered_package     TEXT    NOT NULL,
     covered_class       TEXT    NOT NULL,
-    instruction_missed  TEXT    NOT NULL,
-    instruction_covered TEXT    NOT NULL,
-    branch_missed       TEXT    NOT NULL,
-    branch_covered      TEXT    NOT NULL,
-    line_missed         TEXT    NOT NULL,
-    line_covered        TEXT    NOT NULL,
-    complexity_missed   TEXT    NOT NULL,
-    complexity_covered  TEXT    NOT NULL,
-    method_missed       TEXT    NOT NULL,
-    method_covered      TEXT    NOT NULL,
+    instruction_missed  INTEGER NOT NULL,
+    instruction_covered INTEGER NOT NULL,
+    branch_missed       INTEGER NOT NULL,
+    branch_covered      INTEGER NOT NULL,
+    line_missed         INTEGER NOT NULL,
+    line_covered        INTEGER NOT NULL,
+    complexity_missed   INTEGER NOT NULL,
+    complexity_covered  INTEGER NOT NULL,
+    method_missed       INTEGER NOT NULL,
+    method_covered      INTEGER NOT NULL,
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 

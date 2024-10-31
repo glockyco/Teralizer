@@ -90,16 +90,16 @@ public class JacocoDataCollectionTask extends AbstractTask {
                 coverageReportRecord.setCoveredPackage(data[1]);
                 coverageReportRecord.setCoveredClass(data[2]);
 
-                coverageReportRecord.setInstructionMissed(data[3]);
-                coverageReportRecord.setInstructionCovered(data[4]);
-                coverageReportRecord.setBranchMissed(data[5]);
-                coverageReportRecord.setBranchCovered(data[6]);
-                coverageReportRecord.setLineMissed(data[7]);
-                coverageReportRecord.setLineCovered(data[8]);
-                coverageReportRecord.setComplexityMissed(data[9]);
-                coverageReportRecord.setComplexityCovered(data[10]);
-                coverageReportRecord.setMethodMissed(data[11]);
-                coverageReportRecord.setMethodCovered(data[12]);
+                coverageReportRecord.setInstructionMissed(Integer.parseInt(data[3]));
+                coverageReportRecord.setInstructionCovered(Integer.parseInt(data[4]));
+                coverageReportRecord.setBranchMissed(Integer.parseInt(data[5]));
+                coverageReportRecord.setBranchCovered(Integer.parseInt(data[6]));
+                coverageReportRecord.setLineMissed(Integer.parseInt(data[7]));
+                coverageReportRecord.setLineCovered(Integer.parseInt(data[8]));
+                coverageReportRecord.setComplexityMissed(Integer.parseInt(data[9]));
+                coverageReportRecord.setComplexityCovered(Integer.parseInt(data[10]));
+                coverageReportRecord.setMethodMissed(Integer.parseInt(data[11]));
+                coverageReportRecord.setMethodCovered(Integer.parseInt(data[12]));
 
                 coverageReportRecords.add(coverageReportRecord);
             }
