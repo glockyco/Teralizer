@@ -46,20 +46,26 @@ public class PitDataCollectionTask extends AbstractTask {
     }
 
     private void executeMutationTesting(DSLContext create) throws Exception {
-        List<String> includedTests;
+        List<String> targetClasses = SQLiteRepository.fetchCoveredClasses(create, this.getVariant(), this.getProjectId());
+
+        List<String> targetTests;
         switch (this.getStage()) {
             case COLLECT_PIT_DATA_INITIAL:
-                includedTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
+                targetTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
                 break;
             case COLLECT_PIT_DATA_GENERALIZED:
-                includedTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
-                includedTests.addAll(SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.getVariant(), this.getProjectId()));
+                targetTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
+                targetTests.addAll(SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.getVariant(), this.getProjectId()));
                 break;
             default:
                 throw new RuntimeException("Unsupported processing stage " + this.getStage() + ".");
         }
 
-        if (includedTests.isEmpty()) {
+        if (targetClasses.isEmpty()) {
+            throw new RuntimeException("Failed mutation testing. All classes of the project are excluded.");
+        }
+
+        if (targetTests.isEmpty()) {
             throw new RuntimeException("Failed mutation testing. All tests of the project are excluded.");
         }
 
@@ -72,10 +78,10 @@ public class PitDataCollectionTask extends AbstractTask {
             case ANT:
                 throw new RuntimeException("Cannot execute mutation testing for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
-                command = buildGradleCommand(includedTests);
+                command = buildGradleCommand(targetClasses, targetTests);
                 break;
             case MAVEN:
-                command = buildMavenCommand(includedTests);
+                command = buildMavenCommand(targetClasses, targetTests);
                 break;
             default:
                 throw new RuntimeException("Cannot execute mutation testing for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
@@ -204,17 +210,19 @@ public class PitDataCollectionTask extends AbstractTask {
         create.batchInsert(records).execute();
     }
 
-    private static List<String> buildGradleCommand(List<String> includedTests) {
+    private static List<String> buildGradleCommand(List<String> targetClasses, List<String> targetTests) {
         List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE, "--info", "pitest"));
-        if (includedTests != null) {
-            command.add("-PtargetTests=" + String.join(",", includedTests));
+        if (targetTests != null) {
+            command.add("-PtargetClasses=" + String.join(",", targetClasses));
+            command.add("-PtargetTests=" + String.join(",", targetTests));
         }
         return command;
     }
 
-    private static List<String> buildMavenCommand(List<String> includedTests) {
+    private static List<String> buildMavenCommand(List<String> targetClasses, List<String> includedTests) {
         List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "pitest:mutationCoverage"));
         if (includedTests != null) {
+            command.add("-DtargetClasses=" + String.join(",", targetClasses));
             command.add("-DtargetTests=" + String.join(",", includedTests));
         }
         return command;

@@ -39,5 +39,6 @@ pitest {
     outputFormats = ['HTML', 'XML']
     exportLineCoverage = true
     verbose = true
+    targetClasses = project.hasProperty('targetClasses') ? project.getProperty('targetClasses').split(',').toList() : ['*']
     targetTests = project.hasProperty('targetTests') ? project.getProperty('targetTests').split(',').toList() : ['*']
 }

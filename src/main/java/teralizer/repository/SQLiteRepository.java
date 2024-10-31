@@ -11,6 +11,15 @@ import java.util.List;
 
 public class SQLiteRepository {
 
+    public static List<String> fetchCoveredClasses(DSLContext create, GeneralizationVariant variant, Integer projectId) {
+        return create.select(Tables.JACOCO_COVERAGE_REPORT.COVERED_PACKAGE.concat(".").concat(Tables.JACOCO_COVERAGE_REPORT.COVERED_CLASS))
+            .from(Tables.JACOCO_COVERAGE_REPORT)
+            .where(Tables.JACOCO_COVERAGE_REPORT.PROJECT_ID.eq(projectId))
+            .and(Tables.JACOCO_COVERAGE_REPORT.VARIANT.isNotDistinctFrom(variant))
+            .and(Tables.JACOCO_COVERAGE_REPORT.INSTRUCTION_COVERED.greaterThan(0))
+            .fetchInto(String.class);
+    }
+
     public static Result<TestRecord> fetchIncludedTests(DSLContext create, Integer projectId) {
         return create.selectFrom(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.eq(projectId))
