@@ -33,11 +33,7 @@ public class NonPassingTestFilter extends AbstractFilter {
         // and (ii) PIT offers only class-level inclusion/exclusion settings.
         if (this.generalizationRecord == null) {
             List<String> failingTests = this.create
-                .select(Tables.TEST.TEST_PACKAGE_NAME
-                    .concat(".")
-                    .concat(Tables.TEST.TEST_CLASS_NAME)
-                    .concat(".")
-                    .concat(Tables.TEST.TEST_METHOD_NAME))
+                .select(Tables.TEST.TEST_METHOD_QUALIFIED_NAME)
                 .from(Tables.TEST)
                 .join(Tables.JUNIT_TEST_REPORT).on(Tables.TEST.ID.eq(Tables.JUNIT_TEST_REPORT.TEST_ID))
                 .where(Tables.TEST.PROJECT_ID.eq(this.testRecord.getProjectId()))
@@ -51,22 +47,18 @@ public class NonPassingTestFilter extends AbstractFilter {
             }
         } else {
             List<String> failingTests = this.create
-                .select(Tables.GENERALIZATION.GENERALIZED_PACKAGE_NAME
-                    .concat(".")
-                    .concat(Tables.GENERALIZATION.GENERALIZED_CLASS_NAME)
-                    .concat(".")
-                    .concat(Tables.GENERALIZATION.GENERALIZED_METHOD_NAME))
+                .select(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME)
                 .from(Tables.TEST)
                 .join(Tables.GENERALIZATION).on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
                 .join(Tables.JUNIT_TEST_REPORT).on(Tables.GENERALIZATION.ID.eq(Tables.JUNIT_TEST_REPORT.GENERALIZATION_ID))
                 .where(Tables.TEST.PROJECT_ID.eq(this.testRecord.getProjectId()))
                 .and(Tables.GENERALIZATION.VARIANT.eq(this.generalizationRecord.getVariant()))
-                .and(Tables.GENERALIZATION.GENERALIZED_FILE_PATH.eq(this.generalizationRecord.getGeneralizedFilePath()))
+                .and(Tables.GENERALIZATION.FILE_PATH.eq(this.generalizationRecord.getFilePath()))
                 .and(Tables.JUNIT_TEST_REPORT.RESULT.ne(TestResult.PASSED))
                 .fetchInto(String.class);
 
             if (!failingTests.isEmpty()) {
-                String reason = "Failing generalized tests in file " + this.generalizationRecord.getGeneralizedFilePath() + ": " + String.join(", ", failingTests);
+                String reason = "Failing generalized tests in file " + this.generalizationRecord.getFilePath() + ": " + String.join(", ", failingTests);
                 return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
             }
         }

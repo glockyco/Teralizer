@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row20;
+import org.jooq.Row22;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -63,6 +63,16 @@ public class Test extends TableImpl<TestRecord> {
      * The column <code>test.test_file_path</code>.
      */
     public final TableField<TestRecord, String> TEST_FILE_PATH = createField(DSL.name("test_file_path"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>test.test_class_qualified_name</code>.
+     */
+    public final TableField<TestRecord, String> TEST_CLASS_QUALIFIED_NAME = createField(DSL.name("test_class_qualified_name"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>test.test_method_qualified_name</code>.
+     */
+    public final TableField<TestRecord, String> TEST_METHOD_QUALIFIED_NAME = createField(DSL.name("test_method_qualified_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.test_package_name</code>.
@@ -189,7 +199,7 @@ public class Test extends TableImpl<TestRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_TEST_IS_INCLUDED, Indexes.IDX_TEST_PROJECT_ID, Indexes.IDX_TEST_TEST_CLASS_NAME, Indexes.IDX_TEST_TEST_FILE_PATH, Indexes.IDX_TEST_TEST_METHOD_NAME, Indexes.IDX_TEST_TEST_PACKAGE_NAME);
+        return Arrays.<Index>asList(Indexes.IDX_TEST_IS_INCLUDED, Indexes.IDX_TEST_PROJECT_ID, Indexes.IDX_TEST_TEST_CLASS_NAME, Indexes.IDX_TEST_TEST_CLASS_QUALIFIED_NAME, Indexes.IDX_TEST_TEST_FILE_PATH, Indexes.IDX_TEST_TEST_METHOD_NAME, Indexes.IDX_TEST_TEST_METHOD_QUALIFIED_NAME, Indexes.IDX_TEST_TEST_PACKAGE_NAME);
     }
 
     @Override
@@ -248,11 +258,11 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row20 type methods
+    // Row22 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row20<Integer, Integer, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, Boolean, String> fieldsRow() {
-        return (Row20) super.fieldsRow();
+    public Row22<Integer, Integer, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row22) super.fieldsRow();
     }
 }

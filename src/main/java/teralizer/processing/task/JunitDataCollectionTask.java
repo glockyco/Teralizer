@@ -127,7 +127,7 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private List<JunitTestReportRecord> collectGeneralizationReportData(DSLContext create) {
-        String testClassQualifiedName = this.generalizationRecord.getGeneralizedPackageName() + "." + this.generalizationRecord.getGeneralizedClassName();
+        String testClassQualifiedName = this.generalizationRecord.getPackageName() + "." + this.generalizationRecord.getClassName();
         String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
         Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
         return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
@@ -176,6 +176,8 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
 
         record.setTestFilePath(testFilePath.toString());
+        record.setTestClassQualifiedName(testPackageName + "." + testClassName);
+        record.setTestMethodQualifiedName(testPackageName + "." + testClassName + "." + testMethodName);
         record.setTestPackageName(testPackageName);
         record.setTestClassName(testClassName);
         record.setTestMethodName(testMethodName);

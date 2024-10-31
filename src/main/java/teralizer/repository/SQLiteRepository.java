@@ -19,7 +19,7 @@ public class SQLiteRepository {
     }
 
     public static List<String> fetchIncludedTestClasses(DSLContext create, Integer projectId) {
-        return create.selectDistinct(Tables.TEST.TEST_PACKAGE_NAME.concat('.').concat(Tables.TEST.TEST_CLASS_NAME))
+        return create.selectDistinct(Tables.TEST.TEST_CLASS_QUALIFIED_NAME)
             .from(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.eq(projectId))
             .and(Tables.TEST.IS_INCLUDED.eq(true))
@@ -39,7 +39,7 @@ public class SQLiteRepository {
     }
 
     public static List<String> fetchIncludedGeneralizedClasses(DSLContext create, GeneralizationVariant variant, Integer projectId) {
-        return create.selectDistinct(Tables.GENERALIZATION.GENERALIZED_PACKAGE_NAME.concat('.').concat(Tables.GENERALIZATION.GENERALIZED_CLASS_NAME))
+        return create.selectDistinct(Tables.GENERALIZATION.CLASS_QUALIFIED_NAME)
             .from(Tables.TEST)
             .join(Tables.GENERALIZATION)
             .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))

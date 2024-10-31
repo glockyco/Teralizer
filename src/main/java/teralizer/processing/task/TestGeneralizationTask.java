@@ -98,37 +98,43 @@ public class TestGeneralizationTask extends AbstractTask {
     }
 
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
-        GeneralizationRecord generalizationRecord = create.newRecord(Tables.GENERALIZATION);
-        generalizationRecord.setTestId(this.testRecord.getId());
-        generalizationRecord.setVariant(this.variant);
-        generalizationRecord.setGeneralizedFilePath("");
-        generalizationRecord.setGeneralizedPackageName("");
-        generalizationRecord.setGeneralizedClassName("");
-        generalizationRecord.setGeneralizedMethodName("");
-        generalizationRecord.setIsIncluded(true);
-        generalizationRecord.store();
+        GeneralizationRecord record = create.newRecord(Tables.GENERALIZATION);
+        record.setTestId(this.testRecord.getId());
+        record.setVariant(this.variant);
+        record.setFilePath("");
+        record.setClassQualifiedName("");
+        record.setMethodQualifiedName("");
+        record.setPackageName("");
+        record.setClassName("");
+        record.setMethodName("");
+        record.setIsIncluded(true);
+        record.store();
 
-        String generalizedClassName = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + generalizationRecord.getId() + "_Test";
-        Path generalizedClassDirectory = Paths.get(this.testRecord.getTestFilePath()).getParent().resolve(Paths.get(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated", this.variant.name().toLowerCase()));
-        Path generalizedClassPath = generalizedClassDirectory.resolve(generalizedClassName + ".java");
+        String packageName = this.testRecord.getTestPackageName() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated." + this.variant.name().toLowerCase();
+        String className = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + record.getId() + "_Test";
+        String methodName = this.testRecord.getTestMethodName();
+        Path fileDirectory = Paths.get(this.testRecord.getTestFilePath()).getParent().resolve(Paths.get(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated", this.variant.name().toLowerCase()));
+        Path filePath = fileDirectory.resolve(className + ".java");
 
-        generalizationRecord.setGeneralizedFilePath(generalizedClassPath.toString());
-        generalizationRecord.setGeneralizedPackageName(this.testRecord.getTestPackageName() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated." + this.variant.name().toLowerCase());
-        generalizationRecord.setGeneralizedClassName(generalizedClassName);
-        generalizationRecord.setGeneralizedMethodName(this.testRecord.getTestMethodName());
-        generalizationRecord.store();
+        record.setFilePath(filePath.toString());
+        record.setClassQualifiedName(packageName + "." + className);
+        record.setMethodQualifiedName(packageName + "." + className + "." + methodName);
+        record.setPackageName(packageName);
+        record.setClassName(className);
+        record.setMethodName(methodName);
+        record.store();
 
-        return generalizationRecord;
+        return record;
     }
 
     private void generalizeTest(Gson gson, JavaParser javaParser, VelocityEngine velocityEngine) throws IOException {
         CompilationUnit compilationUnit = javaParser.parse(Paths.get(this.testRecord.getTestFilePath())).getResult().get();
 
-        compilationUnit.setPackageDeclaration(this.generalizationRecord.getGeneralizedPackageName());
+        compilationUnit.setPackageDeclaration(this.generalizationRecord.getPackageName());
         compilationUnit.addImport(this.testRecord.getTestPackageName() + ".*");
 
         ClassOrInterfaceDeclaration testClassDeclaration = compilationUnit.getClassByName(this.testRecord.getTestClassName()).get();
-        testClassDeclaration.setName(this.generalizationRecord.getGeneralizedClassName());
+        testClassDeclaration.setName(this.generalizationRecord.getClassName());
 
         List<AnnotationExpr> evoSuiteAnnotations = new ArrayList<>();
         for (AnnotationExpr annotation : testClassDeclaration.getAnnotations()) {
@@ -325,7 +331,7 @@ public class TestGeneralizationTask extends AbstractTask {
             // @TODO: Remove setup code that is not needed anymore after generalization.
         }
 
-        Paths.get(this.generalizationRecord.getGeneralizedFilePath()).toFile().getParentFile().mkdirs();
-        Files.write(Paths.get(this.generalizationRecord.getGeneralizedFilePath()), compilationUnit.toString().getBytes());
+        Paths.get(this.generalizationRecord.getFilePath()).toFile().getParentFile().mkdirs();
+        Files.write(Paths.get(this.generalizationRecord.getFilePath()), compilationUnit.toString().getBytes());
     }
 }

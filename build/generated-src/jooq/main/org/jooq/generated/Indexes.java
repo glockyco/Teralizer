@@ -29,8 +29,10 @@ public class Indexes {
     // -------------------------------------------------------------------------
 
     public static final Index IDX_ASSERTION_TEST_ID = Internal.createIndex(DSL.name("idx_assertion_test_id"), Assertion.ASSERTION, new OrderField[] { Assertion.ASSERTION.TEST_ID }, false);
-    public static final Index IDX_GENERALIZATION_GENERALIZED_FILE_PATH = Internal.createIndex(DSL.name("idx_generalization_generalized_file_path"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.GENERALIZED_FILE_PATH }, false);
+    public static final Index IDX_GENERALIZATION_CLASS_QUALIFIED_NAME = Internal.createIndex(DSL.name("idx_generalization_class_qualified_name"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.CLASS_QUALIFIED_NAME }, false);
+    public static final Index IDX_GENERALIZATION_FILE_PATH = Internal.createIndex(DSL.name("idx_generalization_file_path"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.FILE_PATH }, false);
     public static final Index IDX_GENERALIZATION_IS_INCLUDED = Internal.createIndex(DSL.name("idx_generalization_is_included"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.IS_INCLUDED }, false);
+    public static final Index IDX_GENERALIZATION_METHOD_QUALIFIED_NAME = Internal.createIndex(DSL.name("idx_generalization_method_qualified_name"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.METHOD_QUALIFIED_NAME }, false);
     public static final Index IDX_GENERALIZATION_TEST_ID = Internal.createIndex(DSL.name("idx_generalization_test_id"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.TEST_ID }, false);
     public static final Index IDX_GENERALIZATION_VARIANT = Internal.createIndex(DSL.name("idx_generalization_variant"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.VARIANT }, false);
     public static final Index IDX_JACOCO_COVERAGE_REPORT_CLASS = Internal.createIndex(DSL.name("idx_jacoco_coverage_report_class"), JacocoCoverageReport.JACOCO_COVERAGE_REPORT, new OrderField[] { JacocoCoverageReport.JACOCO_COVERAGE_REPORT.COVERED_CLASS }, false);
@@ -62,7 +64,9 @@ public class Indexes {
     public static final Index IDX_TEST_IS_INCLUDED = Internal.createIndex(DSL.name("idx_test_is_included"), Test.TEST, new OrderField[] { Test.TEST.IS_INCLUDED }, false);
     public static final Index IDX_TEST_PROJECT_ID = Internal.createIndex(DSL.name("idx_test_project_id"), Test.TEST, new OrderField[] { Test.TEST.PROJECT_ID }, false);
     public static final Index IDX_TEST_TEST_CLASS_NAME = Internal.createIndex(DSL.name("idx_test_test_class_name"), Test.TEST, new OrderField[] { Test.TEST.TEST_CLASS_NAME }, false);
+    public static final Index IDX_TEST_TEST_CLASS_QUALIFIED_NAME = Internal.createIndex(DSL.name("idx_test_test_class_qualified_name"), Test.TEST, new OrderField[] { Test.TEST.TEST_CLASS_QUALIFIED_NAME }, false);
     public static final Index IDX_TEST_TEST_FILE_PATH = Internal.createIndex(DSL.name("idx_test_test_file_path"), Test.TEST, new OrderField[] { Test.TEST.TEST_FILE_PATH }, false);
     public static final Index IDX_TEST_TEST_METHOD_NAME = Internal.createIndex(DSL.name("idx_test_test_method_name"), Test.TEST, new OrderField[] { Test.TEST.TESTED_METHOD_NAME }, false);
+    public static final Index IDX_TEST_TEST_METHOD_QUALIFIED_NAME = Internal.createIndex(DSL.name("idx_test_test_method_qualified_name"), Test.TEST, new OrderField[] { Test.TEST.TEST_METHOD_QUALIFIED_NAME }, false);
     public static final Index IDX_TEST_TEST_PACKAGE_NAME = Internal.createIndex(DSL.name("idx_test_test_package_name"), Test.TEST, new OrderField[] { Test.TEST.TEST_PACKAGE_NAME }, false);
 }
