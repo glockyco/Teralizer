@@ -14,7 +14,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row15;
+import org.jooq.Row16;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -126,6 +126,11 @@ public class Project extends TableImpl<ProjectRecord> {
     public final TableField<ProjectRecord, String> CLASSPATH = createField(DSL.name("classpath"), SQLDataType.CLOB, this, "");
 
     /**
+     * The column <code>project.use_test_generation</code>.
+     */
+    public final TableField<ProjectRecord, Boolean> USE_TEST_GENERATION = createField(DSL.name("use_test_generation"), SQLDataType.BOOLEAN.nullable(false), this, "");
+
+    /**
      * The column <code>project.runtime</code>.
      */
     public final TableField<ProjectRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL, this, "");
@@ -215,11 +220,11 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row15 type methods
+    // Row16 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row15<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, Path, String, Float> fieldsRow() {
-        return (Row15) super.fieldsRow();
+    public Row16<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, Path, String, Boolean, Float> fieldsRow() {
+        return (Row16) super.fieldsRow();
     }
 }

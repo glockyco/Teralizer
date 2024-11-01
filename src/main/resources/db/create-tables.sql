@@ -13,11 +13,11 @@ DROP TABLE IF EXISTS project;
 CREATE TABLE project
 (
     id                     INTEGER PRIMARY KEY AUTOINCREMENT,
-    type                   TEXT NOT NULL,
+    type                   TEXT    NOT NULL,
     test_framework         TEXT, -- can be null for invalid project root paths
     test_framework_version TEXT, -- can be null for invalid project root paths or if the test framework is UNKNOWN
-    root_path              TEXT NOT NULL,
-    data_path              TEXT NOT NULL,
+    root_path              TEXT    NOT NULL,
+    data_path              TEXT    NOT NULL,
     main_source_path       TEXT, -- can be null for invalid project root paths
     test_source_path       TEXT, -- can be null for invalid project root paths
     main_compiled_path     TEXT, -- can be null for invalid project root paths
@@ -26,6 +26,7 @@ CREATE TABLE project
     coverage_reports_path  TEXT, -- can be null for invalid project root paths
     mutation_reports_path  TEXT, -- can be null for invalid project root paths
     classpath              TEXT, -- can be null for invalid project root paths
+    use_test_generation    INTEGER NOT NULL,
     runtime                REAL  -- can be null until the project is fully processed
 );
 

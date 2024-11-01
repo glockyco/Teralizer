@@ -99,6 +99,11 @@ jooq {
                             }
                             forcedType {
                                 name = "BOOLEAN"
+                                expressions = "project.use_test_generation"
+                                types = "INTEGER"
+                            }
+                            forcedType {
+                                name = "BOOLEAN"
                                 expressions = "test.is_included"
                                 types = "INTEGER"
                             }

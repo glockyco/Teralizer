@@ -34,6 +34,10 @@ public class CleanupTask extends AbstractTask {
         this.testSourcePath = testSourcePath;
     }
 
+    public CleanupTask(ProcessingStage stage, ProjectRecord projectRecord) {
+        this(stage, null, projectRecord);
+    }
+
     public CleanupTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.variant = variant;
@@ -60,7 +64,7 @@ public class CleanupTask extends AbstractTask {
         // project. Even though this could be figured out, deleting all files that we
         // might have created in previous runs for any project type is much easier...
 
-        if (this.stage == ProcessingStage.CLEANUP_PROJECT) {
+        if (this.stage == ProcessingStage.CLEANUP_PROJECT && this.projectRecord == null) {
             File mavenBuildFile = this.projectPath.resolve(ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE).toFile();
             File gradleBuildFile =  this.projectPath.resolve(ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE).toFile();
             List<File> buildFiles = Arrays.asList(mavenBuildFile, gradleBuildFile);
@@ -82,7 +86,7 @@ public class CleanupTask extends AbstractTask {
             testSourcePath = this.projectPath;
         }
 
-        Files.walkFileTree(testSourcePath, new DirectoryDeletionVisitor(this.stage, this.variant));
+        Files.walkFileTree(testSourcePath, new DirectoryDeletionVisitor(this.projectRecord, this.stage));
 
         // We do not automatically remove collected data in the DB and the data
         // directory. These should be preserved even if the generalization is
@@ -91,12 +95,12 @@ public class CleanupTask extends AbstractTask {
 
     private static class DirectoryDeletionVisitor extends SimpleFileVisitor<Path> {
 
+        private final ProjectRecord projectRecord;
         private final ProcessingStage stage;
-        private final GeneralizationVariant variant;
 
-        public DirectoryDeletionVisitor(ProcessingStage stage, GeneralizationVariant variant) {
+        public DirectoryDeletionVisitor(ProjectRecord projectRecord, ProcessingStage stage) {
+            this.projectRecord = projectRecord;
             this.stage = stage;
-            this.variant = variant;
         }
 
         @Override
@@ -105,6 +109,25 @@ public class CleanupTask extends AbstractTask {
                 LOGGER.atInfo().log("Deleting directory '" + directory + "'.");
                 FileUtils.deleteDirectory(directory.toFile());
                 return FileVisitResult.SKIP_SUBTREE;
+            }
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            // We only delete EvoSuite files if they were (probably) generated
+            // by us. Of course, we could use a more robust check. However, the
+            // current check is likely "good enough" for most cases. After all,
+            // there are not that many projects that use EvoSuite, and even
+            // fewer ones (presumably: zero?) that are also processed by us.
+            boolean shouldDeleteFile = this.stage == ProcessingStage.CLEANUP_PROJECT
+                && this.projectRecord != null
+                && this.projectRecord.getUseTestGeneration()
+                && file.getFileName().toString().endsWith("ESTest.java");
+
+            if (shouldDeleteFile) {
+                LOGGER.atInfo().log("Deleting EvoSuite test file '" + file + "'.");
+                file.toFile().delete();
             }
             return FileVisitResult.CONTINUE;
         }

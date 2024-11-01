@@ -338,6 +338,8 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/java,linux,macos,eclipse,windows,intellij,netbeans,visualstudiocode,gradle
 
+!/src/main/resources/evosuite/evosuite-1.2.0.jar
+
 !build/generated-src/
 !build/generated-src/**
 

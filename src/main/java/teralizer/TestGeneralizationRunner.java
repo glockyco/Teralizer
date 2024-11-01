@@ -50,7 +50,9 @@ public class TestGeneralizationRunner {
                 Paths.get("projects/EqBench/src/test/code"),
                 Paths.get("projects/EqBench/target/classes"),
                 Paths.get("projects/EqBench/target/test-classes"),
-                Paths.get("projects/EqBench/target/surefire-reports")
+                Paths.get("projects/EqBench/target/surefire-reports"),
+                Paths.get("projects/EqBench/target/site/jacoco"),
+                Paths.get("projects/EqBench/target/pit-reports")
             ),
             new ProjectInfo("projects/example-gradle-junit4"),
             new ProjectInfo("projects/example-gradle-junit5"),
@@ -66,9 +68,6 @@ public class TestGeneralizationRunner {
         pipeline.getContext().put(TaskContext.VELOCITY_ENGINE, this.createVelocityEngine());
 
         for (ProjectInfo projectInfo : projectInfos) {
-            pipeline.addTask(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, projectInfo.getRootPath(), projectInfo.getTestSourcePath()));
-            pipeline.executeAll();
-
             long startTime = System.currentTimeMillis();
 
             ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
@@ -82,6 +81,7 @@ public class TestGeneralizationRunner {
             projectRecord.setTestReportsPath(projectInfo.getTestReportsPath());
             projectRecord.setCoverageReportsPath(projectInfo.getCoverageReportsPath());
             projectRecord.setMutationReportsPath(projectInfo.getMutationReportsPath());
+            projectRecord.setUseTestGeneration(projectInfo.getUseTestGeneration());
             projectRecord.store();
 
             pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord));

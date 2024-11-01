@@ -15,6 +15,8 @@ public class ProjectInfo {
     private Path coverageReportsPath;
     private Path mutationReportsPath;
 
+    private boolean useTestGeneration = false;
+
     public ProjectInfo(String rootPath) {
         this(Paths.get(rootPath), null, null, null, null, null, null, null);
     }
@@ -110,5 +112,14 @@ public class ProjectInfo {
 
     public void setMutationReportsPath(Path mutationReportsPath) {
         this.mutationReportsPath = mutationReportsPath;
+    }
+
+    public boolean getUseTestGeneration() {
+        return this.useTestGeneration;
+    }
+
+    public ProjectInfo setUseTestGeneration(boolean useTestGeneration) {
+        this.useTestGeneration = useTestGeneration;
+        return this;
     }
 }

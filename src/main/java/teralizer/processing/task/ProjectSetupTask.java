@@ -86,7 +86,10 @@ public class ProjectSetupTask extends AbstractTask {
         JavaParser javaParser = JavaParserFactory.createJavaParser(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath());
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
+        scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
+
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_ORIGINAL, this.projectRecord));
+        scheduleTask.accept(new TestGenerationTask(ProcessingStage.GENERATE_TESTS, this.projectRecord));
         scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_ORIGINAL, this.projectRecord));
 
         scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_TESTS, this.projectRecord));
@@ -145,10 +148,6 @@ public class ProjectSetupTask extends AbstractTask {
             destinationPath = projectRecord.getRootPath().resolve(GRADLE_CUSTOM_BUILD_FILE);
         } else {
             throw new RuntimeException("Failed to setup build file. Operation is not implemented for projects of type " + projectRecord.getType() + ".");
-        }
-
-        if (destinationPath.toFile().exists()) {
-            throw new RuntimeException("Failed to setup build file. " + destinationPath + " already exists.");
         }
 
         Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
