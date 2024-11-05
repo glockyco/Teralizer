@@ -136,6 +136,11 @@ public class CleanupTask extends AbstractTask {
             if (this.stage == ProcessingStage.CLEANUP_PROJECT) {
                 return this.isGeneratedDirectory(directory);
             } else if (this.stage == ProcessingStage.CLEANUP_GENERALIZATION) {
+                // Since all generalized test variants are added to the same
+                // project (albeit in different directories), we still need to
+                // remove ALL variants during cleanup to ensure that coverage,
+                // mutation score, etc. of the current variant are not affected
+                // by generalized tests that were created for other variants.
                 return this.isGeneratedDirectory(directory.getParent()) && this.isVariantDirectory(directory);
             } else {
                 throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
