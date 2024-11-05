@@ -31,15 +31,6 @@ public class TestGeneralizationRunner {
         new TestGeneralizationRunner().run();
     }
 
-    // @TODO: Add JPF models for more native methods (e.g., SymbolicStringHandler)?
-    // @TODO: Use jpf-nhandler.
-
-    // @TODO: Use some workflow engine to manage the tasks.
-    // @TODO: Allow white-/blacklisting of individual tests/classes.
-    // @TODO: Make individual tasks skip-able (=> "caching"?).
-    // @TODO: Decide how to deal with files that are already created (perhaps from earlier runs).
-    // @TODO: Compare how much longer test execution takes with JPF compared to "normally".
-
     public void run() {
         // @TODO: Get project directories from input args.
 
@@ -92,20 +83,6 @@ public class TestGeneralizationRunner {
             projectRecord.setRuntime((endTime - startTime) / 1000.0f);
             projectRecord.store();
         }
-
-        // @TODO: Add shutdown handler.
-
-        // @TODO: Store the pre-condition and post-condition of every test(method) in z3 representation (?).
-        //   We need a z3 representation to identify duplicate tests.
-        // @TODO: Implement test duplication detection.
-
-        // @TODO: Execute @Before / @BeforeClass / @After / @AfterAll methods.
-        // @TODO: Think about using JUnit InvocationInterceptor + @ExtendWith to handle more tests.
-        // @TODO: Think about using Gradle's "test { executable = '/path/to/custom/java' }" to execute tests with SPF.
-
-        // @TODO: Calculate how often multiple tests cover the same path / partition.
-
-        // @TODO: Evaluate simplification of inputs + outputs.
     }
 
     private VelocityEngine createVelocityEngine() {
