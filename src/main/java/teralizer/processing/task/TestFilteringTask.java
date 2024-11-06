@@ -97,6 +97,7 @@ public class TestFilteringTask extends AbstractTask {
         List<Filter> filters = Arrays.asList(
             new AssertionCountFilter(create, this.testRecord),
             new MissingValueFilter(this.testRecord),
+            new UnnamedPackageFilter(this.testRecord),
             new ParameterTypeFilter(gson, this.testRecord),
             new NonPassingTestFilter(create, this.testRecord)
         );
