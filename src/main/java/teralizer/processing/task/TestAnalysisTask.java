@@ -113,10 +113,19 @@ public class TestAnalysisTask extends AbstractTask {
                     testedMethodParameters.add(new MethodParameter(paramType, paramName));
                 }
 
+                String packageName = testedMethodDeclaration.getPackageName();
+                String className = testedMethodDeclaration.getClassName().replace(".", "$");
+                String methodName = testedMethodDeclaration.getName();
+
+                String qualifiedClassName = (packageName.isEmpty() ? "" : (packageName + ".")) + className;
+                String qualifiedMethodName = qualifiedClassName + "." + methodName;
+
                 testRecord.setTestedFilePath(testedClassPath);
-                testRecord.setTestedPackageName(testedMethodDeclaration.getPackageName());
-                testRecord.setTestedClassName(testedMethodDeclaration.getClassName().replace(".", "$"));
-                testRecord.setTestedMethodName(testedMethodDeclaration.getName());
+                testRecord.setTestedClassQualifiedName(qualifiedClassName);
+                testRecord.setTestedMethodQualifiedName(qualifiedMethodName);
+                testRecord.setTestedPackageName(packageName);
+                testRecord.setTestedClassName(className);
+                testRecord.setTestedMethodName(methodName);
                 testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
                 testRecord.setTestedMethodReturnType(testedMethodDeclaration.getReturnType().describe());
 

@@ -36,28 +36,31 @@ CREATE INDEX idx_project_test_framework ON project (test_framework);
 
 CREATE TABLE test
 (
-    id                         INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id                 INTEGER NOT NULL,
-    test_file_path             TEXT    NOT NULL,
-    test_class_qualified_name  TEXT    NOT NULL,
-    test_method_qualified_name TEXT    NOT NULL,
-    test_package_name          TEXT    NOT NULL,
-    test_class_name            TEXT    NOT NULL,
-    test_method_name           TEXT    NOT NULL,
-    tested_file_path           TEXT, -- can be null before test analysis or if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
-    tested_package_name        TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_class_name          TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_method_name         TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_method_param_types  TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_method_return_type  TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    driver_file_path           TEXT    NOT NULL,
-    driver_package_name        TEXT    NOT NULL,
-    driver_class_name          TEXT    NOT NULL,
-    jpf_config_path            TEXT    NOT NULL,
-    input_specification_path   TEXT    NOT NULL,
-    output_specification_path  TEXT    NOT NULL,
-    is_included                INTEGER NOT NULL,
-    exclusion_info             TEXT, -- can be null for tests that are not excluded
+    id                           INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id                   INTEGER NOT NULL,
+    test_file_path               TEXT    NOT NULL,
+    test_class_qualified_name    TEXT    NOT NULL,
+    test_method_qualified_name   TEXT    NOT NULL,
+    test_package_name            TEXT    NOT NULL,
+    test_class_name              TEXT    NOT NULL,
+    test_method_name             TEXT    NOT NULL,
+    tested_file_path             TEXT, -- can be null before test analysis or if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_class_qualified_name  TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_method_qualified_name TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_package_name          TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_class_name            TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_method_name           TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_method_param_types    TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    tested_method_return_type    TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
+    driver_file_path             TEXT    NOT NULL,
+    driver_class_qualified_name  TEXT    NOT NULL,
+    driver_package_name          TEXT    NOT NULL,
+    driver_class_name            TEXT    NOT NULL,
+    jpf_config_path              TEXT    NOT NULL,
+    input_specification_path     TEXT    NOT NULL,
+    output_specification_path    TEXT    NOT NULL,
+    is_included                  INTEGER NOT NULL,
+    exclusion_info               TEXT, -- can be null for tests that are not excluded
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 

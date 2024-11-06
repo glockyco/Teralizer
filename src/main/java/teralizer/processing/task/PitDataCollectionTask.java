@@ -123,8 +123,8 @@ public class PitDataCollectionTask extends AbstractTask {
 
                 String testClassQualifiedName = parts[1].replaceAll("^\\[(runner|class):(.*?)\\]$", "$2");
                 int testClassLastDotIndex = testClassQualifiedName.lastIndexOf('.');
-                String testPackageName = testClassQualifiedName.substring(0, testClassLastDotIndex);
-                String testClassName = testClassQualifiedName.substring(testClassLastDotIndex + 1);
+                String testPackageName = testClassLastDotIndex == -1 ? "" : testClassQualifiedName.substring(0, testClassLastDotIndex);
+                String testClassName = testClassLastDotIndex == -1 ? testClassQualifiedName : testClassQualifiedName.substring(testClassLastDotIndex + 1);
                 String testMethodName = parts[2].replaceAll("^\\[(test|method|property):(.*?)\\((.*)$", "$2");
                 String testMethodQualifiedName = testClassQualifiedName + "." + testMethodName;
 

@@ -68,7 +68,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         VelocityContext context = new VelocityContext();
         context.put("driverPackageName", this.testRecord.getDriverPackageName());
         context.put("driverClassName", this.testRecord.getDriverClassName());
-        context.put("testClassQualifiedName", this.testRecord.getTestPackageName() + "." + this.testRecord.getTestClassName());
+        context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());
         context.put("testClassName", this.testRecord.getTestClassName());
         context.put("testMethodName", this.testRecord.getTestMethodName());
 
@@ -82,27 +82,20 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     private void createJpfConfigFile(Gson gson, VelocityEngine velocityEngine) throws IOException {
-        String driverClassQualifiedName = this.testRecord.getDriverPackageName() + "." + this.testRecord.getDriverClassName();
-        String testClassQualifiedName = this.testRecord.getTestPackageName() + "." + this.testRecord.getTestClassName();
-        String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
-        String testedClassQualifiedName = this.testRecord.getTestedPackageName() + "." + this.testRecord.getTestedClassName();
-        // @TODO: Include method parameter types in the qualified name of the tested method.
-        String testedMethodQualifiedName = testedClassQualifiedName + "." + this.testRecord.getTestedMethodName();
-
         Type type = new TypeToken<List<MethodParameter>>() {}.getType();
         List<MethodParameter> testedMethodParameters = gson.fromJson(this.testRecord.getTestedMethodParamTypes(), type);
         String symbolicParams = testedMethodParameters.stream().map(p -> "sym").collect(Collectors.joining("#"));
-        String symbolicMethod = testedMethodQualifiedName + "(" + symbolicParams + ")";
+        String symbolicMethod = this.testRecord.getTestedMethodQualifiedName() + "(" + symbolicParams + ")";
 
         VelocityContext context = new VelocityContext();
         context.put("classpath", this.projectRecord.getClasspath());
         context.put("symbolicMethod", symbolicMethod);
 
-        context.put("driverClassQualifiedName", driverClassQualifiedName);
-        context.put("testClassQualifiedName", testClassQualifiedName);
-        context.put("testMethodQualifiedName", testMethodQualifiedName);
-        context.put("testedClassQualifiedName", testedClassQualifiedName);
-        context.put("testedMethodQualifiedName", testedMethodQualifiedName);
+        context.put("driverClassQualifiedName", this.testRecord.getDriverClassQualifiedName());
+        context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());
+        context.put("testMethodQualifiedName", this.testRecord.getTestMethodQualifiedName());
+        context.put("testedClassQualifiedName", this.testRecord.getTestedClassQualifiedName());
+        context.put("testedMethodQualifiedName", this.testRecord.getTestedMethodQualifiedName());
         context.put("inputSpecificationPath", this.testRecord.getInputSpecificationPath());
         context.put("outputSpecificationPath", this.testRecord.getOutputSpecificationPath());
 

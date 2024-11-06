@@ -118,8 +118,8 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private List<JunitTestReportRecord> collectTestReportData(DSLContext create) {
-        String testClassQualifiedName = this.testRecord.getTestPackageName() + "." + this.testRecord.getTestClassName();
-        String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
+        String testClassQualifiedName = this.testRecord.getTestClassQualifiedName();
+        String testMethodQualifiedName = this.testRecord.getTestMethodQualifiedName();
         Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
         return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
             .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
@@ -127,8 +127,8 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private List<JunitTestReportRecord> collectGeneralizationReportData(DSLContext create) {
-        String testClassQualifiedName = this.generalizationRecord.getPackageName() + "." + this.generalizationRecord.getClassName();
-        String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
+        String testClassQualifiedName = this.generalizationRecord.getClassQualifiedName();
+        String testMethodQualifiedName = this.generalizationRecord.getMethodQualifiedName();
         Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
         return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
             .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
@@ -158,39 +158,38 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private TestRecord buildTestRecord(DSLContext create, ReportTestCase testCaseReport) {
-        String testMethodQualifiedName = testCaseReport.getFullName();
-        int lastDot = testMethodQualifiedName.lastIndexOf('.');
-        int penultimateDot = testMethodQualifiedName.substring(0, lastDot).lastIndexOf('.');
-
-        String testPackageName = testMethodQualifiedName.substring(0, penultimateDot);
-        String testClassName = testMethodQualifiedName.substring(penultimateDot + 1, lastDot);
-        String testMethodName = testMethodQualifiedName.substring(lastDot + 1);
+        String testMethodName = testCaseReport.getName();
+        String testClassName = testCaseReport.getClassName();
+        int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
+        String testPackageName = lastDotIndex == -1 ? "" : testCaseReport.getFullClassName().substring(0, lastDotIndex);
 
         TestRecord record = create.newRecord(Tables.TEST);
         record.setProjectId(this.getProjectId());
 
-        Path testFilePath = this.projectRecord.getTestSourcePath().resolve(testPackageName.replace(".", "/") + "/" + testClassName + ".java");
+        Path testFilePath = this.projectRecord.getTestSourcePath().resolve(testCaseReport.getFullClassName().replace(".", "/") + ".java");
 
         if (!testFilePath.toFile().exists()) {
             throw new RuntimeException("Test file " + testFilePath + " does not exist.");
         }
 
         record.setTestFilePath(testFilePath.toString());
-        record.setTestClassQualifiedName(testPackageName + "." + testClassName);
-        record.setTestMethodQualifiedName(testPackageName + "." + testClassName + "." + testMethodName);
+        record.setTestClassQualifiedName(testCaseReport.getFullClassName());
+        record.setTestMethodQualifiedName(testCaseReport.getFullName());
         record.setTestPackageName(testPackageName);
         record.setTestClassName(testClassName);
         record.setTestMethodName(testMethodName);
 
-        String driverPackageName = testPackageName + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated";
+        String driverPackageName = (testPackageName.isEmpty() ? "" : (testPackageName + ".")) + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated";
         String driverClassName = "_" + testClassName + "_Driver_" + testMethodName;
         Path driverFilePath = testFilePath.getParent().resolve(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated/" + driverClassName + ".java");
 
         record.setDriverFilePath(driverFilePath.toString());
+        record.setDriverClassQualifiedName(driverPackageName + "." + driverClassName);
         record.setDriverPackageName(driverPackageName);
         record.setDriverClassName(driverClassName);
 
         Path jpfDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/jpf-data");
+        String testMethodQualifiedName = testCaseReport.getFullName();
         Path jpfConfigPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf");
         Path inputSpecificationPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf.input.json");
         Path outputSpecificationPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf.output.json");
@@ -205,13 +204,10 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private JunitTestReportRecord buildTestReportRecord(DSLContext create, Path testReportPath, ReportTestCase testCaseReport) {
-        String testMethodQualifiedName = testCaseReport.getFullName();
-        int lastDot = testMethodQualifiedName.lastIndexOf('.');
-        int penultimateDot = testMethodQualifiedName.substring(0, lastDot).lastIndexOf('.');
-
-        String packageName = testMethodQualifiedName.substring(0, penultimateDot);
-        String className = testMethodQualifiedName.substring(penultimateDot + 1, lastDot);
-        String methodName = testMethodQualifiedName.substring(lastDot + 1);
+        String methodName = testCaseReport.getName();
+        String className = testCaseReport.getClassName();
+        int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
+        String packageName = lastDotIndex == -1 ? "" : testCaseReport.getFullClassName().substring(0, lastDotIndex);
 
         JunitTestReportRecord record = create.newRecord(Tables.JUNIT_TEST_REPORT);
         record.setProjectId(this.getProjectId());
