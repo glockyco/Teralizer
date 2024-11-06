@@ -118,6 +118,7 @@ public class TestGenerationTask extends AbstractTask {
                 this.prepareEvoSuiteTestFile(file);
 
                 LOGGER.atDebug().log("Copying EvoSuite test file from " + file + " to " + targetFilePath);
+                targetFilePath.getParent().toFile().mkdirs();
                 Files.copy(file, targetFilePath, StandardCopyOption.REPLACE_EXISTING);
             } else if (file.toString().endsWith("ESTest_scaffolding.java")) {
                 LOGGER.atDebug().log("Deleting EvoSuite scaffolding file " + file + ".");
