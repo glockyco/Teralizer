@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -57,29 +58,31 @@ public class TestGenerationTask extends AbstractTask {
             .map(p -> Paths.get(p).toAbsolutePath().toString())
             .collect(Collectors.joining(File.pathSeparator));
 
-        String testFormat;
-        switch (this.projectRecord.getTestFramework()) {
-            case JUNIT_4:
-                testFormat = "JUNIT4";
-                break;
-            case JUNIT_5:
-                testFormat = "JUNIT5";
-                break;
-            default:
-                throw new RuntimeException("Unsupported test framework " + this.projectRecord.getTestFramework() + ".");
-        }
-
-        List<String> command = Arrays.asList(
+        List<String> command = new ArrayList<>(Arrays.asList(
             "java",
             "-jar", EVOSUITE_JAR_PATH.toAbsolutePath().toString(),
             "-base_dir", evoSuiteDataDir.toAbsolutePath().toString(),
             "-target", this.projectRecord.getMainCompiledPath().toAbsolutePath().toString(),
             "-projectCP", projectCP,
             "-seed", "0",
+            "-Dstopping_condition=MAXTIME",
             "-Dsearch_budget=1",
-            "-Dstopping_condition=MaxTime",
-            "-Dtest_format=" + testFormat
-        );
+            "-Djunit_check=false",
+            "-Dcoverage=false",
+            "-Dfilter_sandbox_tests=true",
+            "-Duse_separate_classloader=false"
+        ));
+
+        switch (this.projectRecord.getTestFramework()) {
+            case JUNIT_4:
+                command.add("-Dtest_format=JUNIT4");
+                break;
+            case JUNIT_5:
+                command.add("-Dtest_format=JUNIT5");
+                break;
+            default:
+                throw new RuntimeException("Unsupported test framework " + this.projectRecord.getTestFramework() + ".");
+        }
 
         this.consoleCommand.execute(command);
 
