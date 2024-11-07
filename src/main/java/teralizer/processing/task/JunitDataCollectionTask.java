@@ -59,6 +59,12 @@ public class JunitDataCollectionTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        if (!this.projectRecord.getTestReportsPath().toFile().exists()) {
+            // The test reports directory might be missing if the project does
+            // not contain any tests or uses a non-standard reports directory.
+            throw new RuntimeException("Failed to collect test data. Report directory '" + this.projectRecord.getTestReportsPath() + "' does not exist.");
+        }
+
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         switch (this.stage) {
             case COLLECT_JUNIT_TESTS:
