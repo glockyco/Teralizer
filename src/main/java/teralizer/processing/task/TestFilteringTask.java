@@ -127,14 +127,14 @@ public class TestFilteringTask extends AbstractTask {
         String info = "Overall: " + decision + "\n\n" + filterResults;
 
         if (!rejections.isEmpty()) {
-            if (this.testRecord != null) {
-                this.testRecord.setIsIncluded(false);
-                this.testRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
-                this.testRecord.store();
-            } else if (this.generalizationRecord != null) {
+            if (this.generalizationRecord != null) {
                 this.generalizationRecord.setIsIncluded(false);
                 this.generalizationRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
                 this.generalizationRecord.store();
+            } else if (this.testRecord != null) {
+                this.testRecord.setIsIncluded(false);
+                this.testRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
+                this.testRecord.store();
             }
         }
     }
