@@ -1,4 +1,4 @@
-package teralizer;
+package teralizer.jpf;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.PropertyListenerAdapter;
@@ -29,10 +29,20 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private final Path inputSpecificationPath;
     private final Path outputSpecificationPath;
 
+    private final double maxExecutionTime;
+
+    private long startTime;
+
     public TestGeneralizationListener(Config config) {
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
         this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
         this.outputSpecificationPath = Paths.get(config.getString("test_generalization.output_specification_path"));
+        this.maxExecutionTime = config.getDouble("test_generalization.max_execution_time");
+    }
+
+    @Override
+    public void searchStarted(Search search) {
+        this.startTime = System.currentTimeMillis();
     }
 
     @Override
@@ -58,6 +68,14 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         String errorDetails = search.getLastError().getDetails();
         if (errorDetails.contains("java.lang.NullPointerException") && errorDetails.contains("at java.util.concurrent.atomic")) {
             throw new RuntimeException("Failed JPF execution due to incomplete native peers.\n\n" + errorDetails);
+        }
+    }
+
+    @Override
+    public void stateAdvanced(Search search) {
+        double elapsedTime = (System.currentTimeMillis() - this.startTime) / 1000.0;
+        if (elapsedTime > this.maxExecutionTime) {
+            throw new RuntimeException("Execution timeout exceeded: " + elapsedTime + " of " + this.maxExecutionTime + " seconds passed.");
         }
     }
 

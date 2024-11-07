@@ -9,7 +9,7 @@ import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
-import teralizer.TestGeneralizationListener;
+import teralizer.jpf.TestGeneralizationListener;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 

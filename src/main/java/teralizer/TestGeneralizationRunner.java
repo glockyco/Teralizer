@@ -22,6 +22,8 @@ public class TestGeneralizationRunner {
     public static final String TOOL_NAME = "Teralizer";
     public static final Path DB_PATH = Paths.get("database/db.sqlite");
 
+    public static final double JPF_MAX_EXECUTION_TIME = 10; // seconds
+
     private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
 
     public static void main(String[] args) {

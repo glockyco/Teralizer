@@ -10,6 +10,7 @@ import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import teralizer.TestGeneralizationRunner;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -91,6 +92,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("classpath", this.projectRecord.getClasspath());
         context.put("symbolicMethod", symbolicMethod);
 
+        context.put("maxExecutionTime", TestGeneralizationRunner.JPF_MAX_EXECUTION_TIME);
         context.put("driverClassQualifiedName", this.testRecord.getDriverClassQualifiedName());
         context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());
         context.put("testMethodQualifiedName", this.testRecord.getTestMethodQualifiedName());
