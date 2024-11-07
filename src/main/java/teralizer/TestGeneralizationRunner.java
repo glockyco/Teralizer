@@ -6,8 +6,6 @@ import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import teralizer.processing.*;
 import teralizer.processing.task.*;
 
@@ -24,8 +22,6 @@ public class TestGeneralizationRunner {
 
     public static final double JPF_MAX_EXECUTION_TIME = 10; // seconds
     public static final long JPF_MAX_PATH_CONDITION_SIZE = 1000000; // characters
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
 
     public static void main(String[] args) {
         // Arguments: [benchmark]
