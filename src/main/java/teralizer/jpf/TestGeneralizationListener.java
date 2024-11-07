@@ -30,6 +30,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private final Path outputSpecificationPath;
 
     private final double maxExecutionTime;
+    private final long maxPathConditionSize;
 
     private long startTime;
 
@@ -38,6 +39,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
         this.outputSpecificationPath = Paths.get(config.getString("test_generalization.output_specification_path"));
         this.maxExecutionTime = config.getDouble("test_generalization.max_execution_time");
+        this.maxPathConditionSize = config.getLong("test_generalization.max_path_condition_size");
     }
 
     @Override
@@ -76,6 +78,12 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         double elapsedTime = (System.currentTimeMillis() - this.startTime) / 1000.0;
         if (elapsedTime > this.maxExecutionTime) {
             throw new RuntimeException("Execution timeout exceeded: " + elapsedTime + " of " + this.maxExecutionTime + " seconds passed.");
+        }
+
+        PathCondition pathCondition = PathCondition.getPC(search.getVM());
+        int pcLength = pathCondition == null ? 0 : pathCondition.toString().length();
+        if (pcLength > this.maxPathConditionSize) {
+            throw new RuntimeException("PC size limit exceeded: " + pcLength + " of " + this.maxPathConditionSize + " characters used.");
         }
     }
 

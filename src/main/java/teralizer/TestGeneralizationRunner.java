@@ -23,6 +23,7 @@ public class TestGeneralizationRunner {
     public static final Path DB_PATH = Paths.get("database/db.sqlite");
 
     public static final double JPF_MAX_EXECUTION_TIME = 10; // seconds
+    public static final long JPF_MAX_PATH_CONDITION_SIZE = 1000000; // characters
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationRunner.class);
 
