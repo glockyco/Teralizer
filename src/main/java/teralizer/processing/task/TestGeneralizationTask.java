@@ -268,6 +268,12 @@ public class TestGeneralizationTask extends AbstractTask {
             //   a > b & b > c & c < a
 
             // ------------------------------------------------------------------------------------------------------ //
+            // Remove all non-@Test annotations.                                                                      //
+            // ------------------------------------------------------------------------------------------------------ //
+
+            testMethodDeclaration.getAnnotations().removeIf(a -> !a.getNameAsString().equals("Test"));
+
+            // ------------------------------------------------------------------------------------------------------ //
             // Replace JUnit @Test annotations with jqwik @Property annotations.                                      //
             // ------------------------------------------------------------------------------------------------------ //
 
