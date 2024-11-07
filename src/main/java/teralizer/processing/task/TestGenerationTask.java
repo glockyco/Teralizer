@@ -111,18 +111,10 @@ public class TestGenerationTask extends AbstractTask {
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
             if (file.toString().endsWith("ESTest.java")) {
-                Path relativeFilePath = this.evoSuiteTestsDir.relativize(file);
-                Path targetFilePath = this.projectTestsDir.resolve(relativeFilePath);
-
                 LOGGER.atDebug().log("Preparing EvoSuite test file " + file + ".");
                 this.prepareEvoSuiteTestFile(file);
-
-                LOGGER.atDebug().log("Copying EvoSuite test file from " + file + " to " + targetFilePath);
-                targetFilePath.getParent().toFile().mkdirs();
-                Files.copy(file, targetFilePath, StandardCopyOption.REPLACE_EXISTING);
             } else if (file.toString().endsWith("ESTest_scaffolding.java")) {
-                LOGGER.atDebug().log("Deleting EvoSuite scaffolding file " + file + ".");
-                file.toFile().delete();
+                // Keep the scaffolding file as-is.
             }
             return FileVisitResult.CONTINUE;
         }
@@ -146,7 +138,11 @@ public class TestGenerationTask extends AbstractTask {
                     .map(NodeWithSimpleName::getNameAsString)
                     .anyMatch(n -> n.equals("verifyException") || n.equals("assertThrownBy")));
             }
-            Files.write(file, compilationUnit.toString().getBytes());
+
+            Path relativeFilePath = this.evoSuiteTestsDir.relativize(file);
+            Path targetFilePath = this.projectTestsDir.resolve(relativeFilePath);
+            targetFilePath.getParent().toFile().mkdirs();
+            Files.write(targetFilePath, compilationUnit.toString().getBytes());
         }
     }
 }
