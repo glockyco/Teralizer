@@ -137,6 +137,9 @@ public class TestGenerationTask extends AbstractTask {
                     && m.findAll(MethodCallExpr.class).stream()
                     .map(NodeWithSimpleName::getNameAsString)
                     .anyMatch(n -> n.equals("verifyException") || n.equals("assertThrownBy")));
+
+                classDeclaration.getMembers().removeIf(m -> m instanceof MethodDeclaration
+                    && m.getAllContainedComments().stream().anyMatch(c -> c.getContent().equals(" Undeclared exception!")));
             }
 
             Path relativeFilePath = this.evoSuiteTestsDir.relativize(file);
