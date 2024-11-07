@@ -48,21 +48,25 @@ public class PitDataCollectionTask extends AbstractTask {
     private void executeMutationTesting(DSLContext create) throws Exception {
         List<String> targetClasses = SQLiteRepository.fetchCoveredClasses(create, this.getVariant(), this.getProjectId());
 
+        if (targetClasses.isEmpty()) {
+            throw new RuntimeException("Failed mutation testing. All classes of the project are excluded.");
+        }
+
         List<String> targetTests;
         switch (this.getStage()) {
             case COLLECT_PIT_DATA_INITIAL:
                 targetTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
                 break;
             case COLLECT_PIT_DATA_GENERALIZED:
+                List<String> targetGeneralizations = SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.getVariant(), this.getProjectId());
+                if (targetGeneralizations.isEmpty()) {
+                    throw new RuntimeException("Failed mutation testing. All generalized tests of the project are excluded.");
+                }
                 targetTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
-                targetTests.addAll(SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.getVariant(), this.getProjectId()));
+                targetTests.addAll(targetGeneralizations);
                 break;
             default:
                 throw new RuntimeException("Unsupported processing stage " + this.getStage() + ".");
-        }
-
-        if (targetClasses.isEmpty()) {
-            throw new RuntimeException("Failed mutation testing. All classes of the project are excluded.");
         }
 
         if (targetTests.isEmpty()) {
