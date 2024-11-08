@@ -154,6 +154,10 @@ public class TestGenerationTask extends AbstractTask {
                     .anyMatch(n -> n.equals("verifyException") || n.equals("assertThrownBy")));
 
                 classDeclaration.getMembers().removeIf(m -> m instanceof MethodDeclaration
+                    && m.findAll(MethodCallExpr.class).stream()
+                    .anyMatch(e -> e.toString().startsWith("executor.submit")));
+
+                classDeclaration.getMembers().removeIf(m -> m instanceof MethodDeclaration
                     && m.getAllContainedComments().stream().anyMatch(c -> c.getContent().equals(" Undeclared exception!")));
             }
 
