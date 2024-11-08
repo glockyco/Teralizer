@@ -70,7 +70,9 @@ public class TestGenerationTask extends AbstractTask {
             "-Djunit_check=false",
             "-Dcoverage=false",
             "-Dfilter_sandbox_tests=true",
-            "-Duse_separate_classloader=false"
+            "-Duse_separate_classloader=false",
+            "-Dassertion_strategy=UNIT",
+            "-Dcriterion=LINE:BRANCH"
         ));
 
         switch (this.projectRecord.getTestFramework()) {
