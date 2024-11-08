@@ -190,9 +190,12 @@ CREATE TABLE pit_coverage_report
     test_package_name          TEXT    NOT NULL,
     test_class_name            TEXT    NOT NULL,
     test_method_name           TEXT    NOT NULL,
-    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
 );
 
+CREATE INDEX idx_pit_coverage_report_project_id ON pit_coverage_report (project_id);
 CREATE INDEX idx_pit_coverage_report_test_id ON pit_coverage_report (test_id);
 CREATE INDEX idx_pit_coverage_report_generalization_id ON pit_coverage_report (generalization_id);
 

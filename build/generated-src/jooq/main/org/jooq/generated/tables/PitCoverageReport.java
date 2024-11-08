@@ -168,7 +168,7 @@ public class PitCoverageReport extends TableImpl<PitCoverageReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_PIT_COVERAGE_REPORT_GENERALIZATION_ID, Indexes.IDX_PIT_COVERAGE_REPORT_TEST_ID);
+        return Arrays.<Index>asList(Indexes.IDX_PIT_COVERAGE_REPORT_GENERALIZATION_ID, Indexes.IDX_PIT_COVERAGE_REPORT_PROJECT_ID, Indexes.IDX_PIT_COVERAGE_REPORT_TEST_ID);
     }
 
     @Override
@@ -188,16 +188,32 @@ public class PitCoverageReport extends TableImpl<PitCoverageReportRecord> {
 
     @Override
     public List<ForeignKey<PitCoverageReportRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<PitCoverageReportRecord, ?>>asList(Keys.FK_PIT_COVERAGE_REPORT_TEST_1);
+        return Arrays.<ForeignKey<PitCoverageReportRecord, ?>>asList(Keys.FK_PIT_COVERAGE_REPORT_PROJECT_1, Keys.FK_PIT_COVERAGE_REPORT_TEST_1, Keys.FK_PIT_COVERAGE_REPORT_GENERALIZATION_1);
     }
 
+    private transient Project _project;
     private transient Test _test;
+    private transient Generalization _generalization;
+
+    public Project project() {
+        if (_project == null)
+            _project = new Project(this, Keys.FK_PIT_COVERAGE_REPORT_PROJECT_1);
+
+        return _project;
+    }
 
     public Test test() {
         if (_test == null)
             _test = new Test(this, Keys.FK_PIT_COVERAGE_REPORT_TEST_1);
 
         return _test;
+    }
+
+    public Generalization generalization() {
+        if (_generalization == null)
+            _generalization = new Generalization(this, Keys.FK_PIT_COVERAGE_REPORT_GENERALIZATION_1);
+
+        return _generalization;
     }
 
     @Override
