@@ -70,9 +70,9 @@ public class CleanupTask extends AbstractTask {
             List<File> buildFiles = Arrays.asList(mavenBuildFile, gradleBuildFile);
             for (File buildFile : buildFiles) {
                 if (buildFile.exists()) {
-                    LOGGER.atInfo().log("Deleting build file '" + buildFile + "'.");
+                    LOGGER.atInfo().log("Deleting " + TestGeneralizationRunner.TOOL_NAME + " build file '" + buildFile + "'.");
                     if (!buildFile.delete()) {
-                        throw new RuntimeException("Failed to delete build file '" + buildFile + "'.");
+                        throw new RuntimeException("Failed to delete " + TestGeneralizationRunner.TOOL_NAME + " build file '" + buildFile + "'.");
                     }
                 }
             }
@@ -106,7 +106,7 @@ public class CleanupTask extends AbstractTask {
         @Override
         public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) throws IOException {
             if (this.shouldDeleteDirectory(directory)) {
-                LOGGER.atInfo().log("Deleting directory '" + directory + "'.");
+                LOGGER.atInfo().log("Deleting " + TestGeneralizationRunner.TOOL_NAME + " directory '" + directory + "'.");
                 FileUtils.deleteDirectory(directory.toFile());
                 return FileVisitResult.SKIP_SUBTREE;
             }
