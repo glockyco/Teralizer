@@ -184,6 +184,7 @@ public class TestAnalysisTask extends AbstractTask {
             }
 
             AssertionRecord assertionRecord = create.newRecord(Tables.ASSERTION);
+            assertionRecord.setProjectId(testRecord.getProjectId());
             assertionRecord.setTestId(testRecord.getId());
             assertionRecord.setMethodName(methodName);
             assertionRecord.setMethodArgumentTypes(gson.toJson(assertArguments));

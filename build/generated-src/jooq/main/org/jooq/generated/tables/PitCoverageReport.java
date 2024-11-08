@@ -168,7 +168,7 @@ public class PitCoverageReport extends TableImpl<PitCoverageReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_PIT_COVERAGE_REPORT_GENERALIZATION_ID, Indexes.IDX_PIT_COVERAGE_REPORT_PROJECT_ID, Indexes.IDX_PIT_COVERAGE_REPORT_TEST_ID);
+        return Arrays.<Index>asList(Indexes.IDX_PIT_COVERAGE_REPORT_GENERALIZATION_ID, Indexes.IDX_PIT_COVERAGE_REPORT_PROJECT_ID, Indexes.IDX_PIT_COVERAGE_REPORT_STAGE, Indexes.IDX_PIT_COVERAGE_REPORT_STEP, Indexes.IDX_PIT_COVERAGE_REPORT_TEST_ID, Indexes.IDX_PIT_COVERAGE_REPORT_VARIANT);
     }
 
     @Override

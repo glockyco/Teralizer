@@ -78,6 +78,7 @@ CREATE INDEX idx_test_is_included ON test (is_included);
 CREATE TABLE assertion
 (
     id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id            INTEGER NOT NULL,
     test_id               INTEGER NOT NULL,
     method_name           TEXT    NOT NULL,
     method_argument_types TEXT    NOT NULL,
@@ -85,6 +86,7 @@ CREATE TABLE assertion
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
 );
 
+CREATE INDEX idx_assertion_project_id ON assertion (project_id);
 CREATE INDEX idx_assertion_test_id ON assertion (test_id);
 
 CREATE TABLE generalization
@@ -151,6 +153,8 @@ CREATE TABLE jacoco_coverage_report
 (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id          INTEGER NOT NULL,
+    step                INTEGER NOT NULL,
+    stage               INTEGER NOT NULL,
     variant             TEXT, -- can be null if the report is for the original test suite
     covered_package     TEXT    NOT NULL,
     covered_class       TEXT    NOT NULL,
@@ -168,6 +172,9 @@ CREATE TABLE jacoco_coverage_report
 );
 
 CREATE INDEX idx_jacoco_coverage_report_project_id ON jacoco_coverage_report (project_id);
+
+CREATE INDEX idx_jacoco_coverage_report_step ON jacoco_coverage_report (step);
+CREATE INDEX idx_jacoco_coverage_report_stage ON jacoco_coverage_report (stage);
 CREATE INDEX idx_jacoco_coverage_report_variant ON jacoco_coverage_report (variant);
 
 CREATE INDEX idx_jacoco_coverage_report_package ON jacoco_coverage_report (covered_package);
@@ -199,10 +206,16 @@ CREATE INDEX idx_pit_coverage_report_project_id ON pit_coverage_report (project_
 CREATE INDEX idx_pit_coverage_report_test_id ON pit_coverage_report (test_id);
 CREATE INDEX idx_pit_coverage_report_generalization_id ON pit_coverage_report (generalization_id);
 
+CREATE INDEX idx_pit_coverage_report_step ON pit_coverage_report (step);
+CREATE INDEX idx_pit_coverage_report_stage ON pit_coverage_report (stage);
+CREATE INDEX idx_pit_coverage_report_variant ON pit_coverage_report (variant);
+
 CREATE TABLE pit_mutation_report
 (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id          INTEGER NOT NULL,
+    step                INTEGER NOT NULL,
+    stage               TEXT    NOT NULL,
     variant             TEXT, -- can be null if the report is for the original test suite
     is_detected         INTEGER NOT NULL,
     status              TEXT    NOT NULL,
@@ -221,6 +234,9 @@ CREATE TABLE pit_mutation_report
 );
 
 CREATE INDEX idx_pit_mutation_report_project_id ON pit_mutation_report (project_id);
+
+CREATE INDEX idx_pit_mutation_report_step ON pit_mutation_report (step);
+CREATE INDEX idx_pit_mutation_report_stage ON pit_mutation_report (stage);
 CREATE INDEX idx_pit_mutation_report_variant ON pit_mutation_report (variant);
 
 CREATE INDEX idx_pit_mutation_report_is_detected ON pit_mutation_report (is_detected);
@@ -251,4 +267,5 @@ CREATE INDEX idx_task_generalization_id ON task (generalization_id);
 CREATE INDEX idx_task_step ON task (step);
 CREATE INDEX idx_task_stage ON task (stage);
 CREATE INDEX idx_task_variant ON task (variant);
+
 CREATE INDEX idx_task_status ON task (status);

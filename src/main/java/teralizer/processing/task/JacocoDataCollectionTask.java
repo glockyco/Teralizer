@@ -36,24 +36,24 @@ public class JacocoDataCollectionTask extends AbstractTask {
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        List<JacocoCoverageReportRecord> coverageReportsRecords = createCoverageReportRecords(create, this.variant, this.projectRecord, this.consoleCommand);
+        List<JacocoCoverageReportRecord> coverageReportsRecords = this.createCoverageReportRecords(create, this.consoleCommand);
         create.batchStore(coverageReportsRecords).execute();
     }
 
-    private static List<JacocoCoverageReportRecord> createCoverageReportRecords(DSLContext create, GeneralizationVariant variant, ProjectRecord projectRecord, ConsoleCommand consoleCommand) throws Exception {
-        executeCoverageReporting(projectRecord, consoleCommand);
-        return collectCoverageData(create, projectRecord, variant);
+    private List<JacocoCoverageReportRecord> createCoverageReportRecords(DSLContext create, ConsoleCommand consoleCommand) throws Exception {
+        this.executeCoverageReporting(consoleCommand);
+        return this.collectCoverageData(create);
     }
 
-    private static void executeCoverageReporting(ProjectRecord projectRecord, ConsoleCommand consoleCommand) throws Exception {
+    private void executeCoverageReporting(ConsoleCommand consoleCommand) throws Exception {
         List<String> command;
-        switch (projectRecord.getType()) {
+        switch (this.projectRecord.getType()) {
             case UNKNOWN:
-                throw new RuntimeException("Cannot execute coverage reporting for project " + projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
+                throw new RuntimeException("Cannot execute coverage reporting for project " + this.projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");
             case JAIGANTIC:
-                throw new RuntimeException("Cannot execute coverage reporting for project " + projectRecord.getRootPath() + ". JAigantic projects are not supported yet.");
+                throw new RuntimeException("Cannot execute coverage reporting for project " + this.projectRecord.getRootPath() + ". JAigantic projects are not supported yet.");
             case ANT:
-                throw new RuntimeException("Cannot execute coverage reporting for project " + projectRecord.getRootPath() + ". Ant projects are not supported yet.");
+                throw new RuntimeException("Cannot execute coverage reporting for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
                 command = buildGradleCommand();
                 break;
@@ -61,13 +61,13 @@ public class JacocoDataCollectionTask extends AbstractTask {
                 command = buildMavenCommand();
                 break;
             default:
-                throw new RuntimeException("Cannot execute coverage reporting for project " + projectRecord.getRootPath() + ". Unsupported project type " + projectRecord.getType() + ".");
+                throw new RuntimeException("Cannot execute coverage reporting for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
         }
-        consoleCommand.execute(projectRecord.getRootPath(), command);
+        consoleCommand.execute(this.projectRecord.getRootPath(), command);
     }
 
-    private static List<JacocoCoverageReportRecord> collectCoverageData(DSLContext create, ProjectRecord projectRecord, GeneralizationVariant variant) throws IOException {
-        Path reportPath = getCoverageReportPath(projectRecord);
+    private List<JacocoCoverageReportRecord> collectCoverageData(DSLContext create) throws IOException {
+        Path reportPath = getCoverageReportPath(this.projectRecord);
 
         if (!reportPath.toFile().exists()) {
             throw new RuntimeException("Failed to collect coverage data. Report file '" + reportPath + "' does not exist.");
@@ -82,26 +82,29 @@ public class JacocoDataCollectionTask extends AbstractTask {
                 // enough for the JaCoCo reports that we are reading from.
                 String[] data = line.split(",");
 
-                JacocoCoverageReportRecord coverageReportRecord = create.newRecord(Tables.JACOCO_COVERAGE_REPORT);
-                coverageReportRecord.setProjectId(projectRecord.getId());
-                coverageReportRecord.setVariant(variant);
+                JacocoCoverageReportRecord record = create.newRecord(Tables.JACOCO_COVERAGE_REPORT);
+                record.setProjectId(this.projectRecord.getId());
+
+                record.setStep(this.getStage().getStep());
+                record.setStage(this.getStage());
+                record.setVariant(this.getVariant());
 
                 // Skipping data[0], which is the project name.
-                coverageReportRecord.setCoveredPackage(data[1]);
-                coverageReportRecord.setCoveredClass(data[2]);
+                record.setCoveredPackage(data[1]);
+                record.setCoveredClass(data[2]);
 
-                coverageReportRecord.setInstructionMissed(Integer.parseInt(data[3]));
-                coverageReportRecord.setInstructionCovered(Integer.parseInt(data[4]));
-                coverageReportRecord.setBranchMissed(Integer.parseInt(data[5]));
-                coverageReportRecord.setBranchCovered(Integer.parseInt(data[6]));
-                coverageReportRecord.setLineMissed(Integer.parseInt(data[7]));
-                coverageReportRecord.setLineCovered(Integer.parseInt(data[8]));
-                coverageReportRecord.setComplexityMissed(Integer.parseInt(data[9]));
-                coverageReportRecord.setComplexityCovered(Integer.parseInt(data[10]));
-                coverageReportRecord.setMethodMissed(Integer.parseInt(data[11]));
-                coverageReportRecord.setMethodCovered(Integer.parseInt(data[12]));
+                record.setInstructionMissed(Integer.parseInt(data[3]));
+                record.setInstructionCovered(Integer.parseInt(data[4]));
+                record.setBranchMissed(Integer.parseInt(data[5]));
+                record.setBranchCovered(Integer.parseInt(data[6]));
+                record.setLineMissed(Integer.parseInt(data[7]));
+                record.setLineCovered(Integer.parseInt(data[8]));
+                record.setComplexityMissed(Integer.parseInt(data[9]));
+                record.setComplexityCovered(Integer.parseInt(data[10]));
+                record.setMethodMissed(Integer.parseInt(data[11]));
+                record.setMethodCovered(Integer.parseInt(data[12]));
 
-                coverageReportRecords.add(coverageReportRecord);
+                coverageReportRecords.add(record);
             }
         }
         return coverageReportRecords;

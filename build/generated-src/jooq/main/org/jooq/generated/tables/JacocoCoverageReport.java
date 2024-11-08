@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row15;
+import org.jooq.Row17;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -29,6 +29,7 @@ import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
 import teralizer.processing.GeneralizationVariant;
+import teralizer.processing.ProcessingStage;
 
 
 /**
@@ -61,6 +62,16 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
      * The column <code>jacoco_coverage_report.project_id</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>jacoco_coverage_report.step</code>.
+     */
+    public final TableField<JacocoCoverageReportRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>jacoco_coverage_report.stage</code>.
+     */
+    public final TableField<JacocoCoverageReportRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.INTEGER.nullable(false), this, "", new EnumConverter<Integer, ProcessingStage>(Integer.class, ProcessingStage.class));
 
     /**
      * The column <code>jacoco_coverage_report.variant</code>.
@@ -167,7 +178,7 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_JACOCO_COVERAGE_REPORT_CLASS, Indexes.IDX_JACOCO_COVERAGE_REPORT_PACKAGE, Indexes.IDX_JACOCO_COVERAGE_REPORT_PROJECT_ID, Indexes.IDX_JACOCO_COVERAGE_REPORT_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_JACOCO_COVERAGE_REPORT_CLASS, Indexes.IDX_JACOCO_COVERAGE_REPORT_PACKAGE, Indexes.IDX_JACOCO_COVERAGE_REPORT_PROJECT_ID, Indexes.IDX_JACOCO_COVERAGE_REPORT_STAGE, Indexes.IDX_JACOCO_COVERAGE_REPORT_STEP, Indexes.IDX_JACOCO_COVERAGE_REPORT_VARIANT);
     }
 
     @Override
@@ -226,11 +237,11 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     }
 
     // -------------------------------------------------------------------------
-    // Row15 type methods
+    // Row17 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row15<Integer, Integer, GeneralizationVariant, String, String, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> fieldsRow() {
-        return (Row15) super.fieldsRow();
+    public Row17<Integer, Integer, Integer, ProcessingStage, GeneralizationVariant, String, String, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> fieldsRow() {
+        return (Row17) super.fieldsRow();
     }
 }

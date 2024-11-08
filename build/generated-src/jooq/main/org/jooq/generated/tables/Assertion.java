@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row5;
+import org.jooq.Row6;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -53,6 +53,11 @@ public class Assertion extends TableImpl<AssertionRecord> {
      * The column <code>assertion.id</code>.
      */
     public final TableField<AssertionRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+
+    /**
+     * The column <code>assertion.project_id</code>.
+     */
+    public final TableField<AssertionRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>assertion.test_id</code>.
@@ -114,7 +119,7 @@ public class Assertion extends TableImpl<AssertionRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_ASSERTION_TEST_ID);
+        return Arrays.<Index>asList(Indexes.IDX_ASSERTION_PROJECT_ID, Indexes.IDX_ASSERTION_TEST_ID);
     }
 
     @Override
@@ -173,11 +178,11 @@ public class Assertion extends TableImpl<AssertionRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row5 type methods
+    // Row6 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row5<Integer, Integer, String, String, String> fieldsRow() {
-        return (Row5) super.fieldsRow();
+    public Row6<Integer, Integer, Integer, String, String, String> fieldsRow() {
+        return (Row6) super.fieldsRow();
     }
 }

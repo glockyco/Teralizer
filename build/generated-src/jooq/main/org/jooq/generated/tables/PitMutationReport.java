@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row13;
+import org.jooq.Row15;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -30,6 +30,7 @@ import org.jooq.impl.TableImpl;
 
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.MutationStatus;
+import teralizer.processing.ProcessingStage;
 
 
 /**
@@ -62,6 +63,16 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
      * The column <code>pit_mutation_report.project_id</code>.
      */
     public final TableField<PitMutationReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>pit_mutation_report.step</code>.
+     */
+    public final TableField<PitMutationReportRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>pit_mutation_report.stage</code>.
+     */
+    public final TableField<PitMutationReportRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStage>(String.class, ProcessingStage.class));
 
     /**
      * The column <code>pit_mutation_report.variant</code>.
@@ -158,7 +169,7 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_PIT_MUTATION_REPORT_IS_DETECTED, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_CLASS, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_METHOD, Indexes.IDX_PIT_MUTATION_REPORT_PROJECT_ID, Indexes.IDX_PIT_MUTATION_REPORT_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_PIT_MUTATION_REPORT_IS_DETECTED, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_CLASS, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_METHOD, Indexes.IDX_PIT_MUTATION_REPORT_PROJECT_ID, Indexes.IDX_PIT_MUTATION_REPORT_STAGE, Indexes.IDX_PIT_MUTATION_REPORT_STEP, Indexes.IDX_PIT_MUTATION_REPORT_VARIANT);
     }
 
     @Override
@@ -217,11 +228,11 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row13 type methods
+    // Row15 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row13<Integer, Integer, GeneralizationVariant, Boolean, MutationStatus, Integer, String, String, String, String, Integer, String, String> fieldsRow() {
-        return (Row13) super.fieldsRow();
+    public Row15<Integer, Integer, Integer, ProcessingStage, GeneralizationVariant, Boolean, MutationStatus, Integer, String, String, String, String, Integer, String, String> fieldsRow() {
+        return (Row15) super.fieldsRow();
     }
 }

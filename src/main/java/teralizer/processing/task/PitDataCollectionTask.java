@@ -194,6 +194,9 @@ public class PitDataCollectionTask extends AbstractTask {
         for (Element mutationElement : mutationsElement.elements("mutation")) {
             PitMutationReportRecord record = create.newRecord(Tables.PIT_MUTATION_REPORT);
             record.setProjectId(this.getProjectId());
+
+            record.setStep(this.getStage().getStep());
+            record.setStage(this.getStage());
             record.setVariant(this.getVariant());
 
             record.setIsDetected(Boolean.parseBoolean(mutationElement.attributeValue("detected")));
