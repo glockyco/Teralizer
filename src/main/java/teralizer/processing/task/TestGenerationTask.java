@@ -92,8 +92,14 @@ public class TestGenerationTask extends AbstractTask {
         Files.move(evoSuiteReportDir, evoSuiteDataDir.resolve(evoSuiteReportDir));
 
         Path evoSuiteTestsDir = evoSuiteDataDir.resolve("evosuite-tests");
-        JavaParser javaParser = context.get(this.getProjectId(), TaskContext.JAVA_PARSER);
-        Files.walkFileTree(evoSuiteTestsDir, new EvoSuiteTestVisitor(javaParser, evoSuiteTestsDir, this.projectRecord.getTestSourcePath()));
+        Path evoSuiteProcessedTestsDir = evoSuiteDataDir.resolve("evosuite-tests-processed");
+
+        Files.walkFileTree(evoSuiteTestsDir, new EvoSuiteTestVisitor(
+            context.get(this.getProjectId(), TaskContext.JAVA_PARSER),
+            evoSuiteTestsDir,
+            evoSuiteProcessedTestsDir,
+            this.projectRecord.getTestSourcePath()
+        ));
     }
 
     private static class EvoSuiteTestVisitor extends SimpleFileVisitor<Path> {
@@ -102,11 +108,18 @@ public class TestGenerationTask extends AbstractTask {
 
         private final JavaParser javaParser;
         private final Path evoSuiteTestsDir;
+        private final Path evoSuiteProcessedTestsDir;
         private final Path projectTestsDir;
 
-        public EvoSuiteTestVisitor(JavaParser javaParser, Path evoSuiteTestsDir, Path projectTestsDir) {
+        public EvoSuiteTestVisitor(
+            JavaParser javaParser,
+            Path evoSuiteTestsDir,
+            Path evoSuiteProcessedTestsDir,
+            Path projectTestsDir
+        ) {
             this.javaParser = javaParser;
             this.evoSuiteTestsDir = evoSuiteTestsDir;
+            this.evoSuiteProcessedTestsDir = evoSuiteProcessedTestsDir;
             this.projectTestsDir = projectTestsDir;
         }
 
@@ -145,9 +158,16 @@ public class TestGenerationTask extends AbstractTask {
             }
 
             Path relativeFilePath = this.evoSuiteTestsDir.relativize(file);
+
+            // Write the processed file to the data directory for cross-run storage:
+            Path processedFilePath = this.evoSuiteProcessedTestsDir.resolve(relativeFilePath);
+            processedFilePath.getParent().toFile().mkdirs();
+            Files.write(processedFilePath, compilationUnit.toString().getBytes());
+
+            // Copy the file to the project directory for further use in this run:
             Path targetFilePath = this.projectTestsDir.resolve(relativeFilePath);
             targetFilePath.getParent().toFile().mkdirs();
-            Files.write(targetFilePath, compilationUnit.toString().getBytes());
+            Files.copy(processedFilePath, targetFilePath, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 }
