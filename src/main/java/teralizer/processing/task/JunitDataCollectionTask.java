@@ -67,10 +67,11 @@ public class JunitDataCollectionTask extends AbstractTask {
 
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         switch (this.stage) {
-            case COLLECT_JUNIT_TESTS:
-                List<TestRecord> testRecords = this.collectTests(create);
-                create.batchInsert(testRecords).execute();
-                break;
+            case COLLECT_JUNIT_REPORTS_ORIGINAL:
+                if (this.testRecord == null) {
+                    List<TestRecord> testRecords = this.collectTests(create);
+                    create.batchInsert(testRecords).execute();
+                }
             case COLLECT_JUNIT_REPORTS_INITIAL:
                 if (this.testRecord == null) {
                     this.scheduleTasks(create, scheduleTask);
@@ -95,20 +96,24 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private void scheduleTasks(DSLContext create, Consumer<Task> scheduleTask) {
-        if (this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_INITIAL) {
-            Result<TestRecord> testRecords = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
-            for (TestRecord testRecord : testRecords) {
-                scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.projectRecord, testRecord));
-            }
-        } else if (this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED) {
-            Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
-            for (Record record : records) {
-                TestRecord testRecord = record.into(TestRecord.class);
-                GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
-                scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
-            }
-        } else {
-            throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
+        switch (this.stage) {
+            case COLLECT_JUNIT_REPORTS_ORIGINAL:
+            case COLLECT_JUNIT_REPORTS_INITIAL:
+                Result<TestRecord> testRecords = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
+                for (TestRecord testRecord : testRecords) {
+                    scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.projectRecord, testRecord));
+                }
+                break;
+            case COLLECT_JUNIT_REPORTS_GENERALIZED:
+                Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
+                for (Record record : records) {
+                    TestRecord testRecord = record.into(TestRecord.class);
+                    GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
+                    scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
+                }
+                break;
+            default:
+                throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
         }
     }
 
