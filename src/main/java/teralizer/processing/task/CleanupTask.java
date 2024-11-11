@@ -1,6 +1,5 @@
 package teralizer.processing.task;
 
-import org.apache.commons.io.FileUtils;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +9,6 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,35 +84,31 @@ public class CleanupTask extends AbstractTask {
             testSourcePath = this.projectPath;
         }
 
-        Files.walkFileTree(testSourcePath, new DirectoryDeletionVisitor(this.projectRecord, this.stage));
+        Files.walkFileTree(testSourcePath, new CleanupVisitor(this.projectRecord, this.stage));
 
         // We do not automatically remove collected data in the DB and the data
         // directory. These should be preserved even if the generalization is
         // reverted to enable comparisons across multiple generalization runs.
     }
 
-    private static class DirectoryDeletionVisitor extends SimpleFileVisitor<Path> {
+    private static class CleanupVisitor extends SimpleFileVisitor<Path> {
 
         private final ProjectRecord projectRecord;
         private final ProcessingStage stage;
 
-        public DirectoryDeletionVisitor(ProjectRecord projectRecord, ProcessingStage stage) {
+        public CleanupVisitor(ProjectRecord projectRecord, ProcessingStage stage) {
             this.projectRecord = projectRecord;
             this.stage = stage;
         }
 
         @Override
-        public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) throws IOException {
-            if (this.shouldDeleteDirectory(directory)) {
-                LOGGER.atInfo().log("Deleting " + TestGeneralizationRunner.TOOL_NAME + " directory '" + directory + "'.");
-                FileUtils.deleteDirectory(directory.toFile());
-                return FileVisitResult.SKIP_SUBTREE;
-            }
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            this.deleteIfEvoSuiteFile(file);
+            this.deleteIfGeneralizationFile(file);
             return FileVisitResult.CONTINUE;
         }
 
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+        private void deleteIfEvoSuiteFile(Path file) {
             // We only delete EvoSuite files if they were (probably) generated
             // by us. Of course, we could use a more robust check. However, the
             // current check is likely "good enough" for most cases. After all,
@@ -129,35 +123,24 @@ public class CleanupTask extends AbstractTask {
                 LOGGER.atInfo().log("Deleting EvoSuite test file '" + file + "'.");
                 file.toFile().delete();
             }
-            return FileVisitResult.CONTINUE;
         }
 
-        private boolean shouldDeleteDirectory(Path directory) {
+        private void deleteIfGeneralizationFile(Path file) {
+            String fileName = file.getFileName().toString();
+            boolean isDriverFile = fileName.startsWith("_") && fileName.contains("_Driver_");
+            boolean isGeneralizedFile = fileName.startsWith("_") && fileName.contains("_Generalized_");
+
             if (this.stage == ProcessingStage.CLEANUP_PROJECT) {
-                return this.isGeneratedDirectory(directory);
+                if (isDriverFile || isGeneralizedFile) {
+                    file.toFile().delete();
+                }
             } else if (this.stage == ProcessingStage.CLEANUP_GENERALIZATION) {
-                // Since all generalized test variants are added to the same
-                // project (albeit in different directories), we still need to
-                // remove ALL variants during cleanup to ensure that coverage,
-                // mutation score, etc. of the current variant are not affected
-                // by generalized tests that were created for other variants.
-                return this.isGeneratedDirectory(directory.getParent()) && this.isVariantDirectory(directory);
+                if (isGeneralizedFile) {
+                    file.toFile().delete();
+                }
             } else {
                 throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
             }
-        }
-
-        private boolean isGeneratedDirectory(Path directory) {
-            return directory.getFileName().toString().equals(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated");
-        }
-
-        private boolean isVariantDirectory(Path directory) {
-            for (GeneralizationVariant variant : GeneralizationVariant.values()) {
-                if (directory.getFileName().toString().equals(variant.toString().toLowerCase())) {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 

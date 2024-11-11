@@ -20,7 +20,6 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
-import teralizer.TestGeneralizationRunner;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.processing.GeneralizationVariant;
@@ -111,15 +110,17 @@ public class TestGeneralizationTask extends AbstractTask {
         record.setIsIncluded(true);
         record.store();
 
-        String packageName = this.testRecord.getTestPackageName() + "." + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated." + this.variant.name().toLowerCase();
+        String packageName = this.testRecord.getTestPackageName();
         String className = "_" + this.testRecord.getTestClassName() + "_Generalized_" + this.testRecord.getTestMethodName() + "_" + record.getId() + "_Test";
         String methodName = this.testRecord.getTestMethodName();
-        Path fileDirectory = Paths.get(this.testRecord.getTestFilePath()).getParent().resolve(Paths.get(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated", this.variant.name().toLowerCase()));
+        Path fileDirectory = Paths.get(this.testRecord.getTestFilePath()).getParent();
         Path filePath = fileDirectory.resolve(className + ".java");
 
+        String qualifiedNamePrefix = packageName.isEmpty() ? "" : (packageName + ".");
+
         record.setFilePath(filePath.toString());
-        record.setClassQualifiedName(packageName + "." + className);
-        record.setMethodQualifiedName(packageName + "." + className + "." + methodName);
+        record.setClassQualifiedName(qualifiedNamePrefix + className);
+        record.setMethodQualifiedName(qualifiedNamePrefix + className + "." + methodName);
         record.setPackageName(packageName);
         record.setClassName(className);
         record.setMethodName(methodName);

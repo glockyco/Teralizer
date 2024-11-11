@@ -334,4 +334,5 @@ gradle-app.setting
 
 pom.teralizer.xml
 build.teralizer.gradle
-**/teralizer_generated/**
+**/_*_Driver_*.java
+**/_*_Generalized_*.java

@@ -13,7 +13,6 @@ import org.jooq.generated.tables.records.JunitTestReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.xml.sax.SAXException;
-import teralizer.TestGeneralizationRunner;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -190,13 +189,12 @@ public class JunitDataCollectionTask extends AbstractTask {
         record.setTestClassName(testClassName);
         record.setTestMethodName(testMethodName);
 
-        String driverPackageName = (testPackageName.isEmpty() ? "" : (testPackageName + ".")) + TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated";
         String driverClassName = "_" + testClassName + "_Driver_" + testMethodName;
-        Path driverFilePath = testFilePath.getParent().resolve(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "_generated/" + driverClassName + ".java");
+        Path driverFilePath = testFilePath.getParent().resolve(driverClassName + ".java");
 
         record.setDriverFilePath(driverFilePath.toString());
-        record.setDriverClassQualifiedName(driverPackageName + "." + driverClassName);
-        record.setDriverPackageName(driverPackageName);
+        record.setDriverClassQualifiedName((testPackageName.isEmpty() ? "" : (testPackageName + ".")) + driverClassName);
+        record.setDriverPackageName(testPackageName);
         record.setDriverClassName(driverClassName);
 
         Path jpfDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/jpf-data");
