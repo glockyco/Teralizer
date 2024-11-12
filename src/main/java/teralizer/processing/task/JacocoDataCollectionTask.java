@@ -12,7 +12,9 @@ import teralizer.util.ConsoleCommand;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +44,7 @@ public class JacocoDataCollectionTask extends AbstractTask {
 
     private List<JacocoCoverageReportRecord> createCoverageReportRecords(DSLContext create, ConsoleCommand consoleCommand) throws Exception {
         this.executeCoverageReporting(consoleCommand);
-        return this.collectCoverageData(create);
+        return this.collectCoverageData(create, this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/jacoco-data"));
     }
 
     private void executeCoverageReporting(ConsoleCommand consoleCommand) throws Exception {
@@ -66,13 +68,21 @@ public class JacocoDataCollectionTask extends AbstractTask {
         consoleCommand.execute(this.projectRecord.getRootPath(), command);
     }
 
-    private List<JacocoCoverageReportRecord> collectCoverageData(DSLContext create) throws IOException {
+    private List<JacocoCoverageReportRecord> collectCoverageData(DSLContext create, Path dataDirectory) throws IOException {
         Path reportPath = getCoverageReportPath(this.projectRecord);
 
         if (!reportPath.toFile().exists()) {
             throw new RuntimeException("Failed to collect coverage data. Report file '" + reportPath + "' does not exist.");
         }
 
+        // Preserve the full raw data in the data directory:
+        String stageName = this.getStage().getStep() + "-" + this.getStage();
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant().getId() + "-" + this.getVariant());
+        String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
+        dataDirectory.toFile().mkdirs();
+        Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+
+        // Read (relevant parts of) the data and write it to the DB:
         List<JacocoCoverageReportRecord> coverageReportRecords = new ArrayList<>();
         String line;
         try (BufferedReader reader = new BufferedReader(new FileReader(reportPath.toFile()))) {

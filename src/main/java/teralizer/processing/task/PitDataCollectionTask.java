@@ -17,7 +17,10 @@ import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.util.ConsoleCommand;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -39,10 +42,11 @@ public class PitDataCollectionTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        Path pitDataDirectory = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/pit-data");
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         this.executeMutationTesting(create);
-        this.collectCoverageData(create);
-        this.collectMutationData(create);
+        this.collectCoverageData(create, pitDataDirectory);
+        this.collectMutationData(create, pitDataDirectory);
     }
 
     private void executeMutationTesting(DSLContext create) throws Exception {
@@ -93,13 +97,21 @@ public class PitDataCollectionTask extends AbstractTask {
         this.consoleCommand.execute(this.projectRecord.getRootPath(), command);
     }
 
-    private void collectCoverageData(DSLContext create) throws DocumentException {
+    private void collectCoverageData(DSLContext create, Path dataDirectory) throws DocumentException, IOException {
         Path reportPath = this.projectRecord.getMutationReportsPath().resolve("linecoverage.xml");
 
         if (!reportPath.toFile().exists()) {
             throw new RuntimeException("Failed to collect coverage data. Report file '" + reportPath + "' does not exist.");
         }
 
+        // Preserve the full raw data in the data directory:
+        String stageName = this.getStage().getStep() + "-" + this.getStage();
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant().getId() + "-" + this.getVariant());
+        String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
+        dataDirectory.toFile().mkdirs();
+        Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+
+        // Read (relevant parts of) the data and write it to the DB:
         Map<String, Integer> testIds = this.fetchTestIds(create);
         Map<String, Integer> generalizationIds = this.fetchGeneralizationIds(create);
 
@@ -180,13 +192,21 @@ public class PitDataCollectionTask extends AbstractTask {
             .fetch().stream().collect(Collectors.toMap(Record2::component1, Record2::component2));
     }
 
-    private void collectMutationData(DSLContext create) throws DocumentException {
+    private void collectMutationData(DSLContext create, Path dataDirectory) throws DocumentException, IOException {
         Path reportPath = this.projectRecord.getMutationReportsPath().resolve("mutations.xml");
 
         if (!reportPath.toFile().exists()) {
             throw new RuntimeException("Failed to collect mutation data. Report file '" + reportPath + "' does not exist.");
         }
 
+        // Preserve the full raw data in the data directory:
+        String stageName = this.getStage().getStep() + "-" + this.getStage();
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant().getId() + "-" + this.getVariant());
+        String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
+        dataDirectory.toFile().mkdirs();
+        Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+
+        // Read (relevant parts of) the data and write it to the DB:
         Document document = new SAXReader().read(reportPath.toFile());
         Element mutationsElement = document.getRootElement();
 

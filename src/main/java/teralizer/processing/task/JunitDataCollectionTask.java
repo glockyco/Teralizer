@@ -23,6 +23,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -213,6 +214,21 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private JunitTestReportRecord buildTestReportRecord(DSLContext create, Path testReportPath, ReportTestCase testCaseReport) {
+        // Preserve the full raw data in the data directory:
+        Path dataDirectory = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/junit-data");
+        Path testReportDataPath;
+        try {
+            String stageName = this.getStage().getStep() + "-" + this.getStage();
+            String variantName = this.getVariant() == null ? "" : ("." + this.getVariant().getId() + "-" + this.getVariant());
+            String fileName = stageName + variantName + "." + testReportPath.getFileName().toString();
+            testReportDataPath = dataDirectory.resolve(fileName);
+            dataDirectory.toFile().mkdirs();
+            Files.copy(testReportPath, testReportDataPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Write (relevant parts of) the data to the DB:
         String methodName = testCaseReport.getName();
         String className = testCaseReport.getClassName();
         int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
@@ -234,7 +250,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         record.setFailureType(testCaseReport.getFailureType());
         record.setFailureErrorLine(testCaseReport.getFailureErrorLine());
         record.setFailureDetail(testCaseReport.getFailureDetail());
-        record.setReportFilePath(testReportPath.toString());
+        record.setReportFilePath(testReportDataPath.toString());
         return record;
     }
 
