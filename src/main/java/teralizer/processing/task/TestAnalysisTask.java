@@ -75,7 +75,28 @@ public class TestAnalysisTask extends AbstractTask {
             ClassOrInterfaceDeclaration testClassDeclaration = testCompilationUnit.getClassByName(testClassName).get();
 
             for (TestRecord testRecord : testRecords) {
-                MethodDeclaration testMethodDeclaration = testClassDeclaration.getMethodsByName(testRecord.getTestMethodName()).get(0);
+                List<MethodDeclaration> testMethodDeclarations = testClassDeclaration.getMethodsByName(testRecord.getTestMethodName());
+                if (testMethodDeclarations.isEmpty()) {
+                    // This can happen if the test method was inherited from some other class.
+                    // The JUnit reports list the test as part of the child class then, but
+                    // the source code file of the child class does not contain the method.
+                    testRecord.setIsIncluded(false);
+                    testRecord.setExclusionInfo("Excluded by " + this + ". Method " + testRecord.getTestMethodName() + " not found in " + testRecord.getTestClassQualifiedName() + " (might be inherited).");
+                    testRecord.store();
+                    continue;
+                }
+
+                if (testMethodDeclarations.size() > 1) {
+                    // This should never happen because there can only be multiple methods
+                    // with the same name if they have different signatures. However, all
+                    // @Test methods should have the same signature (no inputs, void output).
+                    testRecord.setIsIncluded(false);
+                    testRecord.setExclusionInfo("Excluded by " + this + ". Multiple methods with name " + testRecord.getTestMethodName() + " found in " + testRecord.getTestClassQualifiedName() + ".");
+                    testRecord.store();
+                    continue;
+                }
+
+                MethodDeclaration testMethodDeclaration = testMethodDeclarations.get(0);
                 if (!testMethodDeclaration.isAnnotationPresent("Test")) {
                     testRecord.setIsIncluded(false);
                     testRecord.setExclusionInfo("Excluded by " + this + ". Test method has no @Test annotation.");
