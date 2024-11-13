@@ -154,7 +154,7 @@ CREATE TABLE jacoco_coverage_report
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id          INTEGER NOT NULL,
     step                INTEGER NOT NULL,
-    stage               INTEGER NOT NULL,
+    stage               TEXT    NOT NULL,
     variant             TEXT, -- can be null if the report is for the original test suite
     covered_package     TEXT    NOT NULL,
     covered_class       TEXT    NOT NULL,

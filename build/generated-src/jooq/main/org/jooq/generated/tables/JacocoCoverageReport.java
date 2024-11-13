@@ -71,7 +71,7 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     /**
      * The column <code>jacoco_coverage_report.stage</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.INTEGER.nullable(false), this, "", new EnumConverter<Integer, ProcessingStage>(Integer.class, ProcessingStage.class));
+    public final TableField<JacocoCoverageReportRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStage>(String.class, ProcessingStage.class));
 
     /**
      * The column <code>jacoco_coverage_report.variant</code>.
