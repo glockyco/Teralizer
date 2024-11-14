@@ -78,13 +78,14 @@ public class ProcessingPipeline {
             taskRecord.store();
         }
 
+        long startTime = -1;
         try {
             LOGGER.atDebug().log("Executing task {}.", currentTask);
 
             // We are only tracking task execution time here.
             // Total processing time of a project / test is tracked elsewhere,
             // so we don't have to include the runtime of the DB communication here.
-            long startTime = System.currentTimeMillis();
+            startTime = System.currentTimeMillis();
             currentTask.execute(this.context, (String s) -> {
                 String oldInfo = taskRecord.getInfo();
                 String newInfo = oldInfo == null ? s : oldInfo + "\n" + s;
@@ -104,6 +105,8 @@ public class ProcessingPipeline {
 
             LOGGER.atDebug().log("Task {} successfully executed.", currentTask);
         } catch (Exception e) {
+            long endTime = System.currentTimeMillis();
+
             StringWriter stringWriter = new StringWriter();
             PrintWriter printWriter = new PrintWriter(stringWriter);
             e.printStackTrace(printWriter);
@@ -113,6 +116,7 @@ public class ProcessingPipeline {
             taskRecord.setGeneralizationId(currentTask.getGeneralizationId());
 
             taskRecord.setStatus(ProcessingStatus.FAILED);
+            taskRecord.setRuntime(startTime == -1 ? null : ((endTime - startTime) / 1000.0f));
             String oldInfo = taskRecord.getInfo();
             String newInfo = oldInfo == null ? stringWriter.toString() : String.join("\n\n", stringWriter.toString(), oldInfo);
             taskRecord.setInfo(newInfo);
