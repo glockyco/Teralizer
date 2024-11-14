@@ -297,7 +297,7 @@ public class TestGeneralizationTask extends AbstractTask {
             ClassOrInterfaceType testParametersClassType = new ClassOrInterfaceType(null, testParametersClassDeclaration.getNameAsString());
             ClassOrInterfaceType testParametersSupplierClassType = new ClassOrInterfaceType(null, testParametersSupplierClassDeclaration.getNameAsString());
 
-            Parameter testParametersParameter = new Parameter(testParametersClassType, "testParameters");
+            Parameter testParametersParameter = new Parameter(testParametersClassType, "_p_");
             NormalAnnotationExpr forAllAnnotation = new NormalAnnotationExpr(new Name(net.jqwik.api.ForAll.class.getName()), new NodeList<>(new MemberValuePair("supplier", new ClassExpr(testParametersSupplierClassType))));
             testParametersParameter.addAnnotation(forAllAnnotation);
 

@@ -95,7 +95,7 @@ public static class ${testParametersSupplierClassName} implements net.jqwik.api.
                         )
                     #foreach(${methodParameter} in ${methodParameters}))#end
             #end
-            .filter(testParameters -> #if(${precondition})$precondition#{else}true#end);
+            .filter(_p_ -> #if(${precondition})$precondition#{else}true#end);
         #end
     }
 }

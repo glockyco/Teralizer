@@ -152,32 +152,32 @@ public class ModelToJavaTransformer extends ModelVisitor {
     public void postVisit(VariableInteger variable) {
         assert variable != null;
         assert variable.name != null;
-        this.stack.push("testParameters." + variable.name);
+        this.stack.push("_p_." + variable.name);
     }
 
     @Override
     public void postVisit(VariableReal variable) {
         assert variable != null;
         assert variable.name != null;
-        this.stack.push("testParameters." + variable.name);
+        this.stack.push("_p_." + variable.name);
     }
 
     @Override
     public void postVisit(VariableString variable) {
         assert variable != null;
         assert variable.name != null;
-        this.stack.push("testParameters." + variable.name);
+        this.stack.push("_p_." + variable.name);
     }
 
     @Override
     public void postVisit(ArrayExpression expression) {
-        this.stack.push("testParameters." + expression.name);
+        this.stack.push("_p_." + expression.name);
     }
 
     @Override
     public void postVisit(ArrayElementExpression expression) {
         String elementSelector = this.stack.pop();
-        this.stack.push("testParameters." + expression.arrayName + "[" + elementSelector + "]");
+        this.stack.push("_p_." + expression.arrayName + "[" + elementSelector + "]");
     }
 
     @Override
