@@ -1,0 +1,127 @@
+## @vtlvariable name="testParametersSupplierClassName" type="java.lang.String"
+## @vtlvariable name="testParametersClassName" type="java.lang.String"
+## @vtlvariable name="methodParameters" type="java.util.List<teralizer.domain.MethodParameter>"
+## @vtlvariable name="precondition" type="java.lang.String"
+## @vtlvariable name="lowerBounds" type="java.util.Map<java.lang.String, java.lang.String>"
+## @vtlvariable name="upperBounds" type="java.util.Map<java.lang.String, java.lang.String>"
+##
+#set($lastParamIndex = ${methodParameters.size()} - 1)
+##
+#set($boxedTypes = {
+    "byte"   : "Byte",
+    "short"  : "Short",
+    "int"    : "Integer",
+    "long"   : "Long",
+    "float"  : "Float",
+    "double" : "Double",
+    "char"   : "Character",
+    "boolean": "Boolean",
+    "void"   : "Void"
+})
+#macro(boxedType $primitiveType)
+    #if($boxedTypes.containsKey($primitiveType))
+        #set($type = $boxedTypes.get($primitiveType))
+    #else
+        #set($type = $primitiveType)
+    #end
+    $type
+#end
+##
+#macro(arbitrariesOfType $type $name)
+    #if(${type} == 'byte' || ${type} == 'java.lang.Byte')
+        net.jqwik.api.Arbitraries.bytes()##
+    #elseif(${type} == 'short' || ${type} == 'java.lang.Short')
+        net.jqwik.api.Arbitraries.shorts()##
+    #elseif(${type} == 'int' || ${type} == 'java.lang.Integer')
+        net.jqwik.api.Arbitraries.integers()##
+        #if(${lowerBounds.containsKey($name)})
+            .greaterOrEqual(${lowerBounds.get($name)})##
+        #end
+        #if(${upperBounds.containsKey($name)})
+            .lessOrEqual(${upperBounds.get($name)})##
+        #end
+    #elseif(${type} == 'long' || ${type} == 'java.lang.Long')
+        net.jqwik.api.Arbitraries.longs()##
+        #if(${lowerBounds.containsKey($name)})
+            .greaterOrEqual(${lowerBounds.get($name)})##
+        #end
+        #if(${upperBounds.containsKey($name)})
+            .lessOrEqual(${upperBounds.get($name)})##
+        #end
+    #elseif(${type} == 'float' || ${type} == 'java.lang.Float')
+        net.jqwik.api.Arbitraries.floats()##
+        #if(${lowerBounds.containsKey($name)})
+            .greaterOrEqual(${lowerBounds.get($name)})##
+        #end
+        #if(${upperBounds.containsKey($name)})
+            .lessOrEqual(${upperBounds.get($name)})##
+        #end
+    #elseif(${type} == 'double' || ${type} == 'java.lang.Double')
+        net.jqwik.api.Arbitraries.doubles()##
+        #if(${lowerBounds.containsKey($name)})
+            .greaterOrEqual(${lowerBounds.get($name)})##
+        #end
+        #if(${upperBounds.containsKey($name)})
+            .lessOrEqual(${upperBounds.get($name)})##
+        #end
+    #elseif(${type} == 'char' || ${type} == 'java.lang.Char')
+        net.jqwik.api.Arbitraries.chars()##
+    #elseif(${type} == 'boolean' || ${type} == 'java.lang.Boolean')
+        net.jqwik.api.Arbitraries.of(true, false)##
+    #elseif(${type} == 'String' || ${type} == 'java.lang.String')
+        net.jqwik.api.Arbitraries.strings()##
+    #else
+        net.jqwik.api.Arbitraries.just((${type}) null)##
+    #end
+#end
+##
+public static class ${testParametersClassName} {
+    #foreach(${methodParameter} in ${methodParameters})
+        public ${methodParameter.type} ${methodParameter.name};
+    #end
+
+    public ${testParametersClassName}(
+        #foreach(${methodParameter} in ${methodParameters})
+            ${methodParameter.type} ${methodParameter.name}#if(${foreach.index} < ${lastParamIndex}), #end
+        #end
+    ) {
+        #foreach(${methodParameter} in ${methodParameters})
+            this.${methodParameter.name} = ${methodParameter.name};
+        #end
+    }
+
+    @Override
+    public String toString() {
+        return "${testParametersClassName}{" +
+            #foreach(${methodParameter} in ${methodParameters})
+                "#if(${foreach.index} > 0), #end${methodParameter.name}=" + this.${methodParameter.name} +
+            #end
+        "}";
+    }
+}
+
+public static class ${testParametersSupplierClassName} implements net.jqwik.api.ArbitrarySupplier<${testParametersClassName}> {
+    @Override
+    public net.jqwik.api.Arbitrary<${testParametersClassName}> get() {
+        #if(${methodParameters.size()} <= 0)
+            return net.jqwik.api.Arbitraries.just((${testParametersClassName}) null);
+        #else
+            #if(${methodParameters.size()} == 1)
+                return #arbitrariesOfType(${methodParameters.get(0).type} ${methodParameters.get(0).name})
+                .map(${testParametersClassName}::new)
+            #else
+                return
+                    #foreach(${methodParameter} in ${methodParameters})
+                        #arbitrariesOfType(${methodParameter.type} ${methodParameter.name}).#if(${foreach.index} < ${lastParamIndex})flatMap#{else}map#end(${methodParameter.name} ->
+                    #end
+                        new ${testParametersClassName}(
+                            #foreach(${methodParameter} in ${methodParameters})
+                                ${methodParameter.name}#if(${foreach.index} < ${lastParamIndex}),#end
+                            #end
+                        )
+                    #foreach(${methodParameter} in ${methodParameters}))#end
+            #end
+            .filter(_p_ -> #if(${precondition})$precondition#{else}true#end);
+        #end
+    }
+}

@@ -2,7 +2,8 @@ package teralizer.processing;
 
 public enum GeneralizationVariant {
 
-    NAIVE(1);
+    NAIVE(1),
+    IMPROVED(2);
 
     private final Integer id;
 

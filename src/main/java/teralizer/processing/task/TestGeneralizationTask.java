@@ -22,6 +22,8 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
+import teralizer.jqwik.VariableConstraintExtractor;
+import teralizer.jqwik.VariableConstraintExtractor.VariableConstraints;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -34,10 +36,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -227,14 +226,51 @@ public class TestGeneralizationTask extends AbstractTask {
             allParameters.addAll(temporaryParameters);
 
             VelocityContext context = new VelocityContext();
-            context.put("testParametersSupplierClassName", TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
-            context.put("testParametersClassName", TEST_PARAMETERS_CLASS_NAME);
-            context.put("methodParameters", allParameters);
-            context.put("precondition", inputJava);
-
+            Template template;
             StringWriter stringWriter = new StringWriter();
-            Template template = velocityEngine.getTemplate("test-parameters-classes.vm");
-            template.merge(context, stringWriter);
+
+            switch (this.getVariant()) {
+                case NAIVE:
+                    context.put("testParametersSupplierClassName", TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
+                    context.put("testParametersClassName", TEST_PARAMETERS_CLASS_NAME);
+                    context.put("methodParameters", allParameters);
+                    context.put("precondition", inputJava);
+
+                    template = velocityEngine.getTemplate("test-parameters-classes-naive.vm");
+                    template.merge(context, stringWriter);
+                    break;
+                case IMPROVED:
+                    VariableConstraintExtractor extractor = new VariableConstraintExtractor();
+
+                    Map<String, VariableConstraints> constraints = extractor.process(inputModel);
+
+                    Map<String, String> lowerBounds = new HashMap<>();
+                    constraints.forEach((name, constraint) -> {
+                        if (constraint.getLowerBound() != null) {
+                            lowerBounds.put(name, constraint.getLowerBound());
+                        }
+                    });
+
+                    Map<String, String> upperBounds = new HashMap<>();
+                    constraints.forEach((name, constraint) -> {
+                        if (constraint.getUpperBound() != null) {
+                            upperBounds.put(name, constraint.getUpperBound());
+                        }
+                    });
+
+                    context.put("testParametersSupplierClassName", TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
+                    context.put("testParametersClassName", TEST_PARAMETERS_CLASS_NAME);
+                    context.put("methodParameters", allParameters);
+                    context.put("precondition", inputJava);
+                    context.put("lowerBounds", lowerBounds);
+                    context.put("upperBounds", upperBounds);
+
+                    template = velocityEngine.getTemplate("test-parameters-classes-improved.vm");
+                    template.merge(context, stringWriter);
+                    break;
+                default:
+                    throw new RuntimeException("Unsupported variant " + this.getVariant() + ".");
+            }
 
             CompilationUnit cu = javaParser.parse(stringWriter.toString()).getResult().get();
             ClassOrInterfaceDeclaration testParametersClassDeclaration = cu.getClassByName(TEST_PARAMETERS_CLASS_NAME).get();
