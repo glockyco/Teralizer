@@ -25,7 +25,7 @@
     $type
 #end
 ##
-#macro(arbitrariesOfType $type)
+#macro(naiveArbitrariesOfType $type)
     #if(${type} == 'byte' || ${type} == 'java.lang.Byte')
         net.jqwik.api.Arbitraries.bytes()##
     #elseif(${type} == 'short' || ${type} == 'java.lang.Short')
@@ -81,12 +81,12 @@ public static class ${testParametersSupplierClassName} implements net.jqwik.api.
             return net.jqwik.api.Arbitraries.just((${testParametersClassName}) null);
         #else
             #if(${methodParameters.size()} == 1)
-                return #arbitrariesOfType(${methodParameters.get(0).type})
+                return #naiveArbitrariesOfType(${methodParameters.get(0).type})
                 .map(${testParametersClassName}::new)
             #else
                 return
                     #foreach(${methodParameter} in ${methodParameters})
-                        #arbitrariesOfType(${methodParameter.type}).#if(${foreach.index} < ${lastParamIndex})flatMap#{else}map#end(${methodParameter.name} ->
+                        #naiveArbitrariesOfType(${methodParameter.type}).#if(${foreach.index} < ${lastParamIndex})flatMap#{else}map#end(${methodParameter.name} ->
                     #end
                         new ${testParametersClassName}(
                             #foreach(${methodParameter} in ${methodParameters})
