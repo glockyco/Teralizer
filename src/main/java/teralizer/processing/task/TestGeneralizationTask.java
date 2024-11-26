@@ -242,7 +242,14 @@ public class TestGeneralizationTask extends AbstractTask {
                 case IMPROVED:
                     VariableConstraintExtractor extractor = new VariableConstraintExtractor();
 
-                    Map<String, VariableConstraints> constraints = extractor.process(inputModel);
+                    Map<String, VariableConstraints> constraints = extractor.process(inputModel, allParameters);
+
+                    Map<String, String> equalities = new HashMap<>();
+                    constraints.forEach((name, constraint) -> {
+                        if (constraint.getEquality() != null) {
+                            equalities.put(name, constraint.getEquality());
+                        }
+                    });
 
                     Map<String, String> lowerBounds = new HashMap<>();
                     constraints.forEach((name, constraint) -> {
@@ -262,6 +269,7 @@ public class TestGeneralizationTask extends AbstractTask {
                     context.put("testParametersClassName", TEST_PARAMETERS_CLASS_NAME);
                     context.put("methodParameters", allParameters);
                     context.put("precondition", inputJava);
+                    context.put("equalities", equalities);
                     context.put("lowerBounds", lowerBounds);
                     context.put("upperBounds", upperBounds);
 

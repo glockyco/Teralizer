@@ -2,6 +2,7 @@
 ## @vtlvariable name="testParametersClassName" type="java.lang.String"
 ## @vtlvariable name="methodParameters" type="java.util.List<teralizer.domain.MethodParameter>"
 ## @vtlvariable name="precondition" type="java.lang.String"
+## @vtlvariable name="equalities" type="java.util.Map<java.lang.String, java.lang.String>"
 ## @vtlvariable name="lowerBounds" type="java.util.Map<java.lang.String, java.lang.String>"
 ## @vtlvariable name="upperBounds" type="java.util.Map<java.lang.String, java.lang.String>"
 ##
@@ -33,36 +34,52 @@
     #elseif(${type} == 'short' || ${type} == 'java.lang.Short')
         net.jqwik.api.Arbitraries.shorts()##
     #elseif(${type} == 'int' || ${type} == 'java.lang.Integer')
-        net.jqwik.api.Arbitraries.integers()##
-        #if(${lowerBounds.containsKey($name)})
-            .greaterOrEqual(${lowerBounds.get($name)})##
-        #end
-        #if(${upperBounds.containsKey($name)})
-            .lessOrEqual(${upperBounds.get($name)})##
+        #if(${equalities.containsKey($name)})
+            net.jqwik.api.Arbitraries.of(${equalities.get($name)})##
+        #else
+            net.jqwik.api.Arbitraries.integers()##
+            #if(${lowerBounds.containsKey($name)})
+                .greaterOrEqual(${lowerBounds.get($name)})##
+            #end
+            #if(${upperBounds.containsKey($name)})
+                .lessOrEqual(${upperBounds.get($name)})##
+            #end
         #end
     #elseif(${type} == 'long' || ${type} == 'java.lang.Long')
-        net.jqwik.api.Arbitraries.longs()##
-        #if(${lowerBounds.containsKey($name)})
-            .greaterOrEqual(${lowerBounds.get($name)})##
-        #end
-        #if(${upperBounds.containsKey($name)})
-            .lessOrEqual(${upperBounds.get($name)})##
+        #if(${equalities.containsKey($name)})
+            net.jqwik.api.Arbitraries.of(${equalities.get($name)})##
+        #else
+            net.jqwik.api.Arbitraries.longs()##
+            #if(${lowerBounds.containsKey($name)})
+                .greaterOrEqual(${lowerBounds.get($name)})##
+            #end
+            #if(${upperBounds.containsKey($name)})
+                .lessOrEqual(${upperBounds.get($name)})##
+            #end
         #end
     #elseif(${type} == 'float' || ${type} == 'java.lang.Float')
-        net.jqwik.api.Arbitraries.floats()##
-        #if(${lowerBounds.containsKey($name)})
-            .greaterOrEqual(${lowerBounds.get($name)})##
-        #end
-        #if(${upperBounds.containsKey($name)})
-            .lessOrEqual(${upperBounds.get($name)})##
+        #if(${equalities.containsKey($name)})
+            net.jqwik.api.Arbitraries.of(${equalities.get($name)})##
+        #else
+            net.jqwik.api.Arbitraries.floats()##
+            #if(${lowerBounds.containsKey($name)})
+                .greaterOrEqual(${lowerBounds.get($name)})##
+            #end
+            #if(${upperBounds.containsKey($name)})
+                .lessOrEqual(${upperBounds.get($name)})##
+            #end
         #end
     #elseif(${type} == 'double' || ${type} == 'java.lang.Double')
-        net.jqwik.api.Arbitraries.doubles()##
-        #if(${lowerBounds.containsKey($name)})
-            .greaterOrEqual(${lowerBounds.get($name)})##
-        #end
-        #if(${upperBounds.containsKey($name)})
-            .lessOrEqual(${upperBounds.get($name)})##
+        #if(${equalities.containsKey($name)})
+            net.jqwik.api.Arbitraries.of(${equalities.get($name)})##
+        #else
+            net.jqwik.api.Arbitraries.doubles()##
+            #if(${lowerBounds.containsKey($name)})
+                .greaterOrEqual(${lowerBounds.get($name)})##
+            #end
+            #if(${upperBounds.containsKey($name)})
+                .lessOrEqual(${upperBounds.get($name)})##
+            #end
         #end
     #elseif(${type} == 'char' || ${type} == 'java.lang.Char')
         net.jqwik.api.Arbitraries.chars()##
