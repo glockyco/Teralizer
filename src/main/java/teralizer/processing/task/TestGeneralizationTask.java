@@ -20,6 +20,7 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import teralizer.TestGeneralizationRunner;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.jqwik.VariableConstraintExtractor;
@@ -36,6 +37,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -387,7 +389,22 @@ public class TestGeneralizationTask extends AbstractTask {
             // @TODO: Remove setup code that is not needed anymore after generalization.
         }
 
-        Paths.get(this.generalizationRecord.getFilePath()).toFile().getParentFile().mkdirs();
-        Files.write(Paths.get(this.generalizationRecord.getFilePath()), compilationUnit.toString().getBytes());
+        Path generalizedFilePath = Paths.get(this.generalizationRecord.getFilePath());
+        byte[] generalizedFileBytes = compilationUnit.toString().getBytes();
+
+        // Write the generalized file to the project directory for further use in this run:
+        generalizedFilePath.toFile().getParentFile().mkdirs();
+        Files.write(generalizedFilePath, generalizedFileBytes);
+
+        // Copy the generalized file to the data directory for cross-run storage:
+        Path relativizedFilePath = this.projectRecord.getTestSourcePath().relativize(generalizedFilePath);
+        Path dataFilePath = this.projectRecord.getDataPath()
+            .resolve("project-id-" + this.getProjectId())
+            .resolve(TestGeneralizationRunner.TOOL_NAME.toLowerCase() +"-data")
+            .resolve("tests")
+            .resolve(this.getVariant().toString())
+            .resolve(relativizedFilePath);
+        dataFilePath.getParent().toFile().mkdirs();
+        Files.copy(generalizedFilePath, dataFilePath, StandardCopyOption.REPLACE_EXISTING);
     }
 }
