@@ -35,7 +35,6 @@ dependencies {
     testImplementation libs
 
     implementation 'commons-io:commons-io:2.16.1'
-    implementation "org.jooq:jooq:3.19.10"
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.25.0'
