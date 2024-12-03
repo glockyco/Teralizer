@@ -8,9 +8,11 @@ import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spoon.Launcher;
 import teralizer.TestGeneralizationRunner;
 import teralizer.javaparser.JavaParserFactory;
 import teralizer.processing.*;
+import teralizer.spoon.SpoonFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -87,6 +89,7 @@ public class ProjectSetupTask extends AbstractTask {
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
         scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
+        scheduleTask.accept(new SpoonModelBuildingTask(ProcessingStage.BUILD_SPOON_MODEL, this.projectRecord));
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new TestGenerationTask(ProcessingStage.GENERATE_TESTS, this.projectRecord));

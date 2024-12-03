@@ -2,13 +2,9 @@ package teralizer.jqwik;
 
 import teralizer.domain.*;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 
 public class VariableConstraintExtractor extends ModelVisitor {
-
-    private static final double EPS = 0.01;
 
     private HashMap<String, VariableConstraints> constraints;
     private HashMap<String, Integer> parameterIds;
@@ -236,9 +232,6 @@ public class VariableConstraintExtractor extends ModelVisitor {
     public interface VariableConstraints {
         void setVariableName(String variableName);
         String getVariableName();
-        String getEquality();
-        String getLowerBound();
-        String getUpperBound();
     }
 
     public static class IntegerConstraints implements VariableConstraints {
@@ -246,10 +239,8 @@ public class VariableConstraintExtractor extends ModelVisitor {
         private String variableName;
         private Long constantEquality = null;
         private String variableEquality = null;
-        private final List<Long> constantLowerBounds = new ArrayList<>();
-        private final List<Long> constantUpperBounds = new ArrayList<>();
-        private final List<String> variableLowerBounds = new ArrayList<>();
-        private final List<String> variableUpperBounds = new ArrayList<>();
+        private final List<String> lowerBounds = new ArrayList<>();
+        private final List<String> upperBounds = new ArrayList<>();
 
         @Override
         public void setVariableName(String variableName) {
@@ -279,47 +270,27 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantLowerBound(long value, boolean isIncluded) {
-            this.constantLowerBounds.add(value + (isIncluded ? 0 : 1));
+            this.lowerBounds.add(String.valueOf(value + (isIncluded ? 0 : 1)));
         }
 
         public void addVariableLowerBound(String name, boolean isIncluded) {
-            this.variableLowerBounds.add(name + (isIncluded ? "" : "+1"));
+            this.upperBounds.add(name + (isIncluded ? "" : "+1"));
         }
 
-        public String getLowerBound() {
-            if (!this.constantLowerBounds.isEmpty() && !this.variableLowerBounds.isEmpty()) {
-                return "java.util.Collections.max(java.util.Arrays.asList("
-                    + Collections.max(this.constantLowerBounds) + ", "
-                    + String.join(", ", this.variableLowerBounds) + "))";
-            } else if (!this.constantLowerBounds.isEmpty()) {
-                return String.valueOf(Collections.max(this.constantLowerBounds));
-            } else if (!this.variableLowerBounds.isEmpty()) {
-                return "java.util.Collections.max(java.util.Arrays.asList("
-                    + String.join(", ", this.variableLowerBounds) + "))";
-            }
-            return null;
+        public List<String> getLowerBounds() {
+            return this.lowerBounds;
         }
 
         public void addConstantUpperBound(long value, boolean isIncluded) {
-            this.constantUpperBounds.add(value + (isIncluded ? 0 : -1));
+            this.upperBounds.add(String.valueOf(value + (isIncluded ? 0 : -1)));
         }
 
         public void addVariableUpperBound(String name, boolean isIncluded) {
-            this.variableUpperBounds.add(name + (isIncluded ? "" : "-1"));
+            this.upperBounds.add(name + (isIncluded ? "" : "-1"));
         }
 
-        public String getUpperBound() {
-            if (!this.constantUpperBounds.isEmpty() && !this.variableUpperBounds.isEmpty()) {
-                return "java.util.Collections.min(java.util.Arrays.asList("
-                    + Collections.min(this.constantUpperBounds) + ", "
-                    + String.join(", ", this.variableUpperBounds) + "))";
-            } else if (!this.constantUpperBounds.isEmpty()) {
-                return String.valueOf(Collections.min(this.constantUpperBounds));
-            } else if (!this.variableUpperBounds.isEmpty()) {
-                return "java.util.Collections.min(java.util.Arrays.asList("
-                    + String.join(", ", this.variableUpperBounds) + "))";
-            }
-            return null;
+        public List<String> getUpperBounds() {
+            return this.upperBounds;
         }
     }
 
@@ -328,10 +299,8 @@ public class VariableConstraintExtractor extends ModelVisitor {
         private String variableName;
         private Double constantEquality = null;
         private String variableEquality = null;
-        private final List<Double> constantLowerBounds = new ArrayList<>();
-        private final List<Double> constantUpperBounds = new ArrayList<>();
-        private final List<String> variableLowerBounds = new ArrayList<>();
-        private final List<String> variableUpperBounds = new ArrayList<>();
+        private final List<RealBound> lowerBounds = new ArrayList<>();
+        private final List<RealBound> upperBounds = new ArrayList<>();
 
         @Override
         public void setVariableName(String variableName) {
@@ -361,55 +330,46 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantLowerBound(double value, boolean isIncluded) {
-            this.constantLowerBounds.add(
-                new BigDecimal(value).setScale(2, RoundingMode.HALF_UP)
-                    .add(BigDecimal.valueOf(isIncluded ? 0 : EPS)).doubleValue());
+            this.lowerBounds.add(new RealBound(String.valueOf(value), isIncluded));
         }
 
         public void addVariableLowerBound(String name, boolean isIncluded) {
-            this.variableLowerBounds.add(
-                "new java.math.BigDecimal(" + name + ").setScale(2, java.math.RoundingMode.HALF_UP)" +
-                    ".add(java.math.BigDecimal.valueOf(" + (isIncluded ? 0 : EPS) + ")).doubleValue()");
+            this.lowerBounds.add(new RealBound(name, isIncluded));
         }
 
-        public String getLowerBound() {
-            if (!this.constantLowerBounds.isEmpty() && !this.variableLowerBounds.isEmpty()) {
-                return "java.util.Collections.max(java.util.Arrays.asList("
-                    + Collections.max(this.constantLowerBounds) + ", "
-                    + String.join(", ", this.variableLowerBounds) + "))";
-            } else if (!this.constantLowerBounds.isEmpty()) {
-                return String.valueOf(Collections.max(this.constantLowerBounds));
-            } else if (!this.variableLowerBounds.isEmpty()) {
-                return "java.util.Collections.max(java.util.Arrays.asList("
-                    + String.join(", ", this.variableLowerBounds) + "))";
-            }
-            return null;
+        public List<RealBound> getLowerBounds() {
+            return this.lowerBounds;
         }
 
         public void addConstantUpperBound(double value, boolean isIncluded) {
-            this.constantUpperBounds.add(
-                new BigDecimal(value).setScale(2, RoundingMode.HALF_UP)
-                    .subtract(BigDecimal.valueOf(isIncluded ? 0 : EPS)).doubleValue());
+            this.upperBounds.add(new RealBound(String.valueOf(value), isIncluded));
         }
 
         public void addVariableUpperBound(String name, boolean isIncluded) {
-            this.variableUpperBounds.add(
-                "new java.math.BigDecimal(" + name + ").setScale(2, java.math.RoundingMode.HALF_UP)" +
-                    ".subtract(java.math.BigDecimal.valueOf(" + (isIncluded ? 0 : EPS) + ")).doubleValue()");
+            this.upperBounds.add(new RealBound(name, isIncluded));
         }
 
-        public String getUpperBound() {
-            if (!this.constantUpperBounds.isEmpty() && !this.variableUpperBounds.isEmpty()) {
-                return "java.util.Collections.min(java.util.Arrays.asList("
-                    + Collections.min(this.constantUpperBounds) + ", "
-                    + String.join(", ", this.variableUpperBounds) + "))";
-            } else if (!this.constantUpperBounds.isEmpty()) {
-                return String.valueOf(Collections.min(this.constantUpperBounds));
-            } else if (!this.variableUpperBounds.isEmpty()) {
-                return "java.util.Collections.min(java.util.Arrays.asList("
-                    + String.join(", ", this.variableUpperBounds) + "))";
-            }
-            return null;
+        public List<RealBound> getUpperBounds() {
+            return this.upperBounds;
+        }
+    }
+
+    public static class RealBound {
+
+        private final String value;
+        private final boolean isIncluded;
+
+        public RealBound(String value, boolean isIncluded) {
+            this.value = value;
+            this.isIncluded = isIncluded;
+        }
+
+        public String getValue() {
+            return this.value;
+        }
+
+        public boolean getIsIncluded() {
+            return this.isIncluded;
         }
     }
 }

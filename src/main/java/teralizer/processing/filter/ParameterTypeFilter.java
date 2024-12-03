@@ -11,7 +11,7 @@ import java.util.List;
 
 public class ParameterTypeFilter extends AbstractFilter {
 
-    private static final List<String> SUPPORTED_TYPES = Arrays.asList("int", "double");
+    private static final List<String> SUPPORTED_TYPES = Arrays.asList("byte", "short", "int", "long", "float", "double");
 
     private final Gson gson;
     private final TestRecord testRecord;

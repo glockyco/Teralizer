@@ -1,30 +1,27 @@
 package teralizer.processing.task;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.resolution.UnsolvedSymbolException;
-import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.google.gson.Gson;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import spoon.Launcher;
+import spoon.processing.AbstractProcessor;
+import spoon.reflect.CtModel;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtParameter;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.reference.CtExecutableReference;
+import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.domain.MethodParameter;
-import teralizer.processing.ProcessingPipeline;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +30,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class TestAnalysisTask extends AbstractTask {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingPipeline.class);
 
     public TestAnalysisTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this.stage = stage;
@@ -46,162 +41,149 @@ public class TestAnalysisTask extends AbstractTask {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
 
-        JavaParser javaParser = context.get(this.getProjectId(), TaskContext.JAVA_PARSER);
+        Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
-        this.analyzeTests(create, gson, javaParser, reportInfo);
+        this.analyzeTests(create, gson, spoonLauncher);
     }
 
-    private void analyzeTests(DSLContext create, Gson gson, JavaParser javaParser, Consumer<String> reportInfo) {
+    private void analyzeTests(DSLContext create, Gson gson, Launcher spoonLauncher) {
         Map<String, List<TestRecord>> allTestRecords = create.selectFrom(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.eq(this.getProjectId()))
-            .fetch().stream().collect(Collectors.groupingBy(TestRecord::getTestFilePath));
+            .fetch().stream().collect(Collectors.groupingBy(TestRecord::getTestClassQualifiedName));
 
         if (allTestRecords.isEmpty()) {
             throw new RuntimeException("Failed to identify any tests to analyze.");
         }
 
-        for (Map.Entry<String, List<TestRecord>> entry : allTestRecords.entrySet()) {
-            Path testFilePath = Paths.get(entry.getKey());
-            List<TestRecord> testRecords = entry.getValue();
-            String testClassName = testRecords.get(0).getTestClassName();
+        CtModel ctModel = spoonLauncher.getModel();
+        ctModel.processWith(new AbstractProcessor<CtClass<?>>() {
+            @Override
+            public void process(CtClass<?> ctClass) {
+                if (!allTestRecords.containsKey(ctClass.getQualifiedName())) {
+                    return;
+                }
+                List<TestRecord> testRecords = allTestRecords.get(ctClass.getQualifiedName());
+                for (TestRecord testRecord : testRecords) {
+                    List<CtMethod<?>> testMethodDeclarations = ctClass.getMethodsByName(testRecord.getTestMethodName());
+                    if (testMethodDeclarations.isEmpty()) {
+                        // This can happen if the test method was inherited from some other class.
+                        // The JUnit reports list the test as part of the child class then, but
+                        // the source code file of the child class does not contain the method.
+                        testRecord.setIsIncluded(false);
+                        testRecord.setExclusionInfo("Excluded by " + this + ". Method " + TestAnalysisTask.this.testRecord.getTestMethodName() + " not found in " + TestAnalysisTask.this.testRecord.getTestClassQualifiedName() + " (might be inherited).");
+                        testRecord.store();
+                        continue;
+                    }
 
-            CompilationUnit testCompilationUnit;
-            try {
-                testCompilationUnit = javaParser.parse(testFilePath.toFile()).getResult().get();
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
+                    if (testMethodDeclarations.size() > 1) {
+                        // This should never happen because there can only be multiple methods
+                        // with the same name if they have different signatures. However, all
+                        // @Test methods should have the same signature (no inputs, void output).
+                        testRecord.setIsIncluded(false);
+                        testRecord.setExclusionInfo("Excluded by " + this + ". Multiple methods with name " + TestAnalysisTask.this.testRecord.getTestMethodName() + " found in " + TestAnalysisTask.this.testRecord.getTestClassQualifiedName() + ".");
+                        testRecord.store();
+                        continue;
+                    }
+
+                    CtMethod<?> testMethodDeclaration = testMethodDeclarations.get(0);
+                    if (testMethodDeclaration.getAnnotations().stream().noneMatch(a -> a.getType().getSimpleName().equals("Test"))) {
+                        testRecord.setIsIncluded(false);
+                        testRecord.setExclusionInfo("Excluded by " + this + ". Test method has no @Test annotation.");
+                        testRecord.store();
+                        continue;
+                    }
+
+                    CtInvocation<?> testedMethodCall = findTestedMethodCall(testMethodDeclaration);
+
+                    if (testedMethodCall == null) {
+                        continue;
+                    }
+
+                    CtMethod<?> testedMethodDeclaration = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+                    CtType<?> testedType = testedMethodCall.getExecutable().getDeclaringType().getTypeDeclaration();
+
+                    if (testedMethodDeclaration == null || testedType == null) {
+                        continue;
+                    }
+
+                    SourcePosition position = testedType.getPosition();
+                    String testedClassPath = Paths.get(System.getProperty("user.dir")).relativize(position.getFile().toPath()).toString();
+
+                    String packageName = testedType.getPackage().toString();
+                    String className = testedType.getSimpleName();
+                    String methodName = testedMethodDeclaration.getSimpleName();
+
+                    String qualifiedClassName = testedType.getQualifiedName();
+                    String qualifiedMethodName = qualifiedClassName + "." + methodName;
+
+                    List<MethodParameter> testedMethodParameters = new ArrayList<>();
+                    for (CtParameter<?> param : testedMethodDeclaration.getParameters()) {
+                        String paramType = param.getType().getQualifiedName();
+                        String paramName = param.getSimpleName();
+                        testedMethodParameters.add(new MethodParameter(paramType, paramName));
+                    }
+
+                    testRecord.setTestedFilePath(testedClassPath);
+                    testRecord.setTestedClassQualifiedName(qualifiedClassName);
+                    testRecord.setTestedMethodQualifiedName(qualifiedMethodName);
+                    testRecord.setTestedPackageName(packageName);
+                    testRecord.setTestedClassName(className);
+                    testRecord.setTestedMethodName(methodName);
+                    testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
+                    testRecord.setTestedMethodReturnType(testedMethodDeclaration.getType().getQualifiedName());
+
+                    testRecord.store();
+
+                    TestAnalysisTask.createAssertionRecords(testRecord, testMethodDeclaration, create, gson);
+                }
             }
-
-            ClassOrInterfaceDeclaration testClassDeclaration = testCompilationUnit.getClassByName(testClassName).get();
-
-            for (TestRecord testRecord : testRecords) {
-                List<MethodDeclaration> testMethodDeclarations = testClassDeclaration.getMethodsByName(testRecord.getTestMethodName());
-                if (testMethodDeclarations.isEmpty()) {
-                    // This can happen if the test method was inherited from some other class.
-                    // The JUnit reports list the test as part of the child class then, but
-                    // the source code file of the child class does not contain the method.
-                    testRecord.setIsIncluded(false);
-                    testRecord.setExclusionInfo("Excluded by " + this + ". Method " + testRecord.getTestMethodName() + " not found in " + testRecord.getTestClassQualifiedName() + " (might be inherited).");
-                    testRecord.store();
-                    continue;
-                }
-
-                if (testMethodDeclarations.size() > 1) {
-                    // This should never happen because there can only be multiple methods
-                    // with the same name if they have different signatures. However, all
-                    // @Test methods should have the same signature (no inputs, void output).
-                    testRecord.setIsIncluded(false);
-                    testRecord.setExclusionInfo("Excluded by " + this + ". Multiple methods with name " + testRecord.getTestMethodName() + " found in " + testRecord.getTestClassQualifiedName() + ".");
-                    testRecord.store();
-                    continue;
-                }
-
-                MethodDeclaration testMethodDeclaration = testMethodDeclarations.get(0);
-                if (!testMethodDeclaration.isAnnotationPresent("Test")) {
-                    testRecord.setIsIncluded(false);
-                    testRecord.setExclusionInfo("Excluded by " + this + ". Test method has no @Test annotation.");
-                    testRecord.store();
-                    continue;
-                }
-
-                MethodCallExpr testedMethodCall = findTestedMethodCall(testMethodDeclaration);
-
-                if (testedMethodCall == null) {
-                    continue;
-                }
-
-                ResolvedMethodDeclaration testedMethodDeclaration;
-                try {
-                    testedMethodDeclaration = testedMethodCall.resolve();
-                } catch (UnsolvedSymbolException | UnsupportedOperationException  e) {
-                    continue;
-                }
-
-                // @TODO: Tested "methods" can be constructors.
-                // @TODO: Tested "methods" can be pairs (e.g., encrypt + decrypt).
-                // @TODO: Tested "methods" can be sequences (e.g., multiple calls that repeatedly modify object state).
-
-                String testedClassPath = testedMethodDeclaration.toAst()
-                    .flatMap(m -> m.findCompilationUnit()
-                    .flatMap(cu -> cu.getStorage()
-                    .map(s -> Paths.get(System.getProperty("user.dir")).relativize(s.getPath()).toString())))
-                    .orElse(null);
-
-                List<MethodParameter> testedMethodParameters = new ArrayList<>();
-                for (int i = 0; i < testedMethodDeclaration.getNumberOfParams(); i++) {
-                    String paramType = testedMethodDeclaration.getParam(i).describeType();
-                    String paramName = testedMethodDeclaration.getParam(i).getName();
-                    testedMethodParameters.add(new MethodParameter(paramType, paramName));
-                }
-
-                String packageName = testedMethodDeclaration.getPackageName();
-                String className = testedMethodDeclaration.getClassName().replace(".", "$");
-                String methodName = testedMethodDeclaration.getName();
-
-                String qualifiedClassName = (packageName.isEmpty() ? "" : (packageName + ".")) + className;
-                String qualifiedMethodName = qualifiedClassName + "." + methodName;
-
-                testRecord.setTestedFilePath(testedClassPath);
-                testRecord.setTestedClassQualifiedName(qualifiedClassName);
-                testRecord.setTestedMethodQualifiedName(qualifiedMethodName);
-                testRecord.setTestedPackageName(packageName);
-                testRecord.setTestedClassName(className);
-                testRecord.setTestedMethodName(methodName);
-                testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
-                testRecord.setTestedMethodReturnType(testedMethodDeclaration.getReturnType().describe());
-
-                testRecord.store();
-
-                this.createAssertionRecords(testRecord, testMethodDeclaration, create, gson, reportInfo);
-            }
-        }
+        });
     }
 
-    public static MethodCallExpr findTestedMethodCall(MethodDeclaration testMethodDeclaration) {
-        MethodCallExpr testedMethodCall = null;
-
+    public static CtInvocation<?> findTestedMethodCall(CtMethod<?> testMethodDeclaration) {
         // @TODO: Use more sophisticated detection of tested method.
-        //   - Check whether https://github.com/joernio/joern can be useful.
 
-        List<MethodCallExpr> methodCalls = testMethodDeclaration.findAll(MethodCallExpr.class);
-        for (MethodCallExpr methodCall : methodCalls) {
-            if (methodCall.getNameAsString().startsWith("assert")) {
+        CtInvocation<?> testedMethodCall = null;
+
+        List<CtInvocation<?>> methodCalls = testMethodDeclaration.getElements(new TypeFilter<>(CtInvocation.class));
+        for (CtInvocation<?> methodCall : methodCalls) {
+            if (methodCall.getExecutable().getSimpleName().startsWith("assert")) {
                 break;
             }
             testedMethodCall = methodCall;
         }
 
         assert testedMethodCall != null;
-        assert testedMethodCall.getScope().isPresent();
 
         return testedMethodCall;
     }
 
-    private void createAssertionRecords(TestRecord testRecord, MethodDeclaration testMethodDeclaration, DSLContext create, Gson gson, Consumer<String> reportInfo) {
+    public static CtInvocation<?> findAssertEqualsCall(CtMethod<?> testMethodDeclaration) {
+        // @TODO: Use more sophisticated detection of generalizable assertEquals calls.
+
+        List<CtInvocation<?>> methodCalls = testMethodDeclaration.getElements(new TypeFilter<>(CtInvocation.class));
+        List<CtInvocation<?>> assertEqualsCalls = methodCalls.stream().filter(m -> m.getExecutable().getSimpleName().equals("assertEquals")).collect(Collectors.toList());
+
+        assert assertEqualsCalls.size() == 1;
+        return assertEqualsCalls.get(0);
+    }
+
+    public static void createAssertionRecords(TestRecord testRecord, CtMethod<?> testMethodDeclaration, DSLContext create, Gson gson) {
         List<AssertionRecord> assertionRecords = new ArrayList<>();
 
-        List<MethodCallExpr> assertMethodCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().startsWith("assert"));
-        for (MethodCallExpr assertMethodCall : assertMethodCalls) {
-            String methodName = assertMethodCall.getNameAsString();
+        List<CtInvocation<?>> methodCalls = testMethodDeclaration.getElements(new TypeFilter<>(CtInvocation.class));
+        List<CtInvocation<?>> assertMethodCalls = methodCalls.stream().filter(m -> m.getExecutable().getSimpleName().startsWith("assert")).collect(Collectors.toList());
+
+        for (CtInvocation<?> assertMethodCall : assertMethodCalls) {
+            CtExecutableReference<?> assertMethodRef = assertMethodCall.getExecutable();
+            String methodName = assertMethodRef.getSimpleName();
             String sourceCode = assertMethodCall.toString();
 
             List<MethodParameter> assertArguments = new ArrayList<>();
-            for (Expression argument : assertMethodCall.getArguments()) {
-                String paramType;
-                try {
-                    paramType = argument.calculateResolvedType().describe();
-                } catch (/*UnsolvedSymbolException | */RuntimeException e) {
-                    StringWriter stringWriter = new StringWriter();
-                    PrintWriter printWriter = new PrintWriter(stringWriter);
-                    e.printStackTrace(printWriter);
-
-                    paramType = null;
-                    reportInfo.accept("Could not resolve type of argument " + argument + ". \n\n" + stringWriter);
-
-                    LOGGER.atDebug().log(e.getMessage(), e);
-                }
-                String paramName = argument.toString();
-                assertArguments.add(new MethodParameter(paramType, paramName));
+            for (CtExpression<?> argument : assertMethodCall.getArguments()) {
+                String paramType = argument.getType().getQualifiedName();
+                String paramValue = argument.toString();
+                assertArguments.add(new MethodParameter(paramType, paramValue));
             }
 
             AssertionRecord assertionRecord = create.newRecord(Tables.ASSERTION);
@@ -214,16 +196,5 @@ public class TestAnalysisTask extends AbstractTask {
         }
 
         create.batchStore(assertionRecords).execute();
-    }
-
-    public static MethodCallExpr findAssertEqualsCall(MethodDeclaration testMethodDeclaration) {
-        // @TODO: Use more sophisticated detection of generalizable assertEquals calls.
-        //   What we want is the assertEquals that checks the output of the tested method.
-        //   To (more) reliably identify this, we should probably do, at least, some control flow analysis.
-        //   Check whether https://github.com/joernio/joern can be useful.
-
-        List<MethodCallExpr> assertEqualsCalls = testMethodDeclaration.findAll(MethodCallExpr.class, m -> m.getNameAsString().equals("assertEquals"));
-        assert assertEqualsCalls.size() == 1;
-        return assertEqualsCalls.get(0);
     }
 }
