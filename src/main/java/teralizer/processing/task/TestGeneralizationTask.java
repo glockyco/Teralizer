@@ -147,6 +147,7 @@ public class TestGeneralizationTask extends AbstractTask {
         }
 
         generalizedClassDeclaration.getElements(e -> true).forEach(e -> e.getComments().clear());
+        generalizedClassDeclaration.addComment(factory.createInlineComment("Test: " + this.testRecord.getTestMethodQualifiedName()));
         generalizedClassDeclaration.addComment(factory.createInlineComment("Input specification: " + this.testRecord.getInputSpecificationPath()));
         generalizedClassDeclaration.addComment(factory.createInlineComment("Output specification: " + this.testRecord.getOutputSpecificationPath()));
 
