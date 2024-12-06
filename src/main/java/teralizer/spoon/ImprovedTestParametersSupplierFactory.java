@@ -117,118 +117,132 @@ public class ImprovedTestParametersSupplierFactory {
     }
 
     private static String createByteArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        if (constraint == null) {
-            return "return net.jqwik.api.Arbitraries.bytes()";
-        } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
-        } else {
-            StringBuilder result = new StringBuilder();
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMin = Byte.MIN_VALUE;");
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMax = Byte.MAX_VALUE;");
-            result.append("java.util.List<Byte> " + parameter.getName() + "LowerBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMin" + constraint.getLowerBounds().stream().map(b -> ", " + b).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Byte> " + parameter.getName() + "UpperBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMax" + constraint.getUpperBounds().stream().map(b -> ", " + b).collect(Collectors.joining()) + ");");
-            result.append(parameter.getType() + " " + parameter.getName() + "Min = java.util.Collections.max(" + parameter.getName() + "LowerBounds);");
-            result.append(parameter.getType() + " " + parameter.getName() + "Max = java.util.Collections.min(" + parameter.getName() + "UpperBounds);");
-            result.append("return net.jqwik.api.Arbitraries.bytes().between(" + parameter.getName() + "Min, " + parameter.getName() + "Max)");
-            return result.toString();
-        }
+        return createNumberArbitrary(parameter, constraint, "Byte", "bytes", "Byte.MIN_VALUE", "Byte.MAX_VALUE");
     }
 
     private static String createShortArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        if (constraint == null) {
-            return "return net.jqwik.api.Arbitraries.shorts()";
-        } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
-        } else {
-            StringBuilder result = new StringBuilder();
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMin = Short.MIN_VALUE;");
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMax = Short.MAX_VALUE;");
-            result.append("java.util.List<Short> " + parameter.getName() + "LowerBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMin" + constraint.getLowerBounds().stream().map(b -> ", " + b).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Short> " + parameter.getName() + "UpperBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMax" + constraint.getUpperBounds().stream().map(b -> ", " + b).collect(Collectors.joining()) + ");");
-            result.append(parameter.getType() + " " + parameter.getName() + "Min = java.util.Collections.max(" + parameter.getName() + "LowerBounds);");
-            result.append(parameter.getType() + " " + parameter.getName() + "Max = java.util.Collections.min(" + parameter.getName() + "UpperBounds);");
-            result.append("return net.jqwik.api.Arbitraries.shorts().between(" + parameter.getName() + "Min, " + parameter.getName() + "Max)");
-            return result.toString();
-        }
+        return createNumberArbitrary(parameter, constraint, "Short", "shorts", "Short.MIN_VALUE", "Short.MAX_VALUE");
     }
 
     private static String createIntegerArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        if (constraint == null) {
-            return "return net.jqwik.api.Arbitraries.integers()";
-        } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
-        } else {
-            StringBuilder result = new StringBuilder();
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMin = Integer.MIN_VALUE;");
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMax = Integer.MAX_VALUE;");
-            result.append("java.util.List<Integer> " + parameter.getName() + "LowerBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMin" + constraint.getLowerBounds().stream().map(b -> ", " + b).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Integer> " + parameter.getName() + "UpperBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMax" + constraint.getUpperBounds().stream().map(b -> ", " + b).collect(Collectors.joining()) + ");");
-            result.append(parameter.getType() + " " + parameter.getName() + "Min = java.util.Collections.max(" + parameter.getName() + "LowerBounds);");
-            result.append(parameter.getType() + " " + parameter.getName() + "Max = java.util.Collections.min(" + parameter.getName() + "UpperBounds);");
-            result.append("return net.jqwik.api.Arbitraries.integers().between(" + parameter.getName() + "Min, " + parameter.getName() + "Max)");
-            return result.toString();
-        }
+        return createNumberArbitrary(parameter, constraint, "Integer", "integers", "Integer.MIN_VALUE", "Integer.MAX_VALUE");
     }
 
     private static String createLongArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        if (constraint == null) {
-            return "return net.jqwik.api.Arbitraries.longs()";
-        } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
-        } else {
-            StringBuilder result = new StringBuilder();
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMin = Long.MIN_VALUE;");
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMax = Long.MAX_VALUE;");
-            result.append("java.util.List<Long> " + parameter.getName() + "LowerBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMin" + constraint.getLowerBounds().stream().map(b -> ", " + b).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Long> " + parameter.getName() + "UpperBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMax" + constraint.getUpperBounds().stream().map(b -> ", " + b).collect(Collectors.joining()) + ");");
-            result.append(parameter.getType() + " " + parameter.getName() + "Min = java.util.Collections.max(" + parameter.getName() + "LowerBounds);");
-            result.append(parameter.getType() + " " + parameter.getName() + "Max = java.util.Collections.min(" + parameter.getName() + "UpperBounds);");
-            result.append("return net.jqwik.api.Arbitraries.longs().between(" + parameter.getName() + "Min, " + parameter.getName() + "Max)");
-            return result.toString();
-        }
+        return createNumberArbitrary(parameter, constraint, "Long", "longs", "Long.MIN_VALUE", "Long.MAX_VALUE");
     }
 
     private static String createFloatArbitrary(MethodParameter parameter, RealConstraints constraint) {
-        if (constraint == null) {
-            return "return net.jqwik.api.Arbitraries.floats()";
-        } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
-        } else {
-            StringBuilder result = new StringBuilder();
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMin = -Float.MAX_VALUE;");
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMax = Float.MAX_VALUE;");
-            result.append("java.util.List<Float> " + parameter.getName() + "LowerBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMin" + constraint.getLowerBounds().stream().map(b -> ", " + b.getValue()).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Boolean> " + parameter.getName() + "LowerBoundsIncluded = java.util.Arrays.asList(true" + constraint.getLowerBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Float> " + parameter.getName() + "UpperBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMax" + constraint.getUpperBounds().stream().map(b -> ", " + b.getValue()).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Boolean> " + parameter.getName() + "UpperBoundsIncluded = java.util.Arrays.asList(true" + constraint.getUpperBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining()) + ");");
-            result.append(parameter.getType() + " " + parameter.getName() + "Min = java.util.Collections.max(" + parameter.getName() + "LowerBounds);");
-            result.append("boolean " + parameter.getName() + "MinIncluded = java.util.stream.IntStream.range(0, " + parameter.getName() + "LowerBounds.size()).filter(i -> " + parameter.getName() + "LowerBounds.get(i) == " + parameter.getName() + "Min).allMatch(" + parameter.getName() + "LowerBoundsIncluded::get);");
-            result.append(parameter.getType() + " " + parameter.getName() + "Max = java.util.Collections.min(" + parameter.getName() + "UpperBounds);");
-            result.append("boolean " + parameter.getName() + "MaxIncluded = java.util.stream.IntStream.range(0, " + parameter.getName() + "UpperBounds.size()).filter(i -> " + parameter.getName() + "UpperBounds.get(i) == " + parameter.getName() + "Max).allMatch(" + parameter.getName() + "UpperBoundsIncluded::get);");
-            result.append("return net.jqwik.api.Arbitraries.floats().ofScale(46).between(" + parameter.getName() + "Min, " + parameter.getName() + "MinIncluded, " + parameter.getName() + "Max, " + parameter.getName() + "MaxIncluded)");
-            return result.toString();
-        }
+        return createRealArbitrary(parameter, constraint, "Float", "floats", "-Float.MAX_VALUE", "Float.MAX_VALUE", 46);
     }
 
     private static String createDoubleArbitrary(MethodParameter parameter, RealConstraints constraint) {
+        return createRealArbitrary(parameter, constraint, "Double", "doubles", "-Double.MAX_VALUE", "Double.MAX_VALUE", 325);
+    }
+
+    private static String createNumberArbitrary(
+        MethodParameter parameter,
+        IntegerConstraints constraint,
+        String boxedType,
+        String arbitraryType,
+        String minValue,
+        String maxValue
+    ) {
         if (constraint == null) {
-            return "return net.jqwik.api.Arbitraries.doubles()";
+            return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
         } else if (constraint.getEquality() != null) {
             return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
-        } else {
-            StringBuilder result = new StringBuilder();
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMin = -Double.MAX_VALUE;");
-            result.append(parameter.getType() + " " + parameter.getName() + "DefaultMax = Double.MAX_VALUE;");
-            result.append("java.util.List<Double> " + parameter.getName() + "LowerBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMin" + constraint.getLowerBounds().stream().map(b -> ", " + b.getValue()).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Boolean> " + parameter.getName() + "LowerBoundsIncluded = java.util.Arrays.asList(true" + constraint.getLowerBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Double> " + parameter.getName() + "UpperBounds = java.util.Arrays.asList(" + parameter.getName() + "DefaultMax" + constraint.getUpperBounds().stream().map(b -> ", " + b.getValue()).collect(Collectors.joining()) + ");");
-            result.append("java.util.List<Boolean> " + parameter.getName() + "UpperBoundsIncluded = java.util.Arrays.asList(true" + constraint.getUpperBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining()) + ");");
-            result.append(parameter.getType() + " " + parameter.getName() + "Min = java.util.Collections.max(" + parameter.getName() + "LowerBounds);");
-            result.append("boolean " + parameter.getName() + "MinIncluded = java.util.stream.IntStream.range(0, " + parameter.getName() + "LowerBounds.size()).filter(i -> " + parameter.getName() + "LowerBounds.get(i) == " + parameter.getName() + "Min).allMatch(" + parameter.getName() + "LowerBoundsIncluded::get);");
-            result.append(parameter.getType() + " " + parameter.getName() + "Max = java.util.Collections.min(" + parameter.getName() + "UpperBounds);");
-            result.append("boolean " + parameter.getName() + "MaxIncluded = java.util.stream.IntStream.range(0, " + parameter.getName() + "UpperBounds.size()).filter(i -> " + parameter.getName() + "UpperBounds.get(i) == " + parameter.getName() + "Max).allMatch(" + parameter.getName() + "UpperBoundsIncluded::get);");
-            result.append("return net.jqwik.api.Arbitraries.doubles().ofScale(325).between(" + parameter.getName() + "Min, " + parameter.getName() + "MinIncluded, " + parameter.getName() + "Max, " + parameter.getName() + "MaxIncluded)");
-            return result.toString();
+        }
+
+        Names n = new Names(parameter.getName());
+        StringBuilder result = new StringBuilder();
+        result.append(String.format("%s %s = %s;\n", parameter.getType(), n.defaultMin(), minValue));
+        result.append(String.format("%s %s = %s;\n", parameter.getType(), n.defaultMax(), maxValue));
+        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.lowerBounds(), n.defaultMin(), constraint.getLowerBounds().stream().map(b -> ", " + b).collect(Collectors.joining())));
+        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> ", " + b).collect(Collectors.joining())));
+        result.append(String.format("%s %s = java.util.Collections.max(%s);\n", parameter.getType(), n.min(), n.lowerBounds()));
+        result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
+        result.append(String.format("return net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
+        return result.toString();
+    }
+
+    private static String createRealArbitrary(
+        MethodParameter parameter,
+        RealConstraints constraint,
+        String boxedType,
+        String arbitraryType,
+        String minValue,
+        String maxValue,
+        int scale
+    ) {
+        if (constraint == null) {
+            return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
+        } else if (constraint.getEquality() != null) {
+            return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
+        }
+
+        Names n = new Names(parameter.getName());
+        StringBuilder result = new StringBuilder();
+        result.append(String.format("%s %s = %s;\n", parameter.getType(), n.defaultMin(), minValue));
+        result.append(String.format("%s %s = %s;\n", parameter.getType(), n.defaultMax(), maxValue));
+        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.lowerBounds(), n.defaultMin(), constraint.getLowerBounds().stream().map(b -> ", " + b.getValue()).collect(Collectors.joining())));
+        result.append(String.format("java.util.List<Boolean> %s = java.util.Arrays.asList(true%s);\n", n.lowerBoundIncluded(), constraint.getLowerBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining())));
+        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> ", " + b.getValue()).collect(Collectors.joining())));
+        result.append(String.format("java.util.List<Boolean> %s = java.util.Arrays.asList(true%s);\n", n.upperBoundIncluded(), constraint.getUpperBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining())));
+        result.append(String.format("%s %s = java.util.Collections.max(%s);\n", parameter.getType(), n.min(), n.lowerBounds()));
+        result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.minIncluded(), n.lowerBounds(), n.lowerBounds(), n.min(), n.lowerBoundIncluded()));
+        result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
+        result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.maxIncluded(), n.upperBounds(), n.upperBounds(), n.max(), n.upperBoundIncluded()));
+        result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+        return result.toString();
+    }
+
+
+    private static class Names {
+        private final String baseName;
+
+        public Names(String baseName) {
+            this.baseName = baseName;
+        }
+
+        public String defaultMin() {
+            return this.baseName + "DefaultMin";
+        }
+
+        public String defaultMax() {
+            return this.baseName + "DefaultMax";
+        }
+
+        public String lowerBounds() {
+            return this.baseName + "LowerBounds";
+        }
+
+        public String lowerBoundIncluded() {
+            return this.baseName + "LowerBoundsIncluded";
+        }
+
+        public String upperBounds() {
+            return this.baseName + "UpperBounds";
+        }
+
+        public String upperBoundIncluded() {
+            return this.baseName + "UpperBoundsIncluded";
+        }
+
+        public String min() {
+            return this.baseName + "Min";
+        }
+
+        public String minIncluded() {
+            return this.baseName + "MinIncluded";
+        }
+
+        public String max() {
+            return this.baseName + "Max";
+        }
+
+        public String maxIncluded() {
+            return this.baseName + "MaxIncluded";
         }
     }
 }
