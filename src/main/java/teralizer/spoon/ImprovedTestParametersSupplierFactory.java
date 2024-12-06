@@ -12,6 +12,7 @@ import teralizer.jqwik.VariableConstraintExtractor.RealConstraints;
 import teralizer.jqwik.VariableConstraintExtractor.VariableConstraints;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static teralizer.processing.task.TestGeneralizationTask.TEST_PARAMETERS_CLASS_NAME;
@@ -19,101 +20,151 @@ import static teralizer.processing.task.TestGeneralizationTask.TEST_PARAMETERS_S
 
 public class ImprovedTestParametersSupplierFactory {
 
-    public static CtClass<?> createSupplierClass(Factory factory, List<MethodParameter> parameters, Map<String, VariableConstraints> constraints, String inputJava) {
+    public static CtClass<?> createSupplierClass(
+        Factory factory,
+        List<MethodParameter> parameters,
+        Map<String, VariableConstraints> constraints,
+        String inputJava
+    ) {
         CtClass<?> supplierClass = factory.Class().create(TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
         supplierClass.setSuperInterfaces(new HashSet<>(Collections.singletonList(factory.Type().createReference("net.jqwik.api.ArbitrarySupplier<" + TEST_PARAMETERS_CLASS_NAME + ">"))));
         supplierClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
 
-        List<String> supplierBodies = createSupplierBodies(parameters, constraints, inputJava);
+        createGetMethod(supplierClass, parameters, inputJava);
 
         for (int i = 0; i < parameters.size(); i++) {
-            Set<ModifierKind> modifiers = new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC));
-            CtTypeReference<?> returnType = factory.Type().createReference("net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">");
-
-            List<CtParameter<?>> supplierParameters = parameters.stream().limit(i).map(p ->
-                factory.createParameter(null, SpoonUtils.getTypeReference(factory, p.getType()), p.getName())
-            ).collect(Collectors.toList());
-
-            CtMethod<?> supplierMethod = factory.Method().create(supplierClass, modifiers, returnType, "get" + (i == 0 ? "" : i), supplierParameters, Collections.emptySet(), factory.Core().createBlock());
-            supplierMethod.setBody(factory.createCodeSnippetStatement(supplierBodies.get(i)));
+            List<MethodParameter> params = parameters.subList(0, i);
+            createGetParameterMethod(supplierClass, parameters.get(i), params, constraints);
         }
 
         return supplierClass;
     }
 
-    private static List<String> createSupplierBodies(List<MethodParameter> parameters, Map<String, VariableConstraints> constraints, String inputJava) {
-        List<String> supplierBodies = new ArrayList<>();
+    private static void createGetMethod(
+        CtClass<?> supplierClass,
+        List<MethodParameter> parameters,
+        String inputJava
+    ) {
+        Factory factory = supplierClass.getFactory();
+
+        Set<ModifierKind> modifiers = new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC));
+        CtTypeReference<?> returnType = factory.Type().createReference("net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">");
+
+        CtMethod<?> supplierMethod = factory.Method().create(supplierClass, modifiers, returnType, "get", Collections.emptyList(), Collections.emptySet(), factory.Core().createBlock());
+
         if (parameters.isEmpty()) {
-            supplierBodies.add("return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)");
-        } else {
-            for (int i = 0; i < parameters.size(); i++) {
-                boolean isFirst = i == 0;
-                boolean isLast = i == parameters.size() - 1;
+            supplierMethod.getBody().addStatement(factory.createCodeSnippetStatement("return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)"));
+            return;
+        }
 
-                String body = createArbitrary(parameters.get(i), constraints);
+        // Build a method body that looks like:
+        //     return
+        //         getX().flatMap(x ->
+        //             getY(x).flatMap(y ->
+        //                 getZ(x, y).map(z -> new TestParameters(x, y, z))
+        //             )
+        //         ).filter(_p_ -> {inputJava});
 
-                if (!isLast) {
-                    String parameterNames = parameters.stream().limit(i + 1).map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".flatMap(" + parameters.get(i).getName() + " -> { return get" + (i + 1) + "(" + parameterNames + "); })";
-                } else {
-                    String parameterNames = parameters.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".map(" + parameters.get(i).getName() + " -> new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + "))";
-                }
+        Function<List<MethodParameter>, String> paramNames = (List<MethodParameter> params) -> params.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
 
-                if (isFirst) {
-                    body += " .filter(_p_ -> " + (inputJava == null ? "true" : inputJava) + ")";
-                }
+        StringBuilder builder = new StringBuilder();
+        builder.append("return ");
+        for (int i = 0; i < parameters.size(); i++) {
+            MethodParameter currentParameter = parameters.get(i);
+            List<MethodParameter> previousParameters = parameters.subList(0, i);
 
-                supplierBodies.add(body);
+            builder.append("get_" + currentParameter.getName() + "(" + paramNames.apply(previousParameters) + ")");
+
+            if (i < parameters.size() - 1) {
+                builder.append(".flatMap(" + currentParameter.getName() + " -> ");
+            } else {
+                builder.append(".map(" + currentParameter.getName() + " -> new " + TEST_PARAMETERS_CLASS_NAME + "(" + paramNames.apply(parameters) + "))");
+                // Close the parentheses opened by the flatMaps calls:
+                builder.append(String.join("", Collections.nCopies(i, ")")));
+                builder.append("\n    .filter(_p_ -> " + (inputJava == null ? "true" : inputJava) + ")");
             }
         }
-        return supplierBodies;
+
+        supplierMethod.getBody().addStatement(factory.createCodeSnippetStatement(builder.toString()));
     }
 
-    private static String createArbitrary(MethodParameter parameter, Map<String, VariableConstraints> constraints) {
+    private static void createGetParameterMethod(
+        CtClass<?> supplierClass,
+        MethodParameter parameter,
+        List<MethodParameter> previousParameters,
+        Map<String, VariableConstraints> constraints
+    ) {
+        Factory factory = supplierClass.getFactory();
+
+        String body;
+        String arbitraryType;
         switch (parameter.getType()) {
             case "byte":
             case "java.lang.Byte": {
-                IntegerConstraints constraint = (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null);
-                return createByteArbitrary(parameter, constraint);
+                body = createByteArbitrary(parameter, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                arbitraryType = "Byte";
+                break;
             }
             case "short":
             case "java.lang.Short": {
-                IntegerConstraints constraint = (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null);
-                return createShortArbitrary(parameter, constraint);
+                body = createShortArbitrary(parameter, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                arbitraryType = "Short";
+                break;
             }
             case "int":
             case "java.lang.Integer": {
-                IntegerConstraints constraint = (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null);
-                return createIntegerArbitrary(parameter, constraint);
+                body = createIntegerArbitrary(parameter, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                arbitraryType = "Integer";
+                break;
             }
             case "long":
             case "java.lang.Long": {
-                IntegerConstraints constraint = (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null);
-                return createLongArbitrary(parameter, constraint);
+                body = createLongArbitrary(parameter, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                arbitraryType = "Long";
+                break;
             }
             case "float":
             case "java.lang.Float": {
-                RealConstraints constraint = (RealConstraints) constraints.getOrDefault(parameter.getName(), null);
-                return createFloatArbitrary(parameter, constraint);
+                body = createFloatArbitrary(parameter, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
+                arbitraryType = "Float";
+                break;
             }
             case "double":
             case "java.lang.Double": {
-                RealConstraints constraint = (RealConstraints) constraints.getOrDefault(parameter.getName(), null);
-                return createDoubleArbitrary(parameter, constraint);
+                body = createDoubleArbitrary(parameter, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
+                arbitraryType = "Double";
+                break;
             }
             case "char":
             case "java.lang.Character":
-                return "return net.jqwik.api.Arbitraries.chars()";
+                body = "return net.jqwik.api.Arbitraries.chars()";
+                arbitraryType = "Character";
+                break;
             case "boolean":
             case "java.lang.Boolean":
-                return "return net.jqwik.api.Arbitraries.of(true, false)";
+                body = "return net.jqwik.api.Arbitraries.of(true, false)";
+                arbitraryType = "Boolean";
+                break;
             case "String":
             case "java.lang.String":
-                return "return net.jqwik.api.Arbitraries.strings()";
+                body = "return net.jqwik.api.Arbitraries.strings()";
+                arbitraryType = "String";
+                break;
             default:
-                return "return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)";
+                body = "return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)";
+                arbitraryType = "Object";
+                break;
         }
+
+        Set<ModifierKind> modifiers = new HashSet<>(Collections.singletonList(ModifierKind.PRIVATE));
+        CtTypeReference<?> returnType = factory.Type().createReference("net.jqwik.api.Arbitrary<" + arbitraryType + ">");
+
+        List<CtParameter<?>> params = previousParameters.stream().map(p ->
+            factory.createParameter(null, SpoonUtils.getTypeReference(factory, p.getType()), p.getName())
+        ).collect(Collectors.toList());
+
+        CtMethod<?> supplierMethod = factory.Method().create(supplierClass, modifiers, returnType, "get_" + parameter.getName(), params, Collections.emptySet(), factory.Core().createBlock());
+        supplierMethod.getBody().addStatement(factory.createCodeSnippetStatement(body));
     }
 
     private static String createByteArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
@@ -193,7 +244,8 @@ public class ImprovedTestParametersSupplierFactory {
         result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.minIncluded(), n.lowerBounds(), n.lowerBounds(), n.min(), n.lowerBoundIncluded()));
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
         result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.maxIncluded(), n.upperBounds(), n.upperBounds(), n.max(), n.upperBoundIncluded()));
-        result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+        result.append(String.format("return %s == %s && (!%s || !%s)%n    ? net.jqwik.api.Arbitraries.of()%n", n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
+        result.append(String.format("    : net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
         return result.toString();
     }
 
