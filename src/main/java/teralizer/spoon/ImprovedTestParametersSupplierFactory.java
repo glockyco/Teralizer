@@ -103,7 +103,7 @@ public class ImprovedTestParametersSupplierFactory {
                 return createDoubleArbitrary(parameter, constraint);
             }
             case "char":
-            case "java.lang.Char":
+            case "java.lang.Character":
                 return "return net.jqwik.api.Arbitraries.chars()";
             case "boolean":
             case "java.lang.Boolean":

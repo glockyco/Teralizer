@@ -94,7 +94,7 @@ public class NaiveTestParametersSupplierFactory {
                 return "return net.jqwik.api.Arbitraries.doubles()";
             }
             case "char":
-            case "java.lang.Char":
+            case "java.lang.Character":
                 return "return net.jqwik.api.Arbitraries.chars()";
             case "boolean":
             case "java.lang.Boolean":
