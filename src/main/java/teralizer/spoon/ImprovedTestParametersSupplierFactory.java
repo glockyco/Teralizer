@@ -205,7 +205,7 @@ public class ImprovedTestParametersSupplierFactory {
             result.append("boolean " + parameter.getName() + "MinIncluded = java.util.stream.IntStream.range(0, " + parameter.getName() + "LowerBounds.size()).filter(i -> " + parameter.getName() + "LowerBounds.get(i) == " + parameter.getName() + "Min).allMatch(" + parameter.getName() + "LowerBoundsIncluded::get);");
             result.append(parameter.getType() + " " + parameter.getName() + "Max = java.util.Collections.min(" + parameter.getName() + "UpperBounds);");
             result.append("boolean " + parameter.getName() + "MaxIncluded = java.util.stream.IntStream.range(0, " + parameter.getName() + "UpperBounds.size()).filter(i -> " + parameter.getName() + "UpperBounds.get(i) == " + parameter.getName() + "Max).allMatch(" + parameter.getName() + "UpperBoundsIncluded::get);");
-            result.append("return net.jqwik.api.Arbitraries.floats().between(" + parameter.getName() + "Min, " + parameter.getName() + "MinIncluded, " + parameter.getName() + "Max, " + parameter.getName() + "MaxIncluded)");
+            result.append("return net.jqwik.api.Arbitraries.floats().ofScale(46).between(" + parameter.getName() + "Min, " + parameter.getName() + "MinIncluded, " + parameter.getName() + "Max, " + parameter.getName() + "MaxIncluded)");
             return result.toString();
         }
     }
@@ -227,7 +227,7 @@ public class ImprovedTestParametersSupplierFactory {
             result.append("boolean " + parameter.getName() + "MinIncluded = java.util.stream.IntStream.range(0, " + parameter.getName() + "LowerBounds.size()).filter(i -> " + parameter.getName() + "LowerBounds.get(i) == " + parameter.getName() + "Min).allMatch(" + parameter.getName() + "LowerBoundsIncluded::get);");
             result.append(parameter.getType() + " " + parameter.getName() + "Max = java.util.Collections.min(" + parameter.getName() + "UpperBounds);");
             result.append("boolean " + parameter.getName() + "MaxIncluded = java.util.stream.IntStream.range(0, " + parameter.getName() + "UpperBounds.size()).filter(i -> " + parameter.getName() + "UpperBounds.get(i) == " + parameter.getName() + "Max).allMatch(" + parameter.getName() + "UpperBoundsIncluded::get);");
-            result.append("return net.jqwik.api.Arbitraries.doubles().between(" + parameter.getName() + "Min, " + parameter.getName() + "MinIncluded, " + parameter.getName() + "Max, " + parameter.getName() + "MaxIncluded)");
+            result.append("return net.jqwik.api.Arbitraries.doubles().ofScale(325).between(" + parameter.getName() + "Min, " + parameter.getName() + "MinIncluded, " + parameter.getName() + "Max, " + parameter.getName() + "MaxIncluded)");
             return result.toString();
         }
     }
