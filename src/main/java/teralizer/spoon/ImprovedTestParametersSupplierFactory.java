@@ -213,7 +213,8 @@ public class ImprovedTestParametersSupplierFactory {
         result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> ", " + b).collect(Collectors.joining())));
         result.append(String.format("%s %s = java.util.Collections.max(%s);\n", parameter.getType(), n.min(), n.lowerBounds()));
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
-        result.append(String.format("return net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
+        result.append(String.format("return (%s > %s)%n    ? net.jqwik.api.Arbitraries.of()%n", n.min(), n.max()));
+        result.append(String.format("    : net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
         return result.toString();
     }
 
@@ -244,7 +245,7 @@ public class ImprovedTestParametersSupplierFactory {
         result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.minIncluded(), n.lowerBounds(), n.lowerBounds(), n.min(), n.lowerBoundIncluded()));
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
         result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.maxIncluded(), n.upperBounds(), n.upperBounds(), n.max(), n.upperBoundIncluded()));
-        result.append(String.format("return %s == %s && (!%s || !%s)%n    ? net.jqwik.api.Arbitraries.of()%n", n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
+        result.append(String.format("return ((%s > %s) || (%s == %s && (!%s || !%s)))%n    ? net.jqwik.api.Arbitraries.of()%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
         result.append(String.format("    : net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
         return result.toString();
     }
