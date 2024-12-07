@@ -278,7 +278,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addVariableLowerBound(String name, boolean isIncluded) {
-            this.upperBounds.add(name + (isIncluded ? "" : "+1"));
+            this.lowerBounds.add(name + (isIncluded ? "" : "+1"));
         }
 
         public List<String> getLowerBounds() {
