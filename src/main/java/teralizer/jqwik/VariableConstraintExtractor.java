@@ -2,7 +2,11 @@ package teralizer.jqwik;
 
 import teralizer.domain.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class VariableConstraintExtractor extends ModelVisitor {
 
@@ -336,6 +340,13 @@ public class VariableConstraintExtractor extends ModelVisitor {
         public List<String> getUpperBounds() {
             return this.upperBounds;
         }
+
+        @Override
+        public String toString() {
+            return String.format("%s = { %s }, ", this.variableName, (this.getEquality() == null ? "" : this.getEquality())) +
+                String.format("%s >= { %s }, ", this.variableName, String.join(", ", this.getLowerBounds())) +
+                String.format("%s <= { %s }", this.variableName, String.join(", ", this.getUpperBounds()));
+        }
     }
 
     public static class RealConstraints implements VariableConstraints {
@@ -395,6 +406,20 @@ public class VariableConstraintExtractor extends ModelVisitor {
 
         public List<RealBound> getUpperBounds() {
             return this.upperBounds;
+        }
+
+        @Override
+        public String toString() {
+            List<String> lowerBoundsIncluded = this.lowerBounds.stream().filter(b -> b.getIsIncluded()).map(RealBound::getValue).collect(Collectors.toList());
+            List<String> lowerBoundsExcluded = this.lowerBounds.stream().filter(b -> !b.getIsIncluded()).map(RealBound::getValue).collect(Collectors.toList());
+            List<String> upperBoundsIncluded = this.upperBounds.stream().filter(b -> b.getIsIncluded()).map(RealBound::getValue).collect(Collectors.toList());
+            List<String> upperBoundsExcluded = this.upperBounds.stream().filter(b -> !b.getIsIncluded()).map(RealBound::getValue).collect(Collectors.toList());
+
+            return String.format("%s = { %s }, ", this.variableName, (this.getEquality() == null ? "" : this.getEquality())) +
+                String.format("%s > { %s }, ", this.variableName, String.join(", ", lowerBoundsExcluded)) +
+                String.format("%s >= { %s }, ", this.variableName, String.join(", ", lowerBoundsIncluded)) +
+                String.format("%s <= { %s }, ", this.variableName, String.join(", ", upperBoundsIncluded)) +
+                String.format("%s < { %s }", this.variableName, String.join(", ", upperBoundsExcluded));
         }
     }
 
