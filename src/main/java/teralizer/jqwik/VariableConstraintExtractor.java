@@ -59,18 +59,23 @@ public class VariableConstraintExtractor extends ModelVisitor {
         if (this.parameterIds.get(left.name) > this.parameterIds.get(right.name)) {
             switch (operator) {
                 case EQ:
+                    // left == right -> add equality
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableEquality(right.name);
                     break;
                 case LT:
+                    // left < right -> add upper bound
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableUpperBound(right.name, false);
                     break;
                 case LE:
+                    // left <= right -> add upper bound
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableUpperBound(right.name, true);
                     break;
                 case GT:
+                    // left > right -> add lower bound
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableLowerBound(right.name, false);
                     break;
                 case GE:
+                    // left >= right -> add lower bound
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableLowerBound(right.name, true);
                     break;
                 default:
@@ -80,18 +85,23 @@ public class VariableConstraintExtractor extends ModelVisitor {
         if (this.parameterIds.get(right.name) > this.parameterIds.get(left.name)) {
             switch (operator) {
                 case EQ:
+                    // right == left -> add equality
                     this.getConstraint(IntegerConstraints.class, right.name).addVariableEquality(left.name);
                     break;
                 case LT:
+                    // right > left -> add lower bound
                     this.getConstraint(IntegerConstraints.class, right.name).addVariableLowerBound(left.name, false);
                     break;
                 case LE:
+                    // right >= left -> add lower bound
                     this.getConstraint(IntegerConstraints.class, right.name).addVariableLowerBound(left.name, true);
                     break;
                 case GT:
+                    // right < left -> add upper bound
                     this.getConstraint(IntegerConstraints.class, right.name).addVariableUpperBound(left.name, false);
                     break;
                 case GE:
+                    // right <= left -> add upper bound
                     this.getConstraint(IntegerConstraints.class, right.name).addVariableUpperBound(left.name, true);
                     break;
                 default:
@@ -103,18 +113,23 @@ public class VariableConstraintExtractor extends ModelVisitor {
     private void updateConstraints(VariableInteger left, Operator operator, ConstantInteger right) {
         switch (operator) {
             case EQ:
+                // left == right -> add equality
                 this.getConstraint(IntegerConstraints.class, left.name).addConstantEquality(right.value);
                 break;
             case LT:
+                // left < right -> add upper bound
                 this.getConstraint(IntegerConstraints.class, left.name).addConstantUpperBound(right.value, false);
                 break;
             case LE:
+                // left <= right -> add upper bound
                 this.getConstraint(IntegerConstraints.class, left.name).addConstantUpperBound(right.value, true);
                 break;
             case GT:
+                // left > right -> add lower bound
                 this.getConstraint(IntegerConstraints.class, left.name).addConstantLowerBound(right.value, false);
                 break;
             case GE:
+                // left >= right -> add lower bound
                 this.getConstraint(IntegerConstraints.class, left.name).addConstantLowerBound(right.value, true);
                 break;
             default:
@@ -125,18 +140,23 @@ public class VariableConstraintExtractor extends ModelVisitor {
     private void updateConstraints(ConstantInteger left, Operator operator, VariableInteger right) {
         switch (operator) {
             case EQ:
+                // right == left -> add equality
                 this.getConstraint(IntegerConstraints.class, right.name).addConstantEquality(left.value);
                 break;
             case LT:
+                // right > left -> add lower bound
                 this.getConstraint(IntegerConstraints.class, right.name).addConstantLowerBound(left.value, false);
                 break;
             case LE:
+                // right >= left -> add lower bound
                 this.getConstraint(IntegerConstraints.class, right.name).addConstantLowerBound(left.value, true);
                 break;
             case GT:
+                // right < left -> add upper bound
                 this.getConstraint(IntegerConstraints.class, right.name).addConstantUpperBound(left.value, false);
                 break;
             case GE:
+                // right <= left -> add upper bound
                 this.getConstraint(IntegerConstraints.class, right.name).addConstantUpperBound(left.value, true);
                 break;
             default:
@@ -148,18 +168,23 @@ public class VariableConstraintExtractor extends ModelVisitor {
         if (this.parameterIds.get(left.name) > this.parameterIds.get(right.name)) {
             switch (operator) {
                 case EQ:
+                    // left == right -> add equality
                     this.getConstraint(RealConstraints.class, left.name).addVariableEquality(right.name);
                     break;
                 case LT:
+                    // left < right -> add upper bound
                     this.getConstraint(RealConstraints.class, left.name).addVariableUpperBound(right.name, false);
                     break;
                 case LE:
+                    // left <= right -> add upper bound
                     this.getConstraint(RealConstraints.class, left.name).addVariableUpperBound(right.name, true);
                     break;
                 case GT:
+                    // left > right -> add lower bound
                     this.getConstraint(RealConstraints.class, left.name).addVariableLowerBound(right.name, false);
                     break;
                 case GE:
+                    // left >= right -> add lower bound
                     this.getConstraint(RealConstraints.class, left.name).addVariableLowerBound(right.name, true);
                     break;
                 default:
@@ -169,18 +194,23 @@ public class VariableConstraintExtractor extends ModelVisitor {
         if (this.parameterIds.get(right.name) > this.parameterIds.get(left.name)) {
             switch (operator) {
                 case EQ:
+                    // right == left -> add equality
                     this.getConstraint(RealConstraints.class, right.name).addVariableEquality(left.name);
                     break;
                 case LT:
+                    // right > left -> add lower bound
                     this.getConstraint(RealConstraints.class, right.name).addVariableLowerBound(left.name, false);
                     break;
                 case LE:
+                    // right >= left -> add lower bound
                     this.getConstraint(RealConstraints.class, right.name).addVariableLowerBound(left.name, true);
                     break;
                 case GT:
+                    // right < left -> add upper bound
                     this.getConstraint(RealConstraints.class, right.name).addVariableUpperBound(left.name, false);
                     break;
                 case GE:
+                    // right <= left -> add upper bound
                     this.getConstraint(RealConstraints.class, right.name).addVariableUpperBound(left.name, true);
                     break;
                 default:
@@ -192,18 +222,23 @@ public class VariableConstraintExtractor extends ModelVisitor {
     private void updateConstraints(VariableReal left, Operator operator, ConstantReal right) {
         switch (operator) {
             case EQ:
+                // left == right -> add equality
                 this.getConstraint(RealConstraints.class, left.name).addConstantEquality(right.value);
                 break;
             case LT:
+                // left < right -> add upper bound
                 this.getConstraint(RealConstraints.class, left.name).addConstantUpperBound(right.value, false);
                 break;
             case LE:
+                // left <= right -> add upper bound
                 this.getConstraint(RealConstraints.class, left.name).addConstantUpperBound(right.value, true);
                 break;
             case GT:
+                // left > right -> add lower bound
                 this.getConstraint(RealConstraints.class, left.name).addConstantLowerBound(right.value, false);
                 break;
             case GE:
+                // left >= right -> add lower bound
                 this.getConstraint(RealConstraints.class, left.name).addConstantLowerBound(right.value, true);
                 break;
             default:
@@ -214,18 +249,23 @@ public class VariableConstraintExtractor extends ModelVisitor {
     private void updateConstraints(ConstantReal left, Operator operator, VariableReal right) {
         switch (operator) {
             case EQ:
+                // right == left -> add equality
                 this.getConstraint(RealConstraints.class, right.name).addConstantEquality(left.value);
                 break;
             case LT:
+                // right > left -> add lower bound
                 this.getConstraint(RealConstraints.class, right.name).addConstantLowerBound(left.value, false);
                 break;
             case LE:
+                // right >= left -> add lower bound
                 this.getConstraint(RealConstraints.class, right.name).addConstantLowerBound(left.value, true);
                 break;
             case GT:
+                // right < left -> add upper bound
                 this.getConstraint(RealConstraints.class, right.name).addConstantUpperBound(left.value, false);
                 break;
             case GE:
+                // right <= left -> add upper bound
                 this.getConstraint(RealConstraints.class, right.name).addConstantUpperBound(left.value, true);
                 break;
             default:
