@@ -63,12 +63,16 @@ public class VariableConstraintExtractor extends ModelVisitor {
                     break;
                 case LT:
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableUpperBound(right.name, false);
+                    break;
                 case LE:
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableUpperBound(right.name, true);
+                    break;
                 case GT:
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableLowerBound(right.name, false);
+                    break;
                 case GE:
                     this.getConstraint(IntegerConstraints.class, left.name).addVariableLowerBound(right.name, true);
+                    break;
                 default:
                     // do nothing
             }
