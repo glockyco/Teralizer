@@ -23,6 +23,7 @@ import teralizer.jqwik.VariableConstraintExtractor.VariableConstraints;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
 import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
 import teralizer.spoon.generalization.TestParametersFactory;
@@ -305,7 +306,7 @@ public class TestGeneralizationTask extends AbstractTask {
         // Replace tested method arguments with values from `testParameters`.                                     //
         // ------------------------------------------------------------------------------------------------------ //
 
-        CtInvocation<?> testedMethodCall = TestAnalysisTask.findTestedMethodCall(testMethodDeclaration);
+        CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethodDeclaration);
         CtMethod<?> testedMethodDeclaration = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
@@ -342,7 +343,7 @@ public class TestGeneralizationTask extends AbstractTask {
         //   It might be possible to (partially) automate this oracle generalization.
 
         if (outputJava != null) {
-            CtInvocation<?> assertEqualsCall = TestAnalysisTask.findAssertEqualsCall(testMethodDeclaration);
+            CtInvocation<?> assertEqualsCall = TestAnalysis.findAssertEqualsCall(testMethodDeclaration);
             List<CtExpression<?>> assertArguments = assertEqualsCall.getArguments();
             assertArguments.set(0, factory.Code().createCodeSnippetExpression(outputJava));
         }

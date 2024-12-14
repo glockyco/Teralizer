@@ -21,6 +21,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.spoon.analysis.TestAnalysis;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -93,7 +94,7 @@ public class TestAnalysisTask extends AbstractTask {
                         continue;
                     }
 
-                    CtInvocation<?> testedMethodCall = findTestedMethodCall(testMethodDeclaration);
+                    CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethodDeclaration);
 
                     if (testedMethodCall == null) {
                         continue;
@@ -140,40 +141,10 @@ public class TestAnalysisTask extends AbstractTask {
         });
     }
 
-    public static CtInvocation<?> findTestedMethodCall(CtMethod<?> testMethodDeclaration) {
-        // @TODO: Use more sophisticated detection of tested method.
-
-        CtInvocation<?> testedMethodCall = null;
-
-        List<CtInvocation<?>> methodCalls = testMethodDeclaration.getElements(new TypeFilter<>(CtInvocation.class));
-        for (CtInvocation<?> methodCall : methodCalls) {
-            if (methodCall.getExecutable().getSimpleName().startsWith("assert")) {
-                break;
-            }
-            testedMethodCall = methodCall;
-        }
-
-        assert testedMethodCall != null;
-
-        return testedMethodCall;
-    }
-
-    public static CtInvocation<?> findAssertEqualsCall(CtMethod<?> testMethodDeclaration) {
-        // @TODO: Use more sophisticated detection of generalizable assertEquals calls.
-
-        List<CtInvocation<?>> methodCalls = testMethodDeclaration.getElements(new TypeFilter<>(CtInvocation.class));
-        List<CtInvocation<?>> assertEqualsCalls = methodCalls.stream().filter(m -> m.getExecutable().getSimpleName().equals("assertEquals")).collect(Collectors.toList());
-
-        assert assertEqualsCalls.size() == 1;
-        return assertEqualsCalls.get(0);
-    }
-
     public static void createAssertionRecords(TestRecord testRecord, CtMethod<?> testMethodDeclaration, DSLContext create, Gson gson) {
         List<AssertionRecord> assertionRecords = new ArrayList<>();
 
-        List<CtInvocation<?>> methodCalls = testMethodDeclaration.getElements(new TypeFilter<>(CtInvocation.class));
-        List<CtInvocation<?>> assertMethodCalls = methodCalls.stream().filter(m -> m.getExecutable().getSimpleName().startsWith("assert")).collect(Collectors.toList());
-
+        List<CtInvocation<?>> assertMethodCalls = TestAnalysis.findAssertCalls(testMethodDeclaration);
         for (CtInvocation<?> assertMethodCall : assertMethodCalls) {
             CtExecutableReference<?> assertMethodRef = assertMethodCall.getExecutable();
             String methodName = assertMethodRef.getSimpleName();
