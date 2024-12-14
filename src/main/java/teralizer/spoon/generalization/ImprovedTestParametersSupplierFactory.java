@@ -1,4 +1,4 @@
-package teralizer.spoon;
+package teralizer.spoon.generalization;
 
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
@@ -10,6 +10,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.jqwik.VariableConstraintExtractor.IntegerConstraints;
 import teralizer.jqwik.VariableConstraintExtractor.RealConstraints;
 import teralizer.jqwik.VariableConstraintExtractor.VariableConstraints;
+import teralizer.spoon.SpoonUtils;
 
 import java.util.*;
 import java.util.function.Function;

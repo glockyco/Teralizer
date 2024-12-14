@@ -23,9 +23,9 @@ import teralizer.jqwik.VariableConstraintExtractor.VariableConstraints;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
-import teralizer.spoon.ImprovedTestParametersSupplierFactory;
-import teralizer.spoon.NaiveTestParametersSupplierFactory;
-import teralizer.spoon.TestParametersFactory;
+import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
+import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
+import teralizer.spoon.generalization.TestParametersFactory;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 

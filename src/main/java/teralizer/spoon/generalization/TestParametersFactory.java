@@ -1,11 +1,14 @@
-package teralizer.spoon;
+package teralizer.spoon.generalization;
 
 import spoon.reflect.declaration.*;
 import spoon.reflect.factory.Factory;
-import spoon.reflect.reference.CtTypeReference;
 import teralizer.domain.MethodParameter;
+import teralizer.spoon.SpoonUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static teralizer.processing.task.TestGeneralizationTask.TEST_PARAMETERS_CLASS_NAME;

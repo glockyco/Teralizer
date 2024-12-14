@@ -1,4 +1,4 @@
-package teralizer.spoon;
+package teralizer.spoon.generalization;
 
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
@@ -7,6 +7,7 @@ import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 import teralizer.domain.MethodParameter;
+import teralizer.spoon.SpoonUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
