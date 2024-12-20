@@ -157,7 +157,7 @@ public class TestGeneralizationTask extends AbstractTask {
         List<CtMethod<?>> otherTestMethods = generalizedClassDeclaration.getMethods().stream().filter(m -> !isTestMethod.test(m) && hasTestAnnotation.test(m)).collect(Collectors.toList());
         otherTestMethods.forEach(generalizedClassDeclaration::removeMethod);
 
-        CtMethod<?> testMethodDeclaration = generalizedClassDeclaration.getMethodsByName(this.testRecord.getTestMethodName()).get(0);
+        CtMethod<?> testMethod = generalizedClassDeclaration.getMethodsByName(this.testRecord.getTestMethodName()).get(0);
 
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
         //   Otherwise, we will have issues mapping the class names to the correct Arbitraries.
@@ -272,8 +272,8 @@ public class TestGeneralizationTask extends AbstractTask {
         // Remove all existing annotations.                                                                       //
         // ------------------------------------------------------------------------------------------------------ //
 
-        List<CtAnnotation<?>> testMethodAnnotations = new ArrayList<>(testMethodDeclaration.getAnnotations());
-        testMethodAnnotations.forEach(testMethodDeclaration::removeAnnotation);
+        List<CtAnnotation<?>> testMethodAnnotations = new ArrayList<>(testMethod.getAnnotations());
+        testMethodAnnotations.forEach(testMethod::removeAnnotation);
 
         // ------------------------------------------------------------------------------------------------------ //
         // Add a jqwik @Property annotation.                                                                      //
@@ -283,7 +283,7 @@ public class TestGeneralizationTask extends AbstractTask {
         propertyAnnotation.setAnnotationType(factory.Type().createReference("net.jqwik.api.Property"));
         propertyAnnotation.addValue("tries", factory.Code().createLiteral(MAX_TRIES_JQWIK));
         propertyAnnotation.addValue("seed", factory.Code().createLiteral("0"));
-        testMethodDeclaration.addAnnotation(propertyAnnotation);
+        testMethod.addAnnotation(propertyAnnotation);
 
         // ------------------------------------------------------------------------------------------------------ //
         // Add `@ForAll(...) TestParameters testParameters` to the test method signature.                         //
@@ -300,17 +300,18 @@ public class TestGeneralizationTask extends AbstractTask {
         parameter.setSimpleName("_p_");
         parameter.addAnnotation(forAllAnnotation);
 
-        testMethodDeclaration.addParameter(parameter);
+        testMethod.addParameter(parameter);
 
         // ------------------------------------------------------------------------------------------------------ //
         // Replace tested method arguments with values from `testParameters`.                                     //
         // ------------------------------------------------------------------------------------------------------ //
 
-        CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethodDeclaration);
-        CtMethod<?> testedMethodDeclaration = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+        CtInvocation<?> assertion = TestAnalysis.findGeneralizableAssert(testMethod).orElse(null);
+        CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertion).get();
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
-        List<CtParameter<?>> params = testedMethodDeclaration.getParameters();
+        List<CtParameter<?>> params = testedMethod.getParameters();
 
         for (int i = 0; i < args.size(); i++) {
             CtExpression<?> arg = args.get(i);
@@ -343,7 +344,7 @@ public class TestGeneralizationTask extends AbstractTask {
         //   It might be possible to (partially) automate this oracle generalization.
 
         if (outputJava != null) {
-            CtInvocation<?> assertEqualsCall = TestAnalysis.findAssertEqualsCall(testMethodDeclaration);
+            CtInvocation<?> assertEqualsCall = TestAnalysis.findGeneralizableAssert(testMethod).get();
             List<CtExpression<?>> assertArguments = assertEqualsCall.getArguments();
             assertArguments.set(0, factory.Code().createCodeSnippetExpression(outputJava));
         }

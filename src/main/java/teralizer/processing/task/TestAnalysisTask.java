@@ -17,7 +17,6 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtExecutableReference;
-import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -65,8 +64,8 @@ public class TestAnalysisTask extends AbstractTask {
                 }
                 List<TestRecord> testRecords = allTestRecords.get(ctClass.getQualifiedName());
                 for (TestRecord testRecord : testRecords) {
-                    List<CtMethod<?>> testMethodDeclarations = ctClass.getMethodsByName(testRecord.getTestMethodName());
-                    if (testMethodDeclarations.isEmpty()) {
+                    List<CtMethod<?>> testMethods = ctClass.getMethodsByName(testRecord.getTestMethodName());
+                    if (testMethods.isEmpty()) {
                         // This can happen if the test method was inherited from some other class.
                         // The JUnit reports list the test as part of the child class then, but
                         // the source code file of the child class does not contain the method.
@@ -76,7 +75,7 @@ public class TestAnalysisTask extends AbstractTask {
                         continue;
                     }
 
-                    if (testMethodDeclarations.size() > 1) {
+                    if (testMethods.size() > 1) {
                         // This should never happen because there can only be multiple methods
                         // with the same name if they have different signatures. However, all
                         // @Test methods should have the same signature (no inputs, void output).
@@ -86,8 +85,8 @@ public class TestAnalysisTask extends AbstractTask {
                         continue;
                     }
 
-                    CtMethod<?> testMethodDeclaration = testMethodDeclarations.get(0);
-                    if (testMethodDeclaration.getAnnotations().stream().noneMatch(a -> a.getType().getSimpleName().equals("Test"))) {
+                    CtMethod<?> testMethod = testMethods.get(0);
+                    if (testMethod.getAnnotations().stream().noneMatch(a -> a.getType().getSimpleName().equals("Test"))) {
                         testRecord.setIsIncluded(false);
                         testRecord.setExclusionInfo("Excluded by " + this + ". Test method has no @Test annotation.");
                         testRecord.store();
@@ -96,16 +95,17 @@ public class TestAnalysisTask extends AbstractTask {
 
                     TestAnalysisTask.createAssertionRecords(testRecord, testMethod, create, gson);
 
-                    CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethodDeclaration);
+                    CtInvocation<?> assertion = TestAnalysis.findGeneralizableAssert(testMethod).orElse(null);
+                    CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertion).orElse(null);
 
                     if (testedMethodCall == null) {
                         continue;
                     }
 
-                    CtMethod<?> testedMethodDeclaration = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
-                    CtType<?> testedType = testedMethodCall.getExecutable().getDeclaringType().getTypeDeclaration();
+                    CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+                    CtType<?> testedType = testedMethod == null ? null : testedMethod.getDeclaringType();
 
-                    if (testedMethodDeclaration == null || testedType == null) {
+                    if (testedMethod == null || testedType == null) {
                         continue;
                     }
 
@@ -114,13 +114,13 @@ public class TestAnalysisTask extends AbstractTask {
 
                     String packageName = testedType.getPackage().toString();
                     String className = testedType.getSimpleName();
-                    String methodName = testedMethodDeclaration.getSimpleName();
+                    String methodName = testedMethod.getSimpleName();
 
                     String qualifiedClassName = testedType.getQualifiedName();
                     String qualifiedMethodName = qualifiedClassName + "." + methodName;
 
                     List<MethodParameter> testedMethodParameters = new ArrayList<>();
-                    for (CtParameter<?> param : testedMethodDeclaration.getParameters()) {
+                    for (CtParameter<?> param : testedMethod.getParameters()) {
                         String paramType = param.getType().getQualifiedName();
                         String paramName = param.getSimpleName();
                         testedMethodParameters.add(new MethodParameter(paramType, paramName));
@@ -133,7 +133,7 @@ public class TestAnalysisTask extends AbstractTask {
                     testRecord.setTestedClassName(className);
                     testRecord.setTestedMethodName(methodName);
                     testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
-                    testRecord.setTestedMethodReturnType(testedMethodDeclaration.getType().getQualifiedName());
+                    testRecord.setTestedMethodReturnType(testedMethod.getType().getQualifiedName());
 
                     testRecord.store();
                 }
@@ -141,10 +141,10 @@ public class TestAnalysisTask extends AbstractTask {
         });
     }
 
-    public static void createAssertionRecords(TestRecord testRecord, CtMethod<?> testMethodDeclaration, DSLContext create, Gson gson) {
+    public static void createAssertionRecords(TestRecord testRecord, CtMethod<?> testMethod, DSLContext create, Gson gson) {
         List<AssertionRecord> assertionRecords = new ArrayList<>();
 
-        List<CtInvocation<?>> assertMethodCalls = TestAnalysis.findAssertCalls(testMethodDeclaration);
+        List<CtInvocation<?>> assertMethodCalls = TestAnalysis.findAllAsserts(testMethod);
         for (CtInvocation<?> assertMethodCall : assertMethodCalls) {
             CtExecutableReference<?> assertMethodRef = assertMethodCall.getExecutable();
             String methodName = assertMethodRef.getSimpleName();

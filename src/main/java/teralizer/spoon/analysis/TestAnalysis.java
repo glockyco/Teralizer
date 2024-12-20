@@ -1,58 +1,92 @@
 package teralizer.spoon.analysis;
 
-import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
+import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.reflect.visitor.filter.TypeFilter;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 public class TestAnalysis {
 
     private static final String JUNIT4_ASSERTION_PACKAGE = "org.junit.Assert";
     private static final String JUNIT5_ASSERTION_PACKAGE = "org.junit.jupiter.api.Assertions";
 
-    public static CtInvocation<?> findTestedMethodCall(CtMethod<?> testMethod) {
-        // @TODO: Use more sophisticated detection of tested method.
+    private static final String ASSERT_EQUALS = "assertEquals";
+    private static final String ASSERT_TRUE = "assertTrue";
+    private static final String ASSERT_FALSE = "assertFalse";
 
-        CtInvocation<?> testedMethodCall = null;
+    private static final List<String> GENERALIZABLE_ASSERTS = Arrays.asList(ASSERT_EQUALS, ASSERT_TRUE, ASSERT_FALSE);
 
-        List<CtInvocation<?>> methodCalls = testMethod.getElements(new TypeFilter<>(CtInvocation.class));
-        for (CtInvocation<?> methodCall : methodCalls) {
-            if (methodCall.getExecutable().getSimpleName().startsWith("assert")) {
-                break;
-            }
-            testedMethodCall = methodCall;
+    public static Optional<CtInvocation<?>> findTestedMethodCall(CtMethod<?> method, CtInvocation<?> assertion) {
+        CtExpression<?> actual;
+
+        if (assertion == null) {
+            // @TODO: Assume a "no exceptions" test.
+            //   Which method should we return as tested method in this case?
+            return Optional.empty();
         }
 
-        assert testedMethodCall != null;
+        switch (assertion.getExecutable().getSimpleName()) {
+            case ASSERT_EQUALS:
+                // @TODO: Distinguish JUnit 4 vs. JUnit 5 (=> message parameters!).
+                actual = assertion.getArguments().get(1);
+                break;
+            case ASSERT_TRUE:
+            case ASSERT_FALSE:
+                // @TODO: Distinguish JUnit 4 vs. JUnit 5 (=> message parameters!).
+                actual = assertion.getArguments().get(0);
+                break;
+            default:
+                return Optional.empty();
+        }
 
-        return testedMethodCall;
-    }
+        if (actual instanceof CtInvocation<?>) {
+            return Optional.of((CtInvocation<?>) actual);
+        } else if (actual instanceof CtFieldRead<?>) {
+            // @TODO: Add handling for field reads.
+        } else if (actual instanceof CtVariableRead<?>) {
+            // @TODO: Consider that the actual value might be redefined after declaration.
+            CtLocalVariableReference<?> reference = (CtLocalVariableReference<?>) ((CtVariableRead<?>) actual).getVariable();
+            CtLocalVariable<?> declaration = reference.getDeclaration();
+            CtExpression<?> assignment = declaration.getAssignment();
 
-    public static List<CtInvocation<?>> findAssertCalls(CtMethod<?> testMethod) {
-        return testMethod.getElements(element -> {
-            CtExecutableReference<?> executable = element.getExecutable();
-            CtTypeReference<?> declaringType = executable.getDeclaringType();
-
-            if (declaringType == null) {
-                return false;
+            if (assignment instanceof CtInvocation<?>) {
+                return Optional.of((CtInvocation<?>) assignment);
             }
+        }
 
-            String qualifiedName = declaringType.getQualifiedName();
-            return qualifiedName.equals(JUNIT4_ASSERTION_PACKAGE) || qualifiedName.equals(JUNIT5_ASSERTION_PACKAGE);
-        });
+        return Optional.empty();
     }
 
-    public static CtInvocation<?> findAssertEqualsCall(CtMethod<?> testMethod) {
-        // @TODO: Use more sophisticated detection of generalizable assertEquals calls.
+    public static Optional<CtInvocation<?>> findGeneralizableAssert(CtMethod<?> method) {
+        return findGeneralizableAsserts(method).stream().findFirst();
+    }
 
-        List<CtInvocation<?>> methodCalls = testMethod.getElements(new TypeFilter<>(CtInvocation.class));
-        List<CtInvocation<?>> assertEqualsCalls = methodCalls.stream().filter(m -> m.getExecutable().getSimpleName().equals("assertEquals")).collect(Collectors.toList());
+    public static List<CtInvocation<?>> findGeneralizableAsserts(CtMethod<?> method) {
+        return method.getElements(e -> TestAnalysis.isAssertion(e) && TestAnalysis.isGeneralizable(e));
+    }
 
-        assert assertEqualsCalls.size() == 1;
-        return assertEqualsCalls.get(0);
+    public static List<CtInvocation<?>> findAllAsserts(CtMethod<?> method) {
+        return method.getElements(TestAnalysis::isAssertion);
+    }
+
+    public static boolean isGeneralizable(CtInvocation<?> invocation) {
+        return GENERALIZABLE_ASSERTS.contains(invocation.getExecutable().getSimpleName());
+    }
+
+    public static boolean isAssertion(CtInvocation<?> invocation) {
+        CtExecutableReference<?> executable = invocation.getExecutable();
+        CtTypeReference<?> declaringType = executable.getDeclaringType();
+
+        if (declaringType == null) {
+            return false;
+        }
+
+        String qualifiedName = declaringType.getQualifiedName();
+        return qualifiedName.equals(JUNIT4_ASSERTION_PACKAGE) || qualifiedName.equals(JUNIT5_ASSERTION_PACKAGE);
     }
 }
