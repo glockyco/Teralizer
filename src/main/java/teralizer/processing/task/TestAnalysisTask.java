@@ -94,6 +94,8 @@ public class TestAnalysisTask extends AbstractTask {
                         continue;
                     }
 
+                    TestAnalysisTask.createAssertionRecords(testRecord, testMethod, create, gson);
+
                     CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethodDeclaration);
 
                     if (testedMethodCall == null) {
@@ -134,8 +136,6 @@ public class TestAnalysisTask extends AbstractTask {
                     testRecord.setTestedMethodReturnType(testedMethodDeclaration.getType().getQualifiedName());
 
                     testRecord.store();
-
-                    TestAnalysisTask.createAssertionRecords(testRecord, testMethodDeclaration, create, gson);
                 }
             }
         });
