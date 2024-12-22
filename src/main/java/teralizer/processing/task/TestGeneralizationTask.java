@@ -305,7 +305,7 @@ public class TestGeneralizationTask extends AbstractTask {
         // Replace tested method arguments with values from `testParameters`.                                     //
         // ------------------------------------------------------------------------------------------------------ //
 
-        CtInvocation<?> assertion = TestAnalysis.findGeneralizableAssert(testMethod).orElse(null);
+        CtInvocation<?> assertion = TestAnalysis.findGeneralizableAssert(testMethod).get();
         CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertion).get();
         CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
 
@@ -343,9 +343,9 @@ public class TestGeneralizationTask extends AbstractTask {
         //   It might be possible to (partially) automate this oracle generalization.
 
         if (outputJava != null) {
-            CtInvocation<?> assertEqualsCall = TestAnalysis.findGeneralizableAssert(testMethod).get();
-            List<CtExpression<?>> assertArguments = assertEqualsCall.getArguments();
-            assertArguments.set(0, factory.Code().createCodeSnippetExpression(outputJava));
+            int index = TestAnalysis.getExpectedParameterIndex(assertion).get();
+            List<CtExpression<?>> assertArguments = assertion.getArguments();
+            assertArguments.set(index, factory.Code().createCodeSnippetExpression(outputJava));
         }
 
         // ------------------------------------------------------------------------------------------------------ //
