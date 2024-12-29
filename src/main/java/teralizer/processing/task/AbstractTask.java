@@ -7,6 +7,8 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -26,14 +28,20 @@ public abstract class AbstractTask implements Task {
         try {
             this.executeInternal(context, reportInfo, scheduleTask);
         } catch (Exception e) {
+            StringWriter stringWriter = new StringWriter();
+            e.printStackTrace(new PrintWriter(stringWriter));
+            String stackTrace = stringWriter.toString();
+
+            String exclusionMessage = String.format("Excluded by %s.%n%n%s", this, stackTrace);
+
             if (this.testRecord != null) {
                 this.testRecord.setIsIncluded(false);
-                this.testRecord.setExclusionInfo("Excluded by " + this + ".");
+                this.testRecord.setExclusionInfo(exclusionMessage);
                 this.testRecord.store();
             }
             if (this.generalizationRecord != null) {
                 this.generalizationRecord.setIsIncluded(false);
-                this.generalizationRecord.setExclusionInfo("Excluded by " + this + ".");
+                this.generalizationRecord.setExclusionInfo(exclusionMessage);
                 this.generalizationRecord.store();
             }
             throw e;
