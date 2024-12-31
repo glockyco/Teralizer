@@ -46,8 +46,11 @@ public class CleanupTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        if (this.stage != ProcessingStage.CLEANUP_PROJECT && this.stage != ProcessingStage.CLEANUP_GENERALIZATION) {
-            throw new RuntimeException("Cannot preform cleanup. Unsupported processing stage " + this.stage + ".");
+        if (this.stage != ProcessingStage.CLEANUP_PROJECT
+            && this.stage != ProcessingStage.CLEANUP_JPF_INSTRUMENTATION
+            && this.stage != ProcessingStage.CLEANUP_GENERALIZATION
+        ) {
+            throw new RuntimeException("Cannot perform cleanup. Unsupported processing stage " + this.stage + ".");
         }
         if (this.projectPath == null) {
             LOGGER.atInfo().log("Skipping cleanup. Project path is null.");
@@ -104,6 +107,7 @@ public class CleanupTask extends AbstractTask {
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             this.deleteIfEvoSuiteFile(file);
+            this.deleteIfInstrumentationFile(file);
             this.deleteIfGeneralizationFile(file);
             return FileVisitResult.CONTINUE;
         }
@@ -125,21 +129,25 @@ public class CleanupTask extends AbstractTask {
             }
         }
 
-        private void deleteIfGeneralizationFile(Path file) {
+        private void deleteIfInstrumentationFile(Path file) {
             String fileName = file.getFileName().toString();
             boolean isDriverFile = fileName.startsWith("_") && fileName.contains("_Driver_");
-            boolean isGeneralizedFile = fileName.startsWith("_") && fileName.contains("_Generalized_");
+            boolean shouldDeleteFile = isDriverFile && (this.stage == ProcessingStage.CLEANUP_PROJECT || this.stage == ProcessingStage.CLEANUP_JPF_INSTRUMENTATION);
 
-            if (this.stage == ProcessingStage.CLEANUP_PROJECT) {
-                if (isDriverFile || isGeneralizedFile) {
-                    file.toFile().delete();
-                }
-            } else if (this.stage == ProcessingStage.CLEANUP_GENERALIZATION) {
-                if (isGeneralizedFile) {
-                    file.toFile().delete();
-                }
-            } else {
-                throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
+            if (shouldDeleteFile) {
+                LOGGER.atInfo().log("Deleting JPF instrumentation file '" + file + "'.");
+                file.toFile().delete();
+            }
+        }
+
+        private void deleteIfGeneralizationFile(Path file) {
+            String fileName = file.getFileName().toString();
+            boolean isGeneralizedFile = fileName.startsWith("_") && fileName.contains("_Generalized_");
+            boolean shouldDeleteFile = isGeneralizedFile && (this.stage == ProcessingStage.CLEANUP_PROJECT || this.stage == ProcessingStage.CLEANUP_GENERALIZATION);
+
+            if (shouldDeleteFile) {
+                LOGGER.atInfo().log("Deleting generalization file '" + file + "'.");
+                file.toFile().delete();
             }
         }
     }

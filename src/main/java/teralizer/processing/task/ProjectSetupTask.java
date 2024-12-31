@@ -102,6 +102,7 @@ public class ProjectSetupTask extends AbstractTask {
         scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.ADD_JPF_INSTRUMENTATION, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, this.projectRecord));
         scheduleTask.accept(new JpfExecutionTask(ProcessingStage.EXECUTE_JPF, this.projectRecord));
+        scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_JPF_INSTRUMENTATION, this.projectRecord));
 
         scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INITIAL, this.projectRecord));
