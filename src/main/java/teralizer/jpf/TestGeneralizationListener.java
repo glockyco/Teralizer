@@ -34,6 +34,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     private long startTime;
 
+    private int recursionDepth;
+
     public TestGeneralizationListener(Config config) {
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
         this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
@@ -45,6 +47,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     @Override
     public void searchStarted(Search search) {
         this.startTime = System.currentTimeMillis();
+        this.recursionDepth = -1;
     }
 
     @Override
@@ -91,6 +94,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public void methodEntered(VM vm, ThreadInfo currentThread, MethodInfo enteredMethod) {
         if (this.testedMethodSpec.matches(enteredMethod)) {
             LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
+            this.recursionDepth++;
         }
     }
 
@@ -98,7 +102,11 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public void methodExited(VM vm, ThreadInfo currentThread, MethodInfo exitedMethod) {
         if (this.testedMethodSpec.matches(exitedMethod)) {
             LOGGER.atDebug().log("Exiting tested method: " + exitedMethod.toString());
-            this.writeSpecificationFiles(vm);
+            this.recursionDepth--;
+            if (this.recursionDepth == -1) {
+                this.writeSpecificationFiles(vm);
+                vm.getSearch().terminate();
+            }
         }
     }
 
