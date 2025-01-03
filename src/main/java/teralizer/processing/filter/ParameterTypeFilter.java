@@ -2,28 +2,27 @@ package teralizer.processing.filter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.jooq.generated.tables.records.TestRecord;
+import org.jooq.generated.tables.records.AssertionRecord;
 import teralizer.domain.MethodParameter;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.List;
+
+import static teralizer.processing.task.TestGeneralizationTask.SUPPORTED_TYPES;
 
 public class ParameterTypeFilter extends AbstractFilter {
 
-    private static final List<String> SUPPORTED_TYPES = Arrays.asList("byte", "short", "int", "long", "float", "double");
-
     private final Gson gson;
-    private final TestRecord testRecord;
+    private final AssertionRecord assertionRecord;
 
-    public ParameterTypeFilter(Gson gson, TestRecord testRecord) {
+    public ParameterTypeFilter(Gson gson, AssertionRecord assertionRecord) {
         this.gson = gson;
-        this.testRecord = testRecord;
+        this.assertionRecord = assertionRecord;
     }
 
     @Override
     public FilterResult check() {
-        String testedMethodParamTypes = this.testRecord.getTestedMethodParamTypes();
+        String testedMethodParamTypes = this.assertionRecord.getTestedMethodParameters();
         if (testedMethodParamTypes == null) {
             return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_param_types column is null.");
         }

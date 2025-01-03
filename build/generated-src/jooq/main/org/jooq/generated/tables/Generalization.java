@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row12;
+import org.jooq.Row13;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -66,6 +66,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
      * The column <code>generalization.test_id</code>.
      */
     public final TableField<GeneralizationRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>generalization.assertion_id</code>.
+     */
+    public final TableField<GeneralizationRecord, Integer> ASSERTION_ID = createField(DSL.name("assertion_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>generalization.variant</code>.
@@ -152,7 +157,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_CLASS_QUALIFIED_NAME, Indexes.IDX_GENERALIZATION_FILE_PATH, Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_METHOD_QUALIFIED_NAME, Indexes.IDX_GENERALIZATION_PROJECT_ID, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_GENERALIZATION_ASSERTION_ID, Indexes.IDX_GENERALIZATION_CLASS_QUALIFIED_NAME, Indexes.IDX_GENERALIZATION_FILE_PATH, Indexes.IDX_GENERALIZATION_IS_INCLUDED, Indexes.IDX_GENERALIZATION_METHOD_QUALIFIED_NAME, Indexes.IDX_GENERALIZATION_PROJECT_ID, Indexes.IDX_GENERALIZATION_TEST_ID, Indexes.IDX_GENERALIZATION_VARIANT);
     }
 
     @Override
@@ -172,16 +177,32 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
 
     @Override
     public List<ForeignKey<GeneralizationRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<GeneralizationRecord, ?>>asList(Keys.FK_GENERALIZATION_TEST_1);
+        return Arrays.<ForeignKey<GeneralizationRecord, ?>>asList(Keys.FK_GENERALIZATION_PROJECT_1, Keys.FK_GENERALIZATION_TEST_1, Keys.FK_GENERALIZATION_ASSERTION_1);
     }
 
+    private transient Project _project;
     private transient Test _test;
+    private transient Assertion _assertion;
+
+    public Project project() {
+        if (_project == null)
+            _project = new Project(this, Keys.FK_GENERALIZATION_PROJECT_1);
+
+        return _project;
+    }
 
     public Test test() {
         if (_test == null)
             _test = new Test(this, Keys.FK_GENERALIZATION_TEST_1);
 
         return _test;
+    }
+
+    public Assertion assertion() {
+        if (_assertion == null)
+            _assertion = new Assertion(this, Keys.FK_GENERALIZATION_ASSERTION_1);
+
+        return _assertion;
     }
 
     @Override
@@ -211,11 +232,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row12 type methods
+    // Row13 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row12<Integer, Integer, Integer, GeneralizationVariant, String, String, String, String, String, String, Boolean, String> fieldsRow() {
-        return (Row12) super.fieldsRow();
+    public Row13<Integer, Integer, Integer, Integer, GeneralizationVariant, String, String, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row13) super.fieldsRow();
     }
 }

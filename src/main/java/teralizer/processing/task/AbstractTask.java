@@ -1,5 +1,6 @@
 package teralizer.processing.task;
 
+import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
@@ -21,6 +22,7 @@ public abstract class AbstractTask implements Task {
 
     protected ProjectRecord projectRecord;
     protected TestRecord testRecord;
+    protected AssertionRecord assertionRecord;
     protected GeneralizationRecord generalizationRecord;
 
     @Override
@@ -38,6 +40,11 @@ public abstract class AbstractTask implements Task {
                 this.testRecord.setIsIncluded(false);
                 this.testRecord.setExclusionInfo(exclusionMessage);
                 this.testRecord.store();
+            }
+            if (this.assertionRecord != null) {
+                this.assertionRecord.setIsIncluded(false);
+                this.assertionRecord.setExclusionInfo(exclusionMessage);
+                this.assertionRecord.store();
             }
             if (this.generalizationRecord != null) {
                 this.generalizationRecord.setIsIncluded(false);
@@ -69,6 +76,11 @@ public abstract class AbstractTask implements Task {
     }
 
     @Override
+    public Integer getAssertionId() {
+        return this.assertionRecord == null ? null : this.assertionRecord.getId();
+    }
+
+    @Override
     public Integer getGeneralizationId() {
         return this.generalizationRecord == null ? null : this.generalizationRecord.getId();
     }
@@ -77,6 +89,7 @@ public abstract class AbstractTask implements Task {
     public String toString() {
         Integer projectId = this.getProjectId();
         Integer testId = this.getTestId();
+        Integer assertionId = this.getAssertionId();
         Integer generalizationId = this.getGeneralizationId();
 
         String str = this.getClass().getSimpleName() + "{";
@@ -84,6 +97,7 @@ public abstract class AbstractTask implements Task {
         str += this.getVariant() == null ? "" : ", tool=" + this.getVariant();
         str += projectId == null ? "" : ", projectId=" + projectId;
         str += testId == null ? "" : ", testId=" + testId;
+        str += assertionId == null ? "" : ", assertionId=" + assertionId;
         str += generalizationId == null ? "" : ", generalizationId=" + generalizationId;
         str += "}";
 
@@ -100,6 +114,8 @@ public abstract class AbstractTask implements Task {
         Integer thatProjectId = that.getProjectId();
         Integer thisTestId = this.getTestId();
         Integer thatTestId = that.getTestId();
+        Integer thisAssertionId = this.getAssertionId();
+        Integer thatAssertionId = that.getAssertionId();
         Integer thisGeneralizationId = this.getGeneralizationId();
         Integer thatGeneralizationId = that.getGeneralizationId();
 
@@ -107,6 +123,7 @@ public abstract class AbstractTask implements Task {
             && this.variant == that.variant
             && Objects.equals(thisProjectId, thatProjectId)
             && Objects.equals(thisTestId, thatTestId)
+            && Objects.equals(thisAssertionId, thatAssertionId)
             && Objects.equals(thisGeneralizationId, thatGeneralizationId);
     }
 
@@ -114,8 +131,9 @@ public abstract class AbstractTask implements Task {
     public int hashCode() {
         Integer projectId = this.getProjectId();
         Integer testId = this.getTestId();
+        Integer assertionId = this.getAssertionId();
         Integer generalizationId = this.getGeneralizationId();
 
-        return Objects.hash(this.stage, this.variant, projectId, testId, generalizationId);
+        return Objects.hash(this.stage, this.variant, projectId, testId, assertionId, generalizationId);
     }
 }

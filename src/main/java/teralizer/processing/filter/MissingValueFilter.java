@@ -1,35 +1,35 @@
 package teralizer.processing.filter;
 
-import org.jooq.generated.tables.records.TestRecord;
+import org.jooq.generated.tables.records.AssertionRecord;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MissingValueFilter extends AbstractFilter {
 
-    private final TestRecord testRecord;
+    private final AssertionRecord assertionRecord;
 
-    public MissingValueFilter(TestRecord testRecord) {
-        this.testRecord = testRecord;
+    public MissingValueFilter(AssertionRecord assertionRecord) {
+        this.assertionRecord = assertionRecord;
     }
 
     @Override
     public FilterResult check() {
         List<String> rejectionReasons = new ArrayList<>();
 
-        if (this.testRecord.getTestedFilePath() == null) {
+        if (this.assertionRecord.getTestedFilePath() == null) {
             rejectionReasons.add("The test.tested_class_path column is null.");
         }
 
-        if (this.testRecord.getTestedClassName() == null) {
+        if (this.assertionRecord.getTestedClassName() == null) {
             rejectionReasons.add("The test.tested_class_name column is null.");
         }
 
-        if (this.testRecord.getTestedMethodName() == null) {
+        if (this.assertionRecord.getTestedMethodName() == null) {
             rejectionReasons.add("The test.tested_method_name column is null.");
         }
 
-        if (this.testRecord.getTestedMethodParamTypes() == null) {
+        if (this.assertionRecord.getTestedMethodParameters() == null) {
             rejectionReasons.add("The test.tested_method_param_types column is null.");
         }
 

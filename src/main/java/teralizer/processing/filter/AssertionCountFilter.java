@@ -25,8 +25,6 @@ public class AssertionCountFilter extends AbstractFilter {
 
         if (assertions.isEmpty()) {
             return new FilterResult(this.getName(), FilterDecision.REJECT, "assertions.size() < 1.");
-        } else if (assertions.size() > 1) {
-            return new FilterResult(this.getName(), FilterDecision.REJECT, "assertions.size() > 1.");
         }
 
         return new FilterResult(this.getName(), FilterDecision.ACCEPT);

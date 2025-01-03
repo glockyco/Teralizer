@@ -13,6 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
+import org.jooq.Row10;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -87,81 +88,6 @@ public class Test extends TableImpl<TestRecord> {
      * The column <code>test.test_method_name</code>.
      */
     public final TableField<TestRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
-
-    /**
-     * The column <code>test.tested_file_path</code>.
-     */
-    public final TableField<TestRecord, String> TESTED_FILE_PATH = createField(DSL.name("tested_file_path"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>test.tested_class_qualified_name</code>.
-     */
-    public final TableField<TestRecord, String> TESTED_CLASS_QUALIFIED_NAME = createField(DSL.name("tested_class_qualified_name"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>test.tested_method_qualified_name</code>.
-     */
-    public final TableField<TestRecord, String> TESTED_METHOD_QUALIFIED_NAME = createField(DSL.name("tested_method_qualified_name"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>test.tested_package_name</code>.
-     */
-    public final TableField<TestRecord, String> TESTED_PACKAGE_NAME = createField(DSL.name("tested_package_name"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>test.tested_class_name</code>.
-     */
-    public final TableField<TestRecord, String> TESTED_CLASS_NAME = createField(DSL.name("tested_class_name"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>test.tested_method_name</code>.
-     */
-    public final TableField<TestRecord, String> TESTED_METHOD_NAME = createField(DSL.name("tested_method_name"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>test.tested_method_param_types</code>.
-     */
-    public final TableField<TestRecord, String> TESTED_METHOD_PARAM_TYPES = createField(DSL.name("tested_method_param_types"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>test.tested_method_return_type</code>.
-     */
-    public final TableField<TestRecord, String> TESTED_METHOD_RETURN_TYPE = createField(DSL.name("tested_method_return_type"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>test.driver_file_path</code>.
-     */
-    public final TableField<TestRecord, String> DRIVER_FILE_PATH = createField(DSL.name("driver_file_path"), SQLDataType.CLOB.nullable(false), this, "");
-
-    /**
-     * The column <code>test.driver_class_qualified_name</code>.
-     */
-    public final TableField<TestRecord, String> DRIVER_CLASS_QUALIFIED_NAME = createField(DSL.name("driver_class_qualified_name"), SQLDataType.CLOB.nullable(false), this, "");
-
-    /**
-     * The column <code>test.driver_package_name</code>.
-     */
-    public final TableField<TestRecord, String> DRIVER_PACKAGE_NAME = createField(DSL.name("driver_package_name"), SQLDataType.CLOB.nullable(false), this, "");
-
-    /**
-     * The column <code>test.driver_class_name</code>.
-     */
-    public final TableField<TestRecord, String> DRIVER_CLASS_NAME = createField(DSL.name("driver_class_name"), SQLDataType.CLOB.nullable(false), this, "");
-
-    /**
-     * The column <code>test.jpf_config_path</code>.
-     */
-    public final TableField<TestRecord, String> JPF_CONFIG_PATH = createField(DSL.name("jpf_config_path"), SQLDataType.CLOB.nullable(false), this, "");
-
-    /**
-     * The column <code>test.input_specification_path</code>.
-     */
-    public final TableField<TestRecord, String> INPUT_SPECIFICATION_PATH = createField(DSL.name("input_specification_path"), SQLDataType.CLOB.nullable(false), this, "");
-
-    /**
-     * The column <code>test.output_specification_path</code>.
-     */
-    public final TableField<TestRecord, String> OUTPUT_SPECIFICATION_PATH = createField(DSL.name("output_specification_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>test.is_included</code>.
@@ -269,5 +195,14 @@ public class Test extends TableImpl<TestRecord> {
     @Override
     public Test rename(Name name) {
         return new Test(name, null);
+    }
+
+    // -------------------------------------------------------------------------
+    // Row10 type methods
+    // -------------------------------------------------------------------------
+
+    @Override
+    public Row10<Integer, Integer, String, String, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row10) super.fieldsRow();
     }
 }

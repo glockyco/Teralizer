@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row10;
+import org.jooq.Row11;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -68,6 +68,11 @@ public class Task extends TableImpl<TaskRecord> {
      * The column <code>task.test_id</code>.
      */
     public final TableField<TaskRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>task.assertion_id</code>.
+     */
+    public final TableField<TaskRecord, Integer> ASSERTION_ID = createField(DSL.name("assertion_id"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>task.generalization_id</code>.
@@ -144,7 +149,7 @@ public class Task extends TableImpl<TaskRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_TASK_GENERALIZATION_ID, Indexes.IDX_TASK_PROJECT_ID, Indexes.IDX_TASK_STAGE, Indexes.IDX_TASK_STATUS, Indexes.IDX_TASK_STEP, Indexes.IDX_TASK_TEST_ID, Indexes.IDX_TASK_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_TASK_ASSERTION_ID, Indexes.IDX_TASK_GENERALIZATION_ID, Indexes.IDX_TASK_PROJECT_ID, Indexes.IDX_TASK_STAGE, Indexes.IDX_TASK_STATUS, Indexes.IDX_TASK_STEP, Indexes.IDX_TASK_TEST_ID, Indexes.IDX_TASK_VARIANT);
     }
 
     @Override
@@ -164,11 +169,12 @@ public class Task extends TableImpl<TaskRecord> {
 
     @Override
     public List<ForeignKey<TaskRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<TaskRecord, ?>>asList(Keys.FK_TASK_PROJECT_1, Keys.FK_TASK_TEST_1, Keys.FK_TASK_GENERALIZATION_1);
+        return Arrays.<ForeignKey<TaskRecord, ?>>asList(Keys.FK_TASK_PROJECT_1, Keys.FK_TASK_TEST_1, Keys.FK_TASK_ASSERTION_1, Keys.FK_TASK_GENERALIZATION_1);
     }
 
     private transient Project _project;
     private transient Test _test;
+    private transient Assertion _assertion;
     private transient Generalization _generalization;
 
     public Project project() {
@@ -183,6 +189,13 @@ public class Task extends TableImpl<TaskRecord> {
             _test = new Test(this, Keys.FK_TASK_TEST_1);
 
         return _test;
+    }
+
+    public Assertion assertion() {
+        if (_assertion == null)
+            _assertion = new Assertion(this, Keys.FK_TASK_ASSERTION_1);
+
+        return _assertion;
     }
 
     public Generalization generalization() {
@@ -219,11 +232,11 @@ public class Task extends TableImpl<TaskRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row10 type methods
+    // Row11 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row10<Integer, Integer, Integer, Integer, Integer, ProcessingStage, GeneralizationVariant, ProcessingStatus, Float, String> fieldsRow() {
-        return (Row10) super.fieldsRow();
+    public Row11<Integer, Integer, Integer, Integer, Integer, Integer, ProcessingStage, GeneralizationVariant, ProcessingStatus, Float, String> fieldsRow() {
+        return (Row11) super.fieldsRow();
     }
 }

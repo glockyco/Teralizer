@@ -15,5 +15,6 @@ public interface Task {
 
     Integer getProjectId();
     Integer getTestId();
+    Integer getAssertionId();
     Integer getGeneralizationId();
 }

@@ -36,64 +36,81 @@ CREATE INDEX idx_project_test_framework ON project (test_framework);
 
 CREATE TABLE test
 (
-    id                           INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id                   INTEGER NOT NULL,
-    test_file_path               TEXT    NOT NULL,
-    test_class_qualified_name    TEXT    NOT NULL,
-    test_method_qualified_name   TEXT    NOT NULL,
-    test_package_name            TEXT    NOT NULL,
-    test_class_name              TEXT    NOT NULL,
-    test_method_name             TEXT    NOT NULL,
-    tested_file_path             TEXT, -- can be null before test analysis or if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
-    tested_class_qualified_name  TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_method_qualified_name TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_package_name          TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_class_name            TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_method_name           TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_method_param_types    TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    tested_method_return_type    TEXT, -- can be null before test analysis or if we cannot identify a tested class / method
-    driver_file_path             TEXT    NOT NULL,
-    driver_class_qualified_name  TEXT    NOT NULL,
-    driver_package_name          TEXT    NOT NULL,
-    driver_class_name            TEXT    NOT NULL,
-    jpf_config_path              TEXT    NOT NULL,
-    input_specification_path     TEXT    NOT NULL,
-    output_specification_path    TEXT    NOT NULL,
-    is_included                  INTEGER NOT NULL,
-    exclusion_info               TEXT, -- can be null for tests that are not excluded
+    id                         INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id                 INTEGER NOT NULL,
+    test_file_path             TEXT    NOT NULL,
+    test_class_qualified_name  TEXT    NOT NULL,
+    test_method_qualified_name TEXT    NOT NULL,
+    test_package_name          TEXT    NOT NULL,
+    test_class_name            TEXT    NOT NULL,
+    test_method_name           TEXT    NOT NULL,
+    is_included                        INTEGER NOT NULL,
+    exclusion_info                     TEXT, -- can be null for tests that are not excluded
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_test_project_id ON test (project_id);
 
 CREATE INDEX idx_test_test_file_path ON test (test_file_path);
-CREATE INDEX idx_test_test_package_name ON test (test_package_name);
 CREATE INDEX idx_test_test_class_qualified_name ON test (test_class_qualified_name);
-CREATE INDEX idx_test_test_class_name ON test (test_class_name);
 CREATE INDEX idx_test_test_method_qualified_name ON test (test_method_qualified_name);
-CREATE INDEX idx_test_test_method_name ON test (tested_method_name);
+CREATE INDEX idx_test_test_package_name ON test (test_package_name);
+CREATE INDEX idx_test_test_class_name ON test (test_class_name);
+CREATE INDEX idx_test_test_method_name ON test (test_method_name);
 
 CREATE INDEX idx_test_is_included ON test (is_included);
 
 CREATE TABLE assertion
 (
-    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id            INTEGER NOT NULL,
-    test_id               INTEGER NOT NULL,
-    method_name           TEXT    NOT NULL,
-    method_argument_types TEXT    NOT NULL,
-    source_code           TEXT    NOT NULL,
+    id                                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id                         INTEGER NOT NULL,
+    test_id                            INTEGER NOT NULL,
+
+    assertion_name                     TEXT    NOT NULL,
+    assertion_arguments                TEXT    NOT NULL,
+    assertion_source_code              TEXT    NOT NULL,
+    assertion_absolute_path            TEXT    NOT NULL,
+    assertion_relative_path            TEXT    NOT NULL,
+
+    tested_file_path                   TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_class_qualified_name        TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_method_qualified_name       TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_package_name                TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_class_name                  TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_method_name                 TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_method_parameters           TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_method_return_type          TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+
+    tested_method_call_arguments       TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_method_call_source_code     TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_method_call_absolute_path   TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    tested_method_call_relative_path   TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+
+    driver_file_path                   TEXT, -- can be null before JPF instrumentation
+    driver_class_qualified_name        TEXT, -- can be null before JPF instrumentation
+    driver_package_name                TEXT, -- can be null before JPF instrumentation
+    driver_class_name                  TEXT, -- can be null before JPF instrumentation
+
+    jpf_config_path                    TEXT, -- can be null before JPF instrumentation
+    input_specification_path           TEXT, -- can be null before JPF instrumentation
+    output_specification_path          TEXT, -- can be null before JPF instrumentation
+
+    is_included                        INTEGER NOT NULL,
+    exclusion_info                     TEXT, -- can be null for tests that are not excluded
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_assertion_project_id ON assertion (project_id);
 CREATE INDEX idx_assertion_test_id ON assertion (test_id);
 
+CREATE INDEX idx_assertion_is_included ON assertion (is_included);
+
 CREATE TABLE generalization
 (
     id                    INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id            INTEGER NOT NULL,
     test_id               INTEGER NOT NULL,
+    assertion_id          INTEGER NOT NULL,
     variant               TEXT    NOT NULL,
     file_path             TEXT    NOT NULL,
     class_qualified_name  TEXT    NOT NULL,
@@ -103,11 +120,14 @@ CREATE TABLE generalization
     method_name           TEXT    NOT NULL,
     is_included           INTEGER NOT NULL,
     exclusion_info        TEXT, -- can be null for generalizations that are not excluded
-    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
+    FOREIGN KEY (assertion_id) REFERENCES assertion (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_generalization_project_id ON generalization (project_id);
 CREATE INDEX idx_generalization_test_id ON generalization (test_id);
+CREATE INDEX idx_generalization_assertion_id ON generalization (assertion_id);
 CREATE INDEX idx_generalization_variant ON generalization (variant);
 
 CREATE INDEX idx_generalization_file_path ON generalization (file_path);
@@ -248,7 +268,8 @@ CREATE TABLE task
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id        INTEGER, -- can be null for cross-project tasks (e.g., cleanup, data analysis)
     test_id           INTEGER, -- can be null for cross-project and project-level tasks
-    generalization_id INTEGER, -- can be null for cross-project and project-/test-level tasks
+    assertion_id      INTEGER, -- can be null for cross-project and project-/test-level tasks
+    generalization_id INTEGER, -- can be null for cross-project and project-/test-/assertion-level tasks
     step              INTEGER, -- can be null for one-off tasks that are not part of the normal processing flow (e.g., cleanup)
     stage             TEXT NOT NULL,
     variant           TEXT,    -- can be null for cross-variant tasks (e.g., JPF instrumentation + execution)
@@ -257,11 +278,13 @@ CREATE TABLE task
     info              TEXT,    -- can be null for tasks that have nothing special to report
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
+    FOREIGN KEY (assertion_id) REFERENCES assertion (id) ON DELETE CASCADE,
     FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_task_project_id ON task (project_id);
 CREATE INDEX idx_task_test_id ON task (test_id);
+CREATE INDEX idx_task_assertion_id ON task (assertion_id);
 CREATE INDEX idx_task_generalization_id ON task (generalization_id);
 
 CREATE INDEX idx_task_step ON task (step);

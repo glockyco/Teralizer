@@ -66,6 +66,7 @@ public class ProcessingPipeline {
 
         taskRecord.setProjectId(currentTask.getProjectId());
         taskRecord.setTestId(currentTask.getTestId());
+        taskRecord.setAssertionId(currentTask.getAssertionId());
         taskRecord.setGeneralizationId(currentTask.getGeneralizationId());
 
         // The DB file might not have been created or might haven been removed by a `CleanupTask`.
@@ -93,11 +94,12 @@ public class ProcessingPipeline {
             }, this::addTask);
             long endTime = System.currentTimeMillis();
 
-            // Depending on the task, the project / test / generalization ID might
-            // only be available after the task's execution, so we have to set them
-            // again AFTER executing the task.
+            // Depending on the task, the project / test / assertion / generalization
+            // ID might only be available after the task's execution, so we have to
+            // set them again AFTER executing the task.
             taskRecord.setProjectId(currentTask.getProjectId());
             taskRecord.setTestId(currentTask.getTestId());
+            taskRecord.setAssertionId(currentTask.getAssertionId());
             taskRecord.setGeneralizationId(currentTask.getGeneralizationId());
 
             taskRecord.setStatus(ProcessingStatus.SUCCEEDED);
@@ -113,6 +115,7 @@ public class ProcessingPipeline {
 
             taskRecord.setProjectId(currentTask.getProjectId());
             taskRecord.setTestId(currentTask.getTestId());
+            taskRecord.setAssertionId(currentTask.getAssertionId());
             taskRecord.setGeneralizationId(currentTask.getGeneralizationId());
 
             taskRecord.setStatus(ProcessingStatus.FAILED);
@@ -127,9 +130,10 @@ public class ProcessingPipeline {
                 // When a task fails, any scheduled tasks that depend on it should be removed from the queue.
                 boolean hasMatchingProjectId = currentTask.getProjectId() == null || currentTask.getProjectId().equals(queuedTask.getProjectId());
                 boolean hasMatchingTestId = currentTask.getTestId() == null || currentTask.getTestId().equals(queuedTask.getTestId());
+                boolean hasMatchingAssertionId = currentTask.getAssertionId() == null || currentTask.getAssertionId().equals(queuedTask.getAssertionId());
                 boolean hasMatchingGeneralizationId = currentTask.getGeneralizationId() == null || currentTask.getGeneralizationId().equals(queuedTask.getGeneralizationId());
 
-                if (hasMatchingProjectId && hasMatchingTestId && hasMatchingGeneralizationId) {
+                if (hasMatchingProjectId && hasMatchingTestId && hasMatchingAssertionId && hasMatchingGeneralizationId) {
                     LOGGER.atDebug().log("Task {} dropped from queue.", queuedTask);
                     return true;
                 }
@@ -139,9 +143,9 @@ public class ProcessingPipeline {
         }
 
         if (TestGeneralizationRunner.DB_PATH.toFile().exists()) {
-            // When executing a test- or generalization-level `CleanupTask`, the corresponding `TaskRecord` is
-            // deleted. Forcing an insert in such a case ensures that the task is persisted in the DB again at one
-            // level higher (project- or test-level).
+            // When executing a test-, assertion- or generalization-level `CleanupTask`,
+            // the corresponding `TaskRecord` is deleted. Forcing an insert in such a case ensures that
+            // the task is persisted in the DB again at one level higher (project-, test-, or assertion-level).
             if (!this.create.fetchExists(this.create.select().from(Tables.TASK).where(Tables.TASK.ID.eq(taskRecord.getId())))) {
                 taskRecord.changed(true);
                 taskRecord.insert();

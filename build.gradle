@@ -109,6 +109,11 @@ jooq {
                                 types = "INTEGER"
                             }
                             forcedType {
+                                name = "BOOLEAN"
+                                expressions = "assertion.is_included"
+                                types = "INTEGER"
+                            }
+                            forcedType {
                                 userType = "teralizer.processing.GeneralizationVariant"
                                 enumConverter = true
                                 includeExpression = "generalization.variant"

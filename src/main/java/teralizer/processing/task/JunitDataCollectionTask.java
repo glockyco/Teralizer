@@ -98,13 +98,15 @@ public class JunitDataCollectionTask extends AbstractTask {
     private void scheduleTasks(DSLContext create, Consumer<Task> scheduleTask) {
         switch (this.stage) {
             case COLLECT_JUNIT_REPORTS_ORIGINAL:
-            case COLLECT_JUNIT_REPORTS_INITIAL:
-                Result<TestRecord> testRecords = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
-                for (TestRecord testRecord : testRecords) {
+            case COLLECT_JUNIT_REPORTS_INITIAL: {
+                Result<Record> records = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
+                for (Record record : records) {
+                    TestRecord testRecord = record.into(TestRecord.class);
                     scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.projectRecord, testRecord));
                 }
                 break;
-            case COLLECT_JUNIT_REPORTS_GENERALIZED:
+            }
+            case COLLECT_JUNIT_REPORTS_GENERALIZED: {
                 Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
                 for (Record record : records) {
                     TestRecord testRecord = record.into(TestRecord.class);
@@ -112,6 +114,7 @@ public class JunitDataCollectionTask extends AbstractTask {
                     scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
                 }
                 break;
+            }
             default:
                 throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
         }
@@ -189,25 +192,6 @@ public class JunitDataCollectionTask extends AbstractTask {
         record.setTestPackageName(testPackageName);
         record.setTestClassName(testClassName);
         record.setTestMethodName(testMethodName);
-
-        String driverClassName = "_" + testClassName + "_Driver_" + testMethodName;
-        Path driverFilePath = testFilePath.getParent().resolve(driverClassName + ".java");
-
-        record.setDriverFilePath(driverFilePath.toString());
-        record.setDriverClassQualifiedName((testPackageName.isEmpty() ? "" : (testPackageName + ".")) + driverClassName);
-        record.setDriverPackageName(testPackageName);
-        record.setDriverClassName(driverClassName);
-
-        Path jpfDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/jpf-data");
-        String testMethodQualifiedName = testCaseReport.getFullName();
-        Path jpfConfigPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf");
-        Path inputSpecificationPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf.input.json");
-        Path outputSpecificationPath = jpfDataPath.resolve(testMethodQualifiedName + ".jpf.output.json");
-
-        record.setJpfConfigPath(jpfConfigPath.toString());
-        record.setInputSpecificationPath(inputSpecificationPath.toString());
-        record.setOutputSpecificationPath(outputSpecificationPath.toString());
-
         record.setIsIncluded(true);
 
         return record;

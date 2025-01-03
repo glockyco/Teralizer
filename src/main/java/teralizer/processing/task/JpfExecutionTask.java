@@ -5,13 +5,15 @@ import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFNativePeerException;
 import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.Result;
-import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.jpf.TestGeneralizationListener;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.repository.SQLiteRepository;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -20,13 +22,14 @@ import java.util.stream.Collectors;
 public class JpfExecutionTask extends AbstractTask {
 
     public JpfExecutionTask(ProcessingStage stage, ProjectRecord projectRecord) {
-        this(stage, projectRecord, null);
+        this(stage, projectRecord, null, null);
     }
 
-    public JpfExecutionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
+    public JpfExecutionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord, AssertionRecord assertionRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
         this.testRecord = testRecord;
+        this.assertionRecord = assertionRecord;
     }
 
     @Override
@@ -41,18 +44,16 @@ public class JpfExecutionTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
-        Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
-            .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
-            .and(Tables.TEST.IS_INCLUDED.eq(true))
-            .fetch();
-
-        for (TestRecord testRecord : testRecords) {
-            scheduleTask.accept(new JpfExecutionTask(this.stage, this.projectRecord, testRecord));
+        Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+        for (Record record : records) {
+            TestRecord testRecord = record.into(TestRecord.class);
+            AssertionRecord assertionRecord = record.into(AssertionRecord.class);
+            scheduleTask.accept(new JpfExecutionTask(this.stage, this.projectRecord, testRecord, assertionRecord));
         }
     }
 
     private void executeTask(TaskContext context) {
-        Config config = JPF.createConfig(new String[]{testRecord.getJpfConfigPath()});
+        Config config = JPF.createConfig(new String[]{this.assertionRecord.getJpfConfigPath()});
 
         JPF jpf = new JPF(config);
         jpf.addListener(new TestGeneralizationListener(config));

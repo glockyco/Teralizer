@@ -4,7 +4,6 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.TestRecord;
 import teralizer.processing.GeneralizationVariant;
 
 import java.util.List;
@@ -20,8 +19,9 @@ public class SQLiteRepository {
             .fetchInto(String.class);
     }
 
-    public static Result<TestRecord> fetchIncludedTests(DSLContext create, Integer projectId) {
-        return create.selectFrom(Tables.TEST)
+    public static Result<Record> fetchIncludedTests(DSLContext create, Integer projectId) {
+        return create.select()
+            .from(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.eq(projectId))
             .and(Tables.TEST.IS_INCLUDED.eq(true))
             .fetch();
@@ -35,15 +35,27 @@ public class SQLiteRepository {
             .fetchInto(String.class);
     }
 
+    public static Result<Record> fetchIncludedAssertions(DSLContext create, Integer projectId) {
+        return create.select()
+            .from(Tables.TEST)
+            .join(Tables.ASSERTION)
+            .on(Tables.TEST.ID.eq(Tables.ASSERTION.TEST_ID))
+            .where(Tables.TEST.PROJECT_ID.eq(projectId))
+            .and(Tables.TEST.IS_INCLUDED.eq(true))
+            .and(Tables.ASSERTION.IS_INCLUDED.eq(true))
+            .fetch();
+    }
+
     public static Result<Record> fetchIncludedGeneralizations(DSLContext create, GeneralizationVariant variant, Integer projectId) {
         return create.select()
             .from(Tables.TEST)
-            .join(Tables.GENERALIZATION)
-            .on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
+            .join(Tables.ASSERTION).on(Tables.TEST.ID.eq(Tables.ASSERTION.TEST_ID))
+            .join(Tables.GENERALIZATION).on(Tables.ASSERTION.ID.eq(Tables.GENERALIZATION.ASSERTION_ID))
             .where(Tables.TEST.PROJECT_ID.eq(projectId))
             .and(Tables.TEST.IS_INCLUDED.eq(true))
-            .and(Tables.GENERALIZATION.VARIANT.eq(variant))
+            .and(Tables.ASSERTION.IS_INCLUDED.eq(true))
             .and(Tables.GENERALIZATION.IS_INCLUDED.eq(true))
+            .and(Tables.GENERALIZATION.VARIANT.eq(variant))
             .fetch();
     }
 

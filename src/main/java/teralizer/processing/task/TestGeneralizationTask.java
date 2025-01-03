@@ -3,8 +3,10 @@ package teralizer.processing.task;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
@@ -13,6 +15,8 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.*;
 import spoon.reflect.factory.Factory;
+import spoon.reflect.path.CtPath;
+import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.TestGeneralizationRunner;
@@ -23,6 +27,7 @@ import teralizer.jqwik.VariableConstraintExtractor.VariableConstraints;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
 import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
@@ -52,15 +57,18 @@ public class TestGeneralizationTask extends AbstractTask {
     public static String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
     public static String TEST_PARAMETERS_SUPPLIER_CLASS_NAME = "TestParametersSupplier";
 
+    public static final List<String> SUPPORTED_TYPES = Arrays.asList("byte", "short", "int", "long", "float", "double");
+
     public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
-        this(stage, variant, projectRecord, null);
+        this(stage, variant, projectRecord, null, null);
     }
 
-    public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord, TestRecord testRecord) {
+    public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord, TestRecord testRecord, AssertionRecord assertionRecord) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
         this.testRecord = testRecord;
+        this.assertionRecord = assertionRecord;
     }
 
     @Override
@@ -75,13 +83,11 @@ public class TestGeneralizationTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
-        Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
-            .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
-            .and(Tables.TEST.IS_INCLUDED.eq(true))
-            .fetch();
-
-        for (TestRecord testRecord : testRecords) {
-            scheduleTask.accept(new TestGeneralizationTask(this.stage, this.variant, this.projectRecord, testRecord));
+        Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+        for (Record record : records) {
+            TestRecord testRecord = record.into(TestRecord.class);
+            AssertionRecord assertionRecord = record.into(AssertionRecord.class);
+            scheduleTask.accept(new TestGeneralizationTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord));
         }
     }
 
@@ -99,6 +105,7 @@ public class TestGeneralizationTask extends AbstractTask {
         GeneralizationRecord record = create.newRecord(Tables.GENERALIZATION);
         record.setProjectId(this.getProjectId());
         record.setTestId(this.getTestId());
+        record.setAssertionId(this.getAssertionId());
         record.setVariant(this.getVariant());
         record.setFilePath("");
         record.setClassQualifiedName("");
@@ -148,8 +155,8 @@ public class TestGeneralizationTask extends AbstractTask {
         }
 
         generalizedClassDeclaration.addComment(factory.createInlineComment("Test: " + this.testRecord.getTestMethodQualifiedName()));
-        generalizedClassDeclaration.addComment(factory.createInlineComment("Input specification: " + this.testRecord.getInputSpecificationPath()));
-        generalizedClassDeclaration.addComment(factory.createInlineComment("Output specification: " + this.testRecord.getOutputSpecificationPath()));
+        generalizedClassDeclaration.addComment(factory.createInlineComment("Input specification: " + this.assertionRecord.getInputSpecificationPath()));
+        generalizedClassDeclaration.addComment(factory.createInlineComment("Output specification: " + this.assertionRecord.getOutputSpecificationPath()));
 
         Predicate<CtMethod<?>> isTestMethod = (decl) -> decl.getSimpleName().equals(this.testRecord.getTestMethodName());
         Predicate<CtMethod<?>> hasTestAnnotation = (decl) -> decl.getAnnotations().stream().anyMatch(a -> a.getType().getSimpleName().equals("Test"));
@@ -161,10 +168,10 @@ public class TestGeneralizationTask extends AbstractTask {
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
         //   Otherwise, we will have issues mapping the class names to the correct Arbitraries.
         Type type = new TypeToken<List<MethodParameter>>() {}.getType();
-        List<MethodParameter> testedMethodParameters = gson.fromJson(this.testRecord.getTestedMethodParamTypes(), type);
+        List<MethodParameter> testedMethodParameters = gson.fromJson(this.assertionRecord.getTestedMethodParameters(), type);
 
-        String inputSpecification = new String(Files.readAllBytes(Paths.get(this.testRecord.getInputSpecificationPath())));
-        String outputSpecification = new String(Files.readAllBytes(Paths.get(this.testRecord.getOutputSpecificationPath())));
+        String inputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputSpecificationPath())));
+        String outputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputSpecificationPath())));
 
         // @TODO: Check if we can avoid the Model->JSON->Model conversion.
         //   We don't HAVE to store the model as JSON after the JPF execution step. However, if we don't store it,
@@ -305,8 +312,12 @@ public class TestGeneralizationTask extends AbstractTask {
         // Replace tested method arguments with values from `testParameters`.                                     //
         // ------------------------------------------------------------------------------------------------------ //
 
-        CtInvocation<?> assertion = TestAnalysis.findGeneralizableAssert(testMethod).get();
-        CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertion).get();
+        CtPathStringBuilder pathBuilder = new CtPathStringBuilder();
+        CtPath assertionPath = pathBuilder.fromString(this.assertionRecord.getAssertionRelativePath());
+        CtPath testedMethodCallPath = pathBuilder.fromString(this.assertionRecord.getTestedMethodCallRelativePath());
+
+        CtInvocation<?> assertion = (CtInvocation<?>) assertionPath.evaluateOn(testMethod).get(0);
+        CtInvocation<?> testedMethodCall = (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
         CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
@@ -315,15 +326,7 @@ public class TestGeneralizationTask extends AbstractTask {
         for (int i = 0; i < args.size(); i++) {
             CtExpression<?> arg = args.get(i);
             CtParameter<?> param = params.get(i);
-            // @TODO: Add support for non-numeric types.
-            if (
-                arg.getType().getSimpleName().equals("byte") ||
-                arg.getType().getSimpleName().equals("short") ||
-                arg.getType().getSimpleName().equals("int") ||
-                arg.getType().getSimpleName().equals("long") ||
-                arg.getType().getSimpleName().equals("float") ||
-                arg.getType().getSimpleName().equals("double")
-            ) {
+            if (SUPPORTED_TYPES.contains(arg.getType().getSimpleName())) {
                 args.set(i, factory.Code().createCodeSnippetExpression("_p_." + param.getSimpleName()));
             }
         }

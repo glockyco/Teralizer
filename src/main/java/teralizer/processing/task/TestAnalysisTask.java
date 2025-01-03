@@ -14,7 +14,7 @@ import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.CtType;
-import spoon.reflect.reference.CtExecutableReference;
+import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -49,9 +49,9 @@ public class TestAnalysisTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
+        // Analysis is intentionally performed for ALL tests, not just included ones.
         Result<TestRecord> testRecords = create.selectFrom(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.eq(this.projectRecord.getId()))
-            .and(Tables.TEST.IS_INCLUDED.eq(true))
             .fetch();
 
         for (TestRecord testRecord : testRecords) {
@@ -84,78 +84,84 @@ public class TestAnalysisTask extends AbstractTask {
             throw new RuntimeException("Method " + this.testRecord.getTestMethodQualifiedName() + " has no @Test annotation.");
         }
 
-        TestAnalysisTask.createAssertionRecords(this.testRecord, testMethod, create, gson);
-
-        CtInvocation<?> assertion = TestAnalysis.findGeneralizableAssert(testMethod).orElse(null);
-        CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertion).orElse(null);
-
-        if (testedMethodCall == null) {
-            // Unable to identify tested method.
-            return;
-        }
-
-        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
-        CtType<?> testedType = testedMethod == null ? null : testedMethod.getDeclaringType();
-
-        if (testedMethod == null || testedType == null) {
-            // Unable to identify tested method.
-            return;
-        }
-
-        SourcePosition position = testedType.getPosition();
-        String testedClassPath = Paths.get(System.getProperty("user.dir")).relativize(position.getFile().toPath()).toString();
-
-        String packageName = testedType.getPackage().toString();
-        String className = testedType.getSimpleName();
-        String methodName = testedMethod.getSimpleName();
-
-        String qualifiedClassName = testedType.getQualifiedName();
-        String qualifiedMethodName = qualifiedClassName + "." + methodName;
-
-        List<MethodParameter> testedMethodParameters = new ArrayList<>();
-        for (CtParameter<?> param : testedMethod.getParameters()) {
-            String paramType = param.getType().getQualifiedName();
-            String paramName = param.getSimpleName();
-            testedMethodParameters.add(new MethodParameter(paramType, paramName));
-        }
-
-        this.testRecord.setTestedFilePath(testedClassPath);
-        this.testRecord.setTestedClassQualifiedName(qualifiedClassName);
-        this.testRecord.setTestedMethodQualifiedName(qualifiedMethodName);
-        this.testRecord.setTestedPackageName(packageName);
-        this.testRecord.setTestedClassName(className);
-        this.testRecord.setTestedMethodName(methodName);
-        this.testRecord.setTestedMethodParamTypes(gson.toJson(testedMethodParameters));
-        this.testRecord.setTestedMethodReturnType(testedMethod.getType().getQualifiedName());
-
-        this.testRecord.store();
+        this.createAssertionRecords(testMethod, create, gson);
     }
 
-    public static void createAssertionRecords(TestRecord testRecord, CtMethod<?> testMethod, DSLContext create, Gson gson) {
-        List<AssertionRecord> assertionRecords = new ArrayList<>();
+    private void createAssertionRecords(CtMethod<?> testMethod, DSLContext create, Gson gson) {
+        List<AssertionRecord> records = new ArrayList<>();
 
-        List<CtInvocation<?>> assertMethodCalls = TestAnalysis.findAllAsserts(testMethod);
-        for (CtInvocation<?> assertMethodCall : assertMethodCalls) {
-            CtExecutableReference<?> assertMethodRef = assertMethodCall.getExecutable();
-            String methodName = assertMethodRef.getSimpleName();
-            String sourceCode = assertMethodCall.toString();
-
-            List<MethodParameter> assertArguments = new ArrayList<>();
-            for (CtExpression<?> argument : assertMethodCall.getArguments()) {
-                String paramType = argument.getType().getQualifiedName();
-                String paramValue = argument.toString();
-                assertArguments.add(new MethodParameter(paramType, paramValue));
+        List<CtInvocation<?>> assertionCalls = TestAnalysis.findAllAsserts(testMethod);
+        for (CtInvocation<?> assertionCall : assertionCalls) {
+            List<MethodArgument> assertionArguments = new ArrayList<>();
+            for (CtExpression<?> argument : assertionCall.getArguments()) {
+                String argType = argument.getType().getQualifiedName();
+                String argValue = argument.toString();
+                assertionArguments.add(new MethodArgument(argType, argValue));
             }
 
-            AssertionRecord assertionRecord = create.newRecord(Tables.ASSERTION);
-            assertionRecord.setProjectId(testRecord.getProjectId());
-            assertionRecord.setTestId(testRecord.getId());
-            assertionRecord.setMethodName(methodName);
-            assertionRecord.setMethodArgumentTypes(gson.toJson(assertArguments));
-            assertionRecord.setSourceCode(sourceCode);
-            assertionRecords.add(assertionRecord);
+            AssertionRecord record = create.newRecord(Tables.ASSERTION);
+            record.setProjectId(this.getProjectId());
+            record.setTestId(this.getTestId());
+
+            record.setAssertionName(assertionCall.getExecutable().getSimpleName());
+            record.setAssertionArguments(gson.toJson(assertionArguments));
+            record.setAssertionSourceCode(assertionCall.toString());
+            record.setAssertionAbsolutePath(assertionCall.getPath().toString());
+            record.setAssertionRelativePath(assertionCall.getPath().relativePath(testMethod).toString());
+
+            CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertionCall).orElse(null);
+
+            if (testedMethodCall != null) {
+                List<MethodArgument> methodArguments = new ArrayList<>();
+                for (CtExpression<?> argument : testedMethodCall.getArguments()) {
+                    String argType = argument.getType().getQualifiedName();
+                    String argValue = argument.toString();
+                    methodArguments.add(new MethodArgument(argType, argValue));
+                }
+
+                record.setTestedMethodName(testedMethodCall.getExecutable().getSimpleName());
+                record.setTestedMethodCallArguments(gson.toJson(methodArguments));
+                record.setTestedMethodCallSourceCode(testedMethodCall.toString());
+                record.setTestedMethodCallAbsolutePath(testedMethodCall.getPath().toString());
+                record.setTestedMethodCallRelativePath(testedMethodCall.getPath().relativePath(testMethod).toString());
+
+                CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+                CtType<?> testedType = testedMethod == null ? null : testedMethod.getDeclaringType();
+
+                if (testedMethod != null && testedType != null) {
+                    SourcePosition position = testedType.getPosition();
+                    String testedClassPath = Paths.get(System.getProperty("user.dir")).relativize(position.getFile().toPath()).toString();
+
+                    String packageName = testedType.getPackage().toString();
+                    String className = testedType.getSimpleName();
+                    String methodName = testedMethod.getSimpleName();
+
+                    String qualifiedClassName = testedType.getQualifiedName();
+                    String qualifiedMethodName = qualifiedClassName + "." + methodName;
+
+                    List<MethodParameter> testedMethodParameters = new ArrayList<>();
+                    for (CtParameter<?> param : testedMethod.getParameters()) {
+                        String paramType = param.getType().getQualifiedName();
+                        String paramName = param.getSimpleName();
+                        testedMethodParameters.add(new MethodParameter(paramType, paramName));
+                    }
+
+                    record.setTestedFilePath(testedClassPath);
+                    record.setTestedClassQualifiedName(qualifiedClassName);
+                    record.setTestedMethodQualifiedName(qualifiedMethodName);
+                    record.setTestedPackageName(packageName);
+                    record.setTestedClassName(className);
+                    record.setTestedMethodName(methodName);
+                    record.setTestedMethodParameters(gson.toJson(testedMethodParameters));
+                    record.setTestedMethodReturnType(testedMethod.getType().getQualifiedName());
+                }
+            }
+
+            record.setIsIncluded(true);
+
+            records.add(record);
         }
 
-        create.batchStore(assertionRecords).execute();
+        create.batchStore(records).execute();
     }
 }

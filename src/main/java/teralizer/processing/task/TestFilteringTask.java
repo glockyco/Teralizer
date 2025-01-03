@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
+import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
@@ -11,10 +12,6 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.filter.*;
-import teralizer.processing.filter.AssertionCountFilter;
-import teralizer.processing.filter.MissingValueFilter;
-import teralizer.processing.filter.ParameterTypeFilter;
-import teralizer.processing.filter.Filter;
 import teralizer.repository.SQLiteRepository;
 
 import java.util.ArrayList;
@@ -27,15 +24,15 @@ import java.util.stream.Collectors;
 public class TestFilteringTask extends AbstractTask {
 
     public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord) {
-        this(stage, projectRecord, null);
+        this(stage, projectRecord, null, null);
     }
 
-    public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
-        this(stage, null, projectRecord, testRecord, null);
+    public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord, AssertionRecord assertionRecord) {
+        this(stage, null, projectRecord, testRecord, assertionRecord, null);
     }
 
     public TestFilteringTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
-        this(stage, variant, projectRecord, null, null);
+        this(stage, variant, projectRecord, null, null, null);
     }
 
     public TestFilteringTask(
@@ -43,12 +40,14 @@ public class TestFilteringTask extends AbstractTask {
         GeneralizationVariant variant,
         ProjectRecord projectRecord,
         TestRecord testRecord,
+        AssertionRecord assertionRecord,
         GeneralizationRecord generalizationRecord
     ) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
         this.testRecord = testRecord;
+        this.assertionRecord = assertionRecord;
         this.generalizationRecord = generalizationRecord;
     }
 
@@ -74,16 +73,19 @@ public class TestFilteringTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         if (this.stage == ProcessingStage.FILTER_TESTS) {
-            Result<TestRecord> testRecords = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
-            for (TestRecord testRecord : testRecords) {
-                scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord));
+            Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+            for (Record record : records) {
+                TestRecord testRecord = record.into(TestRecord.class);
+                AssertionRecord assertionRecord = record.into(AssertionRecord.class);
+                scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord, assertionRecord));
             }
         } else if (this.stage == ProcessingStage.FILTER_GENERALIZATIONS) {
             Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
             for (Record record : records) {
                 TestRecord testRecord = record.into(TestRecord.class);
+                AssertionRecord assertionRecord = record.into(AssertionRecord.class);
                 GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
-                scheduleTask.accept(new TestFilteringTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
+                scheduleTask.accept(new TestFilteringTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord, generalizationRecord));
             }
         } else {
             throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
@@ -96,9 +98,9 @@ public class TestFilteringTask extends AbstractTask {
 
         List<Filter> filters = Arrays.asList(
             new AssertionCountFilter(create, this.testRecord),
-            new MissingValueFilter(this.testRecord),
+            new MissingValueFilter(this.assertionRecord),
             new UnnamedPackageFilter(this.testRecord),
-            new ParameterTypeFilter(gson, this.testRecord),
+            new ParameterTypeFilter(gson, this.assertionRecord),
             new NonPassingTestFilter(create, this.testRecord)
         );
 
@@ -131,6 +133,10 @@ public class TestFilteringTask extends AbstractTask {
                 this.generalizationRecord.setIsIncluded(false);
                 this.generalizationRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
                 this.generalizationRecord.store();
+            } else if (this.assertionRecord != null) {
+                this.assertionRecord.setIsIncluded(false);
+                this.assertionRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
+                this.assertionRecord.store();
             } else if (this.testRecord != null) {
                 this.testRecord.setIsIncluded(false);
                 this.testRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
