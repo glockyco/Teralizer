@@ -149,6 +149,36 @@ public class Assertion extends TableImpl<AssertionRecord> {
     public final TableField<AssertionRecord, String> TESTED_METHOD_CALL_RELATIVE_PATH = createField(DSL.name("tested_method_call_relative_path"), SQLDataType.CLOB, this, "");
 
     /**
+     * The column <code>assertion.instrumented_file_path</code>.
+     */
+    public final TableField<AssertionRecord, String> INSTRUMENTED_FILE_PATH = createField(DSL.name("instrumented_file_path"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>assertion.instrumented_class_qualified_name</code>.
+     */
+    public final TableField<AssertionRecord, String> INSTRUMENTED_CLASS_QUALIFIED_NAME = createField(DSL.name("instrumented_class_qualified_name"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>assertion.instrumented_method_qualified_name</code>.
+     */
+    public final TableField<AssertionRecord, String> INSTRUMENTED_METHOD_QUALIFIED_NAME = createField(DSL.name("instrumented_method_qualified_name"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>assertion.instrumented_package_name</code>.
+     */
+    public final TableField<AssertionRecord, String> INSTRUMENTED_PACKAGE_NAME = createField(DSL.name("instrumented_package_name"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>assertion.instrumented_class_name</code>.
+     */
+    public final TableField<AssertionRecord, String> INSTRUMENTED_CLASS_NAME = createField(DSL.name("instrumented_class_name"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>assertion.instrumented_method_name</code>.
+     */
+    public final TableField<AssertionRecord, String> INSTRUMENTED_METHOD_NAME = createField(DSL.name("instrumented_method_name"), SQLDataType.CLOB, this, "");
+
+    /**
      * The column <code>assertion.driver_file_path</code>.
      */
     public final TableField<AssertionRecord, String> DRIVER_FILE_PATH = createField(DSL.name("driver_file_path"), SQLDataType.CLOB, this, "");

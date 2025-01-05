@@ -1,16 +1,16 @@
 ## @vtlvariable name="driverPackageName" type="java.lang.String"
 ## @vtlvariable name="driverClassName" type="java.lang.String"
-## @vtlvariable name="testClassQualifiedName" type="java.lang.String"
-## @vtlvariable name="testClassName" type="java.lang.String"
+## @vtlvariable name="instrumentedClassQualifiedName" type="java.lang.String"
+## @vtlvariable name="instrumentedClassName" type="java.lang.String"
 ## @vtlvariable name="testMethodName" type="java.lang.String"
 #if(${driverPackageName})
 package ${driverPackageName};
 
 #end
-import ${testClassQualifiedName};
+import ${instrumentedClassQualifiedName};
 
 public class ${driverClassName} {
     public static void main(String[] args) throws Throwable {
-        new ${testClassName}().${testMethodName}();
+        new ${instrumentedClassName}().${testMethodName}();
     }
 }

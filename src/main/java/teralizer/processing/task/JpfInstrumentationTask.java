@@ -1,7 +1,5 @@
 package teralizer.processing.task;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -11,8 +9,18 @@ import org.jooq.Result;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import spoon.Launcher;
+import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtThisAccess;
+import spoon.reflect.declaration.*;
+import spoon.reflect.factory.Factory;
+import spoon.reflect.path.CtPath;
+import spoon.reflect.path.CtPathStringBuilder;
+import spoon.reflect.reference.CtTypeReference;
+import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.TestGeneralizationRunner;
-import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
@@ -20,11 +28,16 @@ import teralizer.repository.SQLiteRepository;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static teralizer.processing.task.TestGeneralizationTask.SUPPORTED_TYPES;
@@ -63,26 +76,53 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     private void executeTask(TaskContext context) throws Exception {
-        Gson gson =  context.get(TaskContext.GSON);
         VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);
+        Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
+        Factory factory = spoonLauncher.getFactory();
 
         this.updateAssertionRecord();
+
+        CtClass<?> instrumentedClass = this.createInstrumentedClass(factory);
+        CtInvocation<?> testedMethodCall = this.getTestedMethodCall(instrumentedClass);
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+        CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall);
+        CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(factory, instrumentedClass, instrumentedMethod, testedMethod, testedMethodCall);
+        testedMethodCall.replace(instrumentedMethodCall);
+
+        this.createInstrumentedClassFile(spoonLauncher, instrumentedClass);
+
         this.createDriverClassFile(velocityEngine);
-        this.createJpfConfigFile(gson, velocityEngine);
+        this.createJpfConfigFile(velocityEngine, instrumentedMethod);
     }
 
     private void updateAssertionRecord() {
-        String driverClassName = "_" + this.testRecord.getTestClassName() + "_Driver_" + this.testRecord.getTestMethodName() + "_" + this.getAssertionId();
-        Path driverFilePath = Paths.get(this.testRecord.getTestFilePath()).getParent().resolve(driverClassName + ".java");
-
+        Path testFilePath = Paths.get(this.testRecord.getTestFilePath());
         String testPackageName = this.testRecord.getTestPackageName();
+        String packagePrefix = testPackageName.isEmpty() ? "" : testPackageName + ".";
+        String testClassName = this.testRecord.getTestClassName();
+        String testMethodName = this.testRecord.getTestMethodName();
+        String testedMethodName = this.assertionRecord.getTestedMethodName();
+
+        String instrumentedClassName = String.format("_%s_Instrumented_%s_%s_Test", testClassName, testMethodName, this.getAssertionId());
+        String instrumentedMethodName = String.format("%s_%s", testedMethodName, this.getAssertionId());
+        Path instrumentedFilePath = testFilePath.getParent().resolve(instrumentedClassName + ".java");
+
+        this.assertionRecord.setInstrumentedFilePath(instrumentedFilePath.toString());
+        this.assertionRecord.setInstrumentedClassQualifiedName(packagePrefix + instrumentedClassName);
+        this.assertionRecord.setInstrumentedMethodQualifiedName(packagePrefix + instrumentedClassName + "." + instrumentedMethodName);
+        this.assertionRecord.setInstrumentedPackageName(testPackageName);
+        this.assertionRecord.setInstrumentedClassName(instrumentedClassName);
+        this.assertionRecord.setInstrumentedMethodName(instrumentedMethodName);
+
+        String driverClassName = String.format("_%s_Driver_%s", testClassName, instrumentedMethodName);
+        Path driverFilePath = testFilePath.getParent().resolve(driverClassName + ".java");
 
         this.assertionRecord.setDriverFilePath(driverFilePath.toString());
-        this.assertionRecord.setDriverClassQualifiedName((testPackageName.isEmpty() ? "" : (testPackageName + ".")) + driverClassName);
+        this.assertionRecord.setDriverClassQualifiedName(packagePrefix + driverClassName);
         this.assertionRecord.setDriverPackageName(testPackageName);
         this.assertionRecord.setDriverClassName(driverClassName);
 
-        Path jpfDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/jpf-data");
+        Path jpfDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/jpf-data/specs");
         String baseName = this.testRecord.getTestMethodQualifiedName() + "." + this.getAssertionId();
         Path jpfConfigPath = jpfDataPath.resolve(baseName + ".jpf");
         Path inputSpecificationPath = jpfDataPath.resolve(baseName + ".jpf.input.json");
@@ -95,12 +135,116 @@ public class JpfInstrumentationTask extends AbstractTask {
         this.assertionRecord.store();
     }
 
+    private CtClass<?> createInstrumentedClass(Factory factory) {
+        CtClass<?> testClassDeclaration = factory.Class().get(this.testRecord.getTestClassQualifiedName());
+
+        CtClass<?> instrumentedClass = testClassDeclaration.clone();
+        instrumentedClass.setSimpleName(this.assertionRecord.getInstrumentedClassName());
+
+        CtPackage instrumentedClassPackage = factory.Package().getOrCreate(this.assertionRecord.getInstrumentedPackageName());
+        instrumentedClassPackage.addType(instrumentedClass);
+
+        Predicate<CtMethod<?>> isTestMethod = (decl) -> decl.getSimpleName().equals(this.testRecord.getTestMethodName());
+        Predicate<CtMethod<?>> hasTestAnnotation = (decl) -> decl.getAnnotations().stream().anyMatch(a -> a.getType().getSimpleName().equals("Test"));
+        List<CtMethod<?>> otherTestMethods = instrumentedClass.getMethods().stream().filter(m -> !isTestMethod.test(m) && hasTestAnnotation.test(m)).collect(Collectors.toList());
+        otherTestMethods.forEach(instrumentedClass::removeMethod);
+
+        return instrumentedClass;
+    }
+
+    private CtInvocation<?> getTestedMethodCall(CtClass<?> instrumentedClass) {
+        CtMethod<?> testMethod = instrumentedClass.getMethod(this.testRecord.getTestMethodName());
+        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(this.assertionRecord.getTestedMethodCallRelativePath());
+        return (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
+    }
+
+    private CtMethod<?> createInstrumentedMethod(
+        Factory factory,
+        CtClass<?> instrumentedClass,
+        CtMethod<?> testedMethod,
+        CtInvocation<?> testedMethodCall
+    ) {
+        List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
+        if (!testedMethod.isStatic()) {
+            CtExpression<?> target = testedMethodCall.getTarget();
+            CtTypeReference<?> targetType = target instanceof CtThisAccess
+                ? factory.Type().get(this.assertionRecord.getInstrumentedClassQualifiedName()).getReference()
+                : target.getType();
+            CtParameter<?> parameter = factory.createParameter(null, targetType, "_target_");
+            instrumentedParameters.add(parameter);
+        }
+        testedMethod.getParameters().forEach(p -> instrumentedParameters.add(p.clone()));
+
+        CtInvocation<?> instrumentedTestedMethodCall = testedMethodCall.clone();
+        List<CtExpression<?>> arguments = testedMethod.getParameters().stream().map(p -> factory.createCodeSnippetExpression(p.getSimpleName())).collect(Collectors.toList());
+        instrumentedTestedMethodCall.setArguments(arguments);
+        if (!testedMethod.isStatic()) {
+            instrumentedTestedMethodCall.setTarget(factory.createCodeSnippetExpression(instrumentedParameters.get(0).getSimpleName()));
+        }
+
+        CtBlock<?> instrumentedBody = factory.createBlock();
+        instrumentedBody.addStatement(factory.Code().createCodeSnippetStatement("return " + instrumentedTestedMethodCall));
+
+        return factory.createMethod(
+            instrumentedClass,
+            new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
+            testedMethod.getType(),
+            this.assertionRecord.getInstrumentedMethodName(),
+            instrumentedParameters,
+            testedMethod.getThrownTypes(),
+            instrumentedBody
+        );
+    }
+
+    private CtInvocation<?> createInstrumentedMethodCall(
+        Factory factory,
+        CtClass<?> instrumentedClass,
+        CtMethod<?> instrumentedMethod,
+        CtMethod<?> testedMethod,
+        CtInvocation<?> testedMethodCall
+    ) {
+        CtInvocation<?> instrumentedMethodCall = factory.createInvocation(factory.createThisAccess(instrumentedClass.getReference()), instrumentedMethod.getReference());
+        if (!testedMethod.isStatic()) {
+            CtExpression<?> target = testedMethodCall.getTarget();
+            if (target instanceof CtThisAccess) {
+                instrumentedMethodCall.addArgument(factory.createThisAccess(target.getType(), false));
+            } else {
+                instrumentedMethodCall.addArgument(target);
+            }
+        }
+        for (CtExpression<?> argument : testedMethodCall.getArguments()) {
+            instrumentedMethodCall.addArgument(argument);
+        }
+        return instrumentedMethodCall;
+    }
+
+    private void createInstrumentedClassFile(Launcher spoonLauncher, CtClass<?> instrumentedClass) throws IOException {
+        Path instrumentedFilePath = Paths.get(this.assertionRecord.getInstrumentedFilePath());
+        DefaultJavaPrettyPrinter printer = new DefaultJavaPrettyPrinter(spoonLauncher.getEnvironment());
+        printer.calculate(instrumentedClass.getPosition().getCompilationUnit(), Collections.singletonList(instrumentedClass));
+        byte[] instrumentedFileBytes = printer.getResult().getBytes();
+
+        // Write the instrumented file to the project directory for further use in this run:
+        instrumentedFilePath.toFile().getParentFile().mkdirs();
+        Files.write(instrumentedFilePath, instrumentedFileBytes);
+
+        // Copy the instrumented file to the data directory for cross-run storage:
+        Path relativizedFilePath = this.projectRecord.getTestSourcePath().relativize(instrumentedFilePath);
+        Path dataFilePath = this.projectRecord.getDataPath()
+            .resolve("project-id-" + this.getProjectId())
+            .resolve("jpf-data")
+            .resolve("test")
+            .resolve(relativizedFilePath);
+        dataFilePath.getParent().toFile().mkdirs();
+        Files.copy(instrumentedFilePath, dataFilePath, StandardCopyOption.REPLACE_EXISTING);
+    }
+
     private void createDriverClassFile(VelocityEngine velocityEngine) throws IOException {
         VelocityContext context = new VelocityContext();
         context.put("driverPackageName", this.assertionRecord.getDriverPackageName());
         context.put("driverClassName", this.assertionRecord.getDriverClassName());
-        context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());
-        context.put("testClassName", this.testRecord.getTestClassName());
+        context.put("instrumentedClassQualifiedName", this.assertionRecord.getInstrumentedClassQualifiedName());
+        context.put("instrumentedClassName", this.assertionRecord.getInstrumentedClassName());
         context.put("testMethodName", this.testRecord.getTestMethodName());
 
         File driverClassFile = new File(this.assertionRecord.getDriverFilePath());
@@ -110,13 +254,21 @@ public class JpfInstrumentationTask extends AbstractTask {
             Template template = velocityEngine.getTemplate("driver-class.vm");
             template.merge(context, fileWriter);
         }
+
+        // Copy the driver file to the data directory for cross-run storage:
+        Path relativizedFilePath = this.projectRecord.getTestSourcePath().relativize(driverClassFile.toPath());
+        Path dataFilePath = this.projectRecord.getDataPath()
+            .resolve("project-id-" + this.getProjectId())
+            .resolve("jpf-data")
+            .resolve("test")
+            .resolve(relativizedFilePath);
+        dataFilePath.getParent().toFile().mkdirs();
+        Files.copy(driverClassFile.toPath(), dataFilePath, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    private void createJpfConfigFile(Gson gson, VelocityEngine velocityEngine) throws IOException {
-        Type type = new TypeToken<List<MethodParameter>>() {}.getType();
-        List<MethodParameter> testedMethodParameters = gson.fromJson(this.assertionRecord.getTestedMethodParameters(), type);
-        String symbolicParams = testedMethodParameters.stream().map(p -> SUPPORTED_TYPES.contains(p.getType()) ? "sym" : "con").collect(Collectors.joining("#"));
-        String symbolicMethod = this.assertionRecord.getTestedMethodQualifiedName() + "(" + symbolicParams + ")";
+    private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod) throws IOException {
+        String symbolicParams = instrumentedMethod.getParameters().stream().map(p -> SUPPORTED_TYPES.contains(p.getType().getSimpleName()) ? "sym" : "con").collect(Collectors.joining("#"));
+        String symbolicMethod = this.assertionRecord.getInstrumentedMethodQualifiedName() + "(" + symbolicParams + ")";
 
         VelocityContext context = new VelocityContext();
         context.put("classpath", this.projectRecord.getClasspath());
@@ -124,11 +276,15 @@ public class JpfInstrumentationTask extends AbstractTask {
 
         context.put("maxExecutionTime", TestGeneralizationRunner.JPF_MAX_EXECUTION_TIME);
         context.put("maxPathConditionSize", TestGeneralizationRunner.JPF_MAX_PATH_CONDITION_SIZE);
+
         context.put("driverClassQualifiedName", this.assertionRecord.getDriverClassQualifiedName());
         context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());
         context.put("testMethodQualifiedName", this.testRecord.getTestMethodQualifiedName());
         context.put("testedClassQualifiedName", this.assertionRecord.getTestedClassQualifiedName());
         context.put("testedMethodQualifiedName", this.assertionRecord.getTestedMethodQualifiedName());
+        context.put("instrumentedClassQualifiedName", this.assertionRecord.getInstrumentedClassQualifiedName());
+        context.put("instrumentedMethodQualifiedName", this.assertionRecord.getInstrumentedMethodQualifiedName());
+
         context.put("inputSpecificationPath", this.assertionRecord.getInputSpecificationPath());
         context.put("outputSpecificationPath", this.assertionRecord.getOutputSpecificationPath());
 

@@ -132,7 +132,8 @@ public class CleanupTask extends AbstractTask {
         private void deleteIfInstrumentationFile(Path file) {
             String fileName = file.getFileName().toString();
             boolean isDriverFile = fileName.startsWith("_") && fileName.contains("_Driver_");
-            boolean shouldDeleteFile = isDriverFile && (this.stage == ProcessingStage.CLEANUP_PROJECT || this.stage == ProcessingStage.CLEANUP_JPF_INSTRUMENTATION);
+            boolean isInstrumentedFile = fileName.startsWith("_") && fileName.contains("_Instrumented_");
+            boolean shouldDeleteFile = (isDriverFile || isInstrumentedFile) && (this.stage == ProcessingStage.CLEANUP_PROJECT || this.stage == ProcessingStage.CLEANUP_JPF_INSTRUMENTATION);
 
             if (shouldDeleteFile) {
                 LOGGER.atInfo().log("Deleting JPF instrumentation file '" + file + "'.");

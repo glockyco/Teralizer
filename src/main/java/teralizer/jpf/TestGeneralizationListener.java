@@ -25,6 +25,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationListener.class);
 
+    private final String instrumentedMethodQualifiedName;
     private final MethodSpec testedMethodSpec;
     private final Path inputSpecificationPath;
     private final Path outputSpecificationPath;
@@ -37,6 +38,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private int recursionDepth;
 
     public TestGeneralizationListener(Config config) {
+        this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
         this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
         this.outputSpecificationPath = Paths.get(config.getString("test_generalization.output_specification_path"));
@@ -53,7 +55,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     @Override
     public void searchConstraintHit(Search search) {
         if (search.getDepth() >= search.getDepthLimit()) {
-            throw new RuntimeException("Failed to collect input/output specification due to depth limiting. Depth limit of " + search.getDepthLimit() + " exceeded.");
+            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Failed to collect input/output specification due to depth limiting. Depth limit of " + search.getDepthLimit() + " exceeded.");
         }
     }
 
@@ -64,7 +66,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         }
 
         if (!Files.exists(this.inputSpecificationPath) || !Files.exists(this.outputSpecificationPath)) {
-            throw new RuntimeException("Failed to collect input/output specification for unknown reason.");
+            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Failed to collect input/output specification for unknown reason.");
         }
     }
 
@@ -72,7 +74,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public void propertyViolated(Search search) {
         String errorDetails = search.getLastError().getDetails();
         if (errorDetails.contains("java.lang.NullPointerException") && errorDetails.contains("at java.util.concurrent.atomic")) {
-            throw new RuntimeException("Failed JPF execution due to incomplete native peers.\n\n" + errorDetails);
+            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Failed JPF execution due to incomplete native peers.\n\n" + errorDetails);
         }
     }
 
@@ -80,13 +82,13 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public void stateAdvanced(Search search) {
         double elapsedTime = (System.currentTimeMillis() - this.startTime) / 1000.0;
         if (elapsedTime > this.maxExecutionTime) {
-            throw new RuntimeException("Execution timeout exceeded: " + elapsedTime + " of " + this.maxExecutionTime + " seconds passed.");
+            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Execution timeout exceeded: " + elapsedTime + " of " + this.maxExecutionTime + " seconds passed.");
         }
 
         PathCondition pathCondition = PathCondition.getPC(search.getVM());
         int pcLength = pathCondition == null ? 0 : pathCondition.toString().length();
         if (pcLength > this.maxPathConditionSize) {
-            throw new RuntimeException("PC size limit exceeded: " + pcLength + " of " + this.maxPathConditionSize + " characters used.");
+            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - PC size limit exceeded: " + pcLength + " of " + this.maxPathConditionSize + " characters used.");
         }
     }
 

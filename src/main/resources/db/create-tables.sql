@@ -86,6 +86,13 @@ CREATE TABLE assertion
     tested_method_call_absolute_path   TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
     tested_method_call_relative_path   TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
 
+    instrumented_file_path             TEXT, -- can be null before JPF instrumentation
+    instrumented_class_qualified_name  TEXT, -- can be null before JPF instrumentation
+    instrumented_method_qualified_name TEXT, -- can be null before JPF instrumentation
+    instrumented_package_name          TEXT, -- can be null before JPF instrumentation
+    instrumented_class_name            TEXT, -- can be null before JPF instrumentation
+    instrumented_method_name           TEXT, -- can be null before JPF instrumentation
+
     driver_file_path                   TEXT, -- can be null before JPF instrumentation
     driver_class_qualified_name        TEXT, -- can be null before JPF instrumentation
     driver_package_name                TEXT, -- can be null before JPF instrumentation
