@@ -149,23 +149,62 @@ public class TestAnalysis {
     }
 
     public static Optional<Integer> getActualParameterIndex(CtInvocation<?> assertion) {
+        boolean isJunit4 = isJUnit4Assertion(assertion);
+        boolean isJunit5 = isJUnit5Assertion(assertion);
+
+        if (!isJunit4 && !isJunit5) {
+            throw new RuntimeException("Not a JUnit 4 or 5 assertion:\n" + assertion);
+        }
+
+        int argumentCount = assertion.getArguments().size();
+
         switch (assertion.getExecutable().getSimpleName()) {
             case ASSERT_EQUALS:
-                if (assertion.getArguments().size() == 3 && isJUnit4Assertion(assertion)) {
-                    return Optional.of(2);
-                } else if (assertion.getArguments().size() == 2) {
-                    return Optional.of(1);
-                } else {
-                    throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+                if (isJunit4) {
+                    if (argumentCount == 4) {
+                        // The parameters are: message, expected, actual, delta
+                        return Optional.of(2);
+                    } else if (argumentCount == 3) {
+                        if (assertion.getExecutable().getParameters().stream().allMatch(p -> p.getSimpleName().equals("double"))) {
+                            // The parameters are: expected, actual, delta
+                            return Optional.of(1);
+                        } else {
+                             // The parameters are: message, expected, actual
+                            return Optional.of(2);
+                        }
+                    } else if (argumentCount == 2) {
+                        // The parameters are: expected, actual
+                        return Optional.of(1);
+                    } else {
+                        throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+                    }
+                } else { // if (isJunit5) {
+                    if (argumentCount == 2 || argumentCount == 3 || argumentCount == 4) {
+                        // The parameters are: expected, actual(, delta)(, message | messageSupplier)
+                        return Optional.of(1);
+                    } else {
+                        throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+                    }
                 }
             case ASSERT_TRUE:
             case ASSERT_FALSE:
-                if (assertion.getArguments().size() == 2 && isJUnit4Assertion(assertion)) {
-                    return Optional.of(1);
-                } else if (assertion.getArguments().size() == 1) {
-                    return Optional.of(0);
-                } else {
-                    throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+                if (isJunit4) {
+                    if (argumentCount == 2) {
+                        // The parameters are: message, condition
+                        return Optional.of(1);
+                    } else if (argumentCount == 1) {
+                        // The parameters are: condition
+                        return Optional.of(0);
+                    } else {
+                        throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+                    }
+                } else { // if (isJunit5) {
+                    if (argumentCount == 1 || argumentCount == 2) {
+                        // The parameters are: condition | booleanSupplier(, message | message Supplier)
+                        return Optional.of(0);
+                    } else {
+                        throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+                    }
                 }
             default:
                 return Optional.empty();
@@ -173,13 +212,41 @@ public class TestAnalysis {
     }
 
     public static Optional<Integer> getExpectedParameterIndex(CtInvocation<?> assertion) {
+        boolean isJunit4 = isJUnit4Assertion(assertion);
+        boolean isJunit5 = isJUnit5Assertion(assertion);
+
+        if (!isJunit4 && !isJunit5) {
+            throw new RuntimeException("Not a JUnit 4 or 5 assertion:\n" + assertion);
+        }
+
+        int argumentCount = assertion.getArguments().size();
+
         if (assertion.getExecutable().getSimpleName().equals(ASSERT_EQUALS)) {
-            if (assertion.getArguments().size() == 3 && isJUnit4Assertion(assertion)) {
-                return Optional.of(1);
-            } else if (assertion.getArguments().size() == 2) {
-                return Optional.of(0);
-            } else {
-                throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+            if (isJunit4) {
+                if (argumentCount == 4) {
+                    // The parameters are: message, expected, actual, delta
+                    return Optional.of(1);
+                } else if (argumentCount == 3) {
+                    if (assertion.getExecutable().getParameters().stream().allMatch(p -> p.getSimpleName().equals("double"))) {
+                        // The parameters are: expected, actual, delta
+                        return Optional.of(0);
+                    } else {
+                        // The parameters are: message, expected, actual
+                        return Optional.of(1);
+                    }
+                } else if (argumentCount == 2) {
+                    // The parameters are: expected, actual
+                    return Optional.of(0);
+                } else {
+                    throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+                }
+            } else { // if (isJunit5) {
+                if (argumentCount == 2 || argumentCount == 3 || argumentCount == 4) {
+                    // The parameters are: expected, actual(, delta)(, message | messageSupplier)
+                    return Optional.of(0);
+                } else {
+                    throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+                }
             }
         }
         return Optional.empty();
