@@ -19,6 +19,7 @@ import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.TestGeneralizationRunner;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
@@ -249,31 +250,6 @@ public class TestGeneralizationTask extends AbstractTask {
         generalizedClassDeclaration.addNestedType(testParametersClassDeclaration);
         generalizedClassDeclaration.addNestedType(testParametersSupplierClassDeclaration);
 
-        // @TODO: Evaluate TestParameters generation with:
-        //   - "naive" approach (filtering),
-        //   - "manually improved" approach,
-        //   - junit-quickcheck-based generation,
-        //   - z3-simplified path conditions,
-        //   - full z3-based generation.
-        //   We could also evaluate fuzzer-based generation etc.,
-        //   but every additional approach increases implementation effort.
-        //   ---
-        //   Naive approach:
-        //   Arbitrary<Integer> ints = Arbitraries.integers();
-        //   return Combinators.combine(ints, ints).as(TestParameters::new)
-        //       .filter(testParameters -> testParameters.x < testParameters.y);
-        //   ---
-        //   Manually improved approach:
-        //   return Arbitraries.integers().filter(x -> x < Integer.MAX_VALUE).flatMap(x ->
-        //       // We need the filter above to prevent "x + 1" below from overflowing.
-        //       Arbitraries.integers().between(x + 1, Integer.MAX_VALUE)
-        //           .map(y -> new TestParameters(x, y)));
-        //   ---
-        //   The "manually improved" approach might quickly run into issues
-        //   due to, e.g., cyclic dependencies between the variables.
-        //   a >= b && b >= a
-        //   a > b & b > c & c < a
-
         // ------------------------------------------------------------------------------------------------------ //
         // Remove all existing annotations.                                                                       //
         // ------------------------------------------------------------------------------------------------------ //
@@ -335,16 +311,6 @@ public class TestGeneralizationTask extends AbstractTask {
         // Replace expected values in asserts with generalized values.                                            //
         // ------------------------------------------------------------------------------------------------------ //
 
-        // @TODO: Remove all existing assertions.
-        //   For now, generalization seems to be too much effort.
-        //   There are more important things to take care of right now.
-        // @TODO: Analyze which / how many assertions need generalization.
-        //   This could be done by, for example, generating multiple variants of the generalized test classes / methods,
-        //   each one with just a single assertion preserved, and seeing whether the assertion passes or fails.
-        // @TODO: Add generalization for existing assertions.
-        //   For assertions that fail, the oracle has to be modified in some way.
-        //   It might be possible to (partially) automate this oracle generalization.
-
         if (outputJava != null) {
             int index = TestAnalysis.getExpectedParameterIndex(assertion).get();
             List<CtExpression<?>> assertArguments = assertion.getArguments();
@@ -352,10 +318,11 @@ public class TestGeneralizationTask extends AbstractTask {
         }
 
         // ------------------------------------------------------------------------------------------------------ //
-        // Remove parts of the test setup code that are no longer needed after generalization.                    //
+        // Remove parts of the test code that are no longer needed after generalization.                          //
         // ------------------------------------------------------------------------------------------------------ //
 
-        // @TODO: Remove setup code that is not needed anymore after generalization.
+        List<CtInvocation> otherAssertions = testMethod.getElements(new TypeFilter<>(CtInvocation.class)).stream().filter(i -> i != assertion && (TestAnalysis.isJUnit4Assertion(i) || TestAnalysis.isJUnit5Assertion(i))).collect(Collectors.toList());
+        otherAssertions.forEach(CtElement::delete);
 
         // ------------------------------------------------------------------------------------------------------ //
 

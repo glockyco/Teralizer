@@ -20,10 +20,12 @@ import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.TestGeneralizationRunner;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.spoon.analysis.TestAnalysis;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -88,6 +90,12 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall);
         CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(factory, instrumentedClass, instrumentedMethod, testedMethod, testedMethodCall);
         testedMethodCall.replace(instrumentedMethodCall);
+
+        CtMethod<?> testMethod = instrumentedClass.getMethod(this.testRecord.getTestMethodName());
+        CtPath targetAssertionPath = new CtPathStringBuilder().fromString(this.assertionRecord.getAssertionRelativePath());
+        CtInvocation<?> targetAssertion = (CtInvocation<?>) targetAssertionPath.evaluateOn(testMethod).get(0);
+        List<CtInvocation> otherAssertions = testMethod.getElements(new TypeFilter<>(CtInvocation.class)).stream().filter(i -> i != targetAssertion && (TestAnalysis.isJUnit4Assertion(i) || TestAnalysis.isJUnit5Assertion(i))).collect(Collectors.toList());
+        otherAssertions.forEach(CtElement::delete);
 
         this.createInstrumentedClassFile(spoonLauncher, instrumentedClass);
 
