@@ -2,21 +2,21 @@ package teralizer.jqwik;
 
 import teralizer.domain.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class VariableConstraintExtractor extends ModelVisitor {
 
     private HashMap<String, VariableConstraints> constraints;
     private HashMap<String, Integer> parameterIds;
+    private HashMap<String, String> parameterTypes;
 
     public Map<String, VariableConstraints> process(Model model, List<MethodParameter> allParameters) {
         this.parameterIds = new HashMap<>();
+        this.parameterTypes = new HashMap<>();
         for (int i = 0; i < allParameters.size(); i++) {
             this.parameterIds.put(allParameters.get(i).getName(), i);
+            this.parameterTypes.put(allParameters.get(i).getName(), allParameters.get(i).getType());
         }
 
         this.constraints = new HashMap<>();
@@ -50,6 +50,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
                 constraint = (T) this.constraints.get(variableName);
             } else {
                 constraint = type.newInstance();
+                constraint.setVariableType(this.parameterTypes.get(variableName));
                 constraint.setVariableName(variableName);
                 this.constraints.put(variableName, constraint);
             }
@@ -278,17 +279,30 @@ public class VariableConstraintExtractor extends ModelVisitor {
     }
 
     public interface VariableConstraints {
+        void setVariableType(String variableType);
+        String getVariableType();
         void setVariableName(String variableName);
         String getVariableName();
     }
 
     public static class IntegerConstraints implements VariableConstraints {
 
+        private String variableType;
         private String variableName;
-        private Long constantEquality = null;
+        private String constantEquality = null;
         private String variableEquality = null;
         private final List<String> lowerBounds = new ArrayList<>();
         private final List<String> upperBounds = new ArrayList<>();
+
+        @Override
+        public void setVariableType(String variableType) {
+            this.variableType = variableType;
+        }
+
+        @Override
+        public String getVariableType() {
+            return this.variableType;
+        }
 
         @Override
         public void setVariableName(String variableName) {
@@ -301,7 +315,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantEquality(long value) {
-            this.constantEquality = value;
+            this.constantEquality = String.valueOf(value);
         }
 
         public void addVariableEquality(String name) {
@@ -310,7 +324,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
 
         public String getEquality() {
             if (this.constantEquality != null) {
-                return this.constantEquality.toString();
+                return this.constantEquality;
             } else if (this.variableEquality != null) {
                 return this.variableEquality;
             }
@@ -351,11 +365,27 @@ public class VariableConstraintExtractor extends ModelVisitor {
 
     public static class RealConstraints implements VariableConstraints {
 
+        private static final List<String> FLOAT_TYPES = Arrays.asList("float", "Float", "java.lang.Float");
+
+        private String variableType;
         private String variableName;
-        private Double constantEquality = null;
+        private String constantEquality = null;
         private String variableEquality = null;
         private final List<RealBound> lowerBounds = new ArrayList<>();
         private final List<RealBound> upperBounds = new ArrayList<>();
+
+        private String valueOf(double value) {
+            return FLOAT_TYPES.contains(this.variableType) ? (value + "f") : String.valueOf(value);
+        }
+
+        @Override
+        public void setVariableType(String variableType) {
+            this.variableType = variableType;
+        }
+
+        public String getVariableType() {
+            return this.variableType;
+        }
 
         @Override
         public void setVariableName(String variableName) {
@@ -368,7 +398,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantEquality(double value) {
-            this.constantEquality = value;
+            this.constantEquality = this.valueOf(value);
         }
 
         public void addVariableEquality(String name) {
@@ -377,7 +407,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
 
         public String getEquality() {
             if (this.constantEquality != null) {
-                return this.constantEquality.toString();
+                return this.constantEquality;
             } else if (this.variableEquality != null) {
                 return this.variableEquality;
             }
@@ -385,7 +415,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantLowerBound(double value, boolean isIncluded) {
-            this.lowerBounds.add(new RealBound(String.valueOf(value), isIncluded));
+            this.lowerBounds.add(new RealBound(this.valueOf(value), isIncluded));
         }
 
         public void addVariableLowerBound(String name, boolean isIncluded) {
@@ -397,7 +427,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantUpperBound(double value, boolean isIncluded) {
-            this.upperBounds.add(new RealBound(String.valueOf(value), isIncluded));
+            this.upperBounds.add(new RealBound(this.valueOf(value), isIncluded));
         }
 
         public void addVariableUpperBound(String name, boolean isIncluded) {
