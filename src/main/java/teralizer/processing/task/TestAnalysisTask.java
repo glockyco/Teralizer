@@ -91,6 +91,11 @@ public class TestAnalysisTask extends AbstractTask {
         List<AssertionRecord> records = new ArrayList<>();
 
         List<CtInvocation<?>> assertionCalls = TestAnalysis.findAllAsserts(testMethod);
+
+        if (assertionCalls.isEmpty()) {
+            throw new RuntimeException("No assertions found in " + this.testRecord.getTestMethodQualifiedName() + ".");
+        }
+
         for (CtInvocation<?> assertionCall : assertionCalls) {
             List<MethodArgument> assertionArguments = new ArrayList<>();
             for (CtExpression<?> argument : assertionCall.getArguments()) {

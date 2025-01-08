@@ -97,7 +97,6 @@ public class TestFilteringTask extends AbstractTask {
         Gson gson = context.get(TaskContext.GSON);
 
         List<Filter> filters = Arrays.asList(
-            new AssertionCountFilter(create, this.testRecord),
             new MissingValueFilter(this.assertionRecord),
             new UnnamedPackageFilter(this.testRecord),
             new ParameterTypeFilter(gson, this.assertionRecord),
