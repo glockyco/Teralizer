@@ -8,11 +8,9 @@ import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spoon.Launcher;
 import teralizer.TestGeneralizationRunner;
 import teralizer.javaparser.JavaParserFactory;
 import teralizer.processing.*;
-import teralizer.spoon.SpoonFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
