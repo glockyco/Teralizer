@@ -134,7 +134,7 @@ public class JunitDataCollectionTask extends AbstractTask {
     private List<JunitTestReportRecord> collectTestReportData(DSLContext create) {
         String testClassQualifiedName = this.testRecord.getTestClassQualifiedName();
         String testMethodQualifiedName = this.testRecord.getTestMethodQualifiedName();
-        Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
+        Path testReportPath = this.identifyTestReportPath(this.testRecord.getTestClassName(), testClassQualifiedName);
         return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
             .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
             .collect(Collectors.toList());
@@ -143,10 +143,30 @@ public class JunitDataCollectionTask extends AbstractTask {
     private List<JunitTestReportRecord> collectGeneralizationReportData(DSLContext create) {
         String testClassQualifiedName = this.generalizationRecord.getClassQualifiedName();
         String testMethodQualifiedName = this.generalizationRecord.getMethodQualifiedName();
-        Path testReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
+        Path testReportPath = this.identifyTestReportPath(this.generalizationRecord.getClassName(), testClassQualifiedName);
         return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
             .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
             .collect(Collectors.toList());
+    }
+
+    private Path identifyTestReportPath(String testClassName, String testClassQualifiedName) {
+        // If the file name is short enough, Surefire creates report files at the default location:
+        Path defaultTestReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
+        if (Files.exists(defaultTestReportPath)) {
+            return defaultTestReportPath;
+        }
+
+        // If the file name is too long, Surefire instead creates reports at the alternative location:
+        Path alternativeTestReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassName.replace("_", " ") + ".xml");
+        if (Files.exists(alternativeTestReportPath)) {
+            return alternativeTestReportPath;
+        }
+
+        // @TODO: Handle cases where the alternative file name is still too long.
+        throw new RuntimeException(
+            "Unable to identify test report path for test class: " + testClassQualifiedName + ". " +
+            "No file at default path " + defaultTestReportPath + " or alternative path " + alternativeTestReportPath + "."
+        );
     }
 
     private List<ReportTestCase> parseTestCaseReports(Path testReportPath, String testClassQualifiedName, String testMethodQualifiedName) {
