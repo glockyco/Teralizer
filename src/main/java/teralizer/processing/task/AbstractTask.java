@@ -36,21 +36,20 @@ public abstract class AbstractTask implements Task {
 
             String exclusionMessage = String.format("Excluded by %s.%n%n%s", this, stackTrace);
 
-            if (this.testRecord != null) {
-                this.testRecord.setIsIncluded(false);
-                this.testRecord.setExclusionInfo(exclusionMessage);
-                this.testRecord.store();
-            }
-            if (this.assertionRecord != null) {
-                this.assertionRecord.setIsIncluded(false);
-                this.assertionRecord.setExclusionInfo(exclusionMessage);
-                this.assertionRecord.store();
-            }
             if (this.generalizationRecord != null) {
                 this.generalizationRecord.setIsIncluded(false);
                 this.generalizationRecord.setExclusionInfo(exclusionMessage);
                 this.generalizationRecord.store();
+            } else if (this.assertionRecord != null) {
+                this.assertionRecord.setIsIncluded(false);
+                this.assertionRecord.setExclusionInfo(exclusionMessage);
+                this.assertionRecord.store();
+            } else if (this.testRecord != null) {
+                this.testRecord.setIsIncluded(false);
+                this.testRecord.setExclusionInfo(exclusionMessage);
+                this.testRecord.store();
             }
+
             throw e;
         }
     }
