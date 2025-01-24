@@ -104,7 +104,7 @@ public class NaiveTestParametersSupplierFactory {
             case "java.lang.String":
                 return "return net.jqwik.api.Arbitraries.strings()";
             default:
-                return "return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)";
+                return "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
         }
     }
 }
