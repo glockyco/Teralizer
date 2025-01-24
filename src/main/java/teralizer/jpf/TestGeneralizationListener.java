@@ -26,7 +26,9 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestGeneralizationListener.class);
 
     private final String instrumentedMethodQualifiedName;
+    private final MethodSpec instrumentedMethodSpec;
     private final MethodSpec testedMethodSpec;
+
     private final Path inputSpecificationPath;
     private final Path outputSpecificationPath;
 
@@ -39,6 +41,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
+        this.instrumentedMethodSpec = MethodSpec.createMethodSpec(this.instrumentedMethodQualifiedName);
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
         this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
         this.outputSpecificationPath = Paths.get(config.getString("test_generalization.output_specification_path"));
@@ -105,10 +108,10 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         if (this.testedMethodSpec.matches(exitedMethod)) {
             LOGGER.atDebug().log("Exiting tested method: " + exitedMethod.toString());
             this.recursionDepth--;
-            if (this.recursionDepth == -1) {
-                this.writeSpecificationFiles(vm);
-                vm.getSearch().terminate();
-            }
+        }
+        if (this.instrumentedMethodSpec.matches(exitedMethod)) {
+            this.writeSpecificationFiles(vm);
+            vm.getSearch().terminate();
         }
     }
 
