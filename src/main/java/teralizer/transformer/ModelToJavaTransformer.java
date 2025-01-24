@@ -17,7 +17,9 @@ public class ModelToJavaTransformer extends ModelVisitor {
     }
 
     public String transform(double value) {
-        if (value == Double.POSITIVE_INFINITY) {
+        if (Double.isNaN(value)) {
+            return "Double.NaN";
+        } else if (value == Double.POSITIVE_INFINITY) {
             return "Double.POSITIVE_INFINITY";
         } else if (value == Double.NEGATIVE_INFINITY) {
             return "Double.NEGATIVE_INFINITY";

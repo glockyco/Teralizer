@@ -369,8 +369,6 @@ public class VariableConstraintExtractor extends ModelVisitor {
 
     public static class RealConstraints implements VariableConstraints {
 
-        private static final List<String> FLOAT_TYPES = Arrays.asList("float", "Float", "java.lang.Float");
-
         private String variableType;
         private String variableName;
         private String constantEquality = null;
@@ -379,7 +377,19 @@ public class VariableConstraintExtractor extends ModelVisitor {
         private final List<RealBound> upperBounds = new ArrayList<>();
 
         private String valueOf(double value) {
-            return String.format("(%s) %s", this.variableType, value);
+            String valueString;
+            if (Double.isInfinite(value)) {
+                if (value > 0) {
+                    valueString = "Double.POSITIVE_INFINITY";
+                } else {
+                    valueString = "Double.NEGATIVE_INFINITY";
+                }
+            } else if (Double.isNaN(value)) {
+                valueString = "Double.NaN";
+            } else {
+                valueString = String.valueOf(value);
+            }
+            return String.format("(%s) %s", this.variableType, valueString);
         }
 
         @Override
