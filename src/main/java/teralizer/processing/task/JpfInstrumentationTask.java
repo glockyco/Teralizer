@@ -181,7 +181,27 @@ public class JpfInstrumentationTask extends AbstractTask {
             CtParameter<?> parameter = factory.createParameter(null, targetType, "_target_");
             instrumentedParameters.add(parameter);
         }
-        testedMethod.getParameters().forEach(p -> instrumentedParameters.add(p.clone()));
+
+        for (int i = 0; i < testedMethod.getParameters().size(); i++) {
+            CtTypeReference<?> parameterType = testedMethod.getParameters().get(i).getType();
+            CtTypeReference<?> argumentType = testedMethodCall.getArguments().get(i).getType();
+
+            CtTypeReference<?> type;
+            if (!parameterType.isGenerics()) {
+                type = parameterType;
+            } else if (!(argumentType == null) && !(argumentType.toString().equals("<nulltype>"))) {
+                type = argumentType;
+            } else {
+                throw new RuntimeException(
+                    "Failed to identify valid type for parameter " + testedMethod.getParameters().get(i)
+                        + " of tested method " + this.assertionRecord.getTestedMethodQualifiedName()
+                        + " in test method " + this.testRecord.getTestMethodQualifiedName() + "."
+                );
+            }
+
+            CtParameter<?> parameter = factory.createParameter(null, type, testedMethod.getParameters().get(i).getSimpleName());
+            instrumentedParameters.add(parameter);
+        }
 
         CtInvocation<?> instrumentedTestedMethodCall = testedMethodCall.clone();
         List<CtExpression<?>> arguments = testedMethod.getParameters().stream().map(p -> factory.createCodeSnippetExpression(p.getSimpleName())).collect(Collectors.toList());
@@ -196,7 +216,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         return factory.createMethod(
             instrumentedClass,
             new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
-            testedMethod.getType(),
+            !testedMethod.getType().isGenerics() ? testedMethod.getType() : factory.Type().objectType(),
             this.assertionRecord.getInstrumentedMethodName(),
             instrumentedParameters,
             testedMethod.getThrownTypes(),
