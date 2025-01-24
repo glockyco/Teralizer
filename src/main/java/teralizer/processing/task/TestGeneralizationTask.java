@@ -247,6 +247,9 @@ public class TestGeneralizationTask extends AbstractTask {
                 throw new RuntimeException("Unsupported variant " + this.getVariant() + ".");
         }
 
+        Set<CtType<?>> nestedTypes = generalizedClassDeclaration.getNestedTypes();
+        nestedTypes.forEach(CtElement::delete);
+
         generalizedClassDeclaration.addNestedType(testParametersClassDeclaration);
         generalizedClassDeclaration.addNestedType(testParametersSupplierClassDeclaration);
 

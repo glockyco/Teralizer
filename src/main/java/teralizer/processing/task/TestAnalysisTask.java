@@ -11,6 +11,7 @@ import spoon.Launcher;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.cu.SourcePosition;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.CtType;
@@ -65,7 +66,14 @@ public class TestAnalysisTask extends AbstractTask {
 
         Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
-        CtType<?> testClass = spoonLauncher.getFactory().Type().get(this.testRecord.getTestClassQualifiedName());
+        CtClass<?> testClass = spoonLauncher.getFactory().Class().get(this.testRecord.getTestClassQualifiedName());
+
+        if (!testClass.getNestedTypes().isEmpty()) {
+            throw new RuntimeException("Class " + this.testRecord.getTestClassQualifiedName() + " contains nested types.");
+        } else if (!testClass.getAnonymousExecutables().isEmpty()) {
+            throw new RuntimeException("Class " + this.testRecord.getTestClassQualifiedName() + " contains (static) initializers.");
+        }
+
         CtMethod<?> testMethod = testClass.getMethod(this.testRecord.getTestMethodName());
 
         if (testMethod == null) {
