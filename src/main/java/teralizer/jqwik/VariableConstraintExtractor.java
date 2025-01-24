@@ -294,6 +294,10 @@ public class VariableConstraintExtractor extends ModelVisitor {
         private final List<String> lowerBounds = new ArrayList<>();
         private final List<String> upperBounds = new ArrayList<>();
 
+        private String valueOf(double value) {
+            return String.format("(%s) %s", this.variableType, value);
+        }
+
         @Override
         public void setVariableType(String variableType) {
             this.variableType = variableType;
@@ -315,7 +319,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantEquality(long value) {
-            this.constantEquality = String.valueOf(value);
+            this.constantEquality = this.valueOf(value);
         }
 
         public void addVariableEquality(String name) {
@@ -332,7 +336,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantLowerBound(long value, boolean isIncluded) {
-            this.lowerBounds.add(String.valueOf(value + (isIncluded ? 0 : 1)));
+            this.lowerBounds.add(this.valueOf(value + (isIncluded ? 0 : 1)));
         }
 
         public void addVariableLowerBound(String name, boolean isIncluded) {
@@ -344,7 +348,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         }
 
         public void addConstantUpperBound(long value, boolean isIncluded) {
-            this.upperBounds.add(String.valueOf(value + (isIncluded ? 0 : -1)));
+            this.upperBounds.add(this.valueOf(value + (isIncluded ? 0 : -1)));
         }
 
         public void addVariableUpperBound(String name, boolean isIncluded) {
@@ -375,7 +379,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         private final List<RealBound> upperBounds = new ArrayList<>();
 
         private String valueOf(double value) {
-            return FLOAT_TYPES.contains(this.variableType) ? (value + "f") : String.valueOf(value);
+            return String.format("(%s) %s", this.variableType, value);
         }
 
         @Override

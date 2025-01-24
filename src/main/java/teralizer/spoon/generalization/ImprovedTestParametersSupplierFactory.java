@@ -152,8 +152,8 @@ public class ImprovedTestParametersSupplierFactory {
                 arbitraryType = "String";
                 break;
             default:
-                body = "return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)";
-                arbitraryType = "Object";
+                body = "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
+                arbitraryType = parameter.getType();
                 break;
         }
 
