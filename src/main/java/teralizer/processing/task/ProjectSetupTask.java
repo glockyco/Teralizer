@@ -96,6 +96,7 @@ public class ProjectSetupTask extends AbstractTask {
         scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new TestAnalysisTask(ProcessingStage.ANALYZE_TESTS, this.projectRecord));
         scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_TESTS, this.projectRecord));
+        scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_ASSERTIONS, this.projectRecord));
 
         scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.ADD_JPF_INSTRUMENTATION, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, this.projectRecord));

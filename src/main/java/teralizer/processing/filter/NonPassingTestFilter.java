@@ -33,32 +33,31 @@ public class NonPassingTestFilter extends AbstractFilter {
         // and (ii) PIT offers only class-level inclusion/exclusion settings.
         if (this.generalizationRecord == null) {
             List<String> failingTests = this.create
-                .select(Tables.TEST.TEST_METHOD_QUALIFIED_NAME)
-                .from(Tables.TEST)
-                .join(Tables.JUNIT_TEST_REPORT).on(Tables.TEST.ID.eq(Tables.JUNIT_TEST_REPORT.TEST_ID))
-                .where(Tables.TEST.PROJECT_ID.eq(this.testRecord.getProjectId()))
-                .and(Tables.TEST.TEST_FILE_PATH.eq(this.testRecord.getTestFilePath()))
+                .select(Tables.JUNIT_TEST_REPORT.TEST_METHOD_NAME)
+                .from(Tables.JUNIT_TEST_REPORT)
+                .where(Tables.JUNIT_TEST_REPORT.PROJECT_ID.eq(this.testRecord.getProjectId()))
+                .and(Tables.JUNIT_TEST_REPORT.TEST_PACKAGE_NAME.eq(this.testRecord.getTestPackageName()))
+                .and(Tables.JUNIT_TEST_REPORT.TEST_CLASS_NAME.eq(this.testRecord.getTestClassName()))
                 .and(Tables.JUNIT_TEST_REPORT.RESULT.ne(TestResult.PASSED))
                 .fetchInto(String.class);
 
             if (!failingTests.isEmpty()) {
-                String reason = "Failing tests in file " + this.testRecord.getTestFilePath() + ": " + String.join(", ", failingTests);
+                String reason = "Failing tests in test class " + this.testRecord.getTestFilePath() + ": " + String.join(", ", failingTests);
                 return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
             }
         } else {
             List<String> failingTests = this.create
-                .select(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME)
-                .from(Tables.TEST)
-                .join(Tables.GENERALIZATION).on(Tables.TEST.ID.eq(Tables.GENERALIZATION.TEST_ID))
-                .join(Tables.JUNIT_TEST_REPORT).on(Tables.GENERALIZATION.ID.eq(Tables.JUNIT_TEST_REPORT.GENERALIZATION_ID))
-                .where(Tables.TEST.PROJECT_ID.eq(this.testRecord.getProjectId()))
-                .and(Tables.GENERALIZATION.VARIANT.eq(this.generalizationRecord.getVariant()))
-                .and(Tables.GENERALIZATION.FILE_PATH.eq(this.generalizationRecord.getFilePath()))
+                .select(Tables.JUNIT_TEST_REPORT.TEST_METHOD_NAME)
+                .from(Tables.JUNIT_TEST_REPORT)
+                .where(Tables.JUNIT_TEST_REPORT.PROJECT_ID.eq(this.testRecord.getProjectId()))
+                .and(Tables.JUNIT_TEST_REPORT.TEST_PACKAGE_NAME.eq(this.testRecord.getTestPackageName()))
+                .and(Tables.JUNIT_TEST_REPORT.TEST_CLASS_NAME.eq(this.testRecord.getTestClassName()))
+                .and(Tables.JUNIT_TEST_REPORT.VARIANT.eq(this.generalizationRecord.getVariant()))
                 .and(Tables.JUNIT_TEST_REPORT.RESULT.ne(TestResult.PASSED))
                 .fetchInto(String.class);
 
             if (!failingTests.isEmpty()) {
-                String reason = "Failing generalized tests in file " + this.generalizationRecord.getFilePath() + ": " + String.join(", ", failingTests);
+                String reason = "Failing generalized tests in test class " + this.generalizationRecord.getFilePath() + ": " + String.join(", ", failingTests);
                 return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
             }
         }

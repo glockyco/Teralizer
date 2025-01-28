@@ -27,6 +27,10 @@ public class TestFilteringTask extends AbstractTask {
         this(stage, projectRecord, null, null);
     }
 
+    public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
+        this(stage, null, projectRecord, testRecord, null, null);
+    }
+
     public TestFilteringTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord, AssertionRecord assertionRecord) {
         this(stage, null, projectRecord, testRecord, assertionRecord, null);
     }
@@ -53,14 +57,20 @@ public class TestFilteringTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        // If this IS a project-level task, we should schedule the corresponding
+        // test-/assertion-/generalization-level tasks.
         if (this.testRecord == null) {
             this.scheduleTasks(context, scheduleTask);
             return;
         }
 
+        // If this is NOT a project-level task, we should perform the filtering.
         switch (this.stage) {
             case FILTER_TESTS:
                 this.filterTest(context);
+                break;
+            case FILTER_ASSERTIONS:
+                this.filterAssertion(context);
                 break;
             case FILTER_GENERALIZATIONS:
                 this.filterGeneralization(context);
@@ -73,6 +83,12 @@ public class TestFilteringTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         if (this.stage == ProcessingStage.FILTER_TESTS) {
+            Result<Record> records = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
+            for (Record record : records) {
+                TestRecord testRecord = record.into(TestRecord.class);
+                scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord));
+            }
+        } else if (this.stage == ProcessingStage.FILTER_ASSERTIONS) {
             Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
             for (Record record : records) {
                 TestRecord testRecord = record.into(TestRecord.class);
@@ -94,13 +110,21 @@ public class TestFilteringTask extends AbstractTask {
 
     private void filterTest(TaskContext context) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
+        List<Filter> filters = Arrays.asList(
+            new UnnamedPackageFilter(this.testRecord),
+            new NonPassingTestFilter(create, this.testRecord)
+        );
+
+        this.checkFilters(filters);
+    }
+
+    private void filterAssertion(TaskContext context) throws Exception {
         Gson gson = context.get(TaskContext.GSON);
 
         List<Filter> filters = Arrays.asList(
             new MissingValueFilter(this.assertionRecord),
-            new UnnamedPackageFilter(this.testRecord),
-            new ParameterTypeFilter(gson, this.assertionRecord),
-            new NonPassingTestFilter(create, this.testRecord)
+            new ParameterTypeFilter(gson, this.assertionRecord)
         );
 
         this.checkFilters(filters);
