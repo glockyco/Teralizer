@@ -1,6 +1,7 @@
 package teralizer.spoon.analysis;
 
 import spoon.reflect.code.*;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtLocalVariableReference;
@@ -258,5 +259,19 @@ public class TestAnalysis {
 
     public static boolean isJUnit5Assertion(CtInvocation<?> assertion) {
         return assertion.getExecutable().getDeclaringType().getQualifiedName().equals(JUNIT5_ASSERTION_PACKAGE);
+    }
+
+    public static boolean isContainedInLoop(CtElement element) {
+        assert element != null;
+
+        CtElement parent = element.getParent();
+        while(!(parent instanceof CtMethod)) {
+            if(parent instanceof CtLoop) {
+                return true;
+            }
+            parent = parent.getParent();
+        }
+
+        return false;
     }
 }

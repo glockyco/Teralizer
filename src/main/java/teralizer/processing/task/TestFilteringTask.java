@@ -8,6 +8,7 @@ import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import spoon.Launcher;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -121,10 +122,12 @@ public class TestFilteringTask extends AbstractTask {
 
     private void filterAssertion(TaskContext context) throws Exception {
         Gson gson = context.get(TaskContext.GSON);
+        Launcher spoonLauncher = context.get(this.assertionRecord.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
         List<Filter> filters = Arrays.asList(
             new MissingValueFilter(this.assertionRecord),
-            new ParameterTypeFilter(gson, this.assertionRecord)
+            new ParameterTypeFilter(gson, this.assertionRecord),
+            new AssertionInLoopFilter(spoonLauncher, this.assertionRecord)
         );
 
         this.checkFilters(filters);
