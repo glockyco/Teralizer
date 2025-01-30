@@ -16,4 +16,8 @@ public class MyMath {
     public boolean isEqual(int x, int y) {
         return x == y;
     }
+
+    public static Integer addIntegers(Integer x, Integer y) {
+        return x == null || y == null ? null : x + y;
+    }
 }

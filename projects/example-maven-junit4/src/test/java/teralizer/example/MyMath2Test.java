@@ -21,4 +21,12 @@ public class MyMath2Test {
         int actual = new MyMath().abs(input);
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void testAddIntegers() {
+        assertNull(MyMath.addIntegers(null, null));
+        assertEquals(null, MyMath.addIntegers(1, null));
+        assertEquals(null, MyMath.addIntegers(null, 1));
+        assertEquals(new Integer(2), MyMath.addIntegers(1, 1));
+    }
 }

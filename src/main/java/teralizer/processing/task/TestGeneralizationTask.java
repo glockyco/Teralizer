@@ -58,7 +58,14 @@ public class TestGeneralizationTask extends AbstractTask {
     public static String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
     public static String TEST_PARAMETERS_SUPPLIER_CLASS_NAME = "TestParametersSupplier";
 
-    public static final List<String> SUPPORTED_TYPES = Arrays.asList("byte", "short", "int", "long", "float", "double");
+    public static final List<String> SUPPORTED_TYPES = Arrays.asList(
+        "byte", "java.lang.Byte",
+        "short", "java.lang.Short",
+        "int", "java.lang.Integer",
+        "long", "java.lang.Long",
+        "float", "java.lang.Float",
+        "double", "java.lang.Double"
+    );
 
     public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
         this(stage, variant, projectRecord, null, null);

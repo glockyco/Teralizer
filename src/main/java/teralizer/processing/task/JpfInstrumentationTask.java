@@ -295,7 +295,10 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod) throws IOException {
-        String symbolicParams = instrumentedMethod.getParameters().stream().map(p -> SUPPORTED_TYPES.contains(p.getType().getSimpleName()) ? "sym" : "con").collect(Collectors.joining("#"));
+        String symbolicParams = instrumentedMethod.getParameters().stream()
+            .map(p -> SUPPORTED_TYPES.contains(p.getType().getQualifiedName()) ? "sym" : "con")
+            .collect(Collectors.joining("#"));
+
         String symbolicMethod = this.assertionRecord.getInstrumentedMethodQualifiedName() + "(" + symbolicParams + ")";
 
         VelocityContext context = new VelocityContext();
