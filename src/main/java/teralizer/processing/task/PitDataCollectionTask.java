@@ -51,8 +51,12 @@ public class PitDataCollectionTask extends AbstractTask {
 
     private void executeMutationTesting(DSLContext create) throws Exception {
         List<String> targetClasses = SQLiteRepository.fetchCoveredClasses(create, this.getVariant(), this.getProjectId());
+        // Filter anonymous classes, which are stored like: "com.example.MyClass.new MyInterface() {...}"
+        // Passing targetClasses to PIT without this filter causes 'Illegal repetition' errors due to "...".
+        // @TODO: Convert names of anonymous classes so they can be passed to PIT without errors.
+        List<String> targetClassesFiltered = targetClasses.stream().filter(c -> !c.contains("...")).collect(Collectors.toList());
 
-        if (targetClasses.isEmpty()) {
+        if (targetClassesFiltered.isEmpty()) {
             throw new RuntimeException("Failed mutation testing. All classes of the project are excluded.");
         }
 
@@ -86,10 +90,10 @@ public class PitDataCollectionTask extends AbstractTask {
             case ANT:
                 throw new RuntimeException("Cannot execute mutation testing for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
-                command = buildGradleCommand(targetClasses, targetTests);
+                command = buildGradleCommand(targetClassesFiltered, targetTests);
                 break;
             case MAVEN:
-                command = buildMavenCommand(targetClasses, targetTests);
+                command = buildMavenCommand(targetClassesFiltered, targetTests);
                 break;
             default:
                 throw new RuntimeException("Cannot execute mutation testing for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
