@@ -10,6 +10,7 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.PitCoverageReportRecord;
 import org.jooq.generated.tables.records.PitMutationReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
+import org.jooq.impl.DSL;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
@@ -182,18 +183,30 @@ public class PitDataCollectionTask extends AbstractTask {
     }
 
     private Map<String, Integer> fetchTestIds(DSLContext create) {
-        return create.select(Tables.TEST.TEST_METHOD_QUALIFIED_NAME, Tables.TEST.ID)
+        return create.select(
+                // If some tests are executed multiple times, take the ID of the first execution.
+                DSL.min(Tables.TEST.ID),
+                // The qualified name is the same across all group elements, so take any.
+                Tables.TEST.TEST_METHOD_QUALIFIED_NAME
+            )
             .from(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.eq(this.getProjectId()))
-            .fetch().stream().collect(Collectors.toMap(Record2::component1, Record2::component2));
+            .groupBy(Tables.TEST.TEST_METHOD_QUALIFIED_NAME)
+            .fetch().stream().collect(Collectors.toMap(Record2::component2, Record2::component1));
     }
 
     private Map<String, Integer> fetchGeneralizationIds(DSLContext create) {
-        return create.select(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME, Tables.GENERALIZATION.ID)
+        return create.select(
+                // If some generalizations are executed multiple times, take the ID of the first execution.
+                DSL.min(Tables.GENERALIZATION.ID),
+                // The qualified name is the same across all group elements, so take any.
+                DSL.min(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME)
+            )
             .from(Tables.GENERALIZATION)
             .where(Tables.GENERALIZATION.PROJECT_ID.eq(this.getProjectId()))
             .and(Tables.GENERALIZATION.VARIANT.eq(this.getVariant()))
-            .fetch().stream().collect(Collectors.toMap(Record2::component1, Record2::component2));
+            .groupBy(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME)
+            .fetch().stream().collect(Collectors.toMap(Record2::component2, Record2::component1));
     }
 
     private void collectMutationData(DSLContext create, Path dataDirectory) throws DocumentException, IOException {
