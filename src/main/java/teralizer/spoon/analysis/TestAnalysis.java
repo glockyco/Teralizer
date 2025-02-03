@@ -274,4 +274,8 @@ public class TestAnalysis {
 
         return false;
     }
+
+    public static boolean containsAssertion(CtMethod<?> method) {
+        return !method.getElements(TestAnalysis::isAssertion).isEmpty();
+    }
 }

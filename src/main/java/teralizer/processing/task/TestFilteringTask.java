@@ -111,10 +111,12 @@ public class TestFilteringTask extends AbstractTask {
 
     private void filterTest(TaskContext context) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        Launcher spoonLauncher = context.get(this.testRecord.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
         List<Filter> filters = Arrays.asList(
             new UnnamedPackageFilter(this.testRecord),
-            new NonPassingTestFilter(create, this.testRecord)
+            new NonPassingTestFilter(create, this.testRecord),
+            new AssertionInMethodFilter(spoonLauncher, this.testRecord)
         );
 
         this.checkFilters(filters);
