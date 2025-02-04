@@ -54,6 +54,7 @@ public class Keys {
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final ForeignKey<AssertionRecord, ProjectRecord> FK_ASSERTION_PROJECT_1 = Internal.createForeignKey(Assertion.ASSERTION, DSL.name("fk_assertion_project_1"), new TableField[] { Assertion.ASSERTION.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<AssertionRecord, TestRecord> FK_ASSERTION_TEST_1 = Internal.createForeignKey(Assertion.ASSERTION, DSL.name("fk_assertion_test_1"), new TableField[] { Assertion.ASSERTION.TEST_ID }, Keys.PK_TEST, new TableField[] { Test.TEST.ID }, true);
     public static final ForeignKey<GeneralizationRecord, AssertionRecord> FK_GENERALIZATION_ASSERTION_1 = Internal.createForeignKey(Generalization.GENERALIZATION, DSL.name("fk_generalization_assertion_1"), new TableField[] { Generalization.GENERALIZATION.ASSERTION_ID }, Keys.PK_ASSERTION, new TableField[] { Assertion.ASSERTION.ID }, true);
     public static final ForeignKey<GeneralizationRecord, ProjectRecord> FK_GENERALIZATION_PROJECT_1 = Internal.createForeignKey(Generalization.GENERALIZATION, DSL.name("fk_generalization_project_1"), new TableField[] { Generalization.GENERALIZATION.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);

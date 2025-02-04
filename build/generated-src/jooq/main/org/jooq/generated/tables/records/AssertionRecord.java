@@ -480,31 +480,45 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     }
 
     /**
+     * Setter for <code>assertion.equivalent_assertions</code>.
+     */
+    public void setEquivalentAssertions(String value) {
+        set(33, value);
+    }
+
+    /**
+     * Getter for <code>assertion.equivalent_assertions</code>.
+     */
+    public String getEquivalentAssertions() {
+        return (String) get(33);
+    }
+
+    /**
      * Setter for <code>assertion.is_included</code>.
      */
     public void setIsIncluded(Boolean value) {
-        set(33, value);
+        set(34, value);
     }
 
     /**
      * Getter for <code>assertion.is_included</code>.
      */
     public Boolean getIsIncluded() {
-        return (Boolean) get(33);
+        return (Boolean) get(34);
     }
 
     /**
      * Setter for <code>assertion.exclusion_info</code>.
      */
     public void setExclusionInfo(String value) {
-        set(34, value);
+        set(35, value);
     }
 
     /**
      * Getter for <code>assertion.exclusion_info</code>.
      */
     public String getExclusionInfo() {
-        return (String) get(34);
+        return (String) get(35);
     }
 
     // -------------------------------------------------------------------------
@@ -530,7 +544,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     /**
      * Create a detached, initialised AssertionRecord
      */
-    public AssertionRecord(Integer id, Integer projectId, Integer testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputSpecificationPath, String outputSpecificationPath, Boolean isIncluded, String exclusionInfo) {
+    public AssertionRecord(Integer id, Integer projectId, Integer testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, Boolean isIncluded, String exclusionInfo) {
         super(Assertion.ASSERTION);
 
         setId(id);
@@ -566,6 +580,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
         setJpfConfigPath(jpfConfigPath);
         setInputSpecificationPath(inputSpecificationPath);
         setOutputSpecificationPath(outputSpecificationPath);
+        setEquivalentAssertions(equivalentAssertions);
         setIsIncluded(isIncluded);
         setExclusionInfo(exclusionInfo);
     }

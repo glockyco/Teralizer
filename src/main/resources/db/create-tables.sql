@@ -99,11 +99,15 @@ CREATE TABLE assertion
     driver_class_name                  TEXT, -- can be null before JPF instrumentation
 
     jpf_config_path                    TEXT, -- can be null before JPF instrumentation
-    input_specification_path           TEXT, -- can be null before JPF instrumentation
-    output_specification_path          TEXT, -- can be null before JPF instrumentation
+
+    input_specification_path           TEXT, -- can be null before JPF execution
+    output_specification_path          TEXT, -- can be null before JPF execution
+
+    equivalent_assertions              TEXT, -- can be null before JPF analysis
 
     is_included                        INTEGER NOT NULL,
     exclusion_info                     TEXT, -- can be null for tests that are not excluded
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
 );
 

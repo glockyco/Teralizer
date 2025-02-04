@@ -214,6 +214,11 @@ public class Assertion extends TableImpl<AssertionRecord> {
     public final TableField<AssertionRecord, String> OUTPUT_SPECIFICATION_PATH = createField(DSL.name("output_specification_path"), SQLDataType.CLOB, this, "");
 
     /**
+     * The column <code>assertion.equivalent_assertions</code>.
+     */
+    public final TableField<AssertionRecord, String> EQUIVALENT_ASSERTIONS = createField(DSL.name("equivalent_assertions"), SQLDataType.CLOB, this, "");
+
+    /**
      * The column <code>assertion.is_included</code>.
      */
     public final TableField<AssertionRecord, Boolean> IS_INCLUDED = createField(DSL.name("is_included"), SQLDataType.BOOLEAN.nullable(false), this, "");
@@ -283,10 +288,18 @@ public class Assertion extends TableImpl<AssertionRecord> {
 
     @Override
     public List<ForeignKey<AssertionRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<AssertionRecord, ?>>asList(Keys.FK_ASSERTION_TEST_1);
+        return Arrays.<ForeignKey<AssertionRecord, ?>>asList(Keys.FK_ASSERTION_PROJECT_1, Keys.FK_ASSERTION_TEST_1);
     }
 
+    private transient Project _project;
     private transient Test _test;
+
+    public Project project() {
+        if (_project == null)
+            _project = new Project(this, Keys.FK_ASSERTION_PROJECT_1);
+
+        return _project;
+    }
 
     public Test test() {
         if (_test == null)
