@@ -87,10 +87,11 @@ public class ProjectSetupTask extends AbstractTask {
         context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
         scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
-        scheduleTask.accept(new SpoonModelBuildingTask(ProcessingStage.BUILD_SPOON_MODEL, this.projectRecord));
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new TestGenerationTask(ProcessingStage.GENERATE_TESTS, this.projectRecord));
+
+        scheduleTask.accept(new SpoonModelBuildingTask(ProcessingStage.BUILD_SPOON_MODEL, this.projectRecord));
 
         scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_ORIGINAL, this.projectRecord));
         scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL, this.projectRecord));
