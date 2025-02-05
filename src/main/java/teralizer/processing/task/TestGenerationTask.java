@@ -55,6 +55,7 @@ public class TestGenerationTask extends AbstractTask {
         evoSuiteDataDir.toFile().mkdirs();
 
         String projectCP = Arrays.stream(this.projectRecord.getClasspath().split(File.pathSeparator))
+            .filter(p -> Files.exists(Paths.get(p)))
             .map(p -> Paths.get(p).toAbsolutePath().toString())
             .collect(Collectors.joining(File.pathSeparator));
 
