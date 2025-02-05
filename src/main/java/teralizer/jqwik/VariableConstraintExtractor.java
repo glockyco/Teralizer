@@ -295,7 +295,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
         private final List<String> upperBounds = new ArrayList<>();
 
         private String valueOf(double value) {
-            return String.format("(%s) %s", this.variableType, value);
+            return String.format("(%s) (%s)", this.variableType, value);
         }
 
         @Override
@@ -389,7 +389,7 @@ public class VariableConstraintExtractor extends ModelVisitor {
             } else {
                 valueString = String.valueOf(value);
             }
-            return String.format("(%s) %s", this.variableType, valueString);
+            return String.format("(%s) (%s)", this.variableType, valueString);
         }
 
         @Override

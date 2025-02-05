@@ -169,32 +169,33 @@ public class ImprovedTestParametersSupplierFactory {
     }
 
     private static String createByteArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        return createNumberArbitrary(parameter, constraint, "Byte", "bytes", "Byte.MIN_VALUE", "Byte.MAX_VALUE");
+        return createNumberArbitrary(parameter, constraint, "byte", "Byte", "bytes", "Byte.MIN_VALUE", "Byte.MAX_VALUE");
     }
 
     private static String createShortArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        return createNumberArbitrary(parameter, constraint, "Short", "shorts", "Short.MIN_VALUE", "Short.MAX_VALUE");
+        return createNumberArbitrary(parameter, constraint, "short", "Short", "shorts", "Short.MIN_VALUE", "Short.MAX_VALUE");
     }
 
     private static String createIntegerArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        return createNumberArbitrary(parameter, constraint, "Integer", "integers", "Integer.MIN_VALUE", "Integer.MAX_VALUE");
+        return createNumberArbitrary(parameter, constraint, "int", "Integer", "integers", "Integer.MIN_VALUE", "Integer.MAX_VALUE");
     }
 
     private static String createLongArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        return createNumberArbitrary(parameter, constraint, "Long", "longs", "Long.MIN_VALUE", "Long.MAX_VALUE");
+        return createNumberArbitrary(parameter, constraint, "long", "Long", "longs", "Long.MIN_VALUE", "Long.MAX_VALUE");
     }
 
     private static String createFloatArbitrary(MethodParameter parameter, RealConstraints constraint) {
-        return createRealArbitrary(parameter, constraint, "Float", "floats", "-Float.MAX_VALUE", "Float.MAX_VALUE", 46);
+        return createRealArbitrary(parameter, constraint, "float", "Float", "floats", "-Float.MAX_VALUE", "Float.MAX_VALUE", 46);
     }
 
     private static String createDoubleArbitrary(MethodParameter parameter, RealConstraints constraint) {
-        return createRealArbitrary(parameter, constraint, "Double", "doubles", "-Double.MAX_VALUE", "Double.MAX_VALUE", 325);
+        return createRealArbitrary(parameter, constraint, "double", "Double", "doubles", "-Double.MAX_VALUE", "Double.MAX_VALUE", 325);
     }
 
     private static String createNumberArbitrary(
         MethodParameter parameter,
         IntegerConstraints constraint,
+        String unboxedType,
         String boxedType,
         String arbitraryType,
         String minValue,
@@ -210,8 +211,8 @@ public class ImprovedTestParametersSupplierFactory {
         StringBuilder result = new StringBuilder();
         result.append(String.format("%s %s = %s;\n", parameter.getType(), n.defaultMin(), minValue));
         result.append(String.format("%s %s = %s;\n", parameter.getType(), n.defaultMax(), maxValue));
-        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.lowerBounds(), n.defaultMin(), constraint.getLowerBounds().stream().map(b -> ", " + b).collect(Collectors.joining())));
-        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> ", " + b).collect(Collectors.joining())));
+        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.lowerBounds(), n.defaultMin(), constraint.getLowerBounds().stream().map(b -> String.format(", (%s) (%s)", unboxedType, b)).collect(Collectors.joining())));
+        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> String.format(", (%s) (%s)", unboxedType, b)).collect(Collectors.joining())));
         result.append(String.format("%s %s = java.util.Collections.max(%s);\n", parameter.getType(), n.min(), n.lowerBounds()));
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
         result.append(String.format("return (%s > %s)%n    ? net.jqwik.api.Arbitraries.of()%n", n.min(), n.max()));
@@ -222,6 +223,7 @@ public class ImprovedTestParametersSupplierFactory {
     private static String createRealArbitrary(
         MethodParameter parameter,
         RealConstraints constraint,
+        String unboxedType,
         String boxedType,
         String arbitraryType,
         String minValue,
@@ -238,9 +240,9 @@ public class ImprovedTestParametersSupplierFactory {
         StringBuilder result = new StringBuilder();
         result.append(String.format("%s %s = %s;\n", parameter.getType(), n.defaultMin(), minValue));
         result.append(String.format("%s %s = %s;\n", parameter.getType(), n.defaultMax(), maxValue));
-        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.lowerBounds(), n.defaultMin(), constraint.getLowerBounds().stream().map(b -> ", " + b.getValue()).collect(Collectors.joining())));
+        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.lowerBounds(), n.defaultMin(), constraint.getLowerBounds().stream().map(b -> String.format(", (%s) (%s)", unboxedType, b.getValue())).collect(Collectors.joining())));
         result.append(String.format("java.util.List<Boolean> %s = java.util.Arrays.asList(true%s);\n", n.lowerBoundIncluded(), constraint.getLowerBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining())));
-        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> ", " + b.getValue()).collect(Collectors.joining())));
+        result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> String.format(", (%s) (%s)", unboxedType, b.getValue())).collect(Collectors.joining())));
         result.append(String.format("java.util.List<Boolean> %s = java.util.Arrays.asList(true%s);\n", n.upperBoundIncluded(), constraint.getUpperBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining())));
         result.append(String.format("%s %s = java.util.Collections.max(%s);\n", parameter.getType(), n.min(), n.lowerBounds()));
         result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.minIncluded(), n.lowerBounds(), n.lowerBounds(), n.min(), n.lowerBoundIncluded()));
