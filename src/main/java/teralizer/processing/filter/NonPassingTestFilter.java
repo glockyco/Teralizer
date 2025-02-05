@@ -42,22 +42,22 @@ public class NonPassingTestFilter extends AbstractFilter {
                 .fetchInto(String.class);
 
             if (!failingTests.isEmpty()) {
-                String reason = "Failing tests in test class " + this.testRecord.getTestFilePath() + ": " + String.join(", ", failingTests);
+                String reason = "Failing tests in test class " + this.testRecord.getTestClassQualifiedName() + ": " + String.join(", ", failingTests);
                 return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
             }
         } else {
             List<String> failingTests = this.create
                 .select(Tables.JUNIT_TEST_REPORT.TEST_METHOD_NAME)
                 .from(Tables.JUNIT_TEST_REPORT)
-                .where(Tables.JUNIT_TEST_REPORT.PROJECT_ID.eq(this.testRecord.getProjectId()))
-                .and(Tables.JUNIT_TEST_REPORT.TEST_PACKAGE_NAME.eq(this.testRecord.getTestPackageName()))
-                .and(Tables.JUNIT_TEST_REPORT.TEST_CLASS_NAME.eq(this.testRecord.getTestClassName()))
+                .where(Tables.JUNIT_TEST_REPORT.PROJECT_ID.eq(this.generalizationRecord.getProjectId()))
+                .and(Tables.JUNIT_TEST_REPORT.TEST_PACKAGE_NAME.eq(this.generalizationRecord.getPackageName()))
+                .and(Tables.JUNIT_TEST_REPORT.TEST_CLASS_NAME.eq(this.generalizationRecord.getClassName()))
                 .and(Tables.JUNIT_TEST_REPORT.VARIANT.eq(this.generalizationRecord.getVariant()))
                 .and(Tables.JUNIT_TEST_REPORT.RESULT.ne(TestResult.PASSED))
                 .fetchInto(String.class);
 
             if (!failingTests.isEmpty()) {
-                String reason = "Failing generalized tests in test class " + this.generalizationRecord.getFilePath() + ": " + String.join(", ", failingTests);
+                String reason = "Failing generalized tests in test class " + this.generalizationRecord.getClassQualifiedName() + ": " + String.join(", ", failingTests);
                 return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
             }
         }
