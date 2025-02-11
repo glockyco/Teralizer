@@ -86,10 +86,10 @@ public class ModelToJavaTransformer extends ModelVisitor {
                 expr = "(" + left + " % " + right + ")";
                 break;
             case AND:
-                expr = "(" + left + " && " + right + ")";
+                expr = "(" + left + " & " + right + ")";
                 break;
             case OR:
-                expr = "(" + left + " || " + right + ")";
+                expr = "(" + left + " | " + right + ")";
                 break;
             case XOR:
                 expr = "(" + left + " ^ " + right + ")";
