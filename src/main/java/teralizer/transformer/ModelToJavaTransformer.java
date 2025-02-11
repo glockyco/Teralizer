@@ -13,7 +13,7 @@ public class ModelToJavaTransformer extends ModelVisitor {
     }
 
     public String transform(long value) {
-        return String.valueOf(value);
+        return value + ((value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) ? "L" : "");
     }
 
     public String transform(double value) {
