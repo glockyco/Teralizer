@@ -11,6 +11,7 @@
 ## @vtlvariable name="instrumentedMethodQualifiedName" type="java.lang.String"
 ## @vtlvariable name="inputSpecificationPath" type="java.lang.String"
 ## @vtlvariable name="outputSpecificationPath" type="java.lang.String"
+## @vtlvariable name="reportPath" type="java.lang.String"
 target=${driverClassQualifiedName}
 #symbolic.class=...
 symbolic.method=${symbolicMethod}
@@ -42,3 +43,8 @@ test_generalization.input_specification_path=${inputSpecificationPath}
 test_generalization.output_specification_path=${outputSpecificationPath}
 search.depth_limit=100
 search.multiple_errors=true
+report.class=gov.nasa.jpf.report.Reporter
+report.publisher=console
+report.console.class=gov.nasa.jpf.report.ConsolePublisher
+report.console.property_violation=error,trace,snapshot
+report.console.file=${reportPath}

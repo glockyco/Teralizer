@@ -316,6 +316,14 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("inputSpecificationPath", this.assertionRecord.getInputSpecificationPath());
         context.put("outputSpecificationPath", this.assertionRecord.getOutputSpecificationPath());
 
+        Path jpfOutputPath = this.projectRecord.getDataPath()
+            .resolve("project-id-" + this.getProjectId() + "/jpf-data/reports")
+            .resolve(this.testRecord.getTestMethodQualifiedName() + "." + this.getAssertionId() + ".output.txt");
+        context.put("reportPath", jpfOutputPath.toString());
+
+        jpfOutputPath.getParent().toFile().mkdirs();
+        jpfOutputPath.toFile().createNewFile();
+
         File jpfConfigFile = new File(this.assertionRecord.getJpfConfigPath());
         jpfConfigFile.getParentFile().mkdirs();
 
