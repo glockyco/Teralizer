@@ -1,15 +1,17 @@
 package teralizer.processing.task;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spoon.Launcher;
+import spoon.reflect.CtModel;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtCompilationUnit;
+import spoon.reflect.reference.CtExecutableReference;
+import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -21,6 +23,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -96,7 +99,6 @@ public class TestGenerationTask extends AbstractTask {
         Path evoSuiteProcessedTestsDir = evoSuiteDataDir.resolve("evosuite-tests-processed");
 
         Files.walkFileTree(evoSuiteTestsDir, new EvoSuiteTestVisitor(
-            context.get(this.getProjectId(), TaskContext.JAVA_PARSER),
             evoSuiteTestsDir,
             evoSuiteProcessedTestsDir,
             this.projectRecord.getTestSourcePath()
@@ -107,18 +109,15 @@ public class TestGenerationTask extends AbstractTask {
 
         private static final Logger LOGGER = LoggerFactory.getLogger(EvoSuiteTestVisitor.class);
 
-        private final JavaParser javaParser;
         private final Path evoSuiteTestsDir;
         private final Path evoSuiteProcessedTestsDir;
         private final Path projectTestsDir;
 
         public EvoSuiteTestVisitor(
-            JavaParser javaParser,
             Path evoSuiteTestsDir,
             Path evoSuiteProcessedTestsDir,
             Path projectTestsDir
         ) {
-            this.javaParser = javaParser;
             this.evoSuiteTestsDir = evoSuiteTestsDir;
             this.evoSuiteProcessedTestsDir = evoSuiteProcessedTestsDir;
             this.projectTestsDir = projectTestsDir;
@@ -140,39 +139,53 @@ public class TestGenerationTask extends AbstractTask {
             // EvoSuite-generated tests. To be able to use EvoSuite tests
             // anyway, we remove all EvoSuite dependencies from the tests.
 
-            CompilationUnit compilationUnit = this.javaParser.parse(file).getResult().get();
-            compilationUnit.getImports().removeIf((i) -> i.getNameAsString().startsWith("org.evosuite"));
-            for (ClassOrInterfaceDeclaration classDeclaration : compilationUnit.findAll(ClassOrInterfaceDeclaration.class)) {
-                classDeclaration.getAnnotations().removeIf((a) -> true);
-                classDeclaration.getExtendedTypes().removeIf((t) -> true);
+            Launcher launcher = new Launcher();
+            launcher.addInputResource(file.toString());
+            launcher.getEnvironment().setSourceClasspath(new String[]{EVOSUITE_JAR_PATH.toString()});
+            CtModel model = launcher.buildModel();
 
-                classDeclaration.getMembers().removeIf(m -> m instanceof FieldDeclaration
-                    && ((FieldDeclaration) m).getElementType().toString().equals("EvoRunnerJUnit5"));
+            for (CtClass<?> clazz : model.getElements(new TypeFilter<>(CtClass.class))) {
+                clazz.getFields().stream()
+                    .filter(field -> field.getType().toString().startsWith("org.evosuite"))
+                    .forEach(clazz::removeField);
 
-                classDeclaration.getMembers().removeIf(m -> m instanceof MethodDeclaration
-                    && m.findAll(MethodCallExpr.class).stream()
-                    .map(NodeWithSimpleName::getNameAsString)
-                    .anyMatch(n -> n.equals("verifyException") || n.equals("assertThrownBy")));
+                clazz.getMethods().stream()
+                    .filter(method -> {
+                        boolean containsEvoSuiteInvocations = method.getElements(new TypeFilter<>(CtInvocation.class)).stream()
+                            .anyMatch(invocation -> {
+                                CtExecutableReference<?> executable = invocation.getExecutable();
+                                String qualifiedName = executable.getDeclaringType() != null ? executable.getDeclaringType().getQualifiedName() : "";
+                                return qualifiedName.startsWith("org.evosuite");
+                            });
 
-                classDeclaration.getMembers().removeIf(m -> m instanceof MethodDeclaration
-                    && m.findAll(MethodCallExpr.class).stream()
-                    .anyMatch(e -> e.toString().startsWith("executor.submit")));
+                        boolean containsEvoSuiteVariables = method.getElements(new TypeFilter<>(CtLocalVariable.class)).stream()
+                            .anyMatch(localVar -> localVar.getType().toString().startsWith("org.evosuite"));
 
-                classDeclaration.getMembers().removeIf(m -> m instanceof MethodDeclaration
-                    && m.getAllContainedComments().stream().anyMatch(c -> c.getContent().equals(" Undeclared exception!")));
+                        return containsEvoSuiteInvocations || containsEvoSuiteVariables;
+                    }).forEach(clazz::removeMethod);
+
+                CtCompilationUnit compilationUnit = clazz.getPosition().getCompilationUnit();
+                compilationUnit.getImports().removeIf(i -> i.toString().contains("org.evosuite"));
+
+                clazz.setAnnotations(Collections.emptyList());
+                clazz.setSuperclass(null);
+
+                DefaultJavaPrettyPrinter printer = new DefaultJavaPrettyPrinter(launcher.getEnvironment());
+                printer.calculate(compilationUnit, Collections.singletonList(clazz));
+                byte[] processedFileBytes = printer.getResult().getBytes();
+
+                Path relativeFilePath = this.evoSuiteTestsDir.relativize(file);
+
+                // Write the processed file to the data directory for cross-run storage:
+                Path processedFilePath = this.evoSuiteProcessedTestsDir.resolve(relativeFilePath);
+                processedFilePath.getParent().toFile().mkdirs();
+                Files.write(processedFilePath, processedFileBytes);
+
+                // Copy the file to the project directory for further use in this run:
+                Path targetFilePath = this.projectTestsDir.resolve(relativeFilePath);
+                targetFilePath.getParent().toFile().mkdirs();
+                Files.copy(processedFilePath, targetFilePath, StandardCopyOption.REPLACE_EXISTING);
             }
-
-            Path relativeFilePath = this.evoSuiteTestsDir.relativize(file);
-
-            // Write the processed file to the data directory for cross-run storage:
-            Path processedFilePath = this.evoSuiteProcessedTestsDir.resolve(relativeFilePath);
-            processedFilePath.getParent().toFile().mkdirs();
-            Files.write(processedFilePath, compilationUnit.toString().getBytes());
-
-            // Copy the file to the project directory for further use in this run:
-            Path targetFilePath = this.projectTestsDir.resolve(relativeFilePath);
-            targetFilePath.getParent().toFile().mkdirs();
-            Files.copy(processedFilePath, targetFilePath, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 }
