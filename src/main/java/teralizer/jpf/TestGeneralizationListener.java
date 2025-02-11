@@ -63,17 +63,6 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     }
 
     @Override
-    public void searchFinished(Search search) {
-        if (search.hasErrors()) {
-            return; // Nothing to do here. Errors are handled by the JpfExecutionTask.
-        }
-
-        if (!Files.exists(this.inputSpecificationPath) || !Files.exists(this.outputSpecificationPath)) {
-            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Failed to collect input/output specification for unknown reason.");
-        }
-    }
-
-    @Override
     public void propertyViolated(Search search) {
         String errorDetails = search.getLastError().getDetails();
         if (errorDetails.contains("java.lang.NullPointerException") && errorDetails.contains("at java.util.concurrent.atomic")) {

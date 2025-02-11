@@ -15,6 +15,9 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -64,6 +67,12 @@ public class JpfExecutionTask extends AbstractTask {
             // Exception that is (likely) due to JPFs incorrect handling of shadowing.
             // See https://github.com/glockyco/test-generalization/issues/37 for further details
             throw new RuntimeException("Failed JPF execution due to exception in native peers.", e);
+        }
+
+        Path inputSpecificationPath = Paths.get(this.assertionRecord.getInputSpecificationPath());
+        Path outputSpecificationPath = Paths.get(this.assertionRecord.getOutputSpecificationPath());
+        if (!Files.exists(inputSpecificationPath) || !Files.exists(outputSpecificationPath)) {
+            throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName() + " - Failed to collect input/output specification for unknown reason.");
         }
 
         if (jpf.foundErrors()) {
