@@ -20,6 +20,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -44,15 +45,16 @@ public class JpfAnalysisTask extends AbstractTask {
     }
 
     private void updateEquivalencies(DSLContext create) {
-        Map<String, List<Integer>> hashGroups = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId())
+        Map<EquivalencyKey, List<Integer>> groups = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId())
             .map(r -> r.into(AssertionRecord.class)).stream().parallel().collect(Collectors.groupingByConcurrent(
-                this::computeFileHash, Collectors.mapping(AssertionRecord::getId, Collectors.toList())
+                record -> new EquivalencyKey(computeFileHash(record), record.getTestedMethodQualifiedName()),
+                Collectors.mapping(AssertionRecord::getId, Collectors.toList())
             ));
 
-        List<Query> updates = hashGroups.values().stream()
-            .flatMap(hashGroup -> {
-                String sortedIds = JSONArray.toJSONString(hashGroup.stream().sorted().collect(Collectors.toList()));
-                return hashGroup.stream().map(id -> create.update(Tables.ASSERTION)
+        List<Query> updates = groups.values().stream()
+            .flatMap(group -> {
+                String sortedIds = JSONArray.toJSONString(group.stream().sorted().collect(Collectors.toList()));
+                return group.stream().map(id -> create.update(Tables.ASSERTION)
                     .set(Tables.ASSERTION.EQUIVALENT_ASSERTIONS, sortedIds)
                     .where(Tables.ASSERTION.ID.eq(id)));
             })
@@ -61,7 +63,7 @@ public class JpfAnalysisTask extends AbstractTask {
         create.batch(updates).execute();
     }
 
-    private String computeFileHash(AssertionRecord record) {
+    private static String computeFileHash(AssertionRecord record) {
         try (
             InputStream is = Files.newInputStream(Paths.get(record.getInputSpecificationPath()));
             DigestInputStream dis = new DigestInputStream(is, MessageDigest.getInstance("MD5"))
@@ -79,5 +81,29 @@ public class JpfAnalysisTask extends AbstractTask {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
+    }
+
+    private static class EquivalencyKey {
+
+        private final String fileHash;
+        private final String methodName;
+
+        EquivalencyKey(String fileHash, String methodName) {
+            this.fileHash = fileHash;
+            this.methodName = methodName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || this.getClass() != o.getClass()) return false;
+            EquivalencyKey that = (EquivalencyKey) o;
+            return Objects.equals(this.fileHash, that.fileHash) && Objects.equals(this.methodName, that.methodName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.fileHash, this.methodName);
+        }
     }
 }
