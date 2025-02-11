@@ -1,6 +1,5 @@
 package teralizer.processing.task;
 
-import com.github.javaparser.JavaParser;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ModelBuilder;
 import org.gradle.tooling.ProjectConnection;
@@ -9,7 +8,6 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.TestGeneralizationRunner;
-import teralizer.javaparser.JavaParserFactory;
 import teralizer.processing.*;
 
 import java.io.BufferedReader;
@@ -82,9 +80,6 @@ public class ProjectSetupTask extends AbstractTask {
         if (this.projectRecord.getTestFramework() == TestFramework.UNKNOWN) {
             throw new RuntimeException("Cannot setup project" + this.projectRecord.getRootPath() + ". No supported test framework identified.");
         }
-
-        JavaParser javaParser = JavaParserFactory.createJavaParser(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath());
-        context.put(this.projectRecord.getId(), TaskContext.JAVA_PARSER, javaParser);
 
         scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
 

@@ -11,7 +11,6 @@ public class TaskContext {
     public static final String VELOCITY_ENGINE = "global.velocity-engine";
 
     // Project-level context:
-    public static final String JAVA_PARSER = "java-parser";
     public static final String SPOON_LAUNCHER = "spoon-launcher";
 
     private final Map<String, Object> data = new HashMap<>();

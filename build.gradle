@@ -37,7 +37,6 @@ dependencies {
     implementation 'commons-io:commons-io:2.16.1'
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     implementation 'com.google.code.gson:gson:2.11.0'
-    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.25.0'
     implementation 'fr.inria.gforge.spoon:spoon-core:9.1.0'
     implementation 'org.apache.velocity:velocity-engine-core:2.3'
     implementation 'org.gradle:gradle-tooling-api:8.8'
