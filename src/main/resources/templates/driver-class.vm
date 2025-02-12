@@ -3,6 +3,7 @@
 ## @vtlvariable name="instrumentedClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="instrumentedClassName" type="java.lang.String"
 ## @vtlvariable name="testMethodName" type="java.lang.String"
+## @vtlvariable name="beforeCode" type="java.lang.String"
 #if(${driverPackageName})
 package ${driverPackageName};
 
@@ -11,6 +12,12 @@ import ${instrumentedClassQualifiedName};
 
 public class ${driverClassName} {
     public static void main(String[] args) throws Throwable {
-        new ${instrumentedClassName}().${testMethodName}();
+        #if(${beforeCode})
+            ${instrumentedClassName} instrumentedClass = new ${instrumentedClassName}();
+            ${beforeCode}
+            instrumentedClass.${testMethodName}();
+        #else
+            new ${instrumentedClassName}().${testMethodName}();
+        #end
     }
 }

@@ -9,6 +9,9 @@ import org.jooq.Result;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import spoon.Launcher;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
@@ -34,10 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -99,7 +99,7 @@ public class JpfInstrumentationTask extends AbstractTask {
 
         this.createInstrumentedClassFile(spoonLauncher, instrumentedClass);
 
-        this.createDriverClassFile(velocityEngine);
+        this.createDriverClassFile(velocityEngine, spoonLauncher);
         this.createJpfConfigFile(velocityEngine, instrumentedMethod);
     }
 
@@ -267,13 +267,28 @@ public class JpfInstrumentationTask extends AbstractTask {
         Files.copy(instrumentedFilePath, dataFilePath, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    private void createDriverClassFile(VelocityEngine velocityEngine) throws IOException {
+    private void createDriverClassFile(VelocityEngine velocityEngine, Launcher spoonLauncher) throws IOException {
         VelocityContext context = new VelocityContext();
         context.put("driverPackageName", this.assertionRecord.getDriverPackageName());
         context.put("driverClassName", this.assertionRecord.getDriverClassName());
         context.put("instrumentedClassQualifiedName", this.assertionRecord.getInstrumentedClassQualifiedName());
         context.put("instrumentedClassName", this.assertionRecord.getInstrumentedClassName());
         context.put("testMethodName", this.testRecord.getTestMethodName());
+
+        Set<CtMethod<?>> beforeMethods = this.getBeforeMethods(spoonLauncher);
+
+        StringBuilder beforeCode = new StringBuilder();
+
+        for (CtMethod<?> method : beforeMethods) {
+            if(method.isStatic()) {
+                beforeCode.append(this.assertionRecord.getInstrumentedClassName()).append(".").append(method.getSimpleName()).append("();");
+            } else {
+                beforeCode.append("instrumentedClass.").append(method.getSimpleName()).append("();");
+            }
+            beforeCode.append("\n");
+        }
+
+        context.put("beforeCode", beforeCode);
 
         File driverClassFile = new File(this.assertionRecord.getDriverFilePath());
         driverClassFile.getParentFile().mkdirs();
@@ -292,6 +307,23 @@ public class JpfInstrumentationTask extends AbstractTask {
             .resolve(relativizedFilePath);
         dataFilePath.getParent().toFile().mkdirs();
         Files.copy(driverClassFile.toPath(), dataFilePath, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private Set<CtMethod<?>> getBeforeMethods(Launcher spoonLauncher) {
+        List<String> beforeClasses = new ArrayList<>();
+        beforeClasses.add("org.junit.Before");
+        beforeClasses.add("org.junit.BeforeClass");
+        beforeClasses.add("org.junit.jupiter.api.BeforeAll");
+        beforeClasses.add("org.junit.jupiter.api.BeforeEach");
+
+        CtClass<?> testClass = spoonLauncher.getFactory().Class().get(this.testRecord.getTestClassQualifiedName());
+        return beforeClasses.stream()
+                .map(annotationClassString -> spoonLauncher.getFactory().Annotation().createReference(annotationClassString))
+                .map(testClass::getMethodsAnnotatedWith)
+                .reduce((set1, set2) -> {
+                   set1.addAll(set2);
+                   return set1;
+                }).orElse(Collections.emptySet());
     }
 
     private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod) throws IOException {
