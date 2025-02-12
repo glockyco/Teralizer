@@ -280,6 +280,9 @@ public class JpfInstrumentationTask extends AbstractTask {
         StringBuilder beforeCode = new StringBuilder();
 
         for (CtMethod<?> method : beforeMethods) {
+            if (!method.getParameters().isEmpty()) {
+                throw new RuntimeException("Setup method " + method.getSimpleName() + " has parameters");
+            }
             if(method.isStatic()) {
                 beforeCode.append(this.assertionRecord.getInstrumentedClassName()).append(".").append(method.getSimpleName()).append("();");
             } else {
