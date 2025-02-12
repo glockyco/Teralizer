@@ -133,8 +133,12 @@ public class TestAnalysis {
         return method.getElements(TestAnalysis::isAssertion);
     }
 
-    public static boolean isGeneralizable(CtInvocation<?> invocation) {
-        return GENERALIZABLE_ASSERTS.contains(invocation.getExecutable().getSimpleName());
+    public static boolean isGeneralizable(String assertionName) {
+        return GENERALIZABLE_ASSERTS.contains(assertionName);
+    }
+
+    public static boolean isGeneralizable(CtInvocation<?> assertionInvocation) {
+        return isGeneralizable(assertionInvocation.getExecutable().getSimpleName());
     }
 
     public static boolean isAssertion(CtInvocation<?> invocation) {
