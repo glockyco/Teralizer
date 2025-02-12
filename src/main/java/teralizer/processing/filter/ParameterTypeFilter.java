@@ -3,6 +3,7 @@ package teralizer.processing.filter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.jooq.generated.tables.records.AssertionRecord;
+import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 
 import java.lang.reflect.Type;
@@ -22,13 +23,25 @@ public class ParameterTypeFilter extends AbstractFilter {
 
     @Override
     public FilterResult check() {
-        String testedMethodParamTypes = this.assertionRecord.getTestedMethodParameters();
-        if (testedMethodParamTypes == null) {
-            return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_param_types column is null.");
+        String testedMethodCallArgumentsString = this.assertionRecord.getTestedMethodCallArguments();
+        if (testedMethodCallArgumentsString == null) {
+            return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_call_arguments column is null.");
         }
 
-        Type type = new TypeToken<List<MethodParameter>>() {}.getType();
-        List<MethodParameter> testedMethodParameters = this.gson.fromJson(testedMethodParamTypes, type);
+        Type argumentsType = new TypeToken<List<MethodArgument>>() {}.getType();
+        List<MethodParameter> testedMethodCallArguments = this.gson.fromJson(testedMethodCallArgumentsString, argumentsType);
+
+        if (testedMethodCallArguments.isEmpty()) {
+            return new FilterResult(this.getName(), FilterDecision.REJECT, "The tested method has no parameters.");
+        }
+
+        String testedMethodParametersString = this.assertionRecord.getTestedMethodParameters();
+        if (testedMethodParametersString == null) {
+            return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_parameters column is null.");
+        }
+
+        Type parametersType = new TypeToken<List<MethodParameter>>() {}.getType();
+        List<MethodParameter> testedMethodParameters = this.gson.fromJson(testedMethodParametersString, parametersType);
 
         if (testedMethodParameters.stream().noneMatch(a -> SUPPORTED_TYPES.contains(a.getType()))) {
             return new FilterResult(this.getName(), FilterDecision.REJECT, "The tested method has no parameters with generalizable types.");
