@@ -127,9 +127,16 @@ public class ModelToJavaTransformer extends ModelVisitor {
             case ATAN2:
                 expr = "Math.atan2(" + left + ", " + right + ")";
                 break;
+            case SHIFTL:
+                expr = "(" + left + " << " + right + ")";
+                break;
+            case SHIFTR:
+                expr = "(" + left + " >> " + right + ")";
+                break;
+            case SHIFTUR:
+                expr = "(" + left + " >>> " + right + ")";
+                break;
             default:
-                // For operations for which we DON'T KNOW we don't support them, throw a
-                // RuntimeException. This should produce an ERROR classification.
                 throw new RuntimeException("Unable to transform operation '" + operation + "' to Java.");
         }
         this.stack.push(expr);
