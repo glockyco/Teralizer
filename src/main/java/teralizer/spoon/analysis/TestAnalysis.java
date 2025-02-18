@@ -2,6 +2,7 @@ package teralizer.spoon.analysis;
 
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtLocalVariableReference;
@@ -19,6 +20,7 @@ public class TestAnalysis {
     private static final String ASSERT_EQUALS = "assertEquals";
     private static final String ASSERT_TRUE = "assertTrue";
     private static final String ASSERT_FALSE = "assertFalse";
+    private static final String ASSERT_THROWS = "assertThrows";
 
     // JUnit 4:
     //
@@ -95,6 +97,19 @@ public class TestAnalysis {
             return Optional.empty();
         }
 
+        if(assertion.getExecutable().getSimpleName().equals(ASSERT_THROWS)) {
+            CtElement body = getExecutedBody(assertion.getArguments().get(1)).orElse(null);
+
+            if(body == null) return Optional.empty();
+
+            List<CtInvocation<?>> invocations = body.getElements(CtInvocation.class::isInstance);
+
+            // Get the last invocation in the body
+            // If there is only one it is not a problem
+            // If there are multiple, then the last one is probably the one we are looking for (previous calls could be constructor calls)
+            return invocations.isEmpty() ? Optional.empty() : Optional.of(invocations.get(invocations.size()-1));
+        }
+
         Optional<Integer> index = getActualParameterIndex(assertion);
 
         if (!index.isPresent()) {
@@ -119,6 +134,38 @@ public class TestAnalysis {
         }
 
         return Optional.empty();
+    }
+
+    private static Optional<CtElement> getExecutedBody(CtElement element) {
+        CtElement body = null;
+        if(element instanceof CtExecutable) {
+            CtExecutable<?> executable = (CtExecutable<?>) element;
+
+            if(executable instanceof CtLambda){
+                if(executable.getBody() == null) {
+                    body = ((CtLambda<?>) executable).getExpression();
+                } else {
+                    body = executable.getBody();
+                }
+            } else {
+                body = executable.getBody();
+            }
+        } else if (element instanceof CtNewClass){
+            // Check the execute method
+            CtNewClass<?> newClass = (CtNewClass<?>) element;
+            body = ((CtMethod<?>) newClass.getElements(CtMethod.class::isInstance).stream()
+                    .filter(m -> ((CtMethod<?>) m).getSimpleName().equals("execute"))
+                    .findFirst().orElseThrow(() -> new RuntimeException("Could not find execute method of anonymous class"))).getBody();
+        } else if (element instanceof CtVariableRead) {
+            // Check declaration of variable
+            CtLocalVariableReference<?> reference = (CtLocalVariableReference<?>) ((CtVariableRead<?>) element).getVariable();
+            CtLocalVariable<?> declaration = reference.getDeclaration();
+            CtExpression<?> assignment = declaration.getAssignment();
+            return getExecutedBody(assignment);
+        } else if (element instanceof CtExecutableReferenceExpression) {
+            return getExecutedBody(((CtExecutableReferenceExpression<?, ?>) element).getExecutable().getExecutableDeclaration());
+        }
+        return Optional.ofNullable(body);
     }
 
     public static Optional<CtInvocation<?>> findGeneralizableAssert(CtMethod<?> method) {
