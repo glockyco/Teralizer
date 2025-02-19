@@ -1,5 +1,6 @@
 package teralizer.spoon.analysis;
 
+import cvc3.Op;
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
@@ -88,7 +89,7 @@ public class TestAnalysis {
     // - assertFalse(BooleanSupplier booleanSupplier, String message)
     // - assertFalse(BooleanSupplier booleanSupplier, Supplier<String> messageSupplier)
 
-    private static final List<String> GENERALIZABLE_ASSERTS = Arrays.asList(ASSERT_EQUALS, ASSERT_TRUE, ASSERT_FALSE);
+    private static final List<String> GENERALIZABLE_ASSERTS = Arrays.asList(ASSERT_EQUALS, ASSERT_TRUE, ASSERT_FALSE, ASSERT_THROWS);
 
     public static Optional<CtInvocation<?>> findTestedMethodCall(CtMethod<?> method, CtInvocation<?> assertion) {
         if (assertion == null) {
@@ -300,6 +301,9 @@ public class TestAnalysis {
                     throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
                 }
             }
+        } else if (assertion.getExecutable().getSimpleName().equals(ASSERT_THROWS)) {
+            // Junit5 Assertions have the Exception type as first argument
+            return Optional.of(0);
         }
         return Optional.empty();
     }

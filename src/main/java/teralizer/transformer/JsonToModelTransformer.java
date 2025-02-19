@@ -28,6 +28,7 @@ public class JsonToModelTransformer {
         builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionDeserializer());
         builder.registerTypeAdapter(SymbolicStringFunction.class, new SymbolicStringFunctionDeserializer());
         builder.registerTypeAdapter(teralizer.domain.Error.class, new ErrorDeserializer());
+        builder.registerTypeAdapter(ExceptionModel.class, new ExceptionDeserializer());
 
         builder.registerTypeHierarchyAdapter(Model.class, new ModelDeserializer());
 
@@ -185,6 +186,17 @@ public class JsonToModelTransformer {
             String message = jsonObject.get("message").getAsString();
 
             return new Error(errorType, message);
+        }
+    }
+
+    public static class ExceptionDeserializer implements JsonDeserializer<ExceptionModel> {
+        @Override
+        public ExceptionModel deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            String clazz = jsonObject.get("class").getAsString();
+
+            return new ExceptionModel(clazz);
         }
     }
 }

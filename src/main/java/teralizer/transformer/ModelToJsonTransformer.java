@@ -29,6 +29,7 @@ public class ModelToJsonTransformer {
         builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionSerializer());
         builder.registerTypeAdapter(SymbolicStringFunction.class, new SymbolicStringFunctionSerializer());
         builder.registerTypeAdapter(teralizer.domain.Error.class, new ErrorSerializer());
+        builder.registerTypeAdapter(ExceptionModel.class, new ExceptionSerializer());
 
         this.gson = builder.create();
     }
@@ -224,6 +225,18 @@ public class ModelToJsonTransformer {
             jsonObject.add("_type", new JsonPrimitive(error.getClass().getSimpleName()));
             jsonObject.add("error_type", new JsonPrimitive(error.type));
             jsonObject.add("message", new JsonPrimitive(error.message));
+
+            return jsonObject;
+        }
+    }
+
+    private static class ExceptionSerializer implements JsonSerializer<ExceptionModel> {
+        @Override
+        public JsonElement serialize(ExceptionModel exceptionModel, Type type, JsonSerializationContext jsonSerializationContext) {
+            JsonObject jsonObject = new JsonObject();
+
+            jsonObject.add("_type", new JsonPrimitive(exceptionModel.getClass().getSimpleName()));
+            jsonObject.add("class", new JsonPrimitive(exceptionModel.name));
 
             return jsonObject;
         }

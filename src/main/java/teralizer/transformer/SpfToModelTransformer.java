@@ -63,6 +63,14 @@ public class SpfToModelTransformer {
         return new Error("Error", error.getDetails());
     }
 
+    public ExceptionModel transform(CapturedException exception) {
+        if (exception == null) {
+            return null;
+        }
+
+        return new ExceptionModel(exception.getName());
+    }
+
     private static class ConstraintExpressionFactoryVisitor extends ConstraintExpressionVisitor {
         private final Stack<Expression> stack = new Stack<>();
 

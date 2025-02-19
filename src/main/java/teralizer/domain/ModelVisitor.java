@@ -17,6 +17,7 @@ public abstract class ModelVisitor {
     public void preVisit(SymbolicRealFunction function) {}
     public void preVisit(SymbolicStringFunction function) {}
     public void preVisit(Error error) {}
+    public void preVisit(ExceptionModel exceptionModel) {}
 
     public void postVisit(Model model) {}
     public void postVisit(Expression expression) {}
@@ -34,4 +35,5 @@ public abstract class ModelVisitor {
     public void postVisit(SymbolicRealFunction function) {}
     public void postVisit(SymbolicStringFunction function) {}
     public void postVisit(Error error) {}
+    public void postVisit(ExceptionModel exceptionModel) {}
 }

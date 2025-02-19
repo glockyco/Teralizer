@@ -4,15 +4,18 @@ import gov.nasa.jpf.Config;
 import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.jvm.bytecode.JVMReturnInstruction;
 import gov.nasa.jpf.search.Search;
+import gov.nasa.jpf.symbc.bytecode.INVOKEVIRTUAL;
 import gov.nasa.jpf.symbc.numeric.Constraint;
 import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
 import gov.nasa.jpf.util.MethodSpec;
+import gov.nasa.jpf.vm.Instruction;
 import gov.nasa.jpf.vm.MethodInfo;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.VM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.domain.CapturedException;
 import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpfToModelTransformer;
 
@@ -108,17 +111,34 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         PathCondition pathCondition = PathCondition.getPC(vm);
         Constraint spfInput = pathCondition == null ? null : PathCondition.getPC(vm).header;
         // @TODO: Add thrown exceptions to the reported output specification.
-        Expression spfOutput = (Expression) ((JVMReturnInstruction) vm.getCurrentThread().getPC()).getReturnAttr(vm.getCurrentThread());
+        Instruction exitInstruction = vm.getCurrentThread().getPC();
+        Expression spfOutput = null;
+        CapturedException capturedException = null;
 
         LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
         LOGGER.atDebug().log("Input: " + (spfInput == null ? null : spfInput.toString()));
-        LOGGER.atDebug().log("Output: " + (spfOutput == null ? null : spfOutput.toString()));
+
+        if(exitInstruction instanceof JVMReturnInstruction) {
+            spfOutput = (Expression) ((JVMReturnInstruction) exitInstruction).getReturnAttr(vm.getCurrentThread());
+            LOGGER.atDebug().log("Output: " + (spfOutput == null ? null : spfOutput.toString()));
+        } else { // Exception is thrown
+            String exceptionClass = exitInstruction.getMethodInfo().getThrownExceptionClassNames()[0];
+            capturedException = new CapturedException(exceptionClass);
+            LOGGER.atDebug().log("Output: Exception thrown" + exceptionClass);
+        }
 
         SpfToModelTransformer spfToModelTransformer = new SpfToModelTransformer();
         ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
 
         teralizer.domain.Expression modelInput = spfToModelTransformer.transform(spfInput);
-        teralizer.domain.Expression modelOutput = spfToModelTransformer.transform(spfOutput);
+
+        teralizer.domain.Expression modelOutput;
+
+        if(capturedException == null) {
+            modelOutput = spfToModelTransformer.transform(spfOutput);
+        } else {
+            modelOutput = spfToModelTransformer.transform(capturedException);
+        }
 
         String jsonInput = modelToJsonTransformer.transform(modelInput);
         String jsonOutput = modelToJsonTransformer.transform(modelOutput);

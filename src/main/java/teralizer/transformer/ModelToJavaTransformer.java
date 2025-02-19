@@ -216,6 +216,11 @@ public class ModelToJavaTransformer extends ModelVisitor {
         throw new RuntimeException("Unable to transform error '" + error + "' to z3.");
     }
 
+    @Override
+    public void postVisit(ExceptionModel exceptionModel) {
+        this.stack.push(exceptionModel.name + ".class");
+    }
+
     private String[] popArgs(int n) {
         String[] args = new String[n];
         for (int i = n - 1; i >= 0; i--) {
