@@ -68,7 +68,7 @@ public class SpfToModelTransformer {
             return null;
         }
 
-        return new ExceptionModel(exception.getName());
+        return new ExceptionModel(exception.getName(), exception.getMessage());
     }
 
     private static class ConstraintExpressionFactoryVisitor extends ConstraintExpressionVisitor {

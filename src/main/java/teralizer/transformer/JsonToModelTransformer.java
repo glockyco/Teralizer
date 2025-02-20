@@ -195,8 +195,9 @@ public class JsonToModelTransformer {
             JsonObject jsonObject = jsonElement.getAsJsonObject();
 
             String clazz = jsonObject.get("class").getAsString();
+            String message = jsonObject.get("message").getAsString();
 
-            return new ExceptionModel(clazz);
+            return new ExceptionModel(clazz, message);
         }
     }
 }

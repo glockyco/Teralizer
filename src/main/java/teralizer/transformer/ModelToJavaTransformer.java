@@ -218,7 +218,7 @@ public class ModelToJavaTransformer extends ModelVisitor {
 
     @Override
     public void postVisit(ExceptionModel exceptionModel) {
-        this.stack.push(exceptionModel.name + ".class");
+        this.stack.push(null);
     }
 
     private String[] popArgs(int n) {

@@ -237,6 +237,7 @@ public class ModelToJsonTransformer {
 
             jsonObject.add("_type", new JsonPrimitive(exceptionModel.getClass().getSimpleName()));
             jsonObject.add("class", new JsonPrimitive(exceptionModel.name));
+            jsonObject.add("message", new JsonPrimitive(exceptionModel.message));
 
             return jsonObject;
         }

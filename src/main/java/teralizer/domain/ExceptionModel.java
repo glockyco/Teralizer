@@ -4,9 +4,11 @@ import java.util.Objects;
 
 public class ExceptionModel implements Expression {
     public String name;
+    public String message;
 
-    public ExceptionModel(String name) {
+    public ExceptionModel(String name, String message) {
         this.name = name;
+        this.message = message;
     }
 
     @Override
@@ -16,7 +18,7 @@ public class ExceptionModel implements Expression {
     }
 
     public String toString() {
-        return name;
+        return name + ": " + message;
     }
 
     @Override
