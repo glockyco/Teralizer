@@ -9,6 +9,7 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
 
+import javax.swing.text.html.Option;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -164,7 +165,11 @@ public class TestAnalysis {
             CtExpression<?> assignment = declaration.getAssignment();
             return getExecutedBody(assignment);
         } else if (element instanceof CtExecutableReferenceExpression) {
-            return getExecutedBody(((CtExecutableReferenceExpression<?, ?>) element).getExecutable().getExecutableDeclaration());
+            /*
+                If element is a method reference like this::someMethod, we cannot distinguish whether someMethod is the method that is tested or contains the method that is tested.
+                Thus we return an empty body to remove the test via the missing values filter.
+             */
+            return Optional.empty();
         }
         return Optional.ofNullable(body);
     }
