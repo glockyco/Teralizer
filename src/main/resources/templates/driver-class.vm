@@ -3,7 +3,7 @@
 ## @vtlvariable name="instrumentedClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="instrumentedClassName" type="java.lang.String"
 ## @vtlvariable name="testMethodName" type="java.lang.String"
-## @vtlvariable name="beforeCode" type="java.lang.String"
+## @vtlvariable name="beforeMethods" type="java.util.Set<spoon.reflect.declaration.CtMethod>"
 #if(${driverPackageName})
 package ${driverPackageName};
 
@@ -12,12 +12,14 @@ import ${instrumentedClassQualifiedName};
 
 public class ${driverClassName} {
     public static void main(String[] args) throws Throwable {
-        #if(${beforeCode})
-            ${instrumentedClassName} instrumentedClass = new ${instrumentedClassName}();
-            ${beforeCode}
-            instrumentedClass.${testMethodName}();
-        #else
-            new ${instrumentedClassName}().${testMethodName}();
+        ${instrumentedClassName} instance = new ${instrumentedClassName}();
+        #foreach($method in ${beforeMethods})
+            #if($method.static)
+                ${instrumentedClassName}.${method.simpleName}();
+            #else
+                instance.${method.simpleName}();
+            #end
         #end
+        instance.${testMethodName}();
     }
 }

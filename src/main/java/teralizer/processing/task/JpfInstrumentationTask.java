@@ -9,9 +9,6 @@ import org.jooq.Result;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import spoon.Launcher;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
@@ -45,6 +42,13 @@ import java.util.stream.Collectors;
 import static teralizer.processing.task.TestGeneralizationTask.SUPPORTED_TYPES;
 
 public class JpfInstrumentationTask extends AbstractTask {
+
+    private static final List<String> BEFORE_ANNOTATIONS = Arrays.asList(
+        "org.junit.Before",
+        "org.junit.BeforeClass",
+        "org.junit.jupiter.api.BeforeAll",
+        "org.junit.jupiter.api.BeforeEach"
+    );
 
     public JpfInstrumentationTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null, null);
@@ -276,22 +280,12 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("testMethodName", this.testRecord.getTestMethodName());
 
         Set<CtMethod<?>> beforeMethods = this.getBeforeMethods(spoonLauncher);
-
-        StringBuilder beforeCode = new StringBuilder();
-
+        context.put("beforeMethods", beforeMethods);
         for (CtMethod<?> method : beforeMethods) {
             if (!method.getParameters().isEmpty()) {
-                throw new RuntimeException("Setup method " + method.getSimpleName() + " has parameters");
+                throw new RuntimeException("Setup method " + method.getSimpleName() + " has parameters.");
             }
-            if(method.isStatic()) {
-                beforeCode.append(this.assertionRecord.getInstrumentedClassName()).append(".").append(method.getSimpleName()).append("();");
-            } else {
-                beforeCode.append("instrumentedClass.").append(method.getSimpleName()).append("();");
-            }
-            beforeCode.append("\n");
         }
-
-        context.put("beforeCode", beforeCode);
 
         File driverClassFile = new File(this.assertionRecord.getDriverFilePath());
         driverClassFile.getParentFile().mkdirs();
@@ -313,20 +307,13 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     private Set<CtMethod<?>> getBeforeMethods(Launcher spoonLauncher) {
-        List<String> beforeClasses = new ArrayList<>();
-        beforeClasses.add("org.junit.Before");
-        beforeClasses.add("org.junit.BeforeClass");
-        beforeClasses.add("org.junit.jupiter.api.BeforeAll");
-        beforeClasses.add("org.junit.jupiter.api.BeforeEach");
+        CtClass<?> testClass = spoonLauncher.getFactory().Class()
+            .get(this.testRecord.getTestClassQualifiedName());
 
-        CtClass<?> testClass = spoonLauncher.getFactory().Class().get(this.testRecord.getTestClassQualifiedName());
-        return beforeClasses.stream()
-                .map(annotationClassString -> spoonLauncher.getFactory().Annotation().createReference(annotationClassString))
-                .map(testClass::getMethodsAnnotatedWith)
-                .reduce((set1, set2) -> {
-                   set1.addAll(set2);
-                   return set1;
-                }).orElse(Collections.emptySet());
+        return BEFORE_ANNOTATIONS.stream()
+            .map(spoonLauncher.getFactory().Annotation()::createReference)
+            .flatMap(annotation -> testClass.getMethodsAnnotatedWith(annotation).stream())
+            .collect(Collectors.toSet());
     }
 
     private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod) throws IOException {
