@@ -13,30 +13,27 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class TestGeneralizationRunner {
 
     public static final String TOOL_NAME = "Teralizer";
     public static final Path DB_PATH = Paths.get("database/db.sqlite");
+    public static final Path DB_DDL_PATH = Paths.get("src/main/resources/db/create-tables.sql");
 
     public static final double JPF_MAX_EXECUTION_TIME = 10; // seconds
     public static final long JPF_MAX_PATH_CONDITION_SIZE = 1000000; // characters
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // Arguments: [benchmark]
         // - [benchmark]: Path to the benchmark directory, e.g., ../benchmarks/.
         //new TestGeneralizationRunner().run(args[0]);
         new TestGeneralizationRunner().run();
     }
 
-    public void run() {
+    public void run() throws IOException {
         // @TODO: Get project directories from input args.
 
         List<ProjectInfo> projectInfos = Arrays.asList(
@@ -56,22 +53,12 @@ public class TestGeneralizationRunner {
             new ProjectInfo("projects/example-maven-junit5")
         );
 
-        boolean databaseDoesNotExist;
-        try {
-            databaseDoesNotExist = !Files.exists(DB_PATH) || Files.size(DB_PATH) == 0;
-        } catch (IOException e) {
-            throw new RuntimeException("Could not check for database file", e);
-        }
-
-        if (databaseDoesNotExist) {
-            try {
-                this.createDB();
-            } catch (IOException e) {
-                throw new RuntimeException("Cannot create database", e);
-            }
-        }
-
         DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on");
+
+        if (!Files.exists(DB_PATH) || Files.size(DB_PATH) == 0) {
+            String sql = new String(Files.readAllBytes(DB_DDL_PATH));
+            create.parser().parse(sql).forEach(create::execute);
+        }
 
         ProcessingPipeline pipeline = new ProcessingPipeline(create);
         pipeline.getContext().put(TaskContext.DSL_CONTEXT, create);
@@ -102,38 +89,6 @@ public class TestGeneralizationRunner {
 
             projectRecord.setRuntime((endTime - startTime) / 1000.0f);
             projectRecord.store();
-        }
-    }
-
-    private void createDB() throws IOException {
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on");
-             Statement statement = conn.createStatement()) {
-
-            // Read the SQL file
-            List<String> lines = Files.readAllLines(Paths.get("src/main/resources/db/create-tables.sql"));
-
-            // Prepare statements for execution
-            String[] statements = lines.stream()
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .filter(s -> !s.startsWith("--"))
-                    .map(s -> {
-                        if(s.contains("--")) {
-                            return s.split("--")[0];
-                        }
-                        return s;
-                    })
-                    .collect(Collectors.joining(""))
-                    .split(";");
-
-            // Execute the script
-            for(String line : statements) {
-                statement.addBatch(line);
-            }
-
-            statement.executeBatch();
-        } catch (Exception e) {
-            throw new RuntimeException("Could not create database", e);
         }
     }
 
