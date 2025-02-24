@@ -29,6 +29,7 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
 import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
@@ -225,6 +226,16 @@ public class TestGeneralizationTask extends AbstractTask {
         List<MethodParameter> allParameters = new ArrayList<>();
         allParameters.addAll(testedMethodParameters);
         allParameters.addAll(temporaryParameters);
+
+        // Remove parameter types that cannot be generalized
+        allParameters = allParameters.stream().filter(p -> {
+            try {
+                SpoonUtils.getTypeReference(factory, p.getType());
+            } catch (NullPointerException e) {
+                return false;
+            }
+            return true;
+        }).collect(Collectors.toList());
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
