@@ -12,6 +12,7 @@ public interface Task {
 
     ProcessingStage getStage();
     GeneralizationVariant getVariant();
+    GeneralizationVariant getCombinedVariant();
 
     Integer getProjectId();
     Integer getTestId();

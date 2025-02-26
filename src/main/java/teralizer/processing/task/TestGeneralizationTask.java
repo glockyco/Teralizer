@@ -29,7 +29,6 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
-import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
 import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
@@ -73,6 +72,15 @@ public class TestGeneralizationTask extends AbstractTask {
         this.assertionRecord = assertionRecord;
     }
 
+    public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, GeneralizationVariant combinedVariant, ProjectRecord projectRecord, TestRecord testRecord, AssertionRecord assertionRecord) {
+        this.stage = stage;
+        this.variant = variant;
+        this.combinedVariant = combinedVariant;
+        this.projectRecord = projectRecord;
+        this.testRecord = testRecord;
+        this.assertionRecord = assertionRecord;
+    }
+
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (this.testRecord == null) {
@@ -89,7 +97,12 @@ public class TestGeneralizationTask extends AbstractTask {
         for (Record record : records) {
             TestRecord testRecord = record.into(TestRecord.class);
             AssertionRecord assertionRecord = record.into(AssertionRecord.class);
-            scheduleTask.accept(new TestGeneralizationTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord));
+            if (this.variant == GeneralizationVariant.COMBINED) {
+                scheduleTask.accept(new TestGeneralizationTask(this.stage, GeneralizationVariant.COMBINED, GeneralizationVariant.NAIVE, this.projectRecord, testRecord, assertionRecord));
+                scheduleTask.accept(new TestGeneralizationTask(this.stage, GeneralizationVariant.COMBINED, GeneralizationVariant.IMPROVED, this.projectRecord, testRecord, assertionRecord));
+            } else {
+                scheduleTask.accept(new TestGeneralizationTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord));
+            }
         }
     }
 
@@ -105,6 +118,7 @@ public class TestGeneralizationTask extends AbstractTask {
 
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
         GeneralizationRecord record = create.newRecord(Tables.GENERALIZATION);
+        record.setCombinedVariant(this.combinedVariant);
         record.setProjectId(this.getProjectId());
         record.setTestId(this.getTestId());
         record.setAssertionId(this.getAssertionId());
@@ -138,7 +152,7 @@ public class TestGeneralizationTask extends AbstractTask {
     }
 
     private void generalizeTest(Gson gson, Launcher spoonLauncher) throws IOException {
-        Factory factory =  spoonLauncher.getFactory();
+        Factory factory = spoonLauncher.getFactory();
         CtClass<?> testClassDeclaration = factory.Class().get(this.testRecord.getTestClassQualifiedName());
 
         CtClass<?> generalizedClassDeclaration = testClassDeclaration.clone();
@@ -231,7 +245,7 @@ public class TestGeneralizationTask extends AbstractTask {
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
 
-        switch (this.getVariant()) {
+        switch (this.getVariant() == GeneralizationVariant.COMBINED ? this.combinedVariant : this.getVariant()) {
             case NAIVE: {
                 testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
                 testParametersSupplierClassDeclaration = NaiveTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputJava);
@@ -345,7 +359,7 @@ public class TestGeneralizationTask extends AbstractTask {
         Path relativizedFilePath = this.projectRecord.getTestSourcePath().relativize(generalizedFilePath);
         Path dataFilePath = this.projectRecord.getDataPath()
             .resolve("project-id-" + this.getProjectId())
-            .resolve(TestGeneralizationRunner.TOOL_NAME.toLowerCase() +"-data")
+            .resolve(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "-data")
             .resolve("tests")
             .resolve(this.getVariant().toString())
             .resolve(relativizedFilePath);

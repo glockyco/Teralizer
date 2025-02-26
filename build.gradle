@@ -99,18 +99,15 @@ jooq {
                             }
                             forcedType {
                                 name = "BOOLEAN"
-                                expressions = "project.use_test_generation"
-                                types = "INTEGER"
+                                includeExpression = "project.use_test_generation"
                             }
                             forcedType {
                                 name = "BOOLEAN"
-                                expressions = "test.is_included"
-                                types = "INTEGER"
+                                includeExpression = "test.is_included"
                             }
                             forcedType {
                                 name = "BOOLEAN"
-                                expressions = "assertion.is_included"
-                                types = "INTEGER"
+                                includeExpression = "assertion.is_included"
                             }
                             forcedType {
                                 userType = "teralizer.processing.GeneralizationVariant"
@@ -118,9 +115,13 @@ jooq {
                                 includeExpression = "generalization.variant"
                             }
                             forcedType {
+                                userType = "teralizer.processing.GeneralizationVariant"
+                                enumConverter = true
+                                includeExpression = "generalization.combined_variant"
+                            }
+                            forcedType {
                                 name = "BOOLEAN"
-                                expressions = "generalization.is_included"
-                                types = "INTEGER"
+                                includeExpression = "generalization.is_included"
                             }
                             forcedType {
                                 userType = "teralizer.processing.ProcessingStage"
@@ -169,8 +170,7 @@ jooq {
                             }
                             forcedType {
                                 name = "BOOLEAN"
-                                expressions = "pit_mutation_report.is_detected"
-                                types = "INTEGER"
+                                includeExpression = "pit_mutation_report.is_detected"
                             }
                             forcedType {
                                 userType = "teralizer.processing.MutationStatus"

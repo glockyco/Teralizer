@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row13;
+import org.jooq.Row14;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -76,6 +76,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
      * The column <code>generalization.variant</code>.
      */
     public final TableField<GeneralizationRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
+
+    /**
+     * The column <code>generalization.combined_variant</code>.
+     */
+    public final TableField<GeneralizationRecord, GeneralizationVariant> COMBINED_VARIANT = createField(DSL.name("combined_variant"), SQLDataType.CLOB, this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
 
     /**
      * The column <code>generalization.file_path</code>.
@@ -232,11 +237,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row13 type methods
+    // Row14 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row13<Integer, Integer, Integer, Integer, GeneralizationVariant, String, String, String, String, String, String, Boolean, String> fieldsRow() {
-        return (Row13) super.fieldsRow();
+    public Row14<Integer, Integer, Integer, Integer, GeneralizationVariant, GeneralizationVariant, String, String, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row14) super.fieldsRow();
     }
 }

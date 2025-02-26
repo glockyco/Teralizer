@@ -19,6 +19,7 @@ public abstract class AbstractTask implements Task {
 
     protected ProcessingStage stage;
     protected GeneralizationVariant variant;
+    protected GeneralizationVariant combinedVariant;
 
     protected ProjectRecord projectRecord;
     protected TestRecord testRecord;
@@ -65,6 +66,11 @@ public abstract class AbstractTask implements Task {
     }
 
     @Override
+    public GeneralizationVariant getCombinedVariant() {
+        return this.combinedVariant;
+    }
+
+    @Override
     public Integer getProjectId() {
         return this.projectRecord == null ? null : this.projectRecord.getId();
     }
@@ -94,6 +100,7 @@ public abstract class AbstractTask implements Task {
         String str = this.getClass().getSimpleName() + "{";
         str += "stage=" + this.getStage();
         str += this.getVariant() == null ? "" : ", tool=" + this.getVariant();
+        str += this.getCombinedVariant() == null ? "" : ", combined_variant=" + this.getCombinedVariant();
         str += projectId == null ? "" : ", projectId=" + projectId;
         str += testId == null ? "" : ", testId=" + testId;
         str += assertionId == null ? "" : ", assertionId=" + assertionId;
@@ -120,6 +127,7 @@ public abstract class AbstractTask implements Task {
 
         return this.stage == that.stage
             && this.variant == that.variant
+            && this.combinedVariant == that.combinedVariant
             && Objects.equals(thisProjectId, thatProjectId)
             && Objects.equals(thisTestId, thatTestId)
             && Objects.equals(thisAssertionId, thatAssertionId)
@@ -133,6 +141,6 @@ public abstract class AbstractTask implements Task {
         Integer assertionId = this.getAssertionId();
         Integer generalizationId = this.getGeneralizationId();
 
-        return Objects.hash(this.stage, this.variant, projectId, testId, assertionId, generalizationId);
+        return Objects.hash(this.stage, this.variant, this.combinedVariant, projectId, testId, assertionId, generalizationId);
     }
 }
