@@ -226,16 +226,7 @@ public class TestGeneralizationTask extends AbstractTask {
         List<MethodParameter> allParameters = new ArrayList<>();
         allParameters.addAll(testedMethodParameters);
         allParameters.addAll(temporaryParameters);
-
-        // Remove parameter types that cannot be generalized
-        allParameters = allParameters.stream().filter(p -> {
-            try {
-                SpoonUtils.getTypeReference(factory, p.getType());
-            } catch (NullPointerException e) {
-                return false;
-            }
-            return true;
-        }).collect(Collectors.toList());
+        allParameters.removeIf(parameter -> !SUPPORTED_TYPES.contains(parameter.getType()));
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
