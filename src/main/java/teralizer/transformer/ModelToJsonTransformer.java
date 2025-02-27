@@ -169,7 +169,7 @@ public class ModelToJsonTransformer {
             JsonObject jsonObject = new JsonObject();
 
             JsonArray jsonArgs = new JsonArray(function.args.length);
-            for (Expression arg: function.args) {
+            for (Expression arg : function.args) {
                 jsonArgs.add(context.serialize(arg));
             }
 
@@ -187,7 +187,7 @@ public class ModelToJsonTransformer {
             JsonObject jsonObject = new JsonObject();
 
             JsonArray jsonArgs = new JsonArray(function.args.length);
-            for (Expression arg: function.args) {
+            for (Expression arg : function.args) {
                 jsonArgs.add(context.serialize(arg));
             }
 
@@ -205,7 +205,7 @@ public class ModelToJsonTransformer {
             JsonObject jsonObject = new JsonObject();
 
             JsonArray jsonArgs = new JsonArray(function.args.length);
-            for (Expression arg: function.args) {
+            for (Expression arg : function.args) {
                 jsonArgs.add(context.serialize(arg));
             }
 

@@ -18,7 +18,7 @@ public class ExceptionModel implements Expression {
     }
 
     public String toString() {
-        return name + ": " + message;
+        return this.name + ": " + this.message;
     }
 
     @Override

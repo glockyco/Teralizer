@@ -4,7 +4,6 @@ import gov.nasa.jpf.Config;
 import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.jvm.bytecode.JVMReturnInstruction;
 import gov.nasa.jpf.search.Search;
-import gov.nasa.jpf.symbc.bytecode.INVOKEVIRTUAL;
 import gov.nasa.jpf.symbc.numeric.Constraint;
 import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
@@ -107,7 +106,6 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private void writeSpecificationFiles(VM vm, ThreadInfo currentThread) {
         PathCondition pathCondition = PathCondition.getPC(vm);
         Constraint spfInput = pathCondition == null ? null : PathCondition.getPC(vm).header;
-        // @TODO: Add thrown exceptions to the reported output specification.
         Instruction exitInstruction = vm.getCurrentThread().getPC();
         Expression spfOutput = null;
         CapturedException capturedException = null;
@@ -115,15 +113,15 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
         LOGGER.atDebug().log("Input: " + (spfInput == null ? null : spfInput.toString()));
 
-        if(exitInstruction instanceof JVMReturnInstruction) {
+        if (exitInstruction instanceof JVMReturnInstruction) {
             spfOutput = (Expression) ((JVMReturnInstruction) exitInstruction).getReturnAttr(vm.getCurrentThread());
             LOGGER.atDebug().log("Output: " + (spfOutput == null ? null : spfOutput.toString()));
-        } else if(exitInstruction.getMethodInfo().getThrownExceptionClassNames().length > 0) { // Exception is thrown
+        } else if (exitInstruction.getMethodInfo().getThrownExceptionClassNames().length > 0) {
             String exceptionClass = exitInstruction.getMethodInfo().getThrownExceptionClassNames()[0];
             ExceptionInfo pendingException = currentThread.getPendingException();
             String exceptionMessage = pendingException.getCauseDetails();
             capturedException = new CapturedException(exceptionClass, exceptionMessage);
-            LOGGER.atDebug().log("Output: Exception thrown" + exceptionClass);
+            LOGGER.atDebug().log("Output: Exception thrown " + exceptionClass);
         } else {
             throw new RuntimeException("Unexpected exit instruction: " + exitInstruction);
         }
@@ -135,7 +133,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
         teralizer.domain.Expression modelOutput;
 
-        if(capturedException == null) {
+        if (capturedException == null) {
             modelOutput = spfToModelTransformer.transform(spfOutput);
         } else {
             modelOutput = spfToModelTransformer.transform(capturedException);

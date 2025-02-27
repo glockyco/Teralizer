@@ -1,6 +1,5 @@
 package teralizer.spoon.analysis;
 
-import cvc3.Op;
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
@@ -9,7 +8,6 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
 
-import javax.swing.text.html.Option;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -89,6 +87,10 @@ public class TestAnalysis {
     // - assertFalse(BooleanSupplier booleanSupplier)
     // - assertFalse(BooleanSupplier booleanSupplier, String message)
     // - assertFalse(BooleanSupplier booleanSupplier, Supplier<String> messageSupplier)
+    //
+    // - assertThrows(Class<T> expectedType, Executable executable)
+    // - assertThrows(Class<T> expectedType, Executable executable, String message)
+    // - assertThrows(Class<T> expectedType, Executable executable, Supplier<String> messageSupplier)
 
     private static final List<String> GENERALIZABLE_ASSERTS = Arrays.asList(ASSERT_EQUALS, ASSERT_TRUE, ASSERT_FALSE, ASSERT_THROWS);
 
@@ -99,17 +101,20 @@ public class TestAnalysis {
             return Optional.empty();
         }
 
-        if(assertion.getExecutable().getSimpleName().equals(ASSERT_THROWS)) {
+        if (assertion.getExecutable().getSimpleName().equals(ASSERT_THROWS)) {
             CtElement body = getExecutedBody(assertion.getArguments().get(1)).orElse(null);
 
-            if(body == null) return Optional.empty();
+            if (body == null) {
+                return Optional.empty();
+            }
 
             List<CtInvocation<?>> invocations = body.getElements(CtInvocation.class::isInstance);
 
-            // Get the last invocation in the body
-            // If there is only one it is not a problem
-            // If there are multiple, then the last one is probably the one we are looking for (previous calls could be constructor calls)
-            return invocations.isEmpty() ? Optional.empty() : Optional.of(invocations.get(invocations.size()-1));
+            // Get the last invocation in the body.
+            // If there is only one, it is not a problem.
+            // If there are multiple ones, the last one is probably the one
+            // we are looking for (previous calls could be constructor calls).
+            return invocations.isEmpty() ? Optional.empty() : Optional.of(invocations.get(invocations.size() - 1));
         }
 
         Optional<Integer> index = getActualParameterIndex(assertion);
@@ -140,11 +145,10 @@ public class TestAnalysis {
 
     private static Optional<CtElement> getExecutedBody(CtElement element) {
         CtElement body = null;
-        if(element instanceof CtExecutable) {
+        if (element instanceof CtExecutable) {
             CtExecutable<?> executable = (CtExecutable<?>) element;
-
-            if(executable instanceof CtLambda){
-                if(executable.getBody() == null) {
+            if (executable instanceof CtLambda) {
+                if (executable.getBody() == null) {
                     body = ((CtLambda<?>) executable).getExpression();
                 } else {
                     body = executable.getBody();
@@ -152,12 +156,12 @@ public class TestAnalysis {
             } else {
                 body = executable.getBody();
             }
-        } else if (element instanceof CtNewClass){
+        } else if (element instanceof CtNewClass) {
             // Check the execute method
             CtNewClass<?> newClass = (CtNewClass<?>) element;
             body = ((CtMethod<?>) newClass.getElements(CtMethod.class::isInstance).stream()
-                    .filter(m -> ((CtMethod<?>) m).getSimpleName().equals("execute"))
-                    .findFirst().orElseThrow(() -> new RuntimeException("Could not find execute method of anonymous class"))).getBody();
+                .filter(m -> ((CtMethod<?>) m).getSimpleName().equals("execute"))
+                .findFirst().orElseThrow(() -> new RuntimeException("Could not find execute method of anonymous class"))).getBody();
         } else if (element instanceof CtVariableRead) {
             // Check declaration of variable
             CtLocalVariableReference<?> reference = (CtLocalVariableReference<?>) ((CtVariableRead<?>) element).getVariable();
@@ -165,10 +169,12 @@ public class TestAnalysis {
             CtExpression<?> assignment = declaration.getAssignment();
             return getExecutedBody(assignment);
         } else if (element instanceof CtExecutableReferenceExpression) {
-            /*
-                If element is a method reference like this::someMethod, we cannot distinguish whether someMethod is the method that is tested or contains the method that is tested.
-                Thus we return an empty body to remove the test via the missing values filter.
-             */
+            // If element is a method reference like this::someMethod,
+            // we cannot distinguish whether someMethod is the method
+            // that is tested or contains the method that is tested.
+            //
+            // Thus, we return an empty body to remove the test
+            // via the missing values filter.
             return Optional.empty();
         }
         return Optional.ofNullable(body);
@@ -227,7 +233,7 @@ public class TestAnalysis {
                             // The parameters are: expected, actual, delta
                             return Optional.of(1);
                         } else {
-                             // The parameters are: message, expected, actual
+                            // The parameters are: message, expected, actual
                             return Optional.of(2);
                         }
                     } else if (argumentCount == 2) {
@@ -307,8 +313,12 @@ public class TestAnalysis {
                 }
             }
         } else if (assertion.getExecutable().getSimpleName().equals(ASSERT_THROWS)) {
-            // Junit5 Assertions have the Exception type as first argument
-            return Optional.of(0);
+            if (isJunit4) {
+                throw new RuntimeException("Unexpected JUnit 4 assertion:\n" + assertion);
+            } else { // if (isJunit5) {
+                // The parameters are: expectedType, executable(, message | messageSupplier)
+                return Optional.of(0);
+            }
         }
         return Optional.empty();
     }
@@ -325,8 +335,8 @@ public class TestAnalysis {
         assert element != null;
 
         CtElement parent = element.getParent();
-        while(!(parent instanceof CtMethod)) {
-            if(parent instanceof CtLoop) {
+        while (!(parent instanceof CtMethod)) {
+            if (parent instanceof CtLoop) {
                 return true;
             }
             parent = parent.getParent();
