@@ -11,6 +11,8 @@ import teralizer.util.ConsoleCommandException;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,18 +67,23 @@ public class EvoSuiteGenerationTask extends AbstractTask {
                     .replace(".class", "")
                 ).collect(Collectors.toList());
 
-            LOGGER.atDebug().log("Generating EvoSuite tests for " + targetClasses + " classes...");
+            LOGGER.atDebug().log("Generating EvoSuite tests for " + targetClasses.size() + " classes...");
 
             for (int i = 0; i < targetClasses.size(); i++) {
                 String targetClass = targetClasses.get(i);
+                String progressInfo = String.format("(%d of %d)", i + 1, targetClasses.size());
+
                 try {
                     this.generateTests(targetClass);
-                    String message = "Successfully generated tests for '" + targetClass + "' (#" + (i + 1) + ").";
+                    String message = String.format("Successfully generated tests for '%s' %s.", targetClass, progressInfo);
                     LOGGER.atDebug().log(message);
                     reportInfo.accept(message);
                 } catch (Exception e) {
-                    String message = "Failed to generate tests for '" + targetClass + "' (#" + (i + 1) + ").";
-                    LOGGER.atDebug().log(message);
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    String stackTrace = sw.toString();
+
+                    String message = String.format("Failed to generate tests for '%s' %s. Error: %s\nStack trace: %s", targetClass, progressInfo, e.getMessage(), stackTrace);
                     reportInfo.accept(message);
                 }
             }
