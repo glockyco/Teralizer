@@ -65,13 +65,19 @@ public class EvoSuiteGenerationTask extends AbstractTask {
                     .replace(".class", "")
                 ).collect(Collectors.toList());
 
+            LOGGER.atDebug().log("Generating EvoSuite tests for " + targetClasses + " classes...");
+
             for (int i = 0; i < targetClasses.size(); i++) {
                 String targetClass = targetClasses.get(i);
                 try {
                     this.generateTests(targetClass);
-                    reportInfo.accept("Successfully generated tests for '" + targetClass + "' (#" + (i + 1) + ").");
+                    String message = "Successfully generated tests for '" + targetClass + "' (#" + (i + 1) + ").";
+                    LOGGER.atDebug().log(message);
+                    reportInfo.accept(message);
                 } catch (Exception e) {
-                    reportInfo.accept("Failed to generate tests for '" + targetClass + "' (#" + (i + 1) + ").");
+                    String message = "Failed to generate tests for '" + targetClass + "' (#" + (i + 1) + ").";
+                    LOGGER.atDebug().log(message);
+                    reportInfo.accept(message);
                 }
             }
         }
