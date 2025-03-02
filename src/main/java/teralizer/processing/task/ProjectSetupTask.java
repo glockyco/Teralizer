@@ -84,7 +84,8 @@ public class ProjectSetupTask extends AbstractTask {
         scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
 
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_ORIGINAL, this.projectRecord));
-        scheduleTask.accept(new TestGenerationTask(ProcessingStage.GENERATE_TESTS, this.projectRecord));
+        scheduleTask.accept(new EvoSuiteGenerationTask(ProcessingStage.GENERATE_EVOSUITE_TESTS, this.projectRecord));
+        scheduleTask.accept(new EvoSuitePostprocessingTask(ProcessingStage.POSTPROCESS_EVOSUITE_TESTS, this.projectRecord));
 
         scheduleTask.accept(new SpoonModelBuildingTask(ProcessingStage.BUILD_SPOON_MODEL, this.projectRecord));
 
