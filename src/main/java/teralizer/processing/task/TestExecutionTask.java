@@ -94,7 +94,15 @@ public class TestExecutionTask extends AbstractTask {
     }
 
     private static List<String> buildGradleCommand(List<String> includedTests) {
-        List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE, "--info", "-Djacoco.skip=false", "test"));
+        List<String> command = new ArrayList<>(Arrays.asList(
+            "./gradlew",
+            "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE,
+            "--info",
+            "-Djacoco.skip=false",
+            "-DforkCount=1",
+            "-DreuseForks=false",
+            "test"
+        ));
         if (includedTests != null) {
             for (String includedTest : includedTests) {
                 command.add("--tests");
@@ -105,7 +113,14 @@ public class TestExecutionTask extends AbstractTask {
     }
 
     private static List<String> buildMavenCommand(List<String> includedTests) {
-        List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "-Djacoco.skip=false", "test"));
+        List<String> command = new ArrayList<>(Arrays.asList(
+            "mvn",
+            "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE,
+            "-Djacoco.skip=false",
+            "-DforkCount=1",
+            "-DreuseForks=false",
+            "test"
+        ));
         if (includedTests != null) {
             command.add("-Dtest=" + String.join(",", includedTests));
         }
