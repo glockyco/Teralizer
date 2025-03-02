@@ -7,8 +7,10 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.ConsoleCommand;
+import teralizer.util.ConsoleCommandException;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,7 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class EvoSuiteGenerationTask extends AbstractTask {
 
@@ -37,6 +41,10 @@ public class EvoSuiteGenerationTask extends AbstractTask {
         this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getId(), projectRecord.getDataPath());
     }
 
+    public static Path buildEvoSuiteDataPath(ProjectRecord projectRecord) {
+        return projectRecord.getDataPath().resolve("project-id-" + projectRecord.getId() + "/evosuite");
+    }
+
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (!this.projectRecord.getUseTestGeneration()) {
@@ -44,6 +52,32 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             return;
         }
 
+        Path startPath = this.projectRecord.getMainCompiledPath();
+
+        Predicate<Path> isClassFile = path ->
+            path.toString().endsWith(".class")
+                && !path.getFileName().toString().contains("$");
+
+        try (Stream<Path> paths = Files.walk(startPath)) {
+            List<String> targetClasses = paths.filter(isClassFile)
+                .map(path -> startPath.relativize(path).toString()
+                    .replace(File.separator, ".")
+                    .replace(".class", "")
+                ).collect(Collectors.toList());
+
+            for (int i = 0; i < targetClasses.size(); i++) {
+                String targetClass = targetClasses.get(i);
+                try {
+                    this.generateTests(targetClass);
+                    reportInfo.accept("Successfully generated tests for '" + targetClass + "' (#" + (i + 1) + ").");
+                } catch (Exception e) {
+                    reportInfo.accept("Failed to generate tests for '" + targetClass + "' (#" + (i + 1) + ").");
+                }
+            }
+        }
+    }
+
+    private void generateTests(String targetClass) throws ConsoleCommandException, IOException, InterruptedException {
         Path evoSuiteDataDir = buildEvoSuiteDataPath(this.projectRecord);
         evoSuiteDataDir.toFile().mkdirs();
 
@@ -56,7 +90,7 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             "java",
             "-jar", EVOSUITE_JAR_PATH.toAbsolutePath().toString(),
             "-base_dir", evoSuiteDataDir.toAbsolutePath().toString(),
-            "-target", this.projectRecord.getMainCompiledPath().toAbsolutePath().toString(),
+            "-class", targetClass,
             "-projectCP", projectCP,
             "-seed", "0",
             "-Dstopping_condition=MAXTIME",
@@ -81,9 +115,5 @@ public class EvoSuiteGenerationTask extends AbstractTask {
         }
 
         this.consoleCommand.execute(command);
-    }
-
-    public static Path buildEvoSuiteDataPath(ProjectRecord projectRecord) {
-        return projectRecord.getDataPath().resolve("project-id-" + projectRecord.getId() + "/evosuite");
     }
 }
