@@ -6,6 +6,7 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
 
@@ -96,7 +97,7 @@ public class TestExecutionTask extends AbstractTask {
     private static List<String> buildGradleCommand(List<String> includedTests) {
         List<String> command = new ArrayList<>(Arrays.asList(
             "./gradlew",
-            "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE,
+            "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE,
             "--info",
             "-Djacoco.skip=false",
             "-DforkCount=1",
@@ -115,7 +116,7 @@ public class TestExecutionTask extends AbstractTask {
     private static List<String> buildMavenCommand(List<String> includedTests) {
         List<String> command = new ArrayList<>(Arrays.asList(
             "mvn",
-            "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE,
+            "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
             "-Djacoco.skip=false",
             "-DforkCount=1",
             "-DreuseForks=false",

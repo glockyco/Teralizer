@@ -16,8 +16,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static teralizer.processing.task.TestGeneralizationTask.TEST_PARAMETERS_CLASS_NAME;
-import static teralizer.processing.task.TestGeneralizationTask.TEST_PARAMETERS_SUPPLIER_CLASS_NAME;
+import static teralizer.util.Configuration.TEST_PARAMETERS_CLASS_NAME;
+import static teralizer.util.Configuration.TEST_PARAMETERS_SUPPLIER_CLASS_NAME;
 
 public class ImprovedTestParametersSupplierFactory {
 

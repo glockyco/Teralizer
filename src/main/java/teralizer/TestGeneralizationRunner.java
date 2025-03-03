@@ -8,23 +8,16 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
 import teralizer.processing.*;
 import teralizer.processing.task.*;
+import teralizer.util.Configuration;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 public class TestGeneralizationRunner {
-
-    public static final String TOOL_NAME = "Teralizer";
-    public static final Path DB_PATH = Paths.get("database/db.sqlite");
-    public static final Path DB_DDL_PATH = Paths.get("src/main/resources/db/create-tables.sql");
-
-    public static final double JPF_MAX_EXECUTION_TIME = 10; // seconds
-    public static final long JPF_MAX_PATH_CONDITION_SIZE = 1000000; // characters
 
     public static void main(String[] args) throws Exception {
         // Arguments: [benchmark]
@@ -53,10 +46,10 @@ public class TestGeneralizationRunner {
             new ProjectInfo("projects/example-maven-junit5")
         );
 
-        DSLContext create = DSL.using("jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on");
+        DSLContext create = DSL.using("jdbc:sqlite:" + Configuration.DB_PATH.toAbsolutePath() + "?foreign_keys=on");
 
-        if (!Files.exists(DB_PATH) || Files.size(DB_PATH) == 0) {
-            String sql = new String(Files.readAllBytes(DB_DDL_PATH));
+        if (!Files.exists(Configuration.DB_PATH) || Files.size(Configuration.DB_PATH) == 0) {
+            String sql = new String(Files.readAllBytes(Configuration.DB_DDL_PATH));
             create.parser().parse(sql).forEach(create::execute);
         }
 

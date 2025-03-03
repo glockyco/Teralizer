@@ -7,6 +7,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 
 import java.io.BufferedReader;
@@ -121,11 +122,11 @@ public class JacocoDataCollectionTask extends AbstractTask {
     }
 
     private static List<String> buildGradleCommand() {
-        return new ArrayList<>(Arrays.asList("./gradlew", "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE, "--info", "-Djacoco.skip=false", "jacocoTestReport"));
+        return new ArrayList<>(Arrays.asList("./gradlew", "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE, "--info", "-Djacoco.skip=false", "jacocoTestReport"));
     }
 
     private static List<String> buildMavenCommand() {
-        return new ArrayList<>(Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "-Djacoco.skip=false", "jacoco:report"));
+        return new ArrayList<>(Arrays.asList("mvn", "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE, "-Djacoco.skip=false", "jacoco:report"));
     }
 
     private static Path getCoverageReportPath(ProjectRecord projectRecord) {

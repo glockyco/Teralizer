@@ -5,17 +5,14 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.TestGeneralizationRunner;
 import teralizer.processing.TestFramework;
-import teralizer.processing.task.ProjectSetupTask;
+import teralizer.util.Configuration;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
-
-import static teralizer.processing.task.AddDependenciesTask.*;
 
 public class MavenDependencyManager {
 
@@ -33,7 +30,7 @@ public class MavenDependencyManager {
         this.projectRecord = projectRecord;
         this.reportInfo = reportInfo;
 
-        this.pomFilePath = this.projectRecord.getRootPath().resolve(ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE);
+        this.pomFilePath = this.projectRecord.getRootPath().resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE);
         this.document = new SAXReader().read(this.pomFilePath.toFile());
 
         Element root = this.document.getRootElement();
@@ -49,12 +46,12 @@ public class MavenDependencyManager {
             // Deliberately using non-short-circuiting OR here. If multiple
             // dependencies are missing, we want to add all of them.
             hasModifiedDocument |= this.addJUnitIfOutdated();
-            hasModifiedDocument |= this.addDependencyIfMissing(JUNIT_VINTAGE_DEPENDENCY);
+            hasModifiedDocument |= this.addDependencyIfMissing(Configuration.JUNIT_VINTAGE_DEPENDENCY);
         }
         hasModifiedDocument |= this.addJacocoPlugin();
-        hasModifiedDocument |= this.addDependencyIfMissing(PITEST_DEPENDENCY);
+        hasModifiedDocument |= this.addDependencyIfMissing(Configuration.PITEST_DEPENDENCY);
         hasModifiedDocument |= this.addPitestPlugin();
-        hasModifiedDocument |= this.addDependencyIfMissing(JQWIK_DEPENDENCY);
+        hasModifiedDocument |= this.addDependencyIfMissing(Configuration.JQWIK_DEPENDENCY);
 
         if (hasModifiedDocument) {
             XMLWriter writer = new XMLWriter(new FileWriter(this.pomFilePath.toFile()), OutputFormat.createPrettyPrint());
@@ -76,7 +73,7 @@ public class MavenDependencyManager {
         Element element = parent.element(name);
         if (element == null) {
             element = parent.addElement(name);
-            element.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+            element.addComment("Added by " + Configuration.TOOL_NAME + ".");
         }
         return element;
     }
@@ -109,7 +106,7 @@ public class MavenDependencyManager {
         // to do, but is not necessarily guaranteed to convince Maven that the
         // newly added version should be used over the existing one.
         // @TODO: Update the existing JUnit version instead of adding a new one.
-        this.addDependency(JUNIT_4_DEPENDENCY);
+        this.addDependency(Configuration.JUNIT_4_DEPENDENCY);
         return true;
     }
 
@@ -127,7 +124,7 @@ public class MavenDependencyManager {
 
     private void addDependency(Dependency dependency) {
         Element dependencyElement = this.dependenciesElement.addElement("dependency");
-        dependencyElement.addComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+        dependencyElement.addComment("Added by " + Configuration.TOOL_NAME + ".");
         dependencyElement.addElement("groupId").addText(dependency.groupId);
         dependencyElement.addElement("artifactId").addText(dependency.artifactId);
         dependencyElement.addElement("version").addText(dependency.version);
@@ -139,7 +136,7 @@ public class MavenDependencyManager {
             this.reportInfo.accept("Found plugin / config: jacoco");
             return false;
         }
-        this.pluginsElement.add(this.readPluginConfig(JACOCO_CONFIG_PATH_MAVEN));
+        this.pluginsElement.add(this.readPluginConfig(Configuration.JACOCO_CONFIG_PATH_MAVEN));
         this.reportInfo.accept("Added plugin / config: jacoco");
         return true;
     }
@@ -149,7 +146,7 @@ public class MavenDependencyManager {
             this.reportInfo.accept("Found plugin / config: pitest");
             return false;
         }
-        this.pluginsElement.add(this.readPluginConfig(PITEST_CONFIG_PATH_MAVEN));
+        this.pluginsElement.add(this.readPluginConfig(Configuration.PITEST_CONFIG_PATH_MAVEN));
         this.reportInfo.accept("Added plugin / config: pitest");
         return true;
     }
@@ -166,7 +163,7 @@ public class MavenDependencyManager {
     private Node readPluginConfig(Path configPath) throws DocumentException {
         Document pitestConfigDocument = new SAXReader().read(configPath.toFile());
         Element pluginElement = pitestConfigDocument.getRootElement();
-        Comment comment = DocumentHelper.createComment("Added by " + TestGeneralizationRunner.TOOL_NAME + ".");
+        Comment comment = DocumentHelper.createComment("Added by " + Configuration.TOOL_NAME + ".");
         pluginElement.content().add(0, comment);
         return pluginElement.detach();
     }

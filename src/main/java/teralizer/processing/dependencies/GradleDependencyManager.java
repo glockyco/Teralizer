@@ -8,9 +8,8 @@ import org.gradle.tooling.model.Task;
 import org.gradle.tooling.model.eclipse.EclipseExternalDependency;
 import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.TestGeneralizationRunner;
 import teralizer.processing.TestFramework;
-import teralizer.processing.task.ProjectSetupTask;
+import teralizer.util.Configuration;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,12 +18,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import static teralizer.processing.task.AddDependenciesTask.*;
-
 public class GradleDependencyManager {
 
-    private static final String TOOL_COMMENT_START = String.format("// Added by %s - START.", TestGeneralizationRunner.TOOL_NAME);
-    private static final String TOOL_COMMENT_END = String.format("// Added by %s - END.", TestGeneralizationRunner.TOOL_NAME);
+    private static final String TOOL_COMMENT_START = String.format("// Added by %s - START.", Configuration.TOOL_NAME);
+    private static final String TOOL_COMMENT_END = String.format("// Added by %s - END.", Configuration.TOOL_NAME);
 
     private final ProjectRecord projectRecord;
     private final Consumer<String> reportInfo;
@@ -39,7 +36,7 @@ public class GradleDependencyManager {
         this.projectRecord = projectRecord;
         this.reportInfo = reportInfo;
 
-        this.buildFilePath = this.projectRecord.getRootPath().resolve(ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE);
+        this.buildFilePath = this.projectRecord.getRootPath().resolve(Configuration.GRADLE_CUSTOM_BUILD_FILE);
         this.buildFileContent = new StringBuilder(new String(Files.readAllBytes(this.buildFilePath)));
 
         GradleConnector connector = GradleConnector.newConnector();
@@ -56,12 +53,12 @@ public class GradleDependencyManager {
             // dependencies are missing, we want to add all of them.
             hasModifiedDocument |= this.addUseJunitPlatform();
             hasModifiedDocument |= this.addJUnitIfOutdated();
-            hasModifiedDocument |= this.addDependencyIfMissing(JUNIT_VINTAGE_DEPENDENCY);
+            hasModifiedDocument |= this.addDependencyIfMissing(Configuration.JUNIT_VINTAGE_DEPENDENCY);
         }
         hasModifiedDocument |= this.addJacocoPlugin();
-        hasModifiedDocument |= this.addDependencyIfMissing(PITEST_DEPENDENCY);
+        hasModifiedDocument |= this.addDependencyIfMissing(Configuration.PITEST_DEPENDENCY);
         hasModifiedDocument |= this.addPitestPlugin();
-        hasModifiedDocument |= this.addDependencyIfMissing(JQWIK_DEPENDENCY);
+        hasModifiedDocument |= this.addDependencyIfMissing(Configuration.JQWIK_DEPENDENCY);
 
         if (hasModifiedDocument) {
             Files.write(this.buildFilePath, this.buildFileContent.toString().getBytes());
@@ -119,7 +116,7 @@ public class GradleDependencyManager {
         // to do, but is not necessarily guaranteed to convince Gradle that the
         // newly added version should be used over the existing one.
         // @TODO: Update the existing JUnit version instead of adding a new one.
-        this.addDependencyIfMissing(JUNIT_4_DEPENDENCY);
+        this.addDependencyIfMissing(Configuration.JUNIT_4_DEPENDENCY);
         return true;
     }
 
@@ -150,7 +147,7 @@ public class GradleDependencyManager {
             return false;
         }
         this.prependToBuildFile("plugins { id 'jacoco' }");
-        this.appendToBuildFile(new String(Files.readAllBytes(JACOCO_CONFIG_PATH_GRADLE)));
+        this.appendToBuildFile(new String(Files.readAllBytes(Configuration.JACOCO_CONFIG_PATH_GRADLE)));
         this.reportInfo.accept("Added plugin / config: jacocoTestReport");
         return true;
     }
@@ -161,7 +158,7 @@ public class GradleDependencyManager {
             return false;
         }
         this.prependToBuildFile("plugins { id 'info.solidsoft.pitest' version '1.15.0' }");
-        this.appendToBuildFile(new String(Files.readAllBytes(PITEST_CONFIG_PATH_GRADLE)));
+        this.appendToBuildFile(new String(Files.readAllBytes(Configuration.PITEST_CONFIG_PATH_GRADLE)));
         this.reportInfo.accept("Added plugin / config: pitest");
         return true;
     }

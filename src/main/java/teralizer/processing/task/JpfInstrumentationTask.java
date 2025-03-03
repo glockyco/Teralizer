@@ -21,11 +21,11 @@ import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.filter.TypeFilter;
-import teralizer.TestGeneralizationRunner;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.util.Configuration;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -39,7 +39,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static teralizer.processing.task.TestGeneralizationTask.SUPPORTED_TYPES;
+import static teralizer.util.Configuration.SUPPORTED_TYPES;
 
 public class JpfInstrumentationTask extends AbstractTask {
 
@@ -324,8 +324,8 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("classpath", this.projectRecord.getClasspath());
         context.put("symbolicMethod", symbolicMethod);
 
-        context.put("maxExecutionTime", TestGeneralizationRunner.JPF_MAX_EXECUTION_TIME);
-        context.put("maxPathConditionSize", TestGeneralizationRunner.JPF_MAX_PATH_CONDITION_SIZE);
+        context.put("maxExecutionTime", Configuration.JPF_MAX_EXECUTION_TIME);
+        context.put("maxPathConditionSize", Configuration.JPF_MAX_PATH_CONDITION_SIZE);
 
         context.put("driverClassQualifiedName", this.assertionRecord.getDriverClassQualifiedName());
         context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());

@@ -16,6 +16,7 @@ import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 
 import java.io.IOException;
@@ -255,7 +256,7 @@ public class PitDataCollectionTask extends AbstractTask {
     }
 
     private static List<String> buildGradleCommand(List<String> targetClasses, List<String> targetTests) {
-        List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE, "--info", "pitest"));
+        List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE, "--info", "pitest"));
         if (targetTests != null) {
             command.add("-PtargetClasses=" + String.join(",", targetClasses));
             command.add("-PtargetTests=" + String.join(",", targetTests));
@@ -264,7 +265,7 @@ public class PitDataCollectionTask extends AbstractTask {
     }
 
     private static List<String> buildMavenCommand(List<String> targetClasses, List<String> includedTests) {
-        List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "pitest:mutationCoverage"));
+        List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE, "pitest:mutationCoverage"));
         if (includedTests != null) {
             command.add("-DtargetClasses=" + String.join(",", targetClasses));
             command.add("-DtargetTests=" + String.join(",", includedTests));

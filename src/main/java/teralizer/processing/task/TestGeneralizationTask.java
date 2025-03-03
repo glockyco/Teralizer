@@ -20,7 +20,6 @@ import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.filter.TypeFilter;
-import teralizer.TestGeneralizationRunner;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.jqwik.VariableConstraintExtractor;
@@ -35,6 +34,7 @@ import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
 import teralizer.spoon.generalization.TestParametersFactory;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
+import teralizer.util.Configuration;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -51,14 +51,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class TestGeneralizationTask extends AbstractTask {
-
-    private static final int MAX_TRIES_JQWIK = 20;
-    private static final int MAX_SPECIFICATION_SIZE = 200000;
-
-    public static String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
-    public static String TEST_PARAMETERS_SUPPLIER_CLASS_NAME = "TestParametersSupplier";
-
-    public static final List<String> SUPPORTED_TYPES = Arrays.asList("byte", "short", "int", "long", "float", "double");
 
     public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
         this(stage, variant, projectRecord, null, null);
@@ -212,8 +204,8 @@ public class TestGeneralizationTask extends AbstractTask {
         // @TODO: Use a more reliable approach to check whether "code too large" errors (might) occur.
         //   The most (and only?) reliable solution is probably to actually create the file and try to compile
         //   it => if the error occurs, delete the created file again and mark the generalization as failed.
-        boolean isInputJavaTooLarge = inputJava != null && inputJava.length() > MAX_SPECIFICATION_SIZE;
-        boolean isOutputJavaTooLarge = outputJava != null && outputJava.length() > MAX_SPECIFICATION_SIZE;
+        boolean isInputJavaTooLarge = inputJava != null && inputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
+        boolean isOutputJavaTooLarge = outputJava != null && outputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
         if (isInputJavaTooLarge || isOutputJavaTooLarge) {
             throw new RuntimeException("Failing generalization to avoid potential 'code too large' compilation errors.");
         }
@@ -240,7 +232,7 @@ public class TestGeneralizationTask extends AbstractTask {
         List<MethodParameter> allParameters = new ArrayList<>();
         allParameters.addAll(testedMethodParameters);
         allParameters.addAll(temporaryParameters);
-        allParameters.removeIf(parameter -> !SUPPORTED_TYPES.contains(parameter.getType()));
+        allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
@@ -282,7 +274,7 @@ public class TestGeneralizationTask extends AbstractTask {
 
         CtAnnotation<Annotation> propertyAnnotation = factory.Core().createAnnotation();
         propertyAnnotation.setAnnotationType(factory.Type().createReference("net.jqwik.api.Property"));
-        propertyAnnotation.addValue("tries", factory.Code().createLiteral(MAX_TRIES_JQWIK));
+        propertyAnnotation.addValue("tries", factory.Code().createLiteral(Configuration.MAX_TRIES_JQWIK));
         propertyAnnotation.addValue("seed", factory.Code().createLiteral("0"));
         propertyAnnotation.addValue("shrinking", factory.Code().createCodeSnippetExpression("net.jqwik.api.ShrinkingMode.OFF"));
         testMethod.addAnnotation(propertyAnnotation);
@@ -322,7 +314,7 @@ public class TestGeneralizationTask extends AbstractTask {
         for (int i = 0; i < args.size(); i++) {
             CtExpression<?> arg = args.get(i);
             CtParameter<?> param = params.get(i);
-            if (SUPPORTED_TYPES.contains(arg.getType().getSimpleName())) {
+            if (Configuration.SUPPORTED_TYPES.contains(arg.getType().getSimpleName())) {
                 args.set(i, factory.Code().createCodeSnippetExpression("_p_." + param.getSimpleName()));
             }
         }
@@ -359,7 +351,7 @@ public class TestGeneralizationTask extends AbstractTask {
         Path relativizedFilePath = this.projectRecord.getTestSourcePath().relativize(generalizedFilePath);
         Path dataFilePath = this.projectRecord.getDataPath()
             .resolve("project-id-" + this.getProjectId())
-            .resolve(TestGeneralizationRunner.TOOL_NAME.toLowerCase() + "-data")
+            .resolve(Configuration.TOOL_NAME.toLowerCase() + "-data")
             .resolve("tests")
             .resolve(this.getVariant().toString())
             .resolve(relativizedFilePath);

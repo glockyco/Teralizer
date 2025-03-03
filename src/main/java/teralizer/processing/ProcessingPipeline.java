@@ -5,8 +5,8 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import teralizer.TestGeneralizationRunner;
 import teralizer.processing.task.Task;
+import teralizer.util.Configuration;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -75,7 +75,7 @@ public class ProcessingPipeline {
         // (ii) log errors that occur for tasks that DO require a database connection.
         // The `ProcessingPipeline` should, however, NOT recreate a missing database
         // to ensure that the cleaned up state is preserved after a `CleanupTask`.
-        if (TestGeneralizationRunner.DB_PATH.toFile().exists()) {
+        if (Configuration.DB_PATH.toFile().exists()) {
             taskRecord.store();
         }
 
@@ -142,7 +142,7 @@ public class ProcessingPipeline {
             });
         }
 
-        if (TestGeneralizationRunner.DB_PATH.toFile().exists()) {
+        if (Configuration.DB_PATH.toFile().exists()) {
             // When executing a test-, assertion- or generalization-level `CleanupTask`,
             // the corresponding `TaskRecord` is deleted. Forcing an insert in such a case ensures that
             // the task is persisted in the DB again at one level higher (project-, test-, or assertion-level).

@@ -4,6 +4,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
 
@@ -62,12 +63,12 @@ public class ProjectBuildTask extends AbstractTask {
     }
 
     private void buildGradle(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
-        List<String> command = Arrays.asList("./gradlew", "--build-file", ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE, "--info", "clean", "compileJava", "compileTestJava");
+        List<String> command = Arrays.asList("./gradlew", "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE, "--info", "clean", "compileJava", "compileTestJava");
         this.consoleCommand.execute(projectRootPath, command);
     }
 
     private void buildMaven(Path projectRootPath) throws IOException, InterruptedException, ConsoleCommandException {
-        List<String> command = Arrays.asList("mvn", "--file", ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE, "clean", "compile", "test-compile");
+        List<String> command = Arrays.asList("mvn", "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE, "clean", "compile", "test-compile");
         this.consoleCommand.execute(projectRootPath, command);
     }
 }

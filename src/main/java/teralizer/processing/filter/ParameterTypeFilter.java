@@ -9,7 +9,7 @@ import teralizer.domain.MethodParameter;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import static teralizer.processing.task.TestGeneralizationTask.SUPPORTED_TYPES;
+import static teralizer.util.Configuration.SUPPORTED_TYPES;
 
 public class ParameterTypeFilter extends AbstractFilter {
 

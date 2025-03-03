@@ -23,7 +23,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.function.Consumer;
 
-import static teralizer.processing.task.EvoSuiteGenerationTask.EVOSUITE_JAR_PATH;
+import static teralizer.util.Configuration.EVOSUITE_JAR_PATH;
 
 public class EvoSuitePostprocessingTask extends AbstractTask {
 

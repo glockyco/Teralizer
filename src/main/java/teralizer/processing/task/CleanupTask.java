@@ -3,10 +3,10 @@ package teralizer.processing.task;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import teralizer.TestGeneralizationRunner;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
 
 import java.io.File;
 import java.nio.file.FileVisitResult;
@@ -66,14 +66,14 @@ public class CleanupTask extends AbstractTask {
         // might have created in previous runs for any project type is much easier...
 
         if (this.stage == ProcessingStage.CLEANUP_PROJECT && this.projectRecord == null) {
-            File mavenBuildFile = this.projectPath.resolve(ProjectSetupTask.MAVEN_CUSTOM_BUILD_FILE).toFile();
-            File gradleBuildFile =  this.projectPath.resolve(ProjectSetupTask.GRADLE_CUSTOM_BUILD_FILE).toFile();
+            File mavenBuildFile = this.projectPath.resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE).toFile();
+            File gradleBuildFile =  this.projectPath.resolve(Configuration.GRADLE_CUSTOM_BUILD_FILE).toFile();
             List<File> buildFiles = Arrays.asList(mavenBuildFile, gradleBuildFile);
             for (File buildFile : buildFiles) {
                 if (buildFile.exists()) {
-                    LOGGER.atInfo().log("Deleting " + TestGeneralizationRunner.TOOL_NAME + " build file '" + buildFile + "'.");
+                    LOGGER.atInfo().log("Deleting " + Configuration.TOOL_NAME + " build file '" + buildFile + "'.");
                     if (!buildFile.delete()) {
-                        throw new RuntimeException("Failed to delete " + TestGeneralizationRunner.TOOL_NAME + " build file '" + buildFile + "'.");
+                        throw new RuntimeException("Failed to delete " + Configuration.TOOL_NAME + " build file '" + buildFile + "'.");
                     }
                 }
             }

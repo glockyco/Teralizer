@@ -7,20 +7,12 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
+import teralizer.util.Configuration;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class TestAnalysis {
-
-    private static final String JUNIT4_ASSERTION_PACKAGE = "org.junit.Assert";
-    private static final String JUNIT5_ASSERTION_PACKAGE = "org.junit.jupiter.api.Assertions";
-
-    private static final String ASSERT_EQUALS = "assertEquals";
-    private static final String ASSERT_TRUE = "assertTrue";
-    private static final String ASSERT_FALSE = "assertFalse";
-    private static final String ASSERT_THROWS = "assertThrows";
 
     // JUnit 4:
     //
@@ -92,8 +84,6 @@ public class TestAnalysis {
     // - assertThrows(Class<T> expectedType, Executable executable, String message)
     // - assertThrows(Class<T> expectedType, Executable executable, Supplier<String> messageSupplier)
 
-    private static final List<String> GENERALIZABLE_ASSERTS = Arrays.asList(ASSERT_EQUALS, ASSERT_TRUE, ASSERT_FALSE, ASSERT_THROWS);
-
     public static Optional<CtInvocation<?>> findTestedMethodCall(CtMethod<?> method, CtInvocation<?> assertion) {
         if (assertion == null) {
             // @TODO: Assume a "no exceptions" test.
@@ -101,7 +91,7 @@ public class TestAnalysis {
             return Optional.empty();
         }
 
-        if (assertion.getExecutable().getSimpleName().equals(ASSERT_THROWS)) {
+        if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
             CtElement body = getExecutedBody(assertion.getArguments().get(1)).orElse(null);
 
             if (body == null) {
@@ -193,7 +183,7 @@ public class TestAnalysis {
     }
 
     public static boolean isGeneralizable(String assertionName) {
-        return GENERALIZABLE_ASSERTS.contains(assertionName);
+        return Configuration.GENERALIZABLE_ASSERTS.contains(assertionName);
     }
 
     public static boolean isGeneralizable(CtInvocation<?> assertionInvocation) {
@@ -209,7 +199,7 @@ public class TestAnalysis {
         }
 
         String qualifiedName = declaringType.getQualifiedName();
-        return qualifiedName.equals(JUNIT4_ASSERTION_PACKAGE) || qualifiedName.equals(JUNIT5_ASSERTION_PACKAGE);
+        return qualifiedName.equals(Configuration.JUNIT4_ASSERTION_PACKAGE) || qualifiedName.equals(Configuration.JUNIT5_ASSERTION_PACKAGE);
     }
 
     public static Optional<Integer> getActualParameterIndex(CtInvocation<?> assertion) {
@@ -223,7 +213,7 @@ public class TestAnalysis {
         int argumentCount = assertion.getArguments().size();
 
         switch (assertion.getExecutable().getSimpleName()) {
-            case ASSERT_EQUALS:
+            case Configuration.ASSERT_EQUALS:
                 if (isJunit4) {
                     if (argumentCount == 4) {
                         // The parameters are: message, expected, actual, delta
@@ -250,8 +240,8 @@ public class TestAnalysis {
                         throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
                     }
                 }
-            case ASSERT_TRUE:
-            case ASSERT_FALSE:
+            case Configuration.ASSERT_TRUE:
+            case Configuration.ASSERT_FALSE:
                 if (isJunit4) {
                     if (argumentCount == 2) {
                         // The parameters are: message, condition
@@ -285,7 +275,7 @@ public class TestAnalysis {
 
         int argumentCount = assertion.getArguments().size();
 
-        if (assertion.getExecutable().getSimpleName().equals(ASSERT_EQUALS)) {
+        if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_EQUALS)) {
             if (isJunit4) {
                 if (argumentCount == 4) {
                     // The parameters are: message, expected, actual, delta
@@ -312,7 +302,7 @@ public class TestAnalysis {
                     throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
                 }
             }
-        } else if (assertion.getExecutable().getSimpleName().equals(ASSERT_THROWS)) {
+        } else if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
             if (isJunit4) {
                 throw new RuntimeException("Unexpected JUnit 4 assertion:\n" + assertion);
             } else { // if (isJunit5) {
@@ -324,11 +314,11 @@ public class TestAnalysis {
     }
 
     public static boolean isJUnit4Assertion(CtInvocation<?> assertion) {
-        return assertion.getExecutable().getDeclaringType().getQualifiedName().equals(JUNIT4_ASSERTION_PACKAGE);
+        return assertion.getExecutable().getDeclaringType().getQualifiedName().equals(Configuration.JUNIT4_ASSERTION_PACKAGE);
     }
 
     public static boolean isJUnit5Assertion(CtInvocation<?> assertion) {
-        return assertion.getExecutable().getDeclaringType().getQualifiedName().equals(JUNIT5_ASSERTION_PACKAGE);
+        return assertion.getExecutable().getDeclaringType().getQualifiedName().equals(Configuration.JUNIT5_ASSERTION_PACKAGE);
     }
 
     public static boolean isContainedInLoop(CtElement element) {

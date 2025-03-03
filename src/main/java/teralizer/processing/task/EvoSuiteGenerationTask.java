@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
 
@@ -25,8 +26,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class EvoSuiteGenerationTask extends AbstractTask {
-
-    public static final Path EVOSUITE_JAR_PATH = Paths.get("src/main/resources/evosuite/evosuite-1.2.0.jar");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EvoSuiteGenerationTask.class);
 
@@ -101,7 +100,7 @@ public class EvoSuiteGenerationTask extends AbstractTask {
 
         List<String> command = new ArrayList<>(Arrays.asList(
             "java",
-            "-jar", EVOSUITE_JAR_PATH.toAbsolutePath().toString(),
+            "-jar", Configuration.EVOSUITE_JAR_PATH.toAbsolutePath().toString(),
             "-base_dir", evoSuiteDataDir.toAbsolutePath().toString(),
             "-class", targetClass,
             "-projectCP", projectCP,
