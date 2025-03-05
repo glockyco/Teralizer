@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.declaration.CtClass;
@@ -116,7 +117,10 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
                         boolean containsEvoSuiteVariables = method.getElements(new TypeFilter<>(CtLocalVariable.class)).stream()
                             .anyMatch(localVar -> localVar.getType().toString().startsWith("org.evosuite"));
 
-                        return containsEvoSuiteInvocations || containsEvoSuiteVariables;
+                        boolean containsUndeclaredExceptionComment = method.getElements(new TypeFilter<>(CtComment.class)).stream()
+                            .anyMatch(comment -> comment.getContent().contains("Undeclared exception!"));
+
+                        return containsEvoSuiteInvocations || containsEvoSuiteVariables || containsUndeclaredExceptionComment;
                     }).forEach(clazz::removeMethod);
 
                 CtCompilationUnit compilationUnit = clazz.getPosition().getCompilationUnit();
