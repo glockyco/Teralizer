@@ -81,6 +81,9 @@ public class MyMathTest {
         assertEquals(expected, actual);
     }
 
+    /*
+        This test causes a NullPointerException during SPF execution
+     */
     @Test
     public void testDivideFloatException() {
         float x = 6.0f;
