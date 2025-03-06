@@ -166,7 +166,7 @@ public class GradleDependencyManager {
     private void prependToBuildFile(String content) {
         this.buildFileContent.insert(0, TOOL_COMMENT_END + "\n");
         this.buildFileContent.insert(0, content + "\n");
-        this.buildFileContent.insert(0, "+\n" + TOOL_COMMENT_START + "\n");
+        this.buildFileContent.insert(0, "\n" + TOOL_COMMENT_START + "\n");
     }
 
     private void appendToBuildFile(String content) {
