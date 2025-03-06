@@ -146,7 +146,7 @@ public class GradleDependencyManager {
             this.reportInfo.accept("Found plugin / config: jacocoTestReport");
             return false;
         }
-        this.prependToBuildFile("plugins { id 'jacoco' }");
+        this.prependToBuildFile(new String(Files.readAllBytes(Configuration.JACOCO_PLUGIN_PATH_GRADLE)));
         this.appendToBuildFile(new String(Files.readAllBytes(Configuration.JACOCO_CONFIG_PATH_GRADLE)));
         this.reportInfo.accept("Added plugin / config: jacocoTestReport");
         return true;
@@ -157,7 +157,7 @@ public class GradleDependencyManager {
             this.reportInfo.accept("Found plugin / config: pitest");
             return false;
         }
-        this.prependToBuildFile("plugins { id 'info.solidsoft.pitest' version '1.15.0' }");
+        this.prependToBuildFile(new String(Files.readAllBytes(Configuration.PITEST_PLUGIN_PATH_GRADLE)));
         this.appendToBuildFile(new String(Files.readAllBytes(Configuration.PITEST_CONFIG_PATH_GRADLE)));
         this.reportInfo.accept("Added plugin / config: pitest");
         return true;

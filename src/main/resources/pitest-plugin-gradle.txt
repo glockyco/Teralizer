@@ -1,0 +1,1 @@
+plugins { id 'info.solidsoft.pitest' version '1.15.0' }

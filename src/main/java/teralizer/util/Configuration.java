@@ -52,9 +52,11 @@ public class Configuration {
 
     // ----- JaCoCo ----- //
     public static final Path JACOCO_CONFIG_PATH_GRADLE = Paths.get("src/main/resources/jacoco-config-gradle.txt");
+    public static final Path JACOCO_PLUGIN_PATH_GRADLE = Paths.get("src/main/resources/jacoco-plugin-gradle.txt");
     public static final Path JACOCO_CONFIG_PATH_MAVEN = Paths.get("src/main/resources/jacoco-config-maven.txt");
 
     // ----- Pitest ----- //
     public static final Path PITEST_CONFIG_PATH_GRADLE = Paths.get("src/main/resources/pitest-config-gradle.txt");
+    public static final Path PITEST_PLUGIN_PATH_GRADLE = Paths.get("src/main/resources/pitest-plugin-gradle.txt");
     public static final Path PITEST_CONFIG_PATH_MAVEN = Paths.get("src/main/resources/pitest-config-maven.txt");
 }
