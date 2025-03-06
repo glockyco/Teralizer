@@ -146,8 +146,8 @@ public class GradleDependencyManager {
             this.reportInfo.accept("Found plugin / config: jacocoTestReport");
             return false;
         }
-        this.prependToBuildFile(new String(Files.readAllBytes(Configuration.JACOCO_PLUGIN_PATH_GRADLE)));
-        this.appendToBuildFile(new String(Files.readAllBytes(Configuration.JACOCO_CONFIG_PATH_GRADLE)));
+        this.prependToBuildFile(new String(Files.readAllBytes(Configuration.GRADLE_JACOCO_PLUGIN_PATH)));
+        this.appendToBuildFile(new String(Files.readAllBytes(Configuration.GRADLE_JACOCO_CONFIG_PATH)));
         this.reportInfo.accept("Added plugin / config: jacocoTestReport");
         return true;
     }
@@ -157,8 +157,8 @@ public class GradleDependencyManager {
             this.reportInfo.accept("Found plugin / config: pitest");
             return false;
         }
-        this.prependToBuildFile(new String(Files.readAllBytes(Configuration.PITEST_PLUGIN_PATH_GRADLE)));
-        this.appendToBuildFile(new String(Files.readAllBytes(Configuration.PITEST_CONFIG_PATH_GRADLE)));
+        this.prependToBuildFile(new String(Files.readAllBytes(Configuration.GRADLE_PITEST_PLUGIN_PATH)));
+        this.appendToBuildFile(new String(Files.readAllBytes(Configuration.GRADLE_PITEST_CONFIG_PATH)));
         this.reportInfo.accept("Added plugin / config: pitest");
         return true;
     }

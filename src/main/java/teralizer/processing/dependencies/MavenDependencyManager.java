@@ -136,7 +136,7 @@ public class MavenDependencyManager {
             this.reportInfo.accept("Found plugin / config: jacoco");
             return false;
         }
-        this.pluginsElement.add(this.readPluginConfig(Configuration.JACOCO_CONFIG_PATH_MAVEN));
+        this.pluginsElement.add(this.readPluginConfig(Configuration.MAVEN_JACOCO_CONFIG_PATH));
         this.reportInfo.accept("Added plugin / config: jacoco");
         return true;
     }
@@ -146,7 +146,7 @@ public class MavenDependencyManager {
             this.reportInfo.accept("Found plugin / config: pitest");
             return false;
         }
-        this.pluginsElement.add(this.readPluginConfig(Configuration.PITEST_CONFIG_PATH_MAVEN));
+        this.pluginsElement.add(this.readPluginConfig(Configuration.MAVEN_PITEST_CONFIG_PATH));
         this.reportInfo.accept("Added plugin / config: pitest");
         return true;
     }
