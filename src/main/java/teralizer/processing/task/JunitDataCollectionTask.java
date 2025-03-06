@@ -192,7 +192,7 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private TestRecord buildTestRecord(DSLContext create, ReportTestCase testCaseReport) {
-        String testMethodName = testCaseReport.getName();
+        String testMethodName = testCaseReport.getName().replace("()", "");
         String testClassName = testCaseReport.getClassName();
         int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
         String testPackageName = lastDotIndex == -1 ? "" : testCaseReport.getFullClassName().substring(0, lastDotIndex);
@@ -233,7 +233,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
 
         // Write (relevant parts of) the data to the DB:
-        String methodName = testCaseReport.getName();
+        String methodName = testCaseReport.getName().replace("()", "");
         String className = testCaseReport.getClassName();
         int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
         String packageName = lastDotIndex == -1 ? "" : testCaseReport.getFullClassName().substring(0, lastDotIndex);
