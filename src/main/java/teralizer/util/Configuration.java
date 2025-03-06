@@ -58,4 +58,7 @@ public class Configuration {
     // ----- SPF / JPF ----- //
     public static final double JPF_MAX_EXECUTION_TIME = 10; // seconds
     public static final long JPF_MAX_PATH_CONDITION_SIZE = 1000000; // characters
+
+    // ----- Pitest ----- //
+    public static final String PITEST_MUTATORS = "DEFAULTS"; // https://pitest.org/quickstart/mutators/
 }
