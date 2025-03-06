@@ -1,5 +1,6 @@
 package teralizer.util;
 
+import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.dependencies.Dependency;
 
 import java.nio.file.Path;
@@ -40,6 +41,8 @@ public class Configuration {
     public static final Path GRADLE_PITEST_PLUGIN_PATH = Paths.get("src/main/resources/pitest-plugin-gradle.txt");
 
     // ----- Generalization ----- //
+    public static final GeneralizationVariant[] GENERALIZATION_VARIANTS = GeneralizationVariant.values();
+
     public static final int MAX_TRIES_JQWIK = 20;
     public static final int MAX_SPECIFICATION_SIZE = 200000;
 

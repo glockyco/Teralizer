@@ -103,7 +103,7 @@ public class ProjectSetupTask extends AbstractTask {
         scheduleTask.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, this.projectRecord));
         scheduleTask.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_INITIAL, this.projectRecord));
 
-        for (GeneralizationVariant variant : GeneralizationVariant.values()) {
+        for (GeneralizationVariant variant : Configuration.GENERALIZATION_VARIANTS) {
             scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_GENERALIZATION, variant, this.projectRecord));
 
             scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.GENERALIZE_TESTS, variant, this.projectRecord));
