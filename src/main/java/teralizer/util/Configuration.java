@@ -20,6 +20,7 @@ public class Configuration {
 
     // ----- Database ----- //
     public static final Path DB_PATH = Paths.get("database/db.sqlite");
+    public static final String DB_CONNECTION_STRING = "jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on";
     public static final Path DB_DDL_PATH = Paths.get("src/main/resources/db/create-tables.sql");
 
     // ----- Dependencies ----- //

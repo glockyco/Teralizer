@@ -46,7 +46,7 @@ public class TestGeneralizationRunner {
             new ProjectInfo("projects/example-maven-junit5")
         );
 
-        DSLContext create = DSL.using("jdbc:sqlite:" + Configuration.DB_PATH.toAbsolutePath() + "?foreign_keys=on");
+        DSLContext create = DSL.using(Configuration.DB_CONNECTION_STRING);
 
         if (!Files.exists(Configuration.DB_PATH) || Files.size(Configuration.DB_PATH) == 0) {
             String sql = new String(Files.readAllBytes(Configuration.DB_DDL_PATH));
