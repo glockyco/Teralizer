@@ -159,17 +159,30 @@ public class ProjectSetupTask extends AbstractTask {
     private void setupBuildFile(ProjectRecord projectRecord) throws IOException {
         Path sourcePath;
         Path destinationPath;
+        Path buildDataPath;
+
         if (projectRecord.getType() == ProjectType.MAVEN) {
             sourcePath = projectRecord.getRootPath().resolve(Configuration.MAVEN_DEFAULT_BUILD_FILE);
             destinationPath = projectRecord.getRootPath().resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE);
+            buildDataPath = projectRecord.getDataPath()
+                .resolve("project-id-" + this.getProjectId())
+                .resolve(Configuration.TOOL_NAME_LOWER + "-data/build")
+                .resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE);
         } else if (projectRecord.getType() == ProjectType.GRADLE) {
             sourcePath = projectRecord.getRootPath().resolve(Configuration.GRADLE_DEFAULT_BUILD_FILE);
             destinationPath = projectRecord.getRootPath().resolve(Configuration.GRADLE_CUSTOM_BUILD_FILE);
+            buildDataPath = projectRecord.getDataPath()
+                .resolve("project-id-" + this.getProjectId())
+                .resolve(Configuration.TOOL_NAME_LOWER + "-data/build")
+                .resolve(Configuration.GRADLE_CUSTOM_BUILD_FILE);
         } else {
             throw new RuntimeException("Failed to setup build file. Operation is not implemented for projects of type " + projectRecord.getType() + ".");
         }
 
         Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+
+        Files.createDirectories(buildDataPath);
+        Files.copy(destinationPath, buildDataPath, StandardCopyOption.REPLACE_EXISTING);
     }
 
     private void setupTestFramework(ProjectRecord projectRecord) {
