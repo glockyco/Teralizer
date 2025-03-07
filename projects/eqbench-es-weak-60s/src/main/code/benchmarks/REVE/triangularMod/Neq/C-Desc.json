@@ -1,0 +1,20 @@
+{
+  "benchmark name": "REVE",
+  "program name": "triangularMod.f",
+  "function name": "f",
+  "LOC":20,
+  "# Loops":1,
+  "# non-linear arithmetics":0,
+  "changes": 
+  [
+    {
+      "change line": "8",
+      "change type": "Insertion", 
+      "change operation": "increasing the loop iterator"
+    }
+  ],
+  "counter-example":
+  [
+    {"int m":2}
+  ]
+}
