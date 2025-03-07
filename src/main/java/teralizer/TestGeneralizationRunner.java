@@ -73,6 +73,7 @@ public class TestGeneralizationRunner {
             projectRecord.setCoverageReportsPath(projectInfo.getCoverageReportsPath());
             projectRecord.setMutationReportsPath(projectInfo.getMutationReportsPath());
             projectRecord.setUseTestGeneration(projectInfo.getUseTestGeneration());
+            projectRecord.setUseTestGeneralization(projectInfo.getUseTestGeneralization());
             projectRecord.store();
 
             pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord));

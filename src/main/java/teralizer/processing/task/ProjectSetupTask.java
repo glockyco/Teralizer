@@ -76,45 +76,50 @@ public class ProjectSetupTask extends AbstractTask {
         }
 
         scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
-
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_ORIGINAL, this.projectRecord));
-        scheduleTask.accept(new EvoSuiteGenerationTask(ProcessingStage.GENERATE_EVOSUITE_TESTS, this.projectRecord));
-        scheduleTask.accept(new EvoSuitePostprocessingTask(ProcessingStage.POSTPROCESS_EVOSUITE_TESTS, this.projectRecord));
 
-        scheduleTask.accept(new SpoonModelBuildingTask(ProcessingStage.BUILD_SPOON_MODEL, this.projectRecord));
+        if (this.projectRecord.getUseTestGeneration()) {
+            scheduleTask.accept(new EvoSuiteGenerationTask(ProcessingStage.GENERATE_EVOSUITE_TESTS, this.projectRecord));
+            scheduleTask.accept(new EvoSuitePostprocessingTask(ProcessingStage.POSTPROCESS_EVOSUITE_TESTS, this.projectRecord));
+        }
 
-        scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_ORIGINAL, this.projectRecord));
-        scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL, this.projectRecord));
-        scheduleTask.accept(new TestAnalysisTask(ProcessingStage.ANALYZE_TESTS, this.projectRecord));
-        scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_TESTS, this.projectRecord));
-        scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_ASSERTIONS, this.projectRecord));
+        if (this.projectRecord.getUseTestGeneralization()) {
+            scheduleTask.accept(new SpoonModelBuildingTask(ProcessingStage.BUILD_SPOON_MODEL, this.projectRecord));
 
-        scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.ADD_JPF_INSTRUMENTATION, this.projectRecord));
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, this.projectRecord));
-        scheduleTask.accept(new JpfExecutionTask(ProcessingStage.EXECUTE_JPF, this.projectRecord));
-        scheduleTask.accept(new JpfAnalysisTask(ProcessingStage.ANALYZE_JPF, this.projectRecord));
-        scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_JPF_INSTRUMENTATION, this.projectRecord));
+            scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_ORIGINAL, this.projectRecord));
+            scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL, this.projectRecord));
 
-        scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
-        scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INITIAL, this.projectRecord));
-        scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_INITIAL, this.projectRecord));
+            scheduleTask.accept(new TestAnalysisTask(ProcessingStage.ANALYZE_TESTS, this.projectRecord));
+            scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_TESTS, this.projectRecord));
+            scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_ASSERTIONS, this.projectRecord));
 
-        scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_INITIAL, this.projectRecord));
-        scheduleTask.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, this.projectRecord));
-        scheduleTask.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_INITIAL, this.projectRecord));
+            scheduleTask.accept(new JpfInstrumentationTask(ProcessingStage.ADD_JPF_INSTRUMENTATION, this.projectRecord));
+            scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, this.projectRecord));
+            scheduleTask.accept(new JpfExecutionTask(ProcessingStage.EXECUTE_JPF, this.projectRecord));
+            scheduleTask.accept(new JpfAnalysisTask(ProcessingStage.ANALYZE_JPF, this.projectRecord));
+            scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_JPF_INSTRUMENTATION, this.projectRecord));
 
-        for (GeneralizationVariant variant : Configuration.GENERALIZATION_VARIANTS) {
-            scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_GENERALIZATION, variant, this.projectRecord));
+            scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
+            scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INITIAL, this.projectRecord));
+            scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_INITIAL, this.projectRecord));
 
-            scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.GENERALIZE_TESTS, variant, this.projectRecord));
-            scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_GENERALIZED, variant, this.projectRecord));
+            scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_INITIAL, this.projectRecord));
+            scheduleTask.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, this.projectRecord));
+            scheduleTask.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_INITIAL, this.projectRecord));
 
-            scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_GENERALIZED, variant, this.projectRecord));
-            scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED, variant, this.projectRecord));
-            scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_GENERALIZATIONS, variant, this.projectRecord));
+            for (GeneralizationVariant variant : Configuration.GENERALIZATION_VARIANTS) {
+                scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_GENERALIZATION, variant, this.projectRecord));
 
-            scheduleTask.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED, variant, this.projectRecord));
-            scheduleTask.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_GENERALIZED, variant, this.projectRecord));
+                scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.GENERALIZE_TESTS, variant, this.projectRecord));
+                scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_GENERALIZED, variant, this.projectRecord));
+
+                scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_GENERALIZED, variant, this.projectRecord));
+                scheduleTask.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED, variant, this.projectRecord));
+                scheduleTask.accept(new TestFilteringTask(ProcessingStage.FILTER_GENERALIZATIONS, variant, this.projectRecord));
+
+                scheduleTask.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED, variant, this.projectRecord));
+                scheduleTask.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_GENERALIZED, variant, this.projectRecord));
+            }
         }
     }
 

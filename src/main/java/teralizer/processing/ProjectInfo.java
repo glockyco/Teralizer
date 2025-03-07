@@ -16,6 +16,7 @@ public class ProjectInfo {
     private Path mutationReportsPath;
 
     private boolean useTestGeneration = false;
+    private boolean useTestGeneralization = true;
 
     public ProjectInfo(String rootPath) {
         this(Paths.get(rootPath), null, null, null, null, null, null, null);
@@ -120,6 +121,15 @@ public class ProjectInfo {
 
     public ProjectInfo setUseTestGeneration(boolean useTestGeneration) {
         this.useTestGeneration = useTestGeneration;
+        return this;
+    }
+
+    public boolean getUseTestGeneralization() {
+        return this.useTestGeneralization;
+    }
+
+    public ProjectInfo setUseTestGeneralization(boolean useTestGeneralization) {
+        this.useTestGeneralization = useTestGeneralization;
         return this;
     }
 }

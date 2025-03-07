@@ -14,7 +14,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row16;
+import org.jooq.Row17;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -131,6 +131,11 @@ public class Project extends TableImpl<ProjectRecord> {
     public final TableField<ProjectRecord, Boolean> USE_TEST_GENERATION = createField(DSL.name("use_test_generation"), SQLDataType.BOOLEAN.nullable(false), this, "");
 
     /**
+     * The column <code>project.use_test_generalization</code>.
+     */
+    public final TableField<ProjectRecord, Boolean> USE_TEST_GENERALIZATION = createField(DSL.name("use_test_generalization"), SQLDataType.BOOLEAN.nullable(false), this, "");
+
+    /**
      * The column <code>project.runtime</code>.
      */
     public final TableField<ProjectRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL, this, "");
@@ -220,11 +225,11 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row16 type methods
+    // Row17 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row16<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, Path, String, Boolean, Float> fieldsRow() {
-        return (Row16) super.fieldsRow();
+    public Row17<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, Path, String, Boolean, Boolean, Float> fieldsRow() {
+        return (Row17) super.fieldsRow();
     }
 }
