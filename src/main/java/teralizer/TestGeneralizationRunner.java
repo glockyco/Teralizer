@@ -6,46 +6,24 @@ import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
-import teralizer.processing.*;
-import teralizer.processing.task.*;
+import teralizer.processing.ProcessingPipeline;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.ProjectType;
+import teralizer.processing.TaskContext;
+import teralizer.processing.task.ProjectDownloadTask;
 import teralizer.util.Configuration;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 
 public class TestGeneralizationRunner {
 
     public static void main(String[] args) throws Exception {
-        // Arguments: [benchmark]
-        // - [benchmark]: Path to the benchmark directory, e.g., ../benchmarks/.
-        //new TestGeneralizationRunner().run(args[0]);
         new TestGeneralizationRunner().run();
     }
 
     public void run() throws IOException {
-        // @TODO: Get project directories from input args.
-
-        List<ProjectInfo> projectInfos = Arrays.asList(
-            new ProjectInfo(
-                Paths.get("projects/EqBench"),
-                Paths.get("projects/EqBench/src/main/code"),
-                Paths.get("projects/EqBench/src/test/code"),
-                Paths.get("projects/EqBench/target/classes"),
-                Paths.get("projects/EqBench/target/test-classes"),
-                Paths.get("projects/EqBench/target/surefire-reports"),
-                Paths.get("projects/EqBench/target/site/jacoco"),
-                Paths.get("projects/EqBench/target/pit-reports")
-            ),
-            new ProjectInfo("projects/example-gradle-junit4"),
-            new ProjectInfo("projects/example-gradle-junit5"),
-            new ProjectInfo("projects/example-maven-junit4"),
-            new ProjectInfo("projects/example-maven-junit5")
-        );
-
         DSLContext create = DSL.using(Configuration.DB_CONNECTION_STRING);
 
         if (!Files.exists(Configuration.DB_PATH) || Files.size(Configuration.DB_PATH) == 0) {
@@ -58,32 +36,30 @@ public class TestGeneralizationRunner {
         pipeline.getContext().put(TaskContext.GSON, new Gson());
         pipeline.getContext().put(TaskContext.VELOCITY_ENGINE, this.createVelocityEngine());
 
-        for (ProjectInfo projectInfo : projectInfos) {
-            long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
 
-            ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
-            projectRecord.setType(ProjectType.UNKNOWN);
-            projectRecord.setRootPath(projectInfo.getRootPath());
-            projectRecord.setDataPath(projectInfo.getDataPath());
-            projectRecord.setMainSourcePath(projectInfo.getMainSourcePath());
-            projectRecord.setTestSourcePath(projectInfo.getTestSourcePath());
-            projectRecord.setMainCompiledPath(projectInfo.getMainCompiledPath());
-            projectRecord.setTestCompiledPath(projectInfo.getTestCompiledPath());
-            projectRecord.setTestReportsPath(projectInfo.getTestReportsPath());
-            projectRecord.setCoverageReportsPath(projectInfo.getCoverageReportsPath());
-            projectRecord.setMutationReportsPath(projectInfo.getMutationReportsPath());
-            projectRecord.setUseTestGeneration(projectInfo.getUseTestGeneration());
-            projectRecord.setUseTestGeneralization(projectInfo.getUseTestGeneralization());
-            projectRecord.store();
+        ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
+        projectRecord.setType(ProjectType.UNKNOWN);
+        projectRecord.setRootPath(Configuration.getProjectRootPath());
+        projectRecord.setDataPath(Configuration.getProjectDataPath());
+        projectRecord.setMainSourcePath(Configuration.getProjectMainSourcePath());
+        projectRecord.setTestSourcePath(Configuration.getProjectTestSourcePath());
+        projectRecord.setMainCompiledPath(Configuration.getProjectMainCompiledPath());
+        projectRecord.setTestCompiledPath(Configuration.getProjectTestCompiledPath());
+        projectRecord.setTestReportsPath(Configuration.getProjectTestReportsPath());
+        projectRecord.setCoverageReportsPath(Configuration.getProjectCoverageReportsPath());
+        projectRecord.setMutationReportsPath(Configuration.getProjectMutationReportsPath());
+        projectRecord.setUseTestGeneration(Configuration.getProjectUseTestGeneration());
+        projectRecord.setUseTestGeneralization(Configuration.getProjectUseTestGeneralization());
+        projectRecord.store();
 
-            pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord));
-            pipeline.executeAll();
+        pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord));
+        pipeline.executeAll();
 
-            long endTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
 
-            projectRecord.setRuntime((endTime - startTime) / 1000.0f);
-            projectRecord.store();
-        }
+        projectRecord.setRuntime((endTime - startTime) / 1000.0f);
+        projectRecord.store();
     }
 
     private VelocityEngine createVelocityEngine() {

@@ -2,6 +2,7 @@
   <configuration default="false" name="TestGeneralizationRunner" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="teralizer.TestGeneralizationRunner" />
     <module name="test-generalization.main" />
+    <option name="VM_PARAMETERS" value="-Dteralizer.config=project-configs/eqbench.conf" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="teralizer.*" />
