@@ -104,15 +104,7 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             "-base_dir", evoSuiteDataDir.toAbsolutePath().toString(),
             "-class", targetClass,
             "-projectCP", projectCP,
-            "-seed", "0",
-            "-Dstopping_condition=MAXTIME",
-            "-Dsearch_budget=1",
-            "-Djunit_check=false",
-            "-Dcoverage=false",
-            "-Dfilter_sandbox_tests=true",
-            "-Duse_separate_classloader=false",
-            "-Dassertion_strategy=UNIT",
-            "-Dcriterion=LINE:BRANCH"
+            "-seed", "0"
         ));
 
         switch (this.projectRecord.getTestFramework()) {
