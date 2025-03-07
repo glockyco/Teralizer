@@ -59,6 +59,12 @@ public class Configuration {
     public static final String ASSERT_THROWS = "assertThrows";
     public static final List<String> GENERALIZABLE_ASSERTS = Arrays.asList(ASSERT_EQUALS, ASSERT_TRUE, ASSERT_FALSE, ASSERT_THROWS);
 
+    // ----- EvoSuite ----- //
+    public static final String EVOSUITE_STOPPING_CONDITION = "MAXTIME";
+    public static final String EVOSUITE_SEARCH_BUDGET = "60";
+    public static final String EVOSUITE_ASSERTION_STRATEGY = "MUTATION";
+    public static final String EVOSUITE_COVERAGE_CRITERION = "LINE:BRANCH:EXCEPTION:WEAKMUTATION:OUTPUT:METHOD:METHODNOEXCEPTION:CBRANCH";
+
     // ----- SPF / JPF ----- //
     public static final double JPF_MAX_EXECUTION_TIME = 10; // seconds
     public static final long JPF_MAX_PATH_CONDITION_SIZE = 1000000; // characters
