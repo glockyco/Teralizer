@@ -324,8 +324,8 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("classpath", this.projectRecord.getClasspath());
         context.put("symbolicMethod", symbolicMethod);
 
-        context.put("maxExecutionTime", Configuration.JPF_MAX_EXECUTION_TIME);
-        context.put("maxPathConditionSize", Configuration.JPF_MAX_PATH_CONDITION_SIZE);
+        context.put("maxExecutionTime", Configuration.getJpfMaxExecutionTime());
+        context.put("maxPathConditionSize", Configuration.getJpfMaxPathConditionSize());
 
         context.put("driverClassQualifiedName", this.assertionRecord.getDriverClassQualifiedName());
         context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());

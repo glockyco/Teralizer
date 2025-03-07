@@ -260,7 +260,7 @@ public class PitDataCollectionTask extends AbstractTask {
         if (targetTests != null) {
             command.add("-PtargetClasses=" + String.join(",", targetClasses));
             command.add("-PtargetTests=" + String.join(",", targetTests));
-            command.add("-Pmutators=" + Configuration.PITEST_MUTATORS);
+            command.add("-Pmutators=" + Configuration.getPitestMutators());
         }
         return command;
     }
@@ -270,7 +270,7 @@ public class PitDataCollectionTask extends AbstractTask {
         if (includedTests != null) {
             command.add("-DtargetClasses=" + String.join(",", targetClasses));
             command.add("-DtargetTests=" + String.join(",", includedTests));
-            command.add("-Dmutators=" + Configuration.PITEST_MUTATORS);
+            command.add("-Dmutators=" + Configuration.getPitestMutators());
         }
         return command;
     }

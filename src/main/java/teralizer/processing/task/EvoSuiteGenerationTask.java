@@ -105,10 +105,10 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             "-class", targetClass,
             "-projectCP", projectCP,
             "-seed", "0",
-            "-Dstopping_condition=" + Configuration.EVOSUITE_STOPPING_CONDITION,
-            "-Dsearch_budget=" + Configuration.EVOSUITE_SEARCH_BUDGET,
-            "-Dcriterion=" + Configuration.EVOSUITE_COVERAGE_CRITERION,
-            "-Dassertion_strategy=" + Configuration.EVOSUITE_ASSERTION_STRATEGY
+            "-Dstopping_condition=" + Configuration.getEvosuiteStoppingCondition(),
+            "-Dsearch_budget=" + Configuration.getEvosuiteSearchBudget(),
+            "-Dcriterion=" + Configuration.getEvosuiteCoverageCriterion(),
+            "-Dassertion_strategy=" + Configuration.getEvosuiteAssertionStrategy()
         ));
 
         switch (this.projectRecord.getTestFramework()) {

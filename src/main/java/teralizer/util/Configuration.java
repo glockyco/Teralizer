@@ -1,14 +1,46 @@
 package teralizer.util;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.dependencies.Dependency;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
 public class Configuration {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
+
+    private static final Config config;
+
+    static {
+        // Load default config from 'src/main/resources/reference.conf'.
+        Config defaultConfig = ConfigFactory.defaultReference();
+
+        // Load custom config from the path specified by '-Dteralizer.config'.
+        String customConfigPath = System.getProperty("teralizer.config");
+        Config customConfig = ConfigFactory.empty();
+        if (customConfigPath != null && !customConfigPath.isEmpty()) {
+            File customConfigFile = new File(customConfigPath);
+            if (customConfigFile.exists()) {
+                customConfig = ConfigFactory.parseFile(customConfigFile);
+                LOGGER.atDebug().log("Loaded custom configuration from: " + customConfigPath);
+            } else {
+                throw new RuntimeException("Warning: Configuration file not found: " + customConfigPath);
+            }
+        }
+
+        // Combine the two configurations, using the custom config as the
+        // primary source of config values. Any values that are not present
+        // there fall back to the values provided by the default config.
+        config = customConfig.withFallback(defaultConfig).resolve();
+    }
 
     // ----- General ----- //
     public static final String TOOL_NAME = "Teralizer";
@@ -60,15 +92,33 @@ public class Configuration {
     public static final List<String> GENERALIZABLE_ASSERTS = Arrays.asList(ASSERT_EQUALS, ASSERT_TRUE, ASSERT_FALSE, ASSERT_THROWS);
 
     // ----- EvoSuite ----- //
-    public static final String EVOSUITE_STOPPING_CONDITION = "MAXTIME";
-    public static final String EVOSUITE_SEARCH_BUDGET = "60";
-    public static final String EVOSUITE_ASSERTION_STRATEGY = "MUTATION";
-    public static final String EVOSUITE_COVERAGE_CRITERION = "LINE:BRANCH:EXCEPTION:WEAKMUTATION:OUTPUT:METHOD:METHODNOEXCEPTION:CBRANCH";
+    public static String getEvosuiteStoppingCondition() {
+        return config.getString("teralizer.evosuite.stopping-condition");
+    }
+
+    public static String getEvosuiteSearchBudget() {
+        return config.getString("teralizer.evosuite.search-budget");
+    }
+
+    public static String getEvosuiteAssertionStrategy() {
+        return config.getString("teralizer.evosuite.assertion-strategy");
+    }
+
+    public static String getEvosuiteCoverageCriterion() {
+        return config.getString("teralizer.evosuite.coverage-criterion");
+    }
 
     // ----- SPF / JPF ----- //
-    public static final double JPF_MAX_EXECUTION_TIME = 10; // seconds
-    public static final long JPF_MAX_PATH_CONDITION_SIZE = 1000000; // characters
+    public static double getJpfMaxExecutionTime() {
+        return config.getDouble("teralizer.jpf.max-execution-time");
+    }
+
+    public static long getJpfMaxPathConditionSize() {
+        return config.getLong("teralizer.jpf.max-path-condition-size");
+    }
 
     // ----- Pitest ----- //
-    public static final String PITEST_MUTATORS = "DEFAULTS"; // https://pitest.org/quickstart/mutators/
+    public static String getPitestMutators() {
+        return config.getString("teralizer.pitest.mutators");
+    }
 }
