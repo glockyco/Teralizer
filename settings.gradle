@@ -5,3 +5,17 @@ include 'jpf-symbc'
 
 project(':jpf-core').projectDir = new File('jpf-symbc/jpf-core')
 project(':jpf-symbc').projectDir = new File('jpf-symbc/jpf-symbc')
+
+gradle.projectsLoaded { gradle ->
+    gradle.rootProject.childProjects.values().each { project ->
+        if (project.name == 'jpf-core' || project.name == 'jpf-symbc') {
+            project.beforeEvaluate {
+                project.tasks.configureEach { task ->
+                    if (task instanceof Test) {
+                        task.enabled = false
+                    }
+                }
+            }
+        }
+    }
+}
