@@ -71,16 +71,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     @Override
     public void stateAdvanced(Search search) {
-        double elapsedTime = (System.currentTimeMillis() - this.startTime) / 1000.0;
-        if (elapsedTime > this.maxExecutionTime) {
-            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Execution timeout exceeded: " + elapsedTime + " of " + this.maxExecutionTime + " seconds passed.");
-        }
-
-        PathCondition pathCondition = PathCondition.getPC(search.getVM());
-        int pcLength = pathCondition == null ? 0 : pathCondition.toString().length();
-        if (pcLength > this.maxPathConditionSize) {
-            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - PC size limit exceeded: " + pcLength + " of " + this.maxPathConditionSize + " characters used.");
-        }
+        this.checkExecutionTimeoutExceeded();
+        this.checkPcSizeLimitExceeded(PathCondition.getPC(search.getVM()));
     }
 
     @Override
@@ -105,7 +97,9 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     private void writeSpecificationFiles(VM vm, ThreadInfo currentThread) {
         PathCondition pathCondition = PathCondition.getPC(vm);
-        Constraint spfInput = pathCondition == null ? null : PathCondition.getPC(vm).header;
+        this.checkPcSizeLimitExceeded(pathCondition);
+
+        Constraint spfInput = pathCondition == null ? null : pathCondition.header;
         Instruction exitInstruction = vm.getCurrentThread().getPC();
         Expression spfOutput = null;
         CapturedException capturedException = null;
@@ -147,6 +141,20 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             Files.write(this.outputSpecificationPath, jsonOutput.getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void checkExecutionTimeoutExceeded() {
+        double elapsedTime = (System.currentTimeMillis() - this.startTime) / 1000.0;
+        if (elapsedTime > this.maxExecutionTime) {
+            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Execution timeout exceeded: " + elapsedTime + " of " + this.maxExecutionTime + " seconds passed.");
+        }
+    }
+
+    private void checkPcSizeLimitExceeded(PathCondition pathCondition) {
+        int pcLength = pathCondition == null ? 0 : pathCondition.toString().length();
+        if (pcLength > this.maxPathConditionSize) {
+            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - PC size limit exceeded: " + pcLength + " of " + this.maxPathConditionSize + " characters used.");
         }
     }
 }
