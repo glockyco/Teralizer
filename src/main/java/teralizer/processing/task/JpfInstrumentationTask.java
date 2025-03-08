@@ -350,7 +350,6 @@ public class JpfInstrumentationTask extends AbstractTask {
         jpfConfigFile.getParentFile().mkdirs();
 
         try (FileWriter fileWriter = new FileWriter(jpfConfigFile)) {
-            // @TODO: Add execution of @BeforeAll, @Before, @After, @AfterAll to the template.
             // @TODO: How to handle methods (without parameters) that depend on object state?
             Template template = velocityEngine.getTemplate("jpf-config.vm");
             template.merge(context, fileWriter);
