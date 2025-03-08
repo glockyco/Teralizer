@@ -164,6 +164,10 @@ public class Configuration {
         return CONFIG.getLong(TOOL_NAME_LOWER + ".jpf.max-path-condition-size");
     }
 
+    public static long getJpfMaxPcOverheadPercent() {
+        return CONFIG.getLong(TOOL_NAME_LOWER + ".jpf.max-pc-overhead-percent");
+    }
+
     // ----- Pitest ----- //
     public static String getPitestMutators() {
         return CONFIG.getString(TOOL_NAME_LOWER + ".pitest.mutators");

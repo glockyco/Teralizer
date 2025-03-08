@@ -15,10 +15,22 @@ import teralizer.domain.CapturedException;
 import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpfToModelTransformer;
 
+import javax.management.Notification;
+import javax.management.NotificationEmitter;
+import javax.management.NotificationListener;
+import javax.management.openmbean.CompositeData;
 import java.io.IOException;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.sun.management.GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION;
 
 public class TestGeneralizationListener extends PropertyListenerAdapter {
 
@@ -35,8 +47,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private final long maxPathConditionSize;
 
     private long startTime;
-
     private int recursionDepth;
+    private final GcMonitor gcMonitor;
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -46,12 +58,19 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.outputSpecificationPath = Paths.get(config.getString("test_generalization.output_specification_path"));
         this.maxExecutionTime = config.getDouble("test_generalization.max_execution_time");
         this.maxPathConditionSize = config.getLong("test_generalization.max_path_condition_size");
+        this.gcMonitor = new GcMonitor(config.getDouble("test_generalization.max_gc_overhead_percent", 20.0), this.instrumentedMethodQualifiedName);
     }
 
     @Override
     public void searchStarted(Search search) {
         this.startTime = System.currentTimeMillis();
         this.recursionDepth = -1;
+        this.gcMonitor.start(this.startTime);
+    }
+
+    @Override
+    public void searchFinished(Search search) {
+        this.gcMonitor.stop();
     }
 
     @Override
@@ -155,6 +174,81 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         int pcLength = pathCondition == null ? 0 : pathCondition.toString().length();
         if (pcLength > this.maxPathConditionSize) {
             throw new RuntimeException(this.instrumentedMethodQualifiedName + " - PC size limit exceeded: " + pcLength + " of " + this.maxPathConditionSize + " characters used.");
+        }
+    }
+
+    private static class GcMonitor implements NotificationListener {
+        private static final Logger LOGGER = LoggerFactory.getLogger(GcMonitor.class);
+
+        private final double maxGcOverheadPercent;
+        private final String instrumentedMethodName;
+        private final AtomicLong totalGcTimeMs = new AtomicLong(0);
+        private final AtomicReference<Long> startTimeRef = new AtomicReference<>();
+        private final MemoryMXBean memoryBean;
+
+        public GcMonitor(double maxGcOverheadPercent, String instrumentedMethodName) {
+            this.maxGcOverheadPercent = maxGcOverheadPercent;
+            this.instrumentedMethodName = instrumentedMethodName;
+            this.memoryBean = ManagementFactory.getMemoryMXBean();
+        }
+
+        public void start(long startTime) {
+            this.startTimeRef.set(startTime);
+            this.totalGcTimeMs.set(0);
+
+            for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
+                if (gcBean instanceof NotificationEmitter) {
+                    ((NotificationEmitter) gcBean).addNotificationListener(this, null, null);
+                    LOGGER.atDebug().log("Registered GC notification listener for {}.", gcBean.getName());
+                }
+            }
+        }
+
+        public void stop() {
+            for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
+                if (gcBean instanceof NotificationEmitter) {
+                    try {
+                        ((NotificationEmitter) gcBean).removeNotificationListener(this);
+                    } catch (Exception e) {
+                        LOGGER.atWarn().log("Failed to remove GC notification listener.", e);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void handleNotification(Notification notification, Object handback) {
+            if (notification.getType().equals(GARBAGE_COLLECTION_NOTIFICATION)) {
+                CompositeData userData = (CompositeData) notification.getUserData();
+                CompositeData gcInfo = (CompositeData) userData.get("gcInfo");
+                long duration = (Long) gcInfo.get("duration");
+
+                this.totalGcTimeMs.addAndGet(duration);
+
+                long startTime = this.startTimeRef.get();
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                double gcOverheadPercentage = this.totalGcTimeMs.get() * 100.0 / elapsedTime;
+
+                MemoryUsage heapUsage = this.memoryBean.getHeapMemoryUsage();
+                long maxMemory = heapUsage.getMax();
+                double memoryUsagePercentage = maxMemory > 0 ? (double) heapUsage.getUsed() / maxMemory * 100.0 : 0;
+
+                LOGGER.atDebug().log(
+                    "GC overhead: {}%, Memory usage: {}%",
+                    String.format("%.2f", gcOverheadPercentage),
+                    String.format("%.2f", memoryUsagePercentage)
+                );
+
+                if (gcOverheadPercentage > this.maxGcOverheadPercent) {
+                    throw new RuntimeException(String.format(
+                        "%s - GC overhead limit exceeded: %.2f%% of %.2f%% threshold. Memory usage: %.2f%%",
+                        this.instrumentedMethodName,
+                        gcOverheadPercentage,
+                        this.maxGcOverheadPercent,
+                        memoryUsagePercentage
+                    ));
+                }
+            }
         }
     }
 }

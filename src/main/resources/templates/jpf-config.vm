@@ -2,6 +2,7 @@
 ## @vtlvariable name="classpath" type="java.lang.String"
 ## @vtlvariable name="maxExecutionTime" type="java.lang.Double"
 ## @vtlvariable name="maxPathConditionSize" type="java.lang.Long"
+## @vtlvariable name="maxPcOverheadPercent" type="java.lang.Double"
 ## @vtlvariable name="driverClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="testClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="testMethodQualifiedName" type="java.lang.String"
@@ -33,6 +34,7 @@ symbolic.dp=z3
 symbolic.string_dp_timeout_ms=3000
 test_generalization.max_execution_time=${maxExecutionTime}
 test_generalization.max_path_condition_size=${maxPathConditionSize}
+test_generalization.max_gc_overhead_percent=${maxPcOverheadPercent}
 test_generalization.test_class=${testClassQualifiedName}
 test_generalization.test_method=${testMethodQualifiedName}
 test_generalization.tested_class=${testedClassQualifiedName}

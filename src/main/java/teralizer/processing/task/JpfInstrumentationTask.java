@@ -326,6 +326,7 @@ public class JpfInstrumentationTask extends AbstractTask {
 
         context.put("maxExecutionTime", Configuration.getJpfMaxExecutionTime());
         context.put("maxPathConditionSize", Configuration.getJpfMaxPathConditionSize());
+        context.put("maxPcOverheadPercent", Configuration.getJpfMaxPcOverheadPercent());
 
         context.put("driverClassQualifiedName", this.assertionRecord.getDriverClassQualifiedName());
         context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());
