@@ -100,7 +100,23 @@ public class EvoSuiteGenerationTask extends AbstractTask {
 
         List<String> command = new ArrayList<>(Arrays.asList(
             "java",
-            "-jar", Configuration.EVOSUITE_JAR_PATH.toAbsolutePath().toString(),
+            "-Duse_different_logback=" + Configuration.EVOSUITE_LOGBACK_XML_PATH,
+            // To change the logging configuration that EvoSuite uses, we need
+            // to add our custom logback.xml file to EvoSuite's classpath.
+            //
+            // This is because EvoSuite tries to load the logging config that
+            // is set by the -Duse_different_logback={xmlFileName} parameter via
+            // LoggingUtils.class.getClassLoader().getResourceAsStream(xmlFileName);
+            //
+            // To accomplish this, we don't execute EvoSuite via the usual:
+            // `java -jar {EvoSuite-JAR}`
+            // but instead use:
+            // `java -cp {EvoSuite-JAR}:{Resource-Directory} {EvoSuite-Main-Class}`
+            //
+            // The EvoSuite code that loads the logging config file can be found at:
+            // https://github.com/EvoSuite/evosuite/blob/6d2e848c683e15ce9eb9a7ace506993ea46db022/client/src/main/java/org/evosuite/utils/LoggingUtils.java#L340
+            "-cp", Configuration.EVOSUITE_JAR_PATH.toAbsolutePath() + File.pathSeparator + Paths.get("src/main/resources").toAbsolutePath(),
+            Configuration.EVOSUITE_MAIN_CLASS,
             "-base_dir", evoSuiteDataDir.toAbsolutePath().toString(),
             "-class", targetClass,
             "-projectCP", projectCP,

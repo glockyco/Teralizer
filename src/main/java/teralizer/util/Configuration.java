@@ -59,7 +59,9 @@ public class Configuration {
     public static final Path DB_DDL_PATH = Paths.get("src/main/resources/db/create-tables.sql");
 
     // ----- Dependencies ----- //
+    public static final String EVOSUITE_MAIN_CLASS = "org.evosuite.EvoSuite";
     public static final Path EVOSUITE_JAR_PATH = Paths.get("src/main/resources/evosuite/evosuite-1.2.0.jar");
+    public static final Path EVOSUITE_LOGBACK_XML_PATH = Paths.get(/*src/main/resources/*/"evosuite/logback.xml");
 
     public static final Dependency JUNIT_4_DEPENDENCY = new Dependency("junit", "junit", "4.12");
     public static final Dependency JUNIT_VINTAGE_DEPENDENCY = new Dependency("org.junit.vintage", "junit-vintage-engine", "5.11.0");
