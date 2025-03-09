@@ -204,7 +204,7 @@ public class ImprovedTestParametersSupplierFactory {
         if (constraint == null) {
             return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
         } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
+            return "return net.jqwik.api.Arbitraries.of(" + String.format("(%s) (%s)", unboxedType, constraint.getEquality()) + ")";
         }
 
         Names n = new Names(parameter.getName());
@@ -233,7 +233,7 @@ public class ImprovedTestParametersSupplierFactory {
         if (constraint == null) {
             return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
         } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + constraint.getEquality() + ")";
+            return "return net.jqwik.api.Arbitraries.of(" + String.format("(%s) (%s)", unboxedType, constraint.getEquality()) + ")";
         }
 
         Names n = new Names(parameter.getName());
