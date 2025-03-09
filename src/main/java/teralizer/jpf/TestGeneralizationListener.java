@@ -105,17 +105,18 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         CapturedException capturedException = null;
 
         LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
-        LOGGER.atDebug().log("Input: " + (spfInput == null ? null : spfInput.toString()));
+        LOGGER.atTrace().log(() -> "Input: " + (spfInput == null ? null : spfInput.toString()));
 
         if (exitInstruction instanceof JVMReturnInstruction) {
             spfOutput = (Expression) ((JVMReturnInstruction) exitInstruction).getReturnAttr(vm.getCurrentThread());
-            LOGGER.atDebug().log("Output: " + (spfOutput == null ? null : spfOutput.toString()));
+            Expression spfOutput_ = spfOutput; // To use spfOutput in the lambda, it needs to be (effectively) final.
+            LOGGER.atTrace().log(() -> "Output: " + (spfOutput_ == null ? null : spfOutput_.toString()));
         } else if (exitInstruction.getMethodInfo().getThrownExceptionClassNames().length > 0) {
             String exceptionClass = exitInstruction.getMethodInfo().getThrownExceptionClassNames()[0];
             ExceptionInfo pendingException = currentThread.getPendingException();
             String exceptionMessage = pendingException.getCauseDetails();
             capturedException = new CapturedException(exceptionClass, exceptionMessage);
-            LOGGER.atDebug().log("Output: Exception thrown " + exceptionClass);
+            LOGGER.atTrace().log(() -> "Output: Exception thrown " + exceptionClass);
         } else {
             throw new RuntimeException("Unexpected exit instruction: " + exitInstruction);
         }
