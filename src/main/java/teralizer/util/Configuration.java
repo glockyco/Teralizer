@@ -125,7 +125,7 @@ public class Configuration {
     }
 
     public static Path getProjectCoverageReportsPath() {
-        return getPathOrNull(TOOL_NAME_LOWER + ".project.test-reports-path");
+        return getPathOrNull(TOOL_NAME_LOWER + ".project.coverage-reports-path");
     }
 
     public static Path getProjectMutationReportsPath() {
