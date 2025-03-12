@@ -63,7 +63,7 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             List<String> targetClasses = paths.filter(isClassFile)
                 .map(path -> startPath.relativize(path).toString()
                     .replace(File.separator, ".")
-                    .replace(".class", "")
+                    .replaceAll("\\.class", "")
                 ).collect(Collectors.toList());
 
             LOGGER.atDebug().log("Generating EvoSuite tests for " + targetClasses.size() + " classes...");
