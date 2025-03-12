@@ -124,7 +124,8 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             "-Dstopping_condition=" + Configuration.getEvosuiteStoppingCondition(),
             "-Dsearch_budget=" + Configuration.getEvosuiteSearchBudget(),
             "-Dcriterion=" + Configuration.getEvosuiteCoverageCriterion(),
-            "-Dassertion_strategy=" + Configuration.getEvosuiteAssertionStrategy()
+            "-Dassertion_strategy=" + Configuration.getEvosuiteAssertionStrategy(),
+            "-Duse_separate_classloader=false"
         ));
 
         switch (this.projectRecord.getTestFramework()) {
