@@ -10,7 +10,9 @@ import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
 
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -66,10 +68,10 @@ public class TestExecutionTask extends AbstractTask {
             case ANT:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
-                command = buildGradleCommand(includedTests);
+                command = this.buildGradleCommand(includedTests);
                 break;
             case MAVEN:
-                command = buildMavenCommand(includedTests);
+                command = this.buildMavenCommand(includedTests);
                 break;
             default:
                 throw new RuntimeException("Cannot run tests for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
@@ -94,7 +96,7 @@ public class TestExecutionTask extends AbstractTask {
         }
     }
 
-    private static List<String> buildGradleCommand(List<String> includedTests) {
+    private List<String> buildGradleCommand(List<String> includedTests) {
         List<String> command = new ArrayList<>(Arrays.asList(
             "./gradlew",
             "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE,
@@ -104,16 +106,19 @@ public class TestExecutionTask extends AbstractTask {
             "-DreuseForks=false",
             "test"
         ));
+
         if (includedTests != null) {
+            // @TODO: Avoid "Argument list too long" errors if there are many included tests.
             for (String includedTest : includedTests) {
                 command.add("--tests");
                 command.add(includedTest);
             }
         }
+
         return command;
     }
 
-    private static List<String> buildMavenCommand(List<String> includedTests) {
+    private List<String> buildMavenCommand(List<String> includedTests) throws IOException {
         List<String> command = new ArrayList<>(Arrays.asList(
             "mvn",
             "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
@@ -122,9 +127,22 @@ public class TestExecutionTask extends AbstractTask {
             "-DreuseForks=false",
             "test"
         ));
-        if (includedTests != null) {
-            command.add("-Dtest=" + String.join(",", includedTests));
+
+        if (includedTests != null && !includedTests.isEmpty()) {
+            Path commandDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/command-data");
+            Files.createDirectories(commandDataPath);
+
+            String stageName = this.stage.getStep() + "-" + this.stage;
+            String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
+            String executionName = "." + System.currentTimeMillis();
+            String baseName = stageName + variantName + executionName;
+
+            Path includesFilePath = commandDataPath.resolve(baseName + ".tests.txt");
+            Files.write(includesFilePath, includedTests);
+
+            command.add("-Dsurefire.includesFile=" + includesFilePath.toAbsolutePath());
         }
+
         return command;
     }
 }

@@ -258,6 +258,7 @@ public class PitDataCollectionTask extends AbstractTask {
     private static List<String> buildGradleCommand(List<String> targetClasses, List<String> targetTests) {
         List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE, "--info", "pitest"));
         if (targetTests != null) {
+            // @TODO: Avoid "Argument list too long" errors if there are many target classes / tests.
             command.add("-PtargetClasses=" + String.join(",", targetClasses));
             command.add("-PtargetTests=" + String.join(",", targetTests));
             command.add("-Pmutators=" + Configuration.getPitestMutators());
@@ -268,6 +269,7 @@ public class PitDataCollectionTask extends AbstractTask {
     private static List<String> buildMavenCommand(List<String> targetClasses, List<String> includedTests) {
         List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE, "pitest:mutationCoverage"));
         if (includedTests != null) {
+            // @TODO: Avoid "Argument list too long" errors if there are many target classes / tests.
             command.add("-DtargetClasses=" + String.join(",", targetClasses));
             command.add("-DtargetTests=" + String.join(",", includedTests));
             command.add("-Dmutators=" + Configuration.getPitestMutators());
