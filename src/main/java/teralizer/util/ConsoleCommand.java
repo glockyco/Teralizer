@@ -8,7 +8,10 @@ import teralizer.processing.ProcessingStage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConsoleCommand {
 
@@ -18,12 +21,18 @@ public class ConsoleCommand {
     private final GeneralizationVariant variant;
     private final Path commandDataPath;
 
+    private final Map<String, String> environmentVariables = new HashMap<>();
+
     private int executionCount = 0;
 
     public ConsoleCommand(ProcessingStage stage, GeneralizationVariant variant, int projectId, Path projectDataPath) {
         this.stage = stage;
         this.variant = variant;
         this.commandDataPath = projectDataPath.resolve("project-id-" + projectId + "/command-data");
+    }
+
+    public void addEnvironmentVariable(String name, String value) {
+        this.environmentVariables.put(name, value);
     }
 
     public void execute(List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
@@ -39,6 +48,7 @@ public class ConsoleCommand {
         Path commandPath = this.commandDataPath.resolve(baseName + ".command.txt");
         Path outputPath = this.commandDataPath.resolve(baseName + ".output.txt");
         Path errorPath = this.commandDataPath.resolve(baseName + ".error.txt");
+        Path envPath = this.commandDataPath.resolve(baseName + ".env.txt");
         outputPath.toFile().getParentFile().mkdirs();
 
         String commandString = String.join(" ", command);
@@ -48,6 +58,19 @@ public class ConsoleCommand {
         processBuilder.directory(projectRootPath == null ? null : projectRootPath.toFile());
         processBuilder.redirectOutput(ProcessBuilder.Redirect.to(outputPath.toFile()));
         processBuilder.redirectError(ProcessBuilder.Redirect.to(errorPath.toFile()));
+
+        if (!this.environmentVariables.isEmpty()) {
+            Map<String, String> env = processBuilder.environment();
+            env.putAll(this.environmentVariables);
+
+            List<String> envEntries = new ArrayList<>();
+            for (Map.Entry<String, String> entry : this.environmentVariables.entrySet()) {
+                envEntries.add(entry.getKey() + "=" + entry.getValue());
+            }
+
+            Files.write(envPath, envEntries);
+        }
+
         Process process = processBuilder.start();
 
         Thread shutdownHook = new Thread(() -> {

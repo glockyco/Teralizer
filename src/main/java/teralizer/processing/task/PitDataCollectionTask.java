@@ -92,10 +92,10 @@ public class PitDataCollectionTask extends AbstractTask {
             case ANT:
                 throw new RuntimeException("Cannot execute mutation testing for project " + this.projectRecord.getRootPath() + ". Ant projects are not supported yet.");
             case GRADLE:
-                command = buildGradleCommand(targetClassesFiltered, targetTests);
+                command = this.buildGradleCommand(targetClassesFiltered, targetTests);
                 break;
             case MAVEN:
-                command = buildMavenCommand(targetClassesFiltered, targetTests);
+                command = this.buildMavenCommand(targetClassesFiltered, targetTests);
                 break;
             default:
                 throw new RuntimeException("Cannot execute mutation testing for project " + this.projectRecord.getRootPath() + ". Unsupported project type " + this.projectRecord.getType() + ".");
@@ -255,25 +255,41 @@ public class PitDataCollectionTask extends AbstractTask {
         create.batchInsert(records).execute();
     }
 
-    private static List<String> buildGradleCommand(List<String> targetClasses, List<String> targetTests) {
+    private List<String> buildGradleCommand(List<String> targetClasses, List<String> targetTests) {
         List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE, "--info", "pitest"));
-        if (targetTests != null) {
-            // @TODO: Avoid "Argument list too long" errors if there are many target classes / tests.
+        command.add("-Pmutators=" + Configuration.getPitestMutators());
+        if (targetClasses != null) {
+            // @TODO: Avoid "Argument list too long" errors if there are many targetClasses.
             command.add("-PtargetClasses=" + String.join(",", targetClasses));
+        }
+        if (targetTests != null) {
+            // @TODO: Avoid "Argument list too long" errors if there are many targetTests.
             command.add("-PtargetTests=" + String.join(",", targetTests));
-            command.add("-Pmutators=" + Configuration.getPitestMutators());
         }
         return command;
     }
 
-    private static List<String> buildMavenCommand(List<String> targetClasses, List<String> includedTests) {
+    private List<String> buildMavenCommand(List<String> targetClasses, List<String> targetTests) {
         List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE, "pitest:mutationCoverage"));
-        if (includedTests != null) {
-            // @TODO: Avoid "Argument list too long" errors if there are many target classes / tests.
-            command.add("-DtargetClasses=" + String.join(",", targetClasses));
-            command.add("-DtargetTests=" + String.join(",", includedTests));
-            command.add("-Dmutators=" + Configuration.getPitestMutators());
+        command.add("-Dmutators=" + Configuration.getPitestMutators());
+
+        String mavenOpts = System.getenv("MAVEN_OPTS");
+        mavenOpts = mavenOpts == null ? "" : mavenOpts;
+
+        if (targetClasses != null) {
+            // Set -DtargetClasses parameter via MAVEN_OPTS to avoid "Argument list too long" errors.
+            mavenOpts += (mavenOpts.isEmpty() ? "" : " ") + "-DtargetClasses=" + String.join(",", targetClasses);
         }
+
+        if (targetTests != null) {
+            // Set -DtargetTests parameter via MAVEN_OPTS to avoid "Argument list too long" errors.
+            mavenOpts += (mavenOpts.isEmpty() ? "" : " ") + "-DtargetTests=" + String.join(",", targetTests);
+        }
+
+        if (!mavenOpts.isEmpty()) {
+            this.consoleCommand.addEnvironmentVariable("MAVEN_OPTS", mavenOpts);
+        }
+
         return command;
     }
 }

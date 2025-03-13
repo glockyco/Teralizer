@@ -118,7 +118,7 @@ public class TestExecutionTask extends AbstractTask {
         return command;
     }
 
-    private List<String> buildMavenCommand(List<String> includedTests) throws IOException {
+    private List<String> buildMavenCommand(List<String> includedTests) {
         List<String> command = new ArrayList<>(Arrays.asList(
             "mvn",
             "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
@@ -128,19 +128,11 @@ public class TestExecutionTask extends AbstractTask {
             "test"
         ));
 
-        if (includedTests != null && !includedTests.isEmpty()) {
-            Path commandDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/command-data");
-            Files.createDirectories(commandDataPath);
-
-            String stageName = this.stage.getStep() + "-" + this.stage;
-            String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
-            String executionName = "." + System.currentTimeMillis();
-            String baseName = stageName + variantName + executionName;
-
-            Path includesFilePath = commandDataPath.resolve(baseName + ".tests.txt");
-            Files.write(includesFilePath, includedTests);
-
-            command.add("-Dsurefire.includesFile=" + includesFilePath.toAbsolutePath());
+        if (includedTests != null) {
+            // Set -Dtest parameter via MAVEN_OPTS to avoid "Argument list too long" errors.
+            String mavenOpts = System.getenv("MAVEN_OPTS");
+            mavenOpts = (mavenOpts == null ? "" : (mavenOpts + " ")) + "-Dtest=" + String.join(",", includedTests);
+            this.consoleCommand.addEnvironmentVariable("MAVEN_OPTS", mavenOpts);
         }
 
         return command;
