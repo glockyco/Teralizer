@@ -15,6 +15,7 @@ import teralizer.util.Configuration;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 public class TestGeneralizationRunner {
@@ -24,6 +25,11 @@ public class TestGeneralizationRunner {
     }
 
     public void run() throws IOException {
+        Path dbDirectory = Configuration.DB_PATH.getParent();
+        if (!Files.exists(dbDirectory)) {
+            Files.createDirectories(dbDirectory);
+        }
+
         DSLContext create = DSL.using(Configuration.DB_CONNECTION_STRING);
 
         if (!Files.exists(Configuration.DB_PATH) || Files.size(Configuration.DB_PATH) == 0) {
