@@ -353,6 +353,8 @@ gradle-app.setting
 /data
 /database
 /projects/*
+/logs
+
 !/projects/EqBench
 !/projects/example-gradle-junit4
 !/projects/example-gradle-junit5
