@@ -181,7 +181,7 @@ public class ProjectSetupTask extends AbstractTask {
 
         Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
 
-        Files.createDirectories(buildDataPath);
+        Files.createDirectories(buildDataPath.getParent());
         Files.copy(destinationPath, buildDataPath, StandardCopyOption.REPLACE_EXISTING);
     }
 
