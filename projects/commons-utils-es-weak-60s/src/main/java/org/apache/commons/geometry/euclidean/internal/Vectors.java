@@ -1,0 +1,168 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.commons.geometry.euclidean.internal;
+
+import org.apache.commons.numbers.core.Norm;
+import org.apache.commons.numbers.core.Sum;
+
+/** This class consists exclusively of static vector utility methods.
+ */
+public final class Vectors {
+
+    /** Private constructor. */
+    private Vectors() {}
+
+    /** Returns true if the given value is real (ie, not NaN or infinite)
+     * and not equal to zero.
+     * @param value the value to test
+     * @return true if {@code value} is not NaN, infinite, or zero; otherwise
+     *      false
+     */
+    public static boolean isRealNonZero(final double value) {
+        return Double.isFinite(value) && value != 0.0;
+    }
+
+    /** Throws an {@link IllegalArgumentException} if the given norm value
+     * is not real (ie, not NaN or infinite) or zero. The argument is returned
+     * to allow this method to be called inline.
+     * @param norm vector norm value
+     * @return the validated norm value
+     * @throws IllegalArgumentException if the given norm value is NaN, infinite,
+     *      or zero
+     */
+    public static double checkedNorm(final double norm) {
+        if (!isRealNonZero(norm)) {
+            throw illegalNorm(norm);
+        }
+
+        return norm;
+    }
+
+    /** Return an exception indicating an illegal norm value.
+     * @param norm illegal norm value
+     * @return exception indicating an illegal norm value
+     */
+    public static IllegalArgumentException illegalNorm(final double norm) {
+        return new IllegalArgumentException("Illegal norm: " + norm);
+    }
+
+    /** Get the L<sub>2</sub> norm (commonly known as the Euclidean norm) for the vector
+     * with the given components. This corresponds to the common notion of vector magnitude
+     * or length and is defined as the square root of the sum of the squares of all vector components.
+     * @param x vector component
+     * @return L<sub>2</sub> norm for the vector with the given components
+     * @see <a href="https://mathworld.wolfram.com/L2-Norm.html">L2 Norm</a>
+     */
+    public static double norm(final double x) {
+        return Math.abs(x);
+    }
+
+    /** Get the L<sub>2</sub> norm (commonly known as the Euclidean norm) for the vector
+     * with the given components. This corresponds to the common notion of vector magnitude
+     * or length and is defined as the square root of the sum of the squares of all vector components.
+     * @param x1 first vector component
+     * @param x2 second vector component
+     * @return L<sub>2</sub> norm for the vector with the given components
+     * @see <a href="https://mathworld.wolfram.com/L2-Norm.html">L2 Norm</a>
+     */
+    public static double norm(final double x1, final double x2) {
+        return Math.hypot(x1, x2);
+    }
+
+    /** Get the L<sub>2</sub> norm (commonly known as the Euclidean norm) for the vector
+     * with the given components. This corresponds to the common notion of vector magnitude
+     * or length and is defined as the square root of the sum of the squares of all vector components.
+     * @param x1 first vector component
+     * @param x2 second vector component
+     * @param x3 third vector component
+     * @return L<sub>2</sub> norm for the vector with the given components
+     * @see <a href="https://mathworld.wolfram.com/L2-Norm.html">L2 Norm</a>
+     */
+    public static double norm(final double x1, final double x2, final double x3) {
+        return Norm.EUCLIDEAN.of(x1, x2, x3);
+    }
+
+    /** Get the square of the L<sub>2</sub> norm (also known as the Euclidean norm)
+     * for the vector with the given components. This is equal to the sum of the squares of
+     * all vector components.
+     * @param x vector component
+     * @return square of the L<sub>2</sub> norm for the vector with the given components
+     * @see #norm(double)
+     */
+    public static double normSq(final double x) {
+        return x * x;
+    }
+
+    /** Get the square of the L<sub>2</sub> norm (also known as the Euclidean norm)
+     * for the vector with the given components. This is equal to the sum of the squares of
+     * all vector components.
+     * @param x1 first vector component
+     * @param x2 second vector component
+     * @return square of the L<sub>2</sub> norm for the vector with the given components
+     * @see #norm(double, double)
+     */
+    public static double normSq(final double x1, final double x2) {
+        return (x1 * x1) + (x2 * x2);
+    }
+
+    /** Get the square of the L<sub>2</sub> norm (also known as the Euclidean norm)
+     * for the vector with the given components. This is equal to the sum of the squares of
+     * all vector components.
+     * @param x1 first vector component
+     * @param x2 second vector component
+     * @param x3 third vector component
+     * @return square of the L<sub>2</sub> norm for the vector with the given components
+     * @see #norm(double, double, double)
+     */
+    public static double normSq(final double x1, final double x2, final double x3) {
+        return (x1 * x1) + (x2 * x2) + (x3 * x3);
+    }
+
+    /** Compute the linear combination \(a_1 b_1 + a_2 b_2 \) with high accuracy.
+     * @param a1 first factor of the first term
+     * @param b1 second factor of the first term
+     * @param a2 first factor of the second term
+     * @param b2 second factor of the seconf term
+     * @return linear combination.
+     * @see Sum
+     */
+    public static double linearCombination(final double a1, final double b1,
+                                           final double a2, final double b2) {
+        return Sum.create()
+                .addProduct(a1, b1)
+                .addProduct(a2, b2).getAsDouble();
+    }
+
+    /** Compute the linear combination \(a_1 b_1 + a_2 b_2 + a_3 b_3 \) with high accuracy.
+     * @param a1 first factor of the first term
+     * @param b1 second factor of the first term
+     * @param a2 first factor of the second term
+     * @param b2 second factor of the seconf term
+     * @param a3 first factor of the third term
+     * @param b3 second factor of the third term
+     * @return linear combination.
+     * @see Sum
+     */
+    public static double linearCombination(final double a1, final double b1,
+                                           final double a2, final double b2,
+                                           final double a3, final double b3) {
+        return Sum.create()
+                .addProduct(a1, b1)
+                .addProduct(a2, b2)
+                .addProduct(a3, b3).getAsDouble();
+    }
+}

@@ -42,11 +42,44 @@ run_and_log() {
 }
 
 configs=(
-    "project-configs/example-gradle-junit4.conf"
-    "project-configs/example-gradle-junit5.conf"
-    "project-configs/example-maven-junit4.conf"
-    "project-configs/example-maven-junit5.conf"
+    # Examples
+    #"project-configs/example-gradle-junit4.conf"
+    #"project-configs/example-gradle-junit5.conf"
+    #"project-configs/example-maven-junit4.conf"
+    #"project-configs/example-maven-junit5.conf"
     #"project-configs/eqbench.conf"
+    # Evaluation - Original Test Suite
+    "project-configs/evaluation/commons-utils-pit-defaults.conf"
+    # Evaluation - EvoSuite - defaults/1s - Test Suite
+    "project-configs/evaluation/commons-utils-es-default-1s.conf"
+    "project-configs/evaluation/commons-utils-es-default-1s-pit-defaults.conf"
+    "project-configs/evaluation/eqbench-es-default-1s.conf"
+    "project-configs/evaluation/eqbench-es-default-1s-pit-defaults.conf"
+    # Evaluation - EvoSuite - default/60s - Test Suite
+    "project-configs/evaluation/commons-utils-es-default-60s.conf"
+    "project-configs/evaluation/commons-utils-es-default-60s-pit-defaults.conf"
+    "project-configs/evaluation/eqbench-es-default-60s.conf"
+    "project-configs/evaluation/eqbench-es-default-60s-pit-defaults.conf"
+    # Evaluation - EvoSuite  - weak/1s - Test Suite
+    #"project-configs/evaluation/commons-utils-es-weak-1s.conf"
+    #"project-configs/evaluation/commons-utils-es-weak-1s-pit-defaults.conf"
+    #"project-configs/evaluation/eqbench-es-weak-1s.conf"
+    #"project-configs/evaluation/eqbench-es-weak-1s-pit-defaults.conf"
+    # Evaluation - EvoSuite  - weak/60s - Test Suite
+    #"project-configs/evaluation/commons-utils-es-weak-60s.conf"
+    #"project-configs/evaluation/commons-utils-es-weak-60s-pit-defaults.conf"
+    #"project-configs/evaluation/eqbench-es-weak-60s.conf"
+    #"project-configs/evaluation/eqbench-es-weak-60s-pit-defaults.conf"
+    # Evaluation - EvoSuite  - default/10s - Test Suite
+    #"project-configs/evaluation/commons-utils-es-default-10s.conf"
+    #"project-configs/evaluation/commons-utils-es-default-10s-pit-defaults.conf"
+    #"project-configs/evaluation/eqbench-es-default-10s.conf"
+    #"project-configs/evaluation/eqbench-es-default-10s-pit-defaults.conf"
+    # Evaluation - EvoSuite  - weak/10s - Test Suite
+    #"project-configs/evaluation/commons-utils-es-weak-10s.conf"
+    #"project-configs/evaluation/commons-utils-es-weak-10s-pit-defaults.conf"
+    #"project-configs/evaluation/eqbench-es-weak-10s.conf"
+    #"project-configs/evaluation/eqbench-es-weak-10s-pit-defaults.conf"
 )
 
 # Update total_configs to match actual array length
