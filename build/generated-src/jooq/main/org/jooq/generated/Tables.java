@@ -5,6 +5,7 @@ package org.jooq.generated;
 
 
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
@@ -27,6 +28,11 @@ public class Tables {
      * The table <code>assertion</code>.
      */
     public static final Assertion ASSERTION = Assertion.ASSERTION;
+
+    /**
+     * The table <code>evosuite_report</code>.
+     */
+    public static final EvosuiteReport EVOSUITE_REPORT = EvosuiteReport.EVOSUITE_REPORT;
 
     /**
      * The table <code>evosuite_runtime</code>.

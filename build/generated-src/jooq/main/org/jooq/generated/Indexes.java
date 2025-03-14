@@ -7,6 +7,7 @@ package org.jooq.generated;
 import org.jooq.Index;
 import org.jooq.OrderField;
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
@@ -33,6 +34,7 @@ public class Indexes {
     public static final Index IDX_ASSERTION_IS_INCLUDED = Internal.createIndex(DSL.name("idx_assertion_is_included"), Assertion.ASSERTION, new OrderField[] { Assertion.ASSERTION.IS_INCLUDED }, false);
     public static final Index IDX_ASSERTION_PROJECT_ID = Internal.createIndex(DSL.name("idx_assertion_project_id"), Assertion.ASSERTION, new OrderField[] { Assertion.ASSERTION.PROJECT_ID }, false);
     public static final Index IDX_ASSERTION_TEST_ID = Internal.createIndex(DSL.name("idx_assertion_test_id"), Assertion.ASSERTION, new OrderField[] { Assertion.ASSERTION.TEST_ID }, false);
+    public static final Index IDX_EVOSUITE_REPORT_PROJECT_ID = Internal.createIndex(DSL.name("idx_evosuite_report_project_id"), EvosuiteReport.EVOSUITE_REPORT, new OrderField[] { EvosuiteReport.EVOSUITE_REPORT.PROJECT_ID }, false);
     public static final Index IDX_EVOSUITE_RUNTIME_PROJECT_ID = Internal.createIndex(DSL.name("idx_evosuite_runtime_project_id"), EvosuiteRuntime.EVOSUITE_RUNTIME, new OrderField[] { EvosuiteRuntime.EVOSUITE_RUNTIME.PROJECT_ID }, false);
     public static final Index IDX_GENERALIZATION_ASSERTION_ID = Internal.createIndex(DSL.name("idx_generalization_assertion_id"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.ASSERTION_ID }, false);
     public static final Index IDX_GENERALIZATION_CLASS_QUALIFIED_NAME = Internal.createIndex(DSL.name("idx_generalization_class_qualified_name"), Generalization.GENERALIZATION, new OrderField[] { Generalization.GENERALIZATION.CLASS_QUALIFIED_NAME }, false);

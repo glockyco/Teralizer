@@ -8,6 +8,7 @@ import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
@@ -18,6 +19,7 @@ import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.EvosuiteReportRecord;
 import org.jooq.generated.tables.records.EvosuiteRuntimeRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.JacocoCoverageReportRecord;
@@ -43,6 +45,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<AssertionRecord> PK_ASSERTION = Internal.createUniqueKey(Assertion.ASSERTION, DSL.name("pk_assertion"), new TableField[] { Assertion.ASSERTION.ID }, true);
+    public static final UniqueKey<EvosuiteReportRecord> PK_EVOSUITE_REPORT = Internal.createUniqueKey(EvosuiteReport.EVOSUITE_REPORT, DSL.name("pk_evosuite_report"), new TableField[] { EvosuiteReport.EVOSUITE_REPORT.ID }, true);
     public static final UniqueKey<EvosuiteRuntimeRecord> PK_EVOSUITE_RUNTIME = Internal.createUniqueKey(EvosuiteRuntime.EVOSUITE_RUNTIME, DSL.name("pk_evosuite_runtime"), new TableField[] { EvosuiteRuntime.EVOSUITE_RUNTIME.ID }, true);
     public static final UniqueKey<GeneralizationRecord> PK_GENERALIZATION = Internal.createUniqueKey(Generalization.GENERALIZATION, DSL.name("pk_generalization"), new TableField[] { Generalization.GENERALIZATION.ID }, true);
     public static final UniqueKey<JacocoCoverageReportRecord> PK_JACOCO_COVERAGE_REPORT = Internal.createUniqueKey(JacocoCoverageReport.JACOCO_COVERAGE_REPORT, DSL.name("pk_jacoco_coverage_report"), new TableField[] { JacocoCoverageReport.JACOCO_COVERAGE_REPORT.ID }, true);
@@ -59,6 +62,7 @@ public class Keys {
 
     public static final ForeignKey<AssertionRecord, ProjectRecord> FK_ASSERTION_PROJECT_1 = Internal.createForeignKey(Assertion.ASSERTION, DSL.name("fk_assertion_project_1"), new TableField[] { Assertion.ASSERTION.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<AssertionRecord, TestRecord> FK_ASSERTION_TEST_1 = Internal.createForeignKey(Assertion.ASSERTION, DSL.name("fk_assertion_test_1"), new TableField[] { Assertion.ASSERTION.TEST_ID }, Keys.PK_TEST, new TableField[] { Test.TEST.ID }, true);
+    public static final ForeignKey<EvosuiteReportRecord, ProjectRecord> FK_EVOSUITE_REPORT_PROJECT_1 = Internal.createForeignKey(EvosuiteReport.EVOSUITE_REPORT, DSL.name("fk_evosuite_report_project_1"), new TableField[] { EvosuiteReport.EVOSUITE_REPORT.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<EvosuiteRuntimeRecord, ProjectRecord> FK_EVOSUITE_RUNTIME_PROJECT_1 = Internal.createForeignKey(EvosuiteRuntime.EVOSUITE_RUNTIME, DSL.name("fk_evosuite_runtime_project_1"), new TableField[] { EvosuiteRuntime.EVOSUITE_RUNTIME.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<GeneralizationRecord, AssertionRecord> FK_GENERALIZATION_ASSERTION_1 = Internal.createForeignKey(Generalization.GENERALIZATION, DSL.name("fk_generalization_assertion_1"), new TableField[] { Generalization.GENERALIZATION.ASSERTION_ID }, Keys.PK_ASSERTION, new TableField[] { Assertion.ASSERTION.ID }, true);
     public static final ForeignKey<GeneralizationRecord, ProjectRecord> FK_GENERALIZATION_PROJECT_1 = Internal.createForeignKey(Generalization.GENERALIZATION, DSL.name("fk_generalization_project_1"), new TableField[] { Generalization.GENERALIZATION.PROJECT_ID }, Keys.PK_PROJECT, new TableField[] { Project.PROJECT.ID }, true);

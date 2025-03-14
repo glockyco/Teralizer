@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS pit_mutation_report;
 DROP TABLE IF EXISTS pit_coverage_report;
 DROP TABLE IF EXISTS jacoco_coverage_report;
 DROP TABLE IF EXISTS junit_test_report;
+DROP TABLE IF EXISTS evosuite_report;
 DROP TABLE IF EXISTS evosuite_runtime;
 DROP TABLE IF EXISTS generalization;
 DROP TABLE IF EXISTS assertion;
@@ -164,6 +165,20 @@ CREATE TABLE evosuite_runtime
 );
 
 CREATE INDEX idx_evosuite_runtime_project_id ON evosuite_runtime (project_id);
+
+CREATE TABLE evosuite_report
+(
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id    INTEGER NOT NULL,
+    class_name    TEXT    NOT NULL,
+    criterion     TEXT    NOT NULL,
+    coverage      REAL    NOT NULL,
+    total_goals   INTEGER NOT NULL,
+    covered_goals INTEGER NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_evosuite_report_project_id ON evosuite_report (project_id);
 
 CREATE TABLE junit_test_report
 (
