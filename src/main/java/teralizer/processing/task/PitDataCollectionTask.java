@@ -15,6 +15,7 @@ import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.processing.dependencies.MavenDependencyManager;
 import teralizer.repository.SQLiteRepository;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
@@ -22,8 +23,12 @@ import teralizer.util.ConsoleCommand;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -269,27 +274,29 @@ public class PitDataCollectionTask extends AbstractTask {
         return command;
     }
 
-    private List<String> buildMavenCommand(List<String> targetClasses, List<String> targetTests) {
-        List<String> command = new ArrayList<>(Arrays.asList("mvn", "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE, "pitest:mutationCoverage"));
-        command.add("-Dmutators=" + Configuration.getPitestMutators());
+    private List<String> buildMavenCommand(List<String> targetClasses, List<String> targetTests) throws IOException, DocumentException {
+        // We are setting the targetClasses / targetTests via the POM file
+        // (rather than -DtargetClasses=... / -DtargetTests=...)
+        // to avoid "Argument list too long" errors.
+        Path pomFilePath = this.projectRecord.getRootPath().resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE);
+        MavenDependencyManager.updatePitestTargets(pomFilePath, targetClasses, targetTests);
 
-        String mavenOpts = System.getenv("MAVEN_OPTS");
-        mavenOpts = mavenOpts == null ? "" : mavenOpts;
+        Path commandDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/command-data");
+        Files.createDirectories(commandDataPath);
 
-        if (targetClasses != null) {
-            // Set -DtargetClasses parameter via MAVEN_OPTS to avoid "Argument list too long" errors.
-            mavenOpts += (mavenOpts.isEmpty() ? "" : " ") + "-DtargetClasses=" + String.join(",", targetClasses);
-        }
+        String stageName = this.stage.getStep() + "-" + this.stage;
+        String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
+        String executionName = "." + System.currentTimeMillis();
+        String baseName = stageName + variantName + executionName;
 
-        if (targetTests != null) {
-            // Set -DtargetTests parameter via MAVEN_OPTS to avoid "Argument list too long" errors.
-            mavenOpts += (mavenOpts.isEmpty() ? "" : " ") + "-DtargetTests=" + String.join(",", targetTests);
-        }
+        Path pomDataFilePath = commandDataPath.resolve(baseName + ".pom.xml");
+        Files.copy(pomFilePath, pomDataFilePath);
 
-        if (!mavenOpts.isEmpty()) {
-            this.consoleCommand.addEnvironmentVariable("MAVEN_OPTS", mavenOpts);
-        }
-
-        return command;
+        return new ArrayList<>(Arrays.asList(
+            "mvn",
+            "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
+            "pitest:mutationCoverage",
+            "-Dmutators=" + Configuration.getPitestMutators()
+        ));
     }
 }

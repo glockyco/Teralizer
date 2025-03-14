@@ -167,4 +167,52 @@ public class MavenDependencyManager {
         pluginElement.content().add(0, comment);
         return pluginElement.detach();
     }
+
+    public static void updatePitestTargets(Path pomFilePath, List<String> targetClasses, List<String> targetTests) throws DocumentException, IOException {
+        Document pomDocument = new SAXReader().read(pomFilePath.toFile());
+
+        XPath xpath = DocumentHelper.createXPath("/m:project/m:build/m:plugins/m:plugin[m:groupId='org.pitest' and m:artifactId='pitest-maven']");
+        Map<String, String> namespaceURIs = new HashMap<>();
+        namespaceURIs.put("m", "http://maven.apache.org/POM/4.0.0");
+        xpath.setNamespaceURIs(namespaceURIs);
+
+        List<Node> nodes = xpath.selectNodes(pomDocument);
+        if (nodes.isEmpty()) {
+            throw new RuntimeException("PIT plugin not found in POM file.");
+        }
+
+        Element pitestPlugin = (Element) nodes.get(0);
+        Element configElement = pitestPlugin.element("configuration");
+        if (configElement == null) {
+            configElement = pitestPlugin.addElement("configuration");
+            configElement.addComment("Configuration added by " + Configuration.TOOL_NAME + ".");
+        }
+
+        if (targetClasses != null) {
+            updateXmlListElement(configElement, "targetClasses", targetClasses);
+        }
+
+        if (targetTests != null) {
+            updateXmlListElement(configElement, "targetTests", targetTests);
+        }
+
+        XMLWriter writer = new XMLWriter(new FileWriter(pomFilePath.toFile()), OutputFormat.createPrettyPrint());
+        writer.write(pomDocument);
+        writer.close();
+    }
+
+    private static void updateXmlListElement(Element parent, String elementName, List<String> values) {
+        // Remove the existing element if it exists.
+        Element existingElement = parent.element(elementName);
+        if (existingElement != null) {
+            parent.remove(existingElement);
+        }
+
+        // Create the new element with values.
+        Element element = parent.addElement(elementName);
+        element.addComment("Added by " + Configuration.TOOL_NAME + ".");
+        for (String value : values) {
+            element.addElement("param").addText(value);
+        }
+    }
 }
