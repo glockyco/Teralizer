@@ -57,6 +57,7 @@ public class TestGeneralizationRunner {
         projectRecord.setMutationReportsPath(Configuration.getProjectMutationReportsPath());
         projectRecord.setUseTestGeneration(Configuration.getProjectUseTestGeneration());
         projectRecord.setUseTestGeneralization(Configuration.getProjectUseTestGeneralization());
+        projectRecord.setConfiguration(Configuration.render());
         projectRecord.store();
 
         pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord));

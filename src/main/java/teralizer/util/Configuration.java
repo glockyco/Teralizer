@@ -2,6 +2,7 @@ package teralizer.util;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.processing.GeneralizationVariant;
@@ -94,6 +95,12 @@ public class Configuration {
     public static final String ASSERT_FALSE = "assertFalse";
     public static final String ASSERT_THROWS = "assertThrows";
     public static final List<String> GENERALIZABLE_ASSERTS = Arrays.asList(ASSERT_EQUALS, ASSERT_TRUE, ASSERT_FALSE, ASSERT_THROWS);
+
+    public static String render() {
+        return CONFIG.getConfig(TOOL_NAME_LOWER).root().render(
+            ConfigRenderOptions.defaults().setFormatted(true).setOriginComments(false)
+        );
+    }
 
     // ----- Project ----- //
     public static Path getProjectRootPath() {

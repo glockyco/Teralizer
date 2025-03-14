@@ -30,6 +30,7 @@ CREATE TABLE project
     tool_git_version        TEXT, -- can be null because it does not matter if it is missing
     use_test_generation     INTEGER NOT NULL,
     use_test_generalization INTEGER NOT NULL,
+    configuration           TEXT    NOT NULL,
     runtime                 REAL  -- can be null until the project is fully processed
 );
 
