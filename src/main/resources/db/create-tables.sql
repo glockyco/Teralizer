@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS pit_mutation_report;
 DROP TABLE IF EXISTS pit_coverage_report;
 DROP TABLE IF EXISTS jacoco_coverage_report;
 DROP TABLE IF EXISTS junit_test_report;
+DROP TABLE IF EXISTS evosuite_runtime;
 DROP TABLE IF EXISTS generalization;
 DROP TABLE IF EXISTS assertion;
 DROP TABLE IF EXISTS test;
@@ -150,6 +151,19 @@ CREATE INDEX idx_generalization_file_path ON generalization (file_path);
 CREATE INDEX idx_generalization_class_qualified_name ON generalization (class_qualified_name);
 CREATE INDEX idx_generalization_method_qualified_name ON generalization (method_qualified_name);
 CREATE INDEX idx_generalization_is_included ON generalization (is_included);
+
+CREATE TABLE evosuite_runtime
+(
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    class_name TEXT    NOT NULL,
+    step       INTEGER NOT NULL,
+    phase_name TEXT    NOT NULL,
+    runtime    REAL    NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_evosuite_runtime_project_id ON evosuite_runtime (project_id);
 
 CREATE TABLE junit_test_report
 (

@@ -10,6 +10,7 @@ import java.util.List;
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JunitTestReport;
@@ -39,6 +40,11 @@ public class DefaultSchema extends SchemaImpl {
      * The table <code>assertion</code>.
      */
     public final Assertion ASSERTION = Assertion.ASSERTION;
+
+    /**
+     * The table <code>evosuite_runtime</code>.
+     */
+    public final EvosuiteRuntime EVOSUITE_RUNTIME = EvosuiteRuntime.EVOSUITE_RUNTIME;
 
     /**
      * The table <code>generalization</code>.
@@ -102,6 +108,7 @@ public class DefaultSchema extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.<Table<?>>asList(
             Assertion.ASSERTION,
+            EvosuiteRuntime.EVOSUITE_RUNTIME,
             Generalization.GENERALIZATION,
             JacocoCoverageReport.JACOCO_COVERAGE_REPORT,
             JunitTestReport.JUNIT_TEST_REPORT,

@@ -1,5 +1,8 @@
 package teralizer.processing.task;
 
+import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.EvosuiteRuntimeRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,25 +12,32 @@ import teralizer.processing.TaskContext;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
+import teralizer.util.ConsoleCommandResult;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class EvoSuiteGenerationTask extends AbstractTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EvoSuiteGenerationTask.class);
+
+    private static final Pattern PHASE_PATTERN = Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}).*Received status update: (\\w+)");
+    private static final Pattern FINISH_PATTERN = Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}).*Computation finished");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     private final ConsoleCommand consoleCommand;
 
@@ -59,6 +69,8 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             path.toString().endsWith(".class")
                 && !path.getFileName().toString().contains("$");
 
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
         try (Stream<Path> paths = Files.walk(startPath)) {
             List<String> targetClasses = paths.filter(isClassFile)
                 .map(path -> startPath.relativize(path).toString()
@@ -73,7 +85,7 @@ public class EvoSuiteGenerationTask extends AbstractTask {
                 String progressInfo = String.format("(%d of %d)", i + 1, targetClasses.size());
 
                 try {
-                    this.generateTests(targetClass);
+                    this.generateTests(create, targetClass);
                     String message = String.format("Successfully generated tests for '%s' %s.", targetClass, progressInfo);
                     LOGGER.atDebug().log(message);
                     reportInfo.accept(message);
@@ -89,9 +101,9 @@ public class EvoSuiteGenerationTask extends AbstractTask {
         }
     }
 
-    private void generateTests(String targetClass) throws ConsoleCommandException, IOException, InterruptedException {
+    private void generateTests(DSLContext create, String targetClass) throws ConsoleCommandException, IOException, InterruptedException {
         Path evoSuiteDataDir = buildEvoSuiteDataPath(this.projectRecord);
-        evoSuiteDataDir.toFile().mkdirs();
+        Files.createDirectories(evoSuiteDataDir);
 
         String projectCP = Arrays.stream(this.projectRecord.getClasspath().split(File.pathSeparator))
             .filter(p -> Files.exists(Paths.get(p)))
@@ -125,6 +137,9 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             "-Dsearch_budget=" + Configuration.getEvosuiteSearchBudget(),
             "-Dcriterion=" + Configuration.getEvosuiteCoverageCriterion(),
             "-Dassertion_strategy=" + Configuration.getEvosuiteAssertionStrategy(),
+            // The use_separate_classloader setting needs to be false because
+            // EvoSuite (1.2.0) does not support use_separate_classloader=true
+            // together with JUnit 5 test generation.
             "-Duse_separate_classloader=false"
         ));
 
@@ -139,6 +154,61 @@ public class EvoSuiteGenerationTask extends AbstractTask {
                 throw new RuntimeException("Unsupported test framework " + this.projectRecord.getTestFramework() + ".");
         }
 
-        this.consoleCommand.execute(command);
+        ConsoleCommandResult result = this.consoleCommand.execute(command);
+        List<EvosuiteRuntimeRecord> records = this.extractRuntimes(create, result.getOutputPath(), targetClass);
+        create.batchInsert(records).execute();
+    }
+
+    private List<EvosuiteRuntimeRecord> extractRuntimes(DSLContext create, Path outputFilePath, String targetClass) throws IOException {
+        List<EvosuiteRuntimeRecord> records = new ArrayList<>();
+
+        LocalDateTime lastDateTime = null;
+        String lastPhaseName = null;
+        int step = 1;
+
+        try (BufferedReader reader = Files.newBufferedReader(outputFilePath)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher phaseMatcher = PHASE_PATTERN.matcher(line);
+                if (phaseMatcher.find()) {
+                    LocalDateTime currentDateTime = LocalDateTime.parse(phaseMatcher.group(1), DATE_FORMAT);
+                    String currentPhaseName = phaseMatcher.group(2);
+
+                    if (lastDateTime != null && lastPhaseName != null) {
+                        records.add(this.createRuntimeRecord(create, targetClass, step++, lastPhaseName, lastDateTime, currentDateTime));
+                    }
+
+                    lastDateTime = currentDateTime;
+                    lastPhaseName = currentPhaseName;
+                } else {
+                    Matcher finishMatcher = FINISH_PATTERN.matcher(line);
+                    if (finishMatcher.find() && lastDateTime != null && lastPhaseName != null) {
+                        LocalDateTime finishDateTime = LocalDateTime.parse(finishMatcher.group(1), DATE_FORMAT);
+                        records.add(this.createRuntimeRecord(create, targetClass, step++, lastPhaseName, lastDateTime, finishDateTime));
+                    }
+                }
+            }
+        }
+
+        return records;
+    }
+
+    private EvosuiteRuntimeRecord createRuntimeRecord(
+        DSLContext create,
+        String className,
+        int step,
+        String phaseName,
+        LocalDateTime startDateTime,
+        LocalDateTime endDateTime
+    ) {
+        float runtime = ChronoUnit.MILLIS.between(startDateTime, endDateTime) / 1000.0f;
+
+        EvosuiteRuntimeRecord record = create.newRecord(Tables.EVOSUITE_RUNTIME);
+        record.setProjectId(this.getProjectId());
+        record.setClassName(className);
+        record.setStep(step);
+        record.setPhaseName(phaseName);
+        record.setRuntime(runtime);
+        return record;
     }
 }

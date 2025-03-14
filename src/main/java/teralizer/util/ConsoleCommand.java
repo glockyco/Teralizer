@@ -35,11 +35,11 @@ public class ConsoleCommand {
         this.environmentVariables.put(name, value);
     }
 
-    public void execute(List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
-        this.execute(null, command);
+    public ConsoleCommandResult execute(List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
+        return this.execute(null, command);
     }
 
-    public void execute(Path projectRootPath, List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
+    public ConsoleCommandResult execute(Path projectRootPath, List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
         this.executionCount++;
         String stageName = this.stage.getStep() + "-" + this.stage;
         String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
@@ -89,5 +89,7 @@ public class ConsoleCommand {
         if (exitCode != 0) {
             throw new ConsoleCommandException(command, exitCode, outputPath, errorPath);
         }
+
+        return new ConsoleCommandResult(outputPath, errorPath);
     }
 }
