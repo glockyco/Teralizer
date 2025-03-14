@@ -1,5 +1,7 @@
 package teralizer.processing.task;
 
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ModelBuilder;
 import org.gradle.tooling.ProjectConnection;
@@ -44,6 +46,8 @@ public class ProjectSetupTask extends AbstractTask {
         }
 
         this.projectRecord.setType(this.identifyProjectType(this.projectRecord.getRootPath()));
+        this.projectRecord.setGitVersion(identifyGitVersion(this.projectRecord.getRootPath().toAbsolutePath()));
+        this.projectRecord.setToolGitVersion(identifyGitVersion(Paths.get(System.getProperty("user.dir"))));
 
         switch (this.projectRecord.getType()) {
             case UNKNOWN:
@@ -134,6 +138,22 @@ public class ProjectSetupTask extends AbstractTask {
             return ProjectType.ANT;
         }
         return ProjectType.UNKNOWN;
+    }
+
+    private static String identifyGitVersion(Path directoryPath) throws IOException {
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        File gitDir = directoryPath.resolve(".git").toFile();
+
+        if (!gitDir.exists() || !gitDir.isDirectory()) {
+            return null;
+        }
+
+        try (Repository repository = builder.setGitDir(gitDir).build()) {
+            if (repository.resolve("HEAD") == null) {
+                return null;
+            }
+            return repository.resolve("HEAD").getName();
+        }
     }
 
     private void setupBuildFile(ProjectRecord projectRecord) throws IOException {

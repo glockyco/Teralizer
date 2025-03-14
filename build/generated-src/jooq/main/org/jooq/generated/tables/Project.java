@@ -14,7 +14,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row17;
+import org.jooq.Row19;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -126,6 +126,16 @@ public class Project extends TableImpl<ProjectRecord> {
     public final TableField<ProjectRecord, String> CLASSPATH = createField(DSL.name("classpath"), SQLDataType.CLOB, this, "");
 
     /**
+     * The column <code>project.git_version</code>.
+     */
+    public final TableField<ProjectRecord, String> GIT_VERSION = createField(DSL.name("git_version"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>project.tool_git_version</code>.
+     */
+    public final TableField<ProjectRecord, String> TOOL_GIT_VERSION = createField(DSL.name("tool_git_version"), SQLDataType.CLOB, this, "");
+
+    /**
      * The column <code>project.use_test_generation</code>.
      */
     public final TableField<ProjectRecord, Boolean> USE_TEST_GENERATION = createField(DSL.name("use_test_generation"), SQLDataType.BOOLEAN.nullable(false), this, "");
@@ -225,11 +235,11 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row17 type methods
+    // Row19 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row17<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, Path, String, Boolean, Boolean, Float> fieldsRow() {
-        return (Row17) super.fieldsRow();
+    public Row19<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, Path, String, String, String, Boolean, Boolean, Float> fieldsRow() {
+        return (Row19) super.fieldsRow();
     }
 }

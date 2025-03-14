@@ -26,6 +26,8 @@ CREATE TABLE project
     coverage_reports_path   TEXT, -- can be null for invalid project root paths
     mutation_reports_path   TEXT, -- can be null for invalid project root paths
     classpath               TEXT, -- can be null for invalid project root paths
+    git_version             TEXT, -- can be null for non-Git projects
+    tool_git_version        TEXT, -- can be null because it does not matter if it is missing
     use_test_generation     INTEGER NOT NULL,
     use_test_generalization INTEGER NOT NULL,
     runtime                 REAL  -- can be null until the project is fully processed
