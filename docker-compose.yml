@@ -1,0 +1,21 @@
+services:
+  teralizer:
+    build: .
+    environment:
+#      PROJECT_CONFIG_PATH: "<Path to project config file>"
+    ports:
+      - "8000:8000"
+    volumes:
+      - teralizer_db:/app/database
+      - teralizer_data:/app/data
+  adminer:
+    image: adminer
+    ports:
+      - "18080:8080"
+    volumes:
+      - teralizer_db:/app/database
+      - ./docker/adminer/login-password-less.php:/var/www/html/plugins-enabled/login-password-less.php
+
+volumes:
+  teralizer_db:
+  teralizer_data:
