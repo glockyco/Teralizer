@@ -12,6 +12,8 @@ import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.JunitTestReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -29,6 +31,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JunitDataCollectionTask extends AbstractTask {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JunitDataCollectionTask.class);
+
 
     public JunitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null);
@@ -183,6 +188,9 @@ public class JunitDataCollectionTask extends AbstractTask {
                 .peek(testCaseReport -> {
                     String fullNameOld = testCaseReport.getFullName();
                     String fullNameNew = fullNameOld.replaceFirst("\\(\\)$", "");
+                    int index = fullNameNew.lastIndexOf(".");
+                    fullNameNew = index == -1 ? fullNameNew : fullNameNew.substring(index+1);
+                    fullNameNew = testCaseReport.getFullClassName() + "." + fullNameNew;
                     testCaseReport.setFullName(fullNameNew);
                 })
                 .filter(testCaseReport -> {
@@ -198,6 +206,8 @@ public class JunitDataCollectionTask extends AbstractTask {
 
     private TestRecord buildTestRecord(DSLContext create, ReportTestCase testCaseReport) {
         String testMethodName = testCaseReport.getName().replace("()", "");
+        int lastDotIndexMethodName = testMethodName.lastIndexOf(".");
+        testMethodName = lastDotIndexMethodName == -1 ? testMethodName : testMethodName.substring(lastDotIndexMethodName + 1);
         String testClassName = testCaseReport.getClassName();
         int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
         String testPackageName = lastDotIndex == -1 ? "" : testCaseReport.getFullClassName().substring(0, lastDotIndex);
@@ -239,6 +249,8 @@ public class JunitDataCollectionTask extends AbstractTask {
 
         // Write (relevant parts of) the data to the DB:
         String methodName = testCaseReport.getName().replace("()", "");
+        int lastDotIndexMethodName = methodName.lastIndexOf(".");
+        methodName = lastDotIndexMethodName == -1 ? methodName : methodName.substring(lastDotIndexMethodName + 1);
         String className = testCaseReport.getClassName();
         int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
         String packageName = lastDotIndex == -1 ? "" : testCaseReport.getFullClassName().substring(0, lastDotIndex);

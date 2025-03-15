@@ -304,7 +304,7 @@ public class ProjectSetupTask extends AbstractTask {
             String previousLine = "";
             while ((line = outputReader.readLine()) != null) {
                 output.append(line).append("\n");
-                if (previousLine.startsWith("[INFO] Dependencies classpath:")) {
+                if (previousLine.contains("Dependencies classpath:")) {
                     classpath = line.trim();
                 }
                 previousLine = line;
