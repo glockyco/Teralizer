@@ -1,7 +1,7 @@
 services:
   teralizer:
     build: .
-    environment:
+#    environment:
 #      PROJECT_CONFIG_PATH: "<Path to project config file>"
     ports:
       - "8000:8000"
