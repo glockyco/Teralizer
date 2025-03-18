@@ -268,10 +268,13 @@ public class TestGeneralizationTask extends AbstractTask {
             // Replace expected values in asserts with generalized values.                                            //
             // ------------------------------------------------------------------------------------------------------ //
 
+            String outputValueString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputValuePath())));
+            MethodArgument outputValue = gson.fromJson(outputValueString, MethodArgument.class);
+
             if (outputJava != null) {
                 int index = TestAnalysis.getExpectedParameterIndex(assertion).get();
                 List<CtExpression<?>> assertArguments = assertion.getArguments();
-                assertArguments.set(index, factory.Code().createCodeSnippetExpression(outputJava));
+                assertArguments.set(index, factory.Code().createCodeSnippetExpression("(" + outputValue.getType() + ") (" + outputJava + ")"));
             }
         }
 
