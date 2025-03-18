@@ -452,73 +452,101 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     }
 
     /**
+     * Setter for <code>assertion.input_values_path</code>.
+     */
+    public void setInputValuesPath(String value) {
+        set(31, value);
+    }
+
+    /**
+     * Getter for <code>assertion.input_values_path</code>.
+     */
+    public String getInputValuesPath() {
+        return (String) get(31);
+    }
+
+    /**
+     * Setter for <code>assertion.output_value_path</code>.
+     */
+    public void setOutputValuePath(String value) {
+        set(32, value);
+    }
+
+    /**
+     * Getter for <code>assertion.output_value_path</code>.
+     */
+    public String getOutputValuePath() {
+        return (String) get(32);
+    }
+
+    /**
      * Setter for <code>assertion.input_specification_path</code>.
      */
     public void setInputSpecificationPath(String value) {
-        set(31, value);
+        set(33, value);
     }
 
     /**
      * Getter for <code>assertion.input_specification_path</code>.
      */
     public String getInputSpecificationPath() {
-        return (String) get(31);
+        return (String) get(33);
     }
 
     /**
      * Setter for <code>assertion.output_specification_path</code>.
      */
     public void setOutputSpecificationPath(String value) {
-        set(32, value);
+        set(34, value);
     }
 
     /**
      * Getter for <code>assertion.output_specification_path</code>.
      */
     public String getOutputSpecificationPath() {
-        return (String) get(32);
+        return (String) get(34);
     }
 
     /**
      * Setter for <code>assertion.equivalent_assertions</code>.
      */
     public void setEquivalentAssertions(String value) {
-        set(33, value);
+        set(35, value);
     }
 
     /**
      * Getter for <code>assertion.equivalent_assertions</code>.
      */
     public String getEquivalentAssertions() {
-        return (String) get(33);
+        return (String) get(35);
     }
 
     /**
      * Setter for <code>assertion.is_included</code>.
      */
     public void setIsIncluded(Boolean value) {
-        set(34, value);
+        set(36, value);
     }
 
     /**
      * Getter for <code>assertion.is_included</code>.
      */
     public Boolean getIsIncluded() {
-        return (Boolean) get(34);
+        return (Boolean) get(36);
     }
 
     /**
      * Setter for <code>assertion.exclusion_info</code>.
      */
     public void setExclusionInfo(String value) {
-        set(35, value);
+        set(37, value);
     }
 
     /**
      * Getter for <code>assertion.exclusion_info</code>.
      */
     public String getExclusionInfo() {
-        return (String) get(35);
+        return (String) get(37);
     }
 
     // -------------------------------------------------------------------------
@@ -544,7 +572,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     /**
      * Create a detached, initialised AssertionRecord
      */
-    public AssertionRecord(Integer id, Integer projectId, Integer testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, Boolean isIncluded, String exclusionInfo) {
+    public AssertionRecord(Integer id, Integer projectId, Integer testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputValuesPath, String outputValuePath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, Boolean isIncluded, String exclusionInfo) {
         super(Assertion.ASSERTION);
 
         setId(id);
@@ -578,6 +606,8 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
         setDriverPackageName(driverPackageName);
         setDriverClassName(driverClassName);
         setJpfConfigPath(jpfConfigPath);
+        setInputValuesPath(inputValuesPath);
+        setOutputValuePath(outputValuePath);
         setInputSpecificationPath(inputSpecificationPath);
         setOutputSpecificationPath(outputSpecificationPath);
         setEquivalentAssertions(equivalentAssertions);

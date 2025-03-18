@@ -106,6 +106,8 @@ CREATE TABLE assertion
 
     jpf_config_path                    TEXT, -- can be null before JPF instrumentation
 
+    input_values_path                  TEXT, -- can be null before JPF execution
+    output_value_path                  TEXT, -- can be null before JPF execution
     input_specification_path           TEXT, -- can be null before JPF execution
     output_specification_path          TEXT, -- can be null before JPF execution
 

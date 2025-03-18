@@ -137,10 +137,14 @@ public class JpfInstrumentationTask extends AbstractTask {
         Path jpfDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/jpf-data/specs");
         String baseName = this.testRecord.getTestMethodQualifiedName() + "." + this.getAssertionId();
         Path jpfConfigPath = jpfDataPath.resolve(baseName + ".jpf");
-        Path inputSpecificationPath = jpfDataPath.resolve(baseName + ".jpf.input.json");
-        Path outputSpecificationPath = jpfDataPath.resolve(baseName + ".jpf.output.json");
+        Path inputValuesPath = jpfDataPath.resolve(baseName + ".jpf.concrete.input.json");
+        Path outputValuePath = jpfDataPath.resolve(baseName + ".jpf.concrete.output.json");
+        Path inputSpecificationPath = jpfDataPath.resolve(baseName + ".jpf.symbolic.input.json");
+        Path outputSpecificationPath = jpfDataPath.resolve(baseName + ".jpf.symbolic.output.json");
 
         this.assertionRecord.setJpfConfigPath(jpfConfigPath.toString());
+        this.assertionRecord.setInputValuesPath(inputValuesPath.toString());
+        this.assertionRecord.setOutputValuePath(outputValuePath.toString());
         this.assertionRecord.setInputSpecificationPath(inputSpecificationPath.toString());
         this.assertionRecord.setOutputSpecificationPath(outputSpecificationPath.toString());
 
@@ -335,6 +339,8 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("instrumentedClassQualifiedName", this.assertionRecord.getInstrumentedClassQualifiedName());
         context.put("instrumentedMethodQualifiedName", this.assertionRecord.getInstrumentedMethodQualifiedName());
 
+        context.put("inputValuesPath", this.assertionRecord.getInputValuesPath());
+        context.put("outputValuePath", this.assertionRecord.getOutputValuePath());
         context.put("inputSpecificationPath", this.assertionRecord.getInputSpecificationPath());
         context.put("outputSpecificationPath", this.assertionRecord.getOutputSpecificationPath());
 

@@ -204,6 +204,16 @@ public class Assertion extends TableImpl<AssertionRecord> {
     public final TableField<AssertionRecord, String> JPF_CONFIG_PATH = createField(DSL.name("jpf_config_path"), SQLDataType.CLOB, this, "");
 
     /**
+     * The column <code>assertion.input_values_path</code>.
+     */
+    public final TableField<AssertionRecord, String> INPUT_VALUES_PATH = createField(DSL.name("input_values_path"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>assertion.output_value_path</code>.
+     */
+    public final TableField<AssertionRecord, String> OUTPUT_VALUE_PATH = createField(DSL.name("output_value_path"), SQLDataType.CLOB, this, "");
+
+    /**
      * The column <code>assertion.input_specification_path</code>.
      */
     public final TableField<AssertionRecord, String> INPUT_SPECIFICATION_PATH = createField(DSL.name("input_specification_path"), SQLDataType.CLOB, this, "");

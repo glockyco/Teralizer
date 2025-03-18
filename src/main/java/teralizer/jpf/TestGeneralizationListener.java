@@ -1,5 +1,6 @@
 package teralizer.jpf;
 
+import com.google.gson.Gson;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.jvm.bytecode.JVMReturnInstruction;
@@ -12,6 +13,7 @@ import gov.nasa.jpf.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.domain.CapturedException;
+import teralizer.domain.MethodArgument;
 import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpfToModelTransformer;
 
@@ -19,6 +21,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestGeneralizationListener extends PropertyListenerAdapter {
 
@@ -28,6 +32,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private final MethodSpec instrumentedMethodSpec;
     private final MethodSpec testedMethodSpec;
 
+    private final Path inputValuesPath;
+    private final Path outputValuePath;
     private final Path inputSpecificationPath;
     private final Path outputSpecificationPath;
 
@@ -42,6 +48,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
         this.instrumentedMethodSpec = MethodSpec.createMethodSpec(this.instrumentedMethodQualifiedName);
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
+        this.inputValuesPath = Paths.get(config.getString("test_generalization.input_values_path"));
+        this.outputValuePath = Paths.get(config.getString("test_generalization.output_value_path"));
         this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
         this.outputSpecificationPath = Paths.get(config.getString("test_generalization.output_specification_path"));
         this.maxExecutionTime = config.getDouble("test_generalization.max_execution_time");
@@ -99,22 +107,43 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         PathCondition pathCondition = PathCondition.getPC(vm);
         this.checkPcSizeLimitExceeded(pathCondition);
 
+        LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
+
+        List<MethodArgument> concreteInputArguments = new ArrayList<>();
+        String[] concreteInputTypes = currentThread.getTopFrameMethodInfo().getArgumentTypeNames();
+        Object[] concreteInputValues = currentThread.getTopFrame().getArgumentValues(currentThread);
+        int startIndex = currentThread.getTopFrame().getMethodInfo().isStatic() ? 0 : 1;
+        for (int i = startIndex; i < concreteInputValues.length; i++) {
+            concreteInputArguments.add(new MethodArgument(concreteInputTypes[i], concreteInputValues[i].toString()));
+        }
+
         Constraint spfInput = pathCondition == null ? null : pathCondition.header;
-        Instruction exitInstruction = vm.getCurrentThread().getPC();
+
+        LOGGER.atTrace().log(() -> "Input: " + (spfInput == null ? null : spfInput.toString()));
+
+        MethodArgument concreteOutputArgument;
+
         Expression spfOutput = null;
         CapturedException capturedException = null;
 
-        LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
-        LOGGER.atTrace().log(() -> "Input: " + (spfInput == null ? null : spfInput.toString()));
-
+        Instruction exitInstruction = vm.getCurrentThread().getPC();
         if (exitInstruction instanceof JVMReturnInstruction) {
-            spfOutput = (Expression) ((JVMReturnInstruction) exitInstruction).getReturnAttr(vm.getCurrentThread());
+            JVMReturnInstruction returnInstruction = (JVMReturnInstruction) exitInstruction;
+
+            String concreteOutputType = currentThread.getTopFrameMethodInfo().getReturnTypeName();
+            Object concreteOutputValue = returnInstruction.getReturnValue(currentThread);
+            concreteOutputArgument = new MethodArgument(concreteOutputType, concreteOutputValue.toString());
+
+            spfOutput = (Expression) returnInstruction.getReturnAttr(vm.getCurrentThread());
             Expression spfOutput_ = spfOutput; // To use spfOutput in the lambda, it needs to be (effectively) final.
             LOGGER.atTrace().log(() -> "Output: " + (spfOutput_ == null ? null : spfOutput_.toString()));
         } else if (exitInstruction.getMethodInfo().getThrownExceptionClassNames().length > 0) {
             String exceptionClass = exitInstruction.getMethodInfo().getThrownExceptionClassNames()[0];
             ExceptionInfo pendingException = currentThread.getPendingException();
             String exceptionMessage = pendingException.getCauseDetails();
+
+            concreteOutputArgument = new MethodArgument(exceptionClass, exceptionMessage);
+
             capturedException = new CapturedException(exceptionClass, exceptionMessage);
             LOGGER.atTrace().log(() -> "Output: Exception thrown " + exceptionClass);
         } else {
@@ -138,6 +167,9 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         String jsonOutput = modelToJsonTransformer.transform(modelOutput);
 
         try {
+            Gson gson = new Gson();
+            Files.write(this.inputValuesPath, gson.toJson(concreteInputArguments).getBytes());
+            Files.write(this.outputValuePath, gson.toJson(concreteOutputArgument).getBytes());
             Files.write(this.inputSpecificationPath, jsonInput.getBytes());
             Files.write(this.outputSpecificationPath, jsonOutput.getBytes());
         } catch (IOException e) {
