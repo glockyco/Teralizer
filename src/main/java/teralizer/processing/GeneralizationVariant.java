@@ -2,6 +2,7 @@ package teralizer.processing;
 
 public enum GeneralizationVariant {
 
+    BASELINE(0),
     NAIVE(1),
     IMPROVED(2),
     COMBINED(3);

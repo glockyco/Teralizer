@@ -20,6 +20,7 @@ import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.filter.TypeFilter;
+import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.jqwik.VariableConstraintExtractor;
@@ -29,6 +30,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.generalization.BaselineTestParametersSupplierFactory;
 import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
 import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
 import teralizer.spoon.generalization.TestParametersFactory;
@@ -153,17 +155,10 @@ public class TestGeneralizationTask extends AbstractTask {
         CtPackage generalizedClassPackage = generalizedClassDeclaration.getFactory().Package().getOrCreate(this.generalizationRecord.getPackageName());
         generalizedClassPackage.addType(generalizedClassDeclaration);
 
-        List<CtAnnotation<?>> evoSuiteAnnotations = generalizedClassDeclaration.getAnnotations().stream()
-            .filter(a -> a.toString().equals("@RunWith(EvoRunner.class)") || a.toString().startsWith("@EvoRunnerParameters"))
-            .collect(Collectors.toList());
-        evoSuiteAnnotations.forEach(generalizedClassDeclaration::removeAnnotation);
-
-        if (!evoSuiteAnnotations.isEmpty()) {
-            generalizedClassDeclaration.setSuperclass(null);
-        }
-
         generalizedClassDeclaration.addComment(factory.createInlineComment("Test: " + this.testRecord.getTestMethodQualifiedName()));
+        generalizedClassDeclaration.addComment(factory.createInlineComment("Input values: " + this.assertionRecord.getInputValuesPath()));
         generalizedClassDeclaration.addComment(factory.createInlineComment("Input specification: " + this.assertionRecord.getInputSpecificationPath()));
+        generalizedClassDeclaration.addComment(factory.createInlineComment("Output value: " + this.assertionRecord.getOutputValuePath()));
         generalizedClassDeclaration.addComment(factory.createInlineComment("Output specification: " + this.assertionRecord.getOutputSpecificationPath()));
 
         Predicate<CtMethod<?>> isTestMethod = (decl) -> decl.getSimpleName().equals(this.testRecord.getTestMethodName());
@@ -173,86 +168,111 @@ public class TestGeneralizationTask extends AbstractTask {
 
         CtMethod<?> testMethod = generalizedClassDeclaration.getMethodsByName(this.testRecord.getTestMethodName()).get(0);
 
+        CtPathStringBuilder pathBuilder = new CtPathStringBuilder();
+        CtPath assertionPath = pathBuilder.fromString(this.assertionRecord.getAssertionRelativePath());
+        CtInvocation<?> assertion = (CtInvocation<?>) assertionPath.evaluateOn(testMethod).get(0);
+
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
         //   Otherwise, we will have issues mapping the class names to the correct Arbitraries.
         Type type = new TypeToken<List<MethodParameter>>() {}.getType();
         List<MethodParameter> testedMethodParameters = gson.fromJson(this.assertionRecord.getTestedMethodParameters(), type);
 
-        String inputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputSpecificationPath())));
-        String outputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputSpecificationPath())));
-
-        // @TODO: Check if we can avoid the Model->JSON->Model conversion.
-        //   We don't HAVE to store the model as JSON after the JPF execution step. However, if we don't store it,
-        //   we cannot re-execute the later steps without also re-executing the JPF execution step. Of course, we
-        //   can "simply" skip the JSON reading for any runs that have executed the JPF execution before, but that
-        //   then makes it tricky to compare the runtimes of runs WITH vs. WITHOUT reading of JSON files.
-        JsonToModelTransformer jsonToModelTransformer = new JsonToModelTransformer();
-        Model inputModel = jsonToModelTransformer.transform(inputSpecification);
-        Model outputModel = jsonToModelTransformer.transform(outputSpecification);
-
-        ModelToJavaTransformer modelToJavaTransformer = new ModelToJavaTransformer();
-        String inputJava = modelToJavaTransformer.transform(inputModel);
-        String outputJava = modelToJavaTransformer.transform(outputModel);
-
-        // The maximum allowed bytecode size of a Java method is 65535 Bytes.
-        // See: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7, "code_length".
-        // Having a method that is larger than this causes a "code too large" compiler error. To ensure we are not
-        // generating such incompilable code, we fail the generalization for any cases with a "large" input/output
-        // specification. "Large", in this case, is a very rough estimate that is only based on observed cases that
-        // have caused compilation errors. A (more) exact estimate is hard to get since there is no straightforward
-        // relationship between source code size and bytecode size.
-        // @TODO: Use a more reliable approach to check whether "code too large" errors (might) occur.
-        //   The most (and only?) reliable solution is probably to actually create the file and try to compile
-        //   it => if the error occurs, delete the created file again and mark the generalization as failed.
-        boolean isInputJavaTooLarge = inputJava != null && inputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
-        boolean isOutputJavaTooLarge = outputJava != null && outputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
-        if (isInputJavaTooLarge || isOutputJavaTooLarge) {
-            throw new RuntimeException("Failing generalization to avoid potential 'code too large' compilation errors.");
-        }
-
-        String regex = "\"name\": \"((?>INT|REAL)_[0-9]+)\"";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher inputMatcher = pattern.matcher(inputSpecification);
-        Matcher outputMatcher = pattern.matcher(outputSpecification);
-
-        Set<String> distinctMatches = new HashSet<>();
-
-        while (inputMatcher.find()) {
-            String match = inputMatcher.group(1);
-            distinctMatches.add(match);
-        }
-
-        while (outputMatcher.find()) {
-            String match = outputMatcher.group(1);
-            distinctMatches.add(match);
-        }
-
-        List<MethodParameter> temporaryParameters = distinctMatches.stream().map(m -> new MethodParameter(m.startsWith("INT") ? "int" : "double", m)).collect(Collectors.toList());
-
-        List<MethodParameter> allParameters = new ArrayList<>();
-        allParameters.addAll(testedMethodParameters);
-        allParameters.addAll(temporaryParameters);
-        allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
-
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
 
-        switch (this.getVariant() == GeneralizationVariant.COMBINED ? this.combinedVariant : this.getVariant()) {
-            case NAIVE: {
-                testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
-                testParametersSupplierClassDeclaration = NaiveTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputJava);
-                break;
-            }
-            case IMPROVED: {
-                VariableConstraintExtractor extractor = new VariableConstraintExtractor();
-                Map<String, VariableConstraints> constraints = extractor.process(inputModel, allParameters);
+        if (this.getVariant() == GeneralizationVariant.BASELINE) {
+            String inputValuesString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputValuesPath())));
+            Type inputValuesType = new TypeToken<List<MethodArgument>>() {}.getType();
+            List<MethodArgument> inputValues = gson.fromJson(inputValuesString, inputValuesType);
 
-                testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
-                testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, constraints, inputJava);
-                break;
+            List<MethodParameter> allParameters = new ArrayList<>(testedMethodParameters);
+            allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
+
+            testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
+            testParametersSupplierClassDeclaration = BaselineTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputValues);
+        } else {
+            String inputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputSpecificationPath())));
+            String outputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputSpecificationPath())));
+
+            // @TODO: Check if we can avoid the Model->JSON->Model conversion.
+            //   We don't HAVE to store the model as JSON after the JPF execution step. However, if we don't store it,
+            //   we cannot re-execute the later steps without also re-executing the JPF execution step. Of course, we
+            //   can "simply" skip the JSON reading for any runs that have executed the JPF execution before, but that
+            //   then makes it tricky to compare the runtimes of runs WITH vs. WITHOUT reading of JSON files.
+            JsonToModelTransformer jsonToModelTransformer = new JsonToModelTransformer();
+            Model inputModel = jsonToModelTransformer.transform(inputSpecification);
+            Model outputModel = jsonToModelTransformer.transform(outputSpecification);
+
+            ModelToJavaTransformer modelToJavaTransformer = new ModelToJavaTransformer();
+            String inputJava = modelToJavaTransformer.transform(inputModel);
+            String outputJava = modelToJavaTransformer.transform(outputModel);
+
+            // The maximum allowed bytecode size of a Java method is 65535 Bytes.
+            // See: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7, "code_length".
+            // Having a method that is larger than this causes a "code too large" compiler error. To ensure we are not
+            // generating such incompilable code, we fail the generalization for any cases with a "large" input/output
+            // specification. "Large", in this case, is a very rough estimate that is only based on observed cases that
+            // have caused compilation errors. A (more) exact estimate is hard to get since there is no straightforward
+            // relationship between source code size and bytecode size.
+            // @TODO: Use a more reliable approach to check whether "code too large" errors (might) occur.
+            //   The most (and only?) reliable solution is probably to actually create the file and try to compile
+            //   it => if the error occurs, delete the created file again and mark the generalization as failed.
+            boolean isInputJavaTooLarge = inputJava != null && inputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
+            boolean isOutputJavaTooLarge = outputJava != null && outputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
+            if (isInputJavaTooLarge || isOutputJavaTooLarge) {
+                throw new RuntimeException("Failing generalization to avoid potential 'code too large' compilation errors.");
             }
-            default:
-                throw new RuntimeException("Unsupported variant " + this.getVariant() + ".");
+
+            String regex = "\"name\": \"((?>INT|REAL)_[0-9]+)\"";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher inputMatcher = pattern.matcher(inputSpecification);
+            Matcher outputMatcher = pattern.matcher(outputSpecification);
+
+            Set<String> distinctMatches = new HashSet<>();
+
+            while (inputMatcher.find()) {
+                String match = inputMatcher.group(1);
+                distinctMatches.add(match);
+            }
+
+            while (outputMatcher.find()) {
+                String match = outputMatcher.group(1);
+                distinctMatches.add(match);
+            }
+
+            List<MethodParameter> temporaryParameters = distinctMatches.stream().map(m -> new MethodParameter(m.startsWith("INT") ? "int" : "double", m)).collect(Collectors.toList());
+
+            List<MethodParameter> allParameters = new ArrayList<>();
+            allParameters.addAll(testedMethodParameters);
+            allParameters.addAll(temporaryParameters);
+            allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
+
+            switch (this.getVariant() == GeneralizationVariant.COMBINED ? this.combinedVariant : this.getVariant()) {
+                case NAIVE: {
+                    testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
+                    testParametersSupplierClassDeclaration = NaiveTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputJava);
+                    break;
+                }
+                case IMPROVED: {
+                    VariableConstraintExtractor extractor = new VariableConstraintExtractor();
+                    Map<String, VariableConstraints> constraints = extractor.process(inputModel, allParameters);
+                    testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
+                    testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, constraints, inputJava);
+                    break;
+                }
+                default:
+                    throw new RuntimeException("Unsupported variant " + this.getVariant() + ".");
+            }
+
+            // ------------------------------------------------------------------------------------------------------ //
+            // Replace expected values in asserts with generalized values.                                            //
+            // ------------------------------------------------------------------------------------------------------ //
+
+            if (outputJava != null) {
+                int index = TestAnalysis.getExpectedParameterIndex(assertion).get();
+                List<CtExpression<?>> assertArguments = assertion.getArguments();
+                assertArguments.set(index, factory.Code().createCodeSnippetExpression(outputJava));
+            }
         }
 
         Set<CtType<?>> nestedTypes = generalizedClassDeclaration.getNestedTypes();
@@ -300,11 +320,7 @@ public class TestGeneralizationTask extends AbstractTask {
         // Replace tested method arguments with values from `testParameters`.                                     //
         // ------------------------------------------------------------------------------------------------------ //
 
-        CtPathStringBuilder pathBuilder = new CtPathStringBuilder();
-        CtPath assertionPath = pathBuilder.fromString(this.assertionRecord.getAssertionRelativePath());
         CtPath testedMethodCallPath = pathBuilder.fromString(this.assertionRecord.getTestedMethodCallRelativePath());
-
-        CtInvocation<?> assertion = (CtInvocation<?>) assertionPath.evaluateOn(testMethod).get(0);
         CtInvocation<?> testedMethodCall = (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
         CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
 
@@ -317,16 +333,6 @@ public class TestGeneralizationTask extends AbstractTask {
             if (Configuration.SUPPORTED_TYPES.contains(arg.getType().getSimpleName())) {
                 args.set(i, factory.Code().createCodeSnippetExpression("_p_." + param.getSimpleName()));
             }
-        }
-
-        // ------------------------------------------------------------------------------------------------------ //
-        // Replace expected values in asserts with generalized values.                                            //
-        // ------------------------------------------------------------------------------------------------------ //
-
-        if (outputJava != null) {
-            int index = TestAnalysis.getExpectedParameterIndex(assertion).get();
-            List<CtExpression<?>> assertArguments = assertion.getArguments();
-            assertArguments.set(index, factory.Code().createCodeSnippetExpression(outputJava));
         }
 
         // ------------------------------------------------------------------------------------------------------ //
