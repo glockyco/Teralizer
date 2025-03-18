@@ -40,6 +40,10 @@ public class VariableConstraintExtractor extends ModelVisitor {
             this.updateConstraints((VariableReal) op.left, op.op, (ConstantReal) op.right);
         } else if (op.left instanceof ConstantReal && op.right instanceof VariableReal) {
             this.updateConstraints((ConstantReal) op.left, op.op, (VariableReal) op.right);
+        } else if (op.left instanceof VariableInteger && op.right instanceof VariableReal) {
+            this.updateConstraints((VariableInteger) op.left, op.op, (VariableReal) op.right);
+        } else if (op.left instanceof VariableReal && op.right instanceof VariableInteger) {
+            this.updateConstraints((VariableReal) op.left, op.op, (VariableInteger) op.right);
         }
     }
 
@@ -275,6 +279,116 @@ public class VariableConstraintExtractor extends ModelVisitor {
                 break;
             default:
                 // do nothing
+        }
+    }
+
+    private void updateConstraints(VariableInteger left, Operator operator, VariableReal right) {
+        if (this.parameterIds.get(left.name) > this.parameterIds.get(right.name)) {
+            switch (operator) {
+                case EQ:
+                    // left == right -> add equality
+                    this.getConstraint(IntegerConstraints.class, left.name).addVariableEquality(right.name);
+                    break;
+                case LT:
+                    // left < right -> add upper bound
+                    this.getConstraint(IntegerConstraints.class, left.name).addVariableUpperBound(right.name, false);
+                    break;
+                case LE:
+                    // left <= right -> add upper bound
+                    this.getConstraint(IntegerConstraints.class, left.name).addVariableUpperBound(right.name, true);
+                    break;
+                case GT:
+                    // left > right -> add lower bound
+                    this.getConstraint(IntegerConstraints.class, left.name).addVariableLowerBound(right.name, false);
+                    break;
+                case GE:
+                    // left >= right -> add lower bound
+                    this.getConstraint(IntegerConstraints.class, left.name).addVariableLowerBound(right.name, true);
+                    break;
+                default:
+                    // do nothing
+            }
+        }
+        if (this.parameterIds.get(right.name) > this.parameterIds.get(left.name)) {
+            switch (operator) {
+                case EQ:
+                    // right == left -> add equality
+                    this.getConstraint(RealConstraints.class, right.name).addVariableEquality(left.name);
+                    break;
+                case LT:
+                    // right > left -> add lower bound
+                    this.getConstraint(RealConstraints.class, right.name).addVariableLowerBound(left.name, false);
+                    break;
+                case LE:
+                    // right >= left -> add lower bound
+                    this.getConstraint(RealConstraints.class, right.name).addVariableLowerBound(left.name, true);
+                    break;
+                case GT:
+                    // right < left -> add upper bound
+                    this.getConstraint(RealConstraints.class, right.name).addVariableUpperBound(left.name, false);
+                    break;
+                case GE:
+                    // right <= left -> add upper bound
+                    this.getConstraint(RealConstraints.class, right.name).addVariableUpperBound(left.name, true);
+                    break;
+                default:
+                    // do nothing
+            }
+        }
+    }
+
+    private void updateConstraints(VariableReal left, Operator operator, VariableInteger right) {
+        if (this.parameterIds.get(left.name) > this.parameterIds.get(right.name)) {
+            switch (operator) {
+                case EQ:
+                    // left == right -> add equality
+                    this.getConstraint(RealConstraints.class, left.name).addVariableEquality(right.name);
+                    break;
+                case LT:
+                    // left < right -> add upper bound
+                    this.getConstraint(RealConstraints.class, left.name).addVariableUpperBound(right.name, false);
+                    break;
+                case LE:
+                    // left <= right -> add upper bound
+                    this.getConstraint(RealConstraints.class, left.name).addVariableUpperBound(right.name, true);
+                    break;
+                case GT:
+                    // left > right -> add lower bound
+                    this.getConstraint(RealConstraints.class, left.name).addVariableLowerBound(right.name, false);
+                    break;
+                case GE:
+                    // left >= right -> add lower bound
+                    this.getConstraint(RealConstraints.class, left.name).addVariableLowerBound(right.name, true);
+                    break;
+                default:
+                    // do nothing
+            }
+        }
+        if (this.parameterIds.get(right.name) > this.parameterIds.get(left.name)) {
+            switch (operator) {
+                case EQ:
+                    // right == left -> add equality
+                    this.getConstraint(IntegerConstraints.class, right.name).addVariableEquality(left.name);
+                    break;
+                case LT:
+                    // right > left -> add lower bound
+                    this.getConstraint(IntegerConstraints.class, right.name).addVariableLowerBound(left.name, false);
+                    break;
+                case LE:
+                    // right >= left -> add lower bound
+                    this.getConstraint(IntegerConstraints.class, right.name).addVariableLowerBound(left.name, true);
+                    break;
+                case GT:
+                    // right < left -> add upper bound
+                    this.getConstraint(IntegerConstraints.class, right.name).addVariableUpperBound(left.name, false);
+                    break;
+                case GE:
+                    // right <= left -> add upper bound
+                    this.getConstraint(IntegerConstraints.class, right.name).addVariableUpperBound(left.name, true);
+                    break;
+                default:
+                    // do nothing
+            }
         }
     }
 
