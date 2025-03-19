@@ -1,8 +1,8 @@
 services:
   teralizer:
     build: .
-#    environment:
-#      PROJECT_CONFIG_PATH: "<Path to project config file>"
+    environment:
+      PROJECT_CONFIG_PATH: "project-configs/example-maven-junit5.conf"
     ports:
       - "8000:8000"
     volumes:

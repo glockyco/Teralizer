@@ -4,10 +4,10 @@ build
 venv
 projects
 !projects/EqBench
-#!projects/example-maven-junit5
+!projects/example-maven-junit5
 project-configs
 !project-configs/eqbench.conf
-#!project-configs/example-maven-junit5.conf
+!project-configs/example-maven-junit5.conf
 data
 database
 evosuite-report
