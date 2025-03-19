@@ -7,9 +7,9 @@ import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 import teralizer.domain.MethodParameter;
-import teralizer.jqwik.VariableConstraintExtractor.IntegerConstraints;
-import teralizer.jqwik.VariableConstraintExtractor.RealConstraints;
-import teralizer.jqwik.VariableConstraintExtractor.VariableConstraints;
+import teralizer.jqwik.IntegerConstraints;
+import teralizer.jqwik.RealConstraints;
+import teralizer.jqwik.VariableConstraints;
 import teralizer.spoon.SpoonUtils;
 
 import java.util.*;
