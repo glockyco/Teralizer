@@ -1,6 +1,7 @@
 package teralizer;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.velocity.app.VelocityEngine;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
@@ -37,9 +38,11 @@ public class TestGeneralizationRunner {
             create.parser().parse(sql).forEach(create::execute);
         }
 
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
         ProcessingPipeline pipeline = new ProcessingPipeline(create);
         pipeline.getContext().put(TaskContext.DSL_CONTEXT, create);
-        pipeline.getContext().put(TaskContext.GSON, new Gson());
+        pipeline.getContext().put(TaskContext.GSON, gson);
         pipeline.getContext().put(TaskContext.VELOCITY_ENGINE, this.createVelocityEngine());
 
         long startTime = System.currentTimeMillis();

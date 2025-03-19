@@ -229,6 +229,16 @@ public class Assertion extends TableImpl<AssertionRecord> {
     public final TableField<AssertionRecord, String> EQUIVALENT_ASSERTIONS = createField(DSL.name("equivalent_assertions"), SQLDataType.CLOB, this, "");
 
     /**
+     * The column <code>assertion.input_model_statistics</code>.
+     */
+    public final TableField<AssertionRecord, String> INPUT_MODEL_STATISTICS = createField(DSL.name("input_model_statistics"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>assertion.output_model_statistics</code>.
+     */
+    public final TableField<AssertionRecord, String> OUTPUT_MODEL_STATISTICS = createField(DSL.name("output_model_statistics"), SQLDataType.CLOB, this, "");
+
+    /**
      * The column <code>assertion.is_included</code>.
      */
     public final TableField<AssertionRecord, Boolean> IS_INCLUDED = createField(DSL.name("is_included"), SQLDataType.BOOLEAN.nullable(false), this, "");

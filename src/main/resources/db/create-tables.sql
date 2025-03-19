@@ -112,6 +112,8 @@ CREATE TABLE assertion
     output_specification_path          TEXT, -- can be null before JPF execution
 
     equivalent_assertions              TEXT, -- can be null before JPF analysis
+    input_model_statistics             TEXT, -- can be null before JPF analysis
+    output_model_statistics            TEXT, -- can be null before JPF analysis
 
     is_included                        INTEGER NOT NULL,
     exclusion_info                     TEXT, -- can be null for tests that are not excluded

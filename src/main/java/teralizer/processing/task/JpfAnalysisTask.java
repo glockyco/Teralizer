@@ -1,19 +1,28 @@
 package teralizer.processing.task;
 
+import com.google.gson.Gson;
 import org.jooq.DSLContext;
 import org.jooq.Query;
+import org.jooq.Record;
+import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.tools.json.JSONArray;
+import teralizer.domain.Model;
+import teralizer.jpf.ModelStatistics;
+import teralizer.jpf.ModelStatisticsExtractor;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.transformer.JsonToModelTransformer;
+import teralizer.transformer.ModelToJavaTransformer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -39,9 +48,23 @@ public class JpfAnalysisTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        if (this.assertionRecord == null) {
+            DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+            this.updateEquivalencies(create);
+            this.scheduleTasks(create, scheduleTask);
+        } else {
+            Gson gson = context.get(TaskContext.GSON);
+            this.updateModelStatistics(gson);
+        }
+    }
 
-        this.updateEquivalencies(create);
+    private void scheduleTasks(DSLContext create, Consumer<Task> scheduleTask) {
+        Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+        for (Record record : records) {
+            TestRecord testRecord = record.into(TestRecord.class);
+            AssertionRecord assertionRecord = record.into(AssertionRecord.class);
+            scheduleTask.accept(new JpfAnalysisTask(this.stage, this.projectRecord, testRecord, assertionRecord));
+        }
     }
 
     private void updateEquivalencies(DSLContext create) {
@@ -105,5 +128,20 @@ public class JpfAnalysisTask extends AbstractTask {
         public int hashCode() {
             return Objects.hash(this.fileHash, this.methodName);
         }
+    }
+
+    private void updateModelStatistics(Gson gson) throws IOException {
+        ModelStatistics inputStatistics = this.calculateModelStatistics(Paths.get(this.assertionRecord.getInputSpecificationPath()));
+        ModelStatistics outputStatistics = this.calculateModelStatistics(Paths.get(this.assertionRecord.getOutputSpecificationPath()));
+        this.assertionRecord.setInputModelStatistics(gson.toJson(inputStatistics));
+        this.assertionRecord.setOutputModelStatistics(gson.toJson(outputStatistics));
+        this.assertionRecord.store();
+    }
+
+    private ModelStatistics calculateModelStatistics(Path modelPath) throws IOException {
+        String modelString = new String(Files.readAllBytes(modelPath));
+        Model model = new JsonToModelTransformer().transform(modelString);
+        String modelJava = new ModelToJavaTransformer().transform(model);
+        return new ModelStatisticsExtractor().process(model, modelJava);
     }
 }
