@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row14;
+import org.jooq.Row16;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -111,6 +111,16 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
      * The column <code>generalization.method_name</code>.
      */
     public final TableField<GeneralizationRecord, String> METHOD_NAME = createField(DSL.name("method_name"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>generalization.total_constraint_count</code>.
+     */
+    public final TableField<GeneralizationRecord, Integer> TOTAL_CONSTRAINT_COUNT = createField(DSL.name("total_constraint_count"), SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>generalization.used_constraint_count</code>.
+     */
+    public final TableField<GeneralizationRecord, Integer> USED_CONSTRAINT_COUNT = createField(DSL.name("used_constraint_count"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>generalization.is_included</code>.
@@ -237,11 +247,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row14 type methods
+    // Row16 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row14<Integer, Integer, Integer, Integer, GeneralizationVariant, GeneralizationVariant, String, String, String, String, String, String, Boolean, String> fieldsRow() {
-        return (Row14) super.fieldsRow();
+    public Row16<Integer, Integer, Integer, Integer, GeneralizationVariant, GeneralizationVariant, String, String, String, String, String, String, Integer, Integer, Boolean, String> fieldsRow() {
+        return (Row16) super.fieldsRow();
     }
 }

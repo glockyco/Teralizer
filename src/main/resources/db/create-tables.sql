@@ -126,20 +126,26 @@ CREATE INDEX idx_assertion_is_included ON assertion (is_included);
 
 CREATE TABLE generalization
 (
-    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id            INTEGER NOT NULL,
-    test_id               INTEGER NOT NULL,
-    assertion_id          INTEGER NOT NULL,
-    variant               TEXT    NOT NULL,
-    combined_variant      TEXT, -- is only non-null if variant is COMBINED
-    file_path             TEXT    NOT NULL,
-    class_qualified_name  TEXT    NOT NULL,
-    method_qualified_name TEXT    NOT NULL,
-    package_name          TEXT    NOT NULL,
-    class_name            TEXT    NOT NULL,
-    method_name           TEXT    NOT NULL,
-    is_included           INTEGER NOT NULL,
-    exclusion_info        TEXT, -- can be null for generalizations that are not excluded
+    id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id             INTEGER NOT NULL,
+    test_id                INTEGER NOT NULL,
+    assertion_id           INTEGER NOT NULL,
+
+    variant                TEXT    NOT NULL,
+    combined_variant       TEXT,    -- is only non-null if variant is COMBINED
+
+    file_path              TEXT    NOT NULL,
+    class_qualified_name   TEXT    NOT NULL,
+    method_qualified_name  TEXT    NOT NULL,
+    package_name           TEXT    NOT NULL,
+    class_name             TEXT    NOT NULL,
+    method_name            TEXT    NOT NULL,
+
+    total_constraint_count INTEGER, -- can be null for variants that do not process constraints
+    used_constraint_count  INTEGER, -- can be null for variants that do not process constraints
+
+    is_included            INTEGER NOT NULL,
+    exclusion_info         TEXT,    -- can be null for generalizations that are not excluded
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
     FOREIGN KEY (assertion_id) REFERENCES assertion (id) ON DELETE CASCADE

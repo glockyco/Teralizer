@@ -24,6 +24,7 @@ import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.jqwik.VariableConstraintExtractor;
+import teralizer.jqwik.VariableConstraintExtractor.VariableConstraintExtractionResult;
 import teralizer.jqwik.VariableConstraintExtractor.VariableConstraints;
 import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
@@ -255,9 +256,14 @@ public class TestGeneralizationTask extends AbstractTask {
                 }
                 case IMPROVED: {
                     VariableConstraintExtractor extractor = new VariableConstraintExtractor();
-                    Map<String, VariableConstraints> constraints = extractor.process(inputModel, allParameters);
+                    VariableConstraintExtractionResult extractionResult = extractor.process(inputModel, allParameters);
+                    Map<String, VariableConstraints> constraints = extractionResult.getConstraints();
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
                     testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, constraints, inputJava);
+
+                    this.generalizationRecord.setTotalConstraintCount(extractionResult.getTotalConstraintCount());
+                    this.generalizationRecord.setUsedConstraintCount(extractionResult.getUsedConstraintCount());
+                    this.generalizationRecord.store();
                     break;
                 }
                 default:
