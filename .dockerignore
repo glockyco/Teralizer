@@ -11,3 +11,4 @@ project-configs
 data
 database
 evosuite-report
+docker-data

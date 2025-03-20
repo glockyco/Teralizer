@@ -350,6 +350,7 @@ gradle-app.setting
 !build/generated-src/
 !build/generated-src/**
 
+/docker-data
 /data
 /database
 /projects/*
