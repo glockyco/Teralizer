@@ -4,6 +4,7 @@ import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.EvosuiteReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
+import org.jooq.generated.tables.records.TestRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spoon.Launcher;
@@ -59,8 +60,9 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
         Path evoSuiteReportDir = Paths.get("evosuite-report");
         Path statisticsFilePath = evoSuiteReportDir.resolve("statistics.csv");
 
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
         if (Files.exists(statisticsFilePath)) {
-            DSLContext create = context.get(TaskContext.DSL_CONTEXT);
             List<EvosuiteReportRecord> records = this.parseEvoSuiteStatistics(create, statisticsFilePath);
             create.batchInsert(records).execute();
         } else {
@@ -73,6 +75,9 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
         Path evoSuiteProcessedTestsDir = evoSuiteDataDir.resolve("evosuite-tests-processed");
 
         Files.walkFileTree(evoSuiteTestsDir, new EvoSuiteTestVisitor(
+            this,
+            create,
+            this.getProjectId(),
             evoSuiteTestsDir,
             evoSuiteProcessedTestsDir,
             this.projectRecord.getTestSourcePath()
@@ -141,15 +146,24 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
 
         private static final Logger LOGGER = LoggerFactory.getLogger(EvoSuiteTestVisitor.class);
 
+        private final Task task;
+        private final DSLContext create;
+        private final int projectId;
         private final Path evoSuiteTestsDir;
         private final Path evoSuiteProcessedTestsDir;
         private final Path projectTestsDir;
 
         public EvoSuiteTestVisitor(
+            Task task,
+            DSLContext create,
+            int projectId,
             Path evoSuiteTestsDir,
             Path evoSuiteProcessedTestsDir,
             Path projectTestsDir
         ) {
+            this.task = task;
+            this.create = create;
+            this.projectId = projectId;
             this.evoSuiteTestsDir = evoSuiteTestsDir;
             this.evoSuiteProcessedTestsDir = evoSuiteProcessedTestsDir;
             this.projectTestsDir = projectTestsDir;
@@ -176,6 +190,10 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
             launcher.getEnvironment().setSourceClasspath(new String[]{EVOSUITE_JAR_PATH.toString()});
             CtModel model = launcher.buildModel();
 
+            Path relativeFilePath = this.evoSuiteTestsDir.relativize(file);
+            Path processedFilePath = this.evoSuiteProcessedTestsDir.resolve(relativeFilePath);
+            Path targetFilePath = this.projectTestsDir.resolve(relativeFilePath);
+
             for (CtClass<?> clazz : model.getElements(new TypeFilter<>(CtClass.class))) {
                 clazz.getFields().stream()
                     .filter(field -> field.getType().toString().startsWith("org.evosuite"))
@@ -196,7 +214,33 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
                         boolean containsUndeclaredExceptionComment = method.getElements(new TypeFilter<>(CtComment.class)).stream()
                             .anyMatch(comment -> comment.getContent().contains("Undeclared exception!"));
 
-                        return containsEvoSuiteInvocations || containsEvoSuiteVariables || containsUndeclaredExceptionComment;
+                        if (containsEvoSuiteInvocations || containsEvoSuiteVariables || containsUndeclaredExceptionComment) {
+                            // EvoSuite tests that pass this filter are entered
+                            // into the DB during later processing stages, so
+                            // we only need to store the filtered ones here.
+
+                            TestRecord record = this.create.newRecord(Tables.TEST);
+                            record.setProjectId(this.projectId);
+                            record.setTestFilePath(targetFilePath.toString());
+                            record.setTestClassQualifiedName(clazz.getQualifiedName());
+                            record.setTestMethodQualifiedName(clazz.getQualifiedName() + "." + method.getSimpleName());
+                            record.setTestPackageName(clazz.getPackage().getQualifiedName());
+                            record.setTestClassName(clazz.getSimpleName());
+                            record.setTestMethodName(method.getSimpleName());
+
+                            String exclusionInfo = "Excluded by " + this.task + ".\n\n"
+                                + "containsEvoSuiteInvocations = " + containsEvoSuiteInvocations + "\n"
+                                + "containsEvoSuiteVariables = " + containsEvoSuiteVariables + "\n"
+                                + "containsUndeclaredExceptionComment = " + containsUndeclaredExceptionComment + "\n";
+
+                            record.setExclusionInfo(exclusionInfo);
+                            record.setIsIncluded(false);
+                            record.store();
+
+                            return true;
+                        }
+
+                        return false;
                     }).forEach(clazz::removeMethod);
 
                 CtCompilationUnit compilationUnit = clazz.getPosition().getCompilationUnit();
@@ -209,16 +253,12 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
                 printer.calculate(compilationUnit, Collections.singletonList(clazz));
                 byte[] processedFileBytes = printer.getResult().getBytes();
 
-                Path relativeFilePath = this.evoSuiteTestsDir.relativize(file);
-
                 // Write the processed file to the data directory for cross-run storage:
-                Path processedFilePath = this.evoSuiteProcessedTestsDir.resolve(relativeFilePath);
-                processedFilePath.getParent().toFile().mkdirs();
+                Files.createDirectories(processedFilePath.getParent());
                 Files.write(processedFilePath, processedFileBytes);
 
                 // Copy the file to the project directory for further use in this run:
-                Path targetFilePath = this.projectTestsDir.resolve(relativeFilePath);
-                targetFilePath.getParent().toFile().mkdirs();
+                Files.createDirectories(targetFilePath.getParent());
                 Files.copy(processedFilePath, targetFilePath, StandardCopyOption.REPLACE_EXISTING);
             }
         }
