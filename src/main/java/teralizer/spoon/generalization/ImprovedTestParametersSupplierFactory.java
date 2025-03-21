@@ -6,6 +6,7 @@ import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
+import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.jqwik.IntegerConstraints;
 import teralizer.jqwik.RealConstraints;
@@ -24,6 +25,7 @@ public class ImprovedTestParametersSupplierFactory {
     public static CtClass<?> createSupplierClass(
         Factory factory,
         List<MethodParameter> parameters,
+        Map<String, MethodArgument> arguments,
         Map<String, VariableConstraints> constraints,
         String inputJava
     ) {
@@ -34,8 +36,12 @@ public class ImprovedTestParametersSupplierFactory {
         createGetMethod(supplierClass, parameters, inputJava);
 
         for (int i = 0; i < parameters.size(); i++) {
-            List<MethodParameter> params = parameters.subList(0, i);
-            createGetParameterMethod(supplierClass, parameters.get(i), params, constraints);
+            MethodParameter parameter = parameters.get(i);
+            Optional<MethodArgument> argument = arguments.containsKey(parameter.getName())
+                ? Optional.of(arguments.get(parameter.getName()))
+                : Optional.empty();
+
+            createGetParameterMethod(supplierClass, parameters.get(i), argument, parameters.subList(0, i), constraints);
         }
 
         return supplierClass;
@@ -92,6 +98,7 @@ public class ImprovedTestParametersSupplierFactory {
     private static void createGetParameterMethod(
         CtClass<?> supplierClass,
         MethodParameter parameter,
+        Optional<MethodArgument> argument,
         List<MethodParameter> previousParameters,
         Map<String, VariableConstraints> constraints
     ) {
@@ -102,37 +109,37 @@ public class ImprovedTestParametersSupplierFactory {
         switch (parameter.getType()) {
             case "byte":
             case "java.lang.Byte": {
-                body = createByteArbitrary(parameter, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                body = createByteArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
                 arbitraryType = "Byte";
                 break;
             }
             case "short":
             case "java.lang.Short": {
-                body = createShortArbitrary(parameter, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                body = createShortArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
                 arbitraryType = "Short";
                 break;
             }
             case "int":
             case "java.lang.Integer": {
-                body = createIntegerArbitrary(parameter, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                body = createIntegerArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
                 arbitraryType = "Integer";
                 break;
             }
             case "long":
             case "java.lang.Long": {
-                body = createLongArbitrary(parameter, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                body = createLongArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
                 arbitraryType = "Long";
                 break;
             }
             case "float":
             case "java.lang.Float": {
-                body = createFloatArbitrary(parameter, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
+                body = createFloatArbitrary(parameter, argument, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
                 arbitraryType = "Float";
                 break;
             }
             case "double":
             case "java.lang.Double": {
-                body = createDoubleArbitrary(parameter, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
+                body = createDoubleArbitrary(parameter, argument, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
                 arbitraryType = "Double";
                 break;
             }
@@ -168,32 +175,33 @@ public class ImprovedTestParametersSupplierFactory {
         supplierMethod.getBody().addStatement(factory.createCodeSnippetStatement(body));
     }
 
-    private static String createByteArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        return createNumberArbitrary(parameter, constraint, "byte", "Byte", "bytes", "Byte.MIN_VALUE", "Byte.MAX_VALUE");
+    private static String createByteArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, IntegerConstraints constraint) {
+        return createNumberArbitrary(parameter, argument, constraint, "byte", "Byte", "bytes", "Byte.MIN_VALUE", "Byte.MAX_VALUE");
     }
 
-    private static String createShortArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        return createNumberArbitrary(parameter, constraint, "short", "Short", "shorts", "Short.MIN_VALUE", "Short.MAX_VALUE");
+    private static String createShortArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, IntegerConstraints constraint) {
+        return createNumberArbitrary(parameter, argument, constraint, "short", "Short", "shorts", "Short.MIN_VALUE", "Short.MAX_VALUE");
     }
 
-    private static String createIntegerArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        return createNumberArbitrary(parameter, constraint, "int", "Integer", "integers", "Integer.MIN_VALUE", "Integer.MAX_VALUE");
+    private static String createIntegerArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, IntegerConstraints constraint) {
+        return createNumberArbitrary(parameter, argument, constraint, "int", "Integer", "integers", "Integer.MIN_VALUE", "Integer.MAX_VALUE");
     }
 
-    private static String createLongArbitrary(MethodParameter parameter, IntegerConstraints constraint) {
-        return createNumberArbitrary(parameter, constraint, "long", "Long", "longs", "Long.MIN_VALUE", "Long.MAX_VALUE");
+    private static String createLongArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, IntegerConstraints constraint) {
+        return createNumberArbitrary(parameter, argument, constraint, "long", "Long", "longs", "Long.MIN_VALUE", "Long.MAX_VALUE");
     }
 
-    private static String createFloatArbitrary(MethodParameter parameter, RealConstraints constraint) {
-        return createRealArbitrary(parameter, constraint, "float", "Float", "floats", "-Float.MAX_VALUE", "Float.MAX_VALUE", 46);
+    private static String createFloatArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, RealConstraints constraint) {
+        return createRealArbitrary(parameter, argument, constraint, "float", "Float", "floats", "-Float.MAX_VALUE", "Float.MAX_VALUE", 46);
     }
 
-    private static String createDoubleArbitrary(MethodParameter parameter, RealConstraints constraint) {
-        return createRealArbitrary(parameter, constraint, "double", "Double", "doubles", "-Double.MAX_VALUE", "Double.MAX_VALUE", 325);
+    private static String createDoubleArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, RealConstraints constraint) {
+        return createRealArbitrary(parameter, argument, constraint, "double", "Double", "doubles", "-Double.MAX_VALUE", "Double.MAX_VALUE", 325);
     }
 
     private static String createNumberArbitrary(
         MethodParameter parameter,
+        Optional<MethodArgument> argument,
         IntegerConstraints constraint,
         String unboxedType,
         String boxedType,
@@ -202,9 +210,13 @@ public class ImprovedTestParametersSupplierFactory {
         String maxValue
     ) {
         if (constraint == null) {
-            return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
+            if (argument.isPresent()) {
+                return String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), argument.get().getValue(), arbitraryType);
+            } else {
+                return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
+            }
         } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + String.format("(%s) (%s)", unboxedType, constraint.getEquality()) + ")";
+            return "return net.jqwik.api.Arbitraries.just(" + String.format("(%s) (%s)", unboxedType, constraint.getEquality()) + ")";
         }
 
         Names n = new Names(parameter.getName());
@@ -215,13 +227,21 @@ public class ImprovedTestParametersSupplierFactory {
         result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> String.format(", (%s) (%s)", unboxedType, b)).collect(Collectors.joining())));
         result.append(String.format("%s %s = java.util.Collections.max(%s);\n", parameter.getType(), n.min(), n.lowerBounds()));
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
-        result.append(String.format("return (%s > %s)%n    ? net.jqwik.api.Arbitraries.of()%n", n.min(), n.max()));
-        result.append(String.format("    : net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
+
+        if (argument.isPresent()) {
+            result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), argument.get().getType(), argument.get().getValue()));
+            result.append(String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s().between(%s, %s))", argument.get().getType(), argument.get().getValue(), arbitraryType, n.min(), n.max()));
+        } else {
+            result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max()));
+            result.append(String.format("return net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
+        }
+
         return result.toString();
     }
 
     private static String createRealArbitrary(
         MethodParameter parameter,
+        Optional<MethodArgument> argument,
         RealConstraints constraint,
         String unboxedType,
         String boxedType,
@@ -231,9 +251,13 @@ public class ImprovedTestParametersSupplierFactory {
         int scale
     ) {
         if (constraint == null) {
-            return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
+            if (argument.isPresent()) {
+                return String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), argument.get().getValue(), arbitraryType);
+            } else {
+                return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
+            }
         } else if (constraint.getEquality() != null) {
-            return "return net.jqwik.api.Arbitraries.of(" + String.format("(%s) (%s)", unboxedType, constraint.getEquality()) + ")";
+            return "return net.jqwik.api.Arbitraries.just(" + String.format("(%s) (%s)", unboxedType, constraint.getEquality()) + ")";
         }
 
         Names n = new Names(parameter.getName());
@@ -248,8 +272,15 @@ public class ImprovedTestParametersSupplierFactory {
         result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.minIncluded(), n.lowerBounds(), n.lowerBounds(), n.min(), n.lowerBoundIncluded()));
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
         result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.maxIncluded(), n.upperBounds(), n.upperBounds(), n.max(), n.upperBoundIncluded()));
-        result.append(String.format("return ((%s > %s) || (%s == %s && (!%s || !%s)))%n    ? net.jqwik.api.Arbitraries.of()%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
-        result.append(String.format("    : net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+
+        if (argument.isPresent()) {
+            result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded(), argument.get().getType(), argument.get().getValue()));
+            result.append(String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s))", argument.get().getType(), argument.get().getValue(), arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+        } else {
+            result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
+            result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+        }
+
         return result.toString();
     }
 

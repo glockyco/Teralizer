@@ -31,10 +31,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.analysis.TestAnalysis;
-import teralizer.spoon.generalization.BaselineTestParametersSupplierFactory;
-import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
-import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
-import teralizer.spoon.generalization.TestParametersFactory;
+import teralizer.spoon.generalization.*;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 import teralizer.util.Configuration;
@@ -52,6 +49,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class TestGeneralizationTask extends AbstractTask {
 
@@ -178,14 +176,24 @@ public class TestGeneralizationTask extends AbstractTask {
         Type type = new TypeToken<List<MethodParameter>>() {}.getType();
         List<MethodParameter> testedMethodParameters = gson.fromJson(this.assertionRecord.getTestedMethodParameters(), type);
 
+        String inputValuesString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputValuesPath())));
+        Type inputValuesType = new TypeToken<List<MethodArgument>>() {}.getType();
+        List<MethodArgument> inputValues = gson.fromJson(inputValuesString, inputValuesType);
+
+        Map<String, MethodArgument> testedMethodArguments = IntStream
+            .range(0, testedMethodParameters.size())
+            .boxed().collect(Collectors.toMap(
+                i -> testedMethodParameters.get(i).getName(),
+                i -> inputValues.get(i)
+            ));
+
+        Set<CtType<?>> nestedTypes = generalizedClassDeclaration.getNestedTypes();
+        nestedTypes.forEach(CtElement::delete);
+
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
 
         if (this.getVariant() == GeneralizationVariant.BASELINE) {
-            String inputValuesString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputValuesPath())));
-            Type inputValuesType = new TypeToken<List<MethodArgument>>() {}.getType();
-            List<MethodArgument> inputValues = gson.fromJson(inputValuesString, inputValuesType);
-
             List<MethodParameter> allParameters = new ArrayList<>(testedMethodParameters);
             allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
 
@@ -251,7 +259,7 @@ public class TestGeneralizationTask extends AbstractTask {
             switch (this.getVariant() == GeneralizationVariant.COMBINED ? this.combinedVariant : this.getVariant()) {
                 case NAIVE: {
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
-                    testParametersSupplierClassDeclaration = NaiveTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputJava);
+                    testParametersSupplierClassDeclaration = NaiveTestParametersSupplierFactory.createSupplierClass(factory, allParameters, testedMethodArguments, inputJava);
                     break;
                 }
                 case IMPROVED: {
@@ -259,7 +267,7 @@ public class TestGeneralizationTask extends AbstractTask {
                     VariableConstraintExtractionResult extractionResult = extractor.process(inputModel, allParameters);
                     Map<String, VariableConstraints> constraints = extractionResult.getConstraints();
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
-                    testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, constraints, inputJava);
+                    testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, testedMethodArguments, constraints, inputJava);
 
                     this.generalizationRecord.setTotalConstraintCount(extractionResult.getTotalConstraintCount());
                     this.generalizationRecord.setUsedConstraintCount(extractionResult.getUsedConstraintCount());
@@ -282,10 +290,14 @@ public class TestGeneralizationTask extends AbstractTask {
                 List<CtExpression<?>> assertArguments = assertion.getArguments();
                 assertArguments.set(index, factory.Code().createCodeSnippetExpression("(" + outputValue.getType() + ") (" + outputJava + ")"));
             }
-        }
 
-        Set<CtType<?>> nestedTypes = generalizedClassDeclaration.getNestedTypes();
-        nestedTypes.forEach(CtElement::delete);
+            // ------------------------------------------------------------------------------------------------------ //
+            // Add FirstValueArbitrary class.                                                                         //
+            // ------------------------------------------------------------------------------------------------------ //
+
+            CtClass<?> firstValueArbitraryClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass();
+            generalizedClassDeclaration.addNestedType(firstValueArbitraryClass);
+        }
 
         generalizedClassDeclaration.addNestedType(testParametersClassDeclaration);
         generalizedClassDeclaration.addNestedType(testParametersSupplierClassDeclaration);
