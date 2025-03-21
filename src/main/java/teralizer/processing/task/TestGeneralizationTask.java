@@ -306,6 +306,7 @@ public class TestGeneralizationTask extends AbstractTask {
         propertyAnnotation.addValue("tries", factory.Code().createLiteral(Configuration.MAX_TRIES_JQWIK));
         propertyAnnotation.addValue("seed", factory.Code().createLiteral("0"));
         propertyAnnotation.addValue("shrinking", factory.Code().createCodeSnippetExpression("net.jqwik.api.ShrinkingMode.OFF"));
+        propertyAnnotation.addValue("edgeCases", factory.Code().createCodeSnippetExpression("net.jqwik.api.EdgeCasesMode.FIRST"));
         testMethod.addAnnotation(propertyAnnotation);
 
         // ------------------------------------------------------------------------------------------------------ //
