@@ -1,15 +1,14 @@
 package teralizer.processing;
 
-public enum GeneralizationVariant {
+public enum GeneralizationAlgorithm {
 
     BASELINE(0),
     NAIVE(1),
-    IMPROVED(2),
-    COMBINED(3);
+    IMPROVED(2);
 
     private final Integer id;
 
-    GeneralizationVariant(Integer id) {
+    GeneralizationAlgorithm(Integer id) {
         this.id = id;
     }
 

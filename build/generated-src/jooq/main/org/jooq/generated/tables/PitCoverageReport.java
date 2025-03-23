@@ -28,7 +28,6 @@ import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 
 
@@ -86,7 +85,7 @@ public class PitCoverageReport extends TableImpl<PitCoverageReportRecord> {
     /**
      * The column <code>pit_coverage_report.variant</code>.
      */
-    public final TableField<PitCoverageReportRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
+    public final TableField<PitCoverageReportRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>pit_coverage_report.covered_package_name</code>.
@@ -247,7 +246,7 @@ public class PitCoverageReport extends TableImpl<PitCoverageReportRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row15<Integer, Integer, Integer, Integer, Integer, ProcessingStage, GeneralizationVariant, String, String, String, String, Integer, String, String, String> fieldsRow() {
+    public Row15<Integer, Integer, Integer, Integer, Integer, ProcessingStage, String, String, String, String, String, Integer, String, String, String> fieldsRow() {
         return (Row15) super.fieldsRow();
     }
 }

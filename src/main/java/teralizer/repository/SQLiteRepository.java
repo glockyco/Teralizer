@@ -4,13 +4,12 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
-import teralizer.processing.GeneralizationVariant;
 
 import java.util.List;
 
 public class SQLiteRepository {
 
-    public static List<String> fetchCoveredClasses(DSLContext create, GeneralizationVariant variant, Integer projectId) {
+    public static List<String> fetchCoveredClasses(DSLContext create, String variant, Integer projectId) {
         return create.select(Tables.JACOCO_COVERAGE_REPORT.COVERED_PACKAGE.concat(".").concat(Tables.JACOCO_COVERAGE_REPORT.COVERED_CLASS))
             .from(Tables.JACOCO_COVERAGE_REPORT)
             .where(Tables.JACOCO_COVERAGE_REPORT.PROJECT_ID.eq(projectId))
@@ -46,7 +45,7 @@ public class SQLiteRepository {
             .fetch();
     }
 
-    public static Result<Record> fetchIncludedGeneralizations(DSLContext create, GeneralizationVariant variant, Integer projectId) {
+    public static Result<Record> fetchIncludedGeneralizations(DSLContext create, String variant, Integer projectId) {
         return create.select()
             .from(Tables.TEST)
             .join(Tables.ASSERTION).on(Tables.TEST.ID.eq(Tables.ASSERTION.TEST_ID))
@@ -59,7 +58,7 @@ public class SQLiteRepository {
             .fetch();
     }
 
-    public static List<String> fetchIncludedGeneralizedClasses(DSLContext create, GeneralizationVariant variant, Integer projectId) {
+    public static List<String> fetchIncludedGeneralizedClasses(DSLContext create, String variant, Integer projectId) {
         return create.selectDistinct(Tables.GENERALIZATION.CLASS_QUALIFIED_NAME)
             .from(Tables.TEST)
             .join(Tables.GENERALIZATION)

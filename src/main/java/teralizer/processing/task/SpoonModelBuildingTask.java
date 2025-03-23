@@ -2,7 +2,6 @@ package teralizer.processing.task;
 
 import org.jooq.generated.tables.records.ProjectRecord;
 import spoon.Launcher;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.spoon.SpoonFactory;
@@ -15,7 +14,7 @@ public class SpoonModelBuildingTask extends AbstractTask {
         this(stage, null, projectRecord);
     }
 
-    public SpoonModelBuildingTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public SpoonModelBuildingTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
         this.variant = variant;

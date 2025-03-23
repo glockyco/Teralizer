@@ -13,7 +13,6 @@ import org.jooq.generated.tables.records.JunitTestReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.xml.sax.SAXException;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
@@ -39,13 +38,13 @@ public class JunitDataCollectionTask extends AbstractTask {
         this(stage, null, projectRecord, testRecord, null);
     }
 
-    public JunitDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public JunitDataCollectionTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this(stage, variant, projectRecord, null, null);
     }
 
     public JunitDataCollectionTask(
         ProcessingStage stage,
-        GeneralizationVariant variant,
+        String variant,
         ProjectRecord projectRecord,
         TestRecord testRecord,
         GeneralizationRecord generalizationRecord
@@ -223,7 +222,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         Path testReportDataPath;
         try {
             String stageName = this.getStage().getStep() + "-" + this.getStage();
-            String variantName = this.getVariant() == null ? "" : ("." + this.getVariant().getId() + "-" + this.getVariant());
+            String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
             String fileName = stageName + variantName + "." + testReportPath.getFileName().toString();
             testReportDataPath = dataDirectory.resolve(fileName);
             dataDirectory.toFile().mkdirs();

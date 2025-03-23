@@ -1,7 +1,6 @@
 package teralizer.processing.task;
 
 import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.Configuration;
@@ -23,7 +22,7 @@ public class ProjectBuildTask extends AbstractTask {
         this(stage, null, projectRecord);
     }
 
-    public ProjectBuildTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public ProjectBuildTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.projectRecord = projectRecord;
         this.variant = variant;

@@ -132,9 +132,7 @@ CREATE TABLE generalization
     project_id             INTEGER NOT NULL,
     test_id                INTEGER NOT NULL,
     assertion_id           INTEGER NOT NULL,
-
     variant                TEXT    NOT NULL,
-    combined_variant       TEXT,    -- is only non-null if variant is COMBINED
 
     file_path              TEXT    NOT NULL,
     class_qualified_name   TEXT    NOT NULL,

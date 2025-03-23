@@ -2,7 +2,6 @@ package teralizer.processing.task;
 
 import org.jooq.DSLContext;
 import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
@@ -27,7 +26,7 @@ public class TestExecutionTask extends AbstractTask {
         this(stage, null, projectRecord);
     }
 
-    public TestExecutionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public TestExecutionTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
@@ -136,7 +135,7 @@ public class TestExecutionTask extends AbstractTask {
             Files.createDirectories(commandDataPath);
 
             String stageName = this.stage.getStep() + "-" + this.stage;
-            String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
+            String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
             String executionName = "." + System.currentTimeMillis();
             String baseName = stageName + variantName + executionName;
 

@@ -15,8 +15,8 @@ public class TaskPriorityComparator implements Comparator<Task> {
             return INTEGER_COMPARATOR.compare(task1.getProjectId(), task2.getProjectId());
         }
 
-        if (task1.getVariant() != task2.getVariant() && task1.getVariant() != null && task2.getVariant() != null) {
-            return INTEGER_COMPARATOR.compare(task1.getVariant().getId(), task2.getVariant().getId());
+        if (!Objects.equals(task1.getVariant(), task2.getVariant())) {
+            return Comparator.nullsFirst(String::compareTo).compare(task1.getVariant(), task2.getVariant());
         }
 
         if (task1.getStage() != task2.getStage()) {

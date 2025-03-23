@@ -11,7 +11,6 @@ import org.jooq.generated.tables.records.PitCoverageReportRecord;
 import org.jooq.generated.tables.records.PitMutationReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -23,7 +22,6 @@ import teralizer.util.ConsoleCommand;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +38,7 @@ public class PitDataCollectionTask extends AbstractTask {
         this(stage, null, projectRecord);
     }
 
-    public PitDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public PitDataCollectionTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
@@ -117,7 +115,7 @@ public class PitDataCollectionTask extends AbstractTask {
 
         // Preserve the full raw data in the data directory:
         String stageName = this.getStage().getStep() + "-" + this.getStage();
-        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant().getId() + "-" + this.getVariant());
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
         String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
         dataDirectory.toFile().mkdirs();
         Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
@@ -224,7 +222,7 @@ public class PitDataCollectionTask extends AbstractTask {
 
         // Preserve the full raw data in the data directory:
         String stageName = this.getStage().getStep() + "-" + this.getStage();
-        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant().getId() + "-" + this.getVariant());
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
         String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
         dataDirectory.toFile().mkdirs();
         Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
@@ -285,7 +283,7 @@ public class PitDataCollectionTask extends AbstractTask {
         Files.createDirectories(commandDataPath);
 
         String stageName = this.stage.getStep() + "-" + this.stage;
-        String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
         String executionName = "." + System.currentTimeMillis();
         String baseName = stageName + variantName + executionName;
 

@@ -1,6 +1,5 @@
 package teralizer.processing.task;
 
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
@@ -11,8 +10,7 @@ public interface Task {
     void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception;
 
     ProcessingStage getStage();
-    GeneralizationVariant getVariant();
-    GeneralizationVariant getCombinedVariant();
+    String getVariant();
 
     Integer getProjectId();
     Integer getTestId();

@@ -17,7 +17,6 @@ import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.filter.TypeFilter;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 
@@ -42,7 +41,7 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
         this(stage, null, projectRecord);
     }
 
-    public EvoSuitePostprocessingTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public EvoSuitePostprocessingTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;

@@ -26,7 +26,7 @@ import teralizer.domain.Model;
 import teralizer.jqwik.VariableConstraintExtractionResult;
 import teralizer.jqwik.VariableConstraintExtractor;
 import teralizer.jqwik.VariableConstraints;
-import teralizer.processing.GeneralizationVariant;
+import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
@@ -53,22 +53,13 @@ import java.util.stream.IntStream;
 
 public class TestGeneralizationTask extends AbstractTask {
 
-    public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public TestGeneralizationTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this(stage, variant, projectRecord, null, null);
     }
 
-    public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord, TestRecord testRecord, AssertionRecord assertionRecord) {
+    public TestGeneralizationTask(ProcessingStage stage, String variant, ProjectRecord projectRecord, TestRecord testRecord, AssertionRecord assertionRecord) {
         this.stage = stage;
         this.variant = variant;
-        this.projectRecord = projectRecord;
-        this.testRecord = testRecord;
-        this.assertionRecord = assertionRecord;
-    }
-
-    public TestGeneralizationTask(ProcessingStage stage, GeneralizationVariant variant, GeneralizationVariant combinedVariant, ProjectRecord projectRecord, TestRecord testRecord, AssertionRecord assertionRecord) {
-        this.stage = stage;
-        this.variant = variant;
-        this.combinedVariant = combinedVariant;
         this.projectRecord = projectRecord;
         this.testRecord = testRecord;
         this.assertionRecord = assertionRecord;
@@ -90,12 +81,7 @@ public class TestGeneralizationTask extends AbstractTask {
         for (Record record : records) {
             TestRecord testRecord = record.into(TestRecord.class);
             AssertionRecord assertionRecord = record.into(AssertionRecord.class);
-            if (this.variant == GeneralizationVariant.COMBINED) {
-                scheduleTask.accept(new TestGeneralizationTask(this.stage, GeneralizationVariant.COMBINED, GeneralizationVariant.NAIVE, this.projectRecord, testRecord, assertionRecord));
-                scheduleTask.accept(new TestGeneralizationTask(this.stage, GeneralizationVariant.COMBINED, GeneralizationVariant.IMPROVED, this.projectRecord, testRecord, assertionRecord));
-            } else {
-                scheduleTask.accept(new TestGeneralizationTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord));
-            }
+            scheduleTask.accept(new TestGeneralizationTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord));
         }
     }
 
@@ -111,7 +97,6 @@ public class TestGeneralizationTask extends AbstractTask {
 
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
         GeneralizationRecord record = create.newRecord(Tables.GENERALIZATION);
-        record.setCombinedVariant(this.combinedVariant);
         record.setProjectId(this.getProjectId());
         record.setTestId(this.getTestId());
         record.setAssertionId(this.getAssertionId());
@@ -193,7 +178,7 @@ public class TestGeneralizationTask extends AbstractTask {
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
 
-        if (this.getVariant() == GeneralizationVariant.BASELINE) {
+        if (Configuration.getGeneralizationAlgorithm(this.getVariant()) == GeneralizationAlgorithm.BASELINE) {
             List<MethodParameter> allParameters = new ArrayList<>(testedMethodParameters);
             allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
 
@@ -256,7 +241,7 @@ public class TestGeneralizationTask extends AbstractTask {
             allParameters.addAll(temporaryParameters);
             allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
 
-            switch (this.getVariant() == GeneralizationVariant.COMBINED ? this.combinedVariant : this.getVariant()) {
+            switch (Configuration.getGeneralizationAlgorithm(this.getVariant())) {
                 case NAIVE: {
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
                     testParametersSupplierClassDeclaration = NaiveTestParametersSupplierFactory.createSupplierClass(factory, allParameters, testedMethodArguments, inputJava);
@@ -381,7 +366,7 @@ public class TestGeneralizationTask extends AbstractTask {
             .resolve("project-id-" + this.getProjectId())
             .resolve(Configuration.TOOL_NAME.toLowerCase() + "-data")
             .resolve("tests")
-            .resolve(this.getVariant().toString())
+            .resolve(this.getVariant())
             .resolve(relativizedFilePath);
         dataFilePath.getParent().toFile().mkdirs();
         Files.copy(generalizedFilePath, dataFilePath, StandardCopyOption.REPLACE_EXISTING);

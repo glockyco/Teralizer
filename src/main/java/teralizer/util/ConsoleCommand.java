@@ -2,7 +2,6 @@ package teralizer.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 
 import java.io.IOException;
@@ -18,14 +17,14 @@ public class ConsoleCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleCommand.class);
 
     private final ProcessingStage stage;
-    private final GeneralizationVariant variant;
+    private final String variant;
     private final Path commandDataPath;
 
     private final Map<String, String> environmentVariables = new HashMap<>();
 
     private int executionCount = 0;
 
-    public ConsoleCommand(ProcessingStage stage, GeneralizationVariant variant, int projectId, Path projectDataPath) {
+    public ConsoleCommand(ProcessingStage stage, String variant, int projectId, Path projectDataPath) {
         this.stage = stage;
         this.variant = variant;
         this.commandDataPath = projectDataPath.resolve("project-id-" + projectId + "/command-data");
@@ -42,7 +41,7 @@ public class ConsoleCommand {
     public ConsoleCommandResult execute(Path projectRootPath, List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
         this.executionCount++;
         String stageName = this.stage.getStep() + "-" + this.stage;
-        String variantName = this.variant == null ? "" : ("." + this.variant.getId() + "-" + this.variant);
+        String variantName = this.variant == null ? "" : ("." + this.variant);
         String executionName = "." + this.executionCount;
         String baseName = stageName + variantName + executionName;
         Path commandPath = this.commandDataPath.resolve(baseName + ".command.txt");

@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import teralizer.processing.GeneralizationVariant;
+import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.processing.dependencies.Dependency;
 
 import java.io.File;
@@ -78,8 +78,6 @@ public class Configuration {
     public static final Path GRADLE_PITEST_PLUGIN_PATH = Paths.get("src/main/resources/pitest-plugin-gradle.txt");
 
     // ----- Generalization ----- //
-    public static final GeneralizationVariant[] GENERALIZATION_VARIANTS = GeneralizationVariant.values();
-
     public static final int MAX_TRIES_JQWIK = 20;
     public static final int MAX_SPECIFICATION_SIZE = 200000;
 
@@ -176,6 +174,15 @@ public class Configuration {
     // ----- Pitest ----- //
     public static String getPitestMutators() {
         return CONFIG.getString(TOOL_NAME_LOWER + ".pitest.mutators");
+    }
+
+    // ----- Generalizations ----- //
+    public static String[] getGeneralizationVariants() {
+        return CONFIG.getObject(TOOL_NAME_LOWER + ".generalizations").keySet().toArray(new String[0]);
+    }
+
+    public static GeneralizationAlgorithm getGeneralizationAlgorithm(String variant) {
+        return GeneralizationAlgorithm.valueOf(CONFIG.getString(TOOL_NAME_LOWER + ".generalizations." + variant + ".algorithm"));
     }
 
     // ----- Helper Methods ----- //

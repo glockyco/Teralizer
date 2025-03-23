@@ -3,7 +3,6 @@ package teralizer.processing.task;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.Configuration;
@@ -36,7 +35,7 @@ public class CleanupTask extends AbstractTask {
         this(stage, null, projectRecord);
     }
 
-    public CleanupTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public CleanupTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;

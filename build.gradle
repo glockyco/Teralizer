@@ -111,14 +111,14 @@ jooq {
                                 includeExpression = "assertion.is_included"
                             }
                             forcedType {
-                                userType = "teralizer.processing.GeneralizationVariant"
+                                userType = "teralizer.processing.GeneralizationAlgorithm"
                                 enumConverter = true
-                                includeExpression = "generalization.variant"
+                                includeExpression = "generalization.algorithm"
                             }
                             forcedType {
-                                userType = "teralizer.processing.GeneralizationVariant"
+                                userType = "teralizer.processing.GeneralizationAlgorithm"
                                 enumConverter = true
-                                includeExpression = "generalization.combined_variant"
+                                includeExpression = "generalization.combined_algorithm"
                             }
                             forcedType {
                                 name = "BOOLEAN"
@@ -128,11 +128,6 @@ jooq {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
                                 includeExpression = "junit_test_report.stage"
-                            }
-                            forcedType {
-                                userType = "teralizer.processing.GeneralizationVariant"
-                                enumConverter = true
-                                includeExpression = "junit_test_report.variant"
                             }
                             forcedType {
                                 userType = "teralizer.processing.TestResult"
@@ -145,29 +140,14 @@ jooq {
                                 includeExpression = "jacoco_coverage_report.stage"
                             }
                             forcedType {
-                                userType = "teralizer.processing.GeneralizationVariant"
-                                enumConverter = true
-                                includeExpression = "jacoco_coverage_report.variant"
-                            }
-                            forcedType {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
                                 includeExpression = "pit_coverage_report.stage"
                             }
                             forcedType {
-                                userType = "teralizer.processing.GeneralizationVariant"
-                                enumConverter = true
-                                includeExpression = "pit_coverage_report.variant"
-                            }
-                            forcedType {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
                                 includeExpression = "pit_mutation_report.stage"
-                            }
-                            forcedType {
-                                userType = "teralizer.processing.GeneralizationVariant"
-                                enumConverter = true
-                                includeExpression = "pit_mutation_report.variant"
                             }
                             forcedType {
                                 name = "BOOLEAN"
@@ -182,11 +162,6 @@ jooq {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
                                 includeExpression = "task.stage"
-                            }
-                            forcedType {
-                                userType = "teralizer.processing.GeneralizationVariant"
-                                enumConverter = true
-                                includeExpression = "task.variant"
                             }
                             forcedType {
                                 userType = "teralizer.processing.ProcessingStatus"

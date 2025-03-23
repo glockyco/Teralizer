@@ -28,7 +28,6 @@ import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TestResult;
 
@@ -87,7 +86,7 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
     /**
      * The column <code>junit_test_report.variant</code>.
      */
-    public final TableField<JunitTestReportRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
+    public final TableField<JunitTestReportRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>junit_test_report.test_package_name</code>.
@@ -258,7 +257,7 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row17<Integer, Integer, Integer, Integer, Integer, ProcessingStage, GeneralizationVariant, String, String, String, TestResult, Float, String, String, String, String, String> fieldsRow() {
+    public Row17<Integer, Integer, Integer, Integer, Integer, ProcessingStage, String, String, String, String, TestResult, Float, String, String, String, String, String> fieldsRow() {
         return (Row17) super.fieldsRow();
     }
 }

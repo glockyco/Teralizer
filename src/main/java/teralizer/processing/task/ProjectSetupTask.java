@@ -9,7 +9,10 @@ import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import teralizer.processing.*;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.ProjectType;
+import teralizer.processing.TaskContext;
+import teralizer.processing.TestFramework;
 import teralizer.util.Configuration;
 
 import java.io.BufferedReader;
@@ -111,7 +114,7 @@ public class ProjectSetupTask extends AbstractTask {
             scheduleTask.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, this.projectRecord));
             scheduleTask.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_INITIAL, this.projectRecord));
 
-            for (GeneralizationVariant variant : Configuration.GENERALIZATION_VARIANTS) {
+            for (String variant : Configuration.getGeneralizationVariants()) {
                 scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_GENERALIZATION, variant, this.projectRecord));
 
                 scheduleTask.accept(new TestGeneralizationTask(ProcessingStage.GENERALIZE_TESTS, variant, this.projectRecord));

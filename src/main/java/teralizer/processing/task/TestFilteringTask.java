@@ -9,7 +9,6 @@ import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.filter.*;
@@ -36,13 +35,13 @@ public class TestFilteringTask extends AbstractTask {
         this(stage, null, projectRecord, testRecord, assertionRecord, null);
     }
 
-    public TestFilteringTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public TestFilteringTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this(stage, variant, projectRecord, null, null, null);
     }
 
     public TestFilteringTask(
         ProcessingStage stage,
-        GeneralizationVariant variant,
+        String variant,
         ProjectRecord projectRecord,
         TestRecord testRecord,
         AssertionRecord assertionRecord,

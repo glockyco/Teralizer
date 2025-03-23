@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row16;
+import org.jooq.Row15;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -24,11 +24,8 @@ import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.impl.DSL;
-import org.jooq.impl.EnumConverter;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
-
-import teralizer.processing.GeneralizationVariant;
 
 
 /**
@@ -75,12 +72,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     /**
      * The column <code>generalization.variant</code>.
      */
-    public final TableField<GeneralizationRecord, GeneralizationVariant> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
-
-    /**
-     * The column <code>generalization.combined_variant</code>.
-     */
-    public final TableField<GeneralizationRecord, GeneralizationVariant> COMBINED_VARIANT = createField(DSL.name("combined_variant"), SQLDataType.CLOB, this, "", new EnumConverter<String, GeneralizationVariant>(String.class, GeneralizationVariant.class));
+    public final TableField<GeneralizationRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>generalization.file_path</code>.
@@ -247,11 +239,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row16 type methods
+    // Row15 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row16<Integer, Integer, Integer, Integer, GeneralizationVariant, GeneralizationVariant, String, String, String, String, String, String, Integer, Integer, Boolean, String> fieldsRow() {
-        return (Row16) super.fieldsRow();
+    public Row15<Integer, Integer, Integer, Integer, String, String, String, String, String, String, String, Integer, Integer, Boolean, String> fieldsRow() {
+        return (Row15) super.fieldsRow();
     }
 }

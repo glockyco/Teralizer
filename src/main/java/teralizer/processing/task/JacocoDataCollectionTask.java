@@ -4,7 +4,6 @@ import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.JacocoCoverageReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.processing.GeneralizationVariant;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.Configuration;
@@ -29,7 +28,7 @@ public class JacocoDataCollectionTask extends AbstractTask {
         this(stage, null, projectRecord);
     }
 
-    public JacocoDataCollectionTask(ProcessingStage stage, GeneralizationVariant variant, ProjectRecord projectRecord) {
+    public JacocoDataCollectionTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
@@ -78,7 +77,7 @@ public class JacocoDataCollectionTask extends AbstractTask {
 
         // Preserve the full raw data in the data directory:
         String stageName = this.getStage().getStep() + "-" + this.getStage();
-        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant().getId() + "-" + this.getVariant());
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
         String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
         dataDirectory.toFile().mkdirs();
         Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
