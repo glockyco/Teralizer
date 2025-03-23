@@ -78,7 +78,6 @@ public class Configuration {
     public static final Path GRADLE_PITEST_PLUGIN_PATH = Paths.get("src/main/resources/pitest-plugin-gradle.txt");
 
     // ----- Generalization ----- //
-    public static final int MAX_TRIES_JQWIK = 20;
     public static final int MAX_SPECIFICATION_SIZE = 200000;
 
     public static final List<String> SUPPORTED_TYPES = Arrays.asList("byte", "short", "int", "long", "float", "double");
@@ -183,6 +182,10 @@ public class Configuration {
 
     public static GeneralizationAlgorithm getGeneralizationAlgorithm(String variant) {
         return GeneralizationAlgorithm.valueOf(CONFIG.getString(TOOL_NAME_LOWER + ".generalizations." + variant + ".algorithm"));
+    }
+
+    public static int getGeneralizationJqwikTries(String variant) {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".generalizations." + variant + ".jqwik.tries");
     }
 
     // ----- Helper Methods ----- //
