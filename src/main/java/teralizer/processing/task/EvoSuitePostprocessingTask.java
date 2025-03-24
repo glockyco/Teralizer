@@ -194,6 +194,10 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
             Path targetFilePath = this.projectTestsDir.resolve(relativeFilePath);
 
             for (CtClass<?> clazz : model.getElements(new TypeFilter<>(CtClass.class))) {
+                if (clazz.isAnonymous()) {
+                    continue;
+                }
+
                 clazz.getFields().stream()
                     .filter(field -> field.getType().toString().startsWith("org.evosuite"))
                     .forEach(clazz::removeField);
