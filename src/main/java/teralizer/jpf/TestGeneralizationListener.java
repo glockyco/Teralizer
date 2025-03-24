@@ -43,6 +43,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private long startTime;
 
     private int recursionDepth;
+    private boolean isInInstrumentedMethod;
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -60,6 +61,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public void searchStarted(Search search) {
         this.startTime = System.currentTimeMillis();
         this.recursionDepth = -1;
+        this.isInInstrumentedMethod = false;
     }
 
     @Override
@@ -85,6 +87,9 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     @Override
     public void methodEntered(VM vm, ThreadInfo currentThread, MethodInfo enteredMethod) {
+        if (this.instrumentedMethodSpec.matches(enteredMethod)) {
+            this.isInInstrumentedMethod = true;
+        }
         if (this.testedMethodSpec.matches(enteredMethod)) {
             LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
             this.recursionDepth++;
@@ -93,13 +98,16 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     @Override
     public void methodExited(VM vm, ThreadInfo currentThread, MethodInfo exitedMethod) {
+        if (this.instrumentedMethodSpec.matches(exitedMethod)) {
+            this.isInInstrumentedMethod = false;
+        }
         if (this.testedMethodSpec.matches(exitedMethod)) {
             LOGGER.atDebug().log("Exiting tested method: " + exitedMethod.toString());
             this.recursionDepth--;
-        }
-        if (this.instrumentedMethodSpec.matches(exitedMethod)) {
-            this.writeSpecificationFiles(vm, currentThread);
-            vm.getSearch().terminate();
+            if (this.isInInstrumentedMethod && this.recursionDepth == -1) {
+                this.writeSpecificationFiles(vm, currentThread);
+                vm.getSearch().terminate();
+            }
         }
     }
 
@@ -112,8 +120,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         List<MethodArgument> concreteInputArguments = new ArrayList<>();
         String[] concreteInputTypes = currentThread.getTopFrameMethodInfo().getArgumentTypeNames();
         Object[] concreteInputValues = currentThread.getTopFrame().getArgumentValues(currentThread);
-        int startIndex = currentThread.getTopFrame().getMethodInfo().isStatic() ? 0 : 1;
-        for (int i = startIndex; i < concreteInputValues.length; i++) {
+        for (int i = 0; i < concreteInputValues.length; i++) {
             concreteInputArguments.add(new MethodArgument(concreteInputTypes[i], concreteInputValues[i].toString()));
         }
 
