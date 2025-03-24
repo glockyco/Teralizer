@@ -75,8 +75,6 @@ public class BaselineTestParametersSupplierFactory {
             case "java.lang.Short":
             case "int":
             case "java.lang.Integer":
-            case "long":
-            case "java.lang.Long":
             case "float":
             case "java.lang.Float":
             case "double":
@@ -88,6 +86,9 @@ public class BaselineTestParametersSupplierFactory {
             case "String":
             case "java.lang.String":
                 return "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") " + argument.getValue() + ")";
+            case "long":
+            case "java.lang.Long":
+                return "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") " + argument.getValue() + "L)";
             default:
                 return "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
         }
