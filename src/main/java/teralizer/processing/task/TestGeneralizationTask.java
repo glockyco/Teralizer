@@ -183,7 +183,7 @@ public class TestGeneralizationTask extends AbstractTask {
             allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
 
             testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
-            testParametersSupplierClassDeclaration = BaselineTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputValues);
+            testParametersSupplierClassDeclaration = BaselineTestParametersSupplierFactory.createSupplierClass(factory, allParameters, testedMethodArguments);
         } else {
             String inputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputSpecificationPath())));
             String outputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputSpecificationPath())));

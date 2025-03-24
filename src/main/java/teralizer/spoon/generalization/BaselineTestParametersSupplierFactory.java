@@ -18,7 +18,7 @@ import static teralizer.util.Configuration.TEST_PARAMETERS_SUPPLIER_CLASS_NAME;
 
 public class BaselineTestParametersSupplierFactory {
 
-    public static CtClass<?> createSupplierClass(Factory factory, List<MethodParameter> parameters, List<MethodArgument> arguments) {
+    public static CtClass<?> createSupplierClass(Factory factory, List<MethodParameter> parameters, Map<String, MethodArgument> arguments) {
         CtClass<?> supplierClass = factory.Class().create(TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
         supplierClass.setSuperInterfaces(new HashSet<>(Collections.singletonList(factory.Type().createReference("net.jqwik.api.ArbitrarySupplier<" + TEST_PARAMETERS_CLASS_NAME + ">"))));
         supplierClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
@@ -40,23 +40,25 @@ public class BaselineTestParametersSupplierFactory {
         return supplierClass;
     }
 
-    private static List<String> createSupplierBodies(List<MethodParameter> parameters, List<MethodArgument> arguments) {
+    private static List<String> createSupplierBodies(List<MethodParameter> parameters, Map<String, MethodArgument> arguments) {
         List<String> supplierBodies = new ArrayList<>();
         if (parameters.isEmpty()) {
             supplierBodies.add("return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)");
         } else {
             for (int i = 0; i < parameters.size(); i++) {
-                boolean isFirst = i == 0;
                 boolean isLast = i == parameters.size() - 1;
 
-                String body = createArbitrary(parameters.get(i), arguments.get(i));
+                MethodParameter parameter = parameters.get(i);
+                MethodArgument argument = arguments.get(parameter.getName());
+
+                String body = createArbitrary(parameter, argument);
 
                 if (!isLast) {
                     String parameterNames = parameters.stream().limit(i + 1).map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".flatMap(" + parameters.get(i).getName() + " -> { return get" + (i + 1) + "(" + parameterNames + "); })";
+                    body += ".flatMap(" + parameter.getName() + " -> { return get" + (i + 1) + "(" + parameterNames + "); })";
                 } else {
                     String parameterNames = parameters.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".map(" + parameters.get(i).getName() + " -> new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + "))";
+                    body += ".map(" + parameter.getName() + " -> new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + "))";
                 }
 
                 supplierBodies.add(body);
