@@ -9,6 +9,7 @@ import spoon.reflect.reference.CtTypeReference;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.spoon.SpoonUtils;
+import teralizer.transformer.ModelToJavaTransformer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,7 +52,7 @@ public class BaselineTestParametersSupplierFactory {
                 MethodParameter parameter = parameters.get(i);
                 MethodArgument argument = arguments.get(parameter.getName());
 
-                String body = createArbitrary(parameter, argument);
+                String body = createArbitrary(argument);
 
                 if (!isLast) {
                     String parameterNames = parameters.stream().limit(i + 1).map(MethodParameter::getName).collect(Collectors.joining(", "));
@@ -67,30 +68,8 @@ public class BaselineTestParametersSupplierFactory {
         return supplierBodies;
     }
 
-    private static String createArbitrary(MethodParameter parameter, MethodArgument argument) {
-        switch (parameter.getType()) {
-            case "byte":
-            case "java.lang.Byte":
-            case "short":
-            case "java.lang.Short":
-            case "int":
-            case "java.lang.Integer":
-            case "float":
-            case "java.lang.Float":
-            case "double":
-            case "java.lang.Double":
-            case "char":
-            case "java.lang.Character":
-            case "boolean":
-            case "java.lang.Boolean":
-            case "String":
-            case "java.lang.String":
-                return "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") " + argument.getValue() + ")";
-            case "long":
-            case "java.lang.Long":
-                return "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") " + argument.getValue() + "L)";
-            default:
-                return "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
-        }
+    private static String createArbitrary(MethodArgument argument) {
+        String value = new ModelToJavaTransformer().transform(argument);
+        return "return net.jqwik.api.Arbitraries.just((" + argument.getType() + ") " + value + ")";
     }
 }

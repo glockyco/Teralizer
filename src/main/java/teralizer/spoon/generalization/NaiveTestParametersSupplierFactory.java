@@ -9,6 +9,7 @@ import spoon.reflect.reference.CtTypeReference;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.spoon.SpoonUtils;
+import teralizer.transformer.ModelToJavaTransformer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -137,7 +138,7 @@ public class NaiveTestParametersSupplierFactory {
             return String.format(
                 "return new FirstValueArbitrary<>((%s) (%s), %s)",
                 argument.get().getType(),
-                argument.get().getValue(),
+                new ModelToJavaTransformer().transform(argument.get()),
                 baseArbitrary
             );
         }

@@ -12,6 +12,7 @@ import teralizer.jqwik.IntegerConstraints;
 import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.VariableConstraints;
 import teralizer.spoon.SpoonUtils;
+import teralizer.transformer.ModelToJavaTransformer;
 
 import java.util.*;
 import java.util.function.Function;
@@ -211,7 +212,8 @@ public class ImprovedTestParametersSupplierFactory {
     ) {
         if (constraint == null) {
             if (argument.isPresent()) {
-                return String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), argument.get().getValue(), arbitraryType);
+                String firstValue = new ModelToJavaTransformer().transform(argument.get());
+                return String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), firstValue, arbitraryType);
             } else {
                 return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
             }
@@ -229,8 +231,9 @@ public class ImprovedTestParametersSupplierFactory {
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
 
         if (argument.isPresent()) {
-            result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), argument.get().getType(), argument.get().getValue()));
-            result.append(String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s().between(%s, %s))", argument.get().getType(), argument.get().getValue(), arbitraryType, n.min(), n.max()));
+            String firstValue = new ModelToJavaTransformer().transform(argument.get());
+            result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), argument.get().getType(), firstValue));
+            result.append(String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s().between(%s, %s))", argument.get().getType(), firstValue, arbitraryType, n.min(), n.max()));
         } else {
             result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max()));
             result.append(String.format("return net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
@@ -252,7 +255,8 @@ public class ImprovedTestParametersSupplierFactory {
     ) {
         if (constraint == null) {
             if (argument.isPresent()) {
-                return String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), argument.get().getValue(), arbitraryType);
+                String firstValue = new ModelToJavaTransformer().transform(argument.get());
+                return String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), firstValue, arbitraryType);
             } else {
                 return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
             }
@@ -274,8 +278,9 @@ public class ImprovedTestParametersSupplierFactory {
         result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.maxIncluded(), n.upperBounds(), n.upperBounds(), n.max(), n.upperBoundIncluded()));
 
         if (argument.isPresent()) {
-            result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded(), argument.get().getType(), argument.get().getValue()));
-            result.append(String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s))", argument.get().getType(), argument.get().getValue(), arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+            String firstValue = new ModelToJavaTransformer().transform(argument.get());
+            result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded(), argument.get().getType(), firstValue));
+            result.append(String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s))", argument.get().getType(), firstValue, arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
         } else {
             result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
             result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));

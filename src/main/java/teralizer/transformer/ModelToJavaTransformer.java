@@ -1,7 +1,7 @@
 package teralizer.transformer;
 
-import teralizer.domain.*;
 import teralizer.domain.Error;
+import teralizer.domain.*;
 
 import java.util.Stack;
 
@@ -33,6 +33,53 @@ public class ModelToJavaTransformer extends ModelVisitor {
 
     public String transform(String value) {
         return String.valueOf(value);
+    }
+
+    public String transform(MethodArgument argument) {
+        switch (argument.getType()) {
+            case "byte":
+            case "java.lang.Byte":
+            case "short":
+            case "java.lang.Short":
+            case "int":
+            case "java.lang.Integer":
+            case "char":
+            case "java.lang.Character":
+            case "boolean":
+            case "java.lang.Boolean":
+            case "String":
+            case "java.lang.String":
+                return argument.getValue();
+            case "long":
+            case "java.lang.Long":
+                return argument.getValue() + "L";
+            case "float":
+            case "java.lang.Float":
+                switch (argument.getValue()) {
+                    case "NaN":
+                        return "Float.NaN";
+                    case "Infinity":
+                        return "Float.POSITIVE_INFINITY";
+                    case "-Infinity":
+                        return "Float.NEGATIVE_INFINITY";
+                    default:
+                        return argument.getValue() + "F";
+                }
+            case "double":
+            case "java.lang.Double":
+                switch (argument.getValue()) {
+                    case "NaN":
+                        return "Double.NaN";
+                    case "Infinity":
+                        return "Double.POSITIVE_INFINITY";
+                    case "-Infinity":
+                        return "Double.NEGATIVE_INFINITY";
+                    default:
+                        return argument.getValue();
+                }
+            default:
+                return "null";
+        }
     }
 
     public String transform(teralizer.domain.Model model) {
