@@ -70,7 +70,13 @@ public class JunitDataCollectionTask extends AbstractTask {
                 if (this.testRecord == null) {
                     List<TestRecord> testRecords = this.collectTests(create);
                     create.batchInsert(testRecords).execute();
+                    this.scheduleTasks(create, scheduleTask);
+                    return;
+                } else {
+                    List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
+                    create.batchInsert(testReportRecords).execute();
                 }
+                break;
             case COLLECT_JUNIT_REPORTS_INITIAL:
                 if (this.testRecord == null) {
                     this.scheduleTasks(create, scheduleTask);
@@ -239,7 +245,7 @@ public class JunitDataCollectionTask extends AbstractTask {
 
         JunitTestReportRecord record = create.newRecord(Tables.JUNIT_TEST_REPORT);
         record.setProjectId(this.getProjectId());
-        record.setTestId(this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_INITIAL ? this.getTestId() : null);
+        record.setTestId(this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED ? null : this.getTestId());
         record.setGeneralizationId(this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED ? this.getGeneralizationId() : null);
         record.setStep(this.stage.getStep());
         record.setStage(this.stage);
