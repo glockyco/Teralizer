@@ -67,6 +67,7 @@ public class PitDataCollectionTask extends AbstractTask {
 
         List<String> targetTests;
         switch (this.getStage()) {
+            case COLLECT_PIT_DATA_ORIGINAL:
             case COLLECT_PIT_DATA_INITIAL:
                 targetTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
                 break;
