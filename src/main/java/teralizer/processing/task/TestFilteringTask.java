@@ -66,6 +66,9 @@ public class TestFilteringTask extends AbstractTask {
 
         // If this is NOT a project-level task, we should perform the filtering.
         switch (this.stage) {
+            case FILTER_TESTS_ORIGINAL:
+                this.filterTestOriginal(context);
+                break;
             case FILTER_TESTS:
                 this.filterTest(context);
                 break;
@@ -82,39 +85,51 @@ public class TestFilteringTask extends AbstractTask {
 
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        if (this.stage == ProcessingStage.FILTER_TESTS) {
-            Result<Record> records = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
-            for (Record record : records) {
-                TestRecord testRecord = record.into(TestRecord.class);
-                scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord));
+        switch (this.stage) {
+            case FILTER_TESTS_ORIGINAL:
+            case FILTER_TESTS: {
+                Result<Record> records = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
+                for (Record record : records) {
+                    TestRecord testRecord = record.into(TestRecord.class);
+                    scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord));
+                }
+                break;
             }
-        } else if (this.stage == ProcessingStage.FILTER_ASSERTIONS) {
-            Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
-            for (Record record : records) {
-                TestRecord testRecord = record.into(TestRecord.class);
-                AssertionRecord assertionRecord = record.into(AssertionRecord.class);
-                scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord, assertionRecord));
+            case FILTER_ASSERTIONS: {
+                Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+                for (Record record : records) {
+                    TestRecord testRecord = record.into(TestRecord.class);
+                    AssertionRecord assertionRecord = record.into(AssertionRecord.class);
+                    scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord, assertionRecord));
+                }
+                break;
             }
-        } else if (this.stage == ProcessingStage.FILTER_GENERALIZATIONS) {
-            Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
-            for (Record record : records) {
-                TestRecord testRecord = record.into(TestRecord.class);
-                AssertionRecord assertionRecord = record.into(AssertionRecord.class);
-                GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
-                scheduleTask.accept(new TestFilteringTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord, generalizationRecord));
+            case FILTER_GENERALIZATIONS: {
+                Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
+                for (Record record : records) {
+                    TestRecord testRecord = record.into(TestRecord.class);
+                    AssertionRecord assertionRecord = record.into(AssertionRecord.class);
+                    GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
+                    scheduleTask.accept(new TestFilteringTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord, generalizationRecord));
+                }
+                break;
             }
-        } else {
-            throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
+            default:
+                throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
         }
     }
 
-    private void filterTest(TaskContext context) throws Exception {
+    private void filterTestOriginal(TaskContext context) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        List<Filter> filters = Collections.singletonList(new NonPassingTestFilter(create, this.testRecord));
+        this.checkFilters(filters);
+    }
+
+    private void filterTest(TaskContext context) throws Exception {
         Launcher spoonLauncher = context.get(this.testRecord.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
         List<Filter> filters = Arrays.asList(
             new UnnamedPackageFilter(this.testRecord),
-            new NonPassingTestFilter(create, this.testRecord),
             new AssertionInMethodFilter(spoonLauncher, this.testRecord)
         );
 
