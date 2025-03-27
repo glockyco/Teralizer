@@ -69,12 +69,6 @@ public class JpfExecutionTask extends AbstractTask {
             throw new RuntimeException("Failed JPF execution due to exception in native peers.", e);
         }
 
-        Path inputSpecificationPath = Paths.get(this.assertionRecord.getInputSpecificationPath());
-        Path outputSpecificationPath = Paths.get(this.assertionRecord.getOutputSpecificationPath());
-        if (!Files.exists(inputSpecificationPath) || !Files.exists(outputSpecificationPath)) {
-            throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName() + " - Failed to collect input/output specification for unknown reason.");
-        }
-
         if (jpf.foundErrors()) {
             List<Error> errors = jpf.getSearchErrors();
             String errorMessage = "Identified " + errors.size() + " error(s) during JPF execution.\n\n--\n\n" +
@@ -82,6 +76,12 @@ public class JpfExecutionTask extends AbstractTask {
                     e -> e.getDescription() + "\n\n" + e.getDetails()
                 ).collect(Collectors.joining("\n--\n\n"));
             throw new RuntimeException(errorMessage);
+        }
+
+        Path inputSpecificationPath = Paths.get(this.assertionRecord.getInputSpecificationPath());
+        Path outputSpecificationPath = Paths.get(this.assertionRecord.getOutputSpecificationPath());
+        if (!Files.exists(inputSpecificationPath) || !Files.exists(outputSpecificationPath)) {
+            throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName() + " - Failed to collect input/output specification for unknown reason.");
         }
     }
 }
