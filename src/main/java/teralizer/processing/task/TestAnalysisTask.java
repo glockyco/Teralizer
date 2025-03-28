@@ -61,19 +61,8 @@ public class TestAnalysisTask extends AbstractTask {
     }
 
     private void executeTask(TaskContext context) {
-        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        Gson gson = context.get(TaskContext.GSON);
-
         Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
-
         CtClass<?> testClass = spoonLauncher.getFactory().Class().get(this.testRecord.getTestClassQualifiedName());
-
-        if (!testClass.getNestedTypes().isEmpty()) {
-            throw new RuntimeException("Class " + this.testRecord.getTestClassQualifiedName() + " contains nested types.");
-        } else if (!testClass.getAnonymousExecutables().isEmpty()) {
-            throw new RuntimeException("Class " + this.testRecord.getTestClassQualifiedName() + " contains (static) initializers.");
-        }
-
         CtMethod<?> testMethod = testClass.getMethod(this.testRecord.getTestMethodName());
 
         if (testMethod == null) {
@@ -92,6 +81,9 @@ public class TestAnalysisTask extends AbstractTask {
             throw new RuntimeException("Method " + this.testRecord.getTestMethodQualifiedName() + " has no @Test annotation.");
         }
 
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        Gson gson = context.get(TaskContext.GSON);
+
         this.createAssertionRecords(testMethod, create, gson);
     }
 
@@ -101,7 +93,7 @@ public class TestAnalysisTask extends AbstractTask {
         List<CtInvocation<?>> assertionCalls = TestAnalysis.findAllAsserts(testMethod);
 
         if (assertionCalls.isEmpty()) {
-            throw new RuntimeException("No assertions found in " + this.testRecord.getTestMethodQualifiedName() + ".");
+            return;
         }
 
         for (CtInvocation<?> assertionCall : assertionCalls) {
