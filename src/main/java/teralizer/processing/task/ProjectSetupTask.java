@@ -83,6 +83,7 @@ public class ProjectSetupTask extends AbstractTask {
         }
 
         scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
+        scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_ORIGINAL, this.projectRecord));
 
         if (this.projectRecord.getUseTestGeneration()) {
@@ -109,7 +110,6 @@ public class ProjectSetupTask extends AbstractTask {
             scheduleTask.accept(new JpfAnalysisTask(ProcessingStage.ANALYZE_JPF, this.projectRecord));
             scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_JPF_INSTRUMENTATION, this.projectRecord));
 
-            scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
             scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INITIAL, this.projectRecord));
             scheduleTask.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_INITIAL, this.projectRecord));
 
