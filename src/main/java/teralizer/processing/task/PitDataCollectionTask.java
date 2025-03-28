@@ -154,6 +154,11 @@ public class PitDataCollectionTask extends AbstractTask {
                 String testMethodName = parts[2].replaceAll("^\\[(test|method|property):(.*?)\\((.*)$", "$2");
                 String testMethodQualifiedName = testClassQualifiedName + "." + testMethodName;
 
+                boolean isParameterizedTest = testMethodQualifiedName.endsWith("]");
+                if (isParameterizedTest) {
+                    continue;
+                }
+
                 Integer testId = testIds.getOrDefault(testMethodQualifiedName, null);
                 Integer generalizationId = generalizationIds.getOrDefault(testMethodQualifiedName, null);
 
