@@ -121,7 +121,12 @@ public class TestFilteringTask extends AbstractTask {
 
     private void filterTestOriginal(TaskContext context) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
-        List<Filter> filters = Collections.singletonList(new NonPassingTestFilter(create, this.testRecord));
+
+        List<Filter> filters = Arrays.asList(
+            new NonPassingTestFilter(create, this.testRecord),
+            new ParameterizedTestFilter(this.testRecord)
+        );
+
         this.checkFilters(filters);
     }
 
