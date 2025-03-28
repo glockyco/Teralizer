@@ -1,8 +1,15 @@
 # Teralizer
 
 ## Docker
-To run the Docker container use the `docker compose up` command. This will start Teralizer and an additional Adminer 
+To run the Docker container use:
+
+~~~shell
+docker compose up
+~~~
+
+This will start Teralizer and an additional Adminer 
 container that can be used to access the database. Docker compose will store all generated data in the `docker-data` folder in the current directory. 
+
 To access the database on its own, the adminer instance can be started as follows:
 
 ~~~shell

@@ -12,8 +12,6 @@ import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.JunitTestReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -31,9 +29,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JunitDataCollectionTask extends AbstractTask {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JunitDataCollectionTask.class);
-
 
     public JunitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null);
@@ -189,7 +184,7 @@ public class JunitDataCollectionTask extends AbstractTask {
                     String fullNameOld = testCaseReport.getFullName();
                     String fullNameNew = fullNameOld.replaceFirst("\\(\\)$", "");
                     int index = fullNameNew.lastIndexOf(".");
-                    fullNameNew = index == -1 ? fullNameNew : fullNameNew.substring(index+1);
+                    fullNameNew = index == -1 ? fullNameNew : fullNameNew.substring(index + 1);
                     fullNameNew = testCaseReport.getFullClassName() + "." + fullNameNew;
                     testCaseReport.setFullName(fullNameNew);
                 })
