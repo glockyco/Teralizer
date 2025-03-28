@@ -40,7 +40,6 @@ public class SQLiteRepository {
             .join(Tables.ASSERTION)
             .on(Tables.TEST.ID.eq(Tables.ASSERTION.TEST_ID))
             .where(Tables.TEST.PROJECT_ID.eq(projectId))
-            .and(Tables.TEST.IS_INCLUDED.eq(true))
             .and(Tables.ASSERTION.IS_INCLUDED.eq(true))
             .fetch();
     }

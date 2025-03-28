@@ -150,6 +150,7 @@ public class TestFilteringTask extends AbstractTask {
         Launcher spoonLauncher = context.get(this.assertionRecord.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
         List<Filter> filters = Arrays.asList(
+            new ExcludedTestFilter(this.testRecord),
             new MissingValueFilter(this.assertionRecord),
             new UnsupportedAssertionFilter(this.assertionRecord),
             new ParameterTypeFilter(gson, this.assertionRecord),
