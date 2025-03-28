@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row10;
+import org.jooq.Row11;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -88,6 +88,11 @@ public class Test extends TableImpl<TestRecord> {
      * The column <code>test.test_method_name</code>.
      */
     public final TableField<TestRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>test.is_parameterized</code>.
+     */
+    public final TableField<TestRecord, Boolean> IS_PARAMETERIZED = createField(DSL.name("is_parameterized"), SQLDataType.BOOLEAN.nullable(false), this, "");
 
     /**
      * The column <code>test.is_included</code>.
@@ -198,11 +203,11 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row10 type methods
+    // Row11 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row10<Integer, Integer, String, String, String, String, String, String, Boolean, String> fieldsRow() {
-        return (Row10) super.fieldsRow();
+    public Row11<Integer, Integer, String, String, String, String, String, String, Boolean, Boolean, String> fieldsRow() {
+        return (Row11) super.fieldsRow();
     }
 }

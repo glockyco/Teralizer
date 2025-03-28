@@ -50,8 +50,9 @@ CREATE TABLE test
     test_package_name          TEXT    NOT NULL,
     test_class_name            TEXT    NOT NULL,
     test_method_name           TEXT    NOT NULL,
-    is_included                        INTEGER NOT NULL,
-    exclusion_info                     TEXT, -- can be null for tests that are not excluded
+    is_parameterized           INTEGER NOT NULL,
+    is_included                INTEGER NOT NULL,
+    exclusion_info             TEXT, -- can be null for tests that are not excluded
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 

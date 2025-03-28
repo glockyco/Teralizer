@@ -104,6 +104,10 @@ jooq {
                             }
                             forcedType {
                                 name = "BOOLEAN"
+                                includeExpression = "test.is_parameterized"
+                            }
+                            forcedType {
+                                name = "BOOLEAN"
                                 includeExpression = "test.is_included"
                             }
                             forcedType {

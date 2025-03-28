@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,8 +75,11 @@ public class JunitDataCollectionTask extends AbstractTask {
                     this.scheduleTasks(create, scheduleTask);
                     return;
                 } else {
-                    List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
-                    create.batchInsert(testReportRecords).execute();
+                    // @TODO: Add support for parameterized tests.
+                    if (!this.testRecord.getIsParameterized()) {
+                        List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
+                        create.batchInsert(testReportRecords).execute();
+                    }
                 }
                 break;
             case COLLECT_JUNIT_REPORTS_INITIAL:
@@ -132,7 +137,16 @@ public class JunitDataCollectionTask extends AbstractTask {
                 .filter(path -> path.toString().endsWith(".xml"))
                 .flatMap(testReportPath -> this.parseTestCaseReports(testReportPath, null, null).stream())
                 .map(testCaseReport -> this.buildTestRecord(create, testCaseReport))
-                .collect(Collectors.toList());
+                // Keep only the first record for each test method name to
+                // avoid duplicates caused by parameterized tests.
+                .collect(Collectors.collectingAndThen(
+                    Collectors.toMap(
+                        TestRecord::getTestMethodQualifiedName,
+                        Function.identity(),
+                        (existing, replacement) -> existing
+                    ),
+                    map -> new ArrayList<>(map.values())
+                ));
         }
     }
 
@@ -200,7 +214,7 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private TestRecord buildTestRecord(DSLContext create, ReportTestCase testCaseReport) {
-        String testMethodName = testCaseReport.getName().replace("()", "");
+        String testMethodName = testCaseReport.getName().replaceAll("\\(.*", "");
         int lastDotIndexMethodName = testMethodName.lastIndexOf(".");
         testMethodName = lastDotIndexMethodName == -1 ? testMethodName : testMethodName.substring(lastDotIndexMethodName + 1);
         String testClassName = testCaseReport.getClassName();
@@ -218,10 +232,11 @@ public class JunitDataCollectionTask extends AbstractTask {
 
         record.setTestFilePath(testFilePath.toString());
         record.setTestClassQualifiedName(testCaseReport.getFullClassName());
-        record.setTestMethodQualifiedName(testCaseReport.getFullName());
+        record.setTestMethodQualifiedName(testCaseReport.getFullName().replaceAll("\\(.*", ""));
         record.setTestPackageName(testPackageName);
         record.setTestClassName(testClassName);
         record.setTestMethodName(testMethodName);
+        record.setIsParameterized(testCaseReport.getFullName().endsWith("]"));
         record.setIsIncluded(true);
 
         return record;
@@ -243,7 +258,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
 
         // Write (relevant parts of) the data to the DB:
-        String methodName = testCaseReport.getName().replace("()", "");
+        String methodName = testCaseReport.getName().replaceAll("\\(.*", "");
         int lastDotIndexMethodName = methodName.lastIndexOf(".");
         methodName = lastDotIndexMethodName == -1 ? methodName : methodName.substring(lastDotIndexMethodName + 1);
         String className = testCaseReport.getClassName();

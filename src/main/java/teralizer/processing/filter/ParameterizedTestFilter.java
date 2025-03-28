@@ -12,7 +12,7 @@ public class ParameterizedTestFilter extends AbstractFilter {
 
     @Override
     public FilterResult check() {
-        if (this.testRecord.getTestMethodName().endsWith("]")) {
+        if (this.testRecord.getIsParameterized()) {
             String reason = "Test is a parameterized test: " + this.testRecord.getTestMethodQualifiedName();
             return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
         }
