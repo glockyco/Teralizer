@@ -22,9 +22,9 @@ import teralizer.processing.TaskContext;
 import teralizer.spoon.analysis.TestAnalysis;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class TestAnalysisTask extends AbstractTask {
 
@@ -63,28 +63,34 @@ public class TestAnalysisTask extends AbstractTask {
     private void executeTask(TaskContext context) {
         Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
         CtClass<?> testClass = spoonLauncher.getFactory().Class().get(this.testRecord.getTestClassQualifiedName());
-        CtMethod<?> testMethod = testClass.getMethod(this.testRecord.getTestMethodName());
 
-        if (testMethod == null) {
-            List<CtMethod<?>> testMethods = testClass.getMethodsByName(this.testRecord.getTestMethodName());
-            if (testMethods.isEmpty()) {
-                // This can happen if the test method was inherited from some other class.
-                // The JUnit reports list the test as part of the child class then, but
-                // the source code file of the child class does not contain the method.
-                throw new RuntimeException("Method " + this.testRecord.getTestMethodName() + " not found in " + this.testRecord.getTestClassQualifiedName() + " (might be inherited).");
-            } else {
-                throw new RuntimeException("Method " + this.testRecord.getTestMethodQualifiedName() + " has parameters.");
-            }
+        List<CtMethod<?>> matchingMethods = testClass.getMethodsByName(this.testRecord.getTestMethodName());
+
+        if (matchingMethods.isEmpty()) {
+            // This can happen if the test method was inherited from some other class.
+            // The JUnit reports list the test as part of the child class then, but
+            // the source code file of the child class does not contain the method.
+            throw new RuntimeException("No method matches for test method (might be inherited): " + this.testRecord.getTestMethodQualifiedName());
         }
 
-        if (testMethod.getAnnotations().stream().noneMatch(a -> a.getType().getSimpleName().equals("Test"))) {
-            throw new RuntimeException("Method " + this.testRecord.getTestMethodQualifiedName() + " has no @Test annotation.");
+        Set<String> testAnnotations = new HashSet<>(Arrays.asList("Test", "ParameterizedTest"));
+
+        List<CtMethod<?>> candidateMethods = matchingMethods.stream()
+            .filter(method -> method.getAnnotations().stream()
+                .anyMatch(a -> testAnnotations.contains(a.getType().getSimpleName())))
+            .collect(Collectors.toList());
+
+        if (candidateMethods.size() > 1) {
+            throw new RuntimeException("Multiple matches for test method (" + candidateMethods.size() + " total): " + this.testRecord.getTestMethodQualifiedName());
+        } else if (candidateMethods.isEmpty()) {
+            String annotationsStr = testAnnotations.stream().map(a -> "@" + a).collect(Collectors.joining(", "));
+            throw new RuntimeException("No annotation matches for test method (" + annotationsStr +"): " + this.testRecord.getTestMethodQualifiedName());
         }
 
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
 
-        this.createAssertionRecords(testMethod, create, gson);
+        this.createAssertionRecords(candidateMethods.get(0), create, gson);
     }
 
     private void createAssertionRecords(CtMethod<?> testMethod, DSLContext create, Gson gson) {
