@@ -164,7 +164,9 @@ public class TestFilteringTask extends AbstractTask {
     private void filterGeneralization(TaskContext context) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
-        List<Filter> filters = Collections.singletonList(
+        List<Filter> filters = Arrays.asList(
+            new ExcludedTestFilter(this.testRecord),
+            new ExcludedAssertionFilter(this.assertionRecord),
             new NonPassingTestFilter(create, this.testRecord, this.generalizationRecord)
         );
 
