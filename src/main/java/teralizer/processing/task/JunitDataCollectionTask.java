@@ -199,6 +199,7 @@ public class JunitDataCollectionTask extends AbstractTask {
                     String fullNameNew = fullNameOld.replaceFirst("\\(\\)$", "");
                     int index = fullNameNew.lastIndexOf(".");
                     fullNameNew = index == -1 ? fullNameNew : fullNameNew.substring(index + 1);
+                    fullNameNew = fullNameNew.replace(" ", "_");
                     fullNameNew = testCaseReport.getFullClassName() + "." + fullNameNew;
                     testCaseReport.setFullName(fullNameNew);
                 })
