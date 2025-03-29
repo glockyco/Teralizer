@@ -165,6 +165,8 @@ public class TestAnalysisTask extends AbstractTask {
                     record.setTestedMethodName(methodName);
                     record.setTestedMethodParameters(gson.toJson(testedMethodParameters));
                     record.setTestedMethodReturnType(testedMethod.getType().getQualifiedName());
+                    record.setTestedMethodAbsolutePath(testedMethod.getPath().toString());
+                    record.setTestedMethodRelativePath(testedMethod.getPath().relativePath(testedType).toString());
                 }
             }
 

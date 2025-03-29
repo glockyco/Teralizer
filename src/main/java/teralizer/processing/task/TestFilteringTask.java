@@ -16,7 +16,6 @@ import teralizer.repository.SQLiteRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -136,7 +135,7 @@ public class TestFilteringTask extends AbstractTask {
 
         List<Filter> filters = Arrays.asList(
             new UnnamedPackageFilter(this.testRecord),
-            new NestedTypesFilter(spoonLauncher, this.testRecord),
+            new NestedClassesFilter(spoonLauncher, this.testRecord),
             new StaticInitializersFilter(spoonLauncher, this.testRecord),
             new AssertionInMethodFilter(spoonLauncher, this.testRecord),
             new NoAssertionsFilter(create, this.testRecord)

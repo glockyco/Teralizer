@@ -24,6 +24,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.util.Configuration;
 
@@ -90,13 +91,17 @@ public class JpfInstrumentationTask extends AbstractTask {
 
         CtClass<?> instrumentedClass = this.createInstrumentedClass(factory);
         CtInvocation<?> testedMethodCall = this.getTestedMethodCall(instrumentedClass);
-        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+        CtPath testedMethodPath = new CtPathStringBuilder().fromString(this.assertionRecord.getTestedMethodAbsolutePath());
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodPath.evaluateOn(factory.getModel().getRootPackage()).get(0);
         CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall);
         CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(factory, instrumentedClass, instrumentedMethod, testedMethod, testedMethodCall);
         testedMethodCall.replace(instrumentedMethodCall);
 
         CtMethod<?> testMethod = instrumentedClass.getMethod(this.testRecord.getTestMethodName());
-        CtPath targetAssertionPath = new CtPathStringBuilder().fromString(this.assertionRecord.getAssertionRelativePath());
+        CtPath targetAssertionPath = new CtPathStringBuilder().fromString(
+            this.assertionRecord.getAssertionRelativePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.assertionRecord.getInstrumentedClassQualifiedName()));
         CtInvocation<?> targetAssertion = (CtInvocation<?>) targetAssertionPath.evaluateOn(testMethod).get(0);
         List<CtInvocation> otherAssertions = testMethod.getElements(new TypeFilter<>(CtInvocation.class)).stream().filter(i -> i != targetAssertion && (TestAnalysis.isJUnit4Assertion(i) || TestAnalysis.isJUnit5Assertion(i))).collect(Collectors.toList());
         otherAssertions.forEach(CtElement::delete);
@@ -151,14 +156,17 @@ public class JpfInstrumentationTask extends AbstractTask {
         this.assertionRecord.store();
     }
 
-    private CtClass<?> createInstrumentedClass(Factory factory) {
-        CtClass<?> testClassDeclaration = factory.Class().get(this.testRecord.getTestClassQualifiedName());
-
-        CtClass<?> instrumentedClass = testClassDeclaration.clone();
-        instrumentedClass.setSimpleName(this.assertionRecord.getInstrumentedClassName());
-
-        CtPackage instrumentedClassPackage = factory.Package().getOrCreate(this.assertionRecord.getInstrumentedPackageName());
-        instrumentedClassPackage.addType(instrumentedClass);
+    private CtClass<?> createInstrumentedClass(Factory factory) throws IOException {
+        CtClass<?> instrumentedClass = SpoonUtils.cloneClass(
+            factory,
+            factory.Class().get(this.testRecord.getTestClassQualifiedName()),
+            this.testRecord.getTestPackageName(),
+            this.assertionRecord.getInstrumentedPackageName(),
+            this.testRecord.getTestClassName(),
+            this.assertionRecord.getInstrumentedClassName(),
+            this.testRecord.getTestClassQualifiedName(),
+            this.assertionRecord.getInstrumentedClassQualifiedName()
+        );
 
         Predicate<CtMethod<?>> isTestMethod = (decl) -> decl.getSimpleName().equals(this.testRecord.getTestMethodName());
         Predicate<CtMethod<?>> hasTestAnnotation = (decl) -> decl.getAnnotations().stream().anyMatch(a -> a.getType().getSimpleName().equals("Test"));
@@ -170,7 +178,10 @@ public class JpfInstrumentationTask extends AbstractTask {
 
     private CtInvocation<?> getTestedMethodCall(CtClass<?> instrumentedClass) {
         CtMethod<?> testMethod = instrumentedClass.getMethod(this.testRecord.getTestMethodName());
-        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(this.assertionRecord.getTestedMethodCallRelativePath());
+        String path = this.assertionRecord.getTestedMethodCallRelativePath().replace(
+            this.testRecord.getTestClassQualifiedName(),
+            this.assertionRecord.getInstrumentedClassQualifiedName());
+        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(path);
         return (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
     }
 
@@ -255,10 +266,14 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     private void createInstrumentedClassFile(Launcher spoonLauncher, CtClass<?> instrumentedClass) throws IOException {
-        Path instrumentedFilePath = Paths.get(this.assertionRecord.getInstrumentedFilePath());
+        CtCompilationUnit cu = spoonLauncher.getFactory().CompilationUnit().getOrCreate(this.assertionRecord.getInstrumentedFilePath());
+        cu.setDeclaredTypes(Collections.singletonList(instrumentedClass));
+
         DefaultJavaPrettyPrinter printer = new DefaultJavaPrettyPrinter(spoonLauncher.getEnvironment());
-        printer.calculate(instrumentedClass.getPosition().getCompilationUnit(), Collections.singletonList(instrumentedClass));
+        printer.calculate(cu, Collections.singletonList(instrumentedClass));
         byte[] instrumentedFileBytes = printer.getResult().getBytes();
+
+        Path instrumentedFilePath = Paths.get(this.assertionRecord.getInstrumentedFilePath());
 
         // Write the instrumented file to the project directory for further use in this run:
         instrumentedFilePath.toFile().getParentFile().mkdirs();

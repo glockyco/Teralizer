@@ -129,6 +129,16 @@ public class Assertion extends TableImpl<AssertionRecord> {
     public final TableField<AssertionRecord, String> TESTED_METHOD_RETURN_TYPE = createField(DSL.name("tested_method_return_type"), SQLDataType.CLOB, this, "");
 
     /**
+     * The column <code>assertion.tested_method_absolute_path</code>.
+     */
+    public final TableField<AssertionRecord, String> TESTED_METHOD_ABSOLUTE_PATH = createField(DSL.name("tested_method_absolute_path"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>assertion.tested_method_relative_path</code>.
+     */
+    public final TableField<AssertionRecord, String> TESTED_METHOD_RELATIVE_PATH = createField(DSL.name("tested_method_relative_path"), SQLDataType.CLOB, this, "");
+
+    /**
      * The column <code>assertion.tested_method_call_arguments</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_CALL_ARGUMENTS = createField(DSL.name("tested_method_call_arguments"), SQLDataType.CLOB, this, "");

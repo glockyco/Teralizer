@@ -30,6 +30,7 @@ import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.*;
 import teralizer.transformer.JsonToModelTransformer;
@@ -131,13 +132,17 @@ public class TestGeneralizationTask extends AbstractTask {
 
     private void generalizeTest(Gson gson, Launcher spoonLauncher) throws IOException {
         Factory factory = spoonLauncher.getFactory();
-        CtClass<?> testClassDeclaration = factory.Class().get(this.testRecord.getTestClassQualifiedName());
 
-        CtClass<?> generalizedClassDeclaration = testClassDeclaration.clone();
-        generalizedClassDeclaration.setSimpleName(this.generalizationRecord.getClassName());
-
-        CtPackage generalizedClassPackage = generalizedClassDeclaration.getFactory().Package().getOrCreate(this.generalizationRecord.getPackageName());
-        generalizedClassPackage.addType(generalizedClassDeclaration);
+        CtClass<?> generalizedClassDeclaration = SpoonUtils.cloneClass(
+            factory,
+            factory.Class().get(this.testRecord.getTestClassQualifiedName()),
+            this.testRecord.getTestPackageName(),
+            this.generalizationRecord.getPackageName(),
+            this.testRecord.getTestClassName(),
+            this.generalizationRecord.getClassName(),
+            this.testRecord.getTestClassQualifiedName(),
+            this.generalizationRecord.getClassQualifiedName()
+        );
 
         generalizedClassDeclaration.addComment(factory.createInlineComment("Test: " + this.testRecord.getTestMethodQualifiedName()));
         generalizedClassDeclaration.addComment(factory.createInlineComment("Input values: " + this.assertionRecord.getInputValuesPath()));
@@ -153,7 +158,9 @@ public class TestGeneralizationTask extends AbstractTask {
         CtMethod<?> testMethod = generalizedClassDeclaration.getMethodsByName(this.testRecord.getTestMethodName()).get(0);
 
         CtPathStringBuilder pathBuilder = new CtPathStringBuilder();
-        CtPath assertionPath = pathBuilder.fromString(this.assertionRecord.getAssertionRelativePath());
+        CtPath assertionPath = pathBuilder.fromString(this.assertionRecord.getAssertionRelativePath().replace(
+            this.testRecord.getTestClassQualifiedName(),
+            this.generalizationRecord.getClassQualifiedName()));
         CtInvocation<?> assertion = (CtInvocation<?>) assertionPath.evaluateOn(testMethod).get(0);
 
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
@@ -171,9 +178,6 @@ public class TestGeneralizationTask extends AbstractTask {
                 i -> testedMethodParameters.get(i).getName(),
                 i -> inputValues.get(i)
             ));
-
-        Set<CtType<?>> nestedTypes = generalizedClassDeclaration.getNestedTypes();
-        nestedTypes.forEach(CtElement::delete);
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
@@ -329,7 +333,8 @@ public class TestGeneralizationTask extends AbstractTask {
 
         CtPath testedMethodCallPath = pathBuilder.fromString(this.assertionRecord.getTestedMethodCallRelativePath());
         CtInvocation<?> testedMethodCall = (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
-        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+        CtPath testedMethodPath = new CtPathStringBuilder().fromString(this.assertionRecord.getTestedMethodAbsolutePath());
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodPath.evaluateOn(factory.getModel().getRootPackage()).get(0);
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
         List<CtParameter<?>> params = testedMethod.getParameters();
@@ -351,10 +356,14 @@ public class TestGeneralizationTask extends AbstractTask {
 
         // ------------------------------------------------------------------------------------------------------ //
 
-        Path generalizedFilePath = Paths.get(this.generalizationRecord.getFilePath());
+        CtCompilationUnit cu = spoonLauncher.getFactory().CompilationUnit().getOrCreate(this.generalizationRecord.getFilePath());
+        cu.setDeclaredTypes(Collections.singletonList(generalizedClassDeclaration));
+
         DefaultJavaPrettyPrinter printer = new DefaultJavaPrettyPrinter(spoonLauncher.getEnvironment());
-        printer.calculate(generalizedClassDeclaration.getPosition().getCompilationUnit(), Collections.singletonList(generalizedClassDeclaration));
+        printer.calculate(cu, Collections.singletonList(generalizedClassDeclaration));
         byte[] generalizedFileBytes = printer.getResult().getBytes();
+
+        Path generalizedFilePath = Paths.get(this.generalizationRecord.getFilePath());
 
         // Write the generalized file to the project directory for further use in this run:
         generalizedFilePath.toFile().getParentFile().mkdirs();
