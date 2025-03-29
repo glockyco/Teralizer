@@ -267,9 +267,11 @@ public class JpfInstrumentationTask extends AbstractTask {
 
     private void createInstrumentedClassFile(Launcher spoonLauncher, CtClass<?> instrumentedClass) throws IOException {
         CtCompilationUnit cu = spoonLauncher.getFactory().CompilationUnit().getOrCreate(this.assertionRecord.getInstrumentedFilePath());
+        cu.setImports(instrumentedClass.getPosition().getCompilationUnit().getImports().stream().map(CtImport::clone).collect(Collectors.toList()));
         cu.setDeclaredTypes(Collections.singletonList(instrumentedClass));
 
         DefaultJavaPrettyPrinter printer = new DefaultJavaPrettyPrinter(spoonLauncher.getEnvironment());
+        printer.setIgnoreImplicit(false);
         printer.calculate(cu, Collections.singletonList(instrumentedClass));
         byte[] instrumentedFileBytes = printer.getResult().getBytes();
 

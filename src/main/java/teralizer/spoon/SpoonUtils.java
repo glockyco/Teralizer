@@ -113,7 +113,7 @@ public class SpoonUtils {
 
         @Override
         public <T> void visitCtTypeReference(CtTypeReference<T> reference) {
-            if (reference.getQualifiedName().equals(this.oldQualifiedName)) {
+            if (!reference.isImplicit() && reference.getQualifiedName().equals(this.oldQualifiedName)) {
                 reference.setSimpleName(this.newSimpleName);
 
                 // Handle package change
@@ -126,6 +126,7 @@ public class SpoonUtils {
         @Override
         public <T> void visitCtExecutableReference(CtExecutableReference<T> reference) {
             if (reference.getDeclaringType() != null &&
+                !reference.getDeclaringType().isImplicit() &&
                 reference.getDeclaringType().getQualifiedName().equals(this.oldQualifiedName)) {
                 // Update constructor references
                 CtTypeReference<?> newTypeRef = reference.getFactory().Type().createReference(this.newQualifiedName);
@@ -143,6 +144,7 @@ public class SpoonUtils {
         @Override
         public <T> void visitCtFieldReference(CtFieldReference<T> reference) {
             if (reference.getDeclaringType() != null &&
+                !reference.getDeclaringType().isImplicit() &&
                 reference.getDeclaringType().getQualifiedName().equals(this.oldQualifiedName)) {
                 CtTypeReference<?> newTypeRef = reference.getFactory().Type().createReference(this.newQualifiedName);
                 reference.setDeclaringType(newTypeRef);
@@ -155,6 +157,7 @@ public class SpoonUtils {
             // Handle method invocations
             if (invocation.getTarget() != null &&
                 invocation.getTarget().getType() != null &&
+                !invocation.getTarget().getType().isImplicit() &&
                 invocation.getTarget().getType().getQualifiedName().equals(this.oldQualifiedName)) {
 
                 CtExpression<?> target = invocation.getTarget();
@@ -171,7 +174,7 @@ public class SpoonUtils {
         @Override
         public <T> void visitCtNewClass(CtNewClass<T> newClass) {
             // Handle instantiations (new ClassName())
-            if (newClass.getType().getQualifiedName().equals(this.oldQualifiedName)) {
+            if (!newClass.getType().isImplicit() && newClass.getType().getQualifiedName().equals(this.oldQualifiedName)) {
                 CtTypeReference<?> newTypeRef = newClass.getFactory().Type().createReference(this.newQualifiedName);
                 newClass.setType((CtTypeReference<T>) newTypeRef);
             }
@@ -182,6 +185,7 @@ public class SpoonUtils {
         public <T> void visitCtMethod(CtMethod<T> method) {
             // Handle return types
             if (method.getType() != null &&
+                !method.getType().isImplicit() &&
                 method.getType().getQualifiedName().equals(this.oldQualifiedName)) {
                 CtTypeReference<?> newTypeRef = method.getFactory().Type().createReference(this.newQualifiedName);
                 method.setType((CtTypeReference<T>) newTypeRef);
@@ -193,6 +197,7 @@ public class SpoonUtils {
         public <T> void visitCtTypeAccess(CtTypeAccess<T> typeAccess) {
             // Handle class literals (ClassName.class)
             if (typeAccess.getAccessedType() != null &&
+                !typeAccess.getAccessedType().isImplicit() &&
                 typeAccess.getAccessedType().getQualifiedName().equals(this.oldQualifiedName)) {
                 CtTypeReference<?> newTypeRef = typeAccess.getFactory().Type().createReference(this.newQualifiedName);
                 typeAccess.setAccessedType((CtTypeReference<T>) newTypeRef);

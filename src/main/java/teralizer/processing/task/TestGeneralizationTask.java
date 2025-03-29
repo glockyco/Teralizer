@@ -357,9 +357,11 @@ public class TestGeneralizationTask extends AbstractTask {
         // ------------------------------------------------------------------------------------------------------ //
 
         CtCompilationUnit cu = spoonLauncher.getFactory().CompilationUnit().getOrCreate(this.generalizationRecord.getFilePath());
+        cu.setImports(generalizedClassDeclaration.getPosition().getCompilationUnit().getImports().stream().map(CtImport::clone).collect(Collectors.toList()));
         cu.setDeclaredTypes(Collections.singletonList(generalizedClassDeclaration));
 
         DefaultJavaPrettyPrinter printer = new DefaultJavaPrettyPrinter(spoonLauncher.getEnvironment());
+        printer.setIgnoreImplicit(false);
         printer.calculate(cu, Collections.singletonList(generalizedClassDeclaration));
         byte[] generalizedFileBytes = printer.getResult().getBytes();
 
