@@ -33,6 +33,6 @@ public class NestedClassesFilter extends AbstractFilter {
 
         String classesStr = String.join(", ", nestedClasses);
         String reason = "Test class contains nested classes (" + classesStr + "): " + this.testRecord.getTestClassQualifiedName();
-        return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
+        return new FilterResult(this.getName(), FilterDecision.DEFER, reason);
     }
 }
