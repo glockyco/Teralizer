@@ -78,6 +78,10 @@ public class JpfExecutionTask extends AbstractTask {
             throw new RuntimeException(errorMessage);
         }
 
+        if (!jpf.getVM().isInitialized()) {
+            throw new RuntimeException("Failed to initialize VM during JPF execution.");
+        }
+
         Path inputSpecificationPath = Paths.get(this.assertionRecord.getInputSpecificationPath());
         Path outputSpecificationPath = Paths.get(this.assertionRecord.getOutputSpecificationPath());
         if (!Files.exists(inputSpecificationPath) || !Files.exists(outputSpecificationPath)) {
