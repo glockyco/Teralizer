@@ -7,6 +7,7 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.reflect.reference.CtVariableReference;
 import teralizer.util.Configuration;
 
 import java.util.List;
@@ -120,8 +121,14 @@ public class TestAnalysis {
         } else if (actual instanceof CtFieldRead<?>) {
             // @TODO: Add handling for field reads.
         } else if (actual instanceof CtVariableRead<?>) {
+            CtVariableReference<?> variableReference = ((CtVariableRead<?>) actual).getVariable();
+            if (!(variableReference instanceof CtLocalVariableReference)) {
+                // @TODO: Add handling for non-local-variable references.
+                return Optional.empty();
+            }
+
             // @TODO: Consider that the actual value might be redefined after declaration.
-            CtLocalVariableReference<?> reference = (CtLocalVariableReference<?>) ((CtVariableRead<?>) actual).getVariable();
+            CtLocalVariableReference<?> reference = (CtLocalVariableReference<?>) variableReference;
             CtLocalVariable<?> declaration = reference.getDeclaration();
             CtExpression<?> assignment = declaration.getAssignment();
 
