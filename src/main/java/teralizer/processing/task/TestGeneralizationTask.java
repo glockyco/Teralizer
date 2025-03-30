@@ -19,7 +19,6 @@ import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
-import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
@@ -353,8 +352,7 @@ public class TestGeneralizationTask extends AbstractTask {
         // Remove parts of the test code that are no longer needed after generalization.                          //
         // ------------------------------------------------------------------------------------------------------ //
 
-        List<CtInvocation> otherAssertions = testMethod.getElements(new TypeFilter<>(CtInvocation.class)).stream().filter(i -> i != assertion && (TestAnalysis.isJUnit4Assertion(i) || TestAnalysis.isJUnit5Assertion(i))).collect(Collectors.toList());
-        otherAssertions.forEach(CtElement::delete);
+        SpoonUtils.deleteOtherAssertionsInMethod(testedMethod, assertion);
 
         // ------------------------------------------------------------------------------------------------------ //
 

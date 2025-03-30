@@ -1,17 +1,20 @@
 package teralizer.spoon;
 
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.code.CtNewClass;
-import spoon.reflect.code.CtTypeAccess;
+import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.CtScanner;
+import spoon.reflect.visitor.filter.TypeFilter;
+import teralizer.spoon.analysis.TestAnalysis;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SpoonUtils {
 
@@ -65,6 +68,24 @@ public class SpoonUtils {
             default:
                 return factory.Type().get(typeName).getReference();
         }
+    }
+
+    public static void deleteOtherAssertionsInMethod(CtMethod<?> method, CtInvocation<?> assertion) {
+        List<CtInvocation> otherAssertions = method.getElements(new TypeFilter<>(CtInvocation.class)).stream()
+            .filter(i -> i != assertion && (TestAnalysis.isJUnit4Assertion(i) || TestAnalysis.isJUnit5Assertion(i)))
+            .collect(Collectors.toList());
+
+        otherAssertions.forEach(a -> {
+            CtTypeReference<?> returnType = a.getExecutable().getType();
+            boolean hasVoidReturnType = a.getFactory().Type().voidPrimitiveType().equals(returnType);
+            if (hasVoidReturnType || (
+                a.getParent(CtAssignment.class) == null &&
+                a.getParent(CtVariable.class) == null &&
+                a.getParent(CtInvocation.class) == null
+            )) {
+                a.delete();
+            }
+        });
     }
 
     public static CtClass<?> cloneClass(
