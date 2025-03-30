@@ -205,27 +205,23 @@ public class JunitDataCollectionTask extends AbstractTask {
             List<ReportTestCase> testCaseReports = testSuiteReports.stream()
                 .flatMap(testSuiteReport -> testSuiteReport.getTestCases().stream())
                 .peek(testCaseReport -> {
-                    String fullNameOld = testCaseReport.getFullName();
-                    String fullNameNew = fullNameOld.replaceFirst("\\(\\)$", "");
-                    int index = fullNameNew.lastIndexOf(".");
-                    fullNameNew = index == -1 ? fullNameNew : fullNameNew.substring(index + 1);
-                    fullNameNew = fullNameNew.replace(" ", "_");
-                    fullNameNew = testCaseReport.getFullClassName() + "." + fullNameNew;
-                    testCaseReport.setFullName(fullNameNew);
+                    testCaseReport.setName(replaceSpaces(testCaseReport.getName()));
+                    testCaseReport.setFullName(replaceSpaces(testCaseReport.getFullName()));
                 })
                 .filter(testCaseReport -> {
-                    return testClassQualifiedName == null
-                        || testMethodQualifiedName == null
-                        || testCaseReport.getFullName().equals(testMethodQualifiedName);
+                    if (testMethodQualifiedName != null) {
+                        String reportMethodQualifiedName = testCaseReport.getFullName().replaceAll("\\(.*", "");
+                        return reportMethodQualifiedName.equals(testMethodQualifiedName);
+                    } else if (testClassQualifiedName != null) {
+                        String reportClassQualifiedName = testCaseReport.getFullClassName();
+                        return reportClassQualifiedName.equals(testClassQualifiedName);
+                    }
+                    return true;
                 })
                 .collect(Collectors.toList());
 
             if (testCaseReports.isEmpty()) {
-                throw new RuntimeException("Failed to identify matching test case report for " + testMethodQualifiedName + "in " + testReportPath + ".");
-            }
-
-            if (testMethodQualifiedName != null && testCaseReports.size() > 1) {
-                throw new RuntimeException("Multiple matching test case reports for " + testMethodQualifiedName + " in " + testReportPath + " (" + testCaseReports.size() + " total).");
+                throw new RuntimeException("Failed to identify matching test case report for " + testMethodQualifiedName + " in " + testReportPath + ".");
             }
 
             return testCaseReports;
@@ -234,14 +230,26 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
     }
 
+    private static String replaceSpaces(String text) {
+        if (text == null) {
+            return null;
+        }
+
+        int firstParenIndex = text.indexOf('(');
+        if (firstParenIndex > 0) {
+            String beforeParen = text.substring(0, firstParenIndex).replace(" ", "_");
+            String afterParen = text.substring(firstParenIndex);
+            return beforeParen + afterParen;
+        } else {
+            return text.replace(" ", "_");
+        }
+    }
+
     private TestRecord buildTestRecord(DSLContext create, ReportTestCase testCaseReport) {
+        String testMethodQualifiedName = testCaseReport.getFullName().replaceAll("\\(.*", "");
         String testMethodName = testCaseReport.getName().replaceAll("\\(.*", "");
-        testMethodName = testMethodName.replace(" ", "_");
-        int lastDotIndexMethodName = testMethodName.lastIndexOf(".");
-        testMethodName = lastDotIndexMethodName == -1 ? testMethodName : testMethodName.substring(lastDotIndexMethodName + 1);
         String testClassName = testCaseReport.getClassName();
-        int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
-        String testPackageName = lastDotIndex == -1 ? "" : testCaseReport.getFullClassName().substring(0, lastDotIndex);
+        String testPackageName = testCaseReport.getFullClassName().replaceAll("\\.[^.]*$", "");
 
         TestRecord record = create.newRecord(Tables.TEST);
         record.setProjectId(this.getProjectId());
@@ -254,7 +262,7 @@ public class JunitDataCollectionTask extends AbstractTask {
 
         record.setTestFilePath(testFilePath.toString());
         record.setTestClassQualifiedName(testCaseReport.getFullClassName());
-        record.setTestMethodQualifiedName(testCaseReport.getFullName().replaceAll("\\(.*", ""));
+        record.setTestMethodQualifiedName(testMethodQualifiedName);
         record.setTestPackageName(testPackageName);
         record.setTestClassName(testClassName);
         record.setTestMethodName(testMethodName);
@@ -319,21 +327,13 @@ public class JunitDataCollectionTask extends AbstractTask {
             String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
             String fileName = stageName + variantName + "." + testReportPath.getFileName().toString();
             testReportDataPath = dataDirectory.resolve(fileName);
-            dataDirectory.toFile().mkdirs();
+            Files.createDirectories(dataDirectory);
             Files.copy(testReportPath, testReportDataPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         // Write (relevant parts of) the data to the DB:
-        String methodName = testCaseReport.getName().replaceAll("\\(.*", "");
-        methodName = methodName.replace(" ", "_");
-        int lastDotIndexMethodName = methodName.lastIndexOf(".");
-        methodName = lastDotIndexMethodName == -1 ? methodName : methodName.substring(lastDotIndexMethodName + 1);
-        String className = testCaseReport.getClassName();
-        int lastDotIndex = testCaseReport.getFullClassName().lastIndexOf('.');
-        String packageName = lastDotIndex == -1 ? "" : testCaseReport.getFullClassName().substring(0, lastDotIndex);
-
         JunitTestReportRecord record = create.newRecord(Tables.JUNIT_TEST_REPORT);
         record.setProjectId(this.getProjectId());
         record.setTestId(this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED ? null : this.getTestId());
@@ -341,9 +341,10 @@ public class JunitDataCollectionTask extends AbstractTask {
         record.setStep(this.stage.getStep());
         record.setStage(this.stage);
         record.setVariant(this.variant);
-        record.setTestPackageName(packageName);
-        record.setTestClassName(className);
-        record.setTestMethodName(methodName);
+        record.setTestPackageName(this.testRecord.getTestPackageName());
+        record.setTestClassName(this.testRecord.getTestClassName());
+        record.setTestMethodName(this.testRecord.getTestMethodName());
+        record.setTestCaseName(testCaseReport.getName());
         record.setResult(getTestReportResult(testCaseReport));
         record.setRuntime(testCaseReport.getTime());
         record.setFailureMessage(testCaseReport.getFailureMessage());

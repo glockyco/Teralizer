@@ -206,6 +206,7 @@ CREATE TABLE junit_test_report
     test_package_name  TEXT    NOT NULL,
     test_class_name    TEXT    NOT NULL,
     test_method_name   TEXT    NOT NULL,
+    test_case_name     TEXT    NOT NULL,
     result             TEXT    NOT NULL,
     runtime            REAL    NOT NULL,
     failure_message    TEXT,    -- can be null for passed / skipped tests

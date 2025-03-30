@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row17;
+import org.jooq.Row18;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -102,6 +102,11 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
      * The column <code>junit_test_report.test_method_name</code>.
      */
     public final TableField<JunitTestReportRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>junit_test_report.test_case_name</code>.
+     */
+    public final TableField<JunitTestReportRecord, String> TEST_CASE_NAME = createField(DSL.name("test_case_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>junit_test_report.result</code>.
@@ -253,11 +258,11 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row17 type methods
+    // Row18 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row17<Integer, Integer, Integer, Integer, Integer, ProcessingStage, String, String, String, String, TestResult, Float, String, String, String, String, String> fieldsRow() {
-        return (Row17) super.fieldsRow();
+    public Row18<Integer, Integer, Integer, Integer, Integer, ProcessingStage, String, String, String, String, String, TestResult, Float, String, String, String, String, String> fieldsRow() {
+        return (Row18) super.fieldsRow();
     }
 }
