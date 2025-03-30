@@ -341,9 +341,17 @@ public class JunitDataCollectionTask extends AbstractTask {
         record.setStep(this.stage.getStep());
         record.setStage(this.stage);
         record.setVariant(this.variant);
-        record.setTestPackageName(this.testRecord.getTestPackageName());
-        record.setTestClassName(this.testRecord.getTestClassName());
-        record.setTestMethodName(this.testRecord.getTestMethodName());
+
+        if (this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED) {
+            record.setTestPackageName(this.generalizationRecord.getPackageName());
+            record.setTestClassName(this.generalizationRecord.getClassName());
+            record.setTestMethodName(this.generalizationRecord.getMethodName());
+        } else {
+            record.setTestPackageName(this.testRecord.getTestPackageName());
+            record.setTestClassName(this.testRecord.getTestClassName());
+            record.setTestMethodName(this.testRecord.getTestMethodName());
+        }
+
         record.setTestCaseName(testCaseReport.getName());
         record.setResult(getTestReportResult(testCaseReport));
         record.setRuntime(testCaseReport.getTime());
