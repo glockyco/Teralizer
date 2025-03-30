@@ -115,16 +115,6 @@ jooq {
                                 includeExpression = "assertion.is_included"
                             }
                             forcedType {
-                                userType = "teralizer.processing.GeneralizationAlgorithm"
-                                enumConverter = true
-                                includeExpression = "generalization.algorithm"
-                            }
-                            forcedType {
-                                userType = "teralizer.processing.GeneralizationAlgorithm"
-                                enumConverter = true
-                                includeExpression = "generalization.combined_algorithm"
-                            }
-                            forcedType {
                                 name = "BOOLEAN"
                                 includeExpression = "generalization.is_included"
                             }
