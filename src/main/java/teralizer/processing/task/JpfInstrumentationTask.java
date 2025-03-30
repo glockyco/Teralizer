@@ -233,13 +233,23 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtBlock<?> instrumentedBody = factory.createBlock();
         instrumentedBody.addStatement(factory.Code().createCodeSnippetStatement("return " + instrumentedTestedMethodCall));
 
+        CtTypeReference<?> returnType = !testedMethod.getType().isGenerics() ? testedMethod.getType() : factory.Type().objectType();
+        returnType.setSimplyQualified(false);
+        returnType.setImplicit(false);
+
+        Set<CtTypeReference<? extends Throwable>> thrownTypes = testedMethod.getThrownTypes();
+        thrownTypes.forEach(t -> {
+            t.setSimplyQualified(false);
+            t.setImplicit(false);
+        });
+
         return factory.createMethod(
             instrumentedClass,
             new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
-            !testedMethod.getType().isGenerics() ? testedMethod.getType() : factory.Type().objectType(),
+            returnType,
             this.assertionRecord.getInstrumentedMethodName(),
             instrumentedParameters,
-            testedMethod.getThrownTypes(),
+            thrownTypes,
             instrumentedBody
         );
     }
