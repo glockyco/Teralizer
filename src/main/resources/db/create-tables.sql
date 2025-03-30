@@ -42,17 +42,20 @@ CREATE INDEX idx_project_test_framework ON project (test_framework);
 
 CREATE TABLE test
 (
-    id                         INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id                 INTEGER NOT NULL,
-    test_file_path             TEXT    NOT NULL,
-    test_class_qualified_name  TEXT    NOT NULL,
-    test_method_qualified_name TEXT    NOT NULL,
-    test_package_name          TEXT    NOT NULL,
-    test_class_name            TEXT    NOT NULL,
-    test_method_name           TEXT    NOT NULL,
-    is_parameterized           INTEGER NOT NULL,
-    is_included                INTEGER NOT NULL,
-    exclusion_info             TEXT, -- can be null for tests that are not excluded
+    id                           INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id                   INTEGER NOT NULL,
+    test_file_path               TEXT    NOT NULL,
+    test_class_qualified_name    TEXT    NOT NULL,
+    test_method_qualified_name   TEXT    NOT NULL,
+    test_package_name            TEXT    NOT NULL,
+    test_class_name              TEXT    NOT NULL,
+    test_method_name             TEXT    NOT NULL,
+    test_method_absolute_path    TEXT,    -- is null until JunitDataCollectionTask has mapped the the test report to a method
+    test_method_relative_path    TEXT,    -- is null until JunitDataCollectionTask has mapped the the test report to a method
+    test_annotation_name         TEXT,    -- is null until JunitDataCollectionTask has mapped the the test report to a method and can remain null for unknown / unsupported test annotations
+    test_annotations_source_code TEXT,    -- is null until JunitDataCollectionTask has mapped the the test report to a method and can remain null for unknown / unsupported test annotations
+    is_included                  INTEGER NOT NULL,
+    exclusion_info               TEXT,    -- can be null for tests that are not excluded
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
 

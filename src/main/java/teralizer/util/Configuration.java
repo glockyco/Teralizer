@@ -12,6 +12,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Configuration {
@@ -82,11 +83,19 @@ public class Configuration {
 
     public static final List<String> SUPPORTED_TYPES = Arrays.asList("byte", "short", "int", "long", "float", "double");
 
+    public static final String TEST_ANNOTATION_TEST = "Test";
+    public static final String TEST_ANNOTATION_REPEATED = "RepeatedTest";
+    public static final String TEST_ANNOTATION_PARAMETERIZED = "ParameterizedTest";
+    public static final String TEST_ANNOTATION_PROPERTY = "Property";
+    public static final List<String> SUPPORTED_TEST_ANNOTATIONS = Collections.singletonList(TEST_ANNOTATION_TEST);
+    public static final List<String> KNOWN_TEST_ANNOTATIONS = Arrays.asList(TEST_ANNOTATION_TEST, TEST_ANNOTATION_REPEATED, TEST_ANNOTATION_PARAMETERIZED, TEST_ANNOTATION_PROPERTY);
+
     public static final String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
     public static final String TEST_PARAMETERS_SUPPLIER_CLASS_NAME = "TestParametersSupplier";
 
     public static final String JUNIT4_ASSERTION_PACKAGE = "org.junit.Assert";
     public static final String JUNIT5_ASSERTION_PACKAGE = "org.junit.jupiter.api.Assertions";
+
     public static final String ASSERT_EQUALS = "assertEquals";
     public static final String ASSERT_TRUE = "assertTrue";
     public static final String ASSERT_FALSE = "assertFalse";

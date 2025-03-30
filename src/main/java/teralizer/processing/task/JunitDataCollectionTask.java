@@ -13,10 +13,16 @@ import org.jooq.generated.tables.records.JunitTestReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.xml.sax.SAXException;
+import spoon.Launcher;
+import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.factory.Factory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
 import teralizer.repository.SQLiteRepository;
+import teralizer.util.Configuration;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
@@ -67,6 +73,8 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
 
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
+
         switch (this.stage) {
             case COLLECT_JUNIT_REPORTS_ORIGINAL:
                 if (this.testRecord == null) {
@@ -75,11 +83,13 @@ public class JunitDataCollectionTask extends AbstractTask {
                     this.scheduleTasks(create, scheduleTask);
                     return;
                 } else {
-                    // @TODO: Add support for parameterized tests.
-                    if (!this.testRecord.getIsParameterized()) {
-                        List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
-                        create.batchInsert(testReportRecords).execute();
-                    }
+                    // We add the remaining test data using a test-level
+                    // task (after initially creating them in a project-level
+                    // task) to ensure that any errors that occur only cause
+                    // test-level (rather than project-level) exclusions.
+                    this.updateTestRecord(spoonLauncher.getFactory(), this.testRecord);
+                    List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
+                    create.batchInsert(testReportRecords).execute();
                 }
                 break;
             case COLLECT_JUNIT_REPORTS_INITIAL:
@@ -138,7 +148,7 @@ public class JunitDataCollectionTask extends AbstractTask {
                 .flatMap(testReportPath -> this.parseTestCaseReports(testReportPath, null, null).stream())
                 .map(testCaseReport -> this.buildTestRecord(create, testCaseReport))
                 // Keep only the first record for each test method name to
-                // avoid duplicates caused by parameterized tests.
+                // avoid duplicates caused by repeated or parameterized tests.
                 .collect(Collectors.collectingAndThen(
                     Collectors.toMap(
                         TestRecord::getTestMethodQualifiedName,
@@ -248,10 +258,56 @@ public class JunitDataCollectionTask extends AbstractTask {
         record.setTestPackageName(testPackageName);
         record.setTestClassName(testClassName);
         record.setTestMethodName(testMethodName);
-        record.setIsParameterized(testCaseReport.getFullName().endsWith("]"));
         record.setIsIncluded(true);
 
         return record;
+    }
+
+    private void updateTestRecord(Factory factory, TestRecord record) {
+        CtClass<?> testClass = factory.Class().get(this.testRecord.getTestClassQualifiedName());
+
+        List<CtMethod<?>> matchingMethods = testClass.getMethodsByName(this.testRecord.getTestMethodName());
+
+        if (matchingMethods.isEmpty()) {
+            // This can happen if the test method was inherited from some other class.
+            // The JUnit reports list the test as part of the child class then, but
+            // the source code file of the child class does not contain the method.
+            throw new RuntimeException("No method matches for test method (might be inherited): " + this.testRecord.getTestMethodQualifiedName());
+        }
+
+        List<CtMethod<?>> knownTestMethods = matchingMethods.stream()
+            .filter(method -> method.getAnnotations().stream()
+                .anyMatch(a -> Configuration.KNOWN_TEST_ANNOTATIONS.contains(a.getType().getSimpleName())))
+            .collect(Collectors.toList());
+
+        if (knownTestMethods.size() > 1) {
+            throw new RuntimeException("Multiple matches for test method (" + knownTestMethods.size() + " total): " + this.testRecord.getTestMethodQualifiedName());
+        }
+
+        // At this point, we have 0-1 knownTestMethods and 1+ matchingMethods.
+        // If we do have a known test method, take that one as our test method.
+        // If we don't have any known test methods, just take the first of the
+        // matching ones (which can either be an unknown type of test method or
+        // a non-test method). It will later be excluded anyway, but we want to
+        // keep processing it for now to collect more data about it.
+        CtMethod<?> testMethod = knownTestMethods.stream().findFirst().orElse(matchingMethods.get(0));
+
+        record.setTestMethodAbsolutePath(testMethod.getPath().toString());
+        record.setTestMethodRelativePath(testMethod.getPath().relativePath(testClass).toString());
+
+        CtAnnotation<?> testAnnotation = testMethod.getAnnotations().stream()
+            .filter(a -> Configuration.KNOWN_TEST_ANNOTATIONS.contains(a.getType().getSimpleName()))
+            .findFirst().orElse(null);
+
+        if (testAnnotation != null) {
+            String annotationName = testAnnotation.getType().getSimpleName();
+            record.setTestAnnotationName(annotationName);
+        }
+
+        record.setTestAnnotationsSourceCode(testMethod.getAnnotations().stream()
+            .map(Object::toString).collect(Collectors.joining("\n")));
+
+        record.store();
     }
 
     private JunitTestReportRecord buildTestReportRecord(DSLContext create, Path testReportPath, ReportTestCase testCaseReport) {

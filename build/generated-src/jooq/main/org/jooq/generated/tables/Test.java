@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row11;
+import org.jooq.Row14;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -90,9 +90,24 @@ public class Test extends TableImpl<TestRecord> {
     public final TableField<TestRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.is_parameterized</code>.
+     * The column <code>test.test_method_absolute_path</code>.
      */
-    public final TableField<TestRecord, Boolean> IS_PARAMETERIZED = createField(DSL.name("is_parameterized"), SQLDataType.BOOLEAN.nullable(false), this, "");
+    public final TableField<TestRecord, String> TEST_METHOD_ABSOLUTE_PATH = createField(DSL.name("test_method_absolute_path"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>test.test_method_relative_path</code>.
+     */
+    public final TableField<TestRecord, String> TEST_METHOD_RELATIVE_PATH = createField(DSL.name("test_method_relative_path"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>test.test_annotation_name</code>.
+     */
+    public final TableField<TestRecord, String> TEST_ANNOTATION_NAME = createField(DSL.name("test_annotation_name"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>test.test_annotations_source_code</code>.
+     */
+    public final TableField<TestRecord, String> TEST_ANNOTATIONS_SOURCE_CODE = createField(DSL.name("test_annotations_source_code"), SQLDataType.CLOB, this, "");
 
     /**
      * The column <code>test.is_included</code>.
@@ -203,11 +218,11 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row11 type methods
+    // Row14 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row11<Integer, Integer, String, String, String, String, String, String, Boolean, Boolean, String> fieldsRow() {
-        return (Row11) super.fieldsRow();
+    public Row14<Integer, Integer, String, String, String, String, String, String, String, String, String, String, Boolean, String> fieldsRow() {
+        return (Row14) super.fieldsRow();
     }
 }

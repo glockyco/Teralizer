@@ -123,7 +123,7 @@ public class TestFilteringTask extends AbstractTask {
 
         List<Filter> filters = Arrays.asList(
             new NonPassingTestFilter(create, this.testRecord),
-            new ParameterizedTestFilter(this.testRecord)
+            new TestTypeFilter(this.testRecord)
         );
 
         this.checkFilters(filters);

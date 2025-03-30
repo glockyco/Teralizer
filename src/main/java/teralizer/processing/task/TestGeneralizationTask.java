@@ -52,6 +52,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static teralizer.util.Configuration.SUPPORTED_TEST_ANNOTATIONS;
+
 public class TestGeneralizationTask extends AbstractTask {
 
     public TestGeneralizationTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
@@ -151,7 +153,7 @@ public class TestGeneralizationTask extends AbstractTask {
         generalizedClassDeclaration.addComment(factory.createInlineComment("Output specification: " + this.assertionRecord.getOutputSpecificationPath()));
 
         Predicate<CtMethod<?>> isTestMethod = (decl) -> decl.getSimpleName().equals(this.testRecord.getTestMethodName());
-        Predicate<CtMethod<?>> hasTestAnnotation = (decl) -> decl.getAnnotations().stream().anyMatch(a -> a.getType().getSimpleName().equals("Test"));
+        Predicate<CtMethod<?>> hasTestAnnotation = (decl) -> decl.getAnnotations().stream().anyMatch(a -> SUPPORTED_TEST_ANNOTATIONS.contains(a.getType().getSimpleName()));
         List<CtMethod<?>> otherTestMethods = generalizedClassDeclaration.getMethods().stream().filter(m -> !isTestMethod.test(m) && hasTestAnnotation.test(m)).collect(Collectors.toList());
         otherTestMethods.forEach(generalizedClassDeclaration::removeMethod);
 
