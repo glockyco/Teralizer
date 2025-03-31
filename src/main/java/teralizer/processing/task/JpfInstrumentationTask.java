@@ -178,10 +178,10 @@ public class JpfInstrumentationTask extends AbstractTask {
 
     private CtInvocation<?> getTestedMethodCall(CtClass<?> instrumentedClass) {
         CtMethod<?> testMethod = instrumentedClass.getMethod(this.testRecord.getTestMethodName());
-        String path = this.assertionRecord.getTestedMethodCallRelativePath().replace(
-            this.testRecord.getTestClassQualifiedName(),
-            this.assertionRecord.getInstrumentedClassQualifiedName());
-        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(path);
+        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(
+            this.assertionRecord.getTestedMethodCallRelativePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.assertionRecord.getInstrumentedClassQualifiedName()));
         return (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
     }
 

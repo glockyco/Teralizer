@@ -156,10 +156,10 @@ public class TestGeneralizationTask extends AbstractTask {
 
         SpoonUtils.deleteOtherTestMethodsInClass(generalizedClassDeclaration, testMethod);
 
-        CtPathStringBuilder pathBuilder = new CtPathStringBuilder();
-        CtPath assertionPath = pathBuilder.fromString(this.assertionRecord.getAssertionRelativePath().replace(
-            this.testRecord.getTestClassQualifiedName(),
-            this.generalizationRecord.getClassQualifiedName()));
+        CtPath assertionPath = new CtPathStringBuilder().fromString(
+            this.assertionRecord.getAssertionRelativePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.generalizationRecord.getClassQualifiedName()));
         CtInvocation<?> assertion = (CtInvocation<?>) assertionPath.evaluateOn(testMethod).get(0);
 
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
@@ -330,9 +330,16 @@ public class TestGeneralizationTask extends AbstractTask {
         // Replace tested method arguments with values from `testParameters`.                                     //
         // ------------------------------------------------------------------------------------------------------ //
 
-        CtPath testedMethodCallPath = pathBuilder.fromString(this.assertionRecord.getTestedMethodCallRelativePath());
+        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(
+            this.assertionRecord.getTestedMethodCallRelativePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.generalizationRecord.getClassQualifiedName()));
         CtInvocation<?> testedMethodCall = (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
-        CtPath testedMethodPath = new CtPathStringBuilder().fromString(this.assertionRecord.getTestedMethodAbsolutePath());
+
+        CtPath testedMethodPath = new CtPathStringBuilder().fromString(
+            this.assertionRecord.getTestedMethodAbsolutePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.generalizationRecord.getClassQualifiedName()));
         CtMethod<?> testedMethod = (CtMethod<?>) testedMethodPath.evaluateOn(factory.getModel().getRootPackage()).get(0);
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
