@@ -259,6 +259,13 @@ public class PitDataCollectionTask extends AbstractTask {
                 Integer testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
                 Integer generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
 
+                if (testId == null && generalizationId == null) {
+                    throw new RuntimeException("Failed to map coverage record to a test / generalization." +
+                        "\nPIT name: " + name +
+                        "\nQualified method name: " + testNameInfo.getMethodQualifiedName()
+                    );
+                }
+
                 PitCoverageReportRecord record = create.newRecord(Tables.PIT_COVERAGE_REPORT);
 
                 record.setProjectId(this.getProjectId());
@@ -278,10 +285,6 @@ public class PitDataCollectionTask extends AbstractTask {
                 record.setTestPackageName(testNameInfo.getPackageName());
                 record.setTestClassName(testNameInfo.getClassName());
                 record.setTestMethodName(testNameInfo.getMethodName());
-
-                if (testId == null && generalizationId == null) {
-                    throw new RuntimeException("Failed to map coverage record to a test / generalization:\n" + record);
-                }
 
                 records.add(record);
             }
@@ -357,16 +360,19 @@ public class PitDataCollectionTask extends AbstractTask {
                     Integer testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
                     Integer generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
 
+                    if (testId == null && generalizationId == null) {
+                        throw new RuntimeException("Failed to map mutation record to a test / generalization." +
+                            "\nPIT name: " + killingTestName +
+                            "\nQualified method name: " + testNameInfo.getMethodQualifiedName()
+                        );
+                    }
+
                     record.setKillingTestId(testId);
                     record.setKillingGeneralizationId(generalizationId);
 
                     record.setKillingPackageName(testNameInfo.getPackageName());
                     record.setKillingClassName(testNameInfo.getClassName());
                     record.setKillingMethodName(testNameInfo.getMethodName());
-
-                    if (testId == null && generalizationId == null) {
-                        throw new RuntimeException("Failed to map mutation record to a test / generalization:\n" + record);
-                    }
                 }
             }
 
