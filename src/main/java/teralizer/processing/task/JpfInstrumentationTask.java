@@ -35,10 +35,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static teralizer.util.Configuration.SUPPORTED_TEST_ANNOTATIONS;
 import static teralizer.util.Configuration.SUPPORTED_TYPES;
 
 public class JpfInstrumentationTask extends AbstractTask {
@@ -167,10 +165,13 @@ public class JpfInstrumentationTask extends AbstractTask {
             this.assertionRecord.getInstrumentedClassQualifiedName()
         );
 
-        Predicate<CtMethod<?>> isTestMethod = (decl) -> decl.getSimpleName().equals(this.testRecord.getTestMethodName());
-        Predicate<CtMethod<?>> hasTestAnnotation = (decl) -> decl.getAnnotations().stream().anyMatch(a -> SUPPORTED_TEST_ANNOTATIONS.contains(a.getType().getSimpleName()));
-        List<CtMethod<?>> otherTestMethods = instrumentedClass.getMethods().stream().filter(m -> !isTestMethod.test(m) && hasTestAnnotation.test(m)).collect(Collectors.toList());
-        otherTestMethods.forEach(instrumentedClass::removeMethod);
+        CtPath testMethodPath = new CtPathStringBuilder().fromString(
+            this.testRecord.getTestMethodRelativePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.assertionRecord.getInstrumentedClassQualifiedName()));
+        CtMethod<?> testMethod = (CtMethod<?>) testMethodPath.evaluateOn(instrumentedClass).get(0);
+
+        SpoonUtils.deleteOtherTestMethodsInClass(instrumentedClass, testMethod);
 
         return instrumentedClass;
     }

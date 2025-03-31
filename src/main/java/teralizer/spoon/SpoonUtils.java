@@ -14,7 +14,11 @@ import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.spoon.analysis.TestAnalysis;
 
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static teralizer.util.Configuration.KNOWN_TEST_ANNOTATIONS;
+import static teralizer.util.Configuration.SUPPORTED_TEST_ANNOTATIONS;
 
 public class SpoonUtils {
 
@@ -68,6 +72,15 @@ public class SpoonUtils {
             default:
                 return factory.Type().get(typeName).getReference();
         }
+    }
+
+    public static void deleteOtherTestMethodsInClass(CtClass<?> testClass, CtMethod<?> testMethod) {
+        List<CtMethod<?>> otherTestMethods = testClass.getMethods().stream().filter(m -> m != testMethod && hasTestAnnotation(m)).collect(Collectors.toList());
+        otherTestMethods.forEach(testClass::removeMethod);
+    }
+
+    public static boolean hasTestAnnotation(CtMethod<?> testMethod) {
+        return testMethod.getAnnotations().stream().anyMatch(a -> KNOWN_TEST_ANNOTATIONS.contains(a.getType().getSimpleName()));
     }
 
     public static void deleteOtherAssertionsInMethod(CtMethod<?> method, CtInvocation<?> assertion) {

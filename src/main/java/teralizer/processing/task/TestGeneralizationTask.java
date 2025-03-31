@@ -45,13 +45,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static teralizer.util.Configuration.SUPPORTED_TEST_ANNOTATIONS;
 
 public class TestGeneralizationTask extends AbstractTask {
 
@@ -151,12 +148,13 @@ public class TestGeneralizationTask extends AbstractTask {
         generalizedClassDeclaration.addComment(factory.createInlineComment("Output value: " + this.assertionRecord.getOutputValuePath()));
         generalizedClassDeclaration.addComment(factory.createInlineComment("Output specification: " + this.assertionRecord.getOutputSpecificationPath()));
 
-        Predicate<CtMethod<?>> isTestMethod = (decl) -> decl.getSimpleName().equals(this.testRecord.getTestMethodName());
-        Predicate<CtMethod<?>> hasTestAnnotation = (decl) -> decl.getAnnotations().stream().anyMatch(a -> SUPPORTED_TEST_ANNOTATIONS.contains(a.getType().getSimpleName()));
-        List<CtMethod<?>> otherTestMethods = generalizedClassDeclaration.getMethods().stream().filter(m -> !isTestMethod.test(m) && hasTestAnnotation.test(m)).collect(Collectors.toList());
-        otherTestMethods.forEach(generalizedClassDeclaration::removeMethod);
+        CtPath testMethodPath = new CtPathStringBuilder().fromString(
+            this.testRecord.getTestMethodRelativePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.generalizationRecord.getClassQualifiedName()));
+        CtMethod<?> testMethod = (CtMethod<?>) testMethodPath.evaluateOn(generalizedClassDeclaration).get(0);
 
-        CtMethod<?> testMethod = generalizedClassDeclaration.getMethodsByName(this.testRecord.getTestMethodName()).get(0);
+        SpoonUtils.deleteOtherTestMethodsInClass(generalizedClassDeclaration, testMethod);
 
         CtPathStringBuilder pathBuilder = new CtPathStringBuilder();
         CtPath assertionPath = pathBuilder.fromString(this.assertionRecord.getAssertionRelativePath().replace(
