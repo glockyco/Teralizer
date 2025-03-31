@@ -292,28 +292,36 @@ CREATE INDEX idx_pit_coverage_report_variant ON pit_coverage_report (variant);
 
 CREATE TABLE pit_mutation_report
 (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id          INTEGER NOT NULL,
-    step                INTEGER NOT NULL,
-    stage               TEXT    NOT NULL,
-    variant             TEXT, -- can be null if the report is for the original test suite
-    is_detected         INTEGER NOT NULL,
-    status              TEXT    NOT NULL,
-    number_of_tests_run INTEGER NOT NULL,
-    source_file         TEXT    NOT NULL,
-    mutated_class       TEXT    NOT NULL,
-    mutated_method      TEXT    NOT NULL,
-    method_description  TEXT    NOT NULL,
-    line_number         INTEGER NOT NULL,
-    mutator             TEXT    NOT NULL,
-    -- @TODO: indexes
-    -- @TODO: blocks
-    -- @TODO: killing_tests
-    description         TEXT    NOT NULL,
-    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+    id                        INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id                INTEGER NOT NULL,
+    killing_test_id           INTEGER, -- can be null if the mutant was not killed or was killed by a generalization
+    killing_generalization_id INTEGER, -- can be null if the mutant was not killed or was killed by a test
+    step                      INTEGER NOT NULL,
+    stage                     TEXT    NOT NULL,
+    variant                   TEXT,    -- can be null if the report is for the original test suite
+    is_detected               INTEGER NOT NULL,
+    status                    TEXT    NOT NULL,
+    number_of_tests_run       INTEGER NOT NULL,
+    source_file               TEXT    NOT NULL,
+    mutated_class             TEXT    NOT NULL,
+    mutated_method            TEXT    NOT NULL,
+    method_description        TEXT    NOT NULL,
+    line_number               INTEGER NOT NULL,
+    mutator                   TEXT    NOT NULL,
+    indexes                   TEXT    NOT NULL,
+    blocks                    TEXT    NOT NULL,
+    killing_package_name      TEXT,    -- can be null if the mutant was not killed
+    killing_class_name        TEXT,    -- can be null if the mutant was not killed
+    killing_method_name       TEXT,    -- can be null if the mutant was not killed
+    description               TEXT    NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (killing_test_id) REFERENCES test (id) ON DELETE CASCADE,
+    FOREIGN KEY (killing_generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_pit_mutation_report_project_id ON pit_mutation_report (project_id);
+CREATE INDEX idx_pit_mutation_report_killing_test_id ON pit_mutation_report (killing_test_id);
+CREATE INDEX idx_pit_mutation_report_killing_generalization_id ON pit_mutation_report (killing_generalization_id);
 
 CREATE INDEX idx_pit_mutation_report_step ON pit_mutation_report (step);
 CREATE INDEX idx_pit_mutation_report_stage ON pit_mutation_report (stage);

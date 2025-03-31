@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row15;
+import org.jooq.Row22;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -62,6 +62,16 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
      * The column <code>pit_mutation_report.project_id</code>.
      */
     public final TableField<PitMutationReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
+     * The column <code>pit_mutation_report.killing_test_id</code>.
+     */
+    public final TableField<PitMutationReportRecord, Integer> KILLING_TEST_ID = createField(DSL.name("killing_test_id"), SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>pit_mutation_report.killing_generalization_id</code>.
+     */
+    public final TableField<PitMutationReportRecord, Integer> KILLING_GENERALIZATION_ID = createField(DSL.name("killing_generalization_id"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>pit_mutation_report.step</code>.
@@ -124,6 +134,31 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
     public final TableField<PitMutationReportRecord, String> MUTATOR = createField(DSL.name("mutator"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
+     * The column <code>pit_mutation_report.indexes</code>.
+     */
+    public final TableField<PitMutationReportRecord, String> INDEXES = createField(DSL.name("indexes"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>pit_mutation_report.blocks</code>.
+     */
+    public final TableField<PitMutationReportRecord, String> BLOCKS = createField(DSL.name("blocks"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>pit_mutation_report.killing_package_name</code>.
+     */
+    public final TableField<PitMutationReportRecord, String> KILLING_PACKAGE_NAME = createField(DSL.name("killing_package_name"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>pit_mutation_report.killing_class_name</code>.
+     */
+    public final TableField<PitMutationReportRecord, String> KILLING_CLASS_NAME = createField(DSL.name("killing_class_name"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>pit_mutation_report.killing_method_name</code>.
+     */
+    public final TableField<PitMutationReportRecord, String> KILLING_METHOD_NAME = createField(DSL.name("killing_method_name"), SQLDataType.CLOB, this, "");
+
+    /**
      * The column <code>pit_mutation_report.description</code>.
      */
     public final TableField<PitMutationReportRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB.nullable(false), this, "");
@@ -168,7 +203,7 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_PIT_MUTATION_REPORT_IS_DETECTED, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_CLASS, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_METHOD, Indexes.IDX_PIT_MUTATION_REPORT_PROJECT_ID, Indexes.IDX_PIT_MUTATION_REPORT_STAGE, Indexes.IDX_PIT_MUTATION_REPORT_STEP, Indexes.IDX_PIT_MUTATION_REPORT_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_PIT_MUTATION_REPORT_IS_DETECTED, Indexes.IDX_PIT_MUTATION_REPORT_KILLING_GENERALIZATION_ID, Indexes.IDX_PIT_MUTATION_REPORT_KILLING_TEST_ID, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_CLASS, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_METHOD, Indexes.IDX_PIT_MUTATION_REPORT_PROJECT_ID, Indexes.IDX_PIT_MUTATION_REPORT_STAGE, Indexes.IDX_PIT_MUTATION_REPORT_STEP, Indexes.IDX_PIT_MUTATION_REPORT_VARIANT);
     }
 
     @Override
@@ -188,16 +223,32 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
 
     @Override
     public List<ForeignKey<PitMutationReportRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<PitMutationReportRecord, ?>>asList(Keys.FK_PIT_MUTATION_REPORT_PROJECT_1);
+        return Arrays.<ForeignKey<PitMutationReportRecord, ?>>asList(Keys.FK_PIT_MUTATION_REPORT_PROJECT_1, Keys.FK_PIT_MUTATION_REPORT_TEST_1, Keys.FK_PIT_MUTATION_REPORT_GENERALIZATION_1);
     }
 
     private transient Project _project;
+    private transient Test _test;
+    private transient Generalization _generalization;
 
     public Project project() {
         if (_project == null)
             _project = new Project(this, Keys.FK_PIT_MUTATION_REPORT_PROJECT_1);
 
         return _project;
+    }
+
+    public Test test() {
+        if (_test == null)
+            _test = new Test(this, Keys.FK_PIT_MUTATION_REPORT_TEST_1);
+
+        return _test;
+    }
+
+    public Generalization generalization() {
+        if (_generalization == null)
+            _generalization = new Generalization(this, Keys.FK_PIT_MUTATION_REPORT_GENERALIZATION_1);
+
+        return _generalization;
     }
 
     @Override
@@ -227,11 +278,11 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row15 type methods
+    // Row22 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row15<Integer, Integer, Integer, ProcessingStage, String, Boolean, MutationStatus, Integer, String, String, String, String, Integer, String, String> fieldsRow() {
-        return (Row15) super.fieldsRow();
+    public Row22<Integer, Integer, Integer, Integer, Integer, ProcessingStage, String, Boolean, MutationStatus, Integer, String, String, String, String, Integer, String, String, String, String, String, String, String> fieldsRow() {
+        return (Row22) super.fieldsRow();
     }
 }

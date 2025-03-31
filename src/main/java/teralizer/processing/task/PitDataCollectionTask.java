@@ -11,6 +11,7 @@ import org.jooq.generated.tables.records.PitCoverageReportRecord;
 import org.jooq.generated.tables.records.PitMutationReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
+import org.jooq.tools.json.JSONArray;
 import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -28,11 +29,31 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PitDataCollectionTask extends AbstractTask {
 
     private final ConsoleCommand consoleCommand;
+
+    // Different types of test "names" observed in PIT coverage / mutation reports:
+    // - org.example.MyTest.[engine:junit-jupiter]/[class:org.example.MyTest]/[method:testFooBar()]
+    // - org.example.MyTest.[engine:junit-jupiter]/[class:org.example.MyTest]/[test-template:testFoo(double, double)]/[test-template-invocation:#13]
+    // - org.example.MyTest.[engine:junit-vintage]/[runner:org.example.MyTest]/[test:testBar(org.example.MyMathTest)]
+    // - org.example.MyTest.[engine:jqwik]/[class:org.example.MyTest]/[property:testBazz(org.example.MyTest$TestParameters)]
+    // Note that some of these only occur with specific (i) JUnit 4 vs. 5 and (ii) Maven vs. Gradle combinations.
+    // => Take care when modifying the RegEx pattern to ensure matching still works for all types of supported projects.
+
+    private static final Pattern TEST_NAME_PATTERN = Pattern.compile(// Qualified class name followed by engine info:
+        "([\\w$.]+)\\.[^/]+/" +
+            // Section identifier followed by qualified class name:
+            "\\[(?:class|runner):([\\w$.]+)\\]/" +
+            // Section identifier followed by simple method name and parameter types:
+            "\\[(?:method|property|test|test-template):([\\w$]+)\\(.*?\\)\\]" +
+            // Section identifier followed by invocation count (for repeated / parameterized tests only):
+            "(?:/\\[test-template-invocation:.*\\])?"
+    );
 
     public PitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, null, projectRecord);
@@ -49,9 +70,41 @@ public class PitDataCollectionTask extends AbstractTask {
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         Path pitDataDirectory = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/pit-data");
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+
         this.executeMutationTesting(create);
-        this.collectCoverageData(create, pitDataDirectory);
-        this.collectMutationData(create, pitDataDirectory);
+
+        Map<String, Integer> testIds = this.fetchTestIds(create);
+        Map<String, Integer> generalizationIds = this.fetchGeneralizationIds(create);
+
+        this.collectCoverageData(create, pitDataDirectory, testIds, generalizationIds);
+        this.collectMutationData(create, pitDataDirectory, testIds, generalizationIds);
+    }
+
+    private Map<String, Integer> fetchTestIds(DSLContext create) {
+        return create.select(
+                // If some tests are executed multiple times, take the ID of the first execution.
+                DSL.min(Tables.TEST.ID),
+                // The qualified name is the same across all group elements, so take any.
+                Tables.TEST.TEST_METHOD_QUALIFIED_NAME
+            )
+            .from(Tables.TEST)
+            .where(Tables.TEST.PROJECT_ID.eq(this.getProjectId()))
+            .groupBy(Tables.TEST.TEST_METHOD_QUALIFIED_NAME)
+            .fetch().stream().collect(Collectors.toMap(Record2::component2, Record2::component1));
+    }
+
+    private Map<String, Integer> fetchGeneralizationIds(DSLContext create) {
+        return create.select(
+                // If some generalizations are executed multiple times, take the ID of the first execution.
+                DSL.min(Tables.GENERALIZATION.ID),
+                // The qualified name is the same across all group elements, so take any.
+                DSL.min(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME)
+            )
+            .from(Tables.GENERALIZATION)
+            .where(Tables.GENERALIZATION.PROJECT_ID.eq(this.getProjectId()))
+            .and(Tables.GENERALIZATION.VARIANT.eq(this.getVariant()))
+            .groupBy(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME)
+            .fetch().stream().collect(Collectors.toMap(Record2::component2, Record2::component1));
     }
 
     private void executeMutationTesting(DSLContext create) throws Exception {
@@ -120,163 +173,6 @@ public class PitDataCollectionTask extends AbstractTask {
         this.consoleCommand.execute(this.projectRecord.getRootPath(), command);
     }
 
-    private void collectCoverageData(DSLContext create, Path dataDirectory) throws DocumentException, IOException {
-        Path reportPath = this.projectRecord.getMutationReportsPath().resolve("linecoverage.xml");
-
-        if (!reportPath.toFile().exists()) {
-            throw new RuntimeException("Failed to collect coverage data. Report file '" + reportPath + "' does not exist.");
-        }
-
-        // Preserve the full raw data in the data directory:
-        String stageName = this.getStage().getStep() + "-" + this.getStage();
-        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
-        String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
-        dataDirectory.toFile().mkdirs();
-        Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-
-        // Read (relevant parts of) the data and write it to the DB:
-        Map<String, Integer> testIds = this.fetchTestIds(create);
-        Map<String, Integer> generalizationIds = this.fetchGeneralizationIds(create);
-
-        Document document = new SAXReader().read(reportPath.toFile());
-        Element coverageElement = document.getRootElement();
-
-        List<PitCoverageReportRecord> records = new ArrayList<>();
-        for (Element blockElement : coverageElement.elements("block")) {
-            String coveredClassQualifiedName = blockElement.attributeValue("classname");
-            int coveredClassLastDotIndex = coveredClassQualifiedName.lastIndexOf('.');
-            String coveredPackageName = coveredClassQualifiedName.substring(0, coveredClassLastDotIndex);
-            String coveredClassName = coveredClassQualifiedName.substring(coveredClassLastDotIndex + 1);
-
-            String coveredMethodSignature = blockElement.attributeValue("method");
-            String[] methodParts = coveredMethodSignature.split("\\(", 2);
-            String coveredMethodName = methodParts[0];
-            String coveredMethodDescription = "(" + methodParts[1];
-
-            int coveredBlockNumber = Integer.parseInt(blockElement.attributeValue("number"));
-
-            Element testsElement = blockElement.element("tests");
-            for (Element testElement : testsElement.elements("test")) {
-                String name = testElement.attributeValue("name");
-                String[] parts = name.split("/");
-
-                String testClassQualifiedName = parts[1].replaceAll("^\\[(runner|class):(.*?)\\]$", "$2");
-                int testClassLastDotIndex = testClassQualifiedName.lastIndexOf('.');
-                String testPackageName = testClassLastDotIndex == -1 ? "" : testClassQualifiedName.substring(0, testClassLastDotIndex);
-                String testClassName = testClassLastDotIndex == -1 ? testClassQualifiedName : testClassQualifiedName.substring(testClassLastDotIndex + 1);
-                String testMethodName = parts[2].replaceAll("^\\[(test|method|property):(.*?)\\((.*)$", "$2");
-                String testMethodQualifiedName = testClassQualifiedName + "." + testMethodName;
-
-                boolean isParameterizedTest = testMethodQualifiedName.endsWith("]");
-                if (isParameterizedTest) {
-                    continue;
-                }
-
-                Integer testId = testIds.getOrDefault(testMethodQualifiedName, null);
-                Integer generalizationId = generalizationIds.getOrDefault(testMethodQualifiedName, null);
-
-                PitCoverageReportRecord record = create.newRecord(Tables.PIT_COVERAGE_REPORT);
-
-                record.setProjectId(this.getProjectId());
-                record.setTestId(testId);
-                record.setGeneralizationId(generalizationId);
-
-                record.setStep(this.getStage().getStep());
-                record.setStage(this.getStage());
-                record.setVariant(this.getVariant());
-
-                record.setCoveredPackageName(coveredPackageName);
-                record.setCoveredClassName(coveredClassName);
-                record.setCoveredMethodName(coveredMethodName);
-                record.setCoveredMethodDescription(coveredMethodDescription);
-                record.setCoveredBlockNumber(coveredBlockNumber);
-
-                record.setTestPackageName(testPackageName);
-                record.setTestClassName(testClassName);
-                record.setTestMethodName(testMethodName);
-
-                if (testId == null && generalizationId == null) {
-                    throw new RuntimeException("Failed to map coverage record to a test / generalization:\n" + record);
-                }
-
-                records.add(record);
-            }
-        }
-        create.batchInsert(records).execute();
-    }
-
-    private Map<String, Integer> fetchTestIds(DSLContext create) {
-        return create.select(
-                // If some tests are executed multiple times, take the ID of the first execution.
-                DSL.min(Tables.TEST.ID),
-                // The qualified name is the same across all group elements, so take any.
-                Tables.TEST.TEST_METHOD_QUALIFIED_NAME
-            )
-            .from(Tables.TEST)
-            .where(Tables.TEST.PROJECT_ID.eq(this.getProjectId()))
-            .groupBy(Tables.TEST.TEST_METHOD_QUALIFIED_NAME)
-            .fetch().stream().collect(Collectors.toMap(Record2::component2, Record2::component1));
-    }
-
-    private Map<String, Integer> fetchGeneralizationIds(DSLContext create) {
-        return create.select(
-                // If some generalizations are executed multiple times, take the ID of the first execution.
-                DSL.min(Tables.GENERALIZATION.ID),
-                // The qualified name is the same across all group elements, so take any.
-                DSL.min(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME)
-            )
-            .from(Tables.GENERALIZATION)
-            .where(Tables.GENERALIZATION.PROJECT_ID.eq(this.getProjectId()))
-            .and(Tables.GENERALIZATION.VARIANT.eq(this.getVariant()))
-            .groupBy(Tables.GENERALIZATION.METHOD_QUALIFIED_NAME)
-            .fetch().stream().collect(Collectors.toMap(Record2::component2, Record2::component1));
-    }
-
-    private void collectMutationData(DSLContext create, Path dataDirectory) throws DocumentException, IOException {
-        Path reportPath = this.projectRecord.getMutationReportsPath().resolve("mutations.xml");
-
-        if (!reportPath.toFile().exists()) {
-            throw new RuntimeException("Failed to collect mutation data. Report file '" + reportPath + "' does not exist.");
-        }
-
-        // Preserve the full raw data in the data directory:
-        String stageName = this.getStage().getStep() + "-" + this.getStage();
-        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
-        String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
-        dataDirectory.toFile().mkdirs();
-        Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-
-        // Read (relevant parts of) the data and write it to the DB:
-        Document document = new SAXReader().read(reportPath.toFile());
-        Element mutationsElement = document.getRootElement();
-
-        List<PitMutationReportRecord> records = new ArrayList<>();
-        for (Element mutationElement : mutationsElement.elements("mutation")) {
-            PitMutationReportRecord record = create.newRecord(Tables.PIT_MUTATION_REPORT);
-            record.setProjectId(this.getProjectId());
-
-            record.setStep(this.getStage().getStep());
-            record.setStage(this.getStage());
-            record.setVariant(this.getVariant());
-
-            record.setIsDetected(Boolean.parseBoolean(mutationElement.attributeValue("detected")));
-            record.setStatus(MutationStatus.valueOf(mutationElement.attributeValue("status")));
-            record.setNumberOfTestsRun(Integer.parseInt(mutationElement.attributeValue("numberOfTestsRun")));
-
-            record.setSourceFile(mutationElement.element("sourceFile").getText());
-            record.setMutatedClass(mutationElement.element("mutatedClass").getText());
-            record.setMutatedMethod(mutationElement.element("mutatedMethod").getText());
-            record.setMethodDescription(mutationElement.element("methodDescription").getText());
-            record.setLineNumber(Integer.parseInt(mutationElement.element("lineNumber").getText()));
-            record.setMutator(mutationElement.element("mutator").getText());
-            record.setDescription(mutationElement.element("description").getText());
-
-            records.add(record);
-        }
-
-        create.batchInsert(records).execute();
-    }
-
     private List<String> buildGradleCommand(List<String> targetClasses, List<String> targetTests) {
         List<String> command = new ArrayList<>(Arrays.asList("./gradlew", "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE, "--info", "pitest"));
         command.add("-Pmutators=" + Configuration.getPitestMutators());
@@ -315,5 +211,239 @@ public class PitDataCollectionTask extends AbstractTask {
             "pitest:mutationCoverage",
             "-Dmutators=" + Configuration.getPitestMutators()
         ));
+    }
+
+    private void collectCoverageData(
+        DSLContext create,
+        Path dataDirectory,
+        Map<String, Integer> testIds,
+        Map<String, Integer> generalizationIds
+    ) throws DocumentException, IOException {
+        Path reportPath = this.projectRecord.getMutationReportsPath().resolve("linecoverage.xml");
+
+        if (!reportPath.toFile().exists()) {
+            throw new RuntimeException("Failed to collect coverage data. Report file '" + reportPath + "' does not exist.");
+        }
+
+        // Preserve the full raw data in the data directory:
+        String stageName = this.getStage().getStep() + "-" + this.getStage();
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
+        String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
+        Files.createDirectories(dataDirectory);
+        Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+
+        // Read (relevant parts of) the data and write it to the DB:
+        Document document = new SAXReader().read(reportPath.toFile());
+        Element coverageElement = document.getRootElement();
+
+        List<PitCoverageReportRecord> records = new ArrayList<>();
+        for (Element blockElement : coverageElement.elements("block")) {
+            String coveredClassQualifiedName = blockElement.attributeValue("classname");
+            int coveredClassLastDotIndex = coveredClassQualifiedName.lastIndexOf('.');
+            String coveredPackageName = coveredClassQualifiedName.substring(0, coveredClassLastDotIndex);
+            String coveredClassName = coveredClassQualifiedName.substring(coveredClassLastDotIndex + 1);
+
+            String coveredMethodSignature = blockElement.attributeValue("method");
+            String[] methodParts = coveredMethodSignature.split("\\(", 2);
+            String coveredMethodName = methodParts[0];
+            String coveredMethodDescription = "(" + methodParts[1];
+
+            int coveredBlockNumber = Integer.parseInt(blockElement.attributeValue("number"));
+
+            Element testsElement = blockElement.element("tests");
+            for (Element testElement : testsElement.elements("test")) {
+                String name = testElement.attributeValue("name");
+
+                TestNameInfo testNameInfo = this.processTestName(name);
+
+                Integer testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                Integer generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+
+                PitCoverageReportRecord record = create.newRecord(Tables.PIT_COVERAGE_REPORT);
+
+                record.setProjectId(this.getProjectId());
+                record.setTestId(testId);
+                record.setGeneralizationId(generalizationId);
+
+                record.setStep(this.getStage().getStep());
+                record.setStage(this.getStage());
+                record.setVariant(this.getVariant());
+
+                record.setCoveredPackageName(coveredPackageName);
+                record.setCoveredClassName(coveredClassName);
+                record.setCoveredMethodName(coveredMethodName);
+                record.setCoveredMethodDescription(coveredMethodDescription);
+                record.setCoveredBlockNumber(coveredBlockNumber);
+
+                record.setTestPackageName(testNameInfo.getPackageName());
+                record.setTestClassName(testNameInfo.getClassName());
+                record.setTestMethodName(testNameInfo.getMethodName());
+
+                if (testId == null && generalizationId == null) {
+                    throw new RuntimeException("Failed to map coverage record to a test / generalization:\n" + record);
+                }
+
+                records.add(record);
+            }
+        }
+        create.batchInsert(records).execute();
+    }
+
+    private void collectMutationData(
+        DSLContext create,
+        Path dataDirectory,
+        Map<String, Integer> testIds,
+        Map<String, Integer> generalizationIds
+    ) throws DocumentException, IOException {
+        Path reportPath = this.projectRecord.getMutationReportsPath().resolve("mutations.xml");
+
+        if (!reportPath.toFile().exists()) {
+            throw new RuntimeException("Failed to collect mutation data. Report file '" + reportPath + "' does not exist.");
+        }
+
+        // Preserve the full raw data in the data directory:
+        String stageName = this.getStage().getStep() + "-" + this.getStage();
+        String variantName = this.getVariant() == null ? "" : ("." + this.getVariant());
+        String fileName = stageName + variantName + "." + reportPath.getFileName().toString();
+        Files.createDirectories(dataDirectory);
+        Files.copy(reportPath, dataDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+
+        // Read (relevant parts of) the data and write it to the DB:
+        Document document = new SAXReader().read(reportPath.toFile());
+        Element mutationsElement = document.getRootElement();
+
+        List<PitMutationReportRecord> records = new ArrayList<>();
+        for (Element mutationElement : mutationsElement.elements("mutation")) {
+            PitMutationReportRecord record = create.newRecord(Tables.PIT_MUTATION_REPORT);
+            record.setProjectId(this.getProjectId());
+
+            record.setStep(this.getStage().getStep());
+            record.setStage(this.getStage());
+            record.setVariant(this.getVariant());
+
+            record.setIsDetected(Boolean.parseBoolean(mutationElement.attributeValue("detected")));
+            record.setStatus(MutationStatus.valueOf(mutationElement.attributeValue("status")));
+            record.setNumberOfTestsRun(Integer.parseInt(mutationElement.attributeValue("numberOfTestsRun")));
+
+            record.setSourceFile(mutationElement.element("sourceFile").getText());
+            record.setMutatedClass(mutationElement.element("mutatedClass").getText());
+            record.setMutatedMethod(mutationElement.element("mutatedMethod").getText());
+            record.setMethodDescription(mutationElement.element("methodDescription").getText());
+            record.setLineNumber(Integer.parseInt(mutationElement.element("lineNumber").getText()));
+            record.setMutator(mutationElement.element("mutator").getText());
+            record.setDescription(mutationElement.element("description").getText());
+
+            Element indexesElement = mutationElement.element("indexes");
+            List<Integer> indexes = indexesElement == null ? new ArrayList<>() :
+                indexesElement.elements("index").stream()
+                    .map(e -> Integer.parseInt(e.getText()))
+                    .sorted().collect(Collectors.toList());
+            record.setIndexes(JSONArray.toJSONString(indexes));
+
+            Element blocksElement = mutationElement.element("blocks");
+            List<Integer> blocks = blocksElement == null ? new ArrayList<>() :
+                blocksElement.elements("block").stream()
+                    .map(e -> Integer.parseInt(e.getText()))
+                    .sorted().collect(Collectors.toList());
+            record.setBlocks(JSONArray.toJSONString(blocks));
+
+            Element killingTestElement = mutationElement.element("killingTest");
+            if (killingTestElement != null) {
+                String killingTestName = killingTestElement.getText();
+
+                if (killingTestName != null && !killingTestName.isEmpty()) {
+                    TestNameInfo testNameInfo = this.processTestName(killingTestName);
+
+                    Integer testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                    Integer generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+
+                    record.setKillingTestId(testId);
+                    record.setKillingGeneralizationId(generalizationId);
+
+                    record.setKillingPackageName(testNameInfo.getPackageName());
+                    record.setKillingClassName(testNameInfo.getClassName());
+                    record.setKillingMethodName(testNameInfo.getMethodName());
+
+                    if (testId == null && generalizationId == null) {
+                        throw new RuntimeException("Failed to map mutation record to a test / generalization:\n" + record);
+                    }
+                }
+            }
+
+            records.add(record);
+        }
+
+        create.batchInsert(records).execute();
+    }
+
+    private TestNameInfo processTestName(String testName) {
+        Matcher matcher = TEST_NAME_PATTERN.matcher(testName);
+
+        if (matcher.matches()) {
+            // Extract the qualified class name and method name
+            String testClassQualifiedName = matcher.group(2);
+            String testMethodName = matcher.group(3);
+
+            // Create fully qualified method name
+            String testMethodQualifiedName = testClassQualifiedName + "." + testMethodName;
+
+            // Extract package and class name in one step
+            int lastDotIndex = testClassQualifiedName.lastIndexOf('.');
+            String testPackageName = lastDotIndex > 0 ? testClassQualifiedName.substring(0, lastDotIndex) : "";
+            String testClassName = lastDotIndex > 0 ? testClassQualifiedName.substring(lastDotIndex + 1) : testClassQualifiedName;
+
+            return new TestNameInfo(
+                testClassQualifiedName,
+                testMethodQualifiedName,
+                testPackageName,
+                testClassName,
+                testMethodName
+            );
+        } else {
+            throw new RuntimeException("Unexpected test name format: " + testName);
+        }
+    }
+
+    private static class TestNameInfo {
+
+        private final String classQualifiedName;
+        private final String methodQualifiedName;
+        private final String packageName;
+        private final String className;
+        private final String methodName;
+
+        public TestNameInfo(
+            String classQualifiedName,
+            String methodQualifiedName,
+            String packageName,
+            String className,
+            String methodName
+        ) {
+            this.classQualifiedName = classQualifiedName;
+            this.methodQualifiedName = methodQualifiedName;
+            this.packageName = packageName;
+            this.className = className;
+            this.methodName = methodName;
+        }
+
+        public String getClassQualifiedName() {
+            return this.classQualifiedName;
+        }
+
+        public String getMethodQualifiedName() {
+            return this.methodQualifiedName;
+        }
+
+        public String getPackageName() {
+            return this.packageName;
+        }
+
+        public String getClassName() {
+            return this.className;
+        }
+
+        public String getMethodName() {
+            return this.methodName;
+        }
     }
 }
