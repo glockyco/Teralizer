@@ -55,7 +55,20 @@ public class PitDataCollectionTask extends AbstractTask {
     }
 
     private void executeMutationTesting(DSLContext create) throws Exception {
-        List<String> targetClasses = SQLiteRepository.fetchCoveredClasses(create, this.getVariant(), this.getProjectId());
+        List<String> targetClasses;
+        switch (this.getStage()) {
+            case COLLECT_PIT_DATA_ORIGINAL:
+                targetClasses = SQLiteRepository.fetchCoveredClasses(create, ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL, this.getVariant(), this.getProjectId());
+                break;
+            case COLLECT_PIT_DATA_INITIAL:
+            case COLLECT_PIT_DATA_GENERALIZED:
+                // Use the same targetClasses for initial + generalized PIT data
+                // collection to ensure the results are directly comparable.
+                targetClasses = SQLiteRepository.fetchCoveredClasses(create, ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, null, this.getProjectId());
+                break;
+            default:
+                throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
+        }
         // Filter anonymous classes, which are stored like: "com.example.MyClass.new MyInterface() {...}"
         // Passing targetClasses to PIT without this filter causes 'Illegal repetition' errors due to "...".
         // @TODO: Convert names of anonymous classes so they can be passed to PIT without errors.

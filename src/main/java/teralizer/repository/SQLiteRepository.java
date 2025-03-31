@@ -4,15 +4,17 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
+import teralizer.processing.ProcessingStage;
 
 import java.util.List;
 
 public class SQLiteRepository {
 
-    public static List<String> fetchCoveredClasses(DSLContext create, String variant, Integer projectId) {
+    public static List<String> fetchCoveredClasses(DSLContext create, ProcessingStage stage, String variant, Integer projectId) {
         return create.select(Tables.JACOCO_COVERAGE_REPORT.COVERED_PACKAGE.concat(".").concat(Tables.JACOCO_COVERAGE_REPORT.COVERED_CLASS))
             .from(Tables.JACOCO_COVERAGE_REPORT)
             .where(Tables.JACOCO_COVERAGE_REPORT.PROJECT_ID.eq(projectId))
+            .and(Tables.JACOCO_COVERAGE_REPORT.STAGE.eq(stage))
             .and(Tables.JACOCO_COVERAGE_REPORT.VARIANT.isNotDistinctFrom(variant))
             .and(Tables.JACOCO_COVERAGE_REPORT.INSTRUCTION_COVERED.greaterThan(0))
             .fetchInto(String.class);
