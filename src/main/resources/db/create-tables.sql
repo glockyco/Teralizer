@@ -444,6 +444,16 @@ CREATE VIEW pit_mutation_report_ AS
 SELECT
     id,
     project_id,
+    dense_rank() OVER (
+        ORDER BY
+            project_id,
+            mutated_class,
+            line_number,
+            mutator,
+            indexes,
+            blocks,
+            description
+    ) AS mutation_id,
     killing_test_id,
     killing_generalization_id,
     step,
