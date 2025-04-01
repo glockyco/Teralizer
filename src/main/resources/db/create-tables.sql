@@ -1,5 +1,10 @@
 -- Dialect: SQLite
 
+DROP VIEW IF EXISTS pit_mutation_report_;
+DROP VIEW IF EXISTS pit_coverage_report_;
+DROP VIEW IF EXISTS jacoco_coverage_report_;
+DROP VIEW IF EXISTS junit_test_report_;
+
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS pit_mutation_report;
 DROP TABLE IF EXISTS pit_coverage_report;
@@ -360,3 +365,107 @@ CREATE INDEX idx_task_stage ON task (stage);
 CREATE INDEX idx_task_variant ON task (variant);
 
 CREATE INDEX idx_task_status ON task (status);
+
+CREATE VIEW junit_test_report_ AS
+SELECT
+    id,
+    project_id,
+    test_id,
+    generalization_id,
+    step,
+    stage,
+    CASE
+        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'
+        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'
+        ELSE variant
+    END AS variant,
+    test_package_name,
+    test_class_name,
+    test_method_name,
+    test_case_name,
+    result,
+    runtime,
+    failure_message,
+    failure_type,
+    failure_error_line,
+    failure_detail,
+    report_file_path
+FROM junit_test_report;
+
+CREATE VIEW jacoco_coverage_report_ AS
+SELECT
+    id,
+    project_id,
+    step,
+    stage,
+    CASE
+        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'
+        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'
+        ELSE variant
+    END AS variant,
+    covered_package,
+    covered_class,
+    instruction_missed,
+    instruction_covered,
+    branch_missed,
+    branch_covered,
+    line_missed,
+    line_covered,
+    complexity_missed,
+    complexity_covered,
+    method_missed,
+    method_covered
+FROM jacoco_coverage_report;
+
+CREATE VIEW pit_coverage_report_ AS
+SELECT
+    id,
+    project_id,
+    test_id,
+    generalization_id,
+    step,
+    stage,
+    CASE
+        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'
+        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'
+        ELSE variant
+    END AS variant,
+    covered_package_name,
+    covered_class_name,
+    covered_method_name,
+    covered_method_description,
+    covered_block_number,
+    test_package_name,
+    test_class_name,
+    test_method_name
+FROM pit_coverage_report;
+
+CREATE VIEW pit_mutation_report_ AS
+SELECT
+    id,
+    project_id,
+    killing_test_id,
+    killing_generalization_id,
+    step,
+    stage,
+    CASE
+        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'
+        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'
+        ELSE variant
+    END AS variant,
+    is_detected,
+    status,
+    number_of_tests_run,
+    source_file,
+    mutated_class,
+    mutated_method,
+    method_description,
+    line_number,
+    mutator,
+    indexes,
+    blocks,
+    killing_package_name,
+    killing_class_name,
+    killing_method_name,
+    description
+FROM pit_mutation_report;
