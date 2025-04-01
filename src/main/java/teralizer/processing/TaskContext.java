@@ -19,15 +19,15 @@ public class TaskContext {
         this.data.put(key, value);
     }
 
-    public void put(int projectId, String key, Object value) {
+    public void put(long projectId, String key, Object value) {
         this.put("projects." + projectId + "." + key, value);
     }
 
-    public void put(int projectId, int testId, String key, Object value) {
+    public void put(long projectId, long testId, String key, Object value) {
         this.put(projectId, "tests." + testId + "." + key, value);
     }
 
-    public void put(int projectId, int testId, int generalizationId, String key, Object value) {
+    public void put(long projectId, long testId, long generalizationId, String key, Object value) {
         this.put(projectId, testId, "generalizations." + generalizationId + "." + key, value);
     }
 
@@ -35,15 +35,15 @@ public class TaskContext {
         return (T) this.data.get(key);
     }
 
-    public <T> T get(int projectId, String key) {
+    public <T> T get(long projectId, String key) {
         return this.get("projects." + projectId + "." + key);
     }
 
-    public <T> T get(int projectId, int testId, String key) {
+    public <T> T get(long projectId, long testId, String key) {
         return this.get(projectId, "tests." + testId + "." + key);
     }
 
-    public <T> T get(int projectId, int testId, int generalizationId, String key) {
+    public <T> T get(long projectId, long testId, long generalizationId, String key) {
         return this.get(projectId, testId, "generalizations." + generalizationId + "." + key);
     }
 }

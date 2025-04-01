@@ -13,7 +13,7 @@ import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
-import org.jooq.generated.DefaultSchema;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.PitCoverageReportViewRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -29,7 +29,7 @@ public class PitCoverageReportView extends TableImpl<PitCoverageReportViewRecord
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>pit_coverage_report_view</code>
+     * The reference instance of <code>public.pit_coverage_report_view</code>
      */
     public static final PitCoverageReportView PIT_COVERAGE_REPORT_VIEW = new PitCoverageReportView();
 
@@ -42,77 +42,77 @@ public class PitCoverageReportView extends TableImpl<PitCoverageReportViewRecord
     }
 
     /**
-     * The column <code>pit_coverage_report_view.id</code>.
+     * The column <code>public.pit_coverage_report_view.id</code>.
      */
-    public final TableField<PitCoverageReportViewRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitCoverageReportViewRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.project_id</code>.
+     * The column <code>public.pit_coverage_report_view.project_id</code>.
      */
-    public final TableField<PitCoverageReportViewRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitCoverageReportViewRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.test_id</code>.
+     * The column <code>public.pit_coverage_report_view.test_id</code>.
      */
-    public final TableField<PitCoverageReportViewRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitCoverageReportViewRecord, Long> TEST_ID = createField(DSL.name("test_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.generalization_id</code>.
+     * The column <code>public.pit_coverage_report_view.generalization_id</code>.
      */
-    public final TableField<PitCoverageReportViewRecord, Integer> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitCoverageReportViewRecord, Long> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.step</code>.
+     * The column <code>public.pit_coverage_report_view.step</code>.
      */
     public final TableField<PitCoverageReportViewRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.stage</code>.
+     * The column <code>public.pit_coverage_report_view.stage</code>.
      */
     public final TableField<PitCoverageReportViewRecord, String> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.variant</code>.
+     * The column <code>public.pit_coverage_report_view.variant</code>.
      */
-    public final TableField<PitCoverageReportViewRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.VARCHAR, this, "");
+    public final TableField<PitCoverageReportViewRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.covered_package_name</code>.
+     * The column <code>public.pit_coverage_report_view.covered_package_name</code>.
      */
     public final TableField<PitCoverageReportViewRecord, String> COVERED_PACKAGE_NAME = createField(DSL.name("covered_package_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.covered_class_name</code>.
+     * The column <code>public.pit_coverage_report_view.covered_class_name</code>.
      */
     public final TableField<PitCoverageReportViewRecord, String> COVERED_CLASS_NAME = createField(DSL.name("covered_class_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.covered_method_name</code>.
+     * The column <code>public.pit_coverage_report_view.covered_method_name</code>.
      */
     public final TableField<PitCoverageReportViewRecord, String> COVERED_METHOD_NAME = createField(DSL.name("covered_method_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.covered_method_description</code>.
+     * The column <code>public.pit_coverage_report_view.covered_method_description</code>.
      */
     public final TableField<PitCoverageReportViewRecord, String> COVERED_METHOD_DESCRIPTION = createField(DSL.name("covered_method_description"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.covered_block_number</code>.
+     * The column <code>public.pit_coverage_report_view.covered_block_number</code>.
      */
     public final TableField<PitCoverageReportViewRecord, Integer> COVERED_BLOCK_NUMBER = createField(DSL.name("covered_block_number"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.test_package_name</code>.
+     * The column <code>public.pit_coverage_report_view.test_package_name</code>.
      */
     public final TableField<PitCoverageReportViewRecord, String> TEST_PACKAGE_NAME = createField(DSL.name("test_package_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.test_class_name</code>.
+     * The column <code>public.pit_coverage_report_view.test_class_name</code>.
      */
     public final TableField<PitCoverageReportViewRecord, String> TEST_CLASS_NAME = createField(DSL.name("test_class_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_coverage_report_view.test_method_name</code>.
+     * The column <code>public.pit_coverage_report_view.test_method_name</code>.
      */
     public final TableField<PitCoverageReportViewRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB, this, "");
 
@@ -121,25 +121,25 @@ public class PitCoverageReportView extends TableImpl<PitCoverageReportViewRecord
     }
 
     private PitCoverageReportView(Name alias, Table<PitCoverageReportViewRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("CREATE VIEW pit_coverage_report_view AS\nSELECT\n    id,\n    project_id,\n    test_id,\n    generalization_id,\n    step,\n    stage,\n    CASE\n        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'\n        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'\n        ELSE variant\n    END AS variant,\n    covered_package_name,\n    covered_class_name,\n    covered_method_name,\n    covered_method_description,\n    covered_block_number,\n    test_package_name,\n    test_class_name,\n    test_method_name\nFROM pit_coverage_report"));
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"pit_coverage_report_view\" as  SELECT id,\n    project_id,\n    test_id,\n    generalization_id,\n    step,\n    stage,\n        CASE\n            WHEN (stage ~~ '%ORIGINAL'::text) THEN 'ORIGINAL'::text\n            WHEN (stage ~~ '%INITIAL'::text) THEN 'INITIAL'::text\n            ELSE variant\n        END AS variant,\n    covered_package_name,\n    covered_class_name,\n    covered_method_name,\n    covered_method_description,\n    covered_block_number,\n    test_package_name,\n    test_class_name,\n    test_method_name\n   FROM pit_coverage_report;"));
     }
 
     /**
-     * Create an aliased <code>pit_coverage_report_view</code> table reference
+     * Create an aliased <code>public.pit_coverage_report_view</code> table reference
      */
     public PitCoverageReportView(String alias) {
         this(DSL.name(alias), PIT_COVERAGE_REPORT_VIEW);
     }
 
     /**
-     * Create an aliased <code>pit_coverage_report_view</code> table reference
+     * Create an aliased <code>public.pit_coverage_report_view</code> table reference
      */
     public PitCoverageReportView(Name alias) {
         this(alias, PIT_COVERAGE_REPORT_VIEW);
     }
 
     /**
-     * Create a <code>pit_coverage_report_view</code> table reference
+     * Create a <code>public.pit_coverage_report_view</code> table reference
      */
     public PitCoverageReportView() {
         this(DSL.name("pit_coverage_report_view"), null);
@@ -151,7 +151,7 @@ public class PitCoverageReportView extends TableImpl<PitCoverageReportViewRecord
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -185,7 +185,7 @@ public class PitCoverageReportView extends TableImpl<PitCoverageReportViewRecord
     // -------------------------------------------------------------------------
 
     @Override
-    public Row15<Integer, Integer, Integer, Integer, Integer, String, String, String, String, String, String, Integer, String, String, String> fieldsRow() {
+    public Row15<Long, Long, Long, Long, Integer, String, String, String, String, String, String, Integer, String, String, String> fieldsRow() {
         return (Row15) super.fieldsRow();
     }
 }

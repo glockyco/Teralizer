@@ -64,31 +64,31 @@ public abstract class AbstractTask implements Task {
     }
 
     @Override
-    public Integer getProjectId() {
+    public Long getProjectId() {
         return this.projectRecord == null ? null : this.projectRecord.getId();
     }
 
     @Override
-    public Integer getTestId() {
+    public Long getTestId() {
         return this.testRecord == null ? null : this.testRecord.getId();
     }
 
     @Override
-    public Integer getAssertionId() {
+    public Long getAssertionId() {
         return this.assertionRecord == null ? null : this.assertionRecord.getId();
     }
 
     @Override
-    public Integer getGeneralizationId() {
+    public Long getGeneralizationId() {
         return this.generalizationRecord == null ? null : this.generalizationRecord.getId();
     }
 
     @Override
     public String toString() {
-        Integer projectId = this.getProjectId();
-        Integer testId = this.getTestId();
-        Integer assertionId = this.getAssertionId();
-        Integer generalizationId = this.getGeneralizationId();
+        Long projectId = this.getProjectId();
+        Long testId = this.getTestId();
+        Long assertionId = this.getAssertionId();
+        Long generalizationId = this.getGeneralizationId();
 
         String str = this.getClass().getSimpleName() + "{";
         str += "stage=" + this.getStage();
@@ -108,14 +108,14 @@ public abstract class AbstractTask implements Task {
         if (!(o instanceof AbstractTask)) return false;
         AbstractTask that = (AbstractTask) o;
 
-        Integer thisProjectId = this.getProjectId();
-        Integer thatProjectId = that.getProjectId();
-        Integer thisTestId = this.getTestId();
-        Integer thatTestId = that.getTestId();
-        Integer thisAssertionId = this.getAssertionId();
-        Integer thatAssertionId = that.getAssertionId();
-        Integer thisGeneralizationId = this.getGeneralizationId();
-        Integer thatGeneralizationId = that.getGeneralizationId();
+        Long thisProjectId = this.getProjectId();
+        Long thatProjectId = that.getProjectId();
+        Long thisTestId = this.getTestId();
+        Long thatTestId = that.getTestId();
+        Long thisAssertionId = this.getAssertionId();
+        Long thatAssertionId = that.getAssertionId();
+        Long thisGeneralizationId = this.getGeneralizationId();
+        Long thatGeneralizationId = that.getGeneralizationId();
 
         return this.stage == that.stage
             && Objects.equals(this.variant, that.variant)
@@ -127,10 +127,10 @@ public abstract class AbstractTask implements Task {
 
     @Override
     public int hashCode() {
-        Integer projectId = this.getProjectId();
-        Integer testId = this.getTestId();
-        Integer assertionId = this.getAssertionId();
-        Integer generalizationId = this.getGeneralizationId();
+        Long projectId = this.getProjectId();
+        Long testId = this.getTestId();
+        Long assertionId = this.getAssertionId();
+        Long generalizationId = this.getGeneralizationId();
 
         return Objects.hash(this.stage, this.variant, projectId, testId, assertionId, generalizationId);
     }

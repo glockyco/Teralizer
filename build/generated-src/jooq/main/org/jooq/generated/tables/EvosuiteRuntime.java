@@ -19,9 +19,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.EvosuiteRuntimeRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -37,7 +37,7 @@ public class EvosuiteRuntime extends TableImpl<EvosuiteRuntimeRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>evosuite_runtime</code>
+     * The reference instance of <code>public.evosuite_runtime</code>
      */
     public static final EvosuiteRuntime EVOSUITE_RUNTIME = new EvosuiteRuntime();
 
@@ -50,32 +50,32 @@ public class EvosuiteRuntime extends TableImpl<EvosuiteRuntimeRecord> {
     }
 
     /**
-     * The column <code>evosuite_runtime.id</code>.
+     * The column <code>public.evosuite_runtime.id</code>.
      */
-    public final TableField<EvosuiteRuntimeRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<EvosuiteRuntimeRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>evosuite_runtime.project_id</code>.
+     * The column <code>public.evosuite_runtime.project_id</code>.
      */
-    public final TableField<EvosuiteRuntimeRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<EvosuiteRuntimeRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_runtime.class_name</code>.
+     * The column <code>public.evosuite_runtime.class_name</code>.
      */
     public final TableField<EvosuiteRuntimeRecord, String> CLASS_NAME = createField(DSL.name("class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_runtime.step</code>.
+     * The column <code>public.evosuite_runtime.step</code>.
      */
     public final TableField<EvosuiteRuntimeRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_runtime.phase_name</code>.
+     * The column <code>public.evosuite_runtime.phase_name</code>.
      */
     public final TableField<EvosuiteRuntimeRecord, String> PHASE_NAME = createField(DSL.name("phase_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_runtime.runtime</code>.
+     * The column <code>public.evosuite_runtime.runtime</code>.
      */
     public final TableField<EvosuiteRuntimeRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL.nullable(false), this, "");
 
@@ -88,21 +88,21 @@ public class EvosuiteRuntime extends TableImpl<EvosuiteRuntimeRecord> {
     }
 
     /**
-     * Create an aliased <code>evosuite_runtime</code> table reference
+     * Create an aliased <code>public.evosuite_runtime</code> table reference
      */
     public EvosuiteRuntime(String alias) {
         this(DSL.name(alias), EVOSUITE_RUNTIME);
     }
 
     /**
-     * Create an aliased <code>evosuite_runtime</code> table reference
+     * Create an aliased <code>public.evosuite_runtime</code> table reference
      */
     public EvosuiteRuntime(Name alias) {
         this(alias, EVOSUITE_RUNTIME);
     }
 
     /**
-     * Create a <code>evosuite_runtime</code> table reference
+     * Create a <code>public.evosuite_runtime</code> table reference
      */
     public EvosuiteRuntime() {
         this(DSL.name("evosuite_runtime"), null);
@@ -114,7 +114,7 @@ public class EvosuiteRuntime extends TableImpl<EvosuiteRuntimeRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -123,30 +123,30 @@ public class EvosuiteRuntime extends TableImpl<EvosuiteRuntimeRecord> {
     }
 
     @Override
-    public Identity<EvosuiteRuntimeRecord, Integer> getIdentity() {
-        return (Identity<EvosuiteRuntimeRecord, Integer>) super.getIdentity();
+    public Identity<EvosuiteRuntimeRecord, Long> getIdentity() {
+        return (Identity<EvosuiteRuntimeRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<EvosuiteRuntimeRecord> getPrimaryKey() {
-        return Keys.PK_EVOSUITE_RUNTIME;
+        return Keys.EVOSUITE_RUNTIME_PKEY;
     }
 
     @Override
     public List<UniqueKey<EvosuiteRuntimeRecord>> getKeys() {
-        return Arrays.<UniqueKey<EvosuiteRuntimeRecord>>asList(Keys.PK_EVOSUITE_RUNTIME);
+        return Arrays.<UniqueKey<EvosuiteRuntimeRecord>>asList(Keys.EVOSUITE_RUNTIME_PKEY);
     }
 
     @Override
     public List<ForeignKey<EvosuiteRuntimeRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<EvosuiteRuntimeRecord, ?>>asList(Keys.FK_EVOSUITE_RUNTIME_PROJECT_1);
+        return Arrays.<ForeignKey<EvosuiteRuntimeRecord, ?>>asList(Keys.EVOSUITE_RUNTIME__EVOSUITE_RUNTIME_PROJECT_ID_FKEY);
     }
 
     private transient Project _project;
 
     public Project project() {
         if (_project == null)
-            _project = new Project(this, Keys.FK_EVOSUITE_RUNTIME_PROJECT_1);
+            _project = new Project(this, Keys.EVOSUITE_RUNTIME__EVOSUITE_RUNTIME_PROJECT_ID_FKEY);
 
         return _project;
     }
@@ -182,7 +182,7 @@ public class EvosuiteRuntime extends TableImpl<EvosuiteRuntimeRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row6<Integer, Integer, String, Integer, String, Float> fieldsRow() {
+    public Row6<Long, Long, String, Integer, String, Float> fieldsRow() {
         return (Row6) super.fieldsRow();
     }
 }

@@ -10,7 +10,7 @@ import java.util.List;
 
 public class SQLiteRepository {
 
-    public static List<String> fetchCoveredClasses(DSLContext create, ProcessingStage stage, String variant, Integer projectId) {
+    public static List<String> fetchCoveredClasses(DSLContext create, ProcessingStage stage, String variant, Long projectId) {
         return create.select(Tables.JACOCO_COVERAGE_REPORT.COVERED_PACKAGE.concat(".").concat(Tables.JACOCO_COVERAGE_REPORT.COVERED_CLASS))
             .from(Tables.JACOCO_COVERAGE_REPORT)
             .where(Tables.JACOCO_COVERAGE_REPORT.PROJECT_ID.eq(projectId))
@@ -20,7 +20,7 @@ public class SQLiteRepository {
             .fetchInto(String.class);
     }
 
-    public static Result<Record> fetchIncludedTests(DSLContext create, Integer projectId) {
+    public static Result<Record> fetchIncludedTests(DSLContext create, Long projectId) {
         return create.select()
             .from(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.eq(projectId))
@@ -28,7 +28,7 @@ public class SQLiteRepository {
             .fetch();
     }
 
-    public static List<String> fetchIncludedTestClasses(DSLContext create, Integer projectId) {
+    public static List<String> fetchIncludedTestClasses(DSLContext create, Long projectId) {
         return create.selectDistinct(Tables.TEST.TEST_CLASS_QUALIFIED_NAME)
             .from(Tables.TEST)
             .where(Tables.TEST.PROJECT_ID.eq(projectId))
@@ -36,7 +36,7 @@ public class SQLiteRepository {
             .fetchInto(String.class);
     }
 
-    public static Result<Record> fetchIncludedAssertions(DSLContext create, Integer projectId) {
+    public static Result<Record> fetchIncludedAssertions(DSLContext create, Long projectId) {
         return create.select()
             .from(Tables.TEST)
             .join(Tables.ASSERTION)
@@ -46,7 +46,7 @@ public class SQLiteRepository {
             .fetch();
     }
 
-    public static Result<Record> fetchIncludedGeneralizations(DSLContext create, String variant, Integer projectId) {
+    public static Result<Record> fetchIncludedGeneralizations(DSLContext create, String variant, Long projectId) {
         return create.select()
             .from(Tables.TEST)
             .join(Tables.ASSERTION).on(Tables.TEST.ID.eq(Tables.ASSERTION.TEST_ID))
@@ -57,7 +57,7 @@ public class SQLiteRepository {
             .fetch();
     }
 
-    public static List<String> fetchIncludedGeneralizedClasses(DSLContext create, String variant, Integer projectId) {
+    public static List<String> fetchIncludedGeneralizedClasses(DSLContext create, String variant, Long projectId) {
         return create.selectDistinct(Tables.GENERALIZATION.CLASS_QUALIFIED_NAME)
             .from(Tables.TEST)
             .join(Tables.GENERALIZATION)

@@ -147,7 +147,7 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
 
         private final Task task;
         private final DSLContext create;
-        private final int projectId;
+        private final long projectId;
         private final Path evoSuiteTestsDir;
         private final Path evoSuiteProcessedTestsDir;
         private final Path projectTestsDir;
@@ -155,7 +155,7 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
         public EvoSuiteTestVisitor(
             Task task,
             DSLContext create,
-            int projectId,
+            long projectId,
             Path evoSuiteTestsDir,
             Path evoSuiteProcessedTestsDir,
             Path projectTestsDir

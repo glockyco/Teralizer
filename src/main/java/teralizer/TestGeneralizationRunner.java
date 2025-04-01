@@ -33,7 +33,7 @@ public class TestGeneralizationRunner {
 
         DSLContext create = DSL.using(Configuration.DB_CONNECTION_STRING);
 
-        if (!Files.exists(Configuration.DB_PATH) || Files.size(Configuration.DB_PATH) == 0) {
+        if (create.meta().getTables(Tables.PROJECT.getQualifiedName()).isEmpty()) {
             String sql = new String(Files.readAllBytes(Configuration.DB_DDL_PATH));
             create.parser().parse(sql).forEach(create::execute);
         }

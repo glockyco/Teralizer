@@ -18,588 +18,588 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>assertion.id</code>.
+     * Setter for <code>public.assertion.id</code>.
      */
-    public void setId(Integer value) {
+    public void setId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>assertion.id</code>.
+     * Getter for <code>public.assertion.id</code>.
      */
-    public Integer getId() {
-        return (Integer) get(0);
+    public Long getId() {
+        return (Long) get(0);
     }
 
     /**
-     * Setter for <code>assertion.project_id</code>.
+     * Setter for <code>public.assertion.project_id</code>.
      */
-    public void setProjectId(Integer value) {
+    public void setProjectId(Long value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>assertion.project_id</code>.
+     * Getter for <code>public.assertion.project_id</code>.
      */
-    public Integer getProjectId() {
-        return (Integer) get(1);
+    public Long getProjectId() {
+        return (Long) get(1);
     }
 
     /**
-     * Setter for <code>assertion.test_id</code>.
+     * Setter for <code>public.assertion.test_id</code>.
      */
-    public void setTestId(Integer value) {
+    public void setTestId(Long value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>assertion.test_id</code>.
+     * Getter for <code>public.assertion.test_id</code>.
      */
-    public Integer getTestId() {
-        return (Integer) get(2);
+    public Long getTestId() {
+        return (Long) get(2);
     }
 
     /**
-     * Setter for <code>assertion.assertion_name</code>.
+     * Setter for <code>public.assertion.assertion_name</code>.
      */
     public void setAssertionName(String value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>assertion.assertion_name</code>.
+     * Getter for <code>public.assertion.assertion_name</code>.
      */
     public String getAssertionName() {
         return (String) get(3);
     }
 
     /**
-     * Setter for <code>assertion.assertion_arguments</code>.
+     * Setter for <code>public.assertion.assertion_arguments</code>.
      */
     public void setAssertionArguments(String value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>assertion.assertion_arguments</code>.
+     * Getter for <code>public.assertion.assertion_arguments</code>.
      */
     public String getAssertionArguments() {
         return (String) get(4);
     }
 
     /**
-     * Setter for <code>assertion.assertion_source_code</code>.
+     * Setter for <code>public.assertion.assertion_source_code</code>.
      */
     public void setAssertionSourceCode(String value) {
         set(5, value);
     }
 
     /**
-     * Getter for <code>assertion.assertion_source_code</code>.
+     * Getter for <code>public.assertion.assertion_source_code</code>.
      */
     public String getAssertionSourceCode() {
         return (String) get(5);
     }
 
     /**
-     * Setter for <code>assertion.assertion_absolute_path</code>.
+     * Setter for <code>public.assertion.assertion_absolute_path</code>.
      */
     public void setAssertionAbsolutePath(String value) {
         set(6, value);
     }
 
     /**
-     * Getter for <code>assertion.assertion_absolute_path</code>.
+     * Getter for <code>public.assertion.assertion_absolute_path</code>.
      */
     public String getAssertionAbsolutePath() {
         return (String) get(6);
     }
 
     /**
-     * Setter for <code>assertion.assertion_relative_path</code>.
+     * Setter for <code>public.assertion.assertion_relative_path</code>.
      */
     public void setAssertionRelativePath(String value) {
         set(7, value);
     }
 
     /**
-     * Getter for <code>assertion.assertion_relative_path</code>.
+     * Getter for <code>public.assertion.assertion_relative_path</code>.
      */
     public String getAssertionRelativePath() {
         return (String) get(7);
     }
 
     /**
-     * Setter for <code>assertion.tested_file_path</code>.
+     * Setter for <code>public.assertion.tested_file_path</code>.
      */
     public void setTestedFilePath(String value) {
         set(8, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_file_path</code>.
+     * Getter for <code>public.assertion.tested_file_path</code>.
      */
     public String getTestedFilePath() {
         return (String) get(8);
     }
 
     /**
-     * Setter for <code>assertion.tested_class_qualified_name</code>.
+     * Setter for <code>public.assertion.tested_class_qualified_name</code>.
      */
     public void setTestedClassQualifiedName(String value) {
         set(9, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_class_qualified_name</code>.
+     * Getter for <code>public.assertion.tested_class_qualified_name</code>.
      */
     public String getTestedClassQualifiedName() {
         return (String) get(9);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_qualified_name</code>.
+     * Setter for <code>public.assertion.tested_method_qualified_name</code>.
      */
     public void setTestedMethodQualifiedName(String value) {
         set(10, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_qualified_name</code>.
+     * Getter for <code>public.assertion.tested_method_qualified_name</code>.
      */
     public String getTestedMethodQualifiedName() {
         return (String) get(10);
     }
 
     /**
-     * Setter for <code>assertion.tested_package_name</code>.
+     * Setter for <code>public.assertion.tested_package_name</code>.
      */
     public void setTestedPackageName(String value) {
         set(11, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_package_name</code>.
+     * Getter for <code>public.assertion.tested_package_name</code>.
      */
     public String getTestedPackageName() {
         return (String) get(11);
     }
 
     /**
-     * Setter for <code>assertion.tested_class_name</code>.
+     * Setter for <code>public.assertion.tested_class_name</code>.
      */
     public void setTestedClassName(String value) {
         set(12, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_class_name</code>.
+     * Getter for <code>public.assertion.tested_class_name</code>.
      */
     public String getTestedClassName() {
         return (String) get(12);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_name</code>.
+     * Setter for <code>public.assertion.tested_method_name</code>.
      */
     public void setTestedMethodName(String value) {
         set(13, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_name</code>.
+     * Getter for <code>public.assertion.tested_method_name</code>.
      */
     public String getTestedMethodName() {
         return (String) get(13);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_parameters</code>.
+     * Setter for <code>public.assertion.tested_method_parameters</code>.
      */
     public void setTestedMethodParameters(String value) {
         set(14, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_parameters</code>.
+     * Getter for <code>public.assertion.tested_method_parameters</code>.
      */
     public String getTestedMethodParameters() {
         return (String) get(14);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_return_type</code>.
+     * Setter for <code>public.assertion.tested_method_return_type</code>.
      */
     public void setTestedMethodReturnType(String value) {
         set(15, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_return_type</code>.
+     * Getter for <code>public.assertion.tested_method_return_type</code>.
      */
     public String getTestedMethodReturnType() {
         return (String) get(15);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_absolute_path</code>.
+     * Setter for <code>public.assertion.tested_method_absolute_path</code>.
      */
     public void setTestedMethodAbsolutePath(String value) {
         set(16, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_absolute_path</code>.
+     * Getter for <code>public.assertion.tested_method_absolute_path</code>.
      */
     public String getTestedMethodAbsolutePath() {
         return (String) get(16);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_relative_path</code>.
+     * Setter for <code>public.assertion.tested_method_relative_path</code>.
      */
     public void setTestedMethodRelativePath(String value) {
         set(17, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_relative_path</code>.
+     * Getter for <code>public.assertion.tested_method_relative_path</code>.
      */
     public String getTestedMethodRelativePath() {
         return (String) get(17);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_call_arguments</code>.
+     * Setter for <code>public.assertion.tested_method_call_arguments</code>.
      */
     public void setTestedMethodCallArguments(String value) {
         set(18, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_call_arguments</code>.
+     * Getter for <code>public.assertion.tested_method_call_arguments</code>.
      */
     public String getTestedMethodCallArguments() {
         return (String) get(18);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_call_source_code</code>.
+     * Setter for <code>public.assertion.tested_method_call_source_code</code>.
      */
     public void setTestedMethodCallSourceCode(String value) {
         set(19, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_call_source_code</code>.
+     * Getter for <code>public.assertion.tested_method_call_source_code</code>.
      */
     public String getTestedMethodCallSourceCode() {
         return (String) get(19);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_call_absolute_path</code>.
+     * Setter for <code>public.assertion.tested_method_call_absolute_path</code>.
      */
     public void setTestedMethodCallAbsolutePath(String value) {
         set(20, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_call_absolute_path</code>.
+     * Getter for <code>public.assertion.tested_method_call_absolute_path</code>.
      */
     public String getTestedMethodCallAbsolutePath() {
         return (String) get(20);
     }
 
     /**
-     * Setter for <code>assertion.tested_method_call_relative_path</code>.
+     * Setter for <code>public.assertion.tested_method_call_relative_path</code>.
      */
     public void setTestedMethodCallRelativePath(String value) {
         set(21, value);
     }
 
     /**
-     * Getter for <code>assertion.tested_method_call_relative_path</code>.
+     * Getter for <code>public.assertion.tested_method_call_relative_path</code>.
      */
     public String getTestedMethodCallRelativePath() {
         return (String) get(21);
     }
 
     /**
-     * Setter for <code>assertion.instrumented_file_path</code>.
+     * Setter for <code>public.assertion.instrumented_file_path</code>.
      */
     public void setInstrumentedFilePath(String value) {
         set(22, value);
     }
 
     /**
-     * Getter for <code>assertion.instrumented_file_path</code>.
+     * Getter for <code>public.assertion.instrumented_file_path</code>.
      */
     public String getInstrumentedFilePath() {
         return (String) get(22);
     }
 
     /**
-     * Setter for <code>assertion.instrumented_class_qualified_name</code>.
+     * Setter for <code>public.assertion.instrumented_class_qualified_name</code>.
      */
     public void setInstrumentedClassQualifiedName(String value) {
         set(23, value);
     }
 
     /**
-     * Getter for <code>assertion.instrumented_class_qualified_name</code>.
+     * Getter for <code>public.assertion.instrumented_class_qualified_name</code>.
      */
     public String getInstrumentedClassQualifiedName() {
         return (String) get(23);
     }
 
     /**
-     * Setter for <code>assertion.instrumented_method_qualified_name</code>.
+     * Setter for <code>public.assertion.instrumented_method_qualified_name</code>.
      */
     public void setInstrumentedMethodQualifiedName(String value) {
         set(24, value);
     }
 
     /**
-     * Getter for <code>assertion.instrumented_method_qualified_name</code>.
+     * Getter for <code>public.assertion.instrumented_method_qualified_name</code>.
      */
     public String getInstrumentedMethodQualifiedName() {
         return (String) get(24);
     }
 
     /**
-     * Setter for <code>assertion.instrumented_package_name</code>.
+     * Setter for <code>public.assertion.instrumented_package_name</code>.
      */
     public void setInstrumentedPackageName(String value) {
         set(25, value);
     }
 
     /**
-     * Getter for <code>assertion.instrumented_package_name</code>.
+     * Getter for <code>public.assertion.instrumented_package_name</code>.
      */
     public String getInstrumentedPackageName() {
         return (String) get(25);
     }
 
     /**
-     * Setter for <code>assertion.instrumented_class_name</code>.
+     * Setter for <code>public.assertion.instrumented_class_name</code>.
      */
     public void setInstrumentedClassName(String value) {
         set(26, value);
     }
 
     /**
-     * Getter for <code>assertion.instrumented_class_name</code>.
+     * Getter for <code>public.assertion.instrumented_class_name</code>.
      */
     public String getInstrumentedClassName() {
         return (String) get(26);
     }
 
     /**
-     * Setter for <code>assertion.instrumented_method_name</code>.
+     * Setter for <code>public.assertion.instrumented_method_name</code>.
      */
     public void setInstrumentedMethodName(String value) {
         set(27, value);
     }
 
     /**
-     * Getter for <code>assertion.instrumented_method_name</code>.
+     * Getter for <code>public.assertion.instrumented_method_name</code>.
      */
     public String getInstrumentedMethodName() {
         return (String) get(27);
     }
 
     /**
-     * Setter for <code>assertion.driver_file_path</code>.
+     * Setter for <code>public.assertion.driver_file_path</code>.
      */
     public void setDriverFilePath(String value) {
         set(28, value);
     }
 
     /**
-     * Getter for <code>assertion.driver_file_path</code>.
+     * Getter for <code>public.assertion.driver_file_path</code>.
      */
     public String getDriverFilePath() {
         return (String) get(28);
     }
 
     /**
-     * Setter for <code>assertion.driver_class_qualified_name</code>.
+     * Setter for <code>public.assertion.driver_class_qualified_name</code>.
      */
     public void setDriverClassQualifiedName(String value) {
         set(29, value);
     }
 
     /**
-     * Getter for <code>assertion.driver_class_qualified_name</code>.
+     * Getter for <code>public.assertion.driver_class_qualified_name</code>.
      */
     public String getDriverClassQualifiedName() {
         return (String) get(29);
     }
 
     /**
-     * Setter for <code>assertion.driver_package_name</code>.
+     * Setter for <code>public.assertion.driver_package_name</code>.
      */
     public void setDriverPackageName(String value) {
         set(30, value);
     }
 
     /**
-     * Getter for <code>assertion.driver_package_name</code>.
+     * Getter for <code>public.assertion.driver_package_name</code>.
      */
     public String getDriverPackageName() {
         return (String) get(30);
     }
 
     /**
-     * Setter for <code>assertion.driver_class_name</code>.
+     * Setter for <code>public.assertion.driver_class_name</code>.
      */
     public void setDriverClassName(String value) {
         set(31, value);
     }
 
     /**
-     * Getter for <code>assertion.driver_class_name</code>.
+     * Getter for <code>public.assertion.driver_class_name</code>.
      */
     public String getDriverClassName() {
         return (String) get(31);
     }
 
     /**
-     * Setter for <code>assertion.jpf_config_path</code>.
+     * Setter for <code>public.assertion.jpf_config_path</code>.
      */
     public void setJpfConfigPath(String value) {
         set(32, value);
     }
 
     /**
-     * Getter for <code>assertion.jpf_config_path</code>.
+     * Getter for <code>public.assertion.jpf_config_path</code>.
      */
     public String getJpfConfigPath() {
         return (String) get(32);
     }
 
     /**
-     * Setter for <code>assertion.input_values_path</code>.
+     * Setter for <code>public.assertion.input_values_path</code>.
      */
     public void setInputValuesPath(String value) {
         set(33, value);
     }
 
     /**
-     * Getter for <code>assertion.input_values_path</code>.
+     * Getter for <code>public.assertion.input_values_path</code>.
      */
     public String getInputValuesPath() {
         return (String) get(33);
     }
 
     /**
-     * Setter for <code>assertion.output_value_path</code>.
+     * Setter for <code>public.assertion.output_value_path</code>.
      */
     public void setOutputValuePath(String value) {
         set(34, value);
     }
 
     /**
-     * Getter for <code>assertion.output_value_path</code>.
+     * Getter for <code>public.assertion.output_value_path</code>.
      */
     public String getOutputValuePath() {
         return (String) get(34);
     }
 
     /**
-     * Setter for <code>assertion.input_specification_path</code>.
+     * Setter for <code>public.assertion.input_specification_path</code>.
      */
     public void setInputSpecificationPath(String value) {
         set(35, value);
     }
 
     /**
-     * Getter for <code>assertion.input_specification_path</code>.
+     * Getter for <code>public.assertion.input_specification_path</code>.
      */
     public String getInputSpecificationPath() {
         return (String) get(35);
     }
 
     /**
-     * Setter for <code>assertion.output_specification_path</code>.
+     * Setter for <code>public.assertion.output_specification_path</code>.
      */
     public void setOutputSpecificationPath(String value) {
         set(36, value);
     }
 
     /**
-     * Getter for <code>assertion.output_specification_path</code>.
+     * Getter for <code>public.assertion.output_specification_path</code>.
      */
     public String getOutputSpecificationPath() {
         return (String) get(36);
     }
 
     /**
-     * Setter for <code>assertion.equivalent_assertions</code>.
+     * Setter for <code>public.assertion.equivalent_assertions</code>.
      */
     public void setEquivalentAssertions(String value) {
         set(37, value);
     }
 
     /**
-     * Getter for <code>assertion.equivalent_assertions</code>.
+     * Getter for <code>public.assertion.equivalent_assertions</code>.
      */
     public String getEquivalentAssertions() {
         return (String) get(37);
     }
 
     /**
-     * Setter for <code>assertion.input_model_statistics</code>.
+     * Setter for <code>public.assertion.input_model_statistics</code>.
      */
     public void setInputModelStatistics(String value) {
         set(38, value);
     }
 
     /**
-     * Getter for <code>assertion.input_model_statistics</code>.
+     * Getter for <code>public.assertion.input_model_statistics</code>.
      */
     public String getInputModelStatistics() {
         return (String) get(38);
     }
 
     /**
-     * Setter for <code>assertion.output_model_statistics</code>.
+     * Setter for <code>public.assertion.output_model_statistics</code>.
      */
     public void setOutputModelStatistics(String value) {
         set(39, value);
     }
 
     /**
-     * Getter for <code>assertion.output_model_statistics</code>.
+     * Getter for <code>public.assertion.output_model_statistics</code>.
      */
     public String getOutputModelStatistics() {
         return (String) get(39);
     }
 
     /**
-     * Setter for <code>assertion.is_included</code>.
+     * Setter for <code>public.assertion.is_included</code>.
      */
     public void setIsIncluded(Boolean value) {
         set(40, value);
     }
 
     /**
-     * Getter for <code>assertion.is_included</code>.
+     * Getter for <code>public.assertion.is_included</code>.
      */
     public Boolean getIsIncluded() {
         return (Boolean) get(40);
     }
 
     /**
-     * Setter for <code>assertion.exclusion_info</code>.
+     * Setter for <code>public.assertion.exclusion_info</code>.
      */
     public void setExclusionInfo(String value) {
         set(41, value);
     }
 
     /**
-     * Getter for <code>assertion.exclusion_info</code>.
+     * Getter for <code>public.assertion.exclusion_info</code>.
      */
     public String getExclusionInfo() {
         return (String) get(41);
@@ -610,7 +610,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Record1<Integer> key() {
+    public Record1<Long> key() {
         return (Record1) super.key();
     }
 
@@ -628,7 +628,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     /**
      * Create a detached, initialised AssertionRecord
      */
-    public AssertionRecord(Integer id, Integer projectId, Integer testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodAbsolutePath, String testedMethodRelativePath, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputValuesPath, String outputValuePath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, String inputModelStatistics, String outputModelStatistics, Boolean isIncluded, String exclusionInfo) {
+    public AssertionRecord(Long id, Long projectId, Long testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodAbsolutePath, String testedMethodRelativePath, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputValuesPath, String outputValuePath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, String inputModelStatistics, String outputModelStatistics, Boolean isIncluded, String exclusionInfo) {
         super(Assertion.ASSERTION);
 
         setId(id);

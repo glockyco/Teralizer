@@ -19,9 +19,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.EvosuiteReportRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -37,7 +37,7 @@ public class EvosuiteReport extends TableImpl<EvosuiteReportRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>evosuite_report</code>
+     * The reference instance of <code>public.evosuite_report</code>
      */
     public static final EvosuiteReport EVOSUITE_REPORT = new EvosuiteReport();
 
@@ -50,37 +50,37 @@ public class EvosuiteReport extends TableImpl<EvosuiteReportRecord> {
     }
 
     /**
-     * The column <code>evosuite_report.id</code>.
+     * The column <code>public.evosuite_report.id</code>.
      */
-    public final TableField<EvosuiteReportRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<EvosuiteReportRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>evosuite_report.project_id</code>.
+     * The column <code>public.evosuite_report.project_id</code>.
      */
-    public final TableField<EvosuiteReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<EvosuiteReportRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_report.class_name</code>.
+     * The column <code>public.evosuite_report.class_name</code>.
      */
     public final TableField<EvosuiteReportRecord, String> CLASS_NAME = createField(DSL.name("class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_report.criterion</code>.
+     * The column <code>public.evosuite_report.criterion</code>.
      */
     public final TableField<EvosuiteReportRecord, String> CRITERION = createField(DSL.name("criterion"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_report.coverage</code>.
+     * The column <code>public.evosuite_report.coverage</code>.
      */
     public final TableField<EvosuiteReportRecord, Float> COVERAGE = createField(DSL.name("coverage"), SQLDataType.REAL.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_report.total_goals</code>.
+     * The column <code>public.evosuite_report.total_goals</code>.
      */
     public final TableField<EvosuiteReportRecord, Integer> TOTAL_GOALS = createField(DSL.name("total_goals"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>evosuite_report.covered_goals</code>.
+     * The column <code>public.evosuite_report.covered_goals</code>.
      */
     public final TableField<EvosuiteReportRecord, Integer> COVERED_GOALS = createField(DSL.name("covered_goals"), SQLDataType.INTEGER.nullable(false), this, "");
 
@@ -93,21 +93,21 @@ public class EvosuiteReport extends TableImpl<EvosuiteReportRecord> {
     }
 
     /**
-     * Create an aliased <code>evosuite_report</code> table reference
+     * Create an aliased <code>public.evosuite_report</code> table reference
      */
     public EvosuiteReport(String alias) {
         this(DSL.name(alias), EVOSUITE_REPORT);
     }
 
     /**
-     * Create an aliased <code>evosuite_report</code> table reference
+     * Create an aliased <code>public.evosuite_report</code> table reference
      */
     public EvosuiteReport(Name alias) {
         this(alias, EVOSUITE_REPORT);
     }
 
     /**
-     * Create a <code>evosuite_report</code> table reference
+     * Create a <code>public.evosuite_report</code> table reference
      */
     public EvosuiteReport() {
         this(DSL.name("evosuite_report"), null);
@@ -119,7 +119,7 @@ public class EvosuiteReport extends TableImpl<EvosuiteReportRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -128,30 +128,30 @@ public class EvosuiteReport extends TableImpl<EvosuiteReportRecord> {
     }
 
     @Override
-    public Identity<EvosuiteReportRecord, Integer> getIdentity() {
-        return (Identity<EvosuiteReportRecord, Integer>) super.getIdentity();
+    public Identity<EvosuiteReportRecord, Long> getIdentity() {
+        return (Identity<EvosuiteReportRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<EvosuiteReportRecord> getPrimaryKey() {
-        return Keys.PK_EVOSUITE_REPORT;
+        return Keys.EVOSUITE_REPORT_PKEY;
     }
 
     @Override
     public List<UniqueKey<EvosuiteReportRecord>> getKeys() {
-        return Arrays.<UniqueKey<EvosuiteReportRecord>>asList(Keys.PK_EVOSUITE_REPORT);
+        return Arrays.<UniqueKey<EvosuiteReportRecord>>asList(Keys.EVOSUITE_REPORT_PKEY);
     }
 
     @Override
     public List<ForeignKey<EvosuiteReportRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<EvosuiteReportRecord, ?>>asList(Keys.FK_EVOSUITE_REPORT_PROJECT_1);
+        return Arrays.<ForeignKey<EvosuiteReportRecord, ?>>asList(Keys.EVOSUITE_REPORT__EVOSUITE_REPORT_PROJECT_ID_FKEY);
     }
 
     private transient Project _project;
 
     public Project project() {
         if (_project == null)
-            _project = new Project(this, Keys.FK_EVOSUITE_REPORT_PROJECT_1);
+            _project = new Project(this, Keys.EVOSUITE_REPORT__EVOSUITE_REPORT_PROJECT_ID_FKEY);
 
         return _project;
     }
@@ -187,7 +187,7 @@ public class EvosuiteReport extends TableImpl<EvosuiteReportRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row7<Integer, Integer, String, String, Float, Integer, Integer> fieldsRow() {
+    public Row7<Long, Long, String, String, Float, Integer, Integer> fieldsRow() {
         return (Row7) super.fieldsRow();
     }
 }

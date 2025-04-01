@@ -19,9 +19,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.JacocoCoverageReportRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.EnumConverter;
@@ -40,7 +40,7 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>jacoco_coverage_report</code>
+     * The reference instance of <code>public.jacoco_coverage_report</code>
      */
     public static final JacocoCoverageReport JACOCO_COVERAGE_REPORT = new JacocoCoverageReport();
 
@@ -53,87 +53,87 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     }
 
     /**
-     * The column <code>jacoco_coverage_report.id</code>.
+     * The column <code>public.jacoco_coverage_report.id</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<JacocoCoverageReportRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.project_id</code>.
+     * The column <code>public.jacoco_coverage_report.project_id</code>.
      */
-    public final TableField<JacocoCoverageReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<JacocoCoverageReportRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.step</code>.
+     * The column <code>public.jacoco_coverage_report.step</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.stage</code>.
+     * The column <code>public.jacoco_coverage_report.stage</code>.
      */
     public final TableField<JacocoCoverageReportRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStage>(String.class, ProcessingStage.class));
 
     /**
-     * The column <code>jacoco_coverage_report.variant</code>.
+     * The column <code>public.jacoco_coverage_report.variant</code>.
      */
     public final TableField<JacocoCoverageReportRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.covered_package</code>.
+     * The column <code>public.jacoco_coverage_report.covered_package</code>.
      */
     public final TableField<JacocoCoverageReportRecord, String> COVERED_PACKAGE = createField(DSL.name("covered_package"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.covered_class</code>.
+     * The column <code>public.jacoco_coverage_report.covered_class</code>.
      */
     public final TableField<JacocoCoverageReportRecord, String> COVERED_CLASS = createField(DSL.name("covered_class"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.instruction_missed</code>.
+     * The column <code>public.jacoco_coverage_report.instruction_missed</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> INSTRUCTION_MISSED = createField(DSL.name("instruction_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.instruction_covered</code>.
+     * The column <code>public.jacoco_coverage_report.instruction_covered</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> INSTRUCTION_COVERED = createField(DSL.name("instruction_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.branch_missed</code>.
+     * The column <code>public.jacoco_coverage_report.branch_missed</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> BRANCH_MISSED = createField(DSL.name("branch_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.branch_covered</code>.
+     * The column <code>public.jacoco_coverage_report.branch_covered</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> BRANCH_COVERED = createField(DSL.name("branch_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.line_missed</code>.
+     * The column <code>public.jacoco_coverage_report.line_missed</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> LINE_MISSED = createField(DSL.name("line_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.line_covered</code>.
+     * The column <code>public.jacoco_coverage_report.line_covered</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> LINE_COVERED = createField(DSL.name("line_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.complexity_missed</code>.
+     * The column <code>public.jacoco_coverage_report.complexity_missed</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> COMPLEXITY_MISSED = createField(DSL.name("complexity_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.complexity_covered</code>.
+     * The column <code>public.jacoco_coverage_report.complexity_covered</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> COMPLEXITY_COVERED = createField(DSL.name("complexity_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.method_missed</code>.
+     * The column <code>public.jacoco_coverage_report.method_missed</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> METHOD_MISSED = createField(DSL.name("method_missed"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>jacoco_coverage_report.method_covered</code>.
+     * The column <code>public.jacoco_coverage_report.method_covered</code>.
      */
     public final TableField<JacocoCoverageReportRecord, Integer> METHOD_COVERED = createField(DSL.name("method_covered"), SQLDataType.INTEGER.nullable(false), this, "");
 
@@ -146,21 +146,21 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     }
 
     /**
-     * Create an aliased <code>jacoco_coverage_report</code> table reference
+     * Create an aliased <code>public.jacoco_coverage_report</code> table reference
      */
     public JacocoCoverageReport(String alias) {
         this(DSL.name(alias), JACOCO_COVERAGE_REPORT);
     }
 
     /**
-     * Create an aliased <code>jacoco_coverage_report</code> table reference
+     * Create an aliased <code>public.jacoco_coverage_report</code> table reference
      */
     public JacocoCoverageReport(Name alias) {
         this(alias, JACOCO_COVERAGE_REPORT);
     }
 
     /**
-     * Create a <code>jacoco_coverage_report</code> table reference
+     * Create a <code>public.jacoco_coverage_report</code> table reference
      */
     public JacocoCoverageReport() {
         this(DSL.name("jacoco_coverage_report"), null);
@@ -172,7 +172,7 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -181,30 +181,30 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     }
 
     @Override
-    public Identity<JacocoCoverageReportRecord, Integer> getIdentity() {
-        return (Identity<JacocoCoverageReportRecord, Integer>) super.getIdentity();
+    public Identity<JacocoCoverageReportRecord, Long> getIdentity() {
+        return (Identity<JacocoCoverageReportRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<JacocoCoverageReportRecord> getPrimaryKey() {
-        return Keys.PK_JACOCO_COVERAGE_REPORT;
+        return Keys.JACOCO_COVERAGE_REPORT_PKEY;
     }
 
     @Override
     public List<UniqueKey<JacocoCoverageReportRecord>> getKeys() {
-        return Arrays.<UniqueKey<JacocoCoverageReportRecord>>asList(Keys.PK_JACOCO_COVERAGE_REPORT);
+        return Arrays.<UniqueKey<JacocoCoverageReportRecord>>asList(Keys.JACOCO_COVERAGE_REPORT_PKEY);
     }
 
     @Override
     public List<ForeignKey<JacocoCoverageReportRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<JacocoCoverageReportRecord, ?>>asList(Keys.FK_JACOCO_COVERAGE_REPORT_PROJECT_1);
+        return Arrays.<ForeignKey<JacocoCoverageReportRecord, ?>>asList(Keys.JACOCO_COVERAGE_REPORT__JACOCO_COVERAGE_REPORT_PROJECT_ID_FKEY);
     }
 
     private transient Project _project;
 
     public Project project() {
         if (_project == null)
-            _project = new Project(this, Keys.FK_JACOCO_COVERAGE_REPORT_PROJECT_1);
+            _project = new Project(this, Keys.JACOCO_COVERAGE_REPORT__JACOCO_COVERAGE_REPORT_PROJECT_ID_FKEY);
 
         return _project;
     }
@@ -240,7 +240,7 @@ public class JacocoCoverageReport extends TableImpl<JacocoCoverageReportRecord> 
     // -------------------------------------------------------------------------
 
     @Override
-    public Row17<Integer, Integer, Integer, ProcessingStage, String, String, String, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> fieldsRow() {
+    public Row17<Long, Long, Integer, ProcessingStage, String, String, String, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> fieldsRow() {
         return (Row17) super.fieldsRow();
     }
 }

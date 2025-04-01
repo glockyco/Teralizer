@@ -13,7 +13,7 @@ import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
-import org.jooq.generated.DefaultSchema;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.JunitTestReportViewRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -29,7 +29,7 @@ public class JunitTestReportView extends TableImpl<JunitTestReportViewRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>junit_test_report_view</code>
+     * The reference instance of <code>public.junit_test_report_view</code>
      */
     public static final JunitTestReportView JUNIT_TEST_REPORT_VIEW = new JunitTestReportView();
 
@@ -42,92 +42,92 @@ public class JunitTestReportView extends TableImpl<JunitTestReportViewRecord> {
     }
 
     /**
-     * The column <code>junit_test_report_view.id</code>.
+     * The column <code>public.junit_test_report_view.id</code>.
      */
-    public final TableField<JunitTestReportViewRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER, this, "");
+    public final TableField<JunitTestReportViewRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>junit_test_report_view.project_id</code>.
+     * The column <code>public.junit_test_report_view.project_id</code>.
      */
-    public final TableField<JunitTestReportViewRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<JunitTestReportViewRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>junit_test_report_view.test_id</code>.
+     * The column <code>public.junit_test_report_view.test_id</code>.
      */
-    public final TableField<JunitTestReportViewRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<JunitTestReportViewRecord, Long> TEST_ID = createField(DSL.name("test_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>junit_test_report_view.generalization_id</code>.
+     * The column <code>public.junit_test_report_view.generalization_id</code>.
      */
-    public final TableField<JunitTestReportViewRecord, Integer> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<JunitTestReportViewRecord, Long> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>junit_test_report_view.step</code>.
+     * The column <code>public.junit_test_report_view.step</code>.
      */
     public final TableField<JunitTestReportViewRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>junit_test_report_view.stage</code>.
+     * The column <code>public.junit_test_report_view.stage</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.variant</code>.
+     * The column <code>public.junit_test_report_view.variant</code>.
      */
-    public final TableField<JunitTestReportViewRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.VARCHAR, this, "");
+    public final TableField<JunitTestReportViewRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.test_package_name</code>.
+     * The column <code>public.junit_test_report_view.test_package_name</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> TEST_PACKAGE_NAME = createField(DSL.name("test_package_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.test_class_name</code>.
+     * The column <code>public.junit_test_report_view.test_class_name</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> TEST_CLASS_NAME = createField(DSL.name("test_class_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.test_method_name</code>.
+     * The column <code>public.junit_test_report_view.test_method_name</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.test_case_name</code>.
+     * The column <code>public.junit_test_report_view.test_case_name</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> TEST_CASE_NAME = createField(DSL.name("test_case_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.result</code>.
+     * The column <code>public.junit_test_report_view.result</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> RESULT = createField(DSL.name("result"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.runtime</code>.
+     * The column <code>public.junit_test_report_view.runtime</code>.
      */
     public final TableField<JunitTestReportViewRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL, this, "");
 
     /**
-     * The column <code>junit_test_report_view.failure_message</code>.
+     * The column <code>public.junit_test_report_view.failure_message</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> FAILURE_MESSAGE = createField(DSL.name("failure_message"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.failure_type</code>.
+     * The column <code>public.junit_test_report_view.failure_type</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> FAILURE_TYPE = createField(DSL.name("failure_type"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.failure_error_line</code>.
+     * The column <code>public.junit_test_report_view.failure_error_line</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> FAILURE_ERROR_LINE = createField(DSL.name("failure_error_line"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.failure_detail</code>.
+     * The column <code>public.junit_test_report_view.failure_detail</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> FAILURE_DETAIL = createField(DSL.name("failure_detail"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report_view.report_file_path</code>.
+     * The column <code>public.junit_test_report_view.report_file_path</code>.
      */
     public final TableField<JunitTestReportViewRecord, String> REPORT_FILE_PATH = createField(DSL.name("report_file_path"), SQLDataType.CLOB, this, "");
 
@@ -136,25 +136,25 @@ public class JunitTestReportView extends TableImpl<JunitTestReportViewRecord> {
     }
 
     private JunitTestReportView(Name alias, Table<JunitTestReportViewRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("CREATE VIEW junit_test_report_view AS\nSELECT\n    id,\n    project_id,\n    test_id,\n    generalization_id,\n    step,\n    stage,\n    CASE\n        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'\n        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'\n        ELSE variant\n    END AS variant,\n    test_package_name,\n    test_class_name,\n    test_method_name,\n    test_case_name,\n    result,\n    runtime,\n    failure_message,\n    failure_type,\n    failure_error_line,\n    failure_detail,\n    report_file_path\nFROM junit_test_report"));
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"junit_test_report_view\" as  SELECT id,\n    project_id,\n    test_id,\n    generalization_id,\n    step,\n    stage,\n        CASE\n            WHEN (stage ~~ '%ORIGINAL'::text) THEN 'ORIGINAL'::text\n            WHEN (stage ~~ '%INITIAL'::text) THEN 'INITIAL'::text\n            ELSE variant\n        END AS variant,\n    test_package_name,\n    test_class_name,\n    test_method_name,\n    test_case_name,\n    result,\n    runtime,\n    failure_message,\n    failure_type,\n    failure_error_line,\n    failure_detail,\n    report_file_path\n   FROM junit_test_report;"));
     }
 
     /**
-     * Create an aliased <code>junit_test_report_view</code> table reference
+     * Create an aliased <code>public.junit_test_report_view</code> table reference
      */
     public JunitTestReportView(String alias) {
         this(DSL.name(alias), JUNIT_TEST_REPORT_VIEW);
     }
 
     /**
-     * Create an aliased <code>junit_test_report_view</code> table reference
+     * Create an aliased <code>public.junit_test_report_view</code> table reference
      */
     public JunitTestReportView(Name alias) {
         this(alias, JUNIT_TEST_REPORT_VIEW);
     }
 
     /**
-     * Create a <code>junit_test_report_view</code> table reference
+     * Create a <code>public.junit_test_report_view</code> table reference
      */
     public JunitTestReportView() {
         this(DSL.name("junit_test_report_view"), null);
@@ -166,7 +166,7 @@ public class JunitTestReportView extends TableImpl<JunitTestReportViewRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -200,7 +200,7 @@ public class JunitTestReportView extends TableImpl<JunitTestReportViewRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row18<Integer, Integer, Integer, Integer, Integer, String, String, String, String, String, String, String, Float, String, String, String, String, String> fieldsRow() {
+    public Row18<Long, Long, Long, Long, Integer, String, String, String, String, String, String, String, Float, String, String, String, String, String> fieldsRow() {
         return (Row18) super.fieldsRow();
     }
 }

@@ -19,9 +19,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -37,7 +37,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>generalization</code>
+     * The reference instance of <code>public.generalization</code>
      */
     public static final Generalization GENERALIZATION = new Generalization();
 
@@ -50,77 +50,77 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     /**
-     * The column <code>generalization.id</code>.
+     * The column <code>public.generalization.id</code>.
      */
-    public final TableField<GeneralizationRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<GeneralizationRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>generalization.project_id</code>.
+     * The column <code>public.generalization.project_id</code>.
      */
-    public final TableField<GeneralizationRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<GeneralizationRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.test_id</code>.
+     * The column <code>public.generalization.test_id</code>.
      */
-    public final TableField<GeneralizationRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<GeneralizationRecord, Long> TEST_ID = createField(DSL.name("test_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.assertion_id</code>.
+     * The column <code>public.generalization.assertion_id</code>.
      */
-    public final TableField<GeneralizationRecord, Integer> ASSERTION_ID = createField(DSL.name("assertion_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<GeneralizationRecord, Long> ASSERTION_ID = createField(DSL.name("assertion_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.variant</code>.
+     * The column <code>public.generalization.variant</code>.
      */
     public final TableField<GeneralizationRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.file_path</code>.
+     * The column <code>public.generalization.file_path</code>.
      */
     public final TableField<GeneralizationRecord, String> FILE_PATH = createField(DSL.name("file_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.class_qualified_name</code>.
+     * The column <code>public.generalization.class_qualified_name</code>.
      */
     public final TableField<GeneralizationRecord, String> CLASS_QUALIFIED_NAME = createField(DSL.name("class_qualified_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.method_qualified_name</code>.
+     * The column <code>public.generalization.method_qualified_name</code>.
      */
     public final TableField<GeneralizationRecord, String> METHOD_QUALIFIED_NAME = createField(DSL.name("method_qualified_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.package_name</code>.
+     * The column <code>public.generalization.package_name</code>.
      */
     public final TableField<GeneralizationRecord, String> PACKAGE_NAME = createField(DSL.name("package_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.class_name</code>.
+     * The column <code>public.generalization.class_name</code>.
      */
     public final TableField<GeneralizationRecord, String> CLASS_NAME = createField(DSL.name("class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.method_name</code>.
+     * The column <code>public.generalization.method_name</code>.
      */
     public final TableField<GeneralizationRecord, String> METHOD_NAME = createField(DSL.name("method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.total_constraint_count</code>.
+     * The column <code>public.generalization.total_constraint_count</code>.
      */
     public final TableField<GeneralizationRecord, Integer> TOTAL_CONSTRAINT_COUNT = createField(DSL.name("total_constraint_count"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>generalization.used_constraint_count</code>.
+     * The column <code>public.generalization.used_constraint_count</code>.
      */
     public final TableField<GeneralizationRecord, Integer> USED_CONSTRAINT_COUNT = createField(DSL.name("used_constraint_count"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>generalization.is_included</code>.
+     * The column <code>public.generalization.is_included</code>.
      */
     public final TableField<GeneralizationRecord, Boolean> IS_INCLUDED = createField(DSL.name("is_included"), SQLDataType.BOOLEAN.nullable(false), this, "");
 
     /**
-     * The column <code>generalization.exclusion_info</code>.
+     * The column <code>public.generalization.exclusion_info</code>.
      */
     public final TableField<GeneralizationRecord, String> EXCLUSION_INFO = createField(DSL.name("exclusion_info"), SQLDataType.CLOB, this, "");
 
@@ -133,21 +133,21 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     /**
-     * Create an aliased <code>generalization</code> table reference
+     * Create an aliased <code>public.generalization</code> table reference
      */
     public Generalization(String alias) {
         this(DSL.name(alias), GENERALIZATION);
     }
 
     /**
-     * Create an aliased <code>generalization</code> table reference
+     * Create an aliased <code>public.generalization</code> table reference
      */
     public Generalization(Name alias) {
         this(alias, GENERALIZATION);
     }
 
     /**
-     * Create a <code>generalization</code> table reference
+     * Create a <code>public.generalization</code> table reference
      */
     public Generalization() {
         this(DSL.name("generalization"), null);
@@ -159,7 +159,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -168,23 +168,23 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     @Override
-    public Identity<GeneralizationRecord, Integer> getIdentity() {
-        return (Identity<GeneralizationRecord, Integer>) super.getIdentity();
+    public Identity<GeneralizationRecord, Long> getIdentity() {
+        return (Identity<GeneralizationRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<GeneralizationRecord> getPrimaryKey() {
-        return Keys.PK_GENERALIZATION;
+        return Keys.GENERALIZATION_PKEY;
     }
 
     @Override
     public List<UniqueKey<GeneralizationRecord>> getKeys() {
-        return Arrays.<UniqueKey<GeneralizationRecord>>asList(Keys.PK_GENERALIZATION);
+        return Arrays.<UniqueKey<GeneralizationRecord>>asList(Keys.GENERALIZATION_PKEY);
     }
 
     @Override
     public List<ForeignKey<GeneralizationRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<GeneralizationRecord, ?>>asList(Keys.FK_GENERALIZATION_PROJECT_1, Keys.FK_GENERALIZATION_TEST_1, Keys.FK_GENERALIZATION_ASSERTION_1);
+        return Arrays.<ForeignKey<GeneralizationRecord, ?>>asList(Keys.GENERALIZATION__GENERALIZATION_PROJECT_ID_FKEY, Keys.GENERALIZATION__GENERALIZATION_TEST_ID_FKEY, Keys.GENERALIZATION__GENERALIZATION_ASSERTION_ID_FKEY);
     }
 
     private transient Project _project;
@@ -193,21 +193,21 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
 
     public Project project() {
         if (_project == null)
-            _project = new Project(this, Keys.FK_GENERALIZATION_PROJECT_1);
+            _project = new Project(this, Keys.GENERALIZATION__GENERALIZATION_PROJECT_ID_FKEY);
 
         return _project;
     }
 
     public Test test() {
         if (_test == null)
-            _test = new Test(this, Keys.FK_GENERALIZATION_TEST_1);
+            _test = new Test(this, Keys.GENERALIZATION__GENERALIZATION_TEST_ID_FKEY);
 
         return _test;
     }
 
     public Assertion assertion() {
         if (_assertion == null)
-            _assertion = new Assertion(this, Keys.FK_GENERALIZATION_ASSERTION_1);
+            _assertion = new Assertion(this, Keys.GENERALIZATION__GENERALIZATION_ASSERTION_ID_FKEY);
 
         return _assertion;
     }
@@ -243,7 +243,7 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row15<Integer, Integer, Integer, Integer, String, String, String, String, String, String, String, Integer, Integer, Boolean, String> fieldsRow() {
+    public Row15<Long, Long, Long, Long, String, String, String, String, String, String, String, Integer, Integer, Boolean, String> fieldsRow() {
         return (Row15) super.fieldsRow();
     }
 }

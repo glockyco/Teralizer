@@ -19,9 +19,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -37,7 +37,7 @@ public class Test extends TableImpl<TestRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>test</code>
+     * The reference instance of <code>public.test</code>
      */
     public static final Test TEST = new Test();
 
@@ -50,72 +50,72 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     /**
-     * The column <code>test.id</code>.
+     * The column <code>public.test.id</code>.
      */
-    public final TableField<TestRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<TestRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>test.project_id</code>.
+     * The column <code>public.test.project_id</code>.
      */
-    public final TableField<TestRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<TestRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_file_path</code>.
+     * The column <code>public.test.test_file_path</code>.
      */
     public final TableField<TestRecord, String> TEST_FILE_PATH = createField(DSL.name("test_file_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_class_qualified_name</code>.
+     * The column <code>public.test.test_class_qualified_name</code>.
      */
     public final TableField<TestRecord, String> TEST_CLASS_QUALIFIED_NAME = createField(DSL.name("test_class_qualified_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_method_qualified_name</code>.
+     * The column <code>public.test.test_method_qualified_name</code>.
      */
     public final TableField<TestRecord, String> TEST_METHOD_QUALIFIED_NAME = createField(DSL.name("test_method_qualified_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_package_name</code>.
+     * The column <code>public.test.test_package_name</code>.
      */
     public final TableField<TestRecord, String> TEST_PACKAGE_NAME = createField(DSL.name("test_package_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_class_name</code>.
+     * The column <code>public.test.test_class_name</code>.
      */
     public final TableField<TestRecord, String> TEST_CLASS_NAME = createField(DSL.name("test_class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_method_name</code>.
+     * The column <code>public.test.test_method_name</code>.
      */
     public final TableField<TestRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>test.test_method_absolute_path</code>.
+     * The column <code>public.test.test_method_absolute_path</code>.
      */
     public final TableField<TestRecord, String> TEST_METHOD_ABSOLUTE_PATH = createField(DSL.name("test_method_absolute_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>test.test_method_relative_path</code>.
+     * The column <code>public.test.test_method_relative_path</code>.
      */
     public final TableField<TestRecord, String> TEST_METHOD_RELATIVE_PATH = createField(DSL.name("test_method_relative_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>test.test_annotation_name</code>.
+     * The column <code>public.test.test_annotation_name</code>.
      */
     public final TableField<TestRecord, String> TEST_ANNOTATION_NAME = createField(DSL.name("test_annotation_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>test.test_annotations_source_code</code>.
+     * The column <code>public.test.test_annotations_source_code</code>.
      */
     public final TableField<TestRecord, String> TEST_ANNOTATIONS_SOURCE_CODE = createField(DSL.name("test_annotations_source_code"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>test.is_included</code>.
+     * The column <code>public.test.is_included</code>.
      */
     public final TableField<TestRecord, Boolean> IS_INCLUDED = createField(DSL.name("is_included"), SQLDataType.BOOLEAN.nullable(false), this, "");
 
     /**
-     * The column <code>test.exclusion_info</code>.
+     * The column <code>public.test.exclusion_info</code>.
      */
     public final TableField<TestRecord, String> EXCLUSION_INFO = createField(DSL.name("exclusion_info"), SQLDataType.CLOB, this, "");
 
@@ -128,21 +128,21 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     /**
-     * Create an aliased <code>test</code> table reference
+     * Create an aliased <code>public.test</code> table reference
      */
     public Test(String alias) {
         this(DSL.name(alias), TEST);
     }
 
     /**
-     * Create an aliased <code>test</code> table reference
+     * Create an aliased <code>public.test</code> table reference
      */
     public Test(Name alias) {
         this(alias, TEST);
     }
 
     /**
-     * Create a <code>test</code> table reference
+     * Create a <code>public.test</code> table reference
      */
     public Test() {
         this(DSL.name("test"), null);
@@ -154,7 +154,7 @@ public class Test extends TableImpl<TestRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -163,30 +163,30 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     @Override
-    public Identity<TestRecord, Integer> getIdentity() {
-        return (Identity<TestRecord, Integer>) super.getIdentity();
+    public Identity<TestRecord, Long> getIdentity() {
+        return (Identity<TestRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<TestRecord> getPrimaryKey() {
-        return Keys.PK_TEST;
+        return Keys.TEST_PKEY;
     }
 
     @Override
     public List<UniqueKey<TestRecord>> getKeys() {
-        return Arrays.<UniqueKey<TestRecord>>asList(Keys.PK_TEST);
+        return Arrays.<UniqueKey<TestRecord>>asList(Keys.TEST_PKEY);
     }
 
     @Override
     public List<ForeignKey<TestRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<TestRecord, ?>>asList(Keys.FK_TEST_PROJECT_1);
+        return Arrays.<ForeignKey<TestRecord, ?>>asList(Keys.TEST__TEST_PROJECT_ID_FKEY);
     }
 
     private transient Project _project;
 
     public Project project() {
         if (_project == null)
-            _project = new Project(this, Keys.FK_TEST_PROJECT_1);
+            _project = new Project(this, Keys.TEST__TEST_PROJECT_ID_FKEY);
 
         return _project;
     }
@@ -222,7 +222,7 @@ public class Test extends TableImpl<TestRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row14<Integer, Integer, String, String, String, String, String, String, String, String, String, String, Boolean, String> fieldsRow() {
+    public Row14<Long, Long, String, String, String, String, String, String, String, String, String, String, Boolean, String> fieldsRow() {
         return (Row14) super.fieldsRow();
     }
 }

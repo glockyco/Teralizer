@@ -1,4 +1,5 @@
 services:
+
   teralizer:
     build: .
     environment:
@@ -8,10 +9,38 @@ services:
     volumes:
       - ./docker-data/database:/app/database
       - ./docker-data/data:/app/data
+    depends_on:
+      - postgres
+    networks:
+      - teralizer-network
+
+  postgres:
+    image: postgres:17
+    container_name: postgres-teralizer
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/teralizer:/var/lib/postgresql/data
+    networks:
+      - teralizer-network
+
   adminer:
     image: adminer
     ports:
       - "18080:8080"
-    volumes:
-      - ./docker-data/database:/app/database
-      - ./docker/adminer/login-password-less.php:/var/www/html/plugins-enabled/login-password-less.php
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DEFAULT_USER: postgres
+      ADMINER_DEFAULT_PASSWORD: postgres
+      ADMINER_DEFAULT_DB: postgres
+    depends_on:
+      - postgres
+    networks:
+      - teralizer-network
+
+networks:
+  teralizer-network:
+    driver: bridge

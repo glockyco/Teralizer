@@ -68,7 +68,7 @@ public class JpfAnalysisTask extends AbstractTask {
     }
 
     private void updateEquivalencies(DSLContext create) {
-        Map<EquivalencyKey, List<Integer>> groups = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId())
+        Map<EquivalencyKey, List<Long>> groups = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId())
             .map(r -> r.into(AssertionRecord.class)).stream().parallel().collect(Collectors.groupingByConcurrent(
                 record -> new EquivalencyKey(computeFileHash(record), record.getTestedMethodQualifiedName()),
                 Collectors.mapping(AssertionRecord::getId, Collectors.toList())

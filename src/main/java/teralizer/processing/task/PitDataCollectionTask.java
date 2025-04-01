@@ -73,14 +73,14 @@ public class PitDataCollectionTask extends AbstractTask {
 
         this.executeMutationTesting(create);
 
-        Map<String, Integer> testIds = this.fetchTestIds(create);
-        Map<String, Integer> generalizationIds = this.fetchGeneralizationIds(create);
+        Map<String, Long> testIds = this.fetchTestIds(create);
+        Map<String, Long> generalizationIds = this.fetchGeneralizationIds(create);
 
         this.collectCoverageData(create, pitDataDirectory, testIds, generalizationIds);
         this.collectMutationData(create, pitDataDirectory, testIds, generalizationIds);
     }
 
-    private Map<String, Integer> fetchTestIds(DSLContext create) {
+    private Map<String, Long> fetchTestIds(DSLContext create) {
         return create.select(
                 // If some tests are executed multiple times, take the ID of the first execution.
                 DSL.min(Tables.TEST.ID),
@@ -93,7 +93,7 @@ public class PitDataCollectionTask extends AbstractTask {
             .fetch().stream().collect(Collectors.toMap(Record2::component2, Record2::component1));
     }
 
-    private Map<String, Integer> fetchGeneralizationIds(DSLContext create) {
+    private Map<String, Long> fetchGeneralizationIds(DSLContext create) {
         return create.select(
                 // If some generalizations are executed multiple times, take the ID of the first execution.
                 DSL.min(Tables.GENERALIZATION.ID),
@@ -216,8 +216,8 @@ public class PitDataCollectionTask extends AbstractTask {
     private void collectCoverageData(
         DSLContext create,
         Path dataDirectory,
-        Map<String, Integer> testIds,
-        Map<String, Integer> generalizationIds
+        Map<String, Long> testIds,
+        Map<String, Long> generalizationIds
     ) throws DocumentException, IOException {
         Path reportPath = this.projectRecord.getMutationReportsPath().resolve("linecoverage.xml");
 
@@ -256,8 +256,8 @@ public class PitDataCollectionTask extends AbstractTask {
 
                 TestNameInfo testNameInfo = this.processTestName(name);
 
-                Integer testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-                Integer generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                Long testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                Long generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
 
                 if (testId == null && generalizationId == null) {
                     throw new RuntimeException("Failed to map coverage record to a test / generalization." +
@@ -295,8 +295,8 @@ public class PitDataCollectionTask extends AbstractTask {
     private void collectMutationData(
         DSLContext create,
         Path dataDirectory,
-        Map<String, Integer> testIds,
-        Map<String, Integer> generalizationIds
+        Map<String, Long> testIds,
+        Map<String, Long> generalizationIds
     ) throws DocumentException, IOException {
         Path reportPath = this.projectRecord.getMutationReportsPath().resolve("mutations.xml");
 
@@ -357,8 +357,8 @@ public class PitDataCollectionTask extends AbstractTask {
                 if (killingTestName != null && !killingTestName.isEmpty()) {
                     TestNameInfo testNameInfo = this.processTestName(killingTestName);
 
-                    Integer testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-                    Integer generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                    Long testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                    Long generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
 
                     if (testId == null && generalizationId == null) {
                         throw new RuntimeException("Failed to map mutation record to a test / generalization." +

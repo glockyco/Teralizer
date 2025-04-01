@@ -24,7 +24,7 @@ public class ConsoleCommand {
 
     private int executionCount = 0;
 
-    public ConsoleCommand(ProcessingStage stage, String variant, int projectId, Path projectDataPath) {
+    public ConsoleCommand(ProcessingStage stage, String variant, long projectId, Path projectDataPath) {
         this.stage = stage;
         this.variant = variant;
         this.commandDataPath = projectDataPath.resolve("project-id-" + projectId + "/command-data");

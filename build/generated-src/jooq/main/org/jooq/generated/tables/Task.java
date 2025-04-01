@@ -19,9 +19,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.EnumConverter;
@@ -41,7 +41,7 @@ public class Task extends TableImpl<TaskRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>task</code>
+     * The reference instance of <code>public.task</code>
      */
     public static final Task TASK = new Task();
 
@@ -54,57 +54,57 @@ public class Task extends TableImpl<TaskRecord> {
     }
 
     /**
-     * The column <code>task.id</code>.
+     * The column <code>public.task.id</code>.
      */
-    public final TableField<TaskRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<TaskRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>task.project_id</code>.
+     * The column <code>public.task.project_id</code>.
      */
-    public final TableField<TaskRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<TaskRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>task.test_id</code>.
+     * The column <code>public.task.test_id</code>.
      */
-    public final TableField<TaskRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<TaskRecord, Long> TEST_ID = createField(DSL.name("test_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>task.assertion_id</code>.
+     * The column <code>public.task.assertion_id</code>.
      */
-    public final TableField<TaskRecord, Integer> ASSERTION_ID = createField(DSL.name("assertion_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<TaskRecord, Long> ASSERTION_ID = createField(DSL.name("assertion_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>task.generalization_id</code>.
+     * The column <code>public.task.generalization_id</code>.
      */
-    public final TableField<TaskRecord, Integer> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<TaskRecord, Long> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>task.step</code>.
+     * The column <code>public.task.step</code>.
      */
     public final TableField<TaskRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>task.stage</code>.
+     * The column <code>public.task.stage</code>.
      */
     public final TableField<TaskRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStage>(String.class, ProcessingStage.class));
 
     /**
-     * The column <code>task.variant</code>.
+     * The column <code>public.task.variant</code>.
      */
     public final TableField<TaskRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>task.status</code>.
+     * The column <code>public.task.status</code>.
      */
     public final TableField<TaskRecord, ProcessingStatus> STATUS = createField(DSL.name("status"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStatus>(String.class, ProcessingStatus.class));
 
     /**
-     * The column <code>task.runtime</code>.
+     * The column <code>public.task.runtime</code>.
      */
     public final TableField<TaskRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL, this, "");
 
     /**
-     * The column <code>task.info</code>.
+     * The column <code>public.task.info</code>.
      */
     public final TableField<TaskRecord, String> INFO = createField(DSL.name("info"), SQLDataType.CLOB, this, "");
 
@@ -117,21 +117,21 @@ public class Task extends TableImpl<TaskRecord> {
     }
 
     /**
-     * Create an aliased <code>task</code> table reference
+     * Create an aliased <code>public.task</code> table reference
      */
     public Task(String alias) {
         this(DSL.name(alias), TASK);
     }
 
     /**
-     * Create an aliased <code>task</code> table reference
+     * Create an aliased <code>public.task</code> table reference
      */
     public Task(Name alias) {
         this(alias, TASK);
     }
 
     /**
-     * Create a <code>task</code> table reference
+     * Create a <code>public.task</code> table reference
      */
     public Task() {
         this(DSL.name("task"), null);
@@ -143,7 +143,7 @@ public class Task extends TableImpl<TaskRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -152,23 +152,23 @@ public class Task extends TableImpl<TaskRecord> {
     }
 
     @Override
-    public Identity<TaskRecord, Integer> getIdentity() {
-        return (Identity<TaskRecord, Integer>) super.getIdentity();
+    public Identity<TaskRecord, Long> getIdentity() {
+        return (Identity<TaskRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<TaskRecord> getPrimaryKey() {
-        return Keys.PK_TASK;
+        return Keys.TASK_PKEY;
     }
 
     @Override
     public List<UniqueKey<TaskRecord>> getKeys() {
-        return Arrays.<UniqueKey<TaskRecord>>asList(Keys.PK_TASK);
+        return Arrays.<UniqueKey<TaskRecord>>asList(Keys.TASK_PKEY);
     }
 
     @Override
     public List<ForeignKey<TaskRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<TaskRecord, ?>>asList(Keys.FK_TASK_PROJECT_1, Keys.FK_TASK_TEST_1, Keys.FK_TASK_ASSERTION_1, Keys.FK_TASK_GENERALIZATION_1);
+        return Arrays.<ForeignKey<TaskRecord, ?>>asList(Keys.TASK__TASK_PROJECT_ID_FKEY, Keys.TASK__TASK_TEST_ID_FKEY, Keys.TASK__TASK_ASSERTION_ID_FKEY, Keys.TASK__TASK_GENERALIZATION_ID_FKEY);
     }
 
     private transient Project _project;
@@ -178,28 +178,28 @@ public class Task extends TableImpl<TaskRecord> {
 
     public Project project() {
         if (_project == null)
-            _project = new Project(this, Keys.FK_TASK_PROJECT_1);
+            _project = new Project(this, Keys.TASK__TASK_PROJECT_ID_FKEY);
 
         return _project;
     }
 
     public Test test() {
         if (_test == null)
-            _test = new Test(this, Keys.FK_TASK_TEST_1);
+            _test = new Test(this, Keys.TASK__TASK_TEST_ID_FKEY);
 
         return _test;
     }
 
     public Assertion assertion() {
         if (_assertion == null)
-            _assertion = new Assertion(this, Keys.FK_TASK_ASSERTION_1);
+            _assertion = new Assertion(this, Keys.TASK__TASK_ASSERTION_ID_FKEY);
 
         return _assertion;
     }
 
     public Generalization generalization() {
         if (_generalization == null)
-            _generalization = new Generalization(this, Keys.FK_TASK_GENERALIZATION_1);
+            _generalization = new Generalization(this, Keys.TASK__TASK_GENERALIZATION_ID_FKEY);
 
         return _generalization;
     }
@@ -235,7 +235,7 @@ public class Task extends TableImpl<TaskRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row11<Integer, Integer, Integer, Integer, Integer, Integer, ProcessingStage, String, ProcessingStatus, Float, String> fieldsRow() {
+    public Row11<Long, Long, Long, Long, Long, Integer, ProcessingStage, String, ProcessingStatus, Float, String> fieldsRow() {
         return (Row11) super.fieldsRow();
     }
 }

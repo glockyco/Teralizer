@@ -20,9 +20,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.EnumConverter;
@@ -43,7 +43,7 @@ public class Project extends TableImpl<ProjectRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>project</code>
+     * The reference instance of <code>public.project</code>
      */
     public static final Project PROJECT = new Project();
 
@@ -56,102 +56,102 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     /**
-     * The column <code>project.id</code>.
+     * The column <code>public.project.id</code>.
      */
-    public final TableField<ProjectRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<ProjectRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>project.type</code>.
+     * The column <code>public.project.type</code>.
      */
     public final TableField<ProjectRecord, ProjectType> TYPE = createField(DSL.name("type"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProjectType>(String.class, ProjectType.class));
 
     /**
-     * The column <code>project.test_framework</code>.
+     * The column <code>public.project.test_framework</code>.
      */
     public final TableField<ProjectRecord, TestFramework> TEST_FRAMEWORK = createField(DSL.name("test_framework"), SQLDataType.CLOB, this, "", new EnumConverter<String, TestFramework>(String.class, TestFramework.class));
 
     /**
-     * The column <code>project.test_framework_version</code>.
+     * The column <code>public.project.test_framework_version</code>.
      */
     public final TableField<ProjectRecord, String> TEST_FRAMEWORK_VERSION = createField(DSL.name("test_framework_version"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>project.root_path</code>.
+     * The column <code>public.project.root_path</code>.
      */
     public final TableField<ProjectRecord, Path> ROOT_PATH = createField(DSL.name("root_path"), SQLDataType.CLOB.nullable(false), this, "", new PathConverter());
 
     /**
-     * The column <code>project.data_path</code>.
+     * The column <code>public.project.data_path</code>.
      */
     public final TableField<ProjectRecord, Path> DATA_PATH = createField(DSL.name("data_path"), SQLDataType.CLOB.nullable(false), this, "", new PathConverter());
 
     /**
-     * The column <code>project.main_source_path</code>.
+     * The column <code>public.project.main_source_path</code>.
      */
     public final TableField<ProjectRecord, Path> MAIN_SOURCE_PATH = createField(DSL.name("main_source_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
-     * The column <code>project.test_source_path</code>.
+     * The column <code>public.project.test_source_path</code>.
      */
     public final TableField<ProjectRecord, Path> TEST_SOURCE_PATH = createField(DSL.name("test_source_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
-     * The column <code>project.main_compiled_path</code>.
+     * The column <code>public.project.main_compiled_path</code>.
      */
     public final TableField<ProjectRecord, Path> MAIN_COMPILED_PATH = createField(DSL.name("main_compiled_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
-     * The column <code>project.test_compiled_path</code>.
+     * The column <code>public.project.test_compiled_path</code>.
      */
     public final TableField<ProjectRecord, Path> TEST_COMPILED_PATH = createField(DSL.name("test_compiled_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
-     * The column <code>project.test_reports_path</code>.
+     * The column <code>public.project.test_reports_path</code>.
      */
     public final TableField<ProjectRecord, Path> TEST_REPORTS_PATH = createField(DSL.name("test_reports_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
-     * The column <code>project.coverage_reports_path</code>.
+     * The column <code>public.project.coverage_reports_path</code>.
      */
     public final TableField<ProjectRecord, Path> COVERAGE_REPORTS_PATH = createField(DSL.name("coverage_reports_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
-     * The column <code>project.mutation_reports_path</code>.
+     * The column <code>public.project.mutation_reports_path</code>.
      */
     public final TableField<ProjectRecord, Path> MUTATION_REPORTS_PATH = createField(DSL.name("mutation_reports_path"), SQLDataType.CLOB, this, "", new PathConverter());
 
     /**
-     * The column <code>project.classpath</code>.
+     * The column <code>public.project.classpath</code>.
      */
     public final TableField<ProjectRecord, String> CLASSPATH = createField(DSL.name("classpath"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>project.git_version</code>.
+     * The column <code>public.project.git_version</code>.
      */
     public final TableField<ProjectRecord, String> GIT_VERSION = createField(DSL.name("git_version"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>project.tool_git_version</code>.
+     * The column <code>public.project.tool_git_version</code>.
      */
     public final TableField<ProjectRecord, String> TOOL_GIT_VERSION = createField(DSL.name("tool_git_version"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>project.use_test_generation</code>.
+     * The column <code>public.project.use_test_generation</code>.
      */
     public final TableField<ProjectRecord, Boolean> USE_TEST_GENERATION = createField(DSL.name("use_test_generation"), SQLDataType.BOOLEAN.nullable(false), this, "");
 
     /**
-     * The column <code>project.use_test_generalization</code>.
+     * The column <code>public.project.use_test_generalization</code>.
      */
     public final TableField<ProjectRecord, Boolean> USE_TEST_GENERALIZATION = createField(DSL.name("use_test_generalization"), SQLDataType.BOOLEAN.nullable(false), this, "");
 
     /**
-     * The column <code>project.configuration</code>.
+     * The column <code>public.project.configuration</code>.
      */
     public final TableField<ProjectRecord, String> CONFIGURATION = createField(DSL.name("configuration"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>project.runtime</code>.
+     * The column <code>public.project.runtime</code>.
      */
     public final TableField<ProjectRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL, this, "");
 
@@ -164,21 +164,21 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     /**
-     * Create an aliased <code>project</code> table reference
+     * Create an aliased <code>public.project</code> table reference
      */
     public Project(String alias) {
         this(DSL.name(alias), PROJECT);
     }
 
     /**
-     * Create an aliased <code>project</code> table reference
+     * Create an aliased <code>public.project</code> table reference
      */
     public Project(Name alias) {
         this(alias, PROJECT);
     }
 
     /**
-     * Create a <code>project</code> table reference
+     * Create a <code>public.project</code> table reference
      */
     public Project() {
         this(DSL.name("project"), null);
@@ -190,7 +190,7 @@ public class Project extends TableImpl<ProjectRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -199,18 +199,18 @@ public class Project extends TableImpl<ProjectRecord> {
     }
 
     @Override
-    public Identity<ProjectRecord, Integer> getIdentity() {
-        return (Identity<ProjectRecord, Integer>) super.getIdentity();
+    public Identity<ProjectRecord, Long> getIdentity() {
+        return (Identity<ProjectRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<ProjectRecord> getPrimaryKey() {
-        return Keys.PK_PROJECT;
+        return Keys.PROJECT_PKEY;
     }
 
     @Override
     public List<UniqueKey<ProjectRecord>> getKeys() {
-        return Arrays.<UniqueKey<ProjectRecord>>asList(Keys.PK_PROJECT);
+        return Arrays.<UniqueKey<ProjectRecord>>asList(Keys.PROJECT_PKEY);
     }
 
     @Override
@@ -244,7 +244,7 @@ public class Project extends TableImpl<ProjectRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row20<Integer, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, Path, String, String, String, Boolean, Boolean, String, Float> fieldsRow() {
+    public Row20<Long, ProjectType, TestFramework, String, Path, Path, Path, Path, Path, Path, Path, Path, Path, String, String, String, Boolean, Boolean, String, Float> fieldsRow() {
         return (Row20) super.fieldsRow();
     }
 }

@@ -56,9 +56,9 @@ public class Configuration {
     public static final String GRADLE_DEFAULT_BUILD_FILE = "build.gradle";
 
     // ----- Database ----- //
-    public static final Path DB_PATH = Paths.get("database/db.sqlite");
-    public static final String DB_CONNECTION_STRING = "jdbc:sqlite:" + DB_PATH.toAbsolutePath() + "?foreign_keys=on";
+    public static final Path DB_PATH = Paths.get("database", TOOL_NAME_LOWER);
     public static final Path DB_DDL_PATH = Paths.get("src/main/resources/db/create-tables.sql");
+    public static final String DB_CONNECTION_STRING = "jdbc:postgresql://localhost:5432/postgres?user=postgres&password=postgres";
 
     // ----- Dependencies ----- //
     public static final String EVOSUITE_MAIN_CLASS = "org.evosuite.EvoSuite";

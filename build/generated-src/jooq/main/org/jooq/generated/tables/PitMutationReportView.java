@@ -12,7 +12,7 @@ import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
-import org.jooq.generated.DefaultSchema;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.PitMutationReportViewRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -28,7 +28,7 @@ public class PitMutationReportView extends TableImpl<PitMutationReportViewRecord
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>pit_mutation_report_view</code>
+     * The reference instance of <code>public.pit_mutation_report_view</code>
      */
     public static final PitMutationReportView PIT_MUTATION_REPORT_VIEW = new PitMutationReportView();
 
@@ -41,117 +41,117 @@ public class PitMutationReportView extends TableImpl<PitMutationReportViewRecord
     }
 
     /**
-     * The column <code>pit_mutation_report_view.id</code>.
+     * The column <code>public.pit_mutation_report_view.id</code>.
      */
-    public final TableField<PitMutationReportViewRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitMutationReportViewRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.project_id</code>.
+     * The column <code>public.pit_mutation_report_view.project_id</code>.
      */
-    public final TableField<PitMutationReportViewRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitMutationReportViewRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.mutation_id</code>.
+     * The column <code>public.pit_mutation_report_view.mutation_id</code>.
      */
-    public final TableField<PitMutationReportViewRecord, Integer> MUTATION_ID = createField(DSL.name("mutation_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitMutationReportViewRecord, Long> MUTATION_ID = createField(DSL.name("mutation_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.killing_test_id</code>.
+     * The column <code>public.pit_mutation_report_view.killing_test_id</code>.
      */
-    public final TableField<PitMutationReportViewRecord, Integer> KILLING_TEST_ID = createField(DSL.name("killing_test_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitMutationReportViewRecord, Long> KILLING_TEST_ID = createField(DSL.name("killing_test_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.killing_generalization_id</code>.
+     * The column <code>public.pit_mutation_report_view.killing_generalization_id</code>.
      */
-    public final TableField<PitMutationReportViewRecord, Integer> KILLING_GENERALIZATION_ID = createField(DSL.name("killing_generalization_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitMutationReportViewRecord, Long> KILLING_GENERALIZATION_ID = createField(DSL.name("killing_generalization_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.step</code>.
+     * The column <code>public.pit_mutation_report_view.step</code>.
      */
     public final TableField<PitMutationReportViewRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.stage</code>.
+     * The column <code>public.pit_mutation_report_view.stage</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.variant</code>.
+     * The column <code>public.pit_mutation_report_view.variant</code>.
      */
-    public final TableField<PitMutationReportViewRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.VARCHAR, this, "");
+    public final TableField<PitMutationReportViewRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.is_detected</code>.
+     * The column <code>public.pit_mutation_report_view.is_detected</code>.
      */
-    public final TableField<PitMutationReportViewRecord, Integer> IS_DETECTED = createField(DSL.name("is_detected"), SQLDataType.INTEGER, this, "");
+    public final TableField<PitMutationReportViewRecord, Boolean> IS_DETECTED = createField(DSL.name("is_detected"), SQLDataType.BOOLEAN, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.status</code>.
+     * The column <code>public.pit_mutation_report_view.status</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.number_of_tests_run</code>.
+     * The column <code>public.pit_mutation_report_view.number_of_tests_run</code>.
      */
     public final TableField<PitMutationReportViewRecord, Integer> NUMBER_OF_TESTS_RUN = createField(DSL.name("number_of_tests_run"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.source_file</code>.
+     * The column <code>public.pit_mutation_report_view.source_file</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> SOURCE_FILE = createField(DSL.name("source_file"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.mutated_class</code>.
+     * The column <code>public.pit_mutation_report_view.mutated_class</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> MUTATED_CLASS = createField(DSL.name("mutated_class"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.mutated_method</code>.
+     * The column <code>public.pit_mutation_report_view.mutated_method</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> MUTATED_METHOD = createField(DSL.name("mutated_method"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.method_description</code>.
+     * The column <code>public.pit_mutation_report_view.method_description</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> METHOD_DESCRIPTION = createField(DSL.name("method_description"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.line_number</code>.
+     * The column <code>public.pit_mutation_report_view.line_number</code>.
      */
     public final TableField<PitMutationReportViewRecord, Integer> LINE_NUMBER = createField(DSL.name("line_number"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.mutator</code>.
+     * The column <code>public.pit_mutation_report_view.mutator</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> MUTATOR = createField(DSL.name("mutator"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.indexes</code>.
+     * The column <code>public.pit_mutation_report_view.indexes</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> INDEXES = createField(DSL.name("indexes"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.blocks</code>.
+     * The column <code>public.pit_mutation_report_view.blocks</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> BLOCKS = createField(DSL.name("blocks"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.killing_package_name</code>.
+     * The column <code>public.pit_mutation_report_view.killing_package_name</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> KILLING_PACKAGE_NAME = createField(DSL.name("killing_package_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.killing_class_name</code>.
+     * The column <code>public.pit_mutation_report_view.killing_class_name</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> KILLING_CLASS_NAME = createField(DSL.name("killing_class_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.killing_method_name</code>.
+     * The column <code>public.pit_mutation_report_view.killing_method_name</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> KILLING_METHOD_NAME = createField(DSL.name("killing_method_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>pit_mutation_report_view.description</code>.
+     * The column <code>public.pit_mutation_report_view.description</code>.
      */
     public final TableField<PitMutationReportViewRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB, this, "");
 
@@ -160,25 +160,25 @@ public class PitMutationReportView extends TableImpl<PitMutationReportViewRecord
     }
 
     private PitMutationReportView(Name alias, Table<PitMutationReportViewRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("CREATE VIEW pit_mutation_report_view AS\nSELECT\n    id,\n    project_id,\n    dense_rank() OVER (\n        ORDER BY\n            project_id,\n            mutated_class,\n            line_number,\n            mutator,\n            indexes,\n            blocks,\n            description\n    ) AS mutation_id,\n    killing_test_id,\n    killing_generalization_id,\n    step,\n    stage,\n    CASE\n        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'\n        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'\n        ELSE variant\n    END AS variant,\n    is_detected,\n    status,\n    number_of_tests_run,\n    source_file,\n    mutated_class,\n    mutated_method,\n    method_description,\n    line_number,\n    mutator,\n    indexes,\n    blocks,\n    killing_package_name,\n    killing_class_name,\n    killing_method_name,\n    description\nFROM pit_mutation_report"));
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"pit_mutation_report_view\" as  SELECT id,\n    project_id,\n    dense_rank() OVER (ORDER BY project_id, mutated_class, line_number, mutator, indexes, blocks, description) AS mutation_id,\n    killing_test_id,\n    killing_generalization_id,\n    step,\n    stage,\n        CASE\n            WHEN (stage ~~ '%ORIGINAL'::text) THEN 'ORIGINAL'::text\n            WHEN (stage ~~ '%INITIAL'::text) THEN 'INITIAL'::text\n            ELSE variant\n        END AS variant,\n    is_detected,\n    status,\n    number_of_tests_run,\n    source_file,\n    mutated_class,\n    mutated_method,\n    method_description,\n    line_number,\n    mutator,\n    indexes,\n    blocks,\n    killing_package_name,\n    killing_class_name,\n    killing_method_name,\n    description\n   FROM pit_mutation_report;"));
     }
 
     /**
-     * Create an aliased <code>pit_mutation_report_view</code> table reference
+     * Create an aliased <code>public.pit_mutation_report_view</code> table reference
      */
     public PitMutationReportView(String alias) {
         this(DSL.name(alias), PIT_MUTATION_REPORT_VIEW);
     }
 
     /**
-     * Create an aliased <code>pit_mutation_report_view</code> table reference
+     * Create an aliased <code>public.pit_mutation_report_view</code> table reference
      */
     public PitMutationReportView(Name alias) {
         this(alias, PIT_MUTATION_REPORT_VIEW);
     }
 
     /**
-     * Create a <code>pit_mutation_report_view</code> table reference
+     * Create a <code>public.pit_mutation_report_view</code> table reference
      */
     public PitMutationReportView() {
         this(DSL.name("pit_mutation_report_view"), null);
@@ -190,7 +190,7 @@ public class PitMutationReportView extends TableImpl<PitMutationReportViewRecord
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override

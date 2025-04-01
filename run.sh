@@ -52,9 +52,13 @@ configs=(
 # Update total_configs to match actual array length
 total_configs=${#configs[@]}
 
+./gradlew startPostgres
+
 for config in "${configs[@]}"; do
     run_and_log "$config"
 done
+
+./gradlew stopPostgres
 
 
 end_time=$(date +%s)

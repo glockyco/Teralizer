@@ -19,9 +19,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.JunitTestReportRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.EnumConverter;
@@ -41,7 +41,7 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>junit_test_report</code>
+     * The reference instance of <code>public.junit_test_report</code>
      */
     public static final JunitTestReport JUNIT_TEST_REPORT = new JunitTestReport();
 
@@ -54,92 +54,92 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
     }
 
     /**
-     * The column <code>junit_test_report.id</code>.
+     * The column <code>public.junit_test_report.id</code>.
      */
-    public final TableField<JunitTestReportRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<JunitTestReportRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>junit_test_report.project_id</code>.
+     * The column <code>public.junit_test_report.project_id</code>.
      */
-    public final TableField<JunitTestReportRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<JunitTestReportRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>junit_test_report.test_id</code>.
+     * The column <code>public.junit_test_report.test_id</code>.
      */
-    public final TableField<JunitTestReportRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<JunitTestReportRecord, Long> TEST_ID = createField(DSL.name("test_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>junit_test_report.generalization_id</code>.
+     * The column <code>public.junit_test_report.generalization_id</code>.
      */
-    public final TableField<JunitTestReportRecord, Integer> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<JunitTestReportRecord, Long> GENERALIZATION_ID = createField(DSL.name("generalization_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>junit_test_report.step</code>.
+     * The column <code>public.junit_test_report.step</code>.
      */
     public final TableField<JunitTestReportRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>junit_test_report.stage</code>.
+     * The column <code>public.junit_test_report.stage</code>.
      */
     public final TableField<JunitTestReportRecord, ProcessingStage> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, ProcessingStage>(String.class, ProcessingStage.class));
 
     /**
-     * The column <code>junit_test_report.variant</code>.
+     * The column <code>public.junit_test_report.variant</code>.
      */
     public final TableField<JunitTestReportRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report.test_package_name</code>.
+     * The column <code>public.junit_test_report.test_package_name</code>.
      */
     public final TableField<JunitTestReportRecord, String> TEST_PACKAGE_NAME = createField(DSL.name("test_package_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>junit_test_report.test_class_name</code>.
+     * The column <code>public.junit_test_report.test_class_name</code>.
      */
     public final TableField<JunitTestReportRecord, String> TEST_CLASS_NAME = createField(DSL.name("test_class_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>junit_test_report.test_method_name</code>.
+     * The column <code>public.junit_test_report.test_method_name</code>.
      */
     public final TableField<JunitTestReportRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>junit_test_report.test_case_name</code>.
+     * The column <code>public.junit_test_report.test_case_name</code>.
      */
     public final TableField<JunitTestReportRecord, String> TEST_CASE_NAME = createField(DSL.name("test_case_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>junit_test_report.result</code>.
+     * The column <code>public.junit_test_report.result</code>.
      */
     public final TableField<JunitTestReportRecord, TestResult> RESULT = createField(DSL.name("result"), SQLDataType.CLOB.nullable(false), this, "", new EnumConverter<String, TestResult>(String.class, TestResult.class));
 
     /**
-     * The column <code>junit_test_report.runtime</code>.
+     * The column <code>public.junit_test_report.runtime</code>.
      */
     public final TableField<JunitTestReportRecord, Float> RUNTIME = createField(DSL.name("runtime"), SQLDataType.REAL.nullable(false), this, "");
 
     /**
-     * The column <code>junit_test_report.failure_message</code>.
+     * The column <code>public.junit_test_report.failure_message</code>.
      */
     public final TableField<JunitTestReportRecord, String> FAILURE_MESSAGE = createField(DSL.name("failure_message"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report.failure_type</code>.
+     * The column <code>public.junit_test_report.failure_type</code>.
      */
     public final TableField<JunitTestReportRecord, String> FAILURE_TYPE = createField(DSL.name("failure_type"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report.failure_error_line</code>.
+     * The column <code>public.junit_test_report.failure_error_line</code>.
      */
     public final TableField<JunitTestReportRecord, String> FAILURE_ERROR_LINE = createField(DSL.name("failure_error_line"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report.failure_detail</code>.
+     * The column <code>public.junit_test_report.failure_detail</code>.
      */
     public final TableField<JunitTestReportRecord, String> FAILURE_DETAIL = createField(DSL.name("failure_detail"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>junit_test_report.report_file_path</code>.
+     * The column <code>public.junit_test_report.report_file_path</code>.
      */
     public final TableField<JunitTestReportRecord, String> REPORT_FILE_PATH = createField(DSL.name("report_file_path"), SQLDataType.CLOB.nullable(false), this, "");
 
@@ -152,21 +152,21 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
     }
 
     /**
-     * Create an aliased <code>junit_test_report</code> table reference
+     * Create an aliased <code>public.junit_test_report</code> table reference
      */
     public JunitTestReport(String alias) {
         this(DSL.name(alias), JUNIT_TEST_REPORT);
     }
 
     /**
-     * Create an aliased <code>junit_test_report</code> table reference
+     * Create an aliased <code>public.junit_test_report</code> table reference
      */
     public JunitTestReport(Name alias) {
         this(alias, JUNIT_TEST_REPORT);
     }
 
     /**
-     * Create a <code>junit_test_report</code> table reference
+     * Create a <code>public.junit_test_report</code> table reference
      */
     public JunitTestReport() {
         this(DSL.name("junit_test_report"), null);
@@ -178,7 +178,7 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -187,23 +187,23 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
     }
 
     @Override
-    public Identity<JunitTestReportRecord, Integer> getIdentity() {
-        return (Identity<JunitTestReportRecord, Integer>) super.getIdentity();
+    public Identity<JunitTestReportRecord, Long> getIdentity() {
+        return (Identity<JunitTestReportRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<JunitTestReportRecord> getPrimaryKey() {
-        return Keys.PK_JUNIT_TEST_REPORT;
+        return Keys.JUNIT_TEST_REPORT_PKEY;
     }
 
     @Override
     public List<UniqueKey<JunitTestReportRecord>> getKeys() {
-        return Arrays.<UniqueKey<JunitTestReportRecord>>asList(Keys.PK_JUNIT_TEST_REPORT);
+        return Arrays.<UniqueKey<JunitTestReportRecord>>asList(Keys.JUNIT_TEST_REPORT_PKEY);
     }
 
     @Override
     public List<ForeignKey<JunitTestReportRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<JunitTestReportRecord, ?>>asList(Keys.FK_JUNIT_TEST_REPORT_PROJECT_1, Keys.FK_JUNIT_TEST_REPORT_TEST_1, Keys.FK_JUNIT_TEST_REPORT_GENERALIZATION_1);
+        return Arrays.<ForeignKey<JunitTestReportRecord, ?>>asList(Keys.JUNIT_TEST_REPORT__JUNIT_TEST_REPORT_PROJECT_ID_FKEY, Keys.JUNIT_TEST_REPORT__JUNIT_TEST_REPORT_TEST_ID_FKEY, Keys.JUNIT_TEST_REPORT__JUNIT_TEST_REPORT_GENERALIZATION_ID_FKEY);
     }
 
     private transient Project _project;
@@ -212,21 +212,21 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
 
     public Project project() {
         if (_project == null)
-            _project = new Project(this, Keys.FK_JUNIT_TEST_REPORT_PROJECT_1);
+            _project = new Project(this, Keys.JUNIT_TEST_REPORT__JUNIT_TEST_REPORT_PROJECT_ID_FKEY);
 
         return _project;
     }
 
     public Test test() {
         if (_test == null)
-            _test = new Test(this, Keys.FK_JUNIT_TEST_REPORT_TEST_1);
+            _test = new Test(this, Keys.JUNIT_TEST_REPORT__JUNIT_TEST_REPORT_TEST_ID_FKEY);
 
         return _test;
     }
 
     public Generalization generalization() {
         if (_generalization == null)
-            _generalization = new Generalization(this, Keys.FK_JUNIT_TEST_REPORT_GENERALIZATION_1);
+            _generalization = new Generalization(this, Keys.JUNIT_TEST_REPORT__JUNIT_TEST_REPORT_GENERALIZATION_ID_FKEY);
 
         return _generalization;
     }
@@ -262,7 +262,7 @@ public class JunitTestReport extends TableImpl<JunitTestReportRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row18<Integer, Integer, Integer, Integer, Integer, ProcessingStage, String, String, String, String, String, TestResult, Float, String, String, String, String, String> fieldsRow() {
+    public Row18<Long, Long, Long, Long, Integer, ProcessingStage, String, String, String, String, String, TestResult, Float, String, String, String, String, String> fieldsRow() {
         return (Row18) super.fieldsRow();
     }
 }

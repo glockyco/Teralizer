@@ -12,8 +12,8 @@ public interface Task {
     ProcessingStage getStage();
     String getVariant();
 
-    Integer getProjectId();
-    Integer getTestId();
-    Integer getAssertionId();
-    Integer getGeneralizationId();
+    Long getProjectId();
+    Long getTestId();
+    Long getAssertionId();
+    Long getGeneralizationId();
 }

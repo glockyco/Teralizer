@@ -13,7 +13,7 @@ import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
-import org.jooq.generated.DefaultSchema;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.JacocoCoverageReportViewRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -29,7 +29,7 @@ public class JacocoCoverageReportView extends TableImpl<JacocoCoverageReportView
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>jacoco_coverage_report_view</code>
+     * The reference instance of <code>public.jacoco_coverage_report_view</code>
      */
     public static final JacocoCoverageReportView JACOCO_COVERAGE_REPORT_VIEW = new JacocoCoverageReportView();
 
@@ -42,87 +42,87 @@ public class JacocoCoverageReportView extends TableImpl<JacocoCoverageReportView
     }
 
     /**
-     * The column <code>jacoco_coverage_report_view.id</code>.
+     * The column <code>public.jacoco_coverage_report_view.id</code>.
      */
-    public final TableField<JacocoCoverageReportViewRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER, this, "");
+    public final TableField<JacocoCoverageReportViewRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.project_id</code>.
+     * The column <code>public.jacoco_coverage_report_view.project_id</code>.
      */
-    public final TableField<JacocoCoverageReportViewRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER, this, "");
+    public final TableField<JacocoCoverageReportViewRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.step</code>.
+     * The column <code>public.jacoco_coverage_report_view.step</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> STEP = createField(DSL.name("step"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.stage</code>.
+     * The column <code>public.jacoco_coverage_report_view.stage</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, String> STAGE = createField(DSL.name("stage"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.variant</code>.
+     * The column <code>public.jacoco_coverage_report_view.variant</code>.
      */
-    public final TableField<JacocoCoverageReportViewRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.VARCHAR, this, "");
+    public final TableField<JacocoCoverageReportViewRecord, String> VARIANT = createField(DSL.name("variant"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.covered_package</code>.
+     * The column <code>public.jacoco_coverage_report_view.covered_package</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, String> COVERED_PACKAGE = createField(DSL.name("covered_package"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.covered_class</code>.
+     * The column <code>public.jacoco_coverage_report_view.covered_class</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, String> COVERED_CLASS = createField(DSL.name("covered_class"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.instruction_missed</code>.
+     * The column <code>public.jacoco_coverage_report_view.instruction_missed</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> INSTRUCTION_MISSED = createField(DSL.name("instruction_missed"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.instruction_covered</code>.
+     * The column <code>public.jacoco_coverage_report_view.instruction_covered</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> INSTRUCTION_COVERED = createField(DSL.name("instruction_covered"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.branch_missed</code>.
+     * The column <code>public.jacoco_coverage_report_view.branch_missed</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> BRANCH_MISSED = createField(DSL.name("branch_missed"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.branch_covered</code>.
+     * The column <code>public.jacoco_coverage_report_view.branch_covered</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> BRANCH_COVERED = createField(DSL.name("branch_covered"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.line_missed</code>.
+     * The column <code>public.jacoco_coverage_report_view.line_missed</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> LINE_MISSED = createField(DSL.name("line_missed"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.line_covered</code>.
+     * The column <code>public.jacoco_coverage_report_view.line_covered</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> LINE_COVERED = createField(DSL.name("line_covered"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.complexity_missed</code>.
+     * The column <code>public.jacoco_coverage_report_view.complexity_missed</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> COMPLEXITY_MISSED = createField(DSL.name("complexity_missed"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.complexity_covered</code>.
+     * The column <code>public.jacoco_coverage_report_view.complexity_covered</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> COMPLEXITY_COVERED = createField(DSL.name("complexity_covered"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.method_missed</code>.
+     * The column <code>public.jacoco_coverage_report_view.method_missed</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> METHOD_MISSED = createField(DSL.name("method_missed"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column <code>jacoco_coverage_report_view.method_covered</code>.
+     * The column <code>public.jacoco_coverage_report_view.method_covered</code>.
      */
     public final TableField<JacocoCoverageReportViewRecord, Integer> METHOD_COVERED = createField(DSL.name("method_covered"), SQLDataType.INTEGER, this, "");
 
@@ -131,25 +131,25 @@ public class JacocoCoverageReportView extends TableImpl<JacocoCoverageReportView
     }
 
     private JacocoCoverageReportView(Name alias, Table<JacocoCoverageReportViewRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("CREATE VIEW jacoco_coverage_report_view AS\nSELECT\n    id,\n    project_id,\n    step,\n    stage,\n    CASE\n        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'\n        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'\n        ELSE variant\n    END AS variant,\n    covered_package,\n    covered_class,\n    instruction_missed,\n    instruction_covered,\n    branch_missed,\n    branch_covered,\n    line_missed,\n    line_covered,\n    complexity_missed,\n    complexity_covered,\n    method_missed,\n    method_covered\nFROM jacoco_coverage_report"));
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"jacoco_coverage_report_view\" as  SELECT id,\n    project_id,\n    step,\n    stage,\n        CASE\n            WHEN (stage ~~ '%ORIGINAL'::text) THEN 'ORIGINAL'::text\n            WHEN (stage ~~ '%INITIAL'::text) THEN 'INITIAL'::text\n            ELSE variant\n        END AS variant,\n    covered_package,\n    covered_class,\n    instruction_missed,\n    instruction_covered,\n    branch_missed,\n    branch_covered,\n    line_missed,\n    line_covered,\n    complexity_missed,\n    complexity_covered,\n    method_missed,\n    method_covered\n   FROM jacoco_coverage_report;"));
     }
 
     /**
-     * Create an aliased <code>jacoco_coverage_report_view</code> table reference
+     * Create an aliased <code>public.jacoco_coverage_report_view</code> table reference
      */
     public JacocoCoverageReportView(String alias) {
         this(DSL.name(alias), JACOCO_COVERAGE_REPORT_VIEW);
     }
 
     /**
-     * Create an aliased <code>jacoco_coverage_report_view</code> table reference
+     * Create an aliased <code>public.jacoco_coverage_report_view</code> table reference
      */
     public JacocoCoverageReportView(Name alias) {
         this(alias, JACOCO_COVERAGE_REPORT_VIEW);
     }
 
     /**
-     * Create a <code>jacoco_coverage_report_view</code> table reference
+     * Create a <code>public.jacoco_coverage_report_view</code> table reference
      */
     public JacocoCoverageReportView() {
         this(DSL.name("jacoco_coverage_report_view"), null);
@@ -161,7 +161,7 @@ public class JacocoCoverageReportView extends TableImpl<JacocoCoverageReportView
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -195,7 +195,7 @@ public class JacocoCoverageReportView extends TableImpl<JacocoCoverageReportView
     // -------------------------------------------------------------------------
 
     @Override
-    public Row17<Integer, Integer, Integer, String, String, String, String, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> fieldsRow() {
+    public Row17<Long, Long, Integer, String, String, String, String, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> fieldsRow() {
         return (Row17) super.fieldsRow();
     }
 }

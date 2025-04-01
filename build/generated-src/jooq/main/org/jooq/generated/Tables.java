@@ -17,94 +17,88 @@ import org.jooq.generated.tables.PitCoverageReportView;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.PitMutationReportView;
 import org.jooq.generated.tables.Project;
-import org.jooq.generated.tables.SqliteSequence;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
 
 
 /**
- * Convenience access to all tables in the default schema.
+ * Convenience access to all tables in public.
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables {
 
     /**
-     * The table <code>assertion</code>.
+     * The table <code>public.assertion</code>.
      */
     public static final Assertion ASSERTION = Assertion.ASSERTION;
 
     /**
-     * The table <code>evosuite_report</code>.
+     * The table <code>public.evosuite_report</code>.
      */
     public static final EvosuiteReport EVOSUITE_REPORT = EvosuiteReport.EVOSUITE_REPORT;
 
     /**
-     * The table <code>evosuite_runtime</code>.
+     * The table <code>public.evosuite_runtime</code>.
      */
     public static final EvosuiteRuntime EVOSUITE_RUNTIME = EvosuiteRuntime.EVOSUITE_RUNTIME;
 
     /**
-     * The table <code>generalization</code>.
+     * The table <code>public.generalization</code>.
      */
     public static final Generalization GENERALIZATION = Generalization.GENERALIZATION;
 
     /**
-     * The table <code>jacoco_coverage_report</code>.
+     * The table <code>public.jacoco_coverage_report</code>.
      */
     public static final JacocoCoverageReport JACOCO_COVERAGE_REPORT = JacocoCoverageReport.JACOCO_COVERAGE_REPORT;
 
     /**
-     * The table <code>jacoco_coverage_report_view</code>.
+     * The table <code>public.jacoco_coverage_report_view</code>.
      */
     public static final JacocoCoverageReportView JACOCO_COVERAGE_REPORT_VIEW = JacocoCoverageReportView.JACOCO_COVERAGE_REPORT_VIEW;
 
     /**
-     * The table <code>junit_test_report</code>.
+     * The table <code>public.junit_test_report</code>.
      */
     public static final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
 
     /**
-     * The table <code>junit_test_report_view</code>.
+     * The table <code>public.junit_test_report_view</code>.
      */
     public static final JunitTestReportView JUNIT_TEST_REPORT_VIEW = JunitTestReportView.JUNIT_TEST_REPORT_VIEW;
 
     /**
-     * The table <code>pit_coverage_report</code>.
+     * The table <code>public.pit_coverage_report</code>.
      */
     public static final PitCoverageReport PIT_COVERAGE_REPORT = PitCoverageReport.PIT_COVERAGE_REPORT;
 
     /**
-     * The table <code>pit_coverage_report_view</code>.
+     * The table <code>public.pit_coverage_report_view</code>.
      */
     public static final PitCoverageReportView PIT_COVERAGE_REPORT_VIEW = PitCoverageReportView.PIT_COVERAGE_REPORT_VIEW;
 
     /**
-     * The table <code>pit_mutation_report</code>.
+     * The table <code>public.pit_mutation_report</code>.
      */
     public static final PitMutationReport PIT_MUTATION_REPORT = PitMutationReport.PIT_MUTATION_REPORT;
 
     /**
-     * The table <code>pit_mutation_report_view</code>.
+     * The table <code>public.pit_mutation_report_view</code>.
      */
     public static final PitMutationReportView PIT_MUTATION_REPORT_VIEW = PitMutationReportView.PIT_MUTATION_REPORT_VIEW;
 
     /**
-     * The table <code>project</code>.
+     * The table <code>public.project</code>.
      */
     public static final Project PROJECT = Project.PROJECT;
 
     /**
-     * The table <code>sqlite_sequence</code>.
-     */
-    public static final SqliteSequence SQLITE_SEQUENCE = SqliteSequence.SQLITE_SEQUENCE;
-
-    /**
-     * The table <code>task</code>.
+     * The table <code>public.task</code>.
      */
     public static final Task TASK = Task.TASK;
 
     /**
-     * The table <code>test</code>.
+     * The table <code>public.test</code>.
      */
     public static final Test TEST = Test.TEST;
 }

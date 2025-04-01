@@ -18,9 +18,9 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
-import org.jooq.generated.DefaultSchema;
 import org.jooq.generated.Indexes;
 import org.jooq.generated.Keys;
+import org.jooq.generated.Public;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
@@ -36,7 +36,7 @@ public class Assertion extends TableImpl<AssertionRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>assertion</code>
+     * The reference instance of <code>public.assertion</code>
      */
     public static final Assertion ASSERTION = new Assertion();
 
@@ -49,212 +49,212 @@ public class Assertion extends TableImpl<AssertionRecord> {
     }
 
     /**
-     * The column <code>assertion.id</code>.
+     * The column <code>public.assertion.id</code>.
      */
-    public final TableField<AssertionRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
+    public final TableField<AssertionRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>assertion.project_id</code>.
+     * The column <code>public.assertion.project_id</code>.
      */
-    public final TableField<AssertionRecord, Integer> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<AssertionRecord, Long> PROJECT_ID = createField(DSL.name("project_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>assertion.test_id</code>.
+     * The column <code>public.assertion.test_id</code>.
      */
-    public final TableField<AssertionRecord, Integer> TEST_ID = createField(DSL.name("test_id"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<AssertionRecord, Long> TEST_ID = createField(DSL.name("test_id"), SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>assertion.assertion_name</code>.
+     * The column <code>public.assertion.assertion_name</code>.
      */
     public final TableField<AssertionRecord, String> ASSERTION_NAME = createField(DSL.name("assertion_name"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>assertion.assertion_arguments</code>.
+     * The column <code>public.assertion.assertion_arguments</code>.
      */
     public final TableField<AssertionRecord, String> ASSERTION_ARGUMENTS = createField(DSL.name("assertion_arguments"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>assertion.assertion_source_code</code>.
+     * The column <code>public.assertion.assertion_source_code</code>.
      */
     public final TableField<AssertionRecord, String> ASSERTION_SOURCE_CODE = createField(DSL.name("assertion_source_code"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>assertion.assertion_absolute_path</code>.
+     * The column <code>public.assertion.assertion_absolute_path</code>.
      */
     public final TableField<AssertionRecord, String> ASSERTION_ABSOLUTE_PATH = createField(DSL.name("assertion_absolute_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>assertion.assertion_relative_path</code>.
+     * The column <code>public.assertion.assertion_relative_path</code>.
      */
     public final TableField<AssertionRecord, String> ASSERTION_RELATIVE_PATH = createField(DSL.name("assertion_relative_path"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
-     * The column <code>assertion.tested_file_path</code>.
+     * The column <code>public.assertion.tested_file_path</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_FILE_PATH = createField(DSL.name("tested_file_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_class_qualified_name</code>.
+     * The column <code>public.assertion.tested_class_qualified_name</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_CLASS_QUALIFIED_NAME = createField(DSL.name("tested_class_qualified_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_qualified_name</code>.
+     * The column <code>public.assertion.tested_method_qualified_name</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_QUALIFIED_NAME = createField(DSL.name("tested_method_qualified_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_package_name</code>.
+     * The column <code>public.assertion.tested_package_name</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_PACKAGE_NAME = createField(DSL.name("tested_package_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_class_name</code>.
+     * The column <code>public.assertion.tested_class_name</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_CLASS_NAME = createField(DSL.name("tested_class_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_name</code>.
+     * The column <code>public.assertion.tested_method_name</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_NAME = createField(DSL.name("tested_method_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_parameters</code>.
+     * The column <code>public.assertion.tested_method_parameters</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_PARAMETERS = createField(DSL.name("tested_method_parameters"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_return_type</code>.
+     * The column <code>public.assertion.tested_method_return_type</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_RETURN_TYPE = createField(DSL.name("tested_method_return_type"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_absolute_path</code>.
+     * The column <code>public.assertion.tested_method_absolute_path</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_ABSOLUTE_PATH = createField(DSL.name("tested_method_absolute_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_relative_path</code>.
+     * The column <code>public.assertion.tested_method_relative_path</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_RELATIVE_PATH = createField(DSL.name("tested_method_relative_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_call_arguments</code>.
+     * The column <code>public.assertion.tested_method_call_arguments</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_CALL_ARGUMENTS = createField(DSL.name("tested_method_call_arguments"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_call_source_code</code>.
+     * The column <code>public.assertion.tested_method_call_source_code</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_CALL_SOURCE_CODE = createField(DSL.name("tested_method_call_source_code"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_call_absolute_path</code>.
+     * The column <code>public.assertion.tested_method_call_absolute_path</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_CALL_ABSOLUTE_PATH = createField(DSL.name("tested_method_call_absolute_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.tested_method_call_relative_path</code>.
+     * The column <code>public.assertion.tested_method_call_relative_path</code>.
      */
     public final TableField<AssertionRecord, String> TESTED_METHOD_CALL_RELATIVE_PATH = createField(DSL.name("tested_method_call_relative_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.instrumented_file_path</code>.
+     * The column <code>public.assertion.instrumented_file_path</code>.
      */
     public final TableField<AssertionRecord, String> INSTRUMENTED_FILE_PATH = createField(DSL.name("instrumented_file_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.instrumented_class_qualified_name</code>.
+     * The column <code>public.assertion.instrumented_class_qualified_name</code>.
      */
     public final TableField<AssertionRecord, String> INSTRUMENTED_CLASS_QUALIFIED_NAME = createField(DSL.name("instrumented_class_qualified_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.instrumented_method_qualified_name</code>.
+     * The column <code>public.assertion.instrumented_method_qualified_name</code>.
      */
     public final TableField<AssertionRecord, String> INSTRUMENTED_METHOD_QUALIFIED_NAME = createField(DSL.name("instrumented_method_qualified_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.instrumented_package_name</code>.
+     * The column <code>public.assertion.instrumented_package_name</code>.
      */
     public final TableField<AssertionRecord, String> INSTRUMENTED_PACKAGE_NAME = createField(DSL.name("instrumented_package_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.instrumented_class_name</code>.
+     * The column <code>public.assertion.instrumented_class_name</code>.
      */
     public final TableField<AssertionRecord, String> INSTRUMENTED_CLASS_NAME = createField(DSL.name("instrumented_class_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.instrumented_method_name</code>.
+     * The column <code>public.assertion.instrumented_method_name</code>.
      */
     public final TableField<AssertionRecord, String> INSTRUMENTED_METHOD_NAME = createField(DSL.name("instrumented_method_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.driver_file_path</code>.
+     * The column <code>public.assertion.driver_file_path</code>.
      */
     public final TableField<AssertionRecord, String> DRIVER_FILE_PATH = createField(DSL.name("driver_file_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.driver_class_qualified_name</code>.
+     * The column <code>public.assertion.driver_class_qualified_name</code>.
      */
     public final TableField<AssertionRecord, String> DRIVER_CLASS_QUALIFIED_NAME = createField(DSL.name("driver_class_qualified_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.driver_package_name</code>.
+     * The column <code>public.assertion.driver_package_name</code>.
      */
     public final TableField<AssertionRecord, String> DRIVER_PACKAGE_NAME = createField(DSL.name("driver_package_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.driver_class_name</code>.
+     * The column <code>public.assertion.driver_class_name</code>.
      */
     public final TableField<AssertionRecord, String> DRIVER_CLASS_NAME = createField(DSL.name("driver_class_name"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.jpf_config_path</code>.
+     * The column <code>public.assertion.jpf_config_path</code>.
      */
     public final TableField<AssertionRecord, String> JPF_CONFIG_PATH = createField(DSL.name("jpf_config_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.input_values_path</code>.
+     * The column <code>public.assertion.input_values_path</code>.
      */
     public final TableField<AssertionRecord, String> INPUT_VALUES_PATH = createField(DSL.name("input_values_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.output_value_path</code>.
+     * The column <code>public.assertion.output_value_path</code>.
      */
     public final TableField<AssertionRecord, String> OUTPUT_VALUE_PATH = createField(DSL.name("output_value_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.input_specification_path</code>.
+     * The column <code>public.assertion.input_specification_path</code>.
      */
     public final TableField<AssertionRecord, String> INPUT_SPECIFICATION_PATH = createField(DSL.name("input_specification_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.output_specification_path</code>.
+     * The column <code>public.assertion.output_specification_path</code>.
      */
     public final TableField<AssertionRecord, String> OUTPUT_SPECIFICATION_PATH = createField(DSL.name("output_specification_path"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.equivalent_assertions</code>.
+     * The column <code>public.assertion.equivalent_assertions</code>.
      */
     public final TableField<AssertionRecord, String> EQUIVALENT_ASSERTIONS = createField(DSL.name("equivalent_assertions"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.input_model_statistics</code>.
+     * The column <code>public.assertion.input_model_statistics</code>.
      */
     public final TableField<AssertionRecord, String> INPUT_MODEL_STATISTICS = createField(DSL.name("input_model_statistics"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.output_model_statistics</code>.
+     * The column <code>public.assertion.output_model_statistics</code>.
      */
     public final TableField<AssertionRecord, String> OUTPUT_MODEL_STATISTICS = createField(DSL.name("output_model_statistics"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>assertion.is_included</code>.
+     * The column <code>public.assertion.is_included</code>.
      */
     public final TableField<AssertionRecord, Boolean> IS_INCLUDED = createField(DSL.name("is_included"), SQLDataType.BOOLEAN.nullable(false), this, "");
 
     /**
-     * The column <code>assertion.exclusion_info</code>.
+     * The column <code>public.assertion.exclusion_info</code>.
      */
     public final TableField<AssertionRecord, String> EXCLUSION_INFO = createField(DSL.name("exclusion_info"), SQLDataType.CLOB, this, "");
 
@@ -267,21 +267,21 @@ public class Assertion extends TableImpl<AssertionRecord> {
     }
 
     /**
-     * Create an aliased <code>assertion</code> table reference
+     * Create an aliased <code>public.assertion</code> table reference
      */
     public Assertion(String alias) {
         this(DSL.name(alias), ASSERTION);
     }
 
     /**
-     * Create an aliased <code>assertion</code> table reference
+     * Create an aliased <code>public.assertion</code> table reference
      */
     public Assertion(Name alias) {
         this(alias, ASSERTION);
     }
 
     /**
-     * Create a <code>assertion</code> table reference
+     * Create a <code>public.assertion</code> table reference
      */
     public Assertion() {
         this(DSL.name("assertion"), null);
@@ -293,7 +293,7 @@ public class Assertion extends TableImpl<AssertionRecord> {
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
@@ -302,23 +302,23 @@ public class Assertion extends TableImpl<AssertionRecord> {
     }
 
     @Override
-    public Identity<AssertionRecord, Integer> getIdentity() {
-        return (Identity<AssertionRecord, Integer>) super.getIdentity();
+    public Identity<AssertionRecord, Long> getIdentity() {
+        return (Identity<AssertionRecord, Long>) super.getIdentity();
     }
 
     @Override
     public UniqueKey<AssertionRecord> getPrimaryKey() {
-        return Keys.PK_ASSERTION;
+        return Keys.ASSERTION_PKEY;
     }
 
     @Override
     public List<UniqueKey<AssertionRecord>> getKeys() {
-        return Arrays.<UniqueKey<AssertionRecord>>asList(Keys.PK_ASSERTION);
+        return Arrays.<UniqueKey<AssertionRecord>>asList(Keys.ASSERTION_PKEY);
     }
 
     @Override
     public List<ForeignKey<AssertionRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<AssertionRecord, ?>>asList(Keys.FK_ASSERTION_PROJECT_1, Keys.FK_ASSERTION_TEST_1);
+        return Arrays.<ForeignKey<AssertionRecord, ?>>asList(Keys.ASSERTION__ASSERTION_PROJECT_ID_FKEY, Keys.ASSERTION__ASSERTION_TEST_ID_FKEY);
     }
 
     private transient Project _project;
@@ -326,14 +326,14 @@ public class Assertion extends TableImpl<AssertionRecord> {
 
     public Project project() {
         if (_project == null)
-            _project = new Project(this, Keys.FK_ASSERTION_PROJECT_1);
+            _project = new Project(this, Keys.ASSERTION__ASSERTION_PROJECT_ID_FKEY);
 
         return _project;
     }
 
     public Test test() {
         if (_test == null)
-            _test = new Test(this, Keys.FK_ASSERTION_TEST_1);
+            _test = new Test(this, Keys.ASSERTION__ASSERTION_TEST_ID_FKEY);
 
         return _test;
     }
