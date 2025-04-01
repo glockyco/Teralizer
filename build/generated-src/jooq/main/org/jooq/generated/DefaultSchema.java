@@ -14,9 +14,13 @@ import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
+import org.jooq.generated.tables.JacocoCoverageReportView;
 import org.jooq.generated.tables.JunitTestReport;
+import org.jooq.generated.tables.JunitTestReportView;
 import org.jooq.generated.tables.PitCoverageReport;
+import org.jooq.generated.tables.PitCoverageReportView;
 import org.jooq.generated.tables.PitMutationReport;
+import org.jooq.generated.tables.PitMutationReportView;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.SqliteSequence;
 import org.jooq.generated.tables.Task;
@@ -63,9 +67,19 @@ public class DefaultSchema extends SchemaImpl {
     public final JacocoCoverageReport JACOCO_COVERAGE_REPORT = JacocoCoverageReport.JACOCO_COVERAGE_REPORT;
 
     /**
+     * The table <code>jacoco_coverage_report_view</code>.
+     */
+    public final JacocoCoverageReportView JACOCO_COVERAGE_REPORT_VIEW = JacocoCoverageReportView.JACOCO_COVERAGE_REPORT_VIEW;
+
+    /**
      * The table <code>junit_test_report</code>.
      */
     public final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
+
+    /**
+     * The table <code>junit_test_report_view</code>.
+     */
+    public final JunitTestReportView JUNIT_TEST_REPORT_VIEW = JunitTestReportView.JUNIT_TEST_REPORT_VIEW;
 
     /**
      * The table <code>pit_coverage_report</code>.
@@ -73,9 +87,19 @@ public class DefaultSchema extends SchemaImpl {
     public final PitCoverageReport PIT_COVERAGE_REPORT = PitCoverageReport.PIT_COVERAGE_REPORT;
 
     /**
+     * The table <code>pit_coverage_report_view</code>.
+     */
+    public final PitCoverageReportView PIT_COVERAGE_REPORT_VIEW = PitCoverageReportView.PIT_COVERAGE_REPORT_VIEW;
+
+    /**
      * The table <code>pit_mutation_report</code>.
      */
     public final PitMutationReport PIT_MUTATION_REPORT = PitMutationReport.PIT_MUTATION_REPORT;
+
+    /**
+     * The table <code>pit_mutation_report_view</code>.
+     */
+    public final PitMutationReportView PIT_MUTATION_REPORT_VIEW = PitMutationReportView.PIT_MUTATION_REPORT_VIEW;
 
     /**
      * The table <code>project</code>.
@@ -118,9 +142,13 @@ public class DefaultSchema extends SchemaImpl {
             EvosuiteRuntime.EVOSUITE_RUNTIME,
             Generalization.GENERALIZATION,
             JacocoCoverageReport.JACOCO_COVERAGE_REPORT,
+            JacocoCoverageReportView.JACOCO_COVERAGE_REPORT_VIEW,
             JunitTestReport.JUNIT_TEST_REPORT,
+            JunitTestReportView.JUNIT_TEST_REPORT_VIEW,
             PitCoverageReport.PIT_COVERAGE_REPORT,
+            PitCoverageReportView.PIT_COVERAGE_REPORT_VIEW,
             PitMutationReport.PIT_MUTATION_REPORT,
+            PitMutationReportView.PIT_MUTATION_REPORT_VIEW,
             Project.PROJECT,
             SqliteSequence.SQLITE_SEQUENCE,
             Task.TASK,

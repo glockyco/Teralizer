@@ -1,9 +1,9 @@
 -- Dialect: SQLite
 
-DROP VIEW IF EXISTS pit_mutation_report_;
-DROP VIEW IF EXISTS pit_coverage_report_;
-DROP VIEW IF EXISTS jacoco_coverage_report_;
-DROP VIEW IF EXISTS junit_test_report_;
+DROP VIEW IF EXISTS pit_mutation_report_view;
+DROP VIEW IF EXISTS pit_coverage_report_view;
+DROP VIEW IF EXISTS jacoco_coverage_report_view;
+DROP VIEW IF EXISTS junit_test_report_view;
 
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS pit_mutation_report;
@@ -366,7 +366,7 @@ CREATE INDEX idx_task_variant ON task (variant);
 
 CREATE INDEX idx_task_status ON task (status);
 
-CREATE VIEW junit_test_report_ AS
+CREATE VIEW junit_test_report_view AS
 SELECT
     id,
     project_id,
@@ -392,7 +392,7 @@ SELECT
     report_file_path
 FROM junit_test_report;
 
-CREATE VIEW jacoco_coverage_report_ AS
+CREATE VIEW jacoco_coverage_report_view AS
 SELECT
     id,
     project_id,
@@ -417,7 +417,7 @@ SELECT
     method_covered
 FROM jacoco_coverage_report;
 
-CREATE VIEW pit_coverage_report_ AS
+CREATE VIEW pit_coverage_report_view AS
 SELECT
     id,
     project_id,
@@ -440,7 +440,7 @@ SELECT
     test_method_name
 FROM pit_coverage_report;
 
-CREATE VIEW pit_mutation_report_ AS
+CREATE VIEW pit_mutation_report_view AS
 SELECT
     id,
     project_id,
