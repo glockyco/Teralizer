@@ -1,5 +1,7 @@
 -- Dialect: PostgreSQL
 
+DROP FUNCTION variant_order(variant TEXT);
+
 DROP VIEW IF EXISTS pit_mutation_report_view;
 DROP VIEW IF EXISTS pit_coverage_report_view;
 DROP VIEW IF EXISTS jacoco_coverage_report_view;
@@ -515,3 +517,40 @@ SELECT
     killing_method_name,
     description
 FROM pit_mutation_report;
+
+CREATE FUNCTION variant_order(variant TEXT)
+RETURNS INTEGER AS $$
+DECLARE
+    base_order INTEGER;
+    tries_number INTEGER := 0;
+    base_variant TEXT;
+BEGIN
+    IF variant IS NULL THEN
+        RETURN 0;
+    END IF;
+
+    IF variant ~ '_[0-9]+_TRIES$' THEN
+        -- Extract the number between _ and _TRIES
+        tries_number := CAST(regexp_replace(variant, '^.*_([0-9]+)_TRIES$', '\1') AS INTEGER);
+        -- Extract base variant name by removing the _X_TRIES suffix
+        base_variant := regexp_replace(variant, '(_[0-9]+_TRIES)$', '');
+    ELSE
+        base_variant := variant;
+    END IF;
+
+    base_order := CASE
+        WHEN base_variant = 'ORIGINAL' THEN 10000000
+        WHEN base_variant = 'INITIAL' THEN 20000000
+        WHEN base_variant = 'BASELINE' THEN 30000000
+        WHEN base_variant = 'NAIVE' THEN 40000000
+        WHEN base_variant = 'IMPROVED' THEN 60000000
+    END;
+
+    IF base_order IS NULL THEN
+        RAISE EXCEPTION 'Unknown variant type: %', base_variant;
+    END IF;
+
+    RETURN base_order + tries_number;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
