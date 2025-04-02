@@ -462,7 +462,7 @@ FROM
 GROUP BY
     pmr.stage, pmr.variant, pmr.stage, pmr.mutator
 ORDER BY
-    pmr.variant, count(*) DESC, pmr.mutator;
+    variant_order(variant_name(pmr.stage, pmr.variant)), count(*) DESC, pmr.mutator;
 
 CREATE VIEW mutation_results_by_project_variant_mutator AS
 SELECT
@@ -483,7 +483,7 @@ FROM
 GROUP BY
     pmr.project_id, pmr.stage, pmr.variant, pmr.stage, pmr.mutator
 ORDER BY
-    pmr.project_id, pmr.variant, count(*) DESC, pmr.mutator;
+    pmr.project_id, variant_order(variant_name(pmr.stage, pmr.variant)), count(*) DESC, pmr.mutator;
 
 CREATE FUNCTION project_name(project_id BIGINT)
 RETURNS TEXT AS $$
