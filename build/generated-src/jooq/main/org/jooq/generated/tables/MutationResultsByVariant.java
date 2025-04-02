@@ -4,11 +4,12 @@
 package org.jooq.generated.tables;
 
 
+import java.math.BigDecimal;
+
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row9;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -86,12 +87,117 @@ public class MutationResultsByVariant extends TableImpl<MutationResultsByVariant
      */
     public final TableField<MutationResultsByVariantRecord, Long> MEMORY_ERROR = createField(DSL.name("memory_error"), SQLDataType.BIGINT, this, "");
 
+    /**
+     * The column <code>public.mutation_results_by_variant.covered_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, Long> COVERED_DIFF = createField(DSL.name("covered_diff"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.uncovered_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, Long> UNCOVERED_DIFF = createField(DSL.name("uncovered_diff"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.survived_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, Long> SURVIVED_DIFF = createField(DSL.name("survived_diff"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.detected_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, Long> DETECTED_DIFF = createField(DSL.name("detected_diff"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.killed_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, Long> KILLED_DIFF = createField(DSL.name("killed_diff"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.timed_out_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, Long> TIMED_OUT_DIFF = createField(DSL.name("timed_out_diff"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.memory_error_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, Long> MEMORY_ERROR_DIFF = createField(DSL.name("memory_error_diff"), SQLDataType.BIGINT, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.covered_pct</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> COVERED_PCT = createField(DSL.name("covered_pct"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.uncovered_pct</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> UNCOVERED_PCT = createField(DSL.name("uncovered_pct"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.survived_pct</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> SURVIVED_PCT = createField(DSL.name("survived_pct"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.detected_pct</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> DETECTED_PCT = createField(DSL.name("detected_pct"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.killed_pct</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> KILLED_PCT = createField(DSL.name("killed_pct"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.timed_out_pct</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> TIMED_OUT_PCT = createField(DSL.name("timed_out_pct"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.memory_error_pct</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> MEMORY_ERROR_PCT = createField(DSL.name("memory_error_pct"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.covered_pct_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> COVERED_PCT_DIFF = createField(DSL.name("covered_pct_diff"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.uncovered_pct_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> UNCOVERED_PCT_DIFF = createField(DSL.name("uncovered_pct_diff"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.survived_pct_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> SURVIVED_PCT_DIFF = createField(DSL.name("survived_pct_diff"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.detected_pct_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> DETECTED_PCT_DIFF = createField(DSL.name("detected_pct_diff"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.killed_pct_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> KILLED_PCT_DIFF = createField(DSL.name("killed_pct_diff"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.timed_out_pct_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> TIMED_OUT_PCT_DIFF = createField(DSL.name("timed_out_pct_diff"), SQLDataType.NUMERIC, this, "");
+
+    /**
+     * The column <code>public.mutation_results_by_variant.memory_error_pct_diff</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, BigDecimal> MEMORY_ERROR_PCT_DIFF = createField(DSL.name("memory_error_pct_diff"), SQLDataType.NUMERIC, this, "");
+
     private MutationResultsByVariant(Name alias, Table<MutationResultsByVariantRecord> aliased) {
         this(alias, aliased, null);
     }
 
     private MutationResultsByVariant(Name alias, Table<MutationResultsByVariantRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"mutation_results_by_variant\" as  SELECT variant_name(stage, variant) AS variant,\n    count(*) AS total,\n    (count(*) - count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END)) AS covered,\n    count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END) AS uncovered,\n    count(\n        CASE\n            WHEN (status = 'SURVIVED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS survived,\n    sum((is_detected)::integer) AS detected,\n    count(\n        CASE\n            WHEN (status = 'KILLED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS killed,\n    count(\n        CASE\n            WHEN (status = 'TIMED_OUT'::text) THEN 1\n            ELSE NULL::integer\n        END) AS timed_out,\n    count(\n        CASE\n            WHEN (status = 'MEMORY_ERROR'::text) THEN 1\n            ELSE NULL::integer\n        END) AS memory_error\n   FROM pit_mutation_report pmr\n  GROUP BY stage, variant\n  ORDER BY (variant_order(variant_name(stage, variant)));"));
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"mutation_results_by_variant\" as  WITH base_data AS (\n         SELECT variant_name(pmr.stage, pmr.variant) AS variant,\n            count(*) AS total,\n            (count(*) - count(\n                CASE\n                    WHEN (pmr.status = 'NO_COVERAGE'::text) THEN 1\n                    ELSE NULL::integer\n                END)) AS covered,\n            count(\n                CASE\n                    WHEN (pmr.status = 'NO_COVERAGE'::text) THEN 1\n                    ELSE NULL::integer\n                END) AS uncovered,\n            count(\n                CASE\n                    WHEN (pmr.status = 'SURVIVED'::text) THEN 1\n                    ELSE NULL::integer\n                END) AS survived,\n            sum((pmr.is_detected)::integer) AS detected,\n            count(\n                CASE\n                    WHEN (pmr.status = 'KILLED'::text) THEN 1\n                    ELSE NULL::integer\n                END) AS killed,\n            count(\n                CASE\n                    WHEN (pmr.status = 'TIMED_OUT'::text) THEN 1\n                    ELSE NULL::integer\n                END) AS timed_out,\n            count(\n                CASE\n                    WHEN (pmr.status = 'MEMORY_ERROR'::text) THEN 1\n                    ELSE NULL::integer\n                END) AS memory_error\n           FROM pit_mutation_report pmr\n          GROUP BY pmr.stage, pmr.variant\n        ), percentages AS (\n         SELECT base_data.variant,\n            base_data.total,\n            base_data.covered,\n            base_data.uncovered,\n            base_data.survived,\n            base_data.detected,\n            base_data.killed,\n            base_data.timed_out,\n            base_data.memory_error,\n            round((((base_data.covered)::numeric * 100.0) / (base_data.total)::numeric), 2) AS covered_pct,\n            round((((base_data.uncovered)::numeric * 100.0) / (base_data.total)::numeric), 2) AS uncovered_pct,\n            round((((base_data.survived)::numeric * 100.0) / (base_data.total)::numeric), 2) AS survived_pct,\n            round((((base_data.detected)::numeric * 100.0) / (base_data.total)::numeric), 2) AS detected_pct,\n            round((((base_data.killed)::numeric * 100.0) / (base_data.total)::numeric), 2) AS killed_pct,\n            round((((base_data.timed_out)::numeric * 100.0) / (base_data.total)::numeric), 2) AS timed_out_pct,\n            round((((base_data.memory_error)::numeric * 100.0) / (base_data.total)::numeric), 2) AS memory_error_pct\n           FROM base_data\n        )\n SELECT s.variant,\n    s.total,\n    s.covered,\n    s.uncovered,\n    s.survived,\n    s.detected,\n    s.killed,\n    s.timed_out,\n    s.memory_error,\n    (s.covered - b.covered) AS covered_diff,\n    (s.uncovered - b.uncovered) AS uncovered_diff,\n    (s.survived - b.survived) AS survived_diff,\n    (s.detected - b.detected) AS detected_diff,\n    (s.killed - b.killed) AS killed_diff,\n    (s.timed_out - b.timed_out) AS timed_out_diff,\n    (s.memory_error - b.memory_error) AS memory_error_diff,\n    s.covered_pct,\n    s.uncovered_pct,\n    s.survived_pct,\n    s.detected_pct,\n    s.killed_pct,\n    s.timed_out_pct,\n    s.memory_error_pct,\n    round((s.covered_pct - b.covered_pct), 2) AS covered_pct_diff,\n    round((s.uncovered_pct - b.uncovered_pct), 2) AS uncovered_pct_diff,\n    round((s.survived_pct - b.survived_pct), 2) AS survived_pct_diff,\n    round((s.detected_pct - b.detected_pct), 2) AS detected_pct_diff,\n    round((s.killed_pct - b.killed_pct), 2) AS killed_pct_diff,\n    round((s.timed_out_pct - b.timed_out_pct), 2) AS timed_out_pct_diff,\n    round((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff\n   FROM percentages s,\n    percentages b\n  WHERE (b.variant = 'INITIAL'::text)\n  ORDER BY (variant_order(s.variant));"));
     }
 
     /**
@@ -148,14 +254,5 @@ public class MutationResultsByVariant extends TableImpl<MutationResultsByVariant
     @Override
     public MutationResultsByVariant rename(Name name) {
         return new MutationResultsByVariant(name, null);
-    }
-
-    // -------------------------------------------------------------------------
-    // Row9 type methods
-    // -------------------------------------------------------------------------
-
-    @Override
-    public Row9<String, Long, Long, Long, Long, Long, Long, Long, Long> fieldsRow() {
-        return (Row9) super.fieldsRow();
     }
 }
