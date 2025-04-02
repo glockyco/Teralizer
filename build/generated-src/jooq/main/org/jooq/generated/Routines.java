@@ -6,6 +6,7 @@ package org.jooq.generated;
 
 import org.jooq.Configuration;
 import org.jooq.Field;
+import org.jooq.generated.routines.StageOrder;
 import org.jooq.generated.routines.VariantOrder;
 
 
@@ -14,6 +15,44 @@ import org.jooq.generated.routines.VariantOrder;
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Routines {
+
+    /**
+     * Call <code>public.stage_order</code>
+     */
+    public static Integer stageOrder(
+          Configuration configuration
+        , String stage
+    ) {
+        StageOrder f = new StageOrder();
+        f.setStage(stage);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>public.stage_order</code> as a field.
+     */
+    public static Field<Integer> stageOrder(
+          String stage
+    ) {
+        StageOrder f = new StageOrder();
+        f.setStage(stage);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>public.stage_order</code> as a field.
+     */
+    public static Field<Integer> stageOrder(
+          Field<String> stage
+    ) {
+        StageOrder f = new StageOrder();
+        f.setStage(stage);
+
+        return f.asField();
+    }
 
     /**
      * Call <code>public.variant_order</code>

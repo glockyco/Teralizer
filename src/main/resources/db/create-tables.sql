@@ -1,5 +1,6 @@
 -- Dialect: PostgreSQL
 
+DROP FUNCTION stage_order(stage TEXT);
 DROP FUNCTION variant_order(variant TEXT);
 
 DROP VIEW IF EXISTS pit_mutation_report_view;
@@ -554,3 +555,69 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
+CREATE FUNCTION stage_order(stage TEXT)
+RETURNS INTEGER AS $$
+DECLARE
+    stage_order INTEGER;
+BEGIN
+    IF stage IS NULL THEN
+        RETURN -1;
+    END IF;
+
+    stage_order := CASE
+        WHEN stage = 'CLEANUP_PROJECT' THEN 0
+
+        WHEN stage = 'DOWNLOAD_PROJECT' THEN 1
+        WHEN stage = 'SETUP_PROJECT' THEN 2
+
+        WHEN stage = 'ADD_DEPENDENCIES' THEN 3
+        WHEN stage = 'BUILD_PROJECT_ORIGINAL' THEN 4
+
+        WHEN stage = 'GENERATE_EVOSUITE_TESTS' THEN 5
+        WHEN stage = 'POSTPROCESS_EVOSUITE_TESTS' THEN 6
+
+        WHEN stage = 'BUILD_SPOON_MODEL' THEN 7
+
+        WHEN stage = 'EXECUTE_TESTS_ORIGINAL' THEN 8
+        WHEN stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL' THEN 9
+        WHEN stage = 'COLLECT_JACOCO_DATA_ORIGINAL' THEN 10
+        WHEN stage = 'FILTER_TESTS_ORIGINAL' THEN 11
+        WHEN stage = 'COLLECT_PIT_DATA_ORIGINAL' THEN 12
+
+        WHEN stage = 'ANALYZE_TESTS' THEN 13
+        WHEN stage = 'FILTER_TESTS' THEN 14
+        WHEN stage = 'FILTER_ASSERTIONS' THEN 15
+
+        WHEN stage = 'ADD_JPF_INSTRUMENTATION' THEN 16
+        WHEN stage = 'BUILD_PROJECT_INSTRUMENTED' THEN 17
+        WHEN stage = 'EXECUTE_JPF' THEN 18
+        WHEN stage = 'ANALYZE_JPF' THEN 19
+        WHEN stage = 'CLEANUP_JPF_INSTRUMENTATION' THEN 20
+
+        WHEN stage = 'BUILD_PROJECT_INITIAL' THEN 21
+        WHEN stage = 'EXECUTE_TESTS_INITIAL' THEN 22
+
+        WHEN stage = 'COLLECT_JUNIT_REPORTS_INITIAL' THEN 23
+        WHEN stage = 'COLLECT_JACOCO_DATA_INITIAL' THEN 24
+        WHEN stage = 'COLLECT_PIT_DATA_INITIAL' THEN 25
+
+        WHEN stage = 'CLEANUP_GENERALIZATION' THEN 26
+
+        WHEN stage = 'GENERALIZE_TESTS' THEN 27
+        WHEN stage = 'BUILD_PROJECT_GENERALIZED' THEN 28
+
+        WHEN stage = 'EXECUTE_TESTS_GENERALIZED' THEN 29
+        WHEN stage = 'COLLECT_JUNIT_REPORTS_GENERALIZED' THEN 30
+        WHEN stage = 'FILTER_GENERALIZATIONS' THEN 31
+
+        WHEN stage = 'COLLECT_JACOCO_DATA_GENERALIZED' THEN 32
+        WHEN stage = 'COLLECT_PIT_DATA_GENERALIZED' THEN 33
+    END;
+
+    IF stage_order IS NULL THEN
+        RAISE EXCEPTION 'Unknown stage: %', stage;
+    END IF;
+
+    RETURN stage_order;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
