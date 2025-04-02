@@ -7,6 +7,7 @@ package org.jooq.generated;
 import org.jooq.Configuration;
 import org.jooq.Field;
 import org.jooq.generated.routines.StageOrder;
+import org.jooq.generated.routines.VariantName;
 import org.jooq.generated.routines.VariantOrder;
 
 
@@ -50,6 +51,50 @@ public class Routines {
     ) {
         StageOrder f = new StageOrder();
         f.setStage(stage);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>public.variant_name</code>
+     */
+    public static String variantName(
+          Configuration configuration
+        , String stage
+        , String variant
+    ) {
+        VariantName f = new VariantName();
+        f.setStage(stage);
+        f.setVariant(variant);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>public.variant_name</code> as a field.
+     */
+    public static Field<String> variantName(
+          String stage
+        , String variant
+    ) {
+        VariantName f = new VariantName();
+        f.setStage(stage);
+        f.setVariant(variant);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>public.variant_name</code> as a field.
+     */
+    public static Field<String> variantName(
+          Field<String> stage
+        , Field<String> variant
+    ) {
+        VariantName f = new VariantName();
+        f.setStage(stage);
+        f.setVariant(variant);
 
         return f.asField();
     }

@@ -2,11 +2,7 @@
 
 DROP FUNCTION stage_order(stage TEXT);
 DROP FUNCTION variant_order(variant TEXT);
-
-DROP VIEW IF EXISTS pit_mutation_report_view;
-DROP VIEW IF EXISTS pit_coverage_report_view;
-DROP VIEW IF EXISTS jacoco_coverage_report_view;
-DROP VIEW IF EXISTS junit_test_report_view;
+DROP FUNCTION variant_name(stage TEXT, variant TEXT);
 
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS pit_mutation_report;
@@ -405,119 +401,22 @@ CREATE INDEX idx_task_variant ON task (variant);
 
 CREATE INDEX idx_task_status ON task (status);
 
-CREATE VIEW junit_test_report_view AS
-SELECT
-    id,
-    project_id,
-    test_id,
-    generalization_id,
-    step,
-    stage,
-    CASE
-        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'
-        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'
-        ELSE variant
-    END AS variant,
-    test_package_name,
-    test_class_name,
-    test_method_name,
-    test_case_name,
-    result,
-    runtime,
-    failure_message,
-    failure_type,
-    failure_error_line,
-    failure_detail,
-    report_file_path
-FROM junit_test_report;
+CREATE FUNCTION variant_name(stage TEXT, variant TEXT)
+RETURNS TEXT AS $$
+BEGIN
+    IF variant IS NOT NULL THEN
+        RETURN variant;
+    END IF;
 
-CREATE VIEW jacoco_coverage_report_view AS
-SELECT
-    id,
-    project_id,
-    step,
-    stage,
-    CASE
-        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'
-        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'
-        ELSE variant
-    END AS variant,
-    covered_package,
-    covered_class,
-    instruction_missed,
-    instruction_covered,
-    branch_missed,
-    branch_covered,
-    line_missed,
-    line_covered,
-    complexity_missed,
-    complexity_covered,
-    method_missed,
-    method_covered
-FROM jacoco_coverage_report;
-
-CREATE VIEW pit_coverage_report_view AS
-SELECT
-    id,
-    project_id,
-    test_id,
-    generalization_id,
-    step,
-    stage,
-    CASE
-        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'
-        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'
-        ELSE variant
-    END AS variant,
-    covered_package_name,
-    covered_class_name,
-    covered_method_name,
-    covered_method_description,
-    covered_block_number,
-    test_package_name,
-    test_class_name,
-    test_method_name
-FROM pit_coverage_report;
-
-CREATE VIEW pit_mutation_report_view AS
-SELECT
-    id,
-    project_id,
-    dense_rank() OVER (
-        ORDER BY
-            project_id,
-            mutated_class,
-            line_number,
-            mutator,
-            indexes,
-            blocks,
-            description
-    ) AS mutation_id,
-    killing_test_id,
-    killing_generalization_id,
-    step,
-    stage,
-    CASE
-        WHEN stage LIKE '%ORIGINAL' THEN 'ORIGINAL'
-        WHEN stage LIKE '%INITIAL' THEN 'INITIAL'
-        ELSE variant
-    END AS variant,
-    is_detected,
-    status,
-    number_of_tests_run,
-    source_file,
-    mutated_class,
-    mutated_method,
-    method_description,
-    line_number,
-    mutator,
-    indexes,
-    blocks,
-    killing_package_name,
-    killing_class_name,
-    killing_method_name,
-    description
-FROM pit_mutation_report;
+    IF stage LIKE '%ORIGINAL' THEN
+        RETURN 'ORIGINAL';
+    ELSIF stage LIKE '%INITIAL' THEN
+        RETURN 'INITIAL';
+    ELSE
+        RETURN NULL;
+    END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 CREATE FUNCTION variant_order(variant TEXT)
 RETURNS INTEGER AS $$
