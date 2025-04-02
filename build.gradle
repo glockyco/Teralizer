@@ -112,6 +112,11 @@ jooq {
                                 includeExpression = "project.*_path"
                             }
                             forcedType {
+                                userType = "teralizer.processing.filter.FilterDecision"
+                                enumConverter = true
+                                includeExpression = "filter_result.decision"
+                            }
+                            forcedType {
                                 userType = "teralizer.processing.ProcessingStage"
                                 enumConverter = true
                                 includeExpression = "junit_test_report.stage"

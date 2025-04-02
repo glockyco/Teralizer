@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS jacoco_coverage_report;
 DROP TABLE IF EXISTS junit_test_report;
 DROP TABLE IF EXISTS evosuite_report;
 DROP TABLE IF EXISTS evosuite_runtime;
+DROP TABLE IF EXISTS filter_result;
 DROP TABLE IF EXISTS generalization;
 DROP TABLE IF EXISTS assertion;
 DROP TABLE IF EXISTS test;
@@ -174,6 +175,32 @@ CREATE INDEX idx_generalization_file_path ON generalization (file_path);
 CREATE INDEX idx_generalization_class_qualified_name ON generalization (class_qualified_name);
 CREATE INDEX idx_generalization_method_qualified_name ON generalization (method_qualified_name);
 CREATE INDEX idx_generalization_is_included ON generalization (is_included);
+
+CREATE TABLE filter_result
+(
+    id                BIGSERIAL PRIMARY KEY,
+    project_id        BIGINT NOT NULL,
+
+    test_id           BIGINT, -- can be null if the filter result is for an assertion / generalization
+    assertion_id      BIGINT, -- can be null if the filter result is for a test / generalization
+    generalization_id BIGINT, -- can be null if the filter result is for a test / assertion
+
+    filter_name       TEXT   NOT NULL,
+    decision          TEXT   NOT NULL,
+    reason            TEXT   NOT NULL,
+
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
+    FOREIGN KEY (assertion_id) REFERENCES assertion (id) ON DELETE CASCADE,
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_filter_result_project_id ON filter_result (project_id);
+CREATE INDEX idx_filter_result_test_id ON filter_result (test_id);
+CREATE INDEX idx_filter_result_assertion_id ON filter_result (assertion_id);
+CREATE INDEX idx_filter_result_generalization_id ON filter_result (generalization_id);
+
+CREATE INDEX idx_filter_result_decision ON filter_result (decision);
 
 CREATE TABLE evosuite_runtime
 (

@@ -7,6 +7,7 @@ package org.jooq.generated;
 import org.jooq.generated.tables.Assertion;
 import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
+import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JacocoCoverageReportView;
@@ -41,6 +42,11 @@ public class Tables {
      * The table <code>public.evosuite_runtime</code>.
      */
     public static final EvosuiteRuntime EVOSUITE_RUNTIME = EvosuiteRuntime.EVOSUITE_RUNTIME;
+
+    /**
+     * The table <code>public.filter_result</code>.
+     */
+    public static final FilterResult FILTER_RESULT = FilterResult.FILTER_RESULT;
 
     /**
      * The table <code>public.generalization</code>.

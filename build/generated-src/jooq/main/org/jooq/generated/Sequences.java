@@ -31,6 +31,11 @@ public class Sequences {
     public static final Sequence<Long> EVOSUITE_RUNTIME_ID_SEQ = Internal.createSequence("evosuite_runtime_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
 
     /**
+     * The sequence <code>public.filter_result_id_seq</code>
+     */
+    public static final Sequence<Long> FILTER_RESULT_ID_SEQ = Internal.createSequence("filter_result_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
      * The sequence <code>public.generalization_id_seq</code>
      */
     public static final Sequence<Long> GENERALIZATION_ID_SEQ = Internal.createSequence("generalization_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);

@@ -4,10 +4,8 @@ import com.google.gson.Gson;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
-import org.jooq.generated.tables.records.AssertionRecord;
-import org.jooq.generated.tables.records.GeneralizationRecord;
-import org.jooq.generated.tables.records.ProjectRecord;
-import org.jooq.generated.tables.records.TestRecord;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.*;
 import spoon.Launcher;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -18,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class TestFilteringTask extends AbstractTask {
 
@@ -126,7 +123,7 @@ public class TestFilteringTask extends AbstractTask {
             new TestTypeFilter(this.testRecord)
         );
 
-        this.checkFilters(filters);
+        this.checkFilters(create, filters);
     }
 
     private void filterTest(TaskContext context) throws Exception {
@@ -141,10 +138,11 @@ public class TestFilteringTask extends AbstractTask {
             new NoAssertionsFilter(create, this.testRecord)
         );
 
-        this.checkFilters(filters);
+        this.checkFilters(create, filters);
     }
 
     private void filterAssertion(TaskContext context) throws Exception {
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
         Launcher spoonLauncher = context.get(this.assertionRecord.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
@@ -158,7 +156,7 @@ public class TestFilteringTask extends AbstractTask {
             new TestedMethodInLoopFilter(spoonLauncher, this.assertionRecord)
         );
 
-        this.checkFilters(filters);
+        this.checkFilters(create, filters);
     }
 
     private void filterGeneralization(TaskContext context) throws Exception {
@@ -170,32 +168,46 @@ public class TestFilteringTask extends AbstractTask {
             new NonPassingTestFilter(create, this.testRecord, this.generalizationRecord)
         );
 
-        this.checkFilters(filters);
+        this.checkFilters(create, filters);
     }
 
-    private void checkFilters(List<Filter> filters) throws Exception {
-        List<FilterResult> decisions = new ArrayList<>();
+    private void checkFilters(DSLContext create, List<Filter> filters) throws Exception {
+        List<FilterResultRecord> records = new ArrayList<>();
+
         for (Filter filter : filters) {
-            decisions.add(filter.check());
+            FilterResult filterResult = filter.check();
+
+            FilterResultRecord record = create.newRecord(Tables.FILTER_RESULT);
+            record.setProjectId(this.getProjectId());
+            record.setFilterName(filterResult.getFilter());
+            record.setDecision(filterResult.getDecision());
+            record.setReason(filterResult.getReason());
+
+            if (this.getGeneralizationId() != null) {
+                record.setGeneralizationId(this.getGeneralizationId());
+            } else if (this.getAssertionId() != null) {
+                record.setAssertionId(this.getAssertionId());
+            } else if (this.getTestId() != null) {
+                record.setTestId(this.getTestId());
+            }
+
+            records.add(record);
         }
 
-        List<FilterResult> rejections = decisions.stream().filter(d -> d.getDecision() == FilterDecision.REJECT).collect(Collectors.toList());
-        FilterDecision decision = rejections.isEmpty() ? FilterDecision.ACCEPT : FilterDecision.REJECT;
-        String filterResults = decisions.stream().map(FilterResult::toString).collect(Collectors.joining("\n"));
-        String info = "Overall: " + decision + "\n\n" + filterResults;
+        create.batchInsert(records).execute();
 
-        if (!rejections.isEmpty()) {
+        if (records.stream().anyMatch(r -> r.getDecision() == FilterDecision.REJECT)) {
             if (this.generalizationRecord != null) {
                 this.generalizationRecord.setIsIncluded(false);
-                this.generalizationRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
+                this.generalizationRecord.setExclusionInfo(String.format("Excluded by %s.", this));
                 this.generalizationRecord.store();
             } else if (this.assertionRecord != null) {
                 this.assertionRecord.setIsIncluded(false);
-                this.assertionRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
+                this.assertionRecord.setExclusionInfo(String.format("Excluded by %s.", this));
                 this.assertionRecord.store();
             } else if (this.testRecord != null) {
                 this.testRecord.setIsIncluded(false);
-                this.testRecord.setExclusionInfo("Excluded by " + this + ".\n\n" + info);
+                this.testRecord.setExclusionInfo(String.format("Excluded by %s.", this));
                 this.testRecord.store();
             }
         }

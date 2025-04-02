@@ -13,6 +13,7 @@ import org.jooq.Table;
 import org.jooq.generated.tables.Assertion;
 import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
+import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JacocoCoverageReportView;
@@ -55,6 +56,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.evosuite_runtime</code>.
      */
     public final EvosuiteRuntime EVOSUITE_RUNTIME = EvosuiteRuntime.EVOSUITE_RUNTIME;
+
+    /**
+     * The table <code>public.filter_result</code>.
+     */
+    public final FilterResult FILTER_RESULT = FilterResult.FILTER_RESULT;
 
     /**
      * The table <code>public.generalization</code>.
@@ -135,6 +141,7 @@ public class Public extends SchemaImpl {
             Sequences.ASSERTION_ID_SEQ,
             Sequences.EVOSUITE_REPORT_ID_SEQ,
             Sequences.EVOSUITE_RUNTIME_ID_SEQ,
+            Sequences.FILTER_RESULT_ID_SEQ,
             Sequences.GENERALIZATION_ID_SEQ,
             Sequences.JACOCO_COVERAGE_REPORT_ID_SEQ,
             Sequences.JUNIT_TEST_REPORT_ID_SEQ,
@@ -151,6 +158,7 @@ public class Public extends SchemaImpl {
             Assertion.ASSERTION,
             EvosuiteReport.EVOSUITE_REPORT,
             EvosuiteRuntime.EVOSUITE_RUNTIME,
+            FilterResult.FILTER_RESULT,
             Generalization.GENERALIZATION,
             JacocoCoverageReport.JACOCO_COVERAGE_REPORT,
             JacocoCoverageReportView.JACOCO_COVERAGE_REPORT_VIEW,
