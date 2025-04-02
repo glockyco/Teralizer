@@ -1,5 +1,6 @@
 -- Dialect: PostgreSQL
 
+DROP FUNCTION project_name(project_id BIGINT);
 DROP FUNCTION stage_order(stage TEXT);
 DROP FUNCTION variant_order(variant TEXT);
 DROP FUNCTION variant_name(stage TEXT, variant TEXT);
@@ -400,6 +401,32 @@ CREATE INDEX idx_task_stage ON task (stage);
 CREATE INDEX idx_task_variant ON task (variant);
 
 CREATE INDEX idx_task_status ON task (status);
+
+CREATE FUNCTION project_name(project_id BIGINT)
+RETURNS TEXT AS $$
+DECLARE
+    root_path TEXT;
+    project_name TEXT;
+BEGIN
+    SELECT p.root_path INTO root_path
+    FROM project p
+    WHERE p.id = project_id;
+
+    IF root_path IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    -- Extract everything after the last '/'.
+    project_name := regexp_replace(root_path, '^.*/([^/]+)$', '\1');
+
+    -- If the regex didn't match but the path contains '/' something went wrong.
+    IF project_name = root_path AND root_path LIKE '%/%' THEN
+        RAISE EXCEPTION 'Failed to extract project name from path: %', root_path;
+    END IF;
+
+    -- If there is no '/' in the path, the entire path is the project name.
+    RETURN project_name;END;
+$$ LANGUAGE plpgsql STABLE;
 
 CREATE FUNCTION variant_name(stage TEXT, variant TEXT)
 RETURNS TEXT AS $$

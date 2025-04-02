@@ -6,6 +6,7 @@ package org.jooq.generated;
 
 import org.jooq.Configuration;
 import org.jooq.Field;
+import org.jooq.generated.routines.ProjectName;
 import org.jooq.generated.routines.StageOrder;
 import org.jooq.generated.routines.VariantName;
 import org.jooq.generated.routines.VariantOrder;
@@ -16,6 +17,44 @@ import org.jooq.generated.routines.VariantOrder;
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Routines {
+
+    /**
+     * Call <code>public.project_name</code>
+     */
+    public static String projectName(
+          Configuration configuration
+        , Long projectId
+    ) {
+        ProjectName f = new ProjectName();
+        f.setProjectId(projectId);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>public.project_name</code> as a field.
+     */
+    public static Field<String> projectName(
+          Long projectId
+    ) {
+        ProjectName f = new ProjectName();
+        f.setProjectId(projectId);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>public.project_name</code> as a field.
+     */
+    public static Field<String> projectName(
+          Field<Long> projectId
+    ) {
+        ProjectName f = new ProjectName();
+        f.setProjectId(projectId);
+
+        return f.asField();
+    }
 
     /**
      * Call <code>public.stage_order</code>
