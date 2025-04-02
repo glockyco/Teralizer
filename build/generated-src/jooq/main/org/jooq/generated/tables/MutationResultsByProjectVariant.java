@@ -8,7 +8,7 @@ import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row10;
+import org.jooq.Row11;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -91,12 +91,17 @@ public class MutationResultsByProjectVariant extends TableImpl<MutationResultsBy
      */
     public final TableField<MutationResultsByProjectVariantRecord, Long> TIMED_OUT = createField(DSL.name("timed_out"), SQLDataType.BIGINT, this, "");
 
+    /**
+     * The column <code>public.mutation_results_by_project_variant.memory_error</code>.
+     */
+    public final TableField<MutationResultsByProjectVariantRecord, Long> MEMORY_ERROR = createField(DSL.name("memory_error"), SQLDataType.BIGINT, this, "");
+
     private MutationResultsByProjectVariant(Name alias, Table<MutationResultsByProjectVariantRecord> aliased) {
         this(alias, aliased, null);
     }
 
     private MutationResultsByProjectVariant(Name alias, Table<MutationResultsByProjectVariantRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"mutation_results_by_project_variant\" as  SELECT project_id,\n    project_name(project_id) AS project,\n    variant_name(stage, variant) AS variant,\n    count(*) AS total,\n    (count(*) - count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END)) AS covered,\n    count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END) AS uncovered,\n    count(\n        CASE\n            WHEN (status = 'SURVIVED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS survived,\n    sum((is_detected)::integer) AS detected,\n    count(\n        CASE\n            WHEN (status = 'KILLED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS killed,\n    count(\n        CASE\n            WHEN (status = 'TIMED_OUT'::text) THEN 1\n            ELSE NULL::integer\n        END) AS timed_out\n   FROM pit_mutation_report pmr\n  GROUP BY project_id, stage, variant\n  ORDER BY project_id, (variant_order(variant_name(stage, variant)));"));
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"mutation_results_by_project_variant\" as  SELECT project_id,\n    project_name(project_id) AS project,\n    variant_name(stage, variant) AS variant,\n    count(*) AS total,\n    (count(*) - count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END)) AS covered,\n    count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END) AS uncovered,\n    count(\n        CASE\n            WHEN (status = 'SURVIVED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS survived,\n    sum((is_detected)::integer) AS detected,\n    count(\n        CASE\n            WHEN (status = 'KILLED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS killed,\n    count(\n        CASE\n            WHEN (status = 'TIMED_OUT'::text) THEN 1\n            ELSE NULL::integer\n        END) AS timed_out,\n    count(\n        CASE\n            WHEN (status = 'MEMORY_ERROR'::text) THEN 1\n            ELSE NULL::integer\n        END) AS memory_error\n   FROM pit_mutation_report pmr\n  GROUP BY project_id, stage, variant\n  ORDER BY project_id, (variant_order(variant_name(stage, variant)));"));
     }
 
     /**
@@ -156,11 +161,11 @@ public class MutationResultsByProjectVariant extends TableImpl<MutationResultsBy
     }
 
     // -------------------------------------------------------------------------
-    // Row10 type methods
+    // Row11 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row10<Long, String, String, Long, Long, Long, Long, Long, Long, Long> fieldsRow() {
-        return (Row10) super.fieldsRow();
+    public Row11<Long, String, String, Long, Long, Long, Long, Long, Long, Long, Long> fieldsRow() {
+        return (Row11) super.fieldsRow();
     }
 }

@@ -416,7 +416,8 @@ SELECT
     COUNT(CASE WHEN pmr.status = 'SURVIVED' THEN 1 END) AS survived,
     SUM(pmr.is_detected::int) AS detected,
     COUNT(CASE WHEN pmr.status = 'KILLED' THEN 1 END) AS killed,
-    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out
+    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out,
+    COUNT(CASE WHEN pmr.status = 'MEMORY_ERROR' THEN 1 END) AS memory_error
 FROM
     pit_mutation_report pmr
 GROUP BY
@@ -435,7 +436,8 @@ SELECT
     COUNT(CASE WHEN pmr.status = 'SURVIVED' THEN 1 END) AS survived,
     SUM(pmr.is_detected::int) AS detected,
     COUNT(CASE WHEN pmr.status = 'KILLED' THEN 1 END) AS killed,
-    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out
+    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out,
+    COUNT(CASE WHEN pmr.status = 'MEMORY_ERROR' THEN 1 END) AS memory_error
 FROM
     pit_mutation_report pmr
 GROUP BY
@@ -453,7 +455,8 @@ SELECT
     COUNT(CASE WHEN pmr.status = 'SURVIVED' THEN 1 END) AS survived,
     SUM(pmr.is_detected::int) AS detected,
     COUNT(CASE WHEN pmr.status = 'KILLED' THEN 1 END) AS killed,
-    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out
+    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out,
+    COUNT(CASE WHEN pmr.status = 'MEMORY_ERROR' THEN 1 END) AS memory_error
 FROM
     pit_mutation_report pmr
 GROUP BY
@@ -473,7 +476,8 @@ SELECT
     COUNT(CASE WHEN pmr.status = 'SURVIVED' THEN 1 END) AS survived,
     SUM(pmr.is_detected::int) AS detected,
     COUNT(CASE WHEN pmr.status = 'KILLED' THEN 1 END) AS killed,
-    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out
+    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out,
+    COUNT(CASE WHEN pmr.status = 'MEMORY_ERROR' THEN 1 END) AS memory_error
 FROM
     pit_mutation_report pmr
 GROUP BY

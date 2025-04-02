@@ -8,7 +8,7 @@ import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row8;
+import org.jooq.Row9;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -81,12 +81,17 @@ public class MutationResultsByVariant extends TableImpl<MutationResultsByVariant
      */
     public final TableField<MutationResultsByVariantRecord, Long> TIMED_OUT = createField(DSL.name("timed_out"), SQLDataType.BIGINT, this, "");
 
+    /**
+     * The column <code>public.mutation_results_by_variant.memory_error</code>.
+     */
+    public final TableField<MutationResultsByVariantRecord, Long> MEMORY_ERROR = createField(DSL.name("memory_error"), SQLDataType.BIGINT, this, "");
+
     private MutationResultsByVariant(Name alias, Table<MutationResultsByVariantRecord> aliased) {
         this(alias, aliased, null);
     }
 
     private MutationResultsByVariant(Name alias, Table<MutationResultsByVariantRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"mutation_results_by_variant\" as  SELECT variant_name(stage, variant) AS variant,\n    count(*) AS total,\n    (count(*) - count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END)) AS covered,\n    count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END) AS uncovered,\n    count(\n        CASE\n            WHEN (status = 'SURVIVED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS survived,\n    sum((is_detected)::integer) AS detected,\n    count(\n        CASE\n            WHEN (status = 'KILLED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS killed,\n    count(\n        CASE\n            WHEN (status = 'TIMED_OUT'::text) THEN 1\n            ELSE NULL::integer\n        END) AS timed_out\n   FROM pit_mutation_report pmr\n  GROUP BY stage, variant\n  ORDER BY (variant_order(variant_name(stage, variant)));"));
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"mutation_results_by_variant\" as  SELECT variant_name(stage, variant) AS variant,\n    count(*) AS total,\n    (count(*) - count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END)) AS covered,\n    count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END) AS uncovered,\n    count(\n        CASE\n            WHEN (status = 'SURVIVED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS survived,\n    sum((is_detected)::integer) AS detected,\n    count(\n        CASE\n            WHEN (status = 'KILLED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS killed,\n    count(\n        CASE\n            WHEN (status = 'TIMED_OUT'::text) THEN 1\n            ELSE NULL::integer\n        END) AS timed_out,\n    count(\n        CASE\n            WHEN (status = 'MEMORY_ERROR'::text) THEN 1\n            ELSE NULL::integer\n        END) AS memory_error\n   FROM pit_mutation_report pmr\n  GROUP BY stage, variant\n  ORDER BY (variant_order(variant_name(stage, variant)));"));
     }
 
     /**
@@ -146,11 +151,11 @@ public class MutationResultsByVariant extends TableImpl<MutationResultsByVariant
     }
 
     // -------------------------------------------------------------------------
-    // Row8 type methods
+    // Row9 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row8<String, Long, Long, Long, Long, Long, Long, Long> fieldsRow() {
-        return (Row8) super.fieldsRow();
+    public Row9<String, Long, Long, Long, Long, Long, Long, Long, Long> fieldsRow() {
+        return (Row9) super.fieldsRow();
     }
 }

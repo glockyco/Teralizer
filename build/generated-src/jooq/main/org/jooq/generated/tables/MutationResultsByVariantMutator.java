@@ -8,7 +8,7 @@ import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row9;
+import org.jooq.Row10;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -86,12 +86,17 @@ public class MutationResultsByVariantMutator extends TableImpl<MutationResultsBy
      */
     public final TableField<MutationResultsByVariantMutatorRecord, Long> TIMED_OUT = createField(DSL.name("timed_out"), SQLDataType.BIGINT, this, "");
 
+    /**
+     * The column <code>public.mutation_results_by_variant_mutator.memory_error</code>.
+     */
+    public final TableField<MutationResultsByVariantMutatorRecord, Long> MEMORY_ERROR = createField(DSL.name("memory_error"), SQLDataType.BIGINT, this, "");
+
     private MutationResultsByVariantMutator(Name alias, Table<MutationResultsByVariantMutatorRecord> aliased) {
         this(alias, aliased, null);
     }
 
     private MutationResultsByVariantMutator(Name alias, Table<MutationResultsByVariantMutatorRecord> aliased, Field<?>[] parameters) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"mutation_results_by_variant_mutator\" as  SELECT variant_name(stage, variant) AS variant,\n    \"substring\"(mutator, '([^.]+)$'::text) AS mutator,\n    count(*) AS total,\n    (count(*) - count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END)) AS covered,\n    count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END) AS uncovered,\n    count(\n        CASE\n            WHEN (status = 'SURVIVED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS survived,\n    sum((is_detected)::integer) AS detected,\n    count(\n        CASE\n            WHEN (status = 'KILLED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS killed,\n    count(\n        CASE\n            WHEN (status = 'TIMED_OUT'::text) THEN 1\n            ELSE NULL::integer\n        END) AS timed_out\n   FROM pit_mutation_report pmr\n  GROUP BY stage, variant, mutator\n  ORDER BY pmr.variant, (count(*)) DESC, pmr.mutator;"));
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view("create view \"mutation_results_by_variant_mutator\" as  SELECT variant_name(stage, variant) AS variant,\n    \"substring\"(mutator, '([^.]+)$'::text) AS mutator,\n    count(*) AS total,\n    (count(*) - count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END)) AS covered,\n    count(\n        CASE\n            WHEN (status = 'NO_COVERAGE'::text) THEN 1\n            ELSE NULL::integer\n        END) AS uncovered,\n    count(\n        CASE\n            WHEN (status = 'SURVIVED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS survived,\n    sum((is_detected)::integer) AS detected,\n    count(\n        CASE\n            WHEN (status = 'KILLED'::text) THEN 1\n            ELSE NULL::integer\n        END) AS killed,\n    count(\n        CASE\n            WHEN (status = 'TIMED_OUT'::text) THEN 1\n            ELSE NULL::integer\n        END) AS timed_out,\n    count(\n        CASE\n            WHEN (status = 'MEMORY_ERROR'::text) THEN 1\n            ELSE NULL::integer\n        END) AS memory_error\n   FROM pit_mutation_report pmr\n  GROUP BY stage, variant, mutator\n  ORDER BY pmr.variant, (count(*)) DESC, pmr.mutator;"));
     }
 
     /**
@@ -151,11 +156,11 @@ public class MutationResultsByVariantMutator extends TableImpl<MutationResultsBy
     }
 
     // -------------------------------------------------------------------------
-    // Row9 type methods
+    // Row10 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row9<String, String, Long, Long, Long, Long, Long, Long, Long> fieldsRow() {
-        return (Row9) super.fieldsRow();
+    public Row10<String, String, Long, Long, Long, Long, Long, Long, Long, Long> fieldsRow() {
+        return (Row10) super.fieldsRow();
     }
 }
