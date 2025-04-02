@@ -14,6 +14,7 @@ import org.jooq.generated.tables.JunitTestReport;
 import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
+import org.jooq.generated.tables.ProjectMutationSummary;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
 
@@ -73,6 +74,11 @@ public class Tables {
      * The table <code>public.project</code>.
      */
     public static final Project PROJECT = Project.PROJECT;
+
+    /**
+     * The table <code>public.project_mutation_summary</code>.
+     */
+    public static final ProjectMutationSummary PROJECT_MUTATION_SUMMARY = ProjectMutationSummary.PROJECT_MUTATION_SUMMARY;
 
     /**
      * The table <code>public.task</code>.

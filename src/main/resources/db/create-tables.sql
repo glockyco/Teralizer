@@ -5,6 +5,8 @@ DROP FUNCTION stage_order(stage TEXT);
 DROP FUNCTION variant_order(variant TEXT);
 DROP FUNCTION variant_name(stage TEXT, variant TEXT);
 
+DROP VIEW IF EXISTS project_mutation_summary;
+
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS pit_mutation_report;
 DROP TABLE IF EXISTS pit_coverage_report;
@@ -401,6 +403,25 @@ CREATE INDEX idx_task_stage ON task (stage);
 CREATE INDEX idx_task_variant ON task (variant);
 
 CREATE INDEX idx_task_status ON task (status);
+
+CREATE VIEW project_mutation_summary AS
+SELECT
+    pmr.project_id,
+    project_name(pmr.project_id) AS project,
+    variant_name(pmr.stage, pmr.variant) AS variant,
+    COUNT(*) AS total,
+    COUNT(*) - COUNT(CASE WHEN pmr.status = 'NO_COVERAGE' THEN 1 END) AS covered,
+    COUNT(CASE WHEN pmr.status = 'NO_COVERAGE' THEN 1 END) AS uncovered,
+    COUNT(CASE WHEN pmr.status = 'SURVIVED' THEN 1 END) AS survived,
+    SUM(pmr.is_detected::int) AS detected,
+    COUNT(CASE WHEN pmr.status = 'KILLED' THEN 1 END) AS killed,
+    COUNT(CASE WHEN pmr.status = 'TIMED_OUT' THEN 1 END) AS timed_out
+FROM
+    pit_mutation_report pmr
+GROUP BY
+    pmr.project_id, pmr.stage, pmr.variant
+ORDER BY
+    pmr.project_id, variant_order(variant_name(pmr.stage, pmr.variant));
 
 CREATE FUNCTION project_name(project_id BIGINT)
 RETURNS TEXT AS $$

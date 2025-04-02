@@ -20,6 +20,7 @@ import org.jooq.generated.tables.JunitTestReport;
 import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
+import org.jooq.generated.tables.ProjectMutationSummary;
 import org.jooq.generated.tables.Task;
 import org.jooq.generated.tables.Test;
 import org.jooq.impl.SchemaImpl;
@@ -89,6 +90,11 @@ public class Public extends SchemaImpl {
     public final Project PROJECT = Project.PROJECT;
 
     /**
+     * The table <code>public.project_mutation_summary</code>.
+     */
+    public final ProjectMutationSummary PROJECT_MUTATION_SUMMARY = ProjectMutationSummary.PROJECT_MUTATION_SUMMARY;
+
+    /**
      * The table <code>public.task</code>.
      */
     public final Task TASK = Task.TASK;
@@ -141,6 +147,7 @@ public class Public extends SchemaImpl {
             PitCoverageReport.PIT_COVERAGE_REPORT,
             PitMutationReport.PIT_MUTATION_REPORT,
             Project.PROJECT,
+            ProjectMutationSummary.PROJECT_MUTATION_SUMMARY,
             Task.TASK,
             Test.TEST);
     }
