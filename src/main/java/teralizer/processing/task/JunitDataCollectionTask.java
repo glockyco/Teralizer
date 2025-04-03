@@ -25,7 +25,9 @@ import teralizer.repository.SQLiteRepository;
 import teralizer.util.Configuration;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -271,7 +273,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         return record;
     }
 
-    private void updateTestRecord(Factory factory, TestRecord record) {
+    private void updateTestRecord(Factory factory, TestRecord record) throws IOException {
         CtClass<?> testClass = factory.Class().get(this.testRecord.getTestClassQualifiedName());
 
         List<CtMethod<?>> matchingMethods = testClass.getMethodsByName(this.testRecord.getTestMethodName());
@@ -314,6 +316,10 @@ public class JunitDataCollectionTask extends AbstractTask {
 
         record.setTestAnnotationsSourceCode(testMethod.getAnnotations().stream()
             .map(Object::toString).collect(Collectors.joining("\n")));
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(testMethod.toString()))) {
+            record.setLineCount((int) reader.lines().count());
+        }
 
         record.store();
     }

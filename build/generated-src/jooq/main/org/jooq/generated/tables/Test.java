@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row14;
+import org.jooq.Row15;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -108,6 +108,11 @@ public class Test extends TableImpl<TestRecord> {
      * The column <code>public.test.test_annotations_source_code</code>.
      */
     public final TableField<TestRecord, String> TEST_ANNOTATIONS_SOURCE_CODE = createField(DSL.name("test_annotations_source_code"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.test.line_count</code>.
+     */
+    public final TableField<TestRecord, Integer> LINE_COUNT = createField(DSL.name("line_count"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>public.test.is_included</code>.
@@ -218,11 +223,11 @@ public class Test extends TableImpl<TestRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row14 type methods
+    // Row15 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row14<Long, Long, String, String, String, String, String, String, String, String, String, String, Boolean, String> fieldsRow() {
-        return (Row14) super.fieldsRow();
+    public Row15<Long, Long, String, String, String, String, String, String, String, String, String, String, Integer, Boolean, String> fieldsRow() {
+        return (Row15) super.fieldsRow();
     }
 }

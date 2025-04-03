@@ -36,7 +36,9 @@ import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 import teralizer.util.Configuration;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -106,6 +108,7 @@ public class TestGeneralizationTask extends AbstractTask {
         record.setPackageName("");
         record.setClassName("");
         record.setMethodName("");
+        record.setLineCount(0);
         record.setIsIncluded(true);
         record.store();
 
@@ -358,6 +361,13 @@ public class TestGeneralizationTask extends AbstractTask {
         // ------------------------------------------------------------------------------------------------------ //
 
         SpoonUtils.deleteOtherAssertionsInMethod(testedMethod, assertion);
+
+        // ------------------------------------------------------------------------------------------------------ //
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(generalizedClassDeclaration.toString()))) {
+            this.generalizationRecord.setLineCount((int) reader.lines().count());
+            this.generalizationRecord.store();
+        }
 
         // ------------------------------------------------------------------------------------------------------ //
 

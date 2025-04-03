@@ -61,12 +61,13 @@ CREATE TABLE test
     test_package_name            TEXT    NOT NULL,
     test_class_name              TEXT    NOT NULL,
     test_method_name             TEXT    NOT NULL,
-    test_method_absolute_path    TEXT, -- is null until JunitDataCollectionTask has mapped the test report to a method
-    test_method_relative_path    TEXT, -- is null until JunitDataCollectionTask has mapped the test report to a method
-    test_annotation_name         TEXT, -- is null until JunitDataCollectionTask has mapped the test report to a method and can remain null for unknown / unsupported test annotations
-    test_annotations_source_code TEXT, -- is null until JunitDataCollectionTask has mapped the test report to a method and can remain null for unknown / unsupported test annotations
+    test_method_absolute_path    TEXT,    -- is null until JunitDataCollectionTask has mapped the test report to a method
+    test_method_relative_path    TEXT,    -- is null until JunitDataCollectionTask has mapped the test report to a method
+    test_annotation_name         TEXT,    -- is null until JunitDataCollectionTask has mapped the test report to a method and can remain null for unknown / unsupported test annotations
+    test_annotations_source_code TEXT,    -- is null until JunitDataCollectionTask has mapped the test report to a method and can remain null for unknown / unsupported test annotations
+    line_count                   INTEGER, -- is null until JunitDataCollectionTask has mapped the test report to a method
     is_included                  BOOLEAN NOT NULL,
-    exclusion_info               TEXT, -- can be null for tests that are not excluded
+    exclusion_info               TEXT,    -- can be null for tests that are not excluded
 
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );
@@ -162,6 +163,8 @@ CREATE TABLE generalization
 
     total_constraint_count INTEGER, -- can be null for variants that do not process constraints
     used_constraint_count  INTEGER, -- can be null for variants that do not process constraints
+
+    line_count             INTEGER NOT NULL,
 
     is_included            BOOLEAN NOT NULL,
     exclusion_info         TEXT,    -- can be null for generalizations that are not excluded
