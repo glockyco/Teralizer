@@ -7,6 +7,7 @@ package org.jooq.generated;
 import org.jooq.Configuration;
 import org.jooq.Field;
 import org.jooq.generated.routines.ProjectName;
+import org.jooq.generated.routines.SimpleName;
 import org.jooq.generated.routines.StageOrder;
 import org.jooq.generated.routines.VariantName;
 import org.jooq.generated.routines.VariantOrder;
@@ -52,6 +53,44 @@ public class Routines {
     ) {
         ProjectName f = new ProjectName();
         f.setProjectId(projectId);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>public.simple_name</code>
+     */
+    public static String simpleName(
+          Configuration configuration
+        , String qualifiedName
+    ) {
+        SimpleName f = new SimpleName();
+        f.setQualifiedName_(qualifiedName);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>public.simple_name</code> as a field.
+     */
+    public static Field<String> simpleName(
+          String qualifiedName
+    ) {
+        SimpleName f = new SimpleName();
+        f.setQualifiedName_(qualifiedName);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>public.simple_name</code> as a field.
+     */
+    public static Field<String> simpleName(
+          Field<String> qualifiedName
+    ) {
+        SimpleName f = new SimpleName();
+        f.setQualifiedName_(qualifiedName);
 
         return f.asField();
     }

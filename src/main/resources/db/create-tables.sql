@@ -4,6 +4,7 @@ DROP FUNCTION project_name(project_id BIGINT);
 DROP FUNCTION stage_order(stage TEXT);
 DROP FUNCTION variant_order(variant TEXT);
 DROP FUNCTION variant_name(stage TEXT, variant TEXT);
+DROP FUNCTION simple_name(qualified_name TEXT);
 
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS pit_mutation_report;
@@ -404,6 +405,15 @@ CREATE INDEX idx_task_stage ON task (stage);
 CREATE INDEX idx_task_variant ON task (variant);
 
 CREATE INDEX idx_task_status ON task (status);
+
+CREATE OR REPLACE FUNCTION simple_name(qualified_name TEXT)
+RETURNS TEXT AS $$
+    SELECT CASE
+        WHEN qualified_name IS NULL THEN NULL
+        WHEN position('.' IN qualified_name) = 0 THEN qualified_name
+        ELSE substring(qualified_name FROM (length(qualified_name) - position('.' IN reverse(qualified_name)) + 2))
+    END;
+$$ LANGUAGE sql;
 
 CREATE FUNCTION project_name(project_id BIGINT)
 RETURNS TEXT AS $$

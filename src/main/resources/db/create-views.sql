@@ -2,6 +2,130 @@ DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant;
+DROP MATERIALIZED VIEW mv_mutation_status_changes;
+DROP MATERIALIZED VIEW mv_mutation_variant_comparison;
+DROP MATERIALIZED VIEW mv_pit_mutation_report;
+
+CREATE MATERIALIZED VIEW mv_pit_mutation_report AS
+SELECT
+    id,
+    project_id,
+    dense_rank() OVER (
+        ORDER BY
+            project_id,
+            mutated_class,
+            line_number,
+            mutator,
+            indexes,
+            blocks,
+            description
+    ) AS mutation_id,
+    killing_test_id,
+    killing_generalization_id,
+    step,
+    stage,
+    variant_name(stage, variant) AS variant,
+    variant_order(variant_name(stage, variant)) AS variant_order,
+    is_detected,
+    status,
+    number_of_tests_run,
+    source_file,
+    mutated_class,
+    mutated_method,
+    method_description,
+    line_number,
+    mutator,
+    indexes,
+    blocks,
+    killing_package_name,
+    killing_class_name,
+    killing_method_name,
+    description
+FROM
+    pit_mutation_report
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_pit_mutation_report_id ON mv_pit_mutation_report (id);
+
+CREATE INDEX idx_mv_pit_mutation_report_project_id ON mv_pit_mutation_report (project_id);
+CREATE INDEX idx_mv_pit_mutation_report_killing_test_id ON mv_pit_mutation_report (killing_test_id);
+CREATE INDEX idx_mv_pit_mutation_report_killing_generalization_id ON mv_pit_mutation_report (killing_generalization_id);
+
+CREATE INDEX idx_mv_pit_mutation_report_step ON mv_pit_mutation_report (step);
+CREATE INDEX idx_mv_pit_mutation_report_stage ON mv_pit_mutation_report (stage);
+CREATE INDEX idx_mv_pit_mutation_report_variant ON mv_pit_mutation_report (variant);
+CREATE INDEX idx_mv_pit_mutation_report_variant_order ON mv_pit_mutation_report (variant_order);
+
+CREATE INDEX idx_mv_pit_mutation_report_is_detected ON mv_pit_mutation_report (is_detected);
+CREATE INDEX idx_mv_pit_mutation_report_mutated_class ON mv_pit_mutation_report (mutated_class);
+CREATE INDEX idx_mv_pit_mutation_report_mutated_method ON mv_pit_mutation_report (mutated_method);
+
+CREATE MATERIALIZED VIEW mv_mutation_variant_comparison AS
+SELECT
+    a.mutation_id,
+    a.id AS a_report_id,
+    a.variant AS a_variant,
+    a.status AS a_status,
+    a.is_detected AS a_is_detected,
+    b.id AS b_report_id,
+    b.variant AS b_variant,
+    b.status AS b_status,
+    b.is_detected AS b_is_detected
+FROM
+    mv_pit_mutation_report a
+JOIN
+    mv_pit_mutation_report b
+ON
+    a.mutation_id = b.mutation_id AND
+    a.variant != b.variant
+ORDER BY a.id, b.variant_order
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_mutation_variant_comparison_a_report_id_b_report_id ON mv_mutation_variant_comparison (a_report_id, b_report_id);
+
+CREATE INDEX idx_mv_mutation_variant_comparison_mutation_id ON mv_mutation_variant_comparison (mutation_id);
+CREATE INDEX idx_mv_mutation_variant_comparison_a_report_id ON mv_mutation_variant_comparison (a_report_id);
+CREATE INDEX idx_mv_mutation_variant_comparison_b_report_id ON mv_mutation_variant_comparison (b_report_id);
+
+CREATE INDEX idx_mv_mutation_variant_comparison_a_status ON mv_mutation_variant_comparison (a_status);
+CREATE INDEX idx_mv_mutation_variant_comparison_b_status ON mv_mutation_variant_comparison (b_status);
+CREATE INDEX idx_mv_mutation_variant_comparison_a_is_detected ON mv_mutation_variant_comparison (a_is_detected);
+CREATE INDEX idx_mv_mutation_variant_comparison_b_is_detected ON mv_mutation_variant_comparison (b_is_detected);
+
+CREATE MATERIALIZED VIEW mv_mutation_status_changes AS
+SELECT
+    --*,
+    a_report_id,
+    b_report_id,
+    a_variant,
+    b_variant,
+    a_status,
+    b_status,
+    a_is_detected,
+    b_is_detected,
+    ra.number_of_tests_run AS a_number_of_tests_run,
+    rb.number_of_tests_run AS b_number_of_tests_run,
+    ra.source_file,
+    simple_name(ra.mutator) AS mutator,
+    COALESCE(g.project_id, t.project_id) AS killing_project_id,
+    COALESCE(g.test_id, t.id) AS killing_test_id,
+    g.assertion_id AS killing_assertion_id,
+    g.id AS killing_generalization_id,
+    g.total_constraint_count AS killing_total_constraint_count,
+    g.used_constraint_count AS killing_used_constraint_count,
+    g.line_count AS killing_line_count,
+    tr.runtime AS killing_runtime
+FROM mv_mutation_variant_comparison c
+JOIN mv_pit_mutation_report ra ON c.a_report_id = ra.id
+JOIN mv_pit_mutation_report rb ON c.b_report_id = rb.id
+LEFT JOIN test t ON rb.killing_test_id = t.id
+LEFT JOIN generalization g ON rb.killing_generalization_id = g.id
+LEFT JOIN junit_test_report tr ON g.id = tr.generalization_id
+WHERE c.a_variant = 'INITIAL' AND c.b_variant != 'ORIGINAL' AND c.a_status != c.b_status
+ORDER BY b_is_detected, b_status = 'KILLED', g.id IS NOT NULL, ra.id, rb.variant_order
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_mutation_status_changes_a_report_id_b_report_id ON mv_mutation_status_changes (a_report_id, b_report_id);
 
 CREATE MATERIALIZED VIEW mv_mutation_results_by_variant AS
 WITH base_data AS (
