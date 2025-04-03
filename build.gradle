@@ -95,6 +95,7 @@ jooq {
                     database {
                         name = 'org.jooq.meta.postgres.PostgresDatabase'
                         inputSchema = 'public'
+                        excludes = 'mv_.*'
                         forcedTypes {
                             forcedType {
                                 userType = "teralizer.processing.ProjectType"

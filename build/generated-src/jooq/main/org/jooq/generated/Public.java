@@ -17,10 +17,6 @@ import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JunitTestReport;
-import org.jooq.generated.tables.MutationResultsByProjectVariant;
-import org.jooq.generated.tables.MutationResultsByProjectVariantMutator;
-import org.jooq.generated.tables.MutationResultsByVariant;
-import org.jooq.generated.tables.MutationResultsByVariantMutator;
 import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
@@ -76,26 +72,6 @@ public class Public extends SchemaImpl {
      * The table <code>public.junit_test_report</code>.
      */
     public final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
-
-    /**
-     * The table <code>public.mutation_results_by_project_variant</code>.
-     */
-    public final MutationResultsByProjectVariant MUTATION_RESULTS_BY_PROJECT_VARIANT = MutationResultsByProjectVariant.MUTATION_RESULTS_BY_PROJECT_VARIANT;
-
-    /**
-     * The table <code>public.mutation_results_by_project_variant_mutator</code>.
-     */
-    public final MutationResultsByProjectVariantMutator MUTATION_RESULTS_BY_PROJECT_VARIANT_MUTATOR = MutationResultsByProjectVariantMutator.MUTATION_RESULTS_BY_PROJECT_VARIANT_MUTATOR;
-
-    /**
-     * The table <code>public.mutation_results_by_variant</code>.
-     */
-    public final MutationResultsByVariant MUTATION_RESULTS_BY_VARIANT = MutationResultsByVariant.MUTATION_RESULTS_BY_VARIANT;
-
-    /**
-     * The table <code>public.mutation_results_by_variant_mutator</code>.
-     */
-    public final MutationResultsByVariantMutator MUTATION_RESULTS_BY_VARIANT_MUTATOR = MutationResultsByVariantMutator.MUTATION_RESULTS_BY_VARIANT_MUTATOR;
 
     /**
      * The table <code>public.pit_coverage_report</code>.
@@ -162,10 +138,6 @@ public class Public extends SchemaImpl {
             Generalization.GENERALIZATION,
             JacocoCoverageReport.JACOCO_COVERAGE_REPORT,
             JunitTestReport.JUNIT_TEST_REPORT,
-            MutationResultsByProjectVariant.MUTATION_RESULTS_BY_PROJECT_VARIANT,
-            MutationResultsByProjectVariantMutator.MUTATION_RESULTS_BY_PROJECT_VARIANT_MUTATOR,
-            MutationResultsByVariant.MUTATION_RESULTS_BY_VARIANT,
-            MutationResultsByVariantMutator.MUTATION_RESULTS_BY_VARIANT_MUTATOR,
             PitCoverageReport.PIT_COVERAGE_REPORT,
             PitMutationReport.PIT_MUTATION_REPORT,
             Project.PROJECT,
