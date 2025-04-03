@@ -383,101 +383,241 @@ public class MutationResultsByProjectVariantMutatorRecord extends TableRecordImp
     }
 
     /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.survived_of_covered_pct</code>.
+     */
+    public void setSurvivedOfCoveredPct(BigDecimal value) {
+        set(26, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.survived_of_covered_pct</code>.
+     */
+    public BigDecimal getSurvivedOfCoveredPct() {
+        return (BigDecimal) get(26);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.detected_of_covered_pct</code>.
+     */
+    public void setDetectedOfCoveredPct(BigDecimal value) {
+        set(27, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.detected_of_covered_pct</code>.
+     */
+    public BigDecimal getDetectedOfCoveredPct() {
+        return (BigDecimal) get(27);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.killed_of_covered_pct</code>.
+     */
+    public void setKilledOfCoveredPct(BigDecimal value) {
+        set(28, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.killed_of_covered_pct</code>.
+     */
+    public BigDecimal getKilledOfCoveredPct() {
+        return (BigDecimal) get(28);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.timed_out_of_covered_pct</code>.
+     */
+    public void setTimedOutOfCoveredPct(BigDecimal value) {
+        set(29, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.timed_out_of_covered_pct</code>.
+     */
+    public BigDecimal getTimedOutOfCoveredPct() {
+        return (BigDecimal) get(29);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.memory_error_of_covered_pct</code>.
+     */
+    public void setMemoryErrorOfCoveredPct(BigDecimal value) {
+        set(30, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.memory_error_of_covered_pct</code>.
+     */
+    public BigDecimal getMemoryErrorOfCoveredPct() {
+        return (BigDecimal) get(30);
+    }
+
+    /**
      * Setter for <code>public.mutation_results_by_project_variant_mutator.covered_pct_diff</code>.
      */
     public void setCoveredPctDiff(BigDecimal value) {
-        set(26, value);
+        set(31, value);
     }
 
     /**
      * Getter for <code>public.mutation_results_by_project_variant_mutator.covered_pct_diff</code>.
      */
     public BigDecimal getCoveredPctDiff() {
-        return (BigDecimal) get(26);
+        return (BigDecimal) get(31);
     }
 
     /**
      * Setter for <code>public.mutation_results_by_project_variant_mutator.uncovered_pct_diff</code>.
      */
     public void setUncoveredPctDiff(BigDecimal value) {
-        set(27, value);
+        set(32, value);
     }
 
     /**
      * Getter for <code>public.mutation_results_by_project_variant_mutator.uncovered_pct_diff</code>.
      */
     public BigDecimal getUncoveredPctDiff() {
-        return (BigDecimal) get(27);
+        return (BigDecimal) get(32);
     }
 
     /**
      * Setter for <code>public.mutation_results_by_project_variant_mutator.survived_pct_diff</code>.
      */
     public void setSurvivedPctDiff(BigDecimal value) {
-        set(28, value);
+        set(33, value);
     }
 
     /**
      * Getter for <code>public.mutation_results_by_project_variant_mutator.survived_pct_diff</code>.
      */
     public BigDecimal getSurvivedPctDiff() {
-        return (BigDecimal) get(28);
+        return (BigDecimal) get(33);
     }
 
     /**
      * Setter for <code>public.mutation_results_by_project_variant_mutator.detected_pct_diff</code>.
      */
     public void setDetectedPctDiff(BigDecimal value) {
-        set(29, value);
+        set(34, value);
     }
 
     /**
      * Getter for <code>public.mutation_results_by_project_variant_mutator.detected_pct_diff</code>.
      */
     public BigDecimal getDetectedPctDiff() {
-        return (BigDecimal) get(29);
+        return (BigDecimal) get(34);
     }
 
     /**
      * Setter for <code>public.mutation_results_by_project_variant_mutator.killed_pct_diff</code>.
      */
     public void setKilledPctDiff(BigDecimal value) {
-        set(30, value);
+        set(35, value);
     }
 
     /**
      * Getter for <code>public.mutation_results_by_project_variant_mutator.killed_pct_diff</code>.
      */
     public BigDecimal getKilledPctDiff() {
-        return (BigDecimal) get(30);
+        return (BigDecimal) get(35);
     }
 
     /**
      * Setter for <code>public.mutation_results_by_project_variant_mutator.timed_out_pct_diff</code>.
      */
     public void setTimedOutPctDiff(BigDecimal value) {
-        set(31, value);
+        set(36, value);
     }
 
     /**
      * Getter for <code>public.mutation_results_by_project_variant_mutator.timed_out_pct_diff</code>.
      */
     public BigDecimal getTimedOutPctDiff() {
-        return (BigDecimal) get(31);
+        return (BigDecimal) get(36);
     }
 
     /**
      * Setter for <code>public.mutation_results_by_project_variant_mutator.memory_error_pct_diff</code>.
      */
     public void setMemoryErrorPctDiff(BigDecimal value) {
-        set(32, value);
+        set(37, value);
     }
 
     /**
      * Getter for <code>public.mutation_results_by_project_variant_mutator.memory_error_pct_diff</code>.
      */
     public BigDecimal getMemoryErrorPctDiff() {
-        return (BigDecimal) get(32);
+        return (BigDecimal) get(37);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.survived_of_covered_pct_diff</code>.
+     */
+    public void setSurvivedOfCoveredPctDiff(BigDecimal value) {
+        set(38, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.survived_of_covered_pct_diff</code>.
+     */
+    public BigDecimal getSurvivedOfCoveredPctDiff() {
+        return (BigDecimal) get(38);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.detected_of_covered_pct_diff</code>.
+     */
+    public void setDetectedOfCoveredPctDiff(BigDecimal value) {
+        set(39, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.detected_of_covered_pct_diff</code>.
+     */
+    public BigDecimal getDetectedOfCoveredPctDiff() {
+        return (BigDecimal) get(39);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.killed_of_covered_pct_diff</code>.
+     */
+    public void setKilledOfCoveredPctDiff(BigDecimal value) {
+        set(40, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.killed_of_covered_pct_diff</code>.
+     */
+    public BigDecimal getKilledOfCoveredPctDiff() {
+        return (BigDecimal) get(40);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.timed_out_of_covered_pct_diff</code>.
+     */
+    public void setTimedOutOfCoveredPctDiff(BigDecimal value) {
+        set(41, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.timed_out_of_covered_pct_diff</code>.
+     */
+    public BigDecimal getTimedOutOfCoveredPctDiff() {
+        return (BigDecimal) get(41);
+    }
+
+    /**
+     * Setter for <code>public.mutation_results_by_project_variant_mutator.memory_error_of_covered_pct_diff</code>.
+     */
+    public void setMemoryErrorOfCoveredPctDiff(BigDecimal value) {
+        set(42, value);
+    }
+
+    /**
+     * Getter for <code>public.mutation_results_by_project_variant_mutator.memory_error_of_covered_pct_diff</code>.
+     */
+    public BigDecimal getMemoryErrorOfCoveredPctDiff() {
+        return (BigDecimal) get(42);
     }
 
     // -------------------------------------------------------------------------
@@ -494,7 +634,7 @@ public class MutationResultsByProjectVariantMutatorRecord extends TableRecordImp
     /**
      * Create a detached, initialised MutationResultsByProjectVariantMutatorRecord
      */
-    public MutationResultsByProjectVariantMutatorRecord(Long projectId, String projectName, String variant, String mutator, Long total, Long covered, Long uncovered, Long survived, Long detected, Long killed, Long timedOut, Long memoryError, Long coveredDiff, Long uncoveredDiff, Long survivedDiff, Long detectedDiff, Long killedDiff, Long timedOutDiff, Long memoryErrorDiff, BigDecimal coveredPct, BigDecimal uncoveredPct, BigDecimal survivedPct, BigDecimal detectedPct, BigDecimal killedPct, BigDecimal timedOutPct, BigDecimal memoryErrorPct, BigDecimal coveredPctDiff, BigDecimal uncoveredPctDiff, BigDecimal survivedPctDiff, BigDecimal detectedPctDiff, BigDecimal killedPctDiff, BigDecimal timedOutPctDiff, BigDecimal memoryErrorPctDiff) {
+    public MutationResultsByProjectVariantMutatorRecord(Long projectId, String projectName, String variant, String mutator, Long total, Long covered, Long uncovered, Long survived, Long detected, Long killed, Long timedOut, Long memoryError, Long coveredDiff, Long uncoveredDiff, Long survivedDiff, Long detectedDiff, Long killedDiff, Long timedOutDiff, Long memoryErrorDiff, BigDecimal coveredPct, BigDecimal uncoveredPct, BigDecimal survivedPct, BigDecimal detectedPct, BigDecimal killedPct, BigDecimal timedOutPct, BigDecimal memoryErrorPct, BigDecimal survivedOfCoveredPct, BigDecimal detectedOfCoveredPct, BigDecimal killedOfCoveredPct, BigDecimal timedOutOfCoveredPct, BigDecimal memoryErrorOfCoveredPct, BigDecimal coveredPctDiff, BigDecimal uncoveredPctDiff, BigDecimal survivedPctDiff, BigDecimal detectedPctDiff, BigDecimal killedPctDiff, BigDecimal timedOutPctDiff, BigDecimal memoryErrorPctDiff, BigDecimal survivedOfCoveredPctDiff, BigDecimal detectedOfCoveredPctDiff, BigDecimal killedOfCoveredPctDiff, BigDecimal timedOutOfCoveredPctDiff, BigDecimal memoryErrorOfCoveredPctDiff) {
         super(MutationResultsByProjectVariantMutator.MUTATION_RESULTS_BY_PROJECT_VARIANT_MUTATOR);
 
         setProjectId(projectId);
@@ -523,6 +663,11 @@ public class MutationResultsByProjectVariantMutatorRecord extends TableRecordImp
         setKilledPct(killedPct);
         setTimedOutPct(timedOutPct);
         setMemoryErrorPct(memoryErrorPct);
+        setSurvivedOfCoveredPct(survivedOfCoveredPct);
+        setDetectedOfCoveredPct(detectedOfCoveredPct);
+        setKilledOfCoveredPct(killedOfCoveredPct);
+        setTimedOutOfCoveredPct(timedOutOfCoveredPct);
+        setMemoryErrorOfCoveredPct(memoryErrorOfCoveredPct);
         setCoveredPctDiff(coveredPctDiff);
         setUncoveredPctDiff(uncoveredPctDiff);
         setSurvivedPctDiff(survivedPctDiff);
@@ -530,5 +675,10 @@ public class MutationResultsByProjectVariantMutatorRecord extends TableRecordImp
         setKilledPctDiff(killedPctDiff);
         setTimedOutPctDiff(timedOutPctDiff);
         setMemoryErrorPctDiff(memoryErrorPctDiff);
+        setSurvivedOfCoveredPctDiff(survivedOfCoveredPctDiff);
+        setDetectedOfCoveredPctDiff(detectedOfCoveredPctDiff);
+        setKilledOfCoveredPctDiff(killedOfCoveredPctDiff);
+        setTimedOutOfCoveredPctDiff(timedOutOfCoveredPctDiff);
+        setMemoryErrorOfCoveredPctDiff(memoryErrorOfCoveredPctDiff);
     }
 }

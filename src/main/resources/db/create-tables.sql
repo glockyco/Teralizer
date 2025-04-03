@@ -591,7 +591,13 @@ percentages AS (
         ROUND((detected * 100.0 / total), 2) AS detected_pct,
         ROUND((killed * 100.0 / total), 2) AS killed_pct,
         ROUND((timed_out * 100.0 / total), 2) AS timed_out_pct,
-        ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct
+        ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct,
+        --
+        ROUND((survived * 100.0 / covered), 2) AS survived_of_covered_pct,
+        ROUND((detected * 100.0 / covered), 2) AS detected_of_covered_pct,
+        ROUND((killed * 100.0 / covered), 2) AS killed_of_covered_pct,
+        ROUND((timed_out * 100.0 / covered), 2) AS timed_out_of_covered_pct,
+        ROUND((memory_error * 100.0 / covered), 2) AS memory_error_of_covered_pct
     FROM
         base_data
 )
@@ -622,6 +628,12 @@ SELECT
     s.killed_pct,
     s.timed_out_pct,
     s.memory_error_pct,
+    --
+    s.survived_of_covered_pct,
+    s.detected_of_covered_pct,
+    s.killed_of_covered_pct,
+    s.timed_out_of_covered_pct,
+    s.memory_error_of_covered_pct,
     -- Difference columns
     ROUND((s.covered_pct - b.covered_pct), 2) AS covered_pct_diff,
     ROUND((s.uncovered_pct - b.uncovered_pct), 2) AS uncovered_pct_diff,
@@ -629,7 +641,13 @@ SELECT
     ROUND((s.detected_pct - b.detected_pct), 2) AS detected_pct_diff,
     ROUND((s.killed_pct - b.killed_pct), 2) AS killed_pct_diff,
     ROUND((s.timed_out_pct - b.timed_out_pct), 2) AS timed_out_pct_diff,
-    ROUND((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff
+    ROUND((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff,
+    --
+    ROUND((s.survived_of_covered_pct - b.survived_of_covered_pct), 2) AS survived_of_covered_pct_diff,
+    ROUND((s.detected_of_covered_pct - b.detected_of_covered_pct), 2) AS detected_of_covered_pct_diff,
+    ROUND((s.killed_of_covered_pct - b.killed_of_covered_pct), 2) AS killed_of_covered_pct_diff,
+    ROUND((s.timed_out_of_covered_pct - b.timed_out_of_covered_pct), 2) AS timed_out_of_covered_pct_diff,
+    ROUND((s.memory_error_of_covered_pct - b.memory_error_of_covered_pct), 2) AS memory_error_of_covered_pct_diff
 FROM
     percentages s,
     percentages b
@@ -675,7 +693,13 @@ percentages AS (
         ROUND((detected * 100.0 / total), 2) AS detected_pct,
         ROUND((killed * 100.0 / total), 2) AS killed_pct,
         ROUND((timed_out * 100.0 / total), 2) AS timed_out_pct,
-        ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct
+        ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct,
+        --
+        ROUND((survived * 100.0 / covered), 2) AS survived_of_covered_pct,
+        ROUND((detected * 100.0 / covered), 2) AS detected_of_covered_pct,
+        ROUND((killed * 100.0 / covered), 2) AS killed_of_covered_pct,
+        ROUND((timed_out * 100.0 / covered), 2) AS timed_out_of_covered_pct,
+        ROUND((memory_error * 100.0 / covered), 2) AS memory_error_of_covered_pct
     FROM
         base_data
 )
@@ -707,6 +731,12 @@ SELECT
     s.killed_pct,
     s.timed_out_pct,
     s.memory_error_pct,
+    --
+    s.survived_of_covered_pct,
+    s.detected_of_covered_pct,
+    s.killed_of_covered_pct,
+    s.timed_out_of_covered_pct,
+    s.memory_error_of_covered_pct,
     -- Difference columns
     ROUND((s.covered_pct - b.covered_pct), 2) AS covered_pct_diff,
     ROUND((s.uncovered_pct - b.uncovered_pct), 2) AS uncovered_pct_diff,
@@ -714,7 +744,13 @@ SELECT
     ROUND((s.detected_pct - b.detected_pct), 2) AS detected_pct_diff,
     ROUND((s.killed_pct - b.killed_pct), 2) AS killed_pct_diff,
     ROUND((s.timed_out_pct - b.timed_out_pct), 2) AS timed_out_pct_diff,
-    ROUND((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff
+    ROUND((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff,
+    --
+    ROUND((s.survived_of_covered_pct - b.survived_of_covered_pct), 2) AS survived_of_covered_pct_diff,
+    ROUND((s.detected_of_covered_pct - b.detected_of_covered_pct), 2) AS detected_of_covered_pct_diff,
+    ROUND((s.killed_of_covered_pct - b.killed_of_covered_pct), 2) AS killed_of_covered_pct_diff,
+    ROUND((s.timed_out_of_covered_pct - b.timed_out_of_covered_pct), 2) AS timed_out_of_covered_pct_diff,
+    ROUND((s.memory_error_of_covered_pct - b.memory_error_of_covered_pct), 2) AS memory_error_of_covered_pct_diff
 FROM
     percentages s,
     percentages b
@@ -763,7 +799,13 @@ percentages AS (
         ROUND((detected * 100.0 / total), 2) AS detected_pct,
         ROUND((killed * 100.0 / total), 2) AS killed_pct,
         ROUND((timed_out * 100.0 / total), 2) AS timed_out_pct,
-        ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct
+        ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct,
+        --
+        ROUND((survived * 100.0 / covered), 2) AS survived_of_covered_pct,
+        ROUND((detected * 100.0 / covered), 2) AS detected_of_covered_pct,
+        ROUND((killed * 100.0 / covered), 2) AS killed_of_covered_pct,
+        ROUND((timed_out * 100.0 / covered), 2) AS timed_out_of_covered_pct,
+        ROUND((memory_error * 100.0 / covered), 2) AS memory_error_of_covered_pct
     FROM
         base_data
 )
@@ -796,6 +838,12 @@ SELECT
     s.killed_pct,
     s.timed_out_pct,
     s.memory_error_pct,
+    --
+    s.survived_of_covered_pct,
+    s.detected_of_covered_pct,
+    s.killed_of_covered_pct,
+    s.timed_out_of_covered_pct,
+    s.memory_error_of_covered_pct,
     -- Difference columns
     ROUND((s.covered_pct - b.covered_pct), 2) AS covered_pct_diff,
     ROUND((s.uncovered_pct - b.uncovered_pct), 2) AS uncovered_pct_diff,
@@ -803,7 +851,13 @@ SELECT
     ROUND((s.detected_pct - b.detected_pct), 2) AS detected_pct_diff,
     ROUND((s.killed_pct - b.killed_pct), 2) AS killed_pct_diff,
     ROUND((s.timed_out_pct - b.timed_out_pct), 2) AS timed_out_pct_diff,
-    ROUND((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff
+    ROUND((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff,
+    --
+    ROUND((s.survived_of_covered_pct - b.survived_of_covered_pct), 2) AS survived_of_covered_pct_diff,
+    ROUND((s.detected_of_covered_pct - b.detected_of_covered_pct), 2) AS detected_of_covered_pct_diff,
+    ROUND((s.killed_of_covered_pct - b.killed_of_covered_pct), 2) AS killed_of_covered_pct_diff,
+    ROUND((s.timed_out_of_covered_pct - b.timed_out_of_covered_pct), 2) AS timed_out_of_covered_pct_diff,
+    ROUND((s.memory_error_of_covered_pct - b.memory_error_of_covered_pct), 2) AS memory_error_of_covered_pct_diff
 FROM
     percentages s,
     percentages b
@@ -854,7 +908,13 @@ percentages AS (
         ROUND((detected * 100.0 / total), 2) AS detected_pct,
         ROUND((killed * 100.0 / total), 2) AS killed_pct,
         ROUND((timed_out * 100.0 / total), 2) AS timed_out_pct,
-        ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct
+        ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct,
+        --
+        ROUND((survived * 100.0 / covered), 2) AS survived_of_covered_pct,
+        ROUND((detected * 100.0 / covered), 2) AS detected_of_covered_pct,
+        ROUND((killed * 100.0 / covered), 2) AS killed_of_covered_pct,
+        ROUND((timed_out * 100.0 / covered), 2) AS timed_out_of_covered_pct,
+        ROUND((memory_error * 100.0 / covered), 2) AS memory_error_of_covered_pct
     FROM
         base_data
 )
@@ -888,6 +948,12 @@ SELECT
     s.killed_pct,
     s.timed_out_pct,
     s.memory_error_pct,
+    --
+    s.survived_of_covered_pct,
+    s.detected_of_covered_pct,
+    s.killed_of_covered_pct,
+    s.timed_out_of_covered_pct,
+    s.memory_error_of_covered_pct,
     -- Difference columns
     ROUND((s.covered_pct - b.covered_pct), 2) AS covered_pct_diff,
     ROUND((s.uncovered_pct - b.uncovered_pct), 2) AS uncovered_pct_diff,
@@ -895,7 +961,13 @@ SELECT
     ROUND((s.detected_pct - b.detected_pct), 2) AS detected_pct_diff,
     ROUND((s.killed_pct - b.killed_pct), 2) AS killed_pct_diff,
     ROUND((s.timed_out_pct - b.timed_out_pct), 2) AS timed_out_pct_diff,
-    ROUND((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff
+    ROUND((s.memory_error_pct - b.memory_error_pct), 2) AS memory_error_pct_diff,
+    --
+    ROUND((s.survived_of_covered_pct - b.survived_of_covered_pct), 2) AS survived_of_covered_pct_diff,
+    ROUND((s.detected_of_covered_pct - b.detected_of_covered_pct), 2) AS detected_of_covered_pct_diff,
+    ROUND((s.killed_of_covered_pct - b.killed_of_covered_pct), 2) AS killed_of_covered_pct_diff,
+    ROUND((s.timed_out_of_covered_pct - b.timed_out_of_covered_pct), 2) AS timed_out_of_covered_pct_diff,
+    ROUND((s.memory_error_of_covered_pct - b.memory_error_of_covered_pct), 2) AS memory_error_of_covered_pct_diff
 FROM
     percentages s,
     percentages b
