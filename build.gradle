@@ -12,6 +12,22 @@ targetCompatibility = 1.8
 
 mainClassName = 'teralizer.TestGeneralizationRunner'
 
+def dotEnvFile = file(".env")
+def envProps = new Properties()
+if (dotEnvFile.exists()) {
+    dotEnvFile.withInputStream { envProps.load(it) }
+}
+
+static def getEnv(envProps, key, defaultValue = "") {
+    return envProps.getProperty(key, System.getenv(key) ?: defaultValue)
+}
+
+def dbHost = getEnv(envProps, 'DB_HOST', 'localhost')
+def dbPort = getEnv(envProps, 'DB_PORT', '5432')
+def dbName = getEnv(envProps, 'DB_NAME', 'postgres')
+def dbUser = getEnv(envProps, 'DB_USER', 'postgres')
+def dbPassword = getEnv(envProps, 'DB_PASSWORD', 'postgres')
+
 repositories {
     mavenCentral()
     maven { url 'https://repo.gradle.org/gradle/libs-releases' }
@@ -30,6 +46,7 @@ dependencies {
     implementation libs
     testImplementation libs
 
+    implementation 'io.github.cdimascio:dotenv-java:2.3.2'
     implementation 'com.typesafe:config:1.4.3'
     implementation 'commons-io:commons-io:2.16.1'
     implementation 'org.postgresql:postgresql:42.7.4'
@@ -87,9 +104,9 @@ jooq {
             generationTool {
                 jdbc {
                     driver = 'org.postgresql.Driver'
-                    url = 'jdbc:postgresql://localhost:5432/postgres'
-                    user = 'postgres'
-                    password = 'postgres'
+                    url = "jdbc:postgresql://${dbHost}:${dbPort}/${dbName}"
+                    user = dbUser
+                    password = dbPassword
                 }
                 generator {
                     database {

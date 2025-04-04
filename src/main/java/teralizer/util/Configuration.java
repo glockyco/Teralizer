@@ -3,6 +3,7 @@ package teralizer.util;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.processing.GeneralizationAlgorithm;
@@ -18,7 +19,7 @@ import java.util.List;
 public class Configuration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
-
+    private static final Dotenv DOTENV = Dotenv.configure().load();
     private static final Config CONFIG;
 
     // ----- General ----- //
@@ -56,9 +57,15 @@ public class Configuration {
     public static final String GRADLE_DEFAULT_BUILD_FILE = "build.gradle";
 
     // ----- Database ----- //
+    public static final String DB_HOST = DOTENV.get("DB_HOST", "localhost");
+    public static final String DB_PORT = DOTENV.get("DB_PORT", "5432");
+    public static final String DB_NAME = DOTENV.get("DB_NAME", "postgres");
+    public static final String DB_USER = DOTENV.get("DB_USER", "postgres");
+    public static final String DB_PASSWORD = DOTENV.get("DB_PASSWORD", "postgres");
+
     public static final Path DB_PATH = Paths.get("database", TOOL_NAME_LOWER);
     public static final Path DB_DDL_PATH = Paths.get("src/main/resources/db/create-tables.sql");
-    public static final String DB_CONNECTION_STRING = "jdbc:postgresql://localhost:5432/postgres?user=postgres&password=postgres";
+    public static final String DB_CONNECTION_STRING = String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s", DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD);
 
     // ----- Dependencies ----- //
     public static final String EVOSUITE_MAIN_CLASS = "org.evosuite.EvoSuite";
