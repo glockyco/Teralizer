@@ -94,7 +94,6 @@ CREATE INDEX idx_mv_mutation_variant_comparison_b_is_detected ON mv_mutation_var
 
 CREATE MATERIALIZED VIEW mv_mutation_status_changes AS
 SELECT
-    --*,
     a_report_id,
     b_report_id,
     a_variant,
@@ -107,22 +106,28 @@ SELECT
     rb.number_of_tests_run AS b_number_of_tests_run,
     ra.source_file,
     simple_name(ra.mutator) AS mutator,
-    COALESCE(g.project_id, t.project_id) AS killing_project_id,
-    COALESCE(g.test_id, t.id) AS killing_test_id,
-    g.assertion_id AS killing_assertion_id,
-    g.id AS killing_generalization_id,
-    g.total_constraint_count AS killing_total_constraint_count,
-    g.used_constraint_count AS killing_used_constraint_count,
-    g.line_count AS killing_line_count,
+    ra.description,
+    COALESCE(kt.test_method_qualified_name, t.test_method_qualified_name) AS test_method,
+    a.input_specification_path,
+    COALESCE(kg.project_id, kt.project_id) AS killing_project_id,
+    COALESCE(kg.test_id, kt.id) AS killing_test_id,
+    kg.assertion_id AS killing_assertion_id,
+    kg.id AS killing_generalization_id,
+    kg.class_qualified_name AS killing_class,
+    kg.total_constraint_count AS killing_total_constraint_count,
+    kg.used_constraint_count AS killing_used_constraint_count,
+    kg.line_count AS killing_line_count,
     tr.runtime AS killing_runtime
 FROM mv_mutation_variant_comparison c
 JOIN mv_pit_mutation_report ra ON c.a_report_id = ra.id
 JOIN mv_pit_mutation_report rb ON c.b_report_id = rb.id
-LEFT JOIN test t ON rb.killing_test_id = t.id
-LEFT JOIN generalization g ON rb.killing_generalization_id = g.id
-LEFT JOIN junit_test_report tr ON g.id = tr.generalization_id
+LEFT JOIN test kt ON rb.killing_test_id = kt.id
+LEFT JOIN generalization kg ON rb.killing_generalization_id = kg.id
+LEFT JOIN test t ON t.id = kg.test_id
+LEFT JOIN assertion a ON a.id = kg.assertion_id
+LEFT JOIN junit_test_report tr ON kg.id = tr.generalization_id
 WHERE c.a_variant = 'INITIAL' AND c.b_variant != 'ORIGINAL' AND c.a_status != c.b_status
-ORDER BY b_is_detected, b_status = 'KILLED', g.id IS NOT NULL, ra.id, rb.variant_order
+ORDER BY b_is_detected, b_status = 'KILLED', kg.id IS NOT NULL, ra.id, rb.variant_order
 WITH DATA;
 
 CREATE UNIQUE INDEX idx_mv_mutation_status_changes_a_report_id_b_report_id ON mv_mutation_status_changes (a_report_id, b_report_id);
