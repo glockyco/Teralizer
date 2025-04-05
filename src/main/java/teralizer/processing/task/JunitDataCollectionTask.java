@@ -52,6 +52,10 @@ public class JunitDataCollectionTask extends AbstractTask {
         this(stage, variant, projectRecord, null, null);
     }
 
+    public JunitDataCollectionTask(ProcessingStage stage, String variant, ProjectRecord projectRecord, TestRecord testRecord) {
+        this(stage, variant, projectRecord, testRecord, null);
+    }
+
     public JunitDataCollectionTask(
         ProcessingStage stage,
         String variant,
@@ -83,7 +87,6 @@ public class JunitDataCollectionTask extends AbstractTask {
                     List<TestRecord> testRecords = this.collectTests(create);
                     create.batchInsert(testRecords).execute();
                     this.scheduleTasks(create, scheduleTask);
-                    return;
                 } else {
                     // We add the remaining test data using a test-level
                     // task (after initially creating them in a project-level
@@ -97,7 +100,6 @@ public class JunitDataCollectionTask extends AbstractTask {
             case COLLECT_JUNIT_REPORTS_INITIAL:
                 if (this.testRecord == null) {
                     this.scheduleTasks(create, scheduleTask);
-                    return;
                 } else {
                     List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
                     create.batchInsert(testReportRecords).execute();
@@ -106,7 +108,9 @@ public class JunitDataCollectionTask extends AbstractTask {
             case COLLECT_JUNIT_REPORTS_GENERALIZED:
                 if (this.testRecord == null) {
                     this.scheduleTasks(create, scheduleTask);
-                    return;
+                } else if (this.generalizationRecord == null) {
+                    List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
+                    create.batchInsert(testReportRecords).execute();
                 } else {
                     List<JunitTestReportRecord> testReportRecords = this.collectGeneralizationReportData(create);
                     create.batchInsert(testReportRecords).execute();
@@ -129,8 +133,13 @@ public class JunitDataCollectionTask extends AbstractTask {
                 break;
             }
             case COLLECT_JUNIT_REPORTS_GENERALIZED: {
-                Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
-                for (Record record : records) {
+                Result<Record> testRecords = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
+                for (Record record : testRecords) {
+                    TestRecord testRecord = record.into(TestRecord.class);
+                    scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord));
+                }
+                Result<Record> generalizationRecords = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
+                for (Record record : generalizationRecords) {
                     TestRecord testRecord = record.into(TestRecord.class);
                     GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
                     scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
@@ -348,7 +357,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         record.setStage(this.stage);
         record.setVariant(this.variant);
 
-        if (this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED) {
+        if (this.generalizationRecord != null) {
             record.setTestPackageName(this.generalizationRecord.getPackageName());
             record.setTestClassName(this.generalizationRecord.getClassName());
             record.setTestMethodName(this.generalizationRecord.getMethodName());
