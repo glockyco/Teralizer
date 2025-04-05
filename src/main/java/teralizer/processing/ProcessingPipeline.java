@@ -69,15 +69,7 @@ public class ProcessingPipeline {
         taskRecord.setAssertionId(currentTask.getAssertionId());
         taskRecord.setGeneralizationId(currentTask.getGeneralizationId());
 
-        // The DB file might not have been created or might haven been removed by a `CleanupTask`.
-        // The `ProcessingPipeline` should still continue as usual in such a case to:
-        // (i)  execute tasks that do NOT require a database connection, and
-        // (ii) log errors that occur for tasks that DO require a database connection.
-        // The `ProcessingPipeline` should, however, NOT recreate a missing database
-        // to ensure that the cleaned up state is preserved after a `CleanupTask`.
-        if (Configuration.DB_PATH.toFile().exists()) {
-            taskRecord.store();
-        }
+        taskRecord.store();
 
         long startTime = -1;
         try {
@@ -142,16 +134,14 @@ public class ProcessingPipeline {
             });
         }
 
-        if (Configuration.DB_PATH.toFile().exists()) {
-            // When executing a test-, assertion- or generalization-level `CleanupTask`,
-            // the corresponding `TaskRecord` is deleted. Forcing an insert in such a case ensures that
-            // the task is persisted in the DB again at one level higher (project-, test-, or assertion-level).
-            if (!this.create.fetchExists(this.create.select().from(Tables.TASK).where(Tables.TASK.ID.eq(taskRecord.getId())))) {
-                taskRecord.changed(true);
-                taskRecord.insert();
-            } else {
-                taskRecord.update();
-            }
+        // When executing a test-, assertion- or generalization-level `CleanupTask`,
+        // the corresponding `TaskRecord` is deleted. Forcing an insert in such a case ensures that
+        // the task is persisted in the DB again at one level higher (project-, test-, or assertion-level).
+        if (!this.create.fetchExists(this.create.select().from(Tables.TASK).where(Tables.TASK.ID.eq(taskRecord.getId())))) {
+            taskRecord.changed(true);
+            taskRecord.insert();
+        } else {
+            taskRecord.update();
         }
     }
 }
