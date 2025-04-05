@@ -317,6 +317,11 @@ public class PitDataCollectionTask extends AbstractTask {
 
         List<PitMutationReportRecord> records = new ArrayList<>();
         for (Element mutationElement : mutationsElement.elements("mutation")) {
+            String mutatedClassQualifiedName = mutationElement.element("mutatedClass").getText();
+            int mutatedClassLastDotIndex = mutatedClassQualifiedName.lastIndexOf('.');
+            String mutatedPackageName = mutatedClassQualifiedName.substring(0, mutatedClassLastDotIndex);
+            String mutatedClassName = mutatedClassQualifiedName.substring(mutatedClassLastDotIndex + 1);
+
             PitMutationReportRecord record = create.newRecord(Tables.PIT_MUTATION_REPORT);
             record.setProjectId(this.getProjectId());
 
@@ -329,7 +334,8 @@ public class PitDataCollectionTask extends AbstractTask {
             record.setNumberOfTestsRun(Integer.parseInt(mutationElement.attributeValue("numberOfTestsRun")));
 
             record.setSourceFile(mutationElement.element("sourceFile").getText());
-            record.setMutatedClass(mutationElement.element("mutatedClass").getText());
+            record.setMutatedPackage(mutatedPackageName);
+            record.setMutatedClass(mutatedClassName);
             record.setMutatedMethod(mutationElement.element("mutatedMethod").getText());
             record.setMethodDescription(mutationElement.element("methodDescription").getText());
             record.setLineNumber(Integer.parseInt(mutationElement.element("lineNumber").getText()));

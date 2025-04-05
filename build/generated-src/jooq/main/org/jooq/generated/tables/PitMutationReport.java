@@ -13,7 +13,6 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row22;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -107,6 +106,11 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
      * The column <code>public.pit_mutation_report.source_file</code>.
      */
     public final TableField<PitMutationReportRecord, String> SOURCE_FILE = createField(DSL.name("source_file"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>public.pit_mutation_report.mutated_package</code>.
+     */
+    public final TableField<PitMutationReportRecord, String> MUTATED_PACKAGE = createField(DSL.name("mutated_package"), SQLDataType.CLOB.nullable(false), this, "");
 
     /**
      * The column <code>public.pit_mutation_report.mutated_class</code>.
@@ -203,7 +207,7 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_PIT_MUTATION_REPORT_IS_DETECTED, Indexes.IDX_PIT_MUTATION_REPORT_KILLING_GENERALIZATION_ID, Indexes.IDX_PIT_MUTATION_REPORT_KILLING_TEST_ID, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_CLASS, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_METHOD, Indexes.IDX_PIT_MUTATION_REPORT_PROJECT_ID, Indexes.IDX_PIT_MUTATION_REPORT_STAGE, Indexes.IDX_PIT_MUTATION_REPORT_STEP, Indexes.IDX_PIT_MUTATION_REPORT_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_PIT_MUTATION_REPORT_IS_DETECTED, Indexes.IDX_PIT_MUTATION_REPORT_KILLING_GENERALIZATION_ID, Indexes.IDX_PIT_MUTATION_REPORT_KILLING_TEST_ID, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_CLASS, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_METHOD, Indexes.IDX_PIT_MUTATION_REPORT_MUTATED_PACKAGE, Indexes.IDX_PIT_MUTATION_REPORT_PROJECT_ID, Indexes.IDX_PIT_MUTATION_REPORT_STAGE, Indexes.IDX_PIT_MUTATION_REPORT_STEP, Indexes.IDX_PIT_MUTATION_REPORT_VARIANT);
     }
 
     @Override
@@ -275,14 +279,5 @@ public class PitMutationReport extends TableImpl<PitMutationReportRecord> {
     @Override
     public PitMutationReport rename(Name name) {
         return new PitMutationReport(name, null);
-    }
-
-    // -------------------------------------------------------------------------
-    // Row22 type methods
-    // -------------------------------------------------------------------------
-
-    @Override
-    public Row22<Long, Long, Long, Long, Integer, ProcessingStage, String, Boolean, MutationStatus, Integer, String, String, String, String, Integer, String, String, String, String, String, String, String> fieldsRow() {
-        return (Row22) super.fieldsRow();
     }
 }

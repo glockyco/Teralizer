@@ -346,6 +346,7 @@ CREATE TABLE pit_mutation_report
     status                    TEXT    NOT NULL,
     number_of_tests_run       INTEGER NOT NULL,
     source_file               TEXT    NOT NULL,
+    mutated_package           TEXT    NOT NULL,
     mutated_class             TEXT    NOT NULL,
     mutated_method            TEXT    NOT NULL,
     method_description        TEXT    NOT NULL,
@@ -372,6 +373,7 @@ CREATE INDEX idx_pit_mutation_report_stage ON pit_mutation_report (stage);
 CREATE INDEX idx_pit_mutation_report_variant ON pit_mutation_report (variant);
 
 CREATE INDEX idx_pit_mutation_report_is_detected ON pit_mutation_report (is_detected);
+CREATE INDEX idx_pit_mutation_report_mutated_package ON pit_mutation_report (mutated_package);
 CREATE INDEX idx_pit_mutation_report_mutated_class ON pit_mutation_report (mutated_class);
 CREATE INDEX idx_pit_mutation_report_mutated_method ON pit_mutation_report (mutated_method);
 
