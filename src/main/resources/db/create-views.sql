@@ -4,7 +4,145 @@ DROP MATERIALIZED VIEW mv_mutation_results_by_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant;
 DROP MATERIALIZED VIEW mv_mutation_status_changes;
 DROP MATERIALIZED VIEW mv_mutation_variant_comparison;
+DROP MATERIALIZED VIEW mv_pit_mutation_coverage;
 DROP MATERIALIZED VIEW mv_pit_mutation_report;
+DROP MATERIALIZED VIEW mv_pit_coverage_report;
+DROP MATERIALIZED VIEW mv_pit_mutation_report_location;
+DROP MATERIALIZED VIEW mv_pit_coverage_report_location;
+DROP MATERIALIZED VIEW mv_pit_location;
+
+CREATE MATERIALIZED VIEW mv_pit_location AS
+WITH
+    pit_coverage_locations AS (
+        SELECT
+            pcr.covered_package_name,
+            pcr.covered_class_name,
+            pcr.covered_method_name,
+            pcr.covered_method_description,
+            pcr.covered_block_number
+        FROM
+            pit_coverage_report pcr
+    ),
+    pit_mutation_locations AS (
+        SELECT
+            pmr.mutated_package,
+            pmr.mutated_class,
+            pmr.mutated_method,
+            pmr.method_description,
+            block::int
+        FROM
+            pit_mutation_report pmr,
+            jsonb_array_elements_text(pmr.blocks::jsonb) AS block
+    )
+SELECT
+    row_number() OVER () AS id,
+    package_name,
+    class_name,
+    method_name,
+    method_description,
+    block
+FROM (
+    SELECT
+        covered_package_name AS package_name,
+        covered_class_name AS class_name,
+        covered_method_name AS method_name,
+        covered_method_description AS method_description,
+        covered_block_number AS block
+    FROM pit_coverage_locations
+    UNION ALL
+    SELECT * FROM pit_mutation_locations
+) AS pit_locations
+GROUP BY
+    package_name,
+    class_name,
+    method_name,
+    method_description,
+    block
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_pit_location_id ON mv_pit_location (id);
+
+CREATE INDEX idx_mv_pit_location_package_name ON mv_pit_location (package_name);
+CREATE INDEX idx_mv_pit_location_class_name ON mv_pit_location (class_name);
+CREATE INDEX idx_mv_pit_location_method_name ON mv_pit_location (method_name);
+CREATE INDEX idx_mv_pit_location_method_description ON mv_pit_location (method_description);
+CREATE INDEX idx_mv_pit_location_block ON mv_pit_location (block);
+
+CREATE MATERIALIZED VIEW mv_pit_coverage_report_location AS
+SELECT
+    pcr.id AS report_id,
+    pl.id AS location_id
+FROM
+    pit_coverage_report pcr,
+    mv_pit_location pl
+WHERE
+    pl.package_name = pcr.covered_package_name AND
+    pl.class_name = pcr.covered_class_name AND
+    pl.method_name = pcr.covered_method_name AND
+    pl.method_description = pcr.covered_method_description AND
+    pl.block = pcr.covered_block_number;
+
+CREATE UNIQUE INDEX idx_mv_pit_coverage_report_location ON mv_pit_coverage_report_location (report_id, location_id);
+
+CREATE INDEX idx_mv_pit_coverage_report_location_report_id ON mv_pit_coverage_report_location (report_id);
+CREATE INDEX idx_mv_pit_coverage_report_location_location_id ON mv_pit_coverage_report_location (location_id);
+
+CREATE MATERIALIZED VIEW mv_pit_mutation_report_location AS
+SELECT
+    pmr.id AS report_id,
+    pl.id AS location_id
+FROM
+    pit_mutation_report pmr,
+    mv_pit_location pl,
+    jsonb_array_elements_text(pmr.blocks::jsonb) AS pmr_block
+WHERE
+    pl.package_name = pmr.mutated_package AND
+    pl.class_name = pmr.mutated_class AND
+    pl.method_name = pmr.mutated_method AND
+    pl.method_description = pmr.method_description AND
+    pl.block = pmr_block::int;
+
+CREATE UNIQUE INDEX idx_mv_pit_mutation_report_location ON mv_pit_mutation_report_location (report_id, location_id);
+
+CREATE INDEX idx_mv_pit_mutation_report_location_report_id ON mv_pit_mutation_report_location (report_id);
+CREATE INDEX idx_mv_pit_mutation_report_location_location_id ON mv_pit_mutation_report_location (location_id);
+
+CREATE MATERIALIZED VIEW mv_pit_coverage_report AS
+SELECT
+    pcr.id,
+    pcr.project_id,
+    pcr.test_id,
+    pcr.generalization_id,
+    pcr.step,
+    pcr.stage,
+    variant_name(pcr.stage, pcr.variant) AS variant,
+    variant_order(variant_name(pcr.stage, pcr.variant)) AS variant_order,
+    pl.location_id AS location_id,
+    pcr.covered_package_name,
+    pcr.covered_class_name,
+    pcr.covered_method_name,
+    pcr.covered_method_description,
+    pcr.covered_block_number,
+    pcr.test_package_name,
+    pcr.test_class_name,
+    pcr.test_method_name
+FROM
+    pit_coverage_report pcr,
+    mv_pit_coverage_report_location pl
+WHERE
+    pcr.id = pl.report_id;
+
+CREATE UNIQUE INDEX idx_mv_pit_coverage_report ON mv_pit_coverage_report (id);
+
+CREATE INDEX idx_mv_pit_coverage_report_project_id ON mv_pit_coverage_report (project_id);
+CREATE INDEX idx_mv_pit_coverage_report_test_id ON mv_pit_coverage_report (test_id);
+CREATE INDEX idx_mv_pit_coverage_report_generalization_id ON mv_pit_coverage_report (generalization_id);
+
+CREATE INDEX idx_mv_pit_coverage_report_step ON mv_pit_coverage_report (step);
+CREATE INDEX idx_mv_pit_coverage_report_stage ON mv_pit_coverage_report (stage);
+CREATE INDEX idx_mv_pit_coverage_report_variant ON mv_pit_coverage_report (variant);
+
+CREATE INDEX idx_mv_pit_coverage_report_pit_location_id ON mv_pit_coverage_report (location_id);
 
 CREATE MATERIALIZED VIEW mv_pit_mutation_report AS
 SELECT
@@ -37,17 +175,24 @@ SELECT
     mutator,
     indexes,
     blocks,
+    COALESCE(
+        (SELECT json_agg(pl.location_id)
+         FROM mv_pit_mutation_report_location pl
+         WHERE pmr.id = pl.report_id),
+        '[]'::json
+    ) AS location_ids,
     killing_package_name,
     killing_class_name,
     killing_method_name,
     description
 FROM
-    pit_mutation_report
+    pit_mutation_report pmr
 WITH DATA;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_report_id ON mv_pit_mutation_report (id);
 
 CREATE INDEX idx_mv_pit_mutation_report_project_id ON mv_pit_mutation_report (project_id);
+CREATE INDEX idx_mv_pit_mutation_report_mutation_id ON mv_pit_mutation_report (mutation_id);
 CREATE INDEX idx_mv_pit_mutation_report_killing_test_id ON mv_pit_mutation_report (killing_test_id);
 CREATE INDEX idx_mv_pit_mutation_report_killing_generalization_id ON mv_pit_mutation_report (killing_generalization_id);
 
@@ -59,6 +204,28 @@ CREATE INDEX idx_mv_pit_mutation_report_variant_order ON mv_pit_mutation_report 
 CREATE INDEX idx_mv_pit_mutation_report_is_detected ON mv_pit_mutation_report (is_detected);
 CREATE INDEX idx_mv_pit_mutation_report_mutated_class ON mv_pit_mutation_report (mutated_class);
 CREATE INDEX idx_mv_pit_mutation_report_mutated_method ON mv_pit_mutation_report (mutated_method);
+CREATE INDEX idx_mv_pit_mutation_report_method_description ON mv_pit_mutation_report (method_description);
+
+CREATE MATERIALIZED VIEW mv_pit_mutation_coverage AS
+SELECT
+    pmr.id AS mutation_id,
+    pcr.id AS coverage_id
+FROM
+    mv_pit_mutation_report pmr
+CROSS JOIN LATERAL
+    jsonb_array_elements_text(pmr.location_ids::jsonb) AS pmr_location_id
+LEFT JOIN
+    mv_pit_coverage_report pcr
+ON
+    pcr.location_id = pmr_location_id::int AND
+    pcr.project_id = pmr.project_id AND
+    pcr.variant = pmr.variant
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_pit_mutation_coverage ON mv_pit_mutation_coverage (mutation_id, coverage_id);
+
+CREATE INDEX idx_mv_pit_mutation_id ON mv_pit_mutation_coverage (mutation_id);
+CREATE INDEX idx_mv_pit_coverage_id ON mv_pit_mutation_coverage (coverage_id);
 
 CREATE MATERIALIZED VIEW mv_mutation_variant_comparison AS
 SELECT

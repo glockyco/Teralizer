@@ -333,6 +333,12 @@ CREATE INDEX idx_pit_coverage_report_step ON pit_coverage_report (step);
 CREATE INDEX idx_pit_coverage_report_stage ON pit_coverage_report (stage);
 CREATE INDEX idx_pit_coverage_report_variant ON pit_coverage_report (variant);
 
+CREATE INDEX idx_pit_coverage_report_covered_package_name ON pit_coverage_report (covered_package_name);
+CREATE INDEX idx_pit_coverage_report_covered_class_name ON pit_coverage_report (covered_class_name);
+CREATE INDEX idx_pit_coverage_report_covered_method_name ON pit_coverage_report (covered_method_name);
+CREATE INDEX idx_pit_coverage_report_covered_method_description ON pit_coverage_report (covered_method_description);
+CREATE INDEX idx_pit_coverage_report_covered_block_number ON pit_coverage_report (covered_block_number);
+
 CREATE TABLE pit_mutation_report
 (
     id                        BIGSERIAL PRIMARY KEY,
@@ -376,6 +382,7 @@ CREATE INDEX idx_pit_mutation_report_is_detected ON pit_mutation_report (is_dete
 CREATE INDEX idx_pit_mutation_report_mutated_package ON pit_mutation_report (mutated_package);
 CREATE INDEX idx_pit_mutation_report_mutated_class ON pit_mutation_report (mutated_class);
 CREATE INDEX idx_pit_mutation_report_mutated_method ON pit_mutation_report (mutated_method);
+CREATE INDEX idx_pit_mutation_report_method_description ON pit_mutation_report (method_description);
 
 CREATE TABLE task
 (
