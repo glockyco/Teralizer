@@ -109,6 +109,7 @@ SELECT
     ra.description,
     COALESCE(kt.test_method_qualified_name, t.test_method_qualified_name) AS test_method,
     a.input_specification_path,
+    a.input_model_statistics,
     COALESCE(kg.project_id, kt.project_id) AS killing_project_id,
     COALESCE(kg.test_id, kt.id) AS killing_test_id,
     kg.assertion_id AS killing_assertion_id,
