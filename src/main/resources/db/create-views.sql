@@ -4,12 +4,73 @@ DROP MATERIALIZED VIEW mv_mutation_results_by_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant;
 DROP MATERIALIZED VIEW mv_mutation_status_changes;
 DROP MATERIALIZED VIEW mv_mutation_variant_comparison;
+DROP MATERIALIZED VIEW mv_pit_mutation_report_extension;
+DROP MATERIALIZED VIEW mv_mutation_covering_generalizations;
+DROP MATERIALIZED VIEW mv_mutation_covering_assertions;
+DROP MATERIALIZED VIEW mv_mutation_covering_tests;
 DROP MATERIALIZED VIEW mv_pit_mutation_coverage;
 DROP MATERIALIZED VIEW mv_pit_mutation_report;
 DROP MATERIALIZED VIEW mv_pit_coverage_report;
 DROP MATERIALIZED VIEW mv_pit_mutation_report_location;
 DROP MATERIALIZED VIEW mv_pit_coverage_report_location;
 DROP MATERIALIZED VIEW mv_pit_location;
+DROP MATERIALIZED VIEW mv_generalization_extension;
+DROP MATERIALIZED VIEW mv_assertion_extension;
+DROP MATERIALIZED VIEW mv_test_extension;
+
+CREATE MATERIALIZED VIEW mv_test_extension AS
+SELECT
+    t.id AS test_id,
+    variant_name(r.stage, r.variant) AS variant,
+    variant_order(variant_name(r.stage, r.variant)) AS variant_order,
+    coalesce(count(r.id), 0) AS reports,
+    sum(r.runtime) AS runtime
+FROM test t
+LEFT JOIN junit_test_report r ON t.id = r.test_id
+GROUP BY t.id, r.stage, r.variant
+ORDER BY t.id, variant_order(variant_name(r.stage, r.variant));
+
+CREATE UNIQUE INDEX idx_mv_test_extension ON mv_test_extension (test_id, variant);
+
+CREATE INDEX idx_mv_test_extension_test_id ON mv_test_extension (test_id);
+CREATE INDEX idx_mv_test_extension_variant ON mv_test_extension (variant);
+CREATE INDEX idx_mv_test_extension_variant_order ON mv_test_extension (variant_order);
+
+CREATE MATERIALIZED VIEW mv_assertion_extension AS
+SELECT
+    a.id AS assertion_id,
+    te.variant,
+    te.variant_order,
+    min((a.input_model_statistics::json->>'javaSize')::int) AS model_java_size,
+    min((a.input_model_statistics::json->>'operationCount')::int) AS model_operation_count
+FROM assertion a
+JOIN mv_test_extension te ON a.test_id = te.test_id
+GROUP BY a.id, te.variant, te.variant_order
+ORDER BY a.id, te.variant_order;
+
+CREATE UNIQUE INDEX idx_mv_assertion_extension ON mv_assertion_extension (assertion_id, variant);
+
+CREATE INDEX idx_mv_assertion_extension_assertion_id ON mv_assertion_extension (assertion_id);
+CREATE INDEX idx_mv_assertion_extension_variant ON mv_assertion_extension (variant);
+CREATE INDEX idx_mv_assertion_extension_variant_order ON mv_assertion_extension (variant_order);
+
+CREATE MATERIALIZED VIEW mv_generalization_extension AS
+SELECT
+    g.id AS generalization_id,
+    g.variant AS variant,
+    variant_order(g.variant) AS variant_order,
+    coalesce(count(r.id), 0) AS reports,
+    sum(r.runtime) AS runtime
+FROM generalization g
+LEFT JOIN junit_test_report r ON g.id = r.generalization_id
+GROUP BY g.id, g.variant
+ORDER BY g.id, variant_order(g.variant);
+
+CREATE UNIQUE INDEX idx_mv_generalization_extension ON mv_generalization_extension (generalization_id, variant);
+
+CREATE INDEX idx_mv_generalization_extension_generalization_id ON mv_generalization_extension (generalization_id);
+CREATE INDEX idx_mv_generalization_extension_variant ON mv_generalization_extension (variant);
+CREATE INDEX idx_mv_generalization_extension_variant_order ON mv_generalization_extension (variant_order);
 
 CREATE MATERIALIZED VIEW mv_pit_location AS
 WITH
@@ -72,10 +133,8 @@ CREATE MATERIALIZED VIEW mv_pit_coverage_report_location AS
 SELECT
     pcr.id AS report_id,
     pl.id AS location_id
-FROM
-    pit_coverage_report pcr,
-    mv_pit_location pl
-WHERE
+FROM pit_coverage_report pcr
+LEFT JOIN mv_pit_location pl ON
     pl.package_name = pcr.covered_package_name AND
     pl.class_name = pcr.covered_class_name AND
     pl.method_name = pcr.covered_method_name AND
@@ -91,11 +150,9 @@ CREATE MATERIALIZED VIEW mv_pit_mutation_report_location AS
 SELECT
     pmr.id AS report_id,
     pl.id AS location_id
-FROM
-    pit_mutation_report pmr,
-    mv_pit_location pl,
-    jsonb_array_elements_text(pmr.blocks::jsonb) AS pmr_block
-WHERE
+FROM pit_mutation_report pmr
+CROSS JOIN LATERAL jsonb_array_elements_text(pmr.blocks::jsonb) AS pmr_block
+LEFT JOIN mv_pit_location pl ON
     pl.package_name = pmr.mutated_package AND
     pl.class_name = pmr.mutated_class AND
     pl.method_name = pmr.mutated_method AND
@@ -126,11 +183,8 @@ SELECT
     pcr.test_package_name,
     pcr.test_class_name,
     pcr.test_method_name
-FROM
-    pit_coverage_report pcr,
-    mv_pit_coverage_report_location pl
-WHERE
-    pcr.id = pl.report_id;
+FROM pit_coverage_report pcr
+LEFT JOIN mv_pit_coverage_report_location pl ON pcr.id = pl.report_id;
 
 CREATE UNIQUE INDEX idx_mv_pit_coverage_report ON mv_pit_coverage_report (id);
 
@@ -206,6 +260,7 @@ CREATE INDEX idx_mv_pit_mutation_report_mutated_class ON mv_pit_mutation_report 
 CREATE INDEX idx_mv_pit_mutation_report_mutated_method ON mv_pit_mutation_report (mutated_method);
 CREATE INDEX idx_mv_pit_mutation_report_method_description ON mv_pit_mutation_report (method_description);
 
+DROP MATERIALIZED VIEW mv_pit_mutation_coverage;
 CREATE MATERIALIZED VIEW mv_pit_mutation_coverage AS
 SELECT
     pmr.id AS mutation_id,
@@ -220,12 +275,193 @@ ON
     pcr.location_id = pmr_location_id::int AND
     pcr.project_id = pmr.project_id AND
     pcr.variant = pmr.variant
+WHERE
+    pcr.id IS NOT NULL
+GROUP BY
+    pmr.id, pcr.id
 WITH DATA;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_coverage ON mv_pit_mutation_coverage (mutation_id, coverage_id);
 
 CREATE INDEX idx_mv_pit_mutation_id ON mv_pit_mutation_coverage (mutation_id);
 CREATE INDEX idx_mv_pit_coverage_id ON mv_pit_mutation_coverage (coverage_id);
+
+CREATE MATERIALIZED VIEW mv_mutation_covering_tests AS
+SELECT
+    pmr.project_id,
+    pmr.id AS mutation_id,
+    pmr.status,
+    t.id AS test_id,
+    pmr.variant,
+    pmr.variant_order,
+    min(te.reports) AS reports,
+    min(te.runtime) AS runtime
+FROM mv_pit_mutation_report pmr
+JOIN mv_pit_mutation_coverage pmc ON pmr.id = pmc.mutation_id
+JOIN mv_pit_coverage_report pcr ON pmc.coverage_id = pcr.id
+JOIN test t ON pcr.test_id = t.id
+JOIN mv_test_extension te ON t.id = te.test_id
+GROUP BY pmr.project_id, pmr.id, pmr.status, t.id, pmr.variant, pmr.variant_order
+ORDER BY pmr.project_id, pmr.id, t.id, pmr.variant_order
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_pit_mutation_covering_tests ON mv_mutation_covering_tests (mutation_id, test_id);
+
+CREATE INDEX idx_mv_pit_mutation_covering_tests_project_id ON mv_mutation_covering_tests (project_id);
+CREATE INDEX idx_mv_pit_mutation_covering_tests_mutation_id ON mv_mutation_covering_tests (mutation_id);
+CREATE INDEX idx_mv_pit_mutation_covering_tests_test_id ON mv_mutation_covering_tests (test_id);
+CREATE INDEX idx_mv_pit_mutation_covering_tests_variant ON mv_mutation_covering_tests (variant);
+CREATE INDEX idx_mv_pit_mutation_covering_tests_variant_order ON mv_mutation_covering_tests (variant_order);
+
+CREATE MATERIALIZED VIEW mv_mutation_covering_assertions AS
+SELECT
+    pmr.project_id,
+    pmr.id AS mutation_id,
+    pmr.status,
+    a.id AS assertion_id,
+    pmr.variant,
+    pmr.variant_order,
+    min(ae.model_java_size) AS model_java_size,
+    min(ae.model_operation_count) AS model_operation_count
+FROM mv_pit_mutation_report pmr
+JOIN mv_pit_mutation_coverage pmc ON pmr.id = pmc.mutation_id
+JOIN mv_pit_coverage_report pcr ON pmc.coverage_id = pcr.id
+JOIN assertion a ON pcr.test_id = a.test_id
+JOIN mv_assertion_extension ae ON a.id = ae.assertion_id
+GROUP BY pmr.project_id, pmr.id, pmr.status, a.id, pmr.variant, pmr.variant_order
+ORDER BY pmr.project_id, pmr.id, a.id, pmr.variant_order
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_pit_mutation_covering_assertions ON mv_mutation_covering_assertions (mutation_id, assertion_id);
+
+CREATE INDEX idx_mv_pit_mutation_covering_assertions_project_id ON mv_mutation_covering_assertions (project_id);
+CREATE INDEX idx_mv_pit_mutation_covering_assertions_mutation_id ON mv_mutation_covering_assertions (mutation_id);
+CREATE INDEX idx_mv_pit_mutation_covering_assertions_test_id ON mv_mutation_covering_assertions (assertion_id);
+CREATE INDEX idx_mv_pit_mutation_covering_assertions_variant ON mv_mutation_covering_assertions (variant);
+CREATE INDEX idx_mv_pit_mutation_covering_assertions_variant_order ON mv_mutation_covering_assertions (variant_order);
+
+CREATE MATERIALIZED VIEW mv_mutation_covering_generalizations AS
+SELECT
+    pmr.project_id,
+    pmr.id AS mutation_id,
+    pmr.status,
+    g.id AS generalization_id,
+    pmr.variant,
+    pmr.variant_order,
+    min(ge.reports) AS reports,
+    min(ge.runtime) AS runtime,
+    min(g.total_constraint_count) AS total_constraint_count,
+    min(g.used_constraint_count) AS used_constraint_count
+FROM mv_pit_mutation_report pmr
+JOIN mv_pit_mutation_coverage pmc ON pmr.id = pmc.mutation_id
+JOIN mv_pit_coverage_report pcr ON pmc.coverage_id = pcr.id
+JOIN generalization g ON pcr.test_id = g.test_id
+JOIN mv_generalization_extension ge ON g.id = ge.generalization_id
+GROUP BY pmr.project_id, pmr.id, pmr.status, g.id, pmr.variant, pmr.variant_order
+ORDER BY pmr.project_id, pmr.id, g.id, pmr.variant_order
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_pit_mutation_covering_generalizations ON mv_mutation_covering_generalizations (mutation_id, generalization_id);
+
+CREATE INDEX idx_mv_pit_mutation_covering_generalizations_project_id ON mv_mutation_covering_generalizations (project_id);
+CREATE INDEX idx_mv_pit_mutation_covering_generalizations_mutation_id ON mv_mutation_covering_generalizations (mutation_id);
+CREATE INDEX idx_mv_pit_mutation_covering_generalizations_generalization_id ON mv_mutation_covering_generalizations (generalization_id);
+CREATE INDEX idx_mv_pit_mutation_covering_generalizations_variant ON mv_mutation_covering_generalizations (variant);
+CREATE INDEX idx_mv_pit_mutation_covering_generalizations_variant_order ON mv_mutation_covering_generalizations (variant_order);
+
+CREATE MATERIALIZED VIEW mv_pit_mutation_report_extension AS
+WITH base_data AS (
+    SELECT
+        pmr.id AS report_id,
+        pmr.project_id,
+        project_name(pmr.project_id) AS project_name,
+        pmr.mutation_id,
+        pmr.variant,
+        pmr.is_detected,
+        pmr.status,
+        pmr.variant_order
+    FROM mv_pit_mutation_report pmr
+    JOIN project p ON pmr.project_id = p.id
+),
+test_stats AS (
+    SELECT
+        mct.mutation_id,
+        count(t.id) AS covering_tests,
+        count(t.id) FILTER (WHERE t.is_included) AS included_tests,
+        count(t.id) FILTER (WHERE NOT t.is_included) AS excluded_tests,
+        sum(mct.reports) AS test_reports_sum,
+        sum(mct.runtime) AS test_runtime_sum
+    FROM mv_mutation_covering_tests mct
+    LEFT JOIN test t ON mct.test_id = t.id
+    GROUP BY mct.mutation_id
+),
+assertion_stats AS (
+    SELECT
+        mca.mutation_id,
+        count(a.id) AS covering_assertions,
+        count(a.id) FILTER (WHERE a.is_included) AS included_assertions,
+        count(a.id) FILTER (WHERE NOT a.is_included) AS excluded_assertions,
+        sum(mca.model_java_size) AS model_java_size_sum,
+        sum(mca.model_operation_count) AS model_operation_count_sum
+    FROM mv_mutation_covering_assertions mca
+    LEFT JOIN assertion a ON mca.assertion_id = a.id
+    GROUP BY mca.mutation_id
+),
+generalization_stats AS (
+    SELECT
+        mcg.mutation_id,
+        count(g.id) AS covering_generalizations,
+        count(g.id) FILTER (WHERE g.is_included) AS included_generalizations,
+        count(g.id) FILTER (WHERE NOT g.is_included) AS excluded_generalizations,
+        sum(mcg.reports) AS generalization_reports_sum,
+        sum(mcg.runtime) AS generalization_runtime_sum,
+        sum(mcg.total_constraint_count) AS total_constraint_count_sum,
+        sum(mcg.used_constraint_count) AS used_constraint_count_sum
+    FROM mv_mutation_covering_generalizations mcg
+    LEFT JOIN generalization g ON mcg.generalization_id = g.id
+    GROUP BY mcg.mutation_id
+)
+SELECT
+    b.report_id,
+    b.project_id,
+    b.project_name,
+    b.mutation_id,
+    b.variant,
+    b.variant_order,
+    b.is_detected,
+    b.status,
+    COALESCE(t.covering_tests, 0) AS covering_tests,
+    COALESCE(t.included_tests, 0) AS included_tests,
+    COALESCE(t.excluded_tests, 0) AS excluded_tests,
+    COALESCE(a.covering_assertions, 0) AS covering_assertions,
+    COALESCE(a.included_assertions, 0) AS included_assertions,
+    COALESCE(a.excluded_assertions, 0) AS excluded_assertions,
+    COALESCE(g.covering_generalizations, 0) AS covering_generalizations,
+    COALESCE(g.included_generalizations, 0) AS included_generalizations,
+    COALESCE(g.excluded_generalizations, 0) AS excluded_generalizations,
+    COALESCE(t.test_reports_sum, 0) AS test_reports_sum,
+    COALESCE(t.test_runtime_sum, 0) AS test_runtime_sum,
+    COALESCE(a.model_java_size_sum, 0) AS model_java_size_sum,
+    COALESCE(a.model_operation_count_sum, 0) AS model_operation_count_sum,
+    COALESCE(g.generalization_reports_sum, 0) AS generalization_reports_sum,
+    COALESCE(g.generalization_runtime_sum, 0) AS generalization_runtime_sum,
+    COALESCE(g.total_constraint_count_sum, 0) AS total_constraint_count_sum,
+    COALESCE(g.used_constraint_count_sum, 0) AS used_constraint_count_sum
+FROM base_data b
+LEFT JOIN test_stats t ON b.report_id = t.mutation_id
+LEFT JOIN assertion_stats a ON b.report_id = a.mutation_id
+LEFT JOIN generalization_stats g ON b.report_id = g.mutation_id
+ORDER BY b.project_name, b.project_id, b.mutation_id, b.variant_order;
+
+CREATE UNIQUE INDEX idx_mv_pit_mutation_report_extension ON mv_pit_mutation_report_extension (report_id);
+
+CREATE INDEX idx_mv_pit_mutation_report_extension_project_id ON mv_pit_mutation_report_extension (project_id);
+CREATE INDEX idx_mv_pit_mutation_report_extension_mutation_id ON mv_pit_mutation_report_extension (mutation_id);
+CREATE INDEX idx_mv_pit_mutation_report_extension_variant ON mv_pit_mutation_report_extension (variant);
+CREATE INDEX idx_mv_pit_mutation_report_extension_variant_order ON mv_pit_mutation_report_extension (variant_order);
+
+CREATE INDEX idx_mv_pit_mutation_report_extension_is_detected ON mv_pit_mutation_report_extension (is_detected);
+CREATE INDEX idx_mv_pit_mutation_report_extension_status ON mv_pit_mutation_report_extension (status);
 
 CREATE MATERIALIZED VIEW mv_mutation_variant_comparison AS
 SELECT
