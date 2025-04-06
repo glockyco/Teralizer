@@ -601,6 +601,8 @@ CREATE INDEX idx_mv_mutation_variant_comparison_b_is_detected ON mv_mutation_var
 
 CREATE MATERIALIZED VIEW mv_mutation_status_changes AS
 SELECT
+    p.id AS project_id,
+    project_name(p.id) AS project_name,
     a_report_id,
     b_report_id,
     a_variant,
@@ -629,6 +631,7 @@ SELECT
 FROM mv_mutation_variant_comparison c
 JOIN mv_pit_mutation_report ra ON c.a_report_id = ra.id
 JOIN mv_pit_mutation_report rb ON c.b_report_id = rb.id
+LEFT JOIN project p ON ra.project_id = p.id
 LEFT JOIN test kt ON rb.killing_test_id = kt.id
 LEFT JOIN generalization kg ON rb.killing_generalization_id = kg.id
 LEFT JOIN test t ON t.id = kg.test_id
