@@ -36,6 +36,10 @@ CREATE INDEX idx_mv_test_extension_test_id ON mv_test_extension (test_id);
 CREATE INDEX idx_mv_test_extension_variant ON mv_test_extension (variant);
 CREATE INDEX idx_mv_test_extension_variant_order ON mv_test_extension (variant_order);
 
+SELECT
+    'Test extension exists for every test.' AS test,
+    (SELECT count(DISTINCT te.test_id) FROM mv_test_extension te) = (SELECT count(*) FROM test) AS result;
+
 CREATE MATERIALIZED VIEW mv_assertion_extension AS
 SELECT
     a.id AS assertion_id,
@@ -54,6 +58,10 @@ CREATE INDEX idx_mv_assertion_extension_assertion_id ON mv_assertion_extension (
 CREATE INDEX idx_mv_assertion_extension_variant ON mv_assertion_extension (variant);
 CREATE INDEX idx_mv_assertion_extension_variant_order ON mv_assertion_extension (variant_order);
 
+SELECT
+    'Assertion extension exists for every assertion.' AS test,
+    (SELECT count(DISTINCT ae.assertion_id) FROM mv_assertion_extension ae) = (SELECT count(*) FROM assertion) AS result;
+
 CREATE MATERIALIZED VIEW mv_generalization_extension AS
 SELECT
     g.id AS generalization_id,
@@ -71,6 +79,10 @@ CREATE UNIQUE INDEX idx_mv_generalization_extension ON mv_generalization_extensi
 CREATE INDEX idx_mv_generalization_extension_generalization_id ON mv_generalization_extension (generalization_id);
 CREATE INDEX idx_mv_generalization_extension_variant ON mv_generalization_extension (variant);
 CREATE INDEX idx_mv_generalization_extension_variant_order ON mv_generalization_extension (variant_order);
+
+SELECT
+    'Generalization extension exists for every generalization.' AS test,
+    (SELECT count(DISTINCT ge.generalization_id) FROM mv_generalization_extension ge) = (SELECT count(*) FROM generalization) AS result;
 
 CREATE MATERIALIZED VIEW mv_pit_location AS
 WITH
@@ -146,6 +158,10 @@ CREATE UNIQUE INDEX idx_mv_pit_coverage_report_location ON mv_pit_coverage_repor
 CREATE INDEX idx_mv_pit_coverage_report_location_report_id ON mv_pit_coverage_report_location (report_id);
 CREATE INDEX idx_mv_pit_coverage_report_location_location_id ON mv_pit_coverage_report_location (location_id);
 
+SELECT
+    'Every coverage report is mapped to a location.' AS test,
+    (SELECT count(*) FROM mv_pit_coverage_report_location crl WHERE crl.location_id IS NULL) AS result;
+
 CREATE MATERIALIZED VIEW mv_pit_mutation_report_location AS
 SELECT
     pmr.id AS report_id,
@@ -163,6 +179,10 @@ CREATE UNIQUE INDEX idx_mv_pit_mutation_report_location ON mv_pit_mutation_repor
 
 CREATE INDEX idx_mv_pit_mutation_report_location_report_id ON mv_pit_mutation_report_location (report_id);
 CREATE INDEX idx_mv_pit_mutation_report_location_location_id ON mv_pit_mutation_report_location (location_id);
+
+SELECT
+    'Every mutation report is mapped to a location.' AS test,
+    (SELECT count(*) = 0 FROM mv_pit_mutation_report_location mrl WHERE mrl.location_id IS NULL) AS result;
 
 CREATE MATERIALIZED VIEW mv_pit_coverage_report AS
 SELECT
@@ -197,6 +217,10 @@ CREATE INDEX idx_mv_pit_coverage_report_stage ON mv_pit_coverage_report (stage);
 CREATE INDEX idx_mv_pit_coverage_report_variant ON mv_pit_coverage_report (variant);
 
 CREATE INDEX idx_mv_pit_coverage_report_pit_location_id ON mv_pit_coverage_report (location_id);
+
+SELECT
+    'Every coverage report has a location.' AS test,
+    (SELECT count(*) = 0 FROM mv_pit_coverage_report pcr WHERE pcr.location_id IS NULL) AS result;
 
 CREATE MATERIALIZED VIEW mv_pit_mutation_report AS
 SELECT
@@ -260,6 +284,22 @@ CREATE INDEX idx_mv_pit_mutation_report_mutated_class ON mv_pit_mutation_report 
 CREATE INDEX idx_mv_pit_mutation_report_mutated_method ON mv_pit_mutation_report (mutated_method);
 CREATE INDEX idx_mv_pit_mutation_report_method_description ON mv_pit_mutation_report (method_description);
 
+SELECT
+    'The number of blocks and location IDs are the same.' AS test,
+    (SELECT COUNT(*) = 0 FROM mv_pit_mutation_report pmr WHERE json_array_length(blocks::json) != json_array_length(location_ids)) AS result;
+
+SELECT
+    'All location IDs are non-NULL.' AS test,
+    (SELECT
+        CASE WHEN COUNT(*) = 0 THEN TRUE ELSE FALSE END
+        FROM mv_pit_mutation_report
+        WHERE (
+            SELECT COUNT(*)
+            FROM json_array_elements(location_ids) AS elements
+            WHERE elements IS NULL OR elements::text = 'null'
+        ) > 0
+    ) AS result;
+
 DROP MATERIALIZED VIEW mv_pit_mutation_coverage;
 CREATE MATERIALIZED VIEW mv_pit_mutation_coverage AS
 SELECT
@@ -285,6 +325,23 @@ CREATE UNIQUE INDEX idx_mv_pit_mutation_coverage ON mv_pit_mutation_coverage (mu
 
 CREATE INDEX idx_mv_pit_mutation_id ON mv_pit_mutation_coverage (mutation_id);
 CREATE INDEX idx_mv_pit_coverage_id ON mv_pit_mutation_coverage (coverage_id);
+
+SELECT
+    'No mutation with status NO_COVERAGE has coverage.' AS test,
+    (SELECT COUNT(*) = 0
+     FROM mv_pit_mutation_report pmr
+     JOIN mv_pit_mutation_coverage pmc ON pmr.id = pmc.mutation_id
+     WHERE pmr.status = 'NO_COVERAGE'
+    ) AS result;
+
+SELECT
+    'All mutations with status other than NO_COVERAGE have coverage.' AS test,
+    (SELECT COUNT(*) = 0
+     FROM mv_pit_mutation_report pmr
+     LEFT JOIN mv_pit_mutation_coverage pmc ON pmr.id = pmc.mutation_id
+     WHERE pmr.status != 'NO_COVERAGE'
+     AND pmc.coverage_id IS NULL
+    ) AS result;
 
 CREATE MATERIALIZED VIEW mv_mutation_covering_tests AS
 SELECT
@@ -313,6 +370,14 @@ CREATE INDEX idx_mv_pit_mutation_covering_tests_test_id ON mv_mutation_covering_
 CREATE INDEX idx_mv_pit_mutation_covering_tests_variant ON mv_mutation_covering_tests (variant);
 CREATE INDEX idx_mv_pit_mutation_covering_tests_variant_order ON mv_mutation_covering_tests (variant_order);
 
+SELECT
+    'No mutation with status NO_COVERAGE has covering tests.' AS test,
+    (SELECT COUNT(*) = 0
+     FROM mv_mutation_covering_tests mct
+     JOIN mv_pit_mutation_report pmr ON mct.mutation_id = pmr.id
+     WHERE pmr.status = 'NO_COVERAGE'
+    ) AS result;
+
 CREATE MATERIALIZED VIEW mv_mutation_covering_assertions AS
 SELECT
     pmr.project_id,
@@ -339,6 +404,26 @@ CREATE INDEX idx_mv_pit_mutation_covering_assertions_mutation_id ON mv_mutation_
 CREATE INDEX idx_mv_pit_mutation_covering_assertions_test_id ON mv_mutation_covering_assertions (assertion_id);
 CREATE INDEX idx_mv_pit_mutation_covering_assertions_variant ON mv_mutation_covering_assertions (variant);
 CREATE INDEX idx_mv_pit_mutation_covering_assertions_variant_order ON mv_mutation_covering_assertions (variant_order);
+
+SELECT
+    'No mutation with status NO_COVERAGE has covering assertions.' AS test,
+    (SELECT COUNT(*) = 0
+     FROM mv_mutation_covering_assertions mca
+     JOIN mv_pit_mutation_report pmr ON mca.mutation_id = pmr.id
+     WHERE pmr.status = 'NO_COVERAGE'
+    ) AS result;
+
+SELECT
+    'All mutations with covering assertions also have covering tests.' AS test,
+    (SELECT COUNT(*) = 0
+     FROM (
+         SELECT DISTINCT mca.mutation_id, mca.variant
+         FROM mv_mutation_covering_assertions mca
+         EXCEPT
+         SELECT DISTINCT mct.mutation_id, mct.variant
+         FROM mv_mutation_covering_tests mct
+     ) AS mutations_with_assertions_but_no_tests
+    ) AS result;
 
 CREATE MATERIALIZED VIEW mv_mutation_covering_generalizations AS
 SELECT
@@ -368,6 +453,25 @@ CREATE INDEX idx_mv_pit_mutation_covering_generalizations_mutation_id ON mv_muta
 CREATE INDEX idx_mv_pit_mutation_covering_generalizations_generalization_id ON mv_mutation_covering_generalizations (generalization_id);
 CREATE INDEX idx_mv_pit_mutation_covering_generalizations_variant ON mv_mutation_covering_generalizations (variant);
 CREATE INDEX idx_mv_pit_mutation_covering_generalizations_variant_order ON mv_mutation_covering_generalizations (variant_order);
+
+SELECT
+    'No mutation with status NO_COVERAGE has covering generalizations.' AS test,
+    (SELECT COUNT(*) = 0
+     FROM mv_mutation_covering_generalizations mcg
+     JOIN mv_pit_mutation_report pmr ON mcg.mutation_id = pmr.id
+     WHERE pmr.status = 'NO_COVERAGE'
+    ) AS result;
+
+SELECT
+    'All mutations with status other than NO_COVERAGE have covering tests or generalizations.' AS test,
+    (SELECT COUNT(*) = 0
+     FROM mv_pit_mutation_report pmr
+     LEFT JOIN mv_mutation_covering_tests mct ON pmr.id = mct.mutation_id
+     LEFT JOIN mv_mutation_covering_generalizations mcg ON pmr.id = mcg.mutation_id
+     WHERE pmr.status != 'NO_COVERAGE'
+       AND mct.mutation_id IS NULL
+       AND mcg.mutation_id IS NULL
+    ) AS result;
 
 CREATE MATERIALIZED VIEW mv_pit_mutation_report_extension AS
 WITH base_data AS (
