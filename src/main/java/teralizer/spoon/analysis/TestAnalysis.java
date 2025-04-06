@@ -342,7 +342,7 @@ public class TestAnalysis {
         return false;
     }
 
-    public static boolean containsAssertion(CtMethod<?> method) {
-        return !method.getElements(TestAnalysis::isAssertion).isEmpty();
+    public static boolean containsAssertion(CtElement element) {
+        return !element.getElements(TestAnalysis::isAssertion).isEmpty();
     }
 }
