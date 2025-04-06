@@ -106,7 +106,7 @@ public class JunitDataCollectionTask extends AbstractTask {
                 }
                 break;
             case COLLECT_JUNIT_REPORTS_GENERALIZED:
-                if (this.testRecord == null) {
+                if (this.testRecord == null && this.generalizationRecord == null) {
                     this.scheduleTasks(create, scheduleTask);
                 } else if (this.generalizationRecord == null) {
                     List<JunitTestReportRecord> testReportRecords = this.collectTestReportData(create);
@@ -351,20 +351,22 @@ public class JunitDataCollectionTask extends AbstractTask {
         // Write (relevant parts of) the data to the DB:
         JunitTestReportRecord record = create.newRecord(Tables.JUNIT_TEST_REPORT);
         record.setProjectId(this.getProjectId());
-        record.setTestId(this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED ? null : this.getTestId());
-        record.setGeneralizationId(this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED ? this.getGeneralizationId() : null);
         record.setStep(this.stage.getStep());
         record.setStage(this.stage);
         record.setVariant(this.variant);
 
-        if (this.generalizationRecord != null) {
-            record.setTestPackageName(this.generalizationRecord.getPackageName());
-            record.setTestClassName(this.generalizationRecord.getClassName());
-            record.setTestMethodName(this.generalizationRecord.getMethodName());
-        } else {
+        if (this.generalizationRecord == null) {
+            record.setTestId(this.getTestId());
+            record.setGeneralizationId(null);
             record.setTestPackageName(this.testRecord.getTestPackageName());
             record.setTestClassName(this.testRecord.getTestClassName());
             record.setTestMethodName(this.testRecord.getTestMethodName());
+        } else {
+            record.setTestId(null);
+            record.setGeneralizationId(this.getGeneralizationId());
+            record.setTestPackageName(this.generalizationRecord.getPackageName());
+            record.setTestClassName(this.generalizationRecord.getClassName());
+            record.setTestMethodName(this.generalizationRecord.getMethodName());
         }
 
         record.setTestCaseName(testCaseReport.getName());
