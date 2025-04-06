@@ -8,10 +8,7 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.GeneralizationRecord;
-import org.jooq.generated.tables.records.JunitTestReportRecord;
-import org.jooq.generated.tables.records.ProjectRecord;
-import org.jooq.generated.tables.records.TestRecord;
+import org.jooq.generated.tables.records.*;
 import org.xml.sax.SAXException;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtAnnotation;
@@ -45,15 +42,15 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     public JunitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord, TestRecord testRecord) {
-        this(stage, null, projectRecord, testRecord, null);
+        this(stage, null, projectRecord, testRecord, null, null);
     }
 
     public JunitDataCollectionTask(ProcessingStage stage, String variant, ProjectRecord projectRecord) {
-        this(stage, variant, projectRecord, null, null);
+        this(stage, variant, projectRecord, null, null, null);
     }
 
     public JunitDataCollectionTask(ProcessingStage stage, String variant, ProjectRecord projectRecord, TestRecord testRecord) {
-        this(stage, variant, projectRecord, testRecord, null);
+        this(stage, variant, projectRecord, testRecord, null, null);
     }
 
     public JunitDataCollectionTask(
@@ -61,12 +58,14 @@ public class JunitDataCollectionTask extends AbstractTask {
         String variant,
         ProjectRecord projectRecord,
         TestRecord testRecord,
+        AssertionRecord assertionRecord,
         GeneralizationRecord generalizationRecord
     ) {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
         this.testRecord = testRecord;
+        this.assertionRecord = assertionRecord;
         this.generalizationRecord = generalizationRecord;
     }
 
@@ -141,8 +140,9 @@ public class JunitDataCollectionTask extends AbstractTask {
                 Result<Record> generalizationRecords = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
                 for (Record record : generalizationRecords) {
                     TestRecord testRecord = record.into(TestRecord.class);
+                    AssertionRecord assertionRecord = record.into(AssertionRecord.class);
                     GeneralizationRecord generalizationRecord = record.into(GeneralizationRecord.class);
-                    scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, generalizationRecord));
+                    scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord, assertionRecord, generalizationRecord));
                 }
                 break;
             }
