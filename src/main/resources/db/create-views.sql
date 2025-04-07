@@ -593,6 +593,8 @@ CREATE UNIQUE INDEX idx_mv_mutation_variant_comparison_a_report_id_b_report_id O
 CREATE INDEX idx_mv_mutation_variant_comparison_mutation_id ON mv_mutation_variant_comparison (mutation_id);
 CREATE INDEX idx_mv_mutation_variant_comparison_a_report_id ON mv_mutation_variant_comparison (a_report_id);
 CREATE INDEX idx_mv_mutation_variant_comparison_b_report_id ON mv_mutation_variant_comparison (b_report_id);
+CREATE INDEX idx_mv_mutation_variant_comparison_a_variant ON mv_mutation_variant_comparison (a_variant);
+CREATE INDEX idx_mv_mutation_variant_comparison_b_variant ON mv_mutation_variant_comparison (b_variant);
 
 CREATE INDEX idx_mv_mutation_variant_comparison_a_status ON mv_mutation_variant_comparison (a_status);
 CREATE INDEX idx_mv_mutation_variant_comparison_b_status ON mv_mutation_variant_comparison (b_status);
