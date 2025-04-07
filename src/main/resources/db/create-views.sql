@@ -160,7 +160,7 @@ CREATE INDEX idx_mv_pit_coverage_report_location_location_id ON mv_pit_coverage_
 
 SELECT
     'Every coverage report is mapped to a location.' AS test,
-    (SELECT count(*) FROM mv_pit_coverage_report_location crl WHERE crl.location_id IS NULL) AS result;
+    (SELECT count(*) = 0 FROM mv_pit_coverage_report_location crl WHERE crl.location_id IS NULL) AS result;
 
 CREATE MATERIALIZED VIEW mv_pit_mutation_report_location AS
 SELECT
