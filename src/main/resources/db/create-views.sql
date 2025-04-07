@@ -2,6 +2,7 @@ DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant;
+DROP MATERIALIZED VIEW mv_mutation_new_kill_counts;
 DROP MATERIALIZED VIEW mv_mutation_status_changes;
 DROP MATERIALIZED VIEW mv_mutation_variant_comparison;
 DROP MATERIALIZED VIEW mv_pit_mutation_report_extension;
