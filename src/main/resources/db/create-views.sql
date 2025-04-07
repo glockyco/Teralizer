@@ -437,7 +437,7 @@ SELECT
 FROM mv_pit_mutation_report pmr
 JOIN mv_pit_mutation_coverage pmc ON pmr.id = pmc.mutation_id
 JOIN mv_pit_coverage_report pcr ON pmc.coverage_id = pcr.id
-JOIN generalization g ON pcr.test_id = g.test_id
+JOIN generalization g ON pcr.generalization_id = g.id
 JOIN mv_generalization_extension ge ON g.id = ge.generalization_id
 GROUP BY pmr.project_id, pmr.id, pmr.status, g.id, pmr.variant, pmr.variant_order
 ORDER BY pmr.project_id, pmr.id, g.id, pmr.variant_order
