@@ -630,7 +630,7 @@ SELECT
 FROM mv_mutation_variant_comparison c
 JOIN mv_pit_mutation_report ra ON c.a_report_id = ra.id
 JOIN mv_pit_mutation_report rb ON c.b_report_id = rb.id
-LEFT JOIN project p ON ra.project_id = p.id
+JOIN project p ON ra.project_id = p.id
 LEFT JOIN test kt ON rb.killing_test_id = kt.id
 LEFT JOIN generalization kg ON rb.killing_generalization_id = kg.id
 LEFT JOIN test t ON t.id = kg.test_id
@@ -651,6 +651,24 @@ CREATE INDEX idx_mv_mutation_status_changes_a_status ON mv_mutation_status_chang
 CREATE INDEX idx_mv_mutation_status_changes_b_status ON mv_mutation_status_changes (b_status);
 CREATE INDEX idx_mv_mutation_status_changes_a_is_detected ON mv_mutation_status_changes (a_is_detected);
 CREATE INDEX idx_mv_mutation_status_changes_b_is_detected ON mv_mutation_status_changes (b_is_detected);
+
+CREATE MATERIALIZED VIEW mv_mutation_new_kill_counts AS
+SELECT
+    project_id,
+    project_name,
+    a_variant,
+    b_variant,
+    --COUNT(*) AS total_changes,
+    --SUM(CASE WHEN a_is_detected = TRUE AND b_is_detected = FALSE THEN 1 ELSE 0 END) AS no_longer_detected,
+    --SUM(CASE WHEN a_is_detected = FALSE AND b_is_detected = TRUE THEN 1 ELSE 0 END) AS newly_detected,
+    SUM(CASE WHEN a_is_detected = FALSE AND b_status = 'KILLED' THEN 1 ELSE 0 END) AS newly_killed,
+    --SUM(CASE WHEN a_is_detected = b_is_detected AND a_status != b_status THEN 1 ELSE 0 END) AS only_status_changed
+    variant_order(a_variant) AS a_variant_order,
+    variant_order(b_variant) AS b_variant_order
+FROM mv_mutation_status_changes
+GROUP BY project_id, project_name, a_variant, b_variant
+ORDER BY project_id, variant_order(a_variant), variant_order(b_variant)
+WITH DATA;
 
 CREATE MATERIALIZED VIEW mv_mutation_results_by_variant AS
 WITH base_data AS (
