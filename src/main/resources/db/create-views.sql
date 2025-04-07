@@ -639,7 +639,7 @@ LEFT JOIN generalization kg ON rb.killing_generalization_id = kg.id
 LEFT JOIN test t ON t.id = kg.test_id
 LEFT JOIN assertion a ON a.id = kg.assertion_id
 LEFT JOIN junit_test_report tr ON kg.id = tr.generalization_id
-WHERE c.a_variant = 'INITIAL' AND c.b_variant != 'ORIGINAL' AND c.a_status != c.b_status
+WHERE c.a_variant IN ('ORIGINAL', 'INITIAL') AND c.b_variant != 'ORIGINAL' AND c.a_status != c.b_status
 ORDER BY b_is_detected, b_status = 'KILLED', kg.id IS NOT NULL, ra.id, rb.variant_order
 WITH DATA;
 
