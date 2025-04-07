@@ -300,7 +300,6 @@ SELECT
         ) > 0
     ) AS result;
 
-DROP MATERIALIZED VIEW mv_pit_mutation_coverage;
 CREATE MATERIALIZED VIEW mv_pit_mutation_coverage AS
 SELECT
     pmr.id AS mutation_id,
