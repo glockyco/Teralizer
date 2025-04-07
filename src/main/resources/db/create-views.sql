@@ -379,21 +379,19 @@ SELECT
 
 CREATE MATERIALIZED VIEW mv_mutation_covering_assertions AS
 SELECT
-    pmr.project_id,
-    pmr.id AS mutation_id,
-    pmr.status,
+    mct.project_id,
+    mct.mutation_id,
+    mct.status,
     a.id AS assertion_id,
-    pmr.variant,
-    pmr.variant_order,
+    mct.variant,
+    mct.variant_order,
     min(ae.model_java_size) AS model_java_size,
     min(ae.model_operation_count) AS model_operation_count
-FROM mv_pit_mutation_report pmr
-JOIN mv_pit_mutation_coverage pmc ON pmr.id = pmc.mutation_id
-JOIN mv_pit_coverage_report pcr ON pmc.coverage_id = pcr.id
-JOIN assertion a ON pcr.test_id = a.test_id
+FROM mv_mutation_covering_tests mct
+JOIN assertion a ON mct.test_id = a.test_id
 JOIN mv_assertion_extension ae ON a.id = ae.assertion_id
-GROUP BY pmr.project_id, pmr.id, pmr.status, a.id, pmr.variant, pmr.variant_order
-ORDER BY pmr.project_id, pmr.id, a.id, pmr.variant_order
+GROUP BY mct.project_id, mct.mutation_id, mct.status, a.id, mct.variant, mct.variant_order
+ORDER BY mct.project_id, mct.mutation_id, a.id, mct.variant_order
 WITH DATA;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_covering_assertions ON mv_mutation_covering_assertions (mutation_id, assertion_id);
