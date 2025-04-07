@@ -643,7 +643,17 @@ WHERE c.a_variant IN ('ORIGINAL', 'INITIAL') AND c.b_variant != 'ORIGINAL' AND c
 ORDER BY b_is_detected, b_status = 'KILLED', kg.id IS NOT NULL, ra.id, rb.variant_order
 WITH DATA;
 
-CREATE UNIQUE INDEX idx_mv_mutation_status_changes_a_report_id_b_report_id ON mv_mutation_status_changes (a_report_id, b_report_id);
+CREATE UNIQUE INDEX idx_mv_mutation_status_changes ON mv_mutation_status_changes (a_report_id, b_report_id);
+
+CREATE INDEX idx_mv_mutation_status_changes_project_id ON mv_mutation_status_changes (project_id);
+CREATE INDEX idx_mv_mutation_status_changes_a_report_id ON mv_mutation_status_changes (a_report_id);
+CREATE INDEX idx_mv_mutation_status_changes_b_report_id ON mv_mutation_status_changes (b_report_id);
+CREATE INDEX idx_mv_mutation_status_changes_a_variant ON mv_mutation_status_changes (a_variant);
+CREATE INDEX idx_mv_mutation_status_changes_b_variant ON mv_mutation_status_changes (b_variant);
+CREATE INDEX idx_mv_mutation_status_changes_a_status ON mv_mutation_status_changes (a_status);
+CREATE INDEX idx_mv_mutation_status_changes_b_status ON mv_mutation_status_changes (b_status);
+CREATE INDEX idx_mv_mutation_status_changes_a_is_detected ON mv_mutation_status_changes (a_is_detected);
+CREATE INDEX idx_mv_mutation_status_changes_b_is_detected ON mv_mutation_status_changes (b_is_detected);
 
 CREATE MATERIALIZED VIEW mv_mutation_results_by_variant AS
 WITH base_data AS (
