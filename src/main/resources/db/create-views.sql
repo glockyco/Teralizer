@@ -15,7 +15,8 @@ DROP MATERIALIZED VIEW mv_pit_coverage_report;
 DROP MATERIALIZED VIEW mv_pit_mutation_report_location;
 DROP MATERIALIZED VIEW mv_pit_coverage_report_location;
 DROP MATERIALIZED VIEW mv_pit_location;
-DROP MATERIALIZED VIEW mv_evosuite_runtime_pivoted_by_project;
+DROP MATERIALIZED VIEW mv_evosuite_runtime_pivoted;
+DROP MATERIALIZED VIEW mv_evosuite_runtime;
 DROP MATERIALIZED VIEW mv_generalization_extension;
 DROP MATERIALIZED VIEW mv_assertion_extension;
 DROP MATERIALIZED VIEW mv_test_extension;
@@ -88,6 +89,27 @@ SELECT
     'Generalization extension exists for every generalization.' AS test,
     (SELECT count(DISTINCT ge.generalization_id) FROM mv_generalization_extension ge) = (SELECT count(*) FROM generalization) AS result;
 
+CREATE MATERIALIZED VIEW mv_evosuite_runtime AS
+SELECT
+    id,
+    project_id,
+    dense_rank() OVER (
+        ORDER BY
+            project_id,
+            class_name
+    ) AS class_id,
+    class_name,
+    step,
+    phase_name,
+    runtime
+FROM evosuite_runtime
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_evosuite_runtime ON mv_evosuite_runtime (id);
+
+CREATE INDEX idx_mv_evosuite_runtime_project_id ON mv_evosuite_runtime (project_id);
+CREATE INDEX idx_mv_evosuite_runtime_class_id ON mv_evosuite_runtime (class_id);
+
 DO $$
 DECLARE
     phase_columns TEXT := '';
@@ -96,8 +118,8 @@ DECLARE
 BEGIN
     -- Get the list of phase names to create columns, ordered by step
     SELECT
-        string_agg(format('%I', phase_name), ', '),
-        string_agg(format('%I NUMERIC', phase_name), ', ')
+        string_agg(format('%I', lower(phase_name)), ', '),
+        string_agg(format('%I NUMERIC', lower(phase_name)), ', ')
     INTO
         phase_columns,
         phase_column_defs
@@ -109,7 +131,7 @@ BEGIN
                 phase_name,
                 MAX(step) as max_step
             FROM
-                public.evosuite_runtime
+                public.mv_evosuite_runtime
             GROUP BY
                 phase_name
             ORDER BY
@@ -119,44 +141,64 @@ BEGIN
 
     -- Create the materialized view with the dynamic columns
     create_view_sql := format('
-        CREATE MATERIALIZED VIEW mv_evosuite_runtime_pivoted_by_project AS
-        SELECT * FROM crosstab(
-            ''SELECT
-                rt.project_id,
-                public.project_name(rt.project_id) AS project_name,
-                rt.phase_name,
-                sum(rt.runtime) AS runtime
+        CREATE MATERIALIZED VIEW mv_evosuite_runtime_pivoted AS
+        WITH class_totals AS (
+            SELECT
+                class_id,
+                SUM(runtime) AS total_runtime
             FROM
-                public.project AS p
-                INNER JOIN public.evosuite_runtime AS rt ON p.id = rt.project_id
-            WHERE
-                p.use_test_generation = true
+                public.mv_evosuite_runtime
             GROUP BY
-                rt.project_id,
-                public.project_name(rt.project_id),
-                rt.phase_name
-            ORDER BY rt.project_id, public.project_name(rt.project_id), rt.phase_name'',
-
-            ''SELECT phase_name
-              FROM (
-                SELECT
-                    phase_name,
-                    MAX(step) as max_step
+                class_id
+        ),
+        pivoted_data AS (
+            SELECT * FROM crosstab(
+                ''SELECT
+                    rt.class_id,
+                    rt.project_id,
+                    rt.class_name,
+                    rt.phase_name,
+                    sum(rt.runtime) AS runtime
                 FROM
-                    public.evosuite_runtime
+                    public.mv_evosuite_runtime AS rt
                 GROUP BY
-                    phase_name
-                ORDER BY
-                    max_step
-              ) ordered_phases''
-        ) AS ct (project_id INTEGER, project_name TEXT, %s)
-    ', phase_column_defs);
+                    rt.class_id,
+                    rt.project_id,
+                    rt.class_name,
+                    rt.phase_name
+                ORDER BY rt.class_id'',
+
+                ''SELECT phase_name
+                  FROM (
+                    SELECT
+                        phase_name,
+                        MAX(step) as max_step
+                    FROM
+                        public.mv_evosuite_runtime
+                    GROUP BY
+                        phase_name
+                    ORDER BY
+                        max_step
+                  ) ordered_phases''
+            ) AS ct (class_id INTEGER, project_id INTEGER, class_name TEXT, %s)
+        )
+        SELECT
+            pd.class_id,
+            pd.project_id,
+            pd.class_name,
+            ct.total_runtime AS total,
+            %s
+        FROM
+            pivoted_data pd
+        JOIN
+            class_totals ct ON pd.class_id = ct.class_id
+    ', phase_column_defs, phase_columns);
 
     -- Execute the dynamic SQL to create the materialized view
     EXECUTE create_view_sql;
 END $$;
 
-CREATE UNIQUE INDEX idx_mv_evosuite_runtime_pivoted_by_project ON mv_evosuite_runtime_pivoted_by_project(project_id);
+CREATE UNIQUE INDEX idx_mv_evosuite_runtime_pivoted ON mv_evosuite_runtime_pivoted(project_id);
 
 CREATE MATERIALIZED VIEW mv_pit_location AS
 WITH
