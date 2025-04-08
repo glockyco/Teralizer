@@ -15,6 +15,7 @@ DROP MATERIALIZED VIEW mv_pit_coverage_report;
 DROP MATERIALIZED VIEW mv_pit_mutation_report_location;
 DROP MATERIALIZED VIEW mv_pit_coverage_report_location;
 DROP MATERIALIZED VIEW mv_pit_location;
+DROP MATERIALIZED VIEW mv_runtime_comparison_test_vs_generalization;
 DROP MATERIALIZED VIEW mv_evosuite_runtime_pivoted;
 DROP MATERIALIZED VIEW mv_evosuite_runtime;
 DROP MATERIALIZED VIEW mv_generalization_extension;
@@ -225,6 +226,37 @@ BEGIN
 END $$;
 
 CREATE UNIQUE INDEX idx_mv_evosuite_runtime_pivoted ON mv_evosuite_runtime_pivoted(project_id);
+
+DROP MATERIALIZED VIEW mv_runtime_comparison_test_vs_generalization;
+CREATE MATERIALIZED VIEW mv_runtime_comparison_test_vs_generalization AS
+SELECT
+    t.project_id,
+    project_name(t.project_id) AS project_name,
+    g.test_id,
+    ge.generalization_id,
+    ge.variant,
+    ge.variant_order,
+    te.runtime AS t_runtime,
+    ge.runtime AS g_runtime,
+    ge.runtime - te.runtime AS runtime_diff,
+    v.tries,
+    (ge.runtime - te.runtime) / v.tries AS runtime_diff_per_try
+FROM generalization g
+JOIN test t ON g.test_id = t.id
+JOIN mv_test_extension te ON t.id = te.test_id
+JOIN mv_generalization_extension ge ON g.id = ge.generalization_id
+JOIN mv_variant v ON t.project_id = v.project_id AND ge.variant = v.variant
+WHERE t.is_included AND g.is_included AND te.variant = 'INITIAL'
+ORDER BY g.project_id, g.test_id, ge.variant_order
+WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_runtime_comparison_test_vs_generalization ON mv_runtime_comparison_test_vs_generalization(test_id, generalization_id);
+
+CREATE INDEX idx_mv_runtime_comparison_test_vs_generalization_p_id ON mv_runtime_comparison_test_vs_generalization(project_id);
+CREATE INDEX idx_mv_runtime_comparison_test_vs_generalization_t_id ON mv_runtime_comparison_test_vs_generalization(test_id);
+CREATE INDEX idx_mv_runtime_comparison_test_vs_generalization_g_id ON mv_runtime_comparison_test_vs_generalization(generalization_id);
+CREATE INDEX idx_mv_runtime_comparison_test_vs_generalization_v ON mv_runtime_comparison_test_vs_generalization(variant);
+CREATE INDEX idx_mv_runtime_comparison_test_vs_generalization_v_o ON mv_runtime_comparison_test_vs_generalization(variant_order);
 
 CREATE MATERIALIZED VIEW mv_pit_location AS
 WITH
