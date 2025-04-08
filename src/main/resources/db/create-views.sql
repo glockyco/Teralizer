@@ -20,8 +20,34 @@ DROP MATERIALIZED VIEW mv_evosuite_runtime;
 DROP MATERIALIZED VIEW mv_generalization_extension;
 DROP MATERIALIZED VIEW mv_assertion_extension;
 DROP MATERIALIZED VIEW mv_test_extension;
+DROP MATERIALIZED VIEW mv_variant;
 
 CREATE EXTENSION IF NOT EXISTS tablefunc;
+
+CREATE MATERIALIZED VIEW mv_variant AS
+SELECT
+    v.project_id,
+    v.variant,
+    min((v.config->'jqwik'->>'tries')::int) as tries,
+    v.variant_order
+FROM (
+    SELECT
+        p.id AS project_id,
+        key as variant,
+        variant_order(key) AS variant_order,
+        value as config
+    FROM
+        project p,
+        jsonb_each(CAST(configuration as jsonb)->'generalizations')
+) as v
+GROUP BY v.project_id, v.variant, v.variant_order
+ORDER BY v.project_id, v.variant_order;
+
+CREATE UNIQUE INDEX idx_mv_variant ON mv_variant (project_id, variant);
+
+CREATE INDEX idx_mv_variant_project_id ON mv_variant (project_id);
+CREATE INDEX idx_mv_variant_variant ON mv_variant (variant);
+CREATE INDEX idx_mv_variant_variant_order ON mv_variant (variant_order);
 
 CREATE MATERIALIZED VIEW mv_test_extension AS
 SELECT
