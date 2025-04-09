@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW mv_efficiency_comparison_evosuite_vs_teralizer;
 DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant_mutator;
@@ -1310,3 +1311,110 @@ WHERE
 ORDER BY
     s.project_id, variant_order(s.variant), s.total DESC, s.mutator
 WITH DATA;
+
+CREATE MATERIALIZED VIEW mv_efficiency_comparison_evosuite_vs_teralizer AS
+WITH
+    mutation_results AS (
+        SELECT
+            mr.project_id,
+            mr.project_name,
+            mr.variant,
+            variant_order(mr.variant) AS variant_order,
+            mr.detected_of_covered_pct
+        FROM mv_mutation_results_by_project_variant mr
+    ),
+    evosuite_runtime AS (
+        SELECT
+            rt.project_id,
+            project_name(rt.project_id) AS project_name,
+            sum(rt.runtime) AS runtime
+        FROM mv_evosuite_runtime rt
+        GROUP BY rt.project_id
+    ),
+    evosuite_runtime_no_validation AS (
+        SELECT
+            rt.project_id,
+            project_name(rt.project_id) AS project_name,
+            sum(rt.runtime) AS runtime
+        FROM mv_evosuite_runtime rt
+        WHERE rt.phase_name != 'JUNIT_CHECK'
+        GROUP BY rt.project_id
+    ),
+    teralizer_runtime AS (
+        SELECT
+            t.project_id,
+            project_name(t.project_id) AS project_name,
+            coalesce(t.variant, 'SHARED') AS variant,
+            variant_order(t.variant) AS variant_order,
+            sum(t.runtime) AS runtime
+        FROM
+            task t
+        WHERE
+            t.runtime IS NOT NULL
+            AND t.stage IN (
+                -- Specification Extraction
+                'BUILD_SPOON_MODEL', 'ANALYZE_TESTS', 'FILTER_TESTS', 'FILTER_ASSERTIONS',
+                'ADD_JPF_INSTRUMENTATION', 'BUILD_PROJECT_INSTRUMENTED', 'EXECUTE_JPF', 'ANALYZE_JPF',
+                -- Initial Validation (excluding evaluation-only)
+               'ADD_DEPENDENCIES', 'BUILD_PROJECT_INITIAL', 'EXECUTE_TESTS_INITIAL',
+               'COLLECT_JUNIT_REPORTS_INITIAL', --'COLLECT_JACOCO_DATA_INITIAL', 'COLLECT_PIT_DATA_INITIAL'
+                -- Generalization
+               'GENERALIZE_TESTS',
+                -- Generalization Validation (excluding generalization-only):
+               'BUILD_PROJECT_GENERALIZED', 'EXECUTE_TESTS_GENERALIZED',
+               'COLLECT_JUNIT_REPORTS_GENERALIZED', 'FILTER_GENERALIZATIONS',
+                --'COLLECT_JACOCO_DATA_GENERALIZED',
+               'COLLECT_PIT_DATA_GENERALIZED'
+            )
+        GROUP BY
+            t.project_id,
+            t.variant
+        ORDER BY t.project_id, variant_order(t.variant)
+    ),
+    teralizer_runtime_no_validation AS (
+        SELECT
+            t.project_id,
+            project_name(t.project_id) AS project_name,
+            coalesce(t.variant, 'SHARED') AS variant,
+            variant_order(t.variant) AS variant_order,
+            sum(t.runtime) AS runtime
+        FROM
+            task t
+        WHERE
+            t.runtime IS NOT NULL
+            AND t.stage IN (
+                -- Specification Extraction
+                'BUILD_SPOON_MODEL', 'ANALYZE_TESTS', 'FILTER_TESTS', 'FILTER_ASSERTIONS',
+                'ADD_JPF_INSTRUMENTATION', 'BUILD_PROJECT_INSTRUMENTED', 'EXECUTE_JPF', 'ANALYZE_JPF',
+                -- Generalization (excluding validation stages)
+                'GENERALIZE_TESTS'
+                -- Excluded all validation stages
+            )
+        GROUP BY
+            t.project_id,
+            t.variant
+        ORDER BY t.project_id, variant_order(t.variant)
+    )
+SELECT
+    mre.project_name,
+    mre.variant AS evosuite_variant,
+    mrt.variant AS teralizer_variant,
+    ert.runtime AS evosuite_runtime,
+    trt_shared.runtime + trt_variant.runtime AS teralizer_runtime,
+    ert_no_val.runtime AS e_no_validation,
+    trt_shared_no_val.runtime + trt_variant_no_val.runtime AS t_no_validation,
+    (ert.runtime - ert_no_val.runtime) AS e_validation,
+    (trt_shared.runtime + trt_variant.runtime) - (trt_shared_no_val.runtime + trt_variant_no_val.runtime) AS t_validation,
+    mre.detected_of_covered_pct AS evosuite_detected,
+    mrt.detected_of_covered_pct AS teralizer_detected
+FROM mutation_results mre
+INNER JOIN evosuite_runtime ert ON mre.project_name = ert.project_name AND mre.variant = 'INITIAL'
+INNER JOIN evosuite_runtime_no_validation ert_no_val ON mre.project_name = ert_no_val.project_name AND mre.variant = 'INITIAL'
+INNER JOIN teralizer_runtime trt_shared ON mre.project_id = trt_shared.project_id AND trt_shared.variant = 'SHARED'
+INNER JOIN teralizer_runtime trt_variant ON mre.project_id = trt_variant.project_id AND trt_variant.variant != 'SHARED'
+INNER JOIN teralizer_runtime_no_validation trt_shared_no_val ON mre.project_id = trt_shared_no_val.project_id AND trt_shared_no_val.variant = 'SHARED'
+INNER JOIN teralizer_runtime_no_validation trt_variant_no_val ON mre.project_id = trt_variant_no_val.project_id AND trt_variant_no_val.variant != 'SHARED' AND trt_variant_no_val.variant = trt_variant.variant
+INNER JOIN mutation_results mrt ON trt_variant.project_id = mrt.project_id AND trt_variant.variant = mrt.variant
+ORDER BY mre.project_id, mre.variant_order, trt_variant.variant_order
+WITH DATA;
+
