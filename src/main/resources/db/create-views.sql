@@ -405,11 +405,14 @@ SELECT
     dense_rank() OVER (
         ORDER BY
             project_id,
+            mutated_package,
             mutated_class,
+            mutated_method,
             line_number,
             mutator,
             indexes,
             blocks,
+            method_description,
             description
     ) AS mutation_id,
     killing_test_id,
@@ -422,6 +425,7 @@ SELECT
     status,
     number_of_tests_run,
     source_file,
+    mutated_package,
     mutated_class,
     mutated_method,
     method_description,
