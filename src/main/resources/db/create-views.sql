@@ -3,7 +3,7 @@ DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_variant;
-DROP MATERIALIZED VIEW mv_mutation_new_kill_counts;
+DROP MATERIALIZED VIEW mv_generalization_effects;
 DROP MATERIALIZED VIEW mv_mutation_status_changes;
 DROP MATERIALIZED VIEW mv_mutation_variant_comparison;
 DROP MATERIALIZED VIEW mv_pit_mutation_report_extension;
@@ -832,23 +832,129 @@ CREATE INDEX idx_mv_mutation_status_changes_b_status ON mv_mutation_status_chang
 CREATE INDEX idx_mv_mutation_status_changes_a_is_detected ON mv_mutation_status_changes (a_is_detected);
 CREATE INDEX idx_mv_mutation_status_changes_b_is_detected ON mv_mutation_status_changes (b_is_detected);
 
-CREATE MATERIALIZED VIEW mv_mutation_new_kill_counts AS
+CREATE MATERIALIZED VIEW mv_generalization_effects AS
+WITH
+    newly_killed_mutations AS (
+        SELECT *
+        FROM mv_mutation_status_changes
+        WHERE a_is_detected = FALSE AND b_status = 'KILLED'
+    ),
+    killing_generalizations AS (
+        SELECT
+            nkm.project_id,
+            nkm.a_variant,
+            nkm.b_variant,
+            nkm.killing_generalization_id AS generalization_id,
+            min(g.test_id) AS test_id,
+            min(nkm.killing_line_count) AS line_count,
+            min(ge.runtime) AS runtime
+        FROM newly_killed_mutations nkm
+        JOIN generalization g ON nkm.killing_generalization_id = g.id
+        JOIN mv_generalization_extension ge ON nkm.killing_generalization_id = ge.generalization_id
+        GROUP BY 1, 2, 3, 4
+    ),
+    generalized_tests AS (
+        SELECT
+            kg.project_id,
+            kg.a_variant,
+            kg.b_variant,
+            kg.test_id,
+            t.line_count,
+            te.runtime,
+            (SELECT count(*) FROM assertion a WHERE a.test_id = kg.test_id) AS assertions
+        FROM killing_generalizations kg
+        JOIN test t ON kg.test_id = t.id
+        JOIN mv_test_extension te ON kg.test_id = te.test_id AND te.variant = kg.a_variant
+    ),
+    base_data AS (
+        SELECT
+            nkm.project_id,
+            nkm.a_variant,
+            nkm.b_variant,
+            count(*) AS mutations,
+            (SELECT count(*) FROM killing_generalizations kg
+             WHERE kg.project_id = nkm.project_id
+             AND kg.a_variant = nkm.a_variant
+             AND kg.b_variant = nkm.b_variant) AS generalizations,
+            (SELECT sum(kg.line_count) FROM killing_generalizations kg
+             WHERE kg.project_id = nkm.project_id
+             AND kg.a_variant = nkm.a_variant
+             AND kg.b_variant = nkm.b_variant) AS generalization_lines,
+            (SELECT sum(kg.runtime) FROM killing_generalizations kg
+             WHERE kg.project_id = nkm.project_id
+             AND kg.a_variant = nkm.a_variant
+             AND kg.b_variant = nkm.b_variant) AS generalization_runtime
+        FROM newly_killed_mutations nkm
+        GROUP BY 1, 2, 3
+    ),
+    test_data AS (
+        SELECT
+            gt.project_id,
+            gt.a_variant,
+            gt.b_variant,
+            count(*) AS tests,
+            sum(CASE WHEN assertions = 1 THEN 1 ELSE 0 END) AS tests_replaceable,
+            sum(gt.line_count) AS test_lines,
+            coalesce(sum(gt.line_count) FILTER (WHERE gt.assertions = 1), 0) AS test_lines_replaceable,
+            coalesce(sum(gt.line_count) FILTER (WHERE gt.assertions > 1), 0) AS test_lines_non_replaceable,
+            sum(gt.runtime) AS test_runtime,
+            coalesce(sum(gt.runtime) FILTER (WHERE gt.assertions = 1), 0) AS test_runtime_replaceable,
+            coalesce(sum(gt.runtime) FILTER (WHERE gt.assertions > 1), 0) AS test_runtime_non_replaceable
+        FROM generalized_tests gt
+        GROUP BY 1, 2, 3
+    ),
+    test_counts AS (
+        SELECT
+            project_id,
+            count(*) AS test_count,
+            sum(t.line_count) AS line_count,
+            sum(te.runtime) AS runtime
+        FROM test t
+        JOIN mv_test_extension te ON t.id = te.test_id
+        WHERE te.variant = 'ORIGINAL'
+        GROUP BY 1
+    )
 SELECT
-    project_id,
-    project_name,
-    a_variant,
-    b_variant,
-    --COUNT(*) AS total_changes,
-    --SUM(CASE WHEN a_is_detected = TRUE AND b_is_detected = FALSE THEN 1 ELSE 0 END) AS no_longer_detected,
-    --SUM(CASE WHEN a_is_detected = FALSE AND b_is_detected = TRUE THEN 1 ELSE 0 END) AS newly_detected,
-    SUM(CASE WHEN a_is_detected = FALSE AND b_status = 'KILLED' THEN 1 ELSE 0 END) AS newly_killed,
-    --SUM(CASE WHEN a_is_detected = b_is_detected AND a_status != b_status THEN 1 ELSE 0 END) AS only_status_changed
-    variant_order(a_variant) AS a_variant_order,
-    variant_order(b_variant) AS b_variant_order
-FROM mv_mutation_status_changes
-GROUP BY project_id, project_name, a_variant, b_variant
-ORDER BY project_id, variant_order(a_variant), variant_order(b_variant)
+    bd.project_id,
+    project_name(bd.project_id),
+    bd.a_variant,
+    bd.b_variant,
+    variant_order(bd.a_variant) AS a_variant_order,
+    variant_order(bd.b_variant) AS b_variant_order,
+    -- Mutation data
+    bd.mutations AS killed_mutations,
+    -- Test counts
+    tc.test_count AS tests_before,
+    bd.generalizations AS added_tests,
+    td.tests_replaceable AS removed_tests,
+    (tc.test_count + bd.generalizations - td.tests_replaceable) AS tests_after,
+    (tc.test_count + bd.generalizations - td.tests_replaceable) - tc.test_count AS tests_delta,
+    ((tc.test_count + bd.generalizations - td.tests_replaceable) - tc.test_count) * 100.0 / NULLIF(tc.test_count, 0) AS tests_delta_pct,
+    -- Line counts
+    tc.line_count AS lines_before,
+    bd.generalization_lines AS added_lines,
+    td.test_lines_replaceable AS removed_lines,
+    (tc.line_count + bd.generalization_lines - td.test_lines_replaceable) AS lines_after,
+    (tc.line_count + bd.generalization_lines - td.test_lines_replaceable) - tc.line_count AS lines_delta,
+    ((tc.line_count + bd.generalization_lines - td.test_lines_replaceable) - tc.line_count) * 100.0 / NULLIF(tc.line_count, 0) AS lines_delta_pct,
+    -- Runtime data
+    tc.runtime AS runtime_before,
+    bd.generalization_runtime AS added_runtime,
+    td.test_runtime_replaceable AS removed_runtime,
+    (tc.runtime + bd.generalization_runtime - td.test_runtime_replaceable) AS runtime_after,
+    (tc.runtime + bd.generalization_runtime - td.test_runtime_replaceable) - tc.runtime AS runtime_delta,
+    ((tc.runtime + bd.generalization_runtime - td.test_runtime_replaceable) - tc.runtime) * 100.0 / NULLIF(tc.runtime, 0) AS runtime_delta_pct
+FROM base_data bd
+JOIN test_data td ON bd.project_id = td.project_id AND bd.a_variant = td.a_variant AND bd.b_variant = td.b_variant
+JOIN test_counts tc ON bd.project_id = tc.project_id
+ORDER BY bd.project_id, variant_order(bd.a_variant), variant_order(bd.b_variant)
 WITH DATA;
+
+CREATE UNIQUE INDEX idx_mv_generalization_effects ON mv_generalization_effects (project_id, a_variant, b_variant);
+
+CREATE INDEX idx_mv_generalization_effects_project_id ON mv_generalization_effects (project_id);
+CREATE INDEX idx_mv_generalization_effects_a_variant ON mv_generalization_effects (a_variant);
+CREATE INDEX idx_mv_generalization_effects_b_variant ON mv_generalization_effects (b_variant);
 
 CREATE MATERIALIZED VIEW mv_mutation_results_by_variant AS
 WITH base_data AS (
