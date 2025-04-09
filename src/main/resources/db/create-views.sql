@@ -225,7 +225,9 @@ BEGIN
     EXECUTE create_view_sql;
 END $$;
 
-CREATE UNIQUE INDEX idx_mv_evosuite_runtime_pivoted ON mv_evosuite_runtime_pivoted(project_id);
+CREATE UNIQUE INDEX idx_mv_evosuite_runtime_pivoted ON mv_evosuite_runtime_pivoted(class_id);
+
+CREATE INDEX idx_mv_evosuite_runtime_pivoted_project_id ON mv_evosuite_runtime_pivoted(project_id);
 
 DROP MATERIALIZED VIEW mv_runtime_comparison_test_vs_generalization;
 CREATE MATERIALIZED VIEW mv_runtime_comparison_test_vs_generalization AS
