@@ -229,7 +229,6 @@ CREATE UNIQUE INDEX idx_mv_evosuite_runtime_pivoted ON mv_evosuite_runtime_pivot
 
 CREATE INDEX idx_mv_evosuite_runtime_pivoted_project_id ON mv_evosuite_runtime_pivoted(project_id);
 
-DROP MATERIALIZED VIEW mv_runtime_comparison_test_vs_generalization;
 CREATE MATERIALIZED VIEW mv_runtime_comparison_test_vs_generalization AS
 SELECT
     t.project_id,
