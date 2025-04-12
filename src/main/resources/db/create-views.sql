@@ -1528,3 +1528,28 @@ INNER JOIN mutation_results mrt ON trt_variant.project_id = mrt.project_id AND t
 ORDER BY mre.project_id, mre.variant_order, trt_variant.variant_order
 WITH DATA;
 
+CREATE MATERIALIZED VIEW mv_mutation_detection_comparison AS
+SELECT
+    pmr.project_id,
+    project_name(pmr.project_id) AS project_name,
+    pmr.variant,
+    pmr.is_detected,
+    count(DISTINCT pmr.id) AS count,
+    avg(mct.runtime) AS avg_test_runtime,
+    avg(mca.model_java_size) AS avg_model_java_size,
+    avg(mca.model_operation_count) AS avg_model_operation_count,
+    avg(mcg.runtime) AS avg_generalization_runtime,
+    avg(mcg.total_constraint_count) AS avg_total_constraint_count,
+    avg(mcg.used_constraint_count) AS avg_used_constraint_count,
+    100 * avg(CASE
+        WHEN mcg.total_constraint_count = 0 THEN 1  -- Use 1 (100%) when denominator is 0
+        ELSE mcg.used_constraint_count / mcg.total_constraint_count
+    END) AS avg_used_constraint_pct
+FROM mv_pit_mutation_report pmr
+LEFT JOIN mv_mutation_covering_tests mct ON pmr.id = mct.mutation_id AND pmr.variant = mct.variant
+LEFT JOIN mv_mutation_covering_assertions mca ON pmr.id = mca.mutation_id AND pmr.variant = mca.variant
+LEFT JOIN mv_mutation_covering_generalizations mcg ON pmr.id = mcg.mutation_id AND pmr.variant = mcg.variant
+WHERE pmr.status != 'NO_COVERAGE' AND pmr.variant = 'IMPROVED_200_TRIES'
+GROUP BY pmr.project_id, pmr.variant, pmr.variant_order, pmr.is_detected
+ORDER BY pmr.project_id, pmr.variant_order, pmr.is_detected
+WITH DATA;
