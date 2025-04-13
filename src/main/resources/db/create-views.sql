@@ -1,3 +1,4 @@
+DROP MATERIALIZED VIEW mv_exclusions_jpf;
 DROP MATERIALIZED VIEW mv_exclusions_filtering;
 DROP MATERIALIZED VIEW mv_exclusions_all;
 DROP MATERIALIZED VIEW mv_mutation_detection_comparison;
@@ -1644,4 +1645,41 @@ ORDER BY
     level,
     total DESC,
     filter_name
+WITH DATA;
+
+CREATE MATERIALIZED VIEW mv_exclusions_jpf AS
+WITH
+    categorized_tasks AS (
+        SELECT
+            CASE
+                WHEN info LIKE '%java.lang.NoSuchMethodException!!%' THEN 'NoSuchMethodException'
+                WHEN info LIKE '%java.lang.ArithmeticException: !!!div by 0%' THEN 'ArithmeticException: div by 0'
+                WHEN info LIKE '%java.lang.RuntimeException: NEWARRAY: symbolic array length%' THEN 'RuntimeException: symbolic array length'
+                WHEN info LIKE '%at gov.nasa.jpf.vm.NamedFields.setLongValue(NamedFields.java:158)%' THEN 'ArrayIndexOutOfBoundsException (setLongValue)'
+                WHEN info LIKE '%at gov.nasa.jpf.vm.NamedFields.setDoubleValue(NamedFields.java:164)%' THEN 'ArrayIndexOutOfBoundsException (setDoubleValue)'
+                WHEN info LIKE '%at gov.nasa.jpf.vm.FunctionObjectFactory.getFunctionObject(FunctionObjectFactory.java:28)%' THEN 'NullPointerException (getFunctionObject)'
+                WHEN info LIKE '%at gov.nasa.jpf.vm.GenericHeap.queueMark(GenericHeap.java:557)%' THEN 'NullPointerException (queueMark)'
+                WHEN info LIKE '%at teralizer.jpf.TestGeneralizationListener.writeSpecificationFiles(TestGeneralizationListener.java:124)%' THEN 'NullPointerException (writeSpecificationFiles:124)'
+                WHEN info LIKE '%at teralizer.jpf.TestGeneralizationListener.writeSpecificationFiles(TestGeneralizationListener.java:147)%' THEN 'NullPointerException (writeSpecificationFiles:147)'
+                WHEN info LIKE '%Depth limit of 100 exceeded.%' THEN 'Depth limit exceeded'
+                WHEN info LIKE '%PC size limit exceeded%' THEN 'PC size limit exceeded'
+                WHEN info LIKE '%Failed to collect input/output specification for unknown reason%' THEN 'Failed to collect specification'
+                WHEN info LIKE '%Execution timeout exceeded%' THEN 'Execution timeout'
+                WHEN info LIKE '%java.lang.OutOfMemoryError: Java heap spac%' THEN 'OutOfMemoryError: Java heap space'
+                WHEN info LIKE '%java.lang.OutOfMemoryError: GC overhead limit exceeded%' THEN 'OutOfMemoryError: GC overhead'
+                WHEN info LIKE '%org.opentest4j.AssertionFailedError%' THEN 'AssertionFailedError'
+                WHEN info LIKE '%gov.nasa.jpf.vm.NoUncaughtExceptionsProperty%' THEN 'NoUncaughtExceptionsProperty'
+                WHEN info = E'java.lang.ArrayIndexOutOfBoundsException\n' THEN 'ArrayIndexOutOfBoundsException (simple)'
+                WHEN info = E'java.lang.NullPointerException\n' THEN 'NullPointerException (simple)'
+                ELSE 'Other failures'
+            END AS error_category
+        FROM task
+        WHERE status = 'FAILED' AND stage = 'EXECUTE_JPF'
+    )
+SELECT
+    error_category,
+    count(*) AS count
+FROM categorized_tasks
+GROUP BY error_category
+ORDER BY count DESC
 WITH DATA;
