@@ -1584,3 +1584,61 @@ ORDER BY
     e.is_included DESC,
     e.count DESC
 WITH DATA;
+
+CREATE MATERIALIZED VIEW mv_exclusions_filtering AS
+WITH
+    base_data AS (
+        SELECT
+            coalesce(g.variant, 'SHARED') AS variant,
+            CASE
+                WHEN fr.test_id IS NOT NULL THEN '1-TEST'
+                WHEN fr.assertion_id IS NOT NULL THEN '2-ASSERTION'
+                WHEN fr.generalization_id IS NOT NULL THEN '3-GENERALIZATION'
+            END AS level,
+            simple_name(fr.filter_name) AS filter_name,
+            fr.decision,
+            count(*) AS count
+        FROM filter_result fr
+        JOIN project p ON fr.project_id = p.id
+        LEFT JOIN generalization g ON fr.generalization_id = g.id
+        WHERE p.use_test_generalization
+        GROUP BY
+            g.variant,
+            fr.filter_name,
+            CASE
+                WHEN fr.test_id IS NOT NULL THEN '1-TEST'
+                WHEN fr.assertion_id IS NOT NULL THEN '2-ASSERTION'
+                WHEN fr.generalization_id IS NOT NULL THEN '3-GENERALIZATION'
+            END,
+            fr.decision
+    ),
+    pivoted AS (
+        SELECT
+            variant,
+            level,
+            filter_name,
+            SUM(count) AS total,
+            SUM(CASE WHEN decision = 'ACCEPT' THEN count ELSE 0 END) AS accept,
+            SUM(CASE WHEN decision = 'REJECT' THEN count ELSE 0 END) AS reject,
+            SUM(CASE WHEN decision = 'DEFER' THEN count ELSE 0 END) AS defer
+        FROM base_data
+        GROUP BY
+            variant,
+            level,
+            filter_name
+    )
+SELECT
+    variant,
+    level,
+    filter_name,
+    total,
+    accept,
+    reject,
+    defer
+FROM pivoted
+ORDER BY
+    variant_order(CASE WHEN variant = 'SHARED' THEN null ELSE variant END),
+    level,
+    total DESC,
+    filter_name
+WITH DATA;
