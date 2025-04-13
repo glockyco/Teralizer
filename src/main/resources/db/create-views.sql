@@ -1,3 +1,6 @@
+DROP MATERIALIZED VIEW mv_exclusions_filtering;
+DROP MATERIALIZED VIEW mv_exclusions_all;
+DROP MATERIALIZED VIEW mv_mutation_detection_comparison;
 DROP MATERIALIZED VIEW mv_efficiency_comparison_evosuite_vs_teralizer;
 DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant_mutator;
 DROP MATERIALIZED VIEW mv_mutation_results_by_project_variant;
