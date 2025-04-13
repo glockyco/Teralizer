@@ -1553,3 +1553,34 @@ WHERE pmr.status != 'NO_COVERAGE' AND pmr.variant = 'IMPROVED_200_TRIES'
 GROUP BY pmr.project_id, pmr.variant, pmr.variant_order, pmr.is_detected
 ORDER BY pmr.project_id, pmr.variant_order, pmr.is_detected
 WITH DATA;
+
+CREATE MATERIALIZED VIEW mv_exclusions_all AS
+SELECT
+    coalesce(e.variant, 'SHARED') AS variant,
+    e.level,
+    e.is_included,
+    SUBSTRING(e.exclusion_info,
+        POSITION('Excluded by ' IN e.exclusion_info) + 12,
+        POSITION('{' IN e.exclusion_info) - (POSITION('Excluded by ' IN e.exclusion_info) + 12)
+    ) AS excluded_by,
+    COUNT(*) AS count
+FROM (
+    SELECT t.project_id, null AS variant, '1-TEST' AS level, t.is_included, t.exclusion_info FROM test t
+    UNION ALL
+    SELECT a.project_id, null, '2-ASSERTION', a.is_included, a.exclusion_info FROM assertion a
+    UNION ALL
+    SELECT g.project_id, g.variant, '3-GENERALIZATION', g.is_included, g.exclusion_info FROM generalization g
+) AS e
+JOIN project p ON e.project_id = p.id
+WHERE p.use_test_generalization
+GROUP BY
+    e.variant,
+    e.level,
+    e.is_included,
+    excluded_by
+ORDER BY
+    variant_order(e.variant),
+    e.level,
+    e.is_included DESC,
+    e.count DESC
+WITH DATA;
