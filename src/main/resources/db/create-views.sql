@@ -485,23 +485,19 @@ SELECT
     ) AS result;
 
 CREATE MATERIALIZED VIEW mv_pit_mutation_coverage AS
-SELECT
+SELECT DISTINCT
     pmr.id AS mutation_id,
     pcr.id AS coverage_id
 FROM
     mv_pit_mutation_report pmr
-CROSS JOIN LATERAL
-    jsonb_array_elements_text(pmr.location_ids::jsonb) AS pmr_location_id
-LEFT JOIN
+INNER JOIN LATERAL
+    jsonb_array_elements_text(pmr.location_ids::jsonb) AS pmr_location_id ON true
+INNER JOIN
     mv_pit_coverage_report pcr
 ON
     pcr.location_id = pmr_location_id::int AND
     pcr.project_id = pmr.project_id AND
     pcr.variant = pmr.variant
-WHERE
-    pcr.id IS NOT NULL
-GROUP BY
-    pmr.id, pcr.id
 WITH DATA;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_coverage ON mv_pit_mutation_coverage (mutation_id, coverage_id);
