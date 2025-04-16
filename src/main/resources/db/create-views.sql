@@ -323,6 +323,8 @@ CREATE INDEX idx_mv_pit_location_method_name ON mv_pit_location (method_name);
 CREATE INDEX idx_mv_pit_location_method_description ON mv_pit_location (method_description);
 CREATE INDEX idx_mv_pit_location_block ON mv_pit_location (block);
 
+CREATE INDEX idx_mv_pit_location_join ON mv_pit_location(package_name, class_name, method_name, method_description, block);
+
 CREATE MATERIALIZED VIEW mv_pit_coverage_report_location AS
 SELECT
     pcr.id AS report_id,
