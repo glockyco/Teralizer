@@ -400,6 +400,8 @@ CREATE INDEX idx_mv_pit_coverage_report_variant ON mv_pit_coverage_report (varia
 
 CREATE INDEX idx_mv_pit_coverage_report_pit_location_id ON mv_pit_coverage_report (location_id);
 
+CREATE INDEX idx_mv_pit_coverage_report_location_project_variant ON mv_pit_coverage_report(location_id, project_id, variant);
+
 SELECT
     'Every coverage report has a location.' AS test,
     (SELECT count(*) = 0 FROM mv_pit_coverage_report pcr WHERE pcr.location_id IS NULL) AS result;
@@ -470,6 +472,8 @@ CREATE INDEX idx_mv_pit_mutation_report_mutated_class ON mv_pit_mutation_report 
 CREATE INDEX idx_mv_pit_mutation_report_mutated_method ON mv_pit_mutation_report (mutated_method);
 CREATE INDEX idx_mv_pit_mutation_report_method_description ON mv_pit_mutation_report (method_description);
 
+CREATE INDEX idx_mv_pit_mutation_report_project_variant ON mv_pit_mutation_report(project_id, variant);
+
 SELECT
     'The number of blocks and location IDs are the same.' AS test,
     (SELECT COUNT(*) = 0 FROM mv_pit_mutation_report pmr WHERE json_array_length(blocks::json) != json_array_length(location_ids)) AS result;
@@ -492,12 +496,10 @@ SELECT DISTINCT
     pcr.id AS coverage_id
 FROM
     mv_pit_mutation_report pmr
-INNER JOIN LATERAL
-    jsonb_array_elements_text(pmr.location_ids::jsonb) AS pmr_location_id ON true
-INNER JOIN
+JOIN
     mv_pit_coverage_report pcr
 ON
-    pcr.location_id = pmr_location_id::int AND
+    pcr.location_id = ANY(ARRAY(SELECT jsonb_array_elements_text(pmr.location_ids::jsonb)::int)) AND
     pcr.project_id = pmr.project_id AND
     pcr.variant = pmr.variant
 WITH DATA;
