@@ -136,8 +136,7 @@ SELECT
     step,
     phase_name,
     runtime
-FROM evosuite_runtime
-WITH DATA;
+FROM evosuite_runtime;
 
 CREATE UNIQUE INDEX idx_mv_evosuite_runtime ON mv_evosuite_runtime (id);
 
@@ -255,8 +254,7 @@ JOIN mv_test_extension te ON t.id = te.test_id
 JOIN mv_generalization_extension ge ON g.id = ge.generalization_id
 JOIN mv_variant v ON t.project_id = v.project_id AND ge.variant = v.variant
 WHERE t.is_included AND g.is_included AND te.variant = 'INITIAL'
-ORDER BY g.project_id, g.test_id, ge.variant_order
-WITH DATA;
+ORDER BY g.project_id, g.test_id, ge.variant_order;
 
 CREATE UNIQUE INDEX idx_mv_runtime_comparison_test_vs_generalization ON mv_runtime_comparison_test_vs_generalization(test_id, generalization_id);
 
@@ -312,8 +310,7 @@ GROUP BY
     class_name,
     method_name,
     method_description,
-    block
-WITH DATA;
+    block;
 
 CREATE UNIQUE INDEX idx_mv_pit_location_id ON mv_pit_location (id);
 
@@ -452,8 +449,7 @@ SELECT
     killing_method_name,
     description
 FROM
-    pit_mutation_report pmr
-WITH DATA;
+    pit_mutation_report pmr;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_report_id ON mv_pit_mutation_report (id);
 
@@ -501,8 +497,7 @@ JOIN
 ON
     pcr.location_id = ANY(ARRAY(SELECT jsonb_array_elements_text(pmr.location_ids::jsonb)::int)) AND
     pcr.project_id = pmr.project_id AND
-    pcr.variant = pmr.variant
-WITH DATA;
+    pcr.variant = pmr.variant;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_coverage ON mv_pit_mutation_coverage (mutation_id, coverage_id);
 
@@ -542,8 +537,7 @@ JOIN mv_pit_coverage_report pcr ON pmc.coverage_id = pcr.id
 JOIN test t ON pcr.test_id = t.id
 JOIN mv_test_extension te ON t.id = te.test_id
 GROUP BY pmr.project_id, pmr.id, pmr.status, t.id, pmr.variant, pmr.variant_order
-ORDER BY pmr.project_id, pmr.id, t.id, pmr.variant_order
-WITH DATA;
+ORDER BY pmr.project_id, pmr.id, t.id, pmr.variant_order;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_covering_tests ON mv_mutation_covering_tests (mutation_id, test_id);
 
@@ -575,8 +569,7 @@ FROM mv_mutation_covering_tests mct
 JOIN assertion a ON mct.test_id = a.test_id
 JOIN mv_assertion_extension ae ON a.id = ae.assertion_id
 GROUP BY mct.project_id, mct.mutation_id, mct.status, a.id, mct.variant, mct.variant_order
-ORDER BY mct.project_id, mct.mutation_id, a.id, mct.variant_order
-WITH DATA;
+ORDER BY mct.project_id, mct.mutation_id, a.id, mct.variant_order;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_covering_assertions ON mv_mutation_covering_assertions (mutation_id, assertion_id);
 
@@ -624,8 +617,7 @@ JOIN mv_pit_coverage_report pcr ON pmc.coverage_id = pcr.id
 JOIN generalization g ON pcr.generalization_id = g.id
 JOIN mv_generalization_extension ge ON g.id = ge.generalization_id
 GROUP BY pmr.project_id, pmr.id, pmr.status, g.id, pmr.variant, pmr.variant_order
-ORDER BY pmr.project_id, pmr.id, g.id, pmr.variant_order
-WITH DATA;
+ORDER BY pmr.project_id, pmr.id, g.id, pmr.variant_order;
 
 CREATE UNIQUE INDEX idx_mv_pit_mutation_covering_generalizations ON mv_mutation_covering_generalizations (mutation_id, generalization_id);
 
@@ -766,8 +758,7 @@ JOIN
 ON
     a.mutation_id = b.mutation_id AND
     a.variant != b.variant
-ORDER BY a.id, b.variant_order
-WITH DATA;
+ORDER BY a.id, b.variant_order;
 
 CREATE UNIQUE INDEX idx_mv_mutation_variant_comparison_a_report_id_b_report_id ON mv_mutation_variant_comparison (a_report_id, b_report_id);
 
@@ -821,8 +812,7 @@ LEFT JOIN test t ON t.id = kg.test_id
 LEFT JOIN assertion a ON a.id = kg.assertion_id
 LEFT JOIN junit_test_report tr ON kg.id = tr.generalization_id
 WHERE c.a_variant IN ('ORIGINAL', 'INITIAL') AND c.b_variant != 'ORIGINAL' AND c.a_status != c.b_status
-ORDER BY b_is_detected, b_status = 'KILLED', kg.id IS NOT NULL, ra.id, rb.variant_order
-WITH DATA;
+ORDER BY b_is_detected, b_status = 'KILLED', kg.id IS NOT NULL, ra.id, rb.variant_order;
 
 CREATE UNIQUE INDEX idx_mv_mutation_status_changes ON mv_mutation_status_changes (a_report_id, b_report_id);
 
@@ -951,8 +941,7 @@ SELECT
 FROM base_data bd
 JOIN test_data td ON bd.project_id = td.project_id AND bd.a_variant = td.a_variant AND bd.b_variant = td.b_variant
 JOIN test_counts tc ON bd.project_id = tc.project_id
-ORDER BY bd.project_id, variant_order(bd.a_variant), variant_order(bd.b_variant)
-WITH DATA;
+ORDER BY bd.project_id, variant_order(bd.a_variant), variant_order(bd.b_variant);
 
 CREATE UNIQUE INDEX idx_mv_generalization_effects ON mv_generalization_effects (project_id, a_variant, b_variant);
 
@@ -1068,8 +1057,7 @@ FROM
 WHERE
     b.variant = 'INITIAL'
 ORDER BY
-    variant_order(s.variant)
-WITH DATA;
+    variant_order(s.variant);
 
 CREATE MATERIALIZED VIEW mv_mutation_results_by_variant_mutator AS
 WITH base_data AS (
@@ -1183,8 +1171,7 @@ WHERE
       b.variant = 'INITIAL'
   AND s.mutator = b.mutator
 ORDER BY
-    variant_order(s.variant), s.total DESC, s.mutator
-WITH DATA;
+    variant_order(s.variant), s.total DESC, s.mutator;
 
 CREATE MATERIALIZED VIEW mv_mutation_results_by_project_variant AS
 WITH base_data AS (
@@ -1301,8 +1288,7 @@ WHERE
       b.variant = 'INITIAL'
   AND s.project_id = b.project_id
 ORDER BY
-    s.project_id, variant_order(s.variant)
-WITH DATA;
+    s.project_id, variant_order(s.variant);
 
 CREATE MATERIALIZED VIEW mv_mutation_results_by_project_variant_mutator AS
 WITH base_data AS (
@@ -1423,8 +1409,7 @@ WHERE
   AND s.project_id = b.project_id
   AND s.mutator = b.mutator
 ORDER BY
-    s.project_id, variant_order(s.variant), s.total DESC, s.mutator
-WITH DATA;
+    s.project_id, variant_order(s.variant), s.total DESC, s.mutator;
 
 CREATE MATERIALIZED VIEW mv_efficiency_comparison_evosuite_vs_teralizer AS
 WITH
@@ -1529,8 +1514,7 @@ INNER JOIN teralizer_runtime trt_variant ON mre.project_id = trt_variant.project
 INNER JOIN teralizer_runtime_no_validation trt_shared_no_val ON mre.project_id = trt_shared_no_val.project_id AND trt_shared_no_val.variant = 'SHARED'
 INNER JOIN teralizer_runtime_no_validation trt_variant_no_val ON mre.project_id = trt_variant_no_val.project_id AND trt_variant_no_val.variant != 'SHARED' AND trt_variant_no_val.variant = trt_variant.variant
 INNER JOIN mutation_results mrt ON trt_variant.project_id = mrt.project_id AND trt_variant.variant = mrt.variant
-ORDER BY mre.project_id, mre.variant_order, trt_variant.variant_order
-WITH DATA;
+ORDER BY mre.project_id, mre.variant_order, trt_variant.variant_order;
 
 CREATE MATERIALIZED VIEW mv_mutation_detection_comparison AS
 SELECT
@@ -1555,8 +1539,7 @@ LEFT JOIN mv_mutation_covering_assertions mca ON pmr.id = mca.mutation_id AND pm
 LEFT JOIN mv_mutation_covering_generalizations mcg ON pmr.id = mcg.mutation_id AND pmr.variant = mcg.variant
 WHERE pmr.status != 'NO_COVERAGE' AND pmr.variant = 'IMPROVED_200_TRIES'
 GROUP BY pmr.project_id, pmr.variant, pmr.variant_order, pmr.is_detected
-ORDER BY pmr.project_id, pmr.variant_order, pmr.is_detected
-WITH DATA;
+ORDER BY pmr.project_id, pmr.variant_order, pmr.is_detected;
 
 CREATE MATERIALIZED VIEW mv_exclusions_all AS
 SELECT
@@ -1586,8 +1569,7 @@ ORDER BY
     variant_order(e.variant),
     e.level,
     e.is_included DESC,
-    e.count DESC
-WITH DATA;
+    e.count DESC;
 
 CREATE MATERIALIZED VIEW mv_exclusions_filtering AS
 WITH
@@ -1644,8 +1626,7 @@ ORDER BY
     variant_order(CASE WHEN variant = 'SHARED' THEN null ELSE variant END),
     level,
     total DESC,
-    filter_name
-WITH DATA;
+    filter_name;
 
 CREATE MATERIALIZED VIEW mv_exclusions_jpf AS
 WITH
@@ -1681,7 +1662,6 @@ SELECT
     count(*) AS count
 FROM categorized_tasks
 GROUP BY error_category
-ORDER BY count DESC
-WITH DATA;
+ORDER BY count DESC;
 
 VACUUM ANALYZE;
