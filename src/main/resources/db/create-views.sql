@@ -1,3 +1,6 @@
+ALTER SYSTEM SET max_wal_size = '4GB';
+SELECT pg_reload_conf();
+
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_jpf;
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_filtering;
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_all;
@@ -1665,3 +1668,6 @@ GROUP BY error_category
 ORDER BY count DESC;
 
 VACUUM ANALYZE;
+
+ALTER SYSTEM RESET max_wal_size;
+SELECT pg_reload_conf();
