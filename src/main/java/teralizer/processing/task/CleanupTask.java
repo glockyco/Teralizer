@@ -1,8 +1,11 @@
 package teralizer.processing.task;
 
+import org.apache.commons.io.FilenameUtils;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spoon.Launcher;
+import spoon.reflect.declaration.CtType;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.Configuration;
@@ -86,7 +89,11 @@ public class CleanupTask extends AbstractTask {
             testSourcePath = this.projectPath;
         }
 
-        Files.walkFileTree(testSourcePath, new CleanupVisitor(this.projectRecord, this.stage));
+        Files.walkFileTree(testSourcePath, new CleanupVisitor(
+            context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER),
+            this.projectRecord,
+            this.stage
+        ));
 
         // We do not automatically remove collected data in the DB and the data
         // directory. These should be preserved even if the generalization is
@@ -95,10 +102,12 @@ public class CleanupTask extends AbstractTask {
 
     private static class CleanupVisitor extends SimpleFileVisitor<Path> {
 
+        private final Launcher spoonLauncher;
         private final ProjectRecord projectRecord;
         private final ProcessingStage stage;
 
-        public CleanupVisitor(ProjectRecord projectRecord, ProcessingStage stage) {
+        public CleanupVisitor(Launcher spoonLauncher, ProjectRecord projectRecord, ProcessingStage stage) {
+            this.spoonLauncher = spoonLauncher;
             this.projectRecord = projectRecord;
             this.stage = stage;
         }
@@ -135,8 +144,11 @@ public class CleanupTask extends AbstractTask {
             boolean shouldDeleteFile = (isDriverFile || isInstrumentedFile) && (this.stage == ProcessingStage.CLEANUP_PROJECT || this.stage == ProcessingStage.CLEANUP_JPF_INSTRUMENTATION);
 
             if (shouldDeleteFile) {
-                LOGGER.atInfo().log("Deleting JPF instrumentation file '" + file + "'.");
-                file.toFile().delete();
+                LOGGER.atInfo().log("Deleting JPF instrumentation file: " + file);
+                if (file.toFile().delete()) {
+                    this.deleteTypeFromSpoonModel(file);
+                }
+
             }
         }
 
@@ -146,8 +158,25 @@ public class CleanupTask extends AbstractTask {
             boolean shouldDeleteFile = isGeneralizedFile && (this.stage == ProcessingStage.CLEANUP_PROJECT || this.stage == ProcessingStage.CLEANUP_GENERALIZATION);
 
             if (shouldDeleteFile) {
-                LOGGER.atInfo().log("Deleting generalization file '" + file + "'.");
-                file.toFile().delete();
+                LOGGER.atInfo().log("Deleting generalization file: " + file);
+                if (file.toFile().delete()) {
+                    this.deleteTypeFromSpoonModel(file);
+                }
+            }
+        }
+
+        private void deleteTypeFromSpoonModel(Path file) {
+            if (this.spoonLauncher != null) {
+                String className = FilenameUtils.getBaseName(file.getFileName().toString());
+                Path relativePath = this.projectRecord.getTestSourcePath().relativize(file.getParent());
+                String packageName = relativePath.toString().replace("/", ".").replace("\\", ".");
+                String qualifiedName = packageName.isEmpty() ? className : packageName + "." + className;
+
+                CtType<?> type = this.spoonLauncher.getFactory().Type().get(qualifiedName);
+                if (type != null) {
+                    LOGGER.atInfo().log("Deleting type from Spoon model: " + qualifiedName);
+                    type.delete();
+                }
             }
         }
     }
