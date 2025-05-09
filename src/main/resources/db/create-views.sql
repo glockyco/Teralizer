@@ -1,6 +1,7 @@
 ALTER SYSTEM SET max_wal_size = '4GB';
 SELECT pg_reload_conf();
 
+DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_test_fails;
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_jpf;
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_filtering;
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_all;
@@ -1668,6 +1669,17 @@ SELECT
 FROM categorized_tasks
 GROUP BY error_category
 ORDER BY count DESC;
+
+CREATE MATERIALIZED VIEW mv_exclusions_test_fails AS
+SELECT
+    variant_name(stage, variant) AS variant,
+    variant_order(variant_name(stage, variant)) AS variant_order,
+    simple_name(failure_type) AS failure_type,
+    count(*) AS count
+FROM junit_test_report
+WHERE result != 'PASSED'
+GROUP BY stage, variant, failure_type
+ORDER BY variant_order, count(*) DESC;
 
 VACUUM ANALYZE;
 
