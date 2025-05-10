@@ -1545,7 +1545,7 @@ LEFT JOIN mv_mutation_covering_assertions mca ON pmr.id = mca.mutation_id AND pm
 LEFT JOIN mv_mutation_covering_generalizations mcg ON pmr.id = mcg.mutation_id AND pmr.variant = mcg.variant
 WHERE pmr.status != 'NO_COVERAGE' AND pmr.variant = 'IMPROVED_200_TRIES'
 GROUP BY pmr.project_id, pmr.variant, pmr.variant_order, pmr.is_detected
-ORDER BY pmr.project_id, pmr.variant_order, pmr.is_detected;
+ORDER BY pmr.project_id, pmr.variant_order, pmr.is_detected DESC;
 
 CREATE MATERIALIZED VIEW mv_exclusions_all AS
 SELECT
