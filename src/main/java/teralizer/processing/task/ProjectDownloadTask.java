@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,16 +26,16 @@ public class ProjectDownloadTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
-        if (this.projectRecord.getRootPath() == null) {
+        String repositoryUrl = Configuration.getProjectRootPathString();
+        if (repositoryUrl == null) {
             throw new RuntimeException("Cannot download project. Project root path is null.");
-        } else if (!this.projectRecord.getRootPath().toString().endsWith(".git")) {
-            LOGGER.atInfo().log("Nothing to download for project {}. Project root path is not a Git repository URL.", this.projectRecord.getRootPath());
+        } else if (!repositoryUrl.endsWith(".git")) {
+            LOGGER.atInfo().log("Nothing to download for project {}. Project root path is not a Git repository URL.", repositoryUrl);
             this.scheduleNextTask(scheduleTask);
             return;
         }
 
-        Path repositoryUrl = this.projectRecord.getRootPath();
-        String projectName = this.sanitizeRepositoryUrl(repositoryUrl.toString());
+        String projectName = this.sanitizeRepositoryUrl(repositoryUrl);
         Path projectRootPath = Paths.get("projects", projectName);
         Path projectDataPath = Paths.get("data", projectName);
 
@@ -48,15 +49,18 @@ public class ProjectDownloadTask extends AbstractTask {
             return;
         }
 
-        SshdSessionFactory sshSessionFactory = new SshdSessionFactory();
-
         CloneCommand cloneCommand = Git.cloneRepository();
-        cloneCommand.setURI(repositoryUrl.toString());
+        cloneCommand.setURI(repositoryUrl);
         cloneCommand.setDirectory(projectRootPath.toAbsolutePath().toFile());
-        cloneCommand.setTransportConfigCallback(transport -> {
-            SshTransport sshTransport = (SshTransport) transport;
-            sshTransport.setSshSessionFactory(sshSessionFactory);
-        });
+
+        if (repositoryUrl.startsWith("git@") || repositoryUrl.startsWith("ssh://")) {
+            try (SshdSessionFactory sshSessionFactory = new SshdSessionFactory()) {
+                cloneCommand.setTransportConfigCallback(transport -> {
+                    SshTransport sshTransport = (SshTransport) transport;
+                    sshTransport.setSshSessionFactory(sshSessionFactory);
+                });
+            }
+        }
 
         cloneCommand.call().close();
 

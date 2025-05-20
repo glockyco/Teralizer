@@ -117,7 +117,11 @@ public class Configuration {
 
     // ----- Project ----- //
     public static Path getProjectRootPath() {
-        return Paths.get(CONFIG.getString(TOOL_NAME_LOWER + ".project.root-path"));
+        return Paths.get(getProjectRootPathString());
+    }
+
+    public static String getProjectRootPathString() {
+        return CONFIG.getString(TOOL_NAME_LOWER + ".project.root-path");
     }
 
     public static Path getProjectDataPath() {
