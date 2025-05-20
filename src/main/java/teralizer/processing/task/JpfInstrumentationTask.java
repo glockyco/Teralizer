@@ -10,14 +10,13 @@ import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
-import spoon.reflect.code.CtBlock;
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.code.CtThisAccess;
+import spoon.reflect.code.*;
 import spoon.reflect.declaration.*;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
+import spoon.reflect.reference.CtExecutableReference;
+import spoon.reflect.reference.CtTypeParameterReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.processing.ProcessingStage;
@@ -232,7 +231,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtBlock<?> instrumentedBody = factory.createBlock();
         instrumentedBody.addStatement(factory.Code().createCodeSnippetStatement("return " + instrumentedTestedMethodCall));
 
-        CtTypeReference<?> returnType = !testedMethod.getType().isGenerics() ? testedMethod.getType() : factory.Type().objectType();
+        CtTypeReference<?> returnType = this.inferExpectedType(testedMethodCall);
         returnType.setSimplyQualified(false);
         returnType.setImplicit(false);
 
@@ -251,6 +250,61 @@ public class JpfInstrumentationTask extends AbstractTask {
             thrownTypes,
             instrumentedBody
         );
+    }
+
+    CtTypeReference<?> inferExpectedType(CtInvocation<?> call) {
+        CtElement parent = call.getParent();
+        Factory factory = call.getFactory();
+
+        // Assignment: x = foo();
+        if (parent instanceof CtAssignment) {
+            CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) parent;
+            return this.eraseGenerics(assignment.getAssigned().getType(), factory);
+        }
+
+        // Variable declaration: Type x = foo();
+        if (parent instanceof CtVariable) {
+            CtVariable<?> variable = (CtVariable<?>) parent;
+            return this.eraseGenerics(variable.getType(), factory);
+        }
+
+        // Method argument: bar(foo());
+        if (parent instanceof CtInvocation) {
+            CtInvocation<?> invocation = (CtInvocation<?>) parent;
+            int argIndex = invocation.getArguments().indexOf(call);
+            if (argIndex >= 0) {
+                CtExecutableReference<?> execRef = invocation.getExecutable();
+                List<CtTypeReference<?>> paramTypes = execRef.getParameters();
+                if (argIndex < paramTypes.size()) {
+                    return this.eraseGenerics(paramTypes.get(argIndex), factory);
+                } else if (!paramTypes.isEmpty()) {
+                    return this.eraseGenerics(paramTypes.get(paramTypes.size() - 1), factory);
+                }
+            }
+        }
+
+        // Return statement: return foo();
+        if (parent instanceof CtReturn) {
+            CtMethod<?> enclosingMethod = call.getParent(CtMethod.class);
+            if (enclosingMethod != null) {
+                return this.eraseGenerics(enclosingMethod.getType(), factory);
+            }
+        }
+
+        // Conditional expression: foo() ? ... : ...
+        if (parent instanceof CtConditional) {
+            return factory.Type().BOOLEAN_PRIMITIVE;
+        }
+
+        // Fallback: type of the called method
+        return this.eraseGenerics(call.getType(), factory);
+    }
+
+    private CtTypeReference<?> eraseGenerics(CtTypeReference<?> type, Factory factory) {
+        if (type == null || type.isGenerics() || type instanceof CtTypeParameterReference) {
+            return factory.Type().OBJECT;
+        }
+        return type;
     }
 
     private CtInvocation<?> createInstrumentedMethodCall(
