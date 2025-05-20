@@ -1,6 +1,5 @@
 package teralizer.processing.task;
 
-import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.transport.SshTransport;
@@ -35,10 +34,12 @@ public class ProjectDownloadTask extends AbstractTask {
         }
 
         Path repositoryUrl = this.projectRecord.getRootPath();
-        String repositoryName = FilenameUtils.getBaseName(repositoryUrl.toString());
-        Path projectRootPath = Paths.get("projects", repositoryName);
+        String projectName = this.sanitizeRepositoryUrl(repositoryUrl.toString());
+        Path projectRootPath = Paths.get("projects", projectName);
+        Path projectDataPath = Paths.get("data", projectName);
 
         this.projectRecord.setRootPath(projectRootPath);
+        this.projectRecord.setDataPath(projectDataPath);
         this.projectRecord.store();
 
         if (projectRootPath.toFile().exists()) {
@@ -64,5 +65,23 @@ public class ProjectDownloadTask extends AbstractTask {
 
     public void scheduleNextTask(Consumer<Task> scheduleTask) {
         scheduleTask.accept(new ProjectSetupTask(ProcessingStage.SETUP_PROJECT, this.projectRecord));
+    }
+
+    private String sanitizeRepositoryUrl(String url) {
+        // Remove protocol prefixes
+        String cleaned = url
+            .replaceFirst("^https?://", "")
+            .replaceFirst("^git@", "");
+
+        // Replace ':' (from SSH URLs) with '/'
+        cleaned = cleaned.replace(':', '/');
+
+        // Remove .git suffix if present
+        cleaned = cleaned.replaceAll("\\.git$", "");
+
+        // Replace all non-alphanumeric (and non-underscore, non-hyphen) characters with '_'
+        cleaned = cleaned.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+
+        return cleaned;
     }
 }
