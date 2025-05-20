@@ -43,6 +43,30 @@ services:
     networks:
       - teralizer-network
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin-teralizer
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      PGADMIN_SERVER_JSON_FILE: /var/lib/pgadmin/servers.json
+    ports:
+      - "18081:80"
+    volumes:
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
+      - ./docker/pgadmin/entrypoint.sh:/new-entrypoint.sh
+      - pgadmin-data:/var/lib/pgadmin
+    entrypoint: ["/new-entrypoint.sh"]
+    depends_on:
+      - postgres
+    networks:
+      - teralizer-network
+
 networks:
   teralizer-network:
     driver: bridge
+
+volumes:
+  pgadmin-data:

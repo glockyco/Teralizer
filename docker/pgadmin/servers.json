@@ -1,0 +1,15 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Teralizer",
+            "Group": "Servers",
+            "Host": "postgres",
+            "Port": 5432,
+            "MaintenanceDB": "${DB_NAME:-postgres}",
+            "Username": "${DB_USER:-postgres}",
+            "Password": "${DB_PASSWORD:-postgres}",
+            "SSLMode": "prefer",
+            "SavePassword": true
+        }
+    }
+}
