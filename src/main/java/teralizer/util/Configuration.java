@@ -190,6 +190,11 @@ public class Configuration {
         return CONFIG.getLong(TOOL_NAME_LOWER + ".jpf.max-path-condition-size");
     }
 
+    // ----- JUnit ----- //
+    public static int getJunitMaxExecutionTime() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.max-execution-time");
+    }
+
     // ----- Pitest ----- //
     public static String getPitestMutators() {
         return CONFIG.getString(TOOL_NAME_LOWER + ".pitest.mutators");

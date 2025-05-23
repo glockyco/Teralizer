@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class ConsoleCommand {
 
@@ -19,15 +20,23 @@ public class ConsoleCommand {
     private final ProcessingStage stage;
     private final String variant;
     private final Path commandDataPath;
+    private final long timeout;
+    private final TimeUnit timeoutUnit;
 
     private final Map<String, String> environmentVariables = new HashMap<>();
 
     private int executionCount = 0;
 
     public ConsoleCommand(ProcessingStage stage, String variant, long projectId, Path projectDataPath) {
+        this(stage, variant, projectId, projectDataPath, 0, null);
+    }
+
+    public ConsoleCommand(ProcessingStage stage, String variant, long projectId, Path projectDataPath, long timeout, TimeUnit timeoutUnit) {
         this.stage = stage;
         this.variant = variant;
         this.commandDataPath = projectDataPath.resolve("project-id-" + projectId + "/command-data");
+        this.timeout = timeout;
+        this.timeoutUnit = timeoutUnit;
     }
 
     public void addEnvironmentVariable(String name, String value) {
@@ -80,7 +89,16 @@ public class ConsoleCommand {
         int exitCode;
         try {
             Runtime.getRuntime().addShutdownHook(shutdownHook);
-            exitCode = process.waitFor();
+            if (this.timeout > 0 && this.timeoutUnit != null) {
+                boolean finished = process.waitFor(this.timeout, this.timeoutUnit);
+                if (!finished) {
+                    process.destroyForcibly();
+                    throw new RuntimeException("Test execution timeout exceeded.");
+                }
+                exitCode = process.exitValue();
+            } else {
+                exitCode = process.waitFor();
+            }
         } finally {
             Runtime.getRuntime().removeShutdownHook(shutdownHook);
         }

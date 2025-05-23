@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -30,7 +31,15 @@ public class TestExecutionTask extends AbstractTask {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
-        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getId(), projectRecord.getDataPath());
+
+        this.consoleCommand = new ConsoleCommand(
+            stage,
+            variant,
+            projectRecord.getId(),
+            projectRecord.getDataPath(),
+            Configuration.getJunitMaxExecutionTime(),
+            TimeUnit.SECONDS
+        );
     }
 
     @Override
