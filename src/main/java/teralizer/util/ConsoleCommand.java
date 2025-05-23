@@ -93,7 +93,7 @@ public class ConsoleCommand {
                 boolean finished = process.waitFor(this.timeout, this.timeoutUnit);
                 if (!finished) {
                     process.destroyForcibly();
-                    throw new RuntimeException("Test execution timeout exceeded.");
+                    throw new RuntimeException("Command execution timeout exceeded.");
                 }
                 exitCode = process.exitValue();
             } else {

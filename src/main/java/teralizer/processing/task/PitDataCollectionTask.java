@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,7 +64,15 @@ public class PitDataCollectionTask extends AbstractTask {
         this.stage = stage;
         this.variant = variant;
         this.projectRecord = projectRecord;
-        this.consoleCommand = new ConsoleCommand(stage, variant, projectRecord.getId(), projectRecord.getDataPath());
+
+        this.consoleCommand = new ConsoleCommand(
+            stage,
+            variant,
+            projectRecord.getId(),
+            projectRecord.getDataPath(),
+            Configuration.getPitestMaxExecutionTime(),
+            TimeUnit.SECONDS
+        );
     }
 
     @Override

@@ -200,6 +200,10 @@ public class Configuration {
         return CONFIG.getString(TOOL_NAME_LOWER + ".pitest.mutators");
     }
 
+    public static int getPitestMaxExecutionTime() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".pitest.max-execution-time");
+    }
+
     // ----- Generalizations ----- //
     public static String[] getGeneralizationVariants() {
         return CONFIG.getObject(TOOL_NAME_LOWER + ".generalizations").keySet().toArray(new String[0]);
