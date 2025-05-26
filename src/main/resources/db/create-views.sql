@@ -203,7 +203,7 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 CREATE VIEW v_project_failures AS
-SELECT *
+SELECT project_name(project_id), *
 FROM (
     SELECT DISTINCT ON (t.project_id)
         t.project_id,
