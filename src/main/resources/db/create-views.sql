@@ -1547,21 +1547,21 @@ WITH base_data AS (
             memory_error,
             run_error,
             -- Calculate percentages
-            ROUND((covered * 100.0 / total), 2) AS covered_pct,
-            ROUND((uncovered * 100.0 / total), 2) AS uncovered_pct,
-            ROUND((survived * 100.0 / total), 2) AS survived_pct,
-            ROUND((detected * 100.0 / total), 2) AS detected_pct,
-            ROUND((killed * 100.0 / total), 2) AS killed_pct,
-            ROUND((timed_out * 100.0 / total), 2) AS timed_out_pct,
-            ROUND((memory_error * 100.0 / total), 2) AS memory_error_pct,
-            ROUND((run_error * 100.0 / total), 2) AS run_error_pct,
-            --
-            ROUND((survived * 100.0 / covered), 2) AS survived_of_covered_pct,
-            ROUND((detected * 100.0 / covered), 2) AS detected_of_covered_pct,
-            ROUND((killed * 100.0 / covered), 2) AS killed_of_covered_pct,
-            ROUND((timed_out * 100.0 / covered), 2) AS timed_out_of_covered_pct,
-            ROUND((memory_error * 100.0 / covered), 2) AS memory_error_of_covered_pct,
-            ROUND((run_error * 100.0 / covered), 2) AS run_error_of_covered_pct
+            ROUND(CASE WHEN total = 0 THEN 0 ELSE (covered * 100.0 / total) END, 2) AS covered_pct,
+            ROUND(CASE WHEN total = 0 THEN 0 ELSE (uncovered * 100.0 / total) END, 2) AS uncovered_pct,
+            ROUND(CASE WHEN total = 0 THEN 0 ELSE (survived * 100.0 / total) END, 2) AS survived_pct,
+            ROUND(CASE WHEN total = 0 THEN 0 ELSE (detected * 100.0 / total) END, 2) AS detected_pct,
+            ROUND(CASE WHEN total = 0 THEN 0 ELSE (killed * 100.0 / total) END, 2) AS killed_pct,
+            ROUND(CASE WHEN total = 0 THEN 0 ELSE (timed_out * 100.0 / total) END, 2) AS timed_out_pct,
+            ROUND(CASE WHEN total = 0 THEN 0 ELSE (memory_error * 100.0 / total) END, 2) AS memory_error_pct,
+            ROUND(CASE WHEN total = 0 THEN 0 ELSE (run_error * 100.0 / total) END, 2) AS run_error_pct,
+            ---
+            ROUND(CASE WHEN covered = 0 THEN 0 ELSE (survived * 100.0 / covered) END, 2) AS survived_of_covered_pct,
+            ROUND(CASE WHEN covered = 0 THEN 0 ELSE (detected * 100.0 / covered) END, 2) AS detected_of_covered_pct,
+            ROUND(CASE WHEN covered = 0 THEN 0 ELSE (killed * 100.0 / covered) END, 2) AS killed_of_covered_pct,
+            ROUND(CASE WHEN covered = 0 THEN 0 ELSE (timed_out * 100.0 / covered) END, 2) AS timed_out_of_covered_pct,
+            ROUND(CASE WHEN covered = 0 THEN 0 ELSE (memory_error * 100.0 / covered) END, 2) AS memory_error_of_covered_pct,
+            ROUND(CASE WHEN covered = 0 THEN 0 ELSE (run_error * 100.0 / covered) END, 2) AS run_error_of_covered_pct
         FROM
             base_data
     )
