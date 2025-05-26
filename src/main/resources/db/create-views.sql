@@ -34,6 +34,9 @@ DROP MATERIALIZED VIEW IF EXISTS mv_assertion_extension;
 DROP MATERIALIZED VIEW IF EXISTS mv_test_extension;
 DROP MATERIALIZED VIEW IF EXISTS mv_variant;
 
+DROP VIEW IF EXISTS v_project_failures_summary;
+DROP VIEW IF EXISTS v_project_failures;
+
 DROP FUNCTION project_name(project_id BIGINT);
 DROP FUNCTION stage_order(stage TEXT);
 DROP FUNCTION variant_order(variant TEXT);
@@ -198,6 +201,35 @@ BEGIN
     RETURN stage_order;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE VIEW v_project_failures AS
+SELECT *
+FROM (
+    SELECT DISTINCT ON (t.project_id)
+        t.project_id,
+        t.step,
+        t.stage,
+        t.status,
+        t.info
+    FROM task t
+    WHERE
+        t.status != 'SUCCEEDED'
+        AND t.project_id IS NOT NULL
+        AND t.test_id IS NULL
+        AND t.assertion_id IS NULL
+        AND t.generalization_id IS NULL
+    ORDER BY t.project_id, t.step
+) AS fails
+ORDER BY step, project_id;
+
+CREATE VIEW v_project_failures_summary AS
+SELECT
+    step,
+    stage,
+    COUNT(*) AS count
+FROM v_project_failures
+GROUP BY step, stage
+ORDER BY step;
 
 CREATE MATERIALIZED VIEW mv_variant AS
 SELECT
