@@ -36,6 +36,7 @@ DROP MATERIALIZED VIEW IF EXISTS mv_variant;
 
 DROP VIEW IF EXISTS v_project_failures_summary;
 DROP VIEW IF EXISTS v_project_failures;
+DROP VIEW IF EXISTS v_projects_successes;
 
 DROP FUNCTION project_name(project_id BIGINT);
 DROP FUNCTION stage_order(stage TEXT);
@@ -201,6 +202,24 @@ BEGIN
     RETURN stage_order;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE VIEW v_projects_successes AS
+SELECT
+    project_name(t.project_id),
+    t.project_id
+FROM
+    task t
+WHERE
+    t.project_id IS NOT NULL
+    AND t.test_id IS NULL
+    AND t.assertion_id IS NULL
+    AND t.generalization_id IS NULL
+GROUP BY
+    t.project_id
+HAVING
+    BOOL_AND(t.status = 'SUCCEEDED')
+    AND SUM(CASE WHEN t.stage = 'COLLECT_PIT_DATA_GENERALIZED' THEN 1 ELSE 0 END) > 0;
+
 
 CREATE VIEW v_project_failures AS
 SELECT project_name(project_id), *
