@@ -64,6 +64,11 @@ public class TestAnalysisTask extends AbstractTask {
     }
 
     private void executeTask(TaskContext context) {
+        String testMethodRelativePath = this.testRecord.getTestMethodRelativePath();
+        if (testMethodRelativePath == null) {
+            return;
+        }
+
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         Gson gson = context.get(TaskContext.GSON);
 
@@ -73,7 +78,7 @@ public class TestAnalysisTask extends AbstractTask {
         CtClass<?> testClass = factory.Class().get(this.testRecord.getTestClassQualifiedName());
 
         CtPathStringBuilder pathBuilder = new CtPathStringBuilder();
-        CtPath testMethodPath = pathBuilder.fromString(this.testRecord.getTestMethodRelativePath());
+        CtPath testMethodPath = pathBuilder.fromString(testMethodRelativePath);
         CtMethod<?> testMethod = (CtMethod<?>) testMethodPath.evaluateOn(testClass).get(0);
 
         this.createAssertionRecords(testMethod, create, gson);
