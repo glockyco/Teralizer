@@ -390,60 +390,76 @@ BEGIN
         ) ordered_phases
     ) phases;
 
-    -- Create the materialized view with the dynamic columns
-    create_view_sql := format('
-        CREATE MATERIALIZED VIEW mv_evosuite_runtime_pivoted AS
-        WITH class_totals AS (
+    IF phase_column_defs IS NULL OR phase_column_defs = '' THEN
+        -- No phases: create a minimal view
+        create_view_sql := '
+            CREATE MATERIALIZED VIEW mv_evosuite_runtime_pivoted AS
             SELECT
                 class_id,
-                SUM(runtime) AS total_runtime
+                project_id,
+                class_name,
+                SUM(runtime) AS total
             FROM
                 public.mv_evosuite_runtime
             GROUP BY
-                class_id
-        ),
-        pivoted_data AS (
-            SELECT * FROM crosstab(
-                ''SELECT
-                    rt.class_id,
-                    rt.project_id,
-                    rt.class_name,
-                    rt.phase_name,
-                    sum(rt.runtime) AS runtime
+                class_id, project_id, class_name
+        ';
+    ELSE
+        -- Phases exist: use dynamic crosstab
+        create_view_sql := format('
+            CREATE MATERIALIZED VIEW mv_evosuite_runtime_pivoted AS
+            WITH class_totals AS (
+                SELECT
+                    class_id,
+                    SUM(runtime) AS total_runtime
                 FROM
-                    public.mv_evosuite_runtime AS rt
+                    public.mv_evosuite_runtime
                 GROUP BY
-                    rt.class_id,
-                    rt.project_id,
-                    rt.class_name,
-                    rt.phase_name
-                ORDER BY rt.class_id'',
-
-                ''SELECT phase_name
-                  FROM (
-                    SELECT
-                        phase_name,
-                        MAX(step) as max_step
+                    class_id
+            ),
+            pivoted_data AS (
+                SELECT * FROM crosstab(
+                    ''SELECT
+                        rt.class_id,
+                        rt.project_id,
+                        rt.class_name,
+                        rt.phase_name,
+                        sum(rt.runtime) AS runtime
                     FROM
-                        public.mv_evosuite_runtime
+                        public.mv_evosuite_runtime AS rt
                     GROUP BY
-                        phase_name
-                    ORDER BY
-                        max_step
-                  ) ordered_phases''
-            ) AS ct (class_id INTEGER, project_id INTEGER, class_name TEXT, %s)
-        )
-        SELECT
-            pd.class_id,
-            pd.project_id,
-            pd.class_name,
-            ct.total_runtime AS total,
-            %s
-        FROM
-            pivoted_data pd
-        JOIN
-            class_totals ct ON pd.class_id = ct.class_id
-    ', phase_column_defs, phase_columns);
+                        rt.class_id,
+                        rt.project_id,
+                        rt.class_name,
+                        rt.phase_name
+                    ORDER BY rt.class_id'',
+
+                    ''SELECT phase_name
+                      FROM (
+                        SELECT
+                            phase_name,
+                            MAX(step) as max_step
+                        FROM
+                            public.mv_evosuite_runtime
+                        GROUP BY
+                            phase_name
+                        ORDER BY
+                            max_step
+                      ) ordered_phases''
+                ) AS ct (class_id INTEGER, project_id INTEGER, class_name TEXT, %s)
+            )
+            SELECT
+                pd.class_id,
+                pd.project_id,
+                pd.class_name,
+                ct.total_runtime AS total,
+                %s
+            FROM
+                pivoted_data pd
+            JOIN
+                class_totals ct ON pd.class_id = ct.class_id
+        ', phase_column_defs, phase_columns);
+    END IF;
 
     -- Execute the dynamic SQL to create the materialized view
     EXECUTE create_view_sql;
