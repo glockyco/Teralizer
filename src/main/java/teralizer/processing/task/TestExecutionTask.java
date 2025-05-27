@@ -90,13 +90,21 @@ public class TestExecutionTask extends AbstractTask {
         } catch (ConsoleCommandException e) {
             try (Stream<String> lines = Files.lines(e.getOutputPath())) {
                 if (lines.anyMatch(line ->
+                    // Try to detect assertion failures early so we don't have to process the whole file:
                     /* JUnit 5 */ line.contains("AssertionFailedError") ||
                     /* JUnit 4 */ line.contains("AssertionError") ||
-                    /* jqwik */ line.contains("TooManyFilterMissesException"))
-                ) {
+                    /* JUnit 4 */ line.contains("ComparisonFailure") ||
+                    /* jqwik */ line.contains("TooManyFilterMissesException") ||
+                    // If we don't find anything with the above, also look at the test execution summary:
+                    line.contains("[ERROR] Errors:") ||
+                    line.contains("[ERROR] Failures:") ||
+                    line.contains("There are test failures.")
+                )) {
                     // There might be other errors beyond the assertion / filtering ones,
                     // but we just assume the best and keep going until something breaks.
-                    reportInfo.accept(e.getMessage() + "\nFailure is (partially(?)) caused by assertion / filtering error(s).");
+                    // The processing pipeline handles processing errors rather gracefully
+                    // (logs them and then terminates), so no need to be overly strict here.
+                    reportInfo.accept(e.getMessage() + "\nFailure is (partially(?)) caused by test failures.");
                 } else {
                     throw e;
                 }
