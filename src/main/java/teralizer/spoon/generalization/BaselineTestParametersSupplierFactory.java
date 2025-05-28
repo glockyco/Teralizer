@@ -30,9 +30,11 @@ public class BaselineTestParametersSupplierFactory {
             Set<ModifierKind> modifiers = new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC));
             CtTypeReference<?> returnType = factory.Type().createReference("net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">");
 
-            List<CtParameter<?>> supplierParameters = parameters.stream().limit(i).map(p ->
-                factory.createParameter(null, SpoonUtils.getTypeReference(factory, p.getType()), p.getName())
-            ).collect(Collectors.toList());
+            List<CtParameter<?>> supplierParameters = parameters.stream().limit(i).map(p -> {
+                CtParameter<?> param = factory.createParameter(null, SpoonUtils.getTypeReference(factory, p.getType()), p.getName());
+                param.addModifier(ModifierKind.FINAL);
+                return param;
+            }).collect(Collectors.toList());
 
             CtMethod<?> supplierMethod = factory.Method().create(supplierClass, modifiers, returnType, "get" + (i == 0 ? "" : i), supplierParameters, Collections.emptySet(), factory.Core().createBlock());
             supplierMethod.setBody(factory.createCodeSnippetStatement(supplierBodies.get(i)));
@@ -56,10 +58,18 @@ public class BaselineTestParametersSupplierFactory {
 
                 if (!isLast) {
                     String parameterNames = parameters.stream().limit(i + 1).map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".flatMap(" + parameter.getName() + " -> { return get" + (i + 1) + "(" + parameterNames + "); })";
+                    body += ".flatMap(new java.util.function.Function<" + getBoxedType(parameter.getType()) + ", net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">>() {\n";
+                    body += "    public net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + "> apply(final " + getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
+                    body += "        return get" + (i + 1) + "(" + parameterNames + ");\n";
+                    body += "    }\n";
+                    body += "})";
                 } else {
                     String parameterNames = parameters.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".map(" + parameter.getName() + " -> new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + "))";
+                    body += ".map(new java.util.function.Function<" + getBoxedType(parameter.getType()) + ", " + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
+                    body += "    public " + TEST_PARAMETERS_CLASS_NAME + " apply(final " + getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
+                    body += "        return new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + ");\n";
+                    body += "    }\n";
+                    body += "})";
                 }
 
                 supplierBodies.add(body);
@@ -71,5 +81,19 @@ public class BaselineTestParametersSupplierFactory {
     private static String createArbitrary(MethodArgument argument) {
         String value = new ModelToJavaTransformer().transform(argument);
         return "return net.jqwik.api.Arbitraries.just((" + argument.getType() + ") " + value + ")";
+    }
+
+    private static String getBoxedType(String type) {
+        switch (type) {
+            case "byte": return "Byte";
+            case "short": return "Short";
+            case "int": return "Integer";
+            case "long": return "Long";
+            case "float": return "Float";
+            case "double": return "Double";
+            case "char": return "Character";
+            case "boolean": return "Boolean";
+            default: return type;
+        }
     }
 }

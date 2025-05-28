@@ -36,9 +36,7 @@ import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 import teralizer.util.Configuration;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -51,6 +49,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class TestGeneralizationTask extends AbstractTask {
 
@@ -364,13 +363,6 @@ public class TestGeneralizationTask extends AbstractTask {
 
         // ------------------------------------------------------------------------------------------------------ //
 
-        try (BufferedReader reader = new BufferedReader(new StringReader(generalizedClassDeclaration.toString()))) {
-            this.generalizationRecord.setLineCount((int) reader.lines().count());
-            this.generalizationRecord.store();
-        }
-
-        // ------------------------------------------------------------------------------------------------------ //
-
         CtCompilationUnit cu = spoonLauncher.getFactory().CompilationUnit().getOrCreate(this.generalizationRecord.getFilePath());
         cu.setImports(generalizedClassDeclaration.getPosition().getCompilationUnit().getImports().stream().map(CtImport::clone).collect(Collectors.toList()));
         cu.setDeclaredTypes(Collections.singletonList(generalizedClassDeclaration));
@@ -385,6 +377,11 @@ public class TestGeneralizationTask extends AbstractTask {
         // Write the generalized file to the project directory for further use in this run:
         generalizedFilePath.toFile().getParentFile().mkdirs();
         Files.write(generalizedFilePath, generalizedFileBytes);
+
+        try (Stream<String> lines = Files.lines(generalizedFilePath)) {
+            this.generalizationRecord.setLineCount((int) lines.count());
+            this.generalizationRecord.store();
+        }
 
         // Copy the generalized file to the data directory for cross-run storage:
         Path relativizedFilePath = this.projectRecord.getTestSourcePath().relativize(generalizedFilePath);

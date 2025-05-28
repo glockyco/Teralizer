@@ -35,9 +35,11 @@ public class NaiveTestParametersSupplierFactory {
             Set<ModifierKind> modifiers = new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC));
             CtTypeReference<?> returnType = factory.Type().createReference("net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">");
 
-            List<CtParameter<?>> supplierParameters = parameters.stream().limit(i).map(p ->
-                factory.createParameter(null, SpoonUtils.getTypeReference(factory, p.getType()), p.getName())
-            ).collect(Collectors.toList());
+            List<CtParameter<?>> supplierParameters = parameters.stream().limit(i).map(p -> {
+                CtParameter<?> param = factory.createParameter(null, SpoonUtils.getTypeReference(factory, p.getType()), p.getName());
+                param.addModifier(ModifierKind.FINAL);
+                return param;
+            }).collect(Collectors.toList());
 
             CtMethod<?> supplierMethod = factory.Method().create(supplierClass, modifiers, returnType, "get" + (i == 0 ? "" : i), supplierParameters, Collections.emptySet(), factory.Core().createBlock());
             supplierMethod.setBody(factory.createCodeSnippetStatement(supplierBodies.get(i)));
@@ -68,14 +70,26 @@ public class NaiveTestParametersSupplierFactory {
 
                 if (!isLast) {
                     String parameterNames = parameters.stream().limit(i + 1).map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".flatMap(" + parameters.get(i).getName() + " -> { return get" + (i + 1) + "(" + parameterNames + "); })";
+                    body += ".flatMap(new java.util.function.Function<" + getBoxedType(parameter.getType()) + ", net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">>() {\n";
+                    body += "    public net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + "> apply(final " + getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
+                    body += "        return get" + (i + 1) + "(" + parameterNames + ");\n";
+                    body += "    }\n";
+                    body += "})";
                 } else {
                     String parameterNames = parameters.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".map(" + parameters.get(i).getName() + " -> new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + "))";
+                    body += ".map(new java.util.function.Function<" + getBoxedType(parameter.getType()) + ", " + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
+                    body += "    public " + TEST_PARAMETERS_CLASS_NAME + " apply(final " + getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
+                    body += "        return new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + ");\n";
+                    body += "    }\n";
+                    body += "})";
                 }
 
                 if (isFirst) {
-                    body += " .filter(_p_ -> " + (inputJava == null ? "true" : inputJava) + ")";
+                    body += "\n.filter(new java.util.function.Predicate<" + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
+                    body += "    public boolean test(final " + TEST_PARAMETERS_CLASS_NAME + " _p_) {\n";
+                    body += "        return " + (inputJava == null ? "true" : inputJava) + ";\n";
+                    body += "    }\n";
+                    body += "})";
                 }
 
                 supplierBodies.add(body);
@@ -86,57 +100,70 @@ public class NaiveTestParametersSupplierFactory {
 
     private static String createArbitrary(MethodParameter parameter, Optional<MethodArgument> argument) {
         String baseArbitrary;
+        String boxedType;
+
         switch (parameter.getType()) {
             case "byte":
             case "java.lang.Byte": {
                 baseArbitrary = "net.jqwik.api.Arbitraries.bytes()";
+                boxedType = "Byte";
                 break;
             }
             case "short":
             case "java.lang.Short": {
                 baseArbitrary = "net.jqwik.api.Arbitraries.shorts()";
+                boxedType = "Short";
                 break;
             }
             case "int":
             case "java.lang.Integer": {
                 baseArbitrary = "net.jqwik.api.Arbitraries.integers()";
+                boxedType = "Integer";
                 break;
             }
             case "long":
             case "java.lang.Long": {
                 baseArbitrary = "net.jqwik.api.Arbitraries.longs()";
+                boxedType = "Long";
                 break;
             }
             case "float":
             case "java.lang.Float": {
                 baseArbitrary = "net.jqwik.api.Arbitraries.floats()";
+                boxedType = "Float";
                 break;
             }
             case "double":
             case "java.lang.Double": {
                 baseArbitrary = "net.jqwik.api.Arbitraries.doubles()";
+                boxedType = "Double";
                 break;
             }
             case "char":
             case "java.lang.Character":
                 baseArbitrary = "net.jqwik.api.Arbitraries.chars()";
+                boxedType = "Character";
                 break;
             case "boolean":
             case "java.lang.Boolean":
                 baseArbitrary = "net.jqwik.api.Arbitraries.of(true, false)";
+                boxedType = "Boolean";
                 break;
             case "String":
             case "java.lang.String":
                 baseArbitrary = "net.jqwik.api.Arbitraries.strings()";
+                boxedType = "String";
                 break;
             default:
                 baseArbitrary = "net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
+                boxedType = parameter.getType();
                 break;
         }
 
         if (argument.isPresent()) {
             return String.format(
-                "return new FirstValueArbitrary<>((%s) (%s), %s)",
+                "return new FirstValueArbitrary<%s>((%s) (%s), %s)",
+                boxedType,
                 argument.get().getType(),
                 new ModelToJavaTransformer().transform(argument.get()),
                 baseArbitrary
@@ -144,5 +171,19 @@ public class NaiveTestParametersSupplierFactory {
         }
 
         return String.format("return %s", baseArbitrary);
+    }
+
+    private static String getBoxedType(String type) {
+        switch (type) {
+            case "byte": return "Byte";
+            case "short": return "Short";
+            case "int": return "Integer";
+            case "long": return "Long";
+            case "float": return "Float";
+            case "double": return "Double";
+            case "char": return "Character";
+            case "boolean": return "Boolean";
+            default: return type;
+        }
     }
 }

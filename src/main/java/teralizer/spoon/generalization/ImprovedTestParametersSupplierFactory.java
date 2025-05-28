@@ -66,12 +66,23 @@ public class ImprovedTestParametersSupplierFactory {
         }
 
         // Build a method body that looks like:
-        //     return
-        //         getX().flatMap(x ->
-        //             getY(x).flatMap(y ->
-        //                 getZ(x, y).map(z -> new TestParameters(x, y, z))
-        //             )
-        //         ).filter(_p_ -> {inputJava});
+        //     return get_x().flatMap(new java.util.function.Function<Integer, net.jqwik.api.Arbitrary<TestParameters>>() {
+        //         public net.jqwik.api.Arbitrary<TestParameters> apply(final Integer x) {
+        //             return get_y(x).flatMap(new java.util.function.Function<Integer, net.jqwik.api.Arbitrary<TestParameters>>() {
+        //                 public net.jqwik.api.Arbitrary<TestParameters> apply(final Integer y) {
+        //                     return get_z(x, y).map(new java.util.function.Function<Integer, TestParameters>() {
+        //                         public TestParameters apply(final Integer z) {
+        //                             return new TestParameters(x, y, z);
+        //                         }
+        //                     });
+        //                 }
+        //             });
+        //         }
+        //     }).filter(new java.util.function.Predicate<TestParameters>() {
+        //         public boolean test(final TestParameters _p_) {
+        //             return {inputJava};
+        //         }
+        //     });
 
         Function<List<MethodParameter>, String> paramNames = (List<MethodParameter> params) -> params.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
 
@@ -80,16 +91,40 @@ public class ImprovedTestParametersSupplierFactory {
         for (int i = 0; i < parameters.size(); i++) {
             MethodParameter currentParameter = parameters.get(i);
             List<MethodParameter> previousParameters = parameters.subList(0, i);
+            String previousParamNames = paramNames.apply(previousParameters);
 
-            builder.append("get_" + currentParameter.getName() + "(" + paramNames.apply(previousParameters) + ")");
+            builder.append("get_").append(currentParameter.getName()).append("(").append(previousParamNames).append(")");
 
             if (i < parameters.size() - 1) {
-                builder.append(".flatMap(" + currentParameter.getName() + " -> ");
+                builder.append(".flatMap(new java.util.function.Function<");
+                builder.append(getBoxedType(currentParameter.getType()));
+                builder.append(", net.jqwik.api.Arbitrary<TestParameters>>() {\n");
+                builder.append("    public net.jqwik.api.Arbitrary<TestParameters> apply(final ");
+                builder.append(getBoxedType(currentParameter.getType())).append(" ");
+                builder.append(currentParameter.getName()).append(") {\n");
+                builder.append("        return ");
             } else {
-                builder.append(".map(" + currentParameter.getName() + " -> new " + TEST_PARAMETERS_CLASS_NAME + "(" + paramNames.apply(parameters) + "))");
-                // Close the parentheses opened by the flatMaps calls:
-                builder.append(String.join("", Collections.nCopies(i, ")")));
-                builder.append("\n    .filter(_p_ -> " + (inputJava == null ? "true" : inputJava) + ")");
+                builder.append(".map(new java.util.function.Function<");
+                builder.append(getBoxedType(currentParameter.getType()));
+                builder.append(", TestParameters>() {\n");
+                builder.append("    public TestParameters apply(final ");
+                builder.append(getBoxedType(currentParameter.getType())).append(" ");
+                builder.append(currentParameter.getName()).append(") {\n");
+                builder.append("        return new ").append(TEST_PARAMETERS_CLASS_NAME);
+                builder.append("(").append(paramNames.apply(parameters)).append(");\n");
+                builder.append("    }\n");
+                builder.append("})");
+
+                // Close all the nested return statements and methods
+                for (int j = 0; j < i; j++) {
+                    builder.append(";\n    }\n})");
+                }
+
+                builder.append("\n.filter(new java.util.function.Predicate<TestParameters>() {\n");
+                builder.append("    public boolean test(final TestParameters _p_) {\n");
+                builder.append("        return ").append(inputJava == null ? "true" : inputJava).append(";\n");
+                builder.append("    }\n");
+                builder.append("})");
             }
         }
 
@@ -168,12 +203,28 @@ public class ImprovedTestParametersSupplierFactory {
         Set<ModifierKind> modifiers = new HashSet<>(Collections.singletonList(ModifierKind.PRIVATE));
         CtTypeReference<?> returnType = factory.Type().createReference("net.jqwik.api.Arbitrary<" + arbitraryType + ">");
 
-        List<CtParameter<?>> params = previousParameters.stream().map(p ->
-            factory.createParameter(null, SpoonUtils.getTypeReference(factory, p.getType()), p.getName())
-        ).collect(Collectors.toList());
+        List<CtParameter<?>> params = previousParameters.stream().map(p -> {
+            CtParameter<?> param = factory.createParameter(null, SpoonUtils.getTypeReference(factory, p.getType()), p.getName());
+            param.addModifier(ModifierKind.FINAL);
+            return param;
+        }).collect(Collectors.toList());
 
         CtMethod<?> supplierMethod = factory.Method().create(supplierClass, modifiers, returnType, "get_" + parameter.getName(), params, Collections.emptySet(), factory.Core().createBlock());
         supplierMethod.getBody().addStatement(factory.createCodeSnippetStatement(body));
+    }
+
+    private static String getBoxedType(String type) {
+        switch (type) {
+            case "byte": return "Byte";
+            case "short": return "Short";
+            case "int": return "Integer";
+            case "long": return "Long";
+            case "float": return "Float";
+            case "double": return "Double";
+            case "char": return "Character";
+            case "boolean": return "Boolean";
+            default: return type;
+        }
     }
 
     private static String createByteArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, IntegerConstraints constraint) {
@@ -213,7 +264,7 @@ public class ImprovedTestParametersSupplierFactory {
         if (constraint == null) {
             if (argument.isPresent()) {
                 String firstValue = new ModelToJavaTransformer().transform(argument.get());
-                return String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), firstValue, arbitraryType);
+                return String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), firstValue, arbitraryType);
             } else {
                 return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
             }
@@ -233,7 +284,7 @@ public class ImprovedTestParametersSupplierFactory {
         if (argument.isPresent()) {
             String firstValue = new ModelToJavaTransformer().transform(argument.get());
             result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), argument.get().getType(), firstValue));
-            result.append(String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s().between(%s, %s))", argument.get().getType(), firstValue, arbitraryType, n.min(), n.max()));
+            result.append(String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s().between(%s, %s))", argument.get().getType(), firstValue, arbitraryType, n.min(), n.max()));
         } else {
             result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max()));
             result.append(String.format("return net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
@@ -256,7 +307,7 @@ public class ImprovedTestParametersSupplierFactory {
         if (constraint == null) {
             if (argument.isPresent()) {
                 String firstValue = new ModelToJavaTransformer().transform(argument.get());
-                return String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), firstValue, arbitraryType);
+                return String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), firstValue, arbitraryType);
             } else {
                 return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
             }
@@ -272,15 +323,17 @@ public class ImprovedTestParametersSupplierFactory {
         result.append(String.format("java.util.List<Boolean> %s = java.util.Arrays.asList(true%s);\n", n.lowerBoundIncluded(), constraint.getLowerBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining())));
         result.append(String.format("java.util.List<%s> %s = java.util.Arrays.asList(%s%s);\n", boxedType, n.upperBounds(), n.defaultMax(), constraint.getUpperBounds().stream().map(b -> String.format(", (%s) (%s)", unboxedType, b.getValue())).collect(Collectors.joining())));
         result.append(String.format("java.util.List<Boolean> %s = java.util.Arrays.asList(true%s);\n", n.upperBoundIncluded(), constraint.getUpperBounds().stream().map(b -> ", " + b.getIsIncluded()).collect(Collectors.joining())));
+
         result.append(String.format("%s %s = java.util.Collections.max(%s);\n", parameter.getType(), n.min(), n.lowerBounds()));
-        result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.minIncluded(), n.lowerBounds(), n.lowerBounds(), n.min(), n.lowerBoundIncluded()));
+        result.append(generateInclusionCheck(n, true));
+
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
-        result.append(String.format("boolean %s = java.util.stream.IntStream.range(0, %s.size()).filter(i -> %s.get(i) == %s).allMatch(%s::get);\n", n.maxIncluded(), n.upperBounds(), n.upperBounds(), n.max(), n.upperBoundIncluded()));
+        result.append(generateInclusionCheck(n, false));
 
         if (argument.isPresent()) {
             String firstValue = new ModelToJavaTransformer().transform(argument.get());
             result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded(), argument.get().getType(), firstValue));
-            result.append(String.format("return new FirstValueArbitrary<>((%s) (%s), net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s))", argument.get().getType(), firstValue, arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+            result.append(String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s))", argument.get().getType(), firstValue, arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
         } else {
             result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
             result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
@@ -289,6 +342,22 @@ public class ImprovedTestParametersSupplierFactory {
         return result.toString();
     }
 
+    private static String generateInclusionCheck(Names n, boolean isMin) {
+        String bounds = isMin ? n.lowerBounds() : n.upperBounds();
+        String boundIncluded = isMin ? n.lowerBoundIncluded() : n.upperBoundIncluded();
+        String value = isMin ? n.min() : n.max();
+        String included = isMin ? n.minIncluded() : n.maxIncluded();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("boolean %s = true;\n", included));
+        sb.append(String.format("for (int i = 0; i < %s.size(); i++) {\n", bounds));
+        sb.append(String.format("    if (%s.get(i).equals(%s) && !%s.get(i)) {\n", bounds, value, boundIncluded));
+        sb.append(String.format("        %s = false;\n", included));
+        sb.append(String.format("        break;\n"));
+        sb.append(String.format("    }\n"));
+        sb.append(String.format("}\n"));
+        return sb.toString();
+    }
 
     private static class Names {
         private final String baseName;
