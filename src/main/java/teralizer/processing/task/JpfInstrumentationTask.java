@@ -217,6 +217,14 @@ public class JpfInstrumentationTask extends AbstractTask {
                 );
             }
 
+            type.setSimplyQualified(false);
+            type.setImplicit(false);
+
+            for (CtAnnotation<?> annotation : type.getAnnotations()) {
+                annotation.getAnnotationType().setSimplyQualified(false);
+                annotation.getAnnotationType().setImplicit(false);
+            }
+
             CtParameter<?> parameter = factory.createParameter(null, type, testedMethod.getParameters().get(i).getSimpleName());
             instrumentedParameters.add(parameter);
         }
