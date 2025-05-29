@@ -56,6 +56,9 @@ total_configs=${#configs[@]}
 
 for config in "${configs[@]}"; do
     run_and_log "$config"
+    # Kill any Java (sub-)processes that remain after
+    # processing of the target project has already terminated.
+    killall -9 java
 done
 
 ./gradlew stopPostgres
