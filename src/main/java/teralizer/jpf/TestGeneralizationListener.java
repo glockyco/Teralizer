@@ -3,7 +3,7 @@ package teralizer.jpf;
 import com.google.gson.Gson;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.PropertyListenerAdapter;
-import gov.nasa.jpf.jvm.bytecode.JVMReturnInstruction;
+import gov.nasa.jpf.jvm.bytecode.*;
 import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.numeric.Constraint;
 import gov.nasa.jpf.symbc.numeric.Expression;
@@ -137,9 +137,47 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         if (exitInstruction instanceof JVMReturnInstruction) {
             JVMReturnInstruction returnInstruction = (JVMReturnInstruction) exitInstruction;
 
-            String concreteOutputType = currentThread.getTopFrameMethodInfo().getReturnTypeName();
             Object concreteOutputValue = returnInstruction.getReturnValue(currentThread);
-            concreteOutputArgument = new MethodArgument(concreteOutputType, concreteOutputValue.toString());
+            String concreteOutputType = currentThread.getTopFrameMethodInfo().getReturnTypeName();
+
+            Object outputValueForArgument;
+            if (returnInstruction instanceof ARETURN) {
+                if (concreteOutputValue == null) {
+                    outputValueForArgument = null;
+                } else if (concreteOutputValue instanceof DynamicElementInfo) {
+                    DynamicElementInfo dei = (DynamicElementInfo) concreteOutputValue;
+                    String type = dei.getType();
+                    if ("Ljava/lang/String;".equals(type)) {
+                        ElementInfo valueArrayInfo = vm.getHeap().get(dei.getReferenceField("value"));
+                        int length = valueArrayInfo.arrayLength();
+                        char[] chars = new char[length];
+                        for (int i = 0; i < length; i++) {
+                            chars[i] = valueArrayInfo.getCharElement(i);
+                        }
+                        outputValueForArgument = new String(chars);
+                    } else {
+                        outputValueForArgument = dei.toString();
+                    }
+                } else {
+                    outputValueForArgument = concreteOutputValue.toString();
+                }
+            } else if (returnInstruction instanceof DRETURN) {
+                outputValueForArgument = (Double) concreteOutputValue;
+            } else if (returnInstruction instanceof FRETURN) {
+                outputValueForArgument = (Float) concreteOutputValue;
+            } else if (returnInstruction instanceof IRETURN) {
+                outputValueForArgument = (Integer) concreteOutputValue;
+            } else if (returnInstruction instanceof LRETURN) {
+                outputValueForArgument = (Long) concreteOutputValue;
+            } else if (returnInstruction instanceof NATIVERETURN) {
+                outputValueForArgument = concreteOutputValue;
+            } else if (returnInstruction instanceof RETURN) {
+                outputValueForArgument = concreteOutputValue; // void
+            } else {
+                throw new RuntimeException("Unexpected returnInstruction: " + returnInstruction);
+            }
+
+            concreteOutputArgument = new MethodArgument(concreteOutputType, outputValueForArgument == null ? "null" : outputValueForArgument.toString());
 
             spfOutput = (Expression) returnInstruction.getReturnAttr(vm.getCurrentThread());
             Expression spfOutput_ = spfOutput; // To use spfOutput in the lambda, it needs to be (effectively) final.
