@@ -2,11 +2,13 @@ package teralizer.processing.filter;
 
 import org.jooq.generated.tables.records.AssertionRecord;
 
-public class VoidReturnTypeFilter extends AbstractFilter {
+import static teralizer.util.Configuration.SUPPORTED_TYPES;
+
+public class ReturnTypeFilter extends AbstractFilter {
 
     private final AssertionRecord assertionRecord;
 
-    public VoidReturnTypeFilter(AssertionRecord assertionRecord) {
+    public ReturnTypeFilter(AssertionRecord assertionRecord) {
         this.assertionRecord = assertionRecord;
     }
 
@@ -18,6 +20,11 @@ public class VoidReturnTypeFilter extends AbstractFilter {
 
         if (this.assertionRecord.getTestedMethodReturnType().equals("void") || this.assertionRecord.getTestedMethodReturnType().equals("java.lang.Void")) {
             String reason = "Tested method has void return type: " + this.assertionRecord.getTestedMethodQualifiedName();
+            return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
+        }
+
+        if (!SUPPORTED_TYPES.contains(this.assertionRecord.getTestedMethodReturnType())) {
+            String reason = "Tested method has unsupported return type: " + this.assertionRecord.getTestedMethodQualifiedName();
             return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
         }
 

@@ -149,7 +149,7 @@ public class TestFilteringTask extends AbstractTask {
         List<Filter> filters = Arrays.asList(
             new ExcludedTestFilter(this.testRecord),
             new MissingValueFilter(this.assertionRecord),
-            new VoidReturnTypeFilter(this.assertionRecord),
+            new ReturnTypeFilter(this.assertionRecord),
             new UnsupportedAssertionFilter(this.assertionRecord),
             new ParameterTypeFilter(gson, this.assertionRecord),
             new AssertionInLoopFilter(spoonLauncher, this.assertionRecord),
