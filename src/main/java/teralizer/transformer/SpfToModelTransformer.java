@@ -130,9 +130,11 @@ public class SpfToModelTransformer {
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.string.DerivedStringExpression expression) {
-            Expression right = this.stack.pop();
-            Expression left = this.stack.pop();
+            Expression right = expression.right == null ? null : this.stack.pop();
+            Expression left = expression.left == null ? null : this.stack.pop();
             Operator op = Operator.get(expression.op.toString());
+
+            // @TODO: Add proper handling for `DerivedStringExpression.oprlist`.
 
             this.stack.push(new Operation(left, op, right));
         }
