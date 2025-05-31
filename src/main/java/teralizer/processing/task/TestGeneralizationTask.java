@@ -158,6 +158,43 @@ public class TestGeneralizationTask extends AbstractTask {
 
         SpoonUtils.deleteOtherTestMethodsInClass(generalizedClassDeclaration, testMethod);
 
+        for (CtMethod<?> method : generalizedClassDeclaration.getMethods()) {
+            List<CtAnnotation<? extends Annotation>> annotations = new ArrayList<>(method.getAnnotations());
+            for (CtAnnotation<? extends Annotation> annotation : annotations) {
+                String annotationType = annotation.getAnnotationType().getQualifiedName();
+
+                if (annotationType.equals("org.junit.Before") || annotationType.equals("org.junit.jupiter.api.BeforeEach")) {
+                    method.removeAnnotation(annotation);
+                    CtAnnotation<Annotation> jqwikAnnotation = factory.Core().createAnnotation();
+                    jqwikAnnotation.setAnnotationType(factory.Type().createReference("net.jqwik.api.lifecycle.BeforeProperty"));
+                    method.addAnnotation(jqwikAnnotation);
+                }
+
+                if (annotationType.equals("org.junit.After") || annotationType.equals("org.junit.jupiter.api.AfterEach")) {
+                    method.removeAnnotation(annotation);
+                    CtAnnotation<Annotation> jqwikAnnotation = factory.Core().createAnnotation();
+                    jqwikAnnotation.setAnnotationType(factory.Type().createReference("net.jqwik.api.lifecycle.AfterProperty"));
+                    method.addAnnotation(jqwikAnnotation);
+                }
+
+                if (annotationType.equals("org.junit.BeforeClass") || annotationType.equals("org.junit.jupiter.api.BeforeAll")) {
+                    method.removeAnnotation(annotation);
+                    CtAnnotation<Annotation> jqwikAnnotation = factory.Core().createAnnotation();
+                    jqwikAnnotation.setAnnotationType(factory.Type().createReference("net.jqwik.api.lifecycle.BeforeContainer"));
+                    method.addAnnotation(jqwikAnnotation);
+                    method.addModifier(ModifierKind.STATIC);
+                }
+
+                if (annotationType.equals("org.junit.AfterClass") || annotationType.equals("org.junit.jupiter.api.AfterAll")) {
+                    method.removeAnnotation(annotation);
+                    CtAnnotation<Annotation> jqwikAnnotation = factory.Core().createAnnotation();
+                    jqwikAnnotation.setAnnotationType(factory.Type().createReference("net.jqwik.api.lifecycle.AfterContainer"));
+                    method.addAnnotation(jqwikAnnotation);
+                    method.addModifier(ModifierKind.STATIC);
+                }
+            }
+        }
+
         CtPath assertionPath = new CtPathStringBuilder().fromString(
             this.assertionRecord.getAssertionRelativePath().replace(
                 this.testRecord.getTestClassQualifiedName(),
