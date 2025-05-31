@@ -393,10 +393,10 @@ public class TestGeneralizationTask extends AbstractTask {
         }
 
         // ------------------------------------------------------------------------------------------------------ //
-        // Remove parts of the test code that are no longer needed after generalization.                          //
+        // Remove other assertions in the test method.                                                            //
         // ------------------------------------------------------------------------------------------------------ //
 
-        SpoonUtils.deleteOtherAssertionsInMethod(testedMethod, assertion);
+        SpoonUtils.deleteOtherAssertionsInMethod(testMethod, assertion);
 
         // ------------------------------------------------------------------------------------------------------ //
 
