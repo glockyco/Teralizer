@@ -196,8 +196,16 @@ public class JpfInstrumentationTask extends AbstractTask {
             CtTypeReference<?> targetType = target instanceof CtThisAccess
                 ? factory.Type().get(this.assertionRecord.getInstrumentedClassQualifiedName()).getReference()
                 : target.getType();
-            CtParameter<?> parameter = factory.createParameter(null, targetType, "_target_");
-            instrumentedParameters.add(parameter);
+            if (targetType instanceof CtTypeParameterReference) {
+                throw new RuntimeException(
+                    "Failed to identify valid type for parameter _target_"
+                        + " of tested method " + this.assertionRecord.getTestedMethodQualifiedName()
+                        + " in test method " + this.testRecord.getTestMethodQualifiedName() + "."
+                );
+            } else {
+                CtParameter<?> parameter = factory.createParameter(null, targetType, "_target_");
+                instrumentedParameters.add(parameter);
+            }
         }
 
         for (int i = 0; i < testedMethod.getParameters().size(); i++) {
