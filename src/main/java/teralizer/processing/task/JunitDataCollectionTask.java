@@ -84,7 +84,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         switch (this.stage) {
             case COLLECT_JUNIT_REPORTS_ORIGINAL:
                 if (this.testRecord == null) {
-                    List<TestRecord> testRecords = this.collectTests(create);
+                    List<TestRecord> testRecords = this.collectTests(create, reportInfo);
                     create.batchInsert(testRecords).execute();
                     this.scheduleTasks(create, scheduleTask);
                 } else {
@@ -152,7 +152,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
     }
 
-    private List<TestRecord> collectTests(DSLContext create) throws IOException {
+    private List<TestRecord> collectTests(DSLContext create, Consumer<String> reportInfo) throws IOException {
         try (Stream<Path> paths = Files.walk(this.projectRecord.getTestReportsPath())) {
             return paths
                 .filter(Files::isRegularFile)
@@ -190,15 +190,22 @@ public class JunitDataCollectionTask extends AbstractTask {
                         return true;
                     };
 
-                    if (!isValidClassName.test(className) || !isValidIdentifierName.test(methodName)) {
+                    if (className.contains("$")) {
+                        reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it references an anonymous inner class.");
                         return false;
                     }
-                    if (!testCaseReport.hasFailure()) {
-                        return true;
-                    } else {
-                        String failureMessage = testCaseReport.getFailureMessage();
-                        return failureMessage == null || !failureMessage.startsWith("No tests found");
+                    if (!isValidClassName.test(className) || !isValidIdentifierName.test(methodName)) {
+                        reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it does not reference a valid class / method name.");
+                        return false;
                     }
+                    if (testCaseReport.hasFailure()) {
+                        String failureMessage = testCaseReport.getFailureMessage();
+                        if (failureMessage != null && failureMessage.startsWith("No tests found")) {
+                            reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it does not reference any tests.");
+                            return false;
+                        }
+                    }
+                    return true;
                 })
                 .map(testCaseReport -> this.buildTestRecord(create, testCaseReport))
                 // Keep only the first record for each test method name to
