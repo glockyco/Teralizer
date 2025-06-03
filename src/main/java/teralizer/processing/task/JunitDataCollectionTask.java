@@ -216,6 +216,13 @@ public class JunitDataCollectionTask extends AbstractTask {
             List<ReportTestSuite> testSuiteReports = testSuiteReportParser.parse(testReportPath.toString());
             List<ReportTestCase> testCaseReports = testSuiteReports.stream()
                 .flatMap(testSuiteReport -> testSuiteReport.getTestCases().stream())
+                .collect(Collectors.toList());
+
+            if (testClassQualifiedName == null && testMethodQualifiedName == null && testCaseReports.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            List<ReportTestCase> filteredTestCaseReports = testCaseReports.stream()
                 .peek(testCaseReport -> {
                     testCaseReport.setName(replaceSpaces(testCaseReport.getName()));
                     testCaseReport.setFullName(replaceSpaces(testCaseReport.getFullName()));
@@ -232,11 +239,11 @@ public class JunitDataCollectionTask extends AbstractTask {
                 })
                 .collect(Collectors.toList());
 
-            if (testCaseReports.isEmpty()) {
+            if (filteredTestCaseReports.isEmpty()) {
                 throw new RuntimeException("Failed to identify matching test case report for " + testMethodQualifiedName + " in " + testReportPath + ".");
             }
 
-            return testCaseReports;
+            return filteredTestCaseReports;
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new RuntimeException(e);
         }
