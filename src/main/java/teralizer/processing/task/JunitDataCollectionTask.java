@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -158,6 +159,40 @@ public class JunitDataCollectionTask extends AbstractTask {
                 .filter(path -> path.toString().endsWith(".xml"))
                 .flatMap(testReportPath -> this.parseTestCaseReports(testReportPath, null, null).stream())
                 .filter(testCaseReport -> {
+                    String className = testCaseReport.getFullClassName();
+                    String methodName = testCaseReport.getName();
+
+                    Predicate<String> isValidIdentifierName = name -> {
+                        if (name == null || name.isEmpty()) {
+                            return false;
+                        }
+                        if (!Character.isJavaIdentifierStart(name.charAt(0))) {
+                            return false;
+                        }
+                        for (int i = 1; i < name.length(); i++) {
+                            if (!Character.isJavaIdentifierPart(name.charAt(i))) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    };
+
+                    Predicate<String> isValidClassName = name -> {
+                        if (name == null || name.isEmpty()) {
+                            return false;
+                        }
+                        String[] parts = name.split("\\.");
+                        for (String part : parts) {
+                            if (!isValidIdentifierName.test(part)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    };
+
+                    if (!isValidClassName.test(className) || !isValidIdentifierName.test(methodName)) {
+                        return false;
+                    }
                     if (!testCaseReport.hasFailure()) {
                         return true;
                     } else {
