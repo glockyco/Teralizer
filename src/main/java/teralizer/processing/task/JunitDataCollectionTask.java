@@ -157,7 +157,14 @@ public class JunitDataCollectionTask extends AbstractTask {
                 .filter(Files::isRegularFile)
                 .filter(path -> path.toString().endsWith(".xml"))
                 .flatMap(testReportPath -> this.parseTestCaseReports(testReportPath, null, null).stream())
-                .filter(testCaseReport -> !testCaseReport.hasFailure() || !testCaseReport.getFailureMessage().startsWith("No tests found"))
+                .filter(testCaseReport -> {
+                    if (!testCaseReport.hasFailure()) {
+                        return true;
+                    } else {
+                        String failureMessage = testCaseReport.getFailureMessage();
+                        return failureMessage == null || !failureMessage.startsWith("No tests found");
+                    }
+                })
                 .map(testCaseReport -> this.buildTestRecord(create, testCaseReport))
                 // Keep only the first record for each test method name to
                 // avoid duplicates caused by repeated or parameterized tests.
