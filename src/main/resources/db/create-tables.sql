@@ -313,7 +313,7 @@ CREATE TABLE pit_coverage_report
     covered_block_number       INTEGER NOT NULL,
     test_package_name          TEXT    NOT NULL,
     test_class_name            TEXT    NOT NULL,
-    test_method_name           TEXT    NOT NULL,
+    test_method_name           TEXT,   -- can be null if the report does not reference a test method
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
     FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
@@ -358,7 +358,7 @@ CREATE TABLE pit_mutation_report
     blocks                    TEXT    NOT NULL,
     killing_package_name      TEXT,   -- can be null if the mutant was not killed
     killing_class_name        TEXT,   -- can be null if the mutant was not killed
-    killing_method_name       TEXT,   -- can be null if the mutant was not killed
+    killing_method_name       TEXT,   -- can be null if the mutant was not killed or if the coverage report does not reference a test method
     description               TEXT    NOT NULL,
 
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,

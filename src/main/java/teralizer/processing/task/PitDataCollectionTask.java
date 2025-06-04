@@ -41,19 +41,21 @@ public class PitDataCollectionTask extends AbstractTask {
     // Different types of test "names" observed in PIT coverage / mutation reports:
     // - org.example.MyTest.[engine:junit-jupiter]/[class:org.example.MyTest]/[method:testFooBar()]
     // - org.example.MyTest.[engine:junit-jupiter]/[class:org.example.MyTest]/[test-template:testFoo(double, double)]/[test-template-invocation:#13]
+    // - org.example.MyTest.[engine:junit-vintage]/[runner:org.example.MyTest]
     // - org.example.MyTest.[engine:junit-vintage]/[runner:org.example.MyTest]/[test:testBar(org.example.MyMathTest)]
     // - org.example.MyTest.[engine:jqwik]/[class:org.example.MyTest]/[property:testBazz(org.example.MyTest$TestParameters)]
     // Note that some of these only occur with specific (i) JUnit 4 vs. 5 and (ii) Maven vs. Gradle combinations.
     // => Take care when modifying the RegEx pattern to ensure matching still works for all types of supported projects.
 
-    private static final Pattern TEST_NAME_PATTERN = Pattern.compile(// Qualified class name followed by engine info:
+    private static final Pattern TEST_NAME_PATTERN = Pattern.compile(
+        // Qualified class name followed by engine info:
         "([\\w$.]+)\\.[^/]+/" +
-            // Section identifier followed by qualified class name:
-            "\\[(?:class|runner):([\\w$.]+)\\]/" +
-            // Section identifier followed by simple method name and parameter types:
-            "\\[(?:method|property|test|test-template):([\\w$]+)\\(.*?\\)\\]" +
-            // Section identifier followed by invocation count (for repeated / parameterized tests only):
-            "(?:/\\[test-template-invocation:.*\\])?"
+        // Section identifier followed by qualified class name:
+        "\\[(?:class|runner):([\\w$.]+)\\]" +
+        // Optional: Section identifier followed by simple method name and parameter types:
+        "(?:/\\[(?:method|property|test|test-template):([\\w$]+)\\(.*?\\)\\])?" +
+        // Optional: Section identifier followed by invocation count (for repeated / parameterized tests only):
+        "(?:/\\[test-template-invocation:.*\\])?"
     );
 
     public PitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
@@ -265,14 +267,20 @@ public class PitDataCollectionTask extends AbstractTask {
 
                 TestNameInfo testNameInfo = this.processTestName(name);
 
-                Long testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-                Long generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-
-                if (testId == null && generalizationId == null) {
-                    throw new RuntimeException("Failed to map coverage record to a test / generalization." +
-                        "\nPIT name: " + name +
-                        "\nQualified method name: " + testNameInfo.getMethodQualifiedName()
-                    );
+                Long testId;
+                Long generalizationId;
+                if (testNameInfo.getMethodQualifiedName() == null) {
+                    testId = null;
+                    generalizationId = null;
+                } else {
+                    testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                    generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                    if (testId == null && generalizationId == null) {
+                        throw new RuntimeException("Failed to map coverage record to a test / generalization." +
+                            "\nPIT name: " + name +
+                            "\nQualified method name: " + testNameInfo.getMethodQualifiedName()
+                        );
+                    }
                 }
 
                 PitCoverageReportRecord record = create.newRecord(Tables.PIT_COVERAGE_REPORT);
@@ -372,14 +380,20 @@ public class PitDataCollectionTask extends AbstractTask {
                 if (killingTestName != null && !killingTestName.isEmpty()) {
                     TestNameInfo testNameInfo = this.processTestName(killingTestName);
 
-                    Long testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-                    Long generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-
-                    if (testId == null && generalizationId == null) {
-                        throw new RuntimeException("Failed to map mutation record to a test / generalization." +
-                            "\nPIT name: " + killingTestName +
-                            "\nQualified method name: " + testNameInfo.getMethodQualifiedName()
-                        );
+                    Long testId;
+                    Long generalizationId;
+                    if (testNameInfo.getMethodQualifiedName() == null) {
+                        testId = null;
+                        generalizationId = null;
+                    } else {
+                        testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                        generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
+                        if (testId == null && generalizationId == null) {
+                            throw new RuntimeException("Failed to map mutation record to a test / generalization." +
+                                "\nPIT name: " + killingTestName +
+                                "\nQualified method name: " + testNameInfo.getMethodQualifiedName()
+                            );
+                        }
                     }
 
                     record.setKillingTestId(testId);
@@ -401,12 +415,12 @@ public class PitDataCollectionTask extends AbstractTask {
         Matcher matcher = TEST_NAME_PATTERN.matcher(testName);
 
         if (matcher.matches()) {
-            // Extract the qualified class name and method name
+            // Extract the qualified class name and (optionally) method name
             String testClassQualifiedName = matcher.group(2);
-            String testMethodName = matcher.group(3);
+            String testMethodName = matcher.group(3); // can be null
 
-            // Create fully qualified method name
-            String testMethodQualifiedName = testClassQualifiedName + "." + testMethodName;
+            // Create the fully qualified method name
+            String testMethodQualifiedName = testMethodName == null ? null : testClassQualifiedName + "." + testMethodName;
 
             // Extract package and class name in one step
             int lastDotIndex = testClassQualifiedName.lastIndexOf('.');
