@@ -55,7 +55,8 @@ public class PitDataCollectionTask extends AbstractTask {
         // Optional: Section identifier followed by simple method name and parameter types:
         "(?:/\\[(?:method|property|test|test-template):([\\w$]+)\\(.*?\\)\\])?" +
         // Optional: Section identifier followed by invocation count (for repeated / parameterized tests only):
-        "(?:/\\[test-template-invocation:.*\\])?"
+        "(?:/\\[test-template-invocation:.*\\])?",
+        Pattern.UNICODE_CHARACTER_CLASS
     );
 
     public PitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
