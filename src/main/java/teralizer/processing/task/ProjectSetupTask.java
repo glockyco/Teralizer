@@ -327,8 +327,10 @@ public class ProjectSetupTask extends AbstractTask {
         classpathElements.add(projectRecord.getMainCompiledPath().toString());
         classpathElements.add(projectRecord.getTestCompiledPath().toString());
 
-        Path workingPath = Paths.get(System.getProperty("user.dir"));
-        Arrays.stream(classpath.split(File.pathSeparator)).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
+        if (!classpath.isEmpty()) {
+            Path workingPath = Paths.get(System.getProperty("user.dir"));
+            Arrays.stream(classpath.split(File.pathSeparator)).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
+        }
 
         projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
     }
