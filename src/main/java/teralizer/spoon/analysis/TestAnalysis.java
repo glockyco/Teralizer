@@ -127,7 +127,43 @@ public class TestAnalysis {
                 return Optional.empty();
             }
 
-            // @TODO: Consider that the actual value might be redefined after declaration.
+            // @TODO: Use proper dataflow analysis to more reliably identify tested methods.
+            List<CtStatement> statements = method.getBody().getStatements();
+            int assertionIndex = 0;
+            for (int i = 0; i < statements.size(); i++) {
+                if (statements.get(i) == assertion) {
+                    assertionIndex = i;
+                    break;
+                }
+            }
+            for (int i = assertionIndex - 1; i >= 0; i--) {
+                CtStatement statement = statements.get(i);
+                if (statement instanceof CtLocalVariable<?>) {
+                    // Handle variable declaration with assignment.
+                    CtLocalVariable<?> localVar = (CtLocalVariable<?>) statement;
+                    if (localVar.getReference().equals(variableReference)) {
+                        CtExpression<?> assignment = localVar.getAssignment();
+                        if (assignment instanceof CtInvocation<?>) {
+                            return Optional.of((CtInvocation<?>) assignment);
+                        }
+                    }
+                } else if (statement instanceof CtAssignment<?, ?>) {
+                    // Handle assignment statement.
+                    CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) statement;
+                    CtExpression<?> assignedExp = assignment.getAssigned();
+                    if (assignedExp instanceof CtVariableWrite<?>) {
+                        CtVariableReference<?> assignedRef = ((CtVariableWrite<?>) assignedExp).getVariable();
+                        if (assignedRef.equals(variableReference)) {
+                            CtExpression<?> assignedValue = assignment.getAssignment();
+                            if (assignedValue instanceof CtInvocation<?>) {
+                                return Optional.of((CtInvocation<?>) assignedValue);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Use Spoon's getDeclaration as a fallback for our naive "dataflow analysis" above.
             CtLocalVariableReference<?> reference = (CtLocalVariableReference<?>) variableReference;
             CtLocalVariable<?> declaration = reference.getDeclaration();
             CtExpression<?> assignment = declaration.getAssignment();
