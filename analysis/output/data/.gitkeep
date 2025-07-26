@@ -1,0 +1,2 @@
+# Data output directory for CSV exports
+# Generated CSV files are automatically excluded by .gitignore patterns
