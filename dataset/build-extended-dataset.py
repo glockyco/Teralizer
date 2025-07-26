@@ -17,7 +17,10 @@ except ImportError:
     tqdm = lambda x, **kwargs: x  # fallback if tqdm is not installed
 
 # --- CONFIGURATION ---
-GITHUB_TOKEN = ''  # Set to your GitHub token
+# Set GITHUB_TOKEN environment variable or add to .env file
+# To create a token: GitHub Settings > Developer settings > Personal access tokens
+import os
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN', '')
 
 if GITHUB_TOKEN == '':
     raise ValueError("GITHUB_TOKEN must be set.")
