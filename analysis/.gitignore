@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/linux,macos,python,windows,pycharm+all,visualstudiocode,jupyternotebooks
-# Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,python,windows,pycharm+all,visualstudiocode,jupyternotebooks
+# Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,visualstudiocode,pycharm+all,python,jupyternotebooks
+# Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,windows,visualstudiocode,pycharm+all,python,jupyternotebooks
 
 ### JupyterNotebooks ###
 # gitignore template for Jupyter Notebooks
@@ -365,4 +365,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/linux,macos,python,windows,pycharm+all,visualstudiocode,jupyternotebooks
+# End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,visualstudiocode,pycharm+all,python,jupyternotebooks
