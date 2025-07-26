@@ -365,3 +365,17 @@ gradle-app.setting
 !/projects/example-gradle-junit5
 !/projects/example-maven-junit4
 !/projects/example-maven-junit5
+
+# AI Coding Assistants
+.aider*
+.codeium/
+.codeiumignore
+.cody/
+.copilot/
+.cursor/
+.cursorignore
+.cursorrules
+.tabnine/
+.tabnine_root
+.tabnineignore
+CLAUDE.md
