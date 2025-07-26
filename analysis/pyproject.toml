@@ -11,3 +11,15 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "sqlalchemy>=2.0.41",
 ]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "teralizer-analysis",
+]
+
+[tool.uv.sources]
+teralizer-analysis = { workspace = true }

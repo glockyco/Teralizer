@@ -1860,7 +1860,7 @@ wheels = [
 [[package]]
 name = "teralizer-analysis"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
     { name = "natsort" },
@@ -1869,6 +1869,11 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "python-dotenv" },
     { name = "sqlalchemy" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "teralizer-analysis" },
 ]
 
 [package.metadata]
@@ -1881,6 +1886,9 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "sqlalchemy", specifier = ">=2.0.41" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "teralizer-analysis", editable = "." }]
 
 [[package]]
 name = "terminado"

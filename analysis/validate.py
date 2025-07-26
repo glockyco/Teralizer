@@ -30,13 +30,12 @@ def test_imports():
             print(f"  ✗ {package}: {e}")
             failed_imports.append(package)
     
-    # Test local teralizer package
+    # Test local teralizer package (editable install)
     try:
-        sys.path.insert(0, 'src')
         importlib.import_module('teralizer')
-        print(f"  ✓ teralizer (local package)")
+        print(f"  ✓ teralizer (editable install)")
     except ImportError as e:
-        print(f"  ✗ teralizer (local package): {e}")
+        print(f"  ✗ teralizer (editable install): {e}")
         failed_imports.append('teralizer')
     
     return len(failed_imports) == 0
@@ -67,31 +66,42 @@ def test_environment():
     return len(missing_vars) == 0
 
 def test_database_connection():
-    """Test database connectivity."""
+    """Test database connectivity and schema validation."""
     print("\nTesting database connections...")
     
     try:
-        from sqlalchemy import create_engine, text
+        from teralizer.config import db_config
+        from sqlalchemy import text
         
-        # Test postgres_dev connection (for RQ1-RQ3)
-        db_host = os.getenv("DB_HOST", "localhost")
-        db_port = os.getenv("DB_PORT", "5432") 
-        db_name = os.getenv("DB_NAME", "postgres")
-        db_user = os.getenv("DB_USER", "postgres")
-        db_password = os.getenv("DB_PASSWORD", "postgres")
-        
-        connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-        
+        # Test postgres_dev (eqbench and commons-utils projects)
+        print("  Testing postgres_dev...")
         try:
-            engine = create_engine(connection_string)
-            with engine.connect() as conn:
-                result = conn.execute(text("SELECT 1"))
-                if result.scalar() == 1:
-                    print(f"  ✓ postgres_dev connection successful")
-                    return True
-        except Exception as e:
+            # Validate=True will check schema automatically
+            engine = db_config.get_dev_engine(validate=True)
+            print(f"  ✓ postgres_dev connection successful and schema valid")
+        except ConnectionError as e:
             print(f"  ✗ postgres_dev connection failed: {e}")
             return False
+        except RuntimeError as e:
+            print(f"  ✗ postgres_dev schema validation failed:\n    {str(e).replace(chr(10), chr(10) + '    ')}")
+            return False
+        except Exception as e:
+            print(f"  ✗ postgres_dev unexpected error: {e}")
+            return False
+        
+        # Test postgres_test (repo-reapers projects)
+        print("  Testing postgres_test...")
+        try:
+            engine = db_config.get_test_engine(validate=True)
+            print(f"  ✓ postgres_test connection successful and schema valid")
+        except ConnectionError as e:
+            print(f"  ℹ postgres_test not available: Connection failed")
+        except RuntimeError as e:
+            print(f"  ℹ postgres_test schema incomplete:\n    {str(e).split(chr(10))[0]}...")
+        except Exception as e:
+            print(f"  ℹ postgres_test unavailable: {type(e).__name__}")
+        
+        return True
             
     except Exception as e:
         print(f"  ✗ Database test setup failed: {e}")
