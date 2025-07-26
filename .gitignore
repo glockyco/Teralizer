@@ -366,6 +366,9 @@ gradle-app.setting
 !/projects/example-maven-junit4
 !/projects/example-maven-junit5
 
+# Analysis generated files
+analysis/output/tables/*.tex
+
 # AI Coding Assistants
 .aider*
 .codeium/
