@@ -7,6 +7,9 @@ Verifies that essential imports work and database connections are available.
 import sys
 import importlib
 import os
+import subprocess
+import tempfile
+from pathlib import Path
 from dotenv import load_dotenv
 
 def test_imports():
@@ -107,6 +110,95 @@ def test_database_connection():
         print(f"  ✗ Database test setup failed: {e}")
         return False
 
+def test_notebook_execution():
+    """Test that all notebooks can execute without errors."""
+    print("\nTesting notebook execution...")
+    
+    # List of notebooks to test in priority order
+    notebooks = [
+        'teralizer-mutation-analysis.ipynb',
+        'teralizer-runtime-analysis.ipynb',
+        'test-runtime-analysis.ipynb',
+        'teralizer-exclusion-analysis.ipynb',
+        'dataset-analysis.ipynb',
+        'evosuite-runtime-analysis.ipynb',
+    ]
+    
+    notebooks_dir = Path("notebooks")
+    if not notebooks_dir.exists():
+        print(f"  ✗ Notebooks directory not found: {notebooks_dir}")
+        return False
+    
+    failed_notebooks = []
+    successful_notebooks = []
+    
+    for notebook in notebooks:
+        notebook_path = notebooks_dir / notebook
+        if not notebook_path.exists():
+            print(f"  ℹ {notebook}: Not found (skipping)")
+            continue
+            
+        print(f"  Testing {notebook}...")
+        
+        # Create temporary output file
+        with tempfile.NamedTemporaryFile(suffix='.ipynb', delete=False) as temp_file:
+            temp_output = temp_file.name
+        
+        try:
+            # Execute notebook using nbconvert
+            result = subprocess.run([
+                'jupyter', 'nbconvert',
+                '--execute',
+                '--to', 'notebook',
+                '--output', temp_output,
+                '--ExecutePreprocessor.timeout=300',  # 5-minute timeout
+                str(notebook_path)
+            ], capture_output=True, text=True, cwd=notebooks_dir.parent)
+            
+            if result.returncode == 0:
+                print(f"    ✓ {notebook}: Executed successfully")
+                successful_notebooks.append(notebook)
+            else:
+                print(f"    ✗ {notebook}: Execution failed")
+                # Show first few lines of error for debugging
+                error_lines = result.stderr.split('\n')
+                for line in error_lines[:3]:
+                    if line.strip():
+                        print(f"      {line}")
+                if len(error_lines) > 3:
+                    print("      ...")
+                failed_notebooks.append(notebook)
+                
+        except FileNotFoundError:
+            print(f"    ✗ {notebook}: jupyter nbconvert not found")
+            print("      Make sure Jupyter is installed: uv add jupyter")
+            failed_notebooks.append(notebook)
+        except Exception as e:
+            print(f"    ✗ {notebook}: Unexpected error: {e}")
+            failed_notebooks.append(notebook)
+        finally:
+            # Clean up temporary file
+            try:
+                os.unlink(temp_output)
+            except FileNotFoundError:
+                pass
+    
+    # Summary
+    total_tested = len(successful_notebooks) + len(failed_notebooks)
+    if total_tested == 0:
+        print("  ℹ No notebooks found to test")
+        return True  # Not a failure if no notebooks exist
+    
+    print(f"\n  Notebook Execution Summary:")
+    print(f"    ✓ Successful: {len(successful_notebooks)}")
+    print(f"    ✗ Failed: {len(failed_notebooks)}")
+    
+    if failed_notebooks:
+        print(f"    Failed notebooks: {', '.join(failed_notebooks)}")
+        return False
+    
+    return True
+
 def main():
     """Run all validation tests."""
     print("=== Analysis Directory Validation ===\n")
@@ -114,7 +206,8 @@ def main():
     tests = [
         ("Import Test", test_imports),
         ("Environment Test", test_environment), 
-        ("Database Test", test_database_connection)
+        ("Database Test", test_database_connection),
+        ("Notebook Execution Test", test_notebook_execution)
     ]
     
     all_passed = True
