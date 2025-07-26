@@ -15,7 +15,19 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 # Load environment variables from .env file in project root
-load_dotenv('../../.env')
+# Find project root by looking for .env file
+def find_project_root():
+    current = Path(__file__).parent
+    for _ in range(10):  # Prevent infinite loop
+        env_file = current / '.env'
+        if env_file.exists():
+            return env_file
+        if current == current.parent:
+            break
+        current = current.parent
+    return '.env'  # Fallback to relative path
+
+load_dotenv(find_project_root())
 
 class DatabaseConfig:
     """Centralized database configuration for teralizer analysis."""
