@@ -30,6 +30,15 @@ def test_imports():
             print(f"  ✗ {package}: {e}")
             failed_imports.append(package)
     
+    # Test local teralizer package
+    try:
+        sys.path.insert(0, 'src')
+        importlib.import_module('teralizer')
+        print(f"  ✓ teralizer (local package)")
+    except ImportError as e:
+        print(f"  ✗ teralizer (local package): {e}")
+        failed_imports.append('teralizer')
+    
     return len(failed_imports) == 0
 
 def test_environment():
