@@ -9,6 +9,7 @@ import importlib
 import os
 import subprocess
 import tempfile
+import re
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -110,6 +111,90 @@ def test_database_connection():
         print(f"  ✗ Database test setup failed: {e}")
         return False
 
+def parse_expected_outputs(notebook_path):
+    """Parse notebook to discover expected output files from export function calls.
+    
+    Args:
+        notebook_path: Path to the notebook file
+        
+    Returns:
+        Dict with 'tables' and 'data' keys containing lists of expected filenames
+    """
+    import nbformat
+    
+    expected = {'tables': [], 'data': []}
+    
+    # Load notebook
+    with open(notebook_path, 'r', encoding='utf-8') as f:
+        notebook = nbformat.read(f, as_version=4)
+    
+    # Search code cells for export function calls
+    for cell in notebook.cells:
+        if cell.cell_type == 'code':
+            source = cell.source
+            
+            # Find save_latex_table calls
+            latex_matches = re.findall(
+                r"save_latex_table\s*\([^,]+,\s*['\"]([^'\"]+)['\"]",
+                source
+            )
+            for match in latex_matches:
+                expected['tables'].append(f"{match}.tex")
+            
+            # Find save_csv_data calls
+            csv_matches = re.findall(
+                r"save_csv_data\s*\([^,]+,\s*['\"]([^'\"]+)['\"]",
+                source
+            )
+            for match in csv_matches:
+                expected['data'].append(f"{match}.csv")
+    
+    return expected
+
+
+def validate_outputs(notebook_name, expected_outputs):
+    """Validate that expected output files exist and are non-empty.
+    
+    Args:
+        notebook_name: Name of the notebook for reporting
+        expected_outputs: Dict with 'tables' and 'data' lists
+        
+    Returns:
+        True if all expected outputs are valid, False otherwise
+    """
+    from teralizer.exports import get_tables_output_dir, get_data_output_dir
+    
+    all_valid = True
+    
+    # Check LaTeX tables
+    tables_dir = get_tables_output_dir()
+    for table_file in expected_outputs['tables']:
+        table_path = tables_dir / table_file
+        if not table_path.exists():
+            print(f"    ✗ Missing LaTeX table: {table_file}")
+            all_valid = False
+        elif table_path.stat().st_size == 0:
+            print(f"    ✗ Empty LaTeX table: {table_file}")
+            all_valid = False
+        else:
+            print(f"    ✓ LaTeX table: {table_file}")
+    
+    # Check CSV data files
+    data_dir = get_data_output_dir()
+    for data_file in expected_outputs['data']:
+        data_path = data_dir / data_file
+        if not data_path.exists():
+            print(f"    ✗ Missing CSV file: {data_file}")
+            all_valid = False
+        elif data_path.stat().st_size == 0:
+            print(f"    ✗ Empty CSV file: {data_file}")
+            all_valid = False
+        else:
+            print(f"    ✓ CSV file: {data_file}")
+    
+    return all_valid
+
+
 def test_notebook_execution():
     """Test that all notebooks can execute without errors."""
     print("\nTesting notebook execution...")
@@ -157,7 +242,22 @@ def test_notebook_execution():
             
             if result.returncode == 0:
                 print(f"    ✓ {notebook}: Executed successfully")
-                successful_notebooks.append(notebook)
+                
+                # Parse expected outputs and validate them
+                expected_outputs = parse_expected_outputs(notebook_path)
+                total_expected = len(expected_outputs['tables']) + len(expected_outputs['data'])
+                
+                if total_expected > 0:
+                    print(f"    Validating {total_expected} expected output files...")
+                    if validate_outputs(notebook, expected_outputs):
+                        print(f"    ✓ {notebook}: All outputs validated")
+                        successful_notebooks.append(notebook)
+                    else:
+                        print(f"    ✗ {notebook}: Output validation failed")
+                        failed_notebooks.append(notebook)
+                else:
+                    print(f"    ℹ {notebook}: No output files expected")
+                    successful_notebooks.append(notebook)
             else:
                 print(f"    ✗ {notebook}: Execution failed")
                 # Show first few lines of error for debugging
