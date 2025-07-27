@@ -111,20 +111,6 @@ def standardize_project_name(project_name: str) -> str:
     return name
 
 
-def standardize_variant_name(variant: str) -> str:
-    """Standardize variant name for consistency across datasets.
-    
-    Args:
-        variant: Raw variant name (may be None)
-        
-    Returns:
-        str: Standardized variant name
-    """
-    if pd.isna(variant) or variant is None or variant == '':
-        return 'SHARED'
-    
-    return str(variant).strip()
-
 
 def format_runtime_seconds(runtime_value: Any) -> float:
     """Convert runtime value to standardized seconds format.
@@ -356,7 +342,7 @@ def save_latex_table(content: str, filename: str, output_dir: str = None) -> Non
 __all__ = [
     'save_csv_data', 'save_latex_table', 
     'get_data_output_dir', 'get_tables_output_dir',
-    'standardize_project_name', 'standardize_variant_name',
+    'standardize_project_name',
     'get_dataset_macro', 'get_variant_macro', 'get_tool_macro',
     'format_table_row', 'get_project_type', 'get_table_group_order',
     'get_project_within_type_order', 'DATASETS', 'VARIANTS', 'TOOLS',
