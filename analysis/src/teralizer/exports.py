@@ -189,6 +189,7 @@ VARIANTS = {
     'IMPROVED_10_TRIES': r'\VariantImprovedA{}',
     'IMPROVED_50_TRIES': r'\VariantImprovedB{}',
     'IMPROVED_200_TRIES': r'\VariantImprovedC{}',
+    'SHARED': r'\VariantShared{}',
 }
 
 # Tool name mappings to LaTeX macros
