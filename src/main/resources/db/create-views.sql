@@ -29,6 +29,7 @@ DROP MATERIALIZED VIEW IF EXISTS mv_pit_location;
 DROP MATERIALIZED VIEW IF EXISTS mv_runtime_comparison_test_vs_generalization;
 DROP MATERIALIZED VIEW IF EXISTS mv_evosuite_runtime_pivoted;
 DROP MATERIALIZED VIEW IF EXISTS mv_evosuite_runtime;
+DROP MATERIALIZED VIEW IF EXISTS mv_teralizer_runtime_by_stage;
 DROP MATERIALIZED VIEW IF EXISTS mv_generalization_extension;
 DROP MATERIALIZED VIEW IF EXISTS mv_assertion_extension;
 DROP MATERIALIZED VIEW IF EXISTS mv_test_extension;
@@ -340,6 +341,58 @@ CREATE INDEX idx_mv_generalization_extension_variant_order ON mv_generalization_
 SELECT
     'Generalization extension exists for every generalization.' AS test,
     (SELECT count(DISTINCT ge.generalization_id) FROM mv_generalization_extension ge) = (SELECT count(*) FROM generalization) AS result;
+
+CREATE MATERIALIZED VIEW mv_teralizer_runtime_by_stage AS
+WITH stage_grouped AS (
+    SELECT 
+        p.id AS project_id,
+        project_name(p.id) AS project_name,
+        split_part(p.root_path, '/', -1) AS base_project_name,
+        CASE 
+            WHEN t.stage IN ('EXECUTE_TESTS_ORIGINAL', 'COLLECT_JUNIT_REPORTS_ORIGINAL', 
+                            'COLLECT_JACOCO_DATA_ORIGINAL', 'FILTER_TESTS_ORIGINAL', 
+                            'COLLECT_PIT_DATA_ORIGINAL') 
+            THEN 'Original Validation'
+            WHEN t.stage IN ('BUILD_SPOON_MODEL', 'ANALYZE_TESTS', 'FILTER_TESTS', 
+                            'FILTER_ASSERTIONS', 'ADD_JPF_INSTRUMENTATION', 
+                            'BUILD_PROJECT_INSTRUMENTED', 'EXECUTE_JPF', 'ANALYZE_JPF') 
+            THEN 'Specification Extraction'
+            WHEN t.stage IN ('ADD_DEPENDENCIES', 'BUILD_PROJECT_INITIAL', 'EXECUTE_TESTS_INITIAL', 
+                            'COLLECT_JUNIT_REPORTS_INITIAL', 'COLLECT_JACOCO_DATA_INITIAL', 
+                            'COLLECT_PIT_DATA_INITIAL') 
+            THEN 'Initial Validation'
+            WHEN t.stage = 'GENERALIZE_TESTS' 
+            THEN 'Test Transformation'
+            WHEN t.stage IN ('BUILD_PROJECT_GENERALIZED', 'EXECUTE_TESTS_GENERALIZED', 
+                            'COLLECT_JUNIT_REPORTS_GENERALIZED', 'FILTER_GENERALIZATIONS', 
+                            'COLLECT_JACOCO_DATA_GENERALIZED', 'COLLECT_PIT_DATA_GENERALIZED') 
+            THEN 'Generalization Validation'
+        END AS stage_group,
+        COALESCE(t.variant, 'SHARED') AS variant,
+        variant_order(t.variant) AS variant_order,
+        t.runtime
+    FROM task t
+    JOIN project p ON t.project_id = p.id  
+    JOIN v_projects_successes ps ON ps.project_id = p.id
+    WHERE 
+        t.runtime IS NOT NULL AND
+        p.use_test_generalization = true
+)
+SELECT 
+    project_id,
+    project_name,
+    base_project_name,
+    stage_group,
+    variant,
+    variant_order,
+    SUM(runtime) AS total_runtime
+FROM stage_grouped
+WHERE stage_group IS NOT NULL
+GROUP BY project_id, project_name, base_project_name, stage_group, variant, variant_order;
+
+CREATE INDEX idx_mv_teralizer_runtime_by_stage_project_id ON mv_teralizer_runtime_by_stage (project_id);
+CREATE INDEX idx_mv_teralizer_runtime_by_stage_stage_group ON mv_teralizer_runtime_by_stage (stage_group);
+CREATE INDEX idx_mv_teralizer_runtime_by_stage_variant ON mv_teralizer_runtime_by_stage (variant);
 
 CREATE MATERIALIZED VIEW mv_evosuite_runtime AS
 SELECT
