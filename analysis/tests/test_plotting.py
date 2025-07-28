@@ -45,7 +45,7 @@ def test_setup_paper_style():
     assert mpl.rcParams['axes.facecolor'] == 'white'
     assert mpl.rcParams['savefig.dpi'] == 300
     assert mpl.rcParams['savefig.format'] == 'pdf'
-    assert mpl.rcParams['axes.grid'] == True
+    assert mpl.rcParams['axes.grid']
 
 
 def test_setup_presentation_style():

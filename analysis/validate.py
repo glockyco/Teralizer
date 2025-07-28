@@ -81,7 +81,7 @@ def test_database_connection():
         print("  Testing postgres_dev...")
         try:
             # Validate=True will check schema automatically
-            engine = db_config.get_dev_engine(validate=True)
+            db_config.get_dev_engine(validate=True)
             print("  ✓ postgres_dev connection successful and schema valid")
         except ConnectionError as e:
             print(f"  ✗ postgres_dev connection failed: {e}")
@@ -96,7 +96,7 @@ def test_database_connection():
         # Test postgres_test (repo-reapers projects)
         print("  Testing postgres_test...")
         try:
-            engine = db_config.get_test_engine(validate=True)
+            db_config.get_test_engine(validate=True)
             print("  ✓ postgres_test connection successful and schema valid")
         except ConnectionError:
             print("  ℹ postgres_test not available: Connection failed")
