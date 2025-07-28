@@ -10,6 +10,7 @@ import os
 import subprocess
 import tempfile
 import re
+import argparse
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -152,6 +153,46 @@ def parse_expected_outputs(notebook_path):
     return expected
 
 
+def get_changed_notebooks():
+    """Get list of notebooks that have been modified according to git.
+    
+    Returns:
+        List of notebook filenames that have uncommitted changes
+    """
+    try:
+        # Get modified files from git
+        result = subprocess.run([
+            'git', 'diff', '--name-only', 'HEAD'
+        ], capture_output=True, text=True, cwd='..')
+        
+        if result.returncode != 0:
+            print(f"    Warning: git diff failed, testing all notebooks")
+            return None
+            
+        changed_files = result.stdout.strip().split('\n') if result.stdout.strip() else []
+        
+        # Filter for notebooks in analysis/notebooks/
+        notebooks_dir = Path("notebooks")
+        changed_notebooks = []
+        
+        for file_path in changed_files:
+            file_path = Path(file_path)
+            # Check if it's a notebook in our analysis/notebooks directory
+            if (file_path.suffix == '.ipynb' and 
+                len(file_path.parts) >= 2 and 
+                file_path.parts[-2] == 'notebooks' and
+                file_path.parts[-3] == 'analysis'):
+                notebook_name = file_path.name
+                if (notebooks_dir / notebook_name).exists():
+                    changed_notebooks.append(notebook_name)
+        
+        return changed_notebooks
+        
+    except Exception as e:
+        print(f"    Warning: Could not determine changed notebooks: {e}")
+        return None
+
+
 def validate_outputs(notebook_name, expected_outputs):
     """Validate that expected output files exist and are non-empty.
     
@@ -195,24 +236,44 @@ def validate_outputs(notebook_name, expected_outputs):
     return all_valid
 
 
-def test_notebook_execution():
-    """Test that all notebooks can execute without errors."""
-    print("\nTesting notebook execution...")
+def test_notebook_execution(specific_notebook=None, changed_only=False):
+    """Test that notebooks can execute without errors.
     
-    # List of notebooks to test in priority order
-    notebooks = [
-        'teralizer-mutation-analysis.ipynb',
-        'teralizer-runtime-analysis.ipynb',
-        'test-runtime-analysis.ipynb',
-        'teralizer-exclusion-analysis.ipynb',
-        'dataset-analysis.ipynb',
-        'evosuite-runtime-analysis.ipynb',
-    ]
+    Args:
+        specific_notebook: If provided, only test this specific notebook
+        changed_only: If True, only test notebooks that have git changes
+    """
+    print("\nTesting notebook execution...")
     
     notebooks_dir = Path("notebooks")
     if not notebooks_dir.exists():
         print(f"  ✗ Notebooks directory not found: {notebooks_dir}")
         return False
+    
+    # Discover available notebooks
+    all_notebooks = sorted([f.name for f in notebooks_dir.glob("*.ipynb")])
+    
+    # Determine which notebooks to test
+    if specific_notebook:
+        if not (notebooks_dir / specific_notebook).exists():
+            print(f"  ✗ Notebook not found: {specific_notebook}")
+            return False
+        notebooks = [specific_notebook]
+        print(f"  Testing specific notebook: {specific_notebook}")
+    elif changed_only:
+        changed_notebooks = get_changed_notebooks()
+        if changed_notebooks is None:
+            # Fall back to testing all notebooks if git detection failed
+            notebooks = all_notebooks
+        elif not changed_notebooks:
+            print("  ℹ No notebook changes detected, skipping notebook execution")
+            return True
+        else:
+            notebooks = changed_notebooks
+            print(f"  Testing changed notebooks: {', '.join(notebooks)}")
+    else:
+        notebooks = all_notebooks
+        print(f"  Testing all {len(notebooks)} notebooks")
     
     failed_notebooks = []
     successful_notebooks = []
@@ -299,26 +360,45 @@ def test_notebook_execution():
     
     return True
 
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description='Validate analysis notebooks and environment')
+    parser.add_argument('--notebook', type=str, help='Validate only the specified notebook')
+    parser.add_argument('--changed', action='store_true', help='Validate only notebooks with git changes')
+    
+    return parser.parse_args()
+
+
 def main():
     """Run all validation tests."""
+    args = parse_arguments()
+    
     print("=== Analysis Directory Validation ===\n")
     
-    tests = [
+    # Always run basic tests
+    basic_tests = [
         ("Import Test", test_imports),
         ("Environment Test", test_environment), 
         ("Database Test", test_database_connection),
-        ("Notebook Execution Test", test_notebook_execution)
     ]
     
     all_passed = True
     
-    for test_name, test_func in tests:
+    for test_name, test_func in basic_tests:
         try:
             if not test_func():
                 all_passed = False
         except Exception as e:
             print(f"  ✗ {test_name} crashed: {e}")
             all_passed = False
+    
+    # Run notebook execution test with appropriate parameters
+    try:
+        if not test_notebook_execution(specific_notebook=args.notebook, changed_only=args.changed):
+            all_passed = False
+    except Exception as e:
+        print(f"  ✗ Notebook Execution Test crashed: {e}")
+        all_passed = False
     
     print(f"\n=== Validation {'PASSED' if all_passed else 'FAILED'} ===")
     return 0 if all_passed else 1
