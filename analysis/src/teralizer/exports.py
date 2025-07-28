@@ -272,6 +272,8 @@ def get_project_type(project_name: str) -> str:
         return 'commons-es'  
     elif project_name == 'commons-utils':
         return 'commons-dev'
+    elif project_name.startswith('repo-reapers'):
+        return 'repo-reapers'
     else:
         return 'other'
 
@@ -290,13 +292,17 @@ def get_table_group_order(project_name: str, variant: str) -> int:
     """
     project_type = get_project_type(project_name)
     
-    # Base group numbers for each project type (large gaps to ensure separation)
     base_order = {
         'eqbench': 0,
-        'commons-es': 100,  # Large gap to separate from eqbench
-        'commons-dev': 200, # Even larger gap to ensure it's always last
-        'other': 300
+        'commons-es': 100,
+        'commons-dev': 200,
+        'repo-reapers': 400,
+        'other': 500
     }
+    
+    # Special handling for repo-reapers summary rows
+    if project_type == 'repo-reapers':
+        return base_order[project_type]
     
     # Variant order within each project type
     variant_order = {
@@ -324,7 +330,11 @@ def get_project_within_type_order() -> dict:
         'commons-utils-es-default-10s': 1,
         'commons-utils-es-default-60s': 2,
         # Commons dev project (only one)
-        'commons-utils': 0
+        'commons-utils': 0,
+        # Repo-reapers summary rows (total, mean, median)
+        'repo-reapers (total)': 0,
+        'repo-reapers (mean)': 1,
+        'repo-reapers (median)': 2,
     }
 
 
