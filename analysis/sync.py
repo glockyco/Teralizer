@@ -120,32 +120,32 @@ def main():
         total_copied = 0
         
         # Sync figures (PDFs)
-        print(f"\n📊 Syncing figures...")
+        print("\n📊 Syncing figures...")
         figures_dir = get_figures_output_dir()
         copied = sync_files(figures_dir, figures_target, '*.pdf', 'figure')
         total_copied += copied
         
         # Sync tables (LaTeX)
-        print(f"\n📋 Syncing tables...")
+        print("\n📋 Syncing tables...")
         tables_dir = get_tables_output_dir()
         copied = sync_files(tables_dir, tables_target, '*.tex', 'table')
         total_copied += copied
         
         # Sync CSV data
-        print(f"\n📈 Syncing CSV data...")
+        print("\n📈 Syncing CSV data...")
         data_dir = get_data_output_dir()
         copied = sync_files(data_dir, data_target, '*.csv', 'CSV data')
         total_copied += copied
         
         # Summary
-        print(f"\n✅ Sync complete!")
+        print("\n✅ Sync complete!")
         print(f"   Total files copied: {total_copied}")
         print(f"   Target repository: {paper_repo_path}")
         
         return 0
         
     except KeyboardInterrupt:
-        print(f"\n❌ Sync cancelled by user")
+        print("\n❌ Sync cancelled by user")
         return 1
         
     except Exception as e:

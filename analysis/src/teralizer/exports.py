@@ -9,8 +9,7 @@ This module provides functions to export analysis results in multiple formats:
 
 import pandas as pd
 from pathlib import Path
-from typing import Optional, Any, Union, List
-import matplotlib.pyplot as plt
+from typing import Optional, Any
 import matplotlib.figure
 
 

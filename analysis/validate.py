@@ -38,7 +38,7 @@ def test_imports():
     # Test local teralizer package (editable install)
     try:
         importlib.import_module('teralizer')
-        print(f"  ✓ teralizer (editable install)")
+        print("  ✓ teralizer (editable install)")
     except ImportError as e:
         print(f"  ✗ teralizer (editable install): {e}")
         failed_imports.append('teralizer')
@@ -76,14 +76,13 @@ def test_database_connection():
     
     try:
         from teralizer.config import db_config
-        from sqlalchemy import text
         
         # Test postgres_dev (eqbench and commons-utils projects)
         print("  Testing postgres_dev...")
         try:
             # Validate=True will check schema automatically
             engine = db_config.get_dev_engine(validate=True)
-            print(f"  ✓ postgres_dev connection successful and schema valid")
+            print("  ✓ postgres_dev connection successful and schema valid")
         except ConnectionError as e:
             print(f"  ✗ postgres_dev connection failed: {e}")
             return False
@@ -98,9 +97,9 @@ def test_database_connection():
         print("  Testing postgres_test...")
         try:
             engine = db_config.get_test_engine(validate=True)
-            print(f"  ✓ postgres_test connection successful and schema valid")
-        except ConnectionError as e:
-            print(f"  ℹ postgres_test not available: Connection failed")
+            print("  ✓ postgres_test connection successful and schema valid")
+        except ConnectionError:
+            print("  ℹ postgres_test not available: Connection failed")
         except RuntimeError as e:
             print(f"  ℹ postgres_test schema incomplete:\n    {str(e).split(chr(10))[0]}...")
         except Exception as e:
@@ -166,7 +165,7 @@ def get_changed_notebooks():
         ], capture_output=True, text=True, cwd='..')
         
         if result.returncode != 0:
-            print(f"    Warning: git diff failed, testing all notebooks")
+            print("    Warning: git diff failed, testing all notebooks")
             return None
             
         changed_files = result.stdout.strip().split('\n') if result.stdout.strip() else []
@@ -350,7 +349,7 @@ def test_notebook_execution(specific_notebook=None, changed_only=False):
         print("  ℹ No notebooks found to test")
         return True  # Not a failure if no notebooks exist
     
-    print(f"\n  Notebook Execution Summary:")
+    print("\n  Notebook Execution Summary:")
     print(f"    ✓ Successful: {len(successful_notebooks)}")
     print(f"    ✗ Failed: {len(failed_notebooks)}")
     
