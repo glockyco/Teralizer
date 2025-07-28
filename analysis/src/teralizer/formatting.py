@@ -5,7 +5,7 @@ LaTeX table formatting that are commonly used across analysis notebooks.
 """
 
 import pandas as pd
-from typing import Dict, List, Any
+from typing import Dict, List
 from natsort import natsorted
 from .exports import (
     get_table_group_order, get_project_within_type_order, 
@@ -209,9 +209,17 @@ def replace_project_names_with_macros(df: pd.DataFrame,
         'commons-utils', 'repo-reapers'
     }
     
-    df[project_column] = df[project_column].apply(
-        lambda x: get_dataset_macro(x) if x in known_projects else x
-    )
+    def replace_with_macro(project_name):
+        if project_name in known_projects:
+            return get_dataset_macro(project_name)
+        # Handle repo-reapers summary rows
+        elif project_name.startswith('repo-reapers '):
+            suffix = project_name.replace('repo-reapers ', '')
+            return f"{get_dataset_macro('repo-reapers')} {suffix}"
+        else:
+            return project_name
+    
+    df[project_column] = df[project_column].apply(replace_with_macro)
     
     return df
 
@@ -325,14 +333,20 @@ def format_table_with_macros(df: pd.DataFrame,
 
 
 def build_latex_table_content(df: pd.DataFrame, 
-                            formatters: Dict[str, Any] = None,
+                            caption: str = None,
+                            label: str = None,
+                            column_spec: str = None,
+                            header_rows: List[str] = None,
                             add_midrules: bool = True,
                             project_column: str = 'project_name') -> str:
-    """Generate complete LaTeX table content from DataFrame.
+    """Generate complete LaTeX table content from DataFrame without pandas to_latex.
     
     Args:
         df: DataFrame to convert to LaTeX
-        formatters: Dictionary of column formatters for to_latex
+        caption: Table caption text
+        label: LaTeX label for referencing
+        column_spec: LaTeX column specification (e.g., 'lrrrrrrr')
+        header_rows: List of custom header row strings to insert after toprule
         add_midrules: Whether to add midrules between project groups
         project_column: Name of column containing project names
         
@@ -346,46 +360,60 @@ def build_latex_table_content(df: pd.DataFrame,
     if df.empty:
         raise ValueError("Cannot build LaTeX table from empty DataFrame")
     
-    # Apply default formatters if none provided
-    if formatters is None:
-        formatters = {}
+    # Build LaTeX table manually
+    lines = []
     
-    # Generate basic LaTeX table
-    latex_content = df.to_latex(
-        index=False,
-        escape=False,
-        formatters=formatters,
-        column_format='l' * len(df.columns)
-    )
+    # Table environment start
+    lines.append("\\begin{table}[H]")
     
-    # Add midrules if requested
-    if add_midrules:
-        if project_column not in df.columns:
-            raise KeyError(f"Project column '{project_column}' required for midrules but not found in DataFrame")
-        
-        # Split into lines and process
-        lines = latex_content.split('\n')
-        
-        # Find data rows (between \toprule and \bottomrule)
-        start_idx = None
-        end_idx = None
-        
-        for i, line in enumerate(lines):
-            if '\\toprule' in line:
-                start_idx = i + 2  # Skip toprule and header row
-            elif '\\bottomrule' in line:
-                end_idx = i
-                break
-        
-        if start_idx is None or end_idx is None:
-            raise ValueError("Could not find \\toprule and \\bottomrule in LaTeX table")
-        
-        # Extract table rows and add midrules
-        table_rows = [line for line in lines[start_idx:end_idx] if line.strip() and not line.strip().startswith('\\')]
-        processed_rows = add_midrules_between_project_groups(table_rows, df, project_column)
-        
-        # Rebuild the table
-        new_lines = lines[:start_idx] + processed_rows + lines[end_idx:]
-        latex_content = '\n'.join(new_lines)
+    # Caption and label
+    if caption:
+        lines.append(f"  \\caption{{{caption}}}")
+    if label:
+        lines.append(f"  \\label{{{label}}}")
     
-    return latex_content
+    # Tabular environment start  
+    col_spec = column_spec or ('l' * len(df.columns))
+    lines.append(f"  \\begin{{tabular}}{{{col_spec}}}")
+    lines.append("    \\toprule")
+    
+    # Custom header rows
+    if header_rows:
+        for header_row in header_rows:
+            lines.append(f"    {header_row}")
+    else:
+        # Default header from DataFrame columns
+        header = " & ".join(df.columns) + " \\\\"
+        lines.append(f"    {header}")
+    
+    lines.append("    \\midrule")
+    
+    # Data rows
+    data_rows = []
+    for _, row in df.iterrows():
+        # Convert each value to string, handling NaN and None
+        row_values = []
+        for val in row:
+            if pd.isna(val):
+                row_values.append("")
+            else:
+                row_values.append(str(val))
+        
+        data_row = " & ".join(row_values) + " \\\\"
+        data_rows.append(data_row)
+    
+    # Add midrules between project groups if requested
+    if add_midrules and project_column in df.columns:
+        processed_rows = add_midrules_between_project_groups(data_rows, df, project_column)
+        for row in processed_rows:
+            lines.append(f"    {row}")
+    else:
+        for row in data_rows:
+            lines.append(f"    {row}")
+    
+    # Table end
+    lines.append("    \\bottomrule")
+    lines.append("  \\end{tabular}")
+    lines.append("\\end{table}")
+    
+    return "\n".join(lines)

@@ -260,11 +260,23 @@ def get_project_type(project_name: str) -> str:
     """Classify project into type groups for proper ordering.
     
     Args:
-        project_name: Project name from database
+        project_name: Project name from database or LaTeX macro name
         
     Returns:
         Project type classification
     """
+    # Handle LaTeX macro names
+    if project_name.startswith('\\Dataset'):
+        if 'EqBench' in project_name:
+            return 'eqbench'
+        elif 'Commons' in project_name and 'Dev' in project_name:
+            return 'commons-dev'
+        elif 'Commons' in project_name:
+            return 'commons-es'
+        elif 'RepoReapers' in project_name:
+            return 'repo-reapers'
+    
+    # Handle original project names
     if project_name.startswith('eqbench'):
         return 'eqbench'
     elif project_name.startswith('commons-utils-es'):
