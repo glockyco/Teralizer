@@ -9,7 +9,11 @@ This module provides functions to export analysis results in multiple formats:
 
 import pandas as pd
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, Union, List
+import matplotlib.pyplot as plt
+import matplotlib.figure
+import shutil
+import os
 
 
 def _find_project_root() -> Path:
@@ -57,6 +61,18 @@ def get_tables_output_dir() -> Path:
     tables_dir = project_root / 'analysis' / 'output' / 'tables'
     tables_dir.mkdir(parents=True, exist_ok=True)
     return tables_dir
+
+
+def get_figures_output_dir() -> Path:
+    """Get the figures output directory, creating it if it doesn't exist.
+    
+    Returns:
+        Path: Absolute path to analysis/output/figures/ directory
+    """
+    project_root = _find_project_root()
+    figures_dir = project_root / 'analysis' / 'output' / 'figures'
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    return figures_dir
 
 
 def save_csv_data(
@@ -339,9 +355,129 @@ def save_latex_table(content: str, filename: str, output_dir: str = None) -> Non
     print(f"Saved LaTeX table to {filepath}")
 
 
+def save_figure(
+    figure: matplotlib.figure.Figure, 
+    filename: str,
+    format: str = 'pdf',
+    dpi: int = 300,
+    bbox_inches: str = 'tight',
+    **kwargs
+) -> Path:
+    """Save a matplotlib figure to the figures output directory.
+    
+    Args:
+        figure: Matplotlib figure object to save
+        filename: Output filename (without extension)
+        format: Output format (default: 'pdf')
+        dpi: Resolution in dots per inch (default: 300)
+        bbox_inches: Bounding box setting (default: 'tight')
+        **kwargs: Additional arguments passed to savefig
+        
+    Returns:
+        Path: Full path to the saved figure file
+        
+    Example:
+        >>> import matplotlib.pyplot as plt
+        >>> fig = plt.figure()
+        >>> plt.plot([1, 2, 3], [4, 5, 6])
+        >>> save_figure(fig, 'my_plot')
+    """
+    # Get figures output directory
+    figures_dir = get_figures_output_dir()
+    
+    # Ensure filename has the correct extension
+    if not filename.endswith(f'.{format}'):
+        filename = f"{filename}.{format}"
+    
+    # Build full path
+    figure_path = figures_dir / filename
+    
+    # Save the figure
+    figure.savefig(
+        figure_path,
+        format=format,
+        dpi=dpi,
+        bbox_inches=bbox_inches,
+        **kwargs
+    )
+    
+    print(f"Saved figure to {figure_path}")
+    return figure_path
+
+
+def sync_to_paper_repo(paper_repo_path: str) -> None:
+    """Sync all figures, tables, and CSV data files from analysis output to paper repository.
+    
+    This function copies:
+    - All PDF figures to paper_repo/figures/
+    - All LaTeX tables to paper_repo/tables/
+    - All CSV data files to paper_repo/data/
+    
+    Args:
+        paper_repo_path: Path to paper repository (required)
+                       
+    Example:
+        >>> sync_to_paper_repo('/Users/username/Projects/test-generalization-paper')
+        
+        >>> # Or get from environment/config
+        >>> import os
+        >>> paper_path = os.getenv('PAPER_REPO_PATH')
+        >>> sync_to_paper_repo(paper_path)
+    """
+    paper_repo_path = Path(paper_repo_path)
+    
+    # Verify paper repo exists
+    if not paper_repo_path.exists():
+        raise FileNotFoundError(
+            f"Paper repository not found at {paper_repo_path}"
+        )
+    
+    # Create target directories in paper repo
+    paper_figures_dir = paper_repo_path / 'figures'
+    paper_tables_dir = paper_repo_path / 'tables'
+    paper_data_dir = paper_repo_path / 'data'
+    
+    paper_figures_dir.mkdir(exist_ok=True)
+    paper_tables_dir.mkdir(exist_ok=True)
+    paper_data_dir.mkdir(exist_ok=True)
+    
+    # Sync figures (all PDFs)
+    figures_dir = get_figures_output_dir()
+    pdf_files = list(figures_dir.glob('*.pdf'))
+    
+    print(f"\nSyncing {len(pdf_files)} figure(s) to {paper_figures_dir}")
+    for pdf_file in pdf_files:
+        target_path = paper_figures_dir / pdf_file.name
+        shutil.copy2(pdf_file, target_path)
+        print(f"  Copied: {pdf_file.name}")
+    
+    # Sync tables (all .tex files)
+    tables_dir = get_tables_output_dir()
+    tex_files = list(tables_dir.glob('*.tex'))
+    
+    print(f"\nSyncing {len(tex_files)} table(s) to {paper_tables_dir}")
+    for tex_file in tex_files:
+        target_path = paper_tables_dir / tex_file.name
+        shutil.copy2(tex_file, target_path)
+        print(f"  Copied: {tex_file.name}")
+    
+    # Sync CSV data files
+    data_dir = get_data_output_dir()
+    csv_files = list(data_dir.glob('*.csv'))
+    
+    print(f"\nSyncing {len(csv_files)} CSV file(s) to {paper_data_dir}")
+    for csv_file in csv_files:
+        target_path = paper_data_dir / csv_file.name
+        shutil.copy2(csv_file, target_path)
+        print(f"  Copied: {csv_file.name}")
+    
+    print(f"\nSync complete!")
+
+
 __all__ = [
-    'save_csv_data', 'save_latex_table', 
-    'get_data_output_dir', 'get_tables_output_dir',
+    'save_csv_data', 'save_latex_table', 'save_figure',
+    'get_data_output_dir', 'get_tables_output_dir', 'get_figures_output_dir',
+    'sync_to_paper_repo',
     'standardize_project_name',
     'get_dataset_macro', 'get_variant_macro', 'get_tool_macro',
     'format_table_row', 'get_project_type', 'get_table_group_order',
