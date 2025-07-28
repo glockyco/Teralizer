@@ -369,6 +369,7 @@ gradle-app.setting
 # Analysis generated files
 analysis/output/tables/*.tex
 analysis/output/data/*.csv
+analysis/output/figures/*.pdf
 
 # AI Coding Assistants
 .aider*
