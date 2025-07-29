@@ -708,10 +708,6 @@ def generate_mutation_detection_figure_csv(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(csv_data)
 
 
-
-
-
-
 def generate_mutation_detection_comparison_csv(df: pd.DataFrame) -> pd.DataFrame:
     """Generate CSV data for model properties comparison.
     
