@@ -320,13 +320,15 @@ def test_notebook_execution(specific_notebook=None, changed_only=False):
                     successful_notebooks.append(notebook)
             else:
                 print(f"    ✗ {notebook}: Execution failed")
-                # Show first few lines of error for debugging
-                error_lines = result.stderr.split('\n')
-                for line in error_lines[:3]:
+                print("    STDERR:")
+                for line in result.stderr.split('\n'):
                     if line.strip():
                         print(f"      {line}")
-                if len(error_lines) > 3:
-                    print("      ...")
+                if result.stdout.strip():
+                    print("    STDOUT:")
+                    for line in result.stdout.split('\n'):
+                        if line.strip():
+                            print(f"      {line}")
                 failed_notebooks.append(notebook)
                 
         except FileNotFoundError:
