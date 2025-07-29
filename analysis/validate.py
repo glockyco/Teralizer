@@ -391,6 +391,41 @@ def test_code_quality():
 
     all_passed = True
 
+    # Test ruff formatting
+    print("  Running ruff formatting...")
+    try:
+        result = subprocess.run(
+            ["uv", "run", "ruff", "format", "."],
+            capture_output=True,
+            text=True,
+            cwd=".",
+        )
+
+        if result.returncode == 0:
+            if result.stderr.strip():
+                # ruff format outputs formatted file info to stderr
+                formatted_files = [
+                    line for line in result.stderr.split("\n") if line.strip()
+                ]
+                if formatted_files:
+                    print(
+                        f"    ✓ Ruff formatting: {len(formatted_files)} file(s) formatted"
+                    )
+                else:
+                    print("    ✓ Ruff formatting: No changes needed")
+            else:
+                print("    ✓ Ruff formatting: No changes needed")
+        else:
+            print("    ✗ Ruff formatting failed")
+            if result.stderr.strip():
+                for line in result.stderr.split("\n"):
+                    if line.strip():
+                        print(f"      {line}")
+            all_passed = False
+    except Exception as e:
+        print(f"    ✗ Ruff formatting failed to run: {e}")
+        all_passed = False
+
     # Test ruff linting
     print("  Running ruff linting...")
     try:
