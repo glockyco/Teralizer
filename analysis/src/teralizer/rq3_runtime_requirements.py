@@ -484,8 +484,6 @@ def generate_pareto_figure(df_pareto: pd.DataFrame, project_name: str) -> plt.Fi
     Returns:
         Matplotlib figure object
     """
-    import matplotlib.pyplot as plt
-
     # Filter data for specific project
     project_data = df_pareto[df_pareto["project_name"] == project_name].copy()
 
