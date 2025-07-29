@@ -20,6 +20,7 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.2.0",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "ruff>=0.12.5",
@@ -32,6 +33,7 @@ teralizer-analysis = { workspace = true }
 
 [tool.ruff]
 target-version = "py311"
+exclude = ["notebooks/legacy/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
