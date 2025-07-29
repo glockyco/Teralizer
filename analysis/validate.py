@@ -450,11 +450,6 @@ def parse_arguments():
         action="store_true",
         help="Validate only notebooks with git changes",
     )
-    parser.add_argument(
-        "--quality",
-        action="store_true",
-        help="Include code quality checks (ruff and ty)",
-    )
 
     return parser.parse_args()
 
@@ -492,14 +487,13 @@ def main():
         print(f"  ✗ Notebook Execution Test crashed: {e}")
         all_passed = False
 
-    # Run code quality tests if requested
-    if args.quality:
-        try:
-            if not test_code_quality():
-                all_passed = False
-        except Exception as e:
-            print(f"  ✗ Code Quality Test crashed: {e}")
+    # Always run code quality tests (type checking and linting)
+    try:
+        if not test_code_quality():
             all_passed = False
+    except Exception as e:
+        print(f"  ✗ Code Quality Test crashed: {e}")
+        all_passed = False
 
     print(f"\n=== Validation {'PASSED' if all_passed else 'FAILED'} ===")
     return 0 if all_passed else 1
