@@ -11,8 +11,7 @@ import os
 import re
 
 from .formatting import (
-    sort_dataframe_by_project, replace_project_names_with_macros, replace_variant_names_with_macros,
-    build_latex_table_content
+    sort_dataframe_by_project, replace_project_names_with_macros, build_latex_table_content
 )
 from .exports import (
     get_variant_macro, format_detection_rate_decimal,
