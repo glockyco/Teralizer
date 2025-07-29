@@ -14,7 +14,7 @@ def dev_conn():
     return db_config.get_dev_engine()
 
 
-@pytest.fixture(scope="session") 
+@pytest.fixture(scope="session")
 def test_conn():
     """Database connection to postgres_test (session-scoped)."""
     return db_config.get_test_engine()
@@ -24,14 +24,14 @@ def test_conn():
 def known_projects():
     """Known project names from actual dataset mappings in table order."""
     return [
-        'eqbench-es-default-1s',
-        'eqbench-es-default-10s', 
-        'eqbench-es-default-60s',
-        'commons-utils-es-default-1s',
-        'commons-utils-es-default-10s',
-        'commons-utils-es-default-60s',
-        'commons-utils',
-        'repo-reapers'
+        "eqbench-es-default-1s",
+        "eqbench-es-default-10s",
+        "eqbench-es-default-60s",
+        "commons-utils-es-default-1s",
+        "commons-utils-es-default-10s",
+        "commons-utils-es-default-60s",
+        "commons-utils",
+        "repo-reapers",
     ]
 
 
@@ -39,30 +39,34 @@ def known_projects():
 def known_variants():
     """Known variant names from actual variant mappings in order."""
     return [
-        'ORIGINAL',
-        'INITIAL',
-        'SHARED',
-        'BASELINE',
-        'NAIVE_10_TRIES',
-        'NAIVE_50_TRIES',
-        'NAIVE_200_TRIES',
-        'IMPROVED_10_TRIES',
-        'IMPROVED_50_TRIES',
-        'IMPROVED_200_TRIES'
+        "ORIGINAL",
+        "INITIAL",
+        "SHARED",
+        "BASELINE",
+        "NAIVE_10_TRIES",
+        "NAIVE_50_TRIES",
+        "NAIVE_200_TRIES",
+        "IMPROVED_10_TRIES",
+        "IMPROVED_50_TRIES",
+        "IMPROVED_200_TRIES",
     ]
 
 
 @pytest.fixture
 def basic_variants():
     """Basic variants used in most queries."""
-    return ['ORIGINAL', 'INITIAL']
+    return ["ORIGINAL", "INITIAL"]
 
 
 @pytest.fixture
 def generalization_variants():
     """Variants that involve test generalization."""
     return [
-        'BASELINE',
-        'NAIVE_10_TRIES', 'NAIVE_50_TRIES', 'NAIVE_200_TRIES',
-        'IMPROVED_10_TRIES', 'IMPROVED_50_TRIES', 'IMPROVED_200_TRIES'
+        "BASELINE",
+        "NAIVE_10_TRIES",
+        "NAIVE_50_TRIES",
+        "NAIVE_200_TRIES",
+        "IMPROVED_10_TRIES",
+        "IMPROVED_50_TRIES",
+        "IMPROVED_200_TRIES",
     ]
