@@ -101,7 +101,7 @@ def test_prettify_variant_label():
     assert prettify_variant_label('IMPROVED_200_TRIES') == 'IMPROVED$_{200}$'
     assert prettify_variant_label('BASELINE') == 'BASELINE'
     assert prettify_variant_label('ORIGINAL') == 'ORIGINAL'
-    assert prettify_variant_label(123) == '123'
+    assert prettify_variant_label('123') == '123'
 
 
 def test_format_runtime_display_auto():

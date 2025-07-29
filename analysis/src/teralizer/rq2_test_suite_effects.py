@@ -6,7 +6,7 @@ ORIGINAL and generalized variants (NAIVE, IMPROVED).
 """
 
 import pandas as pd
-from typing import List
+from typing import List, Optional
 
 from .formatting import (
     sort_dataframe_by_project, replace_project_names_with_macros, replace_variant_names_with_macros,
@@ -21,7 +21,7 @@ from .exports import (
 # Data Retrieval Functions (get_*)
 # =============================================================================
 
-def get_generalization_effects_data(conn, variants: List[str] = None) -> pd.DataFrame:
+def get_generalization_effects_data(conn, variants: Optional[List[str]] = None) -> pd.DataFrame:
     """Get generalization effects data comparing ORIGINAL to specified variants.
     
     Args:
@@ -44,7 +44,7 @@ def get_generalization_effects_data(conn, variants: List[str] = None) -> pd.Data
     return pd.read_sql_query(query, conn)
 
 
-def get_test_count_changes_by_project_variant(conn, variants: List[str] = None) -> pd.DataFrame:
+def get_test_count_changes_by_project_variant(conn, variants: Optional[List[str]] = None) -> pd.DataFrame:
     """Get test count changes between ORIGINAL and generalized variants.
     
     Args:
@@ -59,7 +59,7 @@ def get_test_count_changes_by_project_variant(conn, variants: List[str] = None) 
                'removed_tests', 'tests_after', 'tests_delta', 'tests_delta_pct']]
 
 
-def get_line_count_changes_by_project_variant(conn, variants: List[str] = None) -> pd.DataFrame:
+def get_line_count_changes_by_project_variant(conn, variants: Optional[List[str]] = None) -> pd.DataFrame:
     """Get line count changes between ORIGINAL and generalized variants.
     
     Args:
@@ -74,7 +74,7 @@ def get_line_count_changes_by_project_variant(conn, variants: List[str] = None) 
                'removed_lines', 'lines_after', 'lines_delta', 'lines_delta_pct']]
 
 
-def get_runtime_changes_by_project_variant(conn, variants: List[str] = None) -> pd.DataFrame:
+def get_runtime_changes_by_project_variant(conn, variants: Optional[List[str]] = None) -> pd.DataFrame:
     """Get runtime changes between ORIGINAL and generalized variants.
     
     Args:

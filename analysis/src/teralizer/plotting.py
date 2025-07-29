@@ -8,7 +8,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, Callable
 
 
 # =============================================================================
@@ -210,7 +210,7 @@ def get_distinct_colors(n_colors: int) -> List[str]:
     
     # Extend with colormap if more colors needed
     additional_needed = n_colors - len(base_colors)
-    additional_colors = plt.cm.Set3(np.linspace(0, 1, additional_needed))
+    additional_colors = plt.cm.get_cmap('Set3')(np.linspace(0, 1, additional_needed))
     additional_hex = [f"#{int(c[0]*255):02x}{int(c[1]*255):02x}{int(c[2]*255):02x}" 
                      for c in additional_colors]
     
@@ -269,7 +269,7 @@ def extend_color_palette(base_colors: List[str], needed_count: int) -> List[str]
         return base_colors.copy()
     
     additional_needed = needed_count - len(base_colors)
-    additional_colors = plt.cm.Set3(np.linspace(0, 1, additional_needed))
+    additional_colors = plt.cm.get_cmap('Set3')(np.linspace(0, 1, additional_needed))
     additional_hex = [f"#{int(c[0]*255):02x}{int(c[1]*255):02x}{int(c[2]*255):02x}" 
                      for c in additional_colors]
     
@@ -360,7 +360,7 @@ def setup_multi_subplot_layout(n_subplots: int, figsize_per_plot: Tuple[float, f
     return fig, axes
 
 
-def add_value_labels_on_bars(ax: Any, bars: Any, formatter: Optional[callable] = None) -> None:
+def add_value_labels_on_bars(ax: Any, bars: Any, formatter: Optional[Callable[[float], str]] = None) -> None:
     """Add text labels on top of bars.
     
     Args:

@@ -8,7 +8,7 @@ EvoSuite runtime breakdown by phase and search budget.
 import pandas as pd
 import matplotlib.pyplot as plt
 import re
-from typing import List, Dict, Tuple
+from typing import List, Optional
 
 from .formatting import (
     sort_dataframe_by_project, replace_project_names_with_macros, build_latex_table_content
@@ -58,7 +58,7 @@ def get_teralizer_runtime_by_stage(conn) -> pd.DataFrame:
     return pd.read_sql_query(query, conn)
 
 
-def get_evosuite_vs_teralizer_efficiency(conn, variants: List[str] = None) -> pd.DataFrame:
+def get_evosuite_vs_teralizer_efficiency(conn, variants: Optional[List[str]] = None) -> pd.DataFrame:
     """Get EvoSuite vs Teralizer efficiency comparison data.
     
     Args:
@@ -400,7 +400,6 @@ def generate_pareto_figure(df_pareto: pd.DataFrame, project_name: str) -> plt.Fi
         Matplotlib figure object
     """
     import matplotlib.pyplot as plt
-    import numpy as np
     
     # Filter data for specific project
     project_data = df_pareto[df_pareto['project_name'] == project_name].copy()

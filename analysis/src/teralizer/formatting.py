@@ -5,7 +5,7 @@ LaTeX table formatting that are commonly used across analysis notebooks.
 """
 
 import pandas as pd
-from typing import Dict, List
+from typing import Dict, List, Optional
 from natsort import natsorted
 from .exports import (
     get_table_group_order, get_project_within_type_order, 
@@ -333,10 +333,10 @@ def format_table_with_macros(df: pd.DataFrame,
 
 
 def build_latex_table_content(df: pd.DataFrame, 
-                            caption: str = None,
-                            label: str = None,
-                            column_spec: str = None,
-                            header_rows: List[str] = None,
+                            caption: Optional[str] = None,
+                            label: Optional[str] = None,
+                            column_spec: Optional[str] = None,
+                            header_rows: Optional[List[str]] = None,
                             add_midrules: bool = True,
                             project_column: str = 'project_name') -> str:
     """Generate complete LaTeX table content from DataFrame without pandas to_latex.

@@ -349,7 +349,7 @@ def get_project_within_type_order() -> dict:
     }
 
 
-def save_latex_table(content: str, filename: str, output_dir: str = None) -> None:
+def save_latex_table(content: str, filename: str, output_dir: Optional[str] = None) -> None:
     """Save LaTeX table content to file.
     
     Args:
