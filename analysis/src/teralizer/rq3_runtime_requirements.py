@@ -760,15 +760,15 @@ def generate_pareto_efficiency_csv(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def generate_evosuite_runtime_csv(df: pd.DataFrame) -> pd.DataFrame:
-    """Generate CSV data for EvoSuite runtime phase analysis.
+    """Generate CSV data for EvoSuite runtime phase analysis (aggregated statistics).
 
     Args:
         df: DataFrame from compute_evosuite_phase_statistics
 
     Returns:
-        DataFrame formatted for CSV export
+        DataFrame with mean and median statistics by search budget, formatted for CSV export
     """
-    # Define the runtime columns to export
+    # Define the runtime columns to analyze
     runtime_columns = [
         "total",
         "search",
@@ -783,11 +783,19 @@ def generate_evosuite_runtime_csv(df: pd.DataFrame) -> pd.DataFrame:
         "finished",
     ]
 
+    # Create mean and median dataframes by search budget (matching notebook logic)
+    mean_df = df.groupby("search_budget")[runtime_columns].mean().reset_index()
+    mean_df = mean_df.sort_values("search_budget")
+
+    median_df = df.groupby("search_budget")[runtime_columns].median().reset_index()
+    median_df = median_df.sort_values("search_budget")
+
     csv_data = []
 
-    for _, row in df.iterrows():
+    # Export mean statistics
+    for _, row in mean_df.iterrows():
         data_row = {
-            "project_name": standardize_project_name(row["project_name"]),
+            "statistic_type": "mean",
             "search_budget_seconds": int(row["search_budget"])
             if pd.notna(row["search_budget"])
             else 0,
@@ -800,13 +808,22 @@ def generate_evosuite_runtime_csv(df: pd.DataFrame) -> pd.DataFrame:
                     format_runtime_seconds(row[col]) if pd.notna(row[col]) else 0.0
                 )
 
-        # Add percentage columns
-        percentage_columns = [col for col in runtime_columns if col != "total"]
-        for col in percentage_columns:
-            pct_col = f"{col}_pct"
-            if pct_col in row:
-                data_row[f"{col}_percentage"] = (
-                    float(row[pct_col]) if pd.notna(row[pct_col]) else 0.0
+        csv_data.append(data_row)
+
+    # Export median statistics
+    for _, row in median_df.iterrows():
+        data_row = {
+            "statistic_type": "median",
+            "search_budget_seconds": int(row["search_budget"])
+            if pd.notna(row["search_budget"])
+            else 0,
+        }
+
+        # Add runtime columns
+        for col in runtime_columns:
+            if col in row:
+                data_row[f"{col}_runtime_seconds"] = (
+                    format_runtime_seconds(row[col]) if pd.notna(row[col]) else 0.0
                 )
 
         csv_data.append(data_row)
