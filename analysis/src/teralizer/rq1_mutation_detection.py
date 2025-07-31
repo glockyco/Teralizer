@@ -292,16 +292,15 @@ def compute_mutator_statistics(
         index="mutator", columns="variant", values="detected_of_covered_pct"
     ).reset_index()
 
-    # Calculate improvements
-    if "NAIVE_200_TRIES" in variant_pivot.columns:
-        variant_pivot["detected_diff_naive"] = (
-            variant_pivot["NAIVE_200_TRIES"] - variant_pivot["INITIAL"]
-        )
+    # Calculate improvements for all NAIVE and IMPROVED variants
+    naive_variants = [col for col in variant_pivot.columns if col.startswith("NAIVE_")]
+    improved_variants = [
+        col for col in variant_pivot.columns if col.startswith("IMPROVED_")
+    ]
 
-    if "IMPROVED_200_TRIES" in variant_pivot.columns:
-        variant_pivot["detected_diff_improved"] = (
-            variant_pivot["IMPROVED_200_TRIES"] - variant_pivot["INITIAL"]
-        )
+    for variant in naive_variants + improved_variants:
+        diff_col_name = f"detected_diff_{variant.lower()}"
+        variant_pivot[diff_col_name] = variant_pivot[variant] - variant_pivot["INITIAL"]
 
     # Merge all data
     result = pd.merge(
@@ -465,8 +464,8 @@ def generate_detections_per_mutator_table(df: pd.DataFrame) -> str:
     for _, row in df_table.iterrows():
         naive_val = row.get("NAIVE_200_TRIES", row["INITIAL"])
         improved_val = row.get("IMPROVED_200_TRIES", row["INITIAL"])
-        naive_diff = row.get("detected_diff_naive", 0)
-        improved_diff = row.get("detected_diff_improved", 0)
+        naive_diff = row.get("detected_diff_naive_200_tries", 0)
+        improved_diff = row.get("detected_diff_improved_200_tries", 0)
 
         # Format difference strings
         naive_diff_str = (
@@ -668,7 +667,7 @@ def generate_mutation_detection_comparison_table(df: pd.DataFrame) -> str:
 
 
 def generate_detections_per_mutator_csv(df: pd.DataFrame) -> pd.DataFrame:
-    """Generate CSV data for detection rates by mutator.
+    """Generate CSV data for detection rates by mutator with all variants.
 
     Args:
         df: DataFrame from compute_mutator_statistics
@@ -689,30 +688,43 @@ def generate_detections_per_mutator_csv(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     for _, row in df.iterrows():
-        csv_data.append(
-            {
-                "mutator": row["mutator"],
-                "total_mutants": int(row["total_mutants"]),
-                "percentage_of_total": format_detection_rate_decimal(row["percent"]),
-                "min_percentage_across_projects": format_detection_rate_decimal(
-                    row["min_percent"]
-                ),
-                "max_percentage_across_projects": format_detection_rate_decimal(
-                    row["max_percent"]
-                ),
-                "initial_detection_rate": format_detection_rate_decimal(
-                    row.get("INITIAL", 0)
-                ),
-                "naive_200_detection_rate": format_detection_rate_decimal(
-                    row.get("NAIVE_200_TRIES", 0)
-                ),
-                "naive_200_improvement": row.get("detected_diff_naive", 0.0),
-                "improved_200_detection_rate": format_detection_rate_decimal(
-                    row.get("IMPROVED_200_TRIES", 0)
-                ),
-                "improved_200_improvement": row.get("detected_diff_improved", 0.0),
-            }
-        )
+        # Base data
+        csv_row = {
+            "mutator": row["mutator"],
+            "total_mutants": int(row["total_mutants"]),
+            "percentage_of_total": format_detection_rate_decimal(row["percent"]),
+            "min_percentage_across_projects": format_detection_rate_decimal(
+                row["min_percent"]
+            ),
+            "max_percentage_across_projects": format_detection_rate_decimal(
+                row["max_percent"]
+            ),
+            "initial_detection_rate": format_detection_rate_decimal(
+                row.get("INITIAL", 0)
+            ),
+        }
+
+        # Add all NAIVE variants
+        for tries in [10, 50, 200]:
+            variant_col = f"NAIVE_{tries}_TRIES"
+            csv_row[f"naive_{tries}_detection_rate"] = format_detection_rate_decimal(
+                row.get(variant_col, 0)
+            )
+            csv_row[f"naive_{tries}_improvement"] = row.get(
+                f"detected_diff_{variant_col.lower()}", 0.0
+            )
+
+        # Add all IMPROVED variants
+        for tries in [10, 50, 200]:
+            variant_col = f"IMPROVED_{tries}_TRIES"
+            csv_row[f"improved_{tries}_detection_rate"] = format_detection_rate_decimal(
+                row.get(variant_col, 0)
+            )
+            csv_row[f"improved_{tries}_improvement"] = row.get(
+                f"detected_diff_{variant_col.lower()}", 0.0
+            )
+
+        csv_data.append(csv_row)
 
     return pd.DataFrame(csv_data)
 
