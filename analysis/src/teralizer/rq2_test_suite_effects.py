@@ -596,3 +596,241 @@ def generate_test_runtime_differences_csv(df: pd.DataFrame) -> pd.DataFrame:
         )
 
     return pd.DataFrame(csv_data)
+
+
+def get_test_filtering_impact_data(conn) -> pd.DataFrame:
+    """Get data showing impact of filtering non-contributing generalized tests.
+
+    Args:
+        conn: Database connection
+
+    Returns:
+        DataFrame with total vs contributing generalization counts per project/variant
+    """
+    query = """
+    WITH total_generalizations AS (
+        SELECT 
+            g.project_id,
+            project_name(g.project_id) as project_name,
+            g.variant,
+            COUNT(*) as total_generated
+        FROM generalization g
+        JOIN project p ON g.project_id = p.id
+        JOIN v_projects_successes ps ON ps.project_id = p.id
+        WHERE 
+            g.is_included = true
+            AND p.use_test_generalization = true
+            AND g.variant IN ('NAIVE_10_TRIES', 'NAIVE_50_TRIES', 'NAIVE_200_TRIES', 
+                             'IMPROVED_10_TRIES', 'IMPROVED_50_TRIES', 'IMPROVED_200_TRIES')
+        GROUP BY g.project_id, g.variant
+    ),
+    contributing_generalizations AS (
+        SELECT 
+            project_id,
+            project_name,
+            b_variant as variant,
+            added_tests as contributing_count
+        FROM mv_generalization_effects
+        WHERE a_variant = 'ORIGINAL'
+            AND b_variant IN ('NAIVE_10_TRIES', 'NAIVE_50_TRIES', 'NAIVE_200_TRIES', 
+                             'IMPROVED_10_TRIES', 'IMPROVED_50_TRIES', 'IMPROVED_200_TRIES')
+    )
+    SELECT 
+        tg.project_id,
+        tg.project_name,
+        tg.variant,
+        tg.total_generated,
+        COALESCE(cg.contributing_count, 0) as contributing_count,
+        tg.total_generated - COALESCE(cg.contributing_count, 0) as would_be_filtered
+    FROM total_generalizations tg
+    LEFT JOIN contributing_generalizations cg 
+        ON tg.project_id = cg.project_id AND tg.variant = cg.variant
+    ORDER BY tg.project_name, tg.variant
+    """
+    return pd.read_sql_query(query, conn)
+
+
+def compute_test_filtering_statistics(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute filtering statistics including retention percentages.
+
+    Args:
+        df: DataFrame from get_test_filtering_impact_data
+
+    Returns:
+        DataFrame with filtering statistics and retention percentages
+    """
+    # Calculate retention percentage
+    df = df.copy()
+    df["retention_percentage"] = (
+        df["contributing_count"] / df["total_generated"] * 100
+    ).round(1)
+
+    # Add algorithm type for analysis
+    df["algorithm"] = df["variant"].str.extract(r"^(NAIVE|IMPROVED)")[0]
+    df["tries"] = df["variant"].str.extract(r"_(\d+)_TRIES")[0].astype(int)
+
+    return df
+
+
+def generate_test_filtering_breakdown_csv(df: pd.DataFrame) -> pd.DataFrame:
+    """Generate CSV data for detailed test filtering breakdown per project/variant.
+
+    Args:
+        df: DataFrame from compute_test_filtering_statistics
+
+    Returns:
+        DataFrame formatted for CSV export with per-project details
+    """
+    from .exports import standardize_project_name, get_variant_macro
+
+    csv_data = []
+
+    for _, row in df.iterrows():
+        csv_data.append(
+            {
+                "project_name": standardize_project_name(row["project_name"]),
+                "variant": get_variant_macro(row["variant"]),
+                "algorithm": row["algorithm"],
+                "tries": int(row["tries"]),
+                "total_generated": int(row["total_generated"]),
+                "contributing_count": int(row["contributing_count"]),
+                "would_be_filtered": int(row["would_be_filtered"]),
+                "retention_percentage": round(row["retention_percentage"], 1),
+            }
+        )
+
+    return pd.DataFrame(csv_data)
+
+
+def generate_test_filtering_summary_csv(df: pd.DataFrame) -> pd.DataFrame:
+    """Generate CSV data for aggregated test filtering summary statistics.
+
+    Args:
+        df: DataFrame from compute_test_filtering_statistics
+
+    Returns:
+        DataFrame with summary statistics by algorithm, tries, and overall
+    """
+    csv_data = []
+
+    # Overall summary
+    total_generated = df["total_generated"].sum()
+    total_contributing = df["contributing_count"].sum()
+    total_filtered = df["would_be_filtered"].sum()
+    overall_retention = (
+        (total_contributing / total_generated * 100) if total_generated > 0 else 0
+    )
+
+    csv_data.append(
+        {
+            "summary_type": "overall",
+            "algorithm": "ALL",
+            "tries": "ALL",
+            "variant_count": len(df),
+            "total_generated": int(total_generated),
+            "contributing_count": int(total_contributing),
+            "would_be_filtered": int(total_filtered),
+            "retention_percentage": round(overall_retention, 1),
+        }
+    )
+
+    # By algorithm
+    algo_summary = (
+        df.groupby("algorithm")
+        .agg(
+            {
+                "total_generated": "sum",
+                "contributing_count": "sum",
+                "would_be_filtered": "sum",
+                "variant": "count",
+            }
+        )
+        .reset_index()
+    )
+
+    for _, row in algo_summary.iterrows():
+        retention = (
+            (row["contributing_count"] / row["total_generated"] * 100)
+            if row["total_generated"] > 0
+            else 0
+        )
+        csv_data.append(
+            {
+                "summary_type": "by_algorithm",
+                "algorithm": row["algorithm"],
+                "tries": "ALL",
+                "variant_count": int(row["variant"]),
+                "total_generated": int(row["total_generated"]),
+                "contributing_count": int(row["contributing_count"]),
+                "would_be_filtered": int(row["would_be_filtered"]),
+                "retention_percentage": round(retention, 1),
+            }
+        )
+
+    # By tries count
+    tries_summary = (
+        df.groupby("tries")
+        .agg(
+            {
+                "total_generated": "sum",
+                "contributing_count": "sum",
+                "would_be_filtered": "sum",
+                "variant": "count",
+            }
+        )
+        .reset_index()
+    )
+
+    for _, row in tries_summary.iterrows():
+        retention = (
+            (row["contributing_count"] / row["total_generated"] * 100)
+            if row["total_generated"] > 0
+            else 0
+        )
+        csv_data.append(
+            {
+                "summary_type": "by_tries",
+                "algorithm": "ALL",
+                "tries": str(int(row["tries"])),
+                "variant_count": int(row["variant"]),
+                "total_generated": int(row["total_generated"]),
+                "contributing_count": int(row["contributing_count"]),
+                "would_be_filtered": int(row["would_be_filtered"]),
+                "retention_percentage": round(retention, 1),
+            }
+        )
+
+    # By algorithm and tries
+    algo_tries_summary = (
+        df.groupby(["algorithm", "tries"])
+        .agg(
+            {
+                "total_generated": "sum",
+                "contributing_count": "sum",
+                "would_be_filtered": "sum",
+                "variant": "count",
+            }
+        )
+        .reset_index()
+    )
+
+    for _, row in algo_tries_summary.iterrows():
+        retention = (
+            (row["contributing_count"] / row["total_generated"] * 100)
+            if row["total_generated"] > 0
+            else 0
+        )
+        csv_data.append(
+            {
+                "summary_type": "by_algorithm_tries",
+                "algorithm": row["algorithm"],
+                "tries": str(int(row["tries"])),
+                "variant_count": int(row["variant"]),
+                "total_generated": int(row["total_generated"]),
+                "contributing_count": int(row["contributing_count"]),
+                "would_be_filtered": int(row["would_be_filtered"]),
+                "retention_percentage": round(retention, 1),
+            }
+        )
+
+    return pd.DataFrame(csv_data)
