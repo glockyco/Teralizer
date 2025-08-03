@@ -853,3 +853,202 @@ def generate_teralizer_runtimes_csv(df: pd.DataFrame) -> pd.DataFrame:
         )
 
     return pd.DataFrame(csv_data)
+
+
+def get_stage_step_runtime_breakdown(conn) -> pd.DataFrame:
+    """Get detailed runtime breakdown by processing stage and step.
+
+    Args:
+        conn: Database connection
+
+    Returns:
+        DataFrame with runtime per processing step, aggregated per project
+    """
+    query = """
+    WITH step_runtimes AS (
+        SELECT 
+            t.project_id,
+            project_name(t.project_id) as project_name,
+            t.stage as processing_step,
+            CASE 
+                WHEN t.stage IN ('EXECUTE_TESTS_ORIGINAL', 'COLLECT_JUNIT_REPORTS_ORIGINAL', 
+                                'COLLECT_JACOCO_DATA_ORIGINAL', 'FILTER_TESTS_ORIGINAL', 
+                                'COLLECT_PIT_DATA_ORIGINAL') 
+                THEN 'Original Validation'
+                WHEN t.stage IN ('BUILD_SPOON_MODEL', 'ANALYZE_TESTS', 'FILTER_TESTS', 
+                                'FILTER_ASSERTIONS', 'ADD_JPF_INSTRUMENTATION', 
+                                'BUILD_PROJECT_INSTRUMENTED', 'EXECUTE_JPF', 'ANALYZE_JPF') 
+                THEN 'Specification Extraction'
+                WHEN t.stage IN ('ADD_DEPENDENCIES', 'BUILD_PROJECT_INITIAL', 'EXECUTE_TESTS_INITIAL', 
+                                'COLLECT_JUNIT_REPORTS_INITIAL', 'COLLECT_JACOCO_DATA_INITIAL', 
+                                'COLLECT_PIT_DATA_INITIAL') 
+                THEN 'Initial Validation'
+                WHEN t.stage = 'GENERALIZE_TESTS' 
+                THEN 'Test Transformation'
+                WHEN t.stage IN ('BUILD_PROJECT_GENERALIZED', 'EXECUTE_TESTS_GENERALIZED', 
+                                'COLLECT_JUNIT_REPORTS_GENERALIZED', 'FILTER_GENERALIZATIONS', 
+                                'COLLECT_JACOCO_DATA_GENERALIZED', 'COLLECT_PIT_DATA_GENERALIZED') 
+                THEN 'Generalization Validation'
+            END AS stage_group,
+            SUM(t.runtime) as step_runtime_seconds
+        FROM task t
+        JOIN project p ON t.project_id = p.id  
+        JOIN v_projects_successes ps ON ps.project_id = p.id
+        WHERE 
+            t.runtime IS NOT NULL AND
+            p.use_test_generalization = true
+        GROUP BY t.project_id, t.stage
+    ),
+    project_stage_totals AS (
+        SELECT 
+            project_id,
+            project_name,
+            stage_group,
+            SUM(step_runtime_seconds) as stage_total_runtime
+        FROM step_runtimes
+        WHERE stage_group IS NOT NULL
+        GROUP BY project_id, project_name, stage_group
+    ),
+    project_totals AS (
+        SELECT 
+            project_id,
+            project_name,
+            SUM(step_runtime_seconds) as project_total_runtime
+        FROM step_runtimes
+        WHERE stage_group IS NOT NULL
+        GROUP BY project_id, project_name
+    )
+    SELECT 
+        sr.project_id,
+        sr.project_name,
+        sr.stage_group,
+        sr.processing_step,
+        sr.step_runtime_seconds,
+        pst.stage_total_runtime,
+        pt.project_total_runtime,
+        (sr.step_runtime_seconds / pst.stage_total_runtime * 100) as percentage_of_stage,
+        (sr.step_runtime_seconds / pt.project_total_runtime * 100) as percentage_of_project
+    FROM step_runtimes sr
+    JOIN project_stage_totals pst ON sr.project_id = pst.project_id AND sr.stage_group = pst.stage_group
+    JOIN project_totals pt ON sr.project_id = pt.project_id
+    WHERE sr.stage_group IS NOT NULL
+    ORDER BY sr.project_id, sr.stage_group, sr.processing_step
+    """
+    return pd.read_sql_query(query, conn)
+
+
+def compute_stage_step_runtime_statistics(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute average runtime statistics for each processing step across projects.
+
+    Args:
+        df: DataFrame from get_stage_step_runtime_breakdown
+
+    Returns:
+        DataFrame with average runtime percentages per step
+    """
+    # Group by stage and step to get averages across projects
+    step_stats = (
+        df.groupby(["stage_group", "processing_step"])
+        .agg(
+            {
+                "percentage_of_stage": ["mean", "std", "min", "max"],
+                "percentage_of_project": ["mean", "std", "min", "max"],
+                "step_runtime_seconds": ["sum", "mean", "std", "min", "max"],
+                "project_id": "count",
+            }
+        )
+        .reset_index()
+    )
+
+    # Flatten column names
+    step_stats.columns = [
+        "stage_group",
+        "processing_step",
+        "avg_percentage_of_stage",
+        "std_percentage_of_stage",
+        "min_percentage_of_stage",
+        "max_percentage_of_stage",
+        "avg_percentage_of_project",
+        "std_percentage_of_project",
+        "min_percentage_of_project",
+        "max_percentage_of_project",
+        "total_runtime_seconds",
+        "avg_runtime_seconds",
+        "std_runtime_seconds",
+        "min_runtime_seconds",
+        "max_runtime_seconds",
+        "num_projects",
+    ]
+
+    return step_stats
+
+
+def generate_stage_step_breakdown_csv(df: pd.DataFrame) -> pd.DataFrame:
+    """Generate CSV data for detailed stage/step runtime breakdown.
+
+    Args:
+        df: DataFrame from get_stage_step_runtime_breakdown
+
+    Returns:
+        DataFrame formatted for CSV export with per-project details
+    """
+    csv_data = []
+
+    for _, row in df.iterrows():
+        csv_data.append(
+            {
+                "project_name": standardize_project_name(row["project_name"]),
+                "stage_group": row["stage_group"],
+                "processing_step": row["processing_step"],
+                "step_runtime_seconds": format_runtime_seconds(
+                    row["step_runtime_seconds"]
+                ),
+                "stage_total_runtime_seconds": format_runtime_seconds(
+                    row["stage_total_runtime"]
+                ),
+                "project_total_runtime_seconds": format_runtime_seconds(
+                    row["project_total_runtime"]
+                ),
+                "percentage_of_stage": round(row["percentage_of_stage"], 2),
+                "percentage_of_project": round(row["percentage_of_project"], 2),
+            }
+        )
+
+    return pd.DataFrame(csv_data)
+
+
+def generate_stage_step_statistics_csv(df: pd.DataFrame) -> pd.DataFrame:
+    """Generate CSV data for aggregated stage/step runtime statistics.
+
+    Args:
+        df: DataFrame from compute_stage_step_runtime_statistics
+
+    Returns:
+        DataFrame formatted for CSV export with averages across projects
+    """
+    csv_data = []
+
+    for _, row in df.iterrows():
+        csv_data.append(
+            {
+                "stage_group": row["stage_group"],
+                "processing_step": row["processing_step"],
+                "avg_percentage_of_stage": round(row["avg_percentage_of_stage"], 2),
+                "std_percentage_of_stage": round(row["std_percentage_of_stage"], 2),
+                "min_percentage_of_stage": round(row["min_percentage_of_stage"], 2),
+                "max_percentage_of_stage": round(row["max_percentage_of_stage"], 2),
+                "avg_percentage_of_project": round(row["avg_percentage_of_project"], 2),
+                "std_percentage_of_project": round(row["std_percentage_of_project"], 2),
+                "min_percentage_of_project": round(row["min_percentage_of_project"], 2),
+                "max_percentage_of_project": round(row["max_percentage_of_project"], 2),
+                "total_runtime_seconds": format_runtime_seconds(
+                    row["total_runtime_seconds"]
+                ),
+                "avg_runtime_seconds": format_runtime_seconds(
+                    row["avg_runtime_seconds"]
+                ),
+                "num_projects": int(row["num_projects"]),
+            }
+        )
+
+    return pd.DataFrame(csv_data)
