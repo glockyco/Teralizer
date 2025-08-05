@@ -20,6 +20,7 @@ from .exports import (
     standardize_project_name,
     format_runtime_seconds,
     format_detection_rate_decimal,
+    get_project_type,
 )
 
 
@@ -468,7 +469,8 @@ def generate_teralizer_runtimes_table(df: pd.DataFrame) -> str:
         column_spec="lr",
         header_rows=["Project & Runtime \\\\"],
         add_midrules=True,
-        project_column="Project",
+        grouping_column="Project",
+        grouping_func=get_project_type,
     )
 
     return table_content

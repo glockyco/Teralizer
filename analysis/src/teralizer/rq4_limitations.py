@@ -603,6 +603,8 @@ def generate_exclusions_summary_table(result_df: pd.DataFrame) -> str:
         header_rows=[
             "Variant & Type & Total & \\multicolumn{1}{c}{Included} & \\multicolumn{1}{c}{Excluded} \\\\"
         ],
+        add_midrules=True,
+        grouping_column="Type",
     )
 
     return latex_content
@@ -648,6 +650,7 @@ def generate_filtering_results_table(df: pd.DataFrame, label: str, caption: str)
             "Variant & Type & Filter Name & Total & \\multicolumn{1}{c}{Accept} & \\multicolumn{1}{c}{Reject} \\\\"
         ],
         add_midrules=True,
+        grouping_column="Type",
     )
 
     return latex_content
@@ -830,6 +833,15 @@ def generate_processing_failures_tables(
 
     summary_df = pd.DataFrame(summary_data)
 
+    def group_processing_stages(stage_name):
+        """Group processing stages into logical sections for midrules."""
+        if stage_name == "Total projects":
+            return "header"
+        elif stage_name == "Successfully processed":
+            return "footer"
+        else:
+            return "pipeline"
+
     # Use build_latex_table_content for summary table
     summary_table = build_latex_table_content(
         summary_df,
@@ -837,6 +849,8 @@ def generate_processing_failures_tables(
         label="tab:processing-failures-per-stage",
         column_spec="l r r",
         add_midrules=True,
+        grouping_column="Processing Stage",
+        grouping_func=group_processing_stages,
     )
 
     # Build causes table

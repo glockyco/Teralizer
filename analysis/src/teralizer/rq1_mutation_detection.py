@@ -19,6 +19,7 @@ from .exports import (
     get_variant_macro,
     format_detection_rate_decimal,
     standardize_project_name,
+    get_project_type,
 )
 
 
@@ -577,7 +578,8 @@ def generate_mutants_per_project_table(df: pd.DataFrame) -> str:
         column_spec="lrrrrr",
         header_rows=header_rows,
         add_midrules=True,
-        project_column="Project",
+        grouping_column="Project",
+        grouping_func=get_project_type,
     )
 
     return table_content
@@ -655,7 +657,8 @@ def generate_mutation_detection_comparison_table(df: pd.DataFrame) -> str:
         column_spec="lcrrrrrrr",
         header_rows=header_rows,
         add_midrules=True,
-        project_column="Project",
+        grouping_column="Project",
+        grouping_func=get_project_type,
     )
 
     return table_content

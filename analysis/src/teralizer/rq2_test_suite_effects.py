@@ -14,7 +14,7 @@ from .formatting import (
     replace_variant_names_with_macros,
     build_latex_table_content,
 )
-from .exports import get_variant_macro, standardize_project_name
+from .exports import get_variant_macro, standardize_project_name, get_project_type
 
 
 # =============================================================================
@@ -343,7 +343,8 @@ def generate_tests_per_project_table(df: pd.DataFrame) -> str:
         column_spec="llrrrrrr",
         header_rows=header_rows,
         add_midrules=True,
-        project_column="Project",
+        grouping_column="Project",
+        grouping_func=get_project_type,
     )
 
     return table_content
@@ -406,7 +407,8 @@ def generate_lines_per_project_table(df: pd.DataFrame) -> str:
         column_spec="llrrrrrr",
         header_rows=header_rows,
         add_midrules=True,
-        project_column="Project",
+        grouping_column="Project",
+        grouping_func=get_project_type,
     )
 
     return table_content
@@ -469,7 +471,8 @@ def generate_runtime_per_project_table(df: pd.DataFrame) -> str:
         column_spec="llrrrrrr",
         header_rows=header_rows,
         add_midrules=True,
-        project_column="Project",
+        grouping_column="Project",
+        grouping_func=get_project_type,
     )
 
     return table_content

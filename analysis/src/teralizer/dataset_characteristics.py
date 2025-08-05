@@ -492,6 +492,8 @@ def generate_dataset_table(df: pd.DataFrame) -> str:
     df_formatted = format_thousands_separator(df_with_macros, numeric_columns)
 
     # Build LaTeX table using utility function
+    from .exports import get_project_type
+
     table_content = build_latex_table_content(
         df_formatted,
         caption="Number of files, classes, source lines of code (SLOC), and test methods per project.",
@@ -503,7 +505,8 @@ def generate_dataset_table(df: pd.DataFrame) -> str:
             "Project & Files & Classes & SLOC & Files & Classes & SLOC & Methods \\\\",
         ],
         add_midrules=True,
-        project_column="project_name",
+        grouping_column="project_name",
+        grouping_func=get_project_type,
     )
 
     return table_content

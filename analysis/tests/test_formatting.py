@@ -221,7 +221,7 @@ def test_add_midrules_missing_column_raises_error():
     df = pd.DataFrame({"variant": ["ORIGINAL"]})
     table_rows = ["row1"]
 
-    with pytest.raises(KeyError, match="Project column 'project_name' not found"):
+    with pytest.raises(KeyError, match="Grouping column 'project_name' not found"):
         add_midrules_between_project_groups(table_rows, df)
 
 
@@ -272,14 +272,18 @@ def test_build_latex_table_content_empty_raises_error():
         build_latex_table_content(df)
 
 
-def test_build_latex_table_content_missing_project_column_with_midrules_raises_error():
-    """Test that missing project column with midrules enabled raises KeyError."""
+def test_build_latex_table_content_with_midrules_no_grouping_column():
+    """Test that midrules are disabled when no valid grouping column is provided."""
     df = pd.DataFrame({"variant": ["ORIGINAL"]})
 
-    with pytest.raises(
-        KeyError, match="Project column 'project_name' required for midrules"
-    ):
-        build_latex_table_content(df, add_midrules=True)
+    # Should not raise error, just disable midrules
+    result = build_latex_table_content(
+        df, add_midrules=True, grouping_column="missing_column"
+    )
+
+    # Should generate table without midrules (no error)
+    assert "\\begin{table}[H]" in result
+    assert "\\bottomrule" in result
 
 
 def test_build_latex_table_content_basic():

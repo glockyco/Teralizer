@@ -5,7 +5,7 @@ LaTeX table formatting that are commonly used across analysis notebooks.
 """
 
 import pandas as pd
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Callable
 from natsort import natsorted
 from .exports import (
     get_table_group_order,
@@ -300,6 +300,53 @@ def replace_variant_names_with_macros(
 # =============================================================================
 
 
+def add_midrules_between_groups(
+    table_rows: List[str],
+    df: pd.DataFrame,
+    grouping_column: str,
+    grouping_func: Optional[Callable] = None,
+) -> List[str]:
+    """Add LaTeX midrules between different groups in tables.
+
+    Args:
+        table_rows: List of LaTeX table row strings
+        df: Original DataFrame to determine groupings
+        grouping_column: Name of column to use for grouping
+        grouping_func: Optional function to transform column value for grouping.
+                      If None, uses column value directly.
+
+    Returns:
+        List of table rows with midrules inserted
+
+    Raises:
+        KeyError: If grouping column is missing from DataFrame
+        ValueError: If table_rows and DataFrame lengths don't match
+    """
+    if grouping_column not in df.columns:
+        raise KeyError(f"Grouping column '{grouping_column}' not found in DataFrame")
+
+    if len(table_rows) != len(df):
+        raise ValueError(
+            f"Length mismatch: {len(table_rows)} table rows vs {len(df)} DataFrame rows"
+        )
+
+    result_rows = []
+    prev_group = None
+
+    for i, (row, idx) in enumerate(zip(table_rows, df.index)):
+        column_value = df.loc[idx, grouping_column]
+        current_group = grouping_func(column_value) if grouping_func else column_value
+
+        # Add midrule if group changes (but not at the beginning)
+        if prev_group is not None and current_group != prev_group:
+            result_rows.append(r"\midrule")
+
+        result_rows.append(row)
+        prev_group = current_group
+
+    return result_rows
+
+
 def add_midrules_between_project_groups(
     table_rows: List[str], df: pd.DataFrame, project_column: str = "project_name"
 ) -> List[str]:
@@ -317,31 +364,9 @@ def add_midrules_between_project_groups(
         KeyError: If project column is missing from DataFrame
         ValueError: If table_rows and DataFrame lengths don't match
     """
-    if project_column not in df.columns:
-        raise KeyError(f"Project column '{project_column}' not found in DataFrame")
-
-    if len(table_rows) != len(df):
-        raise ValueError(
-            f"Length mismatch: {len(table_rows)} table rows vs {len(df)} DataFrame rows"
-        )
-
     from .exports import get_project_type
 
-    result_rows = []
-    prev_project_type = None
-
-    for i, (row, idx) in enumerate(zip(table_rows, df.index)):
-        project_name = df.loc[idx, project_column]
-        current_project_type = get_project_type(project_name)
-
-        # Add midrule if project type changes (but not at the beginning)
-        if prev_project_type is not None and current_project_type != prev_project_type:
-            result_rows.append(r"\midrule")
-
-        result_rows.append(row)
-        prev_project_type = current_project_type
-
-    return result_rows
+    return add_midrules_between_groups(table_rows, df, project_column, get_project_type)
 
 
 def format_table_with_macros(
@@ -381,8 +406,9 @@ def build_latex_table_content(
     label: Optional[str] = None,
     column_spec: Optional[str] = None,
     header_rows: Optional[List[str]] = None,
-    add_midrules: bool = True,
-    project_column: str = "project_name",
+    add_midrules: bool = False,
+    grouping_column: Optional[str] = None,
+    grouping_func: Optional[Callable] = None,
 ) -> str:
     """Generate complete LaTeX table content from DataFrame without pandas to_latex.
 
@@ -392,15 +418,16 @@ def build_latex_table_content(
         label: LaTeX label for referencing
         column_spec: LaTeX column specification (e.g., 'lrrrrrrr')
         header_rows: List of custom header row strings to insert after toprule
-        add_midrules: Whether to add midrules between project groups
-        project_column: Name of column containing project names
+        add_midrules: Whether to add midrules between groups
+        grouping_column: Name of column to use for grouping when add_midrules is True
+        grouping_func: Optional function to transform column value for grouping
 
     Returns:
         Complete LaTeX table content string
 
     Raises:
         ValueError: If DataFrame is empty
-        KeyError: If project_column is missing when add_midrules is True
+        KeyError: If grouping_column is missing when add_midrules is True
     """
     if df.empty:
         raise ValueError("Cannot build LaTeX table from empty DataFrame")
@@ -447,10 +474,10 @@ def build_latex_table_content(
         data_row = " & ".join(row_values) + " \\\\"
         data_rows.append(data_row)
 
-    # Add midrules between project groups if requested
-    if add_midrules and project_column in df.columns:
-        processed_rows = add_midrules_between_project_groups(
-            data_rows, df, project_column
+    # Add midrules between groups if requested
+    if add_midrules and grouping_column and grouping_column in df.columns:
+        processed_rows = add_midrules_between_groups(
+            data_rows, df, grouping_column, grouping_func
         )
         for row in processed_rows:
             lines.append(f"    {row}")
