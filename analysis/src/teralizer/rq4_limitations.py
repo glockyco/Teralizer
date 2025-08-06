@@ -626,6 +626,8 @@ def generate_filtering_results_table(df: pd.DataFrame, label: str, caption: str)
     """
 
     def format_count_pct(count, pct):
+        if count == 0:
+            return "-"
         phantom = "\\phantom{0}" if pct < 10 else ""
         return f"{count}\\; ({phantom}{pct:.1f}\\%)"
 
