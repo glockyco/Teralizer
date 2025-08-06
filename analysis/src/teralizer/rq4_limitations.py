@@ -194,6 +194,11 @@ def compute_filtering_exclusions_summary(df: pd.DataFrame) -> pd.DataFrame:
     # Remove Filter suffix from filter names
     df["filter_name"] = df["filter_name"].str.replace(r"Filter$", "", regex=True)
 
+    # Rename specific filters for clarity
+    df["filter_name"] = df["filter_name"].replace(
+        {"UnsupportedAssertion": "AssertionType"}
+    )
+
     # Calculate percentages
     df["accept_pct"] = (df["accept"] / df["total"] * 100).round(1)
     df["defer_pct"] = (df["defer"] / df["total"] * 100).round(1)
