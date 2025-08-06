@@ -188,17 +188,15 @@ def compute_filtering_exclusions_summary(df: pd.DataFrame) -> pd.DataFrame:
     # Ensure integer columns are int type
     df["total"] = df["total"].astype(int)
     df["accept"] = df["accept"].astype(int)
+    df["defer"] = df["defer"].astype(int)
     df["reject"] = df["reject"].astype(int)
-
-    # Add Defer to Reject and drop Defer
-    df["reject"] = df["reject"] + df["defer"]
-    df = df.drop(columns=["defer"])
 
     # Remove Filter suffix from filter names
     df["filter_name"] = df["filter_name"].str.replace(r"Filter$", "", regex=True)
 
     # Calculate percentages
     df["accept_pct"] = (df["accept"] / df["total"] * 100).round(1)
+    df["defer_pct"] = (df["defer"] / df["total"] * 100).round(1)
     df["reject_pct"] = (df["reject"] / df["total"] * 100).round(1)
 
     return df
@@ -629,6 +627,9 @@ def generate_filtering_results_table(df: pd.DataFrame, label: str, caption: str)
     df["Accept"] = df.apply(
         lambda row: format_count_pct(row["accept"], row["accept_pct"]), axis=1
     )
+    df["Defer"] = df.apply(
+        lambda row: format_count_pct(row["defer"], row["defer_pct"]), axis=1
+    )
     df["Reject"] = df.apply(
         lambda row: format_count_pct(row["reject"], row["reject_pct"]), axis=1
     )
@@ -637,17 +638,25 @@ def generate_filtering_results_table(df: pd.DataFrame, label: str, caption: str)
     df = replace_variant_names_with_macros(df, "variant")
 
     # Use build_latex_table_content for consistent formatting
-    columns = ["variant", "Type", "filter_name", "total", "Accept", "Reject"]
+    columns = ["variant", "Type", "filter_name", "total", "Accept", "Defer", "Reject"]
     df_display = df[columns].copy()
-    df_display.columns = ["Variant", "Type", "Filter Name", "Total", "Accept", "Reject"]
+    df_display.columns = [
+        "Variant",
+        "Type",
+        "Filter Name",
+        "Total",
+        "Accept",
+        "Defer",
+        "Reject",
+    ]
 
     latex_content = build_latex_table_content(
         df_display,
         caption=caption,
         label=label,
-        column_spec="lllrrr",
+        column_spec="lllrrrr",
         header_rows=[
-            "Variant & Type & Filter Name & Total & \\multicolumn{1}{c}{Accept} & \\multicolumn{1}{c}{Reject} \\\\"
+            "Variant & Type & Filter Name & Total & \\multicolumn{1}{c}{Accept} & \\multicolumn{1}{c}{Defer} & \\multicolumn{1}{c}{Reject} \\\\"
         ],
         add_midrules=True,
         grouping_column="Type",
@@ -943,8 +952,10 @@ def generate_filtering_results_csv(df: pd.DataFrame, dataset_type: str) -> pd.Da
                 "filter_name": row["filter_name"],
                 "total_count": int(row["total"]),
                 "accept_count": int(row["accept"]),
+                "defer_count": int(row["defer"]),
                 "reject_count": int(row["reject"]),
                 "accept_percentage": float(row["accept_pct"]),
+                "defer_percentage": float(row["defer_pct"]),
                 "reject_percentage": float(row["reject_pct"]),
             }
         )
