@@ -807,7 +807,7 @@ def generate_processing_failures_tables(
             percent_str = "\\phantom{.}100"
         if percent < 10:
             percent_str = f"\\phantom{{0}}{percent_str}"
-        return f"{n}\\; ({percent_str} \\%)"
+        return f"{n}\\; ({percent_str}\\%)"
 
     def escape_latex(s):
         return str(s).replace("&", "\\&").replace("%", "\\%").replace("_", "\\_")

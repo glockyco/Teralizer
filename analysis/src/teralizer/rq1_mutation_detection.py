@@ -545,11 +545,11 @@ def generate_mutants_per_project_table(df: pd.DataFrame) -> str:
 
         row_str = (
             f"{row['project']} & "
-            f"{int(row['included_tests'])}\\; ({row['test_inclusion_pct']:.1f} \\%) & "
-            f"{int(row['included_classes'])}\\; ({row['class_inclusion_pct']:.1f} \\%) & "
+            f"{int(row['included_tests'])}\\; ({row['test_inclusion_pct']:.1f}\\%) & "
+            f"{int(row['included_classes'])}\\; ({row['class_inclusion_pct']:.1f}\\%) & "
             f"{int(row['total'])} & "
-            f"{int(row['covered'])}\\; ({covered_phantom}{row['covered_pct']:.1f} \\%) & "
-            f"{int(row['uncovered'])}\\; ({uncovered_phantom}{row['uncovered_pct']:.1f} \\%)"
+            f"{int(row['covered'])}\\; ({covered_phantom}{row['covered_pct']:.1f}\\%) & "
+            f"{int(row['uncovered'])}\\; ({uncovered_phantom}{row['uncovered_pct']:.1f}\\%)"
         )
         table_rows.append(row_str)
 
@@ -611,7 +611,7 @@ def generate_mutation_detection_comparison_table(df: pd.DataFrame) -> str:
         if pd.isna(num):
             return "-"
         s = f"{int(num)}"
-        return r"\phantom{0}" * (width - len(s)) + s + r" \%"
+        return r"\phantom{0}" * (width - len(s)) + s + r"\%"
 
     # Build table rows manually
     table_rows = []
