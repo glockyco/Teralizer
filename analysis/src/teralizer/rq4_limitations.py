@@ -7,14 +7,48 @@ pipeline failures in the extended dataset of open source projects.
 
 import pandas as pd
 import re
-from typing import Dict, List, Tuple
-from collections import OrderedDict
+from typing import Dict, Tuple
 
 from .formatting import (
     replace_variant_names_with_macros,
+    replace_project_names_with_macros,
     build_latex_table_content,
+    sort_dataframe_by_project,
 )
-from .exports import get_variant_macro
+from .exports import get_variant_macro, get_project_type
+
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+
+def get_variant_type(variant_name: str) -> str:
+    """Group variant names by type for midrule insertion.
+
+    Args:
+        variant_name: The variant name or macro (e.g., "NAIVE_10_TRIES", "\\VariantNaiveA{}")
+
+    Returns:
+        Group name for midrule grouping
+    """
+    # Handle both original names and macro names
+    if variant_name in ["ORIGINAL", "BASELINE", "INITIAL", "SHARED"] or any(
+        x in variant_name
+        for x in [
+            "\\VariantOriginal{}",
+            "\\VariantBaseline{}",
+            "\\VariantInitial{}",
+            "\\VariantShared{}",
+        ]
+    ):
+        return "baseline"
+    elif variant_name.startswith("NAIVE_") or "\\VariantNaive" in variant_name:
+        return "naive"
+    elif variant_name.startswith("IMPROVED_") or "\\VariantImproved" in variant_name:
+        return "improved"
+    else:
+        return "other"
 
 
 # =============================================================================
@@ -98,6 +132,29 @@ def get_test_failures_by_projects_data(conn) -> pd.DataFrame:
     WHERE p.use_test_generalization
     GROUP BY jtr.project_id, jtr.failure_type
     ORDER BY project_name, jtr.project_id, jtr.failure_type
+    """
+    df = pd.read_sql_query(query, conn)
+    return df
+
+
+def get_test_executions_by_variant_data(conn) -> pd.DataFrame:
+    """Get test execution data grouped by variant.
+
+    Args:
+        conn: Database connection
+
+    Returns:
+        DataFrame with test execution counts by failure_type and variant
+    """
+    query = """
+    SELECT
+        variant_name(stage, variant) AS variant,
+        variant_order(variant_name(stage, variant)) AS variant_order,
+        failure_type,
+        count(*) AS count
+    FROM junit_test_report
+    GROUP BY stage, variant, failure_type
+    ORDER BY variant_order, failure_type
     """
     df = pd.read_sql_query(query, conn)
     return df
@@ -290,15 +347,27 @@ def compute_spf_error_categorization(df: pd.DataFrame) -> pd.DataFrame:
     return df_merged
 
 
-def compute_test_failures_pivot(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
-    """Create pivot table for test failures by variant.
+def compute_test_failures_by_variant_summary(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute test execution summary statistics by variant with failure type categorization.
 
     Args:
-        df: Raw test failures data
+        df: Raw test execution data by variant
 
     Returns:
-        Pivoted DataFrame with failures by type and variant
+        DataFrame with variant-level execution statistics and percentages
     """
+
+    # Categorize failure types
+    def categorize_failure_type(failure_type):
+        if pd.isna(failure_type) or failure_type is None:
+            return "null"
+        elif failure_type == "net.jqwik.api.TooManyFilterMissesException":
+            return "TooManyFilterMissesException"
+        else:
+            return "other"
+
+    df["failure_category"] = df["failure_type"].apply(categorize_failure_type)
+
     # Get ordered variants
     ordered_variants = (
         df[["variant", "variant_order"]]
@@ -307,12 +376,55 @@ def compute_test_failures_pivot(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[st
         .tolist()
     )
 
-    # Create pivot table
-    df_agg = df.groupby(["failure_type", "variant"], as_index=False)["count"].sum()
-    pivoted_df = df_agg.pivot(index="failure_type", columns="variant", values="count")
-    pivoted_df = pivoted_df[ordered_variants].fillna(0).astype(int)
+    # Calculate statistics per variant
+    variant_stats = []
+    for variant in ordered_variants:
+        variant_data = df[df["variant"] == variant]
 
-    return pivoted_df, ordered_variants
+        # Sum up executions by category
+        null_count = variant_data[variant_data["failure_category"] == "null"][
+            "count"
+        ].sum()
+        too_many_filter_count = variant_data[
+            variant_data["failure_category"] == "TooManyFilterMissesException"
+        ]["count"].sum()
+        other_count = variant_data[variant_data["failure_category"] == "other"][
+            "count"
+        ].sum()
+
+        total_executions = null_count + too_many_filter_count + other_count
+
+        null_pct = (null_count / total_executions * 100) if total_executions > 0 else 0
+        too_many_filter_pct = (
+            (too_many_filter_count / total_executions * 100)
+            if total_executions > 0
+            else 0
+        )
+        other_pct = (
+            (other_count / total_executions * 100) if total_executions > 0 else 0
+        )
+
+        variant_stats.append(
+            {
+                "variant": variant,
+                "variant_order": variant_data["variant_order"].iloc[0]
+                if not variant_data.empty
+                else 999,
+                "total_executions": total_executions,
+                "null_count": null_count,
+                "null_pct": null_pct,
+                "too_many_filter_count": too_many_filter_count,
+                "too_many_filter_pct": too_many_filter_pct,
+                "other_count": other_count,
+                "other_pct": other_pct,
+            }
+        )
+
+    results_df = pd.DataFrame(variant_stats)
+    # Sort by variant order
+    results_df = results_df.sort_values("variant_order").reset_index(drop=True)
+
+    return results_df
 
 
 def compute_test_failures_by_projects_summary(df: pd.DataFrame) -> pd.DataFrame:
@@ -373,10 +485,8 @@ def compute_test_failures_by_projects_summary(df: pd.DataFrame) -> pd.DataFrame:
         )
 
     results_df = pd.DataFrame(project_stats)
-    # Sort by total executions descending
-    results_df = results_df.sort_values(
-        "total_executions", ascending=False
-    ).reset_index(drop=True)
+    # Sort by project using standard project ordering
+    results_df = sort_dataframe_by_project(results_df, "project_name")
 
     return results_df
 
@@ -799,25 +909,28 @@ def generate_test_failures_by_projects_table(results_df: pd.DataFrame) -> str:
 
     display_df = results_df.copy()
 
-    display_df["Null"] = display_df.apply(
+    display_df["No Error"] = display_df.apply(
         lambda row: format_count_pct(row["null_count"], row["null_pct"]), axis=1
     )
-    display_df["TooManyFilterMissesException"] = display_df.apply(
+    display_df["TooManyFilterMisses"] = display_df.apply(
         lambda row: format_count_pct(
             row["too_many_filter_count"], row["too_many_filter_pct"]
         ),
         axis=1,
     )
-    display_df["Other"] = display_df.apply(
+    display_df["Inaccurate Specification"] = display_df.apply(
         lambda row: format_count_pct(row["other_count"], row["other_pct"]), axis=1
     )
+
+    # Use project macros
+    display_df = replace_project_names_with_macros(display_df, "project_name")
 
     columns = [
         "project_name",
         "total_executions",
-        "Null",
-        "TooManyFilterMissesException",
-        "Other",
+        "No Error",
+        "TooManyFilterMisses",
+        "Inaccurate Specification",
     ]
     display_df_final = display_df[columns].copy()
     display_df_final.columns = [
@@ -836,102 +949,76 @@ def generate_test_failures_by_projects_table(results_df: pd.DataFrame) -> str:
         header_rows=[
             "Project & Total & \\multicolumn{1}{c}{No Error} & \\multicolumn{1}{c}{TooManyFilterMisses} & \\multicolumn{1}{c}{Inaccurate Specification} \\\\"
         ],
-        add_midrules=False,
+        add_midrules=True,
+        grouping_column="Project",
+        grouping_func=get_project_type,
     )
 
     return latex_content
 
 
-def generate_test_failures_table(
-    pivoted_df: pd.DataFrame, ordered_variants: List[str]
-) -> str:
-    """Generate LaTeX table for test execution failures with complex header.
+def generate_test_failures_by_variant_table(results_df: pd.DataFrame) -> str:
+    """Generate LaTeX table for test failures by variant.
 
     Args:
-        pivoted_df: Pivoted test failures data
-        ordered_variants: List of variants in order
+        results_df: DataFrame with variant-level failure statistics
 
     Returns:
         LaTeX table string
     """
-    # Build automated header generation for complex variant structure
-    variant_info = []
-    for v in ordered_variants:
-        m = re.match(r"([A-Z]+)(?:_(\d+)_TRIES)?", v)
-        if m:
-            base = m.group(1)
-            tries = m.group(2) if m.group(2) else "-"
-            variant_info.append((v, base, tries))
-        else:
-            variant_info.append((v, v, "-"))
 
-    # Group columns by base variant
-    grouped = OrderedDict()
-    for v, base, tries in variant_info:
-        grouped.setdefault(base, []).append((v, tries))
+    def format_count_pct(count, pct):
+        phantom = "\\phantom{0}" if pct < 10 else ""
+        return f"{count}\\; ({phantom}{pct:.1f}\\%)"
 
-    # Build header rows
-    header1 = ["Variant"]
-    header2 = ["Tries"]
-    cmidrules = []
-    col_idx = 2  # LaTeX columns start at 1, first is 'Variant'
+    display_df = results_df.copy()
 
-    for base, cols in grouped.items():
-        n = len(cols)
-        if n == 1:
-            header1.append(base)
-            header2.append("-")
-            col_idx += 1
-        else:
-            header1 += [f"\\multicolumn{{{n}}}{{c}}{{{base}}}"]
-            header2 += [tries for _, tries in cols]
-            # cmidrule for this group
-            start = col_idx
-            end = col_idx + n - 1
-            cmidrules.append(f"\\cmidrule(lr){{{start}-{end}}}")
-            col_idx += n
-
-    header1_line = " & ".join(header1) + r" \\"
-    header2_line = " & ".join(header2) + r" \\"
-    cmidrules_line = "\n    ".join(cmidrules)
-
-    # Build the table manually due to complex header structure
-    latex_table = (
-        r"""\begin{table}[H]
-  \caption{Number of test execution failures by exception type and (generalization) variant.}
-  \label{tab:exclusions-test-fails}
-  \begin{tabular}{l"""
-        + "r" * (len(pivoted_df.columns))
-        + r"""}
-    \toprule
-    """
-        + header1_line
-        + "\n    "
-        + cmidrules_line
-        + "\n    "
-        + header2_line
-        + r"""
-    \midrule
-"""
+    display_df["No Error"] = display_df.apply(
+        lambda row: format_count_pct(row["null_count"], row["null_pct"]), axis=1
+    )
+    display_df["TooManyFilterMisses"] = display_df.apply(
+        lambda row: format_count_pct(
+            row["too_many_filter_count"], row["too_many_filter_pct"]
+        ),
+        axis=1,
+    )
+    display_df["Inaccurate Specification"] = display_df.apply(
+        lambda row: format_count_pct(row["other_count"], row["other_pct"]), axis=1
     )
 
-    # Data rows
-    for failure_type, row in pivoted_df.iterrows():
-        row_str = (
-            "    "
-            + str(failure_type)
-            + " & "
-            + " & ".join(str(x) for x in row.values)
-            + r" \\"
-        )
-        latex_table += row_str + "\n"
+    # Use variant macros
+    display_df = replace_variant_names_with_macros(display_df, "variant")
 
-    latex_table += r"""    \bottomrule
-  \end{tabular}
-\end{table}
-"""
+    columns = [
+        "variant",
+        "total_executions",
+        "No Error",
+        "TooManyFilterMisses",
+        "Inaccurate Specification",
+    ]
+    display_df_final = display_df[columns].copy()
+    display_df_final.columns = [
+        "Variant",
+        "Total",
+        "No Error",
+        "TooManyFilterMisses",
+        "Inaccurate Specification",
+    ]
 
-    return latex_table
+    latex_content = build_latex_table_content(
+        display_df_final,
+        caption="Test execution failure analysis by variant.",
+        label="tab:exclusions-test-fails-by-variant",
+        column_spec="lrrrr",
+        header_rows=[
+            "Variant & Total & \\multicolumn{1}{c}{No Error} & \\multicolumn{1}{c}{TooManyFilterMisses} & \\multicolumn{1}{c}{Inaccurate Specification} \\\\"
+        ],
+        add_midrules=True,
+        grouping_column="Variant",
+        grouping_func=get_variant_type,
+    )
+
+    return latex_content
 
 
 def generate_processing_failures_tables(
@@ -1140,28 +1227,29 @@ def generate_spf_failures_csv(df_merged: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(csv_data)
 
 
-def generate_test_failures_csv(
-    pivoted_df: pd.DataFrame, ordered_variants: List[str]
-) -> pd.DataFrame:
-    """Generate CSV data for test failures.
+def generate_test_failures_by_variant_csv(results_df: pd.DataFrame) -> pd.DataFrame:
+    """Generate CSV data for test failures by variant.
 
     Args:
-        pivoted_df: Pivoted test failures data
-        ordered_variants: List of variants in order
+        results_df: DataFrame with variant-level failure statistics
 
     Returns:
         DataFrame formatted for CSV export
     """
     csv_data = []
-    for failure_type, row in pivoted_df.iterrows():
-        for variant in ordered_variants:
-            csv_data.append(
-                {
-                    "failure_type": failure_type,
-                    "variant": get_variant_macro(variant),
-                    "failure_count": int(row[variant]),
-                }
-            )
+    for _, row in results_df.iterrows():
+        csv_data.append(
+            {
+                "variant": get_variant_macro(row["variant"]),
+                "total_executions": int(row["total_executions"]),
+                "null_count": int(row["null_count"]),
+                "null_percentage": float(row["null_pct"]),
+                "too_many_filter_count": int(row["too_many_filter_count"]),
+                "too_many_filter_percentage": float(row["too_many_filter_pct"]),
+                "other_count": int(row["other_count"]),
+                "other_percentage": float(row["other_pct"]),
+            }
+        )
     return pd.DataFrame(csv_data)
 
 
