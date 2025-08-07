@@ -78,6 +78,31 @@ def get_test_failures_data(conn) -> pd.DataFrame:
     return df
 
 
+def get_test_failures_by_projects_data(conn) -> pd.DataFrame:
+    """Get test execution failures data grouped by projects using test generalization.
+
+    Args:
+        conn: Database connection
+
+    Returns:
+        DataFrame with test failure counts by failure_type and project
+    """
+    query = """
+    SELECT
+        project_name(jtr.project_id) AS project_name,
+        jtr.project_id,
+        jtr.failure_type,
+        count(*) as count
+    FROM junit_test_report jtr
+    JOIN project p ON p.id = jtr.project_id
+    WHERE p.use_test_generalization
+    GROUP BY jtr.project_id, jtr.failure_type
+    ORDER BY project_name, jtr.project_id, jtr.failure_type
+    """
+    df = pd.read_sql_query(query, conn)
+    return df
+
+
 def get_processing_failures_summary_data(conn) -> pd.DataFrame:
     """Get processing pipeline failures summary from extended dataset.
 
@@ -288,6 +313,72 @@ def compute_test_failures_pivot(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[st
     pivoted_df = pivoted_df[ordered_variants].fillna(0).astype(int)
 
     return pivoted_df, ordered_variants
+
+
+def compute_test_failures_by_projects_summary(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute test failure summary statistics by project with failure type categorization.
+
+    Args:
+        df: Raw test failures data by project
+
+    Returns:
+        DataFrame with project-level failure statistics and percentages
+    """
+
+    # Categorize failure types
+    def categorize_failure_type(failure_type):
+        if pd.isna(failure_type) or failure_type is None:
+            return "null"
+        elif failure_type == "net.jqwik.api.TooManyFilterMissesException":
+            return "TooManyFilterMissesException"
+        else:
+            return "other"
+
+    df["failure_category"] = df["failure_type"].apply(categorize_failure_type)
+
+    # Calculate percentages per project
+    project_stats = []
+    for project_id, group in df.groupby("project_id"):
+        project_name = group["project_name"].iloc[0]
+        total_executions = group["count"].sum()
+
+        null_count = group[group["failure_category"] == "null"]["count"].sum()
+        too_many_filter_count = group[
+            group["failure_category"] == "TooManyFilterMissesException"
+        ]["count"].sum()
+        other_count = group[group["failure_category"] == "other"]["count"].sum()
+
+        null_pct = (null_count / total_executions * 100) if total_executions > 0 else 0
+        too_many_filter_pct = (
+            (too_many_filter_count / total_executions * 100)
+            if total_executions > 0
+            else 0
+        )
+        other_pct = (
+            (other_count / total_executions * 100) if total_executions > 0 else 0
+        )
+
+        project_stats.append(
+            {
+                "project_name": project_name,
+                "project_id": project_id,
+                "total_executions": total_executions,
+                "null_count": null_count,
+                "null_pct": null_pct,
+                "too_many_filter_count": too_many_filter_count,
+                "too_many_filter_pct": too_many_filter_pct,
+                "other_count": other_count,
+                "other_pct": other_pct,
+            }
+        )
+
+    results_df = pd.DataFrame(project_stats)
+    # Sort by total executions descending
+    results_df = results_df.sort_values(
+        "total_executions", ascending=False
+    ).reset_index(drop=True)
+
+    return results_df
 
 
 def compute_processing_pipeline_statistics(
@@ -692,6 +783,65 @@ def generate_spf_failures_table(df_merged: pd.DataFrame) -> str:
     return latex_content
 
 
+def generate_test_failures_by_projects_table(results_df: pd.DataFrame) -> str:
+    """Generate LaTeX table for test failures by projects.
+
+    Args:
+        results_df: DataFrame with project-level failure statistics
+
+    Returns:
+        LaTeX table string
+    """
+
+    def format_count_pct(count, pct):
+        phantom = "\\phantom{0}" if pct < 10 else ""
+        return f"{count}\\; ({phantom}{pct:.1f}\\%)"
+
+    display_df = results_df.copy()
+
+    display_df["Null"] = display_df.apply(
+        lambda row: format_count_pct(row["null_count"], row["null_pct"]), axis=1
+    )
+    display_df["TooManyFilterMissesException"] = display_df.apply(
+        lambda row: format_count_pct(
+            row["too_many_filter_count"], row["too_many_filter_pct"]
+        ),
+        axis=1,
+    )
+    display_df["Other"] = display_df.apply(
+        lambda row: format_count_pct(row["other_count"], row["other_pct"]), axis=1
+    )
+
+    columns = [
+        "project_name",
+        "total_executions",
+        "Null",
+        "TooManyFilterMissesException",
+        "Other",
+    ]
+    display_df_final = display_df[columns].copy()
+    display_df_final.columns = [
+        "Project",
+        "Total",
+        "No Error",
+        "TooManyFilterMisses",
+        "Inaccurate Specification",
+    ]
+
+    latex_content = build_latex_table_content(
+        display_df_final,
+        caption="Test execution failure analysis by project.",
+        label="tab:exclusions-test-fails-by-project",
+        column_spec="lrrrr",
+        header_rows=[
+            "Project & Total & \\multicolumn{1}{c}{No Error} & \\multicolumn{1}{c}{TooManyFilterMisses} & \\multicolumn{1}{c}{Inaccurate Specification} \\\\"
+        ],
+        add_midrules=False,
+    )
+
+    return latex_content
+
+
 def generate_test_failures_table(
     pivoted_df: pd.DataFrame, ordered_variants: List[str]
 ) -> str:
@@ -1063,6 +1213,32 @@ def generate_processing_failures_csv(
         }
     )
 
+    return pd.DataFrame(csv_data)
+
+
+def generate_test_failures_by_projects_csv(results_df: pd.DataFrame) -> pd.DataFrame:
+    """Generate CSV data for test failures by projects.
+
+    Args:
+        results_df: DataFrame with project-level failure statistics
+
+    Returns:
+        DataFrame formatted for CSV export
+    """
+    csv_data = []
+    for _, row in results_df.iterrows():
+        csv_data.append(
+            {
+                "project_name": row["project_name"],
+                "total_executions": int(row["total_executions"]),
+                "null_count": int(row["null_count"]),
+                "null_percentage": float(row["null_pct"]),
+                "too_many_filter_count": int(row["too_many_filter_count"]),
+                "too_many_filter_percentage": float(row["too_many_filter_pct"]),
+                "other_count": int(row["other_count"]),
+                "other_percentage": float(row["other_pct"]),
+            }
+        )
     return pd.DataFrame(csv_data)
 
 
