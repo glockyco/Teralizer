@@ -198,6 +198,67 @@ def format_runtime_short(seconds: float) -> str:
 # =============================================================================
 
 
+# =============================================================================
+# Variant color schemes
+# =============================================================================
+
+
+def get_wong_variant_colors() -> Dict[str, str]:
+    """Get Wong colorblind-safe color scheme for Teralizer variants.
+
+    Uses the Wong (2011) palette, optimized for all forms of color blindness
+    and grayscale conversion. Colors are semantically mapped to variant types:
+    - Blue: INITIAL/SHARED (baseline reference)
+    - Olive: BASELINE (deterministic generalization)
+    - Orange: NAIVE variants (random sampling v1)
+    - Bluish-green: IMPROVED variants (random sampling v2)
+    - Yellow: ORIGINAL (reserved, not currently used)
+
+    Returns:
+        Dictionary mapping variant names to hex color codes
+
+    References:
+        Wong, B. (2011). Points of view: Color blindness. Nature Methods 8(6).
+    """
+    return {
+        "ORIGINAL": "#999933",  # Wong olive/yellow-green (reserved)
+        "INITIAL": "#0072B2",  # Wong blue
+        "SHARED": "#0072B2",  # Wong blue
+        "BASELINE": "#CCBB44",  # Wong yellow
+        "NAIVE_10_TRIES": "#D55E00",  # Wong orange
+        "NAIVE_50_TRIES": "#D55E00",  # Wong orange
+        "NAIVE_200_TRIES": "#D55E00",  # Wong orange
+        "IMPROVED_10_TRIES": "#009E73",  # Wong bluish-green
+        "IMPROVED_50_TRIES": "#009E73",  # Wong bluish-green
+        "IMPROVED_200_TRIES": "#009E73",  # Wong bluish-green
+    }
+
+
+def get_variant_color(variant: str) -> str:
+    """Get colorblind-safe color for a variant.
+
+    Args:
+        variant: Variant name (e.g., 'INITIAL', 'NAIVE_200_TRIES', 'IMPROVED_10_TRIES')
+
+    Returns:
+        Hex color string
+    """
+    colors = get_wong_variant_colors()
+
+    # Try exact match first
+    if variant in colors:
+        return colors[variant]
+
+    # Handle variant prefixes
+    if variant.startswith("NAIVE"):
+        return colors["NAIVE_10_TRIES"]
+    elif variant.startswith("IMPROVED"):
+        return colors["IMPROVED_10_TRIES"]
+
+    # Fallback to grey for unknown variants
+    return "#BBBBBB"
+
+
 def get_distinct_colors(n_colors: int) -> List[str]:
     """Generate distinct color palette.
 
