@@ -106,18 +106,35 @@ def save_csv_data(
 def standardize_project_name(project_name: str) -> str:
     """Standardize project name for cross-dataset consistency.
 
+    Maps database project names to display names that match LaTeX macros.
+
     Args:
         project_name: Raw project name from database
 
     Returns:
         str: Standardized project name
     """
+    # Project name mapping (mirrors LaTeX macro definitions)
+    PROJECT_NAME_MAPPING = {
+        "eqbench-es-default-1s": "eqbench-es-1s",
+        "eqbench-es-default-10s": "eqbench-es-10s",
+        "eqbench-es-default-60s": "eqbench-es-60s",
+        "commons-utils": "commons-utils-dev",
+        "commons-utils-es-default-1s": "commons-utils-es-1s",
+        "commons-utils-es-default-10s": "commons-utils-es-10s",
+        "commons-utils-es-default-60s": "commons-utils-es-60s",
+    }
+
     # Remove common path prefixes and suffixes
     name = project_name.strip()
 
     # Handle common patterns
     if name.startswith("/"):
         name = name.split("/")[-1]  # Take last path component
+
+    # Apply explicit mapping if available
+    if name in PROJECT_NAME_MAPPING:
+        return PROJECT_NAME_MAPPING[name]
 
     return name
 

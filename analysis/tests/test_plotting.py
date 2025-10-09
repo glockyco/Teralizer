@@ -410,12 +410,12 @@ def test_create_pareto_front_line_invalid():
 
 def test_prepare_multiline_xtick_labels():
     """Test multiline xtick label preparation."""
-    groups = ["Original Validation", "Test Transformation", "Unknown Group"]
+    groups = ["Stage 1 + 2", "Stage 4", "Unknown Group"]
     result = prepare_multiline_xtick_labels(groups)
 
     assert len(result) == 3
-    assert result[0] == "Original\nValidation"
-    assert "BASELINE" in result[1]  # Test Transformation should have variant info
+    assert result[0] == "Setup & Analysis\n(SHARED)"
+    assert "Transformation" in result[1]  # Stage 4 should be Test Transformation
     assert result[2] == "Unknown Group"  # Unknown should pass through unchanged
 
 

@@ -12,6 +12,45 @@ from typing import List, Dict, Optional, Tuple, Any, Callable
 
 
 # =============================================================================
+# Figure configuration standards
+# =============================================================================
+
+# Figure size and font standards for ACM single-column format
+# ACM single-column text width is approximately 7.0 inches
+# Page height constraint is approximately 9.5 inches per column
+
+FIGURE_CONFIG = {
+    # Standard widths (in inches) - adjusted for chart complexity
+    "width_multibar": 7.0,  # Multi-bar charts (RQ1, RQ2, RQ3 stage breakdown)
+    "width_scatter": 7,  # Scatter plots (RQ3 efficiency)
+    "width_comparison": 7.0,  # Side-by-side comparisons (RQ2 runtime differences)
+    "width_full": 7.0,  # Legacy full width (deprecated, use specific widths)
+    "width_large": 6.5,  # Legacy large figure (deprecated)
+    "width_medium": 5.5,  # Legacy medium figure (deprecated)
+    # Height constraints
+    "subplot_height": 2.1,  # Height per subplot for multi-panel figures
+    "max_height": 8.5,  # Maximum height for a single figure
+    "comparison_height": 3.0,  # Height for side-by-side comparisons
+    # Font sizes (in points)
+    "fonts": {
+        "tiny": 7,  # Very small annotations
+        "small": 8,  # Small text, dense labels
+        "normal": 9,  # Standard annotations
+        "medium": 10,  # Emphasized text
+        "large": 11,  # Titles, important labels
+        "xlarge": 12,  # Main titles
+    },
+    # Spacing and offsets
+    "label_offset_pct": 0.02,  # Percentage offset for labels (2%)
+    "y_padding_multiplier": 1.25,  # Y-axis padding multiplier to prevent label overflow
+    "legend_ncol_max": 4,  # Maximum columns in legend before wrapping
+    "subplot_hspace": 0.3,  # Vertical space between subplots
+    "subplot_top": 0.95,  # Top margin for subplots
+    "subplot_bottom": 0.05,  # Bottom margin
+}
+
+
+# =============================================================================
 # Core configuration functions
 # =============================================================================
 
@@ -20,6 +59,7 @@ def setup_paper_style() -> None:
     """Apply standard matplotlib settings for paper figures.
 
     Configures fonts, colors, grid, and output settings for academic publications.
+    Font sizes are appropriate for 9-14" wide figures in ACM single-column format.
     """
     mpl.rcParams.update(
         {
@@ -31,6 +71,12 @@ def setup_paper_style() -> None:
                 "Times New Roman",
                 "Times",
             ],
+            "font.size": 8,
+            "axes.titlesize": 10,
+            "axes.labelsize": 8,
+            "xtick.labelsize": 8,
+            "ytick.labelsize": 8,
+            "legend.fontsize": 8,
             "axes.facecolor": "white",
             "figure.facecolor": "white",
             "axes.edgecolor": "black",
@@ -38,14 +84,31 @@ def setup_paper_style() -> None:
             "grid.color": "#cccccc",
             "grid.linestyle": "--",
             "grid.linewidth": 0.7,
-            "axes.grid": True,
+            "axes.grid": False,
             "axes.axisbelow": True,
             "savefig.dpi": 300,
             "savefig.format": "pdf",
+            "savefig.bbox": "tight",
             "pdf.fonttype": 42,
             "ps.fonttype": 42,
         }
     )
+
+
+def calculate_label_offset(
+    y_min: float, y_max: float, offset_pct: float = 0.02
+) -> float:
+    """Calculate label offset as percentage of axis range.
+
+    Args:
+        y_min: Minimum y-axis value
+        y_max: Maximum y-axis value
+        offset_pct: Offset as percentage of range (default: 0.02 = 2%)
+
+    Returns:
+        Offset value in data units
+    """
+    return (y_max - y_min) * offset_pct
 
 
 def setup_presentation_style() -> None:
@@ -371,6 +434,84 @@ def extend_color_palette(base_colors: List[str], needed_count: int) -> List[str]
 
 
 # =============================================================================
+# Figure sizing helpers
+# =============================================================================
+
+
+def get_multiplot_figure_size(
+    n_subplots: int, layout: str = "vertical"
+) -> Tuple[float, float]:
+    """Calculate optimal figure size for multi-subplot figures.
+
+    Args:
+        n_subplots: Number of subplots
+        layout: "vertical" or "horizontal"
+
+    Returns:
+        Tuple of (width, height) in inches
+
+    Raises:
+        ValueError: If layout is not recognized
+    """
+    if layout == "vertical":
+        width = FIGURE_CONFIG["width_full"]
+        height_per_plot = FIGURE_CONFIG["subplot_height"]
+        total_height = height_per_plot * n_subplots
+        # Cap height at maximum
+        height = min(total_height, FIGURE_CONFIG["max_height"])
+        return width, height
+    elif layout == "horizontal":
+        # Side-by-side comparison
+        width = FIGURE_CONFIG["width_comparison"]
+        height = FIGURE_CONFIG["comparison_height"]
+        return width, height
+    else:
+        raise ValueError(f"Unknown layout: {layout}")
+
+
+def get_font_size(size_name: str) -> int:
+    """Get standardized font size.
+
+    Args:
+        size_name: One of "tiny", "small", "normal", "medium", "large", "xlarge"
+
+    Returns:
+        Font size in points
+
+    Raises:
+        ValueError: If size_name is not recognized
+    """
+    if size_name not in FIGURE_CONFIG["fonts"]:
+        raise ValueError(
+            f"Unknown font size name: {size_name}. "
+            f"Valid options: {list(FIGURE_CONFIG['fonts'].keys())}"
+        )
+    return FIGURE_CONFIG["fonts"][size_name]
+
+
+def should_show_xaxis_labels(
+    subplot_idx: int, total_subplots: int, label_frequency: int = 2
+) -> bool:
+    """Determine if x-axis labels should be shown for a given subplot.
+
+    Args:
+        subplot_idx: Index of current subplot (0-based)
+        total_subplots: Total number of subplots
+        label_frequency: Show labels every N subplots
+
+    Returns:
+        True if labels should be shown
+    """
+    # Always show on last subplot
+    if subplot_idx == total_subplots - 1:
+        return True
+    # Show every label_frequency subplots
+    if subplot_idx % label_frequency == 0:
+        return True
+    return False
+
+
+# =============================================================================
 # Layout and spacing helpers
 # =============================================================================
 
@@ -464,7 +605,10 @@ def setup_multi_subplot_layout(
 
 
 def add_value_labels_on_bars(
-    ax: Any, bars: Any, formatter: Optional[Callable[[float], str]] = None
+    ax: Any,
+    bars: Any,
+    formatter: Optional[Callable[[float], str]] = None,
+    fontsize: int = 9,
 ) -> None:
     """Add text labels on top of bars.
 
@@ -472,6 +616,7 @@ def add_value_labels_on_bars(
         ax: Matplotlib axes object
         bars: Bar objects from ax.bar()
         formatter: Optional function to format values
+        fontsize: Font size for labels (default: 9)
 
     Raises:
         ValueError: If ax or bars is None
@@ -498,7 +643,7 @@ def add_value_labels_on_bars(
                 formatted_value,
                 ha="center",
                 va="bottom",
-                fontsize=16,
+                fontsize=fontsize,
                 rotation=0,
             )
 
@@ -627,11 +772,10 @@ def prepare_multiline_xtick_labels(groups: List[str]) -> List[str]:
         List of formatted multi-line labels
     """
     label_mapping = {
-        "Original Validation": "Original\nValidation",
-        "Specification Extraction": "Specification\nExtraction",
-        "Initial Validation": "Initial\nValidation",
-        "Test Transformation": "Test Transformation\n(BASELINE, NAIVE$_{10|50|200}$, IMPROVED$_{10|50|200}$)",
-        "Generalization Validation": "Generalization Validation\n(BASELINE, NAIVE$_{10|50|200}$, IMPROVED$_{10|50|200}$)",
+        "Stage 1 + 2": "Analysis\n(SHARED)",
+        "Stage 3": "Specification Extraction\n(SHARED)",
+        "Stage 4": "Test Transformation\n(BASELINE, NAIVE, IMPROVED)",
+        "Stage 5": "Validation\n(BASELINE, NAIVE, IMPROVED)",
     }
 
     return [label_mapping.get(group, group) for group in groups]

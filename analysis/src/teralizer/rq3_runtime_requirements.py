@@ -214,11 +214,10 @@ def compute_stage_runtime_breakdown(df: pd.DataFrame) -> pd.DataFrame:
 
     # Use categorical data types for better performance
     ordered_groups = [
-        "Original Validation",
-        "Specification Extraction",
-        "Initial Validation",
-        "Test Transformation",
-        "Generalization Validation",
+        "Stage 1 + 2",
+        "Stage 3",
+        "Stage 4",
+        "Stage 5",
     ]
 
     df_processed["stage_group"] = pd.Categorical(
@@ -697,11 +696,10 @@ def generate_runtime_breakdown_csv(df: pd.DataFrame) -> pd.DataFrame:
     """
     # Define step order mapping for pipeline execution sequence
     step_order_map = {
-        "Original Validation": 1,
-        "Specification Extraction": 2,
-        "Initial Validation": 3,
-        "Test Transformation": 4,
-        "Generalization Validation": 5,
+        "Stage 1 + 2": 1,
+        "Stage 3": 2,
+        "Stage 4": 3,
+        "Stage 5": 4,
     }
 
     csv_data = []
@@ -709,9 +707,8 @@ def generate_runtime_breakdown_csv(df: pd.DataFrame) -> pd.DataFrame:
     for _, row in df.iterrows():
         # Determine if stage is shared (runs once per project) or variant-specific
         is_shared_stage = row["stage_group"] in [
-            "Original Validation",
-            "Specification Extraction",
-            "Initial Validation",
+            "Stage 1 + 2",
+            "Stage 3",
         ]
 
         csv_data.append(
@@ -866,6 +863,7 @@ def get_stage_step_runtime_breakdown(conn) -> pd.DataFrame:
     Returns:
         DataFrame with runtime per processing step, aggregated per project
     """
+
     query = """
     WITH step_runtimes AS (
         SELECT 
@@ -873,24 +871,44 @@ def get_stage_step_runtime_breakdown(conn) -> pd.DataFrame:
             project_name(t.project_id) as project_name,
             t.stage as processing_step,
             CASE 
-                WHEN t.stage IN ('EXECUTE_TESTS_ORIGINAL', 'COLLECT_JUNIT_REPORTS_ORIGINAL', 
-                                'COLLECT_JACOCO_DATA_ORIGINAL', 'FILTER_TESTS_ORIGINAL', 
-                                'COLLECT_PIT_DATA_ORIGINAL') 
-                THEN 'Original Validation'
-                WHEN t.stage IN ('BUILD_SPOON_MODEL', 'ANALYZE_TESTS', 'FILTER_TESTS', 
-                                'FILTER_ASSERTIONS', 'ADD_JPF_INSTRUMENTATION', 
-                                'BUILD_PROJECT_INSTRUMENTED', 'EXECUTE_JPF', 'ANALYZE_JPF') 
-                THEN 'Specification Extraction'
-                WHEN t.stage IN ('ADD_DEPENDENCIES', 'BUILD_PROJECT_INITIAL', 'EXECUTE_TESTS_INITIAL', 
-                                'COLLECT_JUNIT_REPORTS_INITIAL', 'COLLECT_JACOCO_DATA_INITIAL', 
-                                'COLLECT_PIT_DATA_INITIAL') 
-                THEN 'Initial Validation'
-                WHEN t.stage = 'GENERALIZE_TESTS' 
-                THEN 'Test Transformation'
-                WHEN t.stage IN ('BUILD_PROJECT_GENERALIZED', 'EXECUTE_TESTS_GENERALIZED', 
-                                'COLLECT_JUNIT_REPORTS_GENERALIZED', 'FILTER_GENERALIZATIONS', 
-                                'COLLECT_JACOCO_DATA_GENERALIZED', 'COLLECT_PIT_DATA_GENERALIZED') 
-                THEN 'Generalization Validation'
+                WHEN t.stage IN (
+                    'SETUP_PROJECT',
+                    'ADD_DEPENDENCIES',
+                    'BUILD_PROJECT_ORIGINAL',
+                    'BUILD_SPOON_MODEL',
+                    'EXECUTE_TESTS_ORIGINAL',
+                    'COLLECT_JUNIT_REPORTS_ORIGINAL',
+                    'COLLECT_JACOCO_DATA_ORIGINAL',
+                    'FILTER_TESTS_ORIGINAL',
+                    'ANALYZE_TESTS',
+                    'FILTER_TESTS',
+                    'FILTER_ASSERTIONS'
+                ) THEN 'Stage 1 + 2'
+                WHEN t.stage IN (
+                    'ADD_JPF_INSTRUMENTATION',
+                    'BUILD_PROJECT_INSTRUMENTED',
+                    'EXECUTE_JPF',
+                    'ANALYZE_JPF',
+                    'CLEANUP_JPF_INSTRUMENTATION'
+                ) THEN 'Stage 3'
+                WHEN t.stage IN (
+                    'CLEANUP_GENERALIZATION',
+                    'GENERALIZE_TESTS'
+                ) THEN 'Stage 4'
+                WHEN t.stage IN (
+                    'COLLECT_PIT_DATA_ORIGINAL',
+                    'BUILD_PROJECT_INITIAL',
+                    'EXECUTE_TESTS_INITIAL',
+                    'COLLECT_JUNIT_REPORTS_INITIAL',
+                    'COLLECT_JACOCO_DATA_INITIAL',
+                    'COLLECT_PIT_DATA_INITIAL',
+                    'BUILD_PROJECT_GENERALIZED',
+                    'EXECUTE_TESTS_GENERALIZED',
+                    'COLLECT_JUNIT_REPORTS_GENERALIZED',
+                    'FILTER_GENERALIZATIONS',
+                    'COLLECT_JACOCO_DATA_GENERALIZED',
+                    'COLLECT_PIT_DATA_GENERALIZED'
+                ) THEN 'Stage 5'
             END AS stage_group,
             SUM(t.runtime) as step_runtime_seconds
         FROM task t
