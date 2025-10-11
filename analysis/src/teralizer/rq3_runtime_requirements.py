@@ -22,6 +22,7 @@ from .exports import (
     format_detection_rate_decimal,
     get_project_type,
 )
+from .stages import get_stage_group_sql_case
 
 
 # =============================================================================
@@ -864,57 +865,20 @@ def get_stage_step_runtime_breakdown(conn) -> pd.DataFrame:
         DataFrame with runtime per processing step, aggregated per project
     """
 
-    query = """
+    stage_case = get_stage_group_sql_case().replace("stage", "t.stage")
+
+    query = f"""
     WITH step_runtimes AS (
-        SELECT 
+        SELECT
             t.project_id,
             project_name(t.project_id) as project_name,
             t.stage as processing_step,
-            CASE 
-                WHEN t.stage IN (
-                    'SETUP_PROJECT',
-                    'ADD_DEPENDENCIES',
-                    'BUILD_PROJECT_ORIGINAL',
-                    'BUILD_SPOON_MODEL',
-                    'EXECUTE_TESTS_ORIGINAL',
-                    'COLLECT_JUNIT_REPORTS_ORIGINAL',
-                    'COLLECT_JACOCO_DATA_ORIGINAL',
-                    'FILTER_TESTS_ORIGINAL',
-                    'ANALYZE_TESTS',
-                    'FILTER_TESTS',
-                    'FILTER_ASSERTIONS'
-                ) THEN 'Stage 1 + 2'
-                WHEN t.stage IN (
-                    'ADD_JPF_INSTRUMENTATION',
-                    'BUILD_PROJECT_INSTRUMENTED',
-                    'EXECUTE_JPF',
-                    'ANALYZE_JPF',
-                    'CLEANUP_JPF_INSTRUMENTATION'
-                ) THEN 'Stage 3'
-                WHEN t.stage IN (
-                    'CLEANUP_GENERALIZATION',
-                    'GENERALIZE_TESTS'
-                ) THEN 'Stage 4'
-                WHEN t.stage IN (
-                    'COLLECT_PIT_DATA_ORIGINAL',
-                    'BUILD_PROJECT_INITIAL',
-                    'EXECUTE_TESTS_INITIAL',
-                    'COLLECT_JUNIT_REPORTS_INITIAL',
-                    'COLLECT_JACOCO_DATA_INITIAL',
-                    'COLLECT_PIT_DATA_INITIAL',
-                    'BUILD_PROJECT_GENERALIZED',
-                    'EXECUTE_TESTS_GENERALIZED',
-                    'COLLECT_JUNIT_REPORTS_GENERALIZED',
-                    'FILTER_GENERALIZATIONS',
-                    'COLLECT_JACOCO_DATA_GENERALIZED',
-                    'COLLECT_PIT_DATA_GENERALIZED'
-                ) THEN 'Stage 5'
-            END AS stage_group,
+            {stage_case} AS stage_group,
             SUM(t.runtime) as step_runtime_seconds
         FROM task t
-        JOIN project p ON t.project_id = p.id  
+        JOIN project p ON t.project_id = p.id
         JOIN v_projects_successes ps ON ps.project_id = p.id
-        WHERE 
+        WHERE
             t.runtime IS NOT NULL AND
             p.use_test_generalization = true
         GROUP BY t.project_id, t.stage

@@ -7,7 +7,7 @@ pipeline failures in the extended dataset of open source projects.
 
 import pandas as pd
 import re
-from typing import Dict, Tuple
+from typing import Dict
 
 from .formatting import (
     replace_variant_names_with_macros,
@@ -16,6 +16,7 @@ from .formatting import (
     sort_dataframe_by_project,
 )
 from .exports import get_variant_macro, get_project_type
+from .stages import map_internal_stage_to_paper_stage, get_stage_order
 
 
 # =============================================================================
@@ -157,28 +158,6 @@ def get_test_executions_by_variant_data(conn) -> pd.DataFrame:
     ORDER BY variant_order, failure_type
     """
     df = pd.read_sql_query(query, conn)
-    return df
-
-
-def get_processing_failures_summary_data(conn) -> pd.DataFrame:
-    """Get processing pipeline failures summary from extended dataset.
-
-    Args:
-        conn: Database connection (should be extended dataset connection)
-
-    Returns:
-        DataFrame with processing stage failure summary
-    """
-    summary_query = """
-    SELECT NULL as step, NULL as stage, 'Total projects' AS status, 
-           (SELECT SUM(count) FROM v_project_failures_summary) + 
-           (SELECT COUNT(*) FROM v_projects_successes) AS count
-    UNION ALL
-    SELECT step, stage, stage, count FROM v_project_failures_summary
-    UNION ALL
-    SELECT NULL, NULL, 'Successfully processed', COUNT(*) FROM v_projects_successes
-    """
-    df = pd.read_sql_query(summary_query, conn)
     return df
 
 
@@ -489,40 +468,6 @@ def compute_test_failures_by_projects_summary(df: pd.DataFrame) -> pd.DataFrame:
     results_df = sort_dataframe_by_project(results_df, "project_name")
 
     return results_df
-
-
-def compute_processing_pipeline_statistics(
-    summary_df: pd.DataFrame,
-) -> Tuple[pd.DataFrame, int, int]:
-    """Compute processing pipeline failure statistics.
-
-    Args:
-        summary_df: Summary data from processing pipeline
-
-    Returns:
-        Tuple of (failures_per_stage DataFrame, total_projects int, success_count int)
-    """
-    total_projects = int(
-        summary_df.loc[summary_df["status"] == "Total projects", "count"].values[0]
-    )
-    success_count = int(
-        summary_df.loc[
-            summary_df["status"] == "Successfully processed", "count"
-        ].values[0]
-    )
-
-    failures_per_stage = summary_df[
-        (summary_df["status"] != "Total projects")
-        & (summary_df["status"] != "Successfully processed")
-    ].copy()
-
-    failures_per_stage["Failures"] = failures_per_stage["count"].astype(int)
-    failures_per_stage = failures_per_stage.sort_values("step")
-    failures_per_stage["Remaining"] = (
-        total_projects - failures_per_stage["Failures"].cumsum()
-    )
-
-    return failures_per_stage, total_projects, success_count
 
 
 def compute_failure_causes_by_stage(failures_df: pd.DataFrame) -> Dict[str, str]:
@@ -1021,131 +966,6 @@ def generate_test_failures_by_variant_table(results_df: pd.DataFrame) -> str:
     return latex_content
 
 
-def generate_processing_failures_tables(
-    failures_per_stage: pd.DataFrame,
-    total_projects: int,
-    success_count: int,
-    stage_to_causes: Dict[str, str],
-) -> Tuple[str, str]:
-    """Generate both processing failures tables using shared formatting.
-
-    Args:
-        failures_per_stage: DataFrame with failure statistics
-        total_projects: Total number of projects
-        success_count: Number of successfully processed projects
-        stage_to_causes: Dictionary mapping stages to cause descriptions
-
-    Returns:
-        Tuple of (summary_table, causes_table) LaTeX strings
-    """
-
-    def format_remaining(n, total):
-        percent = 100 * n / total if total else 0
-        percent_str = f"{percent:.1f}"
-        if percent == 100:
-            percent_str = "\\phantom{.}100"
-        if percent < 10:
-            percent_str = f"\\phantom{{0}}{percent_str}"
-        return f"{n}\\; ({percent_str}\\%)"
-
-    def escape_latex(s):
-        return str(s).replace("&", "\\&").replace("%", "\\%").replace("_", "\\_")
-
-    # Build summary table data
-    summary_data = []
-
-    # Total projects row
-    summary_data.append(
-        {
-            "Processing Stage": "Total projects",
-            "Failures": "-",
-            "Remaining Projects": format_remaining(total_projects, total_projects),
-        }
-    )
-
-    # Failure rows
-    for _, row in failures_per_stage.iterrows():
-        summary_data.append(
-            {
-                "Processing Stage": escape_latex(row["status"]),
-                "Failures": int(row["Failures"]),
-                "Remaining Projects": format_remaining(
-                    int(row["Remaining"]), total_projects
-                ),
-            }
-        )
-
-    # Success row
-    summary_data.append(
-        {
-            "Processing Stage": "Successfully processed",
-            "Failures": "-",
-            "Remaining Projects": format_remaining(success_count, total_projects),
-        }
-    )
-
-    summary_df = pd.DataFrame(summary_data)
-
-    def group_processing_stages(stage_name):
-        """Group processing stages into logical sections for midrules."""
-        if stage_name == "Total projects":
-            return "header"
-        elif stage_name == "Successfully processed":
-            return "footer"
-        else:
-            return "pipeline"
-
-    # Use build_latex_table_content for summary table
-    summary_table = build_latex_table_content(
-        summary_df,
-        caption="Number of processing failures and remaining projects per processing stage.",
-        label="tab:processing-failures-per-stage",
-        column_spec="l r r",
-        add_midrules=True,
-        grouping_column="Processing Stage",
-        grouping_func=group_processing_stages,
-    )
-
-    # Build causes table
-    stage_order = (
-        failures_per_stage[["stage", "step"]]
-        .drop_duplicates()
-        .sort_values("step")
-        .set_index("stage")
-        .index.tolist()
-    )
-
-    causes_data = []
-    for stage in stage_order:
-        if stage in stage_to_causes:
-            causes_data.append(
-                {
-                    "Processing Stage": escape_latex(stage),
-                    "Causes of Processing Failures": stage_to_causes[stage],
-                }
-            )
-
-    causes_df = pd.DataFrame(causes_data)
-
-    # Manual table for causes due to tabularx requirement
-    causes_table = r"""\begin{table}[H]
-  \caption{Causes of processing failures per processing stage.}
-  \label{tab:processing-failure-causes}
-  \begin{tabularx}{\textwidth}{l X}
-    \toprule
-    Processing Stage & Causes of Processing Failures \\
-    \midrule
-"""
-    for _, row in causes_df.iterrows():
-        causes_table += f"    {row['Processing Stage']} & {row['Causes of Processing Failures']} \\\\\n"
-    causes_table += r"""    \bottomrule
-  \end{tabularx}
-\end{table}
-"""
-
-    return summary_table, causes_table
-
-
 # =============================================================================
 # CSV Generation Functions (generate_*_csv)
 # =============================================================================
@@ -1253,57 +1073,6 @@ def generate_test_failures_by_variant_csv(results_df: pd.DataFrame) -> pd.DataFr
     return pd.DataFrame(csv_data)
 
 
-def generate_processing_failures_csv(
-    failures_per_stage: pd.DataFrame, total_projects: int, success_count: int
-) -> pd.DataFrame:
-    """Generate CSV data for processing failures summary.
-
-    Args:
-        failures_per_stage: DataFrame with failure statistics
-        total_projects: Total number of projects
-        success_count: Number of successfully processed projects
-
-    Returns:
-        DataFrame formatted for CSV export
-    """
-    csv_data = []
-
-    # Add total projects row
-    csv_data.append(
-        {
-            "processing_stage": "Total projects",
-            "failure_count": None,
-            "remaining_count": total_projects,
-            "remaining_percentage": 100.0,
-        }
-    )
-
-    # Add failure rows
-    for _, row in failures_per_stage.iterrows():
-        remaining_count = int(row["Remaining"])
-        remaining_percentage = 100 * remaining_count / total_projects
-        csv_data.append(
-            {
-                "processing_stage": row["status"],
-                "failure_count": int(row["Failures"]),
-                "remaining_count": remaining_count,
-                "remaining_percentage": round(remaining_percentage, 1),
-            }
-        )
-
-    # Add success row
-    csv_data.append(
-        {
-            "processing_stage": "Successfully processed",
-            "failure_count": None,
-            "remaining_count": success_count,
-            "remaining_percentage": round(100 * success_count / total_projects, 1),
-        }
-    )
-
-    return pd.DataFrame(csv_data)
-
-
 def generate_test_failures_by_projects_csv(results_df: pd.DataFrame) -> pd.DataFrame:
     """Generate CSV data for test failures by projects.
 
@@ -1330,18 +1099,116 @@ def generate_test_failures_by_projects_csv(results_df: pd.DataFrame) -> pd.DataF
     return pd.DataFrame(csv_data)
 
 
-def generate_processing_failure_causes_csv(
-    stage_to_causes: Dict[str, str],
-) -> pd.DataFrame:
-    """Generate CSV data for processing failure causes.
+# =============================================================================
+# Processing Failures by Stage and Cause
+# =============================================================================
+
+
+def get_processing_failures_by_cause_data(conn) -> pd.DataFrame:
+    """Get processing failures with individual causes from extended dataset.
 
     Args:
-        stage_to_causes: Dictionary mapping stages to causes
+        conn: Database connection (should be extended dataset connection)
+
+    Returns:
+        DataFrame with columns: internal_stage, cause_desc, count
+    """
+    failures_df = get_processing_failure_causes_data(conn)
+    cause_dict = compute_failure_causes_by_stage(failures_df)
+
+    rows = []
+    for stage, causes_str in cause_dict.items():
+        parts = causes_str.split(", ")
+        for part in parts:
+            match = re.match(r"(.+?) \((\d+)\)$", part)
+            if match:
+                cause_desc = match.group(1)
+                count = int(match.group(2))
+                rows.append(
+                    {"internal_stage": stage, "cause_desc": cause_desc, "count": count}
+                )
+
+    return pd.DataFrame(rows)
+
+
+def compute_processing_failures_by_stage_and_cause(df: pd.DataFrame) -> pd.DataFrame:
+    """Map internal stages to paper stages and aggregate causes.
+
+    Args:
+        df: DataFrame with columns: internal_stage, cause_desc, count
+
+    Returns:
+        DataFrame with columns: stage, cause, count (sorted by stage, count desc, cause)
+    """
+    df = df.copy()
+
+    df["stage"] = df["internal_stage"].apply(map_internal_stage_to_paper_stage)
+
+    unmapped = df[df["stage"].isna()]
+    if not unmapped.empty:
+        unmapped_stages = unmapped["internal_stage"].unique().tolist()
+        raise ValueError(f"Unmapped internal stages found: {unmapped_stages}")
+
+    df_aggregated = df.groupby(["stage", "cause_desc"], as_index=False)["count"].sum()
+
+    other_causes = df_aggregated[df_aggregated["cause_desc"] == "other"]
+    if not other_causes.empty:
+        print("WARNING: Found 'other' category failures that need classification:")
+        print(other_causes)
+
+    stage_order_map = get_stage_order()
+    df_aggregated["stage_order"] = df_aggregated["stage"].map(stage_order_map)
+
+    df_sorted = df_aggregated.sort_values(
+        by=["stage_order", "count", "cause_desc"], ascending=[True, False, True]
+    ).reset_index(drop=True)
+
+    df_sorted = df_sorted[["stage", "cause_desc", "count"]].rename(
+        columns={"cause_desc": "cause"}
+    )
+
+    return df_sorted
+
+
+def generate_processing_failures_table(df: pd.DataFrame) -> str:
+    """Generate unified LaTeX table for processing failures by stage and cause.
+
+    Args:
+        df: DataFrame from compute_processing_failures_by_stage_and_cause
+
+    Returns:
+        LaTeX table string
+    """
+    display_df = df.copy()
+    display_df.columns = ["Stage", "Cause of Failure", "Count"]
+
+    latex_content = build_latex_table_content(
+        display_df,
+        caption="Processing failures by stage and cause.",
+        label="tab:processing-failures",
+        column_spec="llr",
+        add_midrules=False,
+    )
+
+    return latex_content
+
+
+def generate_processing_failures_by_cause_csv(df: pd.DataFrame) -> pd.DataFrame:
+    """Generate CSV data for unified processing failures table.
+
+    Args:
+        df: DataFrame from compute_processing_failures_by_stage_and_cause
 
     Returns:
         DataFrame formatted for CSV export
     """
     csv_data = []
-    for stage, causes in stage_to_causes.items():
-        csv_data.append({"processing_stage": stage, "failure_causes": causes})
+    for _, row in df.iterrows():
+        csv_data.append(
+            {
+                "stage": row["stage"],
+                "cause_of_failure": row["cause"],
+                "count": int(row["count"]),
+            }
+        )
     return pd.DataFrame(csv_data)
