@@ -229,21 +229,31 @@ def get_projects_path() -> Path:
     )
 
 
-def get_source_directories(projects_root: Path) -> List[str]:
+def get_source_directories(
+    projects_root: Path, excluded_projects: set[str] | None = None
+) -> List[str]:
     """Discover all project source directories for analysis.
 
     Args:
         projects_root: Root path containing all projects
+        excluded_projects: Optional set of project directory names to exclude
 
     Returns:
         List of source directory paths to analyze
     """
+    if excluded_projects is None:
+        excluded_projects = set()
+
     directories = []
 
     # Non-GitHub projects (commons-utils*, eqbench*)
     for pattern in ["commons-utils*", "eqbench*"]:
         for project_dir in projects_root.glob(pattern):
             if project_dir.is_dir():
+                # Check if this project should be excluded
+                if project_dir.name in excluded_projects:
+                    continue
+
                 for src_type in ["main", "test"]:
                     # Try both java and code subdirectories (eqbench uses code, others use java)
                     for subdir in ["java", "code"]:
@@ -255,6 +265,10 @@ def get_source_directories(projects_root: Path) -> List[str]:
     # GitHub projects (github_com_*)
     for project_dir in projects_root.glob("github_com_*"):
         if project_dir.is_dir():
+            # Check if this project should be excluded
+            if project_dir.name in excluded_projects:
+                continue
+
             for src_type in ["main", "test"]:
                 src_dir = project_dir / "src" / src_type / "java"
                 if src_dir.exists():
@@ -315,16 +329,19 @@ def compute_directory_statistics(directory: str) -> Dict[str, Any]:
     }
 
 
-def compute_project_statistics(projects_root: Path) -> pd.DataFrame:
+def compute_project_statistics(
+    projects_root: Path, excluded_projects: set[str] | None = None
+) -> pd.DataFrame:
     """Compute comprehensive statistics for all projects.
 
     Args:
         projects_root: Root path containing all projects
+        excluded_projects: Optional set of project directory names to exclude
 
     Returns:
         DataFrame with detailed project statistics
     """
-    directories = get_source_directories(projects_root)
+    directories = get_source_directories(projects_root, excluded_projects)
 
     stats = []
     for directory in directories:
