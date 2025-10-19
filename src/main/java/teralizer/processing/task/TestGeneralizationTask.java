@@ -78,6 +78,15 @@ public class TestGeneralizationTask extends AbstractTask {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
         Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+
+        if (records.isEmpty()) {
+            throw new RuntimeException(
+                "UNEXPECTED: No assertions available for test generalization. " +
+                "This should have been caught by JpfAnalysisTask. " +
+                "Indicates a pipeline bug or unexpected modification."
+            );
+        }
+
         for (Record record : records) {
             TestRecord testRecord = record.into(TestRecord.class);
             AssertionRecord assertionRecord = record.into(AssertionRecord.class);

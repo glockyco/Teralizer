@@ -60,6 +60,14 @@ public class JpfAnalysisTask extends AbstractTask {
 
     private void scheduleTasks(DSLContext create, Consumer<Task> scheduleTask) {
         Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+
+        if (records.isEmpty()) {
+            throw new RuntimeException(
+                "All assertions were excluded during specification extraction (SPF failures). " +
+                "No specifications available for test generalization."
+            );
+        }
+
         for (Record record : records) {
             TestRecord testRecord = record.into(TestRecord.class);
             AssertionRecord assertionRecord = record.into(AssertionRecord.class);
