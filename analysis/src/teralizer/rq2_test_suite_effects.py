@@ -310,8 +310,8 @@ def generate_tests_per_project_table(df: pd.DataFrame) -> str:
 
         row_str = (
             f"{row['project_name']} & {row['b_variant']} & "
-            f"{int(row['tests_before'])} & {int(row['added_tests'])} & {int(row['removed_tests'])} & "
-            f"{int(row['tests_after'])} & {delta_sign}{int(row['tests_delta'])} & "
+            f"{int(row['tests_before']):,} & {int(row['added_tests']):,} & {int(row['removed_tests']):,} & "
+            f"{int(row['tests_after']):,} & {delta_sign}{int(row['tests_delta']):,} & "
             f"{delta_pct_sign}{row['tests_delta_pct']:.1f}\\%"
         )
         table_rows.append(row_str)
@@ -374,8 +374,8 @@ def generate_lines_per_project_table(df: pd.DataFrame) -> str:
 
         row_str = (
             f"{row['project_name']} & {row['b_variant']} & "
-            f"{int(row['lines_before'])} & {int(row['added_lines'])} & {int(row['removed_lines'])} & "
-            f"{int(row['lines_after'])} & {delta_sign}{int(row['lines_delta'])} & "
+            f"{int(row['lines_before']):,} & {int(row['added_lines']):,} & {int(row['removed_lines']):,} & "
+            f"{int(row['lines_after']):,} & {delta_sign}{int(row['lines_delta']):,} & "
             f"{delta_pct_sign}{row['lines_delta_pct']:.1f}\\%"
         )
         table_rows.append(row_str)

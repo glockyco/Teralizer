@@ -485,7 +485,7 @@ def generate_detections_per_mutator_table(df: pd.DataFrame) -> str:
         )
 
         row_str = (
-            f"{row['mutator']} & {row['total']} & {row['percent']:.2f} & "
+            f"{row['mutator']} & {row['total']:,} & {row['percent']:.2f} & "
             f"{row['min_percent']:.2f} & {row['max_percent']:.2f} & {row['INITIAL']:.2f} & "
             f"{naive_val:.2f} & {naive_diff_str} & {improved_val:.2f} & {improved_diff_str}"
         )
@@ -545,11 +545,11 @@ def generate_mutants_per_project_table(df: pd.DataFrame) -> str:
 
         row_str = (
             f"{row['project']} & "
-            f"{int(row['included_tests'])}\\; ({row['test_inclusion_pct']:.1f}\\%) & "
-            f"{int(row['included_classes'])}\\; ({row['class_inclusion_pct']:.1f}\\%) & "
-            f"{int(row['total'])} & "
-            f"{int(row['covered'])}\\; ({covered_phantom}{row['covered_pct']:.1f}\\%) & "
-            f"{int(row['uncovered'])}\\; ({uncovered_phantom}{row['uncovered_pct']:.1f}\\%)"
+            f"{int(row['included_tests']):,}\\; ({row['test_inclusion_pct']:.1f}\\%) & "
+            f"{int(row['included_classes']):,}\\; ({row['class_inclusion_pct']:.1f}\\%) & "
+            f"{int(row['total']):,} & "
+            f"{int(row['covered']):,}\\; ({covered_phantom}{row['covered_pct']:.1f}\\%) & "
+            f"{int(row['uncovered']):,}\\; ({uncovered_phantom}{row['uncovered_pct']:.1f}\\%)"
         )
         table_rows.append(row_str)
 
@@ -619,7 +619,7 @@ def generate_mutation_detection_comparison_table(df: pd.DataFrame) -> str:
         row_str = (
             f"{row['project_name']} & "
             f"{row['is_detected']} & "
-            f"{int(row['count'])} & "
+            f"{int(row['count']):,} & "
             f"{phantom_pad(row['avg_model_operation_count'], width=3)} & "
             f"{phantom_pad(row['median_model_operation_count'], width=2)} & "
             f"{phantom_pad(row['avg_total_constraint_count'], width=2)} & "

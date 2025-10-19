@@ -775,7 +775,7 @@ def generate_filtering_results_table(df: pd.DataFrame, label: str, caption: str)
         if count == 0:
             return "-"
         phantom = "\\phantom{0}" if pct < 10 else ""
-        return f"{count}\\; ({phantom}{pct:.1f}\\%)"
+        return f"{count:,}\\; ({phantom}{pct:.1f}\\%)"
 
     df["Accept"] = df.apply(
         lambda row: format_count_pct(row["accept"], row["accept_pct"]), axis=1
@@ -789,6 +789,9 @@ def generate_filtering_results_table(df: pd.DataFrame, label: str, caption: str)
 
     # Use variant macros
     df = replace_variant_names_with_macros(df, "variant")
+
+    # Format total column with thousands separators
+    df["total"] = df["total"].apply(lambda x: f"{x:,}")
 
     # Use build_latex_table_content for consistent formatting
     columns = ["variant", "Type", "filter_name", "total", "Accept", "Defer", "Reject"]
@@ -827,11 +830,15 @@ def generate_spf_failures_table(df_merged: pd.DataFrame) -> str:
     Returns:
         LaTeX table string
     """
+    # Format Total column with thousands separators for LaTeX display
+    df_display = df_merged.copy()
+    df_display["Total"] = df_display["Total"].apply(lambda x: f"{x:,}")
+
     latex_content = build_latex_table_content(
-        df_merged,
+        df_display,
         caption="Number of SPF execution failures by error type.",
         label="tab:exclusions-spf",
-        column_spec="l" + "r" * (len(df_merged.columns) - 1),
+        column_spec="l" + "r" * (len(df_display.columns) - 1),
         add_midrules=False,
     )
 
@@ -850,7 +857,7 @@ def generate_test_failures_by_projects_table(results_df: pd.DataFrame) -> str:
 
     def format_count_pct(count, pct):
         phantom = "\\phantom{0}" if pct < 10 else ""
-        return f"{count}\\; ({phantom}{pct:.1f}\\%)"
+        return f"{count:,}\\; ({phantom}{pct:.1f}\\%)"
 
     display_df = results_df.copy()
 
@@ -869,6 +876,11 @@ def generate_test_failures_by_projects_table(results_df: pd.DataFrame) -> str:
 
     # Use project macros
     display_df = replace_project_names_with_macros(display_df, "project_name")
+
+    # Format total_executions with thousands separators
+    display_df["total_executions"] = display_df["total_executions"].apply(
+        lambda x: f"{x:,}"
+    )
 
     columns = [
         "project_name",
@@ -914,7 +926,7 @@ def generate_test_failures_by_variant_table(results_df: pd.DataFrame) -> str:
 
     def format_count_pct(count, pct):
         phantom = "\\phantom{0}" if pct < 10 else ""
-        return f"{count}\\; ({phantom}{pct:.1f}\\%)"
+        return f"{count:,}\\; ({phantom}{pct:.1f}\\%)"
 
     display_df = results_df.copy()
 
@@ -933,6 +945,11 @@ def generate_test_failures_by_variant_table(results_df: pd.DataFrame) -> str:
 
     # Use variant macros
     display_df = replace_variant_names_with_macros(display_df, "variant")
+
+    # Format total_executions with thousands separators
+    display_df["total_executions"] = display_df["total_executions"].apply(
+        lambda x: f"{x:,}"
+    )
 
     columns = [
         "variant",
