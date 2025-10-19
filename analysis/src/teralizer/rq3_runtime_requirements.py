@@ -649,7 +649,7 @@ def generate_pareto_points_table(df_pareto: pd.DataFrame, project_name: str) -> 
     for i, (_, row) in enumerate(project_data.iterrows(), start=1):
         variant_label = format_variant_label(row["teralizer_variant"], row["type"])
         detection_pct = f"{row['detection_rate']:.1f}"
-        runtime_s = f"{row['runtime_seconds']:.1f}"
+        runtime_s = f"{int(round(row['runtime_seconds'])):,}"
 
         row_str = f"{i} & {row['evosuite_budget']} & {variant_label} & {detection_pct} & {runtime_s}"
         table_rows.append(row_str)
