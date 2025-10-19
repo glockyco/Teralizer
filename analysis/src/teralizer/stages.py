@@ -14,9 +14,9 @@ def map_internal_stage_to_paper_stage(internal_stage: str) -> Optional[str]:
     grouped into 5 main stages for presentation in the paper:
     - Stage 1: Test and Assertion Analysis
     - Stage 2: Tested Method Identification
-    - Stage 3: Specification Extraction
-    - Stage 4: Generalized Test Creation
-    - Stage 5: Test Suite Reduction
+    - Stage 3: Specification Extraction + Baseline Validation
+    - Stage 4: Generalized Test Creation + Validation
+    - Stage 5: Test Suite Reduction (Mutation Testing + Coverage)
 
     Note: Stages 1 and 2 cannot be distinguished in the collected data because
     their core logic is implemented in the ANALYZE_TESTS task, so they are
@@ -44,33 +44,33 @@ def map_internal_stage_to_paper_stage(internal_stage: str) -> Optional[str]:
         "FILTER_ASSERTIONS",
     }
 
-    # Stage 3: Specification Extraction
+    # Stage 3: Specification Extraction + Baseline Validation
     stage_3 = {
         "ADD_JPF_INSTRUMENTATION",
         "BUILD_PROJECT_INSTRUMENTED",
         "EXECUTE_JPF",
         "ANALYZE_JPF",
         "CLEANUP_JPF_INSTRUMENTATION",
-    }
-
-    # Stage 4: Generalized Test Creation
-    stage_4 = {
-        "CLEANUP_GENERALIZATION",
-        "GENERALIZE_TESTS",
-    }
-
-    # Stage 5: Test Suite Reduction
-    stage_5 = {
-        "COLLECT_PIT_DATA_ORIGINAL",
         "BUILD_PROJECT_INITIAL",
         "EXECUTE_TESTS_INITIAL",
         "COLLECT_JUNIT_REPORTS_INITIAL",
-        "COLLECT_JACOCO_DATA_INITIAL",
-        "COLLECT_PIT_DATA_INITIAL",
+    }
+
+    # Stage 4: Generalized Test Creation + Validation
+    stage_4 = {
+        "CLEANUP_GENERALIZATION",
+        "GENERALIZE_TESTS",
         "BUILD_PROJECT_GENERALIZED",
         "EXECUTE_TESTS_GENERALIZED",
         "COLLECT_JUNIT_REPORTS_GENERALIZED",
         "FILTER_GENERALIZATIONS",
+    }
+
+    # Stage 5: Test Suite Reduction (Mutation Testing + Coverage)
+    stage_5 = {
+        "COLLECT_PIT_DATA_ORIGINAL",
+        "COLLECT_JACOCO_DATA_INITIAL",
+        "COLLECT_PIT_DATA_INITIAL",
         "COLLECT_JACOCO_DATA_GENERALIZED",
         "COLLECT_PIT_DATA_GENERALIZED",
     }
@@ -115,23 +115,23 @@ def get_stage_group_sql_case() -> str:
             'BUILD_PROJECT_INSTRUMENTED',
             'EXECUTE_JPF',
             'ANALYZE_JPF',
-            'CLEANUP_JPF_INSTRUMENTATION'
+            'CLEANUP_JPF_INSTRUMENTATION',
+            'BUILD_PROJECT_INITIAL',
+            'EXECUTE_TESTS_INITIAL',
+            'COLLECT_JUNIT_REPORTS_INITIAL'
         ) THEN 'Stage 3'
         WHEN stage IN (
             'CLEANUP_GENERALIZATION',
-            'GENERALIZE_TESTS'
-        ) THEN 'Stage 4'
-        WHEN stage IN (
-            'COLLECT_PIT_DATA_ORIGINAL',
-            'BUILD_PROJECT_INITIAL',
-            'EXECUTE_TESTS_INITIAL',
-            'COLLECT_JUNIT_REPORTS_INITIAL',
-            'COLLECT_JACOCO_DATA_INITIAL',
-            'COLLECT_PIT_DATA_INITIAL',
+            'GENERALIZE_TESTS',
             'BUILD_PROJECT_GENERALIZED',
             'EXECUTE_TESTS_GENERALIZED',
             'COLLECT_JUNIT_REPORTS_GENERALIZED',
-            'FILTER_GENERALIZATIONS',
+            'FILTER_GENERALIZATIONS'
+        ) THEN 'Stage 4'
+        WHEN stage IN (
+            'COLLECT_PIT_DATA_ORIGINAL',
+            'COLLECT_JACOCO_DATA_INITIAL',
+            'COLLECT_PIT_DATA_INITIAL',
             'COLLECT_JACOCO_DATA_GENERALIZED',
             'COLLECT_PIT_DATA_GENERALIZED'
         ) THEN 'Stage 5'
