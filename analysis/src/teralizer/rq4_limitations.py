@@ -811,13 +811,24 @@ def compute_exclusion_breakdown_filtering_vs_failures(
     }
     df["Type"] = df["level"].map(level_map)
 
+    # Get excluded project IDs (only applies to postgres_test, returns empty set for postgres_dev)
+    excluded_project_ids = get_excluded_project_ids(conn)
+
+    # Build exclusion clause
+    if excluded_project_ids:
+        excluded_ids_str = ",".join(str(id) for id in excluded_project_ids)
+        exclusion_clause = f"AND p.id NOT IN ({excluded_ids_str})"
+    else:
+        exclusion_clause = ""
+
     # For items excluded by TestFilteringTask, we need to check if they have REJECT decisions
     # Query which tests/assertions excluded by TestFilteringTask have REJECT decisions
-    test_reject_query = """
+    test_reject_query = f"""
         SELECT DISTINCT t.id
         FROM test t
         JOIN project p ON t.project_id = p.id
         WHERE p.use_test_generalization
+        {exclusion_clause}
         AND t.is_included = false
         AND t.exclusion_info LIKE '%TestFilteringTask%'
         AND EXISTS (
@@ -826,12 +837,13 @@ def compute_exclusion_breakdown_filtering_vs_failures(
         )
     """
 
-    assertion_reject_query = """
+    assertion_reject_query = f"""
         SELECT DISTINCT a.id
         FROM assertion a
         JOIN test t ON a.test_id = t.id
         JOIN project p ON t.project_id = p.id
         WHERE p.use_test_generalization
+        {exclusion_clause}
         AND a.is_included = false
         AND a.exclusion_info LIKE '%TestFilteringTask%'
         AND EXISTS (
@@ -846,7 +858,7 @@ def compute_exclusion_breakdown_filtering_vs_failures(
     )
 
     # Query the actual excluded items to categorize them properly
-    excluded_tests_query = """
+    excluded_tests_query = f"""
         SELECT
             t.id,
             t.is_included,
@@ -854,9 +866,10 @@ def compute_exclusion_breakdown_filtering_vs_failures(
         FROM test t
         JOIN project p ON t.project_id = p.id
         WHERE p.use_test_generalization
+        {exclusion_clause}
     """
 
-    excluded_assertions_query = """
+    excluded_assertions_query = f"""
         SELECT
             a.id,
             a.is_included,
@@ -865,6 +878,7 @@ def compute_exclusion_breakdown_filtering_vs_failures(
         JOIN test t ON a.test_id = t.id
         JOIN project p ON t.project_id = p.id
         WHERE p.use_test_generalization
+        {exclusion_clause}
     """
 
     tests_df = pd.read_sql_query(text(excluded_tests_query), conn)
