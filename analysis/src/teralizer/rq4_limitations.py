@@ -148,13 +148,89 @@ def get_exclusions_summary_data(conn) -> pd.DataFrame:
 def get_filtering_exclusions_data(conn) -> pd.DataFrame:
     """Get filtering-based exclusions data where reject > 0.
 
+    This function queries filter results directly and applies project exclusions
+    to exclude projects with basic setup failures (dependency errors, missing
+    sources, zero coverage, compilation errors).
+
+    IMPORTANT: This replaces the old mv_exclusions_filtering materialized view
+    which did not apply project exclusions. The view excluded some tests that
+    should have been filtered out.
+
     Args:
         conn: Database connection
 
     Returns:
         DataFrame with filtering results by variant, level, and filter
     """
-    query = "SELECT * FROM mv_exclusions_filtering WHERE reject > 0"
+    # Get projects to exclude (those with setup failures)
+    excluded_ids = get_excluded_project_ids(conn)
+
+    # Build exclusion clause - only add if there are projects to exclude
+    # (main dataset has no exclusions, extended dataset excludes 529 projects)
+    if excluded_ids:
+        excluded_ids_str = ",".join(str(id) for id in excluded_ids)
+        exclusion_clause = f"AND p.id NOT IN ({excluded_ids_str})"
+    else:
+        exclusion_clause = ""
+
+    # Query filter results with exclusions applied
+    # This replicates the logic from mv_exclusions_filtering but adds
+    # the exclusion filter for datasets that have setup failures
+    query = text(f"""
+        WITH
+            base_data AS (
+                SELECT
+                    coalesce(g.variant, 'SHARED') AS variant,
+                    CASE
+                        WHEN fr.test_id IS NOT NULL THEN '1-TEST'
+                        WHEN fr.assertion_id IS NOT NULL THEN '2-ASSERTION'
+                        WHEN fr.generalization_id IS NOT NULL THEN '3-GENERALIZATION'
+                    END AS level,
+                    substring(fr.filter_name from 'filter\\.(\\w+)Filter$') AS filter_name,
+                    fr.decision,
+                    count(*) AS count
+                FROM filter_result fr
+                JOIN project p ON fr.project_id = p.id
+                LEFT JOIN generalization g ON fr.generalization_id = g.id
+                WHERE p.use_test_generalization
+                  {exclusion_clause}
+                GROUP BY
+                    g.variant,
+                    fr.filter_name,
+                    CASE
+                        WHEN fr.test_id IS NOT NULL THEN '1-TEST'
+                        WHEN fr.assertion_id IS NOT NULL THEN '2-ASSERTION'
+                        WHEN fr.generalization_id IS NOT NULL THEN '3-GENERALIZATION'
+                    END,
+                    fr.decision
+            ),
+            pivoted AS (
+                SELECT
+                    variant,
+                    level,
+                    filter_name,
+                    SUM(count) AS total,
+                    SUM(CASE WHEN decision = 'ACCEPT' THEN count ELSE 0 END) AS accept,
+                    SUM(CASE WHEN decision = 'REJECT' THEN count ELSE 0 END) AS reject,
+                    SUM(CASE WHEN decision = 'DEFER' THEN count ELSE 0 END) AS defer
+                FROM base_data
+                GROUP BY
+                    variant,
+                    level,
+                    filter_name
+            )
+        SELECT
+            variant,
+            level,
+            filter_name,
+            total,
+            accept,
+            reject,
+            defer
+        FROM pivoted
+        WHERE reject > 0
+    """)
+
     df = pd.read_sql_query(query, conn)
     return df
 
