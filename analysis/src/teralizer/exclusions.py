@@ -138,6 +138,10 @@ def get_excluded_project_names(conn) -> set[str]:
         Set of project directory names to exclude (e.g., 'github_com_user_repo')
     """
     excluded_ids = get_excluded_project_ids(conn)
+
+    if not excluded_ids:
+        return set()
+
     excluded_ids_str = ",".join(str(id) for id in excluded_ids)
 
     query = f"""
