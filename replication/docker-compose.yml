@@ -23,6 +23,7 @@ services:
   postgres:
     image: postgres:17.1
     container_name: postgres-replication
+    shm_size: 512m
     environment:
       POSTGRES_USER: ${DB_USER:-teralizer}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-teralizer}
@@ -30,15 +31,23 @@ services:
     command:
       - postgres
       - -c
-      - max_wal_size=2GB
-      - -c
-      - maintenance_work_mem=256MB
-      - -c
-      - shared_buffers=256MB
+      - shared_buffers=512MB
       - -c
       - effective_cache_size=1GB
       - -c
+      - maintenance_work_mem=256MB
+      - -c
       - work_mem=64MB
+      - -c
+      - max_wal_size=4GB
+      - -c
+      - min_wal_size=1GB
+      - -c
+      - wal_buffers=64MB
+      - -c
+      - checkpoint_timeout=30min
+      - -c
+      - checkpoint_completion_target=0.9
     ports:
       - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
