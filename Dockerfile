@@ -21,8 +21,8 @@ ENV MAVEN_VERSION=3.9.8
 ENV MAVEN_HOME=/opt/maven
 ENV PATH="${MAVEN_HOME}/bin:${PATH}"
 
-# Install Maven manually
-RUN wget -q https://downloads.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
+# Install Maven from Apache Archive (permanent URL, unlike downloads.apache.org)
+RUN wget -q https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
     tar -xzf apache-maven-${MAVEN_VERSION}-bin.tar.gz -C /opt/ && \
     ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven && \
     rm apache-maven-${MAVEN_VERSION}-bin.tar.gz
