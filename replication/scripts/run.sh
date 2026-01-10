@@ -197,7 +197,17 @@ if [[ "$DATASET" == "primary" ]]; then
     done
 else
     # Extended dataset
-    CONFIG_DIR="$REPO_ROOT/project-configs/extended"
+    # Use replication configs (local paths) for Docker mode, original configs for local mode
+    if [[ "$USE_DOCKER" == "yes" ]]; then
+        CONFIG_DIR="$REPO_ROOT/project-configs/replication/extended"
+        if [[ ! -d "$CONFIG_DIR" ]]; then
+            echo -e "${RED}Error: Replication configs not found at $CONFIG_DIR${NC}"
+            echo "Run: ./scripts/generate-replication-configs.sh"
+            exit 1
+        fi
+    else
+        CONFIG_DIR="$REPO_ROOT/project-configs/extended"
+    fi
 
     # Get sorted list of project configs
     all_configs=()
@@ -302,8 +312,11 @@ run_config() {
     local name=$(basename "$conf")
 
     if [[ "$USE_DOCKER" == "yes" ]]; then
+        # Translate host path to container path
+        # Host: /path/to/repo/project-configs/... -> Container: /app/project-configs/...
+        local container_conf="${conf/$REPO_ROOT\/project-configs//app/project-configs}"
         docker compose -f "$SCRIPT_DIR/../docker-compose.yml" run --rm teralizer \
-            ./gradlew run -Dteralizer.config="$conf" --no-daemon
+            ./gradlew run -Dteralizer.config="$container_conf" --no-daemon
     else
         cd "$REPO_ROOT"
         ./gradlew run -Dteralizer.config="$conf" --no-daemon

@@ -114,7 +114,7 @@ services:
       DB_NAME_TEST: ${DB_NAME_TEST:-postgres_test}
       DATA_DIR: /app/data
     volumes:
-      - ../projects:/app/projects:ro
+      - ../projects:/app/projects
       - teralizer-data:/app/data
       - ../project-configs:/app/project-configs:ro
     depends_on:
