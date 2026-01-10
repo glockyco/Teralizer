@@ -4,3 +4,6 @@
 
 # Jupyter notebooks: strip outputs on commit for clean diffs
 *.ipynb filter=nbstripout diff=nbstripout merge=nbstripout -text
+
+# Shell scripts must have LF line endings
+*.sh text eol=lf
