@@ -7,7 +7,7 @@ PostgreSQL database with schema defined in `src/main/resources/db/create-tables.
 ### Core Tables
 - `project` - Project metadata, configuration, and runtime statistics
 - `test` - Individual test method information and metadata
-- `assertion` - Test assertions and their characteristics  
+- `assertion` - Test assertions and their characteristics
 - `generalization` - Generated property-based test information
 - `task` - Processing pipeline task execution tracking
 
@@ -20,10 +20,7 @@ PostgreSQL database with schema defined in `src/main/resources/db/create-tables.
 
 ### Analysis Views
 
-Complex materialized views defined in `src/main/resources/db/create-views.sql` provide aggregated analysis data for research evaluation, including mutation detection comparisons, efficiency metrics, and runtime analysis.
-
-Key views:
-- `mv_generalization_effects` - Core view for RQ2 analysis containing before/after test metrics
+Materialized views defined in `src/main/resources/db/create-views.sql` provide aggregated analysis data for evaluation.
 
 ## Database Configuration
 

@@ -41,6 +41,10 @@ class DatabaseConfig:
         self.user = os.getenv("DB_USER", "teralizer")
         self.password = os.getenv("DB_PASSWORD", "teralizer")
 
+        # Configurable database names for flexibility during reproduction
+        self.db_name_dev = os.getenv("DB_NAME_DEV", "postgres_dev")
+        self.db_name_test = os.getenv("DB_NAME_TEST", "postgres_test")
+
         # Cache for parsed SQL files
         self._sql_objects_cache = None
 
@@ -266,12 +270,20 @@ class DatabaseConfig:
         return missing, sql_files
 
     def get_dev_engine(self, validate=True):
-        """Get engine for postgres_dev database (eqbench and commons-utils projects)."""
-        return self.get_engine("postgres_dev", validate=validate)
+        """Get engine for dev database (eqbench and commons-utils projects).
+
+        Database name is configurable via DB_NAME_DEV environment variable,
+        defaulting to 'postgres_dev'.
+        """
+        return self.get_engine(self.db_name_dev, validate=validate)
 
     def get_test_engine(self, validate=True):
-        """Get engine for postgres_test database (repo-reapers projects)."""
-        return self.get_engine("postgres_test", validate=validate)
+        """Get engine for test database (repo-reapers projects).
+
+        Database name is configurable via DB_NAME_TEST environment variable,
+        defaulting to 'postgres_test'.
+        """
+        return self.get_engine(self.db_name_test, validate=validate)
 
 
 # Global instance for easy importing

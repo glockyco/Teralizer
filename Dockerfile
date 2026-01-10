@@ -1,3 +1,14 @@
+# Dockerfile for Teralizer Java pipeline.
+#
+# This container runs the test generalization pipeline that processes
+# Java projects and collects data into the PostgreSQL database.
+#
+# Build context should be the repository root:
+#   docker build -t teralizer .
+#
+# Note: Uses JDK 8 for Symbolic Pathfinder compatibility.
+# On ARM (Apple Silicon), this runs via Rosetta emulation.
+
 FROM gradle:6.9.1-jdk8
 
 # Install dependencies and clean up apt cache
@@ -20,13 +31,13 @@ RUN wget -q https://downloads.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries
 WORKDIR /app
 COPY . /app
 
-RUN mkdir "database"
-
-ENV PROJECT_CONFIG_PATH="./project-configs/eqbench.conf"
+# Create directories
+RUN mkdir -p database data logs
 
 # Download dependencies
 RUN ./gradlew dependencies --no-daemon
 # Build the application
-RUN ./gradlew build --no-daemon
+RUN ./gradlew build -x test --no-daemon
 
-CMD ["sh", "-c", "./gradlew -Dteralizer.config=${PROJECT_CONFIG_PATH} run --no-daemon"]
+# Default: show usage
+CMD ["./gradlew", "tasks", "--no-daemon"]

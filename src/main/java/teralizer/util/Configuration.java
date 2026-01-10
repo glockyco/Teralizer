@@ -67,6 +67,9 @@ public class Configuration {
     public static final Path DB_DDL_PATH = Paths.get("src/main/resources/db/create-tables.sql");
     public static final String DB_CONNECTION_STRING = String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s", DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD);
 
+    // ----- Data Directory ----- //
+    public static final Path DATA_DIR = Paths.get(DOTENV.get("DATA_DIR", "data"));
+
     // ----- Dependencies ----- //
     public static final String EVOSUITE_MAIN_CLASS = "org.evosuite.EvoSuite";
     public static final Path EVOSUITE_JAR_PATH = Paths.get("src/main/resources/evosuite/evosuite-1.2.0.jar");
@@ -125,7 +128,7 @@ public class Configuration {
     }
 
     public static Path getProjectDataPath() {
-        return Paths.get("data", getProjectRootPath().getFileName().toString());
+        return DATA_DIR.resolve(getProjectRootPath().getFileName().toString());
     }
 
     public static Path getProjectMainSourcePath() {
