@@ -19,7 +19,7 @@ import java.util.List;
 public class Configuration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
-    private static final Dotenv DOTENV = Dotenv.configure().load();
+    private static final Dotenv DOTENV = Dotenv.configure().ignoreIfMissing().load();
     private static final Config CONFIG;
 
     // ----- General ----- //
