@@ -27,8 +27,8 @@ WORKDIR /app/analysis
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 RUN uv sync --frozen --no-dev 2>/dev/null || uv sync --no-dev
 
-# Install JupyterLab
-RUN uv pip install jupyterlab
+# Install JupyterLab into the virtual environment
+RUN uv pip install --python /opt/venv jupyterlab
 
 # Create output directory
 RUN mkdir -p /app/analysis/output
@@ -40,4 +40,4 @@ EXPOSE 8888
 
 # Start Jupyter Lab without authentication (for ease of reproduction)
 # Security: Port is bound to localhost only in docker-compose.yml
-CMD ["uv", "run", "jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''"]
+CMD ["/opt/venv/bin/jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=", "--NotebookApp.password="]
