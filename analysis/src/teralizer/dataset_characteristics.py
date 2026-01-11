@@ -134,14 +134,18 @@ def _get_project_name(directory: str) -> str:
 # =============================================================================
 
 
-def get_projects_path() -> Path:
+def get_projects_path(raise_if_missing: bool = True) -> Path | None:
     """Get projects directory path from environment variable with fallback.
 
+    Args:
+        raise_if_missing: If True, raise FileNotFoundError when not found.
+                         If False, return None when not found.
+
     Returns:
-        Path to projects directory
+        Path to projects directory, or None if not found and raise_if_missing=False
 
     Raises:
-        FileNotFoundError: If projects directory cannot be found
+        FileNotFoundError: If projects directory cannot be found and raise_if_missing=True
     """
     load_dotenv()
 
@@ -154,9 +158,106 @@ def get_projects_path() -> Path:
     if fallback_path.exists():
         return fallback_path.resolve()
 
-    raise FileNotFoundError(
-        "Projects directory not found. Set PROJECTS_PATH in .env or ensure ../../projects exists."
+    if raise_if_missing:
+        raise FileNotFoundError(
+            "Projects directory not found. Set PROJECTS_PATH in .env or ensure ../../projects exists."
+        )
+    return None
+
+
+def _get_reference_csv_path() -> Path:
+    """Get path to pre-computed reference statistics CSV.
+
+    Returns:
+        Path to the reference CSV file
+    """
+    # Try variant-aware path first (output/original/data/)
+    from .exports import get_data_output_dir
+
+    # The reference is always in original/, not the current variant
+    reference_path = (
+        Path(__file__).parent.parent.parent / "output" / "original" / "data"
     )
+    csv_path = reference_path / "dataset-statistics-data.csv"
+
+    if csv_path.exists():
+        return csv_path
+
+    # Fallback to current output directory
+    return get_data_output_dir() / "dataset-statistics-data.csv"
+
+
+def load_precomputed_statistics() -> pd.DataFrame:
+    """Load pre-computed dataset statistics from reference CSV.
+
+    This function loads statistics that were computed during the original
+    analysis and saved as CSV. Used when projects/ directory is not available.
+
+    Returns:
+        DataFrame with aggregated project statistics
+
+    Raises:
+        FileNotFoundError: If reference CSV cannot be found
+    """
+    csv_path = _get_reference_csv_path()
+
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            f"Pre-computed statistics not found at {csv_path}.\n"
+            "Either:\n"
+            "  1. Set PROJECTS_PATH to compute fresh statistics, or\n"
+            "  2. Ensure output/original/data/dataset-statistics-data.csv exists"
+        )
+
+    df = pd.read_csv(csv_path)
+
+    # Rename columns to match compute_project_aggregates() output format
+    df = df.rename(
+        columns={
+            "project_name": "project",
+            "implementation_files": "main_files",
+            "implementation_classes": "main_classes",
+            "implementation_sloc": "main_sloc",
+        }
+    )
+
+    return df
+
+
+def get_dataset_statistics(
+    db_conn_dev=None, db_conn_test=None, excluded_projects: set[str] | None = None
+) -> pd.DataFrame:
+    """Get dataset statistics, computing fresh or loading pre-computed.
+
+    This is the main entry point for dataset statistics. It attempts to:
+    1. Compute fresh statistics from projects/ if available
+    2. Fall back to pre-computed reference statistics if projects/ is missing
+
+    Args:
+        db_conn_dev: Database connection for dev database (optional, for fresh computation)
+        db_conn_test: Database connection for test database (optional, for fresh computation)
+        excluded_projects: Set of project names to exclude (optional)
+
+    Returns:
+        DataFrame with aggregated project statistics
+    """
+    projects_path = get_projects_path(raise_if_missing=False)
+
+    if projects_path is not None:
+        # Projects available - compute fresh statistics
+        print(f"Computing statistics from {projects_path}...")
+        detailed_stats = compute_project_statistics(projects_path, excluded_projects)
+        print(f"Found {len(detailed_stats)} source directories to analyze")
+        return compute_project_aggregates(detailed_stats, db_conn_dev, db_conn_test)
+    else:
+        # No projects - load pre-computed reference
+        print(
+            "Projects directory not found. Loading pre-computed reference statistics..."
+        )
+        print(
+            "Note: For full replication, download teralizer-projects-*.zip from Zenodo"
+        )
+        return load_precomputed_statistics()
 
 
 def get_source_directories(

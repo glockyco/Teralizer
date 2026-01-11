@@ -6,6 +6,7 @@ effectiveness at detecting various types of mutants.
 """
 
 import pandas as pd
+from pathlib import Path
 from typing import List
 import os
 import re
@@ -20,6 +21,7 @@ from .exports import (
     format_detection_rate_decimal,
     standardize_project_name,
     get_project_type,
+    get_data_output_dir,
 )
 
 
@@ -187,8 +189,53 @@ def get_project_mutator_data(conn) -> pd.DataFrame:
     return pd.read_sql_query(query, conn)
 
 
+def _get_reference_mutants_csv_path() -> Path:
+    """Get path to pre-computed reference mutants CSV."""
+    reference_path = (
+        Path(__file__).parent.parent.parent / "output" / "original" / "data"
+    )
+    csv_path = reference_path / "mutants-per-project-data.csv"
+    if csv_path.exists():
+        return csv_path
+    return get_data_output_dir() / "mutants-per-project-data.csv"
+
+
+def _load_precomputed_class_counts(conn) -> pd.DataFrame:
+    """Load class counts from pre-computed reference CSV."""
+    csv_path = _get_reference_mutants_csv_path()
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            f"Pre-computed mutants data not found at {csv_path}. "
+            "Either provide projects/ directory or ensure reference outputs exist."
+        )
+
+    df = pd.read_csv(csv_path)
+
+    # Get project IDs from database to map names to IDs
+    query = """
+    SELECT p.id AS project_id, project_name(p.id) AS project_name
+    FROM project p
+    JOIN v_projects_successes ps ON ps.project_id = p.id
+    WHERE p.use_test_generalization
+    """
+    df_projects = pd.read_sql_query(query, conn)
+
+    # CSV uses standardized names, so standardize database names before merge
+    df_projects["project_name"] = df_projects["project_name"].apply(
+        standardize_project_name
+    )
+
+    # Merge to get project_id
+    df = df.merge(df_projects, on="project_name", how="inner")
+    return df[["project_id", "total_impl_classes"]].rename(
+        columns={"total_impl_classes": "total_classes"}
+    )
+
+
 def get_total_classes_from_filesystem(conn) -> pd.DataFrame:
     """Get total implementation classes by analyzing the filesystem.
+
+    Falls back to pre-computed reference data when projects directory is unavailable.
 
     Args:
         conn: Database connection
@@ -198,13 +245,24 @@ def get_total_classes_from_filesystem(conn) -> pd.DataFrame:
     """
     # Get project source directories
     query = """
-    SELECT p.id AS project_id, project_name(p.id) AS project_name, 
+    SELECT p.id AS project_id, project_name(p.id) AS project_name,
            '../../' || p.main_source_path AS impl_source_directory
     FROM project p
     JOIN v_projects_successes ps ON ps.project_id = p.id
     WHERE p.use_test_generalization
     """
     df_projects = pd.read_sql_query(query, conn)
+
+    # Check if any project directory exists
+    any_directory_exists = False
+    for _, row in df_projects.iterrows():
+        if os.path.exists(row["impl_source_directory"]):
+            any_directory_exists = True
+            break
+
+    if not any_directory_exists:
+        print("Projects directory not found. Loading pre-computed class counts...")
+        return _load_precomputed_class_counts(conn)
 
     def collect_stats(directory):
         """Count files and classes in a directory."""
