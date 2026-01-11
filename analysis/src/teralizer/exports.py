@@ -97,6 +97,28 @@ def get_figures_output_dir() -> Path:
     return figures_dir
 
 
+def get_executed_output_dir() -> Path:
+    """Get the executed notebooks output directory, creating it if it doesn't exist.
+
+    Returns:
+        Path: Absolute path to analysis/output/{variant}/executed/ directory
+    """
+    executed_dir = _get_output_base() / "executed"
+    executed_dir.mkdir(parents=True, exist_ok=True)
+    return executed_dir
+
+
+def get_html_output_dir() -> Path:
+    """Get the HTML notebooks output directory, creating it if it doesn't exist.
+
+    Returns:
+        Path: Absolute path to analysis/output/{variant}/html/ directory
+    """
+    html_dir = _get_output_base() / "html"
+    html_dir.mkdir(parents=True, exist_ok=True)
+    return html_dir
+
+
 def save_csv_data(
     dataframe: pd.DataFrame, filename: str, description: Optional[str] = None
 ) -> Path:
@@ -488,6 +510,8 @@ __all__ = [
     "get_data_output_dir",
     "get_tables_output_dir",
     "get_figures_output_dir",
+    "get_executed_output_dir",
+    "get_html_output_dir",
     "standardize_project_name",
     "get_dataset_macro",
     "get_variant_macro",

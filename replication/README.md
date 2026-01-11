@@ -185,6 +185,8 @@ The `analysis/output/original/` directory contains:
 - `tables/` - LaTeX tables used in the paper
 - `data/` - CSV files with computed statistics
 - `figures/` - PDF figures used in the paper
+- `executed/` - Executed notebooks with cell outputs
+- `html/` - HTML exports for easy browser viewing
 
 ### Re-running the Analysis
 

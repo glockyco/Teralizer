@@ -142,8 +142,8 @@ if [[ "$DRY_RUN" == "false" ]]; then
     cp -r "$REPO_ROOT/analysis/output/original/data" "$RESULTS_DIR/"
 
     # Copy HTML notebooks if they exist
-    if [[ -d "$REPO_ROOT/analysis/output/html" ]]; then
-        cp -r "$REPO_ROOT/analysis/output/html" "$RESULTS_DIR/"
+    if [[ -d "$REPO_ROOT/analysis/output/original/html" ]]; then
+        cp -r "$REPO_ROOT/analysis/output/original/html" "$RESULTS_DIR/"
     else
         log_warning "HTML notebooks not found - run notebook export first"
     fi

@@ -22,7 +22,8 @@
 #   analysis/output/{variant}/tables/   LaTeX tables
 #   analysis/output/{variant}/data/     CSV files
 #   analysis/output/{variant}/figures/  PDF figures
-#   analysis/output/executed/{variant}/ Executed notebooks with outputs
+#   analysis/output/{variant}/executed/ Executed notebooks with outputs
+#   analysis/output/{variant}/html/     HTML notebook exports
 
 set -euo pipefail
 
@@ -83,7 +84,7 @@ run_notebooks() {
     local failed=0
 
     local output_base="/app/analysis/output/$variant"
-    local executed_dir="/app/analysis/output/executed/$variant"
+    local executed_dir="$output_base/executed"
 
     # Determine which database will be used
     local db_name="postgres_dev"
@@ -194,8 +195,9 @@ run_notebooks() {
 # Export executed notebooks to HTML for easy viewing
 export_html() {
     local variant=$1
-    local executed_dir="/app/analysis/output/executed/$variant"
-    local html_dir="/app/analysis/output/html"
+    local output_base="/app/analysis/output/$variant"
+    local executed_dir="$output_base/executed"
+    local html_dir="$output_base/html"
 
     echo ""
     echo "=========================================="
@@ -244,7 +246,7 @@ export_html() {
     done <<< "$notebooks"
 
     echo ""
-    echo -e "${GREEN}HTML exports saved to: analysis/output/html/${NC}"
+    echo -e "${GREEN}HTML exports saved to: analysis/output/$variant/html/${NC}"
 }
 
 # Parse arguments
