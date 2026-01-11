@@ -68,6 +68,7 @@ def setup_paper_style() -> None:
                 "Linux Libertine",
                 "Libertine",
                 "Linux Libertine O",
+                "Liberation Serif",
                 "Times New Roman",
                 "Times",
             ],
