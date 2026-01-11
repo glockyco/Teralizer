@@ -34,12 +34,14 @@ echo "  Teralizer Replication Package Setup"
 echo "=========================================="
 echo ""
 
-# Step 0: Extract project archives if present as siblings
-echo -e "${YELLOW}[0/5]${NC} Checking for project archives..."
+# Step 0: Extract project and data archives if present as siblings
+echo -e "${YELLOW}[0/5]${NC} Checking for sibling archives..."
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PARENT_DIR="$(cd "$REPO_ROOT/.." && pwd)"
-FOUND_ARCHIVES=0
+FOUND_PROJECT_ARCHIVES=0
+FOUND_DATA_ARCHIVES=0
 
+# Extract project archives
 for archive in "$PARENT_DIR"/teralizer-projects-*.zip; do
     [[ -f "$archive" ]] || continue
     archive_name=$(basename "$archive")
@@ -52,15 +54,37 @@ for archive in "$PARENT_DIR"/teralizer-projects-*.zip; do
 
     echo "  Extracting $archive_name..."
     unzip -q "$archive" -d "$REPO_ROOT"
-    FOUND_ARCHIVES=$((FOUND_ARCHIVES + 1))
+    FOUND_PROJECT_ARCHIVES=$((FOUND_PROJECT_ARCHIVES + 1))
 done
 
-if [[ $FOUND_ARCHIVES -gt 0 ]]; then
-    echo -e "${GREEN}Extracted $FOUND_ARCHIVES project archive(s)${NC}"
+# Extract data archives
+for archive in "$PARENT_DIR"/teralizer-data-*.zip; do
+    [[ -f "$archive" ]] || continue
+    archive_name=$(basename "$archive")
+
+    # Check if data/ already exists with content
+    if [[ -d "$REPO_ROOT/data" ]] && [[ -n "$(ls -A "$REPO_ROOT/data" 2>/dev/null)" ]]; then
+        echo -e "  ${YELLOW}!${NC} data/ already exists, skipping $archive_name"
+        continue
+    fi
+
+    echo "  Extracting $archive_name..."
+    unzip -q "$archive" -d "$REPO_ROOT"
+    FOUND_DATA_ARCHIVES=$((FOUND_DATA_ARCHIVES + 1))
+done
+
+if [[ $FOUND_PROJECT_ARCHIVES -gt 0 ]]; then
+    echo -e "${GREEN}Extracted $FOUND_PROJECT_ARCHIVES project archive(s)${NC}"
 elif [[ -d "$REPO_ROOT/projects" ]]; then
     echo -e "${GREEN}projects/ directory already present${NC}"
 else
     echo -e "${YELLOW}No project archives found (pipeline will not be runnable)${NC}"
+fi
+
+if [[ $FOUND_DATA_ARCHIVES -gt 0 ]]; then
+    echo -e "${GREEN}Extracted $FOUND_DATA_ARCHIVES data archive(s)${NC}"
+elif [[ -d "$REPO_ROOT/data" ]]; then
+    echo -e "${GREEN}data/ directory already present${NC}"
 fi
 echo ""
 

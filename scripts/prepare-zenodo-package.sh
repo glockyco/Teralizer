@@ -7,6 +7,8 @@
 #   3. teralizer-projects-primary-v1.0.zip - Primary dataset projects
 #   4. teralizer-projects-extended-sample-v1.0.zip - Sampled extended projects
 #   5. teralizer-projects-extended-v1.0.zip - Full extended dataset
+#   6. teralizer-data-primary-v1.0.zip - Primary dataset logs and tool reports
+#   7. teralizer-data-extended-v1.0.zip - Extended dataset logs and tool reports
 #
 # USAGE:
 #   ./scripts/prepare-zenodo-package.sh [OPTIONS]
@@ -15,6 +17,8 @@
 #   --output-dir DIR         Output directory for archives (default: ~/zenodo-upload)
 #   --projects-primary DIR   Primary projects directory
 #   --projects-extended DIR  Extended projects directory
+#   --data-primary DIR       Primary data directory (logs, tool reports)
+#   --data-extended DIR      Extended data directory (logs, tool reports)
 #   --sample-size N          Number of projects in extended sample (default: 100)
 #   --version VERSION        Version string for archive names (default: 1.0)
 #   --skip-extended-full     Skip creating the full extended archive
@@ -29,15 +33,19 @@
 #   # Dry run to preview what would be created
 #   ./scripts/prepare-zenodo-package.sh --dry-run \
 #       --projects-primary ~/Projects/test-generalization/projects \
-#       --projects-extended ~/Projects/test-generalization-dev/projects
+#       --projects-extended ~/Projects/test-generalization-dev/projects \
+#       --data-primary ~/Projects/test-generalization/data \
+#       --data-extended ~/Projects/test-generalization-dev/data
 #
 #   # Create all archives except full extended (saves time/space)
 #   ./scripts/prepare-zenodo-package.sh \
 #       --projects-primary ~/Projects/test-generalization/projects \
 #       --projects-extended ~/Projects/test-generalization-dev/projects \
+#       --data-primary ~/Projects/test-generalization/data \
+#       --data-extended ~/Projects/test-generalization-dev/data \
 #       --skip-extended-full
 #
-#   # Create only results and core archives (no projects)
+#   # Create only results and core archives (no projects or data)
 #   ./scripts/prepare-zenodo-package.sh
 
 set -euo pipefail
@@ -56,13 +64,15 @@ NC='\033[0m'
 OUTPUT_DIR="$HOME/zenodo-upload"
 PROJECTS_PRIMARY=""
 PROJECTS_EXTENDED=""
+DATA_PRIMARY=""
+DATA_EXTENDED=""
 SAMPLE_SIZE=100
 VERSION="1.0"
 SKIP_EXTENDED_FULL=false
 DRY_RUN=false
 
 usage() {
-    sed -n '2,41p' "$0"
+    sed -n '2,48p' "$0"
     exit 0
 }
 
@@ -88,6 +98,8 @@ while [[ $# -gt 0 ]]; do
         --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
         --projects-primary) PROJECTS_PRIMARY="$2"; shift 2 ;;
         --projects-extended) PROJECTS_EXTENDED="$2"; shift 2 ;;
+        --data-primary) DATA_PRIMARY="$2"; shift 2 ;;
+        --data-extended) DATA_EXTENDED="$2"; shift 2 ;;
         --sample-size) SAMPLE_SIZE="$2"; shift 2 ;;
         --version) VERSION="$2"; shift 2 ;;
         --skip-extended-full) SKIP_EXTENDED_FULL=true; shift ;;
@@ -356,6 +368,66 @@ elif [[ "$SKIP_EXTENDED_FULL" == "true" ]]; then
     log_warning "Skipping full extended archive (--skip-extended-full)"
 else
     log_warning "Skipping full extended (--projects-extended not specified)"
+fi
+
+# ----------------------------------------------------------------------------
+# Archive 6: Primary Data (logs, tool reports, generalized tests)
+# Archive extracts directly as data/ for easy merging with core
+# ----------------------------------------------------------------------------
+if [[ -n "$DATA_PRIMARY" ]] && [[ -d "$DATA_PRIMARY" ]]; then
+    log_step "Creating Archive 6: Primary Data"
+
+    DATA_PRIMARY_NAME="teralizer-data-primary-v${VERSION}"
+    DATA_PRIMARY_DIR="$STAGING_DIR/data-primary-staging/data"
+
+    if [[ "$DRY_RUN" == "false" ]]; then
+        mkdir -p "$DATA_PRIMARY_DIR"
+
+        # Copy data directory contents
+        log_step "  Copying primary data (this may take a while)..."
+        rsync -a "$DATA_PRIMARY/" "$DATA_PRIMARY_DIR/"
+
+        # Create archive (extracts as data/)
+        log_step "  Compressing archive..."
+        (cd "$STAGING_DIR/data-primary-staging" && zip -rq "$OUTPUT_DIR/${DATA_PRIMARY_NAME}.zip" data)
+
+        DATA_PRIMARY_SIZE=$(du -sh "$OUTPUT_DIR/${DATA_PRIMARY_NAME}.zip" | cut -f1)
+        log_success "Created ${DATA_PRIMARY_NAME}.zip ($DATA_PRIMARY_SIZE)"
+    else
+        log_success "Would create ${DATA_PRIMARY_NAME}.zip"
+    fi
+else
+    log_warning "Skipping primary data (--data-primary not specified or not found)"
+fi
+
+# ----------------------------------------------------------------------------
+# Archive 7: Extended Data (logs, tool reports, generalized tests)
+# Archive extracts directly as data/ for easy merging with core
+# ----------------------------------------------------------------------------
+if [[ -n "$DATA_EXTENDED" ]] && [[ -d "$DATA_EXTENDED" ]]; then
+    log_step "Creating Archive 7: Extended Data"
+
+    DATA_EXTENDED_NAME="teralizer-data-extended-v${VERSION}"
+    DATA_EXTENDED_DIR="$STAGING_DIR/data-extended-staging/data"
+
+    if [[ "$DRY_RUN" == "false" ]]; then
+        mkdir -p "$DATA_EXTENDED_DIR"
+
+        # Copy data directory contents
+        log_step "  Copying extended data (this may take a while)..."
+        rsync -a "$DATA_EXTENDED/" "$DATA_EXTENDED_DIR/"
+
+        # Create archive (extracts as data/)
+        log_step "  Compressing archive..."
+        (cd "$STAGING_DIR/data-extended-staging" && zip -rq "$OUTPUT_DIR/${DATA_EXTENDED_NAME}.zip" data)
+
+        DATA_EXTENDED_SIZE=$(du -sh "$OUTPUT_DIR/${DATA_EXTENDED_NAME}.zip" | cut -f1)
+        log_success "Created ${DATA_EXTENDED_NAME}.zip ($DATA_EXTENDED_SIZE)"
+    else
+        log_success "Would create ${DATA_EXTENDED_NAME}.zip"
+    fi
+else
+    log_warning "Skipping extended data (--data-extended not specified or not found)"
 fi
 
 # ----------------------------------------------------------------------------
