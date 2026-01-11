@@ -34,6 +34,36 @@ echo "  Teralizer Replication Package Setup"
 echo "=========================================="
 echo ""
 
+# Step 0: Extract project archives if present as siblings
+echo -e "${YELLOW}[0/5]${NC} Checking for project archives..."
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PARENT_DIR="$(cd "$REPO_ROOT/.." && pwd)"
+FOUND_ARCHIVES=0
+
+for archive in "$PARENT_DIR"/teralizer-projects-*.zip; do
+    [[ -f "$archive" ]] || continue
+    archive_name=$(basename "$archive")
+
+    # Check if projects/ already exists with content
+    if [[ -d "$REPO_ROOT/projects" ]] && [[ -n "$(ls -A "$REPO_ROOT/projects" 2>/dev/null)" ]]; then
+        echo -e "  ${YELLOW}!${NC} projects/ already exists, skipping $archive_name"
+        continue
+    fi
+
+    echo "  Extracting $archive_name..."
+    unzip -q "$archive" -d "$REPO_ROOT"
+    FOUND_ARCHIVES=$((FOUND_ARCHIVES + 1))
+done
+
+if [[ $FOUND_ARCHIVES -gt 0 ]]; then
+    echo -e "${GREEN}Extracted $FOUND_ARCHIVES project archive(s)${NC}"
+elif [[ -d "$REPO_ROOT/projects" ]]; then
+    echo -e "${GREEN}projects/ directory already present${NC}"
+else
+    echo -e "${YELLOW}No project archives found (pipeline will not be runnable)${NC}"
+fi
+echo ""
+
 # Step 1: Preflight checks
 echo -e "${YELLOW}[1/5]${NC} Running preflight checks..."
 if [[ -x scripts/preflight-check.sh ]]; then
