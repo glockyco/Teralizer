@@ -396,8 +396,14 @@ if [[ -n "$PROJECTS_EXTENDED" ]] && [[ -d "$PROJECTS_EXTENDED" ]] && [[ "$SKIP_E
     if [[ "$DRY_RUN" == "false" ]]; then
         mkdir -p "$FULL_DIR"
 
-        # Copy all extended projects
-        for project in "$PROJECTS_EXTENDED"/github_com_*; do
+        # Count total projects for progress reporting
+        FULL_PROJECTS=("$PROJECTS_EXTENDED"/github_com_*)
+        FULL_TOTAL=${#FULL_PROJECTS[@]}
+        FULL_COUNT=0
+        FULL_PROGRESS_INTERVAL=100
+
+        # Copy all extended projects with progress
+        for project in "${FULL_PROJECTS[@]}"; do
             if [[ -d "$project" ]]; then
                 project_name=$(basename "$project")
 
@@ -408,10 +414,19 @@ if [[ -n "$PROJECTS_EXTENDED" ]] && [[ -d "$PROJECTS_EXTENDED" ]] && [[ "$SKIP_E
                     --exclude='*.class' \
                     --exclude='*.jar' \
                     "$project/" "$FULL_DIR/$project_name/"
+
+                ((FULL_COUNT++)) || true
+
+                # Report progress every N projects
+                if [[ $((FULL_COUNT % FULL_PROGRESS_INTERVAL)) -eq 0 ]]; then
+                    echo -e "  ${CYAN}Progress:${NC} $FULL_COUNT / $FULL_TOTAL projects copied"
+                fi
             fi
         done
+        echo -e "  ${CYAN}Progress:${NC} $FULL_COUNT / $FULL_TOTAL projects copied"
 
         # Create archive (extracts as projects/)
+        log_step "  Compressing archive..."
         (cd "$STAGING_DIR/full-staging" && zip -rq "$OUTPUT_DIR/${FULL_NAME}.zip" projects)
 
         FULL_SIZE=$(du -sh "$OUTPUT_DIR/${FULL_NAME}.zip" | cut -f1)
