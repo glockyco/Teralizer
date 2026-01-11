@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 # Import PostgreSQL databases from the replication package.
 #
-# This script imports the postgres_dev and postgres_test databases
-# from pg_dump custom format files.
+# This script imports 4 databases:
+#   - postgres_dev: Primary dataset with full data
+#   - postgres_test: Extended dataset with full data
+#   - postgres_dev_replication: Primary dataset schema only (for pipeline runs)
+#   - postgres_test_replication: Extended dataset schema only (for pipeline runs)
 #
 # Usage:
 #   ./import-databases.sh [options] [input_dir]
 #
 # Options:
-#   --force    Overwrite existing databases without prompting
-#   --help     Show this help message
+#   --force         Overwrite existing databases without prompting
+#   --skip-schema   Skip creating replication databases (schema only)
+#   --help          Show this help message
 #
 # Environment variables:
 #   DB_USER      PostgreSQL user (default: teralizer)
@@ -18,7 +22,7 @@
 #   CONTAINER    Docker container name (default: postgres-replication)
 #
 # Examples:
-#   # Import from datasets/ directory
+#   # Import from datasets/ directory (creates all 4 databases)
 #   ./import-databases.sh
 #
 #   # Import from specific directory
@@ -37,7 +41,14 @@ CONTAINER="${CONTAINER:-postgres-replication}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FORCE=false
+SKIP_SCHEMA=false
 INPUT_DIR=""
+
+# Clean up dump files on exit (success, error, or interrupt)
+cleanup() {
+    docker exec "$CONTAINER" rm -f /tmp/postgres_dev.dump /tmp/postgres_test.dump 2>/dev/null || true
+}
+trap cleanup EXIT
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -46,8 +57,12 @@ while [[ $# -gt 0 ]]; do
             FORCE=true
             shift
             ;;
+        --skip-schema)
+            SKIP_SCHEMA=true
+            shift
+            ;;
         --help)
-            head -28 "$0" | tail -26
+            head -32 "$0" | tail -30
             exit 0
             ;;
         *)
@@ -153,7 +168,13 @@ fi
 echo ""
 echo "Creating databases if needed..."
 
-for db_name in "$DB_NAME_DEV" "$DB_NAME_TEST"; do
+# Build list of databases to create
+DB_LIST=("$DB_NAME_DEV" "$DB_NAME_TEST")
+if [[ "$SKIP_SCHEMA" != true ]]; then
+    DB_LIST+=("${DB_NAME_DEV}_replication" "${DB_NAME_TEST}_replication")
+fi
+
+for db_name in "${DB_LIST[@]}"; do
     if ! docker exec "$CONTAINER" psql -U "$DB_USER" -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "$db_name"; then
         echo "  Creating $db_name..."
         docker exec "$CONTAINER" createdb -U "$DB_USER" "$db_name"
@@ -167,16 +188,32 @@ docker cp "$INPUT_DIR/postgres_dev.dump" "$CONTAINER:/tmp/postgres_dev.dump"
 docker exec "$CONTAINER" pg_restore -U "$DB_USER" -d "$DB_NAME_DEV" \
     --clean --if-exists --no-owner --no-privileges \
     /tmp/postgres_dev.dump
-docker exec "$CONTAINER" rm /tmp/postgres_dev.dump
-echo "  -> $DB_NAME_DEV imported"
+echo "  -> $DB_NAME_DEV imported (full data)"
 
 echo "Importing $DB_NAME_TEST (this may take a while)..."
 docker cp "$INPUT_DIR/postgres_test.dump" "$CONTAINER:/tmp/postgres_test.dump"
 docker exec "$CONTAINER" pg_restore -U "$DB_USER" -d "$DB_NAME_TEST" \
     --clean --if-exists --no-owner --no-privileges \
     /tmp/postgres_test.dump
-docker exec "$CONTAINER" rm /tmp/postgres_test.dump
-echo "  -> $DB_NAME_TEST imported"
+echo "  -> $DB_NAME_TEST imported (full data)"
+
+# Import schema-only for replication databases
+if [[ "$SKIP_SCHEMA" != true ]]; then
+    echo ""
+    echo "Creating replication databases (schema only)..."
+
+    echo "Importing ${DB_NAME_DEV}_replication schema..."
+    docker exec "$CONTAINER" pg_restore -U "$DB_USER" -d "${DB_NAME_DEV}_replication" \
+        --clean --if-exists --no-owner --no-privileges --schema-only \
+        /tmp/postgres_dev.dump
+    echo "  -> ${DB_NAME_DEV}_replication imported (schema only)"
+
+    echo "Importing ${DB_NAME_TEST}_replication schema..."
+    docker exec "$CONTAINER" pg_restore -U "$DB_USER" -d "${DB_NAME_TEST}_replication" \
+        --clean --if-exists --no-owner --no-privileges --schema-only \
+        /tmp/postgres_test.dump
+    echo "  -> ${DB_NAME_TEST}_replication imported (schema only)"
+fi
 
 # Verify import
 echo ""
@@ -189,5 +226,23 @@ echo -n "  $DB_NAME_TEST projects: "
 docker exec "$CONTAINER" psql -U "$DB_USER" -d "$DB_NAME_TEST" -t -c \
     "SELECT count(*) FROM project;" 2>/dev/null | tr -d ' ' || echo "error"
 
+if [[ "$SKIP_SCHEMA" != true ]]; then
+    echo -n "  ${DB_NAME_DEV}_replication projects: "
+    docker exec "$CONTAINER" psql -U "$DB_USER" -d "${DB_NAME_DEV}_replication" -t -c \
+        "SELECT count(*) FROM project;" 2>/dev/null | tr -d ' ' || echo "error"
+
+    echo -n "  ${DB_NAME_TEST}_replication projects: "
+    docker exec "$CONTAINER" psql -U "$DB_USER" -d "${DB_NAME_TEST}_replication" -t -c \
+        "SELECT count(*) FROM project;" 2>/dev/null | tr -d ' ' || echo "error"
+fi
+
 echo ""
 echo "Import complete!"
+echo ""
+echo "Databases created:"
+echo "  - $DB_NAME_DEV (full data - for verify workflow)"
+echo "  - $DB_NAME_TEST (full data - for verify workflow)"
+if [[ "$SKIP_SCHEMA" != true ]]; then
+    echo "  - ${DB_NAME_DEV}_replication (empty - for replicate workflow)"
+    echo "  - ${DB_NAME_TEST}_replication (empty - for replicate workflow)"
+fi

@@ -1,0 +1,8 @@
+project_name,total_runtime_seconds,runtime_hours,runtime_formatted
+eqbench-es-1s,89187.7,24.77436111111111,24h 46min 27s
+eqbench-es-10s,101792.37,28.275658333333332,28h 16min 32s
+eqbench-es-60s,111202.04,30.889455555555553,30h 53min 22s
+commons-utils-es-1s,29635.145,8.231984722222222,8h 13min 55s
+commons-utils-es-10s,35208.316,9.780087777777778,9h 46min 48s
+commons-utils-es-60s,32672.14,9.075594444444445,9h 04min 32s
+commons-utils-dev,12202.981,3.3897169444444444,3h 23min 22s

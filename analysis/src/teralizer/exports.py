@@ -5,12 +5,40 @@ This module provides functions to export analysis results in multiple formats:
 - CSV files for LLM processing and analysis
 - Project and variant naming standardization
 - Table ordering for paper consistency
+
+Output paths are variant-aware based on DATASET_VARIANT environment variable:
+- original: analysis/output/original/ (reference outputs)
+- verify: analysis/output/verify/ (evaluator re-runs)
+- replicate: analysis/output/replicate/ (full replication)
 """
 
+import os
 import pandas as pd
 from pathlib import Path
 from typing import Optional, Any
 import matplotlib.figure
+
+
+def _get_variant() -> str:
+    """Get current dataset variant from environment.
+
+    Reads DATASET_VARIANT directly to avoid circular import with config module.
+
+    Returns:
+        Variant name: "original", "verify", or "replicate"
+    """
+    return os.getenv("DATASET_VARIANT", "original")
+
+
+def _get_output_base() -> Path:
+    """Get variant-aware output directory base path.
+
+    Returns:
+        Path: Absolute path to analysis/output/{variant}/ directory
+    """
+    project_root = _find_project_root()
+    variant = _get_variant()
+    return project_root / "analysis" / "output" / variant
 
 
 def _find_project_root() -> Path:
@@ -40,10 +68,9 @@ def get_data_output_dir() -> Path:
     """Get the data output directory, creating it if it doesn't exist.
 
     Returns:
-        Path: Absolute path to analysis/output/data/ directory
+        Path: Absolute path to analysis/output/{variant}/data/ directory
     """
-    project_root = _find_project_root()
-    data_dir = project_root / "analysis" / "output" / "data"
+    data_dir = _get_output_base() / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
 
@@ -52,10 +79,9 @@ def get_tables_output_dir() -> Path:
     """Get the tables output directory, creating it if it doesn't exist.
 
     Returns:
-        Path: Absolute path to analysis/output/tables/ directory
+        Path: Absolute path to analysis/output/{variant}/tables/ directory
     """
-    project_root = _find_project_root()
-    tables_dir = project_root / "analysis" / "output" / "tables"
+    tables_dir = _get_output_base() / "tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
     return tables_dir
 
@@ -64,10 +90,9 @@ def get_figures_output_dir() -> Path:
     """Get the figures output directory, creating it if it doesn't exist.
 
     Returns:
-        Path: Absolute path to analysis/output/figures/ directory
+        Path: Absolute path to analysis/output/{variant}/figures/ directory
     """
-    project_root = _find_project_root()
-    figures_dir = project_root / "analysis" / "output" / "figures"
+    figures_dir = _get_output_base() / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
     return figures_dir
 

@@ -1,0 +1,21 @@
+\begin{table}[H]
+  \caption{Test execution failure analysis by variant.}
+  \label{tab:exclusions-test-fails-by-variant}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Variant & Total & \multicolumn{1}{c}{No Error} & \multicolumn{1}{c}{TooManyFilterMisses} & \multicolumn{1}{c}{Inaccurate Specification} \\
+    \midrule
+    \VariantOriginal{} & 39,014 & 38,882\; (99.7\%) & 0\; (\phantom{0}0.0\%) & 132\; (\phantom{0}0.3\%) \\
+    \VariantInitial{} & 19,306 & 19,306\; (100.0\%) & 0\; (\phantom{0}0.0\%) & 0\; (\phantom{0}0.0\%) \\
+    \VariantBaseline{} & 33,142 & 33,120\; (99.9\%) & 0\; (\phantom{0}0.0\%) & 22\; (\phantom{0}0.1\%) \\
+    \midrule
+    \VariantNaiveA{} & 33,110 & 30,049\; (90.8\%) & 2,233\; (\phantom{0}6.7\%) & 828\; (\phantom{0}2.5\%) \\
+    \VariantNaiveB{} & 33,110 & 29,270\; (88.4\%) & 2,938\; (\phantom{0}8.9\%) & 902\; (\phantom{0}2.7\%) \\
+    \VariantNaiveC{} & 33,110 & 29,187\; (88.2\%) & 3,005\; (\phantom{0}9.1\%) & 918\; (\phantom{0}2.8\%) \\
+    \midrule
+    \VariantImprovedA{} & 33,110 & 31,094\; (93.9\%) & 1,189\; (\phantom{0}3.6\%) & 827\; (\phantom{0}2.5\%) \\
+    \VariantImprovedB{} & 33,110 & 30,966\; (93.5\%) & 1,223\; (\phantom{0}3.7\%) & 921\; (\phantom{0}2.8\%) \\
+    \VariantImprovedC{} & 33,110 & 30,903\; (93.3\%) & 1,265\; (\phantom{0}3.8\%) & 942\; (\phantom{0}2.8\%) \\
+    \bottomrule
+  \end{tabular}
+\end{table}

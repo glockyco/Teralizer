@@ -35,6 +35,9 @@ load_dotenv(find_project_root())
 class DatabaseConfig:
     """Centralized database configuration for teralizer analysis."""
 
+    # Valid dataset variants for replication workflow
+    VALID_VARIANTS = ("original", "verify", "replicate")
+
     def __init__(self):
         self.host = os.getenv("DB_HOST", "localhost")
         self.port = os.getenv("DB_PORT", "5432")
@@ -45,8 +48,31 @@ class DatabaseConfig:
         self.db_name_dev = os.getenv("DB_NAME_DEV", "postgres_dev")
         self.db_name_test = os.getenv("DB_NAME_TEST", "postgres_test")
 
+        # Dataset variant: "original", "verify", or "replicate"
+        # - original/verify: use original databases
+        # - replicate: use *_replication databases
+        self.variant = os.getenv("DATASET_VARIANT", "original")
+        if self.variant not in self.VALID_VARIANTS:
+            raise ValueError(
+                f"Invalid DATASET_VARIANT: {self.variant}. "
+                f"Must be one of {self.VALID_VARIANTS}"
+            )
+
         # Cache for parsed SQL files
         self._sql_objects_cache = None
+
+    def _get_db_name(self, base_name):
+        """Get database name with replication suffix if applicable.
+
+        Args:
+            base_name: Base database name (e.g., 'postgres_dev')
+
+        Returns:
+            Database name, with '_replication' suffix for replicate variant
+        """
+        if self.variant == "replicate":
+            return f"{base_name}_replication"
+        return base_name
 
     def get_engine(self, database="postgres_dev", validate=True):
         """
@@ -273,17 +299,21 @@ class DatabaseConfig:
         """Get engine for dev database (eqbench and commons-utils projects).
 
         Database name is configurable via DB_NAME_DEV environment variable,
-        defaulting to 'postgres_dev'.
+        defaulting to 'postgres_dev'. For replicate variant, uses
+        postgres_dev_replication.
         """
-        return self.get_engine(self.db_name_dev, validate=validate)
+        db_name = self._get_db_name(self.db_name_dev)
+        return self.get_engine(db_name, validate=validate)
 
     def get_test_engine(self, validate=True):
         """Get engine for test database (repo-reapers projects).
 
         Database name is configurable via DB_NAME_TEST environment variable,
-        defaulting to 'postgres_test'.
+        defaulting to 'postgres_test'. For replicate variant, uses
+        postgres_test_replication.
         """
-        return self.get_engine(self.db_name_test, validate=validate)
+        db_name = self._get_db_name(self.db_name_test)
+        return self.get_engine(db_name, validate=validate)
 
 
 # Global instance for easy importing

@@ -65,7 +65,7 @@ done
 query_db() {
     local db_name="$1"
     local query="$2"
-    docker exec -i postgres-replication psql -U "$DB_USER" -d "$db_name" -t -A -c "$query" 2>/dev/null
+    docker compose exec -T postgres psql -U "$DB_USER" -d "$db_name" -t -A -c "$query" 2>/dev/null
 }
 
 # Check value against expected
@@ -107,7 +107,7 @@ verify_primary() {
     echo ""
 
     # Check connectivity
-    if ! docker exec -i postgres-replication psql -U "$DB_USER" -d "postgres_dev" -c "SELECT 1" &>/dev/null; then
+    if ! docker compose exec -T postgres psql -U "$DB_USER" -d "postgres_dev" -c "SELECT 1" &>/dev/null; then
         echo -e "  ${RED}✗${NC} Cannot connect to postgres_dev"
         ((errors++))
         return
@@ -142,7 +142,7 @@ verify_extended() {
     echo ""
 
     # Check connectivity
-    if ! docker exec -i postgres-replication psql -U "$DB_USER" -d "postgres_test" -c "SELECT 1" &>/dev/null; then
+    if ! docker compose exec -T postgres psql -U "$DB_USER" -d "postgres_test" -c "SELECT 1" &>/dev/null; then
         echo -e "  ${RED}✗${NC} Cannot connect to postgres_test"
         ((errors++))
         return

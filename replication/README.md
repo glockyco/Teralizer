@@ -41,15 +41,68 @@ This will:
 
 ---
 
-## Use Cases
+## Verification Workflows
 
-| Use Case | What You Get | Time | Commands |
-|----------|--------------|------|----------|
-| **Inspect Data** | Browse results in database | 5 min | `./quick-start.sh` |
-| **Re-run Analysis** | Reproduce paper figures/tables | 30 min | `./quick-start.sh` then run notebooks |
-| **Verify Pipeline (Quick)** | Confirm pipeline works | 5-10 min | `./scripts/run.sh --dataset extended --count 5` |
-| **Verify Pipeline (Extended)** | Process subset of projects | 1-2 hours | See examples below |
-| **Full Reproduction** | Re-run entire data collection | Days/weeks | See Full Reproduction section |
+Choose based on your evaluation goals:
+
+### Workflow 1: Inspect Pre-computed Results (5 min)
+
+Browse results without re-running anything.
+
+1. Start services:
+   ```bash
+   ./quick-start.sh
+   ```
+
+2. Verify import:
+   ```bash
+   ./scripts/verify-results.sh
+   ```
+
+3. Explore:
+   - **Jupyter**: http://localhost:8888 (browse notebooks)
+   - **Adminer**: http://localhost:18080 (query databases)
+   - **Files**: `analysis/output/original/` (pre-computed tables/figures)
+
+### Workflow 2: Verify Analysis Reproducibility (10 min)
+
+Confirm analysis code produces identical results on same data.
+
+1. Setup (if not done):
+   ```bash
+   ./quick-start.sh
+   ```
+
+2. Re-run notebooks:
+   ```bash
+   ./scripts/run-notebooks.sh verify
+   ```
+
+3. Compare outputs:
+   ```bash
+   ./scripts/verify-outputs.sh original verify
+   ```
+
+**Expected**: All outputs match exactly.
+
+### Workflow 3: Verify Pipeline Execution (15+ min)
+
+Confirm data collection pipeline runs successfully.
+
+1. Run pipeline on subset:
+   ```bash
+   ./scripts/run.sh --dataset extended --count 5
+   ```
+
+2. Run analysis on new data:
+   ```bash
+   ./scripts/run-notebooks.sh replicate
+   ```
+
+3. Compare (differences expected due to non-determinism):
+   ```bash
+   ./scripts/verify-outputs.sh original replicate
+   ```
 
 ---
 
@@ -57,7 +110,7 @@ This will:
 
 - **Docker**: Version 20.10+ with Docker Compose V2
 - **RAM**: 8GB minimum (16GB recommended for pipeline)
-- **Disk**: 10GB for quick start, 50GB+ for full reproduction
+- **Disk**: 20GB for quick start, 50GB+ for full reproduction
 - **OS**: Linux, macOS (Intel or Apple Silicon), Windows (WSL2)
 
 Check requirements:
@@ -113,6 +166,57 @@ Extended Dataset (postgres_test)
   ✓ Database connection OK
   ✓ Project count: 1161 (expected 1161)
   ...
+```
+
+---
+
+## Verifying Analysis Results
+
+The package includes pre-computed outputs from our analysis in `analysis/output/original/`. You can verify these by re-running the analysis and comparing results.
+
+### Pre-computed Outputs
+
+The `analysis/output/original/` directory contains:
+- `tables/` - LaTeX tables used in the paper
+- `data/` - CSV files with computed statistics
+- `figures/` - PDF figures used in the paper
+
+### Re-running the Analysis
+
+To re-run the analysis notebooks:
+
+```bash
+# Execute all notebooks on original data (outputs to verify/)
+./scripts/run-notebooks.sh verify
+
+# Or run with --dry-run to see what would be executed
+./scripts/run-notebooks.sh verify --dry-run
+```
+
+This creates outputs in `analysis/output/verify/` using the same original databases.
+
+### Comparing Outputs
+
+After re-running, compare your outputs against the pre-computed reference:
+
+```bash
+./scripts/verify-outputs.sh original verify
+```
+
+**Expected**: All files should match exactly. The analysis is deterministic on the same data.
+
+### Output Variants
+
+| Variant | Database Used | Output Directory | Purpose |
+|---------|---------------|------------------|---------|
+| `original` | postgres_dev/test | `output/original/` | Pre-computed reference (shipped) |
+| `verify` | postgres_dev/test | `output/verify/` | Re-run on same data |
+| `replicate` | postgres_dev/test_replication | `output/replicate/` | Full pipeline reproduction |
+
+To change variants, set `DATASET_VARIANT` environment variable or in `.env`:
+```bash
+export DATASET_VARIANT=verify
+# or: DATASET_VARIANT=replicate ./scripts/run-notebooks.sh replicate
 ```
 
 ---
@@ -196,12 +300,18 @@ Plus `commons-utils-dev`: Uses original developer-written tests (no generation p
 
 ## Databases
 
-Two PostgreSQL databases contain all results:
+### Database Structure
 
-| Database | Contents | Projects |
-|----------|----------|----------|
-| `postgres_dev` | Primary dataset (EqBench + Commons Utils) | 13 |
-| `postgres_test` | Extended dataset (RepoReapers) | 1161 |
+The import creates four databases:
+
+| Database | Contents | Purpose |
+|----------|----------|---------|
+| `postgres_dev` | Primary dataset (13 projects) | Verification workflows |
+| `postgres_test` | Extended dataset (1161 projects) | Verification workflows |
+| `postgres_dev_replication` | Empty schema | Pipeline reproduction |
+| `postgres_test_replication` | Empty schema | Pipeline reproduction |
+
+The `*_replication` databases are populated when you run the pipeline (Workflow 3).
 
 ### Key Tables
 
@@ -228,13 +338,13 @@ psql -h localhost -p 5432 -U teralizer -d postgres_dev
 
 The `analysis/notebooks/` directory contains Jupyter notebooks that reproduce the paper's figures and tables:
 
-| Notebook | Description |
-|----------|-------------|
-| `rq1-mutation-detection.ipynb` | RQ1: Mutation score effects |
-| `rq2-test-suite-effects.ipynb` | RQ2: Test suite size and runtime |
-| `rq3-runtime-requirements.ipynb` | RQ3: Pipeline runtime analysis |
-| `rq4-limitations.ipynb` | RQ4: Unsuccessful generalization causes |
-| `dataset-characteristics.ipynb` | Dataset statistics and characteristics |
+| Notebook | Paper Section | Description |
+|----------|---------------|-------------|
+| `dataset-characteristics.ipynb` | Evaluation Setup | Dataset statistics and characteristics |
+| `rq1-mutation-detection.ipynb` | RQ1, RQ2 | Mutation score; Constraint complexity |
+| `rq2-test-suite-effects.ipynb` | RQ3 | Test suite size and runtime |
+| `rq3-runtime-requirements.ipynb` | RQ4 | Teralizer efficiency |
+| `rq4-limitations.ipynb` | RQ5, RQ6 | Exclusion causes (controlled + real-world) |
 
 ---
 
@@ -251,6 +361,7 @@ Environment variables (set in `.env` or export):
 | `DB_PORT` | 5432 | PostgreSQL port |
 | `ADMINER_PORT` | 18080 | Adminer web UI port |
 | `JUPYTER_PORT` | 8888 | Jupyter Lab port |
+| `DATASET_VARIANT` | verify | Output variant: `verify` or `replicate` |
 
 Copy `.env.example` to `.env` to customize:
 ```bash
@@ -314,7 +425,7 @@ docker compose up -d analysis
 
 ---
 
-## Full Reproduction
+## Complete Pipeline Reproduction
 
 To reproduce all results from scratch (requires days of compute):
 
@@ -349,6 +460,24 @@ The primary dataset requires a two-phase workflow with manual intervention:
 - Generalization progress depends on timeouts (machine-dependent)
 - Some GitHub repositories may have changed or been deleted
 
+### Analyzing Reproduction Results
+
+After running the pipeline, analyze the reproduced data and compare with original results:
+
+```bash
+# Run analysis notebooks on the reproduced data
+./scripts/run-notebooks.sh replicate
+
+# Compare reproduced outputs against original
+./scripts/verify-outputs.sh original replicate
+```
+
+The `replicate` variant:
+- Reads from `postgres_dev_replication` and `postgres_test_replication` databases (populated by pipeline runs)
+- Writes outputs to `analysis/output/replicate/`
+
+Differences between `original/` and `replicate/` are expected due to the non-determinism noted above.
+
 ---
 
 ## Stopping Services
@@ -380,7 +509,9 @@ replication/
     ├── import-databases.sh     # Database import script
     ├── export-databases.sh     # Database export script
     ├── run.sh                  # Unified pipeline runner
-    └── verify-results.sh       # Verification script
+    ├── run-notebooks.sh        # Automated notebook execution
+    ├── verify-results.sh       # Database verification
+    └── verify-outputs.sh       # Output comparison between variants
 
 project-configs/
 ├── primary/

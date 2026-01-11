@@ -1,0 +1,13 @@
+summary_type,algorithm,tries,variant_count,total_generated,contributing_count,would_be_filtered,retention_percentage
+overall,ALL,ALL,42,65633,4240,61393,6.5
+by_algorithm,IMPROVED,ALL,21,35045,2339,32706,6.7
+by_algorithm,NAIVE,ALL,21,30588,1901,28687,6.2
+by_tries,ALL,10,14,22531,1218,21313,5.4
+by_tries,ALL,50,14,21624,1467,20157,6.8
+by_tries,ALL,200,14,21478,1555,19923,7.2
+by_algorithm_tries,IMPROVED,10,7,11788,683,11105,5.8
+by_algorithm_tries,IMPROVED,50,7,11660,812,10848,7.0
+by_algorithm_tries,IMPROVED,200,7,11597,844,10753,7.3
+by_algorithm_tries,NAIVE,10,7,10743,535,10208,5.0
+by_algorithm_tries,NAIVE,50,7,9964,655,9309,6.6
+by_algorithm_tries,NAIVE,200,7,9881,711,9170,7.2

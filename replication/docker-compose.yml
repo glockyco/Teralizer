@@ -88,6 +88,10 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-teralizer}
       DB_NAME_DEV: ${DB_NAME_DEV:-postgres_dev}
       DB_NAME_TEST: ${DB_NAME_TEST:-postgres_test}
+      # Variant controls database selection and output paths:
+      # - verify: use original DBs, output to verify/ (default for evaluators)
+      # - replicate: use replication DBs, output to replicate/
+      DATASET_VARIANT: ${DATASET_VARIANT:-verify}
     volumes:
       - ../analysis:/app/analysis:ro
       - analysis-output:/app/analysis/output

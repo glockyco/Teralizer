@@ -1,0 +1,19 @@
+\begin{table}[H]
+  \caption{Test execution failure analysis by project.}
+  \label{tab:exclusions-test-fails-by-project}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Project & Total & \multicolumn{1}{c}{No Error} & \multicolumn{1}{c}{TooManyFilterMisses} & \multicolumn{1}{c}{Inaccurate Specification} \\
+    \midrule
+    \DatasetEqBenchA{} & 57,137 & 54,998\; (96.3\%) & 1,906\; (\phantom{0}3.3\%) & 233\; (\phantom{0}0.4\%) \\
+    \DatasetEqBenchB{} & 59,033 & 56,643\; (96.0\%) & 2,148\; (\phantom{0}3.6\%) & 242\; (\phantom{0}0.4\%) \\
+    \DatasetEqBenchC{} & 60,231 & 57,680\; (95.8\%) & 2,279\; (\phantom{0}3.8\%) & 272\; (\phantom{0}0.5\%) \\
+    \midrule
+    \DatasetCommonsA{} & 27,598 & 25,119\; (91.0\%) & 1,376\; (\phantom{0}5.0\%) & 1,103\; (\phantom{0}4.0\%) \\
+    \DatasetCommonsB{} & 30,968 & 27,892\; (90.1\%) & 1,742\; (\phantom{0}5.6\%) & 1,334\; (\phantom{0}4.3\%) \\
+    \DatasetCommonsC{} & 31,572 & 28,160\; (89.2\%) & 1,895\; (\phantom{0}6.0\%) & 1,517\; (\phantom{0}4.8\%) \\
+    \midrule
+    \DatasetCommonsDev{} & 18,367 & 17,107\; (93.1\%) & 507\; (\phantom{0}2.8\%) & 753\; (\phantom{0}4.1\%) \\
+    \bottomrule
+  \end{tabular}
+\end{table}

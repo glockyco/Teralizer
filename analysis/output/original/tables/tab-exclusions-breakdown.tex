@@ -1,0 +1,23 @@
+\begin{table}[H]
+  \caption{Exclusion breakdown showing proactive filtering and reactive failures.}
+  \label{tab:exclusions-breakdown}
+  \begin{tabular}{llrrrr}
+    \toprule
+    & & & & \multicolumn{2}{r}{Excluded} \\
+    \cmidrule(lr){5-6}
+    Variant & Type & Total & Included & Filtering & Failures \\
+    \midrule
+    \VariantShared{} & Test & 23,246 & \phantom{}19,306\; (83.1\%) & \phantom{0,0}3,933\; (16.9\%) & \phantom{0,0,0}7\; (\phantom{0}0.0\%) \\
+    \midrule
+    \VariantShared{} & Assertion & 28,923 & \phantom{}13,836\; (47.8\%) & \phantom{}12,092\; (41.8\%) & \phantom{}2,995\; (10.4\%) \\
+    \midrule
+    \VariantBaseline{} & Generalization & 13,836 & \phantom{}13,814\; (99.8\%) & \phantom{0,0,0}22\; (\phantom{0}0.2\%) & \phantom{0,0,0}0\; (\phantom{0}0.0\%) \\
+    \VariantImprovedA{} & Generalization & 13,836 & \phantom{}11,788\; (85.2\%) & \phantom{0,0}2,016\; (14.6\%) & \phantom{0,}32\; (\phantom{0}0.2\%) \\
+    \VariantImprovedC{} & Generalization & 13,836 & \phantom{}11,597\; (83.8\%) & \phantom{0,0}2,207\; (16.0\%) & \phantom{0,}32\; (\phantom{0}0.2\%) \\
+    \VariantImprovedB{} & Generalization & 13,836 & \phantom{}11,660\; (84.3\%) & \phantom{0,0}2,144\; (15.5\%) & \phantom{0,}32\; (\phantom{0}0.2\%) \\
+    \VariantNaiveA{} & Generalization & 13,836 & \phantom{}10,743\; (77.6\%) & \phantom{0,0}3,061\; (22.1\%) & \phantom{0,}32\; (\phantom{0}0.2\%) \\
+    \VariantNaiveC{} & Generalization & 13,836 & \phantom{0,0}9,881\; (71.4\%) & \phantom{0,0}3,923\; (28.4\%) & \phantom{0,}32\; (\phantom{0}0.2\%) \\
+    \VariantNaiveB{} & Generalization & 13,836 & \phantom{0,0}9,964\; (72.0\%) & \phantom{0,0}3,840\; (27.8\%) & \phantom{0,}32\; (\phantom{0}0.2\%) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
