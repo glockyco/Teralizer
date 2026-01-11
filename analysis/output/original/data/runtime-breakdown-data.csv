@@ -23,25 +23,25 @@ commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantBaseline{},12.895013,Fals
 commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantBaseline{},2408.9888,False,4
 commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantNaiveA{},91.73859,False,3
 commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantNaiveA{},3127.5474,False,4
-commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantNaiveB{},80.28446,False,3
-commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantNaiveB{},4027.9004,False,4
+commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantNaiveB{},80.28447,False,3
+commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantNaiveB{},4027.9006,False,4
 commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantNaiveC{},79.65162,False,3
 commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantNaiveC{},8903.605,False,4
 commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantImprovedA{},83.96667,False,3
-commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantImprovedA{},2912.1875,False,4
-commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantImprovedB{},85.36057,False,3
+commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantImprovedA{},2912.1877,False,4
+commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantImprovedB{},85.360565,False,3
 commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantImprovedB{},3699.6348,False,4
 commons-utils-es-60s,commons-utils-dev,Stage 4,\VariantImprovedC{},93.22747,False,3
 commons-utils-es-60s,commons-utils-dev,Stage 5,\VariantImprovedC{},4699.911,False,4
-commons-utils-es-1s,commons-utils-dev,Stage 1 + 2,\VariantShared{},96.878456,True,1
+commons-utils-es-1s,commons-utils-dev,Stage 1 + 2,\VariantShared{},96.878525,True,1
 commons-utils-es-1s,commons-utils-dev,Stage 3,\VariantShared{},213.18048,True,2
 commons-utils-es-1s,commons-utils-dev,Stage 5,\VariantShared{},1306.4514,False,4
-commons-utils-es-1s,commons-utils-dev,Stage 4,\VariantBaseline{},7.496011,False,3
+commons-utils-es-1s,commons-utils-dev,Stage 4,\VariantBaseline{},7.496012,False,3
 commons-utils-es-1s,commons-utils-dev,Stage 5,\VariantBaseline{},1793.4666,False,4
 commons-utils-es-1s,commons-utils-dev,Stage 4,\VariantNaiveA{},60.260616,False,3
 commons-utils-es-1s,commons-utils-dev,Stage 5,\VariantNaiveA{},2594.5178,False,4
 commons-utils-es-1s,commons-utils-dev,Stage 4,\VariantNaiveB{},61.00268,False,3
-commons-utils-es-1s,commons-utils-dev,Stage 5,\VariantNaiveB{},5303.6714,False,4
+commons-utils-es-1s,commons-utils-dev,Stage 5,\VariantNaiveB{},5303.671,False,4
 commons-utils-es-1s,commons-utils-dev,Stage 4,\VariantNaiveC{},61.56676,False,3
 commons-utils-es-1s,commons-utils-dev,Stage 5,\VariantNaiveC{},7162.6113,False,4
 commons-utils-es-1s,commons-utils-dev,Stage 4,\VariantImprovedA{},62.202652,False,3
@@ -50,14 +50,14 @@ commons-utils-es-1s,commons-utils-dev,Stage 4,\VariantImprovedB{},61.072662,Fals
 commons-utils-es-1s,commons-utils-dev,Stage 5,\VariantImprovedB{},3169.9756,False,4
 commons-utils-es-1s,commons-utils-dev,Stage 4,\VariantImprovedC{},62.072712,False,3
 commons-utils-es-1s,commons-utils-dev,Stage 5,\VariantImprovedC{},5253.8623,False,4
-eqbench-es-60s,eqbench,Stage 1 + 2,\VariantShared{},452.90524,True,1
+eqbench-es-60s,eqbench,Stage 1 + 2,\VariantShared{},452.90424,True,1
 eqbench-es-60s,eqbench,Stage 3,\VariantShared{},1818.5874,True,2
 eqbench-es-60s,eqbench,Stage 5,\VariantShared{},7321.3896,False,4
 eqbench-es-60s,eqbench,Stage 4,\VariantBaseline{},12.248884,False,3
 eqbench-es-60s,eqbench,Stage 5,\VariantBaseline{},7143.7793,False,4
-eqbench-es-60s,eqbench,Stage 4,\VariantNaiveA{},168.4276,False,3
+eqbench-es-60s,eqbench,Stage 4,\VariantNaiveA{},168.42758,False,3
 eqbench-es-60s,eqbench,Stage 5,\VariantNaiveA{},10470.964,False,4
-eqbench-es-60s,eqbench,Stage 4,\VariantNaiveB{},158.25175,False,3
+eqbench-es-60s,eqbench,Stage 4,\VariantNaiveB{},158.25177,False,3
 eqbench-es-60s,eqbench,Stage 5,\VariantNaiveB{},11317.213,False,4
 eqbench-es-60s,eqbench,Stage 4,\VariantNaiveC{},173.94844,False,3
 eqbench-es-60s,eqbench,Stage 5,\VariantNaiveC{},35538.164,False,4
@@ -67,8 +67,8 @@ eqbench-es-60s,eqbench,Stage 4,\VariantImprovedB{},170.91856,False,3
 eqbench-es-60s,eqbench,Stage 5,\VariantImprovedB{},10615.919,False,4
 eqbench-es-60s,eqbench,Stage 4,\VariantImprovedC{},153.8903,False,3
 eqbench-es-60s,eqbench,Stage 5,\VariantImprovedC{},17621.01,False,4
-eqbench-es-1s,eqbench,Stage 1 + 2,\VariantShared{},430.8139,True,1
-eqbench-es-1s,eqbench,Stage 3,\VariantShared{},307.74704,True,2
+eqbench-es-1s,eqbench,Stage 1 + 2,\VariantShared{},430.81378,True,1
+eqbench-es-1s,eqbench,Stage 3,\VariantShared{},307.747,True,2
 eqbench-es-1s,eqbench,Stage 5,\VariantShared{},6745.4062,False,4
 eqbench-es-1s,eqbench,Stage 4,\VariantBaseline{},9.809885,False,3
 eqbench-es-1s,eqbench,Stage 5,\VariantBaseline{},6422.2407,False,4
@@ -84,14 +84,14 @@ eqbench-es-1s,eqbench,Stage 4,\VariantImprovedB{},142.99081,False,3
 eqbench-es-1s,eqbench,Stage 5,\VariantImprovedB{},10131.545,False,4
 eqbench-es-1s,eqbench,Stage 4,\VariantImprovedC{},140.56659,False,3
 eqbench-es-1s,eqbench,Stage 5,\VariantImprovedC{},15696.328,False,4
-eqbench-es-10s,eqbench,Stage 1 + 2,\VariantShared{},414.76962,True,1
+eqbench-es-10s,eqbench,Stage 1 + 2,\VariantShared{},414.7695,True,1
 eqbench-es-10s,eqbench,Stage 3,\VariantShared{},2776.0964,True,2
 eqbench-es-10s,eqbench,Stage 5,\VariantShared{},7533.791,False,4
 eqbench-es-10s,eqbench,Stage 4,\VariantBaseline{},12.259882,False,3
 eqbench-es-10s,eqbench,Stage 5,\VariantBaseline{},7292.8677,False,4
 eqbench-es-10s,eqbench,Stage 4,\VariantNaiveA{},145.60109,False,3
-eqbench-es-10s,eqbench,Stage 5,\VariantNaiveA{},9676.3125,False,4
-eqbench-es-10s,eqbench,Stage 4,\VariantNaiveB{},177.87556,False,3
+eqbench-es-10s,eqbench,Stage 5,\VariantNaiveA{},9676.312,False,4
+eqbench-es-10s,eqbench,Stage 4,\VariantNaiveB{},177.87555,False,3
 eqbench-es-10s,eqbench,Stage 5,\VariantNaiveB{},11896.369,False,4
 eqbench-es-10s,eqbench,Stage 4,\VariantNaiveC{},147.19615,False,3
 eqbench-es-10s,eqbench,Stage 5,\VariantNaiveC{},29467.117,False,4
@@ -99,10 +99,10 @@ eqbench-es-10s,eqbench,Stage 4,\VariantImprovedA{},156.53508,False,3
 eqbench-es-10s,eqbench,Stage 5,\VariantImprovedA{},8045.1436,False,4
 eqbench-es-10s,eqbench,Stage 4,\VariantImprovedB{},151.07872,False,3
 eqbench-es-10s,eqbench,Stage 5,\VariantImprovedB{},8782.171,False,4
-eqbench-es-10s,eqbench,Stage 4,\VariantImprovedC{},154.62257,False,3
+eqbench-es-10s,eqbench,Stage 4,\VariantImprovedC{},154.6226,False,3
 eqbench-es-10s,eqbench,Stage 5,\VariantImprovedC{},14790.545,False,4
-commons-utils-es-10s,commons-utils-dev,Stage 1 + 2,\VariantShared{},169.9473,True,1
-commons-utils-es-10s,commons-utils-dev,Stage 3,\VariantShared{},1757.1556,True,2
+commons-utils-es-10s,commons-utils-dev,Stage 1 + 2,\VariantShared{},169.94722,True,1
+commons-utils-es-10s,commons-utils-dev,Stage 3,\VariantShared{},1757.156,True,2
 commons-utils-es-10s,commons-utils-dev,Stage 5,\VariantShared{},1748.8359,False,4
 commons-utils-es-10s,commons-utils-dev,Stage 4,\VariantBaseline{},14.035992,False,3
 commons-utils-es-10s,commons-utils-dev,Stage 5,\VariantBaseline{},2885.9055,False,4
