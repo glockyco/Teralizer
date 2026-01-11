@@ -5,6 +5,7 @@
 #   adminer   - Database web UI (port 18080)
 #   analysis  - Jupyter Lab for analysis notebooks (port 8888)
 #   teralizer - Java pipeline for data collection (on-demand)
+#   verify    - Output comparison tool (on-demand)
 #
 # Usage:
 #   # Quick start (inspect data, re-run analysis)
@@ -12,6 +13,9 @@
 #   ./scripts/import-databases.sh
 #   docker compose up -d analysis
 #   # Open http://localhost:8888 for Jupyter, http://localhost:18080 for Adminer
+#
+#   # Verify outputs match after re-running notebooks
+#   docker compose run --rm verify original verify
 #
 #   # Run pipeline on subset (via run.sh script)
 #   ./scripts/run.sh --dataset extended --count 5
@@ -127,6 +131,26 @@ services:
       resources:
         limits:
           memory: 8G
+
+  # One-shot verification service
+  # Usage: docker compose run --rm verify [original verify|original replicate]
+  verify:
+    build:
+      context: ..
+      dockerfile: replication/Dockerfile.analysis
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-teralizer}
+      DB_PASSWORD: ${DB_PASSWORD:-teralizer}
+    volumes:
+      - ../analysis:/app/analysis
+    working_dir: /app/analysis
+    entrypoint: ["/opt/venv/bin/python", "-m", "teralizer.verify"]
+    command: ["original", "verify"]
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres-data:
