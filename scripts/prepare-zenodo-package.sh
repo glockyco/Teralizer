@@ -1,0 +1,459 @@
+#!/usr/bin/env bash
+# Prepare Zenodo archives for artifact submission.
+#
+# This script creates multiple archives for Zenodo submission:
+#   1. teralizer-results-v1.0.zip    - Results only (HTML, tables, figures, data)
+#   2. teralizer-core-v1.0.zip       - Verification package (code, database dumps)
+#   3. teralizer-projects-primary-v1.0.zip - Primary dataset projects
+#   4. teralizer-projects-extended-sample-v1.0.zip - Sampled extended projects
+#   5. teralizer-projects-extended-v1.0.zip - Full extended dataset
+#
+# USAGE:
+#   ./scripts/prepare-zenodo-package.sh [OPTIONS]
+#
+# OPTIONS:
+#   --output-dir DIR         Output directory for archives (default: ~/zenodo-upload)
+#   --projects-primary DIR   Primary projects directory
+#   --projects-extended DIR  Extended projects directory
+#   --sample-size N          Number of projects in extended sample (default: 100)
+#   --version VERSION        Version string for archive names (default: 1.0)
+#   --skip-extended-full     Skip creating the full extended archive
+#   --dry-run                Show what would be created without doing it
+#   --help                   Show this help message
+#
+# IMPORTANT:
+#   This script creates CLEANED COPIES of project directories for packaging.
+#   Original directories are never modified - all build artifacts are preserved locally.
+#
+# EXAMPLES:
+#   # Dry run to preview what would be created
+#   ./scripts/prepare-zenodo-package.sh --dry-run \
+#       --projects-primary ~/Projects/test-generalization/projects \
+#       --projects-extended ~/Projects/test-generalization-dev/projects
+#
+#   # Create all archives except full extended (saves time/space)
+#   ./scripts/prepare-zenodo-package.sh \
+#       --projects-primary ~/Projects/test-generalization/projects \
+#       --projects-extended ~/Projects/test-generalization-dev/projects \
+#       --skip-extended-full
+#
+#   # Create only results and core archives (no projects)
+#   ./scripts/prepare-zenodo-package.sh
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+# Defaults
+OUTPUT_DIR="$HOME/zenodo-upload"
+PROJECTS_PRIMARY=""
+PROJECTS_EXTENDED=""
+SAMPLE_SIZE=100
+VERSION="1.0"
+SKIP_EXTENDED_FULL=false
+DRY_RUN=false
+
+usage() {
+    sed -n '2,41p' "$0"
+    exit 0
+}
+
+log_step() {
+    echo -e "${CYAN}[$(date +%H:%M:%S)]${NC} $1"
+}
+
+log_success() {
+    echo -e "  ${GREEN}✓${NC} $1"
+}
+
+log_warning() {
+    echo -e "  ${YELLOW}!${NC} $1"
+}
+
+log_error() {
+    echo -e "  ${RED}✗${NC} $1"
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
+        --projects-primary) PROJECTS_PRIMARY="$2"; shift 2 ;;
+        --projects-extended) PROJECTS_EXTENDED="$2"; shift 2 ;;
+        --sample-size) SAMPLE_SIZE="$2"; shift 2 ;;
+        --version) VERSION="$2"; shift 2 ;;
+        --skip-extended-full) SKIP_EXTENDED_FULL=true; shift ;;
+        --dry-run) DRY_RUN=true; shift ;;
+        --help|-h) usage ;;
+        *) echo -e "${RED}Unknown option: $1${NC}"; usage ;;
+    esac
+done
+
+# Validate required paths exist
+if [[ ! -d "$REPO_ROOT/analysis/output/original" ]]; then
+    log_error "Original outputs not found at $REPO_ROOT/analysis/output/original"
+    log_error "Run notebooks first to generate outputs."
+    exit 1
+fi
+
+echo ""
+echo "=========================================="
+echo "  Zenodo Package Preparation"
+echo "  Version: $VERSION"
+echo "=========================================="
+echo ""
+
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo -e "${YELLOW}DRY RUN - No files will be created${NC}"
+    echo ""
+fi
+
+# Create output directory
+if [[ "$DRY_RUN" == "false" ]]; then
+    mkdir -p "$OUTPUT_DIR"
+fi
+
+# Temporary directory for staging
+STAGING_DIR=$(mktemp -d)
+trap "rm -rf $STAGING_DIR" EXIT
+
+# ----------------------------------------------------------------------------
+# Archive 1: Results Only
+# ----------------------------------------------------------------------------
+log_step "Creating Archive 1: Results Only"
+
+RESULTS_NAME="teralizer-results-v${VERSION}"
+RESULTS_DIR="$STAGING_DIR/$RESULTS_NAME"
+
+if [[ "$DRY_RUN" == "false" ]]; then
+    mkdir -p "$RESULTS_DIR"
+
+    # Copy tables, figures, data
+    cp -r "$REPO_ROOT/analysis/output/original/tables" "$RESULTS_DIR/"
+    cp -r "$REPO_ROOT/analysis/output/original/figures" "$RESULTS_DIR/"
+    cp -r "$REPO_ROOT/analysis/output/original/data" "$RESULTS_DIR/"
+
+    # Copy HTML notebooks if they exist
+    if [[ -d "$REPO_ROOT/analysis/output/html" ]]; then
+        cp -r "$REPO_ROOT/analysis/output/html" "$RESULTS_DIR/"
+    else
+        log_warning "HTML notebooks not found - run notebook export first"
+    fi
+
+    # Create README for this archive
+    cat > "$RESULTS_DIR/README.md" << 'EOF'
+# Teralizer Results
+
+Pre-computed analysis results for browsing without running any code.
+
+## Contents
+
+- `tables/` - LaTeX tables (*.tex)
+- `figures/` - PDF figures
+- `data/` - CSV data exports
+- `html/` - Jupyter notebooks as HTML (open in any browser)
+
+## Available Archives
+
+| Archive | Purpose | Size |
+|---------|---------|------|
+| `teralizer-results` | Browse results only (this archive) | ~1MB |
+| `teralizer-core` | Re-run analysis, verify results | ~250MB |
+| `teralizer-projects-primary` | Primary dataset source code | ~50MB |
+| `teralizer-projects-extended-sample` | 100 sampled projects for testing | ~180MB |
+| `teralizer-projects-extended` | All 1161 projects (full replication) | ~5GB |
+
+## Which Archives Do I Need?
+
+**Just browsing results?**
+→ This archive only (`teralizer-results`)
+
+**Verify analysis reproducibility?**
+→ Download `teralizer-core`, then:
+```bash
+cd teralizer-core/replication
+./quick-start.sh
+./scripts/run-notebooks.sh verify
+./scripts/verify-outputs.sh original verify
+```
+
+**Run the full pipeline?**
+→ Download `teralizer-core` + one of the project archives
+→ Extract both to the same parent directory
+→ See `replication/README.md` for detailed instructions
+
+## Setup with Project Archives
+
+**Starting state** - place core + project archive(s) in the same directory:
+```
+~/Downloads/
+├── teralizer-core-v1.0.zip
+├── teralizer-projects-primary-v1.0.zip          (optional)
+├── teralizer-projects-extended-sample-v1.0.zip  (optional)
+└── teralizer-projects-extended-v1.0.zip         (optional)
+```
+At least one project archive is needed to run the pipeline.
+
+**Quick setup** (recommended):
+```bash
+cd ~/Downloads
+unzip teralizer-core-v1.0.zip
+cd teralizer-core-v1.0/replication
+./quick-start.sh   # Auto-extracts sibling project archives
+```
+
+**End state** after quick-start.sh:
+```
+teralizer-core-v1.0/
+├── projects/           # Extracted from project archive
+│   ├── commons-utils/
+│   └── eqbench/
+├── replication/
+├── analysis/
+└── ...
+```
+
+**Manual alternative** (if auto-extraction doesn't work):
+```bash
+unzip teralizer-core-v1.0.zip
+cd teralizer-core-v1.0
+unzip ../teralizer-projects-primary-v1.0.zip   # Creates projects/ here
+cd replication && ./quick-start.sh
+```
+EOF
+
+    # Create archive
+    (cd "$STAGING_DIR" && zip -rq "$OUTPUT_DIR/${RESULTS_NAME}.zip" "$RESULTS_NAME")
+
+    RESULTS_SIZE=$(du -sh "$OUTPUT_DIR/${RESULTS_NAME}.zip" | cut -f1)
+    log_success "Created ${RESULTS_NAME}.zip ($RESULTS_SIZE)"
+else
+    log_success "Would create ${RESULTS_NAME}.zip"
+fi
+
+# ----------------------------------------------------------------------------
+# Archive 2: Verification Package (Core)
+# ----------------------------------------------------------------------------
+log_step "Creating Archive 2: Verification Package"
+
+CORE_NAME="teralizer-core-v${VERSION}"
+CORE_DIR="$STAGING_DIR/$CORE_NAME"
+
+if [[ "$DRY_RUN" == "false" ]]; then
+    mkdir -p "$CORE_DIR"
+
+    # Clone repo fresh to get clean state (include submodules like jpf-symbc)
+    log_step "  Cloning repository..."
+    git clone --quiet --recurse-submodules "$REPO_ROOT" "$CORE_DIR/repo-temp"
+
+    # Resolve LFS files
+    log_step "  Resolving LFS files..."
+    (cd "$CORE_DIR/repo-temp" && git lfs pull 2>/dev/null)
+
+    # Move contents up (excluding .git)
+    shopt -s dotglob
+    mv "$CORE_DIR/repo-temp"/* "$CORE_DIR/" 2>/dev/null || true
+    shopt -u dotglob
+    rm -rf "$CORE_DIR/repo-temp"
+    rm -rf "$CORE_DIR/.git"
+
+    # Remove unnecessary files for verification
+    rm -rf "$CORE_DIR/projects" 2>/dev/null || true
+    rm -rf "$CORE_DIR/data" 2>/dev/null || true
+    rm -rf "$CORE_DIR/.idea" 2>/dev/null || true
+    rm -f "$CORE_DIR/.env" 2>/dev/null || true
+
+    # Ensure output/original exists with reference outputs
+    mkdir -p "$CORE_DIR/analysis/output/original"
+    cp -r "$REPO_ROOT/analysis/output/original/tables" "$CORE_DIR/analysis/output/original/"
+    cp -r "$REPO_ROOT/analysis/output/original/figures" "$CORE_DIR/analysis/output/original/"
+    cp -r "$REPO_ROOT/analysis/output/original/data" "$CORE_DIR/analysis/output/original/"
+
+    # Create archive
+    (cd "$STAGING_DIR" && zip -rq "$OUTPUT_DIR/${CORE_NAME}.zip" "$CORE_NAME")
+
+    CORE_SIZE=$(du -sh "$OUTPUT_DIR/${CORE_NAME}.zip" | cut -f1)
+    log_success "Created ${CORE_NAME}.zip ($CORE_SIZE)"
+else
+    log_success "Would create ${CORE_NAME}.zip"
+fi
+
+# ----------------------------------------------------------------------------
+# Archive 3: Primary Projects
+# Archive extracts directly as projects/ for easy merging with core
+# ----------------------------------------------------------------------------
+if [[ -n "$PROJECTS_PRIMARY" ]] && [[ -d "$PROJECTS_PRIMARY" ]]; then
+    log_step "Creating Archive 3: Primary Projects"
+
+    PRIMARY_NAME="teralizer-projects-primary-v${VERSION}"
+    PRIMARY_DIR="$STAGING_DIR/primary-staging/projects"
+
+    if [[ "$DRY_RUN" == "false" ]]; then
+        mkdir -p "$PRIMARY_DIR"
+
+        # Copy primary projects (commons-utils*, eqbench*)
+        for project in "$PROJECTS_PRIMARY"/commons-utils* "$PROJECTS_PRIMARY"/eqbench*; do
+            if [[ -d "$project" ]]; then
+                project_name=$(basename "$project")
+                log_step "  Copying $project_name (cleaned)..."
+
+                # Copy excluding build artifacts
+                rsync -a \
+                    --exclude='target/' \
+                    --exclude='.git/' \
+                    --exclude='*.class' \
+                    --exclude='*.jar' \
+                    "$project/" "$PRIMARY_DIR/$project_name/"
+            fi
+        done
+
+        # Create archive (extracts as projects/)
+        (cd "$STAGING_DIR/primary-staging" && zip -rq "$OUTPUT_DIR/${PRIMARY_NAME}.zip" projects)
+
+        PRIMARY_SIZE=$(du -sh "$OUTPUT_DIR/${PRIMARY_NAME}.zip" | cut -f1)
+        log_success "Created ${PRIMARY_NAME}.zip ($PRIMARY_SIZE)"
+    else
+        log_success "Would create ${PRIMARY_NAME}.zip"
+    fi
+else
+    log_warning "Skipping primary projects (--projects-primary not specified or not found)"
+fi
+
+# ----------------------------------------------------------------------------
+# Archive 4: Extended Sample
+# Archive extracts directly as projects/ for easy merging with core
+# ----------------------------------------------------------------------------
+if [[ -n "$PROJECTS_EXTENDED" ]] && [[ -d "$PROJECTS_EXTENDED" ]]; then
+    log_step "Creating Archive 4: Extended Sample ($SAMPLE_SIZE projects)"
+
+    SAMPLE_NAME="teralizer-projects-extended-sample-v${VERSION}"
+    SAMPLE_DIR="$STAGING_DIR/sample-staging/projects"
+
+    if [[ "$DRY_RUN" == "false" ]]; then
+        mkdir -p "$SAMPLE_DIR"
+
+        # Get list of extended projects and sample
+        EXTENDED_PROJECTS=("$PROJECTS_EXTENDED"/github_com_*)
+        TOTAL_EXTENDED=${#EXTENDED_PROJECTS[@]}
+
+        if [[ $TOTAL_EXTENDED -gt 0 ]]; then
+            # Sample projects (deterministic using sort)
+            SAMPLE_COUNT=$((SAMPLE_SIZE < TOTAL_EXTENDED ? SAMPLE_SIZE : TOTAL_EXTENDED))
+
+            # Use a deterministic sampling: every Nth project
+            STEP=$((TOTAL_EXTENDED / SAMPLE_COUNT))
+            [[ $STEP -lt 1 ]] && STEP=1
+
+            COUNT=0
+            for ((i=0; i<TOTAL_EXTENDED && COUNT<SAMPLE_COUNT; i+=STEP)); do
+                project="${EXTENDED_PROJECTS[$i]}"
+                project_name=$(basename "$project")
+
+                # Copy excluding build artifacts
+                rsync -a \
+                    --exclude='target/' \
+                    --exclude='.git/' \
+                    --exclude='*.class' \
+                    --exclude='*.jar' \
+                    "$project/" "$SAMPLE_DIR/$project_name/"
+
+                ((COUNT++)) || true
+            done
+
+            log_step "  Sampled $COUNT of $TOTAL_EXTENDED projects"
+        fi
+
+        # Create archive (extracts as projects/)
+        (cd "$STAGING_DIR/sample-staging" && zip -rq "$OUTPUT_DIR/${SAMPLE_NAME}.zip" projects)
+
+        SAMPLE_SIZE_DISK=$(du -sh "$OUTPUT_DIR/${SAMPLE_NAME}.zip" | cut -f1)
+        log_success "Created ${SAMPLE_NAME}.zip ($SAMPLE_SIZE_DISK)"
+    else
+        log_success "Would create ${SAMPLE_NAME}.zip"
+    fi
+else
+    log_warning "Skipping extended sample (--projects-extended not specified or not found)"
+fi
+
+# ----------------------------------------------------------------------------
+# Archive 5: Full Extended
+# Archive extracts directly as projects/ for easy merging with core
+# ----------------------------------------------------------------------------
+if [[ -n "$PROJECTS_EXTENDED" ]] && [[ -d "$PROJECTS_EXTENDED" ]] && [[ "$SKIP_EXTENDED_FULL" == "false" ]]; then
+    log_step "Creating Archive 5: Full Extended (this may take a while)"
+
+    FULL_NAME="teralizer-projects-extended-v${VERSION}"
+    FULL_DIR="$STAGING_DIR/full-staging/projects"
+
+    if [[ "$DRY_RUN" == "false" ]]; then
+        mkdir -p "$FULL_DIR"
+
+        # Copy all extended projects
+        for project in "$PROJECTS_EXTENDED"/github_com_*; do
+            if [[ -d "$project" ]]; then
+                project_name=$(basename "$project")
+
+                # Copy excluding build artifacts
+                rsync -a \
+                    --exclude='target/' \
+                    --exclude='.git/' \
+                    --exclude='*.class' \
+                    --exclude='*.jar' \
+                    "$project/" "$FULL_DIR/$project_name/"
+            fi
+        done
+
+        # Create archive (extracts as projects/)
+        (cd "$STAGING_DIR/full-staging" && zip -rq "$OUTPUT_DIR/${FULL_NAME}.zip" projects)
+
+        FULL_SIZE=$(du -sh "$OUTPUT_DIR/${FULL_NAME}.zip" | cut -f1)
+        log_success "Created ${FULL_NAME}.zip ($FULL_SIZE)"
+    else
+        log_success "Would create ${FULL_NAME}.zip"
+    fi
+elif [[ "$SKIP_EXTENDED_FULL" == "true" ]]; then
+    log_warning "Skipping full extended archive (--skip-extended-full)"
+else
+    log_warning "Skipping full extended (--projects-extended not specified)"
+fi
+
+# ----------------------------------------------------------------------------
+# Generate checksums
+# ----------------------------------------------------------------------------
+if [[ "$DRY_RUN" == "false" ]]; then
+    log_step "Generating checksums"
+
+    (cd "$OUTPUT_DIR" && shasum -a 256 *.zip > checksums.sha256)
+    log_success "Created checksums.sha256"
+fi
+
+# ----------------------------------------------------------------------------
+# Summary
+# ----------------------------------------------------------------------------
+echo ""
+echo "=========================================="
+echo "  Summary"
+echo "=========================================="
+echo ""
+
+if [[ "$DRY_RUN" == "false" ]]; then
+    echo "Archives created in: $OUTPUT_DIR"
+    echo ""
+    ls -lh "$OUTPUT_DIR"/*.zip 2>/dev/null || true
+    echo ""
+    echo "Checksums:"
+    cat "$OUTPUT_DIR/checksums.sha256" 2>/dev/null || true
+else
+    echo "Dry run complete. Use without --dry-run to create archives."
+fi
+
+echo ""
+echo "=========================================="
