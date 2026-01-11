@@ -407,6 +407,9 @@ def save_latex_table(
 ) -> None:
     """Save LaTeX table content to file.
 
+    Trailing whitespace is stripped from each line to ensure reproducible
+    outputs across different systems and editors.
+
     Args:
         content: LaTeX table content
         filename: Output filename (without extension)
@@ -420,6 +423,9 @@ def save_latex_table(
 
     # Create output directory if it doesn't exist
     output_path.mkdir(parents=True, exist_ok=True)
+
+    # Strip trailing whitespace from each line for reproducibility
+    content = "\n".join(line.rstrip() for line in content.split("\n"))
 
     # Write content to file
     filepath = output_path / f"{filename}.tex"

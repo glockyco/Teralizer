@@ -122,7 +122,7 @@ compare_content() {
         if [[ ! -f "$target_file" ]]; then
             echo -e "    ${RED}Missing:${NC} $rel_path"
             ((diff_count++))
-        elif ! diff -q "$base_file" "$target_file" > /dev/null 2>&1; then
+        elif ! diff -q <(sed 's/[[:space:]]*$//' "$base_file") <(sed 's/[[:space:]]*$//' "$target_file") > /dev/null 2>&1; then
             echo -e "    ${YELLOW}Differs:${NC} $rel_path"
             ((diff_count++))
         fi
