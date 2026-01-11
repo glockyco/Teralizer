@@ -14,6 +14,7 @@
 #   all        Run both variants sequentially
 #
 # OPTIONS:
+#   --html     Also generate HTML exports for easy viewing
 #   --dry-run  Show what would be executed without running
 #   --help     Show this help message
 #
@@ -36,6 +37,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 DRY_RUN=false
+EXPORT_HTML=false
 CONTAINER="analysis-replication"
 
 usage() {
@@ -189,12 +191,72 @@ run_notebooks() {
     fi
 }
 
+# Export executed notebooks to HTML for easy viewing
+export_html() {
+    local variant=$1
+    local executed_dir="/app/analysis/output/executed/$variant"
+    local html_dir="/app/analysis/output/html"
+
+    echo ""
+    echo "=========================================="
+    echo "  Exporting HTML Notebooks"
+    echo "=========================================="
+    echo ""
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo -e "${CYAN}Dry run - would export to:${NC} $html_dir/"
+        return 0
+    fi
+
+    # Create HTML output directory
+    docker_exec mkdir -p "$html_dir"
+
+    # Get executed notebooks
+    local notebooks
+    notebooks=$(docker_exec find "$executed_dir" -maxdepth 1 -name "*.ipynb" -type f 2>/dev/null | sort) || true
+
+    if [[ -z "$notebooks" ]]; then
+        echo -e "${YELLOW}No executed notebooks found in $executed_dir${NC}"
+        return 0
+    fi
+
+    local total
+    total=$(echo "$notebooks" | wc -l | tr -d ' ')
+    local current=0
+
+    while IFS= read -r notebook; do
+        [[ -z "$notebook" ]] && continue
+        ((current++)) || true
+        local name
+        name=$(basename "$notebook" .ipynb)
+
+        echo -e "${YELLOW}[$current/$total]${NC} Converting $name.ipynb → $name.html..."
+
+        if docker_exec /opt/venv/bin/jupyter nbconvert \
+            --to html \
+            --output-dir "$html_dir" \
+            --output "$name.html" \
+            "$notebook" 2>&1; then
+            echo -e "  ${GREEN}✓${NC} Created $name.html"
+        else
+            echo -e "  ${RED}✗${NC} Failed to convert $name.ipynb"
+        fi
+    done <<< "$notebooks"
+
+    echo ""
+    echo -e "${GREEN}HTML exports saved to: analysis/output/html/${NC}"
+}
+
 # Parse arguments
 MODE=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         --dry-run)
             DRY_RUN=true
+            shift
+            ;;
+        --html)
+            EXPORT_HTML=true
             shift
             ;;
         --help|-h)
@@ -224,14 +286,17 @@ check_container
 case $MODE in
     verify)
         run_notebooks "verify"
+        [[ "$EXPORT_HTML" == "true" ]] && export_html "verify"
         ;;
     replicate)
         run_notebooks "replicate"
+        [[ "$EXPORT_HTML" == "true" ]] && export_html "replicate"
         ;;
     all)
         run_notebooks "verify"
-        echo ""
         run_notebooks "replicate"
+        # Export HTML from verify variant (same notebooks, just need one copy)
+        [[ "$EXPORT_HTML" == "true" ]] && export_html "verify"
         ;;
     *)
         echo -e "${RED}Unknown mode: $MODE${NC}"
