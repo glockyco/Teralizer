@@ -10,10 +10,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including fonts for matplotlib
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
-    && rm -rf /var/lib/apt/lists/*
+    fontconfig \
+    fonts-liberation \
+    && rm -rf /var/lib/apt/lists/* \
+    && fc-cache -f -v
 
 # Install uv for fast dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
