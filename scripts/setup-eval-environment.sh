@@ -154,6 +154,24 @@ fi
 # Track timing
 START_TIME=$(date +%s)
 
+# Step 0: Clean up existing Docker resources
+# Stop containers, remove volumes, and remove built images (keep third-party images cached)
+log_info "Cleaning up existing Docker resources..."
+
+# Stop and remove containers via compose if possible (handles network cleanup too)
+if [[ -f "$EVAL_DIR/replication/docker-compose.yml" ]]; then
+    docker compose -f "$EVAL_DIR/replication/docker-compose.yml" down -v 2>/dev/null || true
+fi
+
+# Force stop/remove any remaining *-replication containers
+docker ps -aq --filter "name=-replication$" 2>/dev/null | xargs -r docker rm -f 2>/dev/null || true
+
+# Remove replication_* volumes
+docker volume ls -q --filter "name=replication_" 2>/dev/null | xargs -r docker volume rm 2>/dev/null || true
+
+# Remove built images (replication-analysis, replication-teralizer) but keep third-party
+docker rmi replication-analysis:latest replication-teralizer:latest 2>/dev/null || true
+
 # Step 1: Clean up existing directories
 log_info "Cleaning up existing evaluation environment..."
 rm -rf "$EVAL_DIR"
