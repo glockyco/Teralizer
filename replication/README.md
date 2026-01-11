@@ -2,6 +2,8 @@
 
 This package enables reproduction of the results presented in our TOSEM paper on automated test generalization using symbolic execution.
 
+**ACM Artifact Evaluators**: See [Verification Workflows](#verification-workflows) to begin.
+
 ## Security Notice
 
 **Jupyter runs WITHOUT authentication** for ease of reproduction.
@@ -109,9 +111,12 @@ Confirm data collection pipeline runs successfully.
 ## System Requirements
 
 - **Docker**: Version 20.10+ with Docker Compose V2
+- **Bash**: For running the provided scripts
 - **RAM**: 8GB minimum (16GB recommended for pipeline)
 - **Disk**: 20GB for quick start, 50GB+ for full reproduction
 - **OS**: Linux, macOS (Intel or Apple Silicon), Windows (WSL2)
+
+**Note for Windows users**: Run all commands from within WSL2 (required by Docker Desktop anyway).
 
 Check requirements:
 ```bash
@@ -189,11 +194,21 @@ To re-run the analysis notebooks:
 # Execute all notebooks on original data (outputs to verify/)
 ./scripts/run-notebooks.sh verify
 
+# Also generate HTML exports for easy viewing
+./scripts/run-notebooks.sh verify --html
+
 # Or run with --dry-run to see what would be executed
 ./scripts/run-notebooks.sh verify --dry-run
 ```
 
 This creates outputs in `analysis/output/verify/` using the same original databases.
+
+Alternatively, use Docker Compose directly:
+
+```bash
+# Compare outputs using containerized verify tool
+docker compose run --rm verify original verify
+```
 
 ### Comparing Outputs
 
