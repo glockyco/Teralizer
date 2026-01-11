@@ -93,8 +93,7 @@ services:
       # - replicate: use replication DBs, output to replicate/
       DATASET_VARIANT: ${DATASET_VARIANT:-verify}
     volumes:
-      - ../analysis:/app/analysis:ro
-      - analysis-output:/app/analysis/output
+      - ../analysis:/app/analysis
     depends_on:
       postgres:
         condition: service_healthy
@@ -131,5 +130,4 @@ services:
 
 volumes:
   postgres-data:
-  analysis-output:
   teralizer-data:
