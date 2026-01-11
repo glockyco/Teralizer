@@ -5,6 +5,16 @@
     \toprule
     Variant & Type & Filter Name & Total & \multicolumn{1}{c}{Accept} & \multicolumn{1}{c}{Defer} & \multicolumn{1}{c}{Reject} \\
     \midrule
+    \VariantShared{} & Test & NoAssertions & 21,532 & 19,306\; (89.7\%) & - & 2,226\; (10.3\%) \\
+    \VariantShared{} & Test & NonPassingTest & 23,246 & 21,719\; (93.4\%) & - & 1,527\; (\phantom{0}6.6\%) \\
+    \VariantShared{} & Test & TestType & 23,246 & 23,066\; (99.2\%) & - & 180\; (\phantom{0}0.8\%) \\
+    \midrule
+    \VariantShared{} & Assertion & AssertionType & 28,923 & 28,180\; (97.4\%) & - & 743\; (\phantom{0}2.6\%) \\
+    \VariantShared{} & Assertion & ExcludedTest & 28,923 & 27,326\; (94.5\%) & - & 1,597\; (\phantom{0}5.5\%) \\
+    \VariantShared{} & Assertion & MissingValue & 28,923 & 21,766\; (75.3\%) & - & 7,157\; (24.7\%) \\
+    \VariantShared{} & Assertion & ParameterType & 28,923 & 17,835\; (61.7\%) & 6,630\; (22.9\%) & 4,458\; (15.4\%) \\
+    \VariantShared{} & Assertion & VoidReturnType & 28,923 & 21,763\; (75.2\%) & 7,157\; (24.7\%) & 3\; (\phantom{0}0.0\%) \\
+    \midrule
     \VariantBaseline{} & Generalization & NonPassingTest & 13,836 & 13,814\; (99.8\%) & - & 22\; (\phantom{0}0.2\%) \\
     \VariantImprovedA{} & Generalization & NonPassingTest & 13,804 & 11,788\; (85.4\%) & - & 2,016\; (14.6\%) \\
     \VariantImprovedC{} & Generalization & NonPassingTest & 13,804 & 11,597\; (84.0\%) & - & 2,207\; (16.0\%) \\
@@ -12,16 +22,6 @@
     \VariantNaiveA{} & Generalization & NonPassingTest & 13,804 & 10,743\; (77.8\%) & - & 3,061\; (22.2\%) \\
     \VariantNaiveC{} & Generalization & NonPassingTest & 13,804 & 9,881\; (71.6\%) & - & 3,923\; (28.4\%) \\
     \VariantNaiveB{} & Generalization & NonPassingTest & 13,804 & 9,964\; (72.2\%) & - & 3,840\; (27.8\%) \\
-    \midrule
-    \VariantShared{} & Test & NoAssertions & 21,532 & 19,306\; (89.7\%) & - & 2,226\; (10.3\%) \\
-    \VariantShared{} & Test & NonPassingTest & 23,246 & 21,719\; (93.4\%) & - & 1,527\; (\phantom{0}6.6\%) \\
-    \VariantShared{} & Test & TestType & 23,246 & 23,066\; (99.2\%) & - & 180\; (\phantom{0}0.8\%) \\
-    \midrule
-    \VariantShared{} & Assertion & ExcludedTest & 28,923 & 27,326\; (94.5\%) & - & 1,597\; (\phantom{0}5.5\%) \\
-    \VariantShared{} & Assertion & MissingValue & 28,923 & 21,766\; (75.3\%) & - & 7,157\; (24.7\%) \\
-    \VariantShared{} & Assertion & ParameterType & 28,923 & 17,835\; (61.7\%) & 6,630\; (22.9\%) & 4,458\; (15.4\%) \\
-    \VariantShared{} & Assertion & AssertionType & 28,923 & 28,180\; (97.4\%) & - & 743\; (\phantom{0}2.6\%) \\
-    \VariantShared{} & Assertion & VoidReturnType & 28,923 & 21,763\; (75.2\%) & 7,157\; (24.7\%) & 3\; (\phantom{0}0.0\%) \\
     \bottomrule
   \end{tabular}
 \end{table}

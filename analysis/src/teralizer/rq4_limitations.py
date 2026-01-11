@@ -415,6 +415,9 @@ def compute_filtering_exclusions_summary(df: pd.DataFrame) -> pd.DataFrame:
     df["defer_pct"] = (df["defer"] / df["total"] * 100).round(1)
     df["reject_pct"] = (df["reject"] / df["total"] * 100).round(1)
 
+    # Sort for deterministic output: level groups rows by Type, then filter and variant
+    df = df.sort_values(["level", "filter_name", "variant"]).reset_index(drop=True)
+
     return df
 
 
