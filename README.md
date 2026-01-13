@@ -13,9 +13,9 @@ Our work proposes a semantics-based test generalization approach that automatica
 - [Links](#links)
 - [Package Contents](#package-contents)
 - [Quick Start](#quick-start)
-- [Verification Workflows](#reproducing-paper-results)
-- [Complete Reproduction](#complete-reproduction-optional)
-- [File Structure](#file-structure)
+- [Verification Workflows](#verification-workflows)
+- [Complete Reproduction](#complete-reproduction)
+- [Project Structure](#project-structure)
 - [Citation](#citation)
 - [License](#license)
 
