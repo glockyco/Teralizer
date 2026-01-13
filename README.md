@@ -82,13 +82,16 @@ docker compose down -v   # Stop and remove all data
 
 ## Verification Workflows
 
-**Output Variants:**
-- `original/`: Pre-computed outputs from paper evaluation
-- `verify/`: Outputs from re-running analysis on existing database
-- `replicate/`: Outputs from re-running the full data collection pipeline
+Three workflows verify the artifact at increasing levels of depth:
 
-Workflow 2 compares original vs verify (should be identical).
-Workflow 3 compares original vs replicate (may differ due to non-determinism).
+| Workflow | What it does | Archives needed | Output |
+|----------|--------------|-----------------|--------|
+| 1. Inspect | Browse pre-computed results | `teralizer-results` | — |
+| 2. Verify analysis | Re-run notebooks on existing data | `teralizer-core` | `verify/` |
+| 3. Verify pipeline | Re-run data collection | `teralizer-core` + `teralizer-projects-*` | `replicate/` |
+
+Workflow 2 should produce outputs identical to `original/`.
+Workflow 3 outputs may differ due to resource limits and external factors (see [Complete Reproduction](#complete-reproduction)).
 
 ### Workflow 1: Inspect Pre-computed Results (~5 min)
 
