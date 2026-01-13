@@ -240,4 +240,11 @@ teralizer/
 
 ## License
 
-This artifact is released under [CC BY 4.0](LICENSE). Analyzed projects retain their original licenses.
+This artifact uses dual licensing:
+
+| Component | License |
+|-----------|---------|
+| Source code (Java, Python, scripts) | [MIT](LICENSE-MIT) |
+| Data, documentation | [CC BY 4.0](LICENSE-CC-BY-4.0) |
+
+Analyzed projects retain their original licenses.
