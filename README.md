@@ -147,7 +147,7 @@ Confirm the data collection pipeline executes successfully.
    ./scripts/verify-outputs.sh original replicate
    ```
 
-For full reproduction of all projects, see [Complete Reproduction](#complete-reproduction-optional).
+For full reproduction of all projects, see [Complete Reproduction](#complete-reproduction).
 
 ### Analysis Notebooks
 

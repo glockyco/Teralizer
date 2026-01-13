@@ -40,7 +40,7 @@ We apply for the following ACM artifact badges:
 | Item | Evidence |
 |------|----------|
 | Artifact inventory | README.md §Package Contents lists all 7 archives with sizes and contents |
-| File structure | README.md §File Structure documents the complete directory layout |
+| File structure | README.md §Project Structure documents the complete directory layout |
 | Setup instructions | INSTALL.md provides step-by-step installation with verification checkpoints |
 | Usage instructions | README.md §Verification Workflows describes three evaluation paths |
 | Requirements | REQUIREMENTS.md specifies hardware, software, and OS requirements |
