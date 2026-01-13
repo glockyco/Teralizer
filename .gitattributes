@@ -4,7 +4,8 @@
 /analysis/output/**/*.pdf filter=lfs diff=lfs merge=lfs -text
 
 # Jupyter notebooks: strip outputs on commit for clean diffs
-*.ipynb filter=nbstripout diff=nbstripout merge=nbstripout -text
+# (excludes executed notebooks in output directories - those are artifacts)
+analysis/notebooks/*.ipynb filter=nbstripout diff=nbstripout merge=nbstripout -text
 
 # Shell scripts must have LF line endings
 *.sh text eol=lf
