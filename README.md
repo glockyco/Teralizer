@@ -27,7 +27,8 @@ Our work proposes a semantics-based test generalization approach that automatica
 |----------|----------|
 | Zenodo Archive | [10.5281/zenodo.17950381](https://zenodo.org/records/17950381) |
 | Paper (arXiv) | [arXiv:2512.14475](https://arxiv.org/abs/2512.14475) |
-| GitHub | [glockyco/Teralizer](https://github.com/glockyco/Teralizer) |
+| Artifact Repository | [glockyco/Teralizer](https://github.com/glockyco/Teralizer) |
+| Paper Repository | [glockyco/Teralizer-Paper](https://github.com/glockyco/Teralizer-Paper) |
 
 ---
 
