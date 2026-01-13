@@ -4,7 +4,7 @@
 # Verifies:
 #   - Docker is installed and running
 #   - Docker Compose is available
-#   - Sufficient disk space (10GB minimum)
+#   - Sufficient disk space (25GB minimum)
 #   - Ports are available
 #
 # Usage:
@@ -77,12 +77,12 @@ if command -v df &> /dev/null; then
     available_kb=$(df -Pk "$SCRIPT_DIR" 2>/dev/null | awk 'NR==2 {print $4}')
     available_gb=$((available_kb / 1024 / 1024))
 
-    if [[ $available_gb -ge 10 ]]; then
-        check_pass "Available disk space: ${available_gb}GB (minimum 10GB)"
-    elif [[ $available_gb -ge 5 ]]; then
-        check_warn "Available disk space: ${available_gb}GB (10GB recommended, may be tight)"
+    if [[ $available_gb -ge 25 ]]; then
+        check_pass "Available disk space: ${available_gb}GB (minimum 25GB)"
+    elif [[ $available_gb -ge 20 ]]; then
+        check_warn "Available disk space: ${available_gb}GB (25GB recommended, may be tight)"
     else
-        check_fail "Available disk space: ${available_gb}GB (minimum 10GB required)"
+        check_fail "Available disk space: ${available_gb}GB (minimum 25GB required)"
     fi
 else
     check_warn "Could not check disk space"

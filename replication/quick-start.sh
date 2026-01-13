@@ -174,11 +174,11 @@ echo "=========================================="
 echo -e "${GREEN}  Setup Complete!${NC}"
 echo "=========================================="
 echo ""
-echo "Access the following URLs:"
-echo "  - Jupyter Lab:  http://localhost:8888"
-echo "  - Adminer (DB): http://localhost:18080"
+echo "Open Jupyter Lab in your browser:"
+echo "  http://localhost:8888"
 echo ""
-echo "Adminer login:"
+echo "Database UI (Adminer):"
+echo "  http://localhost:18080"
 echo "  System:   PostgreSQL"
 echo "  Server:   postgres"
 echo "  Username: teralizer"
@@ -187,11 +187,3 @@ echo "  Database: postgres_dev (or postgres_test)"
 echo ""
 echo "To stop all services: docker compose down"
 echo "To remove all data:   docker compose down -v"
-echo ""
-
-# Try to open browser
-if command -v open &> /dev/null; then
-    open http://localhost:8888
-elif command -v xdg-open &> /dev/null; then
-    xdg-open http://localhost:8888
-fi
