@@ -209,11 +209,36 @@ else
         CONFIG_DIR="$REPO_ROOT/project-configs/extended"
     fi
 
-    # Get sorted list of project configs
+    PROJECTS_DIR="$REPO_ROOT/projects"
+
+    # Helper: extract project path from config file
+    get_project_path() {
+        local conf="$1"
+        grep 'root-path' "$conf" | sed 's/.*"\(projects\/[^"]*\)".*/\1/' | head -1
+    }
+
+    # Helper: check if project directory exists
+    project_exists() {
+        local conf="$1"
+        local project_path
+        project_path=$(get_project_path "$conf")
+        [[ -n "$project_path" && -d "$REPO_ROOT/$project_path" ]]
+    }
+
+    # Get sorted list of project configs that have existing project directories
     all_configs=()
+    skipped=0
     while IFS= read -r conf; do
-        all_configs+=("$conf")
+        if project_exists "$conf"; then
+            all_configs+=("$conf")
+        else
+            skipped=$((skipped + 1))
+        fi
     done < <(find "$CONFIG_DIR" -name "project-*.conf" | sort -V)
+
+    if [[ $skipped -gt 0 ]]; then
+        echo -e "${YELLOW}Note: Skipped $skipped configs (project directories not found)${NC}"
+    fi
 
     # Apply start/count
     end=${#all_configs[@]}
