@@ -208,7 +208,8 @@ teralizer/
 ├── README.md                   # This file
 ├── INSTALL.md                  # Installation instructions
 ├── REQUIREMENTS.md             # System requirements
-├── LICENSE                     # CC BY 4.0 license
+├── LICENSE-MIT                 # MIT license (code)
+├── LICENSE-CC-BY-4.0           # CC BY 4.0 license (data, docs)
 ├── src/                        # Teralizer Java source code
 ├── analysis/
 │   ├── notebooks/              # Jupyter analysis notebooks
