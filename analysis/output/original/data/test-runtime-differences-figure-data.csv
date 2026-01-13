@@ -1,8 +1,8 @@
 variant,mean_test_runtime_ms,mean_generalization_runtime_ms,mean_runtime_difference_ms,runtime_ratio_generalization_to_test,tries_count,mean_runtime_difference_per_try_ms
-\VariantBaseline{},4.28254,153.843637,149.561096,35.92346,1,149.561096
-\VariantNaiveA{},4.52611,290.657544,286.131434,64.217957,10,28.613143
-\VariantNaiveB{},4.514151,353.07768,348.56353,78.215744,50,6.971271
-\VariantNaiveC{},4.535978,1140.741927,1136.205949,251.487525,200,5.68103
-\VariantImprovedA{},4.531049,193.700288,189.169239,42.74955,10,18.916924
-\VariantImprovedB{},4.556347,251.411149,246.854803,55.178233,50,4.937096
-\VariantImprovedC{},4.566698,399.8278,395.261103,87.552926,200,1.976306
+\VariantBaseline{},4.28,153.84,149.56,35.92,1,149.56
+\VariantNaiveA{},4.53,290.66,286.13,64.22,10,28.61
+\VariantNaiveB{},4.51,353.08,348.56,78.22,50,6.97
+\VariantNaiveC{},4.54,1140.74,1136.21,251.49,200,5.68
+\VariantImprovedA{},4.53,193.7,189.17,42.75,10,18.92
+\VariantImprovedB{},4.56,251.41,246.85,55.18,50,4.94
+\VariantImprovedC{},4.57,399.83,395.26,87.55,200,1.98

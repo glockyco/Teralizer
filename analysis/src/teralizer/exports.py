@@ -124,7 +124,7 @@ def save_csv_data(
 ) -> Path:
     """Save a pandas DataFrame as a CSV file.
 
-    Numeric columns are rounded to 6 decimal places to ensure reproducible
+    Numeric columns are rounded to 2 decimal places to ensure reproducible
     outputs across different database instances and query execution orders.
 
     Args:
@@ -150,7 +150,7 @@ def save_csv_data(
     # Round numeric columns to eliminate floating-point precision noise
     df_export = dataframe.copy()
     numeric_cols = df_export.select_dtypes(include=["float64", "float32"]).columns
-    df_export[numeric_cols] = df_export[numeric_cols].round(6)
+    df_export[numeric_cols] = df_export[numeric_cols].round(2)
 
     # Save the CSV file
     df_export.to_csv(csv_path, index=False)
