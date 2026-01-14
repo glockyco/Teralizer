@@ -368,10 +368,10 @@ for ((i=0; i<${#configs[@]}; i++)); do
 
     if run_config "$conf"; then
         echo -e "${GREEN}$progress ✓${NC} $name"
-        ((succeeded++))
+        ((succeeded++)) || true
     else
         echo -e "${RED}$progress ✗${NC} $name"
-        ((failed++))
+        ((failed++)) || true
     fi
     echo ""
 done
