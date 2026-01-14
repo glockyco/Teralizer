@@ -24,7 +24,7 @@ We apply for the following ACM artifact badges:
 |-----------|----------|
 | Publicly accessible | Zenodo is an open-access repository operated by CERN |
 | Archival repository | Zenodo provides long-term preservation with guaranteed availability |
-| DOI provided | [10.5281/zenodo.17950381](https://zenodo.org/records/17950381) |
+| DOI provided | [10.5281/zenodo.17950380](https://zenodo.org/records/17950380) |
 | Unique identifier | Each archive version has a distinct DOI |
 
 ---
