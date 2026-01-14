@@ -52,13 +52,13 @@ Docker Compose V2 is included with Docker Desktop and recent Docker Engine insta
 
 | Archive | Compressed | Unpacked |
 |---------|------------|----------|
-| teralizer-core | 246 MB | 344 MB |
-| teralizer-results | 1 MB | 3 MB |
-| teralizer-projects-primary | 45 MB | 146 MB |
-| teralizer-projects-extended-sample | 169 MB | 274 MB |
-| teralizer-projects-extended | 1.7 GB | 4.5 GB |
-| teralizer-data-primary | 1.2 GB | 30 GB |
-| teralizer-data-extended | 257 MB | 5.6 GB |
+| teralizer-core | ~250 MB | ~350 MB |
+| teralizer-results | ~1 MB | ~3 MB |
+| teralizer-projects-primary | ~45 MB | ~150 MB |
+| teralizer-projects-extended-sample | ~170 MB | ~275 MB |
+| teralizer-projects-extended | ~1.7 GB | ~4.5 GB |
+| teralizer-data-primary | ~1.1 GB | ~30 GB |
+| teralizer-data-extended | ~260 MB | ~5.5 GB |
 
 **Runtime components:**
 

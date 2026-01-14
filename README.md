@@ -36,13 +36,13 @@ Our work proposes a semantics-based test generalization approach that automatica
 
 | Archive | Size | Contents |
 |---------|------|----------|
-| `teralizer-results` | 1 MB | Tables, figures, HTML notebooks |
-| `teralizer-core` | 246 MB | Code, database dumps, reference outputs |
-| `teralizer-projects-primary` | 45 MB | EqBench + commons-utils source code |
-| `teralizer-projects-extended-sample` | 169 MB | 100 sampled RepoReapers projects |
-| `teralizer-projects-extended` | 1.7 GB | All 1161 RepoReapers projects |
-| `teralizer-data-primary` | 1.2 GB | Logs, tool reports, generalized tests |
-| `teralizer-data-extended` | 257 MB | Logs, tool reports, generalized tests |
+| `teralizer-results` | ~1 MB | Tables, figures, HTML notebooks |
+| `teralizer-core` | ~250 MB | Code, database dumps, reference outputs |
+| `teralizer-projects-primary` | ~45 MB | EqBench + commons-utils source code |
+| `teralizer-projects-extended-sample` | ~170 MB | 100 sampled RepoReapers projects |
+| `teralizer-projects-extended` | ~1.7 GB | All 1161 RepoReapers projects |
+| `teralizer-data-primary` | ~1.1 GB | Logs, tool reports, generalized tests |
+| `teralizer-data-extended` | ~260 MB | Logs, tool reports, generalized tests |
 
 **What to download:**
 - **Browse results only**: `teralizer-results`
