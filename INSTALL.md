@@ -9,8 +9,8 @@ See README.md §Package Contents for which archives to download.
 ## Unpack
 
 ```bash
-unzip teralizer-core-v1.0.zip
-cd teralizer-core-v1.0
+unzip teralizer-core.zip
+cd teralizer-core
 ```
 
 The quick-start script will automatically extract sibling archives.

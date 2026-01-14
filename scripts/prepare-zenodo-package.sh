@@ -2,13 +2,13 @@
 # Prepare Zenodo archives for artifact submission.
 #
 # This script creates multiple archives for Zenodo submission:
-#   1. teralizer-results-v1.0.zip    - Results only (HTML, tables, figures, data)
-#   2. teralizer-core-v1.0.zip       - Verification package (code, database dumps)
-#   3. teralizer-projects-primary-v1.0.zip - Primary dataset projects
-#   4. teralizer-projects-extended-sample-v1.0.zip - Sampled extended projects
-#   5. teralizer-projects-extended-v1.0.zip - Full extended dataset
-#   6. teralizer-data-primary-v1.0.zip - Primary dataset logs and tool reports
-#   7. teralizer-data-extended-v1.0.zip - Extended dataset logs and tool reports
+#   1. teralizer-results.zip                   - Results only (HTML, tables, figures, data)
+#   2. teralizer-core.zip                      - Verification package (code, database dumps)
+#   3. teralizer-projects-primary.zip          - Primary dataset projects
+#   4. teralizer-projects-extended-sample.zip  - Sampled extended projects
+#   5. teralizer-projects-extended.zip         - Full extended dataset
+#   6. teralizer-data-primary.zip              - Primary dataset logs and tool reports
+#   7. teralizer-data-extended.zip             - Extended dataset logs and tool reports
 #
 # USAGE:
 #   ./scripts/prepare-zenodo-package.sh [OPTIONS]
@@ -20,7 +20,7 @@
 #   --data-primary DIR       Primary data directory (logs, tool reports)
 #   --data-extended DIR      Extended data directory (logs, tool reports)
 #   --sample-size N          Number of projects in extended sample (default: 100)
-#   --version VERSION        Version string for archive names (default: 1.0)
+#   --version VERSION        Version suffix for archive names (default: none)
 #   --skip-extended-full     Skip creating the full extended archive
 #   --dry-run                Show what would be created without doing it
 #   --help                   Show this help message
@@ -67,7 +67,7 @@ PROJECTS_EXTENDED=""
 DATA_PRIMARY=""
 DATA_EXTENDED=""
 SAMPLE_SIZE=100
-VERSION="1.0"
+VERSION=""
 SKIP_EXTENDED_FULL=false
 DRY_RUN=false
 
@@ -116,10 +116,19 @@ if [[ ! -d "$REPO_ROOT/analysis/output/original" ]]; then
     exit 1
 fi
 
+# Build version suffix (empty if no version specified)
+if [[ -n "$VERSION" ]]; then
+    VERSION_SUFFIX="-v${VERSION}"
+else
+    VERSION_SUFFIX=""
+fi
+
 echo ""
 echo "=========================================="
 echo "  Zenodo Package Preparation"
-echo "  Version: $VERSION"
+if [[ -n "$VERSION" ]]; then
+    echo "  Version: $VERSION"
+fi
 echo "=========================================="
 echo ""
 
@@ -142,7 +151,7 @@ trap "rm -rf $STAGING_DIR" EXIT
 # ----------------------------------------------------------------------------
 log_step "Creating Archive 1: Results Only"
 
-RESULTS_NAME="teralizer-results-v${VERSION}"
+RESULTS_NAME="teralizer-results${VERSION_SUFFIX}"
 RESULTS_DIR="$STAGING_DIR/$RESULTS_NAME"
 
 if [[ "$DRY_RUN" == "false" ]]; then
@@ -174,7 +183,7 @@ fi
 # ----------------------------------------------------------------------------
 log_step "Creating Archive 2: Verification Package"
 
-CORE_NAME="teralizer-core-v${VERSION}"
+CORE_NAME="teralizer-core${VERSION_SUFFIX}"
 CORE_DIR="$STAGING_DIR/$CORE_NAME"
 
 if [[ "$DRY_RUN" == "false" ]]; then
@@ -223,7 +232,7 @@ fi
 if [[ -n "$PROJECTS_PRIMARY" ]] && [[ -d "$PROJECTS_PRIMARY" ]]; then
     log_step "Creating Archive 3: Primary Projects"
 
-    PRIMARY_NAME="teralizer-projects-primary-v${VERSION}"
+    PRIMARY_NAME="teralizer-projects-primary${VERSION_SUFFIX}"
     PRIMARY_DIR="$STAGING_DIR/primary-staging/projects"
 
     if [[ "$DRY_RUN" == "false" ]]; then
@@ -264,7 +273,7 @@ fi
 if [[ -n "$PROJECTS_EXTENDED" ]] && [[ -d "$PROJECTS_EXTENDED" ]]; then
     log_step "Creating Archive 4: Extended Sample ($SAMPLE_SIZE projects)"
 
-    SAMPLE_NAME="teralizer-projects-extended-sample-v${VERSION}"
+    SAMPLE_NAME="teralizer-projects-extended-sample${VERSION_SUFFIX}"
     SAMPLE_DIR="$STAGING_DIR/sample-staging/projects"
 
     if [[ "$DRY_RUN" == "false" ]]; then
@@ -320,7 +329,7 @@ fi
 if [[ -n "$PROJECTS_EXTENDED" ]] && [[ -d "$PROJECTS_EXTENDED" ]] && [[ "$SKIP_EXTENDED_FULL" == "false" ]]; then
     log_step "Creating Archive 5: Full Extended (this may take a while)"
 
-    FULL_NAME="teralizer-projects-extended-v${VERSION}"
+    FULL_NAME="teralizer-projects-extended${VERSION_SUFFIX}"
     FULL_DIR="$STAGING_DIR/full-staging/projects"
 
     if [[ "$DRY_RUN" == "false" ]]; then
@@ -377,7 +386,7 @@ fi
 if [[ -n "$DATA_PRIMARY" ]] && [[ -d "$DATA_PRIMARY" ]]; then
     log_step "Creating Archive 6: Primary Data"
 
-    DATA_PRIMARY_NAME="teralizer-data-primary-v${VERSION}"
+    DATA_PRIMARY_NAME="teralizer-data-primary${VERSION_SUFFIX}"
     DATA_PRIMARY_DIR="$STAGING_DIR/data-primary-staging/data"
 
     if [[ "$DRY_RUN" == "false" ]]; then
@@ -407,7 +416,7 @@ fi
 if [[ -n "$DATA_EXTENDED" ]] && [[ -d "$DATA_EXTENDED" ]]; then
     log_step "Creating Archive 7: Extended Data"
 
-    DATA_EXTENDED_NAME="teralizer-data-extended-v${VERSION}"
+    DATA_EXTENDED_NAME="teralizer-data-extended${VERSION_SUFFIX}"
     DATA_EXTENDED_DIR="$STAGING_DIR/data-extended-staging/data"
 
     if [[ "$DRY_RUN" == "false" ]]; then
