@@ -35,11 +35,13 @@ Dockerized Postgres, container `postgres-teralizer`, `localhost:5432`. Databases
 `docker exec -i postgres-teralizer psql -U postgres -d <db> -c "..."`.
 - Key tables: `project`, `test`, `assertion`, `generalization`, `task`, `filter_result`.
 - Key views: `v_project_failures`, `mv_exclusions_*`.
-- For read-only analytical queries, prefer the `db-query-patterns` skill + the read-only Postgres MCP.
+- For read-only analytical queries, use the read-only `teralizer-db` MCP.
 
 ## Pitfalls
 - **Raw-SQL `LIKE` escaping:** in SQLAlchemy raw strings, double the percent signs —
   `LIKE '%%_TRIES'`, not `LIKE '%_TRIES'` (a single `%` causes a parameter error).
+- **SPF submodule:** if `jpf-symbc` is missing or the build hits classpath errors, run
+  `git submodule update --init --recursive`, then rebuild.
 
 ## Style & commits
 - Explicit over implicit; minimal comments (explain *why*, not *what*); fail fast.
