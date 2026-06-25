@@ -1,0 +1,3 @@
+- `projects/` contains git submodules (target programs) and is read-only — never edit them.
+- Never commit build artifacts, generated datasets, or the `.env` file.
+- Never push without an explicit request.
