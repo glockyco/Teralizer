@@ -82,11 +82,16 @@ Of 9,675 no-PIT tests across 154 projects:
 
 ## Design
 
-### Pipeline ordering
+### Pipeline ordering (corrected)
 
-MUT-id currently runs at step 13 (`ANALYZE_TESTS`), before PIT at step 25.
-The mutation-based oracle requires PIT data, so MUT-id must move *after*
-`COLLECT_PIT_DATA_INITIAL` (step 25) for the mutant-oracle path.
+MUT-id runs at step 13 (`ANALYZE_TESTS`), before PIT at step 25
+(`COLLECT_PIT_DATA_INITIAL`). The mutation-based oracle requires PIT data.
+
+**Key insight:** MissingValue is an **assertion-level** filter (step 15), not a
+test-level exclusion. Tests with MissingValue-failed assertions remain
+`is_included = true` at the test level, so PIT runs on them at step 25 regardless.
+All 21,081 MissingValue-failed tests have `is_included = true` — PIT data
+exists for 11,406 (54%) of them.
 
 **Two-phase MUT-id:**
 1. **Static MUT-id** (step 13, unchanged) — runs first, produces a candidate
@@ -101,6 +106,11 @@ This does not add a new pipeline stage — it adds a *refinement pass* after PIT
 that backfills MUT-id for previously-failed assertions. The assertion rows are
 updated in-place; no schema change is needed beyond using the existing
 `tested_method_*` columns.
+
+**Important:** this only helps the 54% of MissingValue-failed tests that have
+PIT data. The 46% with no PIT data (projects where PIT failed or tests excluded
+before PIT) need the static fallback. Reducing PIT failures and pre-PIT test
+exclusions is a separate concern (see §Pipeline failure landscape below).
 
 ### Oracle scoring (per test)
 
@@ -123,13 +133,84 @@ For a test $t$ that failed static MUT-id and has PIT data:
    back to the current static analysis + Ghafari mutator/inspector for
    stateful objects + name-matching.
 
-### Validation
+### Validation (manual, before implementation)
 
-Before relying on the oracle, validate against the 5,100 AGREE cases: confirm
-that the mutant-oracle picks the same method as static MUT-id where they agree,
-and that the 9,354 DISAGREE cases are genuine LCBA flaws (not oracle errors).
-A manual sample of ~50 disagreements should confirm the mutant oracle is
-correct.
+Before implementing the oracle, a manual validation study must confirm the
+approach is sound — that the mutant oracle produces correct focal-method
+identifications, not heaps of false positives.
+
+**Sample:** 50 randomly drawn DISAGREE cases (static MUT ≠ killed-mutant
+method) + 20 AGREE cases (control). For each, read the test source code and
+the production method to determine which is the true focal method.
+
+**Pass criterion:** ≥80% of DISAGREE cases should show the mutant oracle is
+correct and the static MUT (LCBA) is wrong. ≥95% of AGREE cases should confirm
+both are correct. If the DISAGREE pass rate is <80%, the oracle is unreliable
+and the approach must be reconsidered.
+
+**Output:** a CSV with columns `test_id, test_name, static_mut, mutant_mut,
+verdict (oracle-correct / static-correct / both-wrong / unclear), notes`.
+Commit to `analysis/output/mut-validation/`.
+
+## Pipeline failure landscape
+
+The MUT-id spec only addresses the 54% of MissingValue-failed tests that have
+PIT data. The other 46% fail because the pipeline never reaches PIT, or PIT
+itself fails. This is a separate, larger problem — the pre-analysis funnel.
+
+Re-run with:
+```python
+from teralizer.applicability_priorities import (
+    get_pipeline_failure_funnel, compute_stage_failure_summary
+)
+with db_config.get_test_engine().connect() as conn:
+    funnel = get_pipeline_failure_funnel(conn)
+    print(compute_stage_failure_summary(funnel))
+```
+
+The funnel (1161 projects, first-failure stage):
+
+| Stage | Step | Projects killed | % | Root cause |
+|---|---|---|---|---|
+| SETUP_PROJECT | 2 | 355 | 30.9% | Maven setup failures (dependency resolution, non-standard layouts) |
+| BUILD_PROJECT_ORIGINAL | 4 | 189 | 16.5% | Compilation errors (`mvn compile test-compile` exit 1) |
+| COLLECT_JUNIT_REPORTS_ORIGINAL | 9 | 88 | 7.7% | Cannot identify test report path (non-standard report locations) |
+| EXECUTE_TESTS_ORIGINAL | 8 | 61 | 5.3% | Test execution timeout (48 of 61) |
+| EXECUTE_TESTS_INITIAL | 22 | 116 | 10.1% | "All tests excluded" — test-level filters reject everything (NoAssertions, NonPassingTest) |
+| COLLECT_PIT_DATA_GENERALIZED | 33 | 219 | 19.1% | Mutation testing on generalized tests fails (compilation or runtime) |
+| COLLECT_PIT_DATA_INITIAL | 25 | 40 | 3.5% | PIT timeout (40 of 40) |
+| EXECUTE_JPF | 18 | 29 | 2.5% | JPF execution failures |
+| COLLECT_JACOCO_DATA_INITIAL | 24 | 34 | 3.0% | JaCoCo collection failures |
+
+**Key observations:**
+
+- **47.4% of projects (549/1161) fail before analysis** (SETUP + BUILD +
+  EXECUTE_TESTS + COLLECT_JUNIT). These never reach MUT identification at all.
+  The biggest single killer is SETUP_PROJECT (30.9%) — Maven dependency
+  resolution and non-standard project layouts.
+
+- **10.1% (116 projects) reach EXECUTE_TESTS_INITIAL but fail with "all tests
+  excluded"** — test-level filters (NoAssertions, NonPassingTest, TestType)
+  reject every test in the project. This is the same filter-based exclusion
+  that blocks assertions, but at the test level. Fixing NoAssertions
+  (interprocedural assertions, #4) and TestType (@ParameterizedTest, #9) would
+  unblock projects here.
+
+- **19.1% (219 projects) fail at COLLECT_PIT_DATA_GENERALIZED** — mutation
+  testing on the *generalized* tests fails. This is downstream of the
+  generalization step and doesn't affect the original-suite PIT data used by
+  the mutation-based MUT oracle.
+
+- **Only 13 projects (1.1%) complete the pipeline with no failures at all.**
+
+**What this means for the MUT-id spec:** the mutation-based oracle can only
+help projects that reach step 25 (`COLLECT_PIT_DATA_INITIAL`) with data. The
+pre-analysis failures (SETUP, BUILD, EXECUTE_TESTS) are infrastructure
+problems that need separate fixes — the applicability-barriers audit (#14:
+Maven/structure-only, project-setup detection) covers these. The test-level
+exclusion failures (EXECUTE_TESTS_INITIAL "all tests excluded") need the same
+filter fixes as the assertion-level analysis (#4 interprocedural assertions,
+#9 @ParameterizedTest).
 
 ## Acceptance criteria
 
