@@ -8,7 +8,7 @@ parent: 2026-06-26-teralizer-overview
 
 Point-in-time JARVIS head-to-head evidence: per-case SPF spike verdicts + provenance.
 
-Implementation plan: `2026-06-26-beat-jarvis-phase1`.
+Implementation plan: `2026-06-27-jarvis-scoreboard-evidence-run`.
 
 ## Case scorecard (JARVIS paper Table 2)
 

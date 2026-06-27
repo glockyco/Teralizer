@@ -27,14 +27,14 @@ work that depends on a re-run is deferred until (1) lands.
 
 ## Current focus: (1) beat JARVIS
 
-- `2026-06-26-beat-jarvis-phase1` *(plan)* — the live, ordered work + the win condition.
+- `2026-06-27-jarvis-scoreboard-evidence-run` *(plan)* — the live evidence run for the pinned JARVIS-era scoreboard.
 - `2026-06-26-jarvis-case-coverage` *(audit)* — the per-case head-to-head evidence behind it.
 
 ## Children
 
 | doc | type | scope | tag |
 |---|---|---|---|
-| `2026-06-26-beat-jarvis-phase1` | plan | ordered work to beat JARVIS + win condition | **current focus** |
+| `2026-06-27-jarvis-scoreboard-evidence-run` | plan | execute the pinned JARVIS-era scoreboard run and decide the claim | **current focus** |
 | `2026-06-26-jarvis-case-coverage` | audit | per-case JARVIS head-to-head evidence + provenance | current focus (evidence) |
 | `2026-06-26-applicability-barriers` | audit | RQ6 real-world applicability barrier evidence (inventory / funnel / ledger) | deferred — step (2) reference |
 | `2026-06-26-data-reuse-and-msr-potential` | note | secondary MSR / data-paper backlog | deferred, gated on (1) |
@@ -46,7 +46,7 @@ work that depends on a re-run is deferred until (1) lands.
 (parameter-value & instruction coverage ≥ JARVIS on SPF-amenable cases). Concede
 `Interval` (a paradigm limit — JARVIS learns the oracle from examples, we derive it
 from the implementation) and `Precision` (ulps). NaN is a shared gap. Full criteria
-and the metric definition live in `beat-jarvis-phase1`.
+and the metric definition live in `2026-06-26-beat-jarvis-phase1`; the current evidence run lives in `2026-06-27-jarvis-scoreboard-evidence-run`.
 
 ## Pointers
 
