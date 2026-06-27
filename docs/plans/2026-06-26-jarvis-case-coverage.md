@@ -6,9 +6,9 @@ created: 2026-06-26
 parent: 2026-06-26-teralizer-overview
 ---
 
-Point-in-time JARVIS head-to-head evidence: per-case SPF spike verdicts + provenance.
+Point-in-time JARVIS head-to-head evidence: per-case SPF spike verdicts, corpus provenance, and scorecard run outputs.
 
-Implementation plan: `2026-06-27-jarvis-scoreboard-evidence-run`.
+Design spec: `2026-06-27-jarvis-scoreboard-evaluation-lane`. Implementation plan: `2026-06-27-jarvis-scoreboard-evidence-run`.
 
 ## Case scorecard (JARVIS paper Table 2)
 
@@ -26,14 +26,14 @@ commons-lang). Assertions in that era were inline in the `@Test` body.
    Apache Commons (`commons-numbers`, `commons-geometry`, `math4`, `lang3`,
    `rng`, `io`, `codec`, …). Class locations and test code differ from JARVIS's.
 
-2. **Only 1 of 9 cases is in our corpus.** `PrecisionTest` →
+2. **Only 1 of 10 Table-2 rows is represented in the current modern corpus.** `PrecisionTest` →
    `org.apache.commons.numbers.core.PrecisionTest` (Precision moved math3.util →
-   commons-numbers-core). The other 8 classes are not bundled.
+   commons-numbers-core). The other JARVIS rows are not bundled in the current corpus.
 
 3. **Exclusion rationale (paper, verbatim).** `sections/04-evaluation-02-framework.tex`
    L94–105: *"we identified public static methods with numeric or boolean
    parameters and return values — the types currently supported by Teralizer."*
-   Yielded 247 classes from 17 Apache Commons projects. So 8/9 JARVIS cases were
+   Yielded 247 classes from 17 Apache Commons projects. Most JARVIS Table-2 rows were
    **excluded by design at dataset-selection time**, not by a runtime failure:
    - `Interval`, `PolynomialFunction`, `UnivariateFunction`: object construction +
      instance methods → not public *static*.
@@ -118,15 +118,14 @@ MUT as a functional interface (`Precision::equals`) — which is exactly what tr
 `NoAssertionsFilter`. So a chunk of the "Precision failure" is an **artifact of
 using HEAD instead of the JARVIS-era version**, not a fundamental Teralizer gap.
 
-**Implication for corpus choice:** using commons-math **3.5/3.6** gives both
-(a) true apples-to-apples with JARVIS and (b) test code whose structure Teralizer
-already handles (inline asserts, `Precision.equals(...)` direct calls). We
-**already have `commons-math-3.x` (3.6.2-SNAPSHOT) checked out** in the non-dev repo.
+**Implication for corpus choice:** the scorecard run must use a pinned JARVIS-era
+fixture or checksummed source artifacts as execution inputs. The modern corpus remains
+supporting evidence for why the existing evaluation database cannot prove the claim.
 
 **SPF spike versions (pinned — no snapshots).**
-- commons-math: tag `MATH_3_5`.
-- commons-lang: `commons-lang3-3.17.0`.
-- jpf-symbc / jpf-core: the spf-eval submodule commits.
+- commons-math: tag `MATH_3_5` → `b3c5dae8f253fcb4484e5cd3cc5662587803efc2`.
+- commons-lang: tag `LANG_3_5` → `36f98d87b24c2f542b02abbf6ec1ee742f1b158b` for CharUtils scorecard inputs.
+- jpf-symbc / jpf-core: the spf-eval submodule commits listed below.
 
 **Spike artifact provenance.**
 - No SNAPSHOT / HEAD / unpinned sources anywhere. Pin exact **tag + resolved
@@ -143,7 +142,7 @@ already handles (inline asserts, `Precision.equals(...)` direct calls). We
 - jpf-symbc `7949438f88224ab073b01cc418555174b35dcd04` (gradle-build) — same SHA as Teralizer's submodule.
 - jpf-core (nested) `201f658be0b8bf23bbb29b69081f5c5304dd34d0` (JPF-8.0-126).
 - JDK openjdk 1.8.0_462. Z3 4.11.2 (z3-turnkey, bundled in jpf-symbc).
-- Caveat: local `commons-lang3-3.17.0/` is an unverified extract (not a pinned checkout) — fetch CharUtils from upstream tag `rel/commons-lang-3.17.0` + record SHA instead.
+- commons-lang `LANG_3_5` → `36f98d87b24c2f542b02abbf6ec1ee742f1b158b`.
 - Full spike report: `spf-eval/jarvis-spike/jarvis-spf-RESULTS.md`, with exact version/SHA cited for each verdict.
 
 ## Implications
@@ -157,10 +156,10 @@ already handles (inline asserts, `Precision.equals(...)` direct calls). We
 - So "improving JARVIS-case handling" splits into two tracks:
   1. **Analysis robustness** (in-corpus, smaller): assertions in helper methods;
      MUT invoked via functional interface. Unblocks `Precision`.
-  2. **Capability expansion** (lets the excluded 8 enter the pipeline): support
-     `char` params; instance methods / object construction (Interval,
-     PolynomialFunction, UnivariateFunction). Plus the double/float bounds-bug
-     fix in the SPF wrapper, which Precision-style double comparisons need anyway.
+  2. **Capability expansion** (lets the excluded 9 Table-2 rows enter the pipeline):
+     support `char` params; include FastMath fixture rows; support instance methods /
+     object construction (Interval, PolynomialFunction, UnivariateFunction). Plus the
+     double/float bounds-bug fix in the SPF wrapper, which Precision-style double comparisons need anyway.
 
 ## Spike results
 
@@ -183,8 +182,8 @@ reaches*, not by mathematical difficulty. Crucially, **object construction +
 instance-method + symbolic-array propagation works robustly** — symbolic values
 flow through constructor → fields → coefficient array → Horner → even a second
 constructed object (`polynomialDerivative()`) into the return oracle. So the
-barrier that kept 8/9 JARVIS cases out of our dataset (static-method-only
-selection) is **a Teralizer criterion, not an SPF limit.**
+barrier that kept 9/10 JARVIS Table-2 rows out of our dataset (static-method-only
+selection plus type/corpus limits) is **a Teralizer criterion, not an SPF limit.**
 
 Genuine SPF gaps are narrow and specific:
 - `Double.doubleToRawLongBits` has no symbolic model over SPF's rational reals →
