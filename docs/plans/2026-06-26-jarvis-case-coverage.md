@@ -171,7 +171,7 @@ Run inputs:
 - Scratch outputs: ignored `data/jarvis-scoreboard/` tree and scratch DB `postgres_jarvis_scoreboard`; no `postgres_dev`, `postgres_test`, or `_replication` target was used.
 - Score query: `analysis/src/teralizer/jarvis_scoreboard.py::get_scoreboard(conn, variants=["NAIVE", "IMPROVED"])`, with probe names joined from `test.test_method_name`.
 
-Current result: **claim not decided yet**. The run gives PVC/IC evidence for all 10 Table-2 rows, represented as 14 assertion-level probes. `Interval.getSize()` passes after promoting inline receiver-constructor arguments into generated parameters. `Abs` passes once the SPF model classpath is prepended, and `Precision.equals(double,double,double)` passes for the Table-2 eps fixture; the pure `maxUlps` overload is not a separate scorecard row.
+Current result: **claim not decided yet**. The run gives PVC/IC evidence for all 10 Table-2 rows, represented as 14 assertion-level probes. `Interval.getSize()` passes after promoting inline receiver-constructor arguments into generated parameters. `Abs` passes once the SPF model classpath is prepended, and `Precision.equals(double,double,double)` passes for the Table-2 eps fixture. The pure `maxUlps` overload is now covered by the separate `2026-06-27-spf-ulps-raw-bits-spike` fixture, not by the Table-2 scorecard row.
 
 | Table row / probe | Status | NAIVE PVC / trials | IMPROVED PVC / trials | IC unit | Cause / note |
 |---|---:|---:|---:|---:|---|
@@ -190,7 +190,7 @@ Current result: **claim not decided yet**. The run gives PVC/IC evidence for all
 | `PrecisionTest` / `assertTrue` | pass | 246 / 2110 | 251 / 2121 | Math project: 1007 / 341,107 instr. | Table-2 eps fixture follows the arithmetic `FastMath.abs(y - x) <= eps` branch. |
 | `PrecisionTest` / `assertFalse` | pass | 229 / 2190 | 230 / 2190 | Math project: 1007 / 341,107 instr. | Table-2 eps fixture rejects values outside the allowed absolute error. |
 
-The 10 JARVIS rows therefore compress the 14 assertion-level probes as all generated tests passing. The remaining caveats are row-specific concessions rather than generated-test blockers: FastMath min/max still carry the shared NaN/signed-zero caveat, `toIntExact` still lacks the overflow exception path, and the pure `Precision.equals(double,double,int maxUlps)` overload is not scored unless added as a separate fixture.
+The 10 JARVIS rows therefore compress the 14 assertion-level probes as all generated tests passing. The remaining caveats are row-specific concessions rather than generated-test blockers: FastMath min/max still carry the shared NaN/signed-zero caveat, and `toIntExact` still lacks the overflow exception path. The pure `Precision.equals(double,double,int maxUlps)` overload is tracked as a separate spike probe because it exercises raw IEEE-754 bit reinterpretation rather than the Table-2 eps predicate.
 
 ## Spike results
 
@@ -205,7 +205,8 @@ result XMLs. **Tally: 8 FULL · 1 PARTIAL · 2 BLOCKED.**
 | Interval.getSize() | ✅ FULL | `(upper − lower)` |
 | PolynomialFunction.value() — const / linear / deriv | ✅ FULL | `c0` / `(x*c1+c0)` / `(2*c2*x+c1)` |
 | FastMath.toIntExact(long) | ⚠️ PARTIAL | correct 5-region partition; overflow exception path missing, `(int)` cast unmodeled (symcrete LCMP) |
-| Precision.equals(double,double,double) | ✅ FULL | Table-2 eps path is extractable through the `FastMath.abs(y - x) <= eps` branch; pure `maxUlps` overload remains unscored raw-bits work |
+| Precision.equals(double,double,double) | ✅ FULL | Table-2 eps path is extractable through the `FastMath.abs(y - x) <= eps` branch |
+| Precision.equals(double,double,int maxUlps) | ✅ SPIKE | Separate raw-bits probe passes with `symbolic.fp=true` + Z3 `fp.to_ieee_bv`; keep outside the Table-2 eps row |
 | Abs.value() | ✅ FULL | `FastMath.abs` model is reached once the generated JPF config prepends `${jpf-symbc}/build/classes` |
 
 **Headline:** SPF spec quality is gated by *which JVM primitives the implementation
@@ -217,7 +218,7 @@ barrier that kept 9/10 JARVIS Table-2 rows out of our dataset (static-method-onl
 selection plus type/corpus limits) is **a Teralizer criterion, not an SPF limit.**
 
 Genuine SPF gaps are narrow and specific:
-- `Double.doubleToRawLongBits` still has no symbolic model in the default rational-real mode, so pure ulps-style checks such as `Precision.equals(double,double,int maxUlps)` remain out of the current scorecard. This is not dismissed as impossible: `2026-06-27-spf-ulps-raw-bits-spike` tests the `symbolic.fp=true` + Z3 IEEE bit-vector route.
+- `Double.doubleToRawLongBits` has symbolic support in the `symbolic.fp=true` + `z3bitvector` spike path, so pure ulps-style checks such as `Precision.equals(double,double,int maxUlps)` are feasible as a separate raw-bits probe. The default rational-real mode still has no raw-bits model.
 - `FastMath.abs` no longer blocks the scorecard once the generated JPF classpath prepends `${jpf-symbc}/build/classes`; this reuses jpf-symbc's existing model-class mechanism rather than modeling raw bits.
 - `toIntExact`'s missing overflow exception is a symcrete `LCMP` control-flow
   decoupling in jpf-symbc (solver-independent; deep fix). `z3bitvector` never

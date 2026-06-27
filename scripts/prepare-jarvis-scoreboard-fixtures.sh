@@ -133,6 +133,12 @@ public class JarvisMathScorecardTest {
   }
 
   @Test
+  public void precisionEqualsMaxUlps() {
+    assertTrue(Precision.equals(1.0, 1.0, 1));
+    assertFalse(Precision.equals(1.0, 1.1, 1));
+  }
+
+  @Test
   public void absValue() {
     assertEquals(3.0, new Abs().value(-3.0), 0.0);
   }

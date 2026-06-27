@@ -9,7 +9,6 @@
 - **Teralizer — Project Overview** [overview] `2026-06-26-teralizer-overview`
 - **Generalizable Input Rule** [spec] `2026-06-27-generalizable-input-rule` ← 2026-06-26-teralizer-overview
 - **JARVIS Scoreboard Evaluation Lane** [spec] `2026-06-27-jarvis-scoreboard-evaluation-lane` ← 2026-06-26-teralizer-overview
-- **SPF Ulps Raw-Bits Spike** [plan] `2026-06-27-spf-ulps-raw-bits-spike` (—) ← 2026-06-26-teralizer-overview
 - **Teralizer Capability & Improvement Directions** [audit] `2026-06-27-teralizer-capability-and-improvement-directions` ← 2026-06-26-teralizer-overview
 
 ## draft
@@ -17,4 +16,4 @@
 - **Ensemble MUT Identification** [spec] `2026-06-27-ensemble-mut-identification` ← 2026-06-26-teralizer-overview
 - **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 
-_11 archived — see `docs/plans/archive/`._
+_12 archived — see `docs/plans/archive/`._
