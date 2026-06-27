@@ -172,7 +172,79 @@ def test_generated_test_runs_resolve_relative_data_path_from_working_directory_w
         conn.close()
 
 
-def test_pvc_and_ic_scoreboard_uses_generated_values_and_jacoco(tmp_path):
+def test_generated_test_runs_prefer_junit_value_log_snapshot(tmp_path):
+    conn = sqlite3.connect(":memory:")
+    try:
+        create_scoreboard_schema(conn)
+        insert_scoreboard_fixture(conn, tmp_path)
+        value_dir = tmp_path / "project-id-1" / "jqwik-data"
+        value_dir.mkdir(parents=True)
+        live_path = value_dir / "7.NAIVE.tsv"
+        snapshot_path = value_dir / "7.NAIVE.junit.tsv"
+        live_path.write_text("lower=999\n")
+        snapshot_path.write_text("lower=1\n")
+
+        runs = get_generated_test_runs(conn)
+
+        assert runs.loc[0, "jqwik_value_log_path"] == str(snapshot_path)
+    finally:
+        conn.close()
+
+
+def test_generated_test_runs_prefer_workspace_snapshot_over_project_live_log(
+    tmp_path, monkeypatch
+):
+    conn = sqlite3.connect(":memory:")
+    try:
+        create_scoreboard_schema(conn)
+        workspace = tmp_path / "workspace"
+        project_root = workspace / "fixture"
+        workspace_snapshot_dir = workspace / "data/run/project-id-1/jqwik-data"
+        project_live_dir = project_root / "data/run/project-id-1/jqwik-data"
+        workspace_snapshot_dir.mkdir(parents=True)
+        project_live_dir.mkdir(parents=True)
+        (workspace_snapshot_dir / "7.NAIVE.junit.tsv").write_text("lower=1\n")
+        (project_live_dir / "7.NAIVE.tsv").write_text("lower=999\n")
+        conn.execute(
+            "INSERT INTO project (id, root_path, data_path) VALUES (1, 'fixture', 'data/run')"
+        )
+        conn.execute(
+            """
+            INSERT INTO assertion (
+                id,
+                project_id,
+                assertion_name,
+                tested_method_call_arguments,
+                tested_class_qualified_name,
+                tested_method_name
+            ) VALUES (2, 1, 'assertTrue', '[]', 'smoke.Subject', 'contains')
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO generalization (
+                id, project_id, assertion_id, variant, class_name, method_name, is_included
+            ) VALUES (7, 1, 2, 'NAIVE', '_SubjectTest_Generalized', 'valueInsideInterval', 1)
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO junit_test_report (
+                project_id, generalization_id, stage, variant, test_class_name, test_method_name, result
+            ) VALUES (1, 7, 'COLLECT_JUNIT_REPORTS_GENERALIZED', 'NAIVE', '_SubjectTest_Generalized', 'valueInsideInterval', 'PASSED')
+            """
+        )
+        conn.commit()
+        monkeypatch.chdir(workspace)
+
+        runs = get_generated_test_runs(conn)
+
+        assert runs.loc[0, "jqwik_value_log_path"] == str(
+            workspace_snapshot_dir / "7.NAIVE.junit.tsv"
+        )
+    finally:
+        conn.close()
+
     conn = sqlite3.connect(":memory:")
     try:
         create_scoreboard_schema(conn)

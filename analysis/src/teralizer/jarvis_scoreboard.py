@@ -272,23 +272,46 @@ def get_scoreboard(
 
 def _jqwik_value_log_path(run: pd.Series) -> str:
     data_path = Path(str(run["data_path"]))
-    if not data_path.is_absolute():
+    project_id = int(run["project_id"])
+    generalization_id = int(run["generalization_id"])
+    variant = run["variant"]
+
+    def value_log_path(base: Path) -> Path:
+        return (
+            base
+            / f"project-id-{project_id}"
+            / "jqwik-data"
+            / f"{generalization_id}.{variant}.tsv"
+        )
+
+    def junit_snapshot_path(path: Path) -> Path:
+        return path.with_name(f"{generalization_id}.{variant}.junit.tsv")
+
+    candidate_bases: list[Path]
+    if data_path.is_absolute():
+        candidate_bases = [data_path]
+        fallback_base = data_path
+    else:
         project_root_path = Path(str(run["project_root_path"]))
+        workspace_data_path = Path.cwd() / data_path
         if project_root_path.is_absolute():
-            data_path = project_root_path / data_path
+            project_data_path = project_root_path / data_path
+            fallback_base = project_data_path
         else:
             project_data_path = Path.cwd() / project_root_path / data_path
-            data_path = (
-                project_data_path
-                if project_data_path.exists()
-                else Path.cwd() / data_path
-            )
-    return str(
-        data_path
-        / f"project-id-{int(run['project_id'])}"
-        / "jqwik-data"
-        / f"{int(run['generalization_id'])}.{run['variant']}.tsv"
-    )
+            fallback_base = workspace_data_path
+        candidate_bases = [workspace_data_path, project_data_path]
+
+    candidate_paths: list[Path] = []
+    for base in candidate_bases:
+        live_path = value_log_path(base)
+        candidate_paths.append(junit_snapshot_path(live_path))
+        candidate_paths.append(live_path)
+
+    for candidate in candidate_paths:
+        if candidate.exists():
+            return str(candidate)
+    return str(value_log_path(fallback_base))
 
 
 def _count_original_argument_values(arguments_json: object) -> int:
