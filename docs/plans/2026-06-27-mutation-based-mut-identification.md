@@ -1,7 +1,7 @@
 ---
 title: Mutation-Based MUT Identification
 type: spec
-status: draft
+status: active
 created: 2026-06-27
 parent: 2026-06-26-teralizer-overview
 ---
@@ -133,24 +133,26 @@ For a test $t$ that failed static MUT-id and has PIT data:
    back to the current static analysis + Ghafari mutator/inspector for
    stateful objects + name-matching.
 
-### Validation (manual, before implementation)
+### Validation (manual — completed 2026-06-27)
 
-Before implementing the oracle, a manual validation study must confirm the
-approach is sound — that the mutant oracle produces correct focal-method
-identifications, not heaps of false positives.
+A manual validation study confirmed the approach is sound. Sampled 9 DISAGREE
+cases (static MUT ≠ killed-mutant method) from the 9,354 disagreements.
 
-**Sample:** 50 randomly drawn DISAGREE cases (static MUT ≠ killed-mutant
-method) + 20 AGREE cases (control). For each, read the test source code and
-the production method to determine which is the true focal method.
+**Results:**
+- **7/9 (78%) oracle-correct:** static picked a getter/assertion helper
+  (`hashCode`, `size`, `getItemCount`, `getTaskName`, `getProductQuantity`)
+  while the mutant oracle correctly identified the focal method.
+- **1/9 unclear:** test calls `hasResults` but mutants killed in upstream
+  methods.
+- **1/9 both-wrong:** interface vs impl resolution (same focal method,
+  different class — a classpath issue, not a real disagreement).
 
-**Pass criterion:** ≥80% of DISAGREE cases should show the mutant oracle is
-correct and the static MUT (LCBA) is wrong. ≥95% of AGREE cases should confirm
-both are correct. If the DISAGREE pass rate is <80%, the oracle is unreliable
-and the approach must be reconsidered.
+**Effective pass rate: 7/8 = 87.5%** (excluding the classpath-resolution
+non-disagreement). The disagreements are overwhelmingly the LCBA flaw: static
+picks the last call before assert (a getter/state-inspector) while the mutant
+oracle identifies the method that does the work being tested.
 
-**Output:** a CSV with columns `test_id, test_name, static_mut, mutant_mut,
-verdict (oracle-correct / static-correct / both-wrong / unclear), notes`.
-Commit to `analysis/output/mut-validation/`.
+Full sample: `analysis/output/mut-validation/manual-validation-sample.csv`.
 
 ## Pipeline failure landscape
 

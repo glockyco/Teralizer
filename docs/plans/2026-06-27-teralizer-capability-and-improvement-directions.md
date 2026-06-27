@@ -76,6 +76,39 @@ study (`~/Projects/phd-thesis/projects/spf-eval/RESULTS.md`).
   rather than crashing, so it never reaches `EXECUTE_JPF FAILED` — visible only as
   degenerate specs.
 
+## Pipeline failure landscape (pre-analysis funnel)
+
+Re-run with `get_pipeline_failure_funnel` + `compute_stage_failure_summary` from
+`applicability_priorities.py`. The funnel (1161 projects, first-failure
+stage):
+
+| Stage | Step | Projects killed | % | Root cause |
+|---|---|---|---|---|
+| SETUP_PROJECT | 2 | 355 | 30.9% | Maven setup (dependency resolution, non-standard layouts) |
+| BUILD_PROJECT_ORIGINAL | 4 | 189 | 16.5% | Compilation errors (`mvn compile test-compile` exit 1) |
+| EXECUTE_TESTS_ORIGINAL | 8 | 61 | 5.3% | Test execution timeout (48 of 61) |
+| COLLECT_JUNIT_REPORTS_ORIGINAL | 9 | 88 | 7.7% | Cannot identify test report path (non-standard report locations) |
+| EXECUTE_TESTS_INITIAL | 22 | 116 | 10.1% | "All tests excluded" — test-level filters reject everything |
+| COLLECT_PIT_DATA_GENERALIZED | 33 | 219 | 19.1% | Mutation testing on generalized tests fails |
+| COLLECT_PIT_DATA_INITIAL | 25 | 40 | 3.5% | PIT timeout |
+| EXECUTE_JPF | 18 | 29 | 2.5% | JPF execution failures |
+| COLLECT_JACOCO_DATA_INITIAL | 24 | 34 | 3.0% | JaCoCo collection failures |
+
+**47.4% of projects fail before analysis** (SETUP + BUILD + EXECUTE_TESTS +
+COLLECT_JUNIT). The biggest killer is SETUP_PROJECT (30.9%) — Maven dependency
+resolution and non-standard project layouts. Only 13 projects (1.1%) complete
+the pipeline with no failures.
+
+**10.1% reach EXECUTE_TESTS_INITIAL but fail with "all tests excluded"** —
+test-level filters (NoAssertions, NonPassingTest, TestType) reject every test.
+Fixing #4 (interprocedural assertions) and #9 (@ParameterizedTest) would
+unblock projects here.
+
+**These pre-analysis failures are infrastructure problems** that need separate
+fixes (barrier #14: Maven/structure-only, project-setup detection). They are
+orthogonal to the MUT-id spec but limit its reach: the mutation-based oracle
+only helps projects that reach step 25 with PIT data.
+
 ## The applicability ceiling (RQ6 real-world)
 
 The RepoReapers funnel: 1161 projects → 507 analyzed → 44 w/ ≥1 included
