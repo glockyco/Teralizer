@@ -14,7 +14,9 @@ from teralizer.applicability_priorities import (
     compute_first_reject_blockers,
     compute_multi_blocker_rate,
     compute_projects_closest_to_completion,
+    compute_missingvalue_taxonomy,
     get_assertion_filter_chain,
+    get_missingvalue_assertions,
     get_project_summary,
 )
 
@@ -23,7 +25,7 @@ def _create_schema(conn) -> None:
     """Create minimal project/assertion/filter_result tables for testing."""
     for stmt in (
         "CREATE TABLE project (id INTEGER PRIMARY KEY, root_path TEXT NOT NULL)",
-        "CREATE TABLE assertion (id INTEGER PRIMARY KEY, project_id INTEGER NOT NULL, is_included BOOLEAN NOT NULL)",
+        "CREATE TABLE assertion (id INTEGER PRIMARY KEY, project_id INTEGER NOT NULL, is_included BOOLEAN NOT NULL, assertion_name TEXT NOT NULL, assertion_source_code TEXT NOT NULL, tested_method_call_source_code TEXT)",
         "CREATE TABLE filter_result (id INTEGER PRIMARY KEY, project_id INTEGER NOT NULL, test_id INTEGER, assertion_id INTEGER, generalization_id INTEGER, filter_name TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT NOT NULL)",
     ):
         conn.execute(text(stmt))
@@ -44,14 +46,17 @@ def _insert_fixture(conn) -> None:
     )
     conn.execute(
         text(
-            "INSERT INTO assertion (id, project_id, is_included) VALUES "
-            "(1, 1, false), (2, 1, false), (3, 1, false), (4, 1, true)"
+            "INSERT INTO assertion (id, project_id, is_included, assertion_name, assertion_source_code, tested_method_call_source_code) VALUES "
+            "(1, 1, false, 'assertEquals', 'assertEquals(result.size(), 3)', 'result.size()'), "
+            "(2, 1, false, 'assertEquals', 'assertEquals(obj.getValue(), 5)', 'obj.getValue()'), "
+            "(3, 1, false, 'assertEquals', 'assertEquals(Utils.compute(x), 0)', 'Utils.compute(x)'), "
+            "(4, 1, true, 'assertEquals', 'assertEquals(1, 1)', null)"
         )
     )
     conn.execute(
         text(
             "INSERT INTO filter_result (id, project_id, assertion_id, filter_name, decision, reason) VALUES "
-            "(1, 1, 1, 'teralizer.processing.filter.MissingValueFilter', 'REJECT', 'tested_class_path is null'), "
+            "(1, 1, 1, 'teralizer.processing.filter.MissingValueFilter', 'REJECT', 'The test.tested_class_path column is null.'), "
             "(2, 1, 1, 'teralizer.processing.filter.ParameterTypeFilter', 'REJECT', 'no generalizable types'), "
             "(3, 1, 2, 'teralizer.processing.filter.ReturnTypeFilter', 'REJECT', 'unsupported return type'), "
             "(4, 1, 3, 'teralizer.processing.filter.ParameterTypeFilter', 'REJECT', 'no parameters'), "
@@ -236,3 +241,24 @@ def test_projects_closest_filters_by_min_included(conn):
 
     empty = compute_projects_closest_to_completion(summary, min_included=5)
     assert len(empty) == 0
+
+
+# ---------------------------------------------------------------------------
+# get_missingvalue_assertions + compute_missingvalue_taxonomy
+# ---------------------------------------------------------------------------
+
+
+def test_missingvalue_taxonomy_classifies_extracted_vs_in_source(conn):
+    """The taxonomy should classify assertions by call-extraction state."""
+    mv_df = get_missingvalue_assertions(conn)
+    taxonomy = compute_missingvalue_taxonomy(mv_df)
+
+    # Assert 1 is first-reject MissingValue; asserts 2,3 reject on ReturnType
+    # and ParameterType respectively, so only assert 1 enters the taxonomy.
+    assert len(taxonomy) >= 1
+    assert "count" in taxonomy.columns
+    assert "pct" in taxonomy.columns
+
+    # Assert 1's call 'result.size()' starts lowercase -> instance_call_extracted
+    categories = set(taxonomy["category"])
+    assert "instance_call_extracted" in categories

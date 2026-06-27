@@ -12,6 +12,7 @@ real-world dataset) or ``get_dev_engine()`` (controlled dataset).
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from dataclasses import dataclass
 from typing import Any
@@ -39,11 +40,39 @@ _FILTER_ALIASES = {
     "ExcludedAssertionFilter": "ExcludedAssertion",
 }
 
+# Regex patterns for classifying MissingValue call-extraction state.
+_INSTANCE_CALL = re.compile(r"^[a-z][a-zA-Z0-9_]*\.")
+_STATIC_CALL = re.compile(r"^[A-Z][a-zA-Z0-9_]*\.")
+_CASTED_CALL = re.compile(r"^\(")
+_INSTANCE_CALL_IN_SRC = re.compile(r"[a-z_]\.[a-zA-Z_][a-zA-Z0-9_]*\s*\(")
+_STATIC_CALL_IN_SRC = re.compile(r"[A-Z][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*\s*\(")
+
 
 def _short_filter(fq_name: str) -> str:
     """Strip the package prefix from a fully-qualified filter class name."""
     simple = fq_name.rsplit(".", 1)[-1]
     return _FILTER_ALIASES.get(simple, simple)
+
+
+def _classify_missingvalue_call(row: pd.Series) -> str:
+    """Classify one MissingValue-rejected assertion by call-extraction state."""
+    call_src = row.get("tested_method_call_source_code")
+    src = row.get("assertion_source_code", "")
+
+    if call_src:
+        if _INSTANCE_CALL.match(call_src):
+            return "instance_call_extracted"
+        if _STATIC_CALL.match(call_src):
+            return "static_call_extracted"
+        if _CASTED_CALL.match(call_src):
+            return "casted_call_extracted"
+        return "other_call_extracted"
+
+    if src and _INSTANCE_CALL_IN_SRC.search(src):
+        return "instance_call_in_source_not_extracted"
+    if src and _STATIC_CALL_IN_SRC.search(src):
+        return "static_call_in_source_not_extracted"
+    return "no_call_visible"
 
 
 # =============================================================================
@@ -83,32 +112,38 @@ def get_assertion_filter_chain(conn: Connection) -> pd.DataFrame:
     return df
 
 
-def get_project_summary(conn: Connection) -> pd.DataFrame:
-    """Per-project assertion inclusion summary.
+def get_missingvalue_assertions(conn: Connection) -> pd.DataFrame:
+    """Return the MissingValue first-reject assertions with source code.
 
-    Columns: project_id, project_name, total_assertions, included_assertions,
-    pct_included.
+    Columns: assertion_id, assertion_source_code,
+    tested_method_call_source_code. These are the assertions where
+    MissingValue is the first REJECT and the reason is the 'tested_class_path is
+    null' variant (the MUT-identification failure, not other MissingValue
+    reasons).
     """
     sql = text(
         """
-        SELECT
-            p.id AS project_id,
-            p.root_path,
-            COUNT(DISTINCT a.id) AS total_assertions,
-            COUNT(DISTINCT a.id) FILTER (WHERE a.is_included) AS included_assertions
-        FROM project p
-        JOIN assertion a ON a.project_id = p.id
-        GROUP BY p.id, p.root_path
-        ORDER BY included_assertions DESC, total_assertions DESC
+        WITH first_rejects AS (
+            SELECT
+                fr.assertion_id,
+                a.assertion_source_code,
+                a.tested_method_call_source_code
+            FROM filter_result fr
+            JOIN assertion a ON a.id = fr.assertion_id
+            WHERE fr.decision = 'REJECT'
+              AND fr.filter_name LIKE '%MissingValueFilter'
+              AND fr.reason LIKE '%tested_class_path column is null%'
+              AND fr.id = (
+                  SELECT min(fr2.id) FROM filter_result fr2
+                  WHERE fr2.assertion_id = a.id AND fr2.decision = 'REJECT'
+              )
+        )
+        SELECT assertion_id, assertion_source_code, tested_method_call_source_code
+        FROM first_rejects
+        ORDER BY assertion_id
         """
     )
-    df = pd.read_sql(sql, conn)
-    df["project_name"] = df["root_path"].str.rsplit("/", n=1).str[-1]
-    df["pct_included"] = (
-        df["included_assertions"] / df["total_assertions"].replace(0, pd.NA) * 100
-    ).round(1)
-    df = df.drop(columns=["root_path"])
-    return df
+    return pd.read_sql(sql, conn)
 
 
 # =============================================================================
@@ -202,6 +237,34 @@ def compute_projects_closest_to_completion(
     return df
 
 
+def compute_missingvalue_taxonomy(mv_df: pd.DataFrame) -> pd.DataFrame:
+    """Classify the MissingValue first-reject bucket by call-extraction state.
+
+    The dominant blocker (58k net reach) is MissingValue with reason
+    'tested_class_path is null' — the MUT-identification layer could not
+    identify the tested file/class at all. This classifier breaks it into:
+
+    - ``instance_call_extracted``: var.method call found, MUT not resolved.
+    - ``static_call_extracted``: Class.method call found, MUT not resolved.
+    - ``casted_call_extracted``: casted/chained call found, MUT not resolved.
+    - ``other_call_extracted``: call found but unclassified pattern.
+    - ``instance_call_in_source_not_extracted``: obj.method() visible in the
+      assertion source code but never extracted — the biggest fixable bucket.
+    - ``static_call_in_source_not_extracted``: Class.method() visible in
+      source but not extracted.
+    - ``no_call_visible``: field access, instanceof, bare variable, or fail()
+      — no method call to identify a MUT from.
+
+    Columns: category, count, pct.
+    """
+    categories = mv_df.apply(_classify_missingvalue_call, axis=1)
+    counts = categories.value_counts().reset_index()
+    counts.columns = ["category", "count"]
+    counts["pct"] = (counts["count"] / counts["count"].sum() * 100).round(1)
+    counts = counts.sort_values("count", ascending=False).reset_index(drop=True)
+    return counts
+
+
 # =============================================================================
 # Reporting
 # =============================================================================
@@ -227,14 +290,17 @@ def generate_report(conn: Connection) -> dict[str, Any]:
     """Run the full prioritization analysis and return a structured report.
 
     Returns a dict with keys: blockers, cooccurrence, multi_blocker_rate,
-    projects_closest, project_summary. Each value is a DataFrame or scalar.
+    missingvalue_taxonomy, projects_closest, project_summary. Each value is a
+    DataFrame or scalar.
     """
     chain = get_assertion_filter_chain(conn)
     projects = get_project_summary(conn)
+    mv_df = get_missingvalue_assertions(conn)
     return {
         "blockers": compute_first_reject_blockers(chain),
         "cooccurrence": compute_blocker_cooccurrence(chain),
         "multi_blocker_rate": compute_multi_blocker_rate(chain),
+        "missingvalue_taxonomy": compute_missingvalue_taxonomy(mv_df),
         "projects_closest": compute_projects_closest_to_completion(projects),
         "project_summary": projects,
     }
@@ -260,6 +326,11 @@ def print_report(report: dict[str, Any]) -> None:
         second = r["second_blocker"] or "(none)"
         print(f"  {r['first_blocker']:<22} + {second:<22} {r['count']:>6}")
     print()
+    print("--- MissingValue taxonomy (MUT-identification failure modes) ---")
+    tax = report["missingvalue_taxonomy"]
+    for _, r in tax.iterrows():
+        print(f"  {r['category']:<45} {r['count']:>6} ({r['pct']:>5}%)")
+    print()
     print("--- Projects closest to completion (top 15) ---")
     proj = report["projects_closest"].head(15)
     for _, r in proj.iterrows():
@@ -268,3 +339,36 @@ def print_report(report: dict[str, Any]) -> None:
             f"{r['total_assertions']:<4} ({r['pct_included']:>5}%)"
         )
     print()
+
+
+# =============================================================================
+# Project summary (kept at the end; uses a SQL query)
+# =============================================================================
+
+
+def get_project_summary(conn: Connection) -> pd.DataFrame:
+    """Per-project assertion inclusion summary.
+
+    Columns: project_id, project_name, total_assertions, included_assertions,
+    pct_included.
+    """
+    sql = text(
+        """
+        SELECT
+            p.id AS project_id,
+            p.root_path,
+            COUNT(DISTINCT a.id) AS total_assertions,
+            COUNT(DISTINCT a.id) FILTER (WHERE a.is_included) AS included_assertions
+        FROM project p
+        JOIN assertion a ON a.project_id = p.id
+        GROUP BY p.id, p.root_path
+        ORDER BY included_assertions DESC, total_assertions DESC
+        """
+    )
+    df = pd.read_sql(sql, conn)
+    df["project_name"] = df["root_path"].str.rsplit("/", n=1).str[-1]
+    df["pct_included"] = (
+        df["included_assertions"] / df["total_assertions"].replace(0, pd.NA) * 100
+    ).round(1)
+    df = df.drop(columns=["root_path"])
+    return df
