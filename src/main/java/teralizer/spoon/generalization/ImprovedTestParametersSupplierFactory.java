@@ -48,32 +48,6 @@ public class ImprovedTestParametersSupplierFactory {
         return supplierClass;
     }
 
-    public static CtClass<?> createSupplierClass(
-        Factory factory,
-        List<MethodParameter> parameters,
-        Map<String, MethodArgument> arguments,
-        Map<String, VariableConstraints> constraints,
-        String inputJava,
-        boolean applyInputFilter
-    ) {
-        CtClass<?> supplierClass = factory.Class().create(TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
-        supplierClass.setSuperInterfaces(new HashSet<>(Collections.singletonList(factory.Type().createReference("net.jqwik.api.ArbitrarySupplier<" + TEST_PARAMETERS_CLASS_NAME + ">"))));
-        supplierClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
-
-        createGetMethod(supplierClass, parameters, inputJava, applyInputFilter && inputJava != null);
-
-        for (int i = 0; i < parameters.size(); i++) {
-            MethodParameter parameter = parameters.get(i);
-            Optional<MethodArgument> argument = arguments.containsKey(parameter.getName())
-                ? Optional.of(arguments.get(parameter.getName()))
-                : Optional.empty();
-
-            createGetParameterMethod(supplierClass, parameters.get(i), argument, parameters.subList(0, i), constraints);
-        }
-
-        return supplierClass;
-    }
-
     private static void createGetMethod(
         CtClass<?> supplierClass,
         List<MethodParameter> parameters,

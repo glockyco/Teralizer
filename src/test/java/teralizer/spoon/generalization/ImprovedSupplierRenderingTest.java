@@ -28,28 +28,13 @@ public class ImprovedSupplierRenderingTest {
     }
 
     @Example
-    void omitsFilterWhenExtractedConstraintsCoverPredicate() {
+    void keepsFilterWhenInputPredicateExists() {
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
             new Launcher().getFactory(),
             Collections.singletonList(new MethodParameter("double", "x")),
             Collections.emptyMap(),
             Collections.emptyMap(),
-            "_p_.x > 0.0",
-            false
-        );
-
-        Assert.assertFalse(supplierClass.toString().contains(".filter("));
-    }
-
-    @Example
-    void keepsFilterWhenResidualInputPredicateExists() {
-        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
-            new Launcher().getFactory(),
-            Collections.singletonList(new MethodParameter("double", "x")),
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            "_p_.x > 0.0",
-            true
+            "_p_.x > 0.0"
         );
 
         Assert.assertTrue(supplierClass.toString().contains(".filter("));

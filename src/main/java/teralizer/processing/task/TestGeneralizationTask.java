@@ -329,8 +329,7 @@ public class TestGeneralizationTask extends AbstractTask {
                     VariableConstraintExtractionResult extractionResult = extractor.process(inputModel, allParameters);
                     Map<String, VariableConstraints> constraints = extractionResult.getConstraints();
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
-                    boolean hasResidualInputPredicate = extractionResult.getUsedConstraintCount() < extractionResult.getTotalConstraintCount();
-                    testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, testedMethodArguments, constraints, inputJava, hasResidualInputPredicate);
+                    testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, testedMethodArguments, constraints, inputJava);
 
                     this.generalizationRecord.setTotalConstraintCount(extractionResult.getTotalConstraintCount());
                     this.generalizationRecord.setUsedConstraintCount(extractionResult.getUsedConstraintCount());
