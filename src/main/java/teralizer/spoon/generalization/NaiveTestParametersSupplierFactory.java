@@ -161,11 +161,15 @@ public class NaiveTestParametersSupplierFactory {
         }
 
         if (argument.isPresent()) {
+            String firstValue = new ModelToJavaTransformer().transform(argument.get());
+            if (argument.get().getType().equals("boolean") || argument.get().getType().equals("java.lang.Boolean")) {
+                return String.format("return new FirstValueArbitrary<%s>(%s, %s)", boxedType, firstValue, baseArbitrary);
+            }
             return String.format(
                 "return new FirstValueArbitrary<%s>((%s) (%s), %s)",
                 boxedType,
                 argument.get().getType(),
-                new ModelToJavaTransformer().transform(argument.get()),
+                firstValue,
                 baseArbitrary
             );
         }

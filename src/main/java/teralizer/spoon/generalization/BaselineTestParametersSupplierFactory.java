@@ -80,6 +80,9 @@ public class BaselineTestParametersSupplierFactory {
 
     private static String createArbitrary(MethodArgument argument) {
         String value = new ModelToJavaTransformer().transform(argument);
+        if (argument.getType().equals("boolean") || argument.getType().equals("java.lang.Boolean")) {
+            return "return net.jqwik.api.Arbitraries.just(" + value + ")";
+        }
         return "return net.jqwik.api.Arbitraries.just((" + argument.getType() + ") " + value + ")";
     }
 

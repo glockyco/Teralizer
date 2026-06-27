@@ -3,10 +3,21 @@ package teralizer.transformer;
 import teralizer.domain.Error;
 import teralizer.domain.*;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Stack;
 
 public class ModelToJavaTransformer extends ModelVisitor {
     private final Stack<String> stack = new Stack<>();
+    private final Map<String, String> variableTypes;
+
+    public ModelToJavaTransformer() {
+        this(Collections.emptyMap());
+    }
+
+    public ModelToJavaTransformer(Map<String, String> variableTypes) {
+        this.variableTypes = variableTypes;
+    }
 
     public String transform(boolean value) {
         return String.valueOf(value);
@@ -28,7 +39,7 @@ public class ModelToJavaTransformer extends ModelVisitor {
     }
 
     public String transform(char value) {
-        return String.valueOf(value);
+        return "'" + this.escapeChar(value) + "'";
     }
 
     public String transform(String value) {
@@ -45,8 +56,10 @@ public class ModelToJavaTransformer extends ModelVisitor {
             case "java.lang.Integer":
             case "char":
             case "java.lang.Character":
+                return this.renderCharArgument(argument.getValue());
             case "boolean":
             case "java.lang.Boolean":
+                return this.renderBooleanArgument(argument.getValue());
             case "String":
             case "java.lang.String":
                 return argument.getValue();
@@ -208,7 +221,11 @@ public class ModelToJavaTransformer extends ModelVisitor {
     public void postVisit(VariableInteger variable) {
         assert variable != null;
         assert variable.name != null;
-        this.stack.push("_p_." + variable.name);
+        if ("boolean".equals(this.variableTypes.get(variable.name)) || "java.lang.Boolean".equals(this.variableTypes.get(variable.name))) {
+            this.stack.push("(_p_." + variable.name + " ? 1 : 0)");
+        } else {
+            this.stack.push("_p_." + variable.name);
+        }
     }
 
     @Override
@@ -266,6 +283,55 @@ public class ModelToJavaTransformer extends ModelVisitor {
     @Override
     public void postVisit(ExceptionModel exceptionModel) {
         this.stack.push(null);
+    }
+
+    private String renderBooleanArgument(String value) {
+        switch (value) {
+            case "1":
+            case "true":
+                return "true";
+            case "0":
+            case "false":
+                return "false";
+            default:
+                throw new RuntimeException("Unable to transform boolean value '" + value + "' to Java.");
+        }
+    }
+
+    private String renderCharArgument(String value) {
+        if (value.startsWith("'") && value.endsWith("'")) {
+            return value;
+        }
+        if (value.matches("[0-9]+")) {
+            return "(char) " + value;
+        }
+        if (value.length() == 1) {
+            return this.transform(value.charAt(0));
+        }
+        throw new RuntimeException("Unable to transform char value '" + value + "' to Java.");
+    }
+
+    private String escapeChar(char value) {
+        switch (value) {
+            case '\b':
+                return "\\b";
+            case '\t':
+                return "\\t";
+            case '\n':
+                return "\\n";
+            case '\f':
+                return "\\f";
+            case '\r':
+                return "\\r";
+            case '"':
+                return "\"";
+            case '\'':
+                return "\\'";
+            case '\\':
+                return "\\\\";
+            default:
+                return String.valueOf(value);
+        }
     }
 
     private String[] popArgs(int n) {
