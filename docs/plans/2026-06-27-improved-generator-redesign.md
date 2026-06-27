@@ -21,6 +21,7 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 - Create: `src/main/java/teralizer/jqwik/planning/InputGenerationPlan.java` for ordered parameter plans and residual metadata.
 - Create: `src/main/java/teralizer/jqwik/planning/ParameterGenerationPlan.java` for one parameter's recipe and consumed clauses.
 - Create: `src/main/java/teralizer/jqwik/planning/GenerationRecipe.java` for jqwik recipe emission.
+- Create: `src/main/java/teralizer/jqwik/planning/RawJavaRecipe.java` for transition recipes that wrap existing emitted arbitrary bodies.
 - Create: `src/main/java/teralizer/jqwik/planning/PlanningContext.java` for parameters, parameter indexes, clause list, and type map.
 - Create: `src/main/java/teralizer/jqwik/planning/DomainPlanner.java` for type-specific planning strategies.
 - Create: `src/main/java/teralizer/jqwik/planning/NumericDomainPlanner.java` for the first integer/real/char recipes.
@@ -45,13 +46,13 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 
 ### Task 2: Planner result types
 
-- [ ] Add `TypeDomain` normalization for primitive/wrapper numeric types, `char`, `boolean`, `String`, arrays, and a fallback `OBJECT`.
-- [ ] Add `GenerationRecipe` with an initial `RawJavaRecipe` implementation that wraps existing emitted arbitrary body strings.
-- [ ] Add `ParameterGenerationPlan` and `InputGenerationPlan` with consumed/residual clause id sets and total/used counts.
-- [ ] Write `InputGenerationPlannerTest` first for plan metadata with no consumed clauses and verify the test fails before implementation.
-- [ ] Implement the result types and a pass-through `InputGenerationPlanner` that produces existing-style per-parameter recipes plus a full residual filter when input clauses exist.
-- [ ] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest`.
-- [ ] Commit the planner skeleton.
+- [x] Add `TypeDomain` normalization for primitive/wrapper numeric types, `char`, `boolean`, `String`, arrays, and a fallback `OBJECT`.
+- [x] Add `GenerationRecipe` with an initial `RawJavaRecipe` implementation that wraps existing emitted arbitrary body strings.
+- [x] Add `ParameterGenerationPlan` and `InputGenerationPlan` with consumed/residual clause id sets and total/used counts.
+- [x] Write `InputGenerationPlannerTest` first for plan metadata with no consumed clauses and verify the test fails before implementation.
+- [x] Implement the result types and a pass-through `InputGenerationPlanner` that produces parameter/domain records plus a full residual filter when input clauses exist.
+- [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest`.
+- [x] Commit the planner skeleton.
 
 ### Task 3: Wire supplier through the planner without behavior change
 
