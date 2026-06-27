@@ -67,6 +67,28 @@ public class TestGeneralizationTask extends AbstractTask {
         this.assertionRecord = assertionRecord;
     }
 
+    static Map<String, MethodArgument> mapTestedMethodArguments(
+        List<MethodParameter> testedMethodParameters,
+        List<MethodArgument> inputValues
+    ) {
+        // For instance-method assertions, SPF stores the concrete receiver as the first input value;
+        // the tested method parameter list contains only declared arguments, so skip that receiver.
+        int offset = inputValues.size() == testedMethodParameters.size() + 1 ? 1 : 0;
+        if (inputValues.size() - offset != testedMethodParameters.size()) {
+            throw new IllegalArgumentException(
+                "Cannot map " + inputValues.size() + " concrete values to " + testedMethodParameters.size() + " tested method parameters."
+            );
+        }
+
+        return IntStream
+            .range(0, testedMethodParameters.size())
+            .boxed()
+            .collect(Collectors.toMap(
+                i -> testedMethodParameters.get(i).getName(),
+                i -> inputValues.get(i + offset)
+            ));
+    }
+
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         if (this.testRecord == null) {
@@ -221,12 +243,7 @@ public class TestGeneralizationTask extends AbstractTask {
         Type inputValuesType = new TypeToken<List<MethodArgument>>() {}.getType();
         List<MethodArgument> inputValues = gson.fromJson(inputValuesString, inputValuesType);
 
-        Map<String, MethodArgument> testedMethodArguments = IntStream
-            .range(0, testedMethodParameters.size())
-            .boxed().collect(Collectors.toMap(
-                i -> testedMethodParameters.get(i).getName(),
-                i -> inputValues.get(i)
-            ));
+        Map<String, MethodArgument> testedMethodArguments = mapTestedMethodArguments(testedMethodParameters, inputValues);
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
