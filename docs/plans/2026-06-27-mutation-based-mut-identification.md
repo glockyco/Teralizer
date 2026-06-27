@@ -1,12 +1,18 @@
 ---
 title: Mutation-Based MUT Identification
 type: spec
-status: active
+status: superseded
 created: 2026-06-27
+superseded_by: 2026-06-27-ensemble-mut-identification
 parent: 2026-06-26-teralizer-overview
 ---
 
 # Mutation-Based MUT Identification
+
+**Superseded by `2026-06-27-ensemble-mut-identification`.** That spec
+incorporates all findings from this one and replaces the post-PIT refinement
+pass with a pipeline restructuring that makes mutation data available before
+MUT-id runs. The validation results and evidence below remain accurate.
 
 Use existing PIT mutation-testing data as a dynamic focal-method oracle,
 falling back to static analysis only when no mutation data exists. No new
