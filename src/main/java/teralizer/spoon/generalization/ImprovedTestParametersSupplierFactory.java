@@ -11,6 +11,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.jqwik.IntegerConstraints;
 import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.VariableConstraints;
+import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.spoon.SpoonUtils;
 import teralizer.transformer.ModelToJavaTransformer;
 
@@ -30,11 +31,24 @@ public class ImprovedTestParametersSupplierFactory {
         Map<String, VariableConstraints> constraints,
         String inputJava
     ) {
+        return createSupplierClass(factory, parameters, arguments, constraints, inputJava, null);
+    }
+
+    public static CtClass<?> createSupplierClass(
+        Factory factory,
+        List<MethodParameter> parameters,
+        Map<String, MethodArgument> arguments,
+        Map<String, VariableConstraints> constraints,
+        String inputJava,
+        InputGenerationPlan plan
+    ) {
         CtClass<?> supplierClass = factory.Class().create(TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
         supplierClass.setSuperInterfaces(new HashSet<>(Collections.singletonList(factory.Type().createReference("net.jqwik.api.ArbitrarySupplier<" + TEST_PARAMETERS_CLASS_NAME + ">"))));
         supplierClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
 
-        createGetMethod(supplierClass, parameters, inputJava, inputJava != null);
+        String residualPredicate = plan == null ? inputJava : plan.getResidualPredicate();
+        boolean applyInputFilter = plan == null ? inputJava != null : plan.hasResidualClauses();
+        createGetMethod(supplierClass, parameters, residualPredicate, applyInputFilter);
 
         for (int i = 0; i < parameters.size(); i++) {
             MethodParameter parameter = parameters.get(i);

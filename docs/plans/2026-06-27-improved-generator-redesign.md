@@ -56,14 +56,14 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 
 ### Task 3: Wire supplier through the planner without behavior change
 
-- [ ] Add an overload `ImprovedTestParametersSupplierFactory.createSupplierClass(..., InputGenerationPlan plan)` and keep the old signature as a small adapter during the migration.
-- [ ] Write a rendering test that proves existing full-filter behavior is unchanged for `_p_.x > 0.0`.
-- [ ] Write a rendering test that proves no filter is emitted when the plan has no residual clauses.
-- [ ] Verify both tests fail before implementation.
-- [ ] Implement the supplier changes by reading recipe bodies from `ParameterGenerationPlan`.
-- [ ] Update `TestGeneralizationTask` to build one `InputGenerationPlan` for `IMPROVED` and set existing total/used constraint metrics from it.
-- [ ] Run `./gradlew test --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest --tests teralizer.processing.task.TestGeneralizationTaskTest`.
-- [ ] Commit the behavior-preserving planner wiring.
+- [x] Add an overload `ImprovedTestParametersSupplierFactory.createSupplierClass(..., InputGenerationPlan plan)` and keep the old signature as a small adapter during the migration.
+- [x] Write a rendering test that proves existing full-filter behavior is unchanged for `_p_.x > 0.0`.
+- [x] Write a rendering test that proves no filter is emitted when the plan has no residual clauses.
+- [x] Verify both tests fail before implementation.
+- [x] Implement the supplier changes by reading recipe bodies from `ParameterGenerationPlan`.
+- [x] Update `TestGeneralizationTask` to build one `InputGenerationPlan` for `IMPROVED` and set existing total/used constraint metrics from it.
+- [x] Run `./gradlew test --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest --tests teralizer.processing.task.TestGeneralizationTaskTest`.
+- [x] Commit the behavior-preserving planner wiring.
 
 ### Task 4: Atomic numeric and char recipes
 
