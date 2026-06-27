@@ -44,6 +44,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     private int recursionDepth;
     private boolean isInInstrumentedMethod;
+    private CapturedException pendingThrownException;
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -62,6 +63,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.startTime = System.currentTimeMillis();
         this.recursionDepth = -1;
         this.isInInstrumentedMethod = false;
+        this.pendingThrownException = null;
     }
 
     @Override
@@ -94,6 +96,15 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
             this.recursionDepth++;
         }
+    }
+
+    @Override
+    public void exceptionThrown(VM vm, ThreadInfo currentThread, ElementInfo thrownException) {
+        if (!this.isInInstrumentedMethod || this.recursionDepth < 0) {
+            return;
+        }
+
+        this.pendingThrownException = this.captureException(currentThread, thrownException);
     }
 
     @Override
@@ -182,15 +193,15 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             spfOutput = (Expression) returnInstruction.getReturnAttr(vm.getCurrentThread());
             Expression spfOutput_ = spfOutput; // To use spfOutput in the lambda, it needs to be (effectively) final.
             LOGGER.atTrace().log(() -> "Output: " + (spfOutput_ == null ? null : spfOutput_.toString()));
-        } else if (exitInstruction.getMethodInfo().getThrownExceptionClassNames().length > 0) {
-            String exceptionClass = exitInstruction.getMethodInfo().getThrownExceptionClassNames()[0];
-            ExceptionInfo pendingException = currentThread.getPendingException();
-            String exceptionMessage = pendingException.getCauseDetails();
+        } else if (exitInstruction instanceof ATHROW) {
+            if (this.pendingThrownException == null) {
+                throw new RuntimeException("JPF reported exceptional exit from " + this.testedMethodSpec.getSource() + " without a captured exceptionThrown notification.");
+            }
 
-            concreteOutputArgument = new MethodArgument(exceptionClass, exceptionMessage);
-
-            capturedException = new CapturedException(exceptionClass, exceptionMessage);
-            LOGGER.atTrace().log(() -> "Output: Exception thrown " + exceptionClass);
+            capturedException = this.pendingThrownException;
+            concreteOutputArgument = new MethodArgument(capturedException.getName(), capturedException.getMessage());
+            LOGGER.atTrace().log("Output: Exception thrown " + capturedException.getName());
+            this.pendingThrownException = null;
         } else {
             throw new RuntimeException("Unexpected exit instruction: " + exitInstruction);
         }
@@ -220,6 +231,19 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private CapturedException captureException(ThreadInfo currentThread, ElementInfo thrownException) {
+        String exceptionClass = thrownException.getClassInfo().getName();
+        String exceptionMessage = null;
+
+        int messageRef = thrownException.getReferenceField("detailMessage");
+        if (messageRef != MJIEnv.NULL) {
+            ElementInfo messageInfo = currentThread.getElementInfo(messageRef);
+            exceptionMessage = messageInfo.asString();
+        }
+
+        return new CapturedException(exceptionClass, exceptionMessage);
     }
 
     private void checkExecutionTimeoutExceeded() {
