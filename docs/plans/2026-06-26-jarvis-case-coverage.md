@@ -171,7 +171,7 @@ Run inputs:
 - Scratch outputs: ignored `data/jarvis-scoreboard/` tree and scratch DB `postgres_jarvis_scoreboard`; no `postgres_dev`, `postgres_test`, or `_replication` target was used.
 - Score query: `analysis/src/teralizer/jarvis_scoreboard.py::get_scoreboard(conn, variants=["NAIVE", "IMPROVED"])`, with probe names joined from `test.test_method_name`.
 
-Current result: **claim not supported yet**. The run gives PVC/IC evidence for 8 of the 10 Table-2 rows. `Interval.getSize()` now passes after promoting inline receiver-constructor arguments into generated parameters. `Abs`/`Precision` generated tests still fail as expected from the SPF raw-bits blockers.
+Current result: **claim not decided yet**. The run gives PVC/IC evidence for all 10 Table-2 rows, represented as 14 assertion-level probes. `Interval.getSize()` passes after promoting inline receiver-constructor arguments into generated parameters. `Abs` passes once the SPF model classpath is prepended, and `Precision.equals(double,double,double)` passes for the Table-2 eps fixture; the pure `maxUlps` overload is not a separate scorecard row.
 
 | Table row / probe | Status | NAIVE PVC / trials | IMPROVED PVC / trials | IC unit | Cause / note |
 |---|---:|---:|---:|---:|---|
@@ -186,11 +186,11 @@ Current result: **claim not supported yet**. The run gives PVC/IC evidence for 8
 | `PolynomialFunctionTest::testLinear` | pass | 181 / 3800 | 197 / 3000 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
 | `PolynomialFunctionTest::testfirstDerivativeComparison` | pass | 91 / 4000 | 91 / 3202 | Math project: 987 / 342,114 instr. | Derivative object flow reaches generated tests. |
 | `IntervalTest::getSize` | pass | 72 / 302 | 72 / 302 | Math project: 987 / 342,114 instr. | Receiver-constructor input support works for inline `new Interval(lower, upper).getSize()`. |
-| `UnivariateFunctionTest::testAbs` | generated test fails | — | — | — | Expected raw-bits/`FastMath.abs` SPF gap; `generalization.is_included=false`. |
-| `PrecisionTest` / `assertTrue` | generated test fails | — | — | — | Expected `doubleToRawLongBits`/ulps gap; `generalization.is_included=false`. |
-| `PrecisionTest` / `assertFalse` | generated test fails | — | — | — | Expected `doubleToRawLongBits`/ulps gap; `generalization.is_included=false`. |
+| `UnivariateFunctionTest::testAbs` | pass | 223 / 1004 | 184 / 1004 | Math project: 1007 / 341,107 instr. | `FastMath.abs` model is reachable through the prepended SPF model classpath. |
+| `PrecisionTest` / `assertTrue` | pass | 246 / 2110 | 251 / 2121 | Math project: 1007 / 341,107 instr. | Table-2 eps fixture follows the arithmetic `FastMath.abs(y - x) <= eps` branch. |
+| `PrecisionTest` / `assertFalse` | pass | 229 / 2190 | 230 / 2190 | Math project: 1007 / 341,107 instr. | Table-2 eps fixture rejects values outside the allowed absolute error. |
 
-The 10 JARVIS rows therefore compress the 14 assertion-level probes as follows: CharUtils rows pass, FastMath min/max passes under the NaN/signed-zero concession, `toIntExact` passes under the overflow concession, PolynomialFunction rows pass, `Interval` passes through receiver-constructor input promotion, and `Abs`/`Precision` remain SPF model blockers.
+The 10 JARVIS rows therefore compress the 14 assertion-level probes as all generated tests passing. The remaining caveats are row-specific concessions rather than generated-test blockers: FastMath min/max still carry the shared NaN/signed-zero caveat, `toIntExact` still lacks the overflow exception path, and the pure `Precision.equals(double,double,int maxUlps)` overload is not scored unless added as a separate fixture.
 
 ## Spike results
 
@@ -205,8 +205,8 @@ result XMLs. **Tally: 8 FULL · 1 PARTIAL · 2 BLOCKED.**
 | Interval.getSize() | ✅ FULL | `(upper − lower)` |
 | PolynomialFunction.value() — const / linear / deriv | ✅ FULL | `c0` / `(x*c1+c0)` / `(2*c2*x+c1)` |
 | FastMath.toIntExact(long) | ⚠️ PARTIAL | correct 5-region partition; overflow exception path missing, `(int)` cast unmodeled (symcrete LCMP) |
-| Precision.equals(double,double,double) | ❌ BLOCKED | ulps fast-path hits native `doubleToRawLongBits` → concretizes; collapses to 1 path, no PC |
-| Abs.value() | ❌ BLOCKED | `FastMath.abs` bit-twiddle via `doubleToRawLongBits` → concretizes |
+| Precision.equals(double,double,double) | ✅ FULL | Table-2 eps path is extractable through the `FastMath.abs(y - x) <= eps` branch; pure `maxUlps` overload remains unscored raw-bits work |
+| Abs.value() | ✅ FULL | `FastMath.abs` model is reached once the generated JPF config prepends `${jpf-symbc}/build/classes` |
 
 **Headline:** SPF spec quality is gated by *which JVM primitives the implementation
 reaches*, not by mathematical difficulty. Crucially, **object construction +
@@ -217,12 +217,8 @@ barrier that kept 9/10 JARVIS Table-2 rows out of our dataset (static-method-onl
 selection plus type/corpus limits) is **a Teralizer criterion, not an SPF limit.**
 
 Genuine SPF gaps are narrow and specific:
-- `Double.doubleToRawLongBits` has no symbolic model over SPF's rational reals →
-  blocks `FastMath.abs` and the `Precision.equals` ulps fast-path. `FastMath.abs`
-  is **cleanly fixable** with a model class mirroring jpf-symbc's existing
-  `java.lang.Math.abs` (BLOCKED→FULL); `Precision`-ulps needs a real IEEE-754 FP
-  theory (research-grade). Precision's *core* `|x−y|≤eps` IS extractable (proven
-  via an eps-symbolic diagnostic) — only the ulps fast-path blocks.
+- `Double.doubleToRawLongBits` still has no symbolic model over SPF's rational reals, so pure ulps-style checks such as `Precision.equals(double,double,int maxUlps)` remain research-grade FP work. The Table-2 scorecard fixture uses `Precision.equals(double,double,double)` and now reaches the extractable `|x-y|≤eps` branch.
+- `FastMath.abs` no longer blocks the scorecard once the generated JPF classpath prepends `${jpf-symbc}/build/classes`; this reuses jpf-symbc's existing model-class mechanism rather than modeling raw bits.
 - `toIntExact`'s missing overflow exception is a symcrete `LCMP` control-flow
   decoupling in jpf-symbc (solver-independent; deep fix). `z3bitvector` never
   helped; `z3` is best for all 11.
@@ -234,10 +230,8 @@ The spec exists for most JARVIS cases, so ingesting them is largely a
 - **High value, in reach:** extend MUT identification to **instance methods /
   object construction** (unblocks Interval + 3× PolynomialFunction + Abs) and
   **`char` parameters** (CharUtils). SPF already delivers the specs.
-- **Low effort, isolated:** add a `FastMath.abs(double)` model in jpf-symbc →
-  Abs.value BLOCKED→FULL.
-- **Defer (research / deep):** `Precision.equals` ulps fast-path (FP theory),
-  `toIntExact` exception path (LCMP semantics).
+- **Completed in this lane:** prepend the jpf-symbc model classes to generated JPF configs so `FastMath.abs(double)` is reachable.
+- **Defer (research / deep):** pure `Precision.equals` ulps overload (FP theory), `toIntExact` exception path (LCMP semantics).
 
 ## Pointers
 

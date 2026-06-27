@@ -1,5 +1,6 @@
 ## @vtlvariable name="symbolicMethod" type="java.lang.String"
 ## @vtlvariable name="classpath" type="java.lang.String"
+## @vtlvariable name="jpfSymbcModelClasspath" type="java.lang.String"
 ## @vtlvariable name="maxExecutionTime" type="java.lang.Double"
 ## @vtlvariable name="maxPathConditionSize" type="java.lang.Long"
 ## @vtlvariable name="driverClassQualifiedName" type="java.lang.String"
@@ -18,7 +19,7 @@ target=${driverClassQualifiedName}
 #symbolic.class=...
 symbolic.method=${symbolicMethod}
 #symbolic.fields=...
-classpath=${classpath}
+classpath=${jpfSymbcModelClasspath}:${classpath}
 symbolic.collect_constraints=true
 #symbolic.min_int=-100
 #symbolic.max_int=100

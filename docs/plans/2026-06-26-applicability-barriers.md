@@ -26,7 +26,7 @@ external dependency. Impact figures are from RQ5 (controlled) / RQ6 (real-world)
 | 8 | Pure-function assumption (no side effects) | spec-extraction design | **E/R** | `03-approach-03` L124-125; field writes (PUTFIELD) already tracked by SPF; unmodeled calls → uninterpreted functions | HIGH |
 | 9 | `@ParameterizedTest` / `@RepeatedTest` rejected | `TestType` filter | **E** (param) | 180 controlled rejections; param tests are *already* parametric — ideal raw material | MED |
 | 10 | double/float negative paths UNSAT | jpf-symbc `ProblemZ3.makeRealVar` lower bound = `Double.MIN_VALUE` (bug) | **E** (bug) | spf-eval double_linear; silently truncates partitions for *all* reals | LOW |
-| 11 | `FastMath.abs` (& native math) concretize | jpf-symbc model gap (`doubleToRawLongBits`) | **E** | spike abs BLOCKED; fix = model class like existing `java.lang.Math` (LOW); pattern reusable for other native math | LOW |
+| 11 | Native math / model classpath gaps | jpf-symbc model classes + selected native peers | **E** | `FastMath.abs` is fixed in the scorecard by prepending `${jpf-symbc}/build/classes`; pattern remains reusable for unsupported native math and model classes | LOW–MED |
 | 12 | Reduction replaces only 1 original test | reduction stage | **E** | `05-discussion` L37; multiple same-partition tests could collapse to one PBT | MED |
 | 13 | PIT class-level exclusion amplification | PIT integration (green-suite, class-level only) | **X/E** | one failing test excludes its whole class — 10× amplification | MED |
 | 14 | Maven + standard structure only | project setup/detection | **E** | ~15% real-world project failures; no Gradle / non-standard layouts | MED |
@@ -59,9 +59,7 @@ mirrors these per-assertion.
 
 **Key:** the biggest *resolvable* SPF-stage bucket is exception-path capture
 (#18), not a solver-model gap. Resource limits (PC/depth/OOM/timeout) are tunable,
-not missing models. `doubleToRawLongBits` concretization (Abs/Precision-ulps) is
-**absent here** — it silently degrades the spec rather than crashing, so it never
-reaches `EXECUTE_JPF FAILED` (visible only as degenerate specs, per the spike).
+not missing models. Raw-bits concretization remains relevant for pure ulps-style checks such as `Precision.equals(double,double,int maxUlps)`, but the current Table-2 eps scorecard fixture reaches the arithmetic `FastMath.abs(y - x) <= eps` branch and passes after the model-classpath fix.
 
 ## RepoReapers applicability funnel
 

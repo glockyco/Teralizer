@@ -64,8 +64,8 @@ Do not add JARVIS configs under `project-configs/primary/`; the primary replicat
 | `PolynomialFunctionTest::testConstants` | `new PolynomialFunction(double[]{c0}).value(x)` | SPF spike FULL; Teralizer needs object/array construction inputs |
 | `PolynomialFunctionTest::testfirstDerivativeComparison` | `new PolynomialFunction(double[]{c0,c1,c2}).polynomialDerivative().value(x)` | SPF spike FULL; Teralizer needs object/array construction inputs |
 | `PolynomialFunctionTest::testLinear` | `new PolynomialFunction(double[]{c0,c1}).value(x)` | SPF spike FULL; Teralizer needs object/array construction inputs |
-| `PrecisionTest` | `Precision.equals(double,double,double)` | SPF spike BLOCKED on ulps/raw-bits path; core eps behavior remains supporting evidence only |
-| `UnivariateFunctionTest::testAbs` | `new Abs().value(double)` | SPF spike FULL only after the `FastMath.abs(double)` SPF model lands |
+| `PrecisionTest` | `Precision.equals(double,double,double)` | Current scorecard eps fixture passes; pure `maxUlps` raw-bits overload is not separately scored |
+| `UnivariateFunctionTest::testAbs` | `new Abs().value(double)` | Current scorecard passes once `${jpf-symbc}/build/classes` is prepended to the generated JPF classpath |
 
 ## Execution contract
 

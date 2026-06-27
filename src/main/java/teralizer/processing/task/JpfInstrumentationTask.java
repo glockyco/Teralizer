@@ -441,6 +441,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         String symbolicMethod = this.assertionRecord.getInstrumentedMethodQualifiedName() + "(" + symbolicParams + ")";
 
         VelocityContext context = new VelocityContext();
+        context.put("jpfSymbcModelClasspath", "${jpf-symbc}/build/classes");
         context.put("classpath", this.projectRecord.getClasspath());
         context.put("symbolicMethod", symbolicMethod);
 
