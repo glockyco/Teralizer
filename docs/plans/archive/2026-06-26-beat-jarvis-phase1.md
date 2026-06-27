@@ -1,8 +1,9 @@
 ---
 title: Beat JARVIS Phase 1
 type: plan
-status: active
+status: implemented
 created: 2026-06-26
+archived: 2026-06-27
 parent: 2026-06-26-teralizer-overview
 ---
 
@@ -37,7 +38,7 @@ Metric definition:
 - [x] Fix #19 the `TestGeneralizationListener.writeSpecificationFiles` listener NPE.
 - [x] Implement #3 object-construction inputs in `JpfInstrumentationTask`, scoped to fixed-arity inline construction with constructing-input generation.
 - [x] Implement #18 exception-path capture in `TestGeneralizationListener` / `JpfExecutionTask` so SPF records thrown-exception specs instead of aborting the whole analysis.
-- [ ] Build the PVC/IC measurement harness around generated jqwik PBT values and per-test JaCoCo coverage for JARVIS Table-2 scoreboard runs.
+- [x] Build the PVC/IC measurement harness around generated jqwik PBT value logs, generated-test outcome classes, and existing JaCoCo IC rows; add finer per-test JaCoCo only if a Table-2 comparison needs it.
 
 ## Validation strategy
 

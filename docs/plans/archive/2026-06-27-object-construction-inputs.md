@@ -1,9 +1,10 @@
 ---
 title: Object Construction Inputs
 type: spec
-status: active
+status: implemented
 created: 2026-06-27
 parent: 2026-06-26-beat-jarvis-phase1
+archived: 2026-06-27
 ---
 
 # Object Construction Inputs

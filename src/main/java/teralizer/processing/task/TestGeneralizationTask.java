@@ -230,6 +230,10 @@ public class TestGeneralizationTask extends AbstractTask {
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
+        Path jqwikValueLogPath = this.projectRecord.getDataPath()
+            .resolve("project-id-" + this.getProjectId())
+            .resolve("jqwik-data")
+            .resolve(this.getGeneralizationId() + "." + this.getVariant() + ".tsv");
         String pendingBooleanOutputExpression = null;
         String pendingBooleanOutputOperator = null;
 
@@ -350,8 +354,10 @@ public class TestGeneralizationTask extends AbstractTask {
             generalizedClassDeclaration.addNestedType(firstValueArbitraryClass);
         }
 
+        CtClass<?> jqwikValueRecorderClass = JqwikValueRecorderFactory.createRecorderClass(factory, jqwikValueLogPath);
         generalizedClassDeclaration.addNestedType(testParametersClassDeclaration);
         generalizedClassDeclaration.addNestedType(testParametersSupplierClassDeclaration);
+        generalizedClassDeclaration.addNestedType(jqwikValueRecorderClass);
 
         // ------------------------------------------------------------------------------------------------------ //
         // Remove all existing annotations.                                                                       //
@@ -431,6 +437,8 @@ public class TestGeneralizationTask extends AbstractTask {
                 args.set(i, factory.Code().createCodeSnippetExpression("_p_." + inputsForArgument.get(0).toMethodParameter().getName()));
             }
         }
+
+        testMethod.getBody().insertBegin(factory.Code().createCodeSnippetStatement("JqwikValueRecorder.record(_p_)"));
 
         if (pendingBooleanOutputExpression != null) {
             List<CtExpression<?>> assertArguments = assertion.getArguments();
