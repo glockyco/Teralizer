@@ -25,6 +25,17 @@ public class JqwikValueRecorderFactory {
             )
         );
 
+        CtMethod<?> resetMethod = factory.Method().create(
+            recorderClass,
+            new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC, ModifierKind.SYNCHRONIZED)),
+            factory.Type().VOID_PRIMITIVE,
+            "reset",
+            Collections.emptyList(),
+            Collections.emptySet(),
+            factory.Core().createBlock()
+        );
+        resetMethod.getBody().addStatement(factory.Code().createCodeSnippetStatement(createResetBody(valueLogPath)));
+
         CtMethod<?> recordMethod = factory.Method().create(
             recorderClass,
             new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC, ModifierKind.SYNCHRONIZED)),
@@ -53,6 +64,9 @@ public class JqwikValueRecorderFactory {
         return "public static class JqwikValueRecorder {\n"
             + "    private static final java.nio.file.Path VALUE_LOG_PATH = java.nio.file.Paths.get(\"" + escapePath(valueLogPath) + "\");\n"
             + "    private static boolean initialized = false;\n"
+            + "    public static synchronized void reset() {\n"
+            + createResetBody(valueLogPath).replace("\n", "\n        ") + "\n"
+            + "    }\n"
             + "    public static synchronized void record(final TestParameters parameters) {\n"
             + createRecordBody(valueLogPath).replace("\n", "\n        ") + "\n"
             + "    }\n"
@@ -85,6 +99,17 @@ public class JqwikValueRecorderFactory {
             + "        }\n"
             + "        return escaped.toString();\n"
             + "    }\n"
+            + "}";
+    }
+
+    private static String createResetBody(Path valueLogPath) {
+        return "try {\n"
+            + "    final java.nio.file.Path VALUE_LOG_PATH = java.nio.file.Paths.get(\"" + escapePath(valueLogPath) + "\");\n"
+            + "    java.nio.file.Files.createDirectories(VALUE_LOG_PATH.getParent());\n"
+            + "    java.nio.file.Files.deleteIfExists(VALUE_LOG_PATH);\n"
+            + "    initialized = true;\n"
+            + "} catch (java.io.IOException e) {\n"
+            + "    throw new RuntimeException(e);\n"
             + "}";
     }
 

@@ -377,6 +377,21 @@ public class TestGeneralizationTask extends AbstractTask {
         generalizedClassDeclaration.addNestedType(testParametersSupplierClassDeclaration);
         generalizedClassDeclaration.addNestedType(jqwikValueRecorderClass);
 
+        CtMethod<?> jqwikValueRecorderResetMethod = factory.Method().create(
+            generalizedClassDeclaration,
+            new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
+            factory.Type().VOID_PRIMITIVE,
+            "resetJqwikValueRecorder",
+            Collections.emptyList(),
+            Collections.emptySet(),
+            factory.Core().createBlock()
+        );
+        CtAnnotation<Annotation> beforePropertyAnnotation = factory.Core().createAnnotation();
+        beforePropertyAnnotation.setAnnotationType(factory.Type().createReference("net.jqwik.api.lifecycle.BeforeProperty"));
+        jqwikValueRecorderResetMethod.addAnnotation(beforePropertyAnnotation);
+        jqwikValueRecorderResetMethod.getBody().addStatement(factory.Code().createCodeSnippetStatement("JqwikValueRecorder.reset()"));
+        generalizedClassDeclaration.addMethod(jqwikValueRecorderResetMethod);
+
         // ------------------------------------------------------------------------------------------------------ //
         // Remove all existing annotations.                                                                       //
         // ------------------------------------------------------------------------------------------------------ //
