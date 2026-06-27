@@ -140,18 +140,43 @@ Everything else is gated on whether (1) is promising.
 ### Tier 2 — RQ6 applicability levers (the rejection reason)
 
 Scored as applicability %, not mutation score (RQ1 barely moves: ~0.05pp on
-strong suites). Do these *after* Tier 1, in this order:
+strong suites). Ordered by **shadowing-aware net reach** — the count of
+assertions where a filter is the *first* reject (the only ones a fix actually
+unblocks). Re-run the analysis after any fix to reprioritize:
 
-1. **#4 interprocedural assertion analysis** — biggest test-level lever;
-   recovers ~86% false-positive NoAssertions rejects; prerequisite for
-   helper-delegated MUT-id. MED effort (interprocedural).
-2. **#6 more assertion types** — 41% of MissingValue is unsupported-assertion-type,
-   not MUT-id. MED effort. Pair with #5.
-3. **#5 MUT-id via Ghafari mutator/inspector classification** (static/Spoon,
-   not from-scratch) + Spoon classpath resolution. Do *with* #4+#6 or its real
-   ~15% share is shadowed. MED effort.
-4. **#9 @ParameterizedTest** — param tests are already parametric; ideal raw
-   material. MED effort.
+```python
+from teralizer.config import db_config
+from teralizer.applicability_priorities import generate_report, print_report
+with db_config.get_test_engine().connect() as conn:
+    print_report(generate_report(conn))
+```
+
+| # | Lever | Net reach | Why it's first |
+|---|---|---|---|
+| 5 | **MUT identification** (Ghafari mutator/inspector, static/Spoon) | 58,122 | The dominant blocker — and it is NOT "missing values" but the MUT-id layer failing (`tested_class_path IS NULL` on chained/fluent calls like `wheels.size()`). Unshadows 25k MissingValue+UnsupportedAssertion and 11k MissingValue+ParameterType pairs. |
+| 6 | **More assertion types** (ReturnType is the #2 first-reject) | 33,978 | Object-returning getters on domain types (`JID.getDomain`, `LeapYear.checkTheYear`). Overlaps #7 (void/state oracles). |
+| 4 | **Interprocedural assertion analysis** (ExcludedTest cascade) | 20,647 | Recovers ~86% false-positive NoAssertions rejects; prerequisite for helper-delegated MUT-id. |
+| 9 | **@ParameterizedTest** | — | Param tests are already parametric; ideal raw material. |
+
+**Shadowing insight that reorders the old priority:** ParameterType looks like
+the #2 blocker by raw rejects (60,289) but has only 8,326 net reach — 86%
+shadowed behind MissingValue/ReturnType. UnsupportedAssertion has 29,170 total
+rejects but **zero** net reach (entirely shadowed behind MissingValue).
+72.4% of blocked assertions hit >=2 filters, so most fixes are marginal in
+isolation. Fix MUT-id (#5) first to unshadow the masses.
+
+**Projects closest to completion** (top candidates for targeted investigation —
+they have included assertions, so the pipeline partially works; re-run the
+analysis after a fix to see blocked assertions move toward inclusion):
+
+| Project | Included/Total | % |
+|---|---|---|
+| `byteseek` | 124/934 | 13.3% |
+| `JadConfig` | 72/1734 | 4.2% |
+| `fsola` | 53/672 | 7.9% |
+| `HdrHistogram` | 53/296 | 17.9% |
+| `combinatoricslib` | 39/757 | 5.2% |
+| `vrockai_beast` | 21/68 | 30.9% |
 
 ### Tier 3 — breadth / capability expansion (deferred)
 
@@ -189,6 +214,7 @@ stateful setup lands.
 ## Pointers
 
 - Shipped Phase 1 tasks: `docs/plans/archive/2026-06-26-beat-jarvis-phase1.md`.
+- Re-runnable shadowing-aware prioritization analysis: `analysis/src/teralizer/applicability_priorities.py` (run `generate_report` against `postgres_test`; tests in `analysis/tests/test_applicability_priorities.py`).
 - RQ6 real-world barrier inventory + funnel: `2026-06-26-applicability-barriers`.
 - JARVIS per-case SPF spike verdicts + provenance: `2026-06-26-jarvis-case-coverage`.
 - Evidence run (next): `2026-06-27-jarvis-scoreboard-evidence-run`.
