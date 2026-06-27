@@ -372,3 +372,65 @@ def get_project_summary(conn: Connection) -> pd.DataFrame:
     ).round(1)
     df = df.drop(columns=["root_path"])
     return df
+
+
+# =============================================================================
+# Pipeline failure funnel
+# =============================================================================
+
+
+def get_pipeline_failure_funnel(conn: Connection) -> pd.DataFrame:
+    """Per-project first-failure stage: which stage kills each project.
+
+    Columns: project_id, first_failed_stage, first_failed_step.
+    Projects with no failures are excluded.
+    """
+    sql = text(
+        """
+        WITH first_failure AS (
+            SELECT project_id, stage, step,
+                ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY step) AS rn
+            FROM task
+            WHERE status = 'FAILED'
+        )
+        SELECT project_id, stage AS first_failed_stage, step AS first_failed_step
+        FROM first_failure
+        WHERE rn = 1
+        ORDER BY step
+        """
+    )
+    return pd.read_sql(sql, conn)
+
+
+def compute_stage_failure_summary(funnel_df: pd.DataFrame) -> pd.DataFrame:
+    """Count how many projects fail at each pipeline stage (first failure).
+
+    Columns: first_failed_stage, first_failed_step, n_projects, pct.
+    """
+    counts = (
+        funnel_df.groupby(["first_failed_stage", "first_failed_step"])
+        .size()
+        .reset_index(name="n_projects")
+        .sort_values("first_failed_step")
+        .reset_index(drop=True)
+    )
+    total = counts["n_projects"].sum()
+    counts["pct"] = (counts["n_projects"] / total * 100).round(1)
+    return counts
+
+
+def get_stage_failure_causes(conn: Connection, stage: str) -> pd.DataFrame:
+    """Root-cause breakdown for one pipeline stage's failures.
+
+    Columns: cause_snippet, n.
+    """
+    sql = text(
+        """
+        SELECT left(info, 80) AS cause_snippet, count(*) AS n
+        FROM task
+        WHERE stage = :stage AND status = 'FAILED'
+        GROUP BY cause_snippet
+        ORDER BY n DESC
+        """
+    )
+    return pd.read_sql(sql, conn, params={"stage": stage})
