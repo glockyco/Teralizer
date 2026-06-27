@@ -59,10 +59,49 @@ def parse_jqwik_value_log(path: str | Path) -> pd.DataFrame:
                     {
                         "trial_index": trial_index,
                         "parameter_name": parameter_name,
-                        "value": value,
+                        "value": _unescape_jqwik_value(value, value_path),
                     }
                 )
     return pd.DataFrame(rows, columns=["trial_index", "parameter_name", "value"])
+
+
+def _unescape_jqwik_value(value: str, value_path: Path) -> str:
+    chars: list[str] = []
+    index = 0
+    while index < len(value):
+        char = value[index]
+        if char != "\\":
+            chars.append(char)
+            index += 1
+            continue
+
+        index += 1
+        if index >= len(value):
+            raise ValueError(f"Malformed jqwik value escape in {value_path}: {value!r}")
+
+        escaped = value[index]
+        if escaped == "n":
+            chars.append("\n")
+        elif escaped == "r":
+            chars.append("\r")
+        elif escaped == "t":
+            chars.append("\t")
+        elif escaped == "\\":
+            chars.append("\\")
+        elif escaped == "u":
+            hex_digits = value[index + 1 : index + 5]
+            if len(hex_digits) != 4 or any(
+                digit not in "0123456789abcdefABCDEF" for digit in hex_digits
+            ):
+                raise ValueError(
+                    f"Malformed jqwik unicode escape in {value_path}: {value!r}"
+                )
+            chars.append(chr(int(hex_digits, 16)))
+            index += 4
+        else:
+            chars.append(escaped)
+        index += 1
+    return "".join(chars)
 
 
 def compute_parameter_value_coverage(values: pd.DataFrame) -> pd.DataFrame:
@@ -232,8 +271,20 @@ def get_scoreboard(
 
 
 def _jqwik_value_log_path(run: pd.Series) -> str:
+    data_path = Path(str(run["data_path"]))
+    if not data_path.is_absolute():
+        project_root_path = Path(str(run["project_root_path"]))
+        if project_root_path.is_absolute():
+            data_path = project_root_path / data_path
+        else:
+            project_data_path = Path.cwd() / project_root_path / data_path
+            data_path = (
+                project_data_path
+                if project_data_path.exists()
+                else Path.cwd() / data_path
+            )
     return str(
-        Path(str(run["data_path"]))
+        data_path
         / f"project-id-{int(run['project_id'])}"
         / "jqwik-data"
         / f"{int(run['generalization_id'])}.{run['variant']}.tsv"

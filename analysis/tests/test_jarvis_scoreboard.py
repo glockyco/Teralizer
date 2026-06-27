@@ -44,6 +44,20 @@ def test_parse_jqwik_value_log_and_compute_pvc(tmp_path):
     ]
 
 
+def test_parse_jqwik_value_log_unescapes_recorded_control_characters(tmp_path):
+    log_path = tmp_path / "7.NAIVE.tsv"
+    log_path.write_text("ch=\\u0000	tab=\\t	line=\\n	backslash=\\\\\n")
+
+    values = parse_jqwik_value_log(log_path)
+
+    assert values.to_dict("records") == [
+        {"trial_index": 0, "parameter_name": "ch", "value": "\u0000"},
+        {"trial_index": 0, "parameter_name": "tab", "value": "\t"},
+        {"trial_index": 0, "parameter_name": "line", "value": "\n"},
+        {"trial_index": 0, "parameter_name": "backslash", "value": "\\"},
+    ]
+
+
 def test_generated_test_runs_compute_stable_jqwik_value_paths(tmp_path):
     conn = sqlite3.connect(":memory:")
     try:
@@ -57,6 +71,102 @@ def test_generated_test_runs_compute_stable_jqwik_value_paths(tmp_path):
         ) == [{"project_id": 1, "generalization_id": 7, "variant": "NAIVE"}]
         assert runs.loc[0, "jqwik_value_log_path"] == str(
             tmp_path / "project-id-1" / "jqwik-data" / "7.NAIVE.tsv"
+        )
+    finally:
+        conn.close()
+
+
+def test_generated_test_runs_resolve_relative_data_path_from_project_root(tmp_path):
+    conn = sqlite3.connect(":memory:")
+    try:
+        create_scoreboard_schema(conn)
+        project_root = tmp_path / "fixture"
+        conn.execute(
+            "INSERT INTO project (id, root_path, data_path) VALUES (1, ?, 'data/run')",
+            (str(project_root),),
+        )
+        conn.execute(
+            """
+            INSERT INTO assertion (
+                id,
+                project_id,
+                assertion_name,
+                tested_method_call_arguments,
+                tested_class_qualified_name,
+                tested_method_name
+            ) VALUES (2, 1, 'assertTrue', '[]', 'smoke.Subject', 'contains')
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO generalization (
+                id, project_id, assertion_id, variant, class_name, method_name, is_included
+            ) VALUES (7, 1, 2, 'NAIVE', '_SubjectTest_Generalized', 'valueInsideInterval', 1)
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO junit_test_report (
+                project_id, generalization_id, stage, variant, test_class_name, test_method_name, result
+            ) VALUES (1, 7, 'COLLECT_JUNIT_REPORTS_GENERALIZED', 'NAIVE', '_SubjectTest_Generalized', 'valueInsideInterval', 'PASSED')
+            """
+        )
+        conn.commit()
+
+        runs = get_generated_test_runs(conn)
+
+        assert runs.loc[0, "jqwik_value_log_path"] == str(
+            project_root / "data/run" / "project-id-1" / "jqwik-data" / "7.NAIVE.tsv"
+        )
+    finally:
+        conn.close()
+
+
+def test_generated_test_runs_resolve_relative_data_path_from_working_directory_when_project_root_path_is_missing(
+    tmp_path, monkeypatch
+):
+    conn = sqlite3.connect(":memory:")
+    try:
+        create_scoreboard_schema(conn)
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+        (workspace / "data/run").mkdir(parents=True)
+        conn.execute(
+            "INSERT INTO project (id, root_path, data_path) VALUES (1, 'fixture', 'data/run')"
+        )
+        conn.execute(
+            """
+            INSERT INTO assertion (
+                id,
+                project_id,
+                assertion_name,
+                tested_method_call_arguments,
+                tested_class_qualified_name,
+                tested_method_name
+            ) VALUES (2, 1, 'assertTrue', '[]', 'smoke.Subject', 'contains')
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO generalization (
+                id, project_id, assertion_id, variant, class_name, method_name, is_included
+            ) VALUES (7, 1, 2, 'NAIVE', '_SubjectTest_Generalized', 'valueInsideInterval', 1)
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO junit_test_report (
+                project_id, generalization_id, stage, variant, test_class_name, test_method_name, result
+            ) VALUES (1, 7, 'COLLECT_JUNIT_REPORTS_GENERALIZED', 'NAIVE', '_SubjectTest_Generalized', 'valueInsideInterval', 'PASSED')
+            """
+        )
+        conn.commit()
+        monkeypatch.chdir(workspace)
+
+        runs = get_generated_test_runs(conn)
+
+        assert runs.loc[0, "jqwik_value_log_path"] == str(
+            workspace / "data/run" / "project-id-1" / "jqwik-data" / "7.NAIVE.tsv"
         )
     finally:
         conn.close()
