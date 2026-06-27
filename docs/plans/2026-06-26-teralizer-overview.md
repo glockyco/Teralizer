@@ -41,6 +41,7 @@ work that depends on a re-run is deferred until (1) lands.
 | `2026-06-26-applicability-barriers` | audit | RQ6 real-world applicability barrier evidence (inventory / funnel / ledger) | deferred — step (2) reference |
 | `2026-06-26-data-reuse-and-msr-potential` | note | secondary MSR / data-paper backlog | deferred, gated on (1) |
 | `2026-06-25-replication-package-documentation-improvements` | plan | verifiable replication package for ACM artifact eval | independent track |
+| `2026-06-27-teralizer-capability-and-improvement-directions` | audit | current capabilities, limitations, improvement directions (post-Phase 1) | reference |
 
 ## Win condition (summary)
 
@@ -53,5 +54,6 @@ and the metric definition live in `2026-06-26-beat-jarvis-phase1`; the current e
 ## Pointers
 
 - Repo conventions + commands: `AGENTS.md`. Planning index: `docs/plans/INDEX.md`.
+- Current capabilities, limitations, and improvement directions: `2026-06-27-teralizer-capability-and-improvement-directions` *(audit)*.
 - SPF spike harness + type-support study: `~/Projects/phd-thesis/projects/spf-eval/`.
 - JARVIS paper: `~/Downloads/vmcai2018-jarvis-extended.pdf` (Tables 1–2; §9 Interval bug case study).
