@@ -183,19 +183,19 @@ public class SpfToModelTransformer {
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.numeric.SymbolicInteger variable) {
-            String name = variable.getName().replaceAll("_\\d+_\\w+$", "");
+            String name = variable.getName().replaceAll("_\\d+_[A-Z]+$", "");
             this.stack.push(new VariableInteger(name));
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.numeric.SymbolicReal variable) {
-            String name = variable.getName().replaceAll("_\\d+_\\w+$", "");
+            String name = variable.getName().replaceAll("_\\d+_[A-Z]+$", "");
             this.stack.push(new VariableReal(name));
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.string.StringSymbolic variable) {
-            String name = variable.getName().replaceAll("_\\d+_\\w+$", "");
+            String name = variable.getName().replaceAll("_\\d+_[A-Z]+$", "");
             this.stack.push(new VariableString(name));
         }
 

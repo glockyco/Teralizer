@@ -23,6 +23,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.SpoonUtils;
+import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.util.Configuration;
 
 import java.io.File;
@@ -208,37 +209,40 @@ public class JpfInstrumentationTask extends AbstractTask {
             }
         }
 
-        for (int i = 0; i < testedMethod.getParameters().size(); i++) {
-            CtTypeReference<?> parameterType = testedMethod.getParameters().get(i).getType();
-            CtTypeReference<?> argumentType = testedMethodCall.getArguments().get(i).getType();
-
-            CtTypeReference<?> type;
-            if (!parameterType.isGenerics()) {
-                type = parameterType;
-            } else if (!(argumentType == null) && !(argumentType.toString().equals("<nulltype>"))) {
-                type = argumentType;
-            } else {
-                throw new RuntimeException(
-                    "Failed to identify valid type for parameter " + testedMethod.getParameters().get(i)
-                        + " of tested method " + this.assertionRecord.getTestedMethodQualifiedName()
-                        + " in test method " + this.testRecord.getTestMethodQualifiedName() + "."
-                );
-            }
-
+        List<GeneralizableInput> generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+        for (GeneralizableInput input : generalizableInputs) {
+            CtTypeReference<?> type = factory.Type().createReference(input.toMethodParameter().getType());
             type.setSimplyQualified(false);
             type.setImplicit(false);
 
-            for (CtAnnotation<?> annotation : type.getAnnotations()) {
-                annotation.getAnnotationType().setSimplyQualified(false);
-                annotation.getAnnotationType().setImplicit(false);
-            }
-
-            CtParameter<?> parameter = factory.createParameter(null, type, testedMethod.getParameters().get(i).getSimpleName());
+            CtParameter<?> parameter = factory.createParameter(null, type, input.toMethodParameter().getName());
             instrumentedParameters.add(parameter);
         }
 
         CtInvocation<?> instrumentedTestedMethodCall = testedMethodCall.clone();
-        List<CtExpression<?>> arguments = testedMethod.getParameters().stream().map(p -> factory.createCodeSnippetExpression(p.getSimpleName())).collect(Collectors.toList());
+        List<CtExpression<?>> arguments = new ArrayList<>();
+        for (int i = 0; i < testedMethodCall.getArguments().size(); i++) {
+            final int argumentIndex = i;
+            List<GeneralizableInput> inputsForArgument = generalizableInputs.stream()
+                .filter(input -> input.getMethodArgumentIndex() == argumentIndex)
+                .collect(Collectors.toList());
+            if (inputsForArgument.isEmpty()) {
+                arguments.add(testedMethodCall.getArguments().get(i).clone());
+            } else if (inputsForArgument.get(0).isConstructorArgument()) {
+                CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getArguments().get(i).clone();
+                List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
+                for (GeneralizableInput input : inputsForArgument) {
+                    constructorArguments.set(
+                        input.getConstructorArgumentIndex(),
+                        factory.createCodeSnippetExpression(input.toMethodParameter().getName())
+                    );
+                }
+                constructorCall.setArguments(constructorArguments);
+                arguments.add(constructorCall);
+            } else {
+                arguments.add(factory.createCodeSnippetExpression(inputsForArgument.get(0).toMethodParameter().getName()));
+            }
+        }
         instrumentedTestedMethodCall.setArguments(arguments);
         if (!testedMethod.isStatic()) {
             instrumentedTestedMethodCall.setTarget(factory.createCodeSnippetExpression(instrumentedParameters.get(0).getSimpleName()));
@@ -246,7 +250,6 @@ public class JpfInstrumentationTask extends AbstractTask {
 
         CtBlock<?> instrumentedBody = factory.createBlock();
         instrumentedBody.addStatement(factory.Code().createCodeSnippetStatement("return " + instrumentedTestedMethodCall));
-
         CtTypeReference<?> returnType = this.inferExpectedType(testedMethodCall);
         returnType.setSimplyQualified(false);
         returnType.setImplicit(false);
@@ -339,8 +342,9 @@ public class JpfInstrumentationTask extends AbstractTask {
                 instrumentedMethodCall.addArgument(target);
             }
         }
-        for (CtExpression<?> argument : testedMethodCall.getArguments()) {
-            instrumentedMethodCall.addArgument(argument);
+        List<GeneralizableInput> generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+        for (GeneralizableInput input : generalizableInputs) {
+            instrumentedMethodCall.addArgument(input.getSourceExpression());
         }
         return instrumentedMethodCall;
     }

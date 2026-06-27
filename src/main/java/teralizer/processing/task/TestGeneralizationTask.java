@@ -11,6 +11,7 @@ import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.*;
@@ -30,6 +31,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.SpoonUtils;
+import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.*;
 import teralizer.transformer.JsonToModelTransformer;
@@ -404,13 +406,29 @@ public class TestGeneralizationTask extends AbstractTask {
         CtMethod<?> testedMethod = (CtMethod<?>) testedMethodPath.evaluateOn(factory.getModel().getRootPackage()).get(0);
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
-        List<CtParameter<?>> params = testedMethod.getParameters();
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
 
         for (int i = 0; i < args.size(); i++) {
-            CtExpression<?> arg = args.get(i);
-            CtParameter<?> param = params.get(i);
-            if (Configuration.SUPPORTED_TYPES.contains(arg.getType().getSimpleName())) {
-                args.set(i, factory.Code().createCodeSnippetExpression("_p_." + param.getSimpleName()));
+            final int argumentIndex = i;
+            List<GeneralizableInput> inputsForArgument = inputs.stream()
+                .filter(input -> input.getMethodArgumentIndex() == argumentIndex)
+                .collect(Collectors.toList());
+            if (inputsForArgument.isEmpty()) {
+                continue;
+            }
+
+            if (inputsForArgument.get(0).isConstructorArgument()) {
+                CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) args.get(i);
+                List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
+                for (GeneralizableInput input : inputsForArgument) {
+                    constructorArguments.set(
+                        input.getConstructorArgumentIndex(),
+                        factory.Code().createCodeSnippetExpression("_p_." + input.toMethodParameter().getName())
+                    );
+                }
+                constructorCall.setArguments(constructorArguments);
+            } else {
+                args.set(i, factory.Code().createCodeSnippetExpression("_p_." + inputsForArgument.get(0).toMethodParameter().getName()));
             }
         }
 

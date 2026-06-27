@@ -35,7 +35,7 @@ Metric definition:
 - [x] Add #1 `char` and `boolean` support in `Configuration.SUPPORTED_TYPES`, generated value rendering, and boolean-return assertion rewriting.
 - [x] Add #11 a `FastMath` SPF model with JARVIS-case `abs(double)`, `min(double,double)`, `max(double,double)`, and `toIntExact(long)` compatibility.
 - [x] Fix #19 the `TestGeneralizationListener.writeSpecificationFiles` listener NPE.
-- [ ] Implement #3 object-construction inputs in `JpfInstrumentationTask`, scoped to fixed-arity inline construction with constructing-input generation.
+- [x] Implement #3 object-construction inputs in `JpfInstrumentationTask`, scoped to fixed-arity inline construction with constructing-input generation.
 - [x] Implement #18 exception-path capture in `TestGeneralizationListener` / `JpfExecutionTask` so SPF records thrown-exception specs instead of aborting the whole analysis.
 - [ ] Build the PVC/IC measurement harness around generated jqwik PBT values and per-test JaCoCo coverage for JARVIS Table-2 scoreboard runs.
 

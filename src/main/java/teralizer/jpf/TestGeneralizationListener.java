@@ -45,6 +45,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private int recursionDepth;
     private boolean isInInstrumentedMethod;
     private CapturedException pendingThrownException;
+    private List<MethodArgument> instrumentedInputArguments;
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -91,6 +92,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public void methodEntered(VM vm, ThreadInfo currentThread, MethodInfo enteredMethod) {
         if (this.instrumentedMethodSpec.matches(enteredMethod)) {
             this.isInInstrumentedMethod = true;
+            this.instrumentedInputArguments = this.captureConcreteArguments(currentThread);
         }
         if (this.testedMethodSpec.matches(enteredMethod)) {
             LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
@@ -128,12 +130,9 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
         LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
 
-        List<MethodArgument> concreteInputArguments = new ArrayList<>();
-        String[] concreteInputTypes = currentThread.getTopFrameMethodInfo().getArgumentTypeNames();
-        Object[] concreteInputValues = currentThread.getTopFrame().getArgumentValues(currentThread);
-        for (int i = 0; i < concreteInputValues.length; i++) {
-            concreteInputArguments.add(new MethodArgument(concreteInputTypes[i], concreteInputValues[i].toString()));
-        }
+        List<MethodArgument> concreteInputArguments = this.instrumentedInputArguments == null
+            ? this.captureConcreteArguments(currentThread)
+            : this.instrumentedInputArguments;
 
         Constraint spfInput = pathCondition == null ? null : pathCondition.header;
 
@@ -231,6 +230,16 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private List<MethodArgument> captureConcreteArguments(ThreadInfo currentThread) {
+        List<MethodArgument> concreteArguments = new ArrayList<>();
+        String[] concreteTypes = currentThread.getTopFrameMethodInfo().getArgumentTypeNames();
+        Object[] concreteValues = currentThread.getTopFrame().getArgumentValues(currentThread);
+        for (int i = 0; i < concreteValues.length; i++) {
+            concreteArguments.add(new MethodArgument(concreteTypes[i], String.valueOf(concreteValues[i])));
+        }
+        return concreteArguments;
     }
 
     private CapturedException captureException(ThreadInfo currentThread, ElementInfo thrownException) {

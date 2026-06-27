@@ -23,6 +23,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.analysis.GeneralizableInput;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -112,22 +113,30 @@ public class TestAnalysisTask extends AbstractTask {
             record.setAssertionRelativePath(assertionCall.getPath().relativePath(testMethod).toString());
 
             CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertionCall).orElse(null);
-
             if (testedMethodCall != null) {
+                CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+                List<GeneralizableInput> generalizableInputs = testedMethod == null
+                    ? null
+                    : GeneralizableInput.derive(testedMethod, testedMethodCall);
                 List<MethodArgument> methodArguments = new ArrayList<>();
-                for (CtExpression<?> argument : testedMethodCall.getArguments()) {
-                    String argType = argument.getType().getQualifiedName();
-                    String argValue = argument.toString();
-                    methodArguments.add(new MethodArgument(argType, argValue));
+                if (generalizableInputs == null) {
+                    for (CtExpression<?> argument : testedMethodCall.getArguments()) {
+                        String argType = argument.getType().getQualifiedName();
+                        String argValue = argument.toString();
+                        methodArguments.add(new MethodArgument(argType, argValue));
+                    }
+                } else {
+                    for (GeneralizableInput input : generalizableInputs) {
+                        methodArguments.add(input.toMethodArgument());
+                    }
                 }
-
                 record.setTestedMethodName(testedMethodCall.getExecutable().getSimpleName());
                 record.setTestedMethodCallArguments(gson.toJson(methodArguments));
                 record.setTestedMethodCallSourceCode(testedMethodCall.toString());
                 record.setTestedMethodCallAbsolutePath(testedMethodCall.getPath().toString());
                 record.setTestedMethodCallRelativePath(testedMethodCall.getPath().relativePath(testMethod).toString());
 
-                CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+
                 CtType<?> testedType = testedMethod == null ? null : testedMethod.getDeclaringType();
 
                 if (testedMethod != null && testedType != null) {
@@ -142,10 +151,16 @@ public class TestAnalysisTask extends AbstractTask {
                     String qualifiedMethodName = qualifiedClassName + "." + methodName;
 
                     List<MethodParameter> testedMethodParameters = new ArrayList<>();
-                    for (CtParameter<?> param : testedMethod.getParameters()) {
-                        String paramType = param.getType().getQualifiedName();
-                        String paramName = param.getSimpleName();
-                        testedMethodParameters.add(new MethodParameter(paramType, paramName));
+                    if (generalizableInputs == null) {
+                        for (CtParameter<?> param : testedMethod.getParameters()) {
+                            String paramType = param.getType().getQualifiedName();
+                            String paramName = param.getSimpleName();
+                            testedMethodParameters.add(new MethodParameter(paramType, paramName));
+                        }
+                    } else {
+                        for (GeneralizableInput input : generalizableInputs) {
+                            testedMethodParameters.add(input.toMethodParameter());
+                        }
                     }
 
                     record.setTestedFilePath(testedClassPath);
