@@ -15,7 +15,7 @@ Run Teralizer on a pinned JARVIS-era fixture and compare generated jqwik tests w
 ## Definitions
 
 - **Table row:** one row in JARVIS paper Table 2. The scoreboard has **10** rows.
-- **Probe:** one Teralizer/SPF target method. The scoreboard has **11** probes because `FastMathTest::testMinMaxDouble` is one JARVIS row but covers both `FastMath.min(double,double)` and `FastMath.max(double,double)`.
+- **Probe:** one assertion-level Teralizer target. The current scorecard has **14** probes because positive/negative assertions and PolynomialFunction variants stay separate, and `FastMathTest::testMinMaxDouble` covers both `FastMath.min(double,double)` and `FastMath.max(double,double)`.
 - **Capability:** a Table row enters the Teralizer pipeline when its fixture test reaches specification collection for every probe needed by that row.
 - **PVC:** sum of distinct generated jqwik values per tested method parameter, using the same tries budget as JARVIS's ScalaCheck default unless a row-specific concession is recorded.
 - **IC:** generated-test instruction coverage from the fresh JARVIS fixture run. Per-probe IC is valid only when the fixture isolates that probe as its own scratch project; otherwise report the available class/project-level JaCoCo unit with an explicit conflation note.
@@ -80,7 +80,7 @@ Do not add JARVIS configs under `project-configs/primary/`; the primary replicat
 
 - A fresh checkout can reproduce the scorecard setup without reading mutable sibling project worktrees except as optional source mirrors.
 - Documented commands include a preflight that verifies the resolved `DB_NAME` and refuses `postgres_dev`, `postgres_test`, and `_replication` targets before the Java process starts.
-- The audit distinguishes 10 JARVIS Table rows from 11 Teralizer probes.
+- The audit distinguishes 10 JARVIS Table rows from 14 assertion-level Teralizer probes.
 - Every numeric PVC/IC claim in the audit is backed by a generated CSV/table path or a logged SQL/query command.
 - Every concession is attached to a concrete cause: Teralizer front-end gap, SPF model gap, JARVIS/shared sampling gap, or intentional paradigm mismatch.
 - `omp-plans check`, the focused Java tests touched by implementation, and `uv run --directory analysis pytest tests/test_jarvis_scoreboard.py -q` pass before any claim is updated.

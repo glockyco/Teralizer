@@ -1,9 +1,10 @@
 ---
 title: JARVIS Scoreboard Evidence Run
 type: plan
-status: active
+status: implemented
 created: 2026-06-27
 parent: 2026-06-27-jarvis-scoreboard-evaluation-lane
+archived: 2026-06-27
 ---
 
 The ordered work to produce a cited JARVIS Table-2 head-to-head result from the clean evaluation lane.
@@ -16,11 +17,11 @@ Produce evidence for the "beat JARVIS" claim by running Teralizer on pinned JARV
 
 Acceptance criteria:
 
-- The run distinguishes **10 JARVIS Table-2 rows** from **11 Teralizer probes** (`FastMathTest::testMinMaxDouble` splits into `min` and `max` probes).
+- The run distinguishes **10 JARVIS Table-2 rows** from **14 assertion-level Teralizer probes** (positive/negative assertions and PolynomialFunction variants stay separate; `FastMathTest::testMinMaxDouble` splits into `min` and `max` probes).
 - The primary comparison fixture is pinned to JARVIS-era or checksummed source artifacts, not modern HEAD snapshots or mutable sibling worktrees.
 - Teralizer runs use scratch database `postgres_jarvis_scoreboard`, `DATASET_VARIANT=jarvis`, and scratch data path `data/jarvis-scoreboard`; no command writes to `postgres_dev`, `postgres_test`, or their replication copies.
 - `docs/plans/2026-06-26-jarvis-case-coverage.md` contains per-row PVC numbers, IC numbers at the available project/probe isolation unit, provenance, and an explicit win/loss/blocker/concession note for each Table-2 row.
-- `docs/plans/2026-06-26-teralizer-overview.md` points at this spec/plan pair and states the same 10-row / 11-probe denominator.
+- `docs/plans/2026-06-26-teralizer-overview.md` points at this spec/plan pair and states the same 10-row / 14-assertion-probe denominator.
 
 ## Decisions
 
@@ -45,13 +46,13 @@ Acceptance criteria:
 
 ## Tasks
 
-- [ ] Pin the primary comparison fixture: record Commons Math `MATH_3_5` / `b3c5dae8f253fcb4484e5cd3cc5662587803efc2`, Commons Lang `LANG_3_5` / `36f98d87b24c2f542b02abbf6ec1ee742f1b158b`, classify every external path as reference-only or execution input, and update the audit before running anything.
-- [ ] Add the scratch evaluation namespace: create `project-configs/jarvis-scoreboard/` configs and any fixture-prep/runner scripts needed to materialize ignored scratch projects from the recorded pins without touching committed `projects/` submodules.
-- [ ] Prove DB/data isolation: create/reset `postgres_jarvis_scoreboard`, run a preflighted dry or minimal command with `DB_NAME=postgres_jarvis_scoreboard DATA_DIR=data/jarvis-scoreboard`, and verify no command path targets `postgres_dev`, `postgres_test`, or `_replication` databases.
-- [ ] Execute the JARVIS scorecard variants for `BASELINE`, `NAIVE`, and `IMPROVED` on the pinned fixture; use the JARVIS tries budget for `NAIVE` and `IMPROVED`, and record jqwik's fixed `seed=0`.
-- [ ] Aggregate PVC and IC results from the scratch jqwik value logs and scratch JaCoCo rows; preserve per-probe IC by fixture isolation where needed, or record class-level conflation explicitly.
-- [ ] Update `docs/plans/2026-06-26-jarvis-case-coverage.md` with the chosen corpus, numeric PVC/IC results or blockers, exact provenance, and a win/loss/blocker/concession summary for each of the 10 Table-2 rows.
-- [ ] Decide whether the evidence supports the overview's "beat JARVIS" claim; if yes, archive this plan and refresh the overview focus, otherwise record the precise blocking gap and spin the next plan from that gap.
+- [x] Pin the primary comparison fixture: record Commons Math `MATH_3_5` / `b3c5dae8f253fcb4484e5cd3cc5662587803efc2`, Commons Lang `LANG_3_5` / `36f98d87b24c2f542b02abbf6ec1ee742f1b158b`, classify every external path as reference-only or execution input, and update the audit before running anything.
+- [x] Add the scratch evaluation namespace: create `project-configs/jarvis-scoreboard/` configs and any fixture-prep/runner scripts needed to materialize ignored scratch projects from the recorded pins without touching committed `projects/` submodules.
+- [x] Prove DB/data isolation: create/reset `postgres_jarvis_scoreboard`, run a preflighted dry or minimal command with `DB_NAME=postgres_jarvis_scoreboard DATA_DIR=data/jarvis-scoreboard`, and verify no command path targets `postgres_dev`, `postgres_test`, or `_replication` databases.
+- [x] Execute the JARVIS scorecard variants for `BASELINE`, `NAIVE`, and `IMPROVED` on the pinned fixture; use the JARVIS tries budget for `NAIVE` and `IMPROVED`, and record jqwik's fixed `seed=0`.
+- [x] Aggregate PVC and IC results from the scratch jqwik value logs and scratch JaCoCo rows; preserve per-probe IC by fixture isolation where needed, or record class-level conflation explicitly.
+- [x] Update `docs/plans/2026-06-26-jarvis-case-coverage.md` with the chosen corpus, numeric PVC/IC results or blockers, exact provenance, and a win/loss/blocker/concession summary for each of the 10 Table-2 rows.
+- [x] Decide whether the evidence supports the overview's "beat JARVIS" claim; if yes, archive this plan and refresh the overview focus, otherwise record the precise blocking gap and spin the next plan from that gap.
 
 ## Validation strategy
 

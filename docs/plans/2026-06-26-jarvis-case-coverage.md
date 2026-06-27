@@ -161,6 +161,37 @@ supporting evidence for why the existing evaluation database cannot prove the cl
      object construction (Interval, PolynomialFunction, UnivariateFunction). Plus the
      double/float bounds-bug fix in the SPF wrapper, which Precision-style double comparisons need anyway.
 
+## Scoreboard run output (2026-06-27)
+
+Run inputs:
+
+- Fixture materializer: `scripts/prepare-jarvis-scoreboard-fixtures.sh`.
+- Source pins: Commons Math `MATH_3_5` / `b3c5dae8f253fcb4484e5cd3cc5662587803efc2`; Commons Lang `LANG_3_5` / `36f98d87b24c2f542b02abbf6ec1ee742f1b158b`.
+- Runner: `scripts/run-jarvis-scoreboard.sh` with `DB_NAME=postgres_jarvis_scoreboard`, `DATA_DIR=data/jarvis-scoreboard`, `DATASET_VARIANT=jarvis`.
+- Scratch outputs: ignored `data/jarvis-scoreboard/` tree and scratch DB `postgres_jarvis_scoreboard`; no `postgres_dev`, `postgres_test`, or `_replication` target was used.
+- Score query: `analysis/src/teralizer/jarvis_scoreboard.py::get_scoreboard(conn, variants=["NAIVE", "IMPROVED"])`, with probe names joined from `test.test_method_name`.
+
+Current result: **claim not supported yet**. The run gives PVC/IC evidence for 7 of the 10 Table-2 rows, but `Interval.getSize()` is still filtered before generalization because receiver-constructor arguments are not promoted into method parameters, and `Abs`/`Precision` generated tests fail as expected from the SPF raw-bits blockers.
+
+| Table row / probe | Status | NAIVE PVC / trials | IMPROVED PVC / trials | IC unit | Cause / note |
+|---|---:|---:|---:|---:|---|
+| `CharUtilsTest::isAscii` / `assertTrue` | pass | 68 / 300 | 68 / 300 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
+| `CharUtilsTest::isAscii` / `assertFalse` | pass | 92 / 300 | 100 / 300 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
+| `CharUtilsTest::isPrintable` / `assertTrue` | pass | 60 / 504 | 60 / 401 | Lang project: 105 / 67,637 instr. | `char` pipeline works; jqwik stops after configured tries plus shrink/edge behavior. |
+| `CharUtilsTest::isPrintable` / `assertFalse` | pass | 32 / 300 | 32 / 400 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
+| `FastMathTest::testMinMaxDouble` / `min` | pass | 131 / 600 | 106 / 600 | Math project: 987 / 342,114 instr. | NaN/signed-zero concession remains. |
+| `FastMathTest::testMinMaxDouble` / `max` | pass | 131 / 600 | 106 / 600 | Math project: 987 / 342,114 instr. | NaN/signed-zero concession remains. |
+| `FastMathTest::toIntExact` | pass | 91 / 600 | 91 / 600 | Math project: 987 / 342,114 instr. | Overflow exception path remains a concession. |
+| `PolynomialFunctionTest::testConstants` | pass | 91 / 1100 | 91 / 1100 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
+| `PolynomialFunctionTest::testLinear` | pass | 91 / 1200 | 91 / 1200 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
+| `PolynomialFunctionTest::testfirstDerivativeComparison` | pass | 90 / 1600 | 90 / 1600 | Math project: 987 / 342,114 instr. | Derivative object flow reaches generated tests. |
+| `IntervalTest::getSize` | blocked before generation | — | — | — | `ParameterTypeFilter`: tested method has no parameters; receiver-constructor inputs are not yet generalizable method parameters. |
+| `UnivariateFunctionTest::testAbs` | generated test fails | — | — | — | Expected raw-bits/`FastMath.abs` SPF gap; `generalization.is_included=false`. |
+| `PrecisionTest` / `assertTrue` | generated test fails | — | — | — | Expected `doubleToRawLongBits`/ulps gap; `generalization.is_included=false`. |
+| `PrecisionTest` / `assertFalse` | generated test fails | — | — | — | Expected `doubleToRawLongBits`/ulps gap; `generalization.is_included=false`. |
+
+The 10 JARVIS rows therefore compress the 14 assertion-level probes as follows: CharUtils rows pass, FastMath min/max passes under the NaN/signed-zero concession, `toIntExact` passes under the overflow concession, PolynomialFunction rows pass, `Interval` is a Teralizer front-end blocker, and `Abs`/`Precision` remain SPF model blockers.
+
 ## Spike results
 
 First-hand by an unbiased SPF investigator against the pinned stack; full report:
