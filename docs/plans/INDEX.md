@@ -12,4 +12,8 @@
 - **Mutation-Based MUT Identification** [spec] `2026-06-27-mutation-based-mut-identification` ← 2026-06-26-teralizer-overview
 - **Teralizer Capability & Improvement Directions** [audit] `2026-06-27-teralizer-capability-and-improvement-directions` ← 2026-06-26-teralizer-overview
 
+## draft
+
+- **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
+
 _8 archived — see `docs/plans/archive/`._

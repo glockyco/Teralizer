@@ -43,6 +43,7 @@ work that depends on a re-run is deferred until (1) lands.
 | `2026-06-25-replication-package-documentation-improvements` | plan | verifiable replication package for ACM artifact eval | independent track |
 | `2026-06-27-teralizer-capability-and-improvement-directions` | audit | current capabilities, limitations, improvement directions (post-Phase 1) | reference |
 | `2026-06-27-mutation-based-mut-identification` | spec | mutation-data-driven focal-method oracle for MUT identification | applicability track |
+| `2026-06-27-inherited-test-method-support` | spec | flatten inherited `@Test` methods into Spoon clones so 5,758 dropped tests parse | backlog |
 
 ## Win condition (summary)
 

@@ -237,6 +237,14 @@ String/array/object inputs (#2) → symbolic array length (#20) → void returns
 (#14). These hit the loop/summarization research wall; net gain is low until
 stateful setup lands.
 
+**Inherited test-method support** — 5,758 tests across 52 projects are dropped
+at `COLLECT_JUNIT_REPORTS_ORIGINAL` because `getMethodsByName` only searches
+declared methods, not inherited ones. Every downstream Spoon stage breaks for
+the same reason. The fix is to flatten inherited `@Test` and lifecycle methods
+into the cloned class at clone time. Non-trivial (architectural change to
+`SpoonUtils.cloneClass`, affects 3 downstream tasks) but well-scoped. Spec:
+`2026-06-27-inherited-test-method-support`.
+
 ### Tier 4 — research / deep (gated)
 
 - **#17 QF_FP/NaN** — needs QF_FP threaded through ~40 solver methods. HIGH
