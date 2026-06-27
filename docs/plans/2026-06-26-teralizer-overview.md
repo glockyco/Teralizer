@@ -47,8 +47,8 @@ work that depends on a re-run is deferred until (1) lands.
 
 ## Win condition (summary)
 
-"Beat JARVIS" = **capability** (10 JARVIS Table-2 rows entering the pipeline; the current evidence run tracks 14 assertion-level Teralizer probes) **+ PVC/IC**
-(parameter-value & instruction coverage ≥ JARVIS on SPF-amenable cases). Current run status: evidence collected and claim decision pending; all 14 assertion-level probes pass after receiver-constructor input promotion and the SPF model classpath fix. Remaining explicit concessions are row-scoped: NaN/signed-zero for min/max, the `toIntExact` overflow path, and any future pure `Precision.equals(double,double,int maxUlps)` fixture. Full criteria
+"Beat JARVIS" = **capability** (10 JARVIS Table-2 rows entering the pipeline; the current evidence run tracks 14 assertion-level Teralizer probes, plus one separate non-Table-2 maxUlps spike) **+ transparent PVC**.
+Current run status: all 10 Table-2 rows enter and all generated tests pass. Under Teralizer's jqwik-input PVC metric, IMPROVED wins 5/10 row aggregates and loses 5/10; the losses are generator/metric-shape differences, not SPF blockers. IC is retained as a sanity check only because the current project-level JaCoCo rows conflate all generated probes; the observed Math IC increase comes entirely from the separate maxUlps probe in `Precision.equals(double,double,int)`. Remaining explicit concessions are row-scoped: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria
 and the metric definition live in `2026-06-26-beat-jarvis-phase1`; the active evidence lane is `2026-06-27-jarvis-scoreboard-evaluation-lane`, using the archived receiver-input and evidence-run plans plus the live `2026-06-26-jarvis-case-coverage` audit.
 
 ## Pointers

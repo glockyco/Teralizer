@@ -171,26 +171,30 @@ Run inputs:
 - Scratch outputs: ignored `data/jarvis-scoreboard/` tree and scratch DB `postgres_jarvis_scoreboard`; no `postgres_dev`, `postgres_test`, or `_replication` target was used.
 - Score query: `analysis/src/teralizer/jarvis_scoreboard.py::get_scoreboard(conn, variants=["NAIVE", "IMPROVED"])`, with probe names joined from `test.test_method_name`.
 
-Current result: **claim not decided yet**. The run gives PVC/IC evidence for all 10 Table-2 rows, represented as 14 assertion-level probes. `Interval.getSize()` passes after promoting inline receiver-constructor arguments into generated parameters. `Abs` passes once the SPF model classpath is prepended, and `Precision.equals(double,double,double)` passes for the Table-2 eps fixture. The pure `maxUlps` overload is now covered by the separate `2026-06-27-spf-ulps-raw-bits-spike` fixture, not by the Table-2 scorecard row.
+Current result: **capability passes; PVC is mixed under a transparent Teralizer input-value metric**. All 10 Table-2 rows enter the pipeline and all generated tests pass. The Table-2 rows are represented as 14 assertion-level Teralizer probes; the pure `Precision.equals(double,double,int maxUlps)` fixture is a separate non-Table-2 spike probe. Under the current scorecard's jqwik-input PVC (sum of distinct generated values per generated test parameter, 100 checks per generated property), IMPROVED beats JARVIS on 5/10 row aggregates and loses on 5/10. Those losses are generator/metric-shape losses, not SPF or generated-test failures.
 
-| Table row / probe | Status | NAIVE PVC / trials | IMPROVED PVC / trials | IC unit | Cause / note |
+JARVIS Table 2 used ScalaCheck's default of 100 tests **per generated PBT**, and the paper's Fig. 2/Fig. 4 examples show multiple abstraction-based generators/properties for a scenario (positive/negative regions and preserved parameterization nuances). Some Table-2 PVC values cannot be produced by a single 100-check, one-parameter PBT (`UnivariateFunctionTest::testAbs` reports PVC 506 for a `double` space), so the honest comparison must report both the number of generated Teralizer probes and the PVC value, not collapse everything into an unqualified win/loss.
+
+| Table row | Teralizer probes | JARVIS PBT PVC | NAIVE PVC / checks | IMPROVED PVC / checks | Result / note |
 |---|---:|---:|---:|---:|---|
-| `CharUtilsTest::isAscii` / `assertTrue` | pass | 68 / 900 | 68 / 900 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
-| `CharUtilsTest::isAscii` / `assertFalse` | pass | 92 / 900 | 100 / 900 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
-| `CharUtilsTest::isPrintable` / `assertTrue` | pass | 60 / 1512 | 60 / 1203 | Lang project: 105 / 67,637 instr. | `char` pipeline works; jqwik stops after configured tries plus shrink/edge behavior. |
-| `CharUtilsTest::isPrintable` / `assertFalse` | pass | 32 / 900 | 32 / 1200 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
-| `FastMathTest::testMinMaxDouble` / `min` | pass | 133 / 1202 | 196 / 2800 | Math project: 987 / 342,114 instr. | NaN/signed-zero concession remains. |
-| `FastMathTest::testMinMaxDouble` / `max` | pass | 141 / 1213 | 112 / 1204 | Math project: 987 / 342,114 instr. | NaN/signed-zero concession remains. |
-| `FastMathTest::toIntExact` | pass | 98 / 1205 | 197 / 1800 | Math project: 987 / 342,114 instr. | Overflow exception path remains a concession. |
-| `PolynomialFunctionTest::testConstants` | pass | 222 / 2800 | 92 / 3400 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
-| `PolynomialFunctionTest::testLinear` | pass | 181 / 3800 | 197 / 3000 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
-| `PolynomialFunctionTest::testfirstDerivativeComparison` | pass | 91 / 4000 | 91 / 3202 | Math project: 987 / 342,114 instr. | Derivative object flow reaches generated tests. |
-| `IntervalTest::getSize` | pass | 72 / 302 | 72 / 302 | Math project: 987 / 342,114 instr. | Receiver-constructor input support works for inline `new Interval(lower, upper).getSize()`. |
-| `UnivariateFunctionTest::testAbs` | pass | 223 / 1004 | 184 / 1004 | Math project: 1007 / 341,107 instr. | `FastMath.abs` model is reachable through the prepended SPF model classpath. |
-| `PrecisionTest` / `assertTrue` | pass | 246 / 2110 | 251 / 2121 | Math project: 1007 / 341,107 instr. | Table-2 eps fixture follows the arithmetic `FastMath.abs(y - x) <= eps` branch. |
-| `PrecisionTest` / `assertFalse` | pass | 229 / 2190 | 230 / 2190 | Math project: 1007 / 341,107 instr. | Table-2 eps fixture rejects values outside the allowed absolute error. |
+| `CharUtilsTest::isAscii` | 2 | 59 | 160 / 200 | 168 / 200 | Teralizer wins; `char` pipeline works. |
+| `CharUtilsTest::isPrintable` | 2 | 45 | 92 / 200 | 92 / 200 | Teralizer wins; JARVIS paper says the original loop had higher PVC than its PBT and exposed a copy-paste bug. |
+| `FastMathTest::testMinMaxDouble` | 2 | 400 | 262 / 200 | 256 / 200 | Teralizer loses on PVC; jqwik produces duplicates under the 100-check budget, while JARVIS aggregates its two generated PBTs at the table-row level. NaN/signed-zero caveat remains shared. |
+| `FastMathTest::toIntExact` | 1 | 65 | 91 / 100 | 91 / 100 | Teralizer wins on PVC; overflow exception path remains a concession. |
+| `IntervalTest` | 1 | 2 | 72 / 100 | 72 / 100 | Teralizer wins on PVC; bug-finding is intentionally not claimed because Teralizer's oracle is path-exact and does not overapproximate. |
+| `PolynomialFunctionTest::testConstants` | 1 | 105 | 91 / 100 | 91 / 100 | Teralizer loses narrowly on PVC; constructor/array input support works. |
+| `PolynomialFunctionTest::testLinear` | 1 | 264 | 91 / 100 | 91 / 100 | Teralizer loses on PVC; JARVIS likely aggregates multiple sampling components for the row. |
+| `PolynomialFunctionTest::testfirstDerivativeComparison` | 1 | 160 | 90 / 100 | 90 / 100 | Teralizer loses on PVC; derivative object flow reaches generated tests. |
+| `PrecisionTest` (`eps`) | 2 | 102 | 422 / 200 | 422 / 200 | Teralizer wins on Table-2 eps PVC; branch follows `FastMath.abs(y - x) <= eps`. |
+| `UnivariateFunctionTest::testAbs` | 1 | 506 | 91 / 100 | 95 / 100 | Teralizer loses on PVC; 506 exceeds a one-parameter 100-check maximum, so this is a different aggregation unit. |
 
-The 10 JARVIS rows therefore compress the 14 assertion-level probes as all generated tests passing. The remaining caveats are row-specific concessions rather than generated-test blockers: FastMath min/max still carry the shared NaN/signed-zero caveat, and `toIntExact` still lacks the overflow exception path. The pure `Precision.equals(double,double,int maxUlps)` overload is tracked as a separate spike probe because it exercises raw IEEE-754 bit reinterpretation rather than the Table-2 eps predicate.
+Separate non-Table-2 probe: `Precision.equals(double,double,int maxUlps)` passes as one generated `assertFalse` probe. PVC is 111 / 100 for NAIVE and 60 / 100 for IMPROVED. Keep this outside the Table-2 aggregate because it exercises raw IEEE-754 bit reinterpretation rather than the paper's eps row.
+
+IC is recorded as a sanity check, not the headline metric for Teralizer. Lang is unchanged across ORIGINAL, INITIAL, BASELINE, NAIVE, and IMPROVED: 105 / 67,637 instructions. Math ORIGINAL and INITIAL are 987 / 342,114 instructions; BASELINE is also 987 / 342,114; NAIVE and IMPROVED are 1025 / 342,114. The entire +38 instruction / +8 line / +6 branch delta is `org.apache.commons.math3.util.Precision`, caused by the extra non-Table-2 maxUlps probe covering the opposite-sign overflow branch in `Precision.equals(double,double,int)`: lines 372–383 in the JaCoCo HTML, with line 388 partially covered. Do not use this project-level IC number as a Table-2 win claim unless per-probe JaCoCo is added or the non-Table-2 probe is excluded from that run.
+
+The IMPROVED generator is still conservative. It encodes extractable one-variable bounds into jqwik `between(...)` calls and now uses a bound-derived `BigDecimal` scale instead of the old global `ofScale(325)` workaround, but it still retains the full `filter(inputJava)` guard whenever an input predicate exists. The attempted shortcut of removing the filter when all counted constraints were "used" was unsound for `char` predicates; it let `Arbitraries.chars()` violate `CharUtils.isAscii*` preconditions. Real by-construction generation needs residual-predicate tracking: remove only the predicate fragments proven to be encoded in arbitraries, keep the rest.
+
+The 10 JARVIS rows therefore compress the 14 assertion-level probes as all generated tests passing, with a 5/10 PVC win under the current transparent input-value metric. The remaining caveats are row-specific concessions rather than generated-test blockers: FastMath min/max still carry the shared NaN/signed-zero caveat, `toIntExact` still lacks the overflow exception path, and pure maxUlps remains a separate raw-bits lane.
 
 ## Spike results
 
