@@ -33,7 +33,7 @@ Metric definition:
 
 - [x] Confirm #10 double/float bounds are irrelevant to Teralizer collect-constraints mode and leave jpf-symbc solver bounds unchanged for Phase 1.
 - [x] Add #1 `char` and `boolean` support in `Configuration.SUPPORTED_TYPES`, generated value rendering, and boolean-return assertion rewriting.
-- [ ] Add #11 a `FastMath.abs` SPF model in the jpf-symbc model classes using the existing native-math model pattern.
+- [x] Add #11 a `FastMath` SPF model with JARVIS-case `abs(double)`, `min(double,double)`, `max(double,double)`, and `toIntExact(long)` compatibility.
 - [ ] Fix #19 the `TestGeneralizationListener.writeSpecificationFiles` listener NPE.
 - [ ] Implement #3 object-construction inputs in `JpfInstrumentationTask`, scoped to fixed-arity inline construction with constructing-input generation.
 - [ ] Implement #18 exception-path capture in `TestGeneralizationListener` / `JpfExecutionTask` so SPF records thrown-exception specs instead of aborting the whole analysis.
