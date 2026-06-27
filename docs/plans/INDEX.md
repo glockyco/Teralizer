@@ -11,4 +11,8 @@
 - **JARVIS Scoreboard Evidence Run** [plan] `2026-06-27-jarvis-scoreboard-evidence-run` (0/7) ← 2026-06-27-jarvis-scoreboard-evaluation-lane
 - **Teralizer Capability & Improvement Directions** [audit] `2026-06-27-teralizer-capability-and-improvement-directions` ← 2026-06-26-teralizer-overview
 
+## draft
+
+- **Mutation-Based MUT Identification** [spec] `2026-06-27-mutation-based-mut-identification` ← 2026-06-26-teralizer-overview
+
 _8 archived — see `docs/plans/archive/`._
