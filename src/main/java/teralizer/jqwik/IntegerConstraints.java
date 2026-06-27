@@ -61,6 +61,10 @@ public class IntegerConstraints implements VariableConstraints {
         this.lowerBounds.add(name + (isIncluded ? "" : "+1"));
     }
 
+    public void addLowerBoundExpression(String expression) {
+        this.lowerBounds.add(expression);
+    }
+
     public List<String> getLowerBounds() {
         return this.lowerBounds;
     }
@@ -71,6 +75,10 @@ public class IntegerConstraints implements VariableConstraints {
 
     public void addVariableUpperBound(String name, boolean isIncluded) {
         this.upperBounds.add(name + (isIncluded ? "" : "-1"));
+    }
+
+    public void addUpperBoundExpression(String expression) {
+        this.upperBounds.add(expression);
     }
 
     public List<String> getUpperBounds() {

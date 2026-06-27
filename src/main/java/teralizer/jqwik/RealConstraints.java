@@ -73,6 +73,10 @@ public class RealConstraints implements VariableConstraints {
         this.lowerBounds.add(new RealBound(name, isIncluded));
     }
 
+    public void addLowerBoundExpression(String expression, boolean isIncluded) {
+        this.lowerBounds.add(new RealBound(expression, isIncluded));
+    }
+
     public List<RealBound> getLowerBounds() {
         return this.lowerBounds;
     }
@@ -83,6 +87,10 @@ public class RealConstraints implements VariableConstraints {
 
     public void addVariableUpperBound(String name, boolean isIncluded) {
         this.upperBounds.add(new RealBound(name, isIncluded));
+    }
+
+    public void addUpperBoundExpression(String expression, boolean isIncluded) {
+        this.upperBounds.add(new RealBound(expression, isIncluded));
     }
 
     public List<RealBound> getUpperBounds() {

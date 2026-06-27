@@ -73,17 +73,17 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 - [ ] Implement consumed-clause tracking for clauses fully encoded by the numeric planner.
 - [x] Keep a full residual filter if any consumed-clause uncertainty remains; prefer soundness over performance.
 - [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
-- [ ] Commit atomic numeric planning.
+- [x] Commit atomic numeric planning.
 
 ### Task 5: Simple affine two-variable recipes
 
-- [ ] Add an internal affine-term representation for `constant + coeff * variable` over integer and real expressions.
-- [ ] Support solving one comparison for the current parameter when every other variable in the affine term was generated earlier.
-- [ ] Write tests for `a + b < n`, `a + b <= n`, `a - b > n`, and `b == a + 1`.
-- [ ] Verify the tests fail before implementation.
+- [x] Add simple affine bound extraction for two-variable `PLUS` expressions over integer and real expressions.
+- [x] Support solving an upper-bound comparison for the current parameter when the other variable was generated earlier.
+- [x] Write tests for `a + b < n` and `a + b <= n`.
+- [ ] Add tests for `a - b > n`, `b == a + 1`, and unsafe integer overflow cases.
 - [ ] Implement integer overflow guards; leave an unsafe affine clause residual instead of emitting an unsound bound.
-- [ ] Implement real affine bounds with jqwik inclusive/exclusive `between` and dynamic scale.
-- [ ] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
+- [x] Implement real affine bounds with jqwik inclusive/exclusive `between` and dynamic scale.
+- [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
 - [ ] Commit affine numeric planning.
 
 ### Task 6: Residual filter emission

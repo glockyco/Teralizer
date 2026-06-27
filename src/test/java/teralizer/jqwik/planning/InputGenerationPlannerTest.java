@@ -109,6 +109,45 @@ public class InputGenerationPlannerTest {
     }
 
     @Example
+    void integerRecipeUsesAffineUpperBoundFromPreviousParameter() {
+        List<MethodParameter> parameters = Arrays.asList(
+            new MethodParameter("int", "a"),
+            new MethodParameter("int", "b")
+        );
+        Model inputModel = new Operation(
+            new Operation(new VariableInteger("a"), Operator.PLUS, new VariableInteger("b")),
+            Operator.LT,
+            new ConstantInteger(10)
+        );
+
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
+        String body = plan.getParameterPlans().get(1).getRecipe().emit();
+
+        Assert.assertTrue(body.contains("bUpperBounds = java.util.Arrays.asList(bDefaultMax, (int) (10 - a - 1))"));
+        Assert.assertTrue(plan.hasResidualClauses());
+    }
+
+    @Example
+    void realRecipeUsesAffineUpperBoundFromPreviousParameter() {
+        List<MethodParameter> parameters = Arrays.asList(
+            new MethodParameter("double", "a"),
+            new MethodParameter("double", "b")
+        );
+        Model inputModel = new Operation(
+            new Operation(new VariableReal("a"), Operator.PLUS, new VariableReal("b")),
+            Operator.LE,
+            new teralizer.domain.ConstantReal(10.0)
+        );
+
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
+        String body = plan.getParameterPlans().get(1).getRecipe().emit();
+
+        Assert.assertTrue(body.contains("bUpperBounds = java.util.Arrays.asList(bDefaultMax, (double) (10.0 - a))"));
+        Assert.assertTrue(body.contains("bUpperBoundIncluded = java.util.Arrays.asList(true, true)"));
+        Assert.assertTrue(plan.hasResidualClauses());
+    }
+
+    @Example
     void createsEmptyPlanForMissingInputModel() {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("double", "x"));
 
