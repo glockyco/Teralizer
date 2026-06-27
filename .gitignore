@@ -343,6 +343,9 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
+# jqwik local test database
+.jqwik-database
+
 # End of https://www.toptal.com/developers/gitignore/api/java,linux,macos,gradle,eclipse,windows,intellij,netbeans,visualstudiocode,jenv
 
 .env
