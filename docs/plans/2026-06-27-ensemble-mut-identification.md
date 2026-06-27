@@ -11,9 +11,9 @@ parent: 2026-06-26-teralizer-overview
 Replace the single-signal LCBA heuristic (last call before assertion) with an
 ensemble focal-method resolver that combines killed-mutant data, name-matching,
 and LCBA as one signal among many. The mutation data is made available before
-MUT-id by restructuring the pipeline: split `ANALYZE_TESTS` into assertion
-discovery (Phase A) and MUT-id resolution (Phase B), with `FILTER_TESTS` and
-`COLLECT_PIT_DATA_ORIGINAL` running between them.
+MUT-id by enabling the already-existing `COLLECT_PIT_DATA_ORIGINAL` step (step
+12), which runs before `ANALYZE_TESTS` (step 13). No pipeline restructuring
+is needed — the step numbers already guarantee the correct execution order.
 
 ## Motivation
 
@@ -33,11 +33,11 @@ TCTracer (White & Krinke, EMSE'22, DOI 10.1007/s10664-021-10079-1) shows that
 an ensemble of techniques outperforms any single one: 79% precision / 83%
 recall / 85% MAP at method level, vs. LCBA's 5–57% precision across projects.
 
-PIT mutation data (`pit_mutation_report`, `pit_coverage_report`) is already
-collected at step 25 (`COLLECT_PIT_DATA_INITIAL`). It records, per test, which
-production methods had mutants killed — a near-zero-false-positive signal for
-the focal method, because helpers and getters rarely have killable mutants.
-The killed-mutant oracle was manually validated: 7/9 disagreement cases (87.5%
+PIT mutation data (`pit_mutation_report`, `pit_coverage_report`) is collected
+at step 25 (`COLLECT_PIT_DATA_INITIAL`). It records, per test, which production
+methods had mutants killed — a near-zero-false-positive signal for the focal
+method, because helpers and getters rarely have killable mutants. The
+killed-mutant oracle was manually validated: 7/9 disagreement cases (87.5%
 effective) show the mutant oracle is correct and static LCBA picks the wrong
 method (full sample: `analysis/output/mut-validation/manual-validation-sample.csv`).
 
@@ -106,44 +106,38 @@ point (see §Combination strategy).
 
 ## Design
 
-### Pipeline restructuring
+### Pipeline: enable PIT_ORIGINAL (no restructuring)
 
-The core challenge: the strongest MUT-id signal (killed mutants) comes from PIT,
-which currently runs at step 25 — 12 steps after MUT-id (step 13). Moving PIT
-before MUT-id naively breaks RQ1 mutation-score comparability: `FILTER_TESTS`
-at step 14 narrows the test class set between the current step 12 and step 25
-positions, so running PIT before step 14 would mutate a broader test set than
-the one PIT_GENERALIZED (step 33) uses for comparison.
-
-The solution: split `ANALYZE_TESTS` (step 13) into two phases, raise
-`COLLECT_PIT_DATA_ORIGINAL`'s step number above `FILTER_TESTS` (step 14), and
-run `FILTER_TESTS` between Phase A and Phase B.
+The pipeline already has the right step numbers. `COLLECT_JACOCO_DATA_ORIGINAL`
+(step 10) and `COLLECT_PIT_DATA_ORIGINAL` (step 12) are commented out in
+`ProjectSetupTask.java:96,101`. Uncommenting them makes PIT mutation data
+available before `ANALYZE_TESTS` (step 13) runs — no step-number changes, no
+new stages, no restructuring.
 
 #### Execution order is determined by step number
 
 `ProcessingPipeline` executes tasks from a `PriorityQueue<Task>` ordered by
-`TaskPriorityComparator`, which compares `task.getStage().getStep()` for tasks
-within the same project. The order of `scheduleTask.accept(...)` calls in
-`ProjectSetupTask` controls only insertion into the queue, not execution
-order. To change when a stage executes, its enum step number must change.
+`TaskPriorityComparator`, which compares `task.getStage().getStep()`. The
+existing step numbers already place `COLLECT_PIT_DATA_ORIGINAL` (12) before
+`ANALYZE_TESTS` (13). No change needed.
 
 #### Current pipeline (steps 8–25)
 
 ```
  8  EXECUTE_TESTS_ORIGINAL       — run all tests (with JaCoCo agent)
  9  COLLECT_JUNIT_REPORTS_ORIGINAL
-10  COLLECT_JACOCO_DATA_ORIGINAL — DISABLED
+10  COLLECT_JACOCO_DATA_ORIGINAL — DISABLED (commented out, line 96)
 11  FILTER_TESTS_ORIGINAL        — NonPassing + TestType
-12  COLLECT_PIT_DATA_ORIGINAL    — DISABLED
+12  COLLECT_PIT_DATA_ORIGINAL    — DISABLED (commented out, line 101)
 13  ANALYZE_TESTS                — assertion discovery + MUT-id (LCBA)
 14  FILTER_TESTS                 — structural + NoAssertions
-15  FILTER_ASSERTIONS            — MissingValue, ParameterType, ReturnType (need MUT-id)
+15  FILTER_ASSERTIONS            — MissingValue, ParameterType, ReturnType
 16-20  JPF block
 21  BUILD_PROJECT_INITIAL
 22  EXECUTE_TESTS_INITIAL
 23  COLLECT_JUNIT_REPORTS_INITIAL
 24  COLLECT_JACOCO_DATA_INITIAL
-25  COLLECT_PIT_DATA_INITIAL     — mutation testing (RQ1 baseline)
+25  COLLECT_PIT_DATA_INITIAL     — mutation testing (RQ1 baseline, variant='INITIAL')
 ```
 
 #### Proposed pipeline
@@ -151,62 +145,73 @@ order. To change when a stage executes, its enum step number must change.
 ```
  8  EXECUTE_TESTS_ORIGINAL       [unchanged]
  9  COLLECT_JUNIT_REPORTS_ORIGINAL  [unchanged]
-10  COLLECT_JACOCO_DATA_ORIGINAL    [re-enable — generates CSV from step 8's .exec, negligible cost]
+10  COLLECT_JACOCO_DATA_ORIGINAL    [RE-ENABLE — generates CSV from step 8's .exec]
 11  FILTER_TESTS_ORIGINAL           [unchanged — NonPassing + TestType]
-13  ANALYZE_TESTS                   [Phase A — assertion discovery only, no MUT-id]
-14  FILTER_TESTS                    [unchanged — structural + NoAssertions, needs Phase A]
-14.5 COLLECT_PIT_DATA_ORIGINAL     [re-enable — step number RAISED above 14, now after filtering]
-15  RESOLVE_TESTED_METHODS          [Phase B — ensemble MUT-id using PIT data]
-16  FILTER_ASSERTIONS               [unchanged — needs MUT-id from Phase B]
-17-21  JPF block                    [unchanged]
-22  BUILD_PROJECT_INITIAL           [unchanged — clean rebuild for generalized tests]
-23  EXECUTE_TESTS_INITIAL           [unchanged]
-24  COLLECT_JUNIT_REPORTS_INITIAL   [unchanged]
-25  COLLECT_JACOCO_DATA_INITIAL     [unchanged]
-    (COLLECT_PIT_DATA_INITIAL removed — redundant with step 14.5)
+12  COLLECT_PIT_DATA_ORIGINAL       [RE-ENABLE — runs before ANALYZE_TESTS, non-fatal]
+13  ANALYZE_TESTS                   [MODIFIED — uses killed-mutant oracle alongside LCBA]
+14  FILTER_TESTS                    [unchanged]
+15  FILTER_ASSERTIONS               [MODIFIED — adds filter guard for null CtInvocation]
+16-20  JPF block                    [unchanged]
+21-25  INITIAL block                [unchanged — serves RQ1/RQ2/RQ3]
 26-33  GENERALIZED block            [unchanged]
 ```
 
-Execution order: `8 → 9 → 10 → 11 → 13 → 14 → 14.5 → 15 → 16 → ...`
-
-`COLLECT_PIT_DATA_ORIGINAL`'s step number is raised from 12 to 14.5 (an
-intermediate value between `FILTER_TESTS` (14) and `FILTER_ASSERTIONS` (15)).
-Since `ProcessingStage` uses `Integer`, the step is set to 15, and
-`RESOLVE_TESTED_METHODS` is set to 16, with all subsequent stages shifting
-their step numbers by one. Alternatively, `COLLECT_PIT_DATA_ORIGINAL` can be
-renamed to `COLLECT_PIT_DATA_BASELINE` with step 15, and the old step-15
-(`FILTER_ASSERTIONS`) shifts to 16, etc. The exact step-number assignment is
-an implementation detail; the key constraint is: step(PIT_ORIGINAL) >
-step(FILTER_TESTS) and step(PIT_ORIGINAL) < step(RESOLVE_TESTED_METHODS).
-
 #### Why this works
 
-1. **`ANALYZE_TESTS` (step 13) is Phase A.** It discovers assertions via
-   `TestAnalysis.findAllAsserts(testMethod)` and creates assertion records —
-   this is pure AST analysis, no MUT-id needed. The existing
-   `TestAnalysisTask.createAssertionRecords` already calls `findAllAsserts`
-   before `findTestedMethodCall`; Phase A simply stops after assertion creation
-   and leaves `tested_method_*` columns null.
+1. **Step numbers already guarantee the order.** `COLLECT_PIT_DATA_ORIGINAL`
+   (step 12) executes before `ANALYZE_TESTS` (step 13) via the
+   `PriorityQueue`/`TaskPriorityComparator`. The mutation data is in
+   `pit_mutation_report` (stage=`COLLECT_PIT_DATA_ORIGINAL`) when MUT-id runs.
 
-2. **`FILTER_TESTS` (step 14) only needs Phase A.** Its filters check structural
-   properties (`UnnamedPackageFilter`, `NestedClassesFilter`,
-   `StaticInitializersFilter`, `AssertionInMethodFilter`) and whether
-   assertions exist (`NoAssertionsFilter`). None depend on `tested_method_*`
-   columns. `NoAssertionsFilter` queries `assertion` table for count — it
-   needs Phase A to have created assertion records, which it has.
+2. **`COLLECT_JACOCO_DATA_ORIGINAL` (step 10) is re-enabled.** PIT_ORIGINAL's
+   `targetClasses` come from `fetchCoveredClasses(COLLECT_JACOCO_DATA_ORIGINAL)`.
+   `EXECUTE_TESTS_ORIGINAL` (step 8) already runs with `-Djacoco.skip=false`
+   (all 3 Maven/Gradle command variants in `TestExecutionTask.java:122,130,154,161`),
+   producing `.exec` data. Step 10 runs `jacoco:report` to generate the CSV —
+   no test execution, negligible cost.
 
-3. **`COLLECT_PIT_DATA_ORIGINAL` (step 14.5) runs after `FILTER_TESTS`.** Its
-   `targetTests = fetchIncludedTestClasses()` sees the same post-step-14 test
-   class set that `COLLECT_PIT_DATA_INITIAL` (step 25) used to. Same scope →
-   same mutation data → directly comparable to `COLLECT_PIT_DATA_GENERALIZED`
-   (step 33). RQ1 mutation-score comparability is preserved.
+3. **PIT_ORIGINAL's test scope is broader than PIT_INITIAL's.**
+   `COLLECT_PIT_DATA_ORIGINAL` (step 12) uses
+   `targetTests = fetchIncludedTestClasses()`. At step 12, only
+   `FILTER_TESTS_ORIGINAL` (step 11, NonPassing + TestType) has run.
+   `FILTER_TESTS` (step 14, structural + NoAssertions) and
+   `FILTER_ASSERTIONS` (step 15, MissingValue) have **not** run yet. So
+   PIT_ORIGINAL runs mutation testing on tests that would later be
+   MissingValue-excluded — including the 21,081 MissingValue-failed tests that
+   need mutation data. This is exactly the signal the resolver needs at step 13.
 
-4. **PIT runs once, not twice.** `COLLECT_PIT_DATA_ORIGINAL` (step 14.5)
-   replaces `COLLECT_PIT_DATA_INITIAL` (step 25, removed). Same test class
-   set, same production code, same mutation data. No efficiency penalty — the
-   runtime is moved, not added.
+4. **RQ1 is untouched.** `COLLECT_PIT_DATA_INITIAL` (step 25) still runs with
+   `variant='INITIAL'`. All SQL views, `rq1_mutation_detection.py`, and
+   `rq4_limitations.py` continue to reference `variant = 'INITIAL'` for RQ1
+   mutation scores. No variant mapping changes, no view updates, no analysis
+   code changes.
 
-5. **JPF exclusions don't affect PIT scope.** JPF (step 17) fails on
+5. **PIT_ORIGINAL and PIT_INITIAL use different `targetClasses` sources — by
+   design.** PIT_ORIGINAL uses `fetchCoveredClasses(COLLECT_JACOCO_DATA_ORIGINAL)`
+   (step 10, all tests), PIT_INITIAL uses
+   `fetchCoveredClasses(COLLECT_JACOCO_DATA_INITIAL)` (step 24, included tests
+   only). These cover different production class sets. This is correct:
+   PIT_ORIGINAL's purpose is MUT-id oracle data (broader is better), while
+   PIT_INITIAL's purpose is RQ1 mutation scores (must match PIT_GENERALIZED's
+   scope). They serve different goals and are stored under different stages.
+
+6. **`COLLECT_PIT_DATA_ORIGINAL` failure must be non-fatal.** It is a
+   project-level task (no `testRecord`/`assertionRecord`). When it throws,
+   `AbstractTask.execute` has nothing to mark excluded, and
+   `ProcessingPipeline.executeNext` removes all remaining tasks for the
+   project (the `queuedTasks.removeIf(...)` call matches on `projectId`).
+   The fix: in `PitDataCollectionTask.executeInternal`, catch exceptions
+   specifically for the `COLLECT_PIT_DATA_ORIGINAL` stage, record the failure
+   via `reportInfo.accept(...)`, and return normally. The task is marked
+   `SUCCEEDED` with an info note. `ANALYZE_TESTS` then finds no PIT_ORIGINAL
+   data for the project and falls back to static-only MUT-id. No projects lost.
+
+   This applies only to `COLLECT_PIT_DATA_ORIGINAL`.
+   `COLLECT_PIT_DATA_INITIAL` and `COLLECT_PIT_DATA_GENERALIZED` keep their
+   current fatal behavior (if PIT fails there, the generalization is excluded
+   — correct for RQ1).
+
+7. **JPF exclusions don't affect PIT scope.** JPF (step 16) fails on
    assertion-level tasks — it marks individual assertions as `is_included =
    false` via `AbstractTask.execute` (which sets `assertionRecord.isIncluded
    = false` when `assertionRecord != null`). It never changes
@@ -215,67 +220,21 @@ step(FILTER_TESTS) and step(PIT_ORIGINAL) < step(RESOLVE_TESTED_METHODS).
    assertions. Verified: all 142 tests with JPF-failed assertions remain
    `is_included = true`.
 
-6. **`COLLECT_PIT_DATA_ORIGINAL` failure is non-fatal.**
-   `PitDataCollectionTask` is a project-level task (no `testRecord` /
-   `assertionRecord`). When it throws, `AbstractTask.execute` has nothing to
-   mark excluded, and the exception propagates to `ProcessingPipeline`, which
-   drops all remaining tasks for the project. The fix: in
-   `PitDataCollectionTask.executeInternal`, catch exceptions specifically for
-   the `COLLECT_PIT_DATA_ORIGINAL` stage, record the failure via
-   `reportInfo.accept(...)`, and return normally. The task is marked
-   `SUCCEEDED` with an info note. Phase B then finds no PIT data for the
-   project and falls back to static-only MUT-id. No projects lost.
+#### Runtime cost
 
-   This applies only to `COLLECT_PIT_DATA_ORIGINAL`.
-   `COLLECT_PIT_DATA_GENERALIZED` keeps its current fatal behavior (if
-   generalized PIT fails, the generalization is excluded — correct).
-
-7. **`COLLECT_JACOCO_DATA_ORIGINAL` (step 10) is re-enabled.** PIT needs
-   `targetClasses = fetchCoveredClasses(stage)`. The stage used is
-   `COLLECT_JACOCO_DATA_ORIGINAL` for PIT_ORIGINAL. `EXECUTE_TESTS_ORIGINAL`
-   (step 8) already runs with `-Djacoco.skip=false`, producing `.exec` data.
-   Step 10 runs `jacoco:report` to generate the CSV — no test execution,
-   negligible cost.
-
-8. **`COLLECT_PIT_DATA_GENERALIZED` (step 33) keeps its current
-   `targetClasses` source.** It currently uses
-   `fetchCoveredClasses(COLLECT_JACOCO_DATA_INITIAL)` (step 24). This does
-   **not** change. `EXECUTE_TESTS_INITIAL` (step 22) runs only included
-   tests, while `EXECUTE_TESTS_ORIGINAL` (step 8) runs all tests — so
-   `COLLECT_JACOCO_DATA_ORIGINAL` covers a broader set of production classes
-   than `COLLECT_JACOCO_DATA_INITIAL`. Using different `targetClasses` sources
-   for PIT_ORIGINAL and PIT_GENERALIZED would produce different total mutant
-   counts, making the mutation scores non-comparable. Keeping
-   `COLLECT_JACOCO_DATA_INITIAL` for PIT_GENERALIZED ensures the same
-   `targetClasses` is used if PIT_ORIGINAL also uses it — but PIT_ORIGINAL runs
-   at step 14.5, before `COLLECT_JACOCO_DATA_INITIAL` (step 24). Therefore
-   PIT_ORIGINAL uses `COLLECT_JACOCO_DATA_ORIGINAL` (step 10) and
-   PIT_GENERALIZED uses `COLLECT_JACOCO_DATA_INITIAL` (step 24). These cover
-   **different** production class sets. To make mutation scores comparable,
-   PIT_GENERALIZED must switch to `COLLECT_JACOCO_DATA_ORIGINAL` as well, so
-   both PIT runs target the same production classes. The broader class set
-   from JaCoCo_ORIGINAL includes classes covered only by excluded tests —
-   these produce zero killed mutants (no included test kills them), inflating
-   the denominator equally for both runs. The score comparison remains valid.
-
-### RQ1 variant mapping
-
-The `variant_name(stage, variant)` SQL function (in `create-views.sql`) maps a
-NULL-variant PIT row whose stage ends in `ORIGINAL` → `'ORIGINAL'` and ending
-in `INITIAL` → `'INITIAL'`. Removing `COLLECT_PIT_DATA_INITIAL` (step 25) and
-using `COLLECT_PIT_DATA_ORIGINAL` (step 14.5) as the baseline changes the
-derived variant from `'INITIAL'` to `'ORIGINAL'`. All SQL views and analysis
-code that reference `variant = 'INITIAL'` for the baseline mutation data must
-be updated to `variant = 'ORIGINAL'`. The `variant_order` function assigns
-`'ORIGINAL'` order 10000000 and `'INITIAL'` order 20000000 — the baseline
-shifts earlier in the ordering, which is consistent (baseline before
-generalized variants).
+PIT runs twice: step 12 (PIT_ORIGINAL, broader scope — after
+`FILTER_TESTS_ORIGINAL` only) and step 25 (PIT_INITIAL, narrower scope — after
+`FILTER_TESTS` and `FILTER_ASSERTIONS`). Step 12's test scope is a superset of
+step 25's. The extra work covers tests filtered out at steps 14–15, including
+the 21,081 MissingValue-failed tests. PIT accounts for 48% of total pipeline
+runtime (median 30.9s, p90 142.5s per project); the additional run adds
+roughly proportional cost on a broader test set. This is the trade-off for
+having mutation data available before MUT-id.
 
 ### MUT-id ensemble resolver
 
-The resolver is a new class (`TestedMethodResolver`) that runs in Phase B
-(`RESOLVE_TESTED_METHODS`). It is invoked per-assertion and produces a
-resolution result containing:
+The resolver modifies `TestAnalysisTask.createAssertionRecords` (step 13). It
+is invoked per-assertion and produces a resolution result containing:
 
 - The resolved `CtMethod` (the production method under test) — or null if
   unresolved.
@@ -299,15 +258,17 @@ that invokes the focal method. This is because:
 
 - `JpfInstrumentationTask.getTestedMethodCall` (line 180) resolves
   `assertionRecord.getTestedMethodCallRelativePath()` via CtPath — NPEs if
-  null.
-- `TestGeneralizationTask` (line 402) reads
-  `getTestedMethodCallRelativePath()` and calls
-  `GeneralizableInput.derive(testedMethod, testedMethodCall)` — both required.
-- `MissingValueFilter` only checks `tested_file_path`,
-  `tested_class_name`, `tested_method_name`, `tested_method_parameters` —
-  all derivable from a `CtMethod` alone. An assertion with a resolved method
-  but no invocation would pass the filter and then crash in JPF
-  instrumentation.
+  null (`CtPathStringBuilder().fromString(null)` throws).
+- `JpfInstrumentationTask.executeTask` (line 91) reads
+  `assertionRecord.getTestedMethodAbsolutePath()` via CtPath — NPEs if null.
+- `TestAnalysisTask.createAssertionRecords` derives everything from
+  `testedMethodCall` (`CtInvocation`): `tested_method_call_arguments`,
+  `_source_code`, `_absolute_path`, `_relative_path`, and
+  `GeneralizableInput.derive(testedMethod, testedMethodCall)`.
+- `MissingValueFilter` only checks `tested_file_path`, `tested_class_name`,
+  `tested_method_name`, `tested_method_parameters` — all derivable from a
+  `CtMethod` alone. An assertion with a resolved method but no invocation
+  would pass the filter and then crash in JPF instrumentation.
 
 The resolver addresses this by running LCBA **per-assertion** first, then
 using the killed-mutant oracle as an override signal:
@@ -326,10 +287,20 @@ using the killed-mutant oracle as an override signal:
 3. **Oracle override (per-test):** if LCBA's method is NOT among the killed
    methods, or LCBA returned empty, use the oracle's pick. Then attempt to
    find the `CtInvocation` by scanning the test method's `CtInvocation`s for
-   one whose `getExecutable().getDeclaration()` resolves to the oracle's
-   `CtMethod`. If found → use it. If not found (the focal method is reached
-   transitively, or LCBA also returned empty) → fill `tested_method_*` columns
-   from the `CtMethod` but leave `tested_method_call_*` null.
+   one that resolves to the oracle's `CtMethod`. The scan must account for
+   interface-vs-implementation: PIT mutates concrete classes (e.g.
+   `ArrayList.add`), but the test may call the method through an interface-typed
+   variable (e.g. `List.add`). `getExecutable().getDeclaration()` on such a
+   call returns the interface method, not the implementation. The scan must
+   also check whether the invocation's resolved method shares the same
+   simple name and signature as a method declared in the oracle's `CtMethod`'s
+   declaring class or any of its supertypes. If a direct or interface-routed
+   `CtInvocation` is found → use it. If LCBA succeeded but the oracle
+   disagrees and no invocation can be recovered for the oracle's method →
+   **keep the LCBA result** (an included-wrong assertion is better than an
+   excluded one). If LCBA returned empty and no invocation can be recovered
+   → fill `tested_method_*` columns from the `CtMethod` but leave
+   `tested_method_call_*` null (the filter guard will exclude it).
 
 4. **Filter guard:** extend `MissingValueFilter` to also reject assertions
    where `tested_method_call_absolute_path` is null. This prevents assertions
@@ -340,10 +311,11 @@ using the killed-mutant oracle as an override signal:
 This approach means:
 - For the 5,100 AGREE cases: LCBA's per-assertion invocation is kept, oracle
   confirms the method. No change in behavior.
-- For the 9,354 DISAGREE cases: if the oracle's method has a direct call in
-  the test source, the invocation is recovered. If not (transitive call), the
-  assertion is excluded by the filter guard — same outcome as today
-  (MissingValue), no regression.
+- For the 9,354 DISAGREE cases: if the oracle's method has a direct or
+  interface-routed call in the test source, the invocation is recovered and
+  the assertion keeps its tested method corrected. If no invocation can be
+  recovered, the LCBA result is kept — no regression (the assertion stays
+  included with its original LCBA method).
 - For the 58,122 MissingValue cases: LCBA already returned empty. The oracle
   may identify a method. If a direct invocation exists, it's recovered and
   the assertion is re-included. If not, the assertion stays excluded — no
@@ -354,11 +326,13 @@ This approach means:
 
 #### Signal 1: Killed-mutant oracle (primary)
 
-For a test $t$ that has PIT mutation data:
+For a test $t$ that has PIT mutation data (from `COLLECT_PIT_DATA_ORIGINAL`,
+step 12):
 
-1. Collect the set of `(mutated_class, mutated_method, method_description)`
-   triples where `is_detected = true` and `killing_test_id = t`. The
-   `method_description` (JVM descriptor, e.g. `(II)V`) is retained to
+1. Query `pit_mutation_report` for `stage = 'COLLECT_PIT_DATA_ORIGINAL'`,
+   `variant IS NULL`, `killing_test_id = t.id`, `is_detected = true`. Collect
+   the set of `(mutated_class, mutated_method, method_description)` triples.
+   The `method_description` (JVM descriptor, e.g. `(II)V`) is retained to
    disambiguate overloads.
 2. If exactly one distinct `(mutated_class, mutated_method)` pair (59% of
    cases) — that's the focal method.
@@ -403,9 +377,9 @@ For tests with `pit_coverage_report` data but no killed mutants:
    method.
 4. If multiple — prefer methods that are directly invoked in the test source
    (scanned via `testMethod.getElements(CtInvocation.class::isInstance)`) over
-   methods only reached transitively. This replaces the call-depth
-   tiebreaker — instead of requiring call-depth data from PIT (which it does
-   not provide), the resolver checks whether a direct `CtInvocation` to the
+   methods only reached transitively. This replaces the call-depth tiebreaker
+   — instead of requiring call-depth data from PIT (which it does not
+   provide), the resolver checks whether a direct `CtInvocation` to the
    candidate method exists in the test source.
 
 #### PIT-to-Spoon mapping
@@ -417,7 +391,11 @@ Spoon `CtMethod` / `CtConstructor` objects:
   (`mutated_package` + "." + `mutated_class`), then
   `factory.Class().get(qualifiedName).getMethodsByName(mutatedMethod)`. Use
   `method_description` to disambiguate overloads by matching parameter types
-  against the JVM descriptor.
+  against the JVM descriptor. The descriptor (e.g. `(II)V`) is parsed by
+  extracting parameter types between the parentheses and mapping JVM type
+  codes (`I`=int, `J`=long, `D`=double, `Ljava/lang/String;`=String, etc.) to
+  Spoon `CtTypeReference` qualified names, then matching against each
+  candidate `CtMethod`'s parameter list.
 - **Constructors (`<init>`):** use `getConstructors()` instead of
   `getMethodsByName()`. Match by `method_description`.
 - **Static initializers (`<clinit>`):** skip — not a testable method.
@@ -447,8 +425,12 @@ for each assertion in test:
        b. Tier B: multiple killed methods → pick by kill count + tiebreakers
        c. If oracle produces a CtMethod:
           - Scan test source for a CtInvocation calling that method
+            (account for interface-vs-implementation: the call may resolve
+            to an interface method, not the oracle's concrete class)
           - If found → use it (oracle method + recovered invocation)
-          - If not found → fill tested_method_* only; filter guard will exclude
+          - If not found AND LCBA succeeded → keep LCBA result (no regression)
+          - If not found AND LCBA returned empty → fill tested_method_* only;
+            filter guard will exclude
        d. If oracle abstains → proceed to step 4
     4. Fallback (no PIT data or oracle abstains):
        a. Try name-matching (NC/NCC/LCS) against focal class methods
@@ -476,32 +458,25 @@ at the method level.
 
 | File | Change |
 |---|---|
-| `ProcessingStage.java` | Add `RESOLVE_TESTED_METHODS` stage; raise `COLLECT_PIT_DATA_ORIGINAL` step above 14; remove `COLLECT_PIT_DATA_INITIAL` |
-| `ProjectSetupTask.java` | Uncomment JaCoCo_ORIGINAL + PIT_ORIGINAL; add `RESOLVE_TESTED_METHODS`; remove `COLLECT_PIT_DATA_INITIAL`; the scheduling order follows from step numbers |
-| `PitDataCollectionTask.java` | `COLLECT_PIT_DATA_GENERALIZED` case: change `fetchCoveredClasses` source from `COLLECT_JACOCO_DATA_INITIAL` to `COLLECT_JACOCO_DATA_ORIGINAL` |
+| `ProjectSetupTask.java` | Uncomment lines 96 and 101 (re-enable `COLLECT_JACOCO_DATA_ORIGINAL` and `COLLECT_PIT_DATA_ORIGINAL`) |
 | `PitDataCollectionTask.java` | `COLLECT_PIT_DATA_ORIGINAL` case: add try-catch in `executeInternal`, record failure via `reportInfo`, return normally on exception |
-| `TestAnalysisTask.java` | Phase A: `createAssertionRecords` stops after assertion discovery (no MUT-id); Phase B (`RESOLVE_TESTED_METHODS`): new task that calls `TestedMethodResolver` to fill `tested_method_*` and `tested_method_call_*` columns |
-| `TestedMethodResolver.java` (new) | Ensemble resolver: LCBA per-assertion + killed-mutant oracle per-test + name-matching + coverage fallback + CtInvocation recovery + PIT-to-Spoon mapping |
-| `MissingValueFilter.java` | Add check: reject if `tested_method_call_absolute_path` is null |
-| `stages.py` (analysis) | Move `COLLECT_PIT_DATA_ORIGINAL` from Stage 5 to Stage 1+2; remove `COLLECT_PIT_DATA_INITIAL`; add `RESOLVE_TESTED_METHODS` to Stage 1+2 |
-| `create-views.sql` | Update `variant_name` function or views: baseline mutation variant changes from `'INITIAL'` to `'ORIGINAL'`; update all views self-joining on `b.variant = 'INITIAL'` to `b.variant = 'ORIGINAL'`; update `mv_teralizer_runtime_by_stage` CASE to move `COLLECT_PIT_DATA_ORIGINAL` to Stage 1+2 |
-| `rq1_mutation_detection.py` | Change `WHERE mr.variant = 'INITIAL'` → `WHERE mr.variant = 'ORIGINAL'` |
-| `rq4_limitations.py` | Update cause patterns referencing `COLLECT_PIT_DATA_INITIAL` (lines 778–803) to `COLLECT_PIT_DATA_ORIGINAL` |
-| `variant_order` (SQL function) | `'ORIGINAL'` already has order 10000000 (before `'INITIAL'` at 20000000); no change needed — baseline just shifts from INITIAL to ORIGINAL in the ordering |
+| `TestAnalysisTask.java` | `createAssertionRecords`: replace `TestAnalysis.findTestedMethodCall` call with `TestedMethodResolver.resolve` (ensemble: LCBA per-assertion + killed-mutant oracle per-test + name-matching + coverage fallback + CtInvocation recovery + PIT-to-Spoon mapping) |
+| `TestedMethodResolver.java` (new) | Ensemble resolver implementation |
+| `MissingValueFilter.java` | Add check: reject if `tested_method_call_absolute_path` is null (filter guard for transitive-call cases) |
+| `SQLiteRepository.java` | Add query: fetch killed-mutant methods for a test from `pit_mutation_report` (stage=`COLLECT_PIT_DATA_ORIGINAL`, `variant IS NULL`, `killing_test_id`, `is_detected=true`) |
+
+No changes to: `ProcessingStage.java`, `ProcessingPipeline.java`, `stages.py`,
+`create-views.sql`, `rq1_mutation_detection.py`, `rq4_limitations.py`, or any
+SQL view. The pipeline structure and all variant mappings are unchanged.
 
 ## Acceptance criteria
 
-- [ ] `ANALYZE_TESTS` is split into Phase A (assertion discovery, step 13)
-  and `RESOLVE_TESTED_METHODS` (Phase B, step > 14.5), with `FILTER_TESTS`
-  (step 14) and `COLLECT_PIT_DATA_ORIGINAL` (step 14.5) running between them.
-- [ ] `COLLECT_PIT_DATA_ORIGINAL`'s step number is raised above 14 so the
-  `PriorityQueue` executes it after `FILTER_TESTS`.
 - [ ] `COLLECT_JACOCO_DATA_ORIGINAL` (step 10) is re-enabled.
-- [ ] `COLLECT_PIT_DATA_INITIAL` (step 25) is removed.
-- [ ] `COLLECT_PIT_DATA_GENERALIZED` (step 33) uses
-  `COLLECT_JACOCO_DATA_ORIGINAL` for `targetClasses`.
-- [ ] PIT_ORIGINAL failure does not kill the project — the pipeline
-  continues with static-only MUT-id.
+- [ ] `COLLECT_PIT_DATA_ORIGINAL` (step 12) is re-enabled.
+- [ ] `COLLECT_PIT_DATA_ORIGINAL` failure does not kill the project — the
+  pipeline continues with static-only MUT-id.
+- [ ] `ANALYZE_TESTS` (step 13) uses the killed-mutant oracle from
+  `pit_mutation_report` (stage=`COLLECT_PIT_DATA_ORIGINAL`) alongside LCBA.
 - [ ] The resolver recovers a `CtInvocation` (not just a `CtMethod`) for
   assertions where the focal method is directly invoked in the test source.
 - [ ] `MissingValueFilter` rejects assertions with null
@@ -514,12 +489,9 @@ at the method level.
 - [ ] Multi-assertion tests with different per-assertion focal methods are not
   collapsed to a single method (LCBA per-assertion is preserved when the
   oracle confirms).
-- [ ] `stages.py`, `create-views.sql`, `rq1_mutation_detection.py`, and
-  `rq4_limitations.py` updated for the new stage structure and variant
-  mapping.
-- [ ] RQ1 mutation scores remain comparable: PIT_ORIGINAL (step 14.5) and
-  PIT_GENERALIZED (step 33) use the same `targetClasses` source
-  (`COLLECT_JACOCO_DATA_ORIGINAL`) and the same original test class set.
+- [ ] RQ1 mutation scores remain untouched: `COLLECT_PIT_DATA_INITIAL` (step
+  25, `variant='INITIAL'`) runs unchanged; all SQL views and analysis code
+  continue to use `variant = 'INITIAL'` for RQ1.
 
 ## Research context
 
