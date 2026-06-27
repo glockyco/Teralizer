@@ -1,21 +1,16 @@
 ---
-title: JARVIS Case Coverage & Teralizer Improvements
-type: note
+title: JARVIS Head-to-Head Evidence
+type: audit
 status: active
 created: 2026-06-26
+parent: 2026-06-26-teralizer-overview
 ---
 
-# JARVIS Case Coverage & Teralizer Improvements
+Point-in-time JARVIS head-to-head evidence: per-case SPF spike verdicts + provenance.
 
-Living scratchpad. Goal: understand why Teralizer doesn't handle the test cases
-JARVIS reported (VMCAI 2018, `vmcai2018-jarvis-extended.pdf`, Tables 1–2), then
-improve handling where worthwhile. We expect to build a **minimal, DB-free
-harness** to iterate on the generalization logic without touching the collected
-evaluation data.
+Implementation plan: `2026-06-26-beat-jarvis-phase1`.
 
-Keep extending this as we go. Not a formal plan — just don't-forget notes.
-
-## The JARVIS cases (paper Table 2)
+## Case scorecard (JARVIS paper Table 2)
 
 Lang: `CharUtilsTest::isAscii` (char), `CharUtilsTest::isPrintable` (char).
 Math: `FastMathTest::testMinMaxDouble` (double²), `FastMathTest::toIntExact` (int),
@@ -25,7 +20,7 @@ Math: `FastMathTest::testMinMaxDouble` (double²), `FastMathTest::toIntExact` (i
 JARVIS ran on the **2018 monolithic** Apache Commons (commons-math `math3`,
 commons-lang). Assertions in that era were inline in the `@Test` body.
 
-## Key findings so far
+## Key findings
 
 1. **Version/era mismatch.** Our `commons-utils` dataset is the **modern modular**
    Apache Commons (`commons-numbers`, `commons-geometry`, `math4`, `lang3`,
@@ -128,6 +123,29 @@ using HEAD instead of the JARVIS-era version**, not a fundamental Teralizer gap.
 already handles (inline asserts, `Precision.equals(...)` direct calls). We
 **already have `commons-math-3.x` (3.6.2-SNAPSHOT) checked out** in the non-dev repo.
 
+**SPF spike versions (pinned — no snapshots).**
+- commons-math: tag `MATH_3_5`.
+- commons-lang: `commons-lang3-3.17.0`.
+- jpf-symbc / jpf-core: the spf-eval submodule commits.
+
+**Spike artifact provenance.**
+- No SNAPSHOT / HEAD / unpinned sources anywhere. Pin exact **tag + resolved
+  commit SHA**, never a branch.
+- Every vendored source file gets a header: upstream repo URL, release tag,
+  commit SHA, original path, license.
+- `spf-eval/jarvis-spike/PROVENANCE.md` records, per library: tag + resolved SHA,
+  the exact git/fetch command used, the JARVIS test row(s) it serves; plus
+  jpf-symbc & jpf-core submodule SHAs, JDK version, and Z3 version.
+- `jarvis-spf-RESULTS.md` cites the exact version/SHA each verdict was produced against.
+
+**Captured pins for verified spf-eval build/run.**
+- commons-math `MATH_3_5` → `b3c5dae8f253fcb4484e5cd3cc5662587803efc2`.
+- jpf-symbc `7949438f88224ab073b01cc418555174b35dcd04` (gradle-build) — same SHA as Teralizer's submodule.
+- jpf-core (nested) `201f658be0b8bf23bbb29b69081f5c5304dd34d0` (JPF-8.0-126).
+- JDK openjdk 1.8.0_462. Z3 4.11.2 (z3-turnkey, bundled in jpf-symbc).
+- Caveat: local `commons-lang3-3.17.0/` is an unverified extract (not a pinned checkout) — fetch CharUtils from upstream tag `rel/commons-lang-3.17.0` + record SHA instead.
+- Full spike report: `spf-eval/jarvis-spike/jarvis-spf-RESULTS.md`, with exact version/SHA cited for each verdict.
+
 ## Implications
 
 - For most JARVIS cases the bottleneck is **Teralizer's own layers**, not SPF:
@@ -144,77 +162,7 @@ already handles (inline asserts, `Precision.equals(...)` direct calls). We
      PolynomialFunction, UnivariateFunction). Plus the double/float bounds-bug
      fix in the SPF wrapper, which Precision-style double comparisons need anyway.
 
-## Open decisions
-
-- [x] **Corpus — RESOLVED.** JARVIS-era **commons-math 3.5** (released tag
-      `MATH_3_5`, not the snapshot) + **commons-lang3 3.17.0** (isAscii/isPrintable
-      byte-identical to JARVIS era). See "Spike" section below.
-- [ ] **Harness shape.** What's the smallest slice of Teralizer's pipeline that
-      takes a single JUnit test → generalized jqwik test without DB/SPF download/
-      full build? Candidates to isolate: `spoon/analysis`, `processing/filter/*`,
-      `spoon/generalization`, `transformer/*`, `jqwik/*`.
-- [ ] **Scope/order.** Track 1 (Precision robustness) first vs. Track 2
-      (capability gaps). Which JARVIS cases are actually worth supporting?
-- [ ] **Bounds bug.** Fix `makeRealVar` lower bound in jpf-symbc wrapper? (Affects
-      every negative-real path; documented in spf-eval double_linear.)
-
-## Spike: SPF spec-extraction investigation
-
-**Question.** For every JARVIS Table-2 case, can SPF/JPF extract a usable
-specification — an *input partition* (path conditions) + an *output oracle*
-(symbolic return expression or determinate constant) — judged purely as an SPF
-question, with **zero reference to Teralizer**. If yes, extending Teralizer to
-ingest it is a wiring task; if no, that bounds the effort.
-
-**Harness.** Extend `~/Projects/phd-thesis/projects/spf-eval/` in place (same
-`jpf-symbc` build Teralizer embeds; no DB, no Teralizer code). Add `jarvis_*`
-subjects alongside the existing ones; reuse the `ExtractionListener` XML output.
-
-**Versions (pinned — no snapshots).**
-- commons-math: tag `MATH_3_5`. commons-lang: `commons-lang3-3.17.0`.
-- jpf-symbc / jpf-core: the spf-eval submodule commits (record SHAs at staging).
-
-**Scope.** All of Table 2 — 6 method families / 10 rows (mapping table above):
-`CharUtils.isAscii/isPrintable`, `FastMath.min/max/toIntExact`,
-`Precision.equals`, `Interval.getSize`, `PolynomialFunction.value`
-(+`polynomialDerivative`), `Abs.value`.
-
-**Prep / investigate split.**
-- *I stage:* verified green build; vendored subject sources compiled with `-g`
-  (debug info — the listener reads param names from the `LocalVariableTable`);
-  a `Subject`+`Driver`+`.jpf` skeleton per case with a naïve (all-concrete)
-  config that compiles and runs; spec definition + success criteria + results
-  template; the case sheet; run instructions; the provenance manifest.
-- *Agent owns:* per-case symbolic design (what's symbolic, solver `z3`/`z3bitvector`,
-  `symbolic.method`, `@Symbolic`, lazy-init / constructor handling, search depth),
-  running + iterating, diagnosing crashes/concretization + workarounds, and the
-  per-case verdict (full / partial / blocked + why) with XML evidence.
-
-**Agent.** One `task` agent, role "SPF/JPF spec-extraction investigator." Its
-brief references **only** the harness + case sheet + spec definition — it is NOT
-told Teralizer's filters, MUT restrictions, or supported-type rules. Deliverable:
-`jarvis-spf-RESULTS.md` (per-case table + evidence + honest overall verdict).
-spf-eval's own `RESULTS.md` is allowed as reference for harness mechanics / known
-SPF quirks, but every JARVIS verdict must come from its own runs.
-
-**Provenance (REQUIRED — standing rule for all spike artifacts).**
-- No SNAPSHOT / HEAD / unpinned sources anywhere. Pin exact **tag + resolved
-  commit SHA**, never a branch.
-- Every vendored source file gets a header: upstream repo URL, release tag,
-  commit SHA, original path, license.
-- `spf-eval/jarvis-spike/PROVENANCE.md` records, per library: tag + resolved SHA,
-  the exact git/fetch command used, the JARVIS test row(s) it serves; plus
-  jpf-symbc & jpf-core submodule SHAs, JDK version, Z3 version, and date.
-- `jarvis-spf-RESULTS.md` cites the exact version/SHA each verdict was produced against.
-
-**Captured pins (2026-06-26, foundation verified — spf-eval builds + runs).**
-- commons-math `MATH_3_5` → `b3c5dae8f253fcb4484e5cd3cc5662587803efc2`.
-- jpf-symbc `7949438f88224ab073b01cc418555174b35dcd04` (gradle-build) — same SHA as Teralizer's submodule.
-- jpf-core (nested) `201f658be0b8bf23bbb29b69081f5c5304dd34d0` (JPF-8.0-126).
-- JDK openjdk 1.8.0_462. Z3 4.11.2 (z3-turnkey, bundled in jpf-symbc).
-- Caveat: local `commons-lang3-3.17.0/` is an unverified extract (not a pinned checkout) — fetch CharUtils from upstream tag `rel/commons-lang-3.17.0` + record SHA instead.
-
-## Spike results (2026-06-26)
+## Spike results
 
 First-hand by an unbiased SPF investigator against the pinned stack; full report:
 `spf-eval/jarvis-spike/jarvis-spf-RESULTS.md`. Verdicts spot-verified against the
@@ -273,9 +221,3 @@ The spec exists for most JARVIS cases, so ingesting them is largely a
 - JARVIS-era subjects: **check out tag `MATH_3_5`** from `~/Projects/test-generalization/projects/commons-math-3.x` (released 3.5). NOTE: that working tree currently sits at `MATH_3_6_1-9-g…` (unreleased snapshot) — **do not use the snapshot**, check out the tag. commons-lang3 source: `~/Projects/test-generalization/projects/commons-lang3-3.17.0`.
 - Sourcegraph query + candidates: `~/Projects/test-generalization/commons-{math,lang}-candidates.txt`; crawler+CSV: `~/Projects/test-generalization/projects/apache-commons-utils/{crawler.py,export.csv}`.
 - DB (read-only): container `postgres-replication` :5432, user `teralizer`, db `postgres_dev`; project_id 22 = commons-utils. Do NOT mutate.
-
-## Next steps
-
-- [x] Stage + run the spike (2026-06-26): all 11 cases extracted — see "Spike results" above and `spf-eval/jarvis-spike/jarvis-spf-RESULTS.md`.
-- [ ] Decide Teralizer-extension scope from the verdicts (see "Implications"): (a) instance-method / object-construction MUTs; (b) `char` params; (c) `FastMath.abs` model; (d) defer Precision-ulps + toIntExact.
-- [ ] Once scoped, brainstorm → plan the chosen Teralizer change before implementing.

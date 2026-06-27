@@ -3,6 +3,7 @@ title: "Replication Package Documentation Improvements"
 type: plan
 status: active
 created: 2026-06-25
+parent: 2026-06-26-teralizer-overview
 ---
 
 # Replication Package Documentation Improvements

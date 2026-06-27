@@ -22,6 +22,7 @@ Run everything from the project root. Validate before committing (`validate.py -
 
 ## Layout & config
 - Architecture / DB references: `docs/architecture.md`, `docs/database.md`.
+- Planning & roadmap: read `docs/plans/INDEX.md` first; the north-star, strategy sequence, and current focus live in `docs/plans/2026-06-26-teralizer-overview.md`.
 - Config: Typesafe Config (HOCON); examples in `project-configs/example-*.conf`.
 - Analysis in `analysis/`; legacy notebooks under `notebooks/legacy/` are excluded via `pyproject.toml`.
 - Exports: `save_latex_table`, `save_csv_data`, `save_figure` from `teralizer.exports` →
