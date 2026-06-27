@@ -84,23 +84,24 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 - [ ] Implement integer overflow guards; leave an unsafe affine clause residual instead of emitting an unsound bound.
 - [x] Implement real affine bounds with jqwik inclusive/exclusive `between` and dynamic scale.
 - [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
-- [ ] Commit affine numeric planning.
+- [x] Commit affine numeric planning.
 
 ### Task 6: Residual filter emission
 
+- [x] Keep full input filtering as the current sound fallback while planner clause-consumption confidence is incomplete.
 - [ ] Make `InputGenerationPlan` render a residual Java predicate from only unconsumed clauses.
 - [ ] Write supplier rendering tests for all-consumed input, partly-consumed input, and unsupported residual input.
 - [ ] Verify the tests fail before implementation.
 - [ ] Implement residual-only filter emission.
-- [ ] If residual rendering is brittle, keep the full filter and record residual metadata; do not block the planner redesign on filter minimization.
-- [ ] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
+- [x] If residual rendering is brittle, keep the full filter and record residual metadata; do not block the planner redesign on filter minimization.
+- [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
 - [ ] Commit residual filter behavior or the explicit full-filter fallback.
 
 ### Task 7: Scoreboard rerun and documentation
 
-- [ ] Run focused Java tests for the planner and supplier.
-- [ ] Run `./gradlew build`.
-- [ ] Run `uv run --directory analysis pytest tests/test_jarvis_scoreboard.py -q`.
+- [x] Run focused Java tests for the planner and supplier.
+- [x] Run `./gradlew build`.
+- [x] Run `uv run --directory analysis pytest tests/test_jarvis_scoreboard.py -q`.
 - [ ] Rerun the JARVIS scorecard against `postgres_jarvis_scoreboard` only if the generator output changed.
 - [ ] Update `docs/plans/2026-06-26-jarvis-case-coverage.md` with any PVC deltas and generator-shape explanation.
 - [ ] Update `docs/plans/2026-06-26-teralizer-overview.md` only if the JARVIS win summary changes.
