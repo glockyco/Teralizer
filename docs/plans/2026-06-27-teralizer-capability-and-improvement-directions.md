@@ -158,6 +158,24 @@ with db_config.get_test_engine().connect() as conn:
 | 4 | **Interprocedural assertion analysis** (ExcludedTest cascade) | 20,647 | Recovers ~86% false-positive NoAssertions rejects; prerequisite for helper-delegated MUT-id. |
 | 9 | **@ParameterizedTest** | — | Param tests are already parametric; ideal raw material. |
 
+**MissingValue taxonomy** — the 58,122 first-reject MissingValue assertions
+break down by call-extraction state (re-run `compute_missingvalue_taxonomy`):
+
+| Category | Count | % | Fixable? |
+|---|---|---|---|
+| `instance_call_in_source_not_extracted` (obj.method() in source, never extracted) | 22,261 | 38.3% | **yes** — MUT-id extraction gap |
+| `instance_call_extracted` (var.method found, MUT not resolved) | 16,630 | 28.6% | **yes** — receiver type resolution |
+| `no_call_visible` (field access / instanceof / bare var / fail()) | 16,583 | 28.5% | partly — needs #6/#7 (assertion types) |
+| `static_call_extracted` (Class.method found, MUT not resolved) | 1,366 | 2.4% | **yes** — classpath resolution |
+| `static_call_in_source_not_extracted` | 697 | 1.2% | **yes** — MUT-id extraction gap |
+| `casted_call_extracted` / `other_call_extracted` | 585 | 1.0% | yes — chained-call resolution |
+
+**Key:** ~70% of the dominant blocker (40k of 58k) is fixable via MUT-id
+extraction + receiver-type resolution — the call is either already extracted
+but the MUT wasn't resolved, or visible in the source but never extracted.
+Only 28% (`no_call_visible`) needs assertion-type expansion (#6) rather than
+MUT-id.
+
 **Shadowing insight that reorders the old priority:** ParameterType looks like
 the #2 blocker by raw rejects (60,289) but has only 8,326 net reach — 86%
 shadowed behind MissingValue/ReturnType. UnsupportedAssertion has 29,170 total
