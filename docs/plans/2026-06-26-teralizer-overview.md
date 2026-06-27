@@ -28,6 +28,8 @@ work that depends on a re-run is deferred until (1) lands.
 ## Current focus: (1) beat JARVIS
 
 - `2026-06-27-jarvis-scoreboard-evaluation-lane` *(spec)* — the clean evaluation-lane contract for pinned JARVIS-era evidence.
+- `2026-06-27-residual-aware-input-generation` *(spec)* — the typed generator redesign for making `IMPROVED` generate path-condition values by construction where safe.
+- `2026-06-27-improved-generator-redesign` *(plan)* — the ordered implementation plan for the residual-aware generator.
 - `2026-06-26-jarvis-case-coverage` *(audit)* — the per-case head-to-head evidence behind it.
 
 ## Children
@@ -35,6 +37,8 @@ work that depends on a re-run is deferred until (1) lands.
 | doc | type | scope | tag |
 |---|---|---|---|
 | `2026-06-27-jarvis-scoreboard-evaluation-lane` | spec | clean lane for reproducible pinned JARVIS Table-2 evidence | current focus (contract) |
+| `2026-06-27-residual-aware-input-generation` | spec | typed, residual-aware `IMPROVED` generator architecture | current focus (generator design) |
+| `2026-06-27-improved-generator-redesign` | plan | task sequence for the typed planner and jqwik emitter rewrite | current focus (implementation) |
 | `2026-06-27-jarvis-scoreboard-evidence-run` | plan | executed pinned JARVIS-era scoreboard run and decided the claim | implemented |
 | `2026-06-27-receiver-constructor-inputs` | plan | close the `Interval.getSize()` inline receiver-constructor blocker exposed by the scoreboard run | implemented |
 | `2026-06-26-jarvis-case-coverage` | audit | per-case JARVIS head-to-head evidence + provenance | current focus (evidence) |
