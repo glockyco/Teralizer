@@ -34,7 +34,33 @@ public class ImprovedTestParametersSupplierFactory {
         supplierClass.setSuperInterfaces(new HashSet<>(Collections.singletonList(factory.Type().createReference("net.jqwik.api.ArbitrarySupplier<" + TEST_PARAMETERS_CLASS_NAME + ">"))));
         supplierClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
 
-        createGetMethod(supplierClass, parameters, inputJava);
+        createGetMethod(supplierClass, parameters, inputJava, inputJava != null);
+
+        for (int i = 0; i < parameters.size(); i++) {
+            MethodParameter parameter = parameters.get(i);
+            Optional<MethodArgument> argument = arguments.containsKey(parameter.getName())
+                ? Optional.of(arguments.get(parameter.getName()))
+                : Optional.empty();
+
+            createGetParameterMethod(supplierClass, parameters.get(i), argument, parameters.subList(0, i), constraints);
+        }
+
+        return supplierClass;
+    }
+
+    public static CtClass<?> createSupplierClass(
+        Factory factory,
+        List<MethodParameter> parameters,
+        Map<String, MethodArgument> arguments,
+        Map<String, VariableConstraints> constraints,
+        String inputJava,
+        boolean applyInputFilter
+    ) {
+        CtClass<?> supplierClass = factory.Class().create(TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
+        supplierClass.setSuperInterfaces(new HashSet<>(Collections.singletonList(factory.Type().createReference("net.jqwik.api.ArbitrarySupplier<" + TEST_PARAMETERS_CLASS_NAME + ">"))));
+        supplierClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
+
+        createGetMethod(supplierClass, parameters, inputJava, applyInputFilter && inputJava != null);
 
         for (int i = 0; i < parameters.size(); i++) {
             MethodParameter parameter = parameters.get(i);
@@ -51,7 +77,8 @@ public class ImprovedTestParametersSupplierFactory {
     private static void createGetMethod(
         CtClass<?> supplierClass,
         List<MethodParameter> parameters,
-        String inputJava
+        String inputJava,
+        boolean applyInputFilter
     ) {
         Factory factory = supplierClass.getFactory();
 
@@ -120,11 +147,13 @@ public class ImprovedTestParametersSupplierFactory {
                     builder.append(";\n    }\n})");
                 }
 
-                builder.append("\n.filter(new java.util.function.Predicate<TestParameters>() {\n");
-                builder.append("    public boolean test(final TestParameters _p_) {\n");
-                builder.append("        return ").append(inputJava == null ? "true" : inputJava).append(";\n");
-                builder.append("    }\n");
-                builder.append("})");
+                if (applyInputFilter) {
+                    builder.append("\n.filter(new java.util.function.Predicate<TestParameters>() {\n");
+                    builder.append("    public boolean test(final TestParameters _p_) {\n");
+                    builder.append("        return ").append(inputJava).append(";\n");
+                    builder.append("    }\n");
+                    builder.append("})");
+                }
             }
         }
 
@@ -244,11 +273,11 @@ public class ImprovedTestParametersSupplierFactory {
     }
 
     private static String createFloatArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, RealConstraints constraint) {
-        return createRealArbitrary(parameter, argument, constraint, "float", "Float", "floats", "-Float.MAX_VALUE", "Float.MAX_VALUE", 46);
+        return createRealArbitrary(parameter, argument, constraint, "float", "Float", "floats", "-Float.MAX_VALUE", "Float.MAX_VALUE");
     }
 
     private static String createDoubleArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, RealConstraints constraint) {
-        return createRealArbitrary(parameter, argument, constraint, "double", "Double", "doubles", "-Double.MAX_VALUE", "Double.MAX_VALUE", 325);
+        return createRealArbitrary(parameter, argument, constraint, "double", "Double", "doubles", "-Double.MAX_VALUE", "Double.MAX_VALUE");
     }
 
     private static String createNumberArbitrary(
@@ -301,8 +330,7 @@ public class ImprovedTestParametersSupplierFactory {
         String boxedType,
         String arbitraryType,
         String minValue,
-        String maxValue,
-        int scale
+        String maxValue
     ) {
         if (constraint == null) {
             if (argument.isPresent()) {
@@ -329,14 +357,16 @@ public class ImprovedTestParametersSupplierFactory {
 
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
         result.append(generateInclusionCheck(n, false));
+        result.append(String.format("int %s = java.lang.Math.max(0, java.math.BigDecimal.valueOf(%s).scale());\n", n.scale(), n.min()));
+        result.append(String.format("%s = java.lang.Math.max(%s, java.lang.Math.max(0, java.math.BigDecimal.valueOf(%s).scale()));\n", n.scale(), n.scale(), n.max()));
 
         if (argument.isPresent()) {
             String firstValue = new ModelToJavaTransformer().transform(argument.get());
             result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded(), argument.get().getType(), firstValue));
-            result.append(String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s))", argument.get().getType(), firstValue, arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+            result.append(String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s().ofScale(%s).between(%s, %s, %s, %s))", argument.get().getType(), firstValue, arbitraryType, n.scale(), n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
         } else {
             result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
-            result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%d).between(%s, %s, %s, %s)", arbitraryType, scale, n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+            result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%s).between(%s, %s, %s, %s)", arbitraryType, n.scale(), n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
         }
 
         return result.toString();
@@ -364,6 +394,10 @@ public class ImprovedTestParametersSupplierFactory {
 
         public Names(String baseName) {
             this.baseName = baseName;
+        }
+
+        public String scale() {
+            return this.baseName + "Scale";
         }
 
         public String defaultMin() {
