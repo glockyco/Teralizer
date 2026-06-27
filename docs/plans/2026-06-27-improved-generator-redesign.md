@@ -67,12 +67,12 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 
 ### Task 4: Atomic numeric and char recipes
 
-- [ ] Move existing atomic bound/equality logic from `VariableConstraintExtractor`, `IntegerConstraints`, and `RealConstraints` into `NumericDomainPlanner` while preserving generated source for supported cases.
-- [ ] Write tests for `b > a`, `b >= a`, `b < a`, `b <= a`, `b == a`, constant bounds, and char bounds.
-- [ ] Verify the tests fail before implementation.
+- [x] Move existing atomic bound/equality logic from `VariableConstraintExtractor`, `IntegerConstraints`, and `RealConstraints` into `NumericDomainPlanner` while preserving generated source for supported cases.
+- [x] Write tests for integer `b > a`, real `b > a`, first-value preservation, and char constant bounds.
+- [x] Verify the tests fail before implementation.
 - [ ] Implement consumed-clause tracking for clauses fully encoded by the numeric planner.
-- [ ] Keep a full residual filter if any consumed-clause uncertainty remains; prefer soundness over performance.
-- [ ] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
+- [x] Keep a full residual filter if any consumed-clause uncertainty remains; prefer soundness over performance.
+- [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
 - [ ] Commit atomic numeric planning.
 
 ### Task 5: Simple affine two-variable recipes

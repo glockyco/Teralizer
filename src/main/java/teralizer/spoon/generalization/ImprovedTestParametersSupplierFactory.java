@@ -12,6 +12,7 @@ import teralizer.jqwik.IntegerConstraints;
 import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.VariableConstraints;
 import teralizer.jqwik.planning.InputGenerationPlan;
+import teralizer.jqwik.planning.ParameterGenerationPlan;
 import teralizer.spoon.SpoonUtils;
 import teralizer.transformer.ModelToJavaTransformer;
 
@@ -56,7 +57,8 @@ public class ImprovedTestParametersSupplierFactory {
                 ? Optional.of(arguments.get(parameter.getName()))
                 : Optional.empty();
 
-            createGetParameterMethod(supplierClass, parameters.get(i), argument, parameters.subList(0, i), constraints);
+            ParameterGenerationPlan parameterPlan = plan == null ? null : plan.getParameterPlans().get(i);
+            createGetParameterMethod(supplierClass, parameters.get(i), argument, parameters.subList(0, i), constraints, parameterPlan);
         }
 
         return supplierClass;
@@ -155,66 +157,81 @@ public class ImprovedTestParametersSupplierFactory {
         List<MethodParameter> previousParameters,
         Map<String, VariableConstraints> constraints
     ) {
+        createGetParameterMethod(supplierClass, parameter, argument, previousParameters, constraints, null);
+    }
+
+    private static void createGetParameterMethod(
+        CtClass<?> supplierClass,
+        MethodParameter parameter,
+        Optional<MethodArgument> argument,
+        List<MethodParameter> previousParameters,
+        Map<String, VariableConstraints> constraints,
+        ParameterGenerationPlan parameterPlan
+    ) {
         Factory factory = supplierClass.getFactory();
 
         String body;
-        String arbitraryType;
-        switch (parameter.getType()) {
-            case "byte":
-            case "java.lang.Byte": {
-                body = createByteArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
-                arbitraryType = "Byte";
-                break;
+        String arbitraryType = getBoxedType(parameter.getType());
+        if (parameterPlan != null && parameterPlan.getRecipe() != null && !parameterPlan.getRecipe().emit().isEmpty()) {
+            body = parameterPlan.getRecipe().emit();
+        } else {
+            switch (parameter.getType()) {
+                case "byte":
+                case "java.lang.Byte": {
+                    body = createByteArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                    arbitraryType = "Byte";
+                    break;
+                }
+                case "short":
+                case "java.lang.Short": {
+                    body = createShortArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                    arbitraryType = "Short";
+                    break;
+                }
+                case "int":
+                case "java.lang.Integer": {
+                    body = createIntegerArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                    arbitraryType = "Integer";
+                    break;
+                }
+                case "long":
+                case "java.lang.Long": {
+                    body = createLongArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
+                    arbitraryType = "Long";
+                    break;
+                }
+                case "float":
+                case "java.lang.Float": {
+                    body = createFloatArbitrary(parameter, argument, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
+                    arbitraryType = "Float";
+                    break;
+                }
+                case "double":
+                case "java.lang.Double": {
+                    body = createDoubleArbitrary(parameter, argument, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
+                    arbitraryType = "Double";
+                    break;
+                }
+                case "char":
+                case "java.lang.Character":
+                    body = "return net.jqwik.api.Arbitraries.chars()";
+                    arbitraryType = "Character";
+                    break;
+                case "boolean":
+                case "java.lang.Boolean":
+                    body = "return net.jqwik.api.Arbitraries.of(true, false)";
+                    arbitraryType = "Boolean";
+                    break;
+                case "String":
+                case "java.lang.String":
+                    body = "return net.jqwik.api.Arbitraries.strings()";
+                    arbitraryType = "String";
+                    break;
+                default:
+                    body = "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
+                    arbitraryType = parameter.getType();
+                    break;
             }
-            case "short":
-            case "java.lang.Short": {
-                body = createShortArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
-                arbitraryType = "Short";
-                break;
-            }
-            case "int":
-            case "java.lang.Integer": {
-                body = createIntegerArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
-                arbitraryType = "Integer";
-                break;
-            }
-            case "long":
-            case "java.lang.Long": {
-                body = createLongArbitrary(parameter, argument, (IntegerConstraints) constraints.getOrDefault(parameter.getName(), null));
-                arbitraryType = "Long";
-                break;
-            }
-            case "float":
-            case "java.lang.Float": {
-                body = createFloatArbitrary(parameter, argument, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
-                arbitraryType = "Float";
-                break;
-            }
-            case "double":
-            case "java.lang.Double": {
-                body = createDoubleArbitrary(parameter, argument, (RealConstraints) constraints.getOrDefault(parameter.getName(), null));
-                arbitraryType = "Double";
-                break;
-            }
-            case "char":
-            case "java.lang.Character":
-                body = "return net.jqwik.api.Arbitraries.chars()";
-                arbitraryType = "Character";
-                break;
-            case "boolean":
-            case "java.lang.Boolean":
-                body = "return net.jqwik.api.Arbitraries.of(true, false)";
-                arbitraryType = "Boolean";
-                break;
-            case "String":
-            case "java.lang.String":
-                body = "return net.jqwik.api.Arbitraries.strings()";
-                arbitraryType = "String";
-                break;
-            default:
-                body = "return net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
-                arbitraryType = parameter.getType();
-                break;
         }
 
         Set<ModifierKind> modifiers = new HashSet<>(Collections.singletonList(ModifierKind.PRIVATE));
