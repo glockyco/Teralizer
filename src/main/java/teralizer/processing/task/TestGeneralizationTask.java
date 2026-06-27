@@ -430,6 +430,21 @@ public class TestGeneralizationTask extends AbstractTask {
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
         List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+        List<GeneralizableInput> receiverConstructorInputs = inputs.stream()
+            .filter(GeneralizableInput::isReceiverConstructorArgument)
+            .collect(Collectors.toList());
+        if (!receiverConstructorInputs.isEmpty()) {
+            CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getTarget();
+            List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
+            for (GeneralizableInput input : receiverConstructorInputs) {
+                constructorArguments.set(
+                    input.getConstructorArgumentIndex(),
+                    factory.Code().createCodeSnippetExpression("_p_." + input.toMethodParameter().getName())
+                );
+            }
+            constructorCall.setArguments(constructorArguments);
+        }
+
 
         for (int i = 0; i < args.size(); i++) {
             final int argumentIndex = i;

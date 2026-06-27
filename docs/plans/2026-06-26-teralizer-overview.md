@@ -27,7 +27,6 @@ work that depends on a re-run is deferred until (1) lands.
 
 ## Current focus: (1) beat JARVIS
 
-- `2026-06-27-receiver-constructor-inputs` *(plan)* — close the `Interval.getSize()` inline receiver-constructor blocker exposed by the pinned scoreboard run.
 - `2026-06-27-jarvis-scoreboard-evaluation-lane` *(spec)* — the clean evaluation-lane contract for pinned JARVIS-era evidence.
 - `2026-06-26-jarvis-case-coverage` *(audit)* — the per-case head-to-head evidence behind it.
 
@@ -37,7 +36,7 @@ work that depends on a re-run is deferred until (1) lands.
 |---|---|---|---|
 | `2026-06-27-jarvis-scoreboard-evaluation-lane` | spec | clean lane for reproducible pinned JARVIS Table-2 evidence | current focus (contract) |
 | `2026-06-27-jarvis-scoreboard-evidence-run` | plan | executed pinned JARVIS-era scoreboard run and decided the claim | implemented |
-| `2026-06-27-receiver-constructor-inputs` | plan | close the `Interval.getSize()` inline receiver-constructor blocker exposed by the scoreboard run | **current focus** |
+| `2026-06-27-receiver-constructor-inputs` | plan | close the `Interval.getSize()` inline receiver-constructor blocker exposed by the scoreboard run | implemented |
 | `2026-06-26-jarvis-case-coverage` | audit | per-case JARVIS head-to-head evidence + provenance | current focus (evidence) |
 | `2026-06-26-applicability-barriers` | audit | RQ6 real-world applicability barrier evidence (inventory / funnel / ledger) | deferred — step (2) reference |
 | `2026-06-26-data-reuse-and-msr-potential` | note | secondary MSR / data-paper backlog | deferred, gated on (1) |
@@ -49,8 +48,8 @@ work that depends on a re-run is deferred until (1) lands.
 ## Win condition (summary)
 
 "Beat JARVIS" = **capability** (10 JARVIS Table-2 rows entering the pipeline; the current evidence run tracks 14 assertion-level Teralizer probes) **+ PVC/IC**
-(parameter-value & instruction coverage ≥ JARVIS on SPF-amenable cases). Current run status: evidence collected, claim not yet supported because `Interval` receiver-construction inputs remain filtered. The original `Interval` paradigm concession only applies after the row enters the pipeline; `Precision` remains an ulps/raw-bits concession. NaN is a shared gap. Full criteria
-and the metric definition live in `2026-06-26-beat-jarvis-phase1`; the active implementation blocker is `2026-06-27-receiver-constructor-inputs`, using evidence from `2026-06-27-jarvis-scoreboard-evaluation-lane` and the archived `2026-06-27-jarvis-scoreboard-evidence-run`.
+(parameter-value & instruction coverage ≥ JARVIS on SPF-amenable cases). Current run status: evidence collected, claim not yet supported; `Interval` now enters and passes through receiver-constructor input promotion, while `Abs`/`Precision` remain SPF raw-bits blockers. The original `Interval` paradigm concession only applies after the row enters the pipeline; `Precision` remains an ulps/raw-bits concession. NaN is a shared gap. Full criteria
+and the metric definition live in `2026-06-26-beat-jarvis-phase1`; the active evidence lane is `2026-06-27-jarvis-scoreboard-evaluation-lane`, using the archived receiver-input and evidence-run plans plus the live `2026-06-26-jarvis-case-coverage` audit.
 
 ## Pointers
 

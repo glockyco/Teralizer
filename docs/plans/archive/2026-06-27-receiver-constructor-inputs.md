@@ -1,9 +1,10 @@
 ---
 title: Receiver Constructor Inputs
 type: plan
-status: active
+status: implemented
 created: 2026-06-27
 parent: 2026-06-26-teralizer-overview
+archived: 2026-06-27
 ---
 
 Close the remaining JARVIS `Interval.getSize()` front-end gap discovered by the pinned scoreboard run.
@@ -21,8 +22,8 @@ Promote constructor arguments from a tested receiver expression such as `new Int
 
 ## Tasks
 
-- [ ] Add a failing receiver-constructor input test around `new Interval(1.0, 10.0).getSize()`.
-- [ ] Extend analysis so inline receiver constructor arguments become `GeneralizableInput` records.
-- [ ] Extend generation so receiver constructor parameters rebuild the receiver expression.
-- [ ] Re-run focused Java tests and the Math scoreboard config against scratch DB/data.
-- [ ] Update `2026-06-26-jarvis-case-coverage` with the new Interval result.
+- [x] Add a failing receiver-constructor input test around `new Interval(1.0, 10.0).getSize()`.
+- [x] Extend analysis so inline receiver constructor arguments become `GeneralizableInput` records.
+- [x] Extend generation so receiver constructor parameters rebuild the receiver expression.
+- [x] Re-run focused Java tests and the Math scoreboard config against scratch DB/data.
+- [x] Update `2026-06-26-jarvis-case-coverage` with the new Interval result.

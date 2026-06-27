@@ -171,26 +171,26 @@ Run inputs:
 - Scratch outputs: ignored `data/jarvis-scoreboard/` tree and scratch DB `postgres_jarvis_scoreboard`; no `postgres_dev`, `postgres_test`, or `_replication` target was used.
 - Score query: `analysis/src/teralizer/jarvis_scoreboard.py::get_scoreboard(conn, variants=["NAIVE", "IMPROVED"])`, with probe names joined from `test.test_method_name`.
 
-Current result: **claim not supported yet**. The run gives PVC/IC evidence for 7 of the 10 Table-2 rows, but `Interval.getSize()` is still filtered before generalization because receiver-constructor arguments are not promoted into method parameters, and `Abs`/`Precision` generated tests fail as expected from the SPF raw-bits blockers.
+Current result: **claim not supported yet**. The run gives PVC/IC evidence for 8 of the 10 Table-2 rows. `Interval.getSize()` now passes after promoting inline receiver-constructor arguments into generated parameters. `Abs`/`Precision` generated tests still fail as expected from the SPF raw-bits blockers.
 
 | Table row / probe | Status | NAIVE PVC / trials | IMPROVED PVC / trials | IC unit | Cause / note |
 |---|---:|---:|---:|---:|---|
-| `CharUtilsTest::isAscii` / `assertTrue` | pass | 68 / 300 | 68 / 300 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
-| `CharUtilsTest::isAscii` / `assertFalse` | pass | 92 / 300 | 100 / 300 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
-| `CharUtilsTest::isPrintable` / `assertTrue` | pass | 60 / 504 | 60 / 401 | Lang project: 105 / 67,637 instr. | `char` pipeline works; jqwik stops after configured tries plus shrink/edge behavior. |
-| `CharUtilsTest::isPrintable` / `assertFalse` | pass | 32 / 300 | 32 / 400 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
-| `FastMathTest::testMinMaxDouble` / `min` | pass | 131 / 600 | 106 / 600 | Math project: 987 / 342,114 instr. | NaN/signed-zero concession remains. |
-| `FastMathTest::testMinMaxDouble` / `max` | pass | 131 / 600 | 106 / 600 | Math project: 987 / 342,114 instr. | NaN/signed-zero concession remains. |
-| `FastMathTest::toIntExact` | pass | 91 / 600 | 91 / 600 | Math project: 987 / 342,114 instr. | Overflow exception path remains a concession. |
-| `PolynomialFunctionTest::testConstants` | pass | 91 / 1100 | 91 / 1100 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
-| `PolynomialFunctionTest::testLinear` | pass | 91 / 1200 | 91 / 1200 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
-| `PolynomialFunctionTest::testfirstDerivativeComparison` | pass | 90 / 1600 | 90 / 1600 | Math project: 987 / 342,114 instr. | Derivative object flow reaches generated tests. |
-| `IntervalTest::getSize` | blocked before generation | — | — | — | `ParameterTypeFilter`: tested method has no parameters; receiver-constructor inputs are not yet generalizable method parameters. |
+| `CharUtilsTest::isAscii` / `assertTrue` | pass | 68 / 900 | 68 / 900 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
+| `CharUtilsTest::isAscii` / `assertFalse` | pass | 92 / 900 | 100 / 900 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
+| `CharUtilsTest::isPrintable` / `assertTrue` | pass | 60 / 1512 | 60 / 1203 | Lang project: 105 / 67,637 instr. | `char` pipeline works; jqwik stops after configured tries plus shrink/edge behavior. |
+| `CharUtilsTest::isPrintable` / `assertFalse` | pass | 32 / 900 | 32 / 1200 | Lang project: 105 / 67,637 instr. | `char` pipeline works. |
+| `FastMathTest::testMinMaxDouble` / `min` | pass | 133 / 1202 | 196 / 2800 | Math project: 987 / 342,114 instr. | NaN/signed-zero concession remains. |
+| `FastMathTest::testMinMaxDouble` / `max` | pass | 141 / 1213 | 112 / 1204 | Math project: 987 / 342,114 instr. | NaN/signed-zero concession remains. |
+| `FastMathTest::toIntExact` | pass | 98 / 1205 | 197 / 1800 | Math project: 987 / 342,114 instr. | Overflow exception path remains a concession. |
+| `PolynomialFunctionTest::testConstants` | pass | 222 / 2800 | 92 / 3400 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
+| `PolynomialFunctionTest::testLinear` | pass | 181 / 3800 | 197 / 3000 | Math project: 987 / 342,114 instr. | Constructor/array input support works for this fixture shape. |
+| `PolynomialFunctionTest::testfirstDerivativeComparison` | pass | 91 / 4000 | 91 / 3202 | Math project: 987 / 342,114 instr. | Derivative object flow reaches generated tests. |
+| `IntervalTest::getSize` | pass | 72 / 302 | 72 / 302 | Math project: 987 / 342,114 instr. | Receiver-constructor input support works for inline `new Interval(lower, upper).getSize()`. |
 | `UnivariateFunctionTest::testAbs` | generated test fails | — | — | — | Expected raw-bits/`FastMath.abs` SPF gap; `generalization.is_included=false`. |
 | `PrecisionTest` / `assertTrue` | generated test fails | — | — | — | Expected `doubleToRawLongBits`/ulps gap; `generalization.is_included=false`. |
 | `PrecisionTest` / `assertFalse` | generated test fails | — | — | — | Expected `doubleToRawLongBits`/ulps gap; `generalization.is_included=false`. |
 
-The 10 JARVIS rows therefore compress the 14 assertion-level probes as follows: CharUtils rows pass, FastMath min/max passes under the NaN/signed-zero concession, `toIntExact` passes under the overflow concession, PolynomialFunction rows pass, `Interval` is a Teralizer front-end blocker, and `Abs`/`Precision` remain SPF model blockers.
+The 10 JARVIS rows therefore compress the 14 assertion-level probes as follows: CharUtils rows pass, FastMath min/max passes under the NaN/signed-zero concession, `toIntExact` passes under the overflow concession, PolynomialFunction rows pass, `Interval` passes through receiver-constructor input promotion, and `Abs`/`Precision` remain SPF model blockers.
 
 ## Spike results
 

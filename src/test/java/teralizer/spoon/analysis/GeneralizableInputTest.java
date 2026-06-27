@@ -50,6 +50,40 @@ public class GeneralizableInputTest {
         Assert.assertEquals("5", inputs.get(2).toMethodArgument().getValue());
     }
 
+    @Example
+    void derivesSyntheticInputsFromInlineReceiverConstructorArguments() {
+        CtInvocation<?> assertion = assertionFromSource(
+            "package smoke;\n"
+                + "import static org.junit.Assert.assertEquals;\n"
+                + "public class SubjectTest {\n"
+                + "  public static final class Interval {\n"
+                + "    private final double lower;\n"
+                + "    private final double upper;\n"
+                + "    public Interval(double lower, double upper) { this.lower = lower; this.upper = upper; }\n"
+                + "    public double getSize() { return upper - lower; }\n"
+                + "  }\n"
+                + "  @org.junit.Test public void valueInsideInterval() {\n"
+                + "    assertEquals(9.0, new Interval(1.0, 10.0).getSize(), 0.0);\n"
+                + "  }\n"
+                + "}\n"
+        );
+        CtInvocation<?> testedMethodCall = assertion.getArguments().get(1).filterChildren(CtInvocation.class::isInstance)
+            .map(CtInvocation.class::cast)
+            .first();
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+
+        Assert.assertEquals(2, inputs.size());
+        Assert.assertEquals("_ctor_receiver_zero_lower", inputs.get(0).toMethodParameter().getName());
+        Assert.assertEquals("double", inputs.get(0).toMethodParameter().getType());
+        Assert.assertEquals("1.0", inputs.get(0).toMethodArgument().getValue());
+        Assert.assertEquals("_ctor_receiver_one_upper", inputs.get(1).toMethodParameter().getName());
+        Assert.assertEquals("10.0", inputs.get(1).toMethodArgument().getValue());
+        Assert.assertTrue(inputs.get(0).isReceiverConstructorArgument());
+        Assert.assertTrue(inputs.get(1).isReceiverConstructorArgument());
+    }
+
     private static CtInvocation<?> assertionFromSource(String source) {
         Launcher launcher = new Launcher();
         launcher.addInputResource(new VirtualFile(source, "SubjectTest.java"));

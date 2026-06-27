@@ -16,6 +16,8 @@ import java.util.List;
 import static teralizer.util.Configuration.SUPPORTED_TYPES;
 
 public class GeneralizableInput {
+    private static final int RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX = -1;
+
     private final int methodArgumentIndex;
     private final int constructorArgumentIndex;
     private final MethodParameter parameter;
@@ -40,6 +42,14 @@ public class GeneralizableInput {
         List<GeneralizableInput> inputs = new ArrayList<>();
         List<CtParameter<?>> parameters = testedMethod.getParameters();
         List<CtExpression<?>> arguments = testedMethodCall.getArguments();
+        if (!testedMethod.isStatic() && testedMethodCall.getTarget() instanceof CtConstructorCall<?>) {
+            inputs.addAll(deriveConstructorInputs(
+                RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX,
+                "receiver",
+                (CtConstructorCall<?>) testedMethodCall.getTarget()
+            ));
+        }
+
 
         for (int i = 0; i < parameters.size(); i++) {
             CtParameter<?> parameter = parameters.get(i);
@@ -56,7 +66,7 @@ public class GeneralizableInput {
                     argument
                 ));
             } else if (argument instanceof CtConstructorCall<?>) {
-                inputs.addAll(deriveConstructorInputs(i, parameter, (CtConstructorCall<?>) argument));
+                inputs.addAll(deriveConstructorInputs(i, parameter.getSimpleName(), (CtConstructorCall<?>) argument));
             }
         }
 
@@ -65,7 +75,7 @@ public class GeneralizableInput {
 
     private static List<GeneralizableInput> deriveConstructorInputs(
         int methodArgumentIndex,
-        CtParameter<?> methodParameter,
+        String methodParameterName,
         CtConstructorCall<?> constructorCall
     ) {
         List<GeneralizableInput> inputs = new ArrayList<>();
@@ -87,7 +97,7 @@ public class GeneralizableInput {
             String constructorParameterName = i < constructorParameters.size()
                 ? constructorParameters.get(i).getSimpleName()
                 : "arg" + i;
-            String inputName = constructorInputName(methodParameter.getSimpleName(), i, constructorParameterName);
+            String inputName = constructorInputName(methodParameterName, i, constructorParameterName);
             String typeName = type.getQualifiedName();
             inputs.add(new GeneralizableInput(
                 methodArgumentIndex,
@@ -153,6 +163,10 @@ public class GeneralizableInput {
 
     public boolean isConstructorArgument() {
         return this.constructorArgumentIndex >= 0;
+    }
+
+    public boolean isReceiverConstructorArgument() {
+        return this.methodArgumentIndex == RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX;
     }
 
     public MethodParameter toMethodParameter() {

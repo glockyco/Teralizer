@@ -191,8 +191,11 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtMethod<?> testedMethod,
         CtInvocation<?> testedMethodCall
     ) {
+        List<GeneralizableInput> generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+        boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
+
         List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
-        if (!testedMethod.isStatic()) {
+        if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
             CtExpression<?> target = testedMethodCall.getTarget();
             CtTypeReference<?> targetType = target instanceof CtThisAccess
                 ? factory.Type().get(this.assertionRecord.getInstrumentedClassQualifiedName()).getReference()
@@ -208,8 +211,6 @@ public class JpfInstrumentationTask extends AbstractTask {
                 instrumentedParameters.add(parameter);
             }
         }
-
-        List<GeneralizableInput> generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
         for (GeneralizableInput input : generalizableInputs) {
             CtTypeReference<?> type = factory.Type().createReference(input.toMethodParameter().getType());
             type.setSimplyQualified(false);
@@ -245,7 +246,20 @@ public class JpfInstrumentationTask extends AbstractTask {
         }
         instrumentedTestedMethodCall.setArguments(arguments);
         if (!testedMethod.isStatic()) {
-            instrumentedTestedMethodCall.setTarget(factory.createCodeSnippetExpression(instrumentedParameters.get(0).getSimpleName()));
+            if (hasReceiverConstructorInputs) {
+                CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getTarget().clone();
+                List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
+                generalizableInputs.stream()
+                    .filter(GeneralizableInput::isReceiverConstructorArgument)
+                    .forEach(input -> constructorArguments.set(
+                        input.getConstructorArgumentIndex(),
+                        factory.createCodeSnippetExpression(input.toMethodParameter().getName())
+                    ));
+                constructorCall.setArguments(constructorArguments);
+                instrumentedTestedMethodCall.setTarget(constructorCall);
+            } else {
+                instrumentedTestedMethodCall.setTarget(factory.createCodeSnippetExpression(instrumentedParameters.get(0).getSimpleName()));
+            }
         }
 
         CtBlock<?> instrumentedBody = factory.createBlock();
@@ -334,7 +348,9 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtInvocation<?> testedMethodCall
     ) {
         CtInvocation<?> instrumentedMethodCall = factory.createInvocation(factory.createThisAccess(instrumentedClass.getReference()), instrumentedMethod.getReference());
-        if (!testedMethod.isStatic()) {
+        List<GeneralizableInput> generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+        boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
+        if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
             CtExpression<?> target = testedMethodCall.getTarget();
             if (target instanceof CtThisAccess) {
                 instrumentedMethodCall.addArgument(factory.createThisAccess(target.getType(), false));
@@ -342,7 +358,6 @@ public class JpfInstrumentationTask extends AbstractTask {
                 instrumentedMethodCall.addArgument(target);
             }
         }
-        List<GeneralizableInput> generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
         for (GeneralizableInput input : generalizableInputs) {
             instrumentedMethodCall.addArgument(input.getSourceExpression());
         }
