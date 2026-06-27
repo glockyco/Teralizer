@@ -242,7 +242,10 @@ at `COLLECT_JUNIT_REPORTS_ORIGINAL` because `getMethodsByName` only searches
 declared methods, not inherited ones. Every downstream Spoon stage breaks for
 the same reason. The fix is to flatten inherited `@Test` and lifecycle methods
 into the cloned class at clone time. Non-trivial (architectural change to
-`SpoonUtils.cloneClass`, affects 3 downstream tasks) but well-scoped. Spec:
+`SpoonUtils.cloneClass`, affects 3 downstream tasks) but well-scoped. Reach is
+not directly comparable to the MUT-id spec (58,122 assertions vs 5,758 tests
+of unknown assertion count); at the corpus median of 2 assertions/test the
+projected reach is ~11,500 assertions. Spec:
 `2026-06-27-inherited-test-method-support`.
 
 ### Tier 4 — research / deep (gated)

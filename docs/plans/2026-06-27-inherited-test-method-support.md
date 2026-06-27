@@ -22,9 +22,11 @@ same reason: the test method is not in the child class's declared-method set.
 - **Nature:** adds more tests to projects that already partially work — it does
   not unlock new projects or new pipeline stages.
 - **Priority:** below the mutation-based MUT-identification spec
-  (`2026-06-27-mutation-based-mut-identification`). That spec addresses 21,081
-  MissingValue-failed assertions across all projects; this spec addresses 5,758
-  tests in 52 projects that already have some working tests.
+  (`2026-06-27-mutation-based-mut-identification`). That spec addresses 58,122
+  first-reject assertions across 21,081 tests; this spec addresses 5,758 tests
+  whose assertion count is unknown (they were dropped before assertion
+  analysis). At the corpus median of 2 assertions/test, the projected reach is
+  ~11,500 assertions — a rough projection, not a measured count.
 
 ## Evidence (DB-grounded, `postgres_test`, 2026-06-27)
 
