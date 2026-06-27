@@ -36,12 +36,12 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 
 ### Task 1: Clause model and flattening
 
-- [ ] Add `ConstraintClause` with `id`, `Model expression`, and `String javaExpression` rendered through `ModelToJavaTransformer`.
-- [ ] Add `ConstraintClauses.from(Model inputModel, Map<String, String> parameterTypes)` that flattens only top-level `Operator.AND` nodes and preserves every other expression as one clause.
-- [ ] Write `ConstraintClausesTest` first for a three-conjunct input and verify the test fails before implementation.
-- [ ] Implement the flattener without changing generator behavior.
-- [ ] Run `./gradlew test --tests teralizer.jqwik.planning.ConstraintClausesTest`.
-- [ ] Commit the clause model and tests.
+- [x] Add `ConstraintClause` with `id`, `Model expression`, and `String javaExpression` rendered through `ModelToJavaTransformer`.
+- [x] Add `ConstraintClauses.from(Model inputModel, Map<String, String> parameterTypes)` that flattens only top-level `Operator.AND` nodes and preserves every other expression as one clause.
+- [x] Write `ConstraintClausesTest` first for a three-conjunct input and verify the test fails before implementation.
+- [x] Implement the flattener without changing generator behavior.
+- [x] Run `./gradlew test --tests teralizer.jqwik.planning.ConstraintClausesTest`.
+- [x] Commit the clause model and tests.
 
 ### Task 2: Planner result types
 
