@@ -35,8 +35,8 @@ load_dotenv(find_project_root())
 class DatabaseConfig:
     """Centralized database configuration for teralizer analysis."""
 
-    # Valid dataset variants for replication workflow
-    VALID_VARIANTS = ("original", "verify", "replicate")
+    # Valid dataset variants for replication and scorecard workflows
+    VALID_VARIANTS = ("original", "verify", "replicate", "jarvis")
 
     def __init__(self):
         self.host = os.getenv("DB_HOST", "localhost")
@@ -48,8 +48,8 @@ class DatabaseConfig:
         self.db_name_dev = os.getenv("DB_NAME_DEV", "postgres_dev")
         self.db_name_test = os.getenv("DB_NAME_TEST", "postgres_test")
 
-        # Dataset variant: "original", "verify", or "replicate"
-        # - original/verify: use original databases
+        # Dataset variant: "original", "verify", "replicate", or "jarvis"
+        # - original/verify/jarvis: use configured database names
         # - replicate: use *_replication databases
         self.variant = os.getenv("DATASET_VARIANT", "original")
         if self.variant not in self.VALID_VARIANTS:
