@@ -172,7 +172,9 @@ def compare_directories(
     diff_messages = []
 
     # Get all files from both directories
-    base_files = {f.name: f for f in base_dir.glob(pattern)} if base_dir.exists() else {}
+    base_files = (
+        {f.name: f for f in base_dir.glob(pattern)} if base_dir.exists() else {}
+    )
     target_files = (
         {f.name: f for f in target_dir.glob(pattern)} if target_dir.exists() else {}
     )

@@ -994,13 +994,15 @@ def compute_exclusion_breakdown_filtering_vs_failures(
     )
 
     # Count exclusions by type for test level
-    test_counts = tests_df.groupby("exclusion_type").size().reset_index(name="count")
+    test_counts = (
+        tests_df.groupby("exclusion_type").size().rename("count").reset_index()
+    )
     test_counts["variant"] = "SHARED"  # Tests belong to SHARED variant
     test_counts["Type"] = "Test"
 
     # Count exclusions by type for assertion level
     assertion_counts = (
-        assertions_df.groupby("exclusion_type").size().reset_index(name="count")
+        assertions_df.groupby("exclusion_type").size().rename("count").reset_index()
     )
     assertion_counts["variant"] = "SHARED"  # Assertions belong to SHARED variant
     assertion_counts["Type"] = "Assertion"
