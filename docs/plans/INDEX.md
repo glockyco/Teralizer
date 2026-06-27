@@ -7,7 +7,9 @@
 - **Data Reuse & MSR Paper Potential (secondary outputs)** [note] `2026-06-26-data-reuse-and-msr-potential` ← 2026-06-26-teralizer-overview
 - **JARVIS Head-to-Head Evidence** [audit] `2026-06-26-jarvis-case-coverage` ← 2026-06-26-teralizer-overview
 - **Teralizer — Project Overview** [overview] `2026-06-26-teralizer-overview`
+- **Generalizable Input Rule** [spec] `2026-06-27-generalizable-input-rule` ← 2026-06-26-teralizer-overview
 - **JARVIS Scoreboard Evaluation Lane** [spec] `2026-06-27-jarvis-scoreboard-evaluation-lane` ← 2026-06-26-teralizer-overview
+- **SPF Ulps Raw-Bits Spike** [plan] `2026-06-27-spf-ulps-raw-bits-spike` (—) ← 2026-06-26-teralizer-overview
 - **Teralizer Capability & Improvement Directions** [audit] `2026-06-27-teralizer-capability-and-improvement-directions` ← 2026-06-26-teralizer-overview
 
 ## draft

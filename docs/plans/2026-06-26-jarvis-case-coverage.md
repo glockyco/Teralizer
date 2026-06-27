@@ -217,11 +217,11 @@ barrier that kept 9/10 JARVIS Table-2 rows out of our dataset (static-method-onl
 selection plus type/corpus limits) is **a Teralizer criterion, not an SPF limit.**
 
 Genuine SPF gaps are narrow and specific:
-- `Double.doubleToRawLongBits` still has no symbolic model over SPF's rational reals, so pure ulps-style checks such as `Precision.equals(double,double,int maxUlps)` remain research-grade FP work. The Table-2 scorecard fixture uses `Precision.equals(double,double,double)` and now reaches the extractable `|x-y|≤eps` branch.
+- `Double.doubleToRawLongBits` still has no symbolic model in the default rational-real mode, so pure ulps-style checks such as `Precision.equals(double,double,int maxUlps)` remain out of the current scorecard. This is not dismissed as impossible: `2026-06-27-spf-ulps-raw-bits-spike` tests the `symbolic.fp=true` + Z3 IEEE bit-vector route.
 - `FastMath.abs` no longer blocks the scorecard once the generated JPF classpath prepends `${jpf-symbc}/build/classes`; this reuses jpf-symbc's existing model-class mechanism rather than modeling raw bits.
 - `toIntExact`'s missing overflow exception is a symcrete `LCMP` control-flow
   decoupling in jpf-symbc (solver-independent; deep fix). `z3bitvector` never
-  helped; `z3` is best for all 11.
+  helped; `z3` is best for the current scorecard rows.
 
 ## Implications for Teralizer extension
 
@@ -231,7 +231,8 @@ The spec exists for most JARVIS cases, so ingesting them is largely a
   object construction** (unblocks Interval + 3× PolynomialFunction + Abs) and
   **`char` parameters** (CharUtils). SPF already delivers the specs.
 - **Completed in this lane:** prepend the jpf-symbc model classes to generated JPF configs so `FastMath.abs(double)` is reachable.
-- **Defer (research / deep):** pure `Precision.equals` ulps overload (FP theory), `toIntExact` exception path (LCMP semantics).
+- **Focused spike:** pure `Precision.equals(double,double,int maxUlps)` raw-bits support via `symbolic.fp=true` + Z3 `fp.to_ieee_bv`; see `2026-06-27-spf-ulps-raw-bits-spike`.
+- **Deep fix:** `toIntExact` exception path (LCMP semantics).
 
 ## Pointers
 
