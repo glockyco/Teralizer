@@ -1,0 +1,10 @@
+category,test_id,static_mut,mutant_killed,verdict,notes
+DISAGREE,437860,MinimumLengthStringConstraintTests.createMinimumStringLengthConstraintWithGivenLengthAndCallIsSatisfiedForInput,MinimumLengthStringConstraint.isSatisfied,oracle-correct,Static picked the test method name itself not the MUT. Test calls isSatisfied and asserts result.
+DISAGREE,424725,IntegerVector.toString,IntegerCompositionGenerator.getOriginalVector,oracle-correct,Static picked list.size() (assertion helper). Real focal is getOriginalVector.
+DISAGREE,432054,TestResults.hasResults,"IIPU.getResults|PackageProducer.buildPackageDataBase",unclear,Test does call hasResults but mutants killed in upstream methods. Could be either.
+DISAGREE,426587,AttrName.hashCode,AttrName.attr,oracle-correct,Static picked hashCode() (JDK method on result). Focal is attr() which creates the object.
+DISAGREE,461096,DirectionalVelocity.move,DirectionalVelocityImpl.move,both-wrong,Interface vs impl resolution - same focal method different class. Not a real disagreement.
+DISAGREE,450675,JpegData.getItemCount,JpegData.read,oracle-correct,Static picked getItemCount() (assertion check). Focal is read() which loads the data.
+DISAGREE,417275,ExplanationChunk.getRule,JEFFWizard.addText,oracle-correct,Static picked getChunks().size() (assertion). Focal is addText which adds the chunk.
+DISAGREE,437614,TaskInfo.getTaskName,StopWatch.getLastTaskInfo,oracle-correct,Static picked getTaskName() (getter on result). Focal is getLastTaskInfo which produces the result.
+DISAGREE,481694,OrderItem.getProductQuantity,OrderingServiceImpl.updateQuantity,oracle-correct,Static picked getProductQuantity() (assertion). Focal is updateQuantity which changes state.
