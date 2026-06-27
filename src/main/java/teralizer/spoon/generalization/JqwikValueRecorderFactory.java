@@ -15,6 +15,15 @@ public class JqwikValueRecorderFactory {
     public static CtClass<?> createRecorderClass(Factory factory, Path valueLogPath) {
         CtClass<?> recorderClass = factory.Class().create("JqwikValueRecorder");
         recorderClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
+        recorderClass.addField(
+            factory.Field().create(
+                recorderClass,
+                new HashSet<>(Arrays.asList(ModifierKind.PRIVATE, ModifierKind.STATIC)),
+                factory.Type().BOOLEAN_PRIMITIVE,
+                "initialized",
+                factory.Code().createLiteral(false)
+            )
+        );
 
         CtMethod<?> recordMethod = factory.Method().create(
             recorderClass,
@@ -43,6 +52,7 @@ public class JqwikValueRecorderFactory {
     static String createRecorderSource(Path valueLogPath) {
         return "public static class JqwikValueRecorder {\n"
             + "    private static final java.nio.file.Path VALUE_LOG_PATH = java.nio.file.Paths.get(\"" + escapePath(valueLogPath) + "\");\n"
+            + "    private static boolean initialized = false;\n"
             + "    public static synchronized void record(final TestParameters parameters) {\n"
             + createRecordBody(valueLogPath).replace("\n", "\n        ") + "\n"
             + "    }\n"
@@ -82,6 +92,10 @@ public class JqwikValueRecorderFactory {
         return "try {\n"
             + "    final java.nio.file.Path VALUE_LOG_PATH = java.nio.file.Paths.get(\"" + escapePath(valueLogPath) + "\");\n"
             + "    java.nio.file.Files.createDirectories(VALUE_LOG_PATH.getParent());\n"
+            + "    if (!initialized) {\n"
+            + "        java.nio.file.Files.deleteIfExists(VALUE_LOG_PATH);\n"
+            + "        initialized = true;\n"
+            + "    }\n"
             + "    StringBuilder row = new StringBuilder();\n"
             + "    for (java.lang.reflect.Field field : TestParameters.class.getDeclaredFields()) {\n"
             + "        if (field.isSynthetic() || field.getName().startsWith(\"$\")) {\n"

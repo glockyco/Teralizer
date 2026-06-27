@@ -20,6 +20,8 @@ public class JqwikValueRecorderFactoryTest {
         Assert.assertTrue(source.contains("case '\\n'"));
         Assert.assertTrue(source.contains("case '\\t'"));
         Assert.assertTrue(source.contains("field.setAccessible(true)"));
+        Assert.assertTrue(source.contains("private static boolean initialized = false"));
+        Assert.assertTrue(source.contains("java.nio.file.Files.deleteIfExists(VALUE_LOG_PATH)"));
         Assert.assertTrue(source.contains("java.nio.file.StandardOpenOption.APPEND"));
         Assert.assertTrue(source.contains("field.isSynthetic()"));
         Assert.assertTrue(source.contains("field.getName().startsWith(\"$\")"));
