@@ -228,6 +228,8 @@ public class TestGeneralizationTask extends AbstractTask {
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
+        String pendingBooleanOutputExpression = null;
+        String pendingBooleanOutputOperator = null;
 
         if (Configuration.getGeneralizationAlgorithm(this.getVariant()) == GeneralizationAlgorithm.BASELINE) {
             List<MethodParameter> allParameters = new ArrayList<>(testedMethodParameters);
@@ -248,7 +250,8 @@ public class TestGeneralizationTask extends AbstractTask {
             Model inputModel = jsonToModelTransformer.transform(inputSpecification);
             Model outputModel = jsonToModelTransformer.transform(outputSpecification);
 
-            ModelToJavaTransformer modelToJavaTransformer = new ModelToJavaTransformer();
+            Map<String, String> testedMethodParameterTypes = testedMethodParameters.stream().collect(Collectors.toMap(MethodParameter::getName, MethodParameter::getType));
+            ModelToJavaTransformer modelToJavaTransformer = new ModelToJavaTransformer(testedMethodParameterTypes);
             String inputJava = modelToJavaTransformer.transform(inputModel);
             String outputJava = modelToJavaTransformer.transform(outputModel);
 
@@ -322,9 +325,19 @@ public class TestGeneralizationTask extends AbstractTask {
             MethodArgument outputValue = gson.fromJson(outputValueString, MethodArgument.class);
 
             if (outputJava != null) {
-                int index = TestAnalysis.getExpectedParameterIndex(assertion).get();
-                List<CtExpression<?>> assertArguments = assertion.getArguments();
-                assertArguments.set(index, factory.Code().createCodeSnippetExpression("(" + outputValue.getType() + ") (" + outputJava + ")"));
+                boolean isBooleanOutput = outputValue.getType().equals("boolean") || outputValue.getType().equals("java.lang.Boolean");
+                String expectedExpression = isBooleanOutput
+                    ? "((" + outputJava + ") != 0)"
+                    : "(" + outputValue.getType() + ") (" + outputJava + ")";
+
+                Optional<Integer> expectedParameterIndex = TestAnalysis.getExpectedParameterIndex(assertion);
+                if (expectedParameterIndex.isPresent()) {
+                    List<CtExpression<?>> assertArguments = assertion.getArguments();
+                    assertArguments.set(expectedParameterIndex.get(), factory.Code().createCodeSnippetExpression(expectedExpression));
+                } else if (isBooleanOutput && TestAnalysis.getActualParameterIndex(assertion).isPresent()) {
+                    pendingBooleanOutputExpression = expectedExpression;
+                    pendingBooleanOutputOperator = assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_FALSE) ? "!=" : "==";
+                }
             }
 
             // ------------------------------------------------------------------------------------------------------ //
@@ -399,6 +412,13 @@ public class TestGeneralizationTask extends AbstractTask {
             if (Configuration.SUPPORTED_TYPES.contains(arg.getType().getSimpleName())) {
                 args.set(i, factory.Code().createCodeSnippetExpression("_p_." + param.getSimpleName()));
             }
+        }
+
+        if (pendingBooleanOutputExpression != null) {
+            List<CtExpression<?>> assertArguments = assertion.getArguments();
+            int index = TestAnalysis.getActualParameterIndex(assertion).get();
+            CtExpression<?> actualArgument = assertArguments.get(index);
+            assertArguments.set(index, factory.Code().createCodeSnippetExpression("(" + actualArgument + ") " + pendingBooleanOutputOperator + " " + pendingBooleanOutputExpression));
         }
 
         // ------------------------------------------------------------------------------------------------------ //
