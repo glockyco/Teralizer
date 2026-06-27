@@ -31,8 +31,8 @@ Metric definition:
 
 ## Tasks
 
-- [ ] Fix #10 double/float bounds configuration in jpf-symbc `ProblemZ3.makeRealVar` so SPF samples the full real domain for double-heavy Table-2 cases.
-- [ ] Add #1 `char` and `boolean` support in `Configuration.SUPPORTED_TYPES` and the generator layer.
+- [x] Confirm #10 double/float bounds are irrelevant to Teralizer collect-constraints mode and leave jpf-symbc solver bounds unchanged for Phase 1.
+- [x] Add #1 `char` and `boolean` support in `Configuration.SUPPORTED_TYPES`, generated value rendering, and boolean-return assertion rewriting.
 - [ ] Add #11 a `FastMath.abs` SPF model in the jpf-symbc model classes using the existing native-math model pattern.
 - [ ] Fix #19 the `TestGeneralizationListener.writeSpecificationFiles` listener NPE.
 - [ ] Implement #3 object-construction inputs in `JpfInstrumentationTask`, scoped to fixed-arity inline construction with constructing-input generation.
