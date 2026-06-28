@@ -183,6 +183,14 @@ public class Configuration {
     }
 
     // ----- SPF / JPF ----- //
+    /**
+     * The SPF model/native-peer classpath, prepended to the project classpath in the
+     * generated JPF config so model classes (e.g. {@code FastMath.abs}) resolve from
+     * the symbc build before the project's own classes. Single source of truth for
+     * {@code JpfInstrumentationTask} and the config template test.
+     */
+    public static final String JPF_SYMBC_MODEL_CLASSPATH = "${jpf-symbc}/build/classes";
+
     public static double getJpfMaxExecutionTime() {
         return CONFIG.getDouble(TOOL_NAME_LOWER + ".jpf.max-execution-time");
     }

@@ -1,10 +1,11 @@
 package teralizer.processing.task;
 
+import net.jqwik.api.Example;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import net.jqwik.api.Example;
 import org.junit.Assert;
+import teralizer.util.Configuration;
 
 import java.io.StringWriter;
 import java.util.Properties;
@@ -20,7 +21,7 @@ public class JpfConfigTemplateTest {
         VelocityContext context = new VelocityContext();
         context.put("driverClassQualifiedName", "example.Driver");
         context.put("symbolicMethod", "example.Test.value(sym)");
-        context.put("jpfSymbcModelClasspath", "${jpf-symbc}/build/classes");
+        context.put("jpfSymbcModelClasspath", Configuration.JPF_SYMBC_MODEL_CLASSPATH);
         context.put("pathSeparator", sep);
         context.put("classpath", "project/target/classes" + sep + "project/target/test-classes");
         context.put("maxExecutionTime", 30.0);
@@ -41,7 +42,7 @@ public class JpfConfigTemplateTest {
         Template template = velocity.getTemplate("jpf-config.vm");
         template.merge(context, writer);
 
-        Assert.assertTrue(writer.toString().contains("classpath=${jpf-symbc}/build/classes" + sep + "project/target/classes" + sep + "project/target/test-classes"));
+        Assert.assertTrue(writer.toString().contains("classpath=" + Configuration.JPF_SYMBC_MODEL_CLASSPATH + sep + "project/target/classes" + sep + "project/target/test-classes"));
     }
 
     private static Properties templateProperties() {
