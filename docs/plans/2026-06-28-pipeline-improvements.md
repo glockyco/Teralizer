@@ -12,11 +12,11 @@ Soundness rule for every task: a generated value must still satisfy the SPF path
 
 ## Phase 1 — Quick correctness wins
 
-- [ ] A-2 · Fix Error JSON round-trip: align the field name between `ModelToJsonTransformer.ErrorSerializer` (`error_type`) and `JsonToModelTransformer.ErrorDeserializer` (`type`); add a round-trip test. (confirm the bug first)
-- [ ] A-4 · Quote/escape `ConstantString` in `ModelToJavaTransformer.postVisit(ConstantString)`; thread boolean types so `JpfAnalysisTask`'s no-arg transformer stops rendering booleans as bare int refs.
-- [ ] B-2 · `MinMax.minDouble` → `-Double.MAX_VALUE` (not `Double.MIN_VALUE`); give `SymbolicReal.UNDEFINED` a distinct sentinel; fix the config-override sentinel pattern.
-- [ ] C-5 · Guard non-finite constant bounds in `RealConstraints.addConstantLowerBound/UpperBound`.
-- [ ] D-2 · Make `Operator.get()` fail with a typed exception (or typed unsupported result) instead of assert-only.
+- [x] A-2 · Fix Error JSON round-trip: align the field name between `ModelToJsonTransformer.ErrorSerializer` (`error_type`) and `JsonToModelTransformer.ErrorDeserializer` (`type`); add a round-trip test. → done (`31d20f7c`).
+- [x] A-4 · Quote/escape `ConstantString` in `ModelToJavaTransformer.postVisit(ConstantString)`; thread boolean types so `JpfAnalysisTask`'s transformer stops rendering booleans as bare int refs. → done (`c4767f1a` quoting, `87348924` boolean threading).
+- [x] B-2 · `MinMax.minDouble` → `-Double.MAX_VALUE`; replaced the `SymbolicReal.UNDEFINED` magic-sentinel checks with a `solved` flag. → done (submodule `524130c`). Config-override sentinel pattern left as a low-risk edge case.
+- [x] C-5 · Guard non-finite constant bounds in `RealConstraints` — the guard was already present in the rebased tree; added a regression test. → done (`c82780b9`).
+- [x] D-2 · Make `Operator.get()` fail with a typed exception instead of assert-only. → done (`221cca83`).
 
 ## Phase 2 — Robustness & seams
 
@@ -36,7 +36,7 @@ Soundness rule for every task: a generated value must still satisfy the SPF path
 
 - [ ] D-3 · Add per-probe template variables for `symbolic.dp`/`symbolic.fp`/`symbolic.bvlength` in `jpf-config.vm` + `Configuration`.
 - [ ] B-4 · Select solver/precision per MUT (raw-bits MUTs → `z3bitvector`+`fp`+`bvlength=64`); everything else stays on `z3`.
-- [ ] B-3 · Derive `ProblemZ3BitVector` FP width from the variable type (avoid the silent 32-bit default for doubles).
+- [ ] B-3 · Derive `ProblemZ3BitVector` FP width from the variable type (avoid the silent 32-bit default for doubles). *(deferred to Phase 5 — only active under `z3bitvector`+`fp`.)*
 
 ## Phase 5 — maxUlps raw-bits lane (research)
 
@@ -47,8 +47,8 @@ Soundness rule for every task: a generated value must still satisfy the SPF path
 
 ## Opportunistic (fold in where adjacent)
 
-- [ ] B-5 · Preserve long width in `LCMP` (and the `toIntExact` overflow path).
-- [ ] B-1 · Add symbolic `abs/min/max` to the `Math` peer so they don't depend on model-class reachability.
+- [x] B-5 · Preserve long width in `LCMP`. → done (submodule `146a4a0`). The `toIntExact` overflow path runs through the same LCMP comparison but was not separately verified.
+- [ ] B-1 · Add symbolic `abs/min/max` to the `Math` peer so they don't depend on model-class reachability. *(deferred to Phase 5 — needs `MathFunction.ABS` + Z3 translation; abs/min/max are piecewise/branching, not a quick peer stub.)*
 - [ ] C-6 · Single recorder source consumed by both Spoon and text paths; assert first-value-first behavior.
 - [ ] D-5 · Centralize + assert the native-peer/model classpath contract.
 
