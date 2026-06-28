@@ -28,7 +28,7 @@ work that depends on a re-run is deferred until (1) lands.
 ## Current focus: (1) beat JARVIS
 
 - `2026-06-27-jarvis-scoreboard-evaluation-lane` *(spec)* — the clean evaluation-lane contract for pinned JARVIS-era evidence.
-- `2026-06-27-residual-aware-input-generation` *(spec)* — the typed generator design for making `IMPROVED` generate path-condition values by construction; the planner shipped (`2026-06-27-improved-generator-redesign`, implemented) and residual-only filtering continues as `2026-06-28-pipeline-improvements` C-3.
+- `2026-06-28-clause-driven-input-generation` *(spec)* — the current generator design: clause-driven `DomainPlanner`s, a single type-capability source, a fail-loud SPF→Model seam, SPF-capability characterization, and generation-coverage telemetry (supersedes `2026-06-27-residual-aware-input-generation`).
 - `2026-06-26-jarvis-case-coverage` *(audit)* — the per-case head-to-head evidence behind it.
 - `2026-06-28-residual-aware-generator-rerun` *(audit)* — clean rerun on the typed generator: zero Table-2 exclusions after two robustness fixes.
 - `2026-06-28-pipeline-architecture-review` *(audit)* — holistic Model⇔Java / SPF-peer / generator / spec-pipeline findings feeding the paper's §5.3 roadmap.
@@ -40,7 +40,8 @@ work that depends on a re-run is deferred until (1) lands.
 | doc | type | scope | tag |
 |---|---|---|---|
 | `2026-06-27-jarvis-scoreboard-evaluation-lane` | spec | clean lane for reproducible pinned JARVIS Table-2 evidence | current focus (contract) |
-| `2026-06-27-residual-aware-input-generation` | spec | typed, residual-aware `IMPROVED` generator architecture | current focus (generator design) |
+| `2026-06-27-residual-aware-input-generation` | spec | v1 typed planner architecture (shipped) | superseded by clause-driven-input-generation |
+| `2026-06-28-clause-driven-input-generation` | spec | clause-driven multi-type generation seam + SPF characterization + coverage telemetry | current focus (generator design) |
 | `2026-06-27-improved-generator-redesign` | plan | typed planner + jqwik emitter rewrite; shipped, residual-only filtering carried to pipeline-improvements C-3 | implemented |
 | `2026-06-27-jarvis-scoreboard-evidence-run` | plan | executed pinned JARVIS-era scoreboard run and decided the claim | implemented |
 | `2026-06-27-receiver-constructor-inputs` | plan | close the `Interval.getSize()` inline receiver-constructor blocker exposed by the scoreboard run | implemented |
