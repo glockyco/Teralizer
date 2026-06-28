@@ -105,7 +105,7 @@ The generator self-reports which clauses it encoded and which fell to the residu
 
 - **Supersedes** `2026-06-27-residual-aware-input-generation` (v1 typed planner, shipped).
 - The fail-loud seam (A-3: `ModelFolder`, A-5: `UnsupportedSpfTermException`) and single emitter (C-1) are shipped in `2026-06-28-pipeline-improvements`; this spec designs the generator that builds on them.
-- C-4 (by-construction recipe library) is open in `pipeline-improvements` and consumed by `2026-06-28-maxulps-raw-bits-lane` (Gap 3); it is a dependency of the maxUlps lane, not a dependency of this spec.
+- C-4 (by-construction recipe library) is reframed (evidence-gated): its only recipe with a named consumer is the raw-bits ulps neighborhood, consumed by `2026-06-28-maxulps-raw-bits-lane` (Gap 3), where the recipe-library infrastructure is built. Further recipes are gated on generation-coverage shape telemetry, not assumption. Not a dependency of this spec.
 - **Extends** `2026-06-27-generalizable-input-rule` (admitting string/array/object inputs).
 - **Baseline matrix:** `phd-thesis/projects/spf-eval` (`RESULTS.md` + golden harness); the in-repo characterization complements `2026-06-26-applicability-barriers` (corpus-level SPF-stage funnel) with per-construct pipeline fixtures, and confirms B-2 cleared the spf-eval double/float bounds bug.
 - `2026-06-28-maxulps-raw-bits-lane` is the worked deep-SPF-extension example and consumes the fail-loud seams + recipe library.

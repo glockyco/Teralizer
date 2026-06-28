@@ -44,3 +44,7 @@ Operator-family + operand-kinds, literals stripped: `STRING:startsWith(var,const
 ## Analysis
 
 New `analysis/src/teralizer/generation_coverage.py` (sibling to `applicability_priorities.py`, which keeps the front-end funnel): top residual shapes, per-`TypeDomain` by-construction coverage, entry-gap-by-type, and the SPF-gap ranking joined to exclusions — the prioritized "next type / next recipe / next SPF fix" lists.
+
+## Gates the modulo / further-recipe decision
+
+The `generation_clause(shape, consumed)` surface is the prerequisite for deciding whether a by-construction modulo recipe (or any further recipe beyond the raw-bits ulps recipe) is worth building. C-3 already records consumed-vs-residual clause *volume* (`total_constraint_count` / `used_constraint_count`), but not *which shapes* fall residual. Only the shape-key here answers "how often is `INTEGER:mod(var,const)≟const` unconsumed, and with what divisor distribution?" — and large-divisor modulo is the only modulo case filtering cannot absorb. Build this surface + run the corpus before committing to a modulo recipe; until then modulo stays speculative (see `2026-06-28-pipeline-improvements` C-4).

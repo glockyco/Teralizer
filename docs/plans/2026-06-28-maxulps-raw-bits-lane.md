@@ -35,7 +35,7 @@ The spike proved the SPF solver layer can preserve symbolic raw bits (`PCParser`
 ### By-construction generation
 
 - [ ] Gap 1 · Enable the raw-bits SPF config for the `precisionEqualsMaxUlps` probe only (via D-3/B-4).
-- [ ] Gap 3 · Emit the by-construction ulps-neighborhood recipe in the planner: `y = Double.longBitsToDouble(Double.doubleToRawLongBits(x) + delta)`, `delta ∈ [−maxUlps, maxUlps]`, same sign — a recipe in the `pipeline-improvements` C-4 library.
+- [ ] Gap 3 · Build the by-construction recipe-library infrastructure (`pipeline-improvements` C-4 lands here) and its first member, the ulps-neighborhood recipe, in the planner: `y = Double.longBitsToDouble(Double.doubleToRawLongBits(x) + delta)`, `delta ∈ [−maxUlps, maxUlps]`, same sign. The ulps recipe is C-4's only evidence-backed member; further recipes are gated on generation-coverage shape telemetry, not assumption.
 
 ### Verification
 
@@ -44,7 +44,7 @@ The spike proved the SPF solver layer can preserve symbolic raw bits (`PCParser`
 ## Dependencies
 
 - Gap 2's Model node uses the `SpfToModelTransformer` typed-outcome seam (A-5, shipped: `UnsupportedSpfTermException`) and the `ModelToJavaTransformer` rendering seam (A-3, shipped: `ModelFolder`) from `pipeline-improvements` Phase 2. D-1 (concretization tagging) is tracked in this lane's Symbolic raw-bits modeling section.
-- Gap 3 reuses the by-construction recipe library (`pipeline-improvements` C-4).
+- Gap 3 builds the by-construction recipe library (`pipeline-improvements` C-4) — the ulps recipe is its first and only evidence-backed member.
 
 ## Acceptance criteria
 
