@@ -239,4 +239,16 @@ public class InputGenerationPlannerTest {
         Assert.assertEquals("true", plan.getResidualPredicate());
         Assert.assertEquals(TypeDomain.REAL, plan.getParameterPlans().get(0).getDomain());
     }
+
+    @Example
+    void parameterConsumesClauseButPlanKeepsItResidual() {
+        // x < 5 : the numeric parameter plan consumes the clause, but the plan keeps it residual
+        // (full input filter retained as the sound fallback; residual-only filtering is deferred to C-3).
+        List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("int", "x"));
+        Operation inputModel = new Operation(new VariableInteger("x"), Operator.LT, new ConstantInteger(5));
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, inputModel);
+        Assert.assertTrue("parameter plan reports the consumed clause", plan.getParameterPlans().get(0).getConsumedClauseIds().contains(0));
+        Assert.assertTrue("plan keeps the clause residual (full filter retained)", plan.getResidualClauseIds().contains(0));
+        Assert.assertFalse("plan-level consumed stays empty", plan.hasConsumedClauses());
+    }
 }
