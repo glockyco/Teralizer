@@ -15,11 +15,14 @@ public class JpfConfigTemplateTest {
         VelocityEngine velocity = new VelocityEngine(templateProperties());
         velocity.init();
 
+        String sep = ";";  // sentinel: distinct from Unix's default `:`, proving the template uses ${pathSeparator}
+
         VelocityContext context = new VelocityContext();
         context.put("driverClassQualifiedName", "example.Driver");
         context.put("symbolicMethod", "example.Test.value(sym)");
         context.put("jpfSymbcModelClasspath", "${jpf-symbc}/build/classes");
-        context.put("classpath", "project/target/classes:project/target/test-classes");
+        context.put("pathSeparator", sep);
+        context.put("classpath", "project/target/classes" + sep + "project/target/test-classes");
         context.put("maxExecutionTime", 30.0);
         context.put("maxPathConditionSize", 100000L);
         context.put("testClassQualifiedName", "example.Test");
@@ -38,7 +41,7 @@ public class JpfConfigTemplateTest {
         Template template = velocity.getTemplate("jpf-config.vm");
         template.merge(context, writer);
 
-        Assert.assertTrue(writer.toString().contains("classpath=${jpf-symbc}/build/classes:project/target/classes:project/target/test-classes"));
+        Assert.assertTrue(writer.toString().contains("classpath=${jpf-symbc}/build/classes" + sep + "project/target/classes" + sep + "project/target/test-classes"));
     }
 
     private static Properties templateProperties() {
