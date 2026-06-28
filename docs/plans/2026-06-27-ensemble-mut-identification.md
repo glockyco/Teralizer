@@ -108,8 +108,8 @@ For the 711 included assertions (those that reach JPF/generalization):
 - 124 (17%) from multi-assertion tests with **different** methods — the
   per-test killed-mutant oracle would collapse these to a single method.
 
-The resolver design addresses this by using LCBA as a per-assertion starting
-point (see §Combination strategy).
+The resolver design addresses this by disambiguating per-assertion within the
+oracle's focal set (see §Combination strategy).
 
 ## Design
 
@@ -277,59 +277,59 @@ that invokes the focal method. This is because:
   `CtMethod` alone. An assertion with a resolved method but no invocation
   would pass the filter and then crash in JPF instrumentation.
 
-The resolver addresses this by running LCBA **per-assertion** first, then
-using the killed-mutant oracle as an override signal:
+The resolver treats the killed-mutant oracle as the authority on **which** method
+is focal, and recovers the test-side `CtInvocation` for that method independently.
+LCBA is not consulted when the oracle has data — it is a separate mechanism, used
+only as the no-data fallback and as an in-set tiebreaker. The two never compete:
+the oracle decides the method, Spoon recovers its invocation.
 
-1. **LCBA first (per-assertion):** call
-   `TestAnalysis.findTestedMethodCall(testMethod, assertionCall)`. This
-   produces a `CtInvocation` or empty — per-assertion, preserving multi-
-   assertion tests' per-assertion resolution.
+1. **Oracle resolves the focal method (per-test, when PIT data exists).** From the
+   test's killed mutants, take the set of mutated methods (see Signal 1). One method
+   in the set (59% of cases) → that is the focal method. Multiple → disambiguate
+   *within the set* per-assertion (next step). The oracle's verdict stands on its
+   own; LCBA does not override it.
 
-2. **Oracle check (per-test):** if LCBA produced a result, check whether the
-   LCBA-resolved `CtMethod` is among the test's killed-mutant methods. If yes
-   → **keep the LCBA result** (per-assertion invocation, correct method). This
-   handles the 4,176 in-killed-set cases and all multi-assertion cases where LCBA
-   picks the right method for that assertion.
+2. **Per-assertion disambiguation (only when the focal set has >1 method).** For the
+   assertion at hand, pick the focal-set method this assertion exercises — by
+   dataflow from the asserted value where available, with LCBA **constrained to the
+   focal set** as a cheap tiebreaker (does the per-assertion LCBA land on a focal-set
+   method?). LCBA here only ranks among methods the oracle already certified as focal;
+   it never introduces a method outside the set.
 
-3. **Oracle override (per-test):** if LCBA's method is NOT among the killed
-   methods, or LCBA returned empty, use the oracle's pick. Then attempt to
-   find the `CtInvocation` by scanning the test method's `CtInvocation`s for
-   one that resolves to the oracle's `CtMethod`. The scan must account for
-   interface-vs-implementation: PIT mutates concrete classes (e.g.
-   `ArrayList.add`), but the test may call the method through an interface-typed
-   variable (e.g. `List.add`). `getExecutable().getDeclaration()` on such a
-   call returns the interface method, not the implementation. The scan must
-   also check whether the invocation's resolved method shares the same
-   simple name and signature as a method declared in the oracle's `CtMethod`'s
-   declaring class or any of its supertypes. If a direct or interface-routed
-   `CtInvocation` is found → use it. If LCBA succeeded but the oracle
-   disagrees and no invocation can be recovered for the oracle's method →
-   **keep the LCBA result** (an included-wrong assertion is better than an
-   excluded one). If LCBA returned empty and no invocation can be recovered
-   → fill `tested_method_*` columns from the `CtMethod` but leave
-   `tested_method_call_*` null (the filter guard will exclude it).
+3. **Independent `CtInvocation` recovery.** Given the chosen focal `CtMethod`, scan the
+   test method's `CtInvocation`s for the call resolving to it. The scan accounts for
+   interface-vs-implementation: PIT mutates concrete classes (e.g. `ArrayList.add`),
+   but the test may call through an interface-typed variable (e.g. `List.add`), so
+   `getExecutable().getDeclaration()` returns the interface method. Match on simple
+   name + JVM descriptor against the focal method's declaring class or any supertype.
+   If a direct or interface-routed invocation is found → use it. If none is found →
+   **exclude** the assertion (fill `tested_method_*` from the `CtMethod`, leave
+   `tested_method_call_*` null, let the filter guard drop it). The resolver never
+   falls back to a non-focal LCBA method: generalizing a method the oracle says is
+   not focal (a getter/helper with no killed mutants) produces a valid-but-meaningless
+   generalization of the wrong method, which is worse than excluding.
 
-4. **Filter guard:** extend `MissingValueFilter` to also reject assertions
-   where `tested_method_call_absolute_path` is null. This prevents assertions
-   with a resolved method but no invocation from reaching JPF
-   instrumentation. These assertions are excluded with a clear reason
+4. **No oracle data → LCBA fallback (per-assertion).** When the test has no PIT
+   mutation data, call `TestAnalysis.findTestedMethodCall(testMethod, assertionCall)`
+   — it yields both the method and its invocation. This is the only path
+   where LCBA decides the method.
+
+5. **Filter guard:** extend `MissingValueFilter` to also reject assertions where
+   `tested_method_call_absolute_path` is null, so a resolved method with no recovered
+   invocation never reaches JPF instrumentation. Excluded with a clear reason
    ("tested method call could not be located in test source").
 
 This approach means:
-- For the 4,176 in-killed-set cases: LCBA's per-assertion invocation is kept,
-  oracle confirms the method. No change in behavior.
-- For the 2,993 absent cases: if the oracle's method has a direct or
-  interface-routed call in the test source, the invocation is recovered and
-  the assertion keeps its tested method corrected. If no invocation can be
-  recovered, the LCBA result is kept — no regression (the assertion stays
-  included with its original LCBA method).
-- For the 58,122 MissingValue cases: LCBA already returned empty. The oracle
-  may identify a method. If a direct invocation exists, it's recovered and
-  the assertion is re-included. If not, the assertion stays excluded — no
-  regression.
-- For multi-assertion tests (124 included assertions with different methods):
-  each assertion keeps its own LCBA invocation unless the oracle disagrees
-  for that specific assertion. No collapse to a single method.
+- **Single-method oracle (59%):** the oracle's method is focal outright; its invocation
+  is recovered by Spoon. LCBA is irrelevant. Where LCBA would have disagreed, the
+  oracle corrects it (the 2,993 LCBA-method-has-no-kills cases).
+- **Multi-method oracle (41%):** the oracle bounds the candidates; per-assertion
+  disambiguation picks within the set, so multi-assertion tests keep per-assertion
+  resolution without collapsing to one method.
+- **The 58,122 MissingValue cases:** LCBA returned empty. The oracle may resolve a
+  focal method; if its invocation is recoverable, the assertion is re-included,
+  otherwise it stays excluded — no regression.
+- **No PIT data (46% of MissingValue tests):** LCBA fallback, behavior unchanged.
 
 #### Signal 1: Killed-mutant oracle (primary)
 
@@ -351,29 +351,7 @@ step 12):
    `CtMethod` via the Spoon model. This requires a mapping layer (see
    §PIT-to-Spoon mapping).
 
-#### Signal 2: Name-matching (secondary, always available)
-
-When the killed-mutant oracle is unavailable (no PIT data) or ambiguous
-(multiple methods with kills, no clear winner):
-
-1. **Naming Conventions (NC):** test method name matches production method
-   name after removing "test" prefix.
-2. **Naming Conventions — Contains (NCC):** test method name contains
-   production method name.
-3. **Longest Common Subsequence (LCS):** ratio of LCS length to the longer
-   name length.
-
-These are cheap static checks applied to all methods in the focal class
-(inferred from the test class name via NC/NCC: `FooTest` → `Foo`).
-
-#### Signal 3: LCBA (tertiary, always available)
-
-The current `TestAnalysis.findTestedMethodCall` — the last invocation before
-the assertion. Weak alone (43% precision vs developer intent, He et al.) but
-provides a per-assertion candidate and, crucially, the `CtInvocation` that
-downstream stages need.
-
-#### Signal 4: Coverage-based (when PIT data exists but no kills)
+#### Signal 2: Coverage-based (secondary — PIT data exists but no kills)
 
 For tests with `pit_coverage_report` data but no killed mutants:
 
@@ -389,6 +367,28 @@ For tests with `pit_coverage_report` data but no killed mutants:
    — instead of requiring call-depth data from PIT (which it does not
    provide), the resolver checks whether a direct `CtInvocation` to the
    candidate method exists in the test source.
+
+#### Signal 3: LCBA (static fallback — always available)
+
+The current `TestAnalysis.findTestedMethodCall` — the last invocation before
+the assertion. Weak alone (43% precision vs developer intent, He et al.) but
+provides a per-assertion candidate and, crucially, the `CtInvocation` that
+downstream stages need.
+
+#### Signal 4: Name-matching (static corroborator / in-set tiebreaker)
+
+Used to disambiguate within an oracle or coverage focal set, and as a static
+fallback when no PIT data exists:
+
+1. **Naming Conventions (NC):** test method name matches production method
+   name after removing "test" prefix.
+2. **Naming Conventions — Contains (NCC):** test method name contains
+   production method name.
+3. **Longest Common Subsequence (LCS):** ratio of LCS length to the longer
+   name length.
+
+These are cheap static checks applied to all methods in the focal class
+(inferred from the test class name via NC/NCC: `FooTest` → `Foo`).
 
 #### PIT-to-Spoon mapping
 
@@ -418,42 +418,47 @@ the oracle signal abstains and the resolver falls through to the next signal.
 
 #### Combination strategy
 
-The resolver operates per-assertion, using LCBA as the starting point:
+The resolver operates per-assertion as a confidence-ordered cascade. Execution-grounded
+PIT signals decide the focal method first (killed mutants, then coverage); the static
+signals (LCBA, name-matching) are the fallback when no PIT signal is available:
 
 ```
 for each assertion in test:
-    1. Run LCBA → produces CtInvocation (or empty)
-    2. If LCBA succeeded:
-       a. Resolve LCBA's CtInvocation to a CtMethod
-       b. Query oracle: is this CtMethod among the test's killed methods?
-       c. If YES → keep LCBA result (per-assertion, oracle-confirmed)
-       d. If NO → oracle disagrees; proceed to step 3
-    3. Run oracle (per-test, cached):
-       a. Tier A: exactly one killed method → use it
-       b. Tier B: multiple killed methods → pick by kill count + tiebreakers
-       c. If oracle produces a CtMethod:
-          - Scan test source for a CtInvocation calling that method
-            (account for interface-vs-implementation: the call may resolve
-            to an interface method, not the oracle's concrete class)
-          - If found → use it (oracle method + recovered invocation)
-          - If not found AND LCBA succeeded → keep LCBA result (no regression)
-          - If not found AND LCBA returned empty → fill tested_method_* only;
-            filter guard will exclude
-       d. If oracle abstains → proceed to step 4
-    4. Fallback (no PIT data or oracle abstains):
-       a. Try name-matching (NC/NCC/LCS) against focal class methods
-       b. If LCBA produced a result → keep it (better than nothing)
-       c. If nothing → leave tested_method_* null (MissingValue excludes)
+    1. Killed-mutant oracle (Signal 1) — test has killed mutants:
+       a. one killed method → focal = that method
+       b. multiple → disambiguate within the set per-assertion, by kill count +
+          tiebreakers (name-match, then in-set LCBA, then alphabetical)
+       c. recover the CtInvocation: scan the test source for a call resolving to
+          `focal` (account for interface-vs-implementation: the call may resolve to
+          an interface method, not the oracle's concrete class)
+          - found → use it (oracle method + recovered invocation)
+          - not found → fill tested_method_* from the CtMethod only; the filter guard
+            excludes it. Do NOT substitute a non-focal method.
+       d. killed-mutant oracle yields nothing usable (no kills, or focal method
+          unmappable) → step 2
+    2. Coverage signal (Signal 2) — PIT coverage exists but no kills:
+       a. candidates = covered methods in the focal class, preferring directly-invoked
+          ones; one → focal, multiple → disambiguate within the set as in 1b
+       b. recover the CtInvocation as in 1c; found → use it, not found → step 3
+    3. Static fallback — no usable PIT signal:
+       a. LCBA (Signal 3) → CtMethod + CtInvocation per-assertion
+       b. name-matching (Signal 4, NC/NCC/LCS) corroborates or disambiguates among
+          focal-class methods
+       c. nothing → leave tested_method_* null (MissingValue excludes)
 ```
 
 This design ensures:
-- **No regression for AGREE cases:** LCBA's invocation is kept when the
-  oracle confirms.
-- **No regression for multi-assertion tests:** each assertion keeps its own
-  LCBA invocation unless the oracle specifically disagrees for that
-  assertion's method.
-- **No regression for MissingValue cases:** if the oracle can't find a
-  direct invocation, the assertion stays excluded (same as today).
+- **Oracle is authoritative when present:** a single-method oracle is used outright;
+  a multi-method oracle is disambiguated within its set. LCBA never overrides it and
+  never contributes a method outside the killed set.
+- **No meaningless inclusions:** when the oracle's focal method has no recoverable
+  invocation, the assertion is excluded rather than generalized against a non-focal
+  LCBA method.
+- **Per-assertion granularity for multi-assertion tests:** disambiguation runs
+  per-assertion within the focal set, so different assertions keep different focal
+  methods.
+- **No regression where the oracle is silent:** tests without PIT data keep the
+  existing LCBA behavior.
 - **No NPE in downstream:** the filter guard rejects assertions with null
   `tested_method_call_absolute_path` before they reach JPF.
 
@@ -468,7 +473,7 @@ at the method level.
 |---|---|
 | `ProjectSetupTask.java` | Uncomment lines 96 and 101 (re-enable `COLLECT_JACOCO_DATA_ORIGINAL` and `COLLECT_PIT_DATA_ORIGINAL`) |
 | `PitDataCollectionTask.java` | `COLLECT_PIT_DATA_ORIGINAL` case: add try-catch in `executeInternal`, record failure via `reportInfo`, return normally on exception |
-| `TestAnalysisTask.java` | `createAssertionRecords`: replace `TestAnalysis.findTestedMethodCall` call with `TestedMethodResolver.resolve` (ensemble: LCBA per-assertion + killed-mutant oracle per-test + name-matching + coverage fallback + CtInvocation recovery + PIT-to-Spoon mapping) |
+| `TestAnalysisTask.java` | `createAssertionRecords`: replace `TestAnalysis.findTestedMethodCall` call with `TestedMethodResolver.resolve` (killed-mutant oracle per-test as primary + independent CtInvocation recovery + PIT-to-Spoon mapping; LCBA fallback per-assertion + name-matching when the oracle is silent) |
 | `TestedMethodResolver.java` (new) | Ensemble resolver implementation |
 | `MissingValueFilter.java` | Add check: reject if `tested_method_call_absolute_path` is null (filter guard for transitive-call cases) |
 | `SQLiteRepository.java` | Add query: fetch killed-mutant methods for a test from `pit_mutation_report` (stage=`COLLECT_PIT_DATA_ORIGINAL`, `variant IS NULL`, `killing_test_id`, `is_detected=true`) |
@@ -484,7 +489,7 @@ SQL view. The pipeline structure and all variant mappings are unchanged.
 - [ ] `COLLECT_PIT_DATA_ORIGINAL` failure does not kill the project — the
   pipeline continues with static-only MUT-id.
 - [ ] `ANALYZE_TESTS` (step 13) uses the killed-mutant oracle from
-  `pit_mutation_report` (stage=`COLLECT_PIT_DATA_ORIGINAL`) alongside LCBA.
+  `pit_mutation_report` (stage=`COLLECT_PIT_DATA_ORIGINAL`) as the primary signal, with LCBA as the no-data fallback.
 - [ ] The resolver recovers a `CtInvocation` (not just a `CtMethod`) for
   assertions where the focal method is directly invoked in the test source.
 - [ ] `MissingValueFilter` rejects assertions with null
@@ -496,8 +501,8 @@ SQL view. The pipeline structure and all variant mappings are unchanged.
   all currently-succeeding assertions still succeed, and their MUT-id matches
   or improves.
 - [ ] Multi-assertion tests with different per-assertion focal methods are not
-  collapsed to a single method (LCBA per-assertion is preserved when the
-  oracle confirms).
+  collapsed to a single method (disambiguated per-assertion within the oracle's
+  focal set).
 - [ ] RQ1 mutation scores remain untouched: `COLLECT_PIT_DATA_INITIAL` (step
   25, `variant='INITIAL'`) runs unchanged; all SQL views and analysis code
   continue to use `variant = 'INITIAL'` for RQ1.
