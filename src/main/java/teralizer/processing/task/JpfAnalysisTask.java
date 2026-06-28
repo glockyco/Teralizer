@@ -1,6 +1,7 @@
 package teralizer.processing.task;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.Record;
@@ -11,6 +12,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.tools.json.JSONArray;
 import teralizer.domain.Model;
+import teralizer.domain.MethodParameter;
 import teralizer.jpf.ModelStatistics;
 import teralizer.jpf.ModelStatisticsExtractor;
 import teralizer.processing.ProcessingStage;
@@ -20,6 +22,7 @@ import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +32,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -139,17 +143,22 @@ public class JpfAnalysisTask extends AbstractTask {
     }
 
     private void updateModelStatistics(Gson gson) throws IOException {
-        ModelStatistics inputStatistics = this.calculateModelStatistics(Paths.get(this.assertionRecord.getInputSpecificationPath()));
-        ModelStatistics outputStatistics = this.calculateModelStatistics(Paths.get(this.assertionRecord.getOutputSpecificationPath()));
+        Type type = new TypeToken<List<MethodParameter>>() {}.getType();
+        List<MethodParameter> parameters = gson.fromJson(this.assertionRecord.getTestedMethodParameters(), type);
+        Map<String, String> variableTypes = parameters == null
+            ? Collections.emptyMap()
+            : parameters.stream().collect(Collectors.toMap(MethodParameter::getName, MethodParameter::getType));
+        ModelStatistics inputStatistics = this.calculateModelStatistics(Paths.get(this.assertionRecord.getInputSpecificationPath()), variableTypes);
+        ModelStatistics outputStatistics = this.calculateModelStatistics(Paths.get(this.assertionRecord.getOutputSpecificationPath()), variableTypes);
         this.assertionRecord.setInputModelStatistics(gson.toJson(inputStatistics));
         this.assertionRecord.setOutputModelStatistics(gson.toJson(outputStatistics));
         this.assertionRecord.store();
     }
 
-    private ModelStatistics calculateModelStatistics(Path modelPath) throws IOException {
+    private ModelStatistics calculateModelStatistics(Path modelPath, Map<String, String> variableTypes) throws IOException {
         String modelString = new String(Files.readAllBytes(modelPath));
         Model model = new JsonToModelTransformer().transform(modelString);
-        String modelJava = new ModelToJavaTransformer().transform(model);
+        String modelJava = new ModelToJavaTransformer(variableTypes).transform(model);
         return new ModelStatisticsExtractor().process(model, modelJava);
     }
 }
