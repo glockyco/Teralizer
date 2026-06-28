@@ -219,20 +219,20 @@ public class SpfToModelTransformer {
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.mixednumstrg.SpecialIntegerExpression expression) {
-            // @TODO: Not sure what to do here?
-            throw new UnsupportedOperationException("postVisit(SpecialIntegerExpression) is not implemented!");
+            throw new UnsupportedSpfTermException(
+                "SpecialIntegerExpression is not mapped to a Model node.");
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.mixednumstrg.SpecialRealExpression expression) {
-            // @TODO: Not sure what to do here?
-            throw new UnsupportedOperationException("postVisit(SpecialRealExpression) is not implemented!");
+            throw new UnsupportedSpfTermException(
+                "SpecialRealExpression is not mapped to a Model node.");
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.concolic.FunctionExpression expression) {
-            // @TODO: Not sure what to do here?
-            throw new UnsupportedOperationException("postVisit(FunctionExpression) is not implemented!");
+            throw new UnsupportedSpfTermException(
+                "FunctionExpression is not mapped to a Model node.");
         }
     }
 }

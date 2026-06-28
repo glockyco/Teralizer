@@ -30,12 +30,12 @@ public class InputGenerationPlanner {
             TypeDomain domain = TypeDomain.from(parameter.getType());
             parameterPlans.add(this.planParameter(parameter, domain, context));
         }
-        // The plan-level consumed set is intentionally empty: the generated supplier keeps the FULL
-        // input filter as the sound fallback. Per-parameter consumed ids are reported on each
-        // ParameterGenerationPlan, but using them to emit a residual-only filter (dropping checks for
-        // clauses provably enforced by construction) is deferred to C-3 in
-        // docs/plans/2026-06-28-pipeline-improvements.md. Do not aggregate consumed ids here without
-        // that by-construction soundness proof — a prior attempt produced unsound generated tests.
+        // Per-parameter consumed ids are reported on each ParameterGenerationPlan, but the
+        // plan-level set is intentionally empty: emitting a residual-only filter (dropping checks
+        // for clauses provably enforced by construction) requires a by-construction soundness
+        // proof that a clause is implied by the recipe — a prior attempt produced unsound
+        // generated tests, so the full input filter is retained as the sound fallback.
+        // @TODO Prove recipe-implied clauses and emit a residual-only filter.
         return new InputGenerationPlan(parameterPlans, context.getClauses(), Collections.emptySet());
     }
 

@@ -243,7 +243,7 @@ public class InputGenerationPlannerTest {
     @Example
     void parameterConsumesClauseButPlanKeepsItResidual() {
         // x < 5 : the numeric parameter plan consumes the clause, but the plan keeps it residual
-        // (full input filter retained as the sound fallback; residual-only filtering is deferred to C-3).
+        // (the full input filter is retained as the sound fallback).
         List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("int", "x"));
         Operation inputModel = new Operation(new VariableInteger("x"), Operator.LT, new ConstantInteger(5));
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, inputModel);
