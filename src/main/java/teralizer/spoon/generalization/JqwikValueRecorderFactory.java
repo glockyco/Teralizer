@@ -144,6 +144,6 @@ public class JqwikValueRecorderFactory {
     }
 
     private static String escapePath(Path valueLogPath) {
-        return valueLogPath.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+        return valueLogPath.toString().replace("\\", "/").replace("\"", "\\\"");
     }
 }
