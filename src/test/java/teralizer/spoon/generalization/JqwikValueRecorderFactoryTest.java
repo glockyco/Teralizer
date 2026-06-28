@@ -27,4 +27,13 @@ public class JqwikValueRecorderFactoryTest {
         Assert.assertTrue(source.contains("field.isSynthetic()"));
         Assert.assertTrue(source.contains("field.getName().startsWith(\"$\")"));
     }
+
+    @Example
+    void escapesSurrogateCharactersToKeepValueLogValidUtf8() {
+        String source = JqwikValueRecorderFactory.createRecorderSource(Paths.get("/tmp/jqwik-values/7.tsv"));
+
+        // A generated char in 0xD800-0xDFFF is a lone surrogate; writing it verbatim to a UTF-8
+        // value log throws MalformedInputException. The recorder must escape it like a control char.
+        Assert.assertTrue(source.contains("Character.isSurrogate(ch)"));
+    }
 }
