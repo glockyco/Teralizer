@@ -5,14 +5,13 @@ import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class InputGenerationPlanner {
-    private final List<DomainPlanner> domainPlanners = Arrays.asList(new NumericDomainPlanner());
+    private final List<DomainPlanner> domainPlanners = DomainPlanners.REGISTERED;
 
     public InputGenerationPlan plan(List<MethodParameter> parameters, Model inputModel) {
         return this.plan(parameters, Collections.emptyMap(), inputModel);
