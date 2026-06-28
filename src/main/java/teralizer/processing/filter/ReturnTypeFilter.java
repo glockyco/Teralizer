@@ -2,7 +2,7 @@ package teralizer.processing.filter;
 
 import org.jooq.generated.tables.records.AssertionRecord;
 
-import static teralizer.util.Configuration.SUPPORTED_TYPES;
+import teralizer.util.TypeCapability;
 
 public class ReturnTypeFilter extends AbstractFilter {
 
@@ -23,7 +23,7 @@ public class ReturnTypeFilter extends AbstractFilter {
             return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
         }
 
-        if (!SUPPORTED_TYPES.contains(this.assertionRecord.getTestedMethodReturnType())) {
+        if (!TypeCapability.supportsReturnValue(this.assertionRecord.getTestedMethodReturnType())) {
             String reason = "Tested method has unsupported return type: " + this.assertionRecord.getTestedMethodQualifiedName();
             return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
         }

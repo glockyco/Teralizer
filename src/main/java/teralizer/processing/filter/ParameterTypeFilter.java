@@ -9,7 +9,7 @@ import teralizer.domain.MethodParameter;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import static teralizer.util.Configuration.SUPPORTED_TYPES;
+import teralizer.util.TypeCapability;
 
 public class ParameterTypeFilter extends AbstractFilter {
 
@@ -43,7 +43,7 @@ public class ParameterTypeFilter extends AbstractFilter {
         Type parametersType = new TypeToken<List<MethodParameter>>() {}.getType();
         List<MethodParameter> testedMethodParameters = this.gson.fromJson(testedMethodParametersString, parametersType);
 
-        if (testedMethodParameters.stream().noneMatch(a -> SUPPORTED_TYPES.contains(a.getType()))) {
+        if (testedMethodParameters.stream().noneMatch(a -> TypeCapability.supportsGeneratedInput(a.getType()))) {
             return new FilterResult(this.getName(), FilterDecision.REJECT, "The tested method has no parameters with generalizable types.");
         }
 

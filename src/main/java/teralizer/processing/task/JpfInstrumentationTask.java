@@ -25,6 +25,7 @@ import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.util.Configuration;
+import teralizer.util.TypeCapability;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -37,7 +38,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static teralizer.util.Configuration.SUPPORTED_TYPES;
 
 public class JpfInstrumentationTask extends AbstractTask {
 
@@ -437,7 +437,7 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod) throws IOException {
-        String symbolicParams = instrumentedMethod.getParameters().stream().map(p -> SUPPORTED_TYPES.contains(p.getType().getSimpleName()) ? "sym" : "con").collect(Collectors.joining("#"));
+        String symbolicParams = instrumentedMethod.getParameters().stream().map(p -> TypeCapability.supportsGeneratedInput(p.getType().getSimpleName()) ? "sym" : "con").collect(Collectors.joining("#"));
         String symbolicMethod = this.assertionRecord.getInstrumentedMethodQualifiedName() + "(" + symbolicParams + ")";
 
         VelocityContext context = new VelocityContext();

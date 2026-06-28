@@ -39,6 +39,7 @@ import teralizer.spoon.generalization.*;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 import teralizer.util.Configuration;
+import teralizer.util.TypeCapability;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -258,7 +259,7 @@ public class TestGeneralizationTask extends AbstractTask {
 
         if (Configuration.getGeneralizationAlgorithm(this.getVariant()) == GeneralizationAlgorithm.BASELINE) {
             List<MethodParameter> allParameters = new ArrayList<>(testedMethodParameters);
-            allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
+            allParameters.removeIf(parameter -> !TypeCapability.supportsGeneratedInput(parameter.getType()));
 
             testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
             testParametersSupplierClassDeclaration = BaselineTestParametersSupplierFactory.createSupplierClass(factory, allParameters, testedMethodArguments);
@@ -318,7 +319,7 @@ public class TestGeneralizationTask extends AbstractTask {
             List<MethodParameter> allParameters = new ArrayList<>();
             allParameters.addAll(testedMethodParameters);
             allParameters.addAll(temporaryParameters);
-            allParameters.removeIf(parameter -> !Configuration.SUPPORTED_TYPES.contains(parameter.getType()));
+            allParameters.removeIf(parameter -> !TypeCapability.supportsGeneratedInput(parameter.getType()));
 
             switch (Configuration.getGeneralizationAlgorithm(this.getVariant())) {
                 case NAIVE: {

@@ -91,17 +91,6 @@ public class Configuration {
     // ----- Generalization ----- //
     public static final int MAX_SPECIFICATION_SIZE = 200000;
 
-    public static final List<String> SUPPORTED_TYPES = Arrays.asList(
-        "byte", "java.lang.Byte",
-        "short", "java.lang.Short",
-        "int", "java.lang.Integer",
-        "long", "java.lang.Long",
-        "float", "java.lang.Float",
-        "double", "java.lang.Double",
-        "char", "java.lang.Character",
-        "boolean", "java.lang.Boolean"
-    );
-
     public static final String TEST_ANNOTATION_TEST = "Test";
     public static final String TEST_ANNOTATION_REPEATED = "RepeatedTest";
     public static final String TEST_ANNOTATION_PARAMETERIZED = "ParameterizedTest";

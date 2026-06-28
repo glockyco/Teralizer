@@ -13,7 +13,7 @@ import teralizer.domain.MethodParameter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static teralizer.util.Configuration.SUPPORTED_TYPES;
+import teralizer.util.TypeCapability;
 
 public class GeneralizableInput {
     private static final int RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX = -1;
@@ -57,7 +57,7 @@ public class GeneralizableInput {
             CtTypeReference<?> type = inferType(parameter, argument);
             String typeName = type.getQualifiedName();
 
-            if (SUPPORTED_TYPES.contains(typeName)) {
+            if (TypeCapability.supportsGeneratedInput(typeName)) {
                 inputs.add(new GeneralizableInput(
                     i,
                     -1,
@@ -90,7 +90,7 @@ public class GeneralizableInput {
             CtTypeReference<?> type = i < constructorParameters.size()
                 ? constructorParameters.get(i).getType()
                 : argument.getType();
-            if (type == null || !SUPPORTED_TYPES.contains(type.getQualifiedName())) {
+            if (type == null || !TypeCapability.supportsGeneratedInput(type.getQualifiedName())) {
                 return new ArrayList<>();
             }
 
