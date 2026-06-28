@@ -186,7 +186,7 @@ with db_config.get_test_engine().connect() as conn:
 
 | # | Lever | Net reach | Why it's first |
 |---|---|---|---|
-| 5 | **MUT identification** (mutation-oracle + Ghafari fallback) | 58,122 | The dominant blocker — and it is NOT "missing values" but the MUT-id layer failing (`tested_class_path IS NULL` on chained/fluent calls like `wheels.size()`). Unshadows 25k MissingValue+UnsupportedAssertion and 11k MissingValue+ParameterType pairs. Spec: `2026-06-27-mutation-based-mut-identification`. |
+| 5 | **MUT identification** (mutation-oracle + Ghafari fallback) | 58,122 | The dominant blocker — and it is NOT "missing values" but the MUT-id layer failing (`tested_class_path IS NULL` on chained/fluent calls like `wheels.size()`). Unshadows 25k MissingValue+UnsupportedAssertion and 11k MissingValue+ParameterType pairs. Spec: `2026-06-27-ensemble-mut-identification`. |
 | 6 | **More assertion types** (ReturnType is the #2 first-reject) | 33,978 | Object-returning getters on domain types (`JID.getDomain`, `LeapYear.checkTheYear`). Overlaps #7 (void/state oracles). |
 | 4 | **Interprocedural assertion analysis** (ExcludedTest cascade) | 20,647 | Recovers ~86% false-positive NoAssertions rejects; prerequisite for helper-delegated MUT-id. |
 | 9 | **@ParameterizedTest** | — | Param tests are already parametric; ideal raw material. |

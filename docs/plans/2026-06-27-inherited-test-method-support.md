@@ -21,8 +21,8 @@ same reason: the test method is not in the child class's declared-method set.
   failures.
 - **Nature:** adds more tests to projects that already partially work — it does
   not unlock new projects or new pipeline stages.
-- **Priority:** below the mutation-based MUT-identification spec
-  (`2026-06-27-mutation-based-mut-identification`). That spec addresses 58,122
+- **Priority:** below the ensemble MUT-identification spec
+  (`2026-06-27-ensemble-mut-identification`). That spec addresses 58,122
   first-reject assertions across 21,081 tests; this spec addresses 5,758 tests
   whose assertion count is unknown (they were dropped before assertion
   analysis). At the corpus median of 2 assertions/test, the projected reach is
@@ -32,7 +32,7 @@ same reason: the test method is not in the child class's declared-method set.
 
 All 52 projects have `EXECUTE_TESTS_ORIGINAL = SUCCEEDED` — tests ran fine; the
 parser is the problem. The crash is in `JunitDataCollectionTask.updateTestRecord`
-(line 345):
+(lines 345–351):
 
 ```java
 List<CtMethod<?>> matchingMethods =

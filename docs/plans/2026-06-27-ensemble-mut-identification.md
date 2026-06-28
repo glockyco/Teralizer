@@ -20,18 +20,18 @@ is needed — the step numbers already guarantee the correct execution order.
 The current static MUT identification (`TestAnalysis.findTestedMethodCall`,
 step 13 `ANALYZE_TESTS`) is the dominant applicability blocker: **58,122
 first-reject assertions** (MissingValue, `tested_class_path is null`) where it
-fails to identify the tested method at all. Even where it succeeds, a
-head-to-head against the mutation oracle shows **35% precision** — it picks the
-wrong method 65% of the time (9,354 disagreements vs 5,100 agreements on 14,454
-tests with killed mutants). The wrong-method picks are the LCBA flaw: it
-selects the last call before an assert, which is often a state-inspector
-(`getState`, `toString`, `getClass`) rather than the focal method.
+fails to identify the tested method at all. Even where it does resolve a
+method, it is often the wrong one — LCBA picks the last call before an assert,
+which is frequently a state-inspector (`getState`, `toString`, `getClass`)
+rather than the focal method. He et al. (FSE'24, DOI 10.1145/3660785) measure
+LCBA at 43.38% precision and 38.42% recall against developer-intended focal
+methods.
 
-He et al. (FSE'24, DOI 10.1145/3660785) independently confirm LCBA's weakness:
-only 43.38% precision and 38.42% recall on developer-intended focal methods.
 TCTracer (White & Krinke, EMSE'22, DOI 10.1007/s10664-021-10079-1) shows that
-an ensemble of techniques outperforms any single one: 79% precision / 83%
-recall / 85% MAP at method level, vs. LCBA's 5–57% precision across projects.
+an ensemble of techniques outperforms any single one, reaching 85% mean
+average precision at the method level. The ensemble below adds a killed-mutant
+oracle to LCBA: it recovers focal methods both where LCBA produces nothing
+(the 58,122 gap) and where LCBA resolves a method that has no killed mutants.
 
 PIT mutation data (`pit_mutation_report`, `pit_coverage_report`) is collected
 at step 25 (`COLLECT_PIT_DATA_INITIAL`). It records, per test, which production
@@ -56,12 +56,19 @@ Of 15,354 tests with killed mutants (across the whole dataset):
 
 59% have exactly one method — a completely unambiguous oracle.
 
-### Static-vs-mutant disagreement
+### LCBA vs. killed-mutant oracle
 
-On 14,454 tests where static MUT-id produced a result AND killed mutants exist:
+On 7,169 tests where LCBA resolves a tested method AND killed mutants exist
+(matched by qualified method name):
 
-- **AGREE:** 5,100 (35%) — static MUT is among the killed methods
-- **DISAGREE:** 9,354 (65%) — static MUT picked a method with no killed mutants
+- **In the killed set:** 4,176 (58%) — LCBA's method is among the methods this
+  test kills mutants in.
+- **Absent:** 2,993 (42%) — LCBA's method has no killed mutants; the oracle can
+  correct these.
+
+Agreement (58%) sits above He et al.'s 43% precision because the killed-mutant
+set is a permissive target (membership in a set of methods, not exact developer
+intent) — it is an upper bound on LCBA's true precision, not a contradiction.
 
 ### Manual validation
 
@@ -281,7 +288,7 @@ using the killed-mutant oracle as an override signal:
 2. **Oracle check (per-test):** if LCBA produced a result, check whether the
    LCBA-resolved `CtMethod` is among the test's killed-mutant methods. If yes
    → **keep the LCBA result** (per-assertion invocation, correct method). This
-   handles the 5,100 AGREE cases and all multi-assertion cases where LCBA
+   handles the 4,176 in-killed-set cases and all multi-assertion cases where LCBA
    picks the right method for that assertion.
 
 3. **Oracle override (per-test):** if LCBA's method is NOT among the killed
@@ -309,9 +316,9 @@ using the killed-mutant oracle as an override signal:
    ("tested method call could not be located in test source").
 
 This approach means:
-- For the 5,100 AGREE cases: LCBA's per-assertion invocation is kept, oracle
-  confirms the method. No change in behavior.
-- For the 9,354 DISAGREE cases: if the oracle's method has a direct or
+- For the 4,176 in-killed-set cases: LCBA's per-assertion invocation is kept,
+  oracle confirms the method. No change in behavior.
+- For the 2,993 absent cases: if the oracle's method has a direct or
   interface-routed call in the test source, the invocation is recovered and
   the assertion keeps its tested method corrected. If no invocation can be
   recovered, the LCBA result is kept — no regression (the assertion stays
@@ -362,8 +369,9 @@ These are cheap static checks applied to all methods in the focal class
 #### Signal 3: LCBA (tertiary, always available)
 
 The current `TestAnalysis.findTestedMethodCall` — the last invocation before
-the assertion. Weak alone (35% precision) but provides a per-assertion
-candidate and, crucially, the `CtInvocation` that downstream stages need.
+the assertion. Weak alone (43% precision vs developer intent, He et al.) but
+provides a per-assertion candidate and, crucially, the `CtInvocation` that
+downstream stages need.
 
 #### Signal 4: Coverage-based (when PIT data exists but no kills)
 
@@ -481,8 +489,9 @@ SQL view. The pipeline structure and all variant mappings are unchanged.
   assertions where the focal method is directly invoked in the test source.
 - [ ] `MissingValueFilter` rejects assertions with null
   `tested_method_call_absolute_path` (filter guard for transitive-call cases).
-- [ ] The ensemble resolver resolves a focal method with invocation for ≥35%
-  of the MissingValue-failed tests (the killed-mutant bucket, Tier A+B).
+- [ ] The ensemble resolver resolves a focal method with invocation for a
+  substantial share of the killed-mutant bucket (Tier A: 7,455 tests = 35% of
+  MissingValue-failed tests), measured by re-running `applicability_priorities.py`.
 - [ ] No regressions on the controlled `postgres_dev` dataset (13 projects) —
   all currently-succeeding assertions still succeed, and their MUT-id matches
   or improves.
@@ -497,14 +506,21 @@ SQL view. The pipeline structure and all variant mappings are unchanged.
 
 | Approach | Signal | Execution? | Precision | Recall | Open source | Fit |
 |---|---|---|---|---|---|---|
-| **LCBA** (current) | Static: last call before assert | No | 35% (our data) / 43% (He et al.) | 38% | — | baseline, one signal |
+| **LCBA** (current) | Static: last call before assert | No | 43% (He et al.) | 38% (He et al.) | — | baseline, one signal |
 | **Ghafari** (SCAM'15, DOI 10.1109/SCAM.2015.7335402) | Static: mutator vs inspector on stateful objects | No | 85%+ (small projects) | — | No | partial — only stateful objects |
-| **TCTracer** (EMSE'22, DOI 10.1007/s10664-021-10079-1) | Dynamic+static: 13-technique ensemble | Yes (-javaagent) | 79% | 83% | Yes | strong but requires agent |
+| **TCTracer** (EMSE'22, DOI 10.1007/s10664-021-10079-1) | Dynamic+static: 13-technique ensemble | Yes (-javaagent) | 85% MAP | — | Yes | strong but requires agent |
 | **Methods2Test** (MSR'22, DOI 10.1145/3524842.3528009) | Static: name-strip + unique-call | No | 90.7% (retained links) | unknown | Yes | subset of our static signals |
 | **TestLinker** (TSE'24, DOI 10.1109/TSE.2024.3449917) | LLM-based (CodeT5) | No | 73% | 58% | Replication pkg | out of scope (ML) |
 | **He et al.** (FSE'24, DOI 10.1145/3660785) | Empirical study | — | — | — | — | motivation: confirms LCBA is bad |
 | **Coach/Tracets4J** (SANER'25, DOI 10.1109/SANER64311.2025.00077) | Static heuristic ensemble | No | — (outperforms M2T/NC/LCBA) | — | No | newer static approach |
-| **Mutation oracle** (our approach) | Dynamic: killed mutants per test | Already collected | 87.5% (validated) | 59% unambiguous | — | **best fit** — data exists |
+| **Mutation oracle** (our approach) | Dynamic: killed mutants per test | Already collected | 88% on sampled disagreements (n=8) | 59% single-method | — | **best fit** — data exists |
+
+The metrics above are not directly comparable: He et al. report focal-method
+precision against manual ground truth; TCTracer reports traceability MAP; and
+the mutation-oracle figures are the single-method specificity (59%) and the
+oracle-correct rate on a 9-case manual sample of LCBA disagreements (7/8).
+Figures for Ghafari, Methods2Test, TestLinker, and Coach are as reported in
+their papers and not independently reproduced here.
 
 No surveyed paper uses existing per-test PIT killed-mutant tables as the
 primary MUT identification oracle. Teralizer's approach is distinct — it

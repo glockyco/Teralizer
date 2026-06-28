@@ -16,8 +16,4 @@
 - **Ensemble MUT Identification** [spec] `2026-06-27-ensemble-mut-identification` ← 2026-06-26-teralizer-overview
 - **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 
-## superseded
-
-- **Mutation-Based MUT Identification** [spec] `2026-06-27-mutation-based-mut-identification` ← 2026-06-26-teralizer-overview
-
-_8 archived — see `docs/plans/archive/`._
+_9 archived — see `docs/plans/archive/`._
