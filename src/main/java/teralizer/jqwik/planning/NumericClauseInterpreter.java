@@ -156,6 +156,9 @@ public final class NumericClauseInterpreter {
         Map<String, VariableConstraints> constraints,
         Map<String, Set<Integer>> consumed
     ) {
+        if (!isNumericDomain(parameterTypes.get(targetName))) {
+            return;
+        }
         if (targetReal) {
             RealConstraints target = ensureRealConstraints(targetName, parameterTypes.get(targetName), constraints);
             if (applyRealVariableBound(target, op, comparand)) {
@@ -178,6 +181,9 @@ public final class NumericClauseInterpreter {
         Map<String, VariableConstraints> constraints,
         Map<String, Set<Integer>> consumed
     ) {
+        if (!isNumericDomain(parameterTypes.get(name))) {
+            return;
+        }
         IntegerConstraints target = ensureIntegerConstraints(name, parameterTypes.get(name), constraints);
         if (applyIntegerConstantBound(target, op, value)) {
             recordConsumed(consumed, name, clauseId);
@@ -193,6 +199,9 @@ public final class NumericClauseInterpreter {
         Map<String, VariableConstraints> constraints,
         Map<String, Set<Integer>> consumed
     ) {
+        if (!isNumericDomain(parameterTypes.get(name))) {
+            return;
+        }
         RealConstraints target = ensureRealConstraints(name, parameterTypes.get(name), constraints);
         if (applyRealConstantBound(target, op, value)) {
             recordConsumed(consumed, name, clauseId);
@@ -466,6 +475,11 @@ public final class NumericClauseInterpreter {
 
     private static void recordConsumed(Map<String, Set<Integer>> consumed, String name, int clauseId) {
         consumed.computeIfAbsent(name, key -> new LinkedHashSet<>()).add(clauseId);
+    }
+
+    private static boolean isNumericDomain(String type) {
+        TypeDomain domain = TypeDomain.from(type);
+        return domain == TypeDomain.INTEGER || domain == TypeDomain.REAL || domain == TypeDomain.CHAR;
     }
 
     private static final class Bound {

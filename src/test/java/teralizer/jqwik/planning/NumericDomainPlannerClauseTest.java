@@ -80,4 +80,16 @@ public class NumericDomainPlannerClauseTest {
         ParameterGenerationPlan plan = new NumericDomainPlanner().plan(parameters.get(0), context);
         Assert.assertTrue(plan.getConsumedClauseIds().isEmpty());
     }
+
+    @Example
+    void numericInterpreterSkipsBooleanDomainParameters() {
+        // boolean b modeled as VariableInteger; b == 1 must NOT become an integer equality
+        Operation model = new Operation(new VariableInteger("b"), Operator.EQ, new ConstantInteger(1));
+        List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("boolean", "b"));
+        List<ConstraintClause> clauses = ConstraintClauses.from(model, Collections.singletonMap("b", "boolean"));
+        PlanningContext context = new PlanningContext(parameters, clauses);
+        NumericClauseInterpretation interpretation = context.getInterpretation("b");
+        Assert.assertNull("boolean param gets no numeric constraints", interpretation.getConstraints());
+        Assert.assertTrue("boolean param consumes no clause numerically", interpretation.getConsumedClauseIds().isEmpty());
+    }
 }
