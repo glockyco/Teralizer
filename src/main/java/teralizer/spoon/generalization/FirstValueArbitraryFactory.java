@@ -18,7 +18,21 @@ public class FirstValueArbitraryFactory {
                 "    }\n" +
                 "\n" +
                 "    public net.jqwik.api.RandomGenerator<T> generator(int genSize) {\n" +
-                "        return delegate.generator(genSize);\n" +
+                "        final net.jqwik.api.RandomGenerator<T> delegateGenerator = delegate.generator(genSize);\n" +
+                "        return new net.jqwik.api.RandomGenerator<T>() {\n" +
+                "            private boolean emitted = false;\n" +
+                "            public net.jqwik.api.Shrinkable<T> next(java.util.Random random) {\n" +
+                "                if (!emitted) {\n" +
+                "                    emitted = true;\n" +
+                "                    return new net.jqwik.engine.properties.shrinking.Unshrinkable<T>(new java.util.function.Supplier<T>() {\n" +
+                "                        public T get() {\n" +
+                "                            return firstValue;\n" +
+                "                        }\n" +
+                "                    }, net.jqwik.api.ShrinkingDistance.MIN);\n" +
+                "                }\n" +
+                "                return delegateGenerator.next(random);\n" +
+                "            }\n" +
+                "        };\n" +
                 "    }\n" +
                 "\n" +
                 "    public net.jqwik.api.EdgeCases<T> edgeCases(int maxEdgeCases) {\n" +
