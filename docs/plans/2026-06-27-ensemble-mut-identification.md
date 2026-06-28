@@ -35,8 +35,10 @@ oracle to LCBA: it recovers focal methods both where LCBA produces nothing
 
 PIT mutation data (`pit_mutation_report`, `pit_coverage_report`) is collected
 at step 25 (`COLLECT_PIT_DATA_INITIAL`). It records, per test, which production
-methods had mutants killed — a near-zero-false-positive signal for the focal
-method, because helpers and getters rarely have killable mutants. The
+methods had mutants killed — a high-specificity signal for the focal method
+(helpers and getters rarely have killable mutants), though noisy: collateral
+kills, private/indirect methods, and flaky tests can mis-attribute (see
+§Research context). The
 killed-mutant oracle was manually validated: 7/9 disagreement cases (87.5%
 effective) show the mutant oracle is correct and static LCBA picks the wrong
 method (full sample: `analysis/output/mut-validation/manual-validation-sample.csv`).
@@ -85,7 +87,10 @@ Effective pass rate: 7/8 = 87.5% (excluding the classpath non-disagreement).
 
 ### Availability for MissingValue-failed tests
 
-Of 21,081 MissingValue-failed tests:
+Of 21,081 MissingValue-failed tests (measured from a one-off PIT_ORIGINAL
+experiment — the committed pipeline has **0** `COLLECT_PIT_DATA_ORIGINAL` rows;
+re-enabling PIT_ORIGINAL regenerates this data, see
+`2026-06-28-mut-id-targeting-and-coverage`):
 
 | Category | Count | % | Signal |
 |---|---|---|---|
@@ -527,11 +532,59 @@ oracle-correct rate on a 9-case manual sample of LCBA disagreements (7/8).
 Figures for Ghafari, Methods2Test, TestLinker, and Coach are as reported in
 their papers and not independently reproduced here.
 
-No surveyed paper uses existing per-test PIT killed-mutant tables as the
-primary MUT identification oracle. Teralizer's approach is distinct — it
-reuses data that is already collected, requires no extra execution, and
-provides a stronger signal than any purely-static approach (the killed-mutant
-set is a ground-truth trace of which methods the test exercises meaningfully).
+### Novelty verdict (literature survey, 2026-06-28)
+
+No surveyed paper uses per-test killed-mutant data as the **primary** focal-method
+oracle ("the methods whose mutants this test kills are the methods under test").
+This was confirmed against OpenAlex + the test-to-code-traceability citation chain
+(Van Rompaey & Demeyer `10.1109/CSMR.2009.39`; SCOTCH `10.1109/ICSM.2011.6080773`;
+Ghafari `10.1109/SCAM.2015.7335402`; TCTracer `10.1007/s10664-021-10079-1`;
+Methods2Test `10.1145/3524842.3528009`; He et al. `10.1145/3660785`; TestLinker
+`10.1109/TSE.2024.3449917`; Tracets4J `10.1109/SANER64311.2025.00077`). The two
+closest precedents differ fundamentally:
+
+- **Vercammen et al., Goal-Oriented Mutation Testing with Focal Methods**
+  (`10.1145/3278186.3278190`) runs the *reverse* direction: it assumes focal-method
+  links to restrict and speed mutation testing. It does not infer focal methods from
+  killed-mutant tables.
+- **TCTracer** (`10.1007/s10664-021-10079-1`) ranks executed methods by dynamic
+  call-trace + static features, and explicitly warns that executed helper/getter/
+  setup methods are false-positive risks — killed-mutant attribution is a
+  stronger-than-coverage signal it does not use.
+
+So the approach is novel-but-adjacent: reusing PIT kill tables already collected
+for mutation scoring as the focal oracle, with LCBA demoted to a no-data fallback.
+
+### Known pitfalls (literature) and how this design handles them
+
+- **Equivalent mutants** (`10.1109/TSE.2010.62`): no kill ≠ not focal. Handled —
+  the oracle only *fires* on kills; absence of kills falls through to coverage then
+  LCBA, never concludes "not focal."
+- **Collateral / coincidental kills and multi-method kills** (Vercammen
+  `10.1145/3278186.3278190`; Du et al. `10.1145/3597926.3598090`): a test can kill
+  mutants in non-intended methods. Handled — the killed set is treated as candidate
+  *focal candidates*, disambiguated per-assertion within the set, not collapsed to one.
+- **Flaky tests corrupt kill attribution** (Shi et al. `10.1145/3293882.3330568`;
+  Alshammari et al. `10.1109/ICSTW60967.2024.00054`): an open risk for this design;
+  PIT_ORIGINAL kills inherit any suite flakiness. Mitigation deferred (quarantine/
+  re-run) — recorded here as a known threat to validity.
+- **Private/indirect focal methods** (Vercammen `10.1145/3278186.3278190`): a kill
+  in a private helper may reflect testing a public wrapper. The interface-vs-impl
+  scan only covers interface→implementation dispatch, not wrapper→private-helper:
+  if the test invokes only the public wrapper, no test-side `CtInvocation` to the
+  helper exists, so recovery fails and the assertion is **excluded** by the filter
+  guard (open case, handled conservatively — excluded, never mis-attributed).
+- **Per-test kill tables are coarse for multi-assert tests** (ATLAS
+  `10.1145/3377811.3380429`): handled by per-assertion disambiguation within the set.
+- **Coverage is weaker than kills** (Chekam et al. `10.1109/ICSE.2017.61`): hence
+  coverage is Signal 2 (secondary), never equal to the kill oracle.
+
+Teralizer's cost advantage is relative, not zero: PIT is already part of the
+pipeline (no new agent or instrumentation, unlike TCTracer's tracing agent), so
+the oracle reuses an existing capability. But the oracle needs `PIT_ORIGINAL`
+(pre-filter) kills, which the committed pipeline does not produce — enabling it
+adds an earlier PIT pass with its own runtime cost (see the runtime-cost note and
+`2026-06-28-mut-id-targeting-and-coverage`).
 
 ## Out of scope
 
