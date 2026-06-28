@@ -42,7 +42,7 @@ work that depends on a re-run is deferred until (1) lands.
 | `2026-06-27-jarvis-scoreboard-evaluation-lane` | spec | clean lane for reproducible pinned JARVIS Table-2 evidence | current focus (contract) |
 | `2026-06-27-residual-aware-input-generation` | spec | v1 typed planner architecture (shipped) | superseded by clause-driven-input-generation |
 | `2026-06-28-clause-driven-input-generation` | spec | clause-driven multi-type generation seam + SPF characterization + coverage telemetry | current focus (generator design) |
-| `2026-06-27-improved-generator-redesign` | plan | typed planner + jqwik emitter rewrite; shipped, residual-only filtering carried to pipeline-improvements C-3 | implemented |
+| `2026-06-27-improved-generator-redesign` | plan | typed planner + jqwik emitter rewrite; shipped, consumed-clause telemetry carried to pipeline-improvements C-3 | implemented |
 | `2026-06-27-jarvis-scoreboard-evidence-run` | plan | executed pinned JARVIS-era scoreboard run and decided the claim | implemented |
 | `2026-06-27-receiver-constructor-inputs` | plan | close the `Interval.getSize()` inline receiver-constructor blocker exposed by the scoreboard run | implemented |
 | `2026-06-26-jarvis-case-coverage` | audit | per-case JARVIS head-to-head evidence + provenance | current focus (evidence) |
