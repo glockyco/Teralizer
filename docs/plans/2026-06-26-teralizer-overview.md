@@ -53,14 +53,13 @@ work that depends on a re-run is deferred until (1) lands.
 | `2026-06-26-applicability-barriers` | audit | RQ6 real-world applicability barrier evidence (inventory / funnel / ledger) | deferred — step (2) reference |
 | `2026-06-26-data-reuse-and-msr-potential` | note | secondary MSR / data-paper backlog | deferred, gated on (1) |
 | `2026-06-25-replication-package-documentation-improvements` | plan | verifiable replication package for ACM artifact eval | independent track |
-| `2026-06-27-teralizer-capability-and-improvement-directions` | audit | current capabilities, limitations, improvement directions (post-Phase 1) | reference |
 | `2026-06-27-ensemble-mut-identification` | spec | ensemble focal-method oracle (killed mutants + LCBA + name-matching) for MUT identification | applicability track |
 | `2026-06-27-inherited-test-method-support` | spec | flatten inherited `@Test` methods into Spoon clones so 5,758 dropped tests parse | backlog |
 
 ## Win condition (summary)
 
 "Beat JARVIS" = **capability** (10 JARVIS Table-2 rows entering the pipeline; the current evidence run tracks 14 assertion-level Teralizer probes, plus one separate non-Table-2 maxUlps spike) **+ transparent PVC**.
-Current run status: all 10 Table-2 rows enter and all generated tests pass. Under Teralizer's jqwik-input PVC metric, IMPROVED wins 5/10 row aggregates and loses 5/10; the losses are generator/metric-shape differences, not SPF blockers. IC is retained as a sanity check only because the current project-level JaCoCo rows conflate all generated probes; the observed Math IC increase comes entirely from the separate maxUlps probe in `Precision.equals(double,double,int)`. Remaining explicit concessions are row-scoped: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria
+Current run status: all 10 Table-2 rows enter and all generated tests pass. IC is retained as a sanity check only because the current project-level JaCoCo rows conflate all generated probes; the observed Math IC increase comes entirely from the separate maxUlps probe in `Precision.equals(double,double,int)`. Remaining explicit concessions are row-scoped: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria
 and the metric definition live in `2026-06-26-beat-jarvis-phase1`; the active evidence lane is `2026-06-27-jarvis-scoreboard-evaluation-lane`, using the archived receiver-input and evidence-run plans plus the live `2026-06-26-jarvis-case-coverage` audit.
 
 The residual-aware generator rerun (2026-06-28) is exclusion-free: all 30 NAIVE + IMPROVED generated tests pass after fixing a non-finite real-scale crash and a surrogate value-log crash. IMPROVED is now ≥ NAIVE on 11/14 passing probes; the affine `eps >= y - x` encoding lowers PVC on the three `Precision.equals` probes (still above JARVIS's 102). Refreshed per-probe PVC and the maxUlps spike gap live in `2026-06-28-residual-aware-generator-rerun`.
@@ -68,6 +67,5 @@ The residual-aware generator rerun (2026-06-28) is exclusion-free: all 30 NAIVE 
 ## Pointers
 
 - Repo conventions + commands: `AGENTS.md`. Planning index: `docs/plans/INDEX.md`.
-- Current capabilities, limitations, and improvement directions: `2026-06-27-teralizer-capability-and-improvement-directions` *(audit)*.
 - SPF spike harness + type-support study: `~/Projects/phd-thesis/projects/spf-eval/`.
 - JARVIS paper: `~/Downloads/vmcai2018-jarvis-extended.pdf` (Tables 1–2; §9 Interval bug case study).

@@ -42,11 +42,11 @@ Self-validation makes the *shipped suite* sound — a wrong spec is excluded, no
 ### Single type-capability source
 A type is generatable iff a registered `DomainPlanner` `supports(TypeDomain.from(type))`. The front-end gate (`GeneralizableInput.derive` / `ParameterTypeFilter`) and `SUPPORTED_TYPES` derive from the registry, not a hand-maintained list.
 
-### Fail-loud visitor seam (soundness-critical)
-A node `ModelToJavaTransformer` must render but cannot is a compile error, not a silent stack imbalance; `SpfToModelTransformer`'s unsupported / leaked-state paths return a typed, attributable "non-generalizable (reason)" outcome instead of `UnsupportedOperationException` or silent concretization. This both stops the soundness risk above and feeds the SPF-gap telemetry. (architecture-review **A-3**, **A-5/D-1**.)
+### Fail-loud visitor seam (soundness-critical) — shipped
+A node `ModelToJavaTransformer` must render but cannot is a compile error, not a silent stack imbalance; `SpfToModelTransformer`'s unsupported / leaked-state paths return a typed, attributable "non-generalizable (reason)" outcome instead of `UnsupportedOperationException` or silent concretization. This both stops the soundness risk above and feeds the SPF-gap telemetry. Shipped: `ModelFolder<T>` (A-3), `NonGeneralizableExpressionException` (A-1), `UnsupportedSpfTermException` (A-5).
 
-### Single emitter
-Collapse the Baseline/Naive/Improved factory triplication so the planner is the one typed emitter. (architecture-review **C-1**.)
+### Single emitter — shipped
+Collapse the Baseline/Naive/Improved factory triplication so the planner is the one typed emitter. Shipped (C-1).
 
 ### The residual filter stays unconditional
 `filter(inputJava)` is always emitted; recipes narrow, the filter enforces. Removing it for "consumed" clauses is **out of scope** (no outcome change, only added unsoundness surface).
@@ -76,30 +76,7 @@ In scope when reasonably accomplished, **evidence-gated, not first priority.** P
 
 ## Generation-coverage telemetry
 
-The seam self-reports; the filter stays unconditional, so tracking is metadata. It separates the gaps, each with a different fix, and links them to actual lost generalizations (exclusions):
-
-| signal | meaning | fix |
-|---|---|---|
-| **entry gap** | parameter type never admitted (`ParameterTypeFilter` reject) | add a `DomainPlanner` (+ admit) |
-| **SPF gap** | admitted, but SPF gave no/partial symbolic spec — tagged by role (constant-return = sound; value-dependent-lost / leakage / lost-composition = completeness/soundness risk) | extend SPF / config / peer |
-| **recipe gap** | SPF gave a clause, no planner recipe encoded it (→ residual filter) | add a recipe |
-
-### Records
-- Per admitted parameter: `{type_domain, symbolic_spec_present, representation ∈ encoded | residual | none}`.
-- Per top-level clause: `{type_domain, shape, consumed_by_construction}`.
-- Per generalization: `{symbolic_output_present, excluded, exclusion_reason}` — ties spec imprecision to lost generalizations; `symbolic_output_present = false` distinguishes a (sound) constant-return oracle from a (lossy) lost one only in combination with `excluded`.
-
-### Shape key
-Operator-family + operand-kinds, literals stripped: `STRING:startsWith(var,const)`, `STRING:matches(var,const)`, `INTEGER:mod(var,const)≟const`, `ARRAY:length(var) op const`, `REAL:affine2(var+var op const)`.
-
-### Schema (additive)
-- `generation_clause(id, generalization_id FK, parameter_name, type_domain, shape, consumed)`.
-- `generation_parameter(id, generalization_id FK, name, declared_type, type_domain, symbolic_spec_present, representation)`.
-- Entry-gap capture: `rejected_parameter(assertion_id FK, declared_type, type_domain)` (or a structured `filter_result` column).
-- Reuse `generalization.total_constraint_count` / `used_constraint_count`; join existing exclusion state for the SPF-gap↔exclusion correlation.
-
-### Analysis
-New `analysis/src/teralizer/generation_coverage.py` (sibling to `applicability_priorities.py`, which keeps the front-end funnel): top residual shapes, per-`TypeDomain` by-construction coverage, entry-gap-by-type, and the SPF-gap ranking joined to exclusions — the prioritized "next type / next recipe / next SPF fix" lists.
+The generator self-reports which clauses it encoded and which fell to the residual filter, so analysis can rank the most common gaps (entry / SPF / recipe) and prioritize the next planner, recipe, or SPF fix. The signal taxonomy, record shape, schema, and analysis module design live in `2026-06-28-generation-coverage-telemetry`.
 
 ## Phasing
 
@@ -127,7 +104,8 @@ New `analysis/src/teralizer/generation_coverage.py` (sibling to `applicability_p
 ## Relationship to existing docs
 
 - **Supersedes** `2026-06-27-residual-aware-input-generation` (v1 typed planner, shipped).
-- **Implements / absorbs** architecture-review findings A-3, A-5/D-1, C-1, C-2, C-4 (in `2026-06-28-pipeline-improvements`) and **reframes C-3** as telemetry; the implementation plan reconciles the overlap.
+- The fail-loud seam (A-3: `ModelFolder`, A-5: `UnsupportedSpfTermException`) and single emitter (C-1) are shipped in `2026-06-28-pipeline-improvements`; this spec designs the generator that builds on them.
+- C-4 (by-construction recipe library) is open in `pipeline-improvements` and consumed by `2026-06-28-maxulps-raw-bits-lane` (Gap 3); it is a dependency of the maxUlps lane, not a dependency of this spec.
 - **Extends** `2026-06-27-generalizable-input-rule` (admitting string/array/object inputs).
 - **Baseline matrix:** `phd-thesis/projects/spf-eval` (`RESULTS.md` + golden harness); the in-repo characterization complements `2026-06-26-applicability-barriers` (corpus-level SPF-stage funnel) with per-construct pipeline fixtures, and confirms B-2 cleared the spf-eval double/float bounds bug.
 - `2026-06-28-maxulps-raw-bits-lane` is the worked deep-SPF-extension example and consumes the fail-loud seams + recipe library.

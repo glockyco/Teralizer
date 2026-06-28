@@ -50,7 +50,7 @@ The names are part of the JPF variable contract: constraint extraction, concrete
 
 All consumers that decide, symbolize, record, or regenerate inputs must use the same derived input surface.
 
-- `ParameterTypeFilter` should accept an assertion when `GeneralizableInput.derive(...)` returns at least one input. Its current persisted-metadata check is weaker: it can reject calls whose only generalizable values are constructor-derived, because `tested_method_parameters` stores the object parameter rather than the flattened constructor parameters.
+- `ParameterTypeFilter` accepts an assertion when at least one derived input has a generalizable type. `TestAnalysisTask` stores the unwrapped constructor inputs from `GeneralizableInput.derive(...)` into `tested_method_parameters` / `tested_method_call_arguments` when the tested-method declaration resolves, so the filter sees the flattened constructor parameters and accepts inline-constructor cases. The residual reject path is `testedMethod == null` (unresolvable declaration), where no `CtMethod` exists for `derive` to consult.
 - `JpfInstrumentationTask` creates the instrumented method signature from derived inputs. Direct scalar inputs become method parameters; constructor-derived inputs replace constructor arguments when the instrumented call is made and rebuild the receiver or argument constructor inside the instrumented method body.
 - `TestGeneralizationListener` must record the instrumented method's input values, because the original tested method frame sees reconstructed objects rather than flattened constructor values.
 - `TestGeneralizationTask` must build `TestParameters` from the same derived inputs and rewrite generated tests so `_p_.<name>` is substituted into direct arguments or constructor arguments.
@@ -83,7 +83,7 @@ Future input expansion should extend the same decision procedure instead of addi
 
 Promising extensions, in order of containment:
 
-1. Make `ParameterTypeFilter` consult the Spoon-backed derived input surface so the filter gate matches the instrumentation/generation capability.
+1. ~~Make `ParameterTypeFilter` consult the Spoon-backed derived input surface so the filter gate matches the instrumentation/generation capability.~~ → done: `TestAnalysisTask` stores the unwrapped constructor inputs, so the filter already sees generalizable primitive parameters and accepts inline-constructor cases.
 2. Add array-literal construction when the array length is concrete and every element has a supported scalar type.
 3. Add one-hop nested constructors only when every nested constructor is pure, fixed-arity, and fully scalar-derived.
 4. Add receiver symbolization for local/field receivers only after a separate stateful-setup spec defines provenance, aliasing, mutation, and reconstruction rules.

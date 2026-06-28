@@ -1,9 +1,11 @@
 ---
 title: Teralizer Capability & Improvement Directions
 type: audit
-status: active
+status: superseded
 created: 2026-06-27
+archived: 2026-06-28
 parent: 2026-06-26-teralizer-overview
+superseded_by: 2026-06-28-pipeline-architecture-review
 ---
 
 Point-in-time synthesis of Teralizer's current capabilities, remaining
