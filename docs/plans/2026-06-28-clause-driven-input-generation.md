@@ -6,114 +6,128 @@ created: 2026-06-28
 parent: 2026-06-26-teralizer-overview
 ---
 
-Redesign the `IMPROVED` input-generation seam so new parameter types are added by registering one planner, ground it in what Symbolic PathFinder can actually specify, and make the whole path self-report what it could and could not represent.
+Redesign the `IMPROVED` input-generation seam so new parameter types are added by registering one planner, ground it in what Symbolic PathFinder can actually specify (reusing the existing spf-eval characterization), and make the whole path self-report what it could and could not represent.
 
 ## Goal
 
 Three coupled outcomes:
 
 1. **Extensible by construction.** Adding `string`, then `array`/`object` support is "register one `DomainPlanner`," not "edit five switch statements." Each planner encodes as much of its parameter's path-condition clauses into a jqwik arbitrary as it can; the unconditional residual filter remains the soundness net for the rest.
-2. **Grounded in SPF reality.** The generator can only encode what SPF actually emits. A characterization test suite maps, per language construct, what SPF produces (a symbolic path-condition clause, a symbolic output oracle, a silent concretization, an unsupported error, or a crash). Recipes are built only for constructs SPF specifies; SPF extensions are targeted by evidence, not guessed.
-3. **Self-reporting.** Each generalization records, as analysis metadata, which clauses it represented by construction and which it could not; the front end records which parameter *types* it could not admit; and the pipeline records which admitted inputs SPF gave **no** symbolic spec for. Analysis can then rank the most common gaps and prioritize the next planner, recipe, or SPF fix.
+2. **Grounded in SPF reality.** The generator can only encode what SPF actually emits. We do **not** re-characterize SPF from scratch — `phd-thesis/projects/spf-eval` already maps it — but we make the relevant slice an in-repo, tested artifact at the pipeline level (spec extraction → render → generate → PIT), because that is where Teralizer's soundness and completeness are actually decided.
+3. **Self-reporting.** Each generalization records, as analysis metadata, which clauses it represented by construction and which it could not; the front end records which parameter *types* it could not admit; the pipeline records which admitted inputs SPF gave **no** symbolic spec for and whether the generalization survived or was excluded. Analysis can then rank the most common gaps and prioritize the next planner, recipe, or SPF fix.
 
-Supersedes `2026-06-27-residual-aware-input-generation`, whose v1 typed planner (`InputGenerationPlanner`/`DomainPlanner`/`TypeDomain`/`ConstraintClause`) shipped. This spec makes that seam clause-driven, grounds it in SPF capability, and adds the telemetry.
+Supersedes `2026-06-27-residual-aware-input-generation`, whose v1 typed planner shipped.
 
-## SPF is the upstream bound
+## SPF is the upstream bound — and what concretization actually costs
 
-Teralizer extracts specs by running SPF in `collect_constraints` mode along the concrete path: the path condition is the input partition, the symbolic return value is the output oracle. So for any input the generator wants to constrain by construction, **SPF must first have produced a symbolic clause naming it** — and for any output oracle, SPF must have produced a symbolic return. If SPF concretizes (e.g. an unmodeled `String` method), the parameter reaches the generator with *no* clause: free generation + residual filter, regardless of how good the planner is.
+Teralizer runs SPF in `collect_constraints` (symcrete) mode along the concrete path: the path condition is the input partition, the symbolic return is the output oracle. For the generator to constrain an input by construction, **SPF must first have produced a symbolic clause naming it**; for an output oracle, a symbolic return. When SPF concretizes (an unmodeled method, a solver-bridge gap), the value reaches the generator with no clause.
 
-The model layer is already ahead of this: SPF supports symbolic strings, and `SpfToModelTransformer` already maps string PCs (`StringConstraint`, `StringSymbolic`→`VariableString`, `equals`/`length`/`startsWith`/`contains`/`matches` via the `Operator` enum). But *which* string/array/object constructs SPF actually symbolizes under our config is not pinned down in-repo — only in the external `spf-eval` study. This spec makes that an in-repo, tested artifact.
+**Concretization is not one bucket, and it is not automatically unsound.** The generated property asserts the rendered oracle against the *real* MUT on every generated input (original value first). So an imprecise spec either still satisfies the assertion (sound) or fails it — and a failing generalization is **excluded** (`NonPassingTestFilter` → PIT), never shipped. Spec imprecision therefore costs **completeness**, not soundness — except where a spec renders to compilable-but-wrong Java. Classify by role:
+
+| concretization role | example (spf-eval) | effect |
+|---|---|---|
+| symbolic PC + **constant** return (`symbolicAttr` absent) | `int_return_const`, `sign(int)` | **sound + complete** — partition exact, oracle is a genuine constant for that branch |
+| value-dependent return lost its symbolic attr, or PC under-constrained, or composition lost | `repeated_call_chained` | **sound but lossy** — divergent/wrong-oracle inputs fail → generalization **excluded** |
+| leaked concrete heap state / un-renderable node | `array_2d` (concrete address in oracle) | **soundness risk** — must **fail loud** (non-generalizable), not silently render |
+
+This makes the fail-loud SPF→Model seam (A-3/A-5) load-bearing for **soundness**, not just maintainability.
+
+Self-validation makes the *shipped suite* sound — a wrong spec is excluded, not shipped — but it does **not** certify the extracted spec: a *passing* generalization only means the spec was not wrong for the sampled inputs, not that it is right. Every concretization is therefore a telemetry/exclusion risk until a characterization fixture proves its role safe; the role table above is a hypothesis to test, not a guarantee.
 
 ## Architecture — the clean seam
 
 ### Clause-driven planners
-`DomainPlanner.plan` receives the flattened `ConstraintClause`s naming its parameter (model expressions with stable ids) plus the concrete argument, and returns a recipe **and the clause ids it encoded**. Each planner interprets its own domain's operators (numeric reads `<`/`+`; string reads `equals`/`length`/`startsWith`). `VariableConstraintExtractor` is retired as the universal pre-digester; `NumericDomainPlanner` does its own numeric clause interpretation, with `IntegerConstraints`/`RealConstraints` demoted to numeric-planner-internal recipe builders.
+`DomainPlanner.plan` receives the flattened `ConstraintClause`s naming its parameter (model expressions with stable ids) plus the concrete argument, and returns a recipe **and the clause ids it encoded**. Each planner interprets its own domain's operators. `VariableConstraintExtractor` is retired as the universal pre-digester; `NumericDomainPlanner` does its own numeric clause interpretation, with `IntegerConstraints`/`RealConstraints` demoted to numeric-planner-internal recipe builders.
 
 ### Single type-capability source
-A type is generatable iff a registered `DomainPlanner` `supports(TypeDomain.from(type))`. The front-end gate (`GeneralizableInput.derive` / `ParameterTypeFilter`) and `SUPPORTED_TYPES` derive from the planner registry instead of a hand-maintained list. Adding a type = registering one planner.
+A type is generatable iff a registered `DomainPlanner` `supports(TypeDomain.from(type))`. The front-end gate (`GeneralizableInput.derive` / `ParameterTypeFilter`) and `SUPPORTED_TYPES` derive from the registry, not a hand-maintained list.
 
-### Fail-loud visitor seam
-A node the renderer must handle but doesn't becomes a compile error (non-defaulted hooks on the `ModelToJavaTransformer` contract) rather than a silent stack imbalance; `SpfToModelTransformer`'s unsupported-node paths return a typed, attributable "non-generalizable (reason)" outcome instead of `UnsupportedOperationException` or silent concretization — which also feeds the SPF-gap telemetry below. (architecture-review **A-3**, **A-5/D-1**.)
+### Fail-loud visitor seam (soundness-critical)
+A node `ModelToJavaTransformer` must render but cannot is a compile error, not a silent stack imbalance; `SpfToModelTransformer`'s unsupported / leaked-state paths return a typed, attributable "non-generalizable (reason)" outcome instead of `UnsupportedOperationException` or silent concretization. This both stops the soundness risk above and feeds the SPF-gap telemetry. (architecture-review **A-3**, **A-5/D-1**.)
 
 ### Single emitter
-Collapse the Baseline/Naive/Improved factory triplication so the planner is the one typed emitter and the factories become thin variant selectors. (architecture-review **C-1**.)
+Collapse the Baseline/Naive/Improved factory triplication so the planner is the one typed emitter. (architecture-review **C-1**.)
 
 ### The residual filter stays unconditional
-`filter(inputJava)` is always emitted. By-construction recipes narrow ranges; the filter is the soundness net for anything not encoded. Removing the filter for "consumed" clauses is **out of scope** — it changes no outcomes and only adds an unsoundness surface.
+`filter(inputJava)` is always emitted; recipes narrow, the filter enforces. Removing it for "consumed" clauses is **out of scope** (no outcome change, only added unsoundness surface).
 
-## SPF capability characterization (foundational)
+## SPF capability characterization — reuse, don't restart
 
-A test suite that pins, per construct, what SPF→Model actually yields under our config — the empirical map that scopes which recipes are reachable and surfaces candidate SPF fixes.
+`phd-thesis/projects/spf-eval` (run 2026-02-19, glockyco/jpf-symbc) already characterizes 100+ subjects with per-construct verdicts (Full / Partial / Crash / Degenerate), exact PC + return-attr notes, and a golden-file regression harness. **It is the baseline support matrix.** The in-repo work is narrower and pipeline-specific:
 
-- **Form:** small fixture MUTs (one construct each — `s.equals`, `s.length`, `s.substring`, `s.charAt`, array read/length, object field access, plus string/array/object *returns* for the oracle side) run through the JPF stage; assert on the emitted input/output specification (the `SpfToModelTransformer` result), tagging each construct `symbolic-clause` / `symbolic-output` / `concretized` / `unsupported` / `crash`.
-- **Seed:** the external `spf-eval` study (`~/Projects/phd-thesis/projects/spf-eval/RESULTS.md`) already characterized SPF type support first-hand; port its relevant cases as the starting matrix, then verify against our config.
-- **Output:** a living "SPF support matrix" that (a) tells the `StringDomainPlanner` which clause shapes can actually appear, (b) doubles as regression tests for the `SpfToModel` mapping, and (c) is the evidence base for which SPF extensions are worth it.
+- **Map each relevant spf-eval verdict to the Teralizer-pipeline outcome:** does `SpfToModelTransformer` ingest it, does `ModelToJavaTransformer` render it, does the generalization survive PIT or get excluded? (spf-eval stops at the SPF spec; we own render→generate→PIT.)
+- **Add pipeline-level fixtures only at the gaps/divergences** — small MUTs through the JPF stage asserting the emitted spec + the generalization outcome.
+- **Re-run the double/float cases:** spf-eval's `double_linear`/`float_linear`/`double_nonlinear` ⚠️Partial are the `Double.MIN_VALUE` lower-bound bug **this branch fixed (B-2)**; confirm they flip to Full (validates B-2 against spf-eval's goldens, ideally by pointing spf-eval at this branch's jpf-symbc build).
 
-## Type planners (incremental, one seam)
+## Type planners (incremental, one seam), scoped by the matrix
 
-Scoped to what characterization shows SPF specifies:
-
-1. **`BooleanDomainPlanner`** — warmup validating the clause-driven seam: `b == true|false` → `just`; else `Arbitraries.of(true, false)`.
-2. **`StringDomainPlanner`** — by construction for the subset SPF specifies: `equals(const)`→`just`; `length op n`→`ofMin/MaxLength`; `startsWith`/`endsWith`/`contains(const)`→prefix/suffix/infix construction; `isEmpty`→`just("")`. Out of construction (→ residual filter): `matches(regex)`, `equalsIgnoreCase`, `charAt`/`indexOf`. Requires admitting `String` via the single type source + enabling `symbolic.strings` for that probe.
-3. **`Array`/`Object` planners** — incremental, subset-first: array length + element recipe (SPF symbolic array length is a known limit, barrier #20); objects extend `GeneralizableInput`'s inline-constructor flattening.
+1. **`BooleanDomainPlanner`** — warmup validating the seam: `b == true|false` → `just`; else `Arbitraries.of(true, false)`. (spf-eval `boolean_input` ✅.)
+2. **`StringDomainPlanner`** — recipes only where spf-eval shows SPF specifies the clause:
+   - **Buildable now:** `equals(const)` → `just`; `length op n` → `ofMin/MaxLength` (`string_equality`, `string_length` ✅).
+   - **Needs a content-shape recipe (later):** `substring`/`charAt`/`indexOf` produce constraints (✅ extraction) but positional construction is harder.
+   - **Not characterized → characterize before building:** `startsWith`/`endsWith`/`contains`.
+   - **SPF crash, not a recipe gap:** `isEmpty`, `compareTo`, null-string param crash SPF (`SymbolicStringHandler` gap) → these are SPF fixes (candidate "easy win" lane), not planner work.
+   - Requires admitting `String` via the single type source + `symbolic.strings` for the probe.
+3. **`Array`/`Object` planners** — subset-first, matrix-scoped: array element/length-guard/return are ✅, but `array_store_con`/null-array crash and `array_2d` leaks a concrete address (fail-loud case); objects extend `GeneralizableInput`'s inline-constructor flattening (lazy-init/field cases ✅).
 
 ## SPF extension
 
-In scope when reasonably accomplished, but **evidence-gated and not first priority**: pursue an SPF/model/peer/config extension only when the characterization suite shows it unblocks a frequent construct (telemetry-ranked) and the fix is tractable. An "easy fix, large improvement" (e.g. a one-line config or a missing peer method) jumps the queue; a deep one (new FP theory, symbolic array length) is recorded as a bounded upstream task, not attempted inline. The `maxulps-raw-bits-lane` is the worked example of a deep, scoped SPF extension.
+In scope when reasonably accomplished, **evidence-gated, not first priority.** Pursue a fix only when the characterization + telemetry show it unblocks a frequent construct and it is tractable. An "easy fix, large improvement" (e.g. adding `isEmpty`/`compareTo` to `SymbolicStringHandler`, or a missing peer method) jumps the queue; a deep one (transcendental solver theory, symbolic FP) is recorded as a bounded upstream task. `2026-06-28-maxulps-raw-bits-lane` is the worked deep example.
 
 ## Generation-coverage telemetry
 
-The seam self-reports. Because the filter stays unconditional, tracking is metadata only — a mislabel is a wrong statistic, never an unsound test. Crucially it separates the *three distinct gaps*, each with a different fix:
+The seam self-reports; the filter stays unconditional, so tracking is metadata. It separates the gaps, each with a different fix, and links them to actual lost generalizations (exclusions):
 
 | signal | meaning | fix |
 |---|---|---|
-| **entry gap** | a parameter type was never admitted (`ParameterTypeFilter` reject) | add a `DomainPlanner` (+ front-end admit) |
-| **SPF gap** | admitted, but SPF produced no symbolic clause/output for it (concretized) | extend SPF / config / a peer |
-| **recipe gap** | SPF gave a clause, but no planner recipe encoded it (→ residual filter) | add a recipe to the planner |
+| **entry gap** | parameter type never admitted (`ParameterTypeFilter` reject) | add a `DomainPlanner` (+ admit) |
+| **SPF gap** | admitted, but SPF gave no/partial symbolic spec — tagged by role (constant-return = sound; value-dependent-lost / leakage / lost-composition = completeness/soundness risk) | extend SPF / config / peer |
+| **recipe gap** | SPF gave a clause, no planner recipe encoded it (→ residual filter) | add a recipe |
 
 ### Records
-- Per admitted parameter: `{type_domain, symbolic_spec_present, representation ∈ encoded | residual | none}` — `none` with `symbolic_spec_present = false` is the SPF gap; `residual` is the recipe gap.
+- Per admitted parameter: `{type_domain, symbolic_spec_present, representation ∈ encoded | residual | none}`.
 - Per top-level clause: `{type_domain, shape, consumed_by_construction}`.
-- Per generalization: `{symbolic_output_present}` — whether the oracle is a real symbolic return or a concretized value.
+- Per generalization: `{symbolic_output_present, excluded, exclusion_reason}` — ties spec imprecision to lost generalizations; `symbolic_output_present = false` distinguishes a (sound) constant-return oracle from a (lossy) lost one only in combination with `excluded`.
 
 ### Shape key
-Operator-family + operand-kinds, literal values stripped: `STRING:startsWith(var,const)`, `STRING:matches(var,const)`, `INTEGER:mod(var,const)≟const`, `ARRAY:length(var) op const`, `REAL:affine2(var+var op const)`.
+Operator-family + operand-kinds, literals stripped: `STRING:startsWith(var,const)`, `STRING:matches(var,const)`, `INTEGER:mod(var,const)≟const`, `ARRAY:length(var) op const`, `REAL:affine2(var+var op const)`.
 
 ### Schema (additive)
 - `generation_clause(id, generalization_id FK, parameter_name, type_domain, shape, consumed)`.
 - `generation_parameter(id, generalization_id FK, name, declared_type, type_domain, symbolic_spec_present, representation)`.
-- Entry-gap capture: `rejected_parameter(assertion_id FK, declared_type, type_domain)` (or a structured column on `filter_result`).
-- Reuse `generalization.total_constraint_count` / `used_constraint_count` for the coarse rate.
+- Entry-gap capture: `rejected_parameter(assertion_id FK, declared_type, type_domain)` (or a structured `filter_result` column).
+- Reuse `generalization.total_constraint_count` / `used_constraint_count`; join existing exclusion state for the SPF-gap↔exclusion correlation.
 
 ### Analysis
-New `analysis/src/teralizer/generation_coverage.py` (sibling to `applicability_priorities.py`, which keeps the front-end filter/stage funnel): top residual shapes, per-`TypeDomain` by-construction coverage, the entry-gap-by-type ranking, and the **SPF-gap ranking** (admitted-but-not-symbolized constructs) — the prioritized "next type / next recipe / next SPF fix" lists.
+New `analysis/src/teralizer/generation_coverage.py` (sibling to `applicability_priorities.py`, which keeps the front-end funnel): top residual shapes, per-`TypeDomain` by-construction coverage, entry-gap-by-type, and the SPF-gap ranking joined to exclusions — the prioritized "next type / next recipe / next SPF fix" lists.
 
 ## Phasing
 
-- **A. Clean seam** — clause-driven `DomainPlanner` + single type source + fail-loud visitor seam + single emitter; emits the clause/parameter telemetry from here on.
-- **Characterization** — the SPF support matrix; runs alongside A and gates the string/array/object recipe scope. The front-end entry-gap capture is independent and cheap, so it can land first for immediate type prioritization.
+- **A. Clean seam** — clause-driven planners + single type source + fail-loud seam + single emitter; emits clause/parameter telemetry.
+- **Characterization** — map the spf-eval matrix to pipeline outcomes + gap fixtures + re-run double/float post-B-2. Runs alongside A; gates the recipe scope. Entry-gap capture is independent and cheap → can land first.
 - **B. `BooleanDomainPlanner`** — seam validation.
-- **C. `StringDomainPlanner`** — the SPF-confirmed subset + front-end admit + per-probe `symbolic.strings`.
+- **C. `StringDomainPlanner`** — the matrix-confirmed `equals`/`length` subset first; characterize `startsWith`/`contains`; content-shape recipes later.
 - **D. Arrays/objects** — subset-first.
-- SPF fixes are interleaved opportunistically per the evidence rule above.
+- SPF fixes interleaved opportunistically per the evidence rule.
 
 ## Acceptance criteria
 
-- Adding a parameter type is registering one `DomainPlanner`; no edits to a hand-maintained type list or per-variant factory switches.
-- The characterization suite exists and tags each covered construct; its findings, not assumption, scope the string/array/object recipes.
-- A clause a planner cannot encode falls to the still-present residual filter; an unhandled Model node fails loud, never silently degrades a spec.
-- Telemetry distinguishes entry / SPF / recipe gaps; `generation_coverage.py` produces the three rankings.
-- String inputs generate by construction for the SPF-confirmed subset and pass; the rest filter; no generated test becomes unsound.
+- Adding a parameter type is registering one `DomainPlanner`; no hand-maintained type list or per-variant factory switch edits.
+- The pipeline characterization maps the spf-eval matrix to render/generate/PIT outcomes; recipe scope follows it, not assumption; the post-B-2 double/float re-run is recorded.
+- A clause no planner encodes falls to the residual filter; an un-renderable or leaked-state Model node fails loud, never silently degrades or mis-renders a spec.
+- Telemetry distinguishes entry / SPF / recipe gaps and links SPF gaps to exclusions; `generation_coverage.py` produces the rankings.
+- String inputs generate by construction for the matrix-confirmed subset and pass; the rest filter; no generated test becomes unsound.
 
 ## Non-goals
 
-- Runtime residual-only filtering (dropping the filter for consumed clauses) — telemetry only; the filter stays.
-- Deep SPF extensions attempted inline (full regex string generation, symbolic array length, FP theory) — recorded as bounded upstream tasks, pursued only when evidence + tractability justify.
+- Runtime residual-only filtering — telemetry only; the filter stays.
+- Re-characterizing SPF from scratch — reuse spf-eval; extend in-repo only at pipeline-specific gaps.
+- Deep SPF extensions inline (transcendental/FP theory, full regex generation, symbolic array length) — bounded upstream tasks, evidence-gated.
 
 ## Relationship to existing docs
 
 - **Supersedes** `2026-06-27-residual-aware-input-generation` (v1 typed planner, shipped).
-- **Implements / absorbs** architecture-review findings A-3, A-5/D-1, C-1, C-2, C-4 (itemized in `2026-06-28-pipeline-improvements`) and **reframes C-3** as telemetry; the derived implementation plan reconciles the overlap.
-- **Extends** `2026-06-27-generalizable-input-rule` (admitting string/array/object inputs via the single type source).
-- The SPF characterization complements `2026-06-26-applicability-barriers` (which classifies SPF-stage failures at the corpus level) with in-repo per-construct tests.
-- `2026-06-28-maxulps-raw-bits-lane` is the worked deep-SPF-extension example and consumes the fail-loud `SpfToModel`/`ModelToJava` seams + the recipe library.
+- **Implements / absorbs** architecture-review findings A-3, A-5/D-1, C-1, C-2, C-4 (in `2026-06-28-pipeline-improvements`) and **reframes C-3** as telemetry; the implementation plan reconciles the overlap.
+- **Extends** `2026-06-27-generalizable-input-rule` (admitting string/array/object inputs).
+- **Baseline matrix:** `phd-thesis/projects/spf-eval` (`RESULTS.md` + golden harness); the in-repo characterization complements `2026-06-26-applicability-barriers` (corpus-level SPF-stage funnel) with per-construct pipeline fixtures, and confirms B-2 cleared the spf-eval double/float bounds bug.
+- `2026-06-28-maxulps-raw-bits-lane` is the worked deep-SPF-extension example and consumes the fail-loud seams + recipe library.
