@@ -101,11 +101,11 @@ Residual-only filtering is not required for this implementation slice. It remain
 - [x] Run focused Java tests for the planner and supplier.
 - [x] Run `./gradlew build`.
 - [x] Run `uv run --directory analysis pytest tests/test_jarvis_scoreboard.py -q`.
-- [ ] Rerun the JARVIS scorecard against `postgres_jarvis_scoreboard` only if the generator output changed.
-- [ ] Update `docs/plans/2026-06-26-jarvis-case-coverage.md` with any PVC deltas and generator-shape explanation.
-- [ ] Update `docs/plans/2026-06-26-teralizer-overview.md` only if the JARVIS win summary changes.
-- [ ] Run `omp-plans index && omp-plans check`.
-- [ ] Commit evidence/doc updates separately from code commits.
+- [x] Rerun the JARVIS scorecard against `postgres_jarvis_scoreboard`; the generator output changed (planner recipes + two fixes).
+- [x] Record PVC deltas and the generator-shape explanation in the dated audit `2026-06-28-residual-aware-generator-rerun` (the 2026-06-26 audit is an immutable point-in-time record).
+- [x] Update `docs/plans/2026-06-26-teralizer-overview.md`: record the exclusion-free residual-aware rerun and link the new audit.
+- [x] Run `omp-plans index && omp-plans check`.
+- [x] Commit evidence/doc updates separately from code commits.
 
 ### Task 8: Generator robustness fixes from the scorecard rerun
 
@@ -113,8 +113,8 @@ The first post-redesign scorecard rerun excluded three generated `IMPROVED` test
 
 - [x] Fix the real-bound dynamic scale: guard `BigDecimal.valueOf(bound).scale()` against NaN/Infinity, because affine bounds such as `y - x` overflow to Infinity at runtime (`precisionEquals` assertTrue crashed with `NumberFormatException`).
 - [x] Fix the jqwik value recorder: escape surrogate characters so the UTF-8 value-log write cannot throw `MalformedInputException`, because `ch >= 128` generates `chars().range(128, 65535)` which spans lone surrogates (`isAscii` assertFalse crashed).
-- [ ] Re-run the scorecard and confirm no Table-2 generated test is excluded.
-- [ ] Document the `precisionEqualsMaxUlps` spike limitation: SPF captured only `0 < maxUlps`, so the x/y ulp relation is absent from the path condition and both NAIVE and IMPROVED generalizations are unsound and excluded. This is a raw-bits spike gap, not a generator or Table-2 result.
+- [x] Re-run the scorecard and confirm no Table-2 generated test is excluded.
+- [x] Document the `precisionEqualsMaxUlps` spike limitation: SPF captured only `0 < maxUlps`, so the x/y ulp relation is absent from the path condition and both NAIVE and IMPROVED generalizations are unsound and excluded. This is a raw-bits spike gap, not a generator or Table-2 result.
 
 ## Acceptance criteria
 

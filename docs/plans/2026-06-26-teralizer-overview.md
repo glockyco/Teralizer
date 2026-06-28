@@ -31,6 +31,7 @@ work that depends on a re-run is deferred until (1) lands.
 - `2026-06-27-residual-aware-input-generation` *(spec)* — the typed generator redesign for making `IMPROVED` generate path-condition values by construction where safe.
 - `2026-06-27-improved-generator-redesign` *(plan)* — the ordered implementation plan for the residual-aware generator.
 - `2026-06-26-jarvis-case-coverage` *(audit)* — the per-case head-to-head evidence behind it.
+- `2026-06-28-residual-aware-generator-rerun` *(audit)* — clean rerun on the typed generator: zero Table-2 exclusions after two robustness fixes.
 
 ## Children
 
@@ -42,6 +43,7 @@ work that depends on a re-run is deferred until (1) lands.
 | `2026-06-27-jarvis-scoreboard-evidence-run` | plan | executed pinned JARVIS-era scoreboard run and decided the claim | implemented |
 | `2026-06-27-receiver-constructor-inputs` | plan | close the `Interval.getSize()` inline receiver-constructor blocker exposed by the scoreboard run | implemented |
 | `2026-06-26-jarvis-case-coverage` | audit | per-case JARVIS head-to-head evidence + provenance | current focus (evidence) |
+| `2026-06-28-residual-aware-generator-rerun` | audit | scorecard rerun on the typed planner: two robustness fixes + refreshed per-probe PVC | current focus (evidence) |
 | `2026-06-26-applicability-barriers` | audit | RQ6 real-world applicability barrier evidence (inventory / funnel / ledger) | deferred — step (2) reference |
 | `2026-06-26-data-reuse-and-msr-potential` | note | secondary MSR / data-paper backlog | deferred, gated on (1) |
 | `2026-06-25-replication-package-documentation-improvements` | plan | verifiable replication package for ACM artifact eval | independent track |
@@ -54,6 +56,8 @@ work that depends on a re-run is deferred until (1) lands.
 "Beat JARVIS" = **capability** (10 JARVIS Table-2 rows entering the pipeline; the current evidence run tracks 14 assertion-level Teralizer probes, plus one separate non-Table-2 maxUlps spike) **+ transparent PVC**.
 Current run status: all 10 Table-2 rows enter and all generated tests pass. Under Teralizer's jqwik-input PVC metric, IMPROVED wins 5/10 row aggregates and loses 5/10; the losses are generator/metric-shape differences, not SPF blockers. IC is retained as a sanity check only because the current project-level JaCoCo rows conflate all generated probes; the observed Math IC increase comes entirely from the separate maxUlps probe in `Precision.equals(double,double,int)`. Remaining explicit concessions are row-scoped: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria
 and the metric definition live in `2026-06-26-beat-jarvis-phase1`; the active evidence lane is `2026-06-27-jarvis-scoreboard-evaluation-lane`, using the archived receiver-input and evidence-run plans plus the live `2026-06-26-jarvis-case-coverage` audit.
+
+The residual-aware generator rerun (2026-06-28) is exclusion-free: all 30 NAIVE + IMPROVED generated tests pass after fixing a non-finite real-scale crash and a surrogate value-log crash. IMPROVED is now ≥ NAIVE on 11/14 passing probes; the affine `eps >= y - x` encoding lowers PVC on the three `Precision.equals` probes (still above JARVIS's 102). Refreshed per-probe PVC and the maxUlps spike gap live in `2026-06-28-residual-aware-generator-rerun`.
 
 ## Pointers
 
