@@ -54,6 +54,7 @@ work that depends on a re-run is deferred until (1) lands.
 | `2026-06-26-data-reuse-and-msr-potential` | note | secondary MSR / data-paper backlog | deferred, gated on (1) |
 | `2026-06-25-replication-package-documentation-improvements` | plan | verifiable replication package for ACM artifact eval | independent track |
 | `2026-06-27-ensemble-mut-identification` | spec | ensemble focal-method oracle (killed mutants + LCBA + name-matching) for MUT identification | applicability track |
+| `2026-06-28-mut-id-targeting-and-coverage` | audit | MUT-id concrete targets, mutation-data coverage, telemetry gaps | applicability track |
 | `2026-06-27-inherited-test-method-support` | spec | flatten inherited `@Test` methods into Spoon clones so 5,758 dropped tests parse | backlog |
 
 ## Win condition (summary)
