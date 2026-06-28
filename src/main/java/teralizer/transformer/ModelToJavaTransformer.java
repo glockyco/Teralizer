@@ -214,7 +214,7 @@ public class ModelToJavaTransformer extends ModelVisitor {
 
     @Override
     public void postVisit(ConstantString constant) {
-        this.stack.push(this.transform(constant.value));
+        this.stack.push(this.renderStringLiteral(constant.value));
     }
 
     @Override
@@ -309,6 +309,25 @@ public class ModelToJavaTransformer extends ModelVisitor {
             return this.transform(value.charAt(0));
         }
         throw new RuntimeException("Unable to transform char value '" + value + "' to Java.");
+    }
+
+    private String renderStringLiteral(String value) {
+        StringBuilder sb = new StringBuilder("\"");
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '\\': sb.append("\\\\"); break;
+                case '"':  sb.append("\\\""); break;
+                case '\b': sb.append("\\b");  break;
+                case '\t': sb.append("\\t");  break;
+                case '\n': sb.append("\\n");  break;
+                case '\f': sb.append("\\f");  break;
+                case '\r': sb.append("\\r");  break;
+                default:   sb.append(c);      break;
+            }
+        }
+        sb.append("\"");
+        return sb.toString();
     }
 
     private String escapeChar(char value) {
