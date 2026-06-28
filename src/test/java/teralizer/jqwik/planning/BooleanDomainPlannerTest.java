@@ -71,6 +71,18 @@ public class BooleanDomainPlannerTest {
     }
 
     @Example
+    void bNotEqualsOneDerivesFalse() {
+        // b != 1
+        Operation model = new Operation(new VariableInteger("b"), Operator.NE, new ConstantInteger(1));
+        List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("boolean", "b"));
+        List<ConstraintClause> clauses = ConstraintClauses.from(model, Collections.singletonMap("b", "boolean"));
+        PlanningContext context = new PlanningContext(parameters, clauses);
+        ParameterGenerationPlan plan = new BooleanDomainPlanner().plan(parameters.get(0), context);
+        Assert.assertTrue("b != 1 must produce just(false)", plan.getRecipe().emit().contains("Arbitraries.just(false)"));
+        Assert.assertEquals("b != 1 clause must be reported consumed", Collections.singleton(0), plan.getConsumedClauseIds());
+    }
+
+    @Example
     void unconstrainedGeneratesOfTrueFalse() {
         // no constraint on b
         List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("boolean", "b"));
