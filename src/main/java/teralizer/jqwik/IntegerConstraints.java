@@ -44,6 +44,10 @@ public class IntegerConstraints implements VariableConstraints {
         this.variableEquality = name;
     }
 
+    public void addEqualityExpression(String expression) {
+        this.variableEquality = expression;
+    }
+
     public String getEquality() {
         if (this.constantEquality != null) {
             return this.constantEquality;

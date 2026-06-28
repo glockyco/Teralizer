@@ -77,11 +77,11 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 
 ### Task 5: Simple affine two-variable recipes
 
-- [x] Add simple affine bound extraction for two-variable `PLUS` expressions over integer and real expressions.
-- [x] Support solving an upper-bound comparison for the current parameter when the other variable was generated earlier.
-- [x] Write tests for `a + b < n` and `a + b <= n`.
-- [ ] Add tests for `a - b > n`, `b == a + 1`, and unsafe integer overflow cases.
-- [ ] Implement integer overflow guards; leave an unsafe affine clause residual instead of emitting an unsound bound.
+- [x] Add an internal affine-term representation for `constant + coeff * variable` over integer and real expressions.
+- [x] Support solving one comparison for the current parameter when every other variable in the affine term was generated earlier.
+- [x] Write tests for `a + b < n`, `a + b <= n`, `a - b > n`, `b == a + 1`, and unsafe integer overflow cases.
+- [x] Verify the tests fail before implementation.
+- [x] Implement integer overflow guards; leave an unsafe affine clause residual instead of emitting an unsound bound.
 - [x] Implement real affine bounds with jqwik inclusive/exclusive `between` and dynamic scale.
 - [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
 - [x] Commit affine numeric planning.

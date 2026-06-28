@@ -123,7 +123,64 @@ public class InputGenerationPlannerTest {
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
         String body = plan.getParameterPlans().get(1).getRecipe().emit();
 
-        Assert.assertTrue(body.contains("bUpperBounds = java.util.Arrays.asList(bDefaultMax, (int) (10 - a - 1))"));
+        Assert.assertTrue(body, body.contains("bUpperBounds = java.util.Arrays.asList(bDefaultMax, (int) (9 - a))"));
+        Assert.assertTrue(plan.hasResidualClauses());
+    }
+
+    @Example
+    void integerRecipeUsesAffineUpperBoundFromSubtraction() {
+        List<MethodParameter> parameters = Arrays.asList(
+            new MethodParameter("int", "a"),
+            new MethodParameter("int", "b")
+        );
+        Model inputModel = new Operation(
+            new Operation(new VariableInteger("a"), Operator.MINUS, new VariableInteger("b")),
+            Operator.GT,
+            new ConstantInteger(3)
+        );
+
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
+        String body = plan.getParameterPlans().get(1).getRecipe().emit();
+
+        Assert.assertTrue(body, body.contains("bUpperBounds = java.util.Arrays.asList(bDefaultMax, (int) (a - 4))"));
+        Assert.assertTrue(plan.hasResidualClauses());
+    }
+
+    @Example
+    void integerRecipeUsesAffineEqualityFromPreviousParameter() {
+        List<MethodParameter> parameters = Arrays.asList(
+            new MethodParameter("int", "a"),
+            new MethodParameter("int", "b")
+        );
+        Model inputModel = new Operation(
+            new VariableInteger("b"),
+            Operator.EQ,
+            new Operation(new VariableInteger("a"), Operator.PLUS, new ConstantInteger(1))
+        );
+
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
+        String body = plan.getParameterPlans().get(1).getRecipe().emit();
+
+        Assert.assertTrue(body.contains("Arbitraries.just((int) (a + 1))"));
+        Assert.assertTrue(plan.hasResidualClauses());
+    }
+
+    @Example
+    void integerRecipeLeavesOverflowSensitiveAffineBoundResidualOnly() {
+        List<MethodParameter> parameters = Arrays.asList(
+            new MethodParameter("long", "a"),
+            new MethodParameter("long", "b")
+        );
+        Model inputModel = new Operation(
+            new Operation(new VariableInteger("a"), Operator.PLUS, new VariableInteger("b")),
+            Operator.LT,
+            new ConstantInteger(Long.MIN_VALUE)
+        );
+
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
+        String body = plan.getParameterPlans().get(1).getRecipe().emit();
+
+        Assert.assertFalse(body.contains("-9223372036854775808 - a - 1"));
         Assert.assertTrue(plan.hasResidualClauses());
     }
 
