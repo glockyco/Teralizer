@@ -25,7 +25,7 @@ path condition, not SPF. Phase 1 lifted the capability surface:
 |---|---|---|
 | Scalar inputs: `int`, `long`, `short`, `byte` | ✅ full | long-standing |
 | `char`, `boolean` inputs | ✅ full (Phase 1) | `SUPPORTED_TYPES` + generator + boolean-return assertion rewriting |
-| `double`/`float` outputs (linear paths) | ✅ full | jqwik-side sampling; solver bounds irrelevant in collect-constraints mode (#10 retracted as moot) |
+| `double`/`float` outputs (linear paths) | ✅ full | jqwik samples output values; for *inputs*, the `Double.MIN_VALUE` real lower-bound default pruned negative-real paths during collection (#10) — fixed by B-2 (`MinMax.minDouble` → `-Double.MAX_VALUE`) |
 | `FastMath.abs/min/max/toIntExact` | ✅ modeled (Phase 1) | jpf-symbc `FastMath` JARVIS model — Abs BLOCKED→FULL |
 | Object construction → field → return (inline, fixed-arity) | ✅ full (Phase 1) | `JpfInstrumentationTask` constructing-input generation; unblocks Interval, PolynomialFunction, UnivariateFunction |
 | Exception-path capture | ✅ full (Phase 1) | `TestGeneralizationListener` records thrown-exception specs instead of aborting (#18) |
@@ -55,7 +55,7 @@ study (`~/Projects/phd-thesis/projects/spf-eval/RESULTS.md`).
 | 13 | PIT class-level exclusion amplification | PIT integration (green-suite, class-level only) | X/E | one failing test excludes its whole class — 10× amplification |
 | 14 | Maven + standard structure only | project setup/detection | E | ~15% real-world project failures; no Gradle / non-standard layouts |
 | 15 | Method-call sequences unsupported | generalization model | E/R | stateful APIs (build-then-use) |
-| 16 | `toIntExact`: exception path + `(int)` cast oracle | jpf-symbc symcrete `LCMP` push-order + `L2I` (no truncation node) | E/R | spike PARTIAL; LCMP one-liner only bites in full-symbolic mode; L2I oracle harder |
+| 16 | `toIntExact`: exception path + `(int)` cast oracle | jpf-symbc `LCMP` long-width + `L2I` (no truncation node) | E/R | ◐ partly addressed (B-5): LCMP no longer truncates `long` operands to `int`; `L2I` cast oracle + overflow exception path still open |
 | 17 | NaN / signed-zero unmodeled | jpf-symbc rational `SymbolicReal` / `ProblemZ3` | R | needs QF_FP threaded through ~40 solver methods |
 | 20 | Symbolic array length | jpf-symbc `NEWARRAY`/`MULTIANEWARRAY` | E/R | 31 dev + 12 real-world `NEWARRAY: symbolic array length` |
 | 21 | Missing JPF/JDK model classes + native peers | jpf-symbc model classpath / native peers | E/X | `class not found` ×592; real-world `UnsatisfiedLinkError` ×~109 — partly modelable, partly genuinely native |
