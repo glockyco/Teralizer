@@ -157,9 +157,10 @@ supporting evidence for why the existing evaluation database cannot prove the cl
   1. **Analysis robustness** (in-corpus, smaller): assertions in helper methods;
      MUT invoked via functional interface. Unblocks `Precision`.
   2. **Capability expansion** (lets the excluded 9 Table-2 rows enter the pipeline):
-     support `char` params; include FastMath fixture rows; support instance methods /
-     object construction (Interval, PolynomialFunction, UnivariateFunction). Plus the
-     double/float bounds-bug fix in the SPF wrapper, which Precision-style double comparisons need anyway.
+     `char` params, the FastMath fixture rows, and instance-method / object construction
+     (Interval, PolynomialFunction, UnivariateFunction) shipped in Phase 1; the double/float
+     lower-bound bug Precision-style comparisons relied on is fixed (B-2 — `MinMax.minDouble`
+     → `-Double.MAX_VALUE`).
 
 ## Scoreboard run output
 
