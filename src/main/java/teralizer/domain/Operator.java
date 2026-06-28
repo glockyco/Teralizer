@@ -84,7 +84,9 @@ public enum Operator implements Model {
     }
 
     public static Operator get(String symbol) {
-        assert lookup.containsKey(symbol);
+        if (!lookup.containsKey(symbol)) {
+            throw new IllegalArgumentException("Unknown operator symbol: " + symbol);
+        }
         return lookup.get(symbol);
     }
 
