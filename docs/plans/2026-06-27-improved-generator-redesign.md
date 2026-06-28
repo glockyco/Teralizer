@@ -107,6 +107,15 @@ Residual-only filtering is not required for this implementation slice. It remain
 - [ ] Run `omp-plans index && omp-plans check`.
 - [ ] Commit evidence/doc updates separately from code commits.
 
+### Task 8: Generator robustness fixes from the scorecard rerun
+
+The first post-redesign scorecard rerun excluded three generated `IMPROVED` tests. Two are generator bugs fixed here; the third is a maxUlps spike limitation.
+
+- [x] Fix the real-bound dynamic scale: guard `BigDecimal.valueOf(bound).scale()` against NaN/Infinity, because affine bounds such as `y - x` overflow to Infinity at runtime (`precisionEquals` assertTrue crashed with `NumberFormatException`).
+- [ ] Fix the jqwik value recorder: escape surrogate characters so the UTF-8 value-log write cannot throw `MalformedInputException`, because `ch >= 128` generates `chars().range(128, 65535)` which spans lone surrogates (`isAscii` assertFalse crashed).
+- [ ] Re-run the scorecard and confirm no Table-2 generated test is excluded.
+- [ ] Document the `precisionEqualsMaxUlps` spike limitation: SPF captured only `0 < maxUlps`, so the x/y ulp relation is absent from the path condition and both NAIVE and IMPROVED generalizations are unsound and excluded. This is a raw-bits spike gap, not a generator or Table-2 result.
+
 ## Acceptance criteria
 
 - The planner boundary exists and is covered by tests before production changes.

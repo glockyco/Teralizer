@@ -205,6 +205,29 @@ public class InputGenerationPlannerTest {
     }
 
     @Example
+    void realRecipeGuardsNonFiniteBoundsBeforeComputingScale() {
+        List<MethodParameter> parameters = Arrays.asList(
+            new MethodParameter("double", "x"),
+            new MethodParameter("double", "y"),
+            new MethodParameter("double", "eps")
+        );
+        // (y - x) < eps gives eps the runtime lower bound (y - x), which can overflow to Infinity.
+        Model inputModel = new Operation(
+            new Operation(new VariableReal("y"), Operator.MINUS, new VariableReal("x")),
+            Operator.LT,
+            new VariableReal("eps")
+        );
+
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
+        String body = plan.getParameterPlans().get(2).getRecipe().emit();
+
+        Assert.assertTrue(body, body.contains("(double) (y - x)"));
+        Assert.assertTrue(body, body.contains("java.lang.Double.isInfinite(epsMin)"));
+        Assert.assertTrue(body, body.contains("java.lang.Double.isInfinite(epsMax)"));
+        Assert.assertTrue(body, body.contains("java.lang.Double.isNaN(epsMin)"));
+    }
+
+    @Example
     void createsEmptyPlanForMissingInputModel() {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("double", "x"));
 

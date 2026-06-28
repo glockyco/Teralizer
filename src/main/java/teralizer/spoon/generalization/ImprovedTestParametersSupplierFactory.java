@@ -362,8 +362,9 @@ public class ImprovedTestParametersSupplierFactory {
 
         result.append(String.format("%s %s = java.util.Collections.min(%s);\n", parameter.getType(), n.max(), n.upperBounds()));
         result.append(generateInclusionCheck(n, false));
-        result.append(String.format("int %s = java.lang.Math.max(0, java.math.BigDecimal.valueOf(%s).scale());\n", n.scale(), n.min()));
-        result.append(String.format("%s = java.lang.Math.max(%s, java.lang.Math.max(0, java.math.BigDecimal.valueOf(%s).scale()));\n", n.scale(), n.scale(), n.max()));
+        result.append(String.format("int %s = 0;\n", n.scale()));
+        result.append(String.format("if (!java.lang.Double.isNaN(%s) && !java.lang.Double.isInfinite(%s)) { %s = java.lang.Math.max(%s, java.lang.Math.max(0, java.math.BigDecimal.valueOf(%s).scale())); }\n", n.min(), n.min(), n.scale(), n.scale(), n.min()));
+        result.append(String.format("if (!java.lang.Double.isNaN(%s) && !java.lang.Double.isInfinite(%s)) { %s = java.lang.Math.max(%s, java.lang.Math.max(0, java.math.BigDecimal.valueOf(%s).scale())); }\n", n.max(), n.max(), n.scale(), n.scale(), n.max()));
 
         if (argument.isPresent()) {
             String firstValue = new ModelToJavaTransformer().transform(argument.get());
