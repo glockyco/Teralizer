@@ -1,8 +1,9 @@
 ---
 title: P1 — Clause-Driven Numeric Planner
 type: plan
-status: active
+status: implemented
 created: 2026-06-28
+archived: 2026-06-28
 parent: 2026-06-28-clause-driven-input-generation
 ---
 
@@ -17,6 +18,12 @@ parent: 2026-06-28-clause-driven-input-generation
 **Tech Stack:** Java 8, jqwik generation, JUnit/jqwik `@Example` tests via `./gradlew test`.
 
 This plan does **not** touch: `Configuration.SUPPORTED_TYPES`, the front-end gate, `ModelVisitor`, the Baseline/Naive/Improved factories, or any DB/telemetry. Those are later plans (P-A2 single type source, P-A3 fail-loud seam, P-A4 emitter collapse, then P2 characterization+telemetry, P3 boolean, P4 string).
+
+## Implementation outcome (as built)
+
+Shipped cleaner than the per-round shim sketched above. Instead of leaving `VariableConstraintExtractor` + `addAffineBounds` feeding a pre-digested map, a single `NumericClauseInterpreter` now owns the numeric clause→bound semantics (atomic comparisons **and** affine), recording consumed clause ids per parameter. `PlanningContext` computes per-parameter interpretations from the clauses; `NumericDomainPlanner` is a pure consumer; `InputGenerationPlanner` no longer runs an extractor/affine pre-pass. `VariableConstraintExtractor` is left byte-identical — it still powers `TestGeneralizationTask`'s total/used constraint-count DB metrics; reconciling that counting onto the interpreter is deferred (A4). The plan-level `InputGenerationPlan` consumed set stays empty on purpose, so the generated supplier keeps the full input filter (sound fallback); emitting a residual-only filter from the per-parameter consumed ids is deferred to C-3 in `2026-06-28-pipeline-improvements.md`.
+
+Commits: `d8836c3e` holder · `4f680d7f` interpreter + planner/context rewrite + RED→GREEN consumed-id test · `9ac4d51d` full-filter-fallback comment · `efc66f4d` consumed-id shape tests. Verified: `./gradlew build` green; `InputGenerationPlannerTest` (atomic / affine / overflow / char / first-value / residual) renders byte-identical recipes; `TestGeneralizationTaskTest` metrics intact.
 
 ---
 

@@ -11,7 +11,6 @@
 - **JARVIS Scoreboard Evaluation Lane** [spec] `2026-06-27-jarvis-scoreboard-evaluation-lane` ← 2026-06-26-teralizer-overview
 - **Teralizer Capability & Improvement Directions** [audit] `2026-06-27-teralizer-capability-and-improvement-directions` ← 2026-06-26-teralizer-overview
 - **Clause-Driven, Multi-Type Input Generation** [spec] `2026-06-28-clause-driven-input-generation` ← 2026-06-26-teralizer-overview
-- **P1 — Clause-Driven Numeric Planner** [plan] `2026-06-28-clause-driven-numeric-planner` (—) ← 2026-06-28-clause-driven-input-generation
 - **maxUlps Raw-Bits Lane** [plan] `2026-06-28-maxulps-raw-bits-lane` (—) ← 2026-06-26-teralizer-overview
 - **Pipeline Architecture Review** [audit] `2026-06-28-pipeline-architecture-review` ← 2026-06-26-teralizer-overview
 - **Pipeline Improvements** [plan] `2026-06-28-pipeline-improvements` (—) ← 2026-06-26-teralizer-overview
@@ -26,4 +25,4 @@
 
 - **Residual-Aware Input Generation** [spec] `2026-06-27-residual-aware-input-generation` ← 2026-06-26-teralizer-overview
 
-_13 archived — see `docs/plans/archive/`._
+_14 archived — see `docs/plans/archive/`._
