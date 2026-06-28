@@ -70,7 +70,7 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 - [x] Move existing atomic bound/equality logic from `VariableConstraintExtractor`, `IntegerConstraints`, and `RealConstraints` into `NumericDomainPlanner` while preserving generated source for supported cases.
 - [x] Write tests for integer `b > a`, real `b > a`, first-value preservation, and char constant bounds.
 - [x] Verify the tests fail before implementation.
-- [ ] Implement consumed-clause tracking for clauses fully encoded by the numeric planner.
+- [ ] Implement consumed-clause tracking for clauses fully encoded by the numeric planner. *(carried forward to `2026-06-28-pipeline-improvements` C-3; this plan shipped the full-filter fallback at line below as its accepted outcome.)*
 - [x] Keep a full residual filter if any consumed-clause uncertainty remains; prefer soundness over performance.
 - [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
 - [x] Commit atomic numeric planning.
