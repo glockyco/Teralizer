@@ -9,6 +9,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
 import teralizer.domain.VariableInteger;
+import teralizer.jqwik.planning.ConstraintClause;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
 
@@ -19,7 +20,7 @@ public class ImprovedSupplierRenderingTest {
     @Example
     void omitsFilterWhenNoResidualInputPredicateExists() {
         MethodParameter x = new MethodParameter("double", "x");
-        // No model → no clauses → hasResidualClauses() == false → no filter emitted
+        // No model → no clauses → hasClauses() == false → no filter emitted
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             Collections.singletonList(x),
             Collections.emptyMap(),
@@ -38,7 +39,7 @@ public class ImprovedSupplierRenderingTest {
     @Example
     void keepsFilterWhenInputPredicateExists() {
         MethodParameter x = new MethodParameter("double", "x");
-        // x > 0.0 produces a residual clause → hasResidualClauses() == true → filter emitted
+        // x > 0.0 produces a clause → hasClauses() == true → filter emitted
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             Collections.singletonList(x),
             new Operation(
@@ -82,7 +83,7 @@ public class ImprovedSupplierRenderingTest {
     @Example
     void omitsFilterWhenPlannerHasNoResidualClauses() {
         MethodParameter parameter = new MethodParameter("double", "x");
-        // No model → no clauses → hasResidualClauses() == false → filter omitted
+        // No model → no clauses → hasClauses() == false → filter omitted
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             Collections.singletonList(parameter),
             Collections.emptyMap(),
@@ -168,5 +169,37 @@ public class ImprovedSupplierRenderingTest {
         );
 
         Assert.assertTrue(supplierClass.toString().contains("FirstValueArbitrary"));
+    }
+
+    @Example
+    void keepsFullFilterEvenWhenAllClausesConsumedByConstruction() {
+        MethodParameter x = new MethodParameter("int", "x");
+        // Simulate post-aggregation state: the clause x < 5 is consumed by the numeric planner,
+        // but the filter must still use the full predicate (filter stays unconditional).
+        ConstraintClause clause = new ConstraintClause(0, null, "(_p_.x < 5)");
+        teralizer.jqwik.planning.ParameterGenerationPlan paramPlan =
+            new teralizer.jqwik.planning.ParameterGenerationPlan(
+                x,
+                teralizer.jqwik.planning.TypeDomain.INTEGER,
+                new teralizer.jqwik.planning.RawJavaRecipe("return net.jqwik.api.Arbitraries.integers().between(0, 4)"),
+                java.util.Collections.singleton(0)
+            );
+        InputGenerationPlan plan = new InputGenerationPlan(
+            java.util.Collections.singletonList(paramPlan),
+            java.util.Collections.singletonList(clause),
+            java.util.Collections.singleton(0)
+        );
+
+        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(),
+            Collections.singletonList(x),
+            null,
+            plan
+        );
+
+        Assert.assertTrue("filter must be emitted even when all clauses are consumed",
+            supplierClass.toString().contains(".filter("));
+        Assert.assertTrue("filter must use the full predicate including consumed clauses",
+            supplierClass.toString().contains("return (_p_.x < 5);"));
     }
 }

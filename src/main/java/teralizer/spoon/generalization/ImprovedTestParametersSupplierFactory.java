@@ -30,9 +30,9 @@ public class ImprovedTestParametersSupplierFactory {
         supplierClass.setSuperInterfaces(new HashSet<>(Collections.singletonList(factory.Type().createReference("net.jqwik.api.ArbitrarySupplier<" + TEST_PARAMETERS_CLASS_NAME + ">"))));
         supplierClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
 
-        String residualPredicate = plan.getResidualPredicate();
-        boolean applyInputFilter = plan.hasResidualClauses();
-        createGetMethod(supplierClass, parameters, residualPredicate, applyInputFilter);
+        String fullPredicate = plan.getFullPredicate();
+        boolean applyInputFilter = plan.hasClauses();
+        createGetMethod(supplierClass, parameters, fullPredicate, applyInputFilter);
 
         for (int i = 0; i < parameters.size(); i++) {
             ParameterGenerationPlan parameterPlan = plan.getParameterPlans().get(i);

@@ -57,8 +57,21 @@ public class InputGenerationPlan {
         return !this.consumedClauseIds.isEmpty();
     }
 
+    public boolean hasClauses() {
+        return !this.clauses.isEmpty();
+    }
+
     public boolean hasResidualClauses() {
         return !this.residualClauseIds.isEmpty();
+    }
+
+    public String getFullPredicate() {
+        if (this.clauses.isEmpty()) {
+            return "true";
+        }
+        return this.clauses.stream()
+            .map(ConstraintClause::getJavaExpression)
+            .collect(Collectors.joining(" && "));
     }
 
     public String getResidualPredicate() {

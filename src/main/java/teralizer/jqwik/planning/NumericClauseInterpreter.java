@@ -35,12 +35,11 @@ import java.util.Set;
  * all affine bounds) so the accumulated bound lists -- and therefore the rendered recipes -- are
  * byte-identical to the previous extractor-then-affine pipeline.
  *
- * <p>INTENTIONAL, DOCUMENTED BOUNDARY: this interpreter deliberately duplicates the atomic
- * operator-&gt;bound semantics of {@link teralizer.jqwik.VariableConstraintExtractor}. That extractor
- * is left untouched on purpose because it also powers the total/used-constraint DB metrics in
- * {@code TestGeneralizationTask} (its used-count increments once per added bound/side, not per
- * clause). Reconciling that counting onto this interpreter is a deliberate later step and must NOT
- * be attempted here.
+ * <p>This interpreter is the single source of truth for numeric clause→bound semantics.
+ * It replaces the former VariableConstraintExtractor, which only recognized atomic
+ * comparisons and powered the DB constraint-count metrics. The interpreter handles both
+ * atomic and affine bounds, and the plan-level consumed-clause ids feed the DB metrics
+ * via InputGenerationPlan in TestGeneralizationTask.
  */
 public final class NumericClauseInterpreter {
     private NumericClauseInterpreter() {
@@ -58,7 +57,7 @@ public final class NumericClauseInterpreter {
         Map<String, VariableConstraints> constraints = new HashMap<>();
         Map<String, Set<Integer>> consumed = new HashMap<>();
 
-        // Pass 1: atomic comparisons (reproduces VariableConstraintExtractor over the flattened clauses).
+        // Pass 1: atomic comparisons over the flattened clauses.
         for (ConstraintClause clause : clauses) {
             if (clause.getExpression() instanceof Operation) {
                 interpretAtomic((Operation) clause.getExpression(), clause.getId(), parameterIndexes, parameterTypes, constraints, consumed);
@@ -117,10 +116,10 @@ public final class NumericClauseInterpreter {
     }
 
     /**
-     * Bounds the higher-indexed variable only, matching the index comparison in
-     * {@code VariableConstraintExtractor}'s var/var {@code updateConstraints} overloads. The flag
-     * for each operand records whether its model node is real ({@code VariableReal}) so the bound is
-     * stored in the right constraint kind regardless of the parameter's declared type.
+     * Bounds the higher-indexed variable only, matching the index comparison in the
+     * var/var comparison logic. The flag for each operand records whether its model node
+     * is real ({@code VariableReal}) so the bound is stored in the right constraint kind
+     * regardless of the parameter's declared type.
      */
     private static void applyVariableComparison(
         String leftName,

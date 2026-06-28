@@ -23,8 +23,6 @@ import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
-import teralizer.jqwik.VariableConstraintExtractionResult;
-import teralizer.jqwik.VariableConstraintExtractor;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
 import teralizer.processing.GeneralizationAlgorithm;
@@ -333,14 +331,12 @@ public class TestGeneralizationTask extends AbstractTask {
                     break;
                 }
                 case IMPROVED: {
-                    VariableConstraintExtractor extractor = new VariableConstraintExtractor();
-                    VariableConstraintExtractionResult extractionResult = extractor.process(inputModel, allParameters);
                     InputGenerationPlan inputGenerationPlan = new InputGenerationPlanner().plan(allParameters, testedMethodArguments, inputModel);
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
                     testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputJava, inputGenerationPlan);
 
-                    this.generalizationRecord.setTotalConstraintCount(extractionResult.getTotalConstraintCount());
-                    this.generalizationRecord.setUsedConstraintCount(extractionResult.getUsedConstraintCount());
+                    this.generalizationRecord.setTotalConstraintCount(inputGenerationPlan.getTotalConstraintCount());
+                    this.generalizationRecord.setUsedConstraintCount(inputGenerationPlan.getUsedConstraintCount());
                     this.generalizationRecord.store();
                     break;
                 }

@@ -54,7 +54,7 @@ All consumers that decide, symbolize, record, or regenerate inputs must use the 
 - `JpfInstrumentationTask` creates the instrumented method signature from derived inputs. Direct scalar inputs become method parameters; constructor-derived inputs replace constructor arguments when the instrumented call is made and rebuild the receiver or argument constructor inside the instrumented method body.
 - `TestGeneralizationListener` must record the instrumented method's input values, because the original tested method frame sees reconstructed objects rather than flattened constructor values.
 - `TestGeneralizationTask` must build `TestParameters` from the same derived inputs and rewrite generated tests so `_p_.<name>` is substituted into direct arguments or constructor arguments.
-- `VariableConstraintExtractor` and downstream generators consume the derived names without schema changes.
+- Downstream generators consume the derived names without schema changes.
 
 ## Soundness boundary
 
