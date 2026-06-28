@@ -31,6 +31,13 @@ public class Operation implements Expression {
     }
 
     @Override
+    public <T> T fold(ModelFolder<T> folder) {
+        T left = this.left == null ? null : this.left.fold(folder);
+        T right = this.right == null ? null : this.right.fold(folder);
+        return folder.fold(this, left, right);
+    }
+
+    @Override
     public String toString() {
         if (this.left == null) {
             assert this.right == null;

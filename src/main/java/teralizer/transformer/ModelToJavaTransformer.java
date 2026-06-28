@@ -3,12 +3,21 @@ package teralizer.transformer;
 import teralizer.domain.Error;
 import teralizer.domain.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
-public class ModelToJavaTransformer extends ModelVisitor {
-    private final Stack<String> stack = new Stack<>();
+/**
+ * Renders a {@link Model} tree to a Java expression. Backed by {@link ModelFolder},
+ * so every concrete node kind has its own hook — a new node added to the domain is a
+ * compile error here until a hook is implemented, never a silent no-op.
+ *
+ * <p>Unsupported {@link Operator}s (the string operators) are not node kinds; they are
+ * rendered through the operation hook's default branch and throw at runtime. Turning
+ * those into a typed non-generalizable outcome is tracked separately (A-1).
+ */
+public class ModelToJavaTransformer extends ModelFolder<String> {
     private final Map<String, String> variableTypes;
 
     public ModelToJavaTransformer() {
@@ -98,191 +107,153 @@ public class ModelToJavaTransformer extends ModelVisitor {
     public String transform(teralizer.domain.Model model) {
         if (model == null) {
             return null;
-        } else {
-            model.accept(this);
-            assert this.stack.size() == 1;
-            return this.stack.pop();
         }
+        return model.fold(this);
     }
 
     @Override
-    public void postVisit(Operation operation) {
-        String right = operation.right == null ? null : this.stack.pop();
-        String left = operation.left == null ? null : this.stack.pop();
-
-        String expr;
-        switch (operation.op) {
-            case EQ:
-                expr = "(" + left + " == " + right + ")";
-                break;
-            case NE:
-                expr = "(" + left + " != " + right + ")";
-                break;
-            case LT:
-                expr = "(" + left + " < " + right + ")";
-                break;
-            case LE:
-                expr = "(" + left + " <= " + right + ")";
-                break;
-            case GT:
-                expr = "(" + left + " > " + right + ")";
-                break;
-            case GE:
-                expr = "(" + left + " >= " + right + ")";
-                break;
-            case PLUS:
-                expr = "(" + left + " + " + right + ")";
-                break;
-            case MINUS:
-                expr = "(" + left + " - " + right + ")";
-                break;
-            case MUL:
-                expr = "(" + left + " * " + right + ")";
-                break;
-            case DIV:
-                expr = "(" + left + " / " + right + ")";
-                break;
-            case MOD:
-                expr = "(" + left + " % " + right + ")";
-                break;
-            case AND:
-                expr = "(" + left + " & " + right + ")";
-                break;
-            case OR:
-                expr = "(" + left + " | " + right + ")";
-                break;
-            case XOR:
-                expr = "(" + left + " ^ " + right + ")";
-                break;
-            case POW:
-                expr = "Math.pow(" + left + ", " + right + ")";
-                break;
-            case SQRT:
-                expr = "Math.sqrt(" + left + ")";
-                break;
-            case EXP:
-                expr = "Math.exp(" + left + ")";
-                break;
-            case LOG:
-                expr = "Math.log(" + left + ")";
-                break;
-            case SIN:
-                expr = "Math.sin(" + left + ")";
-                break;
-            case COS:
-                expr = "Math.cos(" + left + ")";
-                break;
-            case TAN:
-                expr = "Math.tan(" + left + ")";
-                break;
-            case ASIN:
-                expr = "Math.asin(" + left + ")";
-                break;
-            case ACOS:
-                expr = "Math.acos(" + left + ")";
-                break;
-            case ATAN:
-                expr = "Math.atan(" + left + ")";
-                break;
-            case ATAN2:
-                expr = "Math.atan2(" + left + ", " + right + ")";
-                break;
-            case SHIFTL:
-                expr = "(" + left + " << " + right + ")";
-                break;
-            case SHIFTR:
-                expr = "(" + left + " >> " + right + ")";
-                break;
-            case SHIFTUR:
-                expr = "(" + left + " >>> " + right + ")";
-                break;
-            default:
-                throw new RuntimeException("Unable to transform operation '" + operation + "' to Java.");
-        }
-        this.stack.push(expr);
+    public String fold(ConstantInteger constant) {
+        return this.transform(constant.value);
     }
 
     @Override
-    public void postVisit(ConstantInteger constant) {
-        this.stack.push(this.transform(constant.value));
+    public String fold(ConstantReal constant) {
+        return this.transform(constant.value);
     }
 
     @Override
-    public void postVisit(ConstantReal constant) {
-        this.stack.push(this.transform(constant.value));
+    public String fold(ConstantString constant) {
+        return this.renderStringLiteral(constant.value);
     }
 
     @Override
-    public void postVisit(ConstantString constant) {
-        this.stack.push(this.renderStringLiteral(constant.value));
-    }
-
-    @Override
-    public void postVisit(VariableInteger variable) {
+    public String fold(VariableInteger variable) {
         assert variable != null;
         assert variable.name != null;
         if ("boolean".equals(this.variableTypes.get(variable.name)) || "java.lang.Boolean".equals(this.variableTypes.get(variable.name))) {
-            this.stack.push("(_p_." + variable.name + " ? 1 : 0)");
-        } else {
-            this.stack.push("_p_." + variable.name);
+            return "(_p_." + variable.name + " ? 1 : 0)";
+        }
+        return "_p_." + variable.name;
+    }
+
+    @Override
+    public String fold(VariableReal variable) {
+        assert variable != null;
+        assert variable.name != null;
+        return "_p_." + variable.name;
+    }
+
+    @Override
+    public String fold(VariableString variable) {
+        assert variable != null;
+        assert variable.name != null;
+        return "_p_." + variable.name;
+    }
+
+    @Override
+    public String fold(ArrayExpression expression) {
+        return "_p_." + expression.name;
+    }
+
+    @Override
+    public String fold(ArrayElementExpression expression, String elementSelector) {
+        return "_p_." + expression.arrayName + "[" + elementSelector + "]";
+    }
+
+    @Override
+    public String fold(SymbolicIntegerFunction function, List<String> args) {
+        return function.name + "(" + String.join(", ", args) + ")";
+    }
+
+    @Override
+    public String fold(SymbolicRealFunction function, List<String> args) {
+        return function.name + "(" + String.join(", ", args) + ")";
+    }
+
+    @Override
+    public String fold(SymbolicStringFunction function, List<String> args) {
+        return function.name + "(" + String.join(", ", args) + ")";
+    }
+
+    @Override
+    public String fold(Operation operation, String left, String right) {
+        switch (operation.op) {
+            case EQ:
+                return "(" + left + " == " + right + ")";
+            case NE:
+                return "(" + left + " != " + right + ")";
+            case LT:
+                return "(" + left + " < " + right + ")";
+            case LE:
+                return "(" + left + " <= " + right + ")";
+            case GT:
+                return "(" + left + " > " + right + ")";
+            case GE:
+                return "(" + left + " >= " + right + ")";
+            case PLUS:
+                return "(" + left + " + " + right + ")";
+            case MINUS:
+                return "(" + left + " - " + right + ")";
+            case MUL:
+                return "(" + left + " * " + right + ")";
+            case DIV:
+                return "(" + left + " / " + right + ")";
+            case MOD:
+                return "(" + left + " % " + right + ")";
+            case AND:
+                return "(" + left + " & " + right + ")";
+            case OR:
+                return "(" + left + " | " + right + ")";
+            case XOR:
+                return "(" + left + " ^ " + right + ")";
+            case POW:
+                return "Math.pow(" + left + ", " + right + ")";
+            case SQRT:
+                return "Math.sqrt(" + left + ")";
+            case EXP:
+                return "Math.exp(" + left + ")";
+            case LOG:
+                return "Math.log(" + left + ")";
+            case SIN:
+                return "Math.sin(" + left + ")";
+            case COS:
+                return "Math.cos(" + left + ")";
+            case TAN:
+                return "Math.tan(" + left + ")";
+            case ASIN:
+                return "Math.asin(" + left + ")";
+            case ACOS:
+                return "Math.acos(" + left + ")";
+            case ATAN:
+                return "Math.atan(" + left + ")";
+            case ATAN2:
+                return "Math.atan2(" + left + ", " + right + ")";
+            case SHIFTL:
+                return "(" + left + " << " + right + ")";
+            case SHIFTR:
+                return "(" + left + " >> " + right + ")";
+            case SHIFTUR:
+                return "(" + left + " >>> " + right + ")";
+            default:
+                throw new RuntimeException("Unable to transform operation '" + operation + "' to Java.");
         }
     }
 
     @Override
-    public void postVisit(VariableReal variable) {
-        assert variable != null;
-        assert variable.name != null;
-        this.stack.push("_p_." + variable.name);
+    public String fold(Operator operator) {
+        // Operators are visited as part of an Operation, never folded standalone for Java.
+        throw new UnsupportedOperationException("Operator is not a standalone Java expression.");
     }
 
     @Override
-    public void postVisit(VariableString variable) {
-        assert variable != null;
-        assert variable.name != null;
-        this.stack.push("_p_." + variable.name);
-    }
-
-    @Override
-    public void postVisit(ArrayExpression expression) {
-        this.stack.push("_p_." + expression.name);
-    }
-
-    @Override
-    public void postVisit(ArrayElementExpression expression) {
-        String elementSelector = this.stack.pop();
-        this.stack.push("_p_." + expression.arrayName + "[" + elementSelector + "]");
-    }
-
-    @Override
-    public void postVisit(SymbolicIntegerFunction function) {
-        String[] args = this.popArgs(function.args.length);
-        String expr = function.name + "(" + String.join(", ", args) + ")";
-        this.stack.push(expr);
-    }
-
-    @Override
-    public void postVisit(SymbolicRealFunction function) {
-        String[] args = this.popArgs(function.args.length);
-        String expr = function.name + "(" + String.join(", ", args) + ")";
-        this.stack.push(expr);
-    }
-
-    @Override
-    public void postVisit(SymbolicStringFunction function) {
-        String[] args = this.popArgs(function.args.length);
-        String expr = function.name + "(" + String.join(", ", args) + ")";
-        this.stack.push(expr);
-    }
-
-    @Override
-    public void postVisit(Error error) {
+    public String fold(Error error) {
         // Only models without errors should be transformed to Java.
-        throw new RuntimeException("Unable to transform error '" + error + "' to z3.");
+        throw new RuntimeException("Unable to transform error '" + error + "' to Java.");
     }
 
     @Override
-    public void postVisit(ExceptionModel exceptionModel) {
-        this.stack.push(null);
+    public String fold(ExceptionModel exceptionModel) {
+        return null;
     }
 
     private String renderBooleanArgument(String value) {
@@ -351,13 +322,5 @@ public class ModelToJavaTransformer extends ModelVisitor {
             default:
                 return String.valueOf(value);
         }
-    }
-
-    private String[] popArgs(int n) {
-        String[] args = new String[n];
-        for (int i = n - 1; i >= 0; i--) {
-            args[i] = this.stack.pop();
-        }
-        return args;
     }
 }

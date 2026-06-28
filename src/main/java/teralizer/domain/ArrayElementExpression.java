@@ -21,6 +21,12 @@ public class ArrayElementExpression implements Expression {
     }
 
     @Override
+    public <T> T fold(ModelFolder<T> folder) {
+        T selector = this.elementSelector.fold(folder);
+        return folder.fold(this, selector);
+    }
+
+    @Override
     public String toString() {
         return this.arrayName + "[" + this.elementSelector + "]";
     }

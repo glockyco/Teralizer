@@ -16,6 +16,11 @@ public class ConstantString implements Expression {
     }
 
     @Override
+    public <T> T fold(ModelFolder<T> folder) {
+        return folder.fold(this);
+    }
+
+    @Override
     public String toString() {
         return this.value;
     }

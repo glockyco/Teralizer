@@ -17,6 +17,11 @@ public class Error implements Model {
         visitor.postVisit(this);
     }
 
+    @Override
+    public <T> T fold(ModelFolder<T> folder) {
+        return folder.fold(this);
+    }
+
     public String toString() {
         return type + ": " + message;
     }

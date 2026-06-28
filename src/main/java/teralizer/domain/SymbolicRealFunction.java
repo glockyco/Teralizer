@@ -24,6 +24,15 @@ public class SymbolicRealFunction implements Expression {
     }
 
     @Override
+    public <T> T fold(ModelFolder<T> folder) {
+        java.util.List<T> foldedArgs = new java.util.ArrayList<>(this.args.length);
+        for (Expression arg : this.args) {
+            foldedArgs.add(arg.fold(folder));
+        }
+        return folder.fold(this, foldedArgs);
+    }
+
+    @Override
     public String toString() {
         Stream<String> argStrings = Arrays.stream(this.args).map(Object::toString);
         String argsString = argStrings.collect(Collectors.joining(","));

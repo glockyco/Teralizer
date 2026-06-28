@@ -17,6 +17,11 @@ public class ExceptionModel implements Expression {
         visitor.postVisit(this);
     }
 
+    @Override
+    public <T> T fold(ModelFolder<T> folder) {
+        return folder.fold(this);
+    }
+
     public String toString() {
         return this.name + ": " + this.message;
     }
