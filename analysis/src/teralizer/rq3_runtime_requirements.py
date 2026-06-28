@@ -8,7 +8,7 @@ EvoSuite runtime breakdown by phase and search budget.
 import pandas as pd
 import matplotlib.pyplot as plt
 import re
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from .formatting import (
     sort_dataframe_by_project,
@@ -183,9 +183,9 @@ def compute_teralizer_runtime_statistics(df: pd.DataFrame) -> pd.DataFrame:
     df_sorted = sort_dataframe_by_project(df, "project_name")
 
     # Convert runtime to numeric for calculations
-    df_sorted["runtime"] = pd.to_numeric(df_sorted["runtime"], errors="coerce").fillna(
-        0.0
-    )
+    df_sorted["runtime"] = cast(
+        pd.Series, pd.to_numeric(df_sorted["runtime"], errors="coerce")
+    ).fillna(0.0)
 
     return df_sorted
 
@@ -227,8 +227,8 @@ def compute_stage_runtime_breakdown(df: pd.DataFrame) -> pd.DataFrame:
     df_processed["variant"] = pd.Categorical(df_processed["variant"])
 
     # Convert runtime to numeric
-    df_processed["total_runtime"] = pd.to_numeric(
-        df_processed["total_runtime"], errors="coerce"
+    df_processed["total_runtime"] = cast(
+        pd.Series, pd.to_numeric(df_processed["total_runtime"], errors="coerce")
     ).fillna(0.0)
 
     return df_processed
@@ -281,9 +281,17 @@ def compute_pareto_efficiency_analysis(df: pd.DataFrame) -> pd.DataFrame:
 
         # Prepare all points for this project (EvoSuite + Teralizer variants)
         # EvoSuite-only points
-        es_points = evosuite_points[
-            ["project_prefix", "search_budget", "evosuite_runtime", "evosuite_detected"]
-        ].copy()
+        es_points = cast(
+            pd.DataFrame,
+            evosuite_points[
+                [
+                    "project_prefix",
+                    "search_budget",
+                    "evosuite_runtime",
+                    "evosuite_detected",
+                ]
+            ],
+        ).copy()
         es_points["type"] = "ES_ONLY"
         es_points["teralizer_variant"] = "ES_ONLY"
         es_points.rename(
@@ -407,8 +415,8 @@ def compute_evosuite_phase_statistics(df: pd.DataFrame) -> pd.DataFrame:
     # Convert runtime columns to numeric
     for col in runtime_columns:
         if col in df_processed.columns:
-            df_processed[col] = pd.to_numeric(
-                df_processed[col], errors="coerce"
+            df_processed[col] = cast(
+                pd.Series, pd.to_numeric(df_processed[col], errors="coerce")
             ).fillna(0.0)
 
     # Calculate percentage of time spent in each phase
@@ -630,7 +638,7 @@ def generate_pareto_points_table(df_pareto: pd.DataFrame, project_name: str) -> 
         raise ValueError(f"No Pareto optimal points found for project: {project_name}")
 
     # Sort by runtime to match paper ordering
-    project_data = project_data.sort_values("runtime_seconds")
+    project_data = cast(pd.DataFrame, project_data).sort_values("runtime_seconds")
 
     def format_variant_label(variant: str, approach_type: str) -> str:
         """Format variant label for LaTeX output."""

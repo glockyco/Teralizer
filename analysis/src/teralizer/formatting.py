@@ -5,7 +5,7 @@ LaTeX table formatting that are commonly used across analysis notebooks.
 """
 
 import pandas as pd
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional, Callable, cast
 from natsort import natsorted
 from .exports import (
     get_table_group_order,
@@ -53,9 +53,11 @@ def sort_dataframe_by_project(
 
     # Create sorting key function
     def sort_key(idx):
-        project_name = df.loc[idx, project_column]
+        project_name = cast(str, df.loc[idx, project_column])
         variant = (
-            df.loc[idx, variant_column] if variant_column in df.columns else "INITIAL"
+            cast(str, df.loc[idx, variant_column])
+            if variant_column in df.columns
+            else "INITIAL"
         )
 
         table_group_order = get_table_group_order(project_name, variant)

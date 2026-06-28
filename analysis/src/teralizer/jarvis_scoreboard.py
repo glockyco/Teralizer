@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, cast
 
 import pandas as pd
 
@@ -117,7 +117,10 @@ def compute_parameter_value_coverage(values: pd.DataFrame) -> pd.DataFrame:
         .agg(generated_values="size", distinct_generated_values="nunique")
         .reset_index()
     )
-    return coverage[["parameter_name", "generated_values", "distinct_generated_values"]]
+    return cast(
+        pd.DataFrame,
+        coverage[["parameter_name", "generated_values", "distinct_generated_values"]],
+    )
 
 
 def get_generated_test_runs(
@@ -175,7 +178,7 @@ def get_generated_test_runs(
 
     runs = runs.copy()
     runs["jqwik_value_log_path"] = runs.apply(_jqwik_value_log_path, axis=1)
-    return runs.reset_index(drop=True)
+    return cast(pd.DataFrame, runs.reset_index(drop=True))
 
 
 def get_pvc_scores(
@@ -251,7 +254,7 @@ def get_instruction_coverage_scores(
     coverage["instruction_coverage"] = (
         coverage["instruction_covered"] / coverage["instruction_total"]
     )
-    return coverage.reset_index(drop=True)
+    return cast(pd.DataFrame, coverage.reset_index(drop=True))
 
 
 def get_scoreboard(

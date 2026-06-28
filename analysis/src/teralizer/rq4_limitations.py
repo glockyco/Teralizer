@@ -7,7 +7,7 @@ pipeline failures in the extended dataset of open source projects.
 
 import pandas as pd
 import re
-from typing import Dict
+from typing import Dict, cast
 from sqlalchemy import text
 
 from .formatting import (
@@ -453,7 +453,9 @@ def compute_spf_error_categorization(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # Group by merged_category and sum the counts
-    df_merged = df.groupby("merged_category", as_index=False)["count"].sum()
+    df_merged = cast(
+        pd.DataFrame, df.groupby("merged_category", as_index=False)["count"].sum()
+    )
 
     # Sort by count in descending order
     df_merged = df_merged.sort_values(by="count", ascending=False).reset_index(
@@ -502,7 +504,7 @@ def compute_test_failures_by_variant_summary(df: pd.DataFrame) -> pd.DataFrame:
 
     # Get ordered variants
     ordered_variants = (
-        df[["variant", "variant_order"]]
+        cast(pd.DataFrame, df[["variant", "variant_order"]])
         .drop_duplicates()
         .sort_values("variant_order")["variant"]
         .tolist()
@@ -1194,7 +1196,7 @@ def generate_exclusions_breakdown_table(
     ]
 
     latex_content = build_latex_table_content(
-        df_display,
+        cast(pd.DataFrame, df_display),
         caption=caption,
         label=label,
         column_spec="llrrrr",
@@ -1245,7 +1247,7 @@ def generate_exclusions_summary_table(result_df: pd.DataFrame) -> str:
     df_display.columns = ["variant", "Type", "Total", "Included", "Excluded"]
 
     latex_content = build_latex_table_content(
-        df_display,
+        cast(pd.DataFrame, df_display),
         caption="Included and excluded counts by variant and level.",
         label="tab:exclusions-summary",
         column_spec="llrrr",
@@ -1307,7 +1309,7 @@ def generate_filtering_results_table(df: pd.DataFrame, label: str, caption: str)
     ]
 
     latex_content = build_latex_table_content(
-        df_display,
+        cast(pd.DataFrame, df_display),
         caption=caption,
         label=label,
         column_spec="lllrrrr",
@@ -1399,7 +1401,7 @@ def generate_test_failures_by_projects_table(results_df: pd.DataFrame) -> str:
     ]
 
     latex_content = build_latex_table_content(
-        display_df_final,
+        cast(pd.DataFrame, display_df_final),
         caption="Test execution failure analysis by project.",
         label="tab:exclusions-test-fails-by-project",
         column_spec="lrrrr",
@@ -1468,7 +1470,7 @@ def generate_test_failures_by_variant_table(results_df: pd.DataFrame) -> str:
     ]
 
     latex_content = build_latex_table_content(
-        display_df_final,
+        cast(pd.DataFrame, display_df_final),
         caption="Test execution failure analysis by variant.",
         label="tab:exclusions-test-fails-by-variant",
         column_spec="lrrrr",
@@ -1880,7 +1882,7 @@ def get_processing_failures_by_cause_data(conn) -> pd.DataFrame:
                 ignore_index=True,
             )
 
-    return result_df
+    return cast(pd.DataFrame, result_df)
 
 
 def compute_processing_failures_by_stage_and_cause(df: pd.DataFrame) -> pd.DataFrame:
@@ -2017,9 +2019,13 @@ def compute_processing_failures_by_stage_and_cause(df: pd.DataFrame) -> pd.DataF
     stage_order_map = get_stage_order()
     df_aggregated["stage_order"] = df_aggregated["stage"].map(stage_order_map)
 
-    df_sorted = df_aggregated.sort_values(
-        by=["stage_order", "count", "cause_desc"], ascending=[True, False, True]
-    ).reset_index(drop=True)
+    df_sorted = (
+        cast(pd.DataFrame, df_aggregated)
+        .sort_values(
+            by=["stage_order", "count", "cause_desc"], ascending=[True, False, True]
+        )
+        .reset_index(drop=True)
+    )
 
     df_sorted = df_sorted[["stage", "type", "cause_desc", "count"]].rename(
         columns={"cause_desc": "cause"}

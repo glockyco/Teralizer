@@ -6,7 +6,7 @@ ORIGINAL and generalized variants (NAIVE, IMPROVED).
 """
 
 import pandas as pd
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from .formatting import (
     sort_dataframe_by_project,
@@ -60,19 +60,22 @@ def get_test_count_changes_by_project_variant(
         DataFrame with test count statistics per project and variant
     """
     df = get_generalization_effects_data(conn, variants)
-    return df[
-        [
-            "project_name",
-            "a_variant",
-            "b_variant",
-            "tests_before",
-            "added_tests",
-            "removed_tests",
-            "tests_after",
-            "tests_delta",
-            "tests_delta_pct",
-        ]
-    ]
+    return cast(
+        pd.DataFrame,
+        df[
+            [
+                "project_name",
+                "a_variant",
+                "b_variant",
+                "tests_before",
+                "added_tests",
+                "removed_tests",
+                "tests_after",
+                "tests_delta",
+                "tests_delta_pct",
+            ]
+        ],
+    )
 
 
 def get_line_count_changes_by_project_variant(
@@ -88,19 +91,22 @@ def get_line_count_changes_by_project_variant(
         DataFrame with line count statistics per project and variant
     """
     df = get_generalization_effects_data(conn, variants)
-    return df[
-        [
-            "project_name",
-            "a_variant",
-            "b_variant",
-            "lines_before",
-            "added_lines",
-            "removed_lines",
-            "lines_after",
-            "lines_delta",
-            "lines_delta_pct",
-        ]
-    ]
+    return cast(
+        pd.DataFrame,
+        df[
+            [
+                "project_name",
+                "a_variant",
+                "b_variant",
+                "lines_before",
+                "added_lines",
+                "removed_lines",
+                "lines_after",
+                "lines_delta",
+                "lines_delta_pct",
+            ]
+        ],
+    )
 
 
 def get_runtime_changes_by_project_variant(
@@ -116,19 +122,22 @@ def get_runtime_changes_by_project_variant(
         DataFrame with runtime statistics per project and variant
     """
     df = get_generalization_effects_data(conn, variants)
-    return df[
-        [
-            "project_name",
-            "a_variant",
-            "b_variant",
-            "runtime_before",
-            "added_runtime",
-            "removed_runtime",
-            "runtime_after",
-            "runtime_delta",
-            "runtime_delta_pct",
-        ]
-    ]
+    return cast(
+        pd.DataFrame,
+        df[
+            [
+                "project_name",
+                "a_variant",
+                "b_variant",
+                "runtime_before",
+                "added_runtime",
+                "removed_runtime",
+                "runtime_after",
+                "runtime_delta",
+                "runtime_delta_pct",
+            ]
+        ],
+    )
 
 
 def get_test_vs_generalization_runtime_comparison(conn) -> pd.DataFrame:
@@ -184,11 +193,13 @@ def compute_test_suite_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
     ]
     for col in numeric_cols:
         df_sorted[col] = (
-            pd.to_numeric(df_sorted[col], errors="coerce").fillna(0).astype(int)
+            cast(pd.Series, pd.to_numeric(df_sorted[col], errors="coerce"))
+            .fillna(0)
+            .astype(int)
         )
 
-    df_sorted["tests_delta_pct"] = pd.to_numeric(
-        df_sorted["tests_delta_pct"], errors="coerce"
+    df_sorted["tests_delta_pct"] = cast(
+        pd.Series, pd.to_numeric(df_sorted["tests_delta_pct"], errors="coerce")
     ).fillna(0.0)
 
     return df_sorted
@@ -216,11 +227,13 @@ def compute_line_count_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
     ]
     for col in numeric_cols:
         df_sorted[col] = (
-            pd.to_numeric(df_sorted[col], errors="coerce").fillna(0).astype(int)
+            cast(pd.Series, pd.to_numeric(df_sorted[col], errors="coerce"))
+            .fillna(0)
+            .astype(int)
         )
 
-    df_sorted["lines_delta_pct"] = pd.to_numeric(
-        df_sorted["lines_delta_pct"], errors="coerce"
+    df_sorted["lines_delta_pct"] = cast(
+        pd.Series, pd.to_numeric(df_sorted["lines_delta_pct"], errors="coerce")
     ).fillna(0.0)
 
     return df_sorted
@@ -247,10 +260,12 @@ def compute_runtime_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
         "runtime_delta",
     ]
     for col in numeric_cols:
-        df_sorted[col] = pd.to_numeric(df_sorted[col], errors="coerce").fillna(0.0)
+        df_sorted[col] = cast(
+            pd.Series, pd.to_numeric(df_sorted[col], errors="coerce")
+        ).fillna(0.0)
 
-    df_sorted["runtime_delta_pct"] = pd.to_numeric(
-        df_sorted["runtime_delta_pct"], errors="coerce"
+    df_sorted["runtime_delta_pct"] = cast(
+        pd.Series, pd.to_numeric(df_sorted["runtime_delta_pct"], errors="coerce")
     ).fillna(0.0)
 
     return df_sorted
@@ -274,9 +289,13 @@ def compute_test_vs_generalization_runtime_statistics(df: pd.DataFrame) -> pd.Da
         "mean_runtime_diff_per_try_ms",
     ]
     for col in numeric_cols:
-        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+        df[col] = cast(pd.Series, pd.to_numeric(df[col], errors="coerce")).fillna(0.0)
 
-    df["tries"] = pd.to_numeric(df["tries"], errors="coerce").fillna(0).astype(int)
+    df["tries"] = (
+        cast(pd.Series, pd.to_numeric(df["tries"], errors="coerce"))
+        .fillna(0)
+        .astype(int)
+    )
 
     return df
 

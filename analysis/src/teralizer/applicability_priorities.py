@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 from sqlalchemy import Connection, text
@@ -234,7 +234,7 @@ def compute_projects_closest_to_completion(
     """
     mask = project_df["included_assertions"] >= min_included
     df = project_df.loc[mask, :].reset_index(drop=True)
-    return df
+    return cast(pd.DataFrame, df)
 
 
 def compute_missingvalue_taxonomy(mv_df: pd.DataFrame) -> pd.DataFrame:

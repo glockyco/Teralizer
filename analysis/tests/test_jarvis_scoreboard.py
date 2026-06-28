@@ -1,5 +1,7 @@
 import sqlite3
+from typing import cast
 
+import pandas as pd
 import pytest
 
 from teralizer.jarvis_scoreboard import (
@@ -66,9 +68,11 @@ def test_generated_test_runs_compute_stable_jqwik_value_paths(tmp_path):
 
         runs = get_generated_test_runs(conn)
 
-        assert runs[["project_id", "generalization_id", "variant"]].to_dict(
-            "records"
-        ) == [{"project_id": 1, "generalization_id": 7, "variant": "NAIVE"}]
+        assert cast(
+            pd.DataFrame, runs[["project_id", "generalization_id", "variant"]]
+        ).to_dict("records") == [
+            {"project_id": 1, "generalization_id": 7, "variant": "NAIVE"}
+        ]
         assert runs.loc[0, "jqwik_value_log_path"] == str(
             tmp_path / "project-id-1" / "jqwik-data" / "7.NAIVE.tsv"
         )
@@ -261,14 +265,17 @@ def test_generated_test_runs_prefer_workspace_snapshot_over_project_live_log(
         ic = get_instruction_coverage_scores(conn)
         scoreboard = get_scoreboard(conn)
 
-        assert pvc[
-            [
-                "project_id",
-                "generalization_id",
-                "parameter_value_coverage",
-                "jqwik_trials",
-            ]
-        ].to_dict("records") == [
+        assert cast(
+            pd.DataFrame,
+            pvc[
+                [
+                    "project_id",
+                    "generalization_id",
+                    "parameter_value_coverage",
+                    "jqwik_trials",
+                ]
+            ],
+        ).to_dict("records") == [
             {
                 "project_id": 1,
                 "generalization_id": 7,
@@ -277,9 +284,10 @@ def test_generated_test_runs_prefer_workspace_snapshot_over_project_live_log(
             }
         ]
         assert pvc.loc[0, "original_parameter_value_count"] == 3
-        assert ic[
-            ["project_id", "variant", "instruction_covered", "instruction_total"]
-        ].to_dict("records") == [
+        assert cast(
+            pd.DataFrame,
+            ic[["project_id", "variant", "instruction_covered", "instruction_total"]],
+        ).to_dict("records") == [
             {
                 "project_id": 1,
                 "variant": "NAIVE",
@@ -349,9 +357,9 @@ def test_generated_runs_separate_precondition_rejections(tmp_path):
 
         runs = get_generated_test_runs(conn, outcomes=None)
 
-        assert runs[["generalization_id", "test_result", "outcome_class"]].to_dict(
-            "records"
-        ) == [
+        assert cast(
+            pd.DataFrame, runs[["generalization_id", "test_result", "outcome_class"]]
+        ).to_dict("records") == [
             {
                 "generalization_id": 7,
                 "test_result": "PASSED",

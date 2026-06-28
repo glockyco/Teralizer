@@ -5,6 +5,8 @@ computation without needing the real PostgreSQL database. Mirrors the query
 pattern (pd.read_sql + sqlalchemy text) used by the module under test.
 """
 
+from typing import cast
+
 import pandas as pd
 import pytest
 from sqlalchemy import create_engine, text
@@ -91,7 +93,7 @@ def test_filter_chain_returns_only_rejects_in_order(conn):
     assert 4 not in chain["assertion_id"].values
 
     # Assertion 1 has two rejects in order
-    a1 = chain[chain["assertion_id"] == 1].sort_values("position")
+    a1 = cast(pd.DataFrame, chain[chain["assertion_id"] == 1]).sort_values("position")
     assert a1["filter_name"].tolist() == ["MissingValue", "ParameterType"]
     assert a1["position"].tolist() == [1, 2]
 
