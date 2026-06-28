@@ -29,7 +29,8 @@ The spike proved the SPF solver layer can preserve symbolic raw bits (`PCParser`
 ### Symbolic raw-bits modeling
 
 - [ ] B-1 · Add symbolic `abs` (and `min`/`max`) to the `Math`/`FastMath` peer — needs `MathFunction.ABS` + Z3 translation, or a branch-equivalent model class — so the `abs(xInt - yInt)` step stays symbolic without relying on model-class reachability.
-- [ ] Gap 2 · Add a `doubleToRawLongBits` Model node; map it in `SpfToModelTransformer` (the A-5 typed-outcome seam) and render it in `ModelToJavaTransformer` (the A-3 visitor seam).
+- [ ] Gap 2 · Add a `doubleToRawLongBits` Model node; map it in `SpfToModelTransformer` (the A-5 typed-outcome seam, shipped as `UnsupportedSpfTermException`) and render it in `ModelToJavaTransformer` (the A-3 visitor seam, shipped as `ModelFolder`).
+- [ ] D-1 · Tag concretized symbolic terms so incomplete specs are explicit, not silent narrowing — when a value is already concrete (raw bits under `z3`), the listener bakes it in as a constant, which is how the maxUlps spec collapsed to `0 < maxUlps`. Depends on Gap 1 (raw-bits SPF config) and Gap 2 (Model node); without those, tagging would flag every raw-bits probe as incomplete, which is already the documented concession.
 
 ### By-construction generation
 
@@ -42,7 +43,7 @@ The spike proved the SPF solver layer can preserve symbolic raw bits (`PCParser`
 
 ## Dependencies
 
-- Gap 2's Model node depends on the `SpfToModelTransformer` typed-outcome seam (A-5/D-1) and the `ModelToJavaTransformer` rendering seam (A-3) in `pipeline-improvements` Phase 2.
+- Gap 2's Model node uses the `SpfToModelTransformer` typed-outcome seam (A-5, shipped: `UnsupportedSpfTermException`) and the `ModelToJavaTransformer` rendering seam (A-3, shipped: `ModelFolder`) from `pipeline-improvements` Phase 2. D-1 (concretization tagging) is tracked in this lane's Symbolic raw-bits modeling section.
 - Gap 3 reuses the by-construction recipe library (`pipeline-improvements` C-4).
 
 ## Acceptance criteria
