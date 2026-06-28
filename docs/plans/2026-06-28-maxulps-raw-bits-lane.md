@@ -22,9 +22,9 @@ The spike proved the SPF solver layer can preserve symbolic raw bits (`PCParser`
 
 ### Per-probe SPF configuration
 
-- [ ] D-3 · Add per-probe template variables for `symbolic.dp`/`symbolic.fp`/`symbolic.bvlength` in `jpf-config.vm` + `Configuration` (currently a single global setting).
-- [ ] B-4 · Select solver/precision per MUT: raw-bits MUTs → `z3bitvector` + `fp` + `bvlength=64`; everything else stays on `z3`.
-- [ ] B-3 · Derive `ProblemZ3BitVector` FP width from the variable type so doubles are not silently solved at 32-bit (`makeRealVar` uses `FPSort32` when `bvlength == 32`).
+- [x] D-3 · Per-probe `symbolic.dp`/`symbolic.fp`/`symbolic.bvlength` template variables in `jpf-config.vm` (was a hardcoded global `symbolic.dp=z3`), supplied per probe via the typed `SpfSymbolicConfig` value object. → done.
+- [x] B-4 · Select the symbolic backend per MUT by **static detection** (`SpfSymbolicConfigSelector`), not an allowlist: a tested method calling a raw-bits FP conversion (`doubleToRawLongBits`/`floatToIntBits`/inverses) gets `z3bitvector` + `fp` + `bvlength=64`, everything else `z3`. Conservative, direct-body, FP-only (integer bitwise/shift is a separate, deferred profile). → done.
+- [ ] B-3 · Per-variable bit-width in `ProblemZ3BitVector` (int→32-bit BV, long→64-bit BV, double→FPSort64, float→FPSort32). The solver bridge uses one global `bitVectorLength` for everything, so the raw-bits profile's `bvlength=64` correctly represents doubles/longs but **over-widths Java `int`s to 64-bit, changing 32-bit overflow semantics** — the raw-bits profile is therefore sound for the maxUlps probe (its `int maxUlps` is a non-overflowing bound widened to `long`) but **not generally sound** until per-variable width lands. Substantial solver-bridge change (thread the variable type/width to `makeIntVar`/`makeRealVar`).
 
 ### Symbolic raw-bits modeling
 
@@ -34,7 +34,7 @@ The spike proved the SPF solver layer can preserve symbolic raw bits (`PCParser`
 
 ### By-construction generation
 
-- [ ] Gap 1 · Enable the raw-bits SPF config for the `precisionEqualsMaxUlps` probe only (via D-3/B-4).
+- [x] Gap 1 · The raw-bits backend auto-activates for any tested method calling a raw-bits FP conversion (the maxUlps probe included) via `SpfSymbolicConfigSelector` → `SpfSymbolicConfig` → `jpf-config.vm`. → done (D-3 + B-4). End-to-end SPF verification (the path condition carrying the `fpToIEEEBV` relation rather than concretizing) additionally needs Gap 2 ingestion plus a pipeline run, and general soundness needs B-3.
 - [ ] Gap 3 · Build the by-construction recipe-library infrastructure (`pipeline-improvements` C-4 lands here) and its first member, the ulps-neighborhood recipe, in the planner: `y = Double.longBitsToDouble(Double.doubleToRawLongBits(x) + delta)`, `delta ∈ [−maxUlps, maxUlps]`, same sign. The ulps recipe is C-4's only evidence-backed member; further recipes are gated on generation-coverage shape telemetry, not assumption.
 
 ### Verification

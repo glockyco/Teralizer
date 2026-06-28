@@ -24,7 +24,9 @@ import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.GeneralizableInput;
+import teralizer.spoon.analysis.SpfSymbolicConfigSelector;
 import teralizer.util.Configuration;
+import teralizer.util.SpfSymbolicConfig;
 import teralizer.util.TypeCapability;
 
 import java.io.File;
@@ -106,7 +108,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         this.createInstrumentedClassFile(spoonLauncher, instrumentedClass);
 
         this.createDriverClassFile(velocityEngine, spoonLauncher);
-        this.createJpfConfigFile(velocityEngine, instrumentedMethod);
+        this.createJpfConfigFile(velocityEngine, instrumentedMethod, testedMethod);
     }
 
     private void updateAssertionRecord() {
@@ -436,7 +438,7 @@ public class JpfInstrumentationTask extends AbstractTask {
             .collect(Collectors.toSet());
     }
 
-    private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod) throws IOException {
+    private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod) throws IOException {
         String symbolicParams = instrumentedMethod.getParameters().stream().map(p -> TypeCapability.supportsGeneratedInput(p.getType().getSimpleName()) ? "sym" : "con").collect(Collectors.joining("#"));
         String symbolicMethod = this.assertionRecord.getInstrumentedMethodQualifiedName() + "(" + symbolicParams + ")";
 
@@ -445,6 +447,11 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("pathSeparator", File.pathSeparator);
         context.put("classpath", this.projectRecord.getClasspath());
         context.put("symbolicMethod", symbolicMethod);
+
+        SpfSymbolicConfig symbolicConfig = SpfSymbolicConfigSelector.select(testedMethod);
+        context.put("symbolicDp", symbolicConfig.getDp());
+        context.put("symbolicFp", symbolicConfig.isFp());
+        context.put("symbolicBvLength", symbolicConfig.getBvLength());
 
         context.put("maxExecutionTime", Configuration.getJpfMaxExecutionTime());
         context.put("maxPathConditionSize", Configuration.getJpfMaxPathConditionSize());

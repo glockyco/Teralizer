@@ -1,0 +1,48 @@
+package teralizer.util;
+
+/**
+ * SPF symbolic-analysis backend settings for one probe: the decision procedure
+ * ({@code symbolic.dp}), the floating-point theory toggle ({@code symbolic.fp}),
+ * and the bit-vector width ({@code symbolic.bvlength}).
+ *
+ * <p>Teralizer runs SPF in single-path constraint-collection mode and does not
+ * use SPF for solver-driven path exploration or input generation. These settings
+ * control how operations are represented symbolically while the specification is
+ * collected along the concrete path. Under the rational-real {@link #defaultProfile()},
+ * bit-level operations such as {@code Double.doubleToRawLongBits} cannot be
+ * represented and concretize into the collected spec. The {@link #rawBits()}
+ * profile (IEEE bit-vector + FP theory) keeps them symbolic.
+ */
+public final class SpfSymbolicConfig {
+    private final String dp;
+    private final boolean fp;
+    private final int bvLength;
+
+    public SpfSymbolicConfig(String dp, boolean fp, int bvLength) {
+        this.dp = dp;
+        this.fp = fp;
+        this.bvLength = bvLength;
+    }
+
+    /** Rational-real backend ({@code z3}) — the standard profile for numeric/boolean MUTs. */
+    public static SpfSymbolicConfig defaultProfile() {
+        return new SpfSymbolicConfig("z3", false, 32);
+    }
+
+    /** IEEE bit-vector + FP backend ({@code z3bitvector}, 64-bit) — keeps raw-bits operations symbolic. */
+    public static SpfSymbolicConfig rawBits() {
+        return new SpfSymbolicConfig("z3bitvector", true, 64);
+    }
+
+    public String getDp() {
+        return this.dp;
+    }
+
+    public boolean isFp() {
+        return this.fp;
+    }
+
+    public int getBvLength() {
+        return this.bvLength;
+    }
+}
