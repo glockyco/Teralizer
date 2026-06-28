@@ -1,14 +1,21 @@
 ---
 title: P-A2/C-2 — Type-Capability Single Source + Boolean Planner
 type: plan
-status: active
+status: implemented
 created: 2026-06-28
+archived: 2026-06-28
 parent: 2026-06-28-clause-driven-input-generation
 ---
 
 # Type-Capability Single Source (A-2) + BooleanDomainPlanner (C-2)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development. Steps use checkbox (`- [ ]`) tracking.
+
+## Implementation outcome (as built)
+
+Shipped as designed, behavior-preserving. **C-2:** `NumericClauseInterpreter` gated to numeric domains (INTEGER/REAL/CHAR); `BooleanDomainPlanner` interprets the int-encoded boolean equality/inequality (`b==1`/`b!=0`→`just(true)`, `b==0`/`b!=1`→`just(false)`, conflict→`of()`, unconstrained→`of(true,false)`) and reports consumed ids; shared `DomainPlanners.REGISTERED`. **A-2:** registry-backed `TypeCapability` facade (`supportsGeneratedInput` vs distinct `supportsReturnValue`); all six `SUPPORTED_TYPES` consumers rerouted; `SUPPORTED_TYPES` + `ConfigurationSupportedTypesTest` removed. Supported input domains unchanged {INTEGER, REAL, CHAR, BOOLEAN}; zero `SUPPORTED_TYPES` references remain; full `./gradlew build` green.
+
+Commits: `45e8e3da` numeric-domain gate · `d3f9a0e0` BooleanDomainPlanner + registry · `8d1428d0` TypeCapability facade · `238c61e7` `b != 1` test · `6eeb9638` reroute + retire.
 
 **Goal:** Make "a type is generatable" derive from the `DomainPlanner` registry instead of a hand-maintained `Configuration.SUPPORTED_TYPES` string list (A-2), and add a `BooleanDomainPlanner` so booleans get real clause-driven generation instead of falling through to `defaultRecipe` (C-2). C-2 lands first because A-2's "supported ⇔ a registered planner claims the domain" is behavior-preserving only once a boolean planner exists.
 
