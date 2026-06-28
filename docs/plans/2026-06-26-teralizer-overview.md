@@ -32,6 +32,7 @@ work that depends on a re-run is deferred until (1) lands.
 - `2026-06-27-improved-generator-redesign` *(plan)* — the ordered implementation plan for the residual-aware generator.
 - `2026-06-26-jarvis-case-coverage` *(audit)* — the per-case head-to-head evidence behind it.
 - `2026-06-28-residual-aware-generator-rerun` *(audit)* — clean rerun on the typed generator: zero Table-2 exclusions after two robustness fixes.
+- `2026-06-28-pipeline-architecture-review` *(audit)* — holistic Model⇔Java / SPF-peer / generator / spec-pipeline findings feeding the paper's §5.3 roadmap.
 
 ## Children
 
@@ -44,6 +45,7 @@ work that depends on a re-run is deferred until (1) lands.
 | `2026-06-27-receiver-constructor-inputs` | plan | close the `Interval.getSize()` inline receiver-constructor blocker exposed by the scoreboard run | implemented |
 | `2026-06-26-jarvis-case-coverage` | audit | per-case JARVIS head-to-head evidence + provenance | current focus (evidence) |
 | `2026-06-28-residual-aware-generator-rerun` | audit | scorecard rerun on the typed planner: two robustness fixes + refreshed per-probe PVC | current focus (evidence) |
+| `2026-06-28-pipeline-architecture-review` | audit | architecture/implementation findings across the spec→generation pipeline | current focus (roadmap) |
 | `2026-06-26-applicability-barriers` | audit | RQ6 real-world applicability barrier evidence (inventory / funnel / ledger) | deferred — step (2) reference |
 | `2026-06-26-data-reuse-and-msr-potential` | note | secondary MSR / data-paper backlog | deferred, gated on (1) |
 | `2026-06-25-replication-package-documentation-improvements` | plan | verifiable replication package for ACM artifact eval | independent track |
