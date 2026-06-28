@@ -277,24 +277,6 @@ public class TestGeneralizationTask extends AbstractTask {
 
             Map<String, String> testedMethodParameterTypes = testedMethodParameters.stream().collect(Collectors.toMap(MethodParameter::getName, MethodParameter::getType));
             ModelToJavaTransformer modelToJavaTransformer = new ModelToJavaTransformer(testedMethodParameterTypes);
-            String inputJava = modelToJavaTransformer.transform(inputModel);
-            String outputJava = modelToJavaTransformer.transform(outputModel);
-
-            // The maximum allowed bytecode size of a Java method is 65535 Bytes.
-            // See: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7, "code_length".
-            // Having a method that is larger than this causes a "code too large" compiler error. To ensure we are not
-            // generating such incompilable code, we fail the generalization for any cases with a "large" input/output
-            // specification. "Large", in this case, is a very rough estimate that is only based on observed cases that
-            // have caused compilation errors. A (more) exact estimate is hard to get since there is no straightforward
-            // relationship between source code size and bytecode size.
-            // @TODO: Use a more reliable approach to check whether "code too large" errors (might) occur.
-            //   The most (and only?) reliable solution is probably to actually create the file and try to compile
-            //   it => if the error occurs, delete the created file again and mark the generalization as failed.
-            boolean isInputJavaTooLarge = inputJava != null && inputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
-            boolean isOutputJavaTooLarge = outputJava != null && outputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
-            if (isInputJavaTooLarge || isOutputJavaTooLarge) {
-                throw new RuntimeException("Failing generalization to avoid potential 'code too large' compilation errors.");
-            }
 
             String regex = "\"name\": \"((?>INT|REAL)_[0-9]+)\"";
             Pattern pattern = Pattern.compile(regex);
@@ -319,6 +301,30 @@ public class TestGeneralizationTask extends AbstractTask {
             allParameters.addAll(testedMethodParameters);
             allParameters.addAll(temporaryParameters);
             allParameters.removeIf(parameter -> !TypeCapability.supportsGeneratedInput(parameter.getType()));
+
+            // Render the input predicate only after filtering: a clause that references only
+            // non-symbolized (filtered-out) parameters can be dropped soundly, because those
+            // inputs stay at their concrete value; a clause that constrains a generated
+            // parameter is never dropped (it would weaken the SPF path predicate).
+            Set<String> generalizableParameterNames = allParameters.stream().map(MethodParameter::getName).collect(Collectors.toSet());
+            String inputJava = modelToJavaTransformer.transformPredicate(inputModel, generalizableParameterNames);
+            String outputJava = modelToJavaTransformer.transform(outputModel);
+
+            // The maximum allowed bytecode size of a Java method is 65535 Bytes.
+            // See: https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7, "code_length".
+            // Having a method that is larger than this causes a "code too large" compiler error. To ensure we are not
+            // generating such incompilable code, we fail the generalization for any cases with a "large" input/output
+            // specification. "Large", in this case, is a very rough estimate that is only based on observed cases that
+            // have caused compilation errors. A (more) exact estimate is hard to get since there is no straightforward
+            // relationship between source code size and bytecode size.
+            // @TODO: Use a more reliable approach to check whether "code too large" errors (might) occur.
+            //   The most (and only?) reliable solution is probably to actually create the file and try to compile
+            //   it => if the error occurs, delete the created file again and mark the generalization as failed.
+            boolean isInputJavaTooLarge = inputJava != null && inputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
+            boolean isOutputJavaTooLarge = outputJava != null && outputJava.length() > Configuration.MAX_SPECIFICATION_SIZE;
+            if (isInputJavaTooLarge || isOutputJavaTooLarge) {
+                throw new RuntimeException("Failing generalization to avoid potential 'code too large' compilation errors.");
+            }
 
             switch (Configuration.getGeneralizationAlgorithm(this.getVariant())) {
                 case NAIVE: {

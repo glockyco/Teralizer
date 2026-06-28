@@ -5,8 +5,10 @@ import teralizer.domain.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Renders a {@link Model} tree to a Java expression. Backed by {@link ModelFolder},
@@ -14,8 +16,11 @@ import java.util.Map;
  * compile error here until a hook is implemented, never a silent no-op.
  *
  * <p>Unsupported {@link Operator}s (the string operators) are not node kinds; they are
- * rendered through the operation hook's default branch and throw at runtime. Turning
- * those into a typed non-generalizable outcome is tracked separately (A-1).
+ * rendered through the operation hook's default branch and raise a typed
+ * {@link NonGeneralizableExpressionException}. {@link #transformPredicate} uses that
+ * signal to drop a clause whose only referenced parameters are non-symbolized (sound:
+ * they stay concrete), while refusing to drop a clause that still constrains a
+ * generated parameter (which would weaken the path predicate).
  */
 public class ModelToJavaTransformer extends ModelFolder<String> {
     private final Map<String, String> variableTypes;
@@ -109,6 +114,64 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
             return null;
         }
         return model.fold(this);
+    }
+
+    /**
+     * Renders the input path predicate to a Java boolean, dropping clauses that are
+     * non-generalizable because they reference only parameters that will not be
+     * symbolized (they stay at their concrete value, so the clause is trivially
+     * satisfied). A clause that uses an unsupported operator but still constrains a
+     * generated parameter is not dropped — that would weaken the predicate — and the
+     * typed {@link NonGeneralizableExpressionException} surfaces instead. When every
+     * clause is dropped the predicate is {@code true}.
+     *
+     * @param generalizableParameterNames names of parameters that jqwik will generate;
+     *        a clause is sound to drop only if every variable it references is outside
+     *        this set
+     */
+    public String transformPredicate(teralizer.domain.Model inputModel, Set<String> generalizableParameterNames) {
+        if (inputModel == null) {
+            return "true";
+        }
+        List<teralizer.domain.Model> clauses = new ArrayList<>();
+        flattenConjuncts(inputModel, clauses);
+
+        List<String> rendered = new ArrayList<>();
+        for (teralizer.domain.Model clause : clauses) {
+            String javaClause;
+            try {
+                javaClause = clause.fold(this);
+            } catch (NonGeneralizableExpressionException nonGeneralizable) {
+                // Drop only if the clause references at least one variable and every one of
+                // those variables is non-symbolized (stays concrete, so the clause is
+                // trivially satisfied). A clause with no variables, or one that constrains
+                // a generated parameter, must not be dropped — the former is not a
+                // filter-referencing clause and the latter would weaken the predicate.
+                Set<String> referenced = new LinkedHashSet<>();
+                clause.accept(new VariableNameCollector(referenced));
+                if (!referenced.isEmpty() && Collections.disjoint(referenced, generalizableParameterNames)) {
+                    continue;
+                }
+                throw nonGeneralizable;
+            }
+            rendered.add(javaClause);
+        }
+        if (rendered.isEmpty()) {
+            return "true";
+        }
+        return String.join(" && ", rendered);
+    }
+
+    private static void flattenConjuncts(teralizer.domain.Model model, List<teralizer.domain.Model> clauses) {
+        if (model instanceof Operation) {
+            Operation operation = (Operation) model;
+            if (operation.op == Operator.AND && operation.left != null && operation.right != null) {
+                flattenConjuncts(operation.left, clauses);
+                flattenConjuncts(operation.right, clauses);
+                return;
+            }
+        }
+        clauses.add(model);
     }
 
     @Override

@@ -23,7 +23,7 @@ public class InputGenerationPlanner {
             parameterTypes.put(parameter.getName(), parameter.getType());
         }
 
-        List<ConstraintClause> clauses = ConstraintClauses.from(inputModel, parameterTypes);
+        List<ConstraintClause> clauses = ConstraintClauses.from(inputModel, parameterTypes, parameterTypes.keySet());
         PlanningContext context = new PlanningContext(parameters, clauses, arguments);
         List<ParameterGenerationPlan> parameterPlans = new ArrayList<>();
         for (MethodParameter parameter : parameters) {
