@@ -235,20 +235,23 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
             case SHIFTUR:
                 return "(" + left + " >>> " + right + ")";
             default:
-                throw new RuntimeException("Unable to transform operation '" + operation + "' to Java.");
+                throw new NonGeneralizableExpressionException(
+                    "Unable to transform operation '" + operation + "' (operator " + operation.op.name() + ") to Java.");
         }
     }
 
     @Override
     public String fold(Operator operator) {
         // Operators are visited as part of an Operation, never folded standalone for Java.
-        throw new UnsupportedOperationException("Operator is not a standalone Java expression.");
+        throw new NonGeneralizableExpressionException(
+            "Operator '" + operator + "' is not a standalone Java expression.");
     }
 
     @Override
     public String fold(Error error) {
         // Only models without errors should be transformed to Java.
-        throw new RuntimeException("Unable to transform error '" + error + "' to Java.");
+        throw new NonGeneralizableExpressionException(
+            "Unable to transform error '" + error + "' to Java.");
     }
 
     @Override
