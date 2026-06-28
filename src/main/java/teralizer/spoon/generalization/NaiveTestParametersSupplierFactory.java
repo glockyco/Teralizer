@@ -70,15 +70,15 @@ public class NaiveTestParametersSupplierFactory {
 
                 if (!isLast) {
                     String parameterNames = parameters.stream().limit(i + 1).map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".flatMap(new java.util.function.Function<" + getBoxedType(parameter.getType()) + ", net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">>() {\n";
-                    body += "    public net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + "> apply(final " + getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
+                    body += ".flatMap(new java.util.function.Function<" + SpoonUtils.getBoxedType(parameter.getType()) + ", net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">>() {\n";
+                    body += "    public net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + "> apply(final " + SpoonUtils.getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
                     body += "        return get" + (i + 1) + "(" + parameterNames + ");\n";
                     body += "    }\n";
                     body += "})";
                 } else {
                     String parameterNames = parameters.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".map(new java.util.function.Function<" + getBoxedType(parameter.getType()) + ", " + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
-                    body += "    public " + TEST_PARAMETERS_CLASS_NAME + " apply(final " + getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
+                    body += ".map(new java.util.function.Function<" + SpoonUtils.getBoxedType(parameter.getType()) + ", " + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
+                    body += "    public " + TEST_PARAMETERS_CLASS_NAME + " apply(final " + SpoonUtils.getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
                     body += "        return new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + ");\n";
                     body += "    }\n";
                     body += "})";
@@ -175,19 +175,5 @@ public class NaiveTestParametersSupplierFactory {
         }
 
         return String.format("return %s", baseArbitrary);
-    }
-
-    private static String getBoxedType(String type) {
-        switch (type) {
-            case "byte": return "Byte";
-            case "short": return "Short";
-            case "int": return "Integer";
-            case "long": return "Long";
-            case "float": return "Float";
-            case "double": return "Double";
-            case "char": return "Character";
-            case "boolean": return "Boolean";
-            default: return type;
-        }
     }
 }

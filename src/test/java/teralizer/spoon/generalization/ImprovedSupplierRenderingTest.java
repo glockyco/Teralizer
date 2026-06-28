@@ -9,28 +9,27 @@ import teralizer.domain.MethodParameter;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
 import teralizer.domain.VariableInteger;
-import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
-import teralizer.jqwik.planning.ParameterGenerationPlan;
-import teralizer.jqwik.planning.RawJavaRecipe;
-import teralizer.jqwik.planning.TypeDomain;
 
-import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
 
 public class ImprovedSupplierRenderingTest {
 
     @Example
     void omitsFilterWhenNoResidualInputPredicateExists() {
-        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
-            new Launcher().getFactory(),
-            Collections.singletonList(new MethodParameter("double", "x")),
-            Collections.emptyMap(),
+        MethodParameter x = new MethodParameter("double", "x");
+        // No model → no clauses → hasResidualClauses() == false → no filter emitted
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(
+            Collections.singletonList(x),
             Collections.emptyMap(),
             null
+        );
+        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(),
+            Collections.singletonList(x),
+            null,
+            plan
         );
 
         Assert.assertFalse(supplierClass.toString().contains(".filter("));
@@ -38,12 +37,21 @@ public class ImprovedSupplierRenderingTest {
 
     @Example
     void keepsFilterWhenInputPredicateExists() {
+        MethodParameter x = new MethodParameter("double", "x");
+        // x > 0.0 produces a residual clause → hasResidualClauses() == true → filter emitted
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(
+            Collections.singletonList(x),
+            new Operation(
+                new teralizer.domain.VariableReal("x"),
+                Operator.GT,
+                new teralizer.domain.ConstantReal(0.0)
+            )
+        );
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
             new Launcher().getFactory(),
-            Collections.singletonList(new MethodParameter("double", "x")),
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            "_p_.x > 0.0"
+            Collections.singletonList(x),
+            null,
+            plan
         );
 
         Assert.assertTrue(supplierClass.toString().contains(".filter("));
@@ -51,29 +59,20 @@ public class ImprovedSupplierRenderingTest {
 
     @Example
     void keepsFullFilterWhenPlannerReportsResidualClauses() {
+        MethodParameter x = new MethodParameter("double", "x");
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(
+            Collections.singletonList(x),
+            new Operation(
+                new teralizer.domain.VariableReal("x"),
+                Operator.GT,
+                new teralizer.domain.ConstantReal(0.0)
+            )
+        );
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
             new Launcher().getFactory(),
-            Collections.singletonList(new MethodParameter("double", "x")),
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            "_p_.x > 0.0",
-            new InputGenerationPlan(
-                Collections.singletonList(new ParameterGenerationPlan(
-                    new MethodParameter("double", "x"),
-                    TypeDomain.REAL,
-                    new RawJavaRecipe(""),
-                    Collections.emptySet()
-                )),
-                teralizer.jqwik.planning.ConstraintClauses.from(
-                    new teralizer.domain.Operation(
-                        new teralizer.domain.VariableReal("x"),
-                        teralizer.domain.Operator.GT,
-                        new teralizer.domain.ConstantReal(0.0)
-                    ),
-                    Collections.singletonMap("x", "double")
-                ),
-                Collections.emptySet()
-            )
+            Collections.singletonList(x),
+            null,
+            plan
         );
 
         Assert.assertTrue(supplierClass.toString().contains(".filter("));
@@ -83,29 +82,17 @@ public class ImprovedSupplierRenderingTest {
     @Example
     void omitsFilterWhenPlannerHasNoResidualClauses() {
         MethodParameter parameter = new MethodParameter("double", "x");
+        // No model → no clauses → hasResidualClauses() == false → filter omitted
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(
+            Collections.singletonList(parameter),
+            Collections.emptyMap(),
+            null
+        );
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
             new Launcher().getFactory(),
             Collections.singletonList(parameter),
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            "_p_.x > 0.0",
-            new InputGenerationPlan(
-                Collections.singletonList(new ParameterGenerationPlan(
-                    parameter,
-                    TypeDomain.REAL,
-                    new RawJavaRecipe(""),
-                    new HashSet<>(Collections.singletonList(0))
-                )),
-                teralizer.jqwik.planning.ConstraintClauses.from(
-                    new teralizer.domain.Operation(
-                        new teralizer.domain.VariableReal("x"),
-                        teralizer.domain.Operator.GT,
-                        new teralizer.domain.ConstantReal(0.0)
-                    ),
-                    Collections.singletonMap("x", "double")
-                ),
-                new HashSet<>(Collections.singletonList(0))
-            )
+            null,
+            plan
         );
 
         Assert.assertFalse(supplierClass.toString().contains(".filter("));
@@ -127,9 +114,7 @@ public class ImprovedSupplierRenderingTest {
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
             new Launcher().getFactory(),
             java.util.Arrays.asList(a, b),
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            "((_p_.a + _p_.b) < 10)",
+            null,
             plan
         );
 
@@ -139,27 +124,27 @@ public class ImprovedSupplierRenderingTest {
     }
 
     @Example
-    void doubleBoundsUseDynamicScaleInsteadOfGlobalMaximumScale() throws Exception {
-        Method createDoubleArbitrary = ImprovedTestParametersSupplierFactory.class.getDeclaredMethod(
-            "createDoubleArbitrary",
-            MethodParameter.class,
-            Optional.class,
-            RealConstraints.class
+    void doubleBoundsUseDynamicScaleInsteadOfGlobalMaximumScale() {
+        MethodParameter a = new MethodParameter("double", "a");
+        MethodParameter b = new MethodParameter("double", "b");
+        // b > a: NumericDomainPlanner sees a variable lower bound on b → emits dynamic-scale recipe
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(
+            java.util.Arrays.asList(a, b),
+            Collections.singletonMap("b", new MethodArgument("double", "2.0")),
+            new Operation(
+                new teralizer.domain.VariableReal("b"),
+                Operator.GT,
+                new teralizer.domain.VariableReal("a")
+            )
         );
-        createDoubleArbitrary.setAccessible(true);
-
-        RealConstraints constraints = new RealConstraints();
-        constraints.setVariableType("double");
-        constraints.setVariableName("b");
-        constraints.addVariableLowerBound("a", false);
-
-        String body = (String) createDoubleArbitrary.invoke(
+        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(),
+            java.util.Arrays.asList(a, b),
             null,
-            new MethodParameter("double", "b"),
-            Optional.of(new MethodArgument("double", "2.0")),
-            constraints
+            plan
         );
 
+        String body = supplierClass.toString();
         Assert.assertFalse(body.contains("ofScale(325)"));
         Assert.assertTrue(body.contains("java.math.BigDecimal.valueOf"));
         Assert.assertTrue(body.contains("bScale"));

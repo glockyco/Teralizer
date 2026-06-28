@@ -127,6 +127,20 @@ public class SpoonUtils {
         return clonedClass;
     }
 
+    public static String getBoxedType(String type) {
+        switch (type) {
+            case "byte": return "Byte";
+            case "short": return "Short";
+            case "int": return "Integer";
+            case "long": return "Long";
+            case "float": return "Float";
+            case "double": return "Double";
+            case "char": return "Character";
+            case "boolean": return "Boolean";
+            default: return type;
+        }
+    }
+
     private static class ReferenceRenamer extends CtScanner {
         private final String oldQualifiedName;
         private final String newQualifiedName;

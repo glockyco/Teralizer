@@ -25,7 +25,7 @@ Scope: Teralizer-side hardening and constraint encoding. Per-probe SPF configura
 - [ ] A-1 · Render the input model to Java only after non-supported parameters are filtered; turn unsupported operators into a typed "non-generalizable clause" outcome instead of a `RuntimeException`.
 - [ ] A-3 · Make `ModelVisitor` hooks abstract (or seal the node hierarchy) so a missing case is a compile error; centralize type/operator mapping.
 - [ ] A-5 / D-1 · Replace `SpfToModelTransformer`'s `UnsupportedOperationException`/silent-concretization paths with typed, attributable outcomes (tag concretized symbolic terms so incomplete specs are explicit, not silent narrowing).
-- [ ] C-1 · Make the planner the single numeric emitter; reduce the three factories to thin Spoon wrappers; delete the legacy duplicate numeric methods + the triplicated `getBoxedType`.
+- [x] C-1 · Make the planner the single numeric emitter; reduce the three factories to thin Spoon wrappers; delete the legacy duplicate numeric methods + the triplicated `getBoxedType`. → done: removed the 5-arg overloads + legacy numeric emitters + `Names`/`generateInclusionCheck`; `getBoxedType` now single-sourced in `SpoonUtils`; dropped the dead `constraints` and `arguments` params from `createSupplierClass`.
 - [ ] D-4 · Have `ParameterTypeFilter` consult `GeneralizableInput.derive(...)` so inline-constructor cases are not over-rejected.
 
 ## Phase 3 — Effectiveness (constraint encoding)
