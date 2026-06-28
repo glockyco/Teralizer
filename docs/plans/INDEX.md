@@ -15,6 +15,7 @@
 - **Pipeline Architecture Review** [audit] `2026-06-28-pipeline-architecture-review` ← 2026-06-26-teralizer-overview
 - **Pipeline Improvements** [plan] `2026-06-28-pipeline-improvements` (—) ← 2026-06-26-teralizer-overview
 - **Residual-Aware Generator Scorecard Rerun** [audit] `2026-06-28-residual-aware-generator-rerun` ← 2026-06-27-residual-aware-input-generation
+- **P-A2/C-2 — Type-Capability Single Source + Boolean Planner** [plan] `2026-06-28-type-capability-and-boolean-planner` (0/11) ← 2026-06-28-clause-driven-input-generation
 
 ## draft
 
