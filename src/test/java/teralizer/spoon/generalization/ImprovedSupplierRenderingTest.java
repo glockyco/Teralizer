@@ -6,8 +6,12 @@ import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
+import teralizer.domain.Operation;
+import teralizer.domain.Operator;
+import teralizer.domain.VariableInteger;
 import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.planning.InputGenerationPlan;
+import teralizer.jqwik.planning.InputGenerationPlanner;
 import teralizer.jqwik.planning.ParameterGenerationPlan;
 import teralizer.jqwik.planning.RawJavaRecipe;
 import teralizer.jqwik.planning.TypeDomain;
@@ -105,6 +109,33 @@ public class ImprovedSupplierRenderingTest {
         );
 
         Assert.assertFalse(supplierClass.toString().contains(".filter("));
+    }
+
+    @Example
+    void keepsFullFilterForPlannerGeneratedAffineBounds() {
+        MethodParameter a = new MethodParameter("int", "a");
+        MethodParameter b = new MethodParameter("int", "b");
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(
+            java.util.Arrays.asList(a, b),
+            new Operation(
+                new Operation(new VariableInteger("a"), Operator.PLUS, new VariableInteger("b")),
+                Operator.LT,
+                new teralizer.domain.ConstantInteger(10)
+            )
+        );
+
+        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(),
+            java.util.Arrays.asList(a, b),
+            Collections.emptyMap(),
+            Collections.emptyMap(),
+            "((_p_.a + _p_.b) < 10)",
+            plan
+        );
+
+        Assert.assertTrue(supplierClass.toString().contains("bUpperBounds = java.util.Arrays.asList(bDefaultMax, (int) (9 - a))"));
+        Assert.assertTrue(supplierClass.toString().contains(".filter("));
+        Assert.assertTrue(supplierClass.toString().contains("return ((_p_.a + _p_.b) < 10);"));
     }
 
     @Example

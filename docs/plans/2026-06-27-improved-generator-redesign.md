@@ -89,13 +89,12 @@ Replace the numeric-shaped `VariableConstraintExtractor` path with a typed `Inpu
 ### Task 6: Residual filter emission
 
 - [x] Keep full input filtering as the current sound fallback while planner clause-consumption confidence is incomplete.
-- [ ] Make `InputGenerationPlan` render a residual Java predicate from only unconsumed clauses.
-- [ ] Write supplier rendering tests for all-consumed input, partly-consumed input, and unsupported residual input.
-- [ ] Verify the tests fail before implementation.
-- [ ] Implement residual-only filter emission.
+- [x] Add a supplier rendering test that proves planner-generated affine bounds still keep the original full filter.
 - [x] If residual rendering is brittle, keep the full filter and record residual metadata; do not block the planner redesign on filter minimization.
 - [x] Run `./gradlew test --tests teralizer.jqwik.planning.InputGenerationPlannerTest --tests teralizer.spoon.generalization.ImprovedSupplierRenderingTest`.
-- [ ] Commit residual filter behavior or the explicit full-filter fallback.
+- [x] Commit the explicit full-filter fallback.
+
+Residual-only filtering is not required for this implementation slice. It remains a later optimization after consumed-clause tracking is precise enough to remove clauses without weakening the SPF-derived input predicate.
 
 ### Task 7: Scoreboard rerun and documentation
 
