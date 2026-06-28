@@ -38,7 +38,7 @@ Scope: Teralizer-side hardening and constraint encoding. Per-probe SPF configura
 ## Opportunistic (fold in where adjacent)
 
 - [x] B-5 · Preserve long width in `LCMP`. → done (submodule `146a4a0`). The `toIntExact` overflow path runs through the same LCMP comparison but was not separately verified.
-- [ ] C-6 · Single recorder source consumed by both Spoon and text paths; assert first-value-first behavior.
+- [x] C-6 · Single recorder source consumed by both Spoon and text paths; assert first-value-first behavior. → done (`d995e463`): the shared `createResetBody`/`createRecordBody`/`createEscapeValueBody` helpers were already consumed by both paths; an equivalence test now verifies both the Spoon-rendered class and the text source embed the same bodies (whitespace/FQN-normalized) plus the same method signatures, so a future change to one path that inlines a different body fails. `FirstValueArbitrary.generator(int)` previously delegated directly, so the seed input was injected only via `edgeCases()` and was not guaranteed under normal generation; it now wraps the delegate generator to emit a `Shrinkable` of `firstValue` as its first sample before delegating.
 - [ ] D-5 · Centralize + assert the native-peer/model classpath contract.
 
 ## Acceptance criteria
