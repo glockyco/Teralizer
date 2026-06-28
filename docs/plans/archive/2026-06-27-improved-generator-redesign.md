@@ -1,9 +1,10 @@
 ---
 title: Improved Generator Redesign
 type: plan
-status: active
+status: implemented
 created: 2026-06-27
 parent: 2026-06-27-residual-aware-input-generation
+archived: 2026-06-28
 ---
 
 Ordered implementation work for the typed planner behind the `IMPROVED` jqwik input generator.
