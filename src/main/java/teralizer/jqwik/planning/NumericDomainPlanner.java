@@ -8,7 +8,6 @@ import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.VariableConstraints;
 import teralizer.transformer.ModelToJavaTransformer;
 
-import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,9 +23,9 @@ public class NumericDomainPlanner implements DomainPlanner {
         Optional<MethodArgument> argument = context.getArguments().containsKey(parameter.getName())
             ? Optional.of(context.getArguments().get(parameter.getName()))
             : Optional.empty();
-        VariableConstraints constraint = context.getConstraints().get(parameter.getName());
-        String body = createArbitrary(parameter, argument, constraint);
-        return new ParameterGenerationPlan(parameter, domain, new RawJavaRecipe(body), Collections.emptySet());
+        NumericClauseInterpretation interpretation = context.getInterpretation(parameter.getName());
+        String body = createArbitrary(parameter, argument, interpretation.getConstraints());
+        return new ParameterGenerationPlan(parameter, domain, new RawJavaRecipe(body), interpretation.getConsumedClauseIds());
     }
 
     private static String createArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, VariableConstraints constraint) {
