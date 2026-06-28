@@ -329,7 +329,7 @@ public class TestGeneralizationTask extends AbstractTask {
                 case IMPROVED: {
                     VariableConstraintExtractor extractor = new VariableConstraintExtractor();
                     VariableConstraintExtractionResult extractionResult = extractor.process(inputModel, allParameters);
-                    InputGenerationPlan inputGenerationPlan = new InputGenerationPlanner().plan(allParameters, inputModel);
+                    InputGenerationPlan inputGenerationPlan = new InputGenerationPlanner().plan(allParameters, testedMethodArguments, inputModel);
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
                     testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputJava, inputGenerationPlan);
 

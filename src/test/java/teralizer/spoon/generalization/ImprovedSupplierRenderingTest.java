@@ -150,4 +150,23 @@ public class ImprovedSupplierRenderingTest {
         Assert.assertTrue(body.contains("bScale"));
         Assert.assertTrue(body.contains(".ofScale(bScale).between"));
     }
+
+    @Example
+    void injectsFirstValueWhenArgumentPresent() {
+        MethodParameter x = new MethodParameter("int", "x");
+        // The original concrete input must be injected so the generalized test still exercises it.
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(
+            Collections.singletonList(x),
+            Collections.singletonMap("x", new MethodArgument("int", "7")),
+            null
+        );
+        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(),
+            Collections.singletonList(x),
+            null,
+            plan
+        );
+
+        Assert.assertTrue(supplierClass.toString().contains("FirstValueArbitrary"));
+    }
 }
