@@ -223,7 +223,7 @@ public class ModelToJsonTransformer {
             JsonObject jsonObject = new JsonObject();
 
             jsonObject.add("_type", new JsonPrimitive(error.getClass().getSimpleName()));
-            jsonObject.add("error_type", new JsonPrimitive(error.type));
+            jsonObject.add("type", new JsonPrimitive(error.type));
             jsonObject.add("message", new JsonPrimitive(error.message));
 
             return jsonObject;
