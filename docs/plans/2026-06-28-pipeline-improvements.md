@@ -30,8 +30,8 @@ Scope: Teralizer-side hardening and constraint encoding. Per-probe SPF configura
 
 ## Phase 3 — Effectiveness (constraint encoding)
 
-- [ ] C-3 · Populate `consumedClauseIds` per recipe and emit a residual-only filter (keep clauses unless provably enforced by construction).
-- [ ] C-2 · Add a `BooleanDomainPlanner` + boolean constraint extraction.
+- [ ] C-3 · Populate `consumedClauseIds` per recipe and emit a residual-only filter (keep clauses unless provably enforced by construction). → partial: P1 populates per-parameter consumed ids (`4f680d7f`); plan-level aggregation / residual-only filter deliberately deferred for soundness (documented at `InputGenerationPlanner`'s `Collections.emptySet()`).
+- [x] C-2 · Add a `BooleanDomainPlanner` + boolean constraint extraction. → done (`d3f9a0e0` BooleanDomainPlanner + registry; `45e8e3da` numeric-domain gate). Tracked in `archive/2026-06-28-type-capability-and-boolean-planner`.
 - [ ] C-4 · Begin a by-construction recipe library for shapes filtering cannot satisfy (modulo, disequality, and the raw-bits ulps neighborhood) — the ulps recipe is consumed by `2026-06-28-maxulps-raw-bits-lane`.
 
 ## Opportunistic (fold in where adjacent)
