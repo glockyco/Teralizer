@@ -5,7 +5,9 @@ import pandas as pd
 import pytest
 
 from teralizer.jarvis_scoreboard import (
+    JARVIS_TABLE2,
     classify_generated_test_outcome,
+    compare_to_jarvis,
     compute_parameter_value_coverage,
     get_generated_test_runs,
     get_instruction_coverage_scores,
@@ -474,3 +476,105 @@ def insert_scoreboard_fixture(conn: sqlite3.Connection, tmp_path) -> None:
         """
     )
     conn.commit()
+
+
+def _scoreboard_df(rows):
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "variant",
+            "generated_method_name",
+            "assertion_name",
+            "parameter_value_coverage",
+        ],
+    )
+
+
+def test_jarvis_table2_reference_is_complete_and_corrects_polynomial_pvc():
+    by_row = {row.table_row: row for row in JARVIS_TABLE2}
+    assert len(JARVIS_TABLE2) == 10
+    # JARVIS Scala-PBT PVC, verbatim from the paper's Table 2.
+    assert by_row["CharUtilsTest::isAscii"].pbt_pvc == 59
+    assert by_row["CharUtilsTest::isPrintable"].pbt_pvc == 45
+    assert by_row["FastMathTest::testMinMaxDouble"].pbt_pvc == 400
+    assert by_row["FastMathTest::toIntExact"].pbt_pvc == 65
+    assert by_row["IntervalTest"].pbt_pvc == 2
+    assert by_row["PolynomialFunctionTest::testConstants"].pbt_pvc == 105
+    # testLinear vs testfirstDerivativeComparison were transposed in the prose
+    # audit; the paper's Table 2 has linear=160, derivative=264.
+    assert by_row["PolynomialFunctionTest::testLinear"].pbt_pvc == 160
+    assert (
+        by_row["PolynomialFunctionTest::testfirstDerivativeComparison"].pbt_pvc == 264
+    )
+    assert by_row["PrecisionTest"].pbt_pvc == 102
+    assert by_row["UnivariateFunctionTest::testAbs"].pbt_pvc == 506
+    # Every fixture probe maps to exactly one Table-2 row (guards name drift).
+    probe_names = [
+        spec.generated_method_name for row in JARVIS_TABLE2 for spec in row.probes
+    ]
+    assert len(probe_names) == len(set(probe_names))
+
+
+def test_compare_to_jarvis_aggregates_probes_and_flags_verdict():
+    scoreboard = _scoreboard_df(
+        [
+            ("IMPROVED", "isAscii", "assertTrue", 60),
+            ("IMPROVED", "isAscii", "assertFalse", 88),
+            ("IMPROVED", "minDouble", "assertEquals", 152),
+            ("IMPROVED", "maxDouble", "assertEquals", 152),
+            ("IMPROVED", "absValue", "assertEquals", 94),
+            ("IMPROVED", "precisionEquals", "assertTrue", 176),
+            ("IMPROVED", "precisionEquals", "assertFalse", 30),
+        ]
+    )
+    by_row = compare_to_jarvis(scoreboard, variant="IMPROVED").set_index("table_row")
+    # Probes fold into their Table-2 row (sum PVC, the eps precedent).
+    assert by_row.loc["CharUtilsTest::isAscii", "teralizer_pvc"] == 148
+    assert by_row.loc["CharUtilsTest::isAscii", "probe_count"] == 2
+    assert by_row.loc["CharUtilsTest::isAscii", "verdict"] == "win"
+    assert by_row.loc["FastMathTest::testMinMaxDouble", "teralizer_pvc"] == 304
+    assert by_row.loc["FastMathTest::testMinMaxDouble", "verdict"] == "trail"
+    assert by_row.loc["PrecisionTest", "teralizer_pvc"] == 206
+    assert by_row.loc["PrecisionTest", "verdict"] == "win"
+    assert by_row.loc["UnivariateFunctionTest::testAbs", "verdict"] == "trail"
+
+
+def test_compare_to_jarvis_excludes_non_table2_and_other_variants():
+    scoreboard = _scoreboard_df(
+        [
+            ("IMPROVED", "absValue", "assertEquals", 94),
+            ("IMPROVED", "precisionEqualsMaxUlps", "assertFalse", 15),
+            ("NAIVE", "absValue", "assertEquals", 91),
+        ]
+    )
+    by_row = compare_to_jarvis(scoreboard, variant="IMPROVED").set_index("table_row")
+    # maxUlps is a non-Table-2 raw-bits probe; it must not fold into PrecisionTest.
+    assert by_row.loc["PrecisionTest", "probe_count"] == 0
+    assert by_row.loc["PrecisionTest", "verdict"] == "absent"
+    # Only the IMPROVED variant's probe counts toward the comparison.
+    assert by_row.loc["UnivariateFunctionTest::testAbs", "teralizer_pvc"] == 94
+
+
+def test_compare_to_jarvis_validates_mut_when_columns_present():
+    correct = pd.DataFrame(
+        [
+            {
+                "variant": "IMPROVED",
+                "generated_method_name": "absValue",
+                "assertion_name": "assertEquals",
+                "parameter_value_coverage": 94,
+                "tested_class_qualified_name": (
+                    "org.apache.commons.math3.analysis.function.Abs"
+                ),
+                "tested_method_name": "value",
+            }
+        ]
+    )
+    by_row = compare_to_jarvis(correct, variant="IMPROVED").set_index("table_row")
+    assert by_row.loc["UnivariateFunctionTest::testAbs", "teralizer_pvc"] == 94
+
+    wrong = correct.assign(
+        tested_class_qualified_name="org.apache.commons.math3.analysis.function.Sin"
+    )
+    with pytest.raises(ValueError, match="unexpected MUT"):
+        compare_to_jarvis(wrong, variant="IMPROVED")

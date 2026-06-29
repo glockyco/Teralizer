@@ -12,6 +12,7 @@ shape with a test/generalization key when exact per-test IC is required.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 from pathlib import Path
 from typing import Iterable, cast
@@ -23,6 +24,138 @@ GENERATED_JACOCO_STAGE = "COLLECT_JACOCO_DATA_GENERALIZED"
 
 PRECONDITION_REJECTION_FAILURE_TYPES = frozenset(
     {"net.jqwik.api.TooManyFilterMissesException"}
+)
+
+
+@dataclass(frozen=True)
+class ProbeSpec:
+    """A fixture probe and the method-under-test it must resolve to."""
+
+    generated_method_name: str
+    tested_class: str
+    tested_method: str
+
+
+@dataclass(frozen=True)
+class JarvisRow:
+    """One JARVIS paper Table-2 row: the original Java unit test (CUT), the
+    JARVIS-generated Scala property test (PBT), and the Teralizer fixture probes
+    that target the same method(s)."""
+
+    table_row: str
+    parameter_space: str
+    cut_ic: int
+    cut_pvc: int
+    pbt_ic: int
+    pbt_pvc: int
+    probes: tuple[ProbeSpec, ...]
+
+
+_CHARUTILS = "org.apache.commons.lang3.CharUtils"
+_FASTMATH = "org.apache.commons.math3.util.FastMath"
+_INTERVAL = "org.apache.commons.math3.geometry.euclidean.oned.Interval"
+_POLYNOMIAL = "org.apache.commons.math3.analysis.polynomials.PolynomialFunction"
+_PRECISION = "org.apache.commons.math3.util.Precision"
+_ABS = "org.apache.commons.math3.analysis.function.Abs"
+
+# JARVIS paper (VMCAI 2018) Table 2, verbatim. cut_* = the original Java unit test;
+# pbt_* = the JARVIS-generated Scala property test. probes = the pinned
+# _Jarvis*ScorecardTest fixture methods that target each row's MUT.
+JARVIS_TABLE2: tuple[JarvisRow, ...] = (
+    JarvisRow(
+        "CharUtilsTest::isAscii",
+        "char",
+        cut_ic=37,
+        cut_pvc=6,
+        pbt_ic=37,
+        pbt_pvc=59,
+        probes=(ProbeSpec("isAscii", _CHARUTILS, "isAscii"),),
+    ),
+    JarvisRow(
+        "CharUtilsTest::isPrintable",
+        "char",
+        cut_ic=40,
+        cut_pvc=195,
+        pbt_ic=40,
+        pbt_pvc=45,
+        probes=(ProbeSpec("isAsciiPrintable", _CHARUTILS, "isAsciiPrintable"),),
+    ),
+    JarvisRow(
+        "FastMathTest::testMinMaxDouble",
+        "double^2",
+        cut_ic=782,
+        cut_pvc=9,
+        pbt_ic=770,
+        pbt_pvc=400,
+        probes=(
+            ProbeSpec("minDouble", _FASTMATH, "min"),
+            ProbeSpec("maxDouble", _FASTMATH, "max"),
+        ),
+    ),
+    JarvisRow(
+        "FastMathTest::toIntExact",
+        # Table 2 labels the parameter space "int"; the MUT is toIntExact(long).
+        "int",
+        cut_ic=738,
+        cut_pvc=2001,
+        pbt_ic=738,
+        pbt_pvc=65,
+        probes=(ProbeSpec("toIntExact", _FASTMATH, "toIntExact"),),
+    ),
+    JarvisRow(
+        "IntervalTest",
+        "double^2",
+        cut_ic=38,
+        cut_pvc=2,
+        pbt_ic=3869,
+        pbt_pvc=2,
+        probes=(ProbeSpec("intervalGetSize", _INTERVAL, "getSize"),),
+    ),
+    JarvisRow(
+        "PolynomialFunctionTest::testConstants",
+        "double",
+        cut_ic=53,
+        cut_pvc=5,
+        pbt_ic=53,
+        pbt_pvc=105,
+        probes=(ProbeSpec("polynomialConstant", _POLYNOMIAL, "value"),),
+    ),
+    JarvisRow(
+        "PolynomialFunctionTest::testfirstDerivativeComparison",
+        "double",
+        cut_ic=117,
+        cut_pvc=7,
+        pbt_ic=117,
+        pbt_pvc=264,
+        probes=(ProbeSpec("polynomialDerivative", _POLYNOMIAL, "value"),),
+    ),
+    JarvisRow(
+        "PolynomialFunctionTest::testLinear",
+        "double",
+        cut_ic=71,
+        cut_pvc=5,
+        pbt_ic=71,
+        pbt_pvc=160,
+        probes=(ProbeSpec("polynomialLinear", _POLYNOMIAL, "value"),),
+    ),
+    JarvisRow(
+        "PrecisionTest",
+        "double^3",
+        cut_ic=871,
+        cut_pvc=8,
+        pbt_ic=876,
+        pbt_pvc=102,
+        probes=(ProbeSpec("precisionEquals", _PRECISION, "equals"),),
+    ),
+    JarvisRow(
+        "UnivariateFunctionTest::testAbs",
+        "double",
+        cut_ic=739,
+        cut_pvc=5,
+        pbt_ic=739,
+        pbt_pvc=506,
+        probes=(ProbeSpec("absValue", _ABS, "value"),),
+    ),
 )
 
 
@@ -271,6 +404,69 @@ def get_scoreboard(
     if pvc.empty:
         return pvc
     return pvc.merge(coverage, on=["project_id", "variant"], how="left")
+
+
+def compare_to_jarvis(
+    scoreboard: pd.DataFrame, *, variant: str = "IMPROVED"
+) -> pd.DataFrame:
+    """Aggregate Teralizer probes into JARVIS Table-2 rows and score PVC head-to-head.
+
+    Folds the per-assertion probes of ``variant`` into their Table-2 row, summing PVC
+    (the eps precedent), joins JARVIS's published Scala-PBT PVC, and flags each row
+    ``win``/``trail``/``absent``. Probes are keyed by fixture method name because the
+    three ``PolynomialFunction`` rows share one MUT (``value``) with an identical
+    single-double argument signature, so the MUT alone cannot separate them; when the
+    scoreboard carries ``tested_class_qualified_name``/``tested_method_name`` the
+    matched MUT is validated against the reference and a mismatch raises. Non-Table-2
+    probes (e.g. the raw-bits ``precisionEqualsMaxUlps``) have no spec and are dropped.
+    IC is not compared per row: Teralizer IC is project-level until one-project-per-probe
+    fixtures land, so only JARVIS's reference IC is carried for context.
+    """
+    selected = scoreboard[scoreboard["variant"] == variant]
+    has_mut = {"tested_class_qualified_name", "tested_method_name"}.issubset(
+        selected.columns
+    )
+    result = []
+    for row in JARVIS_TABLE2:
+        teralizer_pvc = 0
+        probe_count = 0
+        for spec in row.probes:
+            matched = selected[
+                selected["generated_method_name"] == spec.generated_method_name
+            ]
+            if matched.empty:
+                continue
+            if has_mut:
+                wrong = matched[
+                    (matched["tested_class_qualified_name"] != spec.tested_class)
+                    | (matched["tested_method_name"] != spec.tested_method)
+                ]
+                if not wrong.empty:
+                    raise ValueError(
+                        f"fixture probe {spec.generated_method_name!r} resolved to an "
+                        f"unexpected MUT; expected {spec.tested_class}.{spec.tested_method}"
+                    )
+            teralizer_pvc += int(matched["parameter_value_coverage"].sum())
+            probe_count += int(matched.shape[0])
+        if probe_count == 0:
+            verdict = "absent"
+        elif teralizer_pvc >= row.pbt_pvc:
+            verdict = "win"
+        else:
+            verdict = "trail"
+        result.append(
+            {
+                "table_row": row.table_row,
+                "parameter_space": row.parameter_space,
+                "probe_count": probe_count,
+                "teralizer_pvc": teralizer_pvc,
+                "jarvis_cut_pvc": row.cut_pvc,
+                "jarvis_pbt_pvc": row.pbt_pvc,
+                "pvc_delta": teralizer_pvc - row.pbt_pvc,
+                "verdict": verdict,
+            }
+        )
+    return pd.DataFrame(result)
 
 
 def _jqwik_value_log_path(run: pd.Series) -> str:
