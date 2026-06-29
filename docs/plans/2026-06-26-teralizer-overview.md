@@ -37,8 +37,7 @@ type; `INDEX.md` carries the full status/parent tree and `archive/` the retired 
 - `2026-06-28-residual-aware-generator-rerun` *(audit)* — latest scorecard rerun: zero Table-2 exclusions after two robustness fixes.
 - `2026-06-26-jarvis-case-coverage` *(audit)* — per-case Table-2 targets + provenance.
 - `2026-06-29-pvc-budget-elasticity` *(audit)* — PVC scales ~10-12x with the tries budget while mutation kills stay flat: PVC measures input diversity, not fault detection.
-- `2026-06-28-pipeline-architecture-review` *(audit)* — architecture/implementation findings feeding the paper's §5.3 roadmap.
-- `2026-06-28-pipeline-improvements` *(plan)* — ordered execution of those findings.
+- `2026-06-28-pipeline-architecture-review` *(audit)* — architecture/implementation findings feeding the paper's §5.3 roadmap; execution shipped in `archive/2026-06-28-pipeline-improvements`.
 
 **Active — applicability track (secondary to JARVIS)**
 - `2026-06-27-ensemble-mut-identification` *(spec, draft)* — killed-mutant focal-method oracle replacing LCBA.

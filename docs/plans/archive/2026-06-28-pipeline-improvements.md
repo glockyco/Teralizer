@@ -1,9 +1,10 @@
 ---
 title: Pipeline Improvements
 type: plan
-status: active
+status: implemented
 created: 2026-06-28
 parent: 2026-06-26-teralizer-overview
+archived: 2026-06-29
 ---
 
 Ordered execution of the improvement opportunities in `2026-06-28-pipeline-architecture-review` (finding IDs referenced as A-n/B-n/C-n/D-n). Each task is TDD where testable, an atomic commit, and verified before the next. jpf-symbc tasks (B-*) require rebuilding the submodule; Teralizer tasks (A/C/D) use `./gradlew test`.
@@ -25,7 +26,7 @@ Scope: Teralizer-side hardening and constraint encoding. Per-probe SPF configura
 - [x] A-1 · Render the input model to Java only after non-supported parameters are filtered; turn unsupported operators into a typed "non-generalizable clause" outcome instead of a `RuntimeException`. → done (`13f4821b` typed exception, `f4350514` render-after-filter + sound clause dropping).
 - [x] A-3 · Make `ModelVisitor` hooks abstract (or seal the node hierarchy) so a missing case is a compile error; centralize type/operator mapping. → done (`c9b4fcd4`): `ModelFolder<T>` total fold; operator mapping stays in `fold(Operation)` and is handled by A-1's typed outcome.
 - [x] A-5 · Replace `SpfToModelTransformer`'s `UnsupportedOperationException` paths with typed, attributable outcomes. → done (`99d1dd08`): `UnsupportedSpfTermException` for the three unsupported SPF term kinds.
-- [ ] D-1 · Tag concretized symbolic terms so incomplete specs are explicit, not silent narrowing. Deferred to `2026-06-28-maxulps-raw-bits-lane` (blocked on raw-bits config Gap 1 + Model node Gap 2).
+- D-1 *(delegated)* · Tag concretized symbolic terms so incomplete specs are explicit, not silent narrowing. Deferred to `2026-06-28-maxulps-raw-bits-lane` (blocked on raw-bits config Gap 1 + Model node Gap 2).
 - [x] C-1 · Make the planner the single numeric emitter; reduce the three factories to thin Spoon wrappers; delete the legacy duplicate numeric methods + the triplicated `getBoxedType`. → done (single-sourced `getBoxedType` in `SpoonUtils`; legacy 5-arg overloads + numeric emitters removed).
 - [x] D-4 · Have `ParameterTypeFilter` consult `GeneralizableInput.derive(...)` so inline-constructor cases are not over-rejected. → done (`daef24ba`): verified the filter already accepts via `TestAnalysisTask`'s stored unwrapped inputs; regression test pins it.
 
@@ -33,7 +34,7 @@ Scope: Teralizer-side hardening and constraint encoding. Per-probe SPF configura
 
 - [x] C-3 · Populate `consumedClauseIds` per recipe for generation-coverage telemetry (which clauses each recipe enforced by construction). The residual filter stays unconditional — residual-only filtering is a non-goal per `2026-06-28-clause-driven-input-generation` (no outcome change, only added unsoundness surface). → done: per-parameter consumed ids (`4f680d7f`) aggregated to plan level in `InputGenerationPlanner.plan()`; DB metrics (`total_constraint_count`/`used_constraint_count`) wired to `InputGenerationPlan`, replacing the removed `VariableConstraintExtractor` (which undercounted affine bounds); `InputGenerationPlan` gains `getFullPredicate()`/`hasClauses()` so the factory filter stays unconditional.
 - [x] C-2 · Add a `BooleanDomainPlanner` + boolean constraint extraction. → done (`d3f9a0e0` + `45e8e3da`). Tracked in `archive/2026-06-28-type-capability-and-boolean-planner`.
-- [ ] C-4 · By-construction recipe library for shapes filtering cannot satisfy. Reframed (evidence-gated): the only recipe with a named consumer is the raw-bits **ulps neighborhood**, consumed by `2026-06-28-maxulps-raw-bits-lane` (Gap 3) — so the recipe-library infrastructure + ulps recipe build there, not as standalone work here. Disequality dropped (measure-zero exclusion → filtering is ~free). `x == y` is already the affine-equality recipe. Large-divisor modulo is buildable but speculative (small divisors filter fine); gate it on generation-coverage shape telemetry before building.
+- C-4 *(delegated)* · By-construction recipe library for shapes filtering cannot satisfy. Reframed (evidence-gated): the only recipe with a named consumer is the raw-bits **ulps neighborhood**, consumed by `2026-06-28-maxulps-raw-bits-lane` (Gap 3) — so the recipe-library infrastructure + ulps recipe build there, not as standalone work here. Disequality dropped (measure-zero exclusion → filtering is ~free). `x == y` is already the affine-equality recipe. Large-divisor modulo is buildable but speculative (small divisors filter fine); gate it on generation-coverage shape telemetry before building.
 
 ## Opportunistic (fold in where adjacent)
 
