@@ -68,6 +68,7 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
             case "java.lang.Short":
             case "int":
             case "java.lang.Integer":
+                return argument.getValue();
             case "char":
             case "java.lang.Character":
                 return this.renderCharArgument(argument.getValue());

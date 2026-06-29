@@ -32,6 +32,20 @@ public class ModelToJavaTransformerTypeSupportTest {
     }
 
     @Example
+    void rendersIntegralConcreteValuesAsDecimalLiteralsNotCharCodes() {
+        ModelToJavaTransformer transformer = new ModelToJavaTransformer();
+
+        // int/short/byte are integral, not char: they must render as their decimal value, including
+        // negatives and values beyond Character.MAX_VALUE. Routing them through the char renderer
+        // crashes on negatives and silently truncates large values via a (char) cast.
+        Assert.assertEquals("7", transformer.transform(new MethodArgument("int", "7")));
+        Assert.assertEquals("-5", transformer.transform(new MethodArgument("int", "-5")));
+        Assert.assertEquals("70000", transformer.transform(new MethodArgument("int", "70000")));
+        Assert.assertEquals("-128", transformer.transform(new MethodArgument("byte", "-128")));
+        Assert.assertEquals("-32768", transformer.transform(new MethodArgument("short", "-32768")));
+    }
+
+    @Example
     void rendersBooleanVariablesAsNumericValuesInsideSpfPathConditions() {
         Operation model = new Operation(new VariableInteger("b"), Operator.NE, new ConstantInteger(0));
         ModelToJavaTransformer transformer = new ModelToJavaTransformer(Collections.singletonMap("b", "boolean"));
