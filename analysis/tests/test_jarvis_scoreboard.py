@@ -11,9 +11,11 @@ from teralizer.jarvis_scoreboard import (
     compute_parameter_value_coverage,
     get_generated_test_runs,
     get_instruction_coverage_scores,
+    get_mutation_scores,
     get_pvc_scores,
     get_scoreboard,
     parse_jqwik_value_log,
+    summarize_variants,
 )
 
 
@@ -578,3 +580,94 @@ def test_compare_to_jarvis_validates_mut_when_columns_present():
     )
     with pytest.raises(ValueError, match="unexpected MUT"):
         compare_to_jarvis(wrong, variant="IMPROVED")
+
+
+def test_get_mutation_scores_counts_distinct_mutants():
+    conn = sqlite3.connect(":memory:")
+    try:
+        conn.executescript(
+            """
+            CREATE TABLE pit_mutation_report (
+                project_id INTEGER, variant TEXT, stage TEXT, is_detected INTEGER,
+                mutated_class TEXT, mutated_method TEXT, method_description TEXT,
+                line_number INTEGER, mutator TEXT, indexes INTEGER
+            );
+            """
+        )
+        g = "COLLECT_PIT_DATA_GENERALIZED"
+        rows = [
+            # IMPROVED: mutant A killed (reported twice -> one kill), B survived,
+            # C killed with a NULL description (must not be dropped by the key).
+            (1, "IMPROVED", g, 1, "C", "m", "desc", 10, "MUT_A", 0),
+            (1, "IMPROVED", g, 1, "C", "m", "desc", 10, "MUT_A", 0),
+            (1, "IMPROVED", g, 0, "C", "m", "desc", 11, "MUT_B", 0),
+            (1, "IMPROVED", g, 1, "C", "m", None, 12, "MUT_C", 0),
+            (1, "NAIVE", g, 1, "C", "m", "desc", 10, "MUT_A", 0),
+            # wrong stage -> excluded.
+            (
+                1,
+                "IMPROVED",
+                "COLLECT_PIT_DATA_INITIAL",
+                1,
+                "C",
+                "m",
+                "d",
+                99,
+                "MUT_Z",
+                0,
+            ),
+        ]
+        conn.executemany(
+            "INSERT INTO pit_mutation_report VALUES (?,?,?,?,?,?,?,?,?,?)", rows
+        )
+        conn.commit()
+
+        scores = get_mutation_scores(conn).set_index("variant")
+        assert scores.loc["IMPROVED", "killed_mutants"] == 2  # A once + C
+        assert scores.loc["IMPROVED", "total_mutants"] == 3  # A, B, C
+        assert scores.loc["NAIVE", "killed_mutants"] == 1
+        assert scores.loc["NAIVE", "total_mutants"] == 1
+        assert set(get_mutation_scores(conn, variants=["IMPROVED"])["variant"]) == {
+            "IMPROVED"
+        }
+    finally:
+        conn.close()
+
+
+def test_summarize_variants_pairs_flat_kills_with_rising_pvc():
+    scoreboard = pd.DataFrame(
+        {
+            "variant": [
+                "IMPROVED",
+                "IMPROVED",
+                "IMPROVED_1000_TRIES",
+                "IMPROVED_1000_TRIES",
+            ],
+            "parameter_value_coverage": [60, 88, 190, 290],
+        }
+    )
+    mutation = pd.DataFrame(
+        {
+            "variant": [
+                "IMPROVED",
+                "IMPROVED",
+                "IMPROVED_1000_TRIES",
+                "IMPROVED_1000_TRIES",
+            ],
+            "killed_mutants": [44, 10, 44, 10],
+            "total_mutants": [2000, 953, 2000, 953],
+        }
+    )
+    summary = summarize_variants(scoreboard, mutation).set_index("variant")
+    # PVC rises with the tries budget...
+    assert summary.loc["IMPROVED", "total_pvc"] == 148
+    assert summary.loc["IMPROVED_1000_TRIES", "total_pvc"] == 480
+    assert summary.loc["IMPROVED", "probes"] == 2
+    # ...while kills (summed across fixtures) and score stay flat.
+    assert summary.loc["IMPROVED", "killed_mutants"] == 54
+    assert summary.loc["IMPROVED_1000_TRIES", "killed_mutants"] == 54
+    assert summary.loc["IMPROVED", "total_mutants"] == 2953
+    assert (
+        summary.loc["IMPROVED", "mutation_score"]
+        == summary.loc["IMPROVED_1000_TRIES", "mutation_score"]
+    )
