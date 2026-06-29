@@ -293,7 +293,7 @@ public class JunitDataCollectionTask extends AbstractTask {
                 record.setDistinctTuples(outcome.distinctTuples);
                 record.setDistinctNewTuples(outcome.distinctNewTuples);
                 record.setSeed(outcome.seed);
-                record.setSelectedValueLogPath(outcome.valueLogPath);
+                record.setSelectedValueLogPath(outcomePath.resolveSibling(this.getGeneralizationId() + "." + this.getVariant() + ".values.tsv").toString());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
