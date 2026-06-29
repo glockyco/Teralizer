@@ -10,258 +10,424 @@ parent: 2026-06-26-teralizer-overview
 
 ## Problem
 
-When a generated property uses an `Arbitrary.filter(...)` whose predicate is sparse,
-jqwik throws `TooManyFilterMissesException` after `maxMisses` (default 10000)
-consecutive misses. The generated test then reports as an error, and
-`FILTER_GENERALIZATIONS` marks the generalization `is_included = false` -- it is
-discarded entirely. This happens even when the test **soundly validated the oracle on
-the seed input plus one or more new tuples** before generation stalled.
+Generated jqwik properties can use `Arbitrary.filter(...)` for residual path
+predicates that the generator cannot construct by design. When the predicate is sparse,
+jqwik throws `TooManyFilterMissesException` after the arbitrary's miss budget
+(default `10000`) while trying to produce the next accepted value. The property can
+therefore fail even after it has already executed the oracle on the seed input and one
+or more genuinely new tuples.
 
-Observed in `2026-06-29-pvc-budget-elasticity`: `isAsciiPrintable` passes at 100 tries
-but is excluded at 200/1000 tries (NAIVE, filter-based) -- the same sound generalization
-is kept or thrown away purely on the sampling budget. Discarding a generalization that
-did real, sound work is questionable now that we can *measure* how much it explored.
+Treating that exhaustion as an ordinary failed PBT loses sound work. Treating it as an
+ordinary full pass hides a generation-quality limitation. Teralizer needs a third
+outcome:
 
-## Why this is Teralizer post-processing, not a jqwik setting
+- **FULL** -- the property completed normally;
+- **LIMITED** -- every accepted tuple passed the oracle, but generation exhausted before
+  the configured tries budget;
+- **EXCLUDED** -- the property never validated a useful tuple beyond the seed, or failed
+  for a real oracle/runtime reason.
 
-Grounded in this repo's jqwik **1.8.5**:
+The outcome must be physically green for downstream tools such as PIT. PIT requires a
+green suite before mutation analysis; a permanently failing generated property would
+otherwise appear to kill every mutant or abort PIT before scoring.
 
-- `Arbitrary.filter(predicate)` -> throws `TooManyFilterMissesException` after
-  `maxMisses` (default 10000). This is the path Teralizer's generated tests take
-  when construction cannot encode the predicate and the residual filter must reject
-  misses at runtime.
-- jqwik AUTO generation can exhaust finite delegates, but only if every wrapper in
-  the arbitrary chain preserves `exhaustive(long)`. Teralizer's seed wrapper must
-  therefore forward the delegate's exhaustive generator; otherwise a finite range
-  such as `chars().range(0, 31)` degrades into randomized `tries` sampling.
-- `filter(int maxMisses, Predicate)` (since 1.7.0) only moves the threshold; on a
-  measure-near-zero predicate it still trips or runs unboundedly. It cannot turn a
-  partial run into a pass.
-- `@Property(maxDiscardRatio)` (default 5) governs `Assume.that()` runtime assumptions
-  and yields an `EXHAUSTED` result -- a **different mechanism Teralizer does not use**.
+## Ground rules
 
-There is no jqwik 1.8.5 option that accepts a property which tested a few inputs and
-then exhausted. So leniency must be **Teralizer intercepting jqwik's failure outcome
-and reclassifying it** with our own signal -- an outcome-mapping layer over jqwik, not
-a config flag. Exhaustive finite delegates are handled before this layer by preserving
-jqwik's native exhaustive generation; `LIMITED` is only for residual/filter paths that
-still end in `TooManyFilterMissesException`.
+Grounded in jqwik 1.8.5 and PIT 1.17.0:
 
-## Design
+- `Arbitrary.filter(predicate)` delegates to `filter(10000, predicate)` and throws
+  `TooManyFilterMissesException` from parameter generation when it cannot find the next
+  accepted value. A `try/catch` inside the property body cannot catch it, because the
+  body is called only after parameters are resolved.
+- `@Property(maxDiscardRatio)` governs discarded property tries from assumptions, not
+  `Arbitrary.filter(...)`'s per-value `maxMisses` budget. It is not the design lever.
+- Increasing `filter(maxMisses, predicate)` is stochastic and expensive for sparse
+  predicates. For `ch < 32` over all Java chars, acceptance is about `1 / 2048`; 1000
+  accepted checks require roughly two million candidate draws before PIT repeats the
+  property across coverage and mutants.
+- PIT's partial failing-suite modes are not the semantic fix. A failing test must not be
+  allowed to kill every mutant merely because generation exhausted.
+- IMPROVED should construct domains by design whenever possible. `ch < 32` is a
+  NAIVE-only sparse-filter example; IMPROVED should emit `chars().range(0, 31)` for the
+  same partition.
+- The seed wrapper must preserve jqwik exhaustive generation by delegating
+  `exhaustive(long)` to the wrapped arbitrary. LIMITED is only for residual/filter
+  paths that still exhaust after construction and exhaustive generation have done what
+  they can.
 
-### Acceptance gate (the precise signal)
+## Outcome gate
 
-Keep the generalization iff the recorder logged **at least one distinct serialized
-input tuple beyond the original concrete tuple** (the `firstValue` seed). This is
-distinct full-tuple rows in the value log, deduped so jqwik re-sampling the seed does
-not count.
+LIMITED is accepted only when the current property execution recorded at least one
+distinct serialized tuple beyond the original concrete seed tuple. The gate is a
+**full-tuple count**, not PVC:
 
-**Not PVC.** PVC is per-parameter distinct-value counts; for a multi-parameter probe
-it conflates "parameter `a` got a new value" with "parameter `b` got a new value" and
-is not a tuple count. PVC is reported as telemetry (how *much* a kept generalization
-explored), never as the gate.
+- serialize each accepted `TestParameters` row the same way the value log serializes it;
+- treat the first serialized row as the seed tuple unless explicit seed metadata exists;
+- deduplicate full rows;
+- count distinct rows that are not equal to the seed row;
+- accept as LIMITED iff that count is `>= 1`.
 
-The signal needs no new recording: the value log the recorder already writes contains
-the raw tuples, so distinct-tuples-beyond-seed is a different aggregation of the same
-data than PVC.
+PVC remains telemetry for how much input diversity a kept generalization explored. PVC
+must not decide whether a filter-exhausted run is useful.
 
-### Outcomes
+## Generated-test behavior
 
-- **`LIMITED`** (new): filter-exhausted, but `>= 1` distinct new tuple was soundly
-  validated. Kept (`is_included = true`), flagged distinctly from a full pass.
-- **`EXCLUDED`** (unchanged): exhausted with no new tuple beyond the seed -- the
-  generalization is no better than the source test.
-- A `LIMITED` generalization is **sound**: every tuple it tested passed the oracle; it
-  never weakens the path predicate. It is *narrow*, not *wrong*.
-- **`FULL` upgrade (optional, finite domains only):** when the partition's cardinality
-  is known and finite and the run covered all of it, the result is a full pass, not
-  merely `LIMITED`. Prefer jqwik's native exhaustive generation for this case: a
-  constructed finite delegate should complete without `TooManyFilterMissesException`.
-  A post-hoc `FULL` upgrade is only for finite domains whose cardinality is known from
-  generator metadata; it is **not** inferable from the tuple log alone.
+Generated jqwik tests should be physically green when all accepted tuples satisfy the
+oracle, even if generation later exhausts. Teralizer should implement this with a jqwik
+`AroundPropertyHook`, not with filter-stage post-processing and not with a per-property
+body wrapper.
 
-### maxMisses stays an evaluation constant, not the design lever
+The hook is applied to generated jqwik properties in all execution contexts. It executes
+the property normally and remaps only this exact result to success:
 
-Do not lower `maxMisses` inside this spec to save runtime. For residual filters, the
-tradeoff is governed by the predicate's effective pass rate under jqwik's actual
-arbitrary distribution: a lower threshold can save time on hopelessly sparse filters,
-but it can also produce zero useful tuples where the default threshold would have
-found some. Tuning that threshold would become its own experimental variable and would
-complicate the NAIVE/IMPROVED comparison.
+1. final jqwik status is `FAILED`;
+2. the final throwable is `net.jqwik.api.TooManyFilterMissesException`;
+3. the in-memory recorder for the current property execution reports
+   `distinctNewTupleCount() > 0`.
 
-The preferred fixes are ordered:
+Every other result is returned unchanged:
 
-1. **construct by design** when the planner can encode the partition;
-2. **preserve jqwik exhaustive generation** through wrappers so finite constructed
-   delegates stop at their finite cardinality;
-3. **classify residual filter exhaustion** with `LIMITED` only when construction and
-   exhaustive generation cannot avoid a `TooManyFilterMissesException`.
+- assertion failures remain failed and can kill PIT mutants;
+- target-code runtime errors remain failed;
+- seed-only filter exhaustion remains failed;
+- missing recorder evidence remains failed;
+- normal completions remain successful.
 
-`maxMisses` remains the jqwik default unless a separate pre-evaluation study defines a
-stable policy for all variants.
+The hook must compute both the raw jqwik result and the mapped result in every
+execution context. When durable diagnostics are enabled, it records both results. A
+LIMITED run is therefore physically green, and normal generated-test executions remain
+queryable as filter-exhausted.
 
-### `ch < 32` is a NAIVE-only filter-exhaustion example
+## Shared generated support
 
-The `isAsciiPrintable` / `ch < 32` row does not show an IMPROVED planner failure.
-`NumericDomainPlanner.createCharArbitrary` emits `Arbitraries.chars().range(min, max)`,
-so IMPROVED constructs the `[0, 31]` partition directly (`p = 1`) before any supplier-level
-residual `.filter(...)` that is appended when `applyInputFilter` is true. For this
-specific row, the constructed values already satisfy the residual predicate, so the
-filter does not behave like a sparse rejection sampler. The recorded sweep reflects
-that: IMPROVED completes the probe at 100/200/1000 tries, while NAIVE's full-domain
-`chars().filter(ch < 32)` path exhausts at higher budgets after collecting all 32
-distinct values.
+Do not generate hook classes in every generalized test. Teralizer should inject one
+shared support source file per generated source root, for example:
 
-That split is load-bearing for the spec: `LIMITED` must not blur away IMPROVED's
-by-construction advantage. The seed-wrapper `exhaustive(long)` preservation removes a
-separate false inefficiency -- finite constructed delegates falling back to randomized
-`tries` because the wrapper hid jqwik's exhaustive generator. It does **not** make
-arbitrary sparse residual filters exhaustive, and it does not eliminate the need for a
-`LIMITED` policy for true filter-exhausted residual paths.
+```text
+src/test/java/teralizer/generated/TeralizerJqwikSupport.java
+```
 
-### Persistence model
+The shared support owns:
 
-`generalization.is_included` stays the compatibility gate: `true` for full and
-`LIMITED`, `false` for excluded. The `filter_result` row for the generalization filter
-is the first-slice source of truth for the distinction:
+- `LimitedFilterMissesHook`, the jqwik `AroundPropertyHook`;
+- `ValueRecorder`, the reusable in-memory tuple counter and optional value-log buffer;
+- outcome sidecar writing when durable diagnostics are enabled;
+- a small interface or registry that lets the hook find the current generated test's
+  recorder.
 
-- full pass -- `NonPassingTestFilter` writes `decision = ACCEPT`, no LIMITED reason,
-  `distinct_new_tuples = NULL`;
-- `LIMITED` -- `NonPassingTestFilter` writes `decision = ACCEPT`, stable reason
-  `LIMITED_TOO_MANY_FILTER_MISSES`, and `distinct_new_tuples = N` where `N >= 1`;
-- excluded by filter exhaustion with readable seed-only evidence -- `NonPassingTestFilter`
-  writes `decision = REJECT`, stable reason `FILTER_EXHAUSTED_SEED_ONLY`, and
-  `distinct_new_tuples = 0`;
-- excluded by filter exhaustion with missing/unreadable evidence -- `NonPassingTestFilter`
-  writes `decision = REJECT`, stable reason `FILTER_EXHAUSTED_VALUE_LOG_MISSING`, and
-  `distinct_new_tuples = NULL`;
-- excluded by another failure -- `decision = REJECT`, with the existing rejection reason
-  and `distinct_new_tuples = NULL`.
+Each generated `@Property` method should add only small references to the shared support.
+Register the hook on the property method itself; do not rely on a class-level
+`@AddLifecycleHook` for generated tests.
 
-This keeps the inclusion boolean compatible with existing pipeline scheduling while
-making LIMITED queryable from the filter ledger. Consumers must not parse prose: the
-LIMITED reason must be the stable code `LIMITED_TOO_MANY_FILTER_MISSES`, and
-filter-exhaustion rejections must distinguish `FILTER_EXHAUSTED_SEED_ONLY` from
-`FILTER_EXHAUSTED_VALUE_LOG_MISSING`. The distinct-new-tuple count is stored in
-nullable `filter_result.distinct_new_tuples` (`INTEGER`): `N >= 1` for `LIMITED`, `0`
-for seed-only evidence, `NULL` when evidence is absent or the outcome is unrelated to
-filter exhaustion. Existing rows get `NULL` for the count and no LIMITED/filter-exhaustion
-reason; there is no historical backfill in the schema migration.
+```java
+@net.jqwik.api.lifecycle.AddLifecycleHook(
+    teralizer.generated.TeralizerJqwikSupport.LimitedFilterMissesHook.class
+)
+@net.jqwik.api.Property(...)
+public void property(...) { ... }
+```
 
-### Mechanism: post-process the persisted result
+and a recorder field/call, for example:
 
-A spike confirmed the needed data already exists for the failing row: the excluded
-`isAsciiPrintable` (`ERROR` / `TooManyFilterMisses`) has its value log collected at the
-canonical path (`14.NAIVE_1000_TRIES.junit.tsv`, 178 rows / **32 distinct** tuples) and
-the DB already stores `failure_type = TooManyFilterMissesException`. Classification is
-therefore pure pipeline post-processing -- **no hook, no per-test generated code, no
-test-suite growth**:
+```java
+private static final teralizer.generated.TeralizerJqwikSupport.ValueRecorder<TestParameters>
+    VALUE_RECORDER = ...;
 
-- after junit collection, for a row with `result = ERROR` and
-  `failure_type = TooManyFilterMissesException`, read the collected value log; if
-  distinct tuples beyond the seed `>= 1` -> `LIMITED` (`is_included = true`), else
-  `EXCLUDED`.
+VALUE_RECORDER.record(_p_);
+```
 
-For filter-exhausted randomized runs, use explicit seed metadata if the value log gains
-it later; otherwise the seed tuple is the first serialized tuple in the value log. Count
-distinct full-tuple rows after removing all rows equal to that seed tuple. An empty,
-missing, or unreadable value log yields no evidence and remains `EXCLUDED` with a
-distinct reason; failure type alone is never enough to infer `LIMITED`. An
-`AroundPropertyHook` was considered and rejected: it would inject code into every
-generated test and grow the suite, and it is unnecessary because inclusion is already
-Teralizer's decision, not jqwik's.
+The support class may use an explicit interface implemented by generated tests or a
+controlled reflection convention. Prefer the interface if the generated boilerplate is
+small; prefer reflection only if generated source size is measured to matter.
 
-## Current implementation status
+A ServiceLoader/global hook is not the first choice. It risks affecting non-generated
+jqwik tests in the target project unless gated very tightly, and it makes generated-test
+behavior less visible.
 
-- **Shipped:** generated `FirstValueArbitrary` preserves jqwik exhaustive generation by
-  delegating `exhaustive(long)` to the wrapped arbitrary (`0fe290f6`). This covers the
-  seed-wrapper-caused fallback from finite exhaustive domains to randomized `tries`.
-- **Not implemented:** `LIMITED` classification. `TestFilteringTask` still applies
-  `NonPassingTestFilter` for generated tests, so a `TooManyFilterMissesException` row
-  is still excluded.
-- **Not implemented:** `LIMITED` schema/metadata. There is no stored `LIMITED` outcome
-  or distinct-new-tuple gate column yet.
-- **Not implemented:** analysis/scorecard handling. `jarvis_scoreboard.py` currently
-  classifies `TooManyFilterMissesException` as `precondition_rejected`, not `LIMITED`.
+## Execution identity and sidecars
 
-## Scope (subsystems touched)
+Diagnostics have two layers:
 
-- **Generated seed wrapper** -- preserve `exhaustive(long)` by delegating to the wrapped
-  arbitrary so finite constructed domains use jqwik's native exhaustive mode instead
-  of entering randomized `tries` sampling.
-- **Filter stage** -- `TestFilteringTask` (`FILTER_GENERALIZATIONS`) reads the
-  collected value log and maps the exhausted-with-new-tuple case to `LIMITED` instead
-  of exclusion. No generated-test-template hook.
-- **Schema** -- keep `generalization.is_included` as the compatibility boolean. Store
-  LIMITED on the accepting `NonPassingTestFilter` `filter_result` row with stable reason
-  `LIMITED_TOO_MANY_FILTER_MISSES` plus nullable `filter_result.distinct_new_tuples`
-  (`INTEGER`); use `FILTER_EXHAUSTED_SEED_ONLY` with count `0` for readable seed-only
-  filter exhaustion and `FILTER_EXHAUSTED_VALUE_LOG_MISSING` with count `NULL` for
-  missing evidence. Existing rows keep `NULL` and are not backfilled.
-- **Analysis** -- `classify_generated_test_outcome` and the scorecard recognize
-  `LIMITED`; PVC reported alongside.
+1. **Runtime evidence** is always in memory. The recorder tracks the seed tuple and
+   whether any later accepted full tuple differs from it, exposing that gate to the hook.
+   Persisted mode may keep the fuller distinct-count state needed for diagnostics. The
+   minimal gate is sufficient for PIT: the hook can map useful filter exhaustion to
+   success without writing jqwik diagnostic files during thousands of coverage and
+   mutant invocations.
+2. **Durable diagnostics** are enabled for ordinary generated-test execution stages.
+   The recorder buffers accepted rows and the final outcome in memory, then flushes the
+   value log and outcome sidecar once at the end of the property invocation. Collection
+   tasks import those sidecars into `jqwik_property_execution`.
 
-## Presentation semantics
+PIT defaults to `IN_MEMORY_ONLY` diagnostics. It still uses the same hook and recorder
+for green-suite semantics, but it does not write jqwik value logs, jqwik outcome files,
+or jqwik diagnostic DB rows. If a PIT-specific failure needs investigation, rerun the
+generated tests outside PIT with persisted diagnostics and the same jqwik seed/config
+before adding any PIT persistence feature.
 
-`LIMITED` is included and counts as passing in high-level scorecards. The stable reason
-and distinct-new-tuple count are diagnostic metadata, not a separate high-level result.
-Tables whose purpose is inclusion, capability, or effectiveness should collapse
-`LIMITED` into `passed` by default.
+Durable diagnostics are per **pipeline/test-JVM execution**, not merely per
+generalization and not necessarily per JUnit report. Every pipeline task that persists
+jqwik diagnostics must create a unique execution id and pass it into the test JVM, for
+example:
 
-Generation-specific analyses may split the same rows out as diagnostics:
+```text
+-Dteralizer.jqwik.executionId=<uuid-or-task-id>
+-Dteralizer.jqwik.executionKind=JUNIT
+-Dteralizer.jqwik.diagnosticsMode=PERSISTED
+```
 
-- `full` -- normal pass;
-- `limited_filter_exhausted` -- accepted after useful tuple generation and filter
-  exhaustion;
-- `filter_exhausted_seed_only` -- rejected after readable evidence showed no new tuple;
-- `filter_exhausted_value_log_missing` -- rejected because the evidence needed for the
-  gate was unavailable;
-- other excluded / failed categories as needed.
+or equivalent environment variables. The execution id is a run id for one pipeline
+command/minion context, not every jqwik property invocation.
 
-This preserves the NAIVE-vs-IMPROVED generation-quality signal without polluting
-high-level scorecards. A high-level table can report a row as passed while a generator
-diagnostic table still records that the pass was limited by residual-filter exhaustion.
+When durable diagnostics are enabled, live artifacts are written under the execution id:
+
+```text
+jqwik-data/executions/<execution-id>/<generalization-id>.<variant>.outcome.json
+jqwik-data/executions/<execution-id>/<generalization-id>.<variant>.values.tsv
+```
+
+For normal generated-test execution, one outcome and one value log per property per
+execution id is enough because the property is invoked once. PIT has no durable jqwik
+diagnostic artifacts in the first implementation.
+
+The persisted outcome repeats the identity so import can validate it:
+
+```json
+{
+  "executionId": "<execution-id>",
+  "projectId": 1,
+  "generalizationId": 14,
+  "variant": "NAIVE_1000_TRIES",
+  "testCaseName": "isAsciiPrintable",
+  "executionKind": "JUNIT",
+  "diagnosticsMode": "PERSISTED",
+  "rawStatus": "FAILED",
+  "finalStatus": "SUCCESSFUL",
+  "diagnosticKind": "LIMITED_TOO_MANY_FILTER_MISSES",
+  "throwableType": "net.jqwik.api.TooManyFilterMissesException",
+  "tries": 179,
+  "checks": 178,
+  "distinctTuples": 32,
+  "distinctNewTuples": 31,
+  "seed": "0",
+  "valueLogPath": "jqwik-data/executions/<execution-id>/14.NAIVE_1000_TRIES.values.tsv"
+}
+```
+
+`@BeforeProperty` reset must clear the in-memory recorder state for the current
+invocation. In persisted JUnit mode it may also clear the current execution id's live
+value log and outcome sidecar before writing the fresh result. A stale event from a
+prior run must never be importable as the current run's result because artifact
+collectors import only files under the current execution id and reject payloads whose
+`executionId`, `generalizationId`, `variant`, or `testCaseName` do not match the
+execution being collected. Reusing an execution id is invalid.
+
+Do not add PIT jqwik outcome files in the first implementation. The PIT spike proved
+that a single repeated-invocation path can overwrite earlier outcomes, and storing
+per-invocation PIT telemetry is not needed for the current scorecards. Default PIT
+avoids that cost and risk by using in-memory-only diagnostics. If future work requires
+per-mutant jqwik diagnostics, write a separate spec for an append-only or
+invocation-scoped design.
+
+## Database model
+
+Diagnostics belong in their own execution tables. They are not filter decisions, and
+they are not stable generated-artifact metadata.
+
+Use one table for persisted diagnostic runs and one table for per-property summaries.
+The run table gives later collection tasks a reliable way to find the sidecar directory
+created by the earlier execution task.
+
+```sql
+CREATE TABLE jqwik_execution_run
+(
+    id             BIGSERIAL PRIMARY KEY,
+
+    execution_id   TEXT    NOT NULL UNIQUE,
+    project_id     BIGINT  NOT NULL,
+    task_id        BIGINT,
+
+    step           INTEGER NOT NULL,
+    stage          TEXT    NOT NULL,
+    variant        TEXT,
+    execution_kind TEXT    NOT NULL,
+
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (task_id) REFERENCES task (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_jqwik_execution_run_project_id
+    ON jqwik_execution_run (project_id);
+CREATE INDEX idx_jqwik_execution_run_task_id
+    ON jqwik_execution_run (task_id);
+CREATE INDEX idx_jqwik_execution_run_stage_variant
+    ON jqwik_execution_run (stage, variant);
+```
+
+Use `jqwik_property_execution` for one imported summary row per generated property per
+execution run. The row points at the raw diagnostic sidecar and, when relevant, the
+selected value log used to compute the summary:
+
+```sql
+CREATE TABLE jqwik_property_execution
+(
+    id                       BIGSERIAL PRIMARY KEY,
+
+    jqwik_execution_run_id   BIGINT NOT NULL,
+    project_id               BIGINT NOT NULL,
+    generalization_id        BIGINT NOT NULL,
+
+    junit_test_report_id     BIGINT,
+
+    test_case_name           TEXT    NOT NULL,
+    diagnostic_kind          TEXT    NOT NULL,
+
+    raw_status               TEXT    NOT NULL,
+    final_status             TEXT    NOT NULL,
+    throwable_type           TEXT,
+    throwable_message        TEXT,
+
+    tries                    INTEGER,
+    checks                   INTEGER,
+    distinct_tuples          INTEGER,
+    distinct_new_tuples      INTEGER,
+    seed                     TEXT,
+
+    selected_value_log_path  TEXT,
+    diagnostic_sidecar_path  TEXT,
+
+    FOREIGN KEY (jqwik_execution_run_id) REFERENCES jqwik_execution_run (id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE,
+    FOREIGN KEY (junit_test_report_id) REFERENCES junit_test_report (id) ON DELETE CASCADE,
+
+    UNIQUE (jqwik_execution_run_id, generalization_id, test_case_name)
+);
+```
+
+Recommended indexes:
+
+```sql
+CREATE INDEX idx_jqwik_property_execution_run_id
+    ON jqwik_property_execution (jqwik_execution_run_id);
+CREATE INDEX idx_jqwik_property_execution_project_id
+    ON jqwik_property_execution (project_id);
+CREATE INDEX idx_jqwik_property_execution_generalization_id
+    ON jqwik_property_execution (generalization_id);
+CREATE INDEX idx_jqwik_property_execution_junit_test_report_id
+    ON jqwik_property_execution (junit_test_report_id);
+CREATE INDEX idx_jqwik_property_execution_diagnostic_kind
+    ON jqwik_property_execution (diagnostic_kind);
+```
+
+Every generated jqwik property execution should get a row, including FULL runs. Absence
+of a row means missing/import-failed diagnostics, not FULL.
+
+Suggested `diagnostic_kind` values:
+
+- `FULL`;
+- `LIMITED_TOO_MANY_FILTER_MISSES`;
+- `FILTER_EXHAUSTED_SEED_ONLY`;
+- `ASSERTION_FAILED`;
+- `EXECUTION_ERROR`;
+- `DIAGNOSTIC_MISSING` when an importer needs an explicit failure row.
+
+`junit_test_report_id` is nullable because not every durable diagnostic run necessarily
+has an imported JUnit XML row at insertion time. For JUnit collection rows, link it when
+available. Since current report import uses `batchInsert`, implementation can either
+insert generated report rows with `returning()` before inserting diagnostics, or rely on
+the execution-run key and backfill/link the report id after insert. Prefer a real
+`junit_test_report_id` link unless measured import overhead says otherwise.
+
+`filter_result.distinct_new_tuples` should not be the long-term source of this data.
+`filter_result` remains a filter ledger; jqwik execution diagnostics live in
+`jqwik_property_execution`.
+
+## Pipeline placement
+
+Generated-test execution tasks create and pass execution ids when durable diagnostics
+are enabled. Artifact collection tasks import durable diagnostics. PIT's default path
+passes `teralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY` and does not create jqwik
+diagnostic sidecars or DB rows.
+
+`task.id` is a good execution-id candidate only after one plumbing change: today
+`ProcessingPipeline` creates the `TaskRecord` outside `Task.execute`, and task
+implementations do not receive that record or its id. An implementation must either
+expose the current `TaskRecord.id` through `TaskContext` before invoking the task, or
+generate a UUID inside the execution task and persist a small execution-run mapping so
+later collection tasks know which execution id to import. Do not infer the execution id
+from `(project_id, stage, variant, generalization_id)`: retries and reruns can share all
+of those values.
+
+- `TestExecutionTask` for `EXECUTE_TESTS_GENERALIZED` creates a JUnit execution id,
+  inserts a `jqwik_execution_run` row, passes the id to Maven/Gradle test JVMs, and
+  leaves sidecar parsing to collection.
+- `JunitDataCollectionTask` for `COLLECT_JUNIT_REPORTS_GENERALIZED` finds the matching
+  `jqwik_execution_run`, imports JUnit XML, snapshots/imports sidecars under that
+  execution id, inserts `jqwik_property_execution`, and links `junit_test_report_id`
+  where possible.
+- `PitDataCollectionTask` for `COLLECT_PIT_DATA_GENERALIZED` leaves jqwik diagnostics in
+  `IN_MEMORY_ONLY` mode. It still passes the mode through PIT minion JVM args or an
+  inherited environment variable so minion JVMs classify useful filter exhaustion
+  correctly, but it does not import jqwik diagnostics. Passing the value only through
+  Surefire or the outer Maven process is insufficient; the PIT-launched test JVM must
+  see it.
+
+For PIT, the support hook still maps useful `TooManyFilterMissesException` to success,
+so PIT receives a green property. Mutants are killed only by real assertion failures or
+runtime failures, not by generator exhaustion after all accepted tuples passed.
+
+## Scorecard and analysis semantics
+
+High-level scorecards use `final_status` and collapse LIMITED into passed:
+
+```text
+final_status = SUCCESSFUL
+```
+
+Generation-diagnostic analyses use `diagnostic_kind`:
+
+```text
+FULL
+LIMITED_TOO_MANY_FILTER_MISSES
+FILTER_EXHAUSTED_SEED_ONLY
+ASSERTION_FAILED
+EXECUTION_ERROR
+```
+
+For JARVIS Table-2 style scorecards, LIMITED counts as passing by default. Diagnostic
+tables can split LIMITED rows out without changing the high-level pass/fail result.
 
 ## Non-goals
 
-- Not a jqwik config change; not tuning `maxMisses` as the fix.
-- Not a replacement for by-construction generation -- `LIMITED` is a safety net for
-  shapes the planner cannot construct, not a reason to stop constructing.
-- Not retroactively re-scoring archived runs.
-
-## First-slice decisions
-
-- (resolved by spike) Compute distinct-tuples post-hoc from the collected value log --
-  verified present for `ERROR` rows, so no in-JVM counter and no hook are needed.
-- (resolved) First-slice schema location: keep `generalization.is_included` as the
-  compatibility gate; represent LIMITED on the accepting `NonPassingTestFilter`
-  `filter_result` row with stable reason `LIMITED_TOO_MANY_FILTER_MISSES` and nullable
-  `filter_result.distinct_new_tuples INTEGER`. Seed-only filter exhaustion writes
-  `FILTER_EXHAUSTED_SEED_ONLY` with count `0`; missing/unreadable value-log evidence
-  writes `FILTER_EXHAUSTED_VALUE_LOG_MISSING` with count `NULL`. Existing rows remain
-  `NULL` and are not backfilled.
-- (resolved) Seed identification for filter-exhausted randomized runs: use explicit
-  seed metadata if present; otherwise the first serialized tuple in the value log is the
-  seed, and all rows equal to it are excluded from the distinct-new-tuple count.
-- (resolved) Scorecard semantics: `LIMITED` is included and counts as `passed` in
-  high-level scorecards by default. The stable reason and tuple count remain queryable
-  for generation-specific diagnostics, where LIMITED rows may be split out.
-- (resolved) Backfill policy: forward-only. Archived runs keep their historical
-  classification unless a paper-specific table explicitly asks for a regenerated run.
-- (resolved) Missing or unreadable value log: conservative `EXCLUDED`, with a distinct
-  reason. Never infer `LIMITED` from `TooManyFilterMissesException` alone.
+- Do not tune jqwik `maxMisses` as the fix.
+- Do not make NAIVE construct domains that define IMPROVED's advantage.
+- Do not exclude LIMITED generated tests from PIT target tests.
+- Do not use PIT's partial failing-suite mode as the semantic fix.
+- Do not add PIT jqwik sidecars, a per-mutant jqwik diagnostics DB table, or per-mutant
+  jqwik scorecard analysis in the first implementation.
+- Do not retroactively re-score archived runs unless a paper-specific audit explicitly
+  asks for a regenerated run.
 
 ## Acceptance criteria
 
-- A finite constructed delegate can preserve jqwik AUTO exhaustive behavior through the
-  seed wrapper and complete without randomized `tries` sampling.
-- A probe that exhausts the residual filter after `>= 1` new tuple is kept as
-  `LIMITED`, sound, with PVC telemetry; a probe that only ran the seed is `EXCLUDED`.
-- Missing or unreadable value logs stay excluded with a distinct reason; they never
-  become `LIMITED` by failure type alone.
-- The gate is the distinct-tuple count, not PVC; for filter-exhausted randomized runs,
-  explicit seed metadata wins if present, otherwise the seed is the first serialized
-  value-log row and rows equal to it do not count as new tuples.
-- High-level scorecards count `LIMITED` rows as passed while retaining the stable reason
-  and tuple count for generation-diagnostic views.
-- No generated test becomes unsound.
+- In a persisted generated-test execution, a property that exhausts
+  `Arbitrary.filter(...)` after validating at least one distinct new tuple is physically
+  green and records `LIMITED_TOO_MANY_FILTER_MISSES` in `jqwik_property_execution`.
+- In a persisted generated-test execution, a property that exhausts before validating a
+  distinct new tuple remains non-green and records seed-only or missing-diagnostic
+  evidence.
+- Assertion failures remain non-green and can kill PIT mutants.
+- PIT runs LIMITED generated tests with in-memory-only jqwik diagnostics: useful
+  generator exhaustion does not kill mutants or abort PIT, and PIT does not write jqwik
+  value logs, jqwik outcome sidecars, or jqwik diagnostic DB rows. This requires explicit
+  propagation of `teralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY` into the PIT minion
+  JVM, not just the outer Maven/Surefire process.
+- Every generated jqwik property execution imported by the pipeline has a diagnostic row;
+  FULL is explicit, not represented by row absence.
+- Sidecar imports are keyed by a collector-owned execution id and reject stale or
+  mismatched payloads.
+- Generated support is centralized so the hook/recorder implementation is not duplicated
+  in every generated test class.
+- High-level scorecards count LIMITED as passed while generation-specific analyses can
+  query LIMITED and tuple counts directly from the DB.
