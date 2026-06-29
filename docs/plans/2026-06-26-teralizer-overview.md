@@ -25,37 +25,37 @@ north-star is therefore: **beat JARVIS on its own cases.**
 **(2) and (3) happen only if (1) is promising. No full re-run is planned now** — so any
 work that depends on a re-run is deferred until (1) lands.
 
-## Current focus: (1) beat JARVIS
+## Map (by current relevance)
 
-- `2026-06-27-jarvis-scoreboard-evaluation-lane` *(spec)* — the clean evaluation-lane contract for pinned JARVIS-era evidence.
-- `2026-06-28-clause-driven-input-generation` *(spec)* — the current generator design: clause-driven `DomainPlanner`s, a single type-capability source, a fail-loud SPF→Model seam, SPF-capability characterization, and generation-coverage telemetry (supersedes `2026-06-27-residual-aware-input-generation`).
-- `2026-06-26-jarvis-case-coverage` *(audit)* — the per-case head-to-head evidence behind it.
-- `2026-06-28-residual-aware-generator-rerun` *(audit)* — clean rerun on the typed generator: zero Table-2 exclusions after two robustness fixes.
-- `2026-06-28-pipeline-architecture-review` *(audit)* — holistic Model⇔Java / SPF-peer / generator / spec-pipeline findings feeding the paper's §5.3 roadmap.
-- `2026-06-28-pipeline-improvements` *(plan)* — ordered execution of the architecture-review findings: Teralizer-side hardening, seams, and constraint encoding (correctness wins → seams → encoding).
-- `2026-06-28-maxulps-raw-bits-lane` *(plan)* — the research lane to make `Precision.equals(double,double,int maxUlps)` sound by construction (per-probe SPF config + raw-bits Model node + ulps generator).
+Read this after `INDEX.md`. Grouped by how load-bearing each doc is now, not by
+type; `INDEX.md` carries the full status/parent tree and `archive/` the retired docs.
 
-## Children
+**Read first — current focus: (1) beat JARVIS**
+- `2026-06-27-jarvis-scoreboard-evaluation-lane` *(spec)* — evaluation-lane contract for pinned JARVIS-era evidence.
+- `2026-06-28-clause-driven-input-generation` *(spec)* — current generator design: clause-driven planners, single type-capability source, fail-loud SPF→Model seam.
+- `2026-06-28-generation-coverage-telemetry` *(note)* — telemetry schema the generator self-reports against.
+- `2026-06-27-generalizable-input-rule` *(spec)* — shared input-eligibility rule for every consumer.
+- `2026-06-28-residual-aware-generator-rerun` *(audit)* — latest scorecard rerun: zero Table-2 exclusions after two robustness fixes.
+- `2026-06-26-jarvis-case-coverage` *(audit)* — per-case Table-2 targets + provenance.
+- `2026-06-28-pipeline-architecture-review` *(audit)* — architecture/implementation findings feeding the paper's §5.3 roadmap.
+- `2026-06-28-pipeline-improvements` *(plan)* — ordered execution of those findings.
+- `2026-06-28-maxulps-raw-bits-lane` *(plan)* — research lane for the maxUlps raw-bits probe.
 
-| doc | type | scope | tag |
-|---|---|---|---|
-| `2026-06-27-jarvis-scoreboard-evaluation-lane` | spec | clean lane for reproducible pinned JARVIS Table-2 evidence | current focus (contract) |
-| `2026-06-27-residual-aware-input-generation` | spec | v1 typed planner architecture (shipped) | superseded by clause-driven-input-generation |
-| `2026-06-28-clause-driven-input-generation` | spec | clause-driven multi-type generation seam + SPF characterization + coverage telemetry | current focus (generator design) |
-| `2026-06-27-improved-generator-redesign` | plan | typed planner + jqwik emitter rewrite; shipped, consumed-clause telemetry carried to pipeline-improvements C-3 | implemented |
-| `2026-06-27-jarvis-scoreboard-evidence-run` | plan | executed pinned JARVIS-era scoreboard run and decided the claim | implemented |
-| `2026-06-27-receiver-constructor-inputs` | plan | close the `Interval.getSize()` inline receiver-constructor blocker exposed by the scoreboard run | implemented |
-| `2026-06-26-jarvis-case-coverage` | audit | per-case JARVIS head-to-head evidence + provenance | current focus (evidence) |
-| `2026-06-28-residual-aware-generator-rerun` | audit | scorecard rerun on the typed planner: two robustness fixes + refreshed per-probe PVC | current focus (evidence) |
-| `2026-06-28-pipeline-architecture-review` | audit | architecture/implementation findings across the spec→generation pipeline | current focus (roadmap) |
-| `2026-06-28-pipeline-improvements` | plan | architecture-review findings: Teralizer hardening, seams, constraint encoding | current focus (roadmap) |
-| `2026-06-28-maxulps-raw-bits-lane` | plan | per-probe SPF config + raw-bits Model node + by-construction ulps generator for the maxUlps probe | current focus (raw-bits lane) |
-| `2026-06-26-applicability-barriers` | audit | RQ6 real-world applicability barrier evidence (inventory / funnel / ledger) | deferred — step (2) reference |
-| `2026-06-26-data-reuse-and-msr-potential` | note | secondary MSR / data-paper backlog | deferred, gated on (1) |
-| `2026-06-25-replication-package-documentation-improvements` | plan | verifiable replication package for ACM artifact eval | independent track |
-| `2026-06-27-ensemble-mut-identification` | spec | ensemble focal-method oracle (killed mutants + LCBA + name-matching) for MUT identification | applicability track |
-| `2026-06-28-mut-id-targeting-and-coverage` | audit | MUT-id concrete targets, mutation-data coverage, telemetry gaps | applicability track |
-| `2026-06-27-inherited-test-method-support` | spec | flatten inherited `@Test` methods into Spoon clones so 5,758 dropped tests parse | backlog |
+**Active — applicability track (secondary to JARVIS)**
+- `2026-06-27-ensemble-mut-identification` *(spec, draft)* — killed-mutant focal-method oracle replacing LCBA.
+- `2026-06-28-mut-id-targeting-and-coverage` *(audit)* — MUT-id concrete targets, mutation-data coverage, telemetry gaps.
+
+**Active — independent track**
+- `2026-06-25-replication-package-documentation-improvements` *(plan)* — verifiable replication package for ACM artifact eval.
+
+**Reference & deferred — step (2), gated on beating JARVIS**
+- `2026-06-26-applicability-barriers` *(audit)* — RQ6 real-world barrier evidence (inventory / funnel / ledger).
+- `2026-06-26-data-reuse-and-msr-potential` *(note)* — secondary MSR / data-paper backlog.
+
+**Backlog**
+- `2026-06-27-inherited-test-method-support` *(spec, draft)* — flatten inherited `@Test` methods so 5,758 dropped tests parse.
+
+**Superseded & shipped** — lineage in `INDEX.md` / `archive/`: `2026-06-27-residual-aware-input-generation` (superseded by clause-driven-input-generation), plus the shipped redesign, evidence-run, and receiver-constructor plans.
 
 ## Win condition (summary)
 
