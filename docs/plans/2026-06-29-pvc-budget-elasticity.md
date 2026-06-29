@@ -97,6 +97,37 @@ regressions. The NAIVE filter-miss strengthens the by-construction case; the IMP
 exclusion shows the fail-loud design catching an unsound generalization rather than
 silently passing it.
 
+## Surviving mutants: where the covered gap is
+
+The 33 survived (covered-but-unkilled) mutants are the same set across variants (36 in
+`IMPROVED_1000_TRIES`, the three extra being the fail-loud-excluded `precisionEquals`
+probe). They fall into three groups, none reachable by path-exact generalization:
+
+| group | count | examples | what would kill it |
+|---|---|---|---|
+| boundary / comparison flips | 19 | `toIntExact`, `isAsciiPrintable`, `max`/`min`, `Precision.equals` | a new *original* test on a different path |
+| removed defensive checks | 9 | `MathUtils.checkNotNull`, `PolynomialFunction.<init>` guards | a new *original* test (invalid input) |
+| arithmetic on edge paths | 5 | `abs` (overflow), `Precision.equals` (ULP/raw-bits) | a stronger assertion / raw-bits oracle |
+
+**The boundary survivors are not a constraint bug.** The generated `toIntExact` filter
+`n > -2147483648 && n < 2147483647` looks like a dropped-equality bug -- the no-throw
+path is inclusive `[MIN, MAX]`, yet the bound is strict. It is correct. `lcmp` is a
+tri-state comparison, and `jpf-symbc`'s `LCMP` handler records the *concrete* outcome
+as its own symbolic path: for the original input `n = 7`, `n vs MIN -> GT` and
+`n vs MAX -> LT`, so the path condition is the strict `n > MIN && n < MAX` -- the exact
+condition for the path that input took. The equality endpoints (`n == MIN`/`MAX`),
+where the `>`/`>=` boundary mutant flips, are the `EQ` choice: a *different* symbolic
+path the test never executed (collect-constraints mode records only the one executed
+outcome). The killing input is off the generalized path -- exactly like
+`isAsciiPrintable`'s `ch == 127`.
+
+**Consequence.** None of the survivors is an in-scope generator fix: better edge-case
+sampling cannot reach a path the original test never took, and Teralizer reuses the
+original assertion as its oracle. Raising the covered score needs new *original* tests
+on the exact-boundary / invalid-input paths, or stronger assertions (signed-zero/ULP)
+-- both outside "generalize the existing test." The gap is a property of path-exact
+generalization and oracle strength, not a defect.
+
 ## Implication
 
 Covered mutation score -- the RQ1 fault-detection signal on the code the tests reach
