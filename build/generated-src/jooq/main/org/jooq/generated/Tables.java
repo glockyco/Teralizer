@@ -10,6 +10,8 @@ import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
+import org.jooq.generated.tables.JqwikExecutionRun;
+import org.jooq.generated.tables.JqwikPropertyExecution;
 import org.jooq.generated.tables.JunitTestReport;
 import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
@@ -53,6 +55,16 @@ public class Tables {
      * The table <code>public.jacoco_coverage_report</code>.
      */
     public static final JacocoCoverageReport JACOCO_COVERAGE_REPORT = JacocoCoverageReport.JACOCO_COVERAGE_REPORT;
+
+    /**
+     * The table <code>public.jqwik_execution_run</code>.
+     */
+    public static final JqwikExecutionRun JQWIK_EXECUTION_RUN = JqwikExecutionRun.JQWIK_EXECUTION_RUN;
+
+    /**
+     * The table <code>public.jqwik_property_execution</code>.
+     */
+    public static final JqwikPropertyExecution JQWIK_PROPERTY_EXECUTION = JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION;
 
     /**
      * The table <code>public.junit_test_report</code>.

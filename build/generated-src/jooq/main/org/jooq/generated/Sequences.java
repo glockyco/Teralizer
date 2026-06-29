@@ -46,6 +46,16 @@ public class Sequences {
     public static final Sequence<Long> JACOCO_COVERAGE_REPORT_ID_SEQ = Internal.createSequence("jacoco_coverage_report_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
 
     /**
+     * The sequence <code>public.jqwik_execution_run_id_seq</code>
+     */
+    public static final Sequence<Long> JQWIK_EXECUTION_RUN_ID_SEQ = Internal.createSequence("jqwik_execution_run_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
+     * The sequence <code>public.jqwik_property_execution_id_seq</code>
+     */
+    public static final Sequence<Long> JQWIK_PROPERTY_EXECUTION_ID_SEQ = Internal.createSequence("jqwik_property_execution_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
      * The sequence <code>public.junit_test_report_id_seq</code>
      */
     public static final Sequence<Long> JUNIT_TEST_REPORT_ID_SEQ = Internal.createSequence("junit_test_report_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);

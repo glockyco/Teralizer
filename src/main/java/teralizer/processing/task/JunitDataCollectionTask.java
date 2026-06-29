@@ -298,47 +298,6 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
     }
 
-    static Path getJqwikValueLogPath(Path dataPath, long projectId, long generalizationId, String variant) {
-        return dataPath.resolve("project-id-" + projectId)
-            .resolve("jqwik-data")
-            .resolve(generalizationId + "." + variant + ".tsv");
-    }
-
-    static Path getJunitJqwikValueLogPath(Path dataPath, long projectId, long generalizationId, String variant) {
-        return dataPath.resolve("project-id-" + projectId)
-            .resolve("jqwik-data")
-            .resolve(generalizationId + "." + variant + ".junit.tsv");
-    }
-
-    private void snapshotJqwikValueLog() {
-        Path relativeLogPath = getJqwikValueLogPath(
-            this.projectRecord.getDataPath(),
-            this.getProjectId(),
-            this.getGeneralizationId(),
-            this.getVariant()
-        );
-        Path sourcePath = this.projectRecord.getRootPath().resolve(relativeLogPath);
-        if (!Files.exists(sourcePath)) {
-            sourcePath = relativeLogPath;
-        }
-        if (!Files.exists(sourcePath)) {
-            return;
-        }
-
-        Path snapshotPath = getJunitJqwikValueLogPath(
-            this.projectRecord.getDataPath(),
-            this.getProjectId(),
-            this.getGeneralizationId(),
-            this.getVariant()
-        );
-        try {
-            Files.createDirectories(snapshotPath.getParent());
-            Files.copy(sourcePath, snapshotPath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private static String replaceSpaces(String text) {
         if (text == null) {
             return null;
@@ -442,9 +401,6 @@ public class JunitDataCollectionTask extends AbstractTask {
             testReportDataPath = dataDirectory.resolve(fileName);
             Files.createDirectories(dataDirectory);
             Files.copy(testReportPath, testReportDataPath, StandardCopyOption.REPLACE_EXISTING);
-            if (this.stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED && this.generalizationRecord != null) {
-                this.snapshotJqwikValueLog();
-            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

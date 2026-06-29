@@ -125,7 +125,7 @@ public class PitCoverageReport extends TableImpl<PitCoverageReportRecord> {
     /**
      * The column <code>public.pit_coverage_report.test_method_name</code>.
      */
-    public final TableField<PitCoverageReportRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB.nullable(false), this, "");
+    public final TableField<PitCoverageReportRecord, String> TEST_METHOD_NAME = createField(DSL.name("test_method_name"), SQLDataType.CLOB, this, "");
 
     private PitCoverageReport(Name alias, Table<PitCoverageReportRecord> aliased) {
         this(alias, aliased, null);
@@ -167,7 +167,7 @@ public class PitCoverageReport extends TableImpl<PitCoverageReportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_PIT_COVERAGE_REPORT_GENERALIZATION_ID, Indexes.IDX_PIT_COVERAGE_REPORT_PROJECT_ID, Indexes.IDX_PIT_COVERAGE_REPORT_STAGE, Indexes.IDX_PIT_COVERAGE_REPORT_STEP, Indexes.IDX_PIT_COVERAGE_REPORT_TEST_ID, Indexes.IDX_PIT_COVERAGE_REPORT_VARIANT);
+        return Arrays.<Index>asList(Indexes.IDX_PIT_COVERAGE_REPORT_COVERED_BLOCK_NUMBER, Indexes.IDX_PIT_COVERAGE_REPORT_COVERED_CLASS_NAME, Indexes.IDX_PIT_COVERAGE_REPORT_COVERED_METHOD_DESCRIPTION, Indexes.IDX_PIT_COVERAGE_REPORT_COVERED_METHOD_NAME, Indexes.IDX_PIT_COVERAGE_REPORT_COVERED_PACKAGE_NAME, Indexes.IDX_PIT_COVERAGE_REPORT_GENERALIZATION_ID, Indexes.IDX_PIT_COVERAGE_REPORT_JOIN, Indexes.IDX_PIT_COVERAGE_REPORT_PROJECT_ID, Indexes.IDX_PIT_COVERAGE_REPORT_STAGE, Indexes.IDX_PIT_COVERAGE_REPORT_STEP, Indexes.IDX_PIT_COVERAGE_REPORT_TEST_ID, Indexes.IDX_PIT_COVERAGE_REPORT_VARIANT);
     }
 
     @Override

@@ -1,5 +1,7 @@
 -- Dialect: PostgreSQL
 
+DROP TABLE IF EXISTS jqwik_property_execution;
+DROP TABLE IF EXISTS jqwik_execution_run;
 DROP TABLE IF EXISTS task;
 DROP TABLE IF EXISTS pit_mutation_report;
 DROP TABLE IF EXISTS pit_coverage_report;
@@ -186,7 +188,6 @@ CREATE TABLE filter_result
     filter_name       TEXT   NOT NULL,
     decision          TEXT   NOT NULL,
     reason            TEXT   NOT NULL,
-    distinct_new_tuples INTEGER,
 
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
@@ -413,3 +414,65 @@ CREATE INDEX idx_task_stage ON task (stage);
 CREATE INDEX idx_task_variant ON task (variant);
 
 CREATE INDEX idx_task_status ON task (status);
+
+CREATE TABLE jqwik_execution_run
+(
+    id             BIGSERIAL PRIMARY KEY,
+
+    execution_id   TEXT    NOT NULL UNIQUE,
+    project_id     BIGINT  NOT NULL,
+    task_id        BIGINT,
+
+    step           INTEGER NOT NULL,
+    stage          TEXT    NOT NULL,
+    variant        TEXT,
+    execution_kind TEXT    NOT NULL,
+
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (task_id) REFERENCES task (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_jqwik_execution_run_project_id ON jqwik_execution_run (project_id);
+CREATE INDEX idx_jqwik_execution_run_task_id ON jqwik_execution_run (task_id);
+CREATE INDEX idx_jqwik_execution_run_stage_variant ON jqwik_execution_run (stage, variant);
+
+CREATE TABLE jqwik_property_execution
+(
+    id                      BIGSERIAL PRIMARY KEY,
+
+    jqwik_execution_run_id  BIGINT  NOT NULL,
+    project_id              BIGINT  NOT NULL,
+    generalization_id       BIGINT  NOT NULL,
+
+    junit_test_report_id    BIGINT, -- null for PIT executions, which create no JUnit report rows
+
+    test_case_name          TEXT    NOT NULL,
+    diagnostic_kind         TEXT    NOT NULL,
+
+    raw_status              TEXT    NOT NULL,
+    final_status            TEXT    NOT NULL,
+    throwable_type          TEXT,    -- null when the property did not fail
+    throwable_message       TEXT,    -- null when the property did not fail
+
+    tries                   INTEGER,
+    checks                  INTEGER,
+    distinct_tuples         INTEGER,
+    distinct_new_tuples     INTEGER,
+    seed                    TEXT,
+
+    selected_value_log_path TEXT,    -- null in IN_MEMORY_ONLY runs
+    diagnostic_sidecar_path TEXT,    -- null in IN_MEMORY_ONLY runs
+
+    FOREIGN KEY (jqwik_execution_run_id) REFERENCES jqwik_execution_run (id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE,
+    FOREIGN KEY (junit_test_report_id) REFERENCES junit_test_report (id) ON DELETE CASCADE,
+
+    UNIQUE (jqwik_execution_run_id, generalization_id, test_case_name)
+);
+
+CREATE INDEX idx_jqwik_property_execution_run_id ON jqwik_property_execution (jqwik_execution_run_id);
+CREATE INDEX idx_jqwik_property_execution_project_id ON jqwik_property_execution (project_id);
+CREATE INDEX idx_jqwik_property_execution_generalization_id ON jqwik_property_execution (generalization_id);
+CREATE INDEX idx_jqwik_property_execution_junit_test_report_id ON jqwik_property_execution (junit_test_report_id);
+CREATE INDEX idx_jqwik_property_execution_diagnostic_kind ON jqwik_property_execution (diagnostic_kind);

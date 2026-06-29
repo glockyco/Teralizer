@@ -16,6 +16,8 @@ import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
 import org.jooq.generated.tables.JacocoCoverageReport;
+import org.jooq.generated.tables.JqwikExecutionRun;
+import org.jooq.generated.tables.JqwikPropertyExecution;
 import org.jooq.generated.tables.JunitTestReport;
 import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
@@ -69,6 +71,16 @@ public class Public extends SchemaImpl {
     public final JacocoCoverageReport JACOCO_COVERAGE_REPORT = JacocoCoverageReport.JACOCO_COVERAGE_REPORT;
 
     /**
+     * The table <code>public.jqwik_execution_run</code>.
+     */
+    public final JqwikExecutionRun JQWIK_EXECUTION_RUN = JqwikExecutionRun.JQWIK_EXECUTION_RUN;
+
+    /**
+     * The table <code>public.jqwik_property_execution</code>.
+     */
+    public final JqwikPropertyExecution JQWIK_PROPERTY_EXECUTION = JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION;
+
+    /**
      * The table <code>public.junit_test_report</code>.
      */
     public final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
@@ -120,6 +132,8 @@ public class Public extends SchemaImpl {
             Sequences.FILTER_RESULT_ID_SEQ,
             Sequences.GENERALIZATION_ID_SEQ,
             Sequences.JACOCO_COVERAGE_REPORT_ID_SEQ,
+            Sequences.JQWIK_EXECUTION_RUN_ID_SEQ,
+            Sequences.JQWIK_PROPERTY_EXECUTION_ID_SEQ,
             Sequences.JUNIT_TEST_REPORT_ID_SEQ,
             Sequences.PIT_COVERAGE_REPORT_ID_SEQ,
             Sequences.PIT_MUTATION_REPORT_ID_SEQ,
@@ -137,6 +151,8 @@ public class Public extends SchemaImpl {
             FilterResult.FILTER_RESULT,
             Generalization.GENERALIZATION,
             JacocoCoverageReport.JACOCO_COVERAGE_REPORT,
+            JqwikExecutionRun.JQWIK_EXECUTION_RUN,
+            JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION,
             JunitTestReport.JUNIT_TEST_REPORT,
             PitCoverageReport.PIT_COVERAGE_REPORT,
             PitMutationReport.PIT_MUTATION_REPORT,
