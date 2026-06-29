@@ -608,27 +608,55 @@ def summarize_variants(
     return cast(pd.DataFrame, summary)
 
 
+SWEEP_VARIANTS = (
+    "NAIVE_100_TRIES",
+    "NAIVE_200_TRIES",
+    "NAIVE_1000_TRIES",
+    "IMPROVED_100_TRIES",
+    "IMPROVED_200_TRIES",
+    "IMPROVED_1000_TRIES",
+)
+
+
 def main() -> None:
-    """Print the JARVIS Table-2 head-to-head from the scratch scorecard DB.
+    """Print a JARVIS scratch-scorecard table from ``postgres_jarvis_scoreboard``.
 
     ``uv run --directory analysis python -m teralizer.jarvis_scoreboard`` scores the
-    IMPROVED_100_TRIES variant in ``postgres_jarvis_scoreboard`` against
-    :data:`JARVIS_TABLE2`.
-    The working directory is moved to the repo root so the repo-relative jqwik
-    value-log paths resolve.
+    IMPROVED_100_TRIES variant against :data:`JARVIS_TABLE2`. ``--sweep`` instead
+    prints the per-variant tries-sweep summary (PVC versus mutation score) for the
+    six canonical :data:`SWEEP_VARIANTS`; its ``probes`` column shows the passing
+    probe count, so an excluded probe (13 of 14) stays visible. The working
+    directory moves to the repo root so the repo-relative jqwik value-log paths
+    resolve.
     """
+    import argparse
     import os
 
     from teralizer.config import db_config, find_project_root
 
+    parser = argparse.ArgumentParser(description="JARVIS scratch-scorecard tables.")
+    parser.add_argument(
+        "--sweep",
+        action="store_true",
+        help="print the tries-sweep summary (PVC vs mutation score) per variant",
+    )
+    args = parser.parse_args()
+
     os.chdir(Path(find_project_root()).parent)
     engine = db_config.get_engine("postgres_jarvis_scoreboard", validate=False)
     with engine.connect() as conn:
-        scoreboard = get_scoreboard(
-            conn, variants=["NAIVE_100_TRIES", "IMPROVED_100_TRIES"]
-        )
-    head_to_head = compare_to_jarvis(scoreboard, variant="IMPROVED_100_TRIES")
-    print(head_to_head.to_string(index=False))
+        if args.sweep:
+            summary = summarize_variants(
+                get_scoreboard(conn, variants=SWEEP_VARIANTS),
+                get_mutation_scores(conn, variants=SWEEP_VARIANTS),
+            )
+            table = summary.set_index("variant").reindex(SWEEP_VARIANTS).reset_index()
+        else:
+            scoreboard = get_scoreboard(
+                conn, variants=["NAIVE_100_TRIES", "IMPROVED_100_TRIES"]
+            )
+            table = compare_to_jarvis(scoreboard, variant="IMPROVED_100_TRIES")
+    print(table.to_string(index=False))
 
 
 if __name__ == "__main__":
