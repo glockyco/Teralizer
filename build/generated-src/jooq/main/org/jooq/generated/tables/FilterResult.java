@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row8;
+import org.jooq.Row9;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -91,6 +91,11 @@ public class FilterResult extends TableImpl<FilterResultRecord> {
      * The column <code>public.filter_result.reason</code>.
      */
     public final TableField<FilterResultRecord, String> REASON = createField(DSL.name("reason"), SQLDataType.CLOB.nullable(false), this, "");
+
+    /**
+     * The column <code>public.filter_result.distinct_new_tuples</code>.
+     */
+    public final TableField<FilterResultRecord, Integer> DISTINCT_NEW_TUPLES = createField(DSL.name("distinct_new_tuples"), SQLDataType.INTEGER, this, "");
 
     private FilterResult(Name alias, Table<FilterResultRecord> aliased) {
         this(alias, aliased, null);
@@ -215,11 +220,11 @@ public class FilterResult extends TableImpl<FilterResultRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row8 type methods
+    // Row9 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row8<Long, Long, Long, Long, Long, String, FilterDecision, String> fieldsRow() {
-        return (Row8) super.fieldsRow();
+    public Row9<Long, Long, Long, Long, Long, String, FilterDecision, String, Integer> fieldsRow() {
+        return (Row9) super.fieldsRow();
     }
 }

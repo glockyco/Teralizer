@@ -165,7 +165,7 @@ public class TestFilteringTask extends AbstractTask {
         List<Filter> filters = Arrays.asList(
             new ExcludedTestFilter(this.testRecord),
             new ExcludedAssertionFilter(this.assertionRecord),
-            new NonPassingTestFilter(create, this.testRecord, this.generalizationRecord)
+            new NonPassingTestFilter(create, this.testRecord, this.generalizationRecord, this.projectRecord.getDataPath())
         );
 
         this.checkFilters(create, filters);
@@ -182,6 +182,7 @@ public class TestFilteringTask extends AbstractTask {
             record.setFilterName(filterResult.getFilter());
             record.setDecision(filterResult.getDecision());
             record.setReason(filterResult.getReason());
+            record.setDistinctNewTuples(filterResult.getDistinctNewTuples());
 
             if (this.getGeneralizationId() != null) {
                 record.setGeneralizationId(this.getGeneralizationId());

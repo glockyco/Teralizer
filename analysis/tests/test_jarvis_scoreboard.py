@@ -385,6 +385,106 @@ def test_generated_runs_separate_precondition_rejections(tmp_path):
         conn.close()
 
 
+def test_generated_runs_count_limited_filter_exhaustion_as_passed(tmp_path):
+    conn = sqlite3.connect(":memory:")
+    try:
+        create_scoreboard_schema(conn)
+        insert_scoreboard_fixture(conn, tmp_path)
+        for (
+            assertion_id,
+            generalization_id,
+            included,
+            decision,
+            reason,
+            distinct_new_tuples,
+        ) in [
+            (3, 8, 1, "ACCEPT", "LIMITED_TOO_MANY_FILTER_MISSES", 1),
+            (4, 9, 0, "REJECT", "FILTER_EXHAUSTED_SEED_ONLY", 0),
+            (5, 10, 0, "REJECT", "FILTER_EXHAUSTED_VALUE_LOG_MISSING", None),
+        ]:
+            conn.execute(
+                """
+                INSERT INTO assertion (
+                    id,
+                    project_id,
+                    assertion_name,
+                    tested_method_call_arguments,
+                    tested_class_qualified_name,
+                    tested_method_name
+                ) VALUES (?, 1, 'assertTrue', ?, 'smoke.Subject', 'contains')
+                """,
+                (
+                    assertion_id,
+                    '[{"type":"int","value":"2"},{"type":"int","value":"8"},{"type":"int","value":"5"}]',
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO generalization (
+                    id, project_id, assertion_id, variant, class_name, method_name, is_included
+                ) VALUES (?, 1, ?, 'NAIVE', '_SubjectTest_Generalized', 'valueInsideInterval', ?)
+                """,
+                (generalization_id, assertion_id, included),
+            )
+            conn.execute(
+                """
+                INSERT INTO junit_test_report (
+                    project_id,
+                    generalization_id,
+                    stage,
+                    variant,
+                    test_class_name,
+                    test_method_name,
+                    result,
+                    failure_type,
+                    failure_message
+                ) VALUES (
+                    1,
+                    ?,
+                    'COLLECT_JUNIT_REPORTS_GENERALIZED',
+                    'NAIVE',
+                    '_SubjectTest_Generalized',
+                    'valueInsideInterval',
+                    'ERROR',
+                    'net.jqwik.api.TooManyFilterMissesException',
+                    'Filtering missed more than 10000 times.'
+                )
+                """,
+                (generalization_id,),
+            )
+            conn.execute(
+                """
+                INSERT INTO filter_result (
+                    generalization_id,
+                    filter_name,
+                    decision,
+                    reason,
+                    distinct_new_tuples
+                ) VALUES (?, 'teralizer.processing.filter.NonPassingTestFilter', ?, ?, ?)
+                """,
+                (generalization_id, decision, reason, distinct_new_tuples),
+            )
+        conn.commit()
+
+        runs = get_generated_test_runs(conn, outcomes=None)
+        limited = runs.set_index("generalization_id").loc[8]
+        passed_runs = get_generated_test_runs(conn)
+
+        assert set(runs["generalization_id"]) == {7, 8}
+        assert set(passed_runs["generalization_id"]) == {7, 8}
+        assert limited["outcome_class"] == "passed"
+        assert limited["outcome"] == "passed"
+        assert limited["filter_result_reason"] == "LIMITED_TOO_MANY_FILTER_MISSES"
+        assert limited["generation_diagnostic"] == "limited_filter_exhausted"
+        assert limited["distinct_new_tuples"] == 1
+        assert (
+            runs.set_index("generalization_id").loc[7, "generation_diagnostic"]
+            == "full"
+        )
+    finally:
+        conn.close()
+
+
 def create_scoreboard_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(
         """
@@ -421,6 +521,14 @@ def create_scoreboard_schema(conn: sqlite3.Connection) -> None:
             result TEXT NOT NULL,
             failure_type TEXT,
             failure_message TEXT
+        );
+        CREATE TABLE filter_result (
+            id INTEGER PRIMARY KEY,
+            generalization_id INTEGER NOT NULL,
+            filter_name TEXT NOT NULL,
+            decision TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            distinct_new_tuples INTEGER
         );
         CREATE TABLE jacoco_coverage_report (
             id INTEGER PRIMARY KEY,

@@ -186,6 +186,7 @@ CREATE TABLE filter_result
     filter_name       TEXT   NOT NULL,
     decision          TEXT   NOT NULL,
     reason            TEXT   NOT NULL,
+    distinct_new_tuples INTEGER,
 
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
