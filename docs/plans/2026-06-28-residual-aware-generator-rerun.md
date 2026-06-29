@@ -6,10 +6,12 @@ created: 2026-06-28
 parent: 2026-06-27-residual-aware-input-generation
 ---
 
-Point-in-time evidence from the first JARVIS scorecard rerun on the typed
+Point-in-time evidence from JARVIS scorecard reruns on the typed
 `InputGenerationPlanner` generator. Supersedes the generator-probe PVC numbers in
 `2026-06-26-jarvis-case-coverage` (§ "Scoreboard run output (2026-06-27)"), which
-predate the planner redesign and the two robustness fixes recorded here.
+predate the planner redesign. Two reruns are recorded: Rerun 1 (first typed-planner
+run, with two robustness fixes) and Rerun 2 (2026-06-29, after the multi-param
+collapse fix). **Rerun 2 is the current reference.**
 
 ## Generator under test
 
@@ -36,7 +38,7 @@ bugs (both fixed; see `2026-06-27-improved-generator-redesign` Task 8):
   escaping surrogates like control characters. Surfaced as an excluded `isAscii`
   assertFalse generalization; the fix also hardens NAIVE, which can hit surrogates too.
 
-## Clean rerun result
+## Rerun 1 — first typed-planner run (historical)
 
 Scratch DB `postgres_jarvis_scoreboard`, fixtures `MATH_3_5` and `LANG_3_5`.
 **All 30 generated NAIVE + IMPROVED tests pass; zero Table-2 exclusions.**
@@ -62,7 +64,7 @@ edge-case set bounds the run lower):
 | math | precisionEquals (eps) | assertFalse | 176 | 39 |
 | math | precisionEqualsMaxUlps | assertFalse | 111 | 15 |
 
-## Findings
+## Rerun 1 findings
 
 1. **IMPROVED ≥ NAIVE on 11 of 14 passing probes.** The planner's by-construction
    bounds raise value diversity for char-range, min/max, interval, polynomial, abs,
@@ -85,6 +87,53 @@ edge-case set bounds the run lower):
    most random pairs are genuinely not within `maxUlps`. This is a raw-bits spike
    gap (`2026-06-27-spf-ulps-raw-bits-spike`, archived), not a generator or Table-2
    result; the maxUlps probe stays outside Table-2 claims.
+
+## Rerun 2 — multi-param collapse fixed (2026-06-29)
+
+Rerun after `3a4510be` (tuple-level first-value injection), `142f5222` (renderer
+fail-loud on bitwise/shift over floats), and `1dd31336` (integral decimal
+rendering). Same scratch DB and fixtures. **All 14 Table-2 probes pass for both
+variants; exclusion-free.** `precisionEqualsMaxUlps` now excludes in *both*
+directions (the renderer rejects its bitwise clause), so the `assertFalse` row that
+passed in Rerun 1 is gone — the scorecard is 14 probes, not 15.
+
+| Project | Probe | Assertion | params | NAIVE PVC | IMPROVED PVC |
+|---|---|---|---:|---:|---:|
+| lang | isAscii | assertFalse | 1 | 91 | 88 |
+| lang | isAscii | assertTrue | 1 | 68 | 60 |
+| lang | isAsciiPrintable | assertFalse | 1 | 32 | 29 |
+| lang | isAsciiPrintable | assertTrue | 1 | 59 | 53 |
+| math | toIntExact | assertEquals | 1 | 93 | 90 |
+| math | intervalGetSize | assertEquals | 2 | 88 | 88 |
+| math | maxDouble | assertEquals | 2 | 141 | 152 |
+| math | minDouble | assertEquals | 2 | 141 | 152 |
+| math | absValue | assertEquals | 1 | 91 | 94 |
+| math | polynomialConstant | assertEquals | 1 | 90 | 90 |
+| math | polynomialLinear | assertEquals | 1 | 90 | 90 |
+| math | polynomialDerivative | assertEquals | 1 | 89 | 89 |
+| math | precisionEquals (eps) | assertTrue | 3 | 232 | 176 |
+| math | precisionEquals (eps) | assertFalse | 3 | 20 | 30 |
+
+1. **Multi-param collapse fixed.** Under the old per-parameter
+   `FirstValueArbitrary`-inside-`flatMap`, the inner parameter of every 2+-param
+   probe re-emitted its first value and collapsed (e.g. `maxDouble` IMPROVED ≈ 72,
+   inner param ≈ 7 distinct). With tuple-level injection, `maxDouble`/`minDouble`
+   IMPROVED recover to 152 — above NAIVE (141) and Rerun 1's 138. The eps aggregate
+   is 176 + 30 = 206 (≈ Rerun 1's 208, still > JARVIS's 102).
+
+2. **IMPROVED ≥ NAIVE on 8 of 14** (Rerun 1: 11). The shortfall is the
+   single-parameter char probes (`isAscii`/`isAsciiPrintable`, IMPROVED just below
+   NAIVE), plus the documented eps-`assertTrue` tradeoff and a marginal `toIntExact`.
+   The char dip is single-parameter, so it is **not** the multi-param `flatMap`
+   collapse this rerun fixed; its cause — the tuple-level single-parameter wrap, or
+   an earlier change between Rerun 1 and now — is **not yet attributed**. Sound:
+   every probe passes, exclusion-free. Open: attribute it with a focused
+   single-probe check if IMPROVED-ahead on char matters.
+
+3. **eps tradeoff and maxUlps unchanged in kind.** The `between(y - x, MAX)` eps
+   encoding still trades diversity for guaranteed precondition satisfaction (clears
+   JARVIS in aggregate); maxUlps stays a raw-bits spike gap outside Table-2
+   (`2026-06-28-maxulps-raw-bits-lane`), now fully excluded by the renderer guard.
 
 ## Reproduction
 
