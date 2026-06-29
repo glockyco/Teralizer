@@ -1,0 +1,62 @@
+## Generated FirstValueArbitrary wrapper. Fully static (no interpolation); emitted verbatim
+## via a Velocity literal block (#[[ ... ]]#) so Java generics/'$'/'#' need no escaping.
+#[[
+private static class FirstValueArbitrary<T> implements net.jqwik.api.Arbitrary<T> {
+    private T firstValue;
+
+    private net.jqwik.api.Arbitrary<T> delegate;
+
+    public FirstValueArbitrary(T firstValue, net.jqwik.api.Arbitrary<T> delegate) {
+        this.firstValue = firstValue;
+        this.delegate = delegate;
+    }
+
+    public net.jqwik.api.RandomGenerator<T> generator(int genSize) {
+        final net.jqwik.api.RandomGenerator<T> delegateGenerator = delegate.generator(genSize);
+        return new net.jqwik.api.RandomGenerator<T>() {
+            private boolean emitted = false;
+            public net.jqwik.api.Shrinkable<T> next(java.util.Random random) {
+                if (!emitted) {
+                    emitted = true;
+                    return new net.jqwik.engine.properties.shrinking.Unshrinkable<T>(new java.util.function.Supplier<T>() {
+                        public T get() {
+                            return firstValue;
+                        }
+                    }, net.jqwik.api.ShrinkingDistance.MIN);
+                }
+                return delegateGenerator.next(random);
+            }
+        };
+    }
+
+    public java.util.Optional<net.jqwik.api.ExhaustiveGenerator<T>> exhaustive(long maxNumberOfSamples) {
+        return delegate.exhaustive(maxNumberOfSamples);
+    }
+
+    public net.jqwik.api.EdgeCases<T> edgeCases(int maxEdgeCases) {
+        final java.util.List<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>> suppliers = new java.util.ArrayList<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>>();
+        suppliers.add(new java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>() {
+            public net.jqwik.api.Shrinkable<T> get() {
+                return new net.jqwik.engine.properties.shrinking.Unshrinkable<T>(new java.util.function.Supplier<T>() {
+                    public T get() {
+                        return firstValue;
+                    }
+                }, net.jqwik.api.ShrinkingDistance.MIN);
+            }
+        });
+        suppliers.addAll(delegate.edgeCases().suppliers());
+        return new net.jqwik.api.EdgeCases<T>() {
+            public java.util.List<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>> suppliers() {
+                return suppliers;
+            }
+            public java.util.Iterator<net.jqwik.api.Shrinkable<T>> iterator() {
+                java.util.List<net.jqwik.api.Shrinkable<T>> shrinkables = new java.util.ArrayList<net.jqwik.api.Shrinkable<T>>();
+                for (java.util.function.Supplier<net.jqwik.api.Shrinkable<T>> supplier : suppliers()) {
+                    shrinkables.add(supplier.get());
+                }
+                return shrinkables.iterator();
+            }
+        };
+    }
+}
+]]#

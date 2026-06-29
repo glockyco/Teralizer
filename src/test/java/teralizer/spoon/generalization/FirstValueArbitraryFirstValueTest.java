@@ -1,14 +1,14 @@
 package teralizer.spoon.generalization;
 
 import net.jqwik.api.Example;
+import org.apache.velocity.app.VelocityEngine;
 import org.junit.Assert;
-import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
-import spoon.reflect.factory.Factory;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -22,8 +22,7 @@ public class FirstValueArbitraryFirstValueTest {
 
     @Example
     void generatorEmitsFirstValueBeforeDelegating() {
-        Factory factory = new Launcher().getFactory();
-        CtClass<?> firstValueClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass();
+        CtClass<?> firstValueClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass(velocityEngine());
 
         CtMethod<?> generator = firstValueClass.getMethodsByName("generator").get(0);
         String generatorBody = generator.getBody().toString();
@@ -36,7 +35,7 @@ public class FirstValueArbitraryFirstValueTest {
 
     @Example
     void exhaustiveDelegatesToWrappedArbitrary() {
-        CtClass<?> firstValueClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass();
+        CtClass<?> firstValueClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass(velocityEngine());
 
         List<CtMethod<?>> exhaustiveMethods = firstValueClass.getMethodsByName("exhaustive");
 
@@ -57,5 +56,16 @@ public class FirstValueArbitraryFirstValueTest {
         Assert.assertTrue(
             "exhaustive(long) must delegate the same maxNumberOfSamples value to the wrapped arbitrary",
             exhaustive.getBody().toString().contains("delegate.exhaustive(maxNumberOfSamples)"));
+    }
+
+    private static VelocityEngine velocityEngine() {
+        Properties properties = new Properties();
+        properties.setProperty("resource.loader", "file");
+        properties.setProperty("file.resource.loader.path", "src/main/resources/templates");
+        properties.setProperty("runtime.references.strict", "true");  // match production (TestGeneralizationRunner)
+
+        VelocityEngine velocityEngine = new VelocityEngine(properties);
+        velocityEngine.init();
+        return velocityEngine;
     }
 }

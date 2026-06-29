@@ -2,6 +2,7 @@ package teralizer.processing.task;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.velocity.app.VelocityEngine;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -123,9 +124,10 @@ public class TestGeneralizationTask extends AbstractTask {
         Gson gson = context.get(TaskContext.GSON);
 
         Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
+        VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);
 
         this.generalizationRecord = this.createGeneralizationRecord(create);
-        this.generalizeTest(gson, spoonLauncher);
+        this.generalizeTest(gson, spoonLauncher, velocityEngine);
     }
 
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
@@ -163,7 +165,7 @@ public class TestGeneralizationTask extends AbstractTask {
         return record;
     }
 
-    private void generalizeTest(Gson gson, Launcher spoonLauncher) throws IOException {
+    private void generalizeTest(Gson gson, Launcher spoonLauncher, VelocityEngine velocityEngine) throws IOException {
         Factory factory = spoonLauncher.getFactory();
 
         CtClass<?> generalizedClassDeclaration = SpoonUtils.cloneClass(
@@ -371,11 +373,11 @@ public class TestGeneralizationTask extends AbstractTask {
             // Add FirstValueArbitrary class.                                                                         //
             // ------------------------------------------------------------------------------------------------------ //
 
-            CtClass<?> firstValueArbitraryClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass();
+            CtClass<?> firstValueArbitraryClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass(velocityEngine);
             generalizedClassDeclaration.addNestedType(firstValueArbitraryClass);
         }
 
-        CtClass<?> jqwikValueRecorderClass = JqwikValueRecorderFactory.createRecorderClass(factory, jqwikValueLogPath);
+        CtClass<?> jqwikValueRecorderClass = JqwikValueRecorderFactory.createRecorderClass(velocityEngine, jqwikValueLogPath);
         generalizedClassDeclaration.addNestedType(testParametersClassDeclaration);
         generalizedClassDeclaration.addNestedType(testParametersSupplierClassDeclaration);
         generalizedClassDeclaration.addNestedType(jqwikValueRecorderClass);
