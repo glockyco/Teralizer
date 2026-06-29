@@ -13,6 +13,7 @@
 - **MUT-id Targeting & Mutation-Data Coverage** [audit] `2026-06-28-mut-id-targeting-and-coverage` ← 2026-06-26-teralizer-overview
 - **Pipeline Architecture Review** [audit] `2026-06-28-pipeline-architecture-review` ← 2026-06-26-teralizer-overview
 - **Residual-Aware Generator Scorecard Rerun** [audit] `2026-06-28-residual-aware-generator-rerun` ← 2026-06-27-residual-aware-input-generation
+- **Filter-Exhaustion LIMITED Implementation** [plan] `2026-06-29-limited-outcome-implementation` (—) ← 2026-06-29-filter-exhaustion-limited-outcome
 - **PVC Budget-Elasticity vs Mutation Score** [audit] `2026-06-29-pvc-budget-elasticity` ← 2026-06-26-teralizer-overview
 
 ## draft
