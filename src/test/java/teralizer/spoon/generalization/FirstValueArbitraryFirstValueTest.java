@@ -33,4 +33,29 @@ public class FirstValueArbitraryFirstValueTest {
                 + "currently delegates directly, so the seed input is not guaranteed in normal generation",
             generatorBody.contains("firstValue"));
     }
+
+    @Example
+    void exhaustiveDelegatesToWrappedArbitrary() {
+        CtClass<?> firstValueClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass();
+
+        List<CtMethod<?>> exhaustiveMethods = firstValueClass.getMethodsByName("exhaustive");
+
+        Assert.assertEquals(
+            "FirstValueArbitrary must preserve the delegate's exhaustive generator so jqwik AUTO mode can stop "
+                + "after finite ranges are covered instead of falling back to randomized tries",
+            1,
+            exhaustiveMethods.size());
+
+        CtMethod<?> exhaustive = exhaustiveMethods.get(0);
+        List<String> parameterNames = exhaustive.getParameters().stream()
+            .map(CtParameter::getSimpleName)
+            .collect(Collectors.toList());
+        Assert.assertEquals(
+            "exhaustive(long) must keep jqwik's maxNumberOfSamples parameter",
+            java.util.Collections.singletonList("maxNumberOfSamples"),
+            parameterNames);
+        Assert.assertTrue(
+            "exhaustive(long) must delegate the same maxNumberOfSamples value to the wrapped arbitrary",
+            exhaustive.getBody().toString().contains("delegate.exhaustive(maxNumberOfSamples)"));
+    }
 }

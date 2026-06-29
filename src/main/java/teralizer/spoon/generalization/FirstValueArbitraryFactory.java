@@ -35,6 +35,10 @@ public class FirstValueArbitraryFactory {
                 "        };\n" +
                 "    }\n" +
                 "\n" +
+                "    public java.util.Optional<net.jqwik.api.ExhaustiveGenerator<T>> exhaustive(long maxNumberOfSamples) {\n" +
+                "        return delegate.exhaustive(maxNumberOfSamples);\n" +
+                "    }\n" +
+                "\n" +
                 "    public net.jqwik.api.EdgeCases<T> edgeCases(int maxEdgeCases) {\n" +
                 "        final java.util.List<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>> suppliers = new java.util.ArrayList<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>>();\n" +
                 "        suppliers.add(new java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>() {\n" +
