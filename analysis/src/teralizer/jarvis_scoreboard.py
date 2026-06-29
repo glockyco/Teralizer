@@ -278,8 +278,6 @@ def get_generated_test_runs(
     query = """
     SELECT
         p.id AS project_id,
-        p.root_path AS project_root_path,
-        p.data_path AS data_path,
         g.id AS generalization_id,
         g.variant AS variant,
         g.class_name AS generated_class_name,
@@ -293,7 +291,8 @@ def get_generated_test_runs(
         jtr.failure_type AS failure_type,
         jtr.failure_message AS failure_message,
         jpe.diagnostic_kind AS diagnostic_kind,
-        jpe.distinct_new_tuples AS distinct_new_tuples
+        jpe.distinct_new_tuples AS distinct_new_tuples,
+        jpe.selected_value_log_path AS jqwik_value_log_path
     FROM generalization g
     JOIN project p ON p.id = g.project_id
     JOIN assertion a ON a.id = g.assertion_id
@@ -332,8 +331,6 @@ def get_generated_test_runs(
     if outcomes is not None:
         runs = runs[runs["outcome_class"].isin(set(outcomes))]
 
-    runs = runs.copy()
-    runs["jqwik_value_log_path"] = runs.apply(_jqwik_value_log_path, axis=1)
     return cast(pd.DataFrame, runs.reset_index(drop=True))
 
 
@@ -549,50 +546,6 @@ def compare_to_jarvis(
             }
         )
     return pd.DataFrame(result)
-
-
-def _jqwik_value_log_path(run: pd.Series) -> str:
-    data_path = Path(str(run["data_path"]))
-    project_id = int(run["project_id"])
-    generalization_id = int(run["generalization_id"])
-    variant = run["variant"]
-
-    def value_log_path(base: Path) -> Path:
-        return (
-            base
-            / f"project-id-{project_id}"
-            / "jqwik-data"
-            / f"{generalization_id}.{variant}.tsv"
-        )
-
-    def junit_snapshot_path(path: Path) -> Path:
-        return path.with_name(f"{generalization_id}.{variant}.junit.tsv")
-
-    candidate_bases: list[Path]
-    if data_path.is_absolute():
-        candidate_bases = [data_path]
-        fallback_base = data_path
-    else:
-        project_root_path = Path(str(run["project_root_path"]))
-        workspace_data_path = Path.cwd() / data_path
-        if project_root_path.is_absolute():
-            project_data_path = project_root_path / data_path
-            fallback_base = project_data_path
-        else:
-            project_data_path = Path.cwd() / project_root_path / data_path
-            fallback_base = workspace_data_path
-        candidate_bases = [workspace_data_path, project_data_path]
-
-    candidate_paths: list[Path] = []
-    for base in candidate_bases:
-        live_path = value_log_path(base)
-        candidate_paths.append(junit_snapshot_path(live_path))
-        candidate_paths.append(live_path)
-
-    for candidate in candidate_paths:
-        if candidate.exists():
-            return str(candidate)
-    return str(value_log_path(fallback_base))
 
 
 def _count_original_argument_values(arguments_json: object) -> int:
