@@ -21,7 +21,7 @@ import pandas as pd
 
 GENERATED_JUNIT_STAGE = "COLLECT_JUNIT_REPORTS_GENERALIZED"
 GENERATED_JACOCO_STAGE = "COLLECT_JACOCO_DATA_GENERALIZED"
-LIMITED_FILTER_REASON = "LIMITED_TOO_MANY_FILTER_MISSES"
+LIMITED_DIAGNOSTIC_KIND = "LIMITED_TOO_MANY_FILTER_MISSES"
 
 PRECONDITION_REJECTION_FAILURE_TYPES = frozenset(
     {"net.jqwik.api.TooManyFilterMissesException"}
@@ -161,10 +161,10 @@ JARVIS_TABLE2: tuple[JarvisRow, ...] = (
 
 
 def classify_generated_test_outcome(
-    result: str, failure_type: str | None, filter_result_reason: str | None = None
+    result: str, failure_type: str | None, diagnostic_kind: str | None = None
 ) -> str:
     """Classify generated jqwik execution status without mixing it into IC."""
-    if filter_result_reason == LIMITED_FILTER_REASON:
+    if diagnostic_kind == LIMITED_DIAGNOSTIC_KIND:
         return "passed"
     normalized_result = result.upper()
     if normalized_result == "PASSED":
@@ -178,8 +178,8 @@ def classify_generated_test_outcome(
     return normalized_result.lower()
 
 
-def classify_generation_diagnostic(filter_result_reason: str | None) -> str:
-    if filter_result_reason == LIMITED_FILTER_REASON:
+def classify_generation_diagnostic(diagnostic_kind: str | None) -> str:
+    if diagnostic_kind == LIMITED_DIAGNOSTIC_KIND:
         return "limited_filter_exhausted"
     return "full"
 
@@ -292,19 +292,14 @@ def get_generated_test_runs(
         jtr.result AS test_result,
         jtr.failure_type AS failure_type,
         jtr.failure_message AS failure_message,
-        fr_limited.reason AS filter_result_reason,
-        fr_limited.distinct_new_tuples AS distinct_new_tuples
+        jpe.diagnostic_kind AS diagnostic_kind,
+        jpe.distinct_new_tuples AS distinct_new_tuples
     FROM generalization g
     JOIN project p ON p.id = g.project_id
     JOIN assertion a ON a.id = g.assertion_id
     JOIN junit_test_report jtr ON jtr.generalization_id = g.id
-    LEFT JOIN filter_result fr_limited
-      ON fr_limited.generalization_id = g.id
-     AND fr_limited.filter_name IN (
-        'NonPassingTestFilter',
-        'teralizer.processing.filter.NonPassingTestFilter'
-     )
-     AND fr_limited.reason = 'LIMITED_TOO_MANY_FILTER_MISSES'
+    LEFT JOIN jqwik_property_execution jpe
+      ON jpe.junit_test_report_id = jtr.id
     WHERE g.is_included = TRUE
       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_GENERALIZED'
     ORDER BY p.id, g.variant, g.id
@@ -326,12 +321,12 @@ def get_generated_test_runs(
         lambda run: classify_generated_test_outcome(
             str(run["test_result"]),
             run["failure_type"],
-            run["filter_result_reason"],
+            run["diagnostic_kind"],
         ),
         axis=1,
     )
     runs["outcome"] = runs["outcome_class"]
-    runs["generation_diagnostic"] = runs["filter_result_reason"].map(
+    runs["generation_diagnostic"] = runs["diagnostic_kind"].map(
         classify_generation_diagnostic
     )
     if outcomes is not None:
