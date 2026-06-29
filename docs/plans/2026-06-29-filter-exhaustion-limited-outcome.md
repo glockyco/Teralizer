@@ -65,29 +65,48 @@ data than PVC.
   generalization is no better than the source test.
 - A `LIMITED` generalization is **sound**: every tuple it tested passed the oracle; it
   never weakens the path predicate. It is *narrow*, not *wrong*.
+- **`FULL` upgrade (optional, finite domains only):** when the partition's cardinality
+  is known and finite (`ch < 32` has exactly 32 values) and the run covered all of it,
+  the exclusion is plainly wrong -- it is a full pass, not merely `LIMITED`. This needs
+  domain-cardinality reasoning and is **not** inferable from the tuple log alone, so
+  `LIMITED` is the default and the upgrade is a separate, optional enhancement for
+  finite constructed domains.
 
-### Mechanism
+### maxMisses stays at the default
 
-A jqwik `AroundPropertyHook` in the generated-test template wraps
-`property.execute()`, which returns a `PropertyExecutionResult` (it does not
-necessarily throw):
-1. run the property;
-2. inspect the result -- if it is erroneous with a `TooManyFilterMissesException`
-   throwable/cause (and catch a propagated one too, in case a future jqwik throws),
-   consult the recorder for distinct-tuples-beyond-seed;
-3. `>= 1` -> return a **satisfied** result and emit an explicit "filter-exhausted"
-   marker so the outcome is recorded as `LIMITED`, not inferred; `0` -> return the
-   original erroneous result unchanged (-> `EXCLUDED`).
+Do not lower `maxMisses` to save runtime. Spike (`chars()` filtered to `ch < 32`,
+~0.05% density): at `maxMisses` 10/100/1000 the generator finds **zero** valid inputs
+(it trips before the first hit); only the default **10000** finds all 32 distinct, at
+~50 ms. For the sparse filters that actually cause exclusions, the high default is what
+lets them find anything -- lowering it turns a 32-distinct `LIMITED` into a 0-distinct
+`EXCLUDED` and saves time negligible beside PIT/JaCoCo. `maxMisses` is a coverage knob,
+not a runtime knob; the efficiency intuition holds only for moderately dense filters.
 
-Teralizer already injects the `JqwikValueRecorder` and a `@BeforeProperty` reset, so
-the hook is additive to the template.
+### Mechanism: post-process the persisted result
+
+A 2026-06-29 spike confirmed the needed data already exists for the failing row: the
+excluded `isAsciiPrintable` (`ERROR` / `TooManyFilterMisses`) has its value log
+collected at the canonical path (`14.NAIVE_1000_TRIES.junit.tsv`, 178 rows /
+**32 distinct** tuples) and the DB already stores
+`failure_type = TooManyFilterMissesException`. Classification is therefore pure
+pipeline post-processing -- **no hook, no per-test generated code, no test-suite
+growth**:
+
+- after junit collection, for a row with `result = ERROR` and
+  `failure_type = TooManyFilterMissesException`, read the collected value log; if
+  distinct tuples beyond the seed `>= 1` -> `LIMITED` (`is_included = true`), else
+  `EXCLUDED`.
+
+The seed (`firstValue`) is always recorded first, so the gate is distinct value-log
+rows minus the seed tuple. An `AroundPropertyHook` was considered and rejected: it
+would inject code into every generated test and grow the suite, and it is unnecessary
+because inclusion is already Teralizer's decision, not jqwik's.
 
 ## Scope (subsystems touched)
 
-- **Generated-test template** -- add the around-hook + the exhausted marker
-  (`ModelToJavaTransformer` / supplier rendering / `JqwikValueRecorder`).
-- **Filter stage** -- `TestFilteringTask` (`FILTER_GENERALIZATIONS`) maps the
-  exhausted-with-new-tuple case to `LIMITED` instead of exclusion.
+- **Filter stage** -- `TestFilteringTask` (`FILTER_GENERALIZATIONS`) reads the
+  collected value log and maps the exhausted-with-new-tuple case to `LIMITED` instead
+  of exclusion. No generated-test-template change and no hook.
 - **Schema** -- a `LIMITED` outcome (`filter_result` / `generalization`) plus the
   distinct-tuple count recorded for the gate. Exact columns: implementation detail.
 - **Analysis** -- `classify_generated_test_outcome` and the scorecard recognize
@@ -109,8 +128,8 @@ silent upgrade of NAIVE to "passing."
 
 ## Open questions
 
-- Compute distinct-tuples in-JVM (recorder counter) vs post-hoc from the value log?
-  In-JVM is needed for the live gate; the value log is the cross-check.
+- (resolved by spike) Compute distinct-tuples post-hoc from the collected value log --
+  verified present for `ERROR` rows, so no in-JVM counter and no hook are needed.
 - How does `LIMITED` interact with the scorecard's "exclusion-free" claim -- is a
   `LIMITED` row exclusion-free, or a documented third category?
 - Backfill policy for existing runs (default: none; forward-only).
