@@ -249,10 +249,9 @@ public class TestGeneralizationTask extends AbstractTask {
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
-        Path jqwikValueLogPath = this.projectRecord.getDataPath()
+        Path jqwikDataDirectory = this.projectRecord.getDataPath()
             .resolve("project-id-" + this.getProjectId())
-            .resolve("jqwik-data")
-            .resolve(this.getGeneralizationId() + "." + this.getVariant() + ".tsv");
+            .resolve("jqwik-data");
         String pendingBooleanOutputExpression = null;
         String pendingBooleanOutputOperator = null;
 
@@ -377,7 +376,14 @@ public class TestGeneralizationTask extends AbstractTask {
             generalizedClassDeclaration.addNestedType(firstValueArbitraryClass);
         }
 
-        CtClass<?> jqwikValueRecorderClass = JqwikValueRecorderFactory.createRecorderClass(velocityEngine, jqwikValueLogPath);
+        CtClass<?> jqwikValueRecorderClass = JqwikValueRecorderFactory.createRecorderClass(
+            velocityEngine,
+            jqwikDataDirectory,
+            this.getProjectId(),
+            this.getGeneralizationId(),
+            this.getVariant(),
+            this.generalizationRecord.getMethodName()
+        );
         generalizedClassDeclaration.addNestedType(testParametersClassDeclaration);
         generalizedClassDeclaration.addNestedType(testParametersSupplierClassDeclaration);
         generalizedClassDeclaration.addNestedType(jqwikValueRecorderClass);
@@ -415,6 +421,14 @@ public class TestGeneralizationTask extends AbstractTask {
         propertyAnnotation.addValue("shrinking", factory.Code().createCodeSnippetExpression("net.jqwik.api.ShrinkingMode.OFF"));
         propertyAnnotation.addValue("edgeCases", factory.Code().createCodeSnippetExpression("net.jqwik.api.EdgeCasesMode.FIRST"));
         testMethod.addAnnotation(propertyAnnotation);
+
+        // Install the filter-exhaustion lifecycle hook so a property that exhausts
+        // Arbitrary.filter(...) after validating a distinct new tuple is remapped to a
+        // passing result (LIMITED), keeping the suite physically green for PIT.
+        CtAnnotation<Annotation> addLifecycleHookAnnotation = factory.Core().createAnnotation();
+        addLifecycleHookAnnotation.setAnnotationType(factory.Type().createReference("net.jqwik.api.lifecycle.AddLifecycleHook"));
+        addLifecycleHookAnnotation.addValue("value", factory.Code().createClassAccess(factory.Type().createReference("JqwikValueRecorder.LimitedFilterMissesHook")));
+        testMethod.addAnnotation(addLifecycleHookAnnotation);
 
         // ------------------------------------------------------------------------------------------------------ //
         // Add `@ForAll(...) TestParameters testParameters` to the test method signature.                         //

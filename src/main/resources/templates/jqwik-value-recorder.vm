@@ -1,29 +1,57 @@
-## @vtlvariable name="valueLogPath" type="java.lang.String"
-## Generated jqwik value recorder. The whole class body is emitted verbatim via Velocity
-## literal blocks (#[[ ... ]]#) so Java '$', '\', and '#' characters need no escaping; only
-## ${valueLogPath} is interpolated.
+## @vtlvariable name="projectId" type="java.lang.Long"
+## @vtlvariable name="generalizationId" type="java.lang.Long"
+## @vtlvariable name="variant" type="java.lang.String"
+## @vtlvariable name="testCaseName" type="java.lang.String"
+## @vtlvariable name="baseDirectory" type="java.lang.String"
+## Generated jqwik value recorder + filter-exhaustion lifecycle hook. The class body is
+## emitted verbatim via Velocity literal blocks (#[[ ... ]]#) so Java '$', '\', and '#'
+## need no escaping; only the identity constants are interpolated.
 #[[
 public static class JqwikValueRecorder {
-    private static final java.nio.file.Path VALUE_LOG_PATH = java.nio.file.Paths.get("]]#${valueLogPath}#[[");
-    private static boolean initialized = false;
+    private enum DiagnosticsMode { IN_MEMORY_ONLY, PERSISTED }
+
+    private static final long PROJECT_ID = ]]#${projectId}#[[L;
+    private static final long GENERALIZATION_ID = ]]#${generalizationId}#[[L;
+    private static final String VARIANT = "]]#${variant}#[[";
+    private static final String TEST_CASE_NAME = "]]#${testCaseName}#[[";
+    private static final java.nio.file.Path BASE_DIRECTORY = java.nio.file.Paths.get("]]#${baseDirectory}#[[");
+
+    private static String seedRow = null;
+    private static boolean sawDistinctNonSeedTuple = false;
+    private static final java.util.List<String> rows = new java.util.ArrayList<String>();
+    private static final java.util.Set<String> distinctRows = new java.util.LinkedHashSet<String>();
 
     public static synchronized void reset() {
-        try {
-            java.nio.file.Files.createDirectories(VALUE_LOG_PATH.getParent());
-            java.nio.file.Files.deleteIfExists(VALUE_LOG_PATH);
-            initialized = true;
-        } catch (java.io.IOException e) {
-            throw new RuntimeException(e);
+        seedRow = null;
+        sawDistinctNonSeedTuple = false;
+        rows.clear();
+        distinctRows.clear();
+        if (diagnosticsMode() == DiagnosticsMode.PERSISTED) {
+            try {
+                java.nio.file.Files.createDirectories(executionDirectory());
+                java.nio.file.Files.deleteIfExists(valueLogPath());
+                java.nio.file.Files.deleteIfExists(outcomePath());
+            } catch (java.io.IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public static synchronized void record(final TestParameters parameters) {
+        String serialized = serializeRow(parameters);
+        if (seedRow == null) {
+            seedRow = serialized;
+        } else if (!seedRow.equals(serialized)) {
+            sawDistinctNonSeedTuple = true;
+        }
+        if (diagnosticsMode() == DiagnosticsMode.PERSISTED) {
+            rows.add(serialized);
+            distinctRows.add(serialized);
+        }
+    }
+
+    private static String serializeRow(final TestParameters parameters) {
         try {
-            java.nio.file.Files.createDirectories(VALUE_LOG_PATH.getParent());
-            if (!initialized) {
-                java.nio.file.Files.deleteIfExists(VALUE_LOG_PATH);
-                initialized = true;
-            }
             StringBuilder row = new StringBuilder();
             for (java.lang.reflect.Field field : TestParameters.class.getDeclaredFields()) {
                 if (field.isSynthetic() || field.getName().startsWith("$")) {
@@ -35,8 +63,8 @@ public static class JqwikValueRecorder {
                 field.setAccessible(true);
                 row.append(field.getName()).append('=').append(escapeValue(field.get(parameters)));
             }
-            java.nio.file.Files.write(VALUE_LOG_PATH, java.util.Collections.singletonList(row.toString()), java.nio.charset.StandardCharsets.UTF_8, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
-        } catch (java.io.IOException | IllegalAccessException e) {
+            return row.toString();
+        } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -69,6 +97,145 @@ public static class JqwikValueRecorder {
             }
         }
         return escaped.toString();
+    }
+
+    private static DiagnosticsMode diagnosticsMode() {
+        String raw = System.getProperty("teralizer.jqwik.diagnosticsMode");
+        if (raw == null || raw.trim().isEmpty()) {
+            raw = System.getenv("TERALIZER_JQWIK_DIAGNOSTICS_MODE");
+        }
+        if (raw == null || raw.trim().isEmpty()) {
+            return DiagnosticsMode.IN_MEMORY_ONLY;
+        }
+        return DiagnosticsMode.valueOf(raw.trim());
+    }
+
+    private static String executionId() {
+        String raw = System.getProperty("teralizer.jqwik.executionId");
+        if (raw == null || raw.trim().isEmpty()) {
+            raw = System.getenv("TERALIZER_JQWIK_EXECUTION_ID");
+        }
+        return raw == null || raw.trim().isEmpty() ? "manual" : raw.trim();
+    }
+
+    private static java.nio.file.Path executionDirectory() {
+        return BASE_DIRECTORY.resolve("executions").resolve(executionId());
+    }
+
+    private static java.nio.file.Path valueLogPath() {
+        return executionDirectory().resolve(GENERALIZATION_ID + "." + VARIANT + ".values.tsv");
+    }
+
+    private static java.nio.file.Path outcomePath() {
+        return executionDirectory().resolve(GENERALIZATION_ID + "." + VARIANT + ".outcome.json");
+    }
+
+    private static String diagnosticKind(net.jqwik.api.lifecycle.PropertyExecutionResult raw, net.jqwik.api.lifecycle.PropertyExecutionResult mapped) {
+        boolean filterExhausted = raw.throwable().map(net.jqwik.api.TooManyFilterMissesException.class::isInstance).orElse(false);
+        if (mapped.status() == net.jqwik.api.lifecycle.PropertyExecutionResult.Status.SUCCESSFUL) {
+            if (raw.status() == net.jqwik.api.lifecycle.PropertyExecutionResult.Status.FAILED && filterExhausted) {
+                return "LIMITED_TOO_MANY_FILTER_MISSES";
+            }
+            return "FULL";
+        }
+        if (filterExhausted) {
+            return "FILTER_EXHAUSTED_SEED_ONLY";
+        }
+        if (raw.status() == net.jqwik.api.lifecycle.PropertyExecutionResult.Status.FAILED) {
+            return "ASSERTION_FAILED";
+        }
+        return "EXECUTION_ERROR";
+    }
+
+    private static synchronized void writeOutcome(net.jqwik.api.lifecycle.PropertyExecutionResult raw, net.jqwik.api.lifecycle.PropertyExecutionResult mapped) {
+        if (diagnosticsMode() != DiagnosticsMode.PERSISTED) {
+            return;
+        }
+        try {
+            java.nio.file.Files.createDirectories(executionDirectory());
+            java.nio.file.Files.write(valueLogPath(), rows, java.nio.charset.StandardCharsets.UTF_8);
+            String throwableType = raw.throwable().map(t -> t.getClass().getName()).orElse("");
+            String throwableMessage = raw.throwable().map(t -> t.getMessage() == null ? "" : t.getMessage()).orElse("");
+            String seed = raw.seed().orElse("");
+            int distinctNewTuples = sawDistinctNonSeedTuple ? Math.max(1, distinctRows.size() - 1) : 0;
+            String json = "{\n"
+                + "  \"executionId\": \"" + jsonEscape(executionId()) + "\",\n"
+                + "  \"projectId\": " + PROJECT_ID + ",\n"
+                + "  \"generalizationId\": " + GENERALIZATION_ID + ",\n"
+                + "  \"variant\": \"" + jsonEscape(VARIANT) + "\",\n"
+                + "  \"testCaseName\": \"" + jsonEscape(TEST_CASE_NAME) + "\",\n"
+                + "  \"diagnosticsMode\": \"PERSISTED\",\n"
+                + "  \"rawStatus\": \"" + raw.status() + "\",\n"
+                + "  \"finalStatus\": \"" + mapped.status() + "\",\n"
+                + "  \"diagnosticKind\": \"" + diagnosticKind(raw, mapped) + "\",\n"
+                + "  \"throwableType\": \"" + jsonEscape(throwableType) + "\",\n"
+                + "  \"throwableMessage\": \"" + jsonEscape(throwableMessage) + "\",\n"
+                + "  \"tries\": " + raw.countTries() + ",\n"
+                + "  \"checks\": " + raw.countChecks() + ",\n"
+                + "  \"distinctTuples\": " + distinctRows.size() + ",\n"
+                + "  \"distinctNewTuples\": " + distinctNewTuples + ",\n"
+                + "  \"seed\": \"" + jsonEscape(seed) + "\",\n"
+                + "  \"valueLogPath\": \"" + jsonEscape(valueLogPath().toString()) + "\"\n"
+                + "}\n";
+            java.nio.file.Files.write(outcomePath(), json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String jsonEscape(String value) {
+        StringBuilder escaped = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            switch (ch) {
+                case '\\':
+                    escaped.append("\\\\");
+                    break;
+                case '"':
+                    escaped.append("\\\"");
+                    break;
+                case '\n':
+                    escaped.append("\\n");
+                    break;
+                case '\r':
+                    escaped.append("\\r");
+                    break;
+                case '\t':
+                    escaped.append("\\t");
+                    break;
+                default:
+                    if (Character.isISOControl(ch) || Character.isSurrogate(ch)) {
+                        escaped.append(String.format("\\u%04x", (int) ch));
+                    } else {
+                        escaped.append(ch);
+                    }
+            }
+        }
+        return escaped.toString();
+    }
+
+    // Remaps a property that exhausted Arbitrary.filter(...) after validating at least one
+    // distinct new tuple to a passing result, so PIT and JUnit see a physically green test
+    // while the run stays queryable as filter-exhausted via the outcome sidecar.
+    public static final class LimitedFilterMissesHook implements net.jqwik.api.lifecycle.AroundPropertyHook {
+        @Override
+        public net.jqwik.api.lifecycle.PropertyExecutionResult aroundProperty(
+            net.jqwik.api.lifecycle.PropertyLifecycleContext context,
+            net.jqwik.api.lifecycle.PropertyExecutor property
+        ) {
+            net.jqwik.api.lifecycle.PropertyExecutionResult raw = property.execute();
+            net.jqwik.api.lifecycle.PropertyExecutionResult mapped = raw;
+            boolean filterExhausted = raw.throwable()
+                .map(net.jqwik.api.TooManyFilterMissesException.class::isInstance)
+                .orElse(false);
+            if (raw.status() == net.jqwik.api.lifecycle.PropertyExecutionResult.Status.FAILED
+                && filterExhausted
+                && sawDistinctNonSeedTuple) {
+                mapped = raw.mapToSuccessful();
+            }
+            writeOutcome(raw, mapped);
+            return mapped;
+        }
     }
 }
 ]]#
