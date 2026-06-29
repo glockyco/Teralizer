@@ -527,3 +527,26 @@ def _count_original_argument_values(arguments_json: object) -> int:
             value = argument
         values.append((index, str(value)))
     return len(set(values))
+
+
+def main() -> None:
+    """Print the JARVIS Table-2 head-to-head from the scratch scorecard DB.
+
+    ``uv run --directory analysis python -m teralizer.jarvis_scoreboard`` scores the
+    IMPROVED variant in ``postgres_jarvis_scoreboard`` against :data:`JARVIS_TABLE2`.
+    The working directory is moved to the repo root so the repo-relative jqwik
+    value-log paths resolve.
+    """
+    import os
+
+    from teralizer.config import db_config, find_project_root
+
+    os.chdir(Path(find_project_root()).parent)
+    engine = db_config.get_engine("postgres_jarvis_scoreboard", validate=False)
+    with engine.connect() as conn:
+        scoreboard = get_scoreboard(conn, variants=["NAIVE", "IMPROVED"])
+    print(compare_to_jarvis(scoreboard, variant="IMPROVED").to_string(index=False))
+
+
+if __name__ == "__main__":
+    main()

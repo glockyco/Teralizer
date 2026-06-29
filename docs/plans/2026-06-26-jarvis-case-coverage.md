@@ -200,6 +200,12 @@ this table transposed `testLinear` 160 and `testfirstDerivativeComparison` 264; 
 encoded `JARVIS_TABLE2` is authoritative.) IC stays a project-level sanity check until
 per-probe JaCoCo lands.
 
+Reproduce: with `postgres_jarvis_scoreboard` populated (see
+`skill://running-the-jarvis-scoreboard`), run
+`uv run --directory analysis python -m teralizer.jarvis_scoreboard`; it scores the
+IMPROVED variant against `JARVIS_TABLE2` via `compare_to_jarvis` and prints this
+table (it chdirs to the repo root so the jqwik value-log paths resolve).
+
 ## Spike results
 
 First-hand by an unbiased SPF investigator against the pinned stack; full report:
