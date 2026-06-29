@@ -30,8 +30,7 @@ work that depends on a re-run is deferred until (1) lands.
 Read this after `INDEX.md`. Grouped by how load-bearing each doc is now, not by
 type; `INDEX.md` carries the full status/parent tree and `archive/` the retired docs.
 
-**Read first — current focus: (1) beat JARVIS**
-- `2026-06-27-jarvis-scoreboard-evaluation-lane` *(spec)* — evaluation-lane contract for pinned JARVIS-era evidence.
+**Read first — current focus: (1) beat JARVIS — capability won; generator/PVC ongoing**
 - `2026-06-28-clause-driven-input-generation` *(spec)* — current generator design: clause-driven planners, single type-capability source, fail-loud SPF→Model seam.
 - `2026-06-28-generation-coverage-telemetry` *(note)* — telemetry schema the generator self-reports against.
 - `2026-06-27-generalizable-input-rule` *(spec)* — shared input-eligibility rule for every consumer.
@@ -39,7 +38,6 @@ type; `INDEX.md` carries the full status/parent tree and `archive/` the retired 
 - `2026-06-26-jarvis-case-coverage` *(audit)* — per-case Table-2 targets + provenance.
 - `2026-06-28-pipeline-architecture-review` *(audit)* — architecture/implementation findings feeding the paper's §5.3 roadmap.
 - `2026-06-28-pipeline-improvements` *(plan)* — ordered execution of those findings.
-- `2026-06-28-maxulps-raw-bits-lane` *(plan)* — research lane for the maxUlps raw-bits probe.
 
 **Active — applicability track (secondary to JARVIS)**
 - `2026-06-27-ensemble-mut-identification` *(spec, draft)* — killed-mutant focal-method oracle replacing LCBA.
@@ -59,11 +57,11 @@ type; `INDEX.md` carries the full status/parent tree and `archive/` the retired 
 
 ## Win condition (summary)
 
-"Beat JARVIS" = **capability** (10 JARVIS Table-2 rows entering the pipeline; the current evidence run tracks 14 assertion-level Teralizer probes, plus one separate non-Table-2 maxUlps spike) **+ transparent PVC**.
-Current run status: all 10 Table-2 rows enter and all generated tests pass. IC is retained as a sanity check only because the current project-level JaCoCo rows conflate all generated probes; the observed Math IC increase comes entirely from the separate maxUlps probe in `Precision.equals(double,double,int)`. Remaining explicit concessions are row-scoped: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria
-and the metric definition live in `2026-06-26-beat-jarvis-phase1`; the active evidence lane is `2026-06-27-jarvis-scoreboard-evaluation-lane`, using the archived receiver-input and evidence-run plans plus the live `2026-06-26-jarvis-case-coverage` audit.
+"Beat JARVIS" = **capability** (all 10 JARVIS Table-2 rows enter the pipeline as 14 passing assertion-level probes, exclusion-free) **+ transparent PVC** (per-row IMPROVED-vs-JARVIS, computed by `jarvis_scoreboard.compare_to_jarvis`; CLI `uv run --directory analysis python -m teralizer.jarvis_scoreboard`).
 
-The residual-aware generator rerun (2026-06-28) is exclusion-free: all 30 NAIVE + IMPROVED generated tests pass after fixing a non-finite real-scale crash and a surrogate value-log crash. IMPROVED is now ≥ NAIVE on 11/14 passing probes; the affine `eps >= y - x` encoding lowers PVC on the three `Precision.equals` probes (still above JARVIS's 102). Refreshed per-probe PVC and the maxUlps spike gap live in `2026-06-28-residual-aware-generator-rerun`.
+Capability is won: the rejected paper handled 9/10 of these rows only because Teralizer's static-method/numeric selection excluded them; now `char`, instance-method/object-construction, and FastMath all enter and pass. The non-Table-2 `Precision.equals(double, double, int maxUlps)` raw-bits probe is excluded in both directions (renderer fail-loud, `2026-06-28-maxulps-raw-bits-lane` archived as bounded-upstream-infeasible); IC stays a project-level sanity check (the JaCoCo rows conflate probes) until per-probe fixtures land. Row-scoped concessions: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria live in the archived `2026-06-26-beat-jarvis-phase1`.
+
+On PVC, IMPROVED beats JARVIS's published Scala-PBT PVC on **5 of 10** rows (both `char` rows, `toIntExact`, `IntervalTest`, `Precision`-eps); the 5 trails are single-`double` rows where JARVIS's multiple-generator-per-scenario sampling out-diversifies a single 100-check arbitrary — a sampling-strategy difference, not a soundness or capability gap. The per-row head-to-head lives in `2026-06-26-jarvis-case-coverage`; the exclusion-free Rerun 2 (IMPROVED ≥ NAIVE on 8/14 probes) in `2026-06-28-residual-aware-generator-rerun`.
 
 ## Pointers
 

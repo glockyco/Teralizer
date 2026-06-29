@@ -1,12 +1,24 @@
 ---
 title: maxUlps Raw-Bits Lane
 type: plan
-status: active
+status: implemented
 created: 2026-06-28
 parent: 2026-06-26-teralizer-overview
+archived: 2026-06-29
 ---
 
 Make `Precision.equals(double, double, int maxUlps)` a sound, by-construction Teralizer capability instead of a documented concession. This splits the research-grade raw-bits work out of `2026-06-28-pipeline-improvements`; the findings come from `2026-06-28-pipeline-architecture-review` (Gap 1–3, B-1, B-3, B-4, D-3) and the proof-of-concept in archived `2026-06-27-spf-ulps-raw-bits-spike`. Probe context lives in `2026-06-26-jarvis-case-coverage`.
+
+## Outcome (lane closed)
+
+Gap 1 shipped and is reused: per-probe `SpfSymbolicConfig` + the
+`SpfSymbolicConfigSelector` static detection, plus the renderer's fail-loud guard on
+bitwise/shift over floating-point operands (D-3 + B-4). Gap 2, Gap 3, B-1, B-3, and
+D-1 are **bounded upstream-SPF tasks, not silent concessions** (acceptance
+criterion 3): research-grade Model-node / solver-bridge / by-construction-generator
+work disproportionate to one non-Table-2 probe. `Precision.equals(double, double, int
+maxUlps)` therefore stays an explicit, documented exclusion, and Rerun 2 confirms no
+Table-2 row regresses.
 
 ## Why this is its own lane
 
@@ -39,7 +51,7 @@ The spike proved the SPF solver layer can preserve symbolic raw bits (`PCParser`
 
 ### Verification
 
-- [ ] Re-run the JARVIS scorecard on the scratch DB; confirm the `precisionEqualsMaxUlps` assertTrue probe is sound (precondition satisfied by construction) and no Table-2 row regresses. If still infeasible, document the precise residual blocker.
+- [x] Re-ran the JARVIS scorecard on the scratch DB (Rerun 2): no Table-2 row regresses, and the `precisionEqualsMaxUlps` probe stays excluded. Residual blocker documented: Gap 2 ingestion + Gap 3 by-construction generation (both bounded upstream-SPF).
 
 ## Dependencies
 

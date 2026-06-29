@@ -1,9 +1,10 @@
 ---
 title: JARVIS Scoreboard Evaluation Lane
 type: spec
-status: active
+status: implemented
 created: 2026-06-27
 parent: 2026-06-26-teralizer-overview
+archived: 2026-06-29
 ---
 
 A clean evaluation lane for turning Phase-1 JARVIS capability work into reproducible Table-2 evidence.
