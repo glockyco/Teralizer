@@ -1,5 +1,6 @@
 package teralizer.processing.task;
 
+import com.google.gson.Gson;
 import org.apache.maven.plugin.surefire.log.api.NullConsoleLogger;
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
 import org.apache.maven.plugins.surefire.report.ReportTestSuite;
@@ -18,6 +19,7 @@ import spoon.reflect.factory.Factory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
+import teralizer.processing.diagnostics.JqwikDiagnosticOutcome;
 import teralizer.repository.SQLiteRepository;
 import teralizer.util.Configuration;
 
@@ -25,6 +27,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -79,6 +82,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
 
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        Gson gson = context.get(TaskContext.GSON);
         Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
         switch (this.stage) {
@@ -114,6 +118,7 @@ public class JunitDataCollectionTask extends AbstractTask {
                 } else {
                     List<JunitTestReportRecord> testReportRecords = this.collectGeneralizationReportData(create);
                     create.batchInsert(testReportRecords).execute();
+                    this.importJqwikDiagnostics(create, gson);
                 }
                 break;
             default:
@@ -237,6 +242,84 @@ public class JunitDataCollectionTask extends AbstractTask {
         return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
             .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
             .collect(Collectors.toList());
+    }
+
+    private void importJqwikDiagnostics(DSLContext create, Gson gson) {
+        JqwikExecutionRunRecord runRecord = create
+            .selectFrom(Tables.JQWIK_EXECUTION_RUN)
+            .where(Tables.JQWIK_EXECUTION_RUN.PROJECT_ID.eq(this.getProjectId()))
+            .and(Tables.JQWIK_EXECUTION_RUN.VARIANT.eq(this.variant))
+            .and(Tables.JQWIK_EXECUTION_RUN.EXECUTION_KIND.eq("JUNIT"))
+            .orderBy(Tables.JQWIK_EXECUTION_RUN.ID.desc())
+            .limit(1)
+            .fetchOne();
+
+        if (runRecord == null) {
+            // No execution run was registered, so there is nothing to key diagnostics against.
+            return;
+        }
+
+        Long junitTestReportId = create
+            .select(Tables.JUNIT_TEST_REPORT.ID)
+            .from(Tables.JUNIT_TEST_REPORT)
+            .where(Tables.JUNIT_TEST_REPORT.GENERALIZATION_ID.eq(this.getGeneralizationId()))
+            .and(Tables.JUNIT_TEST_REPORT.STAGE.eq(this.stage))
+            .and(Tables.JUNIT_TEST_REPORT.VARIANT.eq(this.variant))
+            .orderBy(Tables.JUNIT_TEST_REPORT.ID.desc())
+            .limit(1)
+            .fetchOne(Tables.JUNIT_TEST_REPORT.ID);
+
+        Path outcomePath = this.resolveDiagnosticSidecarPath(runRecord.getExecutionId());
+
+        JqwikPropertyExecutionRecord record = create.newRecord(Tables.JQWIK_PROPERTY_EXECUTION);
+        record.setJqwikExecutionRunId(runRecord.getId());
+        record.setProjectId(this.getProjectId());
+        record.setGeneralizationId(this.getGeneralizationId());
+        record.setJunitTestReportId(junitTestReportId);
+        record.setDiagnosticSidecarPath(outcomePath.toString());
+
+        if (Files.exists(outcomePath)) {
+            try {
+                String json = new String(Files.readAllBytes(outcomePath), StandardCharsets.UTF_8);
+                JqwikDiagnosticOutcome outcome = JqwikDiagnosticOutcome.fromJson(gson, json);
+                record.setTestCaseName(outcome.testCaseName != null ? outcome.testCaseName : this.generalizationRecord.getMethodName());
+                record.setDiagnosticKind(outcome.diagnosticKind);
+                record.setRawStatus(outcome.rawStatus);
+                record.setFinalStatus(outcome.finalStatus);
+                record.setThrowableType(outcome.throwableType);
+                record.setThrowableMessage(outcome.throwableMessage);
+                record.setTries(outcome.tries);
+                record.setChecks(outcome.checks);
+                record.setDistinctTuples(outcome.distinctTuples);
+                record.setDistinctNewTuples(outcome.distinctNewTuples);
+                record.setSeed(outcome.seed);
+                record.setSelectedValueLogPath(outcome.valueLogPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            // Absence of a sidecar is recorded explicitly so FULL is never inferred from a missing row.
+            record.setTestCaseName(this.generalizationRecord.getMethodName());
+            record.setDiagnosticKind("DIAGNOSTIC_MISSING");
+            record.setRawStatus("UNKNOWN");
+            record.setFinalStatus("UNKNOWN");
+        }
+
+        record.store();
+    }
+
+    private Path resolveDiagnosticSidecarPath(String executionId) {
+        Path relativePath = this.projectRecord.getDataPath()
+            .resolve("project-id-" + this.getProjectId())
+            .resolve("jqwik-data")
+            .resolve("executions")
+            .resolve(executionId)
+            .resolve(this.getGeneralizationId() + "." + this.getVariant() + ".outcome.json");
+
+        // The recorder runs with the project root as its working directory, so a data path that
+        // is relative resolves against the root there; mirror that here when locating the file.
+        Path rootedPath = this.projectRecord.getRootPath().resolve(relativePath);
+        return Files.exists(rootedPath) ? rootedPath : relativePath;
     }
 
     private Path identifyTestReportPath(String testClassName, String testClassQualifiedName) {
