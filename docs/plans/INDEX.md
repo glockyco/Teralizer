@@ -20,6 +20,7 @@
 - **Ensemble MUT Identification** [spec] `2026-06-27-ensemble-mut-identification` ← 2026-06-26-teralizer-overview
 - **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
+- **Filter-Exhaustion LIMITED Outcome** [spec] `2026-06-29-filter-exhaustion-limited-outcome` ← 2026-06-26-teralizer-overview
 
 ## superseded
 
