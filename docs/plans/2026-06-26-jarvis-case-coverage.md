@@ -166,22 +166,39 @@ supporting evidence for why the existing evaluation database cannot prove the cl
 
 Current per-probe NAIVE/IMPROVED PVC, the zero-exclusion result on the typed `InputGenerationPlanner` generator, the two robustness fixes, and the IC delta live in `2026-06-28-residual-aware-generator-rerun`. Metric definitions (probe, PVC, IC) and the run contract live in `2026-06-27-jarvis-scoreboard-evaluation-lane`.
 
-The JARVIS Table-2 reference targets (durable paper facts) are:
+The head-to-head is computed by `jarvis_scoreboard.compare_to_jarvis` from the
+Rerun-2 IMPROVED value logs against the encoded Table-2 reference (`JARVIS_TABLE2`),
+so it is reproducible and regression-guarded rather than a hand-tally. Teralizer PVC
+folds a row's assertion-level probes (the eps precedent); JARVIS PVC is the paper's
+Scala-PBT column.
 
-| Table row | Teralizer probes | JARVIS PBT PVC |
-|---|---:|---:|
-| `CharUtilsTest::isAscii` | 2 | 59 |
-| `CharUtilsTest::isPrintable` | 2 | 45 |
-| `FastMathTest::testMinMaxDouble` | 2 | 400 |
-| `FastMathTest::toIntExact` | 1 | 65 |
-| `IntervalTest` | 1 | 2 |
-| `PolynomialFunctionTest::testConstants` | 1 | 105 |
-| `PolynomialFunctionTest::testLinear` | 1 | 264 |
-| `PolynomialFunctionTest::testfirstDerivativeComparison` | 1 | 160 |
-| `PrecisionTest` (`eps`) | 2 | 102 |
-| `UnivariateFunctionTest::testAbs` | 1 | 506 |
+| Table row | params | Teralizer IMPROVED PVC | JARVIS PBT PVC | verdict |
+|---|---|---:|---:|:--|
+| `CharUtilsTest::isAscii` | char | 148 | 59 | win |
+| `CharUtilsTest::isPrintable` | char | 82 | 45 | win |
+| `FastMathTest::testMinMaxDouble` | double² | 304 | 400 | trail |
+| `FastMathTest::toIntExact` | int | 90 | 65 | win |
+| `IntervalTest` | double² | 88 | 2 | win |
+| `PolynomialFunctionTest::testConstants` | double | 90 | 105 | trail |
+| `PolynomialFunctionTest::testfirstDerivativeComparison` | double | 89 | 264 | trail |
+| `PolynomialFunctionTest::testLinear` | double | 90 | 160 | trail |
+| `PrecisionTest` (eps) | double³ | 206 | 102 | win |
+| `UnivariateFunctionTest::testAbs` | double | 94 | 506 | trail |
 
-All 10 rows enter as 14 assertion-level probes (plus a separate non-Table-2 `Precision.equals(double,double,int maxUlps)` spike probe), and all generated tests pass. JARVIS Table 2 used ScalaCheck's 100-tests-per-PBT default with multiple generators per scenario, so some row PVCs (e.g. `UnivariateFunctionTest::testAbs` at 506) exceed a single one-parameter 100-check run — the honest comparison reports probe count and PVC together rather than collapsing to an unqualified win/loss. IC is a project-level sanity check, not the headline, until per-probe JaCoCo is added.
+**Capability — all 10 rows enter as 14 passing assertion-level probes, exclusion-free**
+(plus the non-Table-2 `Precision.equals(double,double,int maxUlps)` raw-bits probe,
+excluded). That is the headline RQ6 result: the rejected paper handled 9/10 of these
+rows only because Teralizer's static-method/numeric selection excluded them.
+
+**PVC — IMPROVED wins 5/10, trails 5/10.** The wins are both char rows, `toIntExact`,
+`IntervalTest`, and `Precision`-eps. The trails are the single-`double` rows (plus
+`testMinMaxDouble`): JARVIS pairs multiple ScalaCheck generators per scenario, so its
+per-`double` PVC (264, 506…) exceeds what one jqwik arbitrary yields in a 100-check
+run (~90 cap) — a sampling-strategy difference, partially closable with more
+trials/generators, not a soundness or capability gap. (An earlier prose version of
+this table transposed `testLinear` 160 and `testfirstDerivativeComparison` 264; the
+encoded `JARVIS_TABLE2` is authoritative.) IC stays a project-level sanity check until
+per-probe JaCoCo lands.
 
 ## Spike results
 
