@@ -589,44 +589,36 @@ def test_get_mutation_scores_counts_distinct_mutants():
             """
             CREATE TABLE pit_mutation_report (
                 project_id INTEGER, variant TEXT, stage TEXT, is_detected INTEGER,
-                mutated_class TEXT, mutated_method TEXT, method_description TEXT,
-                line_number INTEGER, mutator TEXT, indexes INTEGER
+                status TEXT, mutated_class TEXT, mutated_method TEXT,
+                method_description TEXT, line_number INTEGER, mutator TEXT,
+                indexes INTEGER
             );
             """
         )
         g = "COLLECT_PIT_DATA_GENERALIZED"
         rows = [
-            # IMPROVED: mutant A killed (reported twice -> one kill), B survived,
-            # C killed with a NULL description (must not be dropped by the key).
-            (1, "IMPROVED", g, 1, "C", "m", "desc", 10, "MUT_A", 0),
-            (1, "IMPROVED", g, 1, "C", "m", "desc", 10, "MUT_A", 0),
-            (1, "IMPROVED", g, 0, "C", "m", "desc", 11, "MUT_B", 0),
-            (1, "IMPROVED", g, 1, "C", "m", None, 12, "MUT_C", 0),
-            (1, "NAIVE", g, 1, "C", "m", "desc", 10, "MUT_A", 0),
+            # IMPROVED: A killed (twice -> one kill), B survived (covered, not killed),
+            # C killed with a NULL description, D NO_COVERAGE (reached by no test).
+            (1, "IMPROVED", g, 1, "KILLED", "C", "m", "desc", 10, "MUT_A", 0),
+            (1, "IMPROVED", g, 1, "KILLED", "C", "m", "desc", 10, "MUT_A", 0),
+            (1, "IMPROVED", g, 0, "SURVIVED", "C", "m", "desc", 11, "MUT_B", 0),
+            (1, "IMPROVED", g, 1, "KILLED", "C", "m", None, 12, "MUT_C", 0),
+            (1, "IMPROVED", g, 0, "NO_COVERAGE", "C", "m", "desc", 13, "MUT_D", 0),
+            (1, "NAIVE", g, 1, "KILLED", "C", "m", "desc", 10, "MUT_A", 0),
             # wrong stage -> excluded.
-            (
-                1,
-                "IMPROVED",
-                "COLLECT_PIT_DATA_INITIAL",
-                1,
-                "C",
-                "m",
-                "d",
-                99,
-                "MUT_Z",
-                0,
-            ),
+            (1, "IMPROVED", "X", 1, "KILLED", "C", "m", "d", 99, "MUT_Z", 0),
         ]
         conn.executemany(
-            "INSERT INTO pit_mutation_report VALUES (?,?,?,?,?,?,?,?,?,?)", rows
+            "INSERT INTO pit_mutation_report VALUES (?,?,?,?,?,?,?,?,?,?,?)", rows
         )
         conn.commit()
 
         scores = get_mutation_scores(conn).set_index("variant")
         assert scores.loc["IMPROVED", "killed_mutants"] == 2  # A once + C
-        assert scores.loc["IMPROVED", "total_mutants"] == 3  # A, B, C
+        assert scores.loc["IMPROVED", "covered_mutants"] == 3  # A, B, C (not D)
+        assert scores.loc["IMPROVED", "total_mutants"] == 4  # A, B, C, D
         assert scores.loc["NAIVE", "killed_mutants"] == 1
-        assert scores.loc["NAIVE", "total_mutants"] == 1
+        assert scores.loc["NAIVE", "covered_mutants"] == 1
         assert set(get_mutation_scores(conn, variants=["IMPROVED"])["variant"]) == {
             "IMPROVED"
         }
@@ -655,6 +647,7 @@ def test_summarize_variants_pairs_flat_kills_with_rising_pvc():
                 "IMPROVED_1000_TRIES",
             ],
             "killed_mutants": [44, 10, 44, 10],
+            "covered_mutants": [80, 7, 80, 7],
             "total_mutants": [2000, 953, 2000, 953],
         }
     )
@@ -663,11 +656,12 @@ def test_summarize_variants_pairs_flat_kills_with_rising_pvc():
     assert summary.loc["IMPROVED", "total_pvc"] == 148
     assert summary.loc["IMPROVED_1000_TRIES", "total_pvc"] == 480
     assert summary.loc["IMPROVED", "probes"] == 2
-    # ...while kills (summed across fixtures) and score stay flat.
+    # ...while kills, covered mutants, and the covered score stay flat.
     assert summary.loc["IMPROVED", "killed_mutants"] == 54
-    assert summary.loc["IMPROVED_1000_TRIES", "killed_mutants"] == 54
+    assert summary.loc["IMPROVED", "covered_mutants"] == 87
     assert summary.loc["IMPROVED", "total_mutants"] == 2953
+    assert summary.loc["IMPROVED", "covered_mutation_score"] == round(54 / 87, 4)
     assert (
-        summary.loc["IMPROVED", "mutation_score"]
-        == summary.loc["IMPROVED_1000_TRIES", "mutation_score"]
+        summary.loc["IMPROVED", "covered_mutation_score"]
+        == summary.loc["IMPROVED_1000_TRIES", "covered_mutation_score"]
     )

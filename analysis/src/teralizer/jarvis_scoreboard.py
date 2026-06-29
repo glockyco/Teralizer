@@ -396,14 +396,15 @@ def get_mutation_scores(
     project_ids: Iterable[int] | None = None,
     variants: Iterable[str] | None = None,
 ) -> pd.DataFrame:
-    """Return distinct killed/total PIT mutants per project and generated variant.
+    """Return distinct killed/covered/total PIT mutants per project and variant.
 
     Each mutant is counted once by its stable PIT identity
-    (class/method/description/line/mutator/index), so a mutant detected by several
-    generated tests is one kill, not several; every key component is null-guarded so
-    a nullable field never silently drops a mutant. ``total_mutants`` is project-wide
-    (PIT mutates the whole fixture, not only the probed methods) and constant across
-    variants — the comparable signal is ``killed_mutants``.
+    (class/method/description/line/mutator/index); every key component is
+    null-guarded so a nullable field never silently drops a mutant.
+    ``covered_mutants`` excludes ``NO_COVERAGE``/``NON_VIABLE`` -- the mutants the
+    generated tests actually reach, which is the meaningful denominator. The
+    project-wide ``total_mutants`` is kept for context but is dominated by mutants
+    in code the probes never touch.
     """
     mutant_key = (
         "COALESCE(mutated_class, '<null>') || '|' || "
@@ -418,6 +419,9 @@ def get_mutation_scores(
         project_id,
         variant,
         COUNT(DISTINCT {mutant_key}) FILTER (WHERE is_detected) AS killed_mutants,
+        COUNT(DISTINCT {mutant_key}) FILTER (
+            WHERE status NOT IN ('NO_COVERAGE', 'NON_VIABLE')
+        ) AS covered_mutants,
         COUNT(DISTINCT {mutant_key}) AS total_mutants
     FROM pit_mutation_report
     WHERE stage = 'COLLECT_PIT_DATA_GENERALIZED'
@@ -426,7 +430,13 @@ def get_mutation_scores(
     ORDER BY project_id, variant
     """
     scores = pd.read_sql_query(query, conn)
-    columns = ["project_id", "variant", "killed_mutants", "total_mutants"]
+    columns = [
+        "project_id",
+        "variant",
+        "killed_mutants",
+        "covered_mutants",
+        "total_mutants",
+    ]
     if project_ids is not None and not scores.empty:
         scores = scores[scores["project_id"].isin(list(project_ids))]
     if variants is not None and not scores.empty:
@@ -434,8 +444,8 @@ def get_mutation_scores(
     if scores.empty:
         return pd.DataFrame(columns=columns)
     scores = scores.copy()
-    scores["killed_mutants"] = scores["killed_mutants"].astype(int)
-    scores["total_mutants"] = scores["total_mutants"].astype(int)
+    for column in ("killed_mutants", "covered_mutants", "total_mutants"):
+        scores[column] = scores[column].astype(int)
     return cast(pd.DataFrame, scores[columns].reset_index(drop=True))
 
 
@@ -581,14 +591,14 @@ def _count_original_argument_values(arguments_json: object) -> int:
 def summarize_variants(
     scoreboard: pd.DataFrame, mutation: pd.DataFrame
 ) -> pd.DataFrame:
-    """Per-variant totals for the tries sweep: probe count, summed PVC, and PIT kills.
+    """Per-variant tries-sweep totals: probe count, summed PVC, and PIT kills.
 
-    PVC sums a variant's per-probe distinct-value counts; ``killed_mutants`` and
-    ``total_mutants`` sum the distinct PIT kills/mutants across fixtures, and
-    ``mutation_score`` is their ratio. ``total_mutants`` is project-wide (PIT mutates
-    the whole fixture, not only the probed methods), so the score is a low, constant
-    floor — the point is that PVC rises with the tries budget while kills and score
-    stay flat.
+    PVC sums a variant's per-probe distinct-value counts. ``killed_mutants``,
+    ``covered_mutants`` and ``total_mutants`` sum the distinct PIT kills, covered
+    mutants (reached by the tests) and all project mutants across fixtures.
+    ``covered_mutation_score`` is killed/covered -- the meaningful score, since
+    ``total_mutants`` is dominated by code the probes never touch. The point is that
+    PVC rises with the tries budget while kills and the covered score stay flat.
     """
     pvc = scoreboard.groupby("variant").agg(
         probes=("parameter_value_coverage", "size"),
@@ -596,14 +606,24 @@ def summarize_variants(
     )
     muts = mutation.groupby("variant").agg(
         killed_mutants=("killed_mutants", "sum"),
+        covered_mutants=("covered_mutants", "sum"),
         total_mutants=("total_mutants", "sum"),
     )
     summary = pvc.join(muts, how="outer").reset_index()
-    for column in ("probes", "total_pvc", "killed_mutants", "total_mutants"):
+    int_columns = (
+        "probes",
+        "total_pvc",
+        "killed_mutants",
+        "covered_mutants",
+        "total_mutants",
+    )
+    for column in int_columns:
         summary[column] = summary[column].fillna(0).astype(int)
-    summary["mutation_score"] = [
-        round(killed / total, 4) if total else 0.0
-        for killed, total in zip(summary["killed_mutants"], summary["total_mutants"])
+    summary["covered_mutation_score"] = [
+        round(killed / covered, 4) if covered else 0.0
+        for killed, covered in zip(
+            summary["killed_mutants"], summary["covered_mutants"]
+        )
     ]
     return cast(pd.DataFrame, summary)
 
@@ -623,9 +643,9 @@ def main() -> None:
 
     ``uv run --directory analysis python -m teralizer.jarvis_scoreboard`` scores the
     IMPROVED_100_TRIES variant against :data:`JARVIS_TABLE2`. ``--sweep`` instead
-    prints the per-variant tries-sweep summary (PVC versus mutation score) for the
-    six canonical :data:`SWEEP_VARIANTS`; its ``probes`` column shows the passing
-    probe count, so an excluded probe (13 of 14) stays visible. The working
+    prints the per-variant tries-sweep summary (PVC versus covered mutation score)
+    for the six canonical :data:`SWEEP_VARIANTS`; its ``probes`` column shows the
+    passing probe count, so an excluded probe (13 of 14) stays visible. The working
     directory moves to the repo root so the repo-relative jqwik value-log paths
     resolve.
     """
@@ -638,7 +658,7 @@ def main() -> None:
     parser.add_argument(
         "--sweep",
         action="store_true",
-        help="print the tries-sweep summary (PVC vs mutation score) per variant",
+        help="print the tries-sweep summary (PVC vs covered mutation score)",
     )
     args = parser.parse_args()
 
