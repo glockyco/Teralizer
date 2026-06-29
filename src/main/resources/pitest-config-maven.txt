@@ -9,5 +9,8 @@
         </outputFormats>
         <exportLineCoverage>true</exportLineCoverage>
         <verbose>true</verbose>
+        <jvmArgs>
+            <jvmArg>-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY</jvmArg>
+        </jvmArgs>
     </configuration>
 </plugin>

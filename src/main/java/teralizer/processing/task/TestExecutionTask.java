@@ -1,6 +1,8 @@
 package teralizer.processing.task;
 
 import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.JqwikExecutionRunRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -15,6 +17,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -65,6 +68,26 @@ public class TestExecutionTask extends AbstractTask {
 
         if (includedTests != null && includedTests.isEmpty()) {
             throw new RuntimeException("Failed test execution. All tests of the project are excluded.");
+        }
+
+        if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {
+            // One persisted diagnostics execution per generalized JUnit run. The generated
+            // recorder writes execution-scoped sidecars keyed by this id; collection finds
+            // the run and imports them. Forked Surefire/Gradle test JVMs inherit the process
+            // environment, so the recorder reads these without per-build argLine tweaks.
+            String executionId = UUID.randomUUID().toString();
+
+            JqwikExecutionRunRecord runRecord = create.newRecord(Tables.JQWIK_EXECUTION_RUN);
+            runRecord.setExecutionId(executionId);
+            runRecord.setProjectId(this.projectRecord.getId());
+            runRecord.setStep(this.stage.getStep());
+            runRecord.setStage(this.stage.name());
+            runRecord.setVariant(this.variant);
+            runRecord.setExecutionKind("JUNIT");
+            runRecord.store();
+
+            this.consoleCommand.addEnvironmentVariable("TERALIZER_JQWIK_DIAGNOSTICS_MODE", "PERSISTED");
+            this.consoleCommand.addEnvironmentVariable("TERALIZER_JQWIK_EXECUTION_ID", executionId);
         }
 
         List<String> command;
