@@ -20,8 +20,10 @@ PIT mutation kills.
 Six variants -- `NAIVE` and `IMPROVED`, each at 100/200/1000 `jqwik.tries` -- declared
 in `project-configs/jarvis-scoreboard/{commons-math,commons-lang}-3.5.conf`, run on a
 freshly reset `postgres_jarvis_scoreboard` scratch DB (fixtures pinned at commons-math
-`MATH_3_5` / commons-lang `LANG_3_5`). Kills are distinct PIT mutants by stable
-identity from `COLLECT_PIT_DATA_GENERALIZED`. Point-in-time run 2026-06-29.
+`MATH_3_5` / commons-lang `LANG_3_5`). Mutants are counted distinct by stable PIT
+identity from `COLLECT_PIT_DATA_GENERALIZED`; covered = killed + survived (the
+mutants the tests reach), excluding `NO_COVERAGE`/`NON_VIABLE`. Point-in-time run
+2026-06-29.
 
 Reproduce:
 
@@ -33,27 +35,31 @@ uv run --directory analysis python -m teralizer.jarvis_scoreboard --sweep
 
 ## Result
 
-| variant | probes | total PVC | killed mutants | mutation score |
-|---|---|---|---|---|
-| NAIVE_100_TRIES | 14 | 1325 | 54 | 0.0183 |
-| NAIVE_200_TRIES | 13 | 2937 | 54 | 0.0183 |
-| NAIVE_1000_TRIES | 13 | 16071 | 54 | 0.0183 |
-| IMPROVED_100_TRIES | 14 | 1281 | 54 | 0.0183 |
-| IMPROVED_200_TRIES | 14 | 2766 | 54 | 0.0183 |
-| IMPROVED_1000_TRIES | 13 | 13797 | 51 | 0.0173 |
+| variant | probes | total PVC | killed | covered | covered score |
+|---|---|---|---|---|---|
+| NAIVE_100_TRIES | 14 | 1325 | 54 | 87 | 0.621 |
+| NAIVE_200_TRIES | 13 | 2937 | 54 | 87 | 0.621 |
+| NAIVE_1000_TRIES | 13 | 16071 | 54 | 87 | 0.621 |
+| IMPROVED_100_TRIES | 14 | 1281 | 54 | 87 | 0.621 |
+| IMPROVED_200_TRIES | 14 | 2766 | 54 | 87 | 0.621 |
+| IMPROVED_1000_TRIES | 13 | 13797 | 51 | 87 | 0.586 |
 
-**PVC is budget-elastic; mutation kills are flat.** Total PVC rises ~10-12x from 100
-to 1000 tries (NAIVE 1325 -> 16071, 12.1x; IMPROVED 1281 -> 13797, 10.8x), while the
-distinct kill count holds at 54 for every variant. The one exception,
-`IMPROVED_1000_TRIES` at 51, is an excluded probe (below), not a mutation-detection
-change. Extra tries buy input diversity, not fault detection.
+**PVC is budget-elastic; the covered mutation score is flat.** Total PVC rises
+~10-12x from 100 to 1000 tries (NAIVE 1325 -> 16071, 12.1x; IMPROVED 1281 -> 13797,
+10.8x), while the kill count holds at 54 and the covered score at 62% for every
+variant. The one exception, `IMPROVED_1000_TRIES` (51 kills, 58.6%), is an excluded
+probe (below), not a detection change. Extra tries buy input diversity, not fault
+detection.
 
-The score is small (1.8%) because PIT mutates the whole project while the generated
-tests target only the 10-14 JARVIS probe methods; the comparable signal is the kill
-count (54), not the project-wide ratio. The JARVIS MUTs are tiny (`isAscii`,
-`min`/`max`, `abs`, ...), so the score is near-ceiling and does not discriminate NAIVE
-from IMPROVED -- both kill the same 54. (Both generators also show the same
-budget-elasticity, so PVC ordering between them is incidental here, not the point.)
+**Denominator: covered, not project-wide.** PIT mutates the whole project (2953
+mutants), but the generated tests reach only the 10-14 probe methods, so 2866 are
+`NO_COVERAGE` -- code the probes never touch. Scoring against all 2953 gives a
+meaningless 1.8%. The meaningful denominator is the 87 *covered* mutants the tests
+actually reach: 54 killed + 33 survived -> 62%. The 33 survived are the genuine
+quality gap (covered code where neither generator's oracle catches the mutation), and
+they are flat across the budget too. The JARVIS MUTs are tiny (`isAscii`, `min`/`max`,
+`abs`, ...), so the covered score does not discriminate NAIVE from IMPROVED -- both
+kill the same 54 of 87.
 
 ### Per-probe PVC scales with the budget
 
@@ -93,9 +99,11 @@ silently passing it.
 
 ## Implication
 
-Mutation score -- the RQ1 fault-detection signal -- is invariant to the sampling
-budget, while PVC inflates monotonically with it. PVC therefore measures input
-diversity, not fault-detection power, and overstates effectiveness as the budget
+Covered mutation score -- the RQ1 fault-detection signal on the code the tests reach
+-- is invariant to the sampling budget (62%, flat; the project-wide 1.8% is the
+discarded denominator), while PVC inflates monotonically with it. PVC therefore
+measures input diversity, not fault-detection power, and overstates effectiveness as
+the budget
 grows. IMPROVED's value over NAIVE is path-exactness, fail-loud soundness, and
 low-budget efficiency -- not raw diversity, which NAIVE matches given enough tries.
 This is point-in-time evidence (jqwik sampling varies run to run); the qualitative
