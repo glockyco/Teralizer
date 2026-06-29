@@ -20,10 +20,9 @@
 - **Ensemble MUT Identification** [spec] `2026-06-27-ensemble-mut-identification` ← 2026-06-26-teralizer-overview
 - **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
-- **Filter-Exhaustion LIMITED Outcome** [spec] `2026-06-29-filter-exhaustion-limited-outcome` ← 2026-06-26-teralizer-overview
 
 ## superseded
 
 - **Residual-Aware Input Generation** [spec] `2026-06-27-residual-aware-input-generation` ← 2026-06-26-teralizer-overview
 
-_20 archived — see `docs/plans/archive/`._
+_21 archived — see `docs/plans/archive/`._

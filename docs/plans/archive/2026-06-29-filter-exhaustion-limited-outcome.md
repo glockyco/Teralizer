@@ -1,9 +1,10 @@
 ---
 title: Filter-Exhaustion LIMITED Outcome
 type: spec
-status: draft
+status: implemented
 created: 2026-06-29
 parent: 2026-06-26-teralizer-overview
+archived: 2026-06-29
 ---
 
 # Filter-Exhaustion LIMITED Outcome
