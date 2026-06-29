@@ -1,9 +1,10 @@
 ---
 title: Filter-Exhaustion LIMITED Implementation
 type: plan
-status: active
+status: implemented
 created: 2026-06-29
 parent: 2026-06-29-filter-exhaustion-limited-outcome
+archived: 2026-06-29
 ---
 
 # Filter-Exhaustion LIMITED Implementation Plan
