@@ -240,6 +240,12 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
 
     @Override
     public String fold(Operation operation, String left, String right) {
+        if (isBitwiseOrShift(operation.op)
+            && (isFloatingPoint(operation.left) || isFloatingPoint(operation.right))) {
+            throw new NonGeneralizableExpressionException(
+                "Cannot render operator '" + operation.op.name()
+                    + "' on floating-point operands as Java; the raw-bits relation is not modeled.");
+        }
         switch (operation.op) {
             case EQ:
                 return "(" + left + " == " + right + ")";
@@ -301,6 +307,55 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 throw new NonGeneralizableExpressionException(
                     "Unable to transform operation '" + operation + "' (operator " + operation.op.name() + ") to Java.");
         }
+    }
+
+    private static boolean isBitwiseOrShift(Operator op) {
+        switch (op) {
+            case AND:
+            case OR:
+            case XOR:
+            case SHIFTL:
+            case SHIFTR:
+            case SHIFTUR:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static boolean isFloatingPoint(Expression expression) {
+        if (expression instanceof VariableReal
+            || expression instanceof ConstantReal
+            || expression instanceof SymbolicRealFunction) {
+            return true;
+        }
+        if (expression instanceof Operation) {
+            Operation inner = (Operation) expression;
+            switch (inner.op) {
+                case POW:
+                case SQRT:
+                case EXP:
+                case LOG:
+                case SIN:
+                case COS:
+                case TAN:
+                case ASIN:
+                case ACOS:
+                case ATAN:
+                case ATAN2:
+                    return true;
+                case PLUS:
+                case MINUS:
+                case MUL:
+                case DIV:
+                case MOD:
+                    return (inner.left != null && isFloatingPoint(inner.left))
+                        || (inner.right != null && isFloatingPoint(inner.right));
+                default:
+                    return false;
+            }
+        }
+        return false;
     }
 
     @Override
