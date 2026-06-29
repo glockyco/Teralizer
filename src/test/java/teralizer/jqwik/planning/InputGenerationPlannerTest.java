@@ -86,14 +86,17 @@ public class InputGenerationPlannerTest {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("int", "x"));
         Model inputModel = new Operation(new VariableInteger("x"), Operator.GT, new ConstantInteger(0));
 
+        MethodArgument argument = new MethodArgument("int", "7");
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             parameters,
-            Collections.singletonMap("x", new MethodArgument("int", "7")),
+            Collections.singletonMap("x", argument),
             inputModel
         );
-        String body = plan.getParameterPlans().get(0).getRecipe().emit();
-
-        Assert.assertTrue(body.contains("new FirstValueArbitrary<Integer>((int) ("));
+        // The original concrete value is preserved on the plan and injected once at the tuple level,
+        // cast to the parameter type. Expected is derived from the transformer (not hardcoded) so this
+        // asserts preservation, not the existing int/char rendering quirk.
+        String expected = "(int) (" + new teralizer.transformer.ModelToJavaTransformer().transform(argument) + ")";
+        Assert.assertEquals(expected, plan.getParameterPlans().get(0).getOriginalValue());
     }
 
     @Example

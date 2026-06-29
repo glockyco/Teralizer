@@ -50,7 +50,7 @@ public class InputGenerationPlanner {
                 return domainPlanner.plan(parameter, context);
             }
         }
-        return new ParameterGenerationPlan(parameter, domain, new RawJavaRecipe(defaultRecipe(parameter, domain)), Collections.emptySet());
+        return new ParameterGenerationPlan(parameter, domain, new RawJavaRecipe(defaultRecipe(parameter, domain)), null, Collections.emptySet());
     }
 
     private static String defaultRecipe(MethodParameter parameter, TypeDomain domain) {

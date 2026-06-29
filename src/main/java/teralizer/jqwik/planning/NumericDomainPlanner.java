@@ -25,7 +25,10 @@ public class NumericDomainPlanner implements DomainPlanner {
             : Optional.empty();
         NumericClauseInterpretation interpretation = context.getInterpretation(parameter.getName());
         String body = createArbitrary(parameter, argument, interpretation.getConstraints());
-        return new ParameterGenerationPlan(parameter, domain, new RawJavaRecipe(body), interpretation.getConsumedClauseIds());
+        String originalValue = argument
+            .map(arg -> "(" + arg.getType() + ") (" + new ModelToJavaTransformer().transform(arg) + ")")
+            .orElse(null);
+        return new ParameterGenerationPlan(parameter, domain, new RawJavaRecipe(body), originalValue, interpretation.getConsumedClauseIds());
     }
 
     private static String createArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, VariableConstraints constraint) {
@@ -58,10 +61,6 @@ public class NumericDomainPlanner implements DomainPlanner {
 
     private static String createCharArbitrary(MethodParameter parameter, Optional<MethodArgument> argument, IntegerConstraints constraint) {
         if (constraint == null) {
-            if (argument.isPresent()) {
-                String firstValue = new ModelToJavaTransformer().transform(argument.get());
-                return String.format("return new FirstValueArbitrary<Character>((%s) (%s), net.jqwik.api.Arbitraries.chars())", argument.get().getType(), firstValue);
-            }
             return "return net.jqwik.api.Arbitraries.chars()";
         } else if (constraint.getEquality() != null) {
             return "return net.jqwik.api.Arbitraries.just((char) (" + constraint.getEquality() + "))";
@@ -78,7 +77,7 @@ public class NumericDomainPlanner implements DomainPlanner {
         if (argument.isPresent()) {
             String firstValue = new ModelToJavaTransformer().transform(argument.get());
             result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.just((char) (%s)); }%n", n.min(), n.max(), firstValue));
-            result.append(String.format("return new FirstValueArbitrary<Character>((char) (%s), net.jqwik.api.Arbitraries.chars().range(%s, %s))", firstValue, n.min(), n.max()));
+            result.append(String.format("return net.jqwik.api.Arbitraries.chars().range(%s, %s)", n.min(), n.max()));
         } else {
             result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max()));
             result.append(String.format("return net.jqwik.api.Arbitraries.chars().range(%s, %s)", n.min(), n.max()));
@@ -97,10 +96,6 @@ public class NumericDomainPlanner implements DomainPlanner {
         String maxValue
     ) {
         if (constraint == null) {
-            if (argument.isPresent()) {
-                String firstValue = new ModelToJavaTransformer().transform(argument.get());
-                return String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), firstValue, arbitraryType);
-            }
             return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
         } else if (constraint.getEquality() != null) {
             return "return net.jqwik.api.Arbitraries.just(" + String.format("(%s) (%s)", unboxedType, constraint.getEquality()) + ")";
@@ -118,7 +113,7 @@ public class NumericDomainPlanner implements DomainPlanner {
         if (argument.isPresent()) {
             String firstValue = new ModelToJavaTransformer().transform(argument.get());
             result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), argument.get().getType(), firstValue));
-            result.append(String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s().between(%s, %s))", argument.get().getType(), firstValue, arbitraryType, n.min(), n.max()));
+            result.append(String.format("return net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
         } else {
             result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max()));
             result.append(String.format("return net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
@@ -137,10 +132,6 @@ public class NumericDomainPlanner implements DomainPlanner {
         String maxValue
     ) {
         if (constraint == null) {
-            if (argument.isPresent()) {
-                String firstValue = new ModelToJavaTransformer().transform(argument.get());
-                return String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s())", argument.get().getType(), firstValue, arbitraryType);
-            }
             return String.format("return net.jqwik.api.Arbitraries.%s()", arbitraryType);
         } else if (constraint.getEquality() != null) {
             return "return net.jqwik.api.Arbitraries.just(" + String.format("(%s) (%s)", unboxedType, constraint.getEquality()) + ")";
@@ -165,7 +156,7 @@ public class NumericDomainPlanner implements DomainPlanner {
         if (argument.isPresent()) {
             String firstValue = new ModelToJavaTransformer().transform(argument.get());
             result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded(), argument.get().getType(), firstValue));
-            result.append(String.format("return new FirstValueArbitrary<" + boxedType + ">((%s) (%s), net.jqwik.api.Arbitraries.%s().ofScale(%s).between(%s, %s, %s, %s))", argument.get().getType(), firstValue, arbitraryType, n.scale(), n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
+            result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%s).between(%s, %s, %s, %s)", arbitraryType, n.scale(), n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
         } else {
             result.append(String.format("if ((%s > %s) || (%s == %s && (!%s || !%s))) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max(), n.min(), n.max(), n.minIncluded(), n.maxIncluded()));
             result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%s).between(%s, %s, %s, %s)", arbitraryType, n.scale(), n.min(), n.minIncluded(), n.max(), n.maxIncluded()));

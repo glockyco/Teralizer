@@ -168,7 +168,30 @@ public class ImprovedSupplierRenderingTest {
             plan
         );
 
-        Assert.assertTrue(supplierClass.toString().contains("FirstValueArbitrary"));
+        String code = supplierClass.toString();
+        Assert.assertTrue("seed must wrap the whole tuple (FirstValueArbitrary<TestParameters>), not the parameter",
+            code.contains("FirstValueArbitrary<TestParameters>(new TestParameters("));
+        Assert.assertFalse("must not wrap individual parameters (per-param injection collapses inner diversity under flatMap)",
+            code.contains("FirstValueArbitrary<Integer"));
+    }
+
+    @Example
+    void wrapsCombinedTupleNotIndividualParametersForMultipleParameters() {
+        MethodParameter a = new MethodParameter("int", "a");
+        MethodParameter b = new MethodParameter("int", "b");
+        java.util.Map<String, MethodArgument> arguments = new java.util.HashMap<>();
+        arguments.put("a", new MethodArgument("int", "7"));
+        arguments.put("b", new MethodArgument("int", "9"));
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(java.util.Arrays.asList(a, b), arguments, null);
+        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(), java.util.Arrays.asList(a, b), null, plan);
+        String code = supplierClass.toString();
+        // Tuple-level: the exact original combination is the seed, wrapped once around the whole tuple.
+        Assert.assertTrue("must inject the original tuple at the tuple level",
+            code.contains("FirstValueArbitrary<TestParameters>(new TestParameters("));
+        // The flatMap-collapse bug: per-parameter FirstValueArbitrary pins inner params to their firstValue.
+        Assert.assertFalse("must not wrap individual parameters",
+            code.contains("FirstValueArbitrary<Integer"));
     }
 
     @Example
@@ -182,6 +205,7 @@ public class ImprovedSupplierRenderingTest {
                 x,
                 teralizer.jqwik.planning.TypeDomain.INTEGER,
                 new teralizer.jqwik.planning.RawJavaRecipe("return net.jqwik.api.Arbitraries.integers().between(0, 4)"),
+                null,
                 java.util.Collections.singleton(0)
             );
         InputGenerationPlan plan = new InputGenerationPlan(

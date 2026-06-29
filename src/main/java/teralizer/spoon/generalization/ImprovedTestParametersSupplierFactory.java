@@ -32,7 +32,8 @@ public class ImprovedTestParametersSupplierFactory {
 
         String fullPredicate = plan.getFullPredicate();
         boolean applyInputFilter = plan.hasClauses();
-        createGetMethod(supplierClass, parameters, fullPredicate, applyInputFilter);
+        String originalTuple = buildOriginalTuple(plan.getParameterPlans());
+        createGetMethod(supplierClass, parameters, fullPredicate, applyInputFilter, originalTuple);
 
         for (int i = 0; i < parameters.size(); i++) {
             ParameterGenerationPlan parameterPlan = plan.getParameterPlans().get(i);
@@ -46,7 +47,8 @@ public class ImprovedTestParametersSupplierFactory {
         CtClass<?> supplierClass,
         List<MethodParameter> parameters,
         String inputJava,
-        boolean applyInputFilter
+        boolean applyInputFilter,
+        String originalTuple
     ) {
         Factory factory = supplierClass.getFactory();
 
@@ -60,29 +62,14 @@ public class ImprovedTestParametersSupplierFactory {
             return;
         }
 
-        // Build a method body that looks like:
-        //     return get_x().flatMap(new java.util.function.Function<Integer, net.jqwik.api.Arbitrary<TestParameters>>() {
-        //         public net.jqwik.api.Arbitrary<TestParameters> apply(final Integer x) {
-        //             return get_y(x).flatMap(new java.util.function.Function<Integer, net.jqwik.api.Arbitrary<TestParameters>>() {
-        //                 public net.jqwik.api.Arbitrary<TestParameters> apply(final Integer y) {
-        //                     return get_z(x, y).map(new java.util.function.Function<Integer, TestParameters>() {
-        //                         public TestParameters apply(final Integer z) {
-        //                             return new TestParameters(x, y, z);
-        //                         }
-        //                     });
-        //                 }
-        //             });
-        //         }
-        //     }).filter(new java.util.function.Predicate<TestParameters>() {
-        //         public boolean test(final TestParameters _p_) {
-        //             return {inputJava};
-        //         }
-        //     });
-
         Function<List<MethodParameter>, String> paramNames = (List<MethodParameter> params) -> params.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
 
+        // Combined tuple arbitrary, e.g.:
+        //     get_x().flatMap(x -> get_y(x).flatMap(y -> get_z(x, y).map(z -> new TestParameters(x, y, z))))
+        // The original input combination is injected once around this whole tuple (a tuple-level
+        // FirstValueArbitrary), never per parameter: a per-parameter seed inside flatMap re-emits each
+        // inner parameter's value on every outer draw and collapses inner-parameter diversity.
         StringBuilder builder = new StringBuilder();
-        builder.append("return ");
         for (int i = 0; i < parameters.size(); i++) {
             MethodParameter currentParameter = parameters.get(i);
             List<MethodParameter> previousParameters = parameters.subList(0, i);
@@ -110,22 +97,39 @@ public class ImprovedTestParametersSupplierFactory {
                 builder.append("    }\n");
                 builder.append("})");
 
-                // Close all the nested return statements and methods
                 for (int j = 0; j < i; j++) {
                     builder.append(";\n    }\n})");
-                }
-
-                if (applyInputFilter) {
-                    builder.append("\n.filter(new java.util.function.Predicate<TestParameters>() {\n");
-                    builder.append("    public boolean test(final TestParameters _p_) {\n");
-                    builder.append("        return ").append(inputJava).append(";\n");
-                    builder.append("    }\n");
-                    builder.append("})");
                 }
             }
         }
 
-        supplierMethod.getBody().addStatement(factory.createCodeSnippetStatement(builder.toString()));
+        String body = builder.toString();
+        if (originalTuple != null) {
+            body = "new FirstValueArbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">(" + originalTuple + ", " + body + ")";
+        }
+        if (applyInputFilter) {
+            body += "\n.filter(new java.util.function.Predicate<TestParameters>() {\n"
+                + "    public boolean test(final TestParameters _p_) {\n"
+                + "        return " + inputJava + ";\n"
+                + "    }\n"
+                + "})";
+        }
+
+        supplierMethod.getBody().addStatement(factory.createCodeSnippetStatement("return " + body));
+    }
+
+    private static String buildOriginalTuple(List<ParameterGenerationPlan> parameterPlans) {
+        if (parameterPlans.isEmpty()) {
+            return null;
+        }
+        List<String> values = new ArrayList<>();
+        for (ParameterGenerationPlan parameterPlan : parameterPlans) {
+            if (parameterPlan.getOriginalValue() == null) {
+                return null;
+            }
+            values.add(parameterPlan.getOriginalValue());
+        }
+        return "new " + TEST_PARAMETERS_CLASS_NAME + "(" + String.join(", ", values) + ")";
     }
 
     private static void createGetParameterMethod(

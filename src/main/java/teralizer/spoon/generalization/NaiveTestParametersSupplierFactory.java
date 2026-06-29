@@ -56,124 +56,100 @@ public class NaiveTestParametersSupplierFactory {
         List<String> supplierBodies = new ArrayList<>();
         if (parameters.isEmpty()) {
             supplierBodies.add("return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)");
-        } else {
-            for (int i = 0; i < parameters.size(); i++) {
-                boolean isFirst = i == 0;
-                boolean isLast = i == parameters.size() - 1;
+            return supplierBodies;
+        }
 
-                MethodParameter parameter = parameters.get(i);
-                Optional<MethodArgument> argument = arguments.containsKey(parameter.getName())
-                    ? Optional.of(arguments.get(parameter.getName()))
-                    : Optional.empty();
+        // Tuple-level seed: the exact original input combination, injected once around the whole
+        // tuple arbitrary. Per-parameter injection inside flatMap re-emits each inner parameter's
+        // seed on every outer draw, collapsing inner-parameter diversity.
+        String originalTuple = buildOriginalTuple(parameters, arguments);
 
-                String body = createArbitrary(parameter, argument);
+        for (int i = 0; i < parameters.size(); i++) {
+            boolean isFirst = i == 0;
+            boolean isLast = i == parameters.size() - 1;
 
-                if (!isLast) {
-                    String parameterNames = parameters.stream().limit(i + 1).map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".flatMap(new java.util.function.Function<" + SpoonUtils.getBoxedType(parameter.getType()) + ", net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">>() {\n";
-                    body += "    public net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + "> apply(final " + SpoonUtils.getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
-                    body += "        return get" + (i + 1) + "(" + parameterNames + ");\n";
-                    body += "    }\n";
-                    body += "})";
-                } else {
-                    String parameterNames = parameters.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
-                    body += ".map(new java.util.function.Function<" + SpoonUtils.getBoxedType(parameter.getType()) + ", " + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
-                    body += "    public " + TEST_PARAMETERS_CLASS_NAME + " apply(final " + SpoonUtils.getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
-                    body += "        return new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + ");\n";
-                    body += "    }\n";
-                    body += "})";
-                }
+            MethodParameter parameter = parameters.get(i);
+            String chain = createArbitrary(parameter);
 
-                if (isFirst) {
-                    body += "\n.filter(new java.util.function.Predicate<" + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
-                    body += "    public boolean test(final " + TEST_PARAMETERS_CLASS_NAME + " _p_) {\n";
-                    body += "        return " + (inputJava == null ? "true" : inputJava) + ";\n";
-                    body += "    }\n";
-                    body += "})";
-                }
-
-                supplierBodies.add(body);
+            if (!isLast) {
+                String parameterNames = parameters.stream().limit(i + 1).map(MethodParameter::getName).collect(Collectors.joining(", "));
+                chain += ".flatMap(new java.util.function.Function<" + SpoonUtils.getBoxedType(parameter.getType()) + ", net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">>() {\n";
+                chain += "    public net.jqwik.api.Arbitrary<" + TEST_PARAMETERS_CLASS_NAME + "> apply(final " + SpoonUtils.getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
+                chain += "        return get" + (i + 1) + "(" + parameterNames + ");\n";
+                chain += "    }\n";
+                chain += "})";
+            } else {
+                String parameterNames = parameters.stream().map(MethodParameter::getName).collect(Collectors.joining(", "));
+                chain += ".map(new java.util.function.Function<" + SpoonUtils.getBoxedType(parameter.getType()) + ", " + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
+                chain += "    public " + TEST_PARAMETERS_CLASS_NAME + " apply(final " + SpoonUtils.getBoxedType(parameter.getType()) + " " + parameter.getName() + ") {\n";
+                chain += "        return new " + TEST_PARAMETERS_CLASS_NAME + "(" + parameterNames + ");\n";
+                chain += "    }\n";
+                chain += "})";
             }
+
+            if (isFirst) {
+                if (originalTuple != null) {
+                    chain = "new FirstValueArbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">(" + originalTuple + ", " + chain + ")";
+                }
+                chain += "\n.filter(new java.util.function.Predicate<" + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
+                chain += "    public boolean test(final " + TEST_PARAMETERS_CLASS_NAME + " _p_) {\n";
+                chain += "        return " + (inputJava == null ? "true" : inputJava) + ";\n";
+                chain += "    }\n";
+                chain += "})";
+            }
+
+            supplierBodies.add("return " + chain);
         }
         return supplierBodies;
     }
 
-    private static String createArbitrary(MethodParameter parameter, Optional<MethodArgument> argument) {
-        String baseArbitrary;
-        String boxedType;
+    private static String buildOriginalTuple(List<MethodParameter> parameters, Map<String, MethodArgument> arguments) {
+        if (arguments == null) {
+            return null;
+        }
+        List<String> values = new ArrayList<>();
+        for (MethodParameter parameter : parameters) {
+            MethodArgument argument = arguments.get(parameter.getName());
+            if (argument == null) {
+                return null;
+            }
+            String firstValue = new ModelToJavaTransformer().transform(argument);
+            values.add("(" + parameter.getType() + ") (" + firstValue + ")");
+        }
+        return "new " + TEST_PARAMETERS_CLASS_NAME + "(" + String.join(", ", values) + ")";
+    }
 
+    private static String createArbitrary(MethodParameter parameter) {
         switch (parameter.getType()) {
             case "byte":
-            case "java.lang.Byte": {
-                baseArbitrary = "net.jqwik.api.Arbitraries.bytes()";
-                boxedType = "Byte";
-                break;
-            }
+            case "java.lang.Byte":
+                return "net.jqwik.api.Arbitraries.bytes()";
             case "short":
-            case "java.lang.Short": {
-                baseArbitrary = "net.jqwik.api.Arbitraries.shorts()";
-                boxedType = "Short";
-                break;
-            }
+            case "java.lang.Short":
+                return "net.jqwik.api.Arbitraries.shorts()";
             case "int":
-            case "java.lang.Integer": {
-                baseArbitrary = "net.jqwik.api.Arbitraries.integers()";
-                boxedType = "Integer";
-                break;
-            }
+            case "java.lang.Integer":
+                return "net.jqwik.api.Arbitraries.integers()";
             case "long":
-            case "java.lang.Long": {
-                baseArbitrary = "net.jqwik.api.Arbitraries.longs()";
-                boxedType = "Long";
-                break;
-            }
+            case "java.lang.Long":
+                return "net.jqwik.api.Arbitraries.longs()";
             case "float":
-            case "java.lang.Float": {
-                baseArbitrary = "net.jqwik.api.Arbitraries.floats()";
-                boxedType = "Float";
-                break;
-            }
+            case "java.lang.Float":
+                return "net.jqwik.api.Arbitraries.floats()";
             case "double":
-            case "java.lang.Double": {
-                baseArbitrary = "net.jqwik.api.Arbitraries.doubles()";
-                boxedType = "Double";
-                break;
-            }
+            case "java.lang.Double":
+                return "net.jqwik.api.Arbitraries.doubles()";
             case "char":
             case "java.lang.Character":
-                baseArbitrary = "net.jqwik.api.Arbitraries.chars()";
-                boxedType = "Character";
-                break;
+                return "net.jqwik.api.Arbitraries.chars()";
             case "boolean":
             case "java.lang.Boolean":
-                baseArbitrary = "net.jqwik.api.Arbitraries.of(true, false)";
-                boxedType = "Boolean";
-                break;
+                return "net.jqwik.api.Arbitraries.of(true, false)";
             case "String":
             case "java.lang.String":
-                baseArbitrary = "net.jqwik.api.Arbitraries.strings()";
-                boxedType = "String";
-                break;
+                return "net.jqwik.api.Arbitraries.strings()";
             default:
-                baseArbitrary = "net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
-                boxedType = parameter.getType();
-                break;
+                return "net.jqwik.api.Arbitraries.just((" + parameter.getType() + ") null)";
         }
-
-        if (argument.isPresent()) {
-            String firstValue = new ModelToJavaTransformer().transform(argument.get());
-            if (argument.get().getType().equals("boolean") || argument.get().getType().equals("java.lang.Boolean")) {
-                return String.format("return new FirstValueArbitrary<%s>(%s, %s)", boxedType, firstValue, baseArbitrary);
-            }
-            return String.format(
-                "return new FirstValueArbitrary<%s>((%s) (%s), %s)",
-                boxedType,
-                argument.get().getType(),
-                firstValue,
-                baseArbitrary
-            );
-        }
-
-        return String.format("return %s", baseArbitrary);
     }
 }

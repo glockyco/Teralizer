@@ -49,19 +49,15 @@ public class BooleanDomainPlanner implements DomainPlanner {
                 body = "return net.jqwik.api.Arbitraries.of()";
             }
             consumedIds = derivedIds;
-        } else if (argument.isPresent()) {
-            MethodArgument arg = argument.get();
-            String firstValue = new ModelToJavaTransformer().transform(arg);
-            body = String.format(
-                "return new FirstValueArbitrary<Boolean>((%s) (%s), net.jqwik.api.Arbitraries.of(true, false))",
-                arg.getType(), firstValue);
-            consumedIds = new LinkedHashSet<>();
         } else {
             body = "return net.jqwik.api.Arbitraries.of(true, false)";
             consumedIds = new LinkedHashSet<>();
         }
 
-        return new ParameterGenerationPlan(parameter, TypeDomain.BOOLEAN, new RawJavaRecipe(body), consumedIds);
+        String originalValue = argument
+            .map(arg -> "(" + arg.getType() + ") (" + new ModelToJavaTransformer().transform(arg) + ")")
+            .orElse(null);
+        return new ParameterGenerationPlan(parameter, TypeDomain.BOOLEAN, new RawJavaRecipe(body), originalValue, consumedIds);
     }
 
     /**

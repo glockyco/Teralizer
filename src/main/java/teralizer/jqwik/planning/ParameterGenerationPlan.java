@@ -10,12 +10,14 @@ public class ParameterGenerationPlan {
     private final MethodParameter parameter;
     private final TypeDomain domain;
     private final GenerationRecipe recipe;
+    private final String originalValue;
     private final Set<Integer> consumedClauseIds;
 
-    public ParameterGenerationPlan(MethodParameter parameter, TypeDomain domain, GenerationRecipe recipe, Set<Integer> consumedClauseIds) {
+    public ParameterGenerationPlan(MethodParameter parameter, TypeDomain domain, GenerationRecipe recipe, String originalValue, Set<Integer> consumedClauseIds) {
         this.parameter = parameter;
         this.domain = domain;
         this.recipe = recipe;
+        this.originalValue = originalValue;
         this.consumedClauseIds = new LinkedHashSet<>(consumedClauseIds);
     }
 
@@ -29,6 +31,15 @@ public class ParameterGenerationPlan {
 
     public GenerationRecipe getRecipe() {
         return this.recipe;
+    }
+
+    /**
+     * The original concrete argument rendered as a cast Java expression (e.g. {@code (int) (7)}),
+     * or {@code null} when this parameter had no recorded original input. Consumed at the tuple
+     * level to seed the exact original combination before generalization.
+     */
+    public String getOriginalValue() {
+        return this.originalValue;
     }
 
     public Set<Integer> getConsumedClauseIds() {

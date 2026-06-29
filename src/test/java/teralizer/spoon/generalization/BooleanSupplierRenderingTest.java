@@ -4,9 +4,11 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
+import spoon.Launcher;
+import spoon.reflect.declaration.CtClass;
 
 import java.lang.reflect.Method;
-import java.util.Optional;
+import java.util.Collections;
 
 public class BooleanSupplierRenderingTest {
 
@@ -21,20 +23,17 @@ public class BooleanSupplierRenderingTest {
     }
 
     @Example
-    void naiveBooleanFirstValueUsesLiteral() throws Exception {
-        Method createArbitrary = NaiveTestParametersSupplierFactory.class.getDeclaredMethod(
-            "createArbitrary",
-            MethodParameter.class,
-            Optional.class
-        );
-        createArbitrary.setAccessible(true);
-
-        String body = (String) createArbitrary.invoke(
-            null,
-            new MethodParameter("boolean", "value"),
-            Optional.of(new MethodArgument("boolean", "0"))
+    void naiveBooleanFirstValueRendersAsLiteralInTupleSeed() {
+        MethodParameter value = new MethodParameter("boolean", "value");
+        CtClass<?> supplierClass = NaiveTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(),
+            Collections.singletonList(value),
+            Collections.singletonMap("value", new MethodArgument("boolean", "0")),
+            null
         );
 
-        Assert.assertEquals("return new FirstValueArbitrary<Boolean>(false, net.jqwik.api.Arbitraries.of(true, false))", body);
+        // Boolean originals must render as the literal `false` (not `0`), seeded once at the tuple level.
+        Assert.assertTrue("boolean original must render as the false literal in the tuple seed",
+            supplierClass.toString().contains("(boolean) (false)"));
     }
 }
