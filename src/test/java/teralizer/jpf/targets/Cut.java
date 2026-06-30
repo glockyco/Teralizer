@@ -56,4 +56,16 @@ public final class Cut {
     public static int twice(int value) {
         return value + value;
     }
+
+    /**
+     * Recursive tested method. {@code triangular(3)} returns 6 via {@code 3 + triangular(2)}; the
+     * inner frames return 3 / 1 / 0. Frame-identity detection must capture the <em>outermost</em>
+     * frame's return (6), not the first (innermost) exit (0).
+     */
+    public static int triangular(int n) {
+        if (n <= 0) {
+            return 0;
+        }
+        return n + triangular(n - 1);
+    }
 }

@@ -96,19 +96,7 @@ public final class JpfListenerHarness {
         String instrumentedMethodQN,
         String testedMethodQN
     ) {
-        Path jpfConfigPath = workDir.resolve("scenario.jpf");
-        Path inputValuesPath = workDir.resolve("concrete-input.json");
-        Path outputValuePath = workDir.resolve("concrete-output.json");
-        Path inputSpecificationPath = workDir.resolve("symbolic-input.json");
-        Path outputSpecificationPath = workDir.resolve("symbolic-output.json");
-        Path reportPath = workDir.resolve("report.txt");
-
-        writeConfig(
-            jpfConfigPath, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
-            inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath, reportPath
-        );
-
-        Config config = JPF.createConfig(new String[]{jpfConfigPath.toString()});
+        Config config = buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN);
         JPF jpf = new JPF(config);
         jpf.addListener(new TestGeneralizationListener(config));
         jpf.run();
@@ -123,7 +111,40 @@ public final class JpfListenerHarness {
             throw new IllegalStateException("JPF VM failed to initialize for " + symbolicMethod);
         }
 
-        return parse(inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath);
+        return parse(
+            workDir.resolve("concrete-input.json"),
+            workDir.resolve("concrete-output.json"),
+            workDir.resolve("symbolic-input.json"),
+            workDir.resolve("symbolic-output.json")
+        );
+    }
+
+    /**
+     * Build the JPF {@link Config} for a scenario without attaching a listener, so a caller can
+     * attach its own (e.g. an observer-only listener) and run. Renders the production
+     * {@code jpf-config.vm} exactly as {@link #run} does; the four specification paths are derived
+     * from {@code workDir} and re-derived by the caller if it needs to read them back.
+     */
+    public static Config buildConfig(
+        Path workDir,
+        String targetClassQN,
+        String symbolicMethod,
+        String instrumentedMethodQN,
+        String testedMethodQN
+    ) {
+        Path jpfConfigPath = workDir.resolve("scenario.jpf");
+        Path inputValuesPath = workDir.resolve("concrete-input.json");
+        Path outputValuePath = workDir.resolve("concrete-output.json");
+        Path inputSpecificationPath = workDir.resolve("symbolic-input.json");
+        Path outputSpecificationPath = workDir.resolve("symbolic-output.json");
+        Path reportPath = workDir.resolve("report.txt");
+
+        writeConfig(
+            jpfConfigPath, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
+            inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath, reportPath
+        );
+
+        return JPF.createConfig(new String[]{jpfConfigPath.toString()});
     }
 
     private static void writeConfig(
