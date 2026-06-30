@@ -63,9 +63,14 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.13'
     implementation 'ch.qos.logback:logback-classic:1.3.14'
 
-    implementation 'junit:junit:4.13.1'
     implementation "net.jqwik:jqwik:1.8.5"
 
+    // jqwik 1.8.5 runs on JUnit Platform 1.10.2; Jupiter 5.10.2 shares that platform version,
+    // so both engines run together under useJUnitPlatform(). Use net.jqwik.api.@Example/@Property
+    // for jqwik and org.junit.jupiter.api.@Test for example/integration tests — never mix the two
+    // on one method. JUnit 4 (junit:junit) is test-scoped only, for org.junit.Assert in older
+    // tests; there is no Vintage engine, so JUnit 4 @Test methods are not discovered here.
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testImplementation 'junit:junit:4.13.1'
     testImplementation "net.jqwik:jqwik:1.8.5"
 
