@@ -265,11 +265,11 @@ public final class JpfListenerHarness {
         context.put("testedClassQualifiedName", classOf(testedMethodQN));
         context.put("testClassQualifiedName", classOf(instrumentedMethodQN));
         context.put("testMethodQualifiedName", instrumentedMethodQN);
-        context.put("inputValuesPath", inputValuesPath.toString());
-        context.put("outputValuePath", outputValuePath.toString());
-        context.put("inputSpecificationPath", inputSpecificationPath.toString());
-        context.put("outputSpecificationPath", outputSpecificationPath.toString());
-        context.put("reportPath", reportPath.toString());
+        context.put("inputValuesPath", configPath(inputValuesPath));
+        context.put("outputValuePath", configPath(outputValuePath));
+        context.put("inputSpecificationPath", configPath(inputSpecificationPath));
+        context.put("outputSpecificationPath", configPath(outputSpecificationPath));
+        context.put("reportPath", configPath(reportPath));
 
         try {
             Files.createFile(reportPath);
@@ -329,9 +329,20 @@ public final class JpfListenerHarness {
         return methodQualifiedName.substring(0, methodQualifiedName.lastIndexOf('.'));
     }
 
+    /**
+     * Render a filesystem path for the {@code .jpf} config file. JPF parses that file with
+     * {@code Properties}-style escaping, where a backslash is an escape character, so a Windows
+     * {@code C:\dir} path written verbatim is corrupted (and its classpath entry lost, leaving JPF
+     * unable to load the target). Forward slashes are accepted by the JVM on every platform, so
+     * normalize to them. No-op where the platform separator is already {@code /}.
+     */
+    private static String configPath(Path path) {
+        return path.toString().replace('\\', '/');
+    }
+
     private static String fixturesClasspath() {
         try {
-            return Paths.get(Cut.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+            return Paths.get(Cut.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString().replace('\\', '/');
         } catch (URISyntaxException e) {
             throw new RuntimeException("Failed to locate the compiled fixture classpath", e);
         }
