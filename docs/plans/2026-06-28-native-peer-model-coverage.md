@@ -36,6 +36,16 @@ is barrier #21, rated MED (partial). The dominant applicability wall is the type
 ceiling (objects/strings), not peers, so this lane is a targeted set of cheap wins,
 not a needle-mover for overall RepoReapers reach.
 
+The beyond-JARVIS census corroborates this row in a second corpus: 154 `EXECUTE_JPF`
+per-assertion exclusions in one commons-math run are all `class not found:
+java.lang.NoSuchMethodException` — a JDK class absent from JPF's model classpath —
+surfacing across seven methods whose symbolic paths reference it: `Precision.round` (55),
+`Precision.equals` (32), `Precision.equalsIncludingNaN` (23), `Precision.compareTo` (20),
+`ArithmeticUtils.gcd` (11), `ArithmeticUtils.lcm` (11), and `FastMath.getExponent` (2).
+These are concrete, ranked per-method targets for the task below; whether each is cheaply
+resolvable (model the class) or bounded is for that task to determine. The gap is
+corpus-general, not a RepoReapers artifact.
+
 ## The unmeasured mode (telemetry prerequisite, not assumed)
 
 A second failure mode is **invisible**: a native peer that intercepts a call and

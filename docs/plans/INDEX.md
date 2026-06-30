@@ -24,6 +24,7 @@
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Beyond-JARVIS Generalization Census** [spec] `2026-06-29-beyond-jarvis-generalization-census` ← 2026-06-26-teralizer-overview
 - **Census Completion — PIT Timeout & Generated-Build Visibility** [spec] `2026-06-30-census-build-robustness-and-pit-scale` ← 2026-06-29-beyond-jarvis-generalization-census
+- **SPF Specification-Extraction Hardening** [spec] `2026-06-30-spf-spec-extraction-hardening` ← 2026-06-29-beyond-jarvis-census-findings
 
 ## superseded
 
