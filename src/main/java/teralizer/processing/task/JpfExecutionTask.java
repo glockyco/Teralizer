@@ -11,12 +11,12 @@ import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.jpf.TestGeneralizationListener;
+import teralizer.jpf.ExtractionOutcome;
+import teralizer.jpf.SpecificationExtractor;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Consumer;
@@ -59,7 +59,8 @@ public class JpfExecutionTask extends AbstractTask {
         Config config = JPF.createConfig(new String[]{this.assertionRecord.getJpfConfigPath()});
 
         JPF jpf = new JPF(config);
-        jpf.addListener(new TestGeneralizationListener(config));
+        TestGeneralizationListener listener = new TestGeneralizationListener(config);
+        jpf.addListener(listener);
 
         try {
             jpf.run();
@@ -82,10 +83,17 @@ public class JpfExecutionTask extends AbstractTask {
             throw new RuntimeException("Failed to initialize VM during JPF execution.");
         }
 
-        Path inputSpecificationPath = Paths.get(this.assertionRecord.getInputSpecificationPath());
-        Path outputSpecificationPath = Paths.get(this.assertionRecord.getOutputSpecificationPath());
-        if (!Files.exists(inputSpecificationPath) || !Files.exists(outputSpecificationPath)) {
-            throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName() + " - Failed to collect input/output specification for unknown reason.");
+        ExtractionOutcome outcome = ExtractionOutcome.fromState(
+            listener.wasTargetEntered(), listener.getInvocation() != null);
+        if (outcome.getKind() != ExtractionOutcome.Kind.EXTRACTED) {
+            throw new RuntimeException(
+                this.assertionRecord.getInstrumentedMethodQualifiedName() + " - " + outcome.getDetail());
         }
+        new SpecificationExtractor().write(
+            listener.getInvocation(),
+            Paths.get(this.assertionRecord.getInputValuesPath()),
+            Paths.get(this.assertionRecord.getOutputValuePath()),
+            Paths.get(this.assertionRecord.getInputSpecificationPath()),
+            Paths.get(this.assertionRecord.getOutputSpecificationPath()));
     }
 }

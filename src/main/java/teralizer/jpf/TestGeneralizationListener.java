@@ -42,6 +42,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private boolean isInInstrumentedMethod;
     private CapturedException pendingThrownException;
     private List<MethodArgument> instrumentedInputArguments;
+    private boolean targetEntered;
+    private Invocation invocation;
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -61,6 +63,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.recursionDepth = -1;
         this.isInInstrumentedMethod = false;
         this.pendingThrownException = null;
+        this.targetEntered = false;
+        this.invocation = null;
     }
 
     @Override
@@ -92,6 +96,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         }
         if (this.testedMethodSpec.matches(enteredMethod)) {
             LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
+            this.targetEntered = true;
             this.recursionDepth++;
         }
     }
@@ -114,13 +119,13 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             LOGGER.atDebug().log("Exiting tested method: " + exitedMethod.toString());
             this.recursionDepth--;
             if (this.isInInstrumentedMethod && this.recursionDepth == -1) {
-                this.writeSpecificationFiles(vm, currentThread);
+                this.invocation = this.captureInvocation(vm, currentThread);
                 vm.getSearch().terminate();
             }
         }
     }
 
-    private void writeSpecificationFiles(VM vm, ThreadInfo currentThread) {
+    private Invocation captureInvocation(VM vm, ThreadInfo currentThread) {
         PathCondition pathCondition = PathCondition.getPC(vm);
         this.checkPcSizeLimitExceeded(pathCondition);
 
@@ -204,12 +209,18 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             modelOutput = spfToModelTransformer.transform(capturedException);
         }
 
-        Invocation invocation = new Invocation(
+        return new Invocation(
             concreteInputArguments, concreteOutputArgument, modelInput, modelOutput);
-        new SpecificationExtractor().write(
-            invocation,
-            this.inputValuesPath, this.outputValuePath,
-            this.inputSpecificationPath, this.outputSpecificationPath);
+    }
+
+    /** The captured invocation, or {@code null} if the tested method never returned in-state. */
+    public Invocation getInvocation() {
+        return this.invocation;
+    }
+
+    /** Whether the tested method was entered at least once on the explored path. */
+    public boolean wasTargetEntered() {
+        return this.targetEntered;
     }
 
     private List<MethodArgument> captureConcreteArguments(ThreadInfo currentThread) {

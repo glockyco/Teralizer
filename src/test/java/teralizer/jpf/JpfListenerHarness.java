@@ -98,7 +98,8 @@ public final class JpfListenerHarness {
     ) {
         Config config = buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN);
         JPF jpf = new JPF(config);
-        jpf.addListener(new TestGeneralizationListener(config));
+        TestGeneralizationListener listener = new TestGeneralizationListener(config);
+        jpf.addListener(listener);
         jpf.run();
 
         if (jpf.foundErrors()) {
@@ -111,12 +112,47 @@ public final class JpfListenerHarness {
             throw new IllegalStateException("JPF VM failed to initialize for " + symbolicMethod);
         }
 
-        return parse(
-            workDir.resolve("concrete-input.json"),
-            workDir.resolve("concrete-output.json"),
-            workDir.resolve("symbolic-input.json"),
-            workDir.resolve("symbolic-output.json")
-        );
+        // The listener now only observes; the specification files are written post-run from the
+        // captured Invocation, exactly as JpfExecutionTask does in the pipeline.
+        Path inputValuesPath = workDir.resolve("concrete-input.json");
+        Path outputValuePath = workDir.resolve("concrete-output.json");
+        Path inputSpecificationPath = workDir.resolve("symbolic-input.json");
+        Path outputSpecificationPath = workDir.resolve("symbolic-output.json");
+        if (listener.getInvocation() != null) {
+            new SpecificationExtractor().write(listener.getInvocation(),
+                inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath);
+        }
+        return parse(inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath);
+    }
+
+    /**
+     * Run the listener and classify the outcome, without writing or reading specification files —
+     * for asserting outcomes (e.g. {@code TARGET_NOT_ENTERED}) that produce no specification.
+     */
+    public static ExtractionOutcome runOutcome(
+        Path workDir,
+        String targetClassQN,
+        String symbolicMethod,
+        String instrumentedMethodQN,
+        String testedMethodQN
+    ) {
+        Config config = buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN);
+        JPF jpf = new JPF(config);
+        TestGeneralizationListener listener = new TestGeneralizationListener(config);
+        jpf.addListener(listener);
+        jpf.run();
+
+        if (jpf.foundErrors()) {
+            String details = jpf.getSearchErrors().stream()
+                .map(error -> error.getDescription() + "\n" + error.getDetails())
+                .collect(Collectors.joining("\n--\n"));
+            throw new IllegalStateException("JPF reported errors for " + symbolicMethod + ":\n" + details);
+        }
+        if (!jpf.getVM().isInitialized()) {
+            throw new IllegalStateException("JPF VM failed to initialize for " + symbolicMethod);
+        }
+
+        return ExtractionOutcome.fromState(listener.wasTargetEntered(), listener.getInvocation() != null);
     }
 
     /**
