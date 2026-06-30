@@ -16,7 +16,6 @@
 - **Beyond-JARVIS Census — Findings & Issue Backlog** [note] `2026-06-29-beyond-jarvis-census-findings` ← 2026-06-29-beyond-jarvis-generalization-census
 - **Beyond-JARVIS Census Implementation Plan** [plan] `2026-06-29-beyond-jarvis-census-implementation` (—) ← 2026-06-29-beyond-jarvis-generalization-census
 - **PVC Budget-Elasticity vs Mutation Score** [audit] `2026-06-29-pvc-budget-elasticity` ← 2026-06-26-teralizer-overview
-- **SPF Specification-Extraction Hardening** [spec] `2026-06-30-spf-spec-extraction-hardening` ← 2026-06-29-beyond-jarvis-census-findings
 
 ## draft
 
@@ -30,4 +29,4 @@
 
 - **Residual-Aware Input Generation** [spec] `2026-06-27-residual-aware-input-generation` ← 2026-06-26-teralizer-overview
 
-_21 archived — see `docs/plans/archive/`._
+_22 archived — see `docs/plans/archive/`._

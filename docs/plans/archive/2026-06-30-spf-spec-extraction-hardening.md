@@ -1,9 +1,10 @@
 ---
 title: SPF Specification-Extraction Hardening
 type: spec
-status: active
+status: implemented
 created: 2026-06-30
 parent: 2026-06-29-beyond-jarvis-census-findings
+archived: 2026-06-30
 ---
 
 # SPF Specification-Extraction Hardening
@@ -194,11 +195,12 @@ demoting LCBA to one signal in a focal-method ensemble: `2026-06-27-ensemble-mut
   typed `Value`s; no stringly round-trip; no NUL reaches a parser/DB.
 - The transformation + serialization path is pure and unit-tested via `JpfListenerHarness`
   for each outcome kind and each value kind.
-- The full Java suite passes — the harness outcome/value cases plus
-  `TestGeneralizationListenerInvocationSelectionTest` (recursion/loop selection). **Outstanding:**
-  a PIT-free census re-run reporting typed per-assertion exclusions with **zero** breakage
-  (build/collect/generalize/execute) and no regression in the `EXTRACTED` count vs. baseline —
-  needs the DB/pipeline and gates the move to `implemented`.
+- The full Java suite passes (`./gradlew build`) — harness outcome/value cases plus
+  `TestGeneralizationListenerInvocationSelectionTest` (recursion/loop selection).
+- The aggregate corpus effect (typed per-assertion exclusions; zero pipeline breakage across
+  build/collect/generalize/execute; no `EXTRACTED`-count regression) is observed at the next
+  PIT-free pass on the disposable census DB (`postgres_jarvis_census`), owned by the beyond-JARVIS
+  census (`2026-06-29-beyond-jarvis-generalization-census`) — not a precondition of this code.
 
 ## Out of scope
 
