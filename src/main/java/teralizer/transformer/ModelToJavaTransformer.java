@@ -117,6 +117,46 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
         }
     }
 
+    public String transform(Value value) {
+        if (value instanceof NullValue) {
+            return "null";
+        }
+        if (value instanceof StringValue) {
+            return this.renderStringLiteral(((StringValue) value).getValue());
+        }
+        if (value instanceof PrimitiveValue) {
+            Object boxed = ((PrimitiveValue) value).getValue();
+            if (boxed instanceof Long) {
+                return boxed + "L";
+            }
+            if (boxed instanceof Float) {
+                return this.renderFloat((Float) boxed);
+            }
+            if (boxed instanceof Double) {
+                return this.transform(((Double) boxed).doubleValue());
+            }
+            if (boxed instanceof Character) {
+                return "(char) " + (int) ((Character) boxed).charValue();
+            }
+            // Byte, Short, Integer, and Boolean all render via their canonical toString().
+            return boxed.toString();
+        }
+        throw new IllegalArgumentException("Unknown Value variant: " + value.getClass().getName());
+    }
+
+    private String renderFloat(float value) {
+        if (Float.isNaN(value)) {
+            return "Float.NaN";
+        }
+        if (value == Float.POSITIVE_INFINITY) {
+            return "Float.POSITIVE_INFINITY";
+        }
+        if (value == Float.NEGATIVE_INFINITY) {
+            return "Float.NEGATIVE_INFINITY";
+        }
+        return value + "F";
+    }
+
     public String transform(teralizer.domain.Model model) {
         if (model == null) {
             return null;
@@ -439,7 +479,13 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 case '\n': sb.append("\\n");  break;
                 case '\f': sb.append("\\f");  break;
                 case '\r': sb.append("\\r");  break;
-                default:   sb.append(c);      break;
+                default:
+                    if (c < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+                    break;
             }
         }
         sb.append("\"");
