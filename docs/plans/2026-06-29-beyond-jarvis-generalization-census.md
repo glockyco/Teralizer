@@ -35,10 +35,11 @@ Honesty bounds:
 
 - The paper exposes JARVIS's successes (Table 2), not a per-test failure ledger. We claim
   "beyond JARVIS's reported set," never "JARVIS failed on test X".
-- The candidate universes differ both ways: JARVIS targets loop/repetition tests that
-  Teralizer's `AssertionInLoopFilter`/`TestedMethodInLoopFilter` reject. The funnel reports
-  Teralizer's own rejections too, not just its wins — the comparison is honest in both
-  directions.
+- The candidate universes differ both ways: JARVIS targets loop/repetition tests, which
+  Teralizer cannot generalize. Teralizer does not reject these at filtering — its
+  `AssertionInLoopFilter`/`TestedMethodInLoopFilter` only annotate them (`DEFER`); they
+  proceed and exit downstream (a degenerate spec or a failing generalized test). The funnel
+  records that downstream exit, so the comparison stays honest in both directions.
 - For non-Table-2 tests the JARVIS baseline is **binary applicability** (no reported
   generalization, hence no published PVC), not a PVC magnitude. PVC-magnitude comparison
   stays scoped to the canonical JARVIS-10 rows.
@@ -57,14 +58,18 @@ Honesty bounds:
 - `project-configs/jarvis-scoreboard/commons-{lang,math}-3.5.conf` do **not** enumerate
   tests; they point `root-path` at the fixture and the pipeline processes whatever test
   classes are present, across 6 variants (NAIVE/IMPROVED x 100/200/1000).
-- Feasibility selection already exists and runs **before** the expensive SPF/PIT stages:
-  the `teralizer.processing.filter` pipeline (`NonPassingTestFilter`, `NoAssertionsFilter`,
-  `TestTypeFilter`, `AssertionInMethodFilter`, `AssertionInLoopFilter`,
-  `TestedMethodInLoopFilter`, `NestedClassesFilter`, `UnnamedPackageFilter`,
-  `StaticInitializersFilter`, `ParameterTypeFilter`, `ReturnTypeFilter`,
-  `UnsupportedAssertionFilter`, `ExcludedAssertionFilter`) plus `GeneralizableInput.derive()`
-  (`2026-06-27-generalizable-input-rule`) and the SPF-stage exclusions at `ANALYZE_JPF`
-  (`NonGeneralizableExpressionException`, `UnsupportedSpfTermException`).
+- Filtering runs **before** the expensive SPF/PIT stages, but only a `REJECT` excludes a
+  record — `TestFilteringTask` sets `is_included=false` solely on `REJECT`; `DEFER`/`ACCEPT`
+  do not, and every result is recorded in `filter_result` as telemetry. Rejecting filters:
+  `NonPassingTestFilter`, `NoAssertionsFilter`, `TestTypeFilter`, `ParameterTypeFilter` (no
+  generalizable-typed parameter — the type ceiling), `ReturnTypeFilter` (void/unsupported),
+  `UnsupportedAssertionFilter`, `UnnamedPackageFilter`, `MissingValueFilter`,
+  `Excluded{Test,Assertion}Filter`. Informational-only (`DEFER`, never excludes):
+  `AssertionInLoopFilter`, `TestedMethodInLoopFilter`, `AssertionInMethodFilter`,
+  `NestedClassesFilter`, `StaticInitializersFilter`. The eligibility decision proper is
+  `GeneralizableInput.derive()` (`2026-06-27-generalizable-input-rule`); SPF-stage exclusions
+  happen later at `ANALYZE_JPF` (`NonGeneralizableExpressionException`,
+  `UnsupportedSpfTermException`).
 
 ## Approach: promote real upstream test classes (compile-gated)
 
@@ -114,10 +119,12 @@ ScalaCheck's default of 100 tests), so any per-row PVC sanity check is apples-to
 
 ### Selection stays automatic
 
-No new selector: the existing filter pipeline (structural + type + assertion + SPF) is the
-"feasible-case automation." We just **record the rejection reason** per non-generalized
-assertion — that tally is half the result (it shows the type ceiling *and* the loop-style
-limit at work, the latter being precisely the repetition structure JARVIS targets).
+No new selector: the existing pipeline already decides feasibility. We record, per
+non-generalized probe, the rejecting filter (e.g. the type-ceiling `ParameterTypeFilter`)
+and any `DEFER` annotation plus the stage at which the probe actually exits — that tally is
+half the result. Loop/repetition cases are the sharpest contrast with JARVIS: it targets
+them specifically, while Teralizer only annotates them (`DEFER`) and cannot soundly
+generalize them.
 
 ### The funnel (the measured result)
 
@@ -126,13 +133,15 @@ Per promoted test class, recorded from the existing DB (`assertion.is_included` 
 
 1. `@Test` methods in the class
 2. assertion-level probes
-3. probes passing the structural + type + assertion filters
+3. probes not REJECTed by any filter (only `REJECT` excludes; `DEFER` is informational)
 4. probes that SPF generalizes (reach `GENERALIZE_TESTS`)
 5. probes that generalize **FULL** (sound) under IMPROVED
 6. probes whose generated property kills >= 1 mutant
 
-The per-stage drop is tallied **by reason** (non-passing, no/loop/structural assertion,
-type ceiling, unsupported assertion, SPF raw-bits / native-peer / transcendental). Each
+Each drop is tallied **by reason**: filter `REJECT`s (non-passing, no-assertion, unsupported
+assertion/return type, type ceiling, unnamed package), SPF-stage exclusions (raw-bits /
+native-peer / transcendental), and the downstream exit stage for `DEFER`-annotated cases
+(loop / nested-class / static-init), since `DEFER` never excludes on its own. Each
 FULL/sound generalization that falls outside JARVIS's Table-2 source-method set is flagged
 an **applicability win**.
 
