@@ -40,9 +40,12 @@ Honesty bounds:
   `AssertionInLoopFilter`/`TestedMethodInLoopFilter` only annotate them (`DEFER`); they
   proceed and exit downstream (a degenerate spec or a failing generalized test). The funnel
   records that downstream exit, so the comparison stays honest in both directions.
-- For non-Table-2 tests the JARVIS baseline is **binary applicability** (no reported
-  generalization, hence no published PVC), not a PVC magnitude. PVC-magnitude comparison
-  stays scoped to the canonical JARVIS-10 rows.
+- For non-Table-2 tests JARVIS gives no PVC baseline, so the JARVIS comparison there is
+  **binary applicability** (it reported no generalization). Quality is not left at binary,
+  though: the census reports **mutation score** for Teralizer's generalizations — the
+  stronger fault-detection metric (`2026-06-29-pvc-budget-elasticity`: PVC tracks input
+  diversity and inflates with the tries budget; kills do not), one JARVIS never reported.
+  PVC-magnitude-vs-JARVIS stays scoped to the canonical JARVIS-10 rows.
 
 ## Current setup (what we build on)
 
@@ -151,10 +154,20 @@ A new census report — an analysis CLI entry plus an audit doc under `docs/plan
 separate from `jarvis_scoreboard.compare_to_jarvis` (the promoted tests have no JARVIS PVC
 baseline). The census runs in a dedicated database and data dir (`postgres_jarvis_census`,
 `data/jarvis-census`) so census rows can never pollute the canonical `compare_to_jarvis`
-aggregation. The report reads that database and emits the per-class funnel, the by-reason
-rejection tally, and the headline counts: **N sound generalizations across M classes beyond
-JARVIS's reported Table-2 set**, and — within JARVIS's own Table-2 source classes —
-Teralizer's generalized method count vs JARVIS's K.
+aggregation. The report reads that database and emits, per class: the funnel, the by-reason
+rejection tally, and — as the fault-detection quality metrics — the augmented GENERALIZED-suite
+**mutation score** (killed / covered) plus, as the improvement attribution, the **mutant-key set
+difference** in killed PIT mutants between two already-collected stages over the *same*
+mutated classes: `COLLECT_PIT_DATA_INITIAL` (the included seed tests) and
+`COLLECT_PIT_DATA_GENERALIZED` (those seed tests *plus* the generated properties). Because
+GENERALIZED's suite is a superset of INITIAL's, the key-set difference is exactly the mutants
+the added properties kill that the single-value seed tests miss — the generalization's net
+fault-detection gain, not a count delta. This is an analysis-only addition to
+`get_mutation_scores` (which today reads only the generalized stage), NAIVE vs IMPROVED — no
+extra PIT, no `ProjectSetupTask` change. Headline counts:
+**N sound generalizations across M classes beyond JARVIS's reported Table-2 set**, and —
+within JARVIS's own Table-2 source classes — Teralizer's generalized-method
+count vs JARVIS's K.
 
 ## Reproducibility
 
@@ -195,6 +208,11 @@ Teralizer's generalized method count vs JARVIS's K.
 - The headline "N sound generalizations across M classes beyond JARVIS's reported Table-2
   set" is derived from FULL IMPROVED diagnostics, exclusion-honest (raw-bits / unsound
   paths excluded, not counted).
+- The report states, per class, the augmented GENERALIZED-suite **mutation score** (killed /
+  covered) and the net fault-detection gain as the **killed mutant-key set difference** between
+  `COLLECT_PIT_DATA_GENERALIZED` (seed + properties) and `COLLECT_PIT_DATA_INITIAL` (seed only)
+  over the same mutated classes — the mutants the added properties kill that the seed misses;
+  a key-set difference, not a count delta, no extra PIT.
 - Within JARVIS's Table-2 source classes, the report states Teralizer's generalized-method
   count against JARVIS's reported methods for the same class.
 - Every promoted class compiled (`mvn test-compile` green); every dropped class is recorded
