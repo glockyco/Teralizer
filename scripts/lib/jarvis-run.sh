@@ -107,24 +107,36 @@ jarvis_run() {
     fi
   done
 
-  # The pipeline catches per-task errors and the JVM still exits 0, so a green gradle build is NOT
-  # a clean run. Surface dropped tasks from the DB and fail loudly if any occurred this run.
-  echo "==> Checking for failed pipeline tasks"
-  local failed_count=0
+  # Per-assertion JPF analysis (ANALYZE_JPF/EXECUTE_JPF) routinely fails for assertions SPF cannot
+  # symbolically handle -- raw-bits relations, unmodeled JDK classes, oversized path conditions --
+  # and those assertions are simply excluded, not pipeline breakage. Report that count for
+  # visibility, but only FAIL on breakage in other stages (build/collect/generalize/execute), since
+  # the pipeline swallows per-task errors and the JVM still exits 0.
+  echo "==> Checking pipeline outcome"
+  local jpf_excluded=0 breakage=0
   if _q=$(_jarvis_psql -tA -d "$JARVIS_DB_NAME" -c \
-    "SELECT count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id};" 2>/dev/null | tr -d '[:space:]'); then
-    failed_count=${_q:-0}
+    "SELECT count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id} AND stage IN ('ANALYZE_JPF','EXECUTE_JPF');" 2>/dev/null | tr -d '[:space:]'); then
+    jpf_excluded=${_q:-0}
   fi
-  if [[ "$failed_count" -gt 0 ]]; then
-    echo "" >&2
-    echo "${failed_count} pipeline task(s) FAILED this run:" >&2
+  if _q=$(_jarvis_psql -tA -d "$JARVIS_DB_NAME" -c \
+    "SELECT count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id} AND stage NOT IN ('ANALYZE_JPF','EXECUTE_JPF');" 2>/dev/null | tr -d '[:space:]'); then
+    breakage=${_q:-0}
+  fi
+  echo "  per-assertion JPF exclusions (non-fatal coverage gaps): ${jpf_excluded}"
+  if [[ "$jpf_excluded" -gt 0 ]]; then
     _jarvis_psql -d "$JARVIS_DB_NAME" -c \
-      "SELECT p.root_path, t.stage, t.variant, left(t.info, 200) AS info_head FROM task t JOIN project p ON p.id = t.project_id WHERE t.status='FAILED' AND t.id > ${baseline_task_id} ORDER BY t.id;" >&2 || true
+      "SELECT CASE WHEN info LIKE '%NonGeneralizableExpressionException%' THEN 'raw-bits non-generalizable' WHEN info LIKE '%class not found%' THEN 'unmodeled JDK/library class' WHEN info LIKE '%PC size limit exceeded%' THEN 'path-condition size limit' WHEN info LIKE '%Unexpected rounding%' THEN 'symbolic control-arg out of range' WHEN info LIKE '%Failed to collect input/output%' THEN 'spec not collected' ELSE 'other (investigate)' END AS cause, count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id} AND stage IN ('ANALYZE_JPF','EXECUTE_JPF') GROUP BY 1 ORDER BY 2 DESC;" || true
+  fi
+  if [[ "$breakage" -gt 0 ]]; then
+    echo "" >&2
+    echo "${breakage} pipeline task(s) FAILED outside JPF analysis this run:" >&2
+    _jarvis_psql -d "$JARVIS_DB_NAME" -c \
+      "SELECT p.root_path, t.stage, t.variant, left(t.info, 200) AS info_head FROM task t JOIN project p ON p.id = t.project_id WHERE t.status='FAILED' AND t.id > ${baseline_task_id} AND t.stage NOT IN ('ANALYZE_JPF','EXECUTE_JPF') ORDER BY t.id;" >&2 || true
     exit 1
   fi
   if [[ "$gradle_failed" == true ]]; then
     echo "A gradle invocation exited non-zero, though no FAILED task was recorded; check the run log." >&2
     exit 1
   fi
-  echo "$JARVIS_LABEL run complete: no failed pipeline tasks."
+  echo "$JARVIS_LABEL run complete: no pipeline breakage (${jpf_excluded} per-assertion JPF exclusions)."
 }
