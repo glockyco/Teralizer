@@ -70,7 +70,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     @Override
     public void searchConstraintHit(Search search) {
         if (search.getDepth() >= search.getDepthLimit()) {
-            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Failed to collect input/output specification due to depth limiting. Depth limit of " + search.getDepthLimit() + " exceeded.");
+            throw new ExtractionAborted(ExtractionAborted.Reason.SEARCH_DEPTH_LIMIT, this.instrumentedMethodQualifiedName + " - Failed to collect input/output specification due to depth limiting. Depth limit of " + search.getDepthLimit() + " exceeded.");
         }
     }
 
@@ -78,7 +78,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public void propertyViolated(Search search) {
         String errorDetails = search.getLastError().getDetails();
         if (errorDetails.contains("java.lang.NullPointerException") && errorDetails.contains("at java.util.concurrent.atomic")) {
-            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Failed JPF execution due to incomplete native peers.\n\n" + errorDetails);
+            throw new ExtractionAborted(ExtractionAborted.Reason.NATIVE_MODEL_GAP, this.instrumentedMethodQualifiedName + " - Failed JPF execution due to incomplete native peers.\n\n" + errorDetails);
         }
     }
 
@@ -288,14 +288,14 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private void checkExecutionTimeoutExceeded() {
         double elapsedTime = (System.currentTimeMillis() - this.startTime) / 1000.0;
         if (elapsedTime > this.maxExecutionTime) {
-            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - Execution timeout exceeded: " + elapsedTime + " of " + this.maxExecutionTime + " seconds passed.");
+            throw new ExtractionAborted(ExtractionAborted.Reason.EXECUTION_TIMEOUT, this.instrumentedMethodQualifiedName + " - Execution timeout exceeded: " + elapsedTime + " of " + this.maxExecutionTime + " seconds passed.");
         }
     }
 
     private void checkPcSizeLimitExceeded(PathCondition pathCondition) {
         int pcLength = pathCondition == null ? 0 : pathCondition.toString().length();
         if (pcLength > this.maxPathConditionSize) {
-            throw new RuntimeException(this.instrumentedMethodQualifiedName + " - PC size limit exceeded: " + pcLength + " of " + this.maxPathConditionSize + " characters used.");
+            throw new ExtractionAborted(ExtractionAborted.Reason.PATH_CONDITION_TOO_LARGE, this.instrumentedMethodQualifiedName + " - PC size limit exceeded: " + pcLength + " of " + this.maxPathConditionSize + " characters used.");
         }
     }
 }

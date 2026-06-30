@@ -3,6 +3,7 @@ package teralizer.processing.task;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
+import gov.nasa.jpf.JPFListenerException;
 import gov.nasa.jpf.JPFNativePeerException;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -11,6 +12,7 @@ import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.jpf.TestGeneralizationListener;
+import teralizer.jpf.ExtractionAborted;
 import teralizer.jpf.ExtractionOutcome;
 import teralizer.jpf.SpecificationExtractor;
 import teralizer.processing.ProcessingStage;
@@ -68,6 +70,13 @@ public class JpfExecutionTask extends AbstractTask {
             // Exception that is (likely) due to JPFs incorrect handling of shadowing.
             // See https://github.com/glockyco/test-generalization/issues/37 for further details
             throw new RuntimeException("Failed JPF execution due to exception in native peers.", e);
+        } catch (JPFListenerException e) {
+            // JPF wraps a listener's throw; surface the typed extraction abort so the task is
+            // recorded with its reason (and token), not JPF's wrapper.
+            if (e.getCause() instanceof ExtractionAborted) {
+                throw (ExtractionAborted) e.getCause();
+            }
+            throw e;
         }
 
         if (jpf.foundErrors()) {

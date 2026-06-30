@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
+import gov.nasa.jpf.JPFListenerException;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -42,6 +43,9 @@ public final class JpfListenerHarness {
 
     private JpfListenerHarness() {
     }
+
+    private static final double DEFAULT_MAX_EXECUTION_TIME = 60.0;
+    private static final long DEFAULT_MAX_PATH_CONDITION_SIZE = 100_000L;
 
     /** Parsed result of one listener run. The specification fields are the raw JSON the listener wrote. */
     public static final class Capture {
@@ -100,7 +104,7 @@ public final class JpfListenerHarness {
         JPF jpf = new JPF(config);
         TestGeneralizationListener listener = new TestGeneralizationListener(config);
         jpf.addListener(listener);
-        jpf.run();
+        runUnwrappingAborts(jpf);
 
         if (jpf.foundErrors()) {
             String details = jpf.getSearchErrors().stream()
@@ -127,7 +131,8 @@ public final class JpfListenerHarness {
 
     /**
      * Run the listener and classify the outcome, without writing or reading specification files —
-     * for asserting outcomes (e.g. {@code TARGET_NOT_ENTERED}) that produce no specification.
+     * for asserting outcomes (e.g. {@code TARGET_NOT_ENTERED}) that produce no specification. Uses
+     * the default extraction ceilings.
      */
     public static ExtractionOutcome runOutcome(
         Path workDir,
@@ -136,11 +141,30 @@ public final class JpfListenerHarness {
         String instrumentedMethodQN,
         String testedMethodQN
     ) {
-        Config config = buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN);
+        return runOutcome(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
+            DEFAULT_MAX_EXECUTION_TIME, DEFAULT_MAX_PATH_CONDITION_SIZE);
+    }
+
+    /**
+     * Run the listener under explicit extraction ceilings and classify the outcome. A tight
+     * {@code maxPathConditionSize} (or {@code maxExecutionTime}) lets a test exercise the listener's
+     * capability-limit guards, which abort the run with a typed {@link ExtractionAborted}.
+     */
+    public static ExtractionOutcome runOutcome(
+        Path workDir,
+        String targetClassQN,
+        String symbolicMethod,
+        String instrumentedMethodQN,
+        String testedMethodQN,
+        double maxExecutionTime,
+        long maxPathConditionSize
+    ) {
+        Config config = buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN,
+            testedMethodQN, maxExecutionTime, maxPathConditionSize);
         JPF jpf = new JPF(config);
         TestGeneralizationListener listener = new TestGeneralizationListener(config);
         jpf.addListener(listener);
-        jpf.run();
+        runUnwrappingAborts(jpf);
 
         if (jpf.foundErrors()) {
             String details = jpf.getSearchErrors().stream()
@@ -159,7 +183,8 @@ public final class JpfListenerHarness {
      * Build the JPF {@link Config} for a scenario without attaching a listener, so a caller can
      * attach its own (e.g. an observer-only listener) and run. Renders the production
      * {@code jpf-config.vm} exactly as {@link #run} does; the four specification paths are derived
-     * from {@code workDir} and re-derived by the caller if it needs to read them back.
+     * from {@code workDir} and re-derived by the caller if it needs to read them back. Uses the
+     * default extraction ceilings.
      */
     public static Config buildConfig(
         Path workDir,
@@ -167,6 +192,20 @@ public final class JpfListenerHarness {
         String symbolicMethod,
         String instrumentedMethodQN,
         String testedMethodQN
+    ) {
+        return buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
+            DEFAULT_MAX_EXECUTION_TIME, DEFAULT_MAX_PATH_CONDITION_SIZE);
+    }
+
+    /** Build the JPF {@link Config} under explicit extraction ceilings (see {@link #buildConfig}). */
+    public static Config buildConfig(
+        Path workDir,
+        String targetClassQN,
+        String symbolicMethod,
+        String instrumentedMethodQN,
+        String testedMethodQN,
+        double maxExecutionTime,
+        long maxPathConditionSize
     ) {
         Path jpfConfigPath = workDir.resolve("scenario.jpf");
         Path inputValuesPath = workDir.resolve("concrete-input.json");
@@ -177,7 +216,8 @@ public final class JpfListenerHarness {
 
         writeConfig(
             jpfConfigPath, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
-            inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath, reportPath
+            inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath, reportPath,
+            maxExecutionTime, maxPathConditionSize
         );
 
         return JPF.createConfig(new String[]{jpfConfigPath.toString()});
@@ -193,7 +233,9 @@ public final class JpfListenerHarness {
         Path outputValuePath,
         Path inputSpecificationPath,
         Path outputSpecificationPath,
-        Path reportPath
+        Path reportPath,
+        double maxExecutionTime,
+        long maxPathConditionSize
     ) {
         VelocityEngine velocity = new VelocityEngine(templateProperties());
         velocity.init();
@@ -209,8 +251,8 @@ public final class JpfListenerHarness {
         context.put("symbolicDp", "z3");
         context.put("symbolicFp", false);
         context.put("symbolicBvLength", 32);
-        context.put("maxExecutionTime", 60.0);
-        context.put("maxPathConditionSize", 100000L);
+        context.put("maxExecutionTime", maxExecutionTime);
+        context.put("maxPathConditionSize", maxPathConditionSize);
         context.put("driverClassQualifiedName", targetClassQN);
         // Only test_generalization.{instrumented_method,tested_method} and the four spec paths are
         // read by the listener; the remaining identity keys are populated for template completeness
@@ -238,6 +280,22 @@ public final class JpfListenerHarness {
             template.merge(context, writer);
         } catch (IOException e) {
             throw new RuntimeException("Failed to write JPF config: " + jpfConfigPath, e);
+        }
+    }
+
+    /**
+     * Run JPF, surfacing a listener's typed {@link ExtractionAborted} directly: JPF wraps a listener
+     * throw in {@link JPFListenerException}, so an abort would otherwise reach callers only as a
+     * buried cause. Mirrors how {@code JpfExecutionTask} unwraps the abort in the pipeline.
+     */
+    private static void runUnwrappingAborts(JPF jpf) {
+        try {
+            jpf.run();
+        } catch (JPFListenerException e) {
+            if (e.getCause() instanceof ExtractionAborted) {
+                throw (ExtractionAborted) e.getCause();
+            }
+            throw e;
         }
     }
 
