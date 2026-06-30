@@ -1,139 +1,130 @@
 ---
-title: Census Completion — Generated-Build Robustness & PIT Scale
+title: Census Completion — PIT Timeout & Generated-Build Visibility
 type: spec
 status: draft
 created: 2026-06-30
 parent: 2026-06-29-beyond-jarvis-generalization-census
 ---
 
-# Census Completion — Generated-Build Robustness & PIT Scale
+# Census Completion — PIT Timeout & Generated-Build Visibility
 
 ## Context
 
-The first beyond-JARVIS census (`2026-06-29-beyond-jarvis-census-implementation`) ran but did
-not complete cleanly. After the listener-correctness fixes (I1 boxed-value capture and P1 typed
-return-attr read; P2 was investigated and found unnecessary — see
-`2026-06-29-beyond-jarvis-census-findings`), two completion blockers remain. This spec defines
-each precisely and recommends an approach.
+The first beyond-JARVIS census (`2026-06-29-beyond-jarvis-census-implementation`) ran but did not
+complete cleanly. After the listener-correctness fixes (I1 boxed-value capture, P1 typed return-attr;
+P2 found unnecessary — see `2026-06-29-beyond-jarvis-census-findings`), two completion items remain:
+**I3** (PIT timed out) and **I2** (a malformed generated test cost a whole variant).
 
-- **I2** — one malformed generated test fails the *entire* variant build.
-- **I3** — PIT mutation testing times out at census scale.
+Both were re-scoped against DB ground truth (`postgres_dev` = eqbench/commons-utils,
+`postgres_test` = RepoReapers) rather than the checked-in HOCON defaults. That evidence overturned
+the first draft of this spec: I3 is a **timeout** problem (scoping already exists and is correct),
+and I2 is a **visibility** problem (the failure is already recorded, just not surfaced).
 
-The I1 fix removes the boxed-value codegen bug that triggered I2 in the first run, so **I2 is now
-defense-in-depth**: it stops *any* future uncompilable generated file from sinking a whole variant,
-rather than being the immediate unblocker.
-
-## I2 — Generated-build robustness
+## I3 — PIT timeout at census scale
 
 ### Problem
 
-`ProjectBuildTask.buildGradle` / `buildMaven` compiles the entire generated suite in one atomic
-step (`./gradlew … clean compileJava compileTestJava`, or `mvn … clean compile test-compile`).
-`TestGeneralizationTask` physically writes every generated test to `generalization.file_path` in
-the project's test source tree. A single generated file that does not compile fails
-`compileTestJava` / `test-compile`, which fails the whole `BUILD_PROJECT_GENERALIZED` stage and
-drops **all** generalizations for that variant — plus the downstream execution/JaCoCo/PIT. In the
-census's commons-lang `IMPROVED_100` run, one malformed file (the I1 boxed-Integer case) lost the
-entire variant; `CENSUS_EXIT=0` hid it because the pipeline swallows per-task failures.
+`PitDataCollectionTask` runs PIT under a `ConsoleCommand` wall-clock timeout equal to
+`pitest.max-execution-time` (census configs: **300s**), enforced at `PitDataCollectionTask:185`. PIT
+over a realistic covered-class set takes **hours**, so the census run is killed at 300s and the
+variant's PIT + mutation-gain data are lost.
 
-### Recommended approach: validate-and-quarantine before the variant build
+### What already exists (and is correct — do not change)
 
-Validate each generated test in isolation, then exclude the ones that don't compile **both in the
-database and on disk**, so the batch build only ever sees valid files.
+PIT is already scoped, not run over `*`:
 
-1. **Validate** the generated tests with an in-process compile check
-   (`javax.tools.JavaCompiler`) against the project's test classpath. Feed all generated test
-   files in a single invocation and collect per-file `Diagnostic`s — structured, no build-output
-   parsing, per-file attribution, and it catches semantic/type errors, not just syntax.
-2. **Quarantine** every generalization whose file has an `ERROR` diagnostic:
-   - mark `generalization.is_included = false` with an `exclusion_info` reason, consistent with the
-     filter mechanism in `TestFilteringTask` / `NonPassingTestFilter`; **and**
-   - **remove the `.java` from the build source set** (skip the write, or delete/rename before the
-     build). Flagging the row alone is insufficient: `ProjectBuildTask` compiles the whole test
-     tree regardless of `is_included`. The data-dir provenance copy
-     (`…/teralizer-data/tests/<variant>/…`) is kept.
-3. **Build** the variant — now guaranteed to compile.
+- `targetClasses` = JaCoCo-covered classes with `INSTRUCTION_COVERED > 0`
+  (`SQLiteRepository.fetchCoveredClasses`), held **identical for INITIAL and GENERALIZED**
+  (`PitDataCollectionTask:130`) so the mutation-gain set difference stays comparable.
+- `targetTests` = the included test classes, plus the included generalized classes for the
+  GENERALIZED stage.
 
-This isolates failures to the single offending test and yields a clean, queryable per-generalization
-exclusion reason (the same shape downstream analysis already understands).
+This is the established all-covered-classes methodology. It is complete and not broken.
 
-#### Alternatives considered
+### Evidence (DB ground truth)
 
-- **Parse-only validation** (Spoon/JavaParser, no classpath): cheaper and catches syntax errors
-  (the I1 class), but misses semantic/type errors. Acceptable as a fast fallback only if the
-  validation-compile cost proves prohibitive.
-- **Resilient batch build** (run the build, parse gradle/maven/ant compiler output to find and
-  exclude failures, rebuild): fragile across build systems and slower (repeated full builds).
-  Rejected.
+- **`postgres_dev` (eqbench/commons-utils evaluation):** `COLLECT_PIT_DATA_GENERALIZED` ran **up to
+  23,847s (~6.6 h)**, avg ~3 h for `NAIVE_200_TRIES`, **all SUCCEEDED**. The stored
+  `project.configuration` has `pitest = { "mutators": "DEFAULTS" }` — **no `max-execution-time`** —
+  i.e. PIT ran effectively **unbounded**. Covered classes: 652 (eqbench), 131 (commons-utils).
+- **`postgres_test` (RepoReapers evaluation):** ran under the 300s cap and shows **64
+  `COLLECT_PIT_DATA_INITIAL` tasks FAILED at ~300.1s** (timeout) plus 270 GENERALIZED failures.
 
-### Open question
+So PIT at this scale legitimately needs hours; the prior *successful* evaluation had no effective PIT
+timeout; the census's 300s is the anomaly.
 
-- **Where to run validation:** inside `TestGeneralizationTask` as each test is generated (natural
-  per-generalization exclusion, but compiles incrementally), or as a dedicated pre-build pass over
-  all generated files for the variant (one compile invocation, simpler classpath story). The
-  pre-build pass is the leaning recommendation; confirm during implementation.
+### Recommendation
+
+Raise the census `pitest.max-execution-time` to match the prior evaluation's effective budget — a
+large value (≥ the observed ~7 h max, or effectively unbounded). Same class scope, larger budget.
+It already reads from HOCON, so this is a per-census-config value.
+
+**Rejected — narrowing `targetClasses` to the classes-under-test:** it would change the mutation
+denominator and break comparability with the established all-covered methodology (and with the prior
+eval, which ran full covered-scope to completion under a large budget). The first draft of this spec
+recommended it; the DB evidence shows it is neither necessary nor methodologically safe.
+
+### Cost / caveat
+
+Census-scale PIT is inherently long (hours per PIT task; several variants → many hours per project),
+exactly as the eqbench evaluation took. If faster turnaround is wanted, reduce the **variant set** or
+trim the **allowlist** (config choices), not the class scope.
 
 ### Acceptance criteria
 
-- A deliberately uncompilable generated test is excluded with `is_included = false` + an
-  `exclusion_info` reason and its file is absent from the build source set; the rest of the variant
-  compiles, runs, and produces generalization data.
-- Validation runs at most once per variant build (no per-file build spawn).
-- Provenance copies under the data dir are unaffected.
+- Census PIT (`COLLECT_PIT_DATA_GENERALIZED` and `_INITIAL`) over commons-math completes without
+  hitting the timeout and produces mutation data; the mutation-gain metric populates.
+- `targetClasses` scope is unchanged and identical INITIAL vs GENERALIZED (still comparable).
+- The PIT timeout is a per-census-config knob set to a realistic large value.
 
-## I3 — PIT at census scale
+## I2 — Generated-build failure visibility
 
 ### Problem
 
-`PitDataCollectionTask.executeMutationTesting` sets `targetClasses` to **all** JaCoCo-covered
-classes from `COLLECT_JACOCO_DATA_INITIAL` (`SQLiteRepository.fetchCoveredClasses`), passed to PIT
-via `-PtargetClasses=` (Gradle) or the POM (Maven). On the JARVIS-10 scorecard that is a handful of
-classes; at census scale it is every class transitively covered by the full commons-math / lang
-suites — hundreds. PIT then mutates and runs against far more classes than are under test. The whole
-PIT invocation is killed by the `ConsoleCommand` wall-clock timeout
-(`pitest.max-execution-time = 300s`, set in the task constructor and enforced at
-`PitDataCollectionTask:185`); the census hit exactly this, after which the variant's remaining tasks
-were dropped and no mutation-gain data was produced.
+`ProjectBuildTask` compiles the whole generated suite atomically; one uncompilable generated file
+fails `BUILD_PROJECT_GENERALIZED`, dropping **all** that variant's generalizations and downstream
+(execution/JaCoCo/PIT). `ProcessingPipeline` catches the exception, records `task.status = FAILED`
+with the stack trace in `task.info`, removes the dependent queued tasks, and **continues** other
+configs/variants. The run-script `set -euo pipefail` does not catch it because the in-process
+pipeline exits 0 — so a dropped variant is only discoverable by querying the `task` table.
 
-### Recommended approach: scope PIT to the classes under test, plus a configurable backstop
+### Reassessment (post-I1)
 
-1. **Scope `targetClasses` to the classes actually under test** — the distinct `tested_class` of
-   the included tests/generalizations — rather than all JaCoCo-covered classes. This is the
-   meaningful mutation denominator (mutation score on the CUTs, per
-   `2026-06-29-pvc-budget-elasticity`; aligns with `2026-06-28-mut-id-targeting-and-coverage`), and
-   it collapses PIT's work from hundreds of classes to the tens under test. **Preserve the existing
-   INITIAL == GENERALIZED `targetClasses` consistency** (the comment at `PitDataCollectionTask:130`):
-   both stages scope to the same CUT set, so the mutation-gain set difference stays comparable.
-2. **Parameterize the timeout** as a backstop. `pitest.max-execution-time` is the wall-clock kill
-   for the whole invocation; mutation testing over many CUTs is inherently slow even when scoped, so
-   census configs need a larger value. It already reads from HOCON, so set a generous per-config
-   census value.
+The I1 fix removed the boxed-value codegen bug behind the only observed instance, so uncompilable
+generated tests should now be **rare**. When one does occur the failure is already **recorded and
+diagnosable**, and the pipeline already isolates other configs/variants. A rare hard-fail-and-record
+is therefore acceptable, and a loud failure usefully *surfaces* a generator bug that silent
+per-file quarantine would hide. Full validate-and-quarantine is over-engineering at this point.
 
-#### Alternatives considered
+### Recommendation (minimal — visibility, not quarantine)
 
-- **Raise the timeout only** (no scoping): may finish but can take hours over full coverage, and
-  still measures mutation on transitively-covered library classes that are not the test target —
-  less meaningful. Insufficient alone.
-- **Trim the allowlist** (drop FastMathTest / MathArraysTest): a census-config workaround that
-  reduces the evidence rather than fixing the cost. Out of scope here.
+Surface dropped variants instead of recording them silently. The swallowing is in
+`ProcessingPipeline` (it catches a task exception, marks `task.status = FAILED`, removes dependents,
+and continues), so the gradle `run` task — and therefore the script's `set -euo pipefail` — see
+success. Fix at that layer, **after the queue drains** so the current mark-and-continue is preserved
+(one bad variant must not abort later independent configs): have the runner exit non-zero if any
+task ended `FAILED` (the script's `set -e` then surfaces it), and/or emit an end-of-run summary of
+the `FAILED` tasks. Cheap, fail-loud, no methodology impact.
 
-### Open question
+### Deferred — validate-and-quarantine
 
-- **CUT source:** scope to `tested_class` from the assertion/generalization rows, or reuse the
-  MUT-identification work (`2026-06-28-mut-id-targeting-and-coverage`) if it already yields a precise
-  per-test class set. Confirm which query is authoritative during implementation.
+Implement **only if** a full post-I1 census shows uncompilable generated tests *recur*. Sketch for
+that case: an in-process `javax.tools.JavaCompiler` check over the generated tests (one invocation,
+per-file `Diagnostic`s) → for each failure mark `generalization.is_included = false` with an
+`exclusion_info` reason **and remove the `.java` from the build source set** (flagging the row is
+insufficient — `ProjectBuildTask` compiles the whole tree; the `…/teralizer-data/tests/<variant>/…`
+provenance copy is kept). Rejected the resilient-rebuild-with-output-parsing alternative as fragile.
 
-### Acceptance criteria
+### Acceptance criteria (for the minimal change)
 
-- Census PIT (`COLLECT_PIT_DATA_GENERALIZED` and `_INITIAL`) over commons-math completes within the
-  configured timeout and produces mutation data.
-- `targetClasses` is the CUT set, identical between INITIAL and GENERALIZED, so the mutation-gain
-  metric (`jarvis_scoreboard --census`) populates and stays comparable.
-- The timeout is configurable per census config.
+- A census run that drops a variant build surfaces it (summary line and/or non-zero signal); the
+  lost variant is not discoverable only by manual `task`-table query.
 
 ## Sequencing & out of scope
 
-- Land **I2** before the next census rerun (so a stray bad file cannot sink a variant), then **I3**,
-  then one full census rerun to validate end-to-end (tracked in the findings note).
-- Out of scope: the larger spf-eval ports (P3/P4/P5), the `reference.conf` variant leak (I4, already
-  mitigated by report scoping), and the mutation-gain metric itself (already implemented).
+- **I3 (timeout) is the immediate census-completion blocker — do it first.** I2 visibility is a
+  cheap follow-on. Quarantine is deferred pending evidence of recurrence. Then run a full census to
+  validate end-to-end.
+- Out of scope: the spf-eval P3/P4/P5 ports, the `reference.conf` variant leak (I4, mitigated by
+  report scoping), the mutation-gain metric itself (implemented), and any change to PIT's
+  class-scope methodology.

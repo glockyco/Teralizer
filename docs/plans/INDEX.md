@@ -23,7 +23,7 @@
 - **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Beyond-JARVIS Generalization Census** [spec] `2026-06-29-beyond-jarvis-generalization-census` ← 2026-06-26-teralizer-overview
-- **Census Completion — Generated-Build Robustness & PIT Scale** [spec] `2026-06-30-census-build-robustness-and-pit-scale` ← 2026-06-29-beyond-jarvis-generalization-census
+- **Census Completion — PIT Timeout & Generated-Build Visibility** [spec] `2026-06-30-census-build-robustness-and-pit-scale` ← 2026-06-29-beyond-jarvis-generalization-census
 
 ## superseded
 
