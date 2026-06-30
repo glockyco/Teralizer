@@ -1,6 +1,5 @@
 package teralizer.jpf;
 
-import com.google.gson.Gson;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.jvm.bytecode.*;
@@ -14,11 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.domain.CapturedException;
 import teralizer.domain.MethodArgument;
-import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpfToModelTransformer;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -198,30 +194,22 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         }
 
         SpfToModelTransformer spfToModelTransformer = new SpfToModelTransformer();
-        ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
 
         teralizer.domain.Expression modelInput = spfToModelTransformer.transform(spfInput);
 
         teralizer.domain.Expression modelOutput;
-
         if (capturedException == null) {
             modelOutput = spfToModelTransformer.transform(spfOutput);
         } else {
             modelOutput = spfToModelTransformer.transform(capturedException);
         }
 
-        String jsonInput = modelToJsonTransformer.transform(modelInput);
-        String jsonOutput = modelToJsonTransformer.transform(modelOutput);
-
-        try {
-            Gson gson = new Gson();
-            Files.write(this.inputValuesPath, gson.toJson(concreteInputArguments).getBytes());
-            Files.write(this.outputValuePath, gson.toJson(concreteOutputArgument).getBytes());
-            Files.write(this.inputSpecificationPath, jsonInput.getBytes());
-            Files.write(this.outputSpecificationPath, jsonOutput.getBytes());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        Invocation invocation = new Invocation(
+            concreteInputArguments, concreteOutputArgument, modelInput, modelOutput);
+        new SpecificationExtractor().write(
+            invocation,
+            this.inputValuesPath, this.outputValuePath,
+            this.inputSpecificationPath, this.outputSpecificationPath);
     }
 
     private List<MethodArgument> captureConcreteArguments(ThreadInfo currentThread) {

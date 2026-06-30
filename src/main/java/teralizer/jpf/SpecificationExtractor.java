@@ -1,0 +1,39 @@
+package teralizer.jpf;
+
+import com.google.gson.Gson;
+import teralizer.transformer.ModelToJsonTransformer;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+/**
+ * Serializes a captured {@link Invocation} to the four specification files. Pure with respect to
+ * JPF/SPF: it operates only on Model POJOs and concrete-value records, so it runs after the JPF
+ * search has terminated without depending on any SPF object remaining valid.
+ */
+public final class SpecificationExtractor {
+
+    private final ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
+    private final Gson gson = new Gson();
+
+    public void write(
+        Invocation invocation,
+        Path inputValuesPath,
+        Path outputValuePath,
+        Path inputSpecificationPath,
+        Path outputSpecificationPath
+    ) {
+        String jsonInput = this.modelToJsonTransformer.transform(invocation.getModelInput());
+        String jsonOutput = this.modelToJsonTransformer.transform(invocation.getModelOutput());
+
+        try {
+            Files.write(inputValuesPath, this.gson.toJson(invocation.getConcreteInputs()).getBytes());
+            Files.write(outputValuePath, this.gson.toJson(invocation.getConcreteOutput()).getBytes());
+            Files.write(inputSpecificationPath, jsonInput.getBytes());
+            Files.write(outputSpecificationPath, jsonOutput.getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
