@@ -30,7 +30,8 @@ work that depends on a re-run is deferred until (1) lands.
 Read this after `INDEX.md`. Grouped by how load-bearing each doc is now, not by
 type; `INDEX.md` carries the full status/parent tree and `archive/` the retired docs.
 
-**Read first — current focus: (1) beat JARVIS — capability won; generator/PVC ongoing**
+**Read first — current focus: (1) beat JARVIS won; primary next work = the listener/value-handling fixes the beyond-JARVIS census surfaced**
+- `2026-06-29-beyond-jarvis-census-findings` *(note)* — **primary next work.** The beyond-JARVIS census (generalize commons-lang/math's *own* tests past JARVIS's 10) produced 109 sound generalizations from one commons-math variant — strong breadth — but surfaced concrete, foundational listener/codegen fixes to do first: boxed-wrapper value capture (`TestGeneralizationListener.captureConcreteArguments` does `String.valueOf` on a JPF `ElementInfo` → `…@24c`), spf-eval listener ports (ObjectList unwrap, `exceptionHandled`, heap PC), generated-suite build robustness, and PIT-at-scale. Spec `2026-06-29-beyond-jarvis-generalization-census`; plan `2026-06-29-beyond-jarvis-census-implementation`.
 - `2026-06-28-clause-driven-input-generation` *(spec)* — current generator design: clause-driven planners, single type-capability source, fail-loud SPF→Model seam.
 - `2026-06-28-generation-coverage-telemetry` *(note)* — telemetry schema the generator self-reports against.
 - `2026-06-27-generalizable-input-rule` *(spec)* — shared input-eligibility rule for every consumer.
