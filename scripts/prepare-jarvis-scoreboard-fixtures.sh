@@ -71,6 +71,65 @@ write_pom() {
 POM
 }
 
+write_census_pom() {
+  local artifact_id="$1"
+  local dst="$2"
+  cat > "$dst/pom.xml" <<POM
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>teralizer.jarvis</groupId>
+  <artifactId>$artifact_id</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
+POM
+}
+
+# Curated allowlist of upstream numeric/char test classes promoted into the census fixture.
+# Prioritizes JARVIS's own Table-2 source classes; refined by the mvn test-compile gate.
+MATH_CENSUS_TESTS="src/test/java/org/apache/commons/math3/util/FastMathTest.java \
+src/test/java/org/apache/commons/math3/util/PrecisionTest.java \
+src/test/java/org/apache/commons/math3/util/ArithmeticUtilsTest.java \
+src/test/java/org/apache/commons/math3/util/MathArraysTest.java \
+src/test/java/org/apache/commons/math3/geometry/euclidean/oned/IntervalTest.java \
+src/test/java/org/apache/commons/math3/analysis/polynomials/PolynomialFunctionTest.java \
+src/test/java/org/apache/commons/math3/TestUtils.java"
+LANG_CENSUS_TESTS="src/test/java/org/apache/commons/lang3/CharUtilsTest.java \
+src/test/java/org/apache/commons/lang3/BooleanUtilsTest.java \
+src/test/java/org/apache/commons/lang3/math/NumberUtilsTest.java"
+
+prepare_census_fixture() {
+  local repo_dir="$1"
+  local dst="$2"
+  local artifact="$3"
+  shift 3
+  rm -rf "$dst"
+  mkdir -p "$dst/src"
+  write_census_pom "$artifact" "$dst"
+  cp -R "$repo_dir/src/main" "$dst/src/"
+  echo "### $artifact"
+  for t in "$@"; do
+    if [[ -f "$repo_dir/$t" ]]; then
+      copy_path "$repo_dir" "$t" "$dst"
+      echo "- KEEP $t"
+    else
+      echo "- DROP(missing) $t"
+    fi
+  done
+}
+
 write_math_scorecard_tests() {
   local dst="$1/src/test/java/org/apache/commons/math3/jarvis"
   mkdir -p "$dst"
@@ -198,6 +257,22 @@ prepare_lang_fixture() {
 mkdir -p "$CACHE_DIR" "$FIXTURE_DIR"
 require_git_pin "$CACHE_DIR/commons-math" "$MATH_TAG" "$MATH_SHA" "$MATH_REPO"
 require_git_pin "$CACHE_DIR/commons-lang" "$LANG_TAG" "$LANG_SHA" "$LANG_REPO"
+
+if [[ "${1:-}" == "--census" ]]; then
+  CENSUS_FIXTURE_DIR="$ROOT_DIR/data/jarvis-census/fixtures"
+  mkdir -p "$CENSUS_FIXTURE_DIR"
+  PROV="$ROOT_DIR/data/jarvis-census/PROVENANCE.md"
+  {
+    echo "# Census fixture provenance"
+    echo
+    echo "Pinned: commons-math $MATH_SHA ($MATH_TAG), commons-lang $LANG_SHA ($LANG_TAG)."
+    echo
+    prepare_census_fixture "$CACHE_DIR/commons-math" "$CENSUS_FIXTURE_DIR/commons-math-3.5-census" "commons-math-3.5-census" $MATH_CENSUS_TESTS
+    prepare_census_fixture "$CACHE_DIR/commons-lang" "$CENSUS_FIXTURE_DIR/commons-lang-3.5-census" "commons-lang-3.5-census" $LANG_CENSUS_TESTS
+  } | tee "$PROV"
+  echo "Prepared census fixtures under $CENSUS_FIXTURE_DIR; provenance at $PROV"
+  exit 0
+fi
 prepare_math_fixture
 prepare_lang_fixture
 
