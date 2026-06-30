@@ -213,6 +213,13 @@ public class Configuration {
         return CONFIG.getInt(TOOL_NAME_LOWER + ".pitest.max-execution-time");
     }
 
+    /** Whether mutation testing runs. Defaults to true; set {@code teralizer.pitest.enabled = false}
+     * to skip PIT (e.g. fast validation runs that only exercise generation/build/JaCoCo). */
+    public static boolean isPitestEnabled() {
+        String path = TOOL_NAME_LOWER + ".pitest.enabled";
+        return !CONFIG.hasPath(path) || CONFIG.getBoolean(path);
+    }
+
     // ----- Generalizations ----- //
     public static String[] getGeneralizationVariants() {
         return CONFIG.getObject(TOOL_NAME_LOWER + ".generalizations").keySet().toArray(new String[0]);

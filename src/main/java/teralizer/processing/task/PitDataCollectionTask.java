@@ -80,6 +80,13 @@ public class PitDataCollectionTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        if (!Configuration.isPitestEnabled()) {
+            reportInfo.accept("Mutation testing disabled (teralizer.pitest.enabled = false); skipping PIT"
+                + " execution and data collection for " + this.getStage()
+                + (this.getVariant() == null ? "" : " / " + this.getVariant()) + ".");
+            return;
+        }
+
         Path pitDataDirectory = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/pit-data");
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
