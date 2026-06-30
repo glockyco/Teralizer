@@ -1,6 +1,6 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.MethodArgument;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 
 import java.util.Collections;
@@ -13,7 +13,7 @@ public class PlanningContext {
     private final List<ConstraintClause> clauses;
     private final Map<String, Integer> parameterIndexes;
     private final Map<String, String> parameterTypes;
-    private final Map<String, MethodArgument> arguments;
+    private final Map<String, Value> arguments;
     private final Map<String, NumericClauseInterpretation> interpretations;
 
     public PlanningContext(List<MethodParameter> parameters, List<ConstraintClause> clauses) {
@@ -23,7 +23,7 @@ public class PlanningContext {
     public PlanningContext(
         List<MethodParameter> parameters,
         List<ConstraintClause> clauses,
-        Map<String, MethodArgument> arguments
+        Map<String, Value> arguments
     ) {
         this.parameters = parameters;
         this.clauses = clauses;
@@ -54,7 +54,7 @@ public class PlanningContext {
         return Collections.unmodifiableMap(this.parameterTypes);
     }
 
-    public Map<String, MethodArgument> getArguments() {
+    public Map<String, Value> getArguments() {
         return Collections.unmodifiableMap(this.arguments);
     }
 

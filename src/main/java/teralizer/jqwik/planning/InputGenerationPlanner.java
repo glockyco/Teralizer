@@ -1,6 +1,6 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.MethodArgument;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 
@@ -19,7 +19,7 @@ public class InputGenerationPlanner {
         return this.plan(parameters, Collections.emptyMap(), inputModel);
     }
 
-    public InputGenerationPlan plan(List<MethodParameter> parameters, Map<String, MethodArgument> arguments, Model inputModel) {
+    public InputGenerationPlan plan(List<MethodParameter> parameters, Map<String, Value> arguments, Model inputModel) {
         Map<String, String> parameterTypes = new HashMap<>();
         for (MethodParameter parameter : parameters) {
             parameterTypes.put(parameter.getName(), parameter.getType());

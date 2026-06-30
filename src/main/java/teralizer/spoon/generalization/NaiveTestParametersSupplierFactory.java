@@ -6,7 +6,7 @@ import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.spoon.SpoonUtils;
 import teralizer.transformer.ModelToJavaTransformer;
@@ -22,7 +22,7 @@ public class NaiveTestParametersSupplierFactory {
     public static CtClass<?> createSupplierClass(
         Factory factory,
         List<MethodParameter> parameters,
-        Map<String, MethodArgument> arguments,
+        Map<String, Value> arguments,
         String inputJava
     ) {
         CtClass<?> supplierClass = factory.Class().create(TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
@@ -50,7 +50,7 @@ public class NaiveTestParametersSupplierFactory {
 
     private static List<String> createSupplierBodies(
         List<MethodParameter> parameters,
-        Map<String, MethodArgument> arguments,
+        Map<String, Value> arguments,
         String inputJava
     ) {
         List<String> supplierBodies = new ArrayList<>();
@@ -103,13 +103,13 @@ public class NaiveTestParametersSupplierFactory {
         return supplierBodies;
     }
 
-    private static String buildOriginalTuple(List<MethodParameter> parameters, Map<String, MethodArgument> arguments) {
+    private static String buildOriginalTuple(List<MethodParameter> parameters, Map<String, Value> arguments) {
         if (arguments == null) {
             return null;
         }
         List<String> values = new ArrayList<>();
         for (MethodParameter parameter : parameters) {
-            MethodArgument argument = arguments.get(parameter.getName());
+            Value argument = arguments.get(parameter.getName());
             if (argument == null) {
                 return null;
             }

@@ -52,71 +52,6 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
         return String.valueOf(value);
     }
 
-    public String transform(char value) {
-        return "'" + this.escapeChar(value) + "'";
-    }
-
-    public String transform(String value) {
-        return String.valueOf(value);
-    }
-
-    public String transform(MethodArgument argument) {
-        // A null value is only legitimate for a reference/boxed type (e.g. a Boolean/Character a
-        // test passed as null); render it as the Java literal. A "null" in a primitive slot is
-        // impossible and indicates a capture bug, so let it fall through and fail fast below.
-        if ("null".equals(argument.getValue()) && isReferenceType(argument.getType())) {
-            return "null";
-        }
-
-        switch (argument.getType()) {
-            case "byte":
-            case "java.lang.Byte":
-            case "short":
-            case "java.lang.Short":
-            case "int":
-            case "java.lang.Integer":
-                return argument.getValue();
-            case "char":
-            case "java.lang.Character":
-                return this.renderCharArgument(argument.getValue());
-            case "boolean":
-            case "java.lang.Boolean":
-                return this.renderBooleanArgument(argument.getValue());
-            case "String":
-            case "java.lang.String":
-                return argument.getValue();
-            case "long":
-            case "java.lang.Long":
-                return argument.getValue() + "L";
-            case "float":
-            case "java.lang.Float":
-                switch (argument.getValue()) {
-                    case "NaN":
-                        return "Float.NaN";
-                    case "Infinity":
-                        return "Float.POSITIVE_INFINITY";
-                    case "-Infinity":
-                        return "Float.NEGATIVE_INFINITY";
-                    default:
-                        return argument.getValue() + "F";
-                }
-            case "double":
-            case "java.lang.Double":
-                switch (argument.getValue()) {
-                    case "NaN":
-                        return "Double.NaN";
-                    case "Infinity":
-                        return "Double.POSITIVE_INFINITY";
-                    case "-Infinity":
-                        return "Double.NEGATIVE_INFINITY";
-                    default:
-                        return argument.getValue();
-                }
-            default:
-                return "null";
-        }
-    }
-
     public String transform(Value value) {
         if (value instanceof NullValue) {
             return "null";
@@ -140,6 +75,12 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
             }
             // Byte, Short, Integer, and Boolean all render via their canonical toString().
             return boxed.toString();
+        }
+        if (value instanceof ReferenceValue) {
+            throw new IllegalArgumentException(
+                "An opaque reference value (" + value.getJavaType() + ") has no Java literal and must not be"
+                    + " rendered; a captured receiver is offset-skipped and an unsupported reference is dropped"
+                    + " before generation.");
         }
         throw new IllegalArgumentException("Unknown Value variant: " + value.getClass().getName());
     }
@@ -425,48 +366,6 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
         return null;
     }
 
-    private static boolean isReferenceType(String type) {
-        switch (type) {
-            case "byte":
-            case "short":
-            case "int":
-            case "char":
-            case "boolean":
-            case "long":
-            case "float":
-            case "double":
-                return false;
-            default:
-                return true;
-        }
-    }
-
-    private String renderBooleanArgument(String value) {
-        switch (value) {
-            case "1":
-            case "true":
-                return "true";
-            case "0":
-            case "false":
-                return "false";
-            default:
-                throw new RuntimeException("Unable to transform boolean value '" + value + "' to Java.");
-        }
-    }
-
-    private String renderCharArgument(String value) {
-        if (value.startsWith("'") && value.endsWith("'")) {
-            return value;
-        }
-        if (value.matches("[0-9]+")) {
-            return "(char) " + value;
-        }
-        if (value.length() == 1) {
-            return this.transform(value.charAt(0));
-        }
-        throw new RuntimeException("Unable to transform char value '" + value + "' to Java.");
-    }
-
     private String renderStringLiteral(String value) {
         StringBuilder sb = new StringBuilder("\"");
         for (int i = 0; i < value.length(); i++) {
@@ -490,28 +389,5 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
         }
         sb.append("\"");
         return sb.toString();
-    }
-
-    private String escapeChar(char value) {
-        switch (value) {
-            case '\b':
-                return "\\b";
-            case '\t':
-                return "\\t";
-            case '\n':
-                return "\\n";
-            case '\f':
-                return "\\f";
-            case '\r':
-                return "\\r";
-            case '"':
-                return "\"";
-            case '\'':
-                return "\\'";
-            case '\\':
-                return "\\\\";
-            default:
-                return String.valueOf(value);
-        }
     }
 }

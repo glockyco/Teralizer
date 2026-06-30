@@ -6,7 +6,7 @@ import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.spoon.SpoonUtils;
 import teralizer.transformer.ModelToJavaTransformer;
@@ -19,7 +19,7 @@ import static teralizer.util.Configuration.TEST_PARAMETERS_SUPPLIER_CLASS_NAME;
 
 public class BaselineTestParametersSupplierFactory {
 
-    public static CtClass<?> createSupplierClass(Factory factory, List<MethodParameter> parameters, Map<String, MethodArgument> arguments) {
+    public static CtClass<?> createSupplierClass(Factory factory, List<MethodParameter> parameters, Map<String, Value> arguments) {
         CtClass<?> supplierClass = factory.Class().create(TEST_PARAMETERS_SUPPLIER_CLASS_NAME);
         supplierClass.setSuperInterfaces(new HashSet<>(Collections.singletonList(factory.Type().createReference("net.jqwik.api.ArbitrarySupplier<" + TEST_PARAMETERS_CLASS_NAME + ">"))));
         supplierClass.setModifiers(new HashSet<>(Arrays.asList(ModifierKind.PUBLIC, ModifierKind.STATIC)));
@@ -43,7 +43,7 @@ public class BaselineTestParametersSupplierFactory {
         return supplierClass;
     }
 
-    private static List<String> createSupplierBodies(List<MethodParameter> parameters, Map<String, MethodArgument> arguments) {
+    private static List<String> createSupplierBodies(List<MethodParameter> parameters, Map<String, Value> arguments) {
         List<String> supplierBodies = new ArrayList<>();
         if (parameters.isEmpty()) {
             supplierBodies.add("return net.jqwik.api.Arbitraries.just((" + TEST_PARAMETERS_CLASS_NAME + ") null)");
@@ -52,7 +52,7 @@ public class BaselineTestParametersSupplierFactory {
                 boolean isLast = i == parameters.size() - 1;
 
                 MethodParameter parameter = parameters.get(i);
-                MethodArgument argument = arguments.get(parameter.getName());
+                Value argument = arguments.get(parameter.getName());
 
                 String body = createArbitrary(argument);
 
@@ -78,11 +78,11 @@ public class BaselineTestParametersSupplierFactory {
         return supplierBodies;
     }
 
-    private static String createArbitrary(MethodArgument argument) {
+    private static String createArbitrary(Value argument) {
         String value = new ModelToJavaTransformer().transform(argument);
-        if (argument.getType().equals("boolean") || argument.getType().equals("java.lang.Boolean")) {
+        if (argument.getJavaType().equals("boolean") || argument.getJavaType().equals("java.lang.Boolean")) {
             return "return net.jqwik.api.Arbitraries.just(" + value + ")";
         }
-        return "return net.jqwik.api.Arbitraries.just((" + argument.getType() + ") " + value + ")";
+        return "return net.jqwik.api.Arbitraries.just((" + argument.getJavaType() + ") " + value + ")";
     }
 }

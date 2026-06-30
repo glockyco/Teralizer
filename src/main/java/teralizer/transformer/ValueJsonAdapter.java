@@ -10,6 +10,7 @@ import com.google.gson.JsonSerializer;
 import teralizer.domain.JavaTypes;
 import teralizer.domain.NullValue;
 import teralizer.domain.PrimitiveValue;
+import teralizer.domain.ReferenceValue;
 import teralizer.domain.StringValue;
 import teralizer.domain.Value;
 
@@ -41,6 +42,9 @@ public final class ValueJsonAdapter implements JsonSerializer<Value>, JsonDeseri
             object.addProperty("kind", "PRIMITIVE");
             object.addProperty("type", src.getJavaType());
             addPrimitivePayload(object, ((PrimitiveValue) src).getValue());
+        } else if (src instanceof ReferenceValue) {
+            object.addProperty("kind", "REFERENCE");
+            object.addProperty("type", src.getJavaType());
         } else {
             throw new IllegalArgumentException("Unknown Value variant: " + src.getClass().getName());
         }
@@ -83,6 +87,8 @@ public final class ValueJsonAdapter implements JsonSerializer<Value>, JsonDeseri
             case "PRIMITIVE":
                 String type = object.get("type").getAsString();
                 return new PrimitiveValue(type, parsePrimitive(type, object.get("value")));
+            case "REFERENCE":
+                return new ReferenceValue(object.get("type").getAsString());
             default:
                 throw new JsonParseException("Unknown Value kind: " + kind);
         }

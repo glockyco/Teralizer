@@ -1,7 +1,7 @@
 package teralizer.jqwik.planning;
 
 import teralizer.domain.ConstantInteger;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
@@ -23,7 +23,7 @@ public class BooleanDomainPlanner implements DomainPlanner {
     @Override
     public ParameterGenerationPlan plan(MethodParameter parameter, PlanningContext context) {
         String name = parameter.getName();
-        Optional<MethodArgument> argument = context.getArguments().containsKey(name)
+        Optional<Value> argument = context.getArguments().containsKey(name)
             ? Optional.of(context.getArguments().get(name))
             : Optional.empty();
 
@@ -55,7 +55,7 @@ public class BooleanDomainPlanner implements DomainPlanner {
         }
 
         String originalValue = argument
-            .map(arg -> "(" + arg.getType() + ") (" + new ModelToJavaTransformer().transform(arg) + ")")
+            .map(arg -> "(" + arg.getJavaType() + ") (" + new ModelToJavaTransformer().transform(arg) + ")")
             .orElse(null);
         return new ParameterGenerationPlan(parameter, TypeDomain.BOOLEAN, new RawJavaRecipe(body), originalValue, consumedIds);
     }

@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,8 +33,9 @@ class TestGeneralizationListenerSymbolicTest {
             PKG + "Cut.twice"
         );
 
-        assertEquals("int", capture.getOutputValue().getType(), "concrete return type");
-        assertEquals("10", capture.getOutputValue().getValue(), "concrete return value for the seed 5");
+        Value output = capture.getOutput().getReturnValue();
+        assertEquals("int", output.getJavaType(), "concrete return type");
+        assertEquals(Integer.valueOf(10), ((PrimitiveValue) output).getValue(), "concrete return value for the seed 5");
 
         String outputSpecification = capture.getOutputSpecificationJson();
         assertNotNull(outputSpecification, "a symbolic return Expression must be captured");

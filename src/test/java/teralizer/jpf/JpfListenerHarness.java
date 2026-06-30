@@ -8,8 +8,10 @@ import gov.nasa.jpf.JPFListenerException;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.CapturedOutput;
+import teralizer.domain.Value;
 import teralizer.jpf.targets.Cut;
+import teralizer.transformer.SpecificationGson;
 import teralizer.util.Configuration;
 
 import java.io.File;
@@ -49,29 +51,29 @@ public final class JpfListenerHarness {
 
     /** Parsed result of one listener run. The specification fields are the raw JSON the listener wrote. */
     public static final class Capture {
-        private final List<MethodArgument> inputValues;
-        private final MethodArgument outputValue;
+        private final List<Value> inputValues;
+        private final CapturedOutput output;
         private final String inputSpecificationJson;
         private final String outputSpecificationJson;
 
         Capture(
-            List<MethodArgument> inputValues,
-            MethodArgument outputValue,
+            List<Value> inputValues,
+            CapturedOutput output,
             String inputSpecificationJson,
             String outputSpecificationJson
         ) {
             this.inputValues = inputValues;
-            this.outputValue = outputValue;
+            this.output = output;
             this.inputSpecificationJson = inputSpecificationJson;
             this.outputSpecificationJson = outputSpecificationJson;
         }
 
-        public List<MethodArgument> getInputValues() {
+        public List<Value> getInputValues() {
             return this.inputValues;
         }
 
-        public MethodArgument getOutputValue() {
-            return this.outputValue;
+        public CapturedOutput getOutput() {
+            return this.output;
         }
 
         public String getInputSpecificationJson() {
@@ -305,11 +307,11 @@ public final class JpfListenerHarness {
         Path inputSpecificationPath,
         Path outputSpecificationPath
     ) {
-        Gson gson = new Gson();
-        Type argumentListType = new TypeToken<List<MethodArgument>>() {
+        Gson gson = SpecificationGson.create();
+        Type valueListType = new TypeToken<List<Value>>() {
         }.getType();
-        List<MethodArgument> inputs = gson.fromJson(readFile(inputValuesPath), argumentListType);
-        MethodArgument output = gson.fromJson(readFile(outputValuePath), MethodArgument.class);
+        List<Value> inputs = gson.fromJson(readFile(inputValuesPath), valueListType);
+        CapturedOutput output = gson.fromJson(readFile(outputValuePath), CapturedOutput.class);
         String inputSpecification = Files.exists(inputSpecificationPath) ? readFile(inputSpecificationPath) : null;
         String outputSpecification = Files.exists(outputSpecificationPath) ? readFile(outputSpecificationPath) : null;
         return new Capture(inputs, output, inputSpecification, outputSpecification);

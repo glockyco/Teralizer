@@ -2,8 +2,10 @@ package teralizer.processing.task;
 
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.ReferenceValue;
+import teralizer.domain.Value;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,14 +15,18 @@ public class TestGeneralizationTaskTest {
     @Example
     void skipsConcreteReceiverWhenMappingInstanceMethodArguments() {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("double", "x"));
-        List<MethodArgument> values = Arrays.asList(
-            new MethodArgument("org.example.Subject", "org.example.Subject@1"),
-            new MethodArgument("double", "2.0")
+        // SPF stores the instance receiver as the first input value. It is an opaque, unrenderable
+        // ReferenceValue that must be offset-skipped so the declared parameter maps to the real
+        // argument, never to the receiver.
+        List<Value> values = Arrays.asList(
+            new ReferenceValue("org.example.Subject"),
+            new PrimitiveValue("double", 2.0)
         );
 
-        Map<String, MethodArgument> mapped = TestGeneralizationTask.mapTestedMethodArguments(parameters, values);
+        Map<String, Value> mapped = TestGeneralizationTask.mapTestedMethodArguments(parameters, values);
 
-        Assert.assertEquals("2.0", mapped.get("x").getValue());
-        Assert.assertEquals("double", mapped.get("x").getType());
+        Assert.assertEquals(1, mapped.size());
+        Assert.assertEquals("double", mapped.get("x").getJavaType());
+        Assert.assertEquals(Double.valueOf(2.0), ((PrimitiveValue) mapped.get("x")).getValue());
     }
 }

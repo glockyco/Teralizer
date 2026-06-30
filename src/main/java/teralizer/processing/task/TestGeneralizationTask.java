@@ -21,7 +21,8 @@ import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.CapturedOutput;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.jqwik.planning.InputGenerationPlan;
@@ -36,6 +37,7 @@ import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.*;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
+import teralizer.transformer.SpecificationGson;
 import teralizer.util.Configuration;
 import teralizer.util.TypeCapability;
 
@@ -68,9 +70,9 @@ public class TestGeneralizationTask extends AbstractTask {
         this.assertionRecord = assertionRecord;
     }
 
-    static Map<String, MethodArgument> mapTestedMethodArguments(
+    static Map<String, Value> mapTestedMethodArguments(
         List<MethodParameter> testedMethodParameters,
-        List<MethodArgument> inputValues
+        List<Value> inputValues
     ) {
         // For instance-method assertions, SPF stores the concrete receiver as the first input value;
         // the tested method parameter list contains only declared arguments, so skip that receiver.
@@ -242,10 +244,11 @@ public class TestGeneralizationTask extends AbstractTask {
         List<MethodParameter> testedMethodParameters = gson.fromJson(this.assertionRecord.getTestedMethodParameters(), type);
 
         String inputValuesString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputValuesPath())));
-        Type inputValuesType = new TypeToken<List<MethodArgument>>() {}.getType();
-        List<MethodArgument> inputValues = gson.fromJson(inputValuesString, inputValuesType);
+        Gson specificationGson = SpecificationGson.create();
+        Type inputValuesType = new TypeToken<List<Value>>() {}.getType();
+        List<Value> inputValues = specificationGson.fromJson(inputValuesString, inputValuesType);
 
-        Map<String, MethodArgument> testedMethodArguments = mapTestedMethodArguments(testedMethodParameters, inputValues);
+        Map<String, Value> testedMethodArguments = mapTestedMethodArguments(testedMethodParameters, inputValues);
 
         CtClass<?> testParametersClassDeclaration;
         CtClass<?> testParametersSupplierClassDeclaration;
@@ -350,13 +353,14 @@ public class TestGeneralizationTask extends AbstractTask {
             // ------------------------------------------------------------------------------------------------------ //
 
             String outputValueString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputValuePath())));
-            MethodArgument outputValue = gson.fromJson(outputValueString, MethodArgument.class);
+            CapturedOutput output = specificationGson.fromJson(outputValueString, CapturedOutput.class);
 
-            if (outputJava != null) {
-                boolean isBooleanOutput = outputValue.getType().equals("boolean") || outputValue.getType().equals("java.lang.Boolean");
+            if (outputJava != null && output.getKind() == CapturedOutput.Kind.RETURNED_VALUE) {
+                String outputType = output.getReturnValue().getJavaType();
+                boolean isBooleanOutput = outputType.equals("boolean") || outputType.equals("java.lang.Boolean");
                 String expectedExpression = isBooleanOutput
                     ? "((" + outputJava + ") != 0)"
-                    : "(" + outputValue.getType() + ") (" + outputJava + ")";
+                    : "(" + outputType + ") (" + outputJava + ")";
 
                 Optional<Integer> expectedParameterIndex = TestAnalysis.getExpectedParameterIndex(assertion);
                 if (expectedParameterIndex.isPresent()) {

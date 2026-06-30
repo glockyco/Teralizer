@@ -68,4 +68,13 @@ public final class Cut {
         }
         return n + triangular(n - 1);
     }
+
+    /**
+     * Primitive {@code boolean} in and out. JPF supplies a boolean return (via {@code ireturn}) as an
+     * {@link Integer} {@code 0}/{@code 1} but a boolean argument as a host {@link Boolean}, so capture
+     * must coerce both forms to a typed boolean.
+     */
+    public static boolean negate(boolean value) {
+        return !value;
+    }
 }

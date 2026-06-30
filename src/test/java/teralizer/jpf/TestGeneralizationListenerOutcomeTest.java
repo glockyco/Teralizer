@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -32,8 +34,9 @@ class TestGeneralizationListenerOutcomeTest {
             PKG + "Cut.catchesInternally"
         );
 
-        assertEquals("int", capture.getOutputValue().getType(), "the output is a normal return, not the handled exception");
-        assertEquals("5", capture.getOutputValue().getValue(), "the returned value");
+        Value output = capture.getOutput().getReturnValue();
+        assertEquals("int", output.getJavaType(), "the output is a normal return, not the handled exception");
+        assertEquals(Integer.valueOf(5), ((PrimitiveValue) output).getValue(), "the returned value");
     }
 
     @Test

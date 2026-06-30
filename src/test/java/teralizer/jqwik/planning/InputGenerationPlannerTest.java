@@ -3,7 +3,8 @@ package teralizer.jqwik.planning;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.ConstantInteger;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
@@ -86,7 +87,7 @@ public class InputGenerationPlannerTest {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("int", "x"));
         Model inputModel = new Operation(new VariableInteger("x"), Operator.GT, new ConstantInteger(0));
 
-        MethodArgument argument = new MethodArgument("int", "7");
+        Value argument = new PrimitiveValue("int", 7);
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             parameters,
             Collections.singletonMap("x", argument),

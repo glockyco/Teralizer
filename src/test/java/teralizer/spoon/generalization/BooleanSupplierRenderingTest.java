@@ -2,7 +2,8 @@ package teralizer.spoon.generalization;
 
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
@@ -14,10 +15,10 @@ public class BooleanSupplierRenderingTest {
 
     @Example
     void baselineBooleanFirstValueUsesLiteral() throws Exception {
-        Method createArbitrary = BaselineTestParametersSupplierFactory.class.getDeclaredMethod("createArbitrary", MethodArgument.class);
+        Method createArbitrary = BaselineTestParametersSupplierFactory.class.getDeclaredMethod("createArbitrary", Value.class);
         createArbitrary.setAccessible(true);
 
-        String body = (String) createArbitrary.invoke(null, new MethodArgument("boolean", "1"));
+        String body = (String) createArbitrary.invoke(null, new PrimitiveValue("boolean", true));
 
         Assert.assertEquals("return net.jqwik.api.Arbitraries.just(true)", body);
     }
@@ -28,7 +29,7 @@ public class BooleanSupplierRenderingTest {
         CtClass<?> supplierClass = NaiveTestParametersSupplierFactory.createSupplierClass(
             new Launcher().getFactory(),
             Collections.singletonList(value),
-            Collections.singletonMap("value", new MethodArgument("boolean", "0")),
+            Collections.singletonMap("value", new PrimitiveValue("boolean", false)),
             null
         );
 

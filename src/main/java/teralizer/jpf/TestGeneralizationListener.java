@@ -12,7 +12,12 @@ import gov.nasa.jpf.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.domain.CapturedException;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.CapturedOutput;
+import teralizer.domain.NullValue;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.ReferenceValue;
+import teralizer.domain.StringValue;
+import teralizer.domain.Value;
 import teralizer.transformer.SpfToModelTransformer;
 
 import java.nio.file.Path;
@@ -41,7 +46,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private int recursionDepth;
     private boolean isInInstrumentedMethod;
     private CapturedException pendingThrownException;
-    private List<MethodArgument> instrumentedInputArguments;
+    private List<Value> instrumentedInputArguments;
     private boolean targetEntered;
     private Invocation invocation;
 
@@ -131,7 +136,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
         LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
 
-        List<MethodArgument> concreteInputArguments = this.instrumentedInputArguments == null
+        List<Value> concreteInputs = this.instrumentedInputArguments == null
             ? this.captureConcreteArguments(currentThread)
             : this.instrumentedInputArguments;
 
@@ -139,44 +144,21 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
         LOGGER.atTrace().log(() -> "Input: " + (spfInput == null ? null : spfInput.toString()));
 
-        MethodArgument concreteOutputArgument;
-
+        CapturedOutput output;
         Expression spfOutput = null;
         CapturedException capturedException = null;
 
         Instruction exitInstruction = vm.getCurrentThread().getPC();
         if (exitInstruction instanceof JVMReturnInstruction) {
             JVMReturnInstruction returnInstruction = (JVMReturnInstruction) exitInstruction;
-
-            Object concreteOutputValue = returnInstruction.getReturnValue(currentThread);
             String concreteOutputType = returnInstruction.getMethodInfo().getReturnTypeName();
 
-            Object outputValueForArgument;
-            if (returnInstruction instanceof ARETURN) {
-                if (concreteOutputValue == null) {
-                    outputValueForArgument = null;
-                } else if (concreteOutputValue instanceof ElementInfo) {
-                    outputValueForArgument = renderReferenceValue(concreteOutputType, (ElementInfo) concreteOutputValue);
-                } else {
-                    outputValueForArgument = concreteOutputValue.toString();
-                }
-            } else if (returnInstruction instanceof DRETURN) {
-                outputValueForArgument = (Double) concreteOutputValue;
-            } else if (returnInstruction instanceof FRETURN) {
-                outputValueForArgument = (Float) concreteOutputValue;
-            } else if (returnInstruction instanceof IRETURN) {
-                outputValueForArgument = (Integer) concreteOutputValue;
-            } else if (returnInstruction instanceof LRETURN) {
-                outputValueForArgument = (Long) concreteOutputValue;
-            } else if (returnInstruction instanceof NATIVERETURN) {
-                outputValueForArgument = concreteOutputValue;
-            } else if (returnInstruction instanceof RETURN) {
-                outputValueForArgument = concreteOutputValue; // void
+            if (returnInstruction instanceof RETURN || "void".equals(concreteOutputType)) {
+                output = CapturedOutput.ofVoid();
             } else {
-                throw new RuntimeException("Unexpected returnInstruction: " + returnInstruction);
+                Object concreteOutputValue = returnInstruction.getReturnValue(currentThread);
+                output = CapturedOutput.ofReturnValue(captureValue(concreteOutputType, concreteOutputValue));
             }
-
-            concreteOutputArgument = new MethodArgument(concreteOutputType, outputValueForArgument == null ? "null" : outputValueForArgument.toString());
 
             // Typed overload: JPF stores stacked slot attributes as an ObjectList, so the untyped
             // getReturnAttr returns the raw attribute and a direct (Expression) cast fails on a list
@@ -191,7 +173,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             }
 
             capturedException = this.pendingThrownException;
-            concreteOutputArgument = new MethodArgument(capturedException.getName(), capturedException.getMessage());
+            output = CapturedOutput.ofThrow(capturedException);
             LOGGER.atTrace().log("Output: Exception thrown " + capturedException.getName());
             this.pendingThrownException = null;
         } else {
@@ -209,8 +191,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             modelOutput = spfToModelTransformer.transform(capturedException);
         }
 
-        return new Invocation(
-            concreteInputArguments, concreteOutputArgument, modelInput, modelOutput);
+        return new Invocation(concreteInputs, output, modelInput, modelOutput);
     }
 
     /** The captured invocation, or {@code null} if the tested method never returned in-state. */
@@ -223,52 +204,85 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         return this.targetEntered;
     }
 
-    private List<MethodArgument> captureConcreteArguments(ThreadInfo currentThread) {
-        List<MethodArgument> concreteArguments = new ArrayList<>();
+    private List<Value> captureConcreteArguments(ThreadInfo currentThread) {
+        List<Value> concreteArguments = new ArrayList<>();
         String[] concreteTypes = currentThread.getTopFrameMethodInfo().getArgumentTypeNames();
         Object[] concreteValues = currentThread.getTopFrame().getArgumentValues(currentThread);
         for (int i = 0; i < concreteValues.length; i++) {
-            // JPF boxes primitive arguments to host wrappers (String.valueOf is correct), but passes
-            // reference arguments as ElementInfo, whose toString() is object identity. Read those by value.
-            String concreteValue = concreteValues[i] instanceof ElementInfo
-                ? renderReferenceValue(concreteTypes[i], (ElementInfo) concreteValues[i])
-                : String.valueOf(concreteValues[i]);
-            concreteArguments.add(new MethodArgument(concreteTypes[i], concreteValue));
+            concreteArguments.add(captureValue(concreteTypes[i], concreteValues[i]));
         }
         return concreteArguments;
     }
 
     /**
-     * Render the concrete value of a reference-typed slot (argument or return) to the string form
-     * {@link teralizer.transformer.ModelToJavaTransformer} expects. JPF represents a boxed primitive
-     * as an {@link ElementInfo} whose {@code toString()} is object identity (e.g.
-     * {@code java.lang.Integer@1f}), so wrappers are read from their backing {@code value} field and
-     * Strings via {@link ElementInfo#asString()}. Other reference types fall back to identity: such
-     * parameters and returns are rejected downstream by the supported-type ceiling, so their value is
-     * never rendered into a generated test.
+     * Build a typed {@link Value} from a concrete slot. JPF passes a primitive as its host wrapper
+     * and a reference as an {@link ElementInfo} (whose {@code toString()} is object identity), so a
+     * boxed wrapper is read from its backing field, a String via {@link ElementInfo#asString()}, a
+     * null reference as a {@link NullValue}, and any other reference (e.g. an instance-method
+     * receiver) as an opaque {@link ReferenceValue} — never corrupted into a null.
      */
-    private static String renderReferenceValue(String javaType, ElementInfo elementInfo) {
+    private static Value captureValue(String javaType, Object concreteValue) {
+        if (concreteValue == null) {
+            return new NullValue(javaType);
+        }
+        if (concreteValue instanceof ElementInfo) {
+            return captureReferenceValue(javaType, (ElementInfo) concreteValue);
+        }
+        return capturePrimitiveValue(javaType, concreteValue);
+    }
+
+    private static Value captureReferenceValue(String javaType, ElementInfo elementInfo) {
         switch (javaType) {
             case "java.lang.String":
-                return elementInfo.asString();
+                return new StringValue(elementInfo.asString());
             case "java.lang.Byte":
-                return Byte.toString(elementInfo.getByteField("value"));
+                return new PrimitiveValue(javaType, elementInfo.getByteField("value"));
             case "java.lang.Short":
-                return Short.toString(elementInfo.getShortField("value"));
+                return new PrimitiveValue(javaType, elementInfo.getShortField("value"));
             case "java.lang.Integer":
-                return Integer.toString(elementInfo.getIntField("value"));
+                return new PrimitiveValue(javaType, elementInfo.getIntField("value"));
             case "java.lang.Long":
-                return Long.toString(elementInfo.getLongField("value"));
+                return new PrimitiveValue(javaType, elementInfo.getLongField("value"));
             case "java.lang.Float":
-                return Float.toString(elementInfo.getFloatField("value"));
+                return new PrimitiveValue(javaType, elementInfo.getFloatField("value"));
             case "java.lang.Double":
-                return Double.toString(elementInfo.getDoubleField("value"));
+                return new PrimitiveValue(javaType, elementInfo.getDoubleField("value"));
             case "java.lang.Boolean":
-                return Boolean.toString(elementInfo.getBooleanField("value"));
+                return new PrimitiveValue(javaType, elementInfo.getBooleanField("value"));
             case "java.lang.Character":
-                return Integer.toString((int) elementInfo.getCharField("value"));
+                return new PrimitiveValue(javaType, elementInfo.getCharField("value"));
             default:
-                return elementInfo.toString();
+                return new ReferenceValue(javaType);
+        }
+    }
+
+    private static Value capturePrimitiveValue(String javaType, Object concreteValue) {
+        switch (javaType) {
+            case "byte":
+                return new PrimitiveValue(javaType, ((Number) concreteValue).byteValue());
+            case "short":
+                return new PrimitiveValue(javaType, ((Number) concreteValue).shortValue());
+            case "int":
+                return new PrimitiveValue(javaType, ((Number) concreteValue).intValue());
+            case "long":
+                return new PrimitiveValue(javaType, ((Number) concreteValue).longValue());
+            case "float":
+                return new PrimitiveValue(javaType, ((Number) concreteValue).floatValue());
+            case "double":
+                return new PrimitiveValue(javaType, ((Number) concreteValue).doubleValue());
+            case "boolean":
+                // A boolean return exits via ireturn and arrives as an Integer 0/1, while a boolean
+                // argument arrives as a host Boolean from the frame slot; handle both forms.
+                return new PrimitiveValue(javaType, concreteValue instanceof Boolean
+                    ? (Boolean) concreteValue
+                    : ((Number) concreteValue).intValue() != 0);
+            case "char":
+                return new PrimitiveValue(javaType, concreteValue instanceof Character
+                    ? (Character) concreteValue
+                    : (char) ((Number) concreteValue).intValue());
+            default:
+                throw new IllegalStateException(
+                    "Unexpected primitive slot type " + javaType + " with value " + concreteValue);
         }
     }
 

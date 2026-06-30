@@ -4,7 +4,8 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 
 import java.util.Arrays;
@@ -18,9 +19,9 @@ public class NaiveSupplierRenderingTest {
     void wrapsCombinedTupleNotIndividualParametersForMultipleParameters() {
         MethodParameter a = new MethodParameter("int", "a");
         MethodParameter b = new MethodParameter("int", "b");
-        Map<String, MethodArgument> arguments = new HashMap<>();
-        arguments.put("a", new MethodArgument("int", "7"));
-        arguments.put("b", new MethodArgument("int", "9"));
+        Map<String, Value> arguments = new HashMap<>();
+        arguments.put("a", new PrimitiveValue("int", 7));
+        arguments.put("b", new PrimitiveValue("int", 9));
 
         CtClass<?> supplierClass = NaiveTestParametersSupplierFactory.createSupplierClass(
             new Launcher().getFactory(), Arrays.asList(a, b), arguments, null);

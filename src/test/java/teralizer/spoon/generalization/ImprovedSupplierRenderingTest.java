@@ -4,7 +4,8 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
@@ -131,7 +132,7 @@ public class ImprovedSupplierRenderingTest {
         // b > a: NumericDomainPlanner sees a variable lower bound on b → emits dynamic-scale recipe
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             java.util.Arrays.asList(a, b),
-            Collections.singletonMap("b", new MethodArgument("double", "2.0")),
+            Collections.singletonMap("b", new PrimitiveValue("double", 2.0)),
             new Operation(
                 new teralizer.domain.VariableReal("b"),
                 Operator.GT,
@@ -158,7 +159,7 @@ public class ImprovedSupplierRenderingTest {
         // The original concrete input must be injected so the generalized test still exercises it.
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             Collections.singletonList(x),
-            Collections.singletonMap("x", new MethodArgument("int", "7")),
+            Collections.singletonMap("x", new PrimitiveValue("int", 7)),
             null
         );
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
@@ -179,9 +180,9 @@ public class ImprovedSupplierRenderingTest {
     void wrapsCombinedTupleNotIndividualParametersForMultipleParameters() {
         MethodParameter a = new MethodParameter("int", "a");
         MethodParameter b = new MethodParameter("int", "b");
-        java.util.Map<String, MethodArgument> arguments = new java.util.HashMap<>();
-        arguments.put("a", new MethodArgument("int", "7"));
-        arguments.put("b", new MethodArgument("int", "9"));
+        java.util.Map<String, Value> arguments = new java.util.HashMap<>();
+        arguments.put("a", new PrimitiveValue("int", 7));
+        arguments.put("b", new PrimitiveValue("int", 9));
         InputGenerationPlan plan = new InputGenerationPlanner().plan(java.util.Arrays.asList(a, b), arguments, null);
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
             new Launcher().getFactory(), java.util.Arrays.asList(a, b), null, plan);

@@ -2,7 +2,9 @@ package teralizer.jpf;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import teralizer.domain.MethodArgument;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.StringValue;
+import teralizer.domain.Value;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -13,12 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * In-process JPF regression tests for {@link TestGeneralizationListener}'s concrete-value capture.
  *
  * <p>A boxed wrapper or {@link String} argument/return is a JPF {@code ElementInfo} on the heap;
- * recording it with {@code String.valueOf(...)} yields object identity ({@code java.lang.Integer@<hash>})
- * instead of the underlying value, which produces uncompilable generated tests and suppresses
- * generalizations (the {@code MissingValueFilter} rejects the unrenderable value). These tests pin
- * value-based capture across the distinct rendering branches (numeric wrapper, boolean, char code
- * point, and String via {@code asString()}). See the I1 finding in
- * {@code docs/plans/2026-06-29-beyond-jarvis-census-findings.md}.
+ * capture must read it by value into a typed {@link Value} (a {@link PrimitiveValue} holding the host
+ * wrapper, or a {@link StringValue}) rather than its object identity. These tests pin value-based
+ * capture across the distinct kinds (numeric wrapper, boolean, char, String), and confirm that a
+ * primitive {@code boolean} — which JPF supplies from an int slot — is coerced to a typed boolean.
  *
  * <p>Each scenario's instrumented method is the static {@code wrapper(value)} on its target class;
  * {@link #runWrapper(Path, String, String)} encodes that convention.
@@ -32,11 +32,11 @@ class TestGeneralizationListenerCaptureTest {
         JpfListenerHarness.Capture capture =
             runWrapper(workDir, PKG + "BoxedIdentityTarget", PKG + "Cut.boxedIdentity");
 
-        List<MethodArgument> inputs = capture.getInputValues();
+        List<Value> inputs = capture.getInputValues();
         assertEquals(1, inputs.size(), "the wrapper declares exactly one argument");
-        assertEquals("java.lang.Integer", inputs.get(0).getType(), "argument type");
+        assertEquals("java.lang.Integer", inputs.get(0).getJavaType(), "argument type");
         assertEquals(
-            "7", inputs.get(0).getValue(),
+            Integer.valueOf(7), ((PrimitiveValue) inputs.get(0)).getValue(),
             "a boxed Integer argument must be captured by its value, not by JPF object identity"
         );
     }
@@ -46,10 +46,10 @@ class TestGeneralizationListenerCaptureTest {
         JpfListenerHarness.Capture capture =
             runWrapper(workDir, PKG + "BoxedIdentityTarget", PKG + "Cut.boxedIdentity");
 
-        MethodArgument output = capture.getOutputValue();
-        assertEquals("java.lang.Integer", output.getType(), "return type");
+        Value output = capture.getOutput().getReturnValue();
+        assertEquals("java.lang.Integer", output.getJavaType(), "return type");
         assertEquals(
-            "7", output.getValue(),
+            Integer.valueOf(7), ((PrimitiveValue) output).getValue(),
             "a boxed Integer return must be captured by its value, not by JPF object identity"
         );
     }
@@ -59,21 +59,43 @@ class TestGeneralizationListenerCaptureTest {
         JpfListenerHarness.Capture capture =
             runWrapper(workDir, PKG + "BoxedBooleanTarget", PKG + "Cut.boxedNegate");
 
-        assertEquals("java.lang.Boolean", capture.getInputValues().get(0).getType(), "argument type");
-        assertEquals("true", capture.getInputValues().get(0).getValue(), "boxed Boolean argument");
-        assertEquals("java.lang.Boolean", capture.getOutputValue().getType(), "return type");
-        assertEquals("false", capture.getOutputValue().getValue(), "negated boxed Boolean return");
+        Value input = capture.getInputValues().get(0);
+        assertEquals("java.lang.Boolean", input.getJavaType(), "argument type");
+        assertEquals(Boolean.TRUE, ((PrimitiveValue) input).getValue(), "boxed Boolean argument");
+
+        Value output = capture.getOutput().getReturnValue();
+        assertEquals("java.lang.Boolean", output.getJavaType(), "return type");
+        assertEquals(Boolean.FALSE, ((PrimitiveValue) output).getValue(), "negated boxed Boolean return");
     }
 
     @Test
-    void capturesBoxedCharacterAsIntegerCodePoint(@TempDir Path workDir) {
+    void capturesPrimitiveBooleanArgumentAndReturnByValue(@TempDir Path workDir) {
+        // Empirical check: a primitive boolean arrives from an int slot, not as a host Boolean;
+        // capture must coerce it to a typed boolean value (input true, negated return false).
+        JpfListenerHarness.Capture capture =
+            runWrapper(workDir, PKG + "PrimitiveBooleanTarget", PKG + "Cut.negate");
+
+        Value input = capture.getInputValues().get(0);
+        assertEquals("boolean", input.getJavaType(), "argument type");
+        assertEquals(Boolean.TRUE, ((PrimitiveValue) input).getValue(), "primitive boolean argument");
+
+        Value output = capture.getOutput().getReturnValue();
+        assertEquals("boolean", output.getJavaType(), "return type");
+        assertEquals(Boolean.FALSE, ((PrimitiveValue) output).getValue(), "negated primitive boolean return");
+    }
+
+    @Test
+    void capturesBoxedCharacterAsHostCharacter(@TempDir Path workDir) {
         JpfListenerHarness.Capture capture =
             runWrapper(workDir, PKG + "BoxedCharTarget", PKG + "Cut.boxedChar");
 
-        assertEquals("java.lang.Character", capture.getInputValues().get(0).getType(), "argument type");
-        assertEquals("65", capture.getInputValues().get(0).getValue(), "'A' captured as its code point");
-        assertEquals("java.lang.Character", capture.getOutputValue().getType(), "return type");
-        assertEquals("65", capture.getOutputValue().getValue(), "'A' return captured as its code point");
+        Value input = capture.getInputValues().get(0);
+        assertEquals("java.lang.Character", input.getJavaType(), "argument type");
+        assertEquals(Character.valueOf('A'), ((PrimitiveValue) input).getValue(), "'A' captured as a host Character");
+
+        Value output = capture.getOutput().getReturnValue();
+        assertEquals("java.lang.Character", output.getJavaType(), "return type");
+        assertEquals(Character.valueOf('A'), ((PrimitiveValue) output).getValue(), "'A' return captured as a host Character");
     }
 
     @Test
@@ -81,10 +103,13 @@ class TestGeneralizationListenerCaptureTest {
         JpfListenerHarness.Capture capture =
             runWrapper(workDir, PKG + "StringReturnTarget", PKG + "Cut.describe");
 
-        assertEquals("java.lang.Integer", capture.getInputValues().get(0).getType(), "argument type");
-        assertEquals("7", capture.getInputValues().get(0).getValue(), "boxed Integer argument");
-        assertEquals("java.lang.String", capture.getOutputValue().getType(), "return type");
-        assertEquals("n=7", capture.getOutputValue().getValue(), "String return captured by value");
+        Value input = capture.getInputValues().get(0);
+        assertEquals("java.lang.Integer", input.getJavaType(), "argument type");
+        assertEquals(Integer.valueOf(7), ((PrimitiveValue) input).getValue(), "boxed Integer argument");
+
+        Value output = capture.getOutput().getReturnValue();
+        assertEquals("java.lang.String", output.getJavaType(), "return type");
+        assertEquals("n=7", ((StringValue) output).getValue(), "String return captured by value");
     }
 
     /**
