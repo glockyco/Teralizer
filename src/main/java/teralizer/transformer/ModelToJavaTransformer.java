@@ -61,6 +61,13 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     }
 
     public String transform(MethodArgument argument) {
+        // A null value is only legitimate for a reference/boxed type (e.g. a Boolean/Character a
+        // test passed as null); render it as the Java literal. A "null" in a primitive slot is
+        // impossible and indicates a capture bug, so let it fall through and fail fast below.
+        if ("null".equals(argument.getValue()) && isReferenceType(argument.getType())) {
+            return "null";
+        }
+
         switch (argument.getType()) {
             case "byte":
             case "java.lang.Byte":
@@ -376,6 +383,22 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     @Override
     public String fold(ExceptionModel exceptionModel) {
         return null;
+    }
+
+    private static boolean isReferenceType(String type) {
+        switch (type) {
+            case "byte":
+            case "short":
+            case "int":
+            case "char":
+            case "boolean":
+            case "long":
+            case "float":
+            case "double":
+                return false;
+            default:
+                return true;
+        }
     }
 
     private String renderBooleanArgument(String value) {

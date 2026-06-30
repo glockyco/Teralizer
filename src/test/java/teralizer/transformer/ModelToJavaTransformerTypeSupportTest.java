@@ -23,6 +23,23 @@ public class ModelToJavaTransformerTypeSupportTest {
     }
 
     @Example
+    void rendersNullReferenceSeedsAsNullLiteralButFailsFastForPrimitives() {
+        ModelToJavaTransformer transformer = new ModelToJavaTransformer();
+
+        // A boxed Boolean/Character (or any reference type) the test passed as null is a legitimate
+        // seed: render the Java literal. Primitives cannot be null, so a "null" there signals a
+        // capture bug and must fail fast rather than silently emit broken Java.
+        Assert.assertEquals("null", transformer.transform(new MethodArgument("java.lang.Boolean", "null")));
+        Assert.assertEquals("null", transformer.transform(new MethodArgument("java.lang.Character", "null")));
+        Assert.assertEquals("null", transformer.transform(new MethodArgument("java.lang.String", "null")));
+
+        Assert.assertThrows(RuntimeException.class,
+            () -> transformer.transform(new MethodArgument("boolean", "null")));
+        Assert.assertThrows(RuntimeException.class,
+            () -> transformer.transform(new MethodArgument("char", "null")));
+    }
+
+    @Example
     void rendersCharConcreteValuesFromJpfAsJavaCharValues() {
         ModelToJavaTransformer transformer = new ModelToJavaTransformer();
 
