@@ -1,7 +1,7 @@
 ---
 title: SPF Specification-Extraction Hardening
 type: spec
-status: draft
+status: active
 created: 2026-06-30
 parent: 2026-06-29-beyond-jarvis-census-findings
 ---
@@ -21,8 +21,7 @@ machine (`recursionDepth`, `isInInstrumentedMethod`, `pendingThrownException`,
 `instrumentedInputArguments`) that fuses five concerns — target detection, concrete
 capture, symbolic capture, model transformation, and file I/O — in a single
 `writeSpecificationFiles`, and collapses every non-success into one untyped
-`"Failed to collect … for unknown reason"`. It has no reachability gate and no
-`stateBacktracked` handling. Each census bug is a symptom of that fusion + the untyped
+`"Failed to collect … for unknown reason"`. Each census bug is a symptom of that fusion + the untyped
 outcome, not an independent defect:
 
 | census symptom | underlying flaw |
@@ -30,7 +29,7 @@ outcome, not an independent defect:
 | `Integer@24c` rendered as a literal | stringly-typed capture (`String.valueOf` on an `ElementInfo`) |
 | crash rendering a null boxed `Boolean`/`Character` seed | value round-tripped as the string `"null"` |
 | Postgres insert fails on `0x00` in a throwable message | untyped text shipped straight to the DB |
-| unreachable assertion (dead `else`) → `"unknown reason"` | no reachability signal; binary "files exist?" outcome |
+| unreachable assertion (dead `else`) → `"unknown reason"` | binary "files exist?" outcome (P2 types it `TARGET_NOT_ENTERED`); reaching SPF at all is a MUT-id defect — an unreachable call mis-selected as the MUT |
 
 Three of these have interim point-fixes (typed boxed-wrapper capture; reference-typed
 `null` rendering; NUL stripping at the DB boundary). They stop the bleeding but leave the
@@ -42,14 +41,13 @@ from today's green baseline.
 
 ```mermaid
 flowchart LR
-  A[original JUnit run + coverage] -->|P1 reachability gate| B[reachable candidates]
-  B --> C[SPF run: observer-only listener]
+  A[original JUnit run] --> C[SPF run: observer-only listener]
   C -->|P3 raw Invocation| D[pure SpecificationExtractor]
   D -->|P5 typed Value| E[Model -> spec JSON]
   C -->|P2 total ExtractionOutcome| F[diagnostics row]
 ```
 
-Five principles:
+Four principles:
 
 - **P2 — one total, typed `ExtractionOutcome` per candidate.** A closed set:
   `EXTRACTED | TARGET_NOT_ENTERED | TARGET_NOT_EXITED | UNSUPPORTED_TERM | PC_TOO_LARGE |
@@ -59,10 +57,13 @@ Five principles:
 - **P5 — typed `Value`s, not strings.** `Primitive | Reference(nullable) | StringValue |
   SymbolicExpr`. The Java renderer pattern-matches on the variant; no identity-hash
   strings, no `"null"`, no raw NUL reaching a downstream parser or the DB.
-- **P3 — the listener only observes.** It records a raw `Invocation { concreteIn, pcIn,
-  concreteOut | thrown, symbolicOut }` and an observable state snapshot. Transformation
-  (SpfToModel → JSON) and file I/O run *after* `jpf.run()` in a pure `SpecificationExtractor`
-  — unit-testable, no JPF coupling in the part that holds the bugs.
+- **P3 — split at the SPF→Model seam.** The listener stays minimal: capture concrete in/out
+  (typed) and transform the symbolic PC + return term to the `Model` *at capture* — during the
+  run, where the SPF objects are valid (exactly where production transforms today, so it is
+  already proven). It records that `Invocation` plus an observable state snapshot and does no file
+  I/O. Outcome classification and `Model`→JSON + file I/O run *after* `jpf.run()` in a pure step
+  that touches only `Model` POJOs, never SPF objects — so post-run SPF-object validity is never
+  assumed. The bug-prone parts (typed values, typed outcome, I/O) sit on the pure side.
 - **P4 — identify the target by clone-stable frame position, not a mutable counter.** JPF
   clones frozen frames and exposes no stable per-frame id, and `StackFrame.equals` compares slot
   state, so a frame object reference cannot identify an invocation across the search. The identity
@@ -72,13 +73,6 @@ Five principles:
   exiting frame is still readable.) *Which* call is the target is decided upstream: instrumentation
   lifts exactly one tested call into a uniquely-named marker wrapper, so the listener never chooses
   among calls. Deletes the `recursionDepth`/`isInInstrumentedMethod`/`pendingThrownException` dance.
-- **P1 — gate on reachability before SPF.** Drop assertions the original suite never
-  executes (the dead-`else` class) so SPF never runs on dead code.
-
-A throwaway spike (`src/test/java/teralizer/jpf/spike/`, removed when Phase 1 lands the production
-code) exercised P2/P3/P4 against real SPF — symbolic-return capture, recursion (outermost frame), a
-looped wrapper (first invocation only), and the unreachable assertion as `TARGET_NOT_ENTERED` —
-confirming the observer/pure-classifier split and the clone-stable stack-position identity.
 
 Contract sketches (Java 8 — no records/sealed; tagged classes + enums):
 
@@ -93,16 +87,16 @@ final class ExtractionOutcome {
 
 abstract class Value { /* PrimitiveValue | ReferenceValue(nullable) | StringValue | SymbolicValue */ }
 
-final class Invocation {          // raw capture; no transformation, no I/O
-    final List<Value> concreteIn;
-    final Constraint  pcIn;       // SPF path-condition header (symbolic input)
-    final Value       concreteOut;   // or…
-    final CapturedException thrown;  // …exactly one of these
-    final Expression  symbolicOut;
+final class Invocation {          // captured during the run; holds Model POJOs, not SPF objects
+    final List<Value>                 concreteIn;
+    final teralizer.domain.Expression modelInput;   // PC transformed to Model at capture
+    final Value                       concreteOut;  // or…
+    final CapturedException           thrown;       // …exactly one of these
+    final teralizer.domain.Expression modelOutput;  // return term transformed to Model at capture
 }
 
-interface SpecificationExtractor {                 // pure; no JPF, no VM
-    ExtractedSpec toSpec(Invocation invocation);   // Model + JSON, fully unit-testable
+interface SpecificationExtractor {                 // pure; only Model POJOs, no JPF/SPF
+    void write(Invocation invocation);             // Model -> JSON -> spec files, fully unit-testable
 }
 
 // Observable listener state, read by JpfExecutionTask to classify (no "unknown reason"):
@@ -140,8 +134,10 @@ result to an `ExtractionOutcome`: a captured invocation → `EXTRACTED`; no `Inv
 Introduce the `Value` model. The listener's capture produces `Value`s (primitives boxed to
 host wrappers; null references as `Reference(null)`; strings via `ElementInfo.asString()`;
 symbolic terms as `SymbolicExpr`). `ModelToJavaTransformer` and the diagnostic writer consume
-`Value`s, not re-parsed strings. The interim point-fixes (boxed capture, `"null"` rendering,
-NUL stripping) become properties of the typed model and their string special-cases are removed.
+`Value`s, not re-parsed strings. The interim boxed-capture and `"null"`-rendering point-fixes
+become properties of the typed model; their string special-cases are removed. `stripNul` stays —
+it guards a separate boundary (the jqwik-diagnostic→DB write in `JunitDataCollectionTask`), not
+the capture→render flow the typed model covers.
 
 - Files: new `src/main/java/teralizer/jpf/Value*.java`; `TestGeneralizationListener` capture
   helpers; `src/main/java/teralizer/transformer/ModelToJavaTransformer.java`;
@@ -153,35 +149,37 @@ NUL stripping) become properties of the typed model and their string special-cas
 
 ### Phase 3 — frame-identity target detection (P4)
 
-Replace `recursionDepth` + `isInInstrumentedMethod` + the entry/exit matching with capture of
-the tested-method frame entered from the wrapper frame; the write trigger is that exact frame's
-return. Add `stateBacktracked` handling (or rely on the single constraint-collection path,
-documented). Removes the mutable counters.
+Replace `recursionDepth` + `isInInstrumentedMethod` + the entry/exit matching with capture keyed
+on the tested-method frame's stack depth, pinned at the first entry reached from the wrapper; the
+write trigger is that exact frame's exit, captured once. Relies on the single constraint-collection
+path (no backtracking), documented in the listener. Removes the mutable counters.
 
 - Files: `TestGeneralizationListener`.
-- Tests: harness target with a recursive tested method and one with a sibling method sharing a
-  name prefix; assert the correct frame is captured.
+- Tests: `TestGeneralizationListenerInvocationSelectionTest` — a recursive tested method (asserts
+  the outermost frame is captured) and a looped wrapper (asserts the first invocation, not the last).
 - Acceptance: capture is correct for recursive/nested targets; no behavior change for the ~210
   currently-handled assertions.
 
-### Phase 4 — reachability gate (P1)
+### Phase 4 — reachability gate (rejected)
 
-Exclude assertions the original suite never executes before instrumentation/SPF, using the
-coverage already collected (`COLLECT_JACOCO_DATA_ORIGINAL`). Requires confirming the coverage
-granularity distinguishes a dead branch; if it does not, this phase stays a no-op and P2's
-runtime `TARGET_NOT_ENTERED` remains the safety net.
-
-- Files: the assertion-filtering stage (`FILTER_ASSERTIONS` path) + its repository queries.
-- Acceptance: the isAscii dead-`else` assertion is excluded before SPF; SPF runs only on
-  reachable assertions.
+Not implemented; superseded by stronger MUT identification. A dead-`else` assertion reaches SPF
+only because MUT-id (LCBA — last call before assert) selected a call the test never executes, and
+an unreachable call cannot be the method under test. A coverage-based pre-filter would mask that
+misidentification rather than fix it — and would still admit *reachable* non-MUT calls (LCBA
+picking `getState()` over `setState()`), so it sits at the wrong layer. The dead-`else` case is
+already handled at runtime as P2's `TARGET_NOT_ENTERED`, recorded as an exclusion. The root fix is
+demoting LCBA to one signal in a focal-method ensemble: `2026-06-27-ensemble-mut-identification`
+(design + evidence), with concrete targets and oracle-coverage data in
+`2026-06-28-mut-id-targeting-and-coverage`.
 
 ## Key decisions (for review)
 
 1. **Phasing** — incremental as above (recommended), vs. a clean-room rewrite. Incremental
    keeps the ~210 working assertions green throughout.
-2. **Reachability signal (Phase 4)** — JaCoCo line/branch coverage (already collected) vs. a
-   lighter "instrumented call line executed" probe. Recommend JaCoCo if granularity suffices;
-   else rely on P2's runtime classification and drop Phase 4.
+2. **Reachability gate (Phase 4)** — rejected. The dead-`else` is a MUT-identification defect
+   (an unreachable call chosen as the MUT), not a missing reachability filter; a coverage gate
+   masks it and still admits reachable non-MUT calls. Handled at runtime by P2's
+   `TARGET_NOT_ENTERED`; root fix in `2026-06-27-ensemble-mut-identification`.
 3. **Path contract** — keep the concrete-path-exact, single-path semantics
    (`symbolic.collect_constraints=true`); confirmed intended, not "first of many."
 4. **`ExtractionOutcome` recording** — `TARGET_NOT_ENTERED` / `UNSUPPORTED_TERM` etc. are
@@ -196,9 +194,11 @@ runtime `TARGET_NOT_ENTERED` remains the safety net.
   typed `Value`s; no stringly round-trip; no NUL reaches a parser/DB.
 - The transformation + serialization path is pure and unit-tested via `JpfListenerHarness`
   for each outcome kind and each value kind.
-- A PIT-free census re-run reports typed per-assertion exclusions and **zero** breakage
-  (build/collect/generalize/execute), with no regression in the count of `EXTRACTED`
-  assertions vs. today's baseline.
+- The full Java suite passes — the harness outcome/value cases plus
+  `TestGeneralizationListenerInvocationSelectionTest` (recursion/loop selection). **Outstanding:**
+  a PIT-free census re-run reporting typed per-assertion exclusions with **zero** breakage
+  (build/collect/generalize/execute) and no regression in the `EXTRACTED` count vs. baseline —
+  needs the DB/pipeline and gates the move to `implemented`.
 
 ## Out of scope
 
