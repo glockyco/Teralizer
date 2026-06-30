@@ -63,12 +63,22 @@ Five principles:
   concreteOut | thrown, symbolicOut }` and an observable state snapshot. Transformation
   (SpfToModel → JSON) and file I/O run *after* `jpf.run()` in a pure `SpecificationExtractor`
   — unit-testable, no JPF coupling in the part that holds the bugs.
-- **P4 — identify the target by frame identity, not a depth counter.** Capture the
-  wrapper's call frame into the tested method; the return that matters is that frame's
-  return. Deletes the `recursionDepth`/`isInInstrumentedMethod`/`pendingThrownException`
-  mutable dance and is correct under recursion and backtracking.
+- **P4 — identify the target by clone-stable frame position, not a mutable counter.** JPF
+  clones frozen frames and exposes no stable per-frame id, and `StackFrame.equals` compares slot
+  state, so a frame object reference cannot identify an invocation across the search. The identity
+  is the frame's stack position (`StackFrame.getDepth()`, copied verbatim by `clone()`): pin it at
+  the first tested entry reached from the wrapper and match the exit at that position — the
+  outermost frame under recursion. (`leave()` notifies `methodExited` before `popFrame()`, so the
+  exiting frame is still readable.) *Which* call is the target is decided upstream: instrumentation
+  lifts exactly one tested call into a uniquely-named marker wrapper, so the listener never chooses
+  among calls. Deletes the `recursionDepth`/`isInInstrumentedMethod`/`pendingThrownException` dance.
 - **P1 — gate on reachability before SPF.** Drop assertions the original suite never
   executes (the dead-`else` class) so SPF never runs on dead code.
+
+A throwaway spike (`src/test/java/teralizer/jpf/spike/`, removed when Phase 1 lands the production
+code) exercised P2/P3/P4 against real SPF — symbolic-return capture, recursion (outermost frame), a
+looped wrapper (first invocation only), and the unreachable assertion as `TARGET_NOT_ENTERED` —
+confirming the observer/pure-classifier split and the clone-stable stack-position identity.
 
 Contract sketches (Java 8 — no records/sealed; tagged classes + enums):
 
