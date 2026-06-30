@@ -148,26 +148,14 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             JVMReturnInstruction returnInstruction = (JVMReturnInstruction) exitInstruction;
 
             Object concreteOutputValue = returnInstruction.getReturnValue(currentThread);
-            String concreteOutputType = currentThread.getTopFrameMethodInfo().getReturnTypeName();
+            String concreteOutputType = returnInstruction.getMethodInfo().getReturnTypeName();
 
             Object outputValueForArgument;
             if (returnInstruction instanceof ARETURN) {
                 if (concreteOutputValue == null) {
                     outputValueForArgument = null;
-                } else if (concreteOutputValue instanceof DynamicElementInfo) {
-                    DynamicElementInfo dei = (DynamicElementInfo) concreteOutputValue;
-                    String type = dei.getType();
-                    if ("Ljava/lang/String;".equals(type)) {
-                        ElementInfo valueArrayInfo = vm.getHeap().get(dei.getReferenceField("value"));
-                        int length = valueArrayInfo.arrayLength();
-                        char[] chars = new char[length];
-                        for (int i = 0; i < length; i++) {
-                            chars[i] = valueArrayInfo.getCharElement(i);
-                        }
-                        outputValueForArgument = new String(chars);
-                    } else {
-                        outputValueForArgument = dei.toString();
-                    }
+                } else if (concreteOutputValue instanceof ElementInfo) {
+                    outputValueForArgument = renderReferenceValue(concreteOutputType, (ElementInfo) concreteOutputValue);
                 } else {
                     outputValueForArgument = concreteOutputValue.toString();
                 }
@@ -237,9 +225,48 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         String[] concreteTypes = currentThread.getTopFrameMethodInfo().getArgumentTypeNames();
         Object[] concreteValues = currentThread.getTopFrame().getArgumentValues(currentThread);
         for (int i = 0; i < concreteValues.length; i++) {
-            concreteArguments.add(new MethodArgument(concreteTypes[i], String.valueOf(concreteValues[i])));
+            // JPF boxes primitive arguments to host wrappers (String.valueOf is correct), but passes
+            // reference arguments as ElementInfo, whose toString() is object identity. Read those by value.
+            String concreteValue = concreteValues[i] instanceof ElementInfo
+                ? renderReferenceValue(concreteTypes[i], (ElementInfo) concreteValues[i])
+                : String.valueOf(concreteValues[i]);
+            concreteArguments.add(new MethodArgument(concreteTypes[i], concreteValue));
         }
         return concreteArguments;
+    }
+
+    /**
+     * Render the concrete value of a reference-typed slot (argument or return) to the string form
+     * {@link teralizer.transformer.ModelToJavaTransformer} expects. JPF represents a boxed primitive
+     * as an {@link ElementInfo} whose {@code toString()} is object identity (e.g.
+     * {@code java.lang.Integer@1f}), so wrappers are read from their backing {@code value} field and
+     * Strings via {@link ElementInfo#asString()}. Other reference types fall back to identity: such
+     * parameters and returns are rejected downstream by the supported-type ceiling, so their value is
+     * never rendered into a generated test.
+     */
+    private static String renderReferenceValue(String javaType, ElementInfo elementInfo) {
+        switch (javaType) {
+            case "java.lang.String":
+                return elementInfo.asString();
+            case "java.lang.Byte":
+                return Byte.toString(elementInfo.getByteField("value"));
+            case "java.lang.Short":
+                return Short.toString(elementInfo.getShortField("value"));
+            case "java.lang.Integer":
+                return Integer.toString(elementInfo.getIntField("value"));
+            case "java.lang.Long":
+                return Long.toString(elementInfo.getLongField("value"));
+            case "java.lang.Float":
+                return Float.toString(elementInfo.getFloatField("value"));
+            case "java.lang.Double":
+                return Double.toString(elementInfo.getDoubleField("value"));
+            case "java.lang.Boolean":
+                return Boolean.toString(elementInfo.getBooleanField("value"));
+            case "java.lang.Character":
+                return Integer.toString((int) elementInfo.getCharField("value"));
+            default:
+                return elementInfo.toString();
+        }
     }
 
     private CapturedException captureException(ThreadInfo currentThread, ElementInfo thrownException) {
