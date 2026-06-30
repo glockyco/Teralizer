@@ -125,7 +125,7 @@ jarvis_run() {
   echo "  per-assertion JPF exclusions (non-fatal coverage gaps): ${jpf_excluded}"
   if [[ "$jpf_excluded" -gt 0 ]]; then
     _jarvis_psql -d "$JARVIS_DB_NAME" -c \
-      "SELECT CASE WHEN info LIKE '%NonGeneralizableExpressionException%' THEN 'raw-bits non-generalizable' WHEN info LIKE '%class not found%' THEN 'unmodeled JDK/library class' WHEN info LIKE '%PC size limit exceeded%' THEN 'path-condition size limit' WHEN info LIKE '%Unexpected rounding%' THEN 'symbolic control-arg out of range' WHEN info LIKE '%Failed to collect input/output%' THEN 'spec not collected' ELSE 'other (investigate)' END AS cause, count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id} AND stage IN ('ANALYZE_JPF','EXECUTE_JPF') GROUP BY 1 ORDER BY 2 DESC;" || true
+      "SELECT CASE WHEN info LIKE '%PATH_CONDITION_TOO_LARGE%' THEN 'path-condition size limit' WHEN info LIKE '%SEARCH_DEPTH_LIMIT%' THEN 'search depth limit' WHEN info LIKE '%EXECUTION_TIMEOUT%' THEN 'execution timeout' WHEN info LIKE '%NATIVE_MODEL_GAP%' THEN 'incomplete native peers' WHEN info LIKE '%TARGET_NOT_ENTERED%' THEN 'target not entered (unreachable)' WHEN info LIKE '%TARGET_NOT_EXITED%' THEN 'target not exited' WHEN info LIKE '%NonGeneralizableExpressionException%' THEN 'raw-bits non-generalizable' WHEN info LIKE '%class not found%' THEN 'unmodeled JDK/library class' WHEN info LIKE '%Unexpected rounding%' THEN 'symbolic control-arg out of range' ELSE 'other (investigate)' END AS cause, count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id} AND stage IN ('ANALYZE_JPF','EXECUTE_JPF') GROUP BY 1 ORDER BY 2 DESC;" || true
   fi
   if [[ "$breakage" -gt 0 ]]; then
     echo "" >&2

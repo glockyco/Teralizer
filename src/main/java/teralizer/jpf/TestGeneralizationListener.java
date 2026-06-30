@@ -70,7 +70,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     @Override
     public void searchConstraintHit(Search search) {
         if (search.getDepth() >= search.getDepthLimit()) {
-            throw new ExtractionAborted(ExtractionAborted.Reason.SEARCH_DEPTH_LIMIT, this.instrumentedMethodQualifiedName + " - Failed to collect input/output specification due to depth limiting. Depth limit of " + search.getDepthLimit() + " exceeded.");
+            throw new ExtractionAborted(ExtractionAborted.Reason.SEARCH_DEPTH_LIMIT, this.instrumentedMethodQualifiedName + " - Search depth limit of " + search.getDepthLimit() + " exceeded.");
         }
     }
 

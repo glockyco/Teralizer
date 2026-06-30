@@ -95,8 +95,8 @@ public class JpfExecutionTask extends AbstractTask {
         ExtractionOutcome outcome = ExtractionOutcome.fromState(
             listener.wasTargetEntered(), listener.getInvocation() != null);
         if (outcome.getKind() != ExtractionOutcome.Kind.EXTRACTED) {
-            throw new RuntimeException(
-                this.assertionRecord.getInstrumentedMethodQualifiedName() + " - " + outcome.getDetail());
+            throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName()
+                + " - " + outcome.getKind().name() + ": " + outcome.getDetail());
         }
         new SpecificationExtractor().write(
             listener.getInvocation(),

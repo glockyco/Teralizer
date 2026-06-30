@@ -1933,6 +1933,16 @@ WITH
     categorized_tasks AS (
         SELECT
             CASE
+                -- Typed extraction dispositions: keyed on the stable enum token that the listener
+                -- (ExtractionAborted.Reason) and JpfExecutionTask (ExtractionOutcome.Kind) embed in
+                -- the failure message, so classification never depends on brittle English phrasing.
+                WHEN info LIKE '%PATH_CONDITION_TOO_LARGE%' THEN 'PC size limit exceeded'
+                WHEN info LIKE '%SEARCH_DEPTH_LIMIT%' THEN 'Depth limit exceeded'
+                WHEN info LIKE '%EXECUTION_TIMEOUT%' THEN 'Execution timeout'
+                WHEN info LIKE '%NATIVE_MODEL_GAP%' THEN 'Incomplete native peers'
+                WHEN info LIKE '%TARGET_NOT_ENTERED%' THEN 'Target not entered (unreachable)'
+                WHEN info LIKE '%TARGET_NOT_EXITED%' THEN 'Target not exited'
+                -- SPF/JPF engine failures not yet typed (see 2026-06-28-native-peer-model-coverage).
                 WHEN info LIKE '%java.lang.NoSuchMethodException!!%' THEN 'NoSuchMethodException'
                 WHEN info LIKE '%java.lang.ArithmeticException: !!!div by 0%' THEN 'ArithmeticException: div by 0'
                 WHEN info LIKE '%java.lang.RuntimeException: NEWARRAY: symbolic array length%' THEN 'RuntimeException: symbolic array length'
@@ -1940,12 +1950,6 @@ WITH
                 WHEN info LIKE '%at gov.nasa.jpf.vm.NamedFields.setDoubleValue(NamedFields.java:164)%' THEN 'ArrayIndexOutOfBoundsException (setDoubleValue)'
                 WHEN info LIKE '%at gov.nasa.jpf.vm.FunctionObjectFactory.getFunctionObject(FunctionObjectFactory.java:28)%' THEN 'NullPointerException (getFunctionObject)'
                 WHEN info LIKE '%at gov.nasa.jpf.vm.GenericHeap.queueMark(GenericHeap.java:557)%' THEN 'NullPointerException (queueMark)'
-                WHEN info LIKE '%at teralizer.jpf.TestGeneralizationListener.writeSpecificationFiles(TestGeneralizationListener.java:124)%' THEN 'NullPointerException (writeSpecificationFiles:124)'
-                WHEN info LIKE '%at teralizer.jpf.TestGeneralizationListener.writeSpecificationFiles(TestGeneralizationListener.java:147)%' THEN 'NullPointerException (writeSpecificationFiles:147)'
-                WHEN info LIKE '%Depth limit of 100 exceeded.%' THEN 'Depth limit exceeded'
-                WHEN info LIKE '%PC size limit exceeded%' THEN 'PC size limit exceeded'
-                WHEN info LIKE '%Failed to collect input/output specification for unknown reason%' THEN 'Failed to collect specification'
-                WHEN info LIKE '%Execution timeout exceeded%' THEN 'Execution timeout'
                 WHEN info LIKE '%java.lang.OutOfMemoryError: Java heap spac%' THEN 'OutOfMemoryError: Java heap space'
                 WHEN info LIKE '%java.lang.OutOfMemoryError: GC overhead limit exceeded%' THEN 'OutOfMemoryError: GC overhead'
                 WHEN info LIKE '%org.opentest4j.AssertionFailedError%' THEN 'AssertionFailedError'

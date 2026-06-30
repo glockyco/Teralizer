@@ -440,9 +440,6 @@ def compute_spf_error_categorization(df: pd.DataFrame) -> pd.DataFrame:
         "ArrayIndexOutOfBoundsException (simple)": "SPF exception",
         "NullPointerException (queueMark)": "SPF exception",
         "ArrayIndexOutOfBoundsException (setLongValue)": "SPF exception",
-        "NullPointerException (writeSpecificationFiles:147)": "Teralizer exception",
-        "NullPointerException (writeSpecificationFiles:124)": "Teralizer exception",
-        "Failed to collect specification": "Teralizer exception",
         "OutOfMemoryError: Java heap space": "OutOfMemoryError",
         "OutOfMemoryError: GC overhead": "OutOfMemoryError",
     }
