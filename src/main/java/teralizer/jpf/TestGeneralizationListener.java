@@ -177,7 +177,11 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
             concreteOutputArgument = new MethodArgument(concreteOutputType, outputValueForArgument == null ? "null" : outputValueForArgument.toString());
 
-            spfOutput = (Expression) returnInstruction.getReturnAttr(vm.getCurrentThread());
+            // Typed overload: JPF stores stacked slot attributes as an ObjectList, so the untyped
+            // getReturnAttr returns the raw attribute and a direct (Expression) cast fails on a list
+            // or a non-Expression attribute. getReturnAttr(ti, Expression.class) unwraps via
+            // ObjectList.getFirst and selects the Expression attribute (null if none).
+            spfOutput = returnInstruction.getReturnAttr(vm.getCurrentThread(), Expression.class);
             Expression spfOutput_ = spfOutput; // To use spfOutput in the lambda, it needs to be (effectively) final.
             LOGGER.atTrace().log(() -> "Output: " + (spfOutput_ == null ? null : spfOutput_.toString()));
         } else if (exitInstruction instanceof ATHROW) {

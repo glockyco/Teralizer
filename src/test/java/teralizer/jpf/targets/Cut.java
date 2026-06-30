@@ -47,4 +47,13 @@ public final class Cut {
             return value;
         }
     }
+
+    /**
+     * Symbolic int in, symbolic int out: when the argument is made symbolic, the return value
+     * carries a symbolic {@code Expression} attribute. Exercises the symbolic-return capture path —
+     * the {@code getReturnAttr} read in {@code writeSpecificationFiles}.
+     */
+    public static int twice(int value) {
+        return value + value;
+    }
 }

@@ -138,11 +138,13 @@ The census ran 3 variants instead of 2.
 spf-eval's listener is more refined than Teralizer's. Scout findings
 (`agent://SpfEvalPortScout`), prioritized:
 
-- **P1 — ObjectList unwrap on the symbolic return attr (HIGH, XS).** SPF may wrap a slot's
-  attributes in an `ObjectList`; Teralizer's direct `(Expression) returnInstruction.getReturnAttr(...)`
-  in `writeSpecificationFiles()` (~L160) fails/nulls when wrapped. Mirror spf-eval
-  `ExtractionListener.extractSymbolicAttr`: `ObjectList.isList(raw) ? ObjectList.getFirst(raw) : raw`
-  before the cast (`import gov.nasa.jpf.util.ObjectList`).
+- **P1 — symbolic return attr read via the typed API (done).** The untyped
+  `returnInstruction.getReturnAttr(ti)` returns the raw slot attribute (`StackFrame.getOperandAttr()`
+  = `attrs[top]`), which JPF stores as an `ObjectList` when attributes are stacked; the direct
+  `(Expression)` cast then throws on a list or a non-`Expression` attribute. Fixed by reading through
+  the typed overload `getReturnAttr(ti, Expression.class)`, which unwraps via `ObjectList.getFirst`
+  and selects the `Expression` (null if none) — cleaner and safer than a manual unwrap plus cast, and
+  idiomatic JPF. Symbolic-return capture is pinned by `TestGeneralizationListenerSymbolicTest`.
 - **P2 — `exceptionHandled` hook (investigated → not needed in Teralizer).** spf-eval clears pending
   exception state on `exceptionHandled`. Teralizer does not need this: `writeSpecificationFiles`
   classifies the output from the *exit instruction* (`JVMReturnInstruction` vs `ATHROW`), not from
@@ -167,10 +169,9 @@ array expressions, `long` suffixing, method-boundary detection, and PC-size/time
 
 ## How to proceed
 
-Suggested order: **I1** (the boxed-value capture fix — done; unblocks lang and unlocks more
-generalizations via fewer `MissingValueFilter` rejects) plus **P1 (ObjectList unwrap)** — small and
-worth shipping before the next run to avoid silent symbolic-attr loss. (**P2** was investigated and
-is not needed in Teralizer; see I5.)
+Suggested order: **I1** (boxed-value capture) and **P1** (typed return-attr read) are **done**, and
+**P2** was investigated and found unnecessary (see I5) — all covered by in-process JPF regression
+tests (`TestGeneralizationListener*Test`).
 Then **I2** (build robustness so one bad file can't sink a variant) → **I3** (so the
 mutation-gain metric collects at census scale) → re-run the census for a complete result. The
 larger spec-extraction ports **P3/P4/P5** and the optional **I4** (variant hygiene) follow. The
