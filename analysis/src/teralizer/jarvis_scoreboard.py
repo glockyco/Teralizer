@@ -469,6 +469,142 @@ def get_mutation_scores(
     return cast(pd.DataFrame, scores[columns].reset_index(drop=True))
 
 
+CENSUS_VARIANTS = ("NAIVE_100_TRIES", "IMPROVED_100_TRIES")
+
+_MUTANT_KEY_SQL = (
+    "COALESCE(mutated_class, '<null>') || '|' || "
+    "COALESCE(mutated_method, '<null>') || '|' || "
+    "COALESCE(method_description, '<null>') || '|' || "
+    "COALESCE(CAST(line_number AS TEXT), '<null>') || '|' || "
+    "COALESCE(mutator, '<null>') || '|' || "
+    "COALESCE(CAST(indexes AS TEXT), '<null>')"
+)
+
+
+def mutation_gain_keys(generalized_keys: set[str], initial_keys: set[str]) -> set[str]:
+    """Mutant keys killed by the GENERALIZED (seed+properties) suite but not by INITIAL (seed)."""
+    return generalized_keys - initial_keys
+
+
+def get_mutation_gain(
+    conn,
+    *,
+    project_ids: Iterable[int] | None = None,
+    variants: Iterable[str] | None = None,
+) -> pd.DataFrame:
+    """Per (project, variant): the net fault-detection gain of generalization.
+
+    INITIAL (the seed suite) runs once per project (``variant IS NULL``); GENERALIZED
+    (seed + generated properties) runs per variant over the same mutated classes. The
+    gain is the killed mutant-key set difference ``GENERALIZED \\ INITIAL`` -- the
+    mutants the added properties kill that the single-value seed tests miss.
+    """
+    initial = pd.read_sql_query(
+        f"SELECT project_id, {_MUTANT_KEY_SQL} AS k FROM pit_mutation_report "
+        "WHERE stage = 'COLLECT_PIT_DATA_INITIAL' AND is_detected",
+        conn,
+    )
+    generalized = pd.read_sql_query(
+        f"SELECT project_id, variant, {_MUTANT_KEY_SQL} AS k FROM pit_mutation_report "
+        "WHERE stage = 'COLLECT_PIT_DATA_GENERALIZED' AND variant IS NOT NULL "
+        "AND is_detected",
+        conn,
+    )
+    columns = ["project_id", "variant", "initial_killed", "generalized_killed", "gain"]
+    if generalized.empty:
+        return pd.DataFrame(columns=columns)
+    initial_by_project = {
+        int(pid): set(grp["k"]) for pid, grp in initial.groupby("project_id")
+    }
+    rows = []
+    for (pid, variant), grp in generalized.groupby(["project_id", "variant"]):
+        gen_keys = set(grp["k"])
+        init_keys = initial_by_project.get(int(pid), set())
+        rows.append(
+            {
+                "project_id": int(pid),
+                "variant": variant,
+                "initial_killed": len(init_keys),
+                "generalized_killed": len(gen_keys),
+                "gain": len(mutation_gain_keys(gen_keys, init_keys)),
+            }
+        )
+    result = pd.DataFrame(rows, columns=columns)
+    if project_ids is not None:
+        result = result[result["project_id"].isin(list(project_ids))]
+    if variants is not None:
+        result = result[result["variant"].isin(list(variants))]
+    return cast(pd.DataFrame, result.reset_index(drop=True))
+
+
+def _project_label(root_path: object) -> str:
+    """Trailing path component of a project root_path (e.g. ``commons-math-3.5-census``)."""
+    return str(root_path).rstrip("/").rsplit("/", 1)[-1]
+
+
+def get_census(
+    conn,
+    *,
+    variants: Iterable[str] | None = None,
+) -> pd.DataFrame:
+    """Per (project, variant, upstream test class): the sound-generalization funnel.
+
+    ``full_sound`` counts generated properties whose diagnostic is FULL; ``executions``
+    is all property executions. Grouped by the upstream test class (e.g. ``FastMathTest``)
+    the generalized assertions came from.
+    """
+    query = """
+    SELECT
+        p.root_path AS root_path,
+        g.variant AS variant,
+        t.test_class_name AS test_class,
+        COUNT(*) FILTER (WHERE jpe.diagnostic_kind = 'FULL') AS full_sound,
+        COUNT(*) AS executions
+    FROM jqwik_property_execution jpe
+    JOIN generalization g ON g.id = jpe.generalization_id
+    JOIN assertion a ON a.id = g.assertion_id
+    JOIN test t ON t.id = a.test_id
+    JOIN project p ON p.id = jpe.project_id
+    GROUP BY p.root_path, g.variant, t.test_class_name
+    ORDER BY p.root_path, g.variant, t.test_class_name
+    """
+    census = pd.read_sql_query(query, conn)
+    columns = ["project", "variant", "test_class", "full_sound", "executions"]
+    if census.empty:
+        return pd.DataFrame(columns=columns)
+    census["project"] = census["root_path"].map(_project_label)
+    if variants is not None:
+        census = census[census["variant"].isin(list(variants))]
+    for column in ("full_sound", "executions"):
+        census[column] = census[column].astype(int)
+    return cast(pd.DataFrame, census[columns].reset_index(drop=True))
+
+
+def get_census_filter_tally(conn) -> pd.DataFrame:
+    """Per (project, filter, decision): filter-result counts.
+
+    ``REJECT`` rows are the actual exclusions (e.g. the type-ceiling ``ParameterTypeFilter``);
+    ``DEFER`` rows are informational annotations (loop/nested/static-init) that never exclude.
+    """
+    tally = pd.read_sql_query(
+        "SELECT p.root_path AS root_path, fr.filter_name AS filter_name, "
+        "fr.decision AS decision, COUNT(*) AS count "
+        "FROM filter_result fr JOIN project p ON p.id = fr.project_id "
+        "WHERE fr.decision IN ('REJECT', 'DEFER') "
+        "GROUP BY p.root_path, fr.filter_name, fr.decision",
+        conn,
+    )
+    columns = ["project", "filter_name", "decision", "count"]
+    if tally.empty:
+        return pd.DataFrame(columns=columns)
+    tally["project"] = tally["root_path"].map(_project_label)
+    tally["count"] = tally["count"].astype(int)
+    tally = tally.sort_values(
+        ["project", "decision", "count"], ascending=[True, True, False]
+    )
+    return cast(pd.DataFrame, tally[columns].reset_index(drop=True))
+
+
 def get_scoreboard(
     conn,
     *,
@@ -636,9 +772,38 @@ def main() -> None:
         action="store_true",
         help="print the tries-sweep summary (PVC vs covered mutation score)",
     )
+    parser.add_argument(
+        "--census",
+        action="store_true",
+        help="print the beyond-JARVIS census from postgres_jarvis_census",
+    )
     args = parser.parse_args()
 
     os.chdir(Path(find_project_root()).parent)
+
+    if args.census:
+        engine = db_config.get_engine("postgres_jarvis_census", validate=False)
+        with engine.connect() as conn:
+            census = get_census(conn, variants=CENSUS_VARIANTS)
+            gain = get_mutation_gain(conn, variants=CENSUS_VARIANTS)
+            scores = get_mutation_scores(conn, variants=CENSUS_VARIANTS)
+            tally = get_census_filter_tally(conn)
+        mutation = gain.merge(
+            scores[["project_id", "variant", "covered_mutants", "total_mutants"]],
+            on=["project_id", "variant"],
+            how="left",
+        )
+        print("=== sound generalizations per upstream test class (FULL) ===")
+        print(census.to_string(index=False))
+        print(
+            "\n=== mutation: augmented score (generalized_killed / covered_mutants) "
+            "+ gain (GENERALIZED \\ INITIAL killed mutant-keys) ==="
+        )
+        print(mutation.to_string(index=False))
+        print("\n=== filter decisions (REJECT excludes; DEFER is informational) ===")
+        print(tally.to_string(index=False))
+        return
+
     engine = db_config.get_engine("postgres_jarvis_scoreboard", validate=False)
     with engine.connect() as conn:
         if args.sweep:
