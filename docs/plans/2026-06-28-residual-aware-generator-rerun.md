@@ -97,6 +97,12 @@ variants; exclusion-free.** `precisionEqualsMaxUlps` now excludes in *both*
 directions (the renderer rejects its bitwise clause), so the `assertFalse` row that
 passed in Rerun 1 is gone — the scorecard is 14 probes, not 15.
 
+**Superseded (2026-06-29, after this rerun).** The raw-bits peer fix excluded *both* eps
+`PrecisionTest` assertions as well: SPF cannot capture `Precision.equals`'s 1-ULP raw-bits
+branch, so the eps generalization is unsound — it passed at 100/200 tries but failed at 1000.
+The current scorecard is **12 probes** with `PrecisionTest` absent; the eps rows and eps-PVC
+findings below are a pre-fix snapshot. See `2026-06-28-maxulps-raw-bits-lane`.
+
 | Project | Probe | Assertion | params | NAIVE PVC | IMPROVED PVC |
 |---|---|---|---:|---:|---:|
 | lang | isAscii | assertFalse | 1 | 91 | 88 |

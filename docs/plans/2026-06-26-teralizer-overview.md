@@ -34,7 +34,7 @@ type; `INDEX.md` carries the full status/parent tree and `archive/` the retired 
 - `2026-06-28-clause-driven-input-generation` *(spec)* — current generator design: clause-driven planners, single type-capability source, fail-loud SPF→Model seam.
 - `2026-06-28-generation-coverage-telemetry` *(note)* — telemetry schema the generator self-reports against.
 - `2026-06-27-generalizable-input-rule` *(spec)* — shared input-eligibility rule for every consumer.
-- `2026-06-28-residual-aware-generator-rerun` *(audit)* — latest scorecard rerun: zero Table-2 exclusions after two robustness fixes.
+- `2026-06-28-residual-aware-generator-rerun` *(audit)* — pre-soundness-fix scorecard rerun; the later raw-bits fix excluded the eps `PrecisionTest` probes (scorecard now 12 probes, that row absent).
 - `2026-06-26-jarvis-case-coverage` *(audit)* — per-case Table-2 targets + provenance.
 - `2026-06-29-pvc-budget-elasticity` *(audit)* — PVC scales ~10-12x with the tries budget while mutation kills stay flat: PVC measures input diversity, not fault detection.
 - `2026-06-28-pipeline-architecture-review` *(audit)* — architecture/implementation findings feeding the paper's §5.3 roadmap; execution shipped in `archive/2026-06-28-pipeline-improvements`.
@@ -57,11 +57,11 @@ type; `INDEX.md` carries the full status/parent tree and `archive/` the retired 
 
 ## Win condition (summary)
 
-"Beat JARVIS" = **capability** (all 10 JARVIS Table-2 rows enter the pipeline as 14 passing assertion-level probes, exclusion-free) **+ transparent PVC** (per-row IMPROVED-vs-JARVIS, computed by `jarvis_scoreboard.compare_to_jarvis`; CLI `uv run --directory analysis python -m teralizer.jarvis_scoreboard`).
+"Beat JARVIS" = **capability** (9 of the 10 JARVIS Table-2 rows enter the pipeline as 12 passing assertion-level probes; the `PrecisionTest` eps row is sound-excluded as a raw-bits path) **+ transparent PVC** (per-row IMPROVED-vs-JARVIS, computed by `jarvis_scoreboard.compare_to_jarvis`; CLI `uv run --directory analysis python -m teralizer.jarvis_scoreboard`).
 
-Capability is won: the rejected paper handled 9/10 of these rows only because Teralizer's static-method/numeric selection excluded them; now `char`, instance-method/object-construction, and FastMath all enter and pass. The non-Table-2 `Precision.equals(double, double, int maxUlps)` raw-bits probe is excluded in both directions (renderer fail-loud, `2026-06-28-maxulps-raw-bits-lane` archived as bounded-upstream-infeasible); IC stays a project-level sanity check (the JaCoCo rows conflate probes) until per-probe fixtures land. Row-scoped concessions: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria live in the archived `2026-06-26-beat-jarvis-phase1`.
+Capability is won: the rejected paper handled 9/10 of these rows only because Teralizer's static-method/numeric selection excluded them; now `char`, instance-method/object-construction, and FastMath all enter and pass. Both `Precision.equals` raw-bits probes are now excluded in both directions — the Table-2 eps `PrecisionTest` and the non-Table-2 `maxUlps` — because SPF cannot capture their 1-ULP raw-bits branch, so the generalization is unsound (the eps probe passed at 100/200 tries but failed at 1000; fixed fail-loud at the `Double` peer, `2026-06-28-maxulps-raw-bits-lane`). IC stays a project-level sanity check (the JaCoCo rows conflate probes) until per-probe fixtures land. Row-scoped concessions: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria live in the archived `2026-06-26-beat-jarvis-phase1`.
 
-On PVC, IMPROVED beats JARVIS's published Scala-PBT PVC on **5 of 10** rows (both `char` rows, `toIntExact`, `IntervalTest`, `Precision`-eps); the 5 trails are single-`double` rows where JARVIS's multiple-generator-per-scenario sampling out-diversifies a single 100-check arbitrary — a sampling-strategy difference, not a soundness or capability gap. The per-row head-to-head lives in `2026-06-26-jarvis-case-coverage`; the exclusion-free Rerun 2 (IMPROVED ≥ NAIVE on 8/14 probes) in `2026-06-28-residual-aware-generator-rerun`.
+On PVC, IMPROVED beats JARVIS's published Scala-PBT PVC on **4 of the 9 scored rows** (both `char` rows, `toIntExact`, `IntervalTest`); the 5 trails are single-`double` rows where JARVIS's multiple-generator-per-scenario sampling out-diversifies a single 100-check arbitrary — a sampling-strategy difference, not a soundness or capability gap. The `PrecisionTest` row is absent (sound-excluded raw-bits). The per-row head-to-head lives in `2026-06-26-jarvis-case-coverage`; the generator's IMPROVED-vs-NAIVE behavior in `2026-06-28-residual-aware-generator-rerun`.
 
 ## Pointers
 

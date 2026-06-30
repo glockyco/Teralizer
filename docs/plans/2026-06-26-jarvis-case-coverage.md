@@ -164,7 +164,7 @@ supporting evidence for why the existing evaluation database cannot prove the cl
 
 ## Scoreboard run output
 
-Current per-probe NAIVE/IMPROVED PVC, the zero-exclusion result on the typed `InputGenerationPlanner` generator, the two robustness fixes, and the IC delta live in `2026-06-28-residual-aware-generator-rerun`. Metric definitions (probe, PVC, IC) and the run contract live in `2026-06-27-jarvis-scoreboard-evaluation-lane`.
+Current per-probe NAIVE/IMPROVED PVC, the generator's two robustness fixes, and the IC delta live in `2026-06-28-residual-aware-generator-rerun` (whose pre-fix snapshot still lists the eps `PrecisionTest` probes; the later raw-bits fix excluded them — the generator itself produces no exclusions, the eps exclusion is an SPF raw-bits limitation). Metric definitions (probe, PVC, IC) and the run contract live in `2026-06-27-jarvis-scoreboard-evaluation-lane`.
 
 The head-to-head is computed by `jarvis_scoreboard.compare_to_jarvis` from the
 Rerun-2 IMPROVED value logs against the encoded Table-2 reference (`JARVIS_TABLE2`),
@@ -182,16 +182,19 @@ Scala-PBT column.
 | `PolynomialFunctionTest::testConstants` | double | 90 | 105 | trail |
 | `PolynomialFunctionTest::testfirstDerivativeComparison` | double | 89 | 264 | trail |
 | `PolynomialFunctionTest::testLinear` | double | 90 | 160 | trail |
-| `PrecisionTest` (eps) | double³ | 206 | 102 | win |
+| `PrecisionTest` (eps) | double³ | — | 102 | absent (sound-excluded raw-bits) |
 | `UnivariateFunctionTest::testAbs` | double | 94 | 506 | trail |
 
-**Capability — all 10 rows enter as 14 passing assertion-level probes, exclusion-free**
-(plus the non-Table-2 `Precision.equals(double,double,int maxUlps)` raw-bits probe,
-excluded). That is the headline RQ6 result: the rejected paper handled 9/10 of these
-rows only because Teralizer's static-method/numeric selection excluded them.
+**Capability — 9 of the 10 rows enter as 12 passing assertion-level probes.** Both
+`Precision.equals` raw-bits probes are excluded in both directions — the Table-2 eps
+`PrecisionTest` row and the non-Table-2 `maxUlps` probe — since SPF cannot capture their
+1-ULP raw-bits branch, so the generalization is unsound (the eps probe passed at 100/200
+tries but failed at 1000; fixed fail-loud at the `Double` peer). That is the headline RQ6
+result: the rejected paper handled 9/10 of these rows only because Teralizer's
+static-method/numeric selection excluded them.
 
-**PVC — IMPROVED wins 5/10, trails 5/10.** The wins are both char rows, `toIntExact`,
-`IntervalTest`, and `Precision`-eps. The trails are the single-`double` rows (plus
+**PVC — IMPROVED wins 4 of the 9 scored rows, trails 5.** The wins are both char rows,
+`toIntExact`, and `IntervalTest` (`PrecisionTest` is absent). The trails are the single-`double` rows (plus
 `testMinMaxDouble`): JARVIS pairs multiple ScalaCheck generators per scenario, so its
 per-`double` PVC (264, 506…) exceeds what one jqwik arbitrary yields in a 100-check
 run (~90 cap) — a sampling-strategy difference, partially closable with more
@@ -219,7 +222,7 @@ result XMLs. **Tally: 8 FULL · 1 PARTIAL · 2 BLOCKED.**
 | Interval.getSize() | ✅ FULL | `(upper − lower)` |
 | PolynomialFunction.value() — const / linear / deriv | ✅ FULL | `c0` / `(x*c1+c0)` / `(2*c2*x+c1)` |
 | FastMath.toIntExact(long) | ⚠️ PARTIAL | correct 5-region partition; overflow exception path missing, `(int)` cast unmodeled (symcrete LCMP) |
-| Precision.equals(double,double,double) | ✅ FULL | Table-2 eps path is extractable through the `FastMath.abs(y - x) <= eps` branch |
+| Precision.equals(double,double,double) | ✅ FULL (but unsound) | eps path is extractable through `FastMath.abs(y - x) <= eps`, but SPF misses the `equals(x,y,1)` 1-ULP raw-bits disjunct, so the extracted spec is unsound → excluded (PrecisionTest absent in the scorecard) |
 | Precision.equals(double,double,int maxUlps) | ✅ SPIKE | Separate raw-bits probe passes with `symbolic.fp=true` + Z3 `fp.to_ieee_bv`; keep outside the Table-2 eps row |
 | Abs.value() | ✅ FULL | `FastMath.abs` model is reached once the generated JPF config prepends `${jpf-symbc}/build/classes` |
 
@@ -232,7 +235,7 @@ barrier that kept 9/10 JARVIS Table-2 rows out of our dataset (static-method-onl
 selection plus type/corpus limits) is **a Teralizer criterion, not an SPF limit.**
 
 Genuine SPF gaps are narrow and specific:
-- `Double.doubleToRawLongBits` has symbolic support in the `symbolic.fp=true` + `z3bitvector` spike path, so pure ulps-style checks such as `Precision.equals(double,double,int maxUlps)` are feasible as a separate raw-bits probe. The default rational-real mode still has no raw-bits model.
+- `Double.doubleToRawLongBits` has symbolic support in the `symbolic.fp=true` + `z3bitvector` spike path, so pure ulps-style checks such as `Precision.equals(double,double,int maxUlps)` are feasible as a separate raw-bits probe. The default rational-real mode has no raw-bits model, so **both** `Precision.equals` overloads are excluded there — including the Table-2 eps path, whose `equals(x,y,1)` 1-ULP disjunct is silently concretized, making the abs-branch-only generalization unsound.
 - `FastMath.abs` no longer blocks the scorecard once the generated JPF classpath prepends `${jpf-symbc}/build/classes`; this reuses jpf-symbc's existing model-class mechanism rather than modeling raw bits.
 - `toIntExact`'s missing overflow exception is a symcrete `LCMP` control-flow
   decoupling in jpf-symbc (solver-independent; deep fix). `z3bitvector` never
