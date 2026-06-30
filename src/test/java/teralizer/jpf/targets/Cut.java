@@ -19,4 +19,19 @@ public final class Cut {
     public static Integer boxedIdentity(Integer value) {
         return value;
     }
+
+    /** Boxed {@link Boolean} in, negated boxed {@link Boolean} out — the boolean rendering branch. */
+    public static Boolean boxedNegate(Boolean value) {
+        return !value;
+    }
+
+    /** Boxed {@link Character} in and out — the char branch, recorded as its integer code point. */
+    public static Character boxedChar(Character value) {
+        return value;
+    }
+
+    /** Boxed {@link Integer} in, {@link String} out — exercises String return capture via asString(). */
+    public static String describe(Integer value) {
+        return "n=" + value;
+    }
 }
