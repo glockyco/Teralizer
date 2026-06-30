@@ -27,7 +27,6 @@ from teralizer.plotting import (
     setup_legend_horizontal,
     add_grid_styling,
     create_pareto_front_line,
-    prepare_multiline_xtick_labels,
     format_detection_percentage,
 )
 
@@ -45,7 +44,8 @@ def test_setup_paper_style():
     assert mpl.rcParams["axes.facecolor"] == "white"
     assert mpl.rcParams["savefig.dpi"] == 300
     assert mpl.rcParams["savefig.format"] == "pdf"
-    assert mpl.rcParams["axes.grid"]
+    # Paper style leaves the blanket grid off; figures add grids per-axis where needed.
+    assert not mpl.rcParams["axes.grid"]
 
 
 def test_setup_presentation_style():
@@ -406,17 +406,6 @@ def test_create_pareto_front_line_invalid():
         create_pareto_front_line(ax, [1, 2], [3, 4, 5])
 
     plt.close(fig)
-
-
-def test_prepare_multiline_xtick_labels():
-    """Test multiline xtick label preparation."""
-    groups = ["Stage 1 + 2", "Stage 4", "Unknown Group"]
-    result = prepare_multiline_xtick_labels(groups)
-
-    assert len(result) == 3
-    assert result[0] == "Setup & Analysis\n(SHARED)"
-    assert "Transformation" in result[1]  # Stage 4 should be Test Transformation
-    assert result[2] == "Unknown Group"  # Unknown should pass through unchanged
 
 
 def test_format_detection_percentage():

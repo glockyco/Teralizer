@@ -763,25 +763,6 @@ def create_pareto_front_line(ax: Any, x_data: List[float], y_data: List[float]) 
 # =============================================================================
 
 
-def prepare_multiline_xtick_labels(groups: List[str]) -> List[str]:
-    """Prepare multi-line x-tick labels for stage groups.
-
-    Args:
-        groups: List of stage group names
-
-    Returns:
-        List of formatted multi-line labels
-    """
-    label_mapping = {
-        "Stage 1 + 2": "Analysis\n(SHARED)",
-        "Stage 3": "Specification Extraction\n(SHARED)",
-        "Stage 4": "Test Transformation\n(BASELINE, NAIVE, IMPROVED)",
-        "Stage 5": "Validation\n(BASELINE, NAIVE, IMPROVED)",
-    }
-
-    return [label_mapping.get(group, group) for group in groups]
-
-
 def format_detection_percentage(value: float, decimal_places: int = 1) -> str:
     """Format detection rate as percentage.
 
