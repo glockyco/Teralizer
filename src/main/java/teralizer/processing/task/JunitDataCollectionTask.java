@@ -282,17 +282,17 @@ public class JunitDataCollectionTask extends AbstractTask {
             try {
                 String json = new String(Files.readAllBytes(outcomePath), StandardCharsets.UTF_8);
                 JqwikDiagnosticOutcome outcome = JqwikDiagnosticOutcome.fromJson(gson, json);
-                record.setTestCaseName(outcome.testCaseName != null ? outcome.testCaseName : this.generalizationRecord.getMethodName());
-                record.setDiagnosticKind(outcome.diagnosticKind);
-                record.setRawStatus(outcome.rawStatus);
-                record.setFinalStatus(outcome.finalStatus);
-                record.setThrowableType(outcome.throwableType);
-                record.setThrowableMessage(outcome.throwableMessage);
+                record.setTestCaseName(stripNul(outcome.testCaseName != null ? outcome.testCaseName : this.generalizationRecord.getMethodName()));
+                record.setDiagnosticKind(stripNul(outcome.diagnosticKind));
+                record.setRawStatus(stripNul(outcome.rawStatus));
+                record.setFinalStatus(stripNul(outcome.finalStatus));
+                record.setThrowableType(stripNul(outcome.throwableType));
+                record.setThrowableMessage(stripNul(outcome.throwableMessage));
                 record.setTries(outcome.tries);
                 record.setChecks(outcome.checks);
                 record.setDistinctTuples(outcome.distinctTuples);
                 record.setDistinctNewTuples(outcome.distinctNewTuples);
-                record.setSeed(outcome.seed);
+                record.setSeed(stripNul(outcome.seed));
                 record.setSelectedValueLogPath(outcomePath.resolveSibling(this.getGeneralizationId() + "." + this.getVariant() + ".values.tsv").toString());
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -306,6 +306,12 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
 
         record.store();
+    }
+
+    private static String stripNul(String value) {
+        // Postgres TEXT columns reject NUL (0x00); a generated char/string value (e.g. CharUtils
+        // isAscii over char 0) can carry it into a throwable message. Strip it before insert.
+        return value == null ? null : value.replace("\u0000", "");
     }
 
     private Path resolveDiagnosticSidecarPath(String executionId) {
