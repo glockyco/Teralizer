@@ -43,7 +43,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     private long startTime;
 
-    private int recursionDepth;
+    private int targetDepth;
     private boolean isInInstrumentedMethod;
     private CapturedException pendingThrownException;
     private List<Value> instrumentedInputArguments;
@@ -65,7 +65,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     @Override
     public void searchStarted(Search search) {
         this.startTime = System.currentTimeMillis();
-        this.recursionDepth = -1;
+        this.targetDepth = -1;
         this.isInInstrumentedMethod = false;
         this.pendingThrownException = null;
         this.targetEntered = false;
@@ -99,16 +99,20 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             this.isInInstrumentedMethod = true;
             this.instrumentedInputArguments = this.captureConcreteArguments(currentThread);
         }
-        if (this.testedMethodSpec.matches(enteredMethod)) {
+        // Pin the tested call's stack position at its first entry reached from inside the wrapper.
+        // Its matching exit (same depth) is the outermost frame under recursion and the first call
+        // under a looped wrapper. The single constraint-collection path does not backtrack, so the
+        // pinned depth stays valid for the rest of the run.
+        if (this.isInInstrumentedMethod && this.targetDepth < 0 && this.testedMethodSpec.matches(enteredMethod)) {
             LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
             this.targetEntered = true;
-            this.recursionDepth++;
+            this.targetDepth = currentThread.getTopFrame().getDepth();
         }
     }
 
     @Override
     public void exceptionThrown(VM vm, ThreadInfo currentThread, ElementInfo thrownException) {
-        if (!this.isInInstrumentedMethod || this.recursionDepth < 0) {
+        if (!this.targetEntered || this.invocation != null) {
             return;
         }
 
@@ -120,13 +124,13 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         if (this.instrumentedMethodSpec.matches(exitedMethod)) {
             this.isInInstrumentedMethod = false;
         }
-        if (this.testedMethodSpec.matches(exitedMethod)) {
+        // Capture exactly once, at the exit of the pinned tested frame (matched by stack depth);
+        // leave() notifies methodExited before popFrame(), so that frame is still the top here.
+        if (this.testedMethodSpec.matches(exitedMethod) && this.targetEntered && this.invocation == null
+                && currentThread.getTopFrame().getDepth() == this.targetDepth) {
             LOGGER.atDebug().log("Exiting tested method: " + exitedMethod.toString());
-            this.recursionDepth--;
-            if (this.isInInstrumentedMethod && this.recursionDepth == -1) {
-                this.invocation = this.captureInvocation(vm, currentThread);
-                vm.getSearch().terminate();
-            }
+            this.invocation = this.captureInvocation(vm, currentThread);
+            vm.getSearch().terminate();
         }
     }
 
