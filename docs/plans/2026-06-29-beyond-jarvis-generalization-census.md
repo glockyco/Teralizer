@@ -10,18 +10,38 @@ parent: 2026-06-26-teralizer-overview
 
 ## Problem
 
-The JARVIS scoreboard runs Teralizer against exactly the 10 hand-picked
-commons-lang/commons-math cases in JARVIS Table-2. That proves Teralizer *matches*
-JARVIS on JARVIS's own ground, but says nothing about reach: how many sound property
-generalizations Teralizer produces from these two projects' **own** test suites that
-JARVIS never attempted. This census measures that reach within the same two projects —
-a Beat-JARVIS strengthener (strategy step 1), distinct from the broader full-corpus
-re-run that the overview gates on step 1 landing.
+JARVIS (VMCAI 2018) ran on the **full** JUnit suites of 12 Apache Commons projects — its
+Table 1 is a whole-suite scenario census — including Commons-Lang and Commons-Math. But
+its method, *safe generalization*, abstracts a value region from a **repetitive
+scenario**: it needs >= 2 compatible test traces (positive/negative examples) to bound the
+abstraction. It therefore reports generalizations only for the repetitive tests in its
+Table 2: `CharUtilsTest::{isAscii,isPrintable}` (Lang); `FastMathTest::{testMinMaxDouble,
+toIntExact}`, `IntervalTest`, `PolynomialFunctionTest::{testConstants,testLinear}`,
+`PrecisionTest`, `UnivariateFunctionTest::testAbs` (Math).
 
-The claim to support: *Teralizer soundly generalizes N properties across M
-commons-lang/commons-math test classes that JARVIS never attempted* — exclusion-honest,
-with the rejection reasons for everything that does not generalize as the other half of
-the result.
+Teralizer extracts the input partition from a **single** test via symbolic path execution
+— no repetition requirement. So generalizing tests beyond JARVIS's Table-2 set is direct
+evidence of **broader applicability**: JARVIS attempted these same suites and reported
+successes only in Table 2, so each additional sound Teralizer generalization is an
+applicability win over a case JARVIS did not — and, by its repetition gate, largely could
+not — generalize. This is a Beat-JARVIS strengthener (strategy step 1) within the same two
+projects, distinct from the broader full-corpus re-run the overview gates on step 1.
+
+Claim to support: *within Commons-Lang/Commons-Math, Teralizer soundly generalizes N
+properties beyond JARVIS's reported Table-2 set* — exclusion-honest, with the rejection
+reasons for everything that does not generalize as the other half of the result.
+
+Honesty bounds:
+
+- The paper exposes JARVIS's successes (Table 2), not a per-test failure ledger. We claim
+  "beyond JARVIS's reported set," never "JARVIS failed on test X".
+- The candidate universes differ both ways: JARVIS targets loop/repetition tests that
+  Teralizer's `AssertionInLoopFilter`/`TestedMethodInLoopFilter` reject. The funnel reports
+  Teralizer's own rejections too, not just its wins — the comparison is honest in both
+  directions.
+- For non-Table-2 tests the JARVIS baseline is **binary applicability** (no reported
+  generalization, hence no published PVC), not a PVC magnitude. PVC-magnitude comparison
+  stays scoped to the canonical JARVIS-10 rows.
 
 ## Current setup (what we build on)
 
@@ -32,8 +52,8 @@ the result.
   are already cached there.
 - For each project the script writes a minimal `pom.xml` (only `junit:4.12`), copies
   `src/main` from the cache, and writes a hand-authored `Jarvis{Lang,Math}ScorecardTest`
-  — small loop-free scorecard methods (1-2 assertion probes each) replicating the 10 Table-2 rows in a `jarvis`
-  package. The upstream `*Test.java` are cached but never promoted into the fixture.
+  — small loop-free scorecard methods (1-2 assertion probes each) replicating the Table-2
+  rows in a `jarvis` package. The upstream `*Test.java` are cached but never promoted.
 - `project-configs/jarvis-scoreboard/commons-{lang,math}-3.5.conf` do **not** enumerate
   tests; they point `root-path` at the fixture and the pipeline processes whatever test
   classes are present, across 6 variants (NAIVE/IMPROVED x 100/200/1000).
@@ -48,11 +68,10 @@ the result.
 
 ## Approach: promote real upstream test classes (compile-gated)
 
-Run the projects' **own** numeric/char test classes through the existing pipeline; let
-the filters and SPF stage decide what generalizes. No new selector is built — the
-existing filter pipeline *is* the feasible-case automation. The expansion is purely
-about feeding more of the cached upstream suite into a buildable fixture and reporting
-the outcome.
+Run the projects' **own** numeric/char test classes through the existing pipeline; let the
+filters and SPF stage decide what generalizes. No new selector is built — the existing
+filter pipeline *is* the feasible-case automation. The expansion is purely about feeding
+more of the cached upstream suite into a buildable fixture and reporting the outcome.
 
 ### Fixtures and the allowlist
 
@@ -66,11 +85,19 @@ A new census fixture per project, assembled by extending
   Add the minimal test dependencies the slice needs (e.g. `hamcrest`) to the census POM,
   and **drop** any class that requires heavy test-support base classes, test resources,
   or non-trivial extra dependencies. Every dropped class is recorded with its reason.
-- Starter allowlist (refined empirically by the compile-gate and the funnel):
-  - commons-math: `util/FastMathTest`, `util/PrecisionTest`, `util/ArithmeticUtilsTest`
-  - commons-lang: `CharUtilsTest`, `NumberUtilsTest`, `BooleanUtilsTest`
-- `data/jarvis-scoreboard/PROVENANCE.md` records the pinned SHAs, the final allowlist,
-  and the dropped-class list with reasons.
+
+Allowlist in priority order (exact paths resolved by the prep step; refined empirically by
+the compile-gate and the funnel):
+
+1. **JARVIS's Table-2 source classes** — the tightest head-to-head: for these we know
+   exactly which methods JARVIS generalized, so the census measures whether and by how much
+   Teralizer's generalized-method set exceeds JARVIS's within the same class. Commons-Math
+   `util/{FastMath,Precision}Test`, `geometry/euclidean/oned/IntervalTest`,
+   `analysis/polynomials/PolynomialFunctionTest`; Commons-Lang `CharUtilsTest`. (The Table-2
+   abs row maps to `analysis.function.Abs`; the cache has no dedicated `AbsTest`, so abs may
+   have no promotable upstream test — itself a finding to record, not an allowlist entry.)
+2. **Adjacent numeric/char classes** for breadth: Commons-Math `util/{ArithmeticUtils,
+   MathArrays}Test`; Commons-Lang `{NumberUtils,BooleanUtils}Test`, `math/*`.
 
 Separate census fixtures (`commons-{lang,math}-3.5-census`) and separate census configs
 keep the canonical JARVIS-10 Table-2 run pristine and fast; the census is an opt-in,
@@ -80,9 +107,17 @@ heavier run. The JARVIS-10 fixture, config, and `compare_to_jarvis` output are u
 
 Census configs run two variants — `NAIVE_100` and `IMPROVED_100`. The census measures
 breadth (how many sound generalizations exist), and the 100/200/1000 tries-elasticity is
-already characterized on the JARVIS-10 (`2026-06-29-pvc-budget-elasticity`), so
-re-sweeping every promoted test is unnecessary. NAIVE is the baseline; IMPROVED is the
-generator under test.
+already characterized on the JARVIS-10 (`2026-06-29-pvc-budget-elasticity`), so re-sweeping
+every promoted test is unnecessary. NAIVE is the baseline; IMPROVED is the generator under
+test. 100 tries also matches JARVIS's own measurement budget (Table 2 PVC was collected at
+ScalaCheck's default of 100 tests), so any per-row PVC sanity check is apples-to-apples.
+
+### Selection stays automatic
+
+No new selector: the existing filter pipeline (structural + type + assertion + SPF) is the
+"feasible-case automation." We just **record the rejection reason** per non-generalized
+assertion — that tally is half the result (it shows the type ceiling *and* the loop-style
+limit at work, the latter being precisely the repetition structure JARVIS targets).
 
 ### The funnel (the measured result)
 
@@ -97,30 +132,32 @@ Per promoted test class, recorded from the existing DB (`assertion.is_included` 
 6. probes whose generated property kills >= 1 mutant
 
 The per-stage drop is tallied **by reason** (non-passing, no/loop/structural assertion,
-type ceiling, unsupported assertion, SPF raw-bits / native-peer / transcendental). That
-tally is half the result: it shows both the type ceiling and the loop-style limit of
-real upstream tests, quantified.
+type ceiling, unsupported assertion, SPF raw-bits / native-peer / transcendental). Each
+FULL/sound generalization that falls outside JARVIS's Table-2 source-method set is flagged
+an **applicability win**.
 
 ### Report
 
 A new census report — an analysis CLI entry plus an audit doc under `docs/plans/` —
-separate from `jarvis_scoreboard.compare_to_jarvis` (the promoted tests have no JARVIS
-baseline). The census runs in a dedicated database and data dir
-(`postgres_jarvis_census`, `data/jarvis-census`) so census rows can never pollute the
-canonical `compare_to_jarvis` aggregation. The report reads that database and emits the per-class
-funnel, the by-reason rejection tally, and the headline counts (N sound generalizations
-across M classes, vs JARVIS's 10).
+separate from `jarvis_scoreboard.compare_to_jarvis` (the promoted tests have no JARVIS PVC
+baseline). The census runs in a dedicated database and data dir (`postgres_jarvis_census`,
+`data/jarvis-census`) so census rows can never pollute the canonical `compare_to_jarvis`
+aggregation. The report reads that database and emits the per-class funnel, the by-reason
+rejection tally, and the headline counts: **N sound generalizations across M classes beyond
+JARVIS's reported Table-2 set**, and — within JARVIS's own Table-2 source classes —
+Teralizer's generalized method count vs JARVIS's K.
 
 ## Reproducibility
 
-- `prepare-jarvis-scoreboard-fixtures.sh` (or a sibling census-prep step) stays
-  idempotent and pins the same SHAs; the allowlist and dropped classes are explicit in
-  the script and `PROVENANCE.md`.
+- `prepare-jarvis-scoreboard-fixtures.sh` (or a sibling census-prep step) stays idempotent
+  and pins the same SHAs; the allowlist and dropped classes are explicit in the script and
+  `PROVENANCE.md`.
 - A census run script mirrors `run-jarvis-scoreboard.sh`'s structure but guards on the
   dedicated census DB/data dir (`postgres_jarvis_census`, `data/jarvis-census`), so a
   census run can never target or perturb `postgres_jarvis_scoreboard`.
-- Generated census artifacts (fixtures, value logs, generated tests) follow the existing
-  gitignore policy — never committed.
+- Generated census artifacts (fixtures, value logs, generated tests) are run evidence, not
+  committed source; they follow the existing gitignore policy. Only prep/config/report/doc
+  changes are committed.
 
 ## Verification
 
@@ -137,17 +174,21 @@ across M classes, vs JARVIS's 10).
   rejects them; this census does not extend the supported input surface.
 - Other projects / the full RepoReapers re-run — gated on step 1 (overview).
 - Any change to the canonical JARVIS-10 Table-2 comparison or `compare_to_jarvis`.
+- Per-test claims about which specific tests JARVIS failed on — the paper exposes only its
+  successes; the claim is "beyond JARVIS's reported set."
 - Authoring new scorecard tests — the census uses the projects' own upstream tests only.
 
 ## Acceptance criteria
 
 - A census run produces, per promoted class, the six-stage funnel and the by-reason
-  rejection tally, from the existing DB tables (no new schema unless measurement proves
-  it necessary).
-- The headline "N sound generalizations across M classes beyond JARVIS's 10" is derived
-  from FULL IMPROVED diagnostics, exclusion-honest (raw-bits / unsound paths excluded,
-  not counted).
-- Every promoted class compiled (`mvn test-compile` green); every dropped class is
-  recorded with a reason in `PROVENANCE.md`.
+  rejection tally, from the existing DB tables (no new schema unless measurement proves it
+  necessary).
+- The headline "N sound generalizations across M classes beyond JARVIS's reported Table-2
+  set" is derived from FULL IMPROVED diagnostics, exclusion-honest (raw-bits / unsound
+  paths excluded, not counted).
+- Within JARVIS's Table-2 source classes, the report states Teralizer's generalized-method
+  count against JARVIS's reported methods for the same class.
+- Every promoted class compiled (`mvn test-compile` green); every dropped class is recorded
+  with a reason in `PROVENANCE.md`.
 - The canonical JARVIS-10 run, config, and `compare_to_jarvis` output are unchanged.
 - The census is reproducible from pinned SHAs + an explicit allowlist.
