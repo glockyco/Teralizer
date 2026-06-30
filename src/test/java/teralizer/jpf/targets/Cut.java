@@ -34,4 +34,17 @@ public final class Cut {
     public static String describe(Integer value) {
         return "n=" + value;
     }
+
+    /**
+     * Throws an exception that is caught internally, then returns normally. The output
+     * specification must be the return value, not the handled exception — {@code methodExited}
+     * sees an ordinary return instruction, so the listener classifies it as a normal return.
+     */
+    public static int catchesInternally(int value) {
+        try {
+            throw new IllegalStateException("handled internally");
+        } catch (IllegalStateException caught) {
+            return value;
+        }
+    }
 }

@@ -143,10 +143,13 @@ spf-eval's listener is more refined than Teralizer's. Scout findings
   in `writeSpecificationFiles()` (~L160) fails/nulls when wrapped. Mirror spf-eval
   `ExtractionListener.extractSymbolicAttr`: `ObjectList.isList(raw) ? ObjectList.getFirst(raw) : raw`
   before the cast (`import gov.nasa.jpf.util.ObjectList`).
-- **P2 — `exceptionHandled` hook (MEDIUM, XS).** Teralizer clears `pendingThrownException` only on
-  `methodExited`; if the method catches internally and returns, the output spec is mis-classified as
-  an exception path. Add `@Override exceptionHandled(...) { pendingThrownException = null; }`
-  (spf-eval `ExtractionListener.exceptionHandled`).
+- **P2 — `exceptionHandled` hook (investigated → not needed in Teralizer).** spf-eval clears pending
+  exception state on `exceptionHandled`. Teralizer does not need this: `writeSpecificationFiles`
+  classifies the output from the *exit instruction* (`JVMReturnInstruction` vs `ATHROW`), not from
+  `pendingThrownException`. A method that catches internally and returns therefore exits on a return
+  instruction and is recorded by its return value; any genuinely propagating exception re-fires
+  `exceptionThrown` (overwriting the field) before the `ATHROW` exit. Porting the hook would be dead
+  code. Pinned by `TestGeneralizationListenerOutcomeTest`, which passes with no hook.
 - **P3 — bit-exact float/double capture (LOW-MED, S; defer).** `String.valueOf(d)` loses NaN
   payloads/subnormals; spf-eval `ValueHelpers` stores decimal + `0x` raw bits and emits
   `Double.longBitsToDouble(0x…)`. Only needed if NaN-payload tests fail.
@@ -164,10 +167,10 @@ array expressions, `long` suffixing, method-boundary detection, and PC-size/time
 
 ## How to proceed
 
-Suggested order: **I1** (the boxed-value capture fix — unblocks lang and likely unlocks more
-generalizations via fewer `MissingValueFilter` rejects) plus the **quick listener-correctness
-fixes P1 (ObjectList unwrap) + P2 (`exceptionHandled`)** first — all small, and shipping them
-before the next run avoids knowingly re-running with silent attr-loss / stale-exception risk.
+Suggested order: **I1** (the boxed-value capture fix — done; unblocks lang and unlocks more
+generalizations via fewer `MissingValueFilter` rejects) plus **P1 (ObjectList unwrap)** — small and
+worth shipping before the next run to avoid silent symbolic-attr loss. (**P2** was investigated and
+is not needed in Teralizer; see I5.)
 Then **I2** (build robustness so one bad file can't sink a variant) → **I3** (so the
 mutation-gain metric collects at census scale) → re-run the census for a complete result. The
 larger spec-extraction ports **P3/P4/P5** and the optional **I4** (variant hygiene) follow. The
