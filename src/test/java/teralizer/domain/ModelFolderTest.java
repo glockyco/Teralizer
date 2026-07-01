@@ -71,11 +71,13 @@ public class ModelFolderTest {
     }
 
     @Example
-    void operationWithNullOperandFoldsWithoutExploding() {
-        RecordingFolder folder = new RecordingFolder();
-        Assert.assertEquals(
-            "Operation{+}(Constant,null)",
-            new Operation(new Constant((long) 4, TypeDomain.INTEGER), Operator.PLUS, null).fold(folder));
+    void operationRequiresTwoOperands() {
+        try {
+            new Operation(new Constant((long) 4, TypeDomain.INTEGER), Operator.PLUS, null);
+            Assert.fail("operation must be binary after calls and negation moved to Invocation/Not");
+        } catch (IllegalArgumentException expected) {
+            Assert.assertTrue(expected.getMessage().contains("binary"));
+        }
     }
 
     /**

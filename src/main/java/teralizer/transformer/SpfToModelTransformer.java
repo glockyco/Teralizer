@@ -8,6 +8,8 @@ import java.util.Locale;
 import java.util.Stack;
 import teralizer.domain.*;
 import teralizer.domain.Error;
+import teralizer.jqwik.planning.MethodCapabilities;
+import teralizer.jqwik.planning.MethodCapability;
 
 public class SpfToModelTransformer {
 
@@ -196,32 +198,33 @@ public class SpfToModelTransformer {
             }
             switch (comparator) {
                 case EQUALS:
-                    return new Invocation(left, null, "equals", Collections.singletonList(right));
+                    return instanceInvocation(left, "equals", Collections.singletonList(right));
                 case NOTEQUALS:
-                    return new Not(new Invocation(left, null, "equals", Collections.singletonList(right)));
+                    return new Not(instanceInvocation(left, "equals", Collections.singletonList(right)));
                 case EQUALSIGNORECASE:
-                    return new Invocation(left, null, "equalsIgnoreCase", Collections.singletonList(right));
+                    return instanceInvocation(left, "equalsIgnoreCase", Collections.singletonList(right));
                 case NOTEQUALSIGNORECASE:
-                    return new Not(new Invocation(left, null, "equalsIgnoreCase", Collections.singletonList(right)));
+                    return new Not(instanceInvocation(left, "equalsIgnoreCase", Collections.singletonList(right)));
                 case STARTSWITH:
-                    return new Invocation(left, null, "startsWith", Collections.singletonList(right));
+                    return instanceInvocation(left, "startsWith", Collections.singletonList(right));
                 case NOTSTARTSWITH:
-                    return new Not(new Invocation(left, null, "startsWith", Collections.singletonList(right)));
+                    return new Not(instanceInvocation(left, "startsWith", Collections.singletonList(right)));
                 case ENDSWITH:
-                    return new Invocation(left, null, "endsWith", Collections.singletonList(right));
+                    return instanceInvocation(left, "endsWith", Collections.singletonList(right));
                 case NOTENDSWITH:
-                    return new Not(new Invocation(left, null, "endsWith", Collections.singletonList(right)));
+                    return new Not(instanceInvocation(left, "endsWith", Collections.singletonList(right)));
                 case CONTAINS:
-                    return new Invocation(left, null, "contains", Collections.singletonList(right));
+                    return instanceInvocation(left, "contains", Collections.singletonList(right));
                 case NOTCONTAINS:
-                    return new Not(new Invocation(left, null, "contains", Collections.singletonList(right)));
+                    return new Not(instanceInvocation(left, "contains", Collections.singletonList(right)));
                 case EMPTY:
-                    return new Invocation(left == null ? right : left, null, "isEmpty", Collections.emptyList());
+                    return instanceInvocation(left == null ? right : left, "isEmpty", Collections.emptyList());
                 case NOTEMPTY:
-                    return new Not(new Invocation(left == null ? right : left, null, "isEmpty", Collections.emptyList()));
+                    return new Not(instanceInvocation(left == null ? right : left, "isEmpty", Collections.emptyList()));
                 default:
                     throw new UnsupportedSpfTermException(
-                        "String comparator '" + comparator + "' is not mapped to a Model invocation.");
+                        "String comparator '" + comparator.name().toLowerCase(Locale.ROOT)
+                            + "' is not admitted by MethodCapabilities.");
             }
         }
 
@@ -247,16 +250,17 @@ public class SpfToModelTransformer {
             Expression right) {
             switch (operator) {
                 case CONCAT:
-                    return new Invocation(left, null, "concat", Collections.singletonList(right));
+                    return instanceInvocation(left, "concat", Collections.singletonList(right));
                 case TRIM:
-                    return new Invocation(right, null, "trim", Collections.emptyList());
+                    return instanceInvocation(right, "trim", Collections.emptyList());
                 case TOLOWERCASE:
-                    return new Invocation(right, null, "toLowerCase", Collections.emptyList());
+                    return instanceInvocation(right, "toLowerCase", Collections.emptyList());
                 case TOUPPERCASE:
-                    return new Invocation(right, null, "toUpperCase", Collections.emptyList());
+                    return instanceInvocation(right, "toUpperCase", Collections.emptyList());
                 default:
                     throw new UnsupportedSpfTermException(
-                        "String operator '" + operator + "' is not mapped from left/right operands.");
+                        "String operator '" + operator.name().toLowerCase(Locale.ROOT)
+                            + "' is not admitted by MethodCapabilities.");
             }
         }
 
@@ -264,31 +268,44 @@ public class SpfToModelTransformer {
             gov.nasa.jpf.symbc.string.StringOperator operator,
             List<Expression> operands) {
             if (operator == gov.nasa.jpf.symbc.string.StringOperator.VALUEOF) {
-                return new Invocation(null, "java.lang.String", "valueOf", operands);
+                return staticInvocation("java.lang.String", "valueOf", operands);
             }
             if (operands.isEmpty()) {
                 throw new UnsupportedSpfTermException(
-                    "String operator '" + operator + "' has no receiver operand.");
+                    "String operator '" + operator.name().toLowerCase(Locale.ROOT) + "' has no receiver operand.");
             }
             Expression receiver = operands.get(0);
             List<Expression> args = operands.subList(1, operands.size());
             switch (operator) {
                 case REPLACE:
-                    return new Invocation(receiver, null, "replace", args);
-                case REPLACEFIRST:
-                    return new Invocation(receiver, null, "replaceFirst", args);
-                case REPLACEALL:
-                    return new Invocation(receiver, null, "replaceAll", args);
-                case SUBSTRING:
-                    return new Invocation(receiver, null, "substring", args);
+                    return instanceInvocation(receiver, "replace", args);
                 case TOLOWERCASE:
-                    return new Invocation(receiver, null, "toLowerCase", args);
+                    return instanceInvocation(receiver, "toLowerCase", args);
                 case TOUPPERCASE:
-                    return new Invocation(receiver, null, "toUpperCase", args);
+                    return instanceInvocation(receiver, "toUpperCase", args);
                 default:
                     throw new UnsupportedSpfTermException(
-                        "String operator '" + operator + "' is not mapped from oprlist operands.");
+                        "String operator '" + operator.name().toLowerCase(Locale.ROOT)
+                            + "' is not admitted by MethodCapabilities.");
             }
+        }
+
+        private static Invocation instanceInvocation(Expression receiver, String method, List<Expression> args) {
+            MethodCapability capability = MethodCapabilities.get(method);
+            if (capability == null || capability.staticQualifier != null || !capability.outputRenderable) {
+                throw new UnsupportedSpfTermException(
+                    "String method '" + method + "' is not admitted by MethodCapabilities.");
+            }
+            return new Invocation(receiver, null, method, args);
+        }
+
+        private static Invocation staticInvocation(String qualifier, String method, List<Expression> args) {
+            MethodCapability capability = MethodCapabilities.get(method);
+            if (capability == null || !qualifier.equals(capability.staticQualifier) || !capability.outputRenderable) {
+                throw new UnsupportedSpfTermException(
+                    "Static method '" + qualifier + "." + method + "' is not admitted by MethodCapabilities.");
+            }
+            return new Invocation(null, qualifier, method, args);
         }
 
         @Override

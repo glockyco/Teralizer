@@ -37,6 +37,13 @@ public class StringDomainPlannerTest {
     }
 
     @Example
+    void isEmptyCollapsesToEmptyStringAndConsumesClause() {
+        ParameterGenerationPlan plan = plan(new Invocation(new Variable("s", TypeDomain.STRING), null, "isEmpty", Collections.emptyList()));
+        Assert.assertEquals("return net.jqwik.api.Arbitraries.of(\"\")", plan.getRecipe().emit());
+        Assert.assertEquals(Collections.singleton(0), plan.getConsumedClauseIds());
+    }
+
+    @Example
     void startsWithBuildsPrefixMap() {
         ParameterGenerationPlan plan = plan(call("startsWith", "ab"));
         String emit = plan.getRecipe().emit();

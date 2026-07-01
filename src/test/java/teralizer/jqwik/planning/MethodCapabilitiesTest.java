@@ -2,6 +2,7 @@ package teralizer.jqwik.planning;
 
 import net.jqwik.api.Example;
 import org.junit.Assert;
+import teralizer.domain.TypeDomain;
 
 public class MethodCapabilitiesTest {
 
@@ -53,5 +54,30 @@ public class MethodCapabilitiesTest {
         Assert.assertEquals("java.lang.Math", sqrt.staticQualifier);
         Assert.assertFalse(sqrt.inputGeneratable);
         Assert.assertTrue(sqrt.outputRenderable);
+    }
+
+    @Example
+    void capabilitiesDeclareReturnDomains() {
+        for (String method : new String[] {"equals", "equalsIgnoreCase", "startsWith", "endsWith", "contains", "isEmpty"}) {
+            Assert.assertEquals(method, TypeDomain.BOOLEAN, MethodCapabilities.get(method).returnDomain);
+        }
+        for (String method : new String[] {"trim", "replace", "toLowerCase", "toUpperCase", "concat"}) {
+            Assert.assertEquals(method, TypeDomain.STRING, MethodCapabilities.get(method).returnDomain);
+        }
+        Assert.assertEquals(TypeDomain.STRING, MethodCapabilities.get("valueOf").returnDomain);
+        Assert.assertEquals(TypeDomain.REAL, MethodCapabilities.get("sqrt").returnDomain);
+        Assert.assertEquals(TypeDomain.INTEGER, MethodCapabilities.get("length").returnDomain);
+        Assert.assertFalse(MethodCapabilities.get("length").outputRenderable);
+    }
+
+    @Example
+    void capabilitiesDeclareInputConstraintKinds() {
+        Assert.assertEquals(MethodCapability.InputConstraintKind.EQUALITY, MethodCapabilities.get("equals").inputConstraintKind);
+        Assert.assertEquals(MethodCapability.InputConstraintKind.PREFIX, MethodCapabilities.get("startsWith").inputConstraintKind);
+        Assert.assertEquals(MethodCapability.InputConstraintKind.SUFFIX, MethodCapabilities.get("endsWith").inputConstraintKind);
+        Assert.assertEquals(MethodCapability.InputConstraintKind.CONTAINS, MethodCapabilities.get("contains").inputConstraintKind);
+        Assert.assertEquals(MethodCapability.InputConstraintKind.EMPTY, MethodCapabilities.get("isEmpty").inputConstraintKind);
+        Assert.assertEquals(MethodCapability.InputConstraintKind.NONE, MethodCapabilities.get("trim").inputConstraintKind);
+        Assert.assertEquals(MethodCapability.InputConstraintKind.NONE, MethodCapabilities.get("replace").inputConstraintKind);
     }
 }

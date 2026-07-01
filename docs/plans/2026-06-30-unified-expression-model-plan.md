@@ -574,7 +574,7 @@ Phase 4 is a cleanup/finalization pass over the unified model after Phases 1–3
 
 **Files:** Modify `src/main/java/teralizer/jqwik/planning/MethodCapability.java`, `MethodCapabilities.java`, `StringDomainPlanner.java`, `src/main/java/teralizer/transformer/ModelToJavaTransformer.java`; tests in `MethodCapabilitiesTest.java`, `StringDomainPlannerTest.java`, `ModelToJavaTransformerInvocationTest.java`, and `ModelToJavaTransformerNonGeneralizableTest.java`.
 
-- [ ] **Step 1: Write failing registry-metadata tests.** Extend `MethodCapabilitiesTest` before production edits:
+- [x] **Step 1: Write failing registry-metadata tests.** Extend `MethodCapabilitiesTest` before production edits:
   - `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, and `isEmpty` have `returnDomain == TypeDomain.BOOLEAN`.
   - `trim`, `replace`, `toLowerCase`, `toUpperCase`, `concat`, and `String.valueOf` have `returnDomain == TypeDomain.STRING`.
   - `sqrt` and every `java.lang.Math` capability have `returnDomain == TypeDomain.REAL`.
@@ -589,7 +589,7 @@ Run:
 
 Expected: FAIL because `MethodCapability` has no return-domain or input-constraint metadata yet.
 
-- [ ] **Step 2: Add capability metadata.** Extend `MethodCapability` with the metadata the consumers currently hardcode:
+- [x] **Step 2: Add capability metadata.** Extend `MethodCapability` with the metadata the consumers currently hardcode:
 
 ```java
 public final class MethodCapability {
@@ -633,7 +633,7 @@ Update `MethodCapabilities` helper methods so string predicate calls set `receiv
 
 Run the MethodCapabilities test from Step 1 — expect PASS.
 
-- [ ] **Step 3: Route renderer type checks through capability metadata.** In `ModelToJavaTransformer`, replace `isStringReturningInvocation` and the hardcoded Math check in `isFloatingPoint` with a shared domain helper:
+- [x] **Step 3: Route renderer type checks through capability metadata.** In `ModelToJavaTransformer`, replace `isStringReturningInvocation` and the hardcoded Math check in `isFloatingPoint` with a shared domain helper:
 
 ```java
 private static TypeDomain expressionDomain(Expression expression) {
@@ -663,7 +663,7 @@ Run:
 
 Expected: PASS; the rendered Java strings should not change.
 
-- [ ] **Step 4: Route `StringDomainPlanner` through capability metadata.** In `deriveConstraints`, look up `MethodCapabilities.get(invocation.method)` and ignore the clause unless the capability is non-null and `inputGeneratable`. Replace the string-method `switch` with `capability.inputConstraintKind`. Add `EMPTY` handling for `isEmpty()` with zero arguments so `s.isEmpty()` structurally consumes the clause and emits `Arbitraries.of("")` rather than relying only on the residual filter.
+- [x] **Step 4: Route `StringDomainPlanner` through capability metadata.** In `deriveConstraints`, look up `MethodCapabilities.get(invocation.method)` and ignore the clause unless the capability is non-null and `inputGeneratable`. Replace the string-method `switch` with `capability.inputConstraintKind`. Add `EMPTY` handling for `isEmpty()` with zero arguments so `s.isEmpty()` structurally consumes the clause and emits `Arbitraries.of("")` rather than relying only on the residual filter.
 
 Add/extend `StringDomainPlannerTest` first:
 
@@ -693,7 +693,7 @@ Expected: FAIL before the planner change, PASS after it.
 
 **Files:** Modify `src/main/java/teralizer/transformer/SpfToModelTransformer.java`, `src/main/java/teralizer/domain/Operation.java`; tests in `SpfToModelTransformerStringInvocationTest.java`, `ModelFolderTest.java`, and `OperatorTest.java`.
 
-- [ ] **Step 1: Write failing ingestion-admission tests.** Extend `SpfToModelTransformerStringInvocationTest` before production edits:
+- [x] **Step 1: Write failing ingestion-admission tests.** Extend `SpfToModelTransformerStringInvocationTest` before production edits:
 
 ```java
 @Example
@@ -717,7 +717,7 @@ Run:
 
 Expected: FAIL because `SUBSTRING` currently becomes `Invocation(..., "substring", ...)`.
 
-- [ ] **Step 2: Gate every string invocation constructed by SPF ingestion through `MethodCapabilities`.** Add helpers inside `ConstraintExpressionFactoryVisitor`:
+- [x] **Step 2: Gate every string invocation constructed by SPF ingestion through `MethodCapabilities`.** Add helpers inside `ConstraintExpressionFactoryVisitor`:
 
 ```java
 private static Invocation instanceInvocation(Expression receiver, String method, List<Expression> args) {
@@ -741,7 +741,7 @@ Use these helpers in `invocationForComparator` and both `invocationForOperator` 
 
 Run the test from Step 1 — expect PASS.
 
-- [ ] **Step 3: Make `Operation` binary-only.** Replace `ModelFolderTest.operationWithNullOperandFoldsWithoutExploding` with a failing invariant test:
+- [x] **Step 3: Make `Operation` binary-only.** Replace `ModelFolderTest.operationWithNullOperandFoldsWithoutExploding` with a failing invariant test:
 
 ```java
 @Example

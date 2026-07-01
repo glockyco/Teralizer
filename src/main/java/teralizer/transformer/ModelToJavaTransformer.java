@@ -209,13 +209,13 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
         }
         String argList = String.join(", ", args);
         if (invocation.receiver != null) {
-            if (capability.staticQualifier != null) {
+            if (capability.staticQualifier != null || capability.receiverDomain == null) {
                 throw new NonGeneralizableExpressionException(
                     "Cannot render static call '" + invocation.method + "' as an instance invocation.");
             }
-            if (!isStringExpression(invocation.receiver)) {
+            if (expressionDomain(invocation.receiver) != capability.receiverDomain) {
                 throw new NonGeneralizableExpressionException(
-                    "Cannot render string call '" + invocation.method + "' on a non-string receiver.");
+                    "Cannot render call '" + invocation.method + "' on a non-" + capability.receiverDomain + " receiver.");
             }
             for (Expression arg : invocation.args) {
                 if (!isStringExpression(arg)) {
@@ -313,42 +313,26 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     }
 
     private static boolean isStringExpression(Expression expression) {
-        return expression instanceof Variable
-            && ((Variable) expression).domain == TypeDomain.STRING
-            || expression instanceof Constant
-            && ((Constant) expression).domain == TypeDomain.STRING
-            || (expression instanceof Invocation && isStringReturningInvocation((Invocation) expression));
+        return expressionDomain(expression) == TypeDomain.STRING;
     }
 
-    private static boolean isStringReturningInvocation(Invocation invocation) {
-        if (invocation.receiver == null) {
-            return "java.lang.String".equals(invocation.qualifier) && "valueOf".equals(invocation.method);
+    private static TypeDomain expressionDomain(Expression expression) {
+        if (expression instanceof Variable) {
+            return ((Variable) expression).domain;
         }
-        switch (invocation.method) {
-            case "concat":
-            case "trim":
-            case "replace":
-            case "toLowerCase":
-            case "toUpperCase":
-                return true;
-            default:
-                return false;
+        if (expression instanceof Constant) {
+            return ((Constant) expression).domain;
         }
+        if (expression instanceof Invocation) {
+            MethodCapability capability = MethodCapabilities.get(((Invocation) expression).method);
+            return capability == null || !capability.outputRenderable ? null : capability.returnDomain;
+        }
+        return null;
     }
 
     private static boolean isFloatingPoint(Expression expression) {
-        if (expression instanceof Variable
-            && ((Variable) expression).domain == TypeDomain.REAL
-            || expression instanceof Constant
-            && ((Constant) expression).domain == TypeDomain.REAL) {
+        if (expressionDomain(expression) == TypeDomain.REAL) {
             return true;
-        }
-        if (expression instanceof Invocation) {
-            Invocation invocation = (Invocation) expression;
-            MethodCapability capability = MethodCapabilities.get(invocation.method);
-            return capability != null
-                && capability.outputRenderable
-                && "java.lang.Math".equals(capability.staticQualifier);
         }
         if (expression instanceof Operation) {
             Operation inner = (Operation) expression;

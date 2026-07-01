@@ -97,4 +97,16 @@ public class SpfToModelTransformerStringInvocationTest {
                 Arrays.asList(new Constant("a", TypeDomain.STRING), new Constant("b", TypeDomain.STRING))),
             new SpfToModelTransformer().transform(expression));
     }
+
+    @Example
+    void unsupportedOprlistStringOperatorIsRejectedAtIngestion() {
+        StringExpression expression = new StringSymbolic("value_1_SYMSTRING")._subString(1);
+
+        try {
+            new SpfToModelTransformer().transform(expression);
+            Assert.fail("expected unsupported substring to be refused before a Model node is built");
+        } catch (UnsupportedSpfTermException expected) {
+            Assert.assertTrue(expected.getMessage().contains("substring"));
+        }
+    }
 }

@@ -108,30 +108,46 @@ public class StringDomainPlanner implements DomainPlanner {
                 Invocation invocation = (Invocation) expression;
                 if (!(invocation.receiver instanceof Variable)
                     || ((Variable) invocation.receiver).domain != TypeDomain.STRING
-                    || !((Variable) invocation.receiver).name.equals(name)
-                    || invocation.args.size() != 1
-                    || !(invocation.args.get(0) instanceof Constant)
-                    || ((Constant) invocation.args.get(0)).domain != TypeDomain.STRING) {
+                    || !((Variable) invocation.receiver).name.equals(name)) {
                     continue;
                 }
-                String literal = transformer.transform(invocation.args.get(0));
-                switch (invocation.method) {
-                    case "equals":
+                MethodCapability capability = MethodCapabilities.get(invocation.method);
+                if (capability == null || !capability.inputGeneratable) {
+                    continue;
+                }
+                String literal;
+                if (capability.inputConstraintKind == MethodCapability.InputConstraintKind.EMPTY) {
+                    if (!invocation.args.isEmpty()) {
+                        continue;
+                    }
+                    literal = transformer.transform(new Constant("", TypeDomain.STRING));
+                } else {
+                    if (invocation.args.size() != 1
+                        || !(invocation.args.get(0) instanceof Constant)
+                        || ((Constant) invocation.args.get(0)).domain != TypeDomain.STRING) {
+                        continue;
+                    }
+                    literal = transformer.transform(invocation.args.get(0));
+                }
+                switch (capability.inputConstraintKind) {
+                    case EQUALITY:
+                    case EMPTY:
                         derived.equality = literal;
                         derived.equalityId = clause.getId();
                         break;
-                    case "startsWith":
+                    case PREFIX:
                         derived.prefix = literal;
                         derived.prefixId = clause.getId();
                         break;
-                    case "endsWith":
+                    case SUFFIX:
                         derived.suffix = literal;
                         derived.suffixId = clause.getId();
                         break;
-                    case "contains":
+                    case CONTAINS:
                         derived.contains = literal;
                         derived.containsId = clause.getId();
                         break;
+                    case NONE:
                     default:
                         break;
                 }

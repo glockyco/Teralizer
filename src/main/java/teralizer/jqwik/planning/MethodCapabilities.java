@@ -3,6 +3,7 @@ package teralizer.jqwik.planning;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import teralizer.domain.TypeDomain;
 
 public final class MethodCapabilities {
     private static final Map<String, MethodCapability> CAPABILITIES = capabilities();
@@ -29,20 +30,20 @@ public final class MethodCapabilities {
 
     private static Map<String, MethodCapability> capabilities() {
         Map<String, MethodCapability> capabilities = new LinkedHashMap<>();
-        instance(capabilities, "equals", true, true);
-        instance(capabilities, "equalsIgnoreCase", false, true);
-        instance(capabilities, "startsWith", true, true);
-        instance(capabilities, "endsWith", true, true);
-        instance(capabilities, "contains", true, true);
-        instance(capabilities, "isEmpty", true, true);
-        instance(capabilities, "concat", false, true);
-        instance(capabilities, "trim", false, true);
-        instance(capabilities, "replace", false, true);
-        instance(capabilities, "toLowerCase", false, true);
-        instance(capabilities, "toUpperCase", false, true);
-        instance(capabilities, "length", false, false);
-        instance(capabilities, "indexOf", false, false);
-        instance(capabilities, "lastIndexOf", false, false);
+        stringPredicate(capabilities, "equals", true, MethodCapability.InputConstraintKind.EQUALITY);
+        stringPredicate(capabilities, "equalsIgnoreCase", false, MethodCapability.InputConstraintKind.NONE);
+        stringPredicate(capabilities, "startsWith", true, MethodCapability.InputConstraintKind.PREFIX);
+        stringPredicate(capabilities, "endsWith", true, MethodCapability.InputConstraintKind.SUFFIX);
+        stringPredicate(capabilities, "contains", true, MethodCapability.InputConstraintKind.CONTAINS);
+        stringPredicate(capabilities, "isEmpty", true, MethodCapability.InputConstraintKind.EMPTY);
+        stringTransform(capabilities, "concat");
+        stringTransform(capabilities, "trim");
+        stringTransform(capabilities, "replace");
+        stringTransform(capabilities, "toLowerCase");
+        stringTransform(capabilities, "toUpperCase");
+        stringNumeric(capabilities, "length");
+        stringNumeric(capabilities, "indexOf");
+        stringNumeric(capabilities, "lastIndexOf");
 
         math(capabilities, "sqrt");
         math(capabilities, "pow");
@@ -55,28 +56,61 @@ public final class MethodCapabilities {
         math(capabilities, "acos");
         math(capabilities, "atan");
         math(capabilities, "atan2");
-        staticMethod(capabilities, "valueOf", "java.lang.String", false, true);
+        staticMethod(capabilities, "valueOf", "java.lang.String", TypeDomain.STRING, false, true);
         return Collections.unmodifiableMap(capabilities);
+    }
+
+    private static void stringPredicate(
+        Map<String, MethodCapability> capabilities,
+        String method,
+        boolean inputGeneratable,
+        MethodCapability.InputConstraintKind inputConstraintKind) {
+        instance(capabilities, method, TypeDomain.BOOLEAN, inputGeneratable, true, inputConstraintKind);
+    }
+
+    private static void stringTransform(Map<String, MethodCapability> capabilities, String method) {
+        instance(capabilities, method, TypeDomain.STRING, false, true, MethodCapability.InputConstraintKind.NONE);
+    }
+
+    private static void stringNumeric(Map<String, MethodCapability> capabilities, String method) {
+        instance(capabilities, method, TypeDomain.INTEGER, false, false, MethodCapability.InputConstraintKind.NONE);
     }
 
     private static void instance(
         Map<String, MethodCapability> capabilities,
         String method,
+        TypeDomain returnDomain,
         boolean inputGeneratable,
-        boolean outputRenderable) {
-        capabilities.put(method, new MethodCapability(method, null, inputGeneratable, outputRenderable));
+        boolean outputRenderable,
+        MethodCapability.InputConstraintKind inputConstraintKind) {
+        capabilities.put(method, new MethodCapability(
+            method,
+            null,
+            TypeDomain.STRING,
+            returnDomain,
+            inputGeneratable,
+            outputRenderable,
+            inputConstraintKind));
     }
 
     private static void math(Map<String, MethodCapability> capabilities, String method) {
-        staticMethod(capabilities, method, "java.lang.Math", false, true);
+        staticMethod(capabilities, method, "java.lang.Math", TypeDomain.REAL, false, true);
     }
 
     private static void staticMethod(
         Map<String, MethodCapability> capabilities,
         String method,
         String staticQualifier,
+        TypeDomain returnDomain,
         boolean inputGeneratable,
         boolean outputRenderable) {
-        capabilities.put(method, new MethodCapability(method, staticQualifier, inputGeneratable, outputRenderable));
+        capabilities.put(method, new MethodCapability(
+            method,
+            staticQualifier,
+            null,
+            returnDomain,
+            inputGeneratable,
+            outputRenderable,
+            MethodCapability.InputConstraintKind.NONE));
     }
 }
