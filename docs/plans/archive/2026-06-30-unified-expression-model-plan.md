@@ -1,9 +1,10 @@
 ---
 title: Unified Expression Model — Implementation Plan
 type: plan
-status: active
+status: implemented
 created: 2026-06-30
 parent: 2026-06-30-unified-expression-model
+archived: 2026-07-01
 ---
 
 # Unified Expression Model Implementation Plan
@@ -953,7 +954,7 @@ omp-plans index && omp-plans check
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit Phase 4.** Commit the doc sync, Phase-4 verification checkboxes, and regenerated index with subject `docs(plans): finalize unified expression model` and a body explaining that registry metadata now drives rendering/planning/admission, temporary recovery now walks typed model variables instead of JSON, and the no-PIT JARVIS guardrail was used.
+- [x] **Step 8: Commit Phase 4.** Commit the doc sync, Phase-4 verification checkboxes, and regenerated index with subject `docs(plans): finalize unified expression model` and a body explaining that registry metadata now drives rendering/planning/admission, temporary recovery now walks typed model variables instead of JSON, and the no-PIT JARVIS guardrail was used.
 
 ---
 
