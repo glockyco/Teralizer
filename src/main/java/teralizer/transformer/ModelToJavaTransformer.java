@@ -298,6 +298,10 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 return "(" + left + ".equals(" + right + "))";
             case NOTEQUALS:
                 return "(!" + left + ".equals(" + right + "))";
+            case EQUALSIGNORECASE:
+                return "(" + left + ".equalsIgnoreCase(" + right + "))";
+            case NOTEQUALSIGNORECASE:
+                return "(!" + left + ".equalsIgnoreCase(" + right + "))";
             case STARTSWITH:
                 return "(" + left + ".startsWith(" + right + "))";
             case NOTSTARTSWITH:
@@ -336,6 +340,8 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
         switch (op) {
             case EQUALS:
             case NOTEQUALS:
+            case EQUALSIGNORECASE:
+            case NOTEQUALSIGNORECASE:
             case STARTSWITH:
             case NOTSTARTSWITH:
             case ENDSWITH:

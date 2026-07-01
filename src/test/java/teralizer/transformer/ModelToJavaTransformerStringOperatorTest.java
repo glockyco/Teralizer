@@ -32,6 +32,16 @@ public class ModelToJavaTransformerStringOperatorTest {
     }
 
     @Example
+    void rendersEqualsIgnoreCase() {
+        Assert.assertEquals("(_p_.s.equalsIgnoreCase(\"foo\"))", render(Operator.EQUALSIGNORECASE));
+    }
+
+    @Example
+    void rendersNotEqualsIgnoreCase() {
+        Assert.assertEquals("(!_p_.s.equalsIgnoreCase(\"foo\"))", render(Operator.NOTEQUALSIGNORECASE));
+    }
+
+    @Example
     void rendersStartsWith() {
         Assert.assertEquals("(_p_.s.startsWith(\"foo\"))", render(Operator.STARTSWITH));
     }
