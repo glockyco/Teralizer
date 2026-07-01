@@ -5,6 +5,7 @@ import teralizer.domain.Error;
 import teralizer.domain.*;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
 public class JsonToModelTransformer {
     private final Gson gson;
@@ -27,6 +28,8 @@ public class JsonToModelTransformer {
         builder.registerTypeAdapter(SymbolicIntegerFunction.class, new SymbolicIntegerFunctionDeserializer());
         builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionDeserializer());
         builder.registerTypeAdapter(SymbolicStringFunction.class, new SymbolicStringFunctionDeserializer());
+        builder.registerTypeAdapter(Invocation.class, new InvocationDeserializer());
+        builder.registerTypeAdapter(Not.class, new NotDeserializer());
         builder.registerTypeAdapter(teralizer.domain.Error.class, new ErrorDeserializer());
         builder.registerTypeAdapter(ExceptionModel.class, new ExceptionDeserializer());
 
@@ -174,6 +177,32 @@ public class JsonToModelTransformer {
             Expression[] args = context.deserialize(jsonObject.get("args"), Expression[].class);
 
             return new SymbolicStringFunction(name, args);
+        }
+    }
+
+    private static class InvocationDeserializer implements JsonDeserializer<Invocation> {
+        @Override
+        public Invocation deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            Expression receiver = context.deserialize(jsonObject.get("receiver"), Expression.class);
+            JsonElement qualifierElement = jsonObject.get("qualifier");
+            String qualifier = qualifierElement == null || qualifierElement.isJsonNull()
+                ? null
+                : qualifierElement.getAsString();
+            String method = jsonObject.get("method").getAsString();
+            Expression[] args = context.deserialize(jsonObject.get("args"), Expression[].class);
+
+            return new Invocation(receiver, qualifier, method, Arrays.asList(args));
+        }
+    }
+
+    private static class NotDeserializer implements JsonDeserializer<Not> {
+        @Override
+        public Not deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            Expression operand = context.deserialize(jsonObject.get("operand"), Expression.class);
+            return new Not(operand);
         }
     }
 

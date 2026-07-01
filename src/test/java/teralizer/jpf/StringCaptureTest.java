@@ -39,7 +39,10 @@ class StringCaptureTest {
         String spec = capture.getInputSpecificationJson();
         assertNotNull(spec, "the String path condition must be captured");
         assertTrue(
-            spec.contains("\"symbol\": \"equals\"") && spec.contains("\"value\": \"foo\""),
+            spec.contains("\"_type\": \"Invocation\"")
+                && spec.contains("\"method\": \"equals\"")
+                && spec.contains("\"name\": \"value\"")
+                && spec.contains("\"value\": \"foo\""),
             "the captured constraint must be value.equals(\"foo\") on the true branch, was: " + spec
         );
     }
@@ -62,7 +65,11 @@ class StringCaptureTest {
         String spec = capture.getInputSpecificationJson();
         assertNotNull(spec, "the String path condition must be captured");
         assertTrue(
-            spec.contains("\"symbol\": \"notequals\"") && spec.contains("\"value\": \"foo\""),
+            spec.contains("\"_type\": \"Not\"")
+                && spec.contains("\"_type\": \"Invocation\"")
+                && spec.contains("\"method\": \"equals\"")
+                && spec.contains("\"name\": \"value\"")
+                && spec.contains("\"value\": \"foo\""),
             "the captured constraint must be the negation value != \"foo\", satisfied by \"bar\", was: " + spec
         );
     }

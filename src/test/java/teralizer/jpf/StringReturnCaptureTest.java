@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Pins capture of a symbolic {@link String} return as an output oracle. An identity return
  * ({@code return s}) is captured as the parameter itself; a computed return ({@code s.concat("!")})
- * is captured as a concat {@code Operation} rather than crashing the listener transform. Regression
+ * is captured as a concat {@code Invocation} rather than crashing the listener transform. Regression
  * guard for {@code SpfToModelTransformer} representing SPF's derived String operators and for the
- * {@code CONCAT} fold arm.
+ * {@code Invocation} fold arm.
  */
 class StringReturnCaptureTest {
 
@@ -40,12 +40,15 @@ class StringReturnCaptureTest {
     }
 
     @Test
-    void capturesConcatStringReturnAsOperation(@TempDir Path workDir) {
+    void capturesConcatStringReturnAsInvocation(@TempDir Path workDir) {
         String spec = run(workDir, "concatWrapper", "concatTail").getOutputSpecificationJson();
         assertNotNull(spec, "computed String return must be captured, not crash the transform");
         assertTrue(
-            spec.contains("\"symbol\": \"concat\"") && spec.contains("\"value\": \"!\""),
-            "concat return must be a concat Operation over the parameter, was: " + spec
+            spec.contains("\"_type\": \"Invocation\"")
+                && spec.contains("\"method\": \"concat\"")
+                && spec.contains("\"name\": \"value\"")
+                && spec.contains("\"value\": \"!\""),
+            "concat return must be a concat Invocation over the parameter, was: " + spec
         );
     }
 }

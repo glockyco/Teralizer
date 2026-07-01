@@ -4,6 +4,9 @@ import gov.nasa.jpf.symbc.numeric.ConstraintExpressionVisitor;
 import teralizer.domain.Error;
 import teralizer.domain.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Stack;
 
 public class SpfToModelTransformer {
@@ -107,10 +110,8 @@ public class SpfToModelTransformer {
             }
 
             Expression right = this.stack.pop();
-            Expression left = this.stack.pop();
-            Operator op = Operator.get(constraint.getComparator().toString());
-
-            Operation top = new Operation(left, op, right);
+            Expression left = constraint.getLeft() == null ? null : this.stack.pop();
+            Expression top = invocationForComparator(constraint.getComparator(), left, right);
 
             if (and == null) {
                 this.stack.push(top);
@@ -130,13 +131,18 @@ public class SpfToModelTransformer {
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.string.DerivedStringExpression expression) {
+            if (expression.oprlist != null) {
+                List<Expression> operands = new ArrayList<>(expression.oprlist.length);
+                for (gov.nasa.jpf.symbc.numeric.Expression operand : expression.oprlist) {
+                    operands.add(transformOperand(operand));
+                }
+                this.stack.push(invocationForOperator(expression.op, operands));
+                return;
+            }
+
             Expression right = expression.right == null ? null : this.stack.pop();
             Expression left = expression.left == null ? null : this.stack.pop();
-            Operator op = Operator.get(expression.op.toString());
-
-            // @TODO: Add proper handling for `DerivedStringExpression.oprlist`.
-
-            this.stack.push(new Operation(left, op, right));
+            this.stack.push(invocationForOperator(expression.op, left, right));
         }
 
         @Override
@@ -164,6 +170,110 @@ public class SpfToModelTransformer {
             Operator op = Operator.get(expression.getOp().toString());
 
             this.stack.push(new Operation(left, op, right));
+        }
+
+        private Expression transformOperand(gov.nasa.jpf.symbc.numeric.Expression expression) {
+            ConstraintExpressionFactoryVisitor visitor = new ConstraintExpressionFactoryVisitor();
+            expression.accept(visitor);
+            return visitor.getExpression();
+        }
+
+        private static Expression invocationForComparator(
+            gov.nasa.jpf.symbc.string.StringComparator comparator,
+            Expression left,
+            Expression right) {
+            if (isEqualityComparator(comparator) && left instanceof ConstantString && !(right instanceof ConstantString)) {
+                Expression originalLeft = left;
+                left = right;
+                right = originalLeft;
+            }
+            switch (comparator) {
+                case EQUALS:
+                    return new Invocation(left, null, "equals", Collections.singletonList(right));
+                case NOTEQUALS:
+                    return new Not(new Invocation(left, null, "equals", Collections.singletonList(right)));
+                case EQUALSIGNORECASE:
+                    return new Invocation(left, null, "equalsIgnoreCase", Collections.singletonList(right));
+                case NOTEQUALSIGNORECASE:
+                    return new Not(new Invocation(left, null, "equalsIgnoreCase", Collections.singletonList(right)));
+                case STARTSWITH:
+                    return new Invocation(left, null, "startsWith", Collections.singletonList(right));
+                case NOTSTARTSWITH:
+                    return new Not(new Invocation(left, null, "startsWith", Collections.singletonList(right)));
+                case ENDSWITH:
+                    return new Invocation(left, null, "endsWith", Collections.singletonList(right));
+                case NOTENDSWITH:
+                    return new Not(new Invocation(left, null, "endsWith", Collections.singletonList(right)));
+                case CONTAINS:
+                    return new Invocation(left, null, "contains", Collections.singletonList(right));
+                case NOTCONTAINS:
+                    return new Not(new Invocation(left, null, "contains", Collections.singletonList(right)));
+                case EMPTY:
+                    return new Invocation(left == null ? right : left, null, "isEmpty", Collections.emptyList());
+                case NOTEMPTY:
+                    return new Not(new Invocation(left == null ? right : left, null, "isEmpty", Collections.emptyList()));
+                default:
+                    throw new UnsupportedSpfTermException(
+                        "String comparator '" + comparator + "' is not mapped to a Model invocation.");
+            }
+        }
+
+        private static boolean isEqualityComparator(gov.nasa.jpf.symbc.string.StringComparator comparator) {
+            switch (comparator) {
+                case EQUALS:
+                case NOTEQUALS:
+                case EQUALSIGNORECASE:
+                case NOTEQUALSIGNORECASE:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static Expression invocationForOperator(
+            gov.nasa.jpf.symbc.string.StringOperator operator,
+            Expression left,
+            Expression right) {
+            switch (operator) {
+                case CONCAT:
+                    return new Invocation(left, null, "concat", Collections.singletonList(right));
+                case TRIM:
+                    return new Invocation(right, null, "trim", Collections.emptyList());
+                default:
+                    throw new UnsupportedSpfTermException(
+                        "String operator '" + operator + "' is not mapped from left/right operands.");
+            }
+        }
+
+        private static Expression invocationForOperator(
+            gov.nasa.jpf.symbc.string.StringOperator operator,
+            List<Expression> operands) {
+            if (operator == gov.nasa.jpf.symbc.string.StringOperator.VALUEOF) {
+                return new Invocation(null, "java.lang.String", "valueOf", operands);
+            }
+            if (operands.isEmpty()) {
+                throw new UnsupportedSpfTermException(
+                    "String operator '" + operator + "' has no receiver operand.");
+            }
+            Expression receiver = operands.get(0);
+            List<Expression> args = operands.subList(1, operands.size());
+            switch (operator) {
+                case REPLACE:
+                    return new Invocation(receiver, null, "replace", args);
+                case REPLACEFIRST:
+                    return new Invocation(receiver, null, "replaceFirst", args);
+                case REPLACEALL:
+                    return new Invocation(receiver, null, "replaceAll", args);
+                case SUBSTRING:
+                    return new Invocation(receiver, null, "substring", args);
+                case TOLOWERCASE:
+                    return new Invocation(receiver, null, "toLowerCase", args);
+                case TOUPPERCASE:
+                    return new Invocation(receiver, null, "toUpperCase", args);
+                default:
+                    throw new UnsupportedSpfTermException(
+                        "String operator '" + operator + "' is not mapped from oprlist operands.");
+            }
         }
 
         @Override

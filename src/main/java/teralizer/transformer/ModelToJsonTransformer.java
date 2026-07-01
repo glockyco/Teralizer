@@ -28,6 +28,8 @@ public class ModelToJsonTransformer {
         builder.registerTypeAdapter(SymbolicIntegerFunction.class, new SymbolicIntegerFunctionSerializer());
         builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionSerializer());
         builder.registerTypeAdapter(SymbolicStringFunction.class, new SymbolicStringFunctionSerializer());
+        builder.registerTypeAdapter(Invocation.class, new InvocationSerializer());
+        builder.registerTypeAdapter(Not.class, new NotSerializer());
         builder.registerTypeAdapter(teralizer.domain.Error.class, new ErrorSerializer());
         builder.registerTypeAdapter(ExceptionModel.class, new ExceptionSerializer());
 
@@ -212,6 +214,38 @@ public class ModelToJsonTransformer {
             jsonObject.add("_type", new JsonPrimitive(function.getClass().getSimpleName()));
             jsonObject.add("name", new JsonPrimitive(function.name));
             jsonObject.add("args", jsonArgs);
+
+            return jsonObject;
+        }
+    }
+
+    private static class InvocationSerializer implements JsonSerializer<Invocation> {
+        @Override
+        public JsonElement serialize(Invocation invocation, Type type, JsonSerializationContext context) {
+            JsonObject jsonObject = new JsonObject();
+
+            JsonArray jsonArgs = new JsonArray(invocation.args.size());
+            for (Expression arg : invocation.args) {
+                jsonArgs.add(context.serialize(arg));
+            }
+
+            jsonObject.add("_type", new JsonPrimitive(invocation.getClass().getSimpleName()));
+            jsonObject.add("receiver", context.serialize(invocation.receiver));
+            jsonObject.add("qualifier", invocation.qualifier == null ? JsonNull.INSTANCE : new JsonPrimitive(invocation.qualifier));
+            jsonObject.add("method", new JsonPrimitive(invocation.method));
+            jsonObject.add("args", jsonArgs);
+
+            return jsonObject;
+        }
+    }
+
+    private static class NotSerializer implements JsonSerializer<Not> {
+        @Override
+        public JsonElement serialize(Not not, Type type, JsonSerializationContext context) {
+            JsonObject jsonObject = new JsonObject();
+
+            jsonObject.add("_type", new JsonPrimitive(not.getClass().getSimpleName()));
+            jsonObject.add("operand", context.serialize(not.operand));
 
             return jsonObject;
         }

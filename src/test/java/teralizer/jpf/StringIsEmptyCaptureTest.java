@@ -39,7 +39,10 @@ class StringIsEmptyCaptureTest {
         String spec = capture.getInputSpecificationJson();
         assertNotNull(spec, "the isEmpty constraint must be captured");
         assertTrue(
-            spec.contains("\"symbol\": \"equals\"") && spec.contains("\"value\": \"\""),
+            spec.contains("\"_type\": \"Invocation\"")
+                && spec.contains("\"method\": \"equals\"")
+                && spec.contains("\"name\": \"value\"")
+                && spec.contains("\"value\": \"\""),
             "empty branch must capture value.equals(\"\"), was: " + spec
         );
     }
@@ -52,7 +55,11 @@ class StringIsEmptyCaptureTest {
         String spec = capture.getInputSpecificationJson();
         assertNotNull(spec, "the negated isEmpty constraint must be captured");
         assertTrue(
-            spec.contains("\"symbol\": \"notequals\"") && spec.contains("\"value\": \"\""),
+            spec.contains("\"_type\": \"Not\"")
+                && spec.contains("\"_type\": \"Invocation\"")
+                && spec.contains("\"method\": \"equals\"")
+                && spec.contains("\"name\": \"value\"")
+                && spec.contains("\"value\": \"\""),
             "non-empty branch must capture value != \"\", was: " + spec
         );
     }

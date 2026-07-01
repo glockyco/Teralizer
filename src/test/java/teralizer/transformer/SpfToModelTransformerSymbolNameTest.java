@@ -11,10 +11,9 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.VariableInteger;
 import teralizer.domain.VariableReal;
+import teralizer.domain.Invocation;
 import teralizer.domain.VariableString;
 import teralizer.domain.ConstantString;
-import teralizer.domain.Operation;
-import teralizer.domain.Operator;
 
 public class SpfToModelTransformerSymbolNameTest {
 
@@ -55,7 +54,7 @@ public class SpfToModelTransformerSymbolNameTest {
         );
 
         Assert.assertEquals(
-            new Operation(new ConstantString("ok"), Operator.EQUALS, new VariableString("_ctor_label_1_text")),
+            new Invocation(new VariableString("_ctor_label_1_text"), null, "equals", java.util.Collections.singletonList(new ConstantString("ok"))),
             transformer.transform(pathCondition)
         );
     }

@@ -198,13 +198,13 @@ public final class MethodCapability {
 
 **Files:** Modify `SpfToModelTransformer.java`; Test `SpfToModelTransformerStringTest.java` + the harness capture tests.
 
-- [ ] **Step 1: Write failing tests.** Feed the visitor a `StringConstraint` for `s.equals("foo")` and assert the produced model is `Invocation(VariableString "s", null, "equals", [ConstantString "foo"])`; the false branch is `Not(Invocation(... "equals" ...))`; a `DerivedStringExpression(TRIM)` (unary, `right`=receiver) → `Invocation(receiver, null, "trim", [])`; a `DerivedStringExpression` with `oprlist` (`replace`) → `Invocation(receiver, null, "replace", [arg0, arg1])` (no drop).
+- [x] **Step 1: Write failing tests.** Feed the visitor a `StringConstraint` for `s.equals("foo")` and assert the produced model is `Invocation(VariableString "s", null, "equals", [ConstantString "foo"])`; the false branch is `Not(Invocation(... "equals" ...))`; canonicalize reversed equality so the symbolic expression is the receiver; unary `EMPTY`/`NOTEMPTY` become `isEmpty`/`Not(isEmpty)`; a `DerivedStringExpression(TRIM)` (unary, `right`=receiver) → `Invocation(receiver, null, "trim", [])`; a `DerivedStringExpression` with `oprlist` (`replace`) → `Invocation(receiver, null, "replace", [arg0, arg1])` (no drop); `Invocation`/`Not` serialize with `_type` and round-trip.
 
-- [ ] **Step 2: Rewrite `postVisit(StringConstraint)` and `postVisit(DerivedStringExpression)`** to emit `Invocation`/`Not`, reading operands from `left`/`right`/`oprlist` uniformly (pop the visited children; map the SPF `StringOperator`/`StringComparator` symbol → Java method name via a small switch; wrap the false-branch comparator in `Not`). An unmapped symbol throws a typed `UnsupportedTerm` (no silent drop). Delete the `Operator.get(...)`-based string path and the `oprlist` TODO.
+- [x] **Step 2: Rewrite `postVisit(StringConstraint)` and `postVisit(DerivedStringExpression)`** to emit `Invocation`/`Not`, reading operands from `left`/`right`/`oprlist` uniformly (pop visited children; transform `oprlist` operands directly because SPF does not visit them; map the SPF `StringOperator`/`StringComparator` symbol → Java method name via a small switch; wrap the false-branch comparator in `Not`). Null-guard SPF unary string constraints before visiting/popping `left`. An unmapped symbol throws a typed `UnsupportedTerm` (no silent drop). Delete the `Operator.get(...)`-based string path and the `oprlist` TODO.
 
-- [ ] **Step 3: Run, expect PASS**; re-run `StringCaptureTest`, `StringReturnCaptureTest`, `StringIsEmptyCaptureTest` (update their JSON assertions to the new node shapes).
+- [x] **Step 3: Run, expect PASS**; re-run `StringCaptureTest`, `StringReturnCaptureTest`, `StringIsEmptyCaptureTest` (update their JSON assertions to the new node shapes).
 
-- [ ] **Step 4: Commit.** `refactor(transformer): total string ingestion into Invocation/Not`
+- [x] **Step 4: Commit.** `refactor(transformer): total string ingestion into Invocation/Not`
 
 ### Task 5: `trim`, `toLowerCase`, `toUpperCase`, `replace`
 
