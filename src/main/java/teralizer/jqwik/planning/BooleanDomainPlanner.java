@@ -21,6 +21,11 @@ public class BooleanDomainPlanner implements DomainPlanner {
     }
 
     @Override
+    public boolean supportsReturn(TypeDomain domain) {
+        return supports(domain);
+    }
+
+    @Override
     public ParameterGenerationPlan plan(MethodParameter parameter, PlanningContext context) {
         String name = parameter.getName();
         Optional<Value> argument = context.getArguments().containsKey(name)

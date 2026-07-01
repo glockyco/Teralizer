@@ -18,6 +18,11 @@ public class NumericDomainPlanner implements DomainPlanner {
     }
 
     @Override
+    public boolean supportsReturn(TypeDomain domain) {
+        return supports(domain);
+    }
+
+    @Override
     public ParameterGenerationPlan plan(MethodParameter parameter, PlanningContext context) {
         TypeDomain domain = TypeDomain.from(parameter.getType());
         Optional<Value> argument = context.getArguments().containsKey(parameter.getName())

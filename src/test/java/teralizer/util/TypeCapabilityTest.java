@@ -31,8 +31,6 @@ public class TypeCapabilityTest {
 
     @Example
     void rejectsGeneratedInputForUnsupportedTypes() {
-        Assert.assertFalse(TypeCapability.supportsGeneratedInput("String"));
-        Assert.assertFalse(TypeCapability.supportsGeneratedInput("java.lang.String"));
         Assert.assertFalse(TypeCapability.supportsGeneratedInput("int[]"));
         Assert.assertFalse(TypeCapability.supportsGeneratedInput("Integer"));   // simple wrapper, maps to OBJECT
         Assert.assertFalse(TypeCapability.supportsGeneratedInput("java.util.List"));
@@ -40,7 +38,16 @@ public class TypeCapabilityTest {
     }
 
     @Example
-    void supportsReturnValueMatchesInputSupportForRepresentativeSubset() {
+    void supportsStringInputButNotReturnYet() {
+        Assert.assertTrue(TypeCapability.supportsGeneratedInput("String"));
+        Assert.assertTrue(TypeCapability.supportsGeneratedInput("java.lang.String"));
+        // A symbolic String return oracle is not captured yet, so String is input-only.
+        Assert.assertFalse(TypeCapability.supportsReturnValue("String"));
+        Assert.assertFalse(TypeCapability.supportsReturnValue("java.lang.String"));
+    }
+
+    @Example
+    void supportsReturnValueForRepresentativeSubset() {
         Assert.assertTrue(TypeCapability.supportsReturnValue("int"));
         Assert.assertTrue(TypeCapability.supportsReturnValue("boolean"));
         Assert.assertFalse(TypeCapability.supportsReturnValue("String"));
