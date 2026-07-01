@@ -79,6 +79,18 @@ carries the full status/parent tree and `archive/` the retired docs.
   transcendentals → `NonGeneralizableExpressionException`, loop-style assertions → `DEFER`);
   spf-eval listener ports — P3 bit-exact float/NaN-payload capture, P4 heap-PC capture for
   object/boxed params, P5 `header.toString()` vs `stringPC()` for raw PC logging.
+- Non-value-oracle generalization (deferred, low priority): generalize tests whose MUT yields no
+  comparable value, replacing the symbolic-output oracle. Two sub-ideas: (a) **no-throw oracle** —
+  for assertion-free tests that completed normally, generalize the MUT's input partition and assert
+  the call raises no exception; (b) **expected-throw oracle** — for `@Test(expected=…)` /
+  `assertThrows` / `ExpectedException`-rule tests, assert the *same* exception holds across the
+  partition. Caveats: the ~7,002 `NoAssertionsFilter`-rejected tests are the natural population but
+  are test-level (no `assertion` rows) and split between (a) and (b) — a no-throw oracle is only
+  valid for runs that actually completed normally, so the two must be told apart first. The hard
+  part is anchor-free **MUT discovery** (no asserted value to trace, unlike the value-oracle MUT-id)
+  and the oracle is weak (only catches throw-behavior flips). Resolved void MUTs today are
+  negligible (24 / 35,299 assertions ≈ 0.07%, ~0 yield); a breadth idea for after the value-oracle
+  funnel is unclogged.
 
 **Superseded & shipped** — lineage in `INDEX.md` / `archive/`.
 
