@@ -18,6 +18,8 @@
 - **Ensemble MUT Identification** [spec] `2026-06-27-ensemble-mut-identification` ← 2026-06-26-teralizer-overview
 - **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
+- **Partial Sound String Support** [plan] `2026-06-30-partial-sound-string-support` (0/42) ← 2026-06-26-teralizer-overview
+- **Static MUT Identification** [plan] `2026-06-30-static-mut-identification` (0/34) ← 2026-06-26-teralizer-overview
 
 ## superseded
 

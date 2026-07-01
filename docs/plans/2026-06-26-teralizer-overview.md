@@ -25,6 +25,21 @@ north-star is therefore: **beat JARVIS on its own cases.**
 **(2) and (3) happen only if (1) is promising. No full re-run is planned now** — so any
 work that depends on a re-run is deferred until (1) lands.
 
+## Current focus
+
+Step 1 (beat JARVIS) is won and consolidated, so the next focused implementation work is two
+no-PIT improvements, each attacking one dominant applicability-funnel blocker. Land both before any
+full re-run so a single run measures the improved implementation.
+
+1. **`2026-06-30-static-mut-identification`** *(plan)* — precedence-cascade MUT-id (abstain-on-ambiguity,
+   with evidence-gated mis-targeting checks) attacking the `MissingValue` blocker (≈ half the corpus).
+   **Do first** — it takes the safe single-producer recall, and its Task 1 diagnostic sizes the other
+   levers before any recall-reducing veto lands.
+2. **`2026-06-30-partial-sound-string-support`** *(plan)* — generalize over the string operations SPF
+   handles soundly; attacks the `ParameterType` / `ReturnType` blocker.
+
+Both are `draft` pending execution approval; each plan carries its own task breakdown and acceptance.
+
 ## Map (by current relevance)
 
 Read this after `INDEX.md`. Grouped by how load-bearing each doc is now; `INDEX.md`
@@ -48,6 +63,8 @@ carries the full status/parent tree and `archive/` the retired docs.
 - `2026-06-28-pipeline-architecture-review` *(audit)* — architecture findings feeding the paper's §5.3 roadmap.
 - `2026-06-27-ensemble-mut-identification` *(spec, draft)* — killed-mutant focal-method oracle replacing LCBA.
 - `2026-06-28-mut-id-targeting-and-coverage` *(audit)* — MUT-id targets, mutation-data coverage, telemetry gaps.
+- `2026-06-30-static-mut-identification` *(plan, draft)* — static (no-PIT) MUT-id recall via a precedence cascade with hard abstain; the static subset of the ensemble spec.
+- `2026-06-30-partial-sound-string-support` *(plan, draft)* — generalize over the string operations SPF handles soundly; unsound/unsupported ops excluded structurally.
 
 **Active — independent track**
 - `2026-06-25-replication-package-documentation-improvements` *(plan)* — verifiable replication package for ACM artifact eval.
