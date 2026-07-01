@@ -16,6 +16,7 @@
 - **Beyond-JARVIS Census — Findings & Issue Backlog** [note] `2026-06-29-beyond-jarvis-census-findings` ← 2026-06-29-beyond-jarvis-generalization-census
 - **Beyond-JARVIS Census Implementation Plan** [plan] `2026-06-29-beyond-jarvis-census-implementation` (—) ← 2026-06-29-beyond-jarvis-generalization-census
 - **PVC Budget-Elasticity vs Mutation Score** [audit] `2026-06-29-pvc-budget-elasticity` ← 2026-06-26-teralizer-overview
+- **JARVIS Comparison (RQ0)** [spec] `2026-06-30-jarvis-comparison` ← 2026-06-26-teralizer-overview
 
 ## draft
 
