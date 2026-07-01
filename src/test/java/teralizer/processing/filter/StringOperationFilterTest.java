@@ -45,6 +45,29 @@ public class StringOperationFilterTest {
     }
 
     @Example
+    void acceptsSupportedStringTransforms() {
+        FilterResult result = check(
+            "class Subject { public static String normalized(String s) { return s.trim().toLowerCase().replace(\"a\", \"b\").toUpperCase(); } }",
+            "normalized");
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
+    void acceptsLengthAndIndexOfStringOperations() {
+        FilterResult result = check(
+            "class Subject { public static int index(String s) { return s.length() + s.indexOf(\"x\"); } }",
+            "index");
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
+    void rejectsCompareToOnAStringParameterMethod() {
+        FilterResult result = check(
+            "class Subject { public static int compare(String s) { return s.compareTo(\"x\"); } }", "compare");
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+    }
+
+    @Example
     void acceptsIsEmptyOnAStringParameterMethod() {
         // isEmpty is now modeled soundly as receiver.equals(""), so it must no longer be rejected.
         FilterResult result = check(

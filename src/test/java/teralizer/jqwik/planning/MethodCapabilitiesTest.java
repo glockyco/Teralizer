@@ -14,6 +14,23 @@ public class MethodCapabilitiesTest {
     }
 
     @Example
+    void outputOnlyStringTransformsAreRegisteredForRendering() {
+        for (String method : new String[] {"trim", "replace", "toLowerCase", "toUpperCase"}) {
+            Assert.assertTrue(method, MethodCapabilities.isSupported(method));
+            Assert.assertTrue(method, MethodCapabilities.isOutputRenderable(method));
+            Assert.assertFalse(method, MethodCapabilities.isInputGeneratable(method));
+            Assert.assertNull(method, MethodCapabilities.get(method).staticQualifier);
+        }
+    }
+
+    @Example
+    void stringNumericMethodsHandledBySpfRemainSupportedForFiltering() {
+        Assert.assertTrue(MethodCapabilities.isSupported("length"));
+        Assert.assertTrue(MethodCapabilities.isSupported("indexOf"));
+        Assert.assertFalse(MethodCapabilities.isOutputRenderable("length"));
+    }
+
+    @Example
     void unsupportedStringMethodsAreAbsent() {
         Assert.assertFalse(MethodCapabilities.isSupported("compareTo"));
         Assert.assertFalse(MethodCapabilities.isOutputRenderable("substring"));

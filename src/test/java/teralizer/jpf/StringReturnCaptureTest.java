@@ -2,9 +2,13 @@ package teralizer.jpf;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import teralizer.domain.Model;
+import teralizer.transformer.JsonToModelTransformer;
+import teralizer.transformer.ModelToJavaTransformer;
 
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -29,6 +33,13 @@ class StringReturnCaptureTest {
         );
     }
 
+    private String renderOutput(Path workDir, String wrapper, String tested) {
+        String spec = run(workDir, wrapper, tested).getOutputSpecificationJson();
+        assertNotNull(spec, "computed String return must be captured");
+        Model model = new JsonToModelTransformer().transform(spec);
+        return new ModelToJavaTransformer().transform(model);
+    }
+
     @Test
     void capturesIdentityStringReturnAsParameter(@TempDir Path workDir) {
         String spec = run(workDir, "echoWrapper", "echo").getOutputSpecificationJson();
@@ -50,5 +61,25 @@ class StringReturnCaptureTest {
                 && spec.contains("\"value\": \"!\""),
             "concat return must be a concat Invocation over the parameter, was: " + spec
         );
+    }
+
+    @Test
+    void rendersTrimReturn(@TempDir Path workDir) {
+        assertEquals("(_p_.value.trim())", renderOutput(workDir, "trimWrapper", "trimmed"));
+    }
+
+    @Test
+    void rendersLowerCaseReturn(@TempDir Path workDir) {
+        assertEquals("(_p_.value.toLowerCase())", renderOutput(workDir, "lowerWrapper", "lowered"));
+    }
+
+    @Test
+    void rendersUpperCaseReturn(@TempDir Path workDir) {
+        assertEquals("(_p_.value.toUpperCase())", renderOutput(workDir, "upperWrapper", "uppered"));
+    }
+
+    @Test
+    void rendersReplaceReturn(@TempDir Path workDir) {
+        assertEquals("(_p_.value.replace(\"o\", \"a\"))", renderOutput(workDir, "replaceWrapper", "replaced"));
     }
 }

@@ -13,8 +13,7 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-import java.util.Arrays;
-import java.util.List;
+import teralizer.jqwik.planning.MethodCapabilities;
 
 /**
  * Rejects an assertion whose method under test takes a {@link String} parameter and performs a
@@ -32,9 +31,6 @@ import java.util.List;
  * only on concrete (non-symbolized) strings.
  */
 public class StringOperationFilter extends AbstractFilter {
-
-    private static final List<String> UNSUPPORTED_STRING_OPS =
-        Arrays.asList("charAt", "substring", "compareTo");
 
     private final Launcher launcher;
     private final AssertionRecord assertionRecord;
@@ -85,10 +81,12 @@ public class StringOperationFilter extends AbstractFilter {
 
     private static boolean isUnsupportedStringOperation(CtInvocation<?> invocation) {
         CtExecutableReference<?> executable = invocation.getExecutable();
-        if (executable == null || !UNSUPPORTED_STRING_OPS.contains(executable.getSimpleName())) {
+        if (executable == null) {
             return false;
         }
         CtTypeReference<?> declaringType = executable.getDeclaringType();
-        return declaringType != null && "java.lang.String".equals(declaringType.getQualifiedName());
+        return declaringType != null
+            && "java.lang.String".equals(declaringType.getQualifiedName())
+            && !MethodCapabilities.isSupported(executable.getSimpleName());
     }
 }

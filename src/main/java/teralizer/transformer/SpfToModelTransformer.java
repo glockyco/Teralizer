@@ -239,6 +239,10 @@ public class SpfToModelTransformer {
                     return new Invocation(left, null, "concat", Collections.singletonList(right));
                 case TRIM:
                     return new Invocation(right, null, "trim", Collections.emptyList());
+                case TOLOWERCASE:
+                    return new Invocation(right, null, "toLowerCase", Collections.emptyList());
+                case TOUPPERCASE:
+                    return new Invocation(right, null, "toUpperCase", Collections.emptyList());
                 default:
                     throw new UnsupportedSpfTermException(
                         "String operator '" + operator + "' is not mapped from left/right operands.");

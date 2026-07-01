@@ -110,6 +110,22 @@ public final class Cut {
         return s.concat("!");
     }
 
+    public static String trimmed(String s) {
+        return s.trim();
+    }
+
+    public static String lowered(String s) {
+        return s.toLowerCase();
+    }
+
+    public static String uppered(String s) {
+        return s.toUpperCase();
+    }
+
+    public static String replaced(String s) {
+        return s.replace('o', 'a');
+    }
+
     /** Symbolic {@link String} in that branches on {@code isEmpty()} — the sound length()==0 op. */
     public static int isEmptyBranch(String s) {
         if (s.isEmpty()) {

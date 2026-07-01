@@ -36,6 +36,13 @@ public final class MethodCapabilities {
         instance(capabilities, "contains", true, true);
         instance(capabilities, "isEmpty", true, true);
         instance(capabilities, "concat", false, true);
+        instance(capabilities, "trim", false, true);
+        instance(capabilities, "replace", false, true);
+        instance(capabilities, "toLowerCase", false, true);
+        instance(capabilities, "toUpperCase", false, true);
+        instance(capabilities, "length", false, false);
+        instance(capabilities, "indexOf", false, false);
+        instance(capabilities, "lastIndexOf", false, false);
 
         math(capabilities, "sqrt");
         math(capabilities, "pow");

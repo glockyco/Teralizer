@@ -14,6 +14,10 @@ public final class StringEchoTarget {
     public static void main(String[] args) {
         echoWrapper("foo");
         concatWrapper("foo");
+        trimWrapper(" foo ");
+        lowerWrapper("FOO");
+        upperWrapper("foo");
+        replaceWrapper("foo");
     }
 
     public static String echoWrapper(String value) {
@@ -22,5 +26,21 @@ public final class StringEchoTarget {
 
     public static String concatWrapper(String value) {
         return Cut.concatTail(value);
+    }
+
+    public static String trimWrapper(String value) {
+        return Cut.trimmed(value);
+    }
+
+    public static String lowerWrapper(String value) {
+        return Cut.lowered(value);
+    }
+
+    public static String upperWrapper(String value) {
+        return Cut.uppered(value);
+    }
+
+    public static String replaceWrapper(String value) {
+        return Cut.replaced(value);
     }
 }

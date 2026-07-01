@@ -210,15 +210,15 @@ public final class MethodCapability {
 
 **Files:** Modify `MethodCapabilities.java`, `StringOperationFilter.java`, `StringDomainPlanner.java`, `jpf-symbc/.../SymbolicStringHandler.java`, `StringExpression.java`; Tests + native `TestSymbolicStringCaseChange.java`.
 
-- [ ] **Step 1: Register** `trim`, `replace` (SPF already captures them), and `toLowerCase`/`toUpperCase` in `MethodCapabilities` — all instance, `outputRenderable=true`; `inputGeneratable=false` (return-oracle-first: input use falls to the filter backstop). Point `StringOperationFilter` at `MethodCapabilities.isSupported(...)` instead of its hardcoded `UNSUPPORTED_STRING_OPS` list.
+- [x] **Step 1: Register** `trim`, `replace` (SPF already captures them), and `toLowerCase`/`toUpperCase` in `MethodCapabilities` — all instance, `outputRenderable=true`; `inputGeneratable=false` (return-oracle-first: input use falls to the filter backstop). Keep SPF-collected numeric string methods (`length`, `indexOf`, `lastIndexOf`) registered for filtering without output rendering. Point `StringOperationFilter` at `MethodCapabilities.isSupported(...)` instead of its hardcoded `UNSUPPORTED_STRING_OPS` list.
 
-- [ ] **Step 2: Add SPF handlers for `toLowerCase`/`toUpperCase`.** In `StringExpression`, add `_toLowerCase()`/`_toUpperCase()` mirroring `_trim()` (`new DerivedStringExpression(StringOperator.TOLOWERCASE, this)`). In `SymbolicStringHandler`, add dispatch arms + handlers mirroring `handleTrim`. Rebuild the submodule.
+- [x] **Step 2: Add SPF handlers for `toLowerCase`/`toUpperCase`.** In `StringExpression`, add `_toLowerCase()`/`_toUpperCase()` mirroring `_trim()` (`new DerivedStringExpression(StringOperator.TOLOWERCASE, this)`). In `SymbolicStringHandler`, add dispatch arms + handlers mirroring `handleTrim`, preserving the concrete transformed value for symcrete branch selection. Rebuild the submodule.
 
-- [ ] **Step 3: Native test** `TestSymbolicStringCaseChange` (mirror `TestSymbolicStringIsEmpty`): a MUT returning `s.toLowerCase()` captures a `DerivedStringExpression(TOLOWERCASE)`. Run via the toggle; revert `settings.gradle`.
+- [x] **Step 3: Native test** `TestSymbolicStringCaseChange` (mirror `TestSymbolicStringIsEmpty`): branches on `s.toLowerCase().equals("foo")` and `s.toUpperCase().equals("FOO")` follow the concrete seed path under `collect_constraints`. Run via the toggle; revert `settings.gradle`.
 
-- [ ] **Step 4: Teralizer test** — a `toLowerCase` return renders `(_p_.s.toLowerCase())`; `trim` return renders `(_p_.s.trim())`; a `replace` renders `(_p_.s.replace('a', 'b'))`. Run, expect PASS.
+- [x] **Step 4: Teralizer test** — `toLowerCase`, `toUpperCase`, `trim`, and char-overload `replace('o', 'a')` returns render as `Invocation` Java expressions. Run, expect PASS.
 
-- [ ] **Step 5: Commit.** `feat: sound trim/toLowerCase/toUpperCase/replace via unified model` (submodule + parent pointer bump).
+- [x] **Step 5: Commit.** `feat: sound trim/toLowerCase/toUpperCase/replace via unified model` (submodule + parent pointer bump).
 
 ### Task 6: delete `SymbolicStringFunction` + retire string `Operator` entries
 
