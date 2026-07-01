@@ -17,9 +17,10 @@ task fails — the pipeline catches the error, drops the downstream tasks, and t
 still exits cleanly. A green gradle build is **not** a clean scorecard. Always verify
 the pipeline log, not the exit code.
 
-The authoritative contract (definitions, data boundaries, case map, the 10-rows vs
-14-probes distinction) lives in `docs/plans/2026-06-27-jarvis-scoreboard-evaluation-lane.md`.
-Latest reference numbers: `docs/plans/2026-06-28-residual-aware-generator-rerun.md`.
+The authoritative contract — definitions, data boundaries, the case map, the rows→probes
+distinction — plus all comparison evidence and current numbers live in
+`docs/plans/2026-06-30-jarvis-comparison.md`. This skill covers **how to collect the data**, not
+what the numbers are.
 
 ## When to use
 
@@ -82,11 +83,11 @@ against `postgres_dev` / `postgres_test` / `_replication` (read-only; never muta
    On a pipeline build failure, read the per-project Maven logs:
    `data/jarvis-scoreboard/<fixture>/project-id-N/command-data/<step>.<variant>.*.{output,error}.txt`.
 
-6. **Aggregate and compare.** Score with `analysis/src/teralizer/jarvis_scoreboard.py`
-   (`get_scoreboard(conn, variants=["NAIVE","IMPROVED"])`), CWD at the repo root so the
-   relative value-log paths resolve. Compare per-probe PVC to
-   `docs/plans/2026-06-28-residual-aware-generator-rerun.md`. Confirm the 14 Table-2
-   probes are exclusion-free.
+6. **Aggregate and compare.** Run the scorer from the repo root (it chdirs so the relative
+   value-log paths resolve): `uv run --directory analysis python -m teralizer.jarvis_scoreboard`
+   for the Table-2 head-to-head, `--sweep` for the tries sweep, `--census` for breadth. Interpret
+   the output against `docs/plans/2026-06-30-jarvis-comparison.md`; the raw-bits `Precision` row
+   is expected absent (a soundness exclusion), not a run failure.
 
 ## Gotchas
 
@@ -97,7 +98,7 @@ against `postgres_dev` / `postgres_test` / `_replication` (read-only; never muta
 | `CREATE DATABASE` → `template1 has a collation version mismatch` | glibc upgraded under the container | `ALTER DATABASE template1 REFRESH COLLATION VERSION;` then CREATE |
 | Rebuild fails on `_*Generalized*_Test.java` from a prior run | Failed `BUILD_PROJECT_GENERALIZED` dropped the cleanup task | Delete stale generated tests before re-running (step 3) |
 | `BUILD SUCCESSFUL` but no scorecard data | A pipeline task failed and dropped downstream tasks; gradle still exits 0 | Grep the pipeline log for `ERROR`; never trust the gradle exit code |
-| `precisionEqualsMaxUlps` excluded | It is a raw-bits probe, **outside** Table-2 (documented concession) | Expected, not a regression. Raw-bits MUTs fail loud / exclude rather than silently concretize — see `docs/plans/2026-06-28-maxulps-raw-bits-lane.md` |
+| `precisionEqualsMaxUlps` excluded | It is a raw-bits probe, **outside** Table-2 (documented concession) | Expected, not a regression. Raw-bits MUTs fail loud / exclude rather than silently concretize — see the soundness axis of `docs/plans/2026-06-30-jarvis-comparison.md` |
 
 ## Data boundaries
 
