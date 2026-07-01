@@ -77,4 +77,15 @@ public final class Cut {
     public static boolean negate(boolean value) {
         return !value;
     }
+
+    /**
+     * Symbolic {@link String} in: branches on equality, so the concrete path's condition carries a
+     * String constraint ({@code s.equals("foo")}). Exercises String path-condition capture.
+     */
+    public static int equalsBranch(String s) {
+        if (s.equals("foo")) {
+            return 1;
+        }
+        return 0;
+    }
 }

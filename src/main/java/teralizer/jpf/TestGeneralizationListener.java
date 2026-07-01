@@ -186,7 +186,11 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
         SpfToModelTransformer spfToModelTransformer = new SpfToModelTransformer();
 
-        teralizer.domain.Expression modelInput = spfToModelTransformer.transform(spfInput);
+        teralizer.domain.Expression numericInput = spfToModelTransformer.transform(spfInput);
+        teralizer.domain.Expression stringInput = pathCondition == null
+            ? null
+            : spfToModelTransformer.transform(pathCondition.spc);
+        teralizer.domain.Expression modelInput = conjoin(numericInput, stringInput);
 
         teralizer.domain.Expression modelOutput;
         if (capturedException == null) {
@@ -196,6 +200,24 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         }
 
         return new Invocation(concreteInputs, output, modelInput, modelOutput);
+    }
+
+    /**
+     * Conjoin the numeric and String path-condition models into one input predicate. The numeric
+     * header and the String path condition ({@code pathCondition.spc}) are collected independently
+     * by SPF; either may be null (a MUT constrains only numbers, only Strings, or neither).
+     */
+    private static teralizer.domain.Expression conjoin(
+        teralizer.domain.Expression numeric,
+        teralizer.domain.Expression string
+    ) {
+        if (numeric == null) {
+            return string;
+        }
+        if (string == null) {
+            return numeric;
+        }
+        return new teralizer.domain.Operation(numeric, teralizer.domain.Operator.AND, string);
     }
 
     /** The captured invocation, or {@code null} if the tested method never returned in-state. */
