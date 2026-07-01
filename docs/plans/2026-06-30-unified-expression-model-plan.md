@@ -139,7 +139,7 @@ public class Invocation implements Expression {
 
 **Files:** Create `src/main/java/teralizer/jqwik/planning/MethodCapability.java`, `MethodCapabilities.java`; Test `MethodCapabilitiesTest.java`.
 
-- [ ] **Step 1: Write `MethodCapability`** — immutable record-like class:
+- [x] **Step 1: Write `MethodCapability`** — immutable record-like class:
 
 ```java
 public final class MethodCapability {
@@ -153,11 +153,11 @@ public final class MethodCapability {
 
 (`spfCollectable` is implied by presence for ops SPF handles; ops absent from the registry are unsupported.)
 
-- [ ] **Step 2: Write `MethodCapabilities`** — a static `Map<String, MethodCapability>` seeded with the current sound set: `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains` (boolean, instance, output-renderable; input-generatable per `StringDomainPlanner`'s existing logic), `isEmpty` (instance, models as `equals("")`), `concat` (instance), plus lookups `get(String)` / `isSupported(String)` / `isOutputRenderable(String)` / `isInputGeneratable(String)`.
+- [x] **Step 2: Write `MethodCapabilities`** — a static `Map<String, MethodCapability>` seeded with the current sound set: `equals`, `startsWith`, `endsWith`, `contains` (instance, output-renderable + input-generatable per `StringDomainPlanner`), `equalsIgnoreCase` and `concat` (instance, output-renderable only), `isEmpty` (instance, models as `equals("")`), and current static renderable functions (`java.lang.Math.*`, `java.lang.String.valueOf`) so `Invocation` rendering does not regress numeric output. Include lookups `get(String)` / `isSupported(String)` / `isOutputRenderable(String)` / `isInputGeneratable(String)`.
 
-- [ ] **Step 3: Test** lookups: `isSupported("equals")` true, `isSupported("compareTo")` false, `get("isEmpty").staticQualifier == null`. Run the test — expect PASS.
+- [x] **Step 3: Test** lookups: `isSupported("equals")` true, `isSupported("compareTo")` false, `get("isEmpty").staticQualifier == null`, `equalsIgnoreCase` output-only, and `sqrt` static-renderable. Run the test — expect PASS.
 
-- [ ] **Step 4: Commit.** `feat(planning): add method capability registry`
+- [x] **Step 4: Commit.** `feat(planning): add method capability registry`
 
 ### Task 3: render `Invocation`/`Not`; retire string arms + guards
 
