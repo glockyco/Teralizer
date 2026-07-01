@@ -1,5 +1,9 @@
 package teralizer.spoon.generalization;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import spoon.Launcher;
@@ -9,7 +13,6 @@ import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
 import teralizer.jqwik.planning.ConstraintClause;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
@@ -44,9 +47,9 @@ public class ImprovedSupplierRenderingTest {
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             Collections.singletonList(x),
             new Operation(
-                new teralizer.domain.VariableReal("x"),
+                new Variable("x", TypeDomain.REAL),
                 Operator.GT,
-                new teralizer.domain.ConstantReal(0.0)
+                new Constant(0.0, TypeDomain.REAL)
             )
         );
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
@@ -65,9 +68,9 @@ public class ImprovedSupplierRenderingTest {
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             Collections.singletonList(x),
             new Operation(
-                new teralizer.domain.VariableReal("x"),
+                new Variable("x", TypeDomain.REAL),
                 Operator.GT,
-                new teralizer.domain.ConstantReal(0.0)
+                new Constant(0.0, TypeDomain.REAL)
             )
         );
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
@@ -107,9 +110,9 @@ public class ImprovedSupplierRenderingTest {
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
             java.util.Arrays.asList(a, b),
             new Operation(
-                new Operation(new VariableInteger("a"), Operator.PLUS, new VariableInteger("b")),
+                new Operation(new Variable("a", TypeDomain.INTEGER), Operator.PLUS, new Variable("b", TypeDomain.INTEGER)),
                 Operator.LT,
-                new teralizer.domain.ConstantInteger(10)
+                new Constant((long) 10, TypeDomain.INTEGER)
             )
         );
 
@@ -134,9 +137,9 @@ public class ImprovedSupplierRenderingTest {
             java.util.Arrays.asList(a, b),
             Collections.singletonMap("b", new PrimitiveValue("double", 2.0)),
             new Operation(
-                new teralizer.domain.VariableReal("b"),
+                new Variable("b", TypeDomain.REAL),
                 Operator.GT,
-                new teralizer.domain.VariableReal("a")
+                new Variable("a", TypeDomain.REAL)
             )
         );
         CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
@@ -204,7 +207,7 @@ public class ImprovedSupplierRenderingTest {
         teralizer.jqwik.planning.ParameterGenerationPlan paramPlan =
             new teralizer.jqwik.planning.ParameterGenerationPlan(
                 x,
-                teralizer.jqwik.planning.TypeDomain.INTEGER,
+                teralizer.domain.TypeDomain.INTEGER,
                 new teralizer.jqwik.planning.RawJavaRecipe("return net.jqwik.api.Arbitraries.integers().between(0, 4)"),
                 null,
                 java.util.Collections.singleton(0)

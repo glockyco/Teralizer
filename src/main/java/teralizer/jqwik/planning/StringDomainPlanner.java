@@ -1,13 +1,14 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.ConstantString;
+import teralizer.domain.Constant;
 import teralizer.domain.Expression;
 import teralizer.domain.Invocation;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
+import teralizer.domain.TypeDomain;
 import teralizer.domain.Value;
-import teralizer.domain.VariableString;
+import teralizer.domain.Variable;
 import teralizer.transformer.ModelToJavaTransformer;
 
 import java.util.ArrayList;
@@ -108,10 +109,12 @@ public class StringDomainPlanner implements DomainPlanner {
             Model expression = clause.getExpression();
             if (expression instanceof Invocation) {
                 Invocation invocation = (Invocation) expression;
-                if (!(invocation.receiver instanceof VariableString)
-                    || !((VariableString) invocation.receiver).name.equals(name)
+                if (!(invocation.receiver instanceof Variable)
+                    || ((Variable) invocation.receiver).domain != TypeDomain.STRING
+                    || !((Variable) invocation.receiver).name.equals(name)
                     || invocation.args.size() != 1
-                    || !(invocation.args.get(0) instanceof ConstantString)) {
+                    || !(invocation.args.get(0) instanceof Constant)
+                    || ((Constant) invocation.args.get(0)).domain != TypeDomain.STRING) {
                     continue;
                 }
                 String literal = transformer.transform(invocation.args.get(0));

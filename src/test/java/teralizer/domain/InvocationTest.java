@@ -15,16 +15,16 @@ class InvocationTest {
     @Test
     void invocationVisitorVisitsReceiverThenArguments() {
         Invocation invocation = new Invocation(
-            new VariableString("s"),
+            new Variable("s", TypeDomain.STRING),
             null,
             "replace",
-            Arrays.asList(new ConstantString("a"), new ConstantString("b")));
+            Arrays.asList(new Constant("a", TypeDomain.STRING), new Constant("b", TypeDomain.STRING)));
 
         List<String> visited = new ArrayList<>();
         invocation.accept(new ModelVisitor() {
             @Override public void preVisit(Invocation node) { visited.add("call:" + node.method); }
-            @Override public void preVisit(VariableString variable) { visited.add("var:" + variable.name); }
-            @Override public void preVisit(ConstantString constant) { visited.add("const:" + constant.value); }
+            @Override public void preVisit(Variable variable) { visited.add("var:" + variable.name); }
+            @Override public void preVisit(Constant constant) { visited.add("const:" + constant.value); }
             @Override public void postVisit(Invocation node) { visited.add("end:" + node.method); }
         });
 
@@ -33,9 +33,9 @@ class InvocationTest {
 
     @Test
     void staticAndInstanceInvocationsAreDistinctValues() {
-        Invocation instance = new Invocation(new VariableString("s"), null, "trim", Collections.emptyList());
-        Invocation sameInstance = new Invocation(new VariableString("s"), null, "trim", Collections.emptyList());
-        Invocation staticCall = new Invocation(null, "java.lang.String", "valueOf", Collections.singletonList(new VariableInteger("i")));
+        Invocation instance = new Invocation(new Variable("s", TypeDomain.STRING), null, "trim", Collections.emptyList());
+        Invocation sameInstance = new Invocation(new Variable("s", TypeDomain.STRING), null, "trim", Collections.emptyList());
+        Invocation staticCall = new Invocation(null, "java.lang.String", "valueOf", Collections.singletonList(new Variable("i", TypeDomain.INTEGER)));
 
         assertEquals(instance, sameInstance);
         assertEquals(instance.hashCode(), sameInstance.hashCode());
@@ -45,10 +45,10 @@ class InvocationTest {
     @Test
     void notFoldsItsOperandBeforeItsOwnHook() {
         Not not = new Not(new Invocation(
-            new VariableString("s"),
+            new Variable("s", TypeDomain.STRING),
             null,
             "startsWith",
-            Collections.singletonList(new ConstantString("x"))));
+            Collections.singletonList(new Constant("x", TypeDomain.STRING))));
 
         String folded = not.fold(new RecordingFolder());
 
@@ -56,12 +56,8 @@ class InvocationTest {
     }
 
     private static final class RecordingFolder extends ModelFolder<String> {
-        @Override public String fold(ConstantInteger constant) { return "integer:" + constant.value; }
-        @Override public String fold(ConstantReal constant) { return "real:" + constant.value; }
-        @Override public String fold(ConstantString constant) { return "string:" + constant.value; }
-        @Override public String fold(VariableInteger variable) { return "variable:" + variable.name; }
-        @Override public String fold(VariableReal variable) { return "variable:" + variable.name; }
-        @Override public String fold(VariableString variable) { return "variable:" + variable.name; }
+        @Override public String fold(Constant constant) { return constant.domain == TypeDomain.STRING ? "string:" + constant.value : "constant:" + constant.value; }
+        @Override public String fold(Variable variable) { return "variable:" + variable.name; }
         @Override public String fold(ArrayExpression expression) { return "array:" + expression.name; }
         @Override public String fold(ArrayElementExpression expression, String elementSelector) { return "arrayElement:" + elementSelector; }
         @Override public String fold(Invocation invocation, String receiver, List<String> args) {

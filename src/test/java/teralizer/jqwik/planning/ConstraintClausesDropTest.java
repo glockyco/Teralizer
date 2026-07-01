@@ -1,15 +1,15 @@
 package teralizer.jqwik.planning;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantInteger;
-import teralizer.domain.ConstantString;
 import teralizer.domain.Invocation;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
-import teralizer.domain.VariableString;
 import teralizer.transformer.NonGeneralizableExpressionException;
 
 import java.util.Collections;
@@ -26,8 +26,8 @@ public class ConstraintClausesDropTest {
         // (a > 0) AND (s.equals("x")): a is generated, s is filtered out (stays concrete). The
         // string clause references only the filtered s, so it is dropped even though it renders;
         // only the generalizable clause survives.
-        Operation numeric = new Operation(new VariableInteger("a"), Operator.GT, new ConstantInteger(0));
-        Invocation string = new Invocation(new VariableString("s"), null, "equals", Collections.singletonList(new ConstantString("x")));
+        Operation numeric = new Operation(new Variable("a", TypeDomain.INTEGER), Operator.GT, new Constant((long) 0, TypeDomain.INTEGER));
+        Invocation string = new Invocation(new Variable("s", TypeDomain.STRING), null, "equals", Collections.singletonList(new Constant("x", TypeDomain.STRING)));
         Model model = new Operation(numeric, Operator.AND, string);
 
         Map<String, String> types = new HashMap<>();
@@ -43,8 +43,8 @@ public class ConstraintClausesDropTest {
 
     @Example
     void keepsAllGeneralizableClauses() {
-        Operation left = new Operation(new VariableInteger("a"), Operator.GT, new ConstantInteger(0));
-        Operation right = new Operation(new VariableInteger("b"), Operator.LT, new ConstantInteger(10));
+        Operation left = new Operation(new Variable("a", TypeDomain.INTEGER), Operator.GT, new Constant((long) 0, TypeDomain.INTEGER));
+        Operation right = new Operation(new Variable("b", TypeDomain.INTEGER), Operator.LT, new Constant((long) 10, TypeDomain.INTEGER));
         Model model = new Operation(left, Operator.AND, right);
 
         Map<String, String> types = new HashMap<>();
@@ -62,7 +62,7 @@ public class ConstraintClausesDropTest {
     @Example
     void refusesToDropClauseConstrainingAGeneralizableParameter() {
         // Unsupported operator on a still-generated parameter: must not be dropped.
-        Invocation bad = new Invocation(new VariableInteger("a"), null, "equals", Collections.singletonList(new ConstantInteger(0)));
+        Invocation bad = new Invocation(new Variable("a", TypeDomain.INTEGER), null, "equals", Collections.singletonList(new Constant((long) 0, TypeDomain.INTEGER)));
 
         Map<String, String> types = new HashMap<>();
         types.put("a", "int");

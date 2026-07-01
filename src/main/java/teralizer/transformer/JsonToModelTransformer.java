@@ -17,12 +17,8 @@ public class JsonToModelTransformer {
 
         builder.registerTypeAdapter(Operation.class, new OperationDeserializer());
         builder.registerTypeAdapter(Operator.class, new OperatorDeserializer());
-        builder.registerTypeAdapter(ConstantInteger.class, new ConstantIntegerDeserializer());
-        builder.registerTypeAdapter(ConstantReal.class, new ConstantRealDeserializer());
-        builder.registerTypeAdapter(ConstantString.class, new ConstantStringDeserializer());
-        builder.registerTypeAdapter(VariableInteger.class, new VariableIntegerDeserializer());
-        builder.registerTypeAdapter(VariableReal.class, new VariableRealDeserializer());
-        builder.registerTypeAdapter(VariableString.class, new VariableStringDeserializer());
+        builder.registerTypeAdapter(Constant.class, new ConstantDeserializer());
+        builder.registerTypeAdapter(Variable.class, new VariableDeserializer());
         builder.registerTypeAdapter(ArrayExpression.class, new ArrayExpressionDeserializer());
         builder.registerTypeAdapter(ArrayElementExpression.class, new ArrayElementExpressionDeserializer());
         builder.registerTypeAdapter(Invocation.class, new InvocationDeserializer());
@@ -74,45 +70,32 @@ public class JsonToModelTransformer {
         }
     }
 
-    private static class ConstantIntegerDeserializer implements JsonDeserializer<ConstantInteger> {
+    private static class ConstantDeserializer implements JsonDeserializer<Constant> {
         @Override
-        public ConstantInteger deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            return new ConstantInteger(jsonElement.getAsJsonObject().get("value").getAsLong());
+        public Constant deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            TypeDomain domain = TypeDomain.valueOf(jsonObject.get("domain").getAsString());
+            JsonElement value = jsonObject.get("value");
+            switch (domain) {
+                case INTEGER:
+                    return new Constant(value.getAsLong(), domain);
+                case REAL:
+                    return new Constant(value.getAsDouble(), domain);
+                case STRING:
+                    return new Constant(value.getAsString(), domain);
+                default:
+                    throw new JsonParseException("Cannot deserialize constant domain: " + domain);
+            }
         }
     }
 
-    private static class ConstantRealDeserializer implements JsonDeserializer<ConstantReal> {
+    private static class VariableDeserializer implements JsonDeserializer<Variable> {
         @Override
-        public ConstantReal deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            return new ConstantReal(jsonElement.getAsJsonObject().get("value").getAsDouble());
-        }
-    }
-
-    private static class ConstantStringDeserializer implements JsonDeserializer<ConstantString> {
-        @Override
-        public ConstantString deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            return new ConstantString(jsonElement.getAsJsonObject().get("value").getAsString());
-        }
-    }
-
-    private static class VariableIntegerDeserializer implements JsonDeserializer<VariableInteger> {
-        @Override
-        public VariableInteger deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            return new VariableInteger(jsonElement.getAsJsonObject().get("name").getAsString());
-        }
-    }
-
-    private static class VariableRealDeserializer implements JsonDeserializer<VariableReal> {
-        @Override
-        public VariableReal deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            return new VariableReal(jsonElement.getAsJsonObject().get("name").getAsString());
-        }
-    }
-
-    private static class VariableStringDeserializer implements JsonDeserializer<VariableString> {
-        @Override
-        public VariableString deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            return new VariableString(jsonElement.getAsJsonObject().get("name").getAsString());
+        public Variable deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            return new Variable(
+                jsonObject.get("name").getAsString(),
+                TypeDomain.valueOf(jsonObject.get("domain").getAsString()));
         }
     }
 

@@ -20,12 +20,8 @@ public class ModelFolderTest {
 
     /** Records the hook name each node dispatches to. */
     private static final class RecordingFolder extends ModelFolder<String> {
-        @Override public String fold(ConstantInteger c) { return "ConstantInteger"; }
-        @Override public String fold(ConstantReal c) { return "ConstantReal"; }
-        @Override public String fold(ConstantString c) { return "ConstantString"; }
-        @Override public String fold(VariableInteger v) { return "VariableInteger"; }
-        @Override public String fold(VariableReal v) { return "VariableReal"; }
-        @Override public String fold(VariableString v) { return "VariableString"; }
+        @Override public String fold(Constant c) { return "Constant"; }
+        @Override public String fold(Variable v) { return "Variable"; }
         @Override public String fold(ArrayExpression e) { return "ArrayExpression"; }
         @Override public String fold(ArrayElementExpression e, String selector) {
             return "ArrayElementExpression[" + selector + "]";
@@ -47,12 +43,12 @@ public class ModelFolderTest {
     @Example
     void leafNodesDispatchToTheirOwnHook() {
         RecordingFolder folder = new RecordingFolder();
-        Assert.assertEquals("ConstantInteger", new ConstantInteger(3).fold(folder));
-        Assert.assertEquals("ConstantReal", new ConstantReal(1.5).fold(folder));
-        Assert.assertEquals("ConstantString", new ConstantString("s").fold(folder));
-        Assert.assertEquals("VariableInteger", new VariableInteger("x").fold(folder));
-        Assert.assertEquals("VariableReal", new VariableReal("y").fold(folder));
-        Assert.assertEquals("VariableString", new VariableString("z").fold(folder));
+        Assert.assertEquals("Constant", new Constant(3L, TypeDomain.INTEGER).fold(folder));
+        Assert.assertEquals("Constant", new Constant(1.5, TypeDomain.REAL).fold(folder));
+        Assert.assertEquals("Constant", new Constant("s", TypeDomain.STRING).fold(folder));
+        Assert.assertEquals("Variable", new Variable("x", TypeDomain.INTEGER).fold(folder));
+        Assert.assertEquals("Variable", new Variable("y", TypeDomain.REAL).fold(folder));
+        Assert.assertEquals("Variable", new Variable("z", TypeDomain.STRING).fold(folder));
         Assert.assertEquals("ArrayExpression", new ArrayExpression("a", "int").fold(folder));
         Assert.assertEquals("Error", new Error("t", "m").fold(folder));
         Assert.assertEquals("ExceptionModel", new ExceptionModel("n", "m").fold(folder));
@@ -63,25 +59,25 @@ public class ModelFolderTest {
     void compositeNodesFoldChildrenBeforeTheHook() {
         RecordingFolder folder = new RecordingFolder();
         Assert.assertEquals(
-            "ArrayElementExpression[VariableInteger]",
-            new ArrayElementExpression("a", "int", new VariableInteger("i")).fold(folder));
+            "ArrayElementExpression[Variable]",
+            new ArrayElementExpression("a", "int", new Variable("i", TypeDomain.INTEGER)).fold(folder));
         Assert.assertEquals(
-            "Invocation{startsWith}(VariableString,ConstantString)",
-            new Invocation(new VariableString("z"), null, "startsWith", Arrays.asList(new ConstantString("s"))).fold(folder));
+            "Invocation{startsWith}(Variable,Constant)",
+            new Invocation(new Variable("z", TypeDomain.STRING), null, "startsWith", Arrays.asList(new Constant("s", TypeDomain.STRING))).fold(folder));
         Assert.assertEquals(
-            "Not(Invocation{startsWith}(VariableString,ConstantString))",
-            new Not(new Invocation(new VariableString("z"), null, "startsWith", Arrays.asList(new ConstantString("s")))).fold(folder));
+            "Not(Invocation{startsWith}(Variable,Constant))",
+            new Not(new Invocation(new Variable("z", TypeDomain.STRING), null, "startsWith", Arrays.asList(new Constant("s", TypeDomain.STRING)))).fold(folder));
         Assert.assertEquals(
-            "Operation{+}(ConstantInteger,VariableInteger)",
-            new Operation(new ConstantInteger(1), Operator.PLUS, new VariableInteger("x")).fold(folder));
+            "Operation{+}(Constant,Variable)",
+            new Operation(new Constant((long) 1, TypeDomain.INTEGER), Operator.PLUS, new Variable("x", TypeDomain.INTEGER)).fold(folder));
     }
 
     @Example
     void operationWithNullOperandFoldsWithoutExploding() {
         RecordingFolder folder = new RecordingFolder();
         Assert.assertEquals(
-            "Operation{+}(ConstantInteger,null)",
-            new Operation(new ConstantInteger(4), Operator.PLUS, null).fold(folder));
+            "Operation{+}(Constant,null)",
+            new Operation(new Constant((long) 4, TypeDomain.INTEGER), Operator.PLUS, null).fold(folder));
     }
 
     /**
@@ -92,8 +88,7 @@ public class ModelFolderTest {
     @Example
     void folderDeclaresOneHookPerConcreteNode() {
         Set<Class<?>> expectedNodes = new HashSet<>(Arrays.asList(
-            ConstantInteger.class, ConstantReal.class, ConstantString.class,
-            VariableInteger.class, VariableReal.class, VariableString.class,
+            Constant.class, Variable.class,
             ArrayExpression.class, ArrayElementExpression.class,
             Invocation.class, Not.class,
             Operation.class, Operator.class, Error.class, ExceptionModel.class));

@@ -1,16 +1,17 @@
 package teralizer.jqwik.planning;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantInteger;
 import teralizer.domain.PrimitiveValue;
 import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
-import teralizer.domain.VariableReal;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +34,7 @@ public class InputGenerationPlannerTest {
     @Example
     void createsPlanWithConsumedClauseForAtomicBound() {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("int", "x"));
-        Model inputModel = new Operation(new VariableInteger("x"), Operator.GT, new ConstantInteger(0));
+        Model inputModel = new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant((long) 0, TypeDomain.INTEGER));
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, inputModel);
 
@@ -55,7 +56,7 @@ public class InputGenerationPlannerTest {
             new MethodParameter("int", "a"),
             new MethodParameter("int", "b")
         );
-        Model inputModel = new Operation(new VariableInteger("b"), Operator.GT, new VariableInteger("a"));
+        Model inputModel = new Operation(new Variable("b", TypeDomain.INTEGER), Operator.GT, new Variable("a", TypeDomain.INTEGER));
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
         String body = plan.getParameterPlans().get(1).getRecipe().emit();
@@ -71,7 +72,7 @@ public class InputGenerationPlannerTest {
             new MethodParameter("double", "a"),
             new MethodParameter("double", "b")
         );
-        Model inputModel = new Operation(new VariableReal("b"), Operator.GT, new VariableReal("a"));
+        Model inputModel = new Operation(new Variable("b", TypeDomain.REAL), Operator.GT, new Variable("a", TypeDomain.REAL));
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
         String body = plan.getParameterPlans().get(1).getRecipe().emit();
@@ -85,7 +86,7 @@ public class InputGenerationPlannerTest {
     @Example
     void firstConcreteValueIsPreservedInNumericRecipe() {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("int", "x"));
-        Model inputModel = new Operation(new VariableInteger("x"), Operator.GT, new ConstantInteger(0));
+        Model inputModel = new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant((long) 0, TypeDomain.INTEGER));
 
         Value argument = new PrimitiveValue("int", 7);
         InputGenerationPlan plan = new InputGenerationPlanner().plan(
@@ -103,7 +104,7 @@ public class InputGenerationPlannerTest {
     @Example
     void charRecipeUsesConstantBounds() {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("char", "c"));
-        Model inputModel = new Operation(new VariableInteger("c"), Operator.GT, new ConstantInteger(64));
+        Model inputModel = new Operation(new Variable("c", TypeDomain.INTEGER), Operator.GT, new Constant((long) 64, TypeDomain.INTEGER));
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
         String body = plan.getParameterPlans().get(0).getRecipe().emit();
@@ -120,9 +121,9 @@ public class InputGenerationPlannerTest {
             new MethodParameter("int", "b")
         );
         Model inputModel = new Operation(
-            new Operation(new VariableInteger("a"), Operator.PLUS, new VariableInteger("b")),
+            new Operation(new Variable("a", TypeDomain.INTEGER), Operator.PLUS, new Variable("b", TypeDomain.INTEGER)),
             Operator.LT,
-            new ConstantInteger(10)
+            new Constant((long) 10, TypeDomain.INTEGER)
         );
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
@@ -139,9 +140,9 @@ public class InputGenerationPlannerTest {
             new MethodParameter("int", "b")
         );
         Model inputModel = new Operation(
-            new Operation(new VariableInteger("a"), Operator.MINUS, new VariableInteger("b")),
+            new Operation(new Variable("a", TypeDomain.INTEGER), Operator.MINUS, new Variable("b", TypeDomain.INTEGER)),
             Operator.GT,
-            new ConstantInteger(3)
+            new Constant((long) 3, TypeDomain.INTEGER)
         );
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
@@ -158,9 +159,9 @@ public class InputGenerationPlannerTest {
             new MethodParameter("int", "b")
         );
         Model inputModel = new Operation(
-            new VariableInteger("b"),
+            new Variable("b", TypeDomain.INTEGER),
             Operator.EQ,
-            new Operation(new VariableInteger("a"), Operator.PLUS, new ConstantInteger(1))
+            new Operation(new Variable("a", TypeDomain.INTEGER), Operator.PLUS, new Constant((long) 1, TypeDomain.INTEGER))
         );
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
@@ -180,9 +181,9 @@ public class InputGenerationPlannerTest {
             new MethodParameter("int", "b")
         );
         Model inputModel = new Operation(
-            new VariableInteger("b"),
+            new Variable("b", TypeDomain.INTEGER),
             Operator.EQ,
-            new Operation(new VariableInteger("a"), Operator.PLUS, new ConstantInteger(1))
+            new Operation(new Variable("a", TypeDomain.INTEGER), Operator.PLUS, new Constant((long) 1, TypeDomain.INTEGER))
         );
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
@@ -198,9 +199,9 @@ public class InputGenerationPlannerTest {
             new MethodParameter("long", "b")
         );
         Model inputModel = new Operation(
-            new Operation(new VariableInteger("a"), Operator.PLUS, new VariableInteger("b")),
+            new Operation(new Variable("a", TypeDomain.INTEGER), Operator.PLUS, new Variable("b", TypeDomain.INTEGER)),
             Operator.LT,
-            new ConstantInteger(Long.MIN_VALUE)
+            new Constant((long) Long.MIN_VALUE, TypeDomain.INTEGER)
         );
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
@@ -218,9 +219,9 @@ public class InputGenerationPlannerTest {
             new MethodParameter("double", "b")
         );
         Model inputModel = new Operation(
-            new Operation(new VariableReal("a"), Operator.PLUS, new VariableReal("b")),
+            new Operation(new Variable("a", TypeDomain.REAL), Operator.PLUS, new Variable("b", TypeDomain.REAL)),
             Operator.LE,
-            new teralizer.domain.ConstantReal(10.0)
+            new Constant(10.0, TypeDomain.REAL)
         );
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
@@ -240,9 +241,9 @@ public class InputGenerationPlannerTest {
         );
         // (y - x) < eps gives eps the runtime lower bound (y - x), which can overflow to Infinity.
         Model inputModel = new Operation(
-            new Operation(new VariableReal("y"), Operator.MINUS, new VariableReal("x")),
+            new Operation(new Variable("y", TypeDomain.REAL), Operator.MINUS, new Variable("x", TypeDomain.REAL)),
             Operator.LT,
-            new VariableReal("eps")
+            new Variable("eps", TypeDomain.REAL)
         );
 
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, Collections.emptyMap(), inputModel);
@@ -273,7 +274,7 @@ public class InputGenerationPlannerTest {
         // to plan level for generation-coverage telemetry. The filter stays unconditional
         // (uses all clauses via getFullPredicate), so soundness is not affected.
         List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("int", "x"));
-        Operation inputModel = new Operation(new VariableInteger("x"), Operator.LT, new ConstantInteger(5));
+        Operation inputModel = new Operation(new Variable("x", TypeDomain.INTEGER), Operator.LT, new Constant((long) 5, TypeDomain.INTEGER));
         InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, inputModel);
         Assert.assertTrue("parameter plan reports the consumed clause", plan.getParameterPlans().get(0).getConsumedClauseIds().contains(0));
         Assert.assertTrue("plan aggregates consumed clause to plan level", plan.getConsumedClauseIds().contains(0));

@@ -45,7 +45,9 @@ class StringReturnCaptureTest {
         String spec = run(workDir, "echoWrapper", "echo").getOutputSpecificationJson();
         assertNotNull(spec, "identity String return must be captured as an output oracle");
         assertTrue(
-            spec.contains("\"_type\": \"VariableString\"") && spec.contains("\"name\": \"value\""),
+            spec.contains("\"_type\": \"Variable\"")
+                && spec.contains("\"name\": \"value\"")
+                && spec.contains("\"domain\": \"STRING\""),
             "identity return must render as the parameter, was: " + spec
         );
     }

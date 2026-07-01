@@ -1,12 +1,14 @@
 package teralizer.jqwik.planning;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantInteger;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,12 +19,12 @@ public class ConstraintClausesTest {
     void flattensTopLevelConjunctionsIntoStableClauses() {
         Model model = new Operation(
             new Operation(
-                new Operation(new VariableInteger("x"), Operator.GT, new ConstantInteger(0)),
+                new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant((long) 0, TypeDomain.INTEGER)),
                 Operator.AND,
-                new Operation(new VariableInteger("y"), Operator.LT, new ConstantInteger(10))
+                new Operation(new Variable("y", TypeDomain.INTEGER), Operator.LT, new Constant((long) 10, TypeDomain.INTEGER))
             ),
             Operator.AND,
-            new Operation(new VariableInteger("z"), Operator.EQ, new ConstantInteger(3))
+            new Operation(new Variable("z", TypeDomain.INTEGER), Operator.EQ, new Constant((long) 3, TypeDomain.INTEGER))
         );
         Map<String, String> parameterTypes = new HashMap<>();
         parameterTypes.put("x", "int");
@@ -33,7 +35,7 @@ public class ConstraintClausesTest {
 
         Assert.assertEquals(3, clauses.size());
         Assert.assertEquals(0, clauses.get(0).getId());
-        Assert.assertEquals(new Operation(new VariableInteger("x"), Operator.GT, new ConstantInteger(0)), clauses.get(0).getExpression());
+        Assert.assertEquals(new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant((long) 0, TypeDomain.INTEGER)), clauses.get(0).getExpression());
         Assert.assertEquals("(_p_.x > 0)", clauses.get(0).getJavaExpression());
         Assert.assertEquals(1, clauses.get(1).getId());
         Assert.assertEquals("(_p_.y < 10)", clauses.get(1).getJavaExpression());
@@ -43,7 +45,7 @@ public class ConstraintClausesTest {
 
     @Example
     void preservesNonConjunctionAsSingleClause() {
-        Model model = new Operation(new VariableInteger("x"), Operator.GT, new ConstantInteger(0));
+        Model model = new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant((long) 0, TypeDomain.INTEGER));
         Map<String, String> parameterTypes = new HashMap<>();
         parameterTypes.put("x", "int");
 

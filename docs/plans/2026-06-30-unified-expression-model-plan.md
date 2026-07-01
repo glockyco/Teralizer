@@ -8,7 +8,7 @@ parent: 2026-06-30-unified-expression-model
 
 # Unified Expression Model Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. **Execution scope: Phases 1–2 are implemented. Phase 3 is expanded below for a user checkpoint and MUST NOT be coded until that checkpoint is approved. Phase 4 remains committed scope but MUST be expanded into its own step-level plan (with a fresh code-read) and checkpointed with the user before any code is written for it.**
+> **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. **Execution scope: Phases 1–3 are implemented. Phase 4 remains committed scope but MUST be expanded into its own step-level plan (with a fresh code-read) and checkpointed with the user before any code is written for it.**
 
 **Goal:** Replace the type-fragmented `teralizer.domain` expression zoo with a uniform model — one `Invocation` node for method/function calls of any arity, a `Not` wrapper, typed `Variable`/`Constant`, `Operation` for true operators only — gated by a single capability registry.
 
@@ -465,14 +465,14 @@ Replace the six per-type leaf classes with `Variable(name, TypeDomain)` and `Con
 
 **Files:** Move `src/main/java/teralizer/jqwik/planning/TypeDomain.java` to `src/main/java/teralizer/domain/TypeDomain.java`; Create `src/main/java/teralizer/domain/Variable.java`, `Constant.java`; Modify `ModelFolder.java`, `ModelVisitor.java`, `SpfToModelTransformer.java`, `ValueToModelTransformer.java`, `VariableNameCollector.java`, `ModelToJavaTransformer.java`, `ModelToJsonTransformer.java`, `JsonToModelTransformer.java`, `NumericClauseInterpreter.java`, `BooleanDomainPlanner.java`, `StringDomainPlanner.java`, planner imports/tests, transformer tests, and `GoldenRenderingTest`; Delete `VariableInteger.java`, `VariableReal.java`, `VariableString.java`, `ConstantInteger.java`, `ConstantReal.java`, `ConstantString.java`.
 
-- [ ] **Step 1: Write failing typed-leaf tests.** Add `src/test/java/teralizer/domain/TypedLeafTest.java` before production edits:
+- [x] **Step 1: Write failing typed-leaf tests.** Add `src/test/java/teralizer/domain/TypedLeafTest.java` before production edits:
   - `new Variable("x", TypeDomain.REAL)` visits `preVisit(Variable)` / `postVisit(Variable)`, folds through `fold(Variable)`, and equals another real variable with the same name but not an integer variable with the same name.
   - `new Constant(7L, TypeDomain.INTEGER)`, `new Constant(1.5d, TypeDomain.REAL)`, and `new Constant("s", TypeDomain.STRING)` fold through `fold(Constant)` and equality includes the domain.
   - `Variable.toString()` returns the name; `Constant.toString()` returns the raw value string for all three domains.
 
 Run `./gradlew test --tests 'teralizer.domain.TypedLeafTest'` — expect compilation failure because `teralizer.domain.TypeDomain`, `Variable`, and `Constant` do not exist.
 
-- [ ] **Step 2: Move `TypeDomain` and add typed leaves additively.** Move `TypeDomain` to package `teralizer.domain` and update imports in `teralizer.jqwik.planning` and tests. Add:
+- [x] **Step 2: Move `TypeDomain` and add typed leaves additively.** Move `TypeDomain` to package `teralizer.domain` and update imports in `teralizer.jqwik.planning` and tests. Add:
 
 ```java
 public final class Variable implements Expression {
@@ -502,7 +502,7 @@ Add `fold(Variable)` / `fold(Constant)` to `ModelFolder`, no-op visitor hooks to
 
 Run `./gradlew test --tests 'teralizer.domain.TypedLeafTest'` — expect PASS.
 
-- [ ] **Step 3: Write failing cutover tests for producers and consumers.** Before changing producers, update or add tests so they expect typed leaves:
+- [x] **Step 3: Write failing cutover tests for producers and consumers.** Before changing producers, update or add tests so they expect typed leaves:
   - `SpfToModelTransformerSymbolNameTest`: `SymbolicInteger` → `Variable(name, TypeDomain.INTEGER)`, `SymbolicReal` → `Variable(name, TypeDomain.REAL)`, string symbols/constants → `TypeDomain.STRING` leaves.
   - `SpfToModelTransformerMathInvocationTest`, `SpfToModelTransformerStringInvocationTest`, and `StringDomainPlannerTest`: invocation receivers/args use typed leaves.
   - `ValueJsonAdapterTest` stays unchanged, but `InvocationJsonRoundTripTest` and a new/updated model JSON round-trip test assert `_type: "Variable"` / `_type: "Constant"` with `domain` and exact `value`.
@@ -510,7 +510,7 @@ Run `./gradlew test --tests 'teralizer.domain.TypedLeafTest'` — expect PASS.
 
 Run the updated focused tests — expect FAIL because production code still emits/consumes the six legacy leaf classes.
 
-- [ ] **Step 4: Cut producers and interpreters over to typed leaves.** Update:
+- [x] **Step 4: Cut producers and interpreters over to typed leaves.** Update:
   - `SpfToModelTransformer`: integer constants/symbols → `Constant(..., INTEGER)` / `Variable(..., INTEGER)`; real constants/symbols → `REAL`; string constants/symbols/builders → `STRING`.
   - `ValueToModelTransformer`: `Integer` → `Constant(value.longValue(), INTEGER)`, `Double` → `Constant(value, REAL)`, `String` → `Constant(value, STRING)`.
   - `VariableNameCollector`: collect `Variable.name` and remove old per-type hook dependence.
@@ -522,15 +522,15 @@ Run the updated focused tests — expect FAIL because production code still emit
 
 Run the focused tests from Step 3 — expect PASS.
 
-- [ ] **Step 5: Delete the six legacy leaf classes and hooks.** Remove `VariableInteger`, `VariableReal`, `VariableString`, `ConstantInteger`, `ConstantReal`, `ConstantString`; delete their `ModelFolder` and `ModelVisitor` hooks; remove JSON adapters/registrations; update `ModelFolderTest.folderDeclaresOneHookPerConcreteNode` to include only `Variable` and `Constant` for leaves; update every recording folder in tests to implement `fold(Variable)` and `fold(Constant)` only. Run `./gradlew compileTestJava` first; any remaining reference is a compile-guided fix.
+- [x] **Step 5: Delete the six legacy leaf classes and hooks.** Remove `VariableInteger`, `VariableReal`, `VariableString`, `ConstantInteger`, `ConstantReal`, `ConstantString`; delete their `ModelFolder` and `ModelVisitor` hooks; remove JSON adapters/registrations; update `ModelFolderTest.folderDeclaresOneHookPerConcreteNode` to include only `Variable` and `Constant` for leaves; update every recording folder in tests to implement `fold(Variable)` and `fold(Constant)` only. Run `./gradlew compileTestJava` first; any remaining reference is a compile-guided fix.
 
 Expected: `./gradlew compileTestJava` PASS, and `grep` for `VariableInteger|VariableReal|VariableString|ConstantInteger|ConstantReal|ConstantString` under `src/main` and `src/test` returns no matches.
 
-- [ ] **Step 6: Update goldens and remaining direct model construction.** Update `GoldenRenderingTest` to construct typed leaves. Expected strings in `src/test/resources/golden/rendering-baseline.json` should remain unchanged for Phase 3 unless rendering intentionally changed; if a string changes, run a generated-test compile/pass check before accepting it.
+- [x] **Step 6: Update goldens and remaining direct model construction.** Update `GoldenRenderingTest` to construct typed leaves. Expected strings in `src/test/resources/golden/rendering-baseline.json` should remain unchanged for Phase 3 unless rendering intentionally changed; if a string changes, run a generated-test compile/pass check before accepting it.
 
 Run `./gradlew test --tests 'teralizer.transformer.GoldenRenderingTest' --tests 'teralizer.transformer.ModelToJavaTransformerFoldOrderTest' --tests 'teralizer.transformer.ModelToJavaTransformerInvocationTest'` — expect PASS.
 
-- [ ] **Step 7: Run focused and full verification.** Run:
+- [x] **Step 7: Run focused and full verification.** Run:
 
 ```bash
 ./gradlew test \
@@ -550,11 +550,11 @@ Run `./gradlew test --tests 'teralizer.transformer.GoldenRenderingTest' --tests 
 
 Run the native SPF string tests with the same cleanup wrapper/trap used in Phase 2. Expected: focused tests, full tests, and native tests PASS; `git status --short settings.gradle` is clean.
 
-- [ ] **Step 8: Run the numeric/char/boolean behavioral guardrail.** Re-run the JARVIS scratch scorecard and census as in Phase 2. Acceptance: the run log contains `scoreboard run complete: no pipeline breakage`, hard-failure grep finds no non-JPF pipeline/build failures, expected raw-bits per-assertion JPF exclusions remain non-fatal, and `uv run --directory analysis python -m teralizer.jarvis_scoreboard --census` still reports 250 sound numeric/char/boolean successes.
+- [x] **Step 8: Run the numeric/char/boolean behavioral guardrail.** Re-run the JARVIS scratch scorecard and census as in Phase 2. Acceptance: the run log contains `scoreboard run complete: no pipeline breakage`, hard-failure grep finds no non-JPF pipeline/build failures, expected raw-bits per-assertion JPF exclusions remain non-fatal, and `uv run --directory analysis python -m teralizer.jarvis_scoreboard --census` still reports 250 sound numeric/char/boolean successes.
 
-- [ ] **Step 9: Run branch handoff build.** Run `./gradlew build` after the full suite and guardrail.
+- [x] **Step 9: Run branch handoff build.** Run `./gradlew build` after the full suite and guardrail.
 
-- [ ] **Step 10: Commit.** Commit the typed-leaf migration, deleted legacy leaves, updated tests, and Phase-3 checkboxes with subject `refactor(domain): unify typed expression leaves` and a body explaining why `TypeDomain` moved to `teralizer.domain`, why char/boolean still enter the model as integer leaves, and how the JARVIS guardrail was verified.
+- [x] **Step 10: Commit.** Commit the typed-leaf migration, deleted legacy leaves, updated tests, and Phase-3 checkboxes with subject `refactor(domain): unify typed expression leaves` and a body explaining why `TypeDomain` moved to `teralizer.domain`, why char/boolean still enter the model as integer leaves, and how the JARVIS guardrail was verified.
 
 
 ---

@@ -17,12 +17,8 @@ public class ModelToJsonTransformer {
 
         builder.registerTypeAdapter(Operation.class, new OperationSerializer());
         builder.registerTypeAdapter(Operator.class, new OperatorSerializer());
-        builder.registerTypeAdapter(ConstantInteger.class, new ConstantIntegerSerializer());
-        builder.registerTypeAdapter(ConstantReal.class, new ConstantRealSerializer());
-        builder.registerTypeAdapter(ConstantString.class, new ConstantStringSerializer());
-        builder.registerTypeAdapter(VariableInteger.class, new VariableIntegerSerializer());
-        builder.registerTypeAdapter(VariableReal.class, new VariableRealSerializer());
-        builder.registerTypeAdapter(VariableString.class, new VariableStringSerializer());
+        builder.registerTypeAdapter(Constant.class, new ConstantSerializer());
+        builder.registerTypeAdapter(Variable.class, new VariableSerializer());
         builder.registerTypeAdapter(ArrayExpression.class, new ArrayExpressionSerializer());
         builder.registerTypeAdapter(ArrayElementExpression.class, new ArrayElementExpressionSerializer());
         builder.registerTypeAdapter(Invocation.class, new InvocationSerializer());
@@ -63,73 +59,39 @@ public class ModelToJsonTransformer {
         }
     }
 
-    private static class ConstantIntegerSerializer implements JsonSerializer<ConstantInteger> {
+    private static class ConstantSerializer implements JsonSerializer<Constant> {
         @Override
-        public JsonElement serialize(ConstantInteger constant, Type type, JsonSerializationContext context) {
+        public JsonElement serialize(Constant constant, Type type, JsonSerializationContext context) {
             JsonObject jsonObject = new JsonObject();
 
             jsonObject.add("_type", new JsonPrimitive(constant.getClass().getSimpleName()));
-            jsonObject.add("value", new JsonPrimitive(constant.value));
+            switch (constant.domain) {
+                case INTEGER:
+                    jsonObject.add("value", new JsonPrimitive(((Number) constant.value).longValue()));
+                    break;
+                case REAL:
+                    jsonObject.add("value", new JsonPrimitive(((Number) constant.value).doubleValue()));
+                    break;
+                case STRING:
+                    jsonObject.add("value", new JsonPrimitive((String) constant.value));
+                    break;
+                default:
+                    throw new JsonParseException("Cannot serialize constant domain: " + constant.domain);
+            }
+            jsonObject.add("domain", new JsonPrimitive(constant.domain.name()));
 
             return jsonObject;
         }
     }
 
-    private static class ConstantRealSerializer implements JsonSerializer<ConstantReal> {
+    private static class VariableSerializer implements JsonSerializer<Variable> {
         @Override
-        public JsonElement serialize(ConstantReal constant, Type type, JsonSerializationContext context) {
-            JsonObject jsonObject = new JsonObject();
-
-            jsonObject.add("_type", new JsonPrimitive(constant.getClass().getSimpleName()));
-            jsonObject.add("value", new JsonPrimitive(constant.value));
-
-            return jsonObject;
-        }
-    }
-
-    private static class ConstantStringSerializer implements JsonSerializer<ConstantString> {
-        @Override
-        public JsonElement serialize(ConstantString constant, Type type, JsonSerializationContext context) {
-            JsonObject jsonObject = new JsonObject();
-
-            jsonObject.add("_type", new JsonPrimitive(constant.getClass().getSimpleName()));
-            jsonObject.add("value", new JsonPrimitive(constant.value));
-
-            return jsonObject;
-        }
-    }
-
-    private static class VariableIntegerSerializer implements JsonSerializer<VariableInteger> {
-        @Override
-        public JsonElement serialize(VariableInteger variable, Type type, JsonSerializationContext context) {
+        public JsonElement serialize(Variable variable, Type type, JsonSerializationContext context) {
             JsonObject jsonObject = new JsonObject();
 
             jsonObject.add("_type", new JsonPrimitive(variable.getClass().getSimpleName()));
             jsonObject.add("name", new JsonPrimitive(variable.name));
-
-            return jsonObject;
-        }
-    }
-
-    private static class VariableRealSerializer implements JsonSerializer<VariableReal> {
-        @Override
-        public JsonElement serialize(VariableReal variable, Type type, JsonSerializationContext context) {
-            JsonObject jsonObject = new JsonObject();
-
-            jsonObject.add("_type", new JsonPrimitive(variable.getClass().getSimpleName()));
-            jsonObject.add("name", new JsonPrimitive(variable.name));
-
-            return jsonObject;
-        }
-    }
-
-    private static class VariableStringSerializer implements JsonSerializer<VariableString> {
-        @Override
-        public JsonElement serialize(VariableString variable, Type type, JsonSerializationContext context) {
-            JsonObject jsonObject = new JsonObject();
-
-            jsonObject.add("_type", new JsonPrimitive(variable.getClass().getSimpleName()));
-            jsonObject.add("name", new JsonPrimitive(variable.name));
+            jsonObject.add("domain", new JsonPrimitive(variable.domain.name()));
 
             return jsonObject;
         }

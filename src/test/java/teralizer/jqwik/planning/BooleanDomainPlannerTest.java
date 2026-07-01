@@ -2,11 +2,12 @@ package teralizer.jqwik.planning;
 
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantInteger;
+import teralizer.domain.Constant;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +17,7 @@ public class BooleanDomainPlannerTest {
     @Example
     void bEqualsOneDerivesTrue() {
         // b == 1
-        Operation model = new Operation(new VariableInteger("b"), Operator.EQ, new ConstantInteger(1));
+        Operation model = new Operation(new Variable("b", TypeDomain.INTEGER), Operator.EQ, new Constant(1L, TypeDomain.INTEGER));
         List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("boolean", "b"));
         List<ConstraintClause> clauses = ConstraintClauses.from(model, Collections.singletonMap("b", "boolean"));
         PlanningContext context = new PlanningContext(parameters, clauses);
@@ -35,7 +36,7 @@ public class BooleanDomainPlannerTest {
     @Example
     void bEqualsZeroDerivesFalse() {
         // b == 0
-        Operation model = new Operation(new VariableInteger("b"), Operator.EQ, new ConstantInteger(0));
+        Operation model = new Operation(new Variable("b", TypeDomain.INTEGER), Operator.EQ, new Constant(0L, TypeDomain.INTEGER));
         List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("boolean", "b"));
         List<ConstraintClause> clauses = ConstraintClauses.from(model, Collections.singletonMap("b", "boolean"));
         PlanningContext context = new PlanningContext(parameters, clauses);
@@ -54,7 +55,7 @@ public class BooleanDomainPlannerTest {
     @Example
     void bNotEqualsZeroDerivesTrue() {
         // b != 0
-        Operation model = new Operation(new VariableInteger("b"), Operator.NE, new ConstantInteger(0));
+        Operation model = new Operation(new Variable("b", TypeDomain.INTEGER), Operator.NE, new Constant(0L, TypeDomain.INTEGER));
         List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("boolean", "b"));
         List<ConstraintClause> clauses = ConstraintClauses.from(model, Collections.singletonMap("b", "boolean"));
         PlanningContext context = new PlanningContext(parameters, clauses);
@@ -73,7 +74,7 @@ public class BooleanDomainPlannerTest {
     @Example
     void bNotEqualsOneDerivesFalse() {
         // b != 1
-        Operation model = new Operation(new VariableInteger("b"), Operator.NE, new ConstantInteger(1));
+        Operation model = new Operation(new Variable("b", TypeDomain.INTEGER), Operator.NE, new Constant(1L, TypeDomain.INTEGER));
         List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("boolean", "b"));
         List<ConstraintClause> clauses = ConstraintClauses.from(model, Collections.singletonMap("b", "boolean"));
         PlanningContext context = new PlanningContext(parameters, clauses);

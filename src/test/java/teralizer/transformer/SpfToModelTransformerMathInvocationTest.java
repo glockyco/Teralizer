@@ -6,7 +6,8 @@ import gov.nasa.jpf.symbc.numeric.SymbolicReal;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.Invocation;
-import teralizer.domain.VariableReal;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,7 +21,7 @@ public class SpfToModelTransformerMathInvocationTest {
             new SymbolicReal("x_1_SYMREAL"));
 
         Assert.assertEquals(
-            new Invocation(null, "java.lang.Math", "sqrt", Collections.singletonList(new VariableReal("x"))),
+            new Invocation(null, "java.lang.Math", "sqrt", Collections.singletonList(new Variable("x", TypeDomain.REAL))),
             new SpfToModelTransformer().transform(expression));
     }
 
@@ -32,7 +33,7 @@ public class SpfToModelTransformerMathInvocationTest {
             new SymbolicReal("y_2_SYMREAL"));
 
         Assert.assertEquals(
-            new Invocation(null, "java.lang.Math", "pow", Arrays.asList(new VariableReal("x"), new VariableReal("y"))),
+            new Invocation(null, "java.lang.Math", "pow", Arrays.asList(new Variable("x", TypeDomain.REAL), new Variable("y", TypeDomain.REAL))),
             new SpfToModelTransformer().transform(expression));
     }
 }

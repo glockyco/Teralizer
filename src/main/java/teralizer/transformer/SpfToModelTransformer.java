@@ -190,7 +190,7 @@ public class SpfToModelTransformer {
             gov.nasa.jpf.symbc.string.StringComparator comparator,
             Expression left,
             Expression right) {
-            if (isEqualityComparator(comparator) && left instanceof ConstantString && !(right instanceof ConstantString)) {
+            if (isEqualityComparator(comparator) && isStringConstant(left) && !isStringConstant(right)) {
                 Expression originalLeft = left;
                 left = right;
                 right = originalLeft;
@@ -224,6 +224,10 @@ public class SpfToModelTransformer {
                     throw new UnsupportedSpfTermException(
                         "String comparator '" + comparator + "' is not mapped to a Model invocation.");
             }
+        }
+
+        private static boolean isStringConstant(Expression expression) {
+            return expression instanceof Constant && ((Constant) expression).domain == TypeDomain.STRING;
         }
 
         private static boolean isEqualityComparator(gov.nasa.jpf.symbc.string.StringComparator comparator) {
@@ -290,40 +294,40 @@ public class SpfToModelTransformer {
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.numeric.IntegerConstant constant) {
-            this.stack.push(new ConstantInteger(constant.value));
+            this.stack.push(new Constant((long) constant.value, TypeDomain.INTEGER));
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.numeric.RealConstant constant) {
-            this.stack.push(new ConstantReal(constant.value));
+            this.stack.push(new Constant(constant.value, TypeDomain.REAL));
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.string.StringConstant constant) {
-            this.stack.push(new ConstantString(constant.value));
+            this.stack.push(new Constant(constant.value, TypeDomain.STRING));
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.numeric.SymbolicInteger variable) {
             String name = variable.getName().replaceAll("_\\d+_[A-Z]+$", "");
-            this.stack.push(new VariableInteger(name));
+            this.stack.push(new Variable(name, TypeDomain.INTEGER));
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.numeric.SymbolicReal variable) {
             String name = variable.getName().replaceAll("_\\d+_[A-Z]+$", "");
-            this.stack.push(new VariableReal(name));
+            this.stack.push(new Variable(name, TypeDomain.REAL));
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.string.StringSymbolic variable) {
             String name = variable.getName().replaceAll("_\\d+_[A-Z]+$", "");
-            this.stack.push(new VariableString(name));
+            this.stack.push(new Variable(name, TypeDomain.STRING));
         }
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.string.SymbolicStringBuilder constant) {
-            this.stack.push(new ConstantString(constant.toString()));
+            this.stack.push(new Constant(constant.toString(), TypeDomain.STRING));
         }
 
         @Override

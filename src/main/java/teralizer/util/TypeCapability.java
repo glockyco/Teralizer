@@ -2,7 +2,7 @@ package teralizer.util;
 
 import teralizer.jqwik.planning.DomainPlanner;
 import teralizer.jqwik.planning.DomainPlanners;
-import teralizer.jqwik.planning.TypeDomain;
+import teralizer.domain.TypeDomain;
 
 import java.util.EnumSet;
 import java.util.Set;

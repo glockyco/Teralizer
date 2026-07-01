@@ -1,12 +1,13 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.ConstantInteger;
-import teralizer.domain.Value;
+import teralizer.domain.Constant;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Value;
+import teralizer.domain.Variable;
 import teralizer.transformer.ModelToJavaTransformer;
 
 import java.util.LinkedHashSet;
@@ -89,16 +90,18 @@ public class BooleanDomainPlanner implements DomainPlanner {
         long constValue;
         boolean variableMatches;
 
-        if (operation.left instanceof VariableInteger && operation.right instanceof ConstantInteger) {
-            VariableInteger var = (VariableInteger) operation.left;
-            ConstantInteger constant = (ConstantInteger) operation.right;
+        if (operation.left instanceof Variable && ((Variable) operation.left).domain == TypeDomain.INTEGER
+            && operation.right instanceof Constant && ((Constant) operation.right).domain == TypeDomain.INTEGER) {
+            Variable var = (Variable) operation.left;
+            Constant constant = (Constant) operation.right;
             variableMatches = var.name.equals(paramName);
-            constValue = constant.value;
-        } else if (operation.left instanceof ConstantInteger && operation.right instanceof VariableInteger) {
-            ConstantInteger constant = (ConstantInteger) operation.left;
-            VariableInteger var = (VariableInteger) operation.right;
+            constValue = ((Number) constant.value).longValue();
+        } else if (operation.left instanceof Constant && ((Constant) operation.left).domain == TypeDomain.INTEGER
+            && operation.right instanceof Variable && ((Variable) operation.right).domain == TypeDomain.INTEGER) {
+            Constant constant = (Constant) operation.left;
+            Variable var = (Variable) operation.right;
             variableMatches = var.name.equals(paramName);
-            constValue = constant.value;
+            constValue = ((Number) constant.value).longValue();
         } else {
             return null;
         }

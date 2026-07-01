@@ -5,12 +5,8 @@ public abstract class ModelVisitor {
     public void preVisit(Expression expression) {}
     public void preVisit(Operation operation) {}
     public void preVisit(Operator operator) {}
-    public void preVisit(ConstantInteger constant) {}
-    public void preVisit(ConstantReal constant) {}
-    public void preVisit(ConstantString constant) {}
-    public void preVisit(VariableInteger variable) {}
-    public void preVisit(VariableReal variable) {}
-    public void preVisit(VariableString variable) {}
+    public void preVisit(Constant constant) {}
+    public void preVisit(Variable variable) {}
     public void preVisit(ArrayExpression expression) {}
     public void preVisit(ArrayElementExpression expression) {}
     public void preVisit(Invocation invocation) {}
@@ -22,12 +18,8 @@ public abstract class ModelVisitor {
     public void postVisit(Expression expression) {}
     public void postVisit(Operation operation) {}
     public void postVisit(Operator operator) {}
-    public void postVisit(ConstantInteger constant) {}
-    public void postVisit(ConstantReal constant) {}
-    public void postVisit(ConstantString constant) {}
-    public void postVisit(VariableInteger variable) {}
-    public void postVisit(VariableReal variable) {}
-    public void postVisit(VariableString variable) {}
+    public void postVisit(Constant constant) {}
+    public void postVisit(Variable variable) {}
     public void postVisit(ArrayExpression expression) {}
     public void postVisit(ArrayElementExpression expression) {}
     public void postVisit(Invocation invocation) {}

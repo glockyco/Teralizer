@@ -1,11 +1,13 @@
 package teralizer.transformer;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantInteger;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
 
 import java.util.Collections;
 
@@ -17,7 +19,7 @@ public class ModelToJavaTransformerBooleanVariableTest {
 
     @Example
     void rendersBooleanVariablesAsNumericValuesInsideSpfPathConditions() {
-        Operation model = new Operation(new VariableInteger("b"), Operator.NE, new ConstantInteger(0));
+        Operation model = new Operation(new Variable("b", TypeDomain.INTEGER), Operator.NE, new Constant((long) 0, TypeDomain.INTEGER));
         ModelToJavaTransformer transformer = new ModelToJavaTransformer(Collections.singletonMap("b", "boolean"));
 
         Assert.assertEquals("((_p_.b ? 1 : 0) != 0)", transformer.transform(model));

@@ -1,5 +1,9 @@
 package teralizer.transformer;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.jqwik.api.Example;
@@ -30,22 +34,22 @@ public class GoldenRenderingTest {
         Map<String, ModelCase> cases = new LinkedHashMap<>();
         cases.put("math.sqrt.operation", new ModelCase(
             new ModelToJavaTransformer(),
-            new Invocation(null, "java.lang.Math", "sqrt", Collections.singletonList(new VariableReal("x")))));
+            new Invocation(null, "java.lang.Math", "sqrt", Collections.singletonList(new Variable("x", TypeDomain.REAL)))));
         cases.put("math.pow.operation", new ModelCase(
             new ModelToJavaTransformer(),
-            new Invocation(null, "java.lang.Math", "pow", Arrays.asList(new VariableReal("x"), new ConstantReal(2.0)))));
+            new Invocation(null, "java.lang.Math", "pow", Arrays.asList(new Variable("x", TypeDomain.REAL), new Constant(2.0, TypeDomain.REAL)))));
         cases.put("math.atan2.operation", new ModelCase(
             new ModelToJavaTransformer(),
-            new Invocation(null, "java.lang.Math", "atan2", Arrays.asList(new VariableReal("y"), new VariableReal("x")))));
+            new Invocation(null, "java.lang.Math", "atan2", Arrays.asList(new Variable("y", TypeDomain.REAL), new Variable("x", TypeDomain.REAL)))));
         cases.put("boolean.path.predicate", new ModelCase(
             new ModelToJavaTransformer(Collections.singletonMap("b", "boolean")),
-            new Operation(new VariableInteger("b"), Operator.NE, new ConstantInteger(0))));
+            new Operation(new Variable("b", TypeDomain.INTEGER), Operator.NE, new Constant((long) 0, TypeDomain.INTEGER))));
         cases.put("char.bound.predicate", new ModelCase(
             new ModelToJavaTransformer(Collections.singletonMap("c", "char")),
-            new Operation(new VariableInteger("c"), Operator.GT, new ConstantInteger(64))));
+            new Operation(new Variable("c", TypeDomain.INTEGER), Operator.GT, new Constant((long) 64, TypeDomain.INTEGER))));
         cases.put("string.transform.invocation", new ModelCase(
             new ModelToJavaTransformer(),
-            new Invocation(new VariableString("s"), null, "trim", Collections.emptyList())));
+            new Invocation(new Variable("s", TypeDomain.STRING), null, "trim", Collections.emptyList())));
         return cases;
     }
 

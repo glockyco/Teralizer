@@ -9,11 +9,10 @@ import gov.nasa.jpf.symbc.string.StringPathCondition;
 import gov.nasa.jpf.symbc.string.StringSymbolic;
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.VariableInteger;
-import teralizer.domain.VariableReal;
+import teralizer.domain.Constant;
 import teralizer.domain.Invocation;
-import teralizer.domain.VariableString;
-import teralizer.domain.ConstantString;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 public class SpfToModelTransformerSymbolNameTest {
 
@@ -22,7 +21,7 @@ public class SpfToModelTransformerSymbolNameTest {
         SpfToModelTransformer transformer = new SpfToModelTransformer();
 
         Assert.assertEquals(
-            new VariableInteger("_ctor_interval_0_lower"),
+            new Variable("_ctor_interval_0_lower", TypeDomain.INTEGER),
             transformer.transform(new SymbolicInteger("_ctor_interval_0_lower_1_SYMINT"))
         );
     }
@@ -32,7 +31,7 @@ public class SpfToModelTransformerSymbolNameTest {
         SpfToModelTransformer transformer = new SpfToModelTransformer();
 
         Assert.assertEquals(
-            new VariableInteger("value"),
+            new Variable("value", TypeDomain.INTEGER),
             transformer.transform(new SymbolicInteger("value_2_SYMINT"))
         );
     }
@@ -42,7 +41,7 @@ public class SpfToModelTransformerSymbolNameTest {
         SpfToModelTransformer transformer = new SpfToModelTransformer();
 
         Assert.assertEquals(
-            new VariableReal("_ctor_interval_0_weight"),
+            new Variable("_ctor_interval_0_weight", TypeDomain.REAL),
             transformer.transform(new SymbolicReal("_ctor_interval_0_weight_3_SYMREAL", 0.0, 1.0))
         );
 
@@ -54,7 +53,7 @@ public class SpfToModelTransformerSymbolNameTest {
         );
 
         Assert.assertEquals(
-            new Invocation(new VariableString("_ctor_label_1_text"), null, "equals", java.util.Collections.singletonList(new ConstantString("ok"))),
+            new Invocation(new Variable("_ctor_label_1_text", TypeDomain.STRING), null, "equals", java.util.Collections.singletonList(new Constant("ok", TypeDomain.STRING))),
             transformer.transform(pathCondition)
         );
     }

@@ -1,5 +1,7 @@
 package teralizer.jqwik.planning;
 
+import teralizer.domain.TypeDomain;
+
 import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
 import teralizer.jqwik.IntegerConstraints;

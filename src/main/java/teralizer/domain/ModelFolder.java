@@ -16,12 +16,8 @@ import java.util.List;
  * @param <T> the folded value type
  */
 public abstract class ModelFolder<T> {
-    public abstract T fold(ConstantInteger constant);
-    public abstract T fold(ConstantReal constant);
-    public abstract T fold(ConstantString constant);
-    public abstract T fold(VariableInteger variable);
-    public abstract T fold(VariableReal variable);
-    public abstract T fold(VariableString variable);
+    public abstract T fold(Constant constant);
+    public abstract T fold(Variable variable);
     public abstract T fold(ArrayExpression expression);
     public abstract T fold(ArrayElementExpression expression, T elementSelector);
     public abstract T fold(Invocation invocation, T receiver, List<T> args);

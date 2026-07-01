@@ -1,18 +1,16 @@
 package teralizer.transformer;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.ArrayElementExpression;
 import teralizer.domain.ArrayExpression;
-import teralizer.domain.ConstantInteger;
-import teralizer.domain.ConstantReal;
-import teralizer.domain.ConstantString;
 import teralizer.domain.Invocation;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
-import teralizer.domain.VariableReal;
-import teralizer.domain.VariableString;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,7 +26,7 @@ public class ModelToJavaTransformerFoldOrderTest {
     @Example
     void arrayElementExpressionRendersSelectorInOrder() {
         // _p_.a[_p_.i] — the element selector must be the folded child, not swapped.
-        ArrayElementExpression expr = new ArrayElementExpression("a", "int", new VariableInteger("i"));
+        ArrayElementExpression expr = new ArrayElementExpression("a", "int", new Variable("i", TypeDomain.INTEGER));
         Assert.assertEquals("_p_.a[_p_.i]", new ModelToJavaTransformer().transform(expr));
     }
 
@@ -36,7 +34,7 @@ public class ModelToJavaTransformerFoldOrderTest {
     void arrayElementExpressionWithCompositeSelector() {
         // _p_.a[(1 + _p_.i)] — the selector is itself an Operation; fold order matters.
         Operation selector = new Operation(
-            new ConstantInteger(1), Operator.PLUS, new VariableInteger("i"));
+            new Constant((long) 1, TypeDomain.INTEGER), Operator.PLUS, new Variable("i", TypeDomain.INTEGER));
         ArrayElementExpression expr = new ArrayElementExpression("a", "int", selector);
         Assert.assertEquals("_p_.a[(1 + _p_.i)]", new ModelToJavaTransformer().transform(expr));
     }
@@ -47,7 +45,7 @@ public class ModelToJavaTransformerFoldOrderTest {
             null,
             "java.lang.Math",
             "pow",
-            Arrays.asList(new ConstantReal(1.0), new VariableReal("y")));
+            Arrays.asList(new Constant(1.0, TypeDomain.REAL), new Variable("y", TypeDomain.REAL)));
 
         Assert.assertEquals("Math.pow(1.0, _p_.y)", new ModelToJavaTransformer().transform(invocation));
     }
@@ -55,10 +53,10 @@ public class ModelToJavaTransformerFoldOrderTest {
     @Example
     void instanceInvocationPreservesReceiverAndArgumentOrder() {
         Invocation invocation = new Invocation(
-            new VariableString("s"),
+            new Variable("s", TypeDomain.STRING),
             null,
             "replace",
-            Arrays.asList(new ConstantString("a"), new ConstantString("b")));
+            Arrays.asList(new Constant("a", TypeDomain.STRING), new Constant("b", TypeDomain.STRING)));
 
         Assert.assertEquals("(_p_.s.replace(\"a\", \"b\"))", new ModelToJavaTransformer().transform(invocation));
     }
@@ -66,8 +64,8 @@ public class ModelToJavaTransformerFoldOrderTest {
     @Example
     void nestedOperationKeepsLeftAndRightDistinct() {
         // (1 - _p_.x) != (_p_.y + 2) — a swap of left/right would change the rendered predicate.
-        Operation left = new Operation(new ConstantInteger(1), Operator.MINUS, new VariableInteger("x"));
-        Operation right = new Operation(new VariableReal("y"), Operator.PLUS, new ConstantInteger(2));
+        Operation left = new Operation(new Constant((long) 1, TypeDomain.INTEGER), Operator.MINUS, new Variable("x", TypeDomain.INTEGER));
+        Operation right = new Operation(new Variable("y", TypeDomain.REAL), Operator.PLUS, new Constant((long) 2, TypeDomain.INTEGER));
         Operation model = new Operation(left, Operator.NE, right);
         Assert.assertEquals("((1 - _p_.x) != (_p_.y + 2))", new ModelToJavaTransformer(Collections.emptyMap()).transform(model));
     }

@@ -1,18 +1,17 @@
 package teralizer.transformer;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantInteger;
-import teralizer.domain.ConstantString;
 import teralizer.domain.Invocation;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
-import teralizer.domain.VariableReal;
-import teralizer.domain.VariableString;
 
 public class ModelToJavaTransformerNonGeneralizableTest {
 
@@ -22,7 +21,7 @@ public class ModelToJavaTransformerNonGeneralizableTest {
         // signal a typed non-generalizable outcome, not a bare RuntimeException, so callers can drop
         // the clause instead of crashing the whole generalization.
         Invocation model = new Invocation(
-            new VariableString("s"), null, "substring", Arrays.asList(new ConstantInteger(0), new ConstantInteger(1)));
+            new Variable("s", TypeDomain.STRING), null, "substring", Arrays.asList(new Constant((long) 0, TypeDomain.INTEGER), new Constant((long) 1, TypeDomain.INTEGER)));
         try {
             new ModelToJavaTransformer().transform(model);
             Assert.fail("expected NonGeneralizableExpressionException");
@@ -36,7 +35,7 @@ public class ModelToJavaTransformerNonGeneralizableTest {
         // Callers distinguish "non-generalizable clause" from other runtime failures; the
         // signal must be a distinct type, not RuntimeException itself.
         Invocation model = new Invocation(
-            new VariableString("s"), null, "substring", Arrays.asList(new ConstantInteger(0), new ConstantInteger(1)));
+            new Variable("s", TypeDomain.STRING), null, "substring", Arrays.asList(new Constant((long) 0, TypeDomain.INTEGER), new Constant((long) 1, TypeDomain.INTEGER)));
         try {
             new ModelToJavaTransformer().transform(model);
             Assert.fail("expected NonGeneralizableExpressionException");
@@ -52,7 +51,7 @@ public class ModelToJavaTransformerNonGeneralizableTest {
         // doubles when the doubleToRawLongBits wrapper has no Model node. Rendering '^' on
         // double operands is invalid Java; the renderer must fail loud so the clause excludes
         // cleanly (honest non-generalizable outcome) instead of emitting uncompilable code.
-        Operation model = new Operation(new VariableReal("x"), Operator.XOR, new VariableReal("y"));
+        Operation model = new Operation(new Variable("x", TypeDomain.REAL), Operator.XOR, new Variable("y", TypeDomain.REAL));
         try {
             new ModelToJavaTransformer().transform(model);
             Assert.fail("expected NonGeneralizableExpressionException");
@@ -64,7 +63,7 @@ public class ModelToJavaTransformerNonGeneralizableTest {
     @Example
     void bitwiseAndWithFloatingPointOperandThrowsTypedException() {
         // Mixed real/int bitwise (the `& SGN_MASK` step) is equally un-renderable.
-        Operation model = new Operation(new VariableReal("x"), Operator.AND, new ConstantInteger(1));
+        Operation model = new Operation(new Variable("x", TypeDomain.REAL), Operator.AND, new Constant((long) 1, TypeDomain.INTEGER));
         try {
             new ModelToJavaTransformer().transform(model);
             Assert.fail("expected NonGeneralizableExpressionException");
@@ -75,7 +74,7 @@ public class ModelToJavaTransformerNonGeneralizableTest {
 
     @Example
     void shiftOnFloatingPointOperandThrowsTypedException() {
-        Operation model = new Operation(new VariableReal("x"), Operator.SHIFTL, new ConstantInteger(2));
+        Operation model = new Operation(new Variable("x", TypeDomain.REAL), Operator.SHIFTL, new Constant((long) 2, TypeDomain.INTEGER));
         try {
             new ModelToJavaTransformer().transform(model);
             Assert.fail("expected NonGeneralizableExpressionException");
@@ -87,9 +86,9 @@ public class ModelToJavaTransformerNonGeneralizableTest {
     @Example
     void bitwiseOnMathInvocationThrowsTypedException() {
         Operation model = new Operation(
-            new Invocation(null, "java.lang.Math", "sqrt", Arrays.asList(new VariableReal("x"))),
+            new Invocation(null, "java.lang.Math", "sqrt", Arrays.asList(new Variable("x", TypeDomain.REAL))),
             Operator.AND,
-            new ConstantInteger(1));
+            new Constant((long) 1, TypeDomain.INTEGER));
         try {
             new ModelToJavaTransformer().transform(model);
             Assert.fail("expected NonGeneralizableExpressionException");
@@ -101,7 +100,7 @@ public class ModelToJavaTransformerNonGeneralizableTest {
     @Example
     void bitwiseXorOnIntegerOperandsStillRenders() {
         // Integer bitwise stays valid Java and must keep rendering after the guard lands.
-        Operation model = new Operation(new VariableInteger("a"), Operator.XOR, new VariableInteger("b"));
+        Operation model = new Operation(new Variable("a", TypeDomain.INTEGER), Operator.XOR, new Variable("b", TypeDomain.INTEGER));
         Assert.assertEquals("(_p_.a ^ _p_.b)", new ModelToJavaTransformer().transform(model));
     }
 
@@ -110,7 +109,7 @@ public class ModelToJavaTransformerNonGeneralizableTest {
         // The scorecard-relevant path: when the un-renderable bitwise clause constrains
         // generated parameters (x, y), transformPredicate must rethrow so the generalization
         // is excluded — never silently drop it, which would weaken the path predicate.
-        Operation model = new Operation(new VariableReal("x"), Operator.XOR, new VariableReal("y"));
+        Operation model = new Operation(new Variable("x", TypeDomain.REAL), Operator.XOR, new Variable("y", TypeDomain.REAL));
         Set<String> generalizable = new HashSet<>(Arrays.asList("x", "y"));
         try {
             new ModelToJavaTransformer().transformPredicate(model, generalizable);

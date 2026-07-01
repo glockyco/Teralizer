@@ -1,5 +1,7 @@
 package teralizer.jqwik.planning;
 
+import teralizer.domain.TypeDomain;
+
 import teralizer.domain.MethodParameter;
 
 import java.util.Collections;

@@ -7,10 +7,11 @@ import gov.nasa.jpf.symbc.string.StringPathCondition;
 import gov.nasa.jpf.symbc.string.StringSymbolic;
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantString;
+import teralizer.domain.Constant;
 import teralizer.domain.Invocation;
 import teralizer.domain.Not;
-import teralizer.domain.VariableString;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,7 +27,7 @@ public class SpfToModelTransformerStringInvocationTest {
             new StringSymbolic("value_1_SYMSTRING"));
 
         Assert.assertEquals(
-            new Invocation(new VariableString("value"), null, "equals", Collections.singletonList(new ConstantString("foo"))),
+            new Invocation(new Variable("value", TypeDomain.STRING), null, "equals", Collections.singletonList(new Constant("foo", TypeDomain.STRING))),
             new SpfToModelTransformer().transform(pathCondition));
     }
 
@@ -39,7 +40,7 @@ public class SpfToModelTransformerStringInvocationTest {
             new gov.nasa.jpf.symbc.string.StringConstant("foo"));
 
         Assert.assertEquals(
-            new Invocation(new VariableString("value"), null, "equals", Collections.singletonList(new ConstantString("foo"))),
+            new Invocation(new Variable("value", TypeDomain.STRING), null, "equals", Collections.singletonList(new Constant("foo", TypeDomain.STRING))),
             new SpfToModelTransformer().transform(pathCondition));
     }
 
@@ -52,7 +53,7 @@ public class SpfToModelTransformerStringInvocationTest {
             new StringSymbolic("value_1_SYMSTRING"));
 
         Assert.assertEquals(
-            new Not(new Invocation(new VariableString("value"), null, "equals", Collections.singletonList(new ConstantString("foo")))),
+            new Not(new Invocation(new Variable("value", TypeDomain.STRING), null, "equals", Collections.singletonList(new Constant("foo", TypeDomain.STRING)))),
             new SpfToModelTransformer().transform(pathCondition));
     }
 
@@ -62,7 +63,7 @@ public class SpfToModelTransformerStringInvocationTest {
         pathCondition._addDet(StringComparator.EMPTY, new StringSymbolic("value_1_SYMSTRING"));
 
         Assert.assertEquals(
-            new Invocation(new VariableString("value"), null, "isEmpty", Collections.emptyList()),
+            new Invocation(new Variable("value", TypeDomain.STRING), null, "isEmpty", Collections.emptyList()),
             new SpfToModelTransformer().transform(pathCondition));
     }
 
@@ -72,7 +73,7 @@ public class SpfToModelTransformerStringInvocationTest {
         pathCondition._addDet(StringComparator.NOTEMPTY, new StringSymbolic("value_1_SYMSTRING"));
 
         Assert.assertEquals(
-            new Not(new Invocation(new VariableString("value"), null, "isEmpty", Collections.emptyList())),
+            new Not(new Invocation(new Variable("value", TypeDomain.STRING), null, "isEmpty", Collections.emptyList())),
             new SpfToModelTransformer().transform(pathCondition));
     }
 
@@ -81,7 +82,7 @@ public class SpfToModelTransformerStringInvocationTest {
         StringExpression expression = new StringSymbolic("value_1_SYMSTRING")._trim();
 
         Assert.assertEquals(
-            new Invocation(new VariableString("value"), null, "trim", Collections.emptyList()),
+            new Invocation(new Variable("value", TypeDomain.STRING), null, "trim", Collections.emptyList()),
             new SpfToModelTransformer().transform(expression));
     }
 
@@ -91,10 +92,10 @@ public class SpfToModelTransformerStringInvocationTest {
 
         Assert.assertEquals(
             new Invocation(
-                new VariableString("value"),
+                new Variable("value", TypeDomain.STRING),
                 null,
                 "replace",
-                Arrays.asList(new ConstantString("a"), new ConstantString("b"))),
+                Arrays.asList(new Constant("a", TypeDomain.STRING), new Constant("b", TypeDomain.STRING))),
             new SpfToModelTransformer().transform(expression));
     }
 }

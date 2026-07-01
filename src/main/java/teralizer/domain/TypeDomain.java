@@ -1,4 +1,4 @@
-package teralizer.jqwik.planning;
+package teralizer.domain;
 
 public enum TypeDomain {
     INTEGER,

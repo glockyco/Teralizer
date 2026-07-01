@@ -2,11 +2,13 @@ package teralizer.domain;
 
 import java.util.Objects;
 
-public class ConstantInteger implements Expression {
-    public long value;
+public final class Variable implements Expression {
+    public final String name;
+    public final TypeDomain domain;
 
-    public ConstantInteger(long value) {
-        this.value = value;
+    public Variable(String name, TypeDomain domain) {
+        this.name = name;
+        this.domain = domain;
     }
 
     @Override
@@ -22,19 +24,19 @@ public class ConstantInteger implements Expression {
 
     @Override
     public String toString() {
-        return String.valueOf(this.value);
+        return this.name;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ConstantInteger that = (ConstantInteger) o;
-        return value == that.value;
+        Variable variable = (Variable) o;
+        return Objects.equals(name, variable.name) && domain == variable.domain;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return Objects.hash(name, domain);
     }
 }

@@ -2,14 +2,15 @@ package teralizer.jqwik.planning;
 
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantString;
+import teralizer.domain.Constant;
 import teralizer.domain.Invocation;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Not;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableString;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,7 +27,7 @@ public class StringDomainPlannerTest {
     }
 
     private static Invocation call(String method, String literal) {
-        return new Invocation(new VariableString("s"), null, method, Collections.singletonList(new ConstantString(literal)));
+        return new Invocation(new Variable("s", TypeDomain.STRING), null, method, Collections.singletonList(new Constant(literal, TypeDomain.STRING)));
     }
 
     @Example

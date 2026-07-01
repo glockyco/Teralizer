@@ -1,14 +1,13 @@
 package teralizer.transformer;
 
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.ConstantInteger;
-import teralizer.domain.ConstantString;
 import teralizer.domain.Invocation;
 import teralizer.domain.Not;
-import teralizer.domain.VariableReal;
-import teralizer.domain.VariableString;
-import teralizer.domain.VariableInteger;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,7 +16,7 @@ public class ModelToJavaTransformerInvocationTest {
 
     @Example
     void rendersNoArgInstanceInvocation() {
-        Invocation invocation = new Invocation(new VariableString("s"), null, "isEmpty", Collections.emptyList());
+        Invocation invocation = new Invocation(new Variable("s", TypeDomain.STRING), null, "isEmpty", Collections.emptyList());
 
         Assert.assertEquals("(_p_.s.isEmpty())", new ModelToJavaTransformer().transform(invocation));
     }
@@ -25,10 +24,10 @@ public class ModelToJavaTransformerInvocationTest {
     @Example
     void rendersOneArgInstanceInvocation() {
         Invocation invocation = new Invocation(
-            new VariableString("s"),
+            new Variable("s", TypeDomain.STRING),
             null,
             "equals",
-            Collections.singletonList(new ConstantString("foo")));
+            Collections.singletonList(new Constant("foo", TypeDomain.STRING)));
 
         Assert.assertEquals("(_p_.s.equals(\"foo\"))", new ModelToJavaTransformer().transform(invocation));
     }
@@ -38,19 +37,19 @@ public class ModelToJavaTransformerInvocationTest {
         Assert.assertEquals(
             "(_p_.s.equalsIgnoreCase(\"foo\"))",
             new ModelToJavaTransformer().transform(new Invocation(
-                new VariableString("s"), null, "equalsIgnoreCase", Collections.singletonList(new ConstantString("foo")))));
+                new Variable("s", TypeDomain.STRING), null, "equalsIgnoreCase", Collections.singletonList(new Constant("foo", TypeDomain.STRING)))));
         Assert.assertEquals(
             "(_p_.s.startsWith(\"f\"))",
             new ModelToJavaTransformer().transform(new Invocation(
-                new VariableString("s"), null, "startsWith", Collections.singletonList(new ConstantString("f")))));
+                new Variable("s", TypeDomain.STRING), null, "startsWith", Collections.singletonList(new Constant("f", TypeDomain.STRING)))));
         Assert.assertEquals(
             "(_p_.s.concat(\"!\"))",
             new ModelToJavaTransformer().transform(new Invocation(
-                new VariableString("s"), null, "concat", Collections.singletonList(new ConstantString("!")))));
+                new Variable("s", TypeDomain.STRING), null, "concat", Collections.singletonList(new Constant("!", TypeDomain.STRING)))));
         Assert.assertEquals(
             "((_p_.s.trim()).toLowerCase())",
             new ModelToJavaTransformer().transform(new Invocation(
-                new Invocation(new VariableString("s"), null, "trim", Collections.emptyList()),
+                new Invocation(new Variable("s", TypeDomain.STRING), null, "trim", Collections.emptyList()),
                 null,
                 "toLowerCase",
                 Collections.emptyList())));
@@ -59,10 +58,10 @@ public class ModelToJavaTransformerInvocationTest {
     @Example
     void stringInvocationOnNonStringReceiverThrowsTypedException() {
         Invocation invocation = new Invocation(
-            new VariableInteger("a"),
+            new Variable("a", TypeDomain.INTEGER),
             null,
             "equals",
-            Collections.singletonList(new ConstantInteger(0)));
+            Collections.singletonList(new Constant((long) 0, TypeDomain.INTEGER)));
 
         try {
             new ModelToJavaTransformer().transform(invocation);
@@ -78,7 +77,7 @@ public class ModelToJavaTransformerInvocationTest {
             null,
             "java.lang.Math",
             "sqrt",
-            Collections.singletonList(new VariableReal("x")));
+            Collections.singletonList(new Variable("x", TypeDomain.REAL)));
 
         Assert.assertEquals("Math.sqrt(_p_.x)", new ModelToJavaTransformer().transform(invocation));
     }
@@ -89,7 +88,7 @@ public class ModelToJavaTransformerInvocationTest {
             null,
             "java.lang.String",
             "valueOf",
-            Collections.singletonList(new VariableInteger("i")));
+            Collections.singletonList(new Variable("i", TypeDomain.INTEGER)));
 
         Assert.assertEquals("String.valueOf(_p_.i)", new ModelToJavaTransformer().transform(invocation));
     }
@@ -97,10 +96,10 @@ public class ModelToJavaTransformerInvocationTest {
     @Example
     void rendersNotAroundInvocation() {
         Invocation invocation = new Invocation(
-            new VariableString("s"),
+            new Variable("s", TypeDomain.STRING),
             null,
             "equals",
-            Collections.singletonList(new ConstantString("foo")));
+            Collections.singletonList(new Constant("foo", TypeDomain.STRING)));
 
         Assert.assertEquals("(!(_p_.s.equals(\"foo\")))", new ModelToJavaTransformer().transform(new Not(invocation)));
     }
@@ -108,10 +107,10 @@ public class ModelToJavaTransformerInvocationTest {
     @Example
     void unsupportedInvocationThrowsTypedException() {
         Invocation invocation = new Invocation(
-            new VariableString("s"),
+            new Variable("s", TypeDomain.STRING),
             null,
             "substring",
-            Arrays.asList(new ConstantInteger(0), new ConstantInteger(1)));
+            Arrays.asList(new Constant((long) 0, TypeDomain.INTEGER), new Constant((long) 1, TypeDomain.INTEGER)));
 
         try {
             new ModelToJavaTransformer().transform(invocation);
@@ -124,7 +123,7 @@ public class ModelToJavaTransformerInvocationTest {
     @Example
     void instanceCallUsingStaticCapabilityThrowsTypedException() {
         Invocation invocation = new Invocation(
-            new VariableReal("x"),
+            new Variable("x", TypeDomain.REAL),
             null,
             "sqrt",
             Collections.emptyList());
@@ -143,7 +142,7 @@ public class ModelToJavaTransformerInvocationTest {
             null,
             "foo.Bar",
             "sqrt",
-            Collections.singletonList(new VariableReal("x")));
+            Collections.singletonList(new Variable("x", TypeDomain.REAL)));
 
         try {
             new ModelToJavaTransformer().transform(invocation);

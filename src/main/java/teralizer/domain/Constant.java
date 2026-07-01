@@ -2,11 +2,13 @@ package teralizer.domain;
 
 import java.util.Objects;
 
-public class VariableInteger implements Expression {
-    public String name;
+public final class Constant implements Expression {
+    public final Object value;
+    public final TypeDomain domain;
 
-    public VariableInteger(String name) {
-        this.name = name;
+    public Constant(Object value, TypeDomain domain) {
+        this.value = value;
+        this.domain = domain;
     }
 
     @Override
@@ -22,19 +24,19 @@ public class VariableInteger implements Expression {
 
     @Override
     public String toString() {
-        return this.name;
+        return String.valueOf(this.value);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        VariableInteger that = (VariableInteger) o;
-        return Objects.equals(name, that.name);
+        Constant constant = (Constant) o;
+        return Objects.equals(value, constant.value) && domain == constant.domain;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(value, domain);
     }
 }

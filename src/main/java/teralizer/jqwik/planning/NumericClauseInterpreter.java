@@ -1,14 +1,13 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.ConstantInteger;
-import teralizer.domain.ConstantReal;
+import teralizer.domain.Constant;
 import teralizer.domain.Expression;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.VariableInteger;
-import teralizer.domain.VariableReal;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 import teralizer.jqwik.IntegerConstraints;
 import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.VariableConstraints;
@@ -26,8 +25,8 @@ import java.util.Set;
  * Single source of truth for turning numeric input clauses into per-parameter {@link VariableConstraints}
  * (the bounds the recipe renderer consumes) plus the ids of the clauses that produced them.
  *
- * <p>Atomic comparisons (operands that are directly {@code VariableInteger}/{@code ConstantInteger}/
- * {@code VariableReal}/{@code ConstantReal}) reproduce the operator-&gt;bound mapping and the
+ * <p>Atomic comparisons (operands that are directly typed integer/real {@code Variable}/
+ * {@code Constant} leaves) reproduce the operator-&gt;bound mapping and the
  * "bound the higher-indexed variable only" rule for var/var comparisons. Compound affine
  * comparisons (one side is an {@code Operation} that normalizes to an affine term) reproduce the
  * highest-indexed-variable, coefficient-&plusmn;1, and overflow-guard logic that used to live in
@@ -96,29 +95,60 @@ public final class NumericClauseInterpreter {
         Expression left = operation.left;
         Expression right = operation.right;
         Operator op = operation.op;
-        if (left instanceof VariableInteger && right instanceof VariableInteger) {
-            applyVariableComparison(((VariableInteger) left).name, false, op, ((VariableInteger) right).name, false, clauseId, parameterIndexes, parameterTypes, constraints, consumed);
-        } else if (left instanceof VariableInteger && right instanceof ConstantInteger) {
-            applyIntegerConstant(((VariableInteger) left).name, op, ((ConstantInteger) right).value, clauseId, parameterTypes, constraints, consumed);
-        } else if (left instanceof ConstantInteger && right instanceof VariableInteger) {
-            applyIntegerConstant(((VariableInteger) right).name, flip(op), ((ConstantInteger) left).value, clauseId, parameterTypes, constraints, consumed);
-        } else if (left instanceof VariableReal && right instanceof VariableReal) {
-            applyVariableComparison(((VariableReal) left).name, true, op, ((VariableReal) right).name, true, clauseId, parameterIndexes, parameterTypes, constraints, consumed);
-        } else if (left instanceof VariableReal && right instanceof ConstantReal) {
-            applyRealConstant(((VariableReal) left).name, op, ((ConstantReal) right).value, clauseId, parameterTypes, constraints, consumed);
-        } else if (left instanceof ConstantReal && right instanceof VariableReal) {
-            applyRealConstant(((VariableReal) right).name, flip(op), ((ConstantReal) left).value, clauseId, parameterTypes, constraints, consumed);
-        } else if (left instanceof VariableInteger && right instanceof VariableReal) {
-            applyVariableComparison(((VariableInteger) left).name, false, op, ((VariableReal) right).name, true, clauseId, parameterIndexes, parameterTypes, constraints, consumed);
-        } else if (left instanceof VariableReal && right instanceof VariableInteger) {
-            applyVariableComparison(((VariableReal) left).name, true, op, ((VariableInteger) right).name, false, clauseId, parameterIndexes, parameterTypes, constraints, consumed);
+        Variable leftVariable = numericVariable(left);
+        Variable rightVariable = numericVariable(right);
+        Constant leftConstant = numericConstant(left);
+        Constant rightConstant = numericConstant(right);
+
+        if (leftVariable != null && rightVariable != null) {
+            applyVariableComparison(leftVariable.name, isReal(leftVariable), op, rightVariable.name, isReal(rightVariable), clauseId, parameterIndexes, parameterTypes, constraints, consumed);
+        } else if (leftVariable != null && rightConstant != null) {
+            applyConstantComparison(leftVariable, op, rightConstant, clauseId, parameterTypes, constraints, consumed);
+        } else if (leftConstant != null && rightVariable != null) {
+            applyConstantComparison(rightVariable, flip(op), leftConstant, clauseId, parameterTypes, constraints, consumed);
+        }
+    }
+
+    private static Variable numericVariable(Expression expression) {
+        if (!(expression instanceof Variable)) {
+            return null;
+        }
+        Variable variable = (Variable) expression;
+        return variable.domain == TypeDomain.INTEGER || variable.domain == TypeDomain.REAL ? variable : null;
+    }
+
+    private static Constant numericConstant(Expression expression) {
+        if (!(expression instanceof Constant)) {
+            return null;
+        }
+        Constant constant = (Constant) expression;
+        return constant.domain == TypeDomain.INTEGER || constant.domain == TypeDomain.REAL ? constant : null;
+    }
+
+    private static boolean isReal(Variable variable) {
+        return variable.domain == TypeDomain.REAL;
+    }
+
+    private static void applyConstantComparison(
+        Variable variable,
+        Operator op,
+        Constant constant,
+        int clauseId,
+        Map<String, String> parameterTypes,
+        Map<String, VariableConstraints> constraints,
+        Map<String, Set<Integer>> consumed
+    ) {
+        if (variable.domain == TypeDomain.INTEGER && constant.domain == TypeDomain.INTEGER) {
+            applyIntegerConstant(variable.name, op, ((Number) constant.value).longValue(), clauseId, parameterTypes, constraints, consumed);
+        } else if (variable.domain == TypeDomain.REAL && constant.domain == TypeDomain.REAL) {
+            applyRealConstant(variable.name, op, ((Number) constant.value).doubleValue(), clauseId, parameterTypes, constraints, consumed);
         }
     }
 
     /**
      * Bounds the higher-indexed variable only, matching the index comparison in the
      * var/var comparison logic. The flag for each operand records whether its model node
-     * is real ({@code VariableReal}) so the bound is stored in the right constraint kind
+     * is real ({@code TypeDomain.REAL}) so the bound is stored in the right constraint kind
      * regardless of the parameter's declared type.
      */
     private static void applyVariableComparison(
@@ -505,17 +535,22 @@ public final class NumericClauseInterpreter {
         }
 
         private static AffineTerm from(Model model) {
-            if (model instanceof VariableInteger) {
-                return variable(((VariableInteger) model).name, false);
+            if (model instanceof Variable) {
+                Variable variable = (Variable) model;
+                if (variable.domain == TypeDomain.INTEGER || variable.domain == TypeDomain.REAL) {
+                    return variable(variable.name, variable.domain == TypeDomain.REAL);
+                }
+                return null;
             }
-            if (model instanceof VariableReal) {
-                return variable(((VariableReal) model).name, true);
-            }
-            if (model instanceof ConstantInteger) {
-                return integerConstant(((ConstantInteger) model).value);
-            }
-            if (model instanceof ConstantReal) {
-                return realConstant(((ConstantReal) model).value);
+            if (model instanceof Constant) {
+                Constant constant = (Constant) model;
+                if (constant.domain == TypeDomain.INTEGER) {
+                    return integerConstant(((Number) constant.value).longValue());
+                }
+                if (constant.domain == TypeDomain.REAL) {
+                    return realConstant(((Number) constant.value).doubleValue());
+                }
+                return null;
             }
             if (model instanceof Operation) {
                 Operation operation = (Operation) model;

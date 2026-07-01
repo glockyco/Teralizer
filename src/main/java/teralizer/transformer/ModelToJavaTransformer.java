@@ -162,41 +162,32 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     }
 
     @Override
-    public String fold(ConstantInteger constant) {
-        return this.transform(constant.value);
+    public String fold(Constant constant) {
+        assert constant != null;
+        assert constant.domain != null;
+        switch (constant.domain) {
+            case INTEGER:
+                return this.transform(((Number) constant.value).longValue());
+            case REAL:
+                return this.transform(((Number) constant.value).doubleValue());
+            case STRING:
+                return this.renderStringLiteral((String) constant.value);
+            default:
+                throw new NonGeneralizableExpressionException(
+                    "Cannot render constant with domain '" + constant.domain + "' as Java.");
+        }
     }
 
     @Override
-    public String fold(ConstantReal constant) {
-        return this.transform(constant.value);
-    }
-
-    @Override
-    public String fold(ConstantString constant) {
-        return this.renderStringLiteral(constant.value);
-    }
-
-    @Override
-    public String fold(VariableInteger variable) {
+    public String fold(Variable variable) {
         assert variable != null;
         assert variable.name != null;
-        if ("boolean".equals(this.variableTypes.get(variable.name)) || "java.lang.Boolean".equals(this.variableTypes.get(variable.name))) {
+        assert variable.domain != null;
+        if (variable.domain == TypeDomain.INTEGER
+            && ("boolean".equals(this.variableTypes.get(variable.name))
+                || "java.lang.Boolean".equals(this.variableTypes.get(variable.name)))) {
             return "(_p_." + variable.name + " ? 1 : 0)";
         }
-        return "_p_." + variable.name;
-    }
-
-    @Override
-    public String fold(VariableReal variable) {
-        assert variable != null;
-        assert variable.name != null;
-        return "_p_." + variable.name;
-    }
-
-    @Override
-    public String fold(VariableString variable) {
-        assert variable != null;
-        assert variable.name != null;
         return "_p_." + variable.name;
     }
 
@@ -323,8 +314,10 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     }
 
     private static boolean isStringExpression(Expression expression) {
-        return expression instanceof VariableString
-            || expression instanceof ConstantString
+        return expression instanceof Variable
+            && ((Variable) expression).domain == TypeDomain.STRING
+            || expression instanceof Constant
+            && ((Constant) expression).domain == TypeDomain.STRING
             || (expression instanceof Invocation && isStringReturningInvocation((Invocation) expression));
     }
 
@@ -345,8 +338,10 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     }
 
     private static boolean isFloatingPoint(Expression expression) {
-        if (expression instanceof VariableReal
-            || expression instanceof ConstantReal) {
+        if (expression instanceof Variable
+            && ((Variable) expression).domain == TypeDomain.REAL
+            || expression instanceof Constant
+            && ((Constant) expression).domain == TypeDomain.REAL) {
             return true;
         }
         if (expression instanceof Invocation) {
