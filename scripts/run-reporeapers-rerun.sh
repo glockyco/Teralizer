@@ -6,13 +6,14 @@
 # (IMPROVED_100_TRIES, PIT skipped: mutation scores are not relevant to the funnel). Per-project
 # failures ARE the data, so the loop records them and continues.
 #
-# Resumable via per-project done-markers under DATA_DIR/done/: a marker is written only after a
-# project's run RETURNS (whether it succeeded or exited non-zero), so a project interrupted
-# mid-run has no marker and is re-run next time. Markers are cleared whenever the DB is created
-# fresh (--reset-db or a missing DB), keeping markers consistent with the DB's contents.
+# Every attempt is logged to DATA_DIR/status.tsv (n, root_path, gradle exit code, log path) so
+# early crashes that never reach the DB still join cleanly with the DB funnel. Resumable via
+# per-project done-markers under DATA_DIR/done/: a marker is written only after a project's run
+# RETURNS, so a project interrupted mid-run has no marker and is re-run next time. Markers and the
+# status ledger are reset whenever the DB is created fresh (--reset-db or a missing DB).
 #
 # Usage: scripts/run-reporeapers-rerun.sh [--reset-db] [--limit N] [--start N]
-#   --reset-db   drop + recreate the scratch DB (clears done-markers) first; else resume/append
+#   --reset-db   drop + recreate the scratch DB (clears markers + status) first; else resume/append
 #   --limit N    process at most N not-yet-done projects (spike)
 #   --start N    skip project configs numbered below N
 #
@@ -27,6 +28,7 @@ PROFILE="project-configs/reporeapers-rerun.conf"
 CONFIG_DIR="project-configs/replication/extended"
 DONE_DIR="$ROOT_DIR/$DATA_DIR/done"
 LOG_DIR="$ROOT_DIR/$DATA_DIR/run-logs"
+STATUS_TSV="$ROOT_DIR/$DATA_DIR/status.tsv"
 
 # Never touch the core corpora.
 case "$DB_NAME" in
@@ -40,7 +42,7 @@ while [[ $# -gt 0 ]]; do
     --reset-db) reset_db=true; shift ;;
     --limit) limit="${2:?--limit needs a number}"; shift 2 ;;
     --start) start="${2:?--start needs a number}"; shift 2 ;;
-    -h|--help) sed -n '2,19p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
@@ -71,11 +73,12 @@ if [[ "$(_psql -tA -d postgres -c "SELECT 1 FROM pg_database WHERE datname='$DB_
     _psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
     _psql -d postgres -c "CREATE DATABASE $DB_NAME;" || { echo "CREATE DATABASE failed" >&2; exit 1; }
   fi
-  # Fresh DB has no recorded projects -> any leftover done-markers are stale.
-  rm -rf "$DONE_DIR"
+  # Fresh DB has no recorded projects -> leftover markers/status are stale.
+  rm -rf "$DONE_DIR" "$STATUS_TSV"
 fi
 
 mkdir -p "$DONE_DIR" "$LOG_DIR"
+[[ -f "$STATUS_TSV" ]] || printf 'n\troot_path\texit_code\tlog\n' > "$STATUS_TSV"
 
 mapfile -t configs < <(find "$ROOT_DIR/$CONFIG_DIR" -maxdepth 1 -name 'project-*.conf' | sort -V)
 [[ ${#configs[@]} -gt 0 ]] || { echo "No project configs under $CONFIG_DIR" >&2; exit 1; }
@@ -87,17 +90,21 @@ for config_abs in "${configs[@]}"; do
   [[ "$limit" -gt 0 && "$attempted" -ge "$limit" ]] && break
   [[ -f "$DONE_DIR/project-$n" ]] && { skipped=$((skipped + 1)); continue; }
   config="${config_abs#"$ROOT_DIR"/}"
+  log="$DATA_DIR/run-logs/project-$n.log"
   root_path=$(sed -n 's/[[:space:]]*root-path[[:space:]]*=[[:space:]]*"\(.*\)".*/\1/p' "$config_abs" | head -1)
   attempted=$((attempted + 1))
   echo "==> [$n] $root_path"
-  if ! DB_NAME="$DB_NAME" DATA_DIR="$DATA_DIR" \
-       "$ROOT_DIR/gradlew" run -Dteralizer.config="$PROFILE,$config" --no-daemon \
-       > "$LOG_DIR/project-$n.log" 2>&1; then
+  DB_NAME="$DB_NAME" DATA_DIR="$DATA_DIR" \
+    "$ROOT_DIR/gradlew" run -Dteralizer.config="$PROFILE,$config" --no-daemon \
+    > "$ROOT_DIR/$log" 2>&1
+  rc=$?
+  printf '%s\t%s\t%s\t%s\n' "$n" "$root_path" "$rc" "$log" >> "$STATUS_TSV"
+  if [[ "$rc" -ne 0 ]]; then
     nonzero=$((nonzero + 1))
-    echo "    gradle exited non-zero (funnel data still recorded; see $DATA_DIR/run-logs/project-$n.log)"
+    echo "    gradle exited $rc (funnel data still recorded where reached; see $log)"
   fi
   touch "$DONE_DIR/project-$n"
 done
 
 echo "reporeapers-rerun: attempted=$attempted skipped(already done)=$skipped gradle-nonzero=$nonzero"
-echo "Funnel lives in DB '$DB_NAME' (project, test, assertion, filter_result, task, generalization)."
+echo "Attempt ledger: $DATA_DIR/status.tsv   Funnel DB: '$DB_NAME' (project, test, assertion, filter_result, task, generalization)."
