@@ -1,12 +1,11 @@
 package teralizer.processing.filter;
 
+import java.util.List;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.processing.TestResult;
-
-import java.util.List;
 
 public class NonPassingTestFilter extends AbstractFilter {
 

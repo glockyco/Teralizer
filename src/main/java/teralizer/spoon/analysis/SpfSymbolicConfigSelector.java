@@ -1,14 +1,13 @@
 package teralizer.spoon.analysis;
 
+import java.util.Arrays;
+import java.util.List;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.util.SpfSymbolicConfig;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Chooses the SPF symbolic-analysis backend for a tested method by detecting the

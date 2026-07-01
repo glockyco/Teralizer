@@ -33,4 +33,3 @@ public class Dependency {
         return Objects.hash(this.groupId, this.artifactId);
     }
 }
-

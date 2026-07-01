@@ -1,12 +1,11 @@
 package teralizer.processing.filter;
 
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtTypeInformation;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class NestedClassesFilter extends AbstractFilter {
 

@@ -5,6 +5,8 @@ import gov.nasa.jpf.symbc.string.StringComparator;
 import gov.nasa.jpf.symbc.string.StringExpression;
 import gov.nasa.jpf.symbc.string.StringPathCondition;
 import gov.nasa.jpf.symbc.string.StringSymbolic;
+import java.util.Arrays;
+import java.util.Collections;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.Constant;
@@ -12,9 +14,6 @@ import teralizer.domain.Invocation;
 import teralizer.domain.Not;
 import teralizer.domain.TypeDomain;
 import teralizer.domain.Variable;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 public class SpfToModelTransformerStringInvocationTest {
 

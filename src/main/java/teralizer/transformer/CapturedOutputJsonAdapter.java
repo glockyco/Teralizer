@@ -7,11 +7,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import java.lang.reflect.Type;
 import teralizer.domain.CapturedException;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.Value;
-
-import java.lang.reflect.Type;
 
 /**
  * Gson (de)serializer for {@link CapturedOutput}, tagging the three outcome kinds so a returned

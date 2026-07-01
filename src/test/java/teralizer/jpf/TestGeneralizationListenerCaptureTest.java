@@ -1,15 +1,14 @@
 package teralizer.jpf;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import teralizer.domain.PrimitiveValue;
 import teralizer.domain.StringValue;
 import teralizer.domain.Value;
-
-import java.nio.file.Path;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * In-process JPF regression tests for {@link TestGeneralizationListener}'s concrete-value capture.

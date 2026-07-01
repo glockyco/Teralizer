@@ -1,12 +1,11 @@
 package teralizer.jpf;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import teralizer.domain.PrimitiveValue;
-
-import java.nio.file.Path;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Pins which invocation of the tested method {@link TestGeneralizationListener} captures when the

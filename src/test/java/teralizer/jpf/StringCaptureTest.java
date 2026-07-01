@@ -1,14 +1,13 @@
 package teralizer.jpf;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import teralizer.domain.PrimitiveValue;
-
-import java.nio.file.Path;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import teralizer.domain.PrimitiveValue;
 
 /**
  * Pins sound capture of a symbolic String path condition. A MUT that branches on

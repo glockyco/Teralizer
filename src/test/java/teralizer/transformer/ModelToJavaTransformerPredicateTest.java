@@ -1,18 +1,16 @@
 package teralizer.transformer;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
-import net.jqwik.api.Example;
-import org.junit.Assert;
-import teralizer.domain.Invocation;
-import teralizer.domain.Operation;
-import teralizer.domain.Operator;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import teralizer.domain.Constant;
+import teralizer.domain.Invocation;
+import teralizer.domain.Operation;
+import teralizer.domain.Operator;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 public class ModelToJavaTransformerPredicateTest {
 

@@ -1,18 +1,17 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.Model;
-import teralizer.domain.Operation;
-import teralizer.domain.Operator;
-import teralizer.transformer.ModelToJavaTransformer;
-import teralizer.transformer.NonGeneralizableExpressionException;
-import teralizer.transformer.VariableNameCollector;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import teralizer.domain.Model;
+import teralizer.domain.Operation;
+import teralizer.domain.Operator;
+import teralizer.transformer.ModelToJavaTransformer;
+import teralizer.transformer.NonGeneralizableExpressionException;
+import teralizer.transformer.VariableNameCollector;
 
 public final class ConstraintClauses {
     private ConstraintClauses() {

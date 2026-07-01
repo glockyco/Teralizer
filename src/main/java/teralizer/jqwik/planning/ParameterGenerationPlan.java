@@ -1,12 +1,10 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.TypeDomain;
-
-import teralizer.domain.MethodParameter;
-
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import teralizer.domain.MethodParameter;
+import teralizer.domain.TypeDomain;
 
 public class ParameterGenerationPlan {
     private final MethodParameter parameter;

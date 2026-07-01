@@ -1,12 +1,11 @@
 package teralizer.jqwik.planning;
 
-import net.jqwik.api.Example;
-import org.junit.Assert;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import net.jqwik.api.Example;
+import org.junit.Assert;
 
 public class InputGenerationPlanTest {
 

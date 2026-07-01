@@ -1,13 +1,12 @@
 package teralizer.transformer;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
 import net.jqwik.api.Example;
 import org.junit.Assert;
+import teralizer.domain.Constant;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 public class ModelToJavaTransformerStringLiteralTest {
 

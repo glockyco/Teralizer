@@ -2,16 +2,15 @@ package teralizer.processing.filter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import net.jqwik.api.Example;
-import org.junit.Assert;
-import org.jooq.generated.tables.records.AssertionRecord;
-import teralizer.domain.MethodArgument;
-import teralizer.domain.MethodParameter;
-
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import net.jqwik.api.Example;
+import org.jooq.generated.tables.records.AssertionRecord;
+import org.junit.Assert;
+import teralizer.domain.MethodArgument;
+import teralizer.domain.MethodParameter;
 
 /**
  * Regression guard for the inline-constructor input case. When the tested method's

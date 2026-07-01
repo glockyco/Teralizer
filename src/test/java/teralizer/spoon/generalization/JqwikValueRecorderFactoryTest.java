@@ -1,13 +1,12 @@
 package teralizer.spoon.generalization;
 
+import java.nio.file.Paths;
+import java.util.Properties;
 import net.jqwik.api.Example;
 import org.apache.velocity.app.VelocityEngine;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
-
-import java.nio.file.Paths;
-import java.util.Properties;
 
 public class JqwikValueRecorderFactoryTest {
 

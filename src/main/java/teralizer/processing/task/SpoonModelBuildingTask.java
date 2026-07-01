@@ -1,12 +1,11 @@
 package teralizer.processing.task;
 
+import java.util.function.Consumer;
 import org.jooq.generated.tables.records.ProjectRecord;
 import spoon.Launcher;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.spoon.SpoonFactory;
-
-import java.util.function.Consumer;
 
 public class SpoonModelBuildingTask extends AbstractTask {
 

@@ -9,6 +9,10 @@ import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
 import gov.nasa.jpf.util.MethodSpec;
 import gov.nasa.jpf.vm.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.domain.CapturedException;
@@ -19,11 +23,6 @@ import teralizer.domain.ReferenceValue;
 import teralizer.domain.StringValue;
 import teralizer.domain.Value;
 import teralizer.transformer.SpfToModelTransformer;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TestGeneralizationListener extends PropertyListenerAdapter {
 

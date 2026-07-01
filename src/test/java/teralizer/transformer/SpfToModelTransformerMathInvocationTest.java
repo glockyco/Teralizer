@@ -3,14 +3,13 @@ package teralizer.transformer;
 import gov.nasa.jpf.symbc.numeric.MathFunction;
 import gov.nasa.jpf.symbc.numeric.MathRealExpression;
 import gov.nasa.jpf.symbc.numeric.SymbolicReal;
+import java.util.Arrays;
+import java.util.Collections;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.Invocation;
 import teralizer.domain.TypeDomain;
 import teralizer.domain.Variable;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 public class SpfToModelTransformerMathInvocationTest {
 

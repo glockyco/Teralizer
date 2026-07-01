@@ -1,16 +1,15 @@
 package teralizer.processing.task;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Objects;
+import java.util.function.Consumer;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Objects;
-import java.util.function.Consumer;
 
 public abstract class AbstractTask implements Task {
 

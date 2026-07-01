@@ -1,9 +1,9 @@
 package teralizer.domain;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Pins the construction invariants of the typed {@link Value} variants: the typed boundary must

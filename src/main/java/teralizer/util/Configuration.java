@@ -4,17 +4,16 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 import io.github.cdimascio.dotenv.Dotenv;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import teralizer.processing.GeneralizationAlgorithm;
-import teralizer.processing.dependencies.Dependency;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import teralizer.processing.GeneralizationAlgorithm;
+import teralizer.processing.dependencies.Dependency;
 
 public class Configuration {
 

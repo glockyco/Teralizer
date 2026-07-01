@@ -1,17 +1,16 @@
 package teralizer.spoon.generalization;
 
-import net.jqwik.api.Example;
-import org.junit.Assert;
-import spoon.Launcher;
-import spoon.reflect.declaration.CtClass;
-import teralizer.domain.PrimitiveValue;
-import teralizer.domain.Value;
-import teralizer.domain.MethodParameter;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import spoon.Launcher;
+import spoon.reflect.declaration.CtClass;
+import teralizer.domain.MethodParameter;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 
 public class NaiveSupplierRenderingTest {
 

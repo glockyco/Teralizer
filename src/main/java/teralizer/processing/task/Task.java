@@ -1,9 +1,8 @@
 package teralizer.processing.task;
 
+import java.util.function.Consumer;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
-
-import java.util.function.Consumer;
 
 public interface Task {
 

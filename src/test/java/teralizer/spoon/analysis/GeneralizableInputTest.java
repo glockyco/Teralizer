@@ -1,5 +1,6 @@
 package teralizer.spoon.analysis;
 
+import java.util.List;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import spoon.Launcher;
@@ -9,8 +10,6 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
-
-import java.util.List;
 
 public class GeneralizableInputTest {
     @Example

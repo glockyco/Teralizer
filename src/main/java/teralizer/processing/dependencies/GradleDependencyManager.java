@@ -1,5 +1,11 @@
 package teralizer.processing.dependencies;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.model.GradleModuleVersion;
@@ -10,13 +16,6 @@ import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.TestFramework;
 import teralizer.util.Configuration;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Consumer;
 
 public class GradleDependencyManager {
 

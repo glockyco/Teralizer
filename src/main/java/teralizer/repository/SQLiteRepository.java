@@ -1,12 +1,11 @@
 package teralizer.repository;
 
+import java.util.List;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
 import teralizer.processing.ProcessingStage;
-
-import java.util.List;
 
 public class SQLiteRepository {
 

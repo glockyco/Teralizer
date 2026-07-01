@@ -1,5 +1,7 @@
 package teralizer.spoon.analysis;
 
+import java.util.ArrayList;
+import java.util.List;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
@@ -9,10 +11,6 @@ import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.reference.CtTypeReference;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import teralizer.util.TypeCapability;
 
 public class GeneralizableInput {

@@ -2,6 +2,10 @@ package teralizer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
 import org.apache.velocity.app.VelocityEngine;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
@@ -13,11 +17,6 @@ import teralizer.processing.ProjectType;
 import teralizer.processing.TaskContext;
 import teralizer.processing.task.ProjectDownloadTask;
 import teralizer.util.Configuration;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Properties;
 
 public class TestGeneralizationRunner {
 

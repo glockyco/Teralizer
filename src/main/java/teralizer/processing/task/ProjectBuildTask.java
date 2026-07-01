@@ -1,18 +1,17 @@
 package teralizer.processing.task;
 
-import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.processing.ProcessingStage;
-import teralizer.processing.TaskContext;
-import teralizer.util.Configuration;
-import teralizer.util.ConsoleCommand;
-import teralizer.util.ConsoleCommandException;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import org.jooq.generated.tables.records.ProjectRecord;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
+import teralizer.util.ConsoleCommand;
+import teralizer.util.ConsoleCommandException;
 
 public class ProjectBuildTask extends AbstractTask {
 

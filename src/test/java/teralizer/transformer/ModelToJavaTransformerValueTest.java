@@ -1,11 +1,11 @@
 package teralizer.transformer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
 import teralizer.domain.NullValue;
 import teralizer.domain.PrimitiveValue;
 import teralizer.domain.StringValue;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Pins how a typed {@link teralizer.domain.Value} renders to a Java literal. The typed renderer

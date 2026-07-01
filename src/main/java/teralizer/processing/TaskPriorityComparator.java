@@ -1,9 +1,8 @@
 package teralizer.processing;
 
-import teralizer.processing.task.Task;
-
 import java.util.Comparator;
 import java.util.Objects;
+import teralizer.processing.task.Task;
 
 public class TaskPriorityComparator implements Comparator<Task> {
 

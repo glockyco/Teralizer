@@ -1,18 +1,16 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
-import net.jqwik.api.Example;
-import org.junit.Assert;
-import teralizer.domain.Model;
-import teralizer.domain.Operation;
-import teralizer.domain.Operator;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import teralizer.domain.Constant;
+import teralizer.domain.Model;
+import teralizer.domain.Operation;
+import teralizer.domain.Operator;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 public class ConstraintClausesTest {
     @Example

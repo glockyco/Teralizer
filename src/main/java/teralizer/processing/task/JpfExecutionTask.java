@@ -5,24 +5,23 @@ import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFListenerException;
 import gov.nasa.jpf.JPFNativePeerException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
-import teralizer.jpf.TestGeneralizationListener;
 import teralizer.jpf.ExtractionAborted;
 import teralizer.jpf.ExtractionOutcome;
 import teralizer.jpf.SpecificationExtractor;
+import teralizer.jpf.TestGeneralizationListener;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
-
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class JpfExecutionTask extends AbstractTask {
 

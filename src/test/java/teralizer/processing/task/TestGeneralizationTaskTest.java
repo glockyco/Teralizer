@@ -1,15 +1,14 @@
 package teralizer.processing.task;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.PrimitiveValue;
 import teralizer.domain.ReferenceValue;
 import teralizer.domain.Value;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class TestGeneralizationTaskTest {
     @Example

@@ -1,5 +1,7 @@
 package teralizer.jqwik.planning;
 
+import java.util.Collections;
+import java.util.List;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.Constant;
@@ -11,9 +13,6 @@ import teralizer.domain.Operation;
 import teralizer.domain.Operator;
 import teralizer.domain.TypeDomain;
 import teralizer.domain.Variable;
-
-import java.util.Collections;
-import java.util.List;
 
 public class StringDomainPlannerTest {
 

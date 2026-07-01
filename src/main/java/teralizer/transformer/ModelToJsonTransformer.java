@@ -1,10 +1,9 @@
 package teralizer.transformer;
 
 import com.google.gson.*;
-import teralizer.domain.Error;
-import teralizer.domain.*;
-
 import java.lang.reflect.Type;
+import teralizer.domain.*;
+import teralizer.domain.Error;
 
 public class ModelToJsonTransformer {
     private final Gson gson;

@@ -1,6 +1,10 @@
 package teralizer.processing.task;
 
 import com.google.gson.Gson;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import org.jooq.DSLContext;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
@@ -22,13 +26,8 @@ import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
-import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.analysis.GeneralizableInput;
-
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
+import teralizer.spoon.analysis.TestAnalysis;
 
 public class TestAnalysisTask extends AbstractTask {
 

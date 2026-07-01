@@ -1,19 +1,17 @@
 package teralizer.processing;
 
-import org.jooq.DSLContext;
-import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.TaskRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import teralizer.processing.task.Task;
-import teralizer.util.Configuration;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.TaskRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import teralizer.processing.task.Task;
 
 public class ProcessingPipeline {
 

@@ -2,6 +2,21 @@ package teralizer.processing.task;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.Record;
@@ -11,8 +26,8 @@ import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.tools.json.JSONArray;
-import teralizer.domain.Model;
 import teralizer.domain.MethodParameter;
+import teralizer.domain.Model;
 import teralizer.jpf.ModelStatistics;
 import teralizer.jpf.ModelStatisticsExtractor;
 import teralizer.processing.ProcessingStage;
@@ -20,22 +35,6 @@ import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
-
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import java.util.Map;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class JpfAnalysisTask extends AbstractTask {
 

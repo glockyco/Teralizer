@@ -5,15 +5,6 @@ import com.google.gson.reflect.TypeToken;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFListenerException;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import teralizer.domain.CapturedOutput;
-import teralizer.domain.Value;
-import teralizer.jpf.targets.Cut;
-import teralizer.transformer.SpecificationGson;
-import teralizer.util.Configuration;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,6 +17,14 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import teralizer.domain.CapturedOutput;
+import teralizer.domain.Value;
+import teralizer.jpf.targets.Cut;
+import teralizer.transformer.SpecificationGson;
+import teralizer.util.Configuration;
 
 /**
  * Runs {@link TestGeneralizationListener} in-process against a compiled target fixture, exactly as

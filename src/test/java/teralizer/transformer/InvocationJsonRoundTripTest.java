@@ -1,5 +1,6 @@
 package teralizer.transformer;
 
+import java.util.Collections;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.Constant;
@@ -8,8 +9,6 @@ import teralizer.domain.Model;
 import teralizer.domain.Not;
 import teralizer.domain.TypeDomain;
 import teralizer.domain.Variable;
-
-import java.util.Collections;
 
 public class InvocationJsonRoundTripTest {
 

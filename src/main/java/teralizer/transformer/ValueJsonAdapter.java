@@ -7,14 +7,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import java.lang.reflect.Type;
 import teralizer.domain.JavaTypes;
 import teralizer.domain.NullValue;
 import teralizer.domain.PrimitiveValue;
 import teralizer.domain.ReferenceValue;
 import teralizer.domain.StringValue;
 import teralizer.domain.Value;
-
-import java.lang.reflect.Type;
 
 /**
  * Gson (de)serializer for the typed {@link Value} hierarchy, using a {@code kind}-tagged object form

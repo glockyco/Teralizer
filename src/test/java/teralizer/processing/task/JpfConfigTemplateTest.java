@@ -1,14 +1,13 @@
 package teralizer.processing.task;
 
+import java.io.StringWriter;
+import java.util.Properties;
 import net.jqwik.api.Example;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.junit.Assert;
 import teralizer.util.Configuration;
-
-import java.io.StringWriter;
-import java.util.Properties;
 
 public class JpfConfigTemplateTest {
     @Example

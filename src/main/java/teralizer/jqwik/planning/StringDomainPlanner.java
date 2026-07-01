@@ -1,21 +1,18 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.Constant;
-import teralizer.domain.Expression;
-import teralizer.domain.Invocation;
-import teralizer.domain.MethodParameter;
-import teralizer.domain.Model;
-import teralizer.domain.Operation;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Value;
-import teralizer.domain.Variable;
-import teralizer.transformer.ModelToJavaTransformer;
-
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import teralizer.domain.Constant;
+import teralizer.domain.Invocation;
+import teralizer.domain.MethodParameter;
+import teralizer.domain.Model;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Value;
+import teralizer.domain.Variable;
+import teralizer.transformer.ModelToJavaTransformer;
 
 /**
  * Plans generation for a symbolic {@link String} parameter. Builds an arbitrary that <em>satisfies</em>

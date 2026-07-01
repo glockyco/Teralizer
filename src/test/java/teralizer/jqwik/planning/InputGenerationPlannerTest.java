@@ -1,21 +1,19 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.PrimitiveValue;
-import teralizer.domain.Value;
+import teralizer.domain.Constant;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Value;
+import teralizer.domain.Variable;
 
 public class InputGenerationPlannerTest {
     @Example

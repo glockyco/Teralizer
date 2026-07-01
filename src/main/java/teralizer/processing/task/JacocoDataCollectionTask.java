@@ -1,14 +1,5 @@
 package teralizer.processing.task;
 
-import org.jooq.DSLContext;
-import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.JacocoCoverageReportRecord;
-import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.processing.ProcessingStage;
-import teralizer.processing.TaskContext;
-import teralizer.util.Configuration;
-import teralizer.util.ConsoleCommand;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -19,6 +10,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.JacocoCoverageReportRecord;
+import org.jooq.generated.tables.records.ProjectRecord;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
+import teralizer.util.ConsoleCommand;
 
 public class JacocoDataCollectionTask extends AbstractTask {
 

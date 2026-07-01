@@ -1,18 +1,5 @@
 package teralizer.processing.task;
 
-import org.jooq.DSLContext;
-import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.EvosuiteRuntimeRecord;
-import org.jooq.generated.tables.records.ProjectRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import teralizer.processing.ProcessingStage;
-import teralizer.processing.TaskContext;
-import teralizer.util.Configuration;
-import teralizer.util.ConsoleCommand;
-import teralizer.util.ConsoleCommandException;
-import teralizer.util.ConsoleCommandResult;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +16,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.EvosuiteRuntimeRecord;
+import org.jooq.generated.tables.records.ProjectRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
+import teralizer.util.ConsoleCommand;
+import teralizer.util.ConsoleCommandException;
+import teralizer.util.ConsoleCommandResult;
 
 public class EvoSuiteGenerationTask extends AbstractTask {
 

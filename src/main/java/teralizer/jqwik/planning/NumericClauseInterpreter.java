@@ -1,5 +1,13 @@
 package teralizer.jqwik.planning;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import teralizer.domain.Constant;
 import teralizer.domain.Expression;
 import teralizer.domain.MethodParameter;
@@ -11,15 +19,6 @@ import teralizer.domain.Variable;
 import teralizer.jqwik.IntegerConstraints;
 import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.VariableConstraints;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Single source of truth for turning numeric input clauses into per-parameter {@link VariableConstraints}

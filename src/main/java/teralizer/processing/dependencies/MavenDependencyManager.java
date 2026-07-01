@@ -1,5 +1,10 @@
 package teralizer.processing.dependencies;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Consumer;
 import org.dom4j.*;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
@@ -7,12 +12,6 @@ import org.dom4j.io.XMLWriter;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.TestFramework;
 import teralizer.util.Configuration;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Consumer;
 
 public class MavenDependencyManager {
 

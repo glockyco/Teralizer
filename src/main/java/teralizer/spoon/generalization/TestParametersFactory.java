@@ -1,17 +1,16 @@
 package teralizer.spoon.generalization;
 
-import spoon.reflect.declaration.*;
-import spoon.reflect.factory.Factory;
-import teralizer.domain.MethodParameter;
-import teralizer.spoon.SpoonUtils;
+import static teralizer.util.Configuration.TEST_PARAMETERS_CLASS_NAME;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static teralizer.util.Configuration.TEST_PARAMETERS_CLASS_NAME;
+import spoon.reflect.declaration.*;
+import spoon.reflect.factory.Factory;
+import teralizer.domain.MethodParameter;
+import teralizer.spoon.SpoonUtils;
 
 public class TestParametersFactory {
 

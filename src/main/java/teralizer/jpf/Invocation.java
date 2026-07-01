@@ -1,10 +1,9 @@
 package teralizer.jpf;
 
+import java.util.List;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.Expression;
 import teralizer.domain.Value;
-
-import java.util.List;
 
 /**
  * The raw result of one tested-method invocation, captured during the run: the concrete input

@@ -1,7 +1,6 @@
 package teralizer.processing.filter;
 
 import org.jooq.generated.tables.records.AssertionRecord;
-
 import teralizer.util.TypeCapability;
 
 public class ReturnTypeFilter extends AbstractFilter {

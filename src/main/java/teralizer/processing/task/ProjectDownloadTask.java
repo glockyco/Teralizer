@@ -1,5 +1,8 @@
 package teralizer.processing.task;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.function.Consumer;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.transport.SshTransport;
@@ -10,10 +13,6 @@ import org.slf4j.LoggerFactory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.util.Configuration;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.function.Consumer;
 
 public class ProjectDownloadTask extends AbstractTask {
 

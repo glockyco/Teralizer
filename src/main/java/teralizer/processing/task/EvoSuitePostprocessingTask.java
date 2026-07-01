@@ -1,5 +1,13 @@
 package teralizer.processing.task;
 
+import static teralizer.util.Configuration.EVOSUITE_JAR_PATH;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
+import java.util.function.Consumer;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.EvosuiteReportRecord;
@@ -19,15 +27,6 @@ import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
-import java.util.function.Consumer;
-
-import static teralizer.util.Configuration.EVOSUITE_JAR_PATH;
 
 public class EvoSuitePostprocessingTask extends AbstractTask {
 

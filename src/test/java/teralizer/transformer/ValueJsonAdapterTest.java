@@ -1,5 +1,7 @@
 package teralizer.transformer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.junit.jupiter.api.Test;
@@ -7,8 +9,6 @@ import teralizer.domain.NullValue;
 import teralizer.domain.PrimitiveValue;
 import teralizer.domain.StringValue;
 import teralizer.domain.Value;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Pins faithful JSON round-tripping of the typed {@link Value} hierarchy: the variant, declared

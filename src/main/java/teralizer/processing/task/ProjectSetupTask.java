@@ -1,20 +1,5 @@
 package teralizer.processing.task;
 
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ModelBuilder;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.model.eclipse.EclipseProject;
-import org.jooq.generated.tables.records.ProjectRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import teralizer.processing.ProcessingStage;
-import teralizer.processing.ProjectType;
-import teralizer.processing.TaskContext;
-import teralizer.processing.TestFramework;
-import teralizer.util.Configuration;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +15,20 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ModelBuilder;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.eclipse.EclipseProject;
+import org.jooq.generated.tables.records.ProjectRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.ProjectType;
+import teralizer.processing.TaskContext;
+import teralizer.processing.TestFramework;
+import teralizer.util.Configuration;
 
 public class ProjectSetupTask extends AbstractTask {
 

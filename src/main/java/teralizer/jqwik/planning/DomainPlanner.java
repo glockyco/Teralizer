@@ -1,8 +1,7 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.TypeDomain;
-
 import teralizer.domain.MethodParameter;
+import teralizer.domain.TypeDomain;
 
 public interface DomainPlanner {
     boolean supports(TypeDomain domain);

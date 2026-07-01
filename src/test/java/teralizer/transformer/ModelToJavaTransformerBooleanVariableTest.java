@@ -1,15 +1,13 @@
 package teralizer.transformer;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
+import java.util.Collections;
 import net.jqwik.api.Example;
 import org.junit.Assert;
+import teralizer.domain.Constant;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-
-import java.util.Collections;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 /**
  * Pins that a boolean variable referenced inside an SPF path condition renders as its numeric form

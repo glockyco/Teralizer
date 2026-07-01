@@ -1,12 +1,11 @@
 package teralizer.jpf;
 
 import com.google.gson.Gson;
-import teralizer.transformer.ModelToJsonTransformer;
-import teralizer.transformer.SpecificationGson;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import teralizer.transformer.ModelToJsonTransformer;
+import teralizer.transformer.SpecificationGson;
 
 /**
  * Serializes a captured {@link Invocation} to the four specification files. Pure with respect to

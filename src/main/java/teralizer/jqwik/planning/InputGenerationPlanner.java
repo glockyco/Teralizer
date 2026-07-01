@@ -1,11 +1,5 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.TypeDomain;
-
-import teralizer.domain.Value;
-import teralizer.domain.MethodParameter;
-import teralizer.domain.Model;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,6 +7,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import teralizer.domain.MethodParameter;
+import teralizer.domain.Model;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Value;
 
 public class InputGenerationPlanner {
     private final List<DomainPlanner> domainPlanners = DomainPlanners.REGISTERED;

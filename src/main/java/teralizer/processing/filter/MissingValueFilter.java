@@ -1,9 +1,8 @@
 package teralizer.processing.filter;
 
-import org.jooq.generated.tables.records.AssertionRecord;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.jooq.generated.tables.records.AssertionRecord;
 
 public class MissingValueFilter extends AbstractFilter {
 

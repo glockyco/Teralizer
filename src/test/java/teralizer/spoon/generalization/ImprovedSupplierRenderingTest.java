@@ -1,23 +1,21 @@
 package teralizer.spoon.generalization;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
+import java.util.Collections;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
-import teralizer.domain.PrimitiveValue;
-import teralizer.domain.Value;
+import teralizer.domain.Constant;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Value;
+import teralizer.domain.Variable;
 import teralizer.jqwik.planning.ConstraintClause;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
-
-import java.util.Collections;
 
 public class ImprovedSupplierRenderingTest {
 

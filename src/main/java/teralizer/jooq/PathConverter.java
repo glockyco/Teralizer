@@ -1,9 +1,8 @@
 package teralizer.jooq;
 
-import org.jooq.Converter;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.jooq.Converter;
 
 public class PathConverter implements Converter<String, Path> {
 

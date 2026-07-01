@@ -5,10 +5,9 @@ import gov.nasa.jpf.symbc.mixednumstrg.SpecialIntegerExpression;
 import gov.nasa.jpf.symbc.mixednumstrg.SpecialRealExpression;
 import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.string.StringConstant;
+import java.util.ArrayList;
 import net.jqwik.api.Example;
 import org.junit.Assert;
-
-import java.util.ArrayList;
 
 /**
  * Unsupported SPF term kinds (the concolic "special" expressions and the function

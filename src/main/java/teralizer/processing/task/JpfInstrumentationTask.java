@@ -1,5 +1,15 @@
 package teralizer.processing.task;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -28,17 +38,6 @@ import teralizer.spoon.analysis.SpfSymbolicConfigSelector;
 import teralizer.util.Configuration;
 import teralizer.util.SpfSymbolicConfig;
 import teralizer.util.TypeCapability;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 
 public class JpfInstrumentationTask extends AbstractTask {

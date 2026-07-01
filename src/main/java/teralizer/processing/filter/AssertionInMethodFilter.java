@@ -1,5 +1,6 @@
 package teralizer.processing.filter;
 
+import java.util.List;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
 import spoon.reflect.code.CtInvocation;
@@ -8,8 +9,6 @@ import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import teralizer.spoon.analysis.TestAnalysis;
-
-import java.util.List;
 
 public class AssertionInMethodFilter extends AbstractFilter {
 

@@ -1,17 +1,15 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.TypeDomain;
-
-import teralizer.domain.Value;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import teralizer.domain.MethodParameter;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Value;
 import teralizer.jqwik.IntegerConstraints;
 import teralizer.jqwik.RealBound;
 import teralizer.jqwik.RealConstraints;
 import teralizer.jqwik.VariableConstraints;
 import teralizer.transformer.ModelToJavaTransformer;
-
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class NumericDomainPlanner implements DomainPlanner {
     @Override

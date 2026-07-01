@@ -1,16 +1,14 @@
 package teralizer.transformer;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
-import net.jqwik.api.Example;
-import org.junit.Assert;
-import teralizer.domain.Invocation;
-import teralizer.domain.Not;
-
 import java.util.Arrays;
 import java.util.Collections;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import teralizer.domain.Constant;
+import teralizer.domain.Invocation;
+import teralizer.domain.Not;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 public class ModelToJavaTransformerInvocationTest {
 

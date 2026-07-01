@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'nu.studer.jooq' version '5.2.2'
+    id 'com.diffplug.spotless' version '6.13.0'
 }
 
 group = 'teralizer'
@@ -85,6 +86,14 @@ compileJava {
 
 test {
     useJUnitPlatform()
+}
+
+spotless {
+    java {
+        target 'src/main/java/**/*.java', 'src/test/java/**/*.java'
+        importOrder()
+        removeUnusedImports()
+    }
 }
 
 tasks.register('startPostgres', Exec) {

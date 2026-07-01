@@ -1,11 +1,10 @@
 package teralizer.jpf;
 
+import java.util.HashMap;
+import java.util.Map;
 import teralizer.domain.Model;
 import teralizer.domain.ModelVisitor;
 import teralizer.domain.Operation;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ModelStatisticsExtractor extends ModelVisitor {
 

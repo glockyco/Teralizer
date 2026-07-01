@@ -1,9 +1,9 @@
 package teralizer.jpf;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Pins the typed-abort carrier contract that the exclusion classifiers depend on: every

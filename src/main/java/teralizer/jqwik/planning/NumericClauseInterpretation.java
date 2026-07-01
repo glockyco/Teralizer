@@ -1,10 +1,9 @@
 package teralizer.jqwik.planning;
 
-import teralizer.jqwik.VariableConstraints;
-
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import teralizer.jqwik.VariableConstraints;
 
 /**
  * The numeric constraints derived for one parameter from the input clauses, plus the ids of the

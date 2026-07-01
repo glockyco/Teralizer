@@ -1,15 +1,5 @@
 package teralizer.processing.task;
 
-import org.apache.commons.io.FilenameUtils;
-import org.jooq.generated.tables.records.ProjectRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import spoon.Launcher;
-import spoon.reflect.declaration.CtType;
-import teralizer.processing.ProcessingStage;
-import teralizer.processing.TaskContext;
-import teralizer.util.Configuration;
-
 import java.io.File;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -20,6 +10,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.apache.commons.io.FilenameUtils;
+import org.jooq.generated.tables.records.ProjectRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spoon.Launcher;
+import spoon.reflect.declaration.CtType;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
 
 public class CleanupTask extends AbstractTask {
 

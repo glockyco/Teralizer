@@ -1,15 +1,14 @@
 package teralizer.jpf;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
-import java.nio.file.Path;
-import teralizer.domain.PrimitiveValue;
-import teralizer.domain.Value;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 
 /**
  * Pins capture of a symbolic return value. With the argument made symbolic, the tested method's

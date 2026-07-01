@@ -1,16 +1,5 @@
 package teralizer.processing.task;
 
-import org.jooq.DSLContext;
-import org.jooq.generated.Tables;
-import org.jooq.generated.tables.records.JqwikExecutionRunRecord;
-import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.processing.ProcessingStage;
-import teralizer.processing.TaskContext;
-import teralizer.repository.SQLiteRepository;
-import teralizer.util.Configuration;
-import teralizer.util.ConsoleCommand;
-import teralizer.util.ConsoleCommandException;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +10,16 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import org.jooq.DSLContext;
+import org.jooq.generated.Tables;
+import org.jooq.generated.tables.records.JqwikExecutionRunRecord;
+import org.jooq.generated.tables.records.ProjectRecord;
+import teralizer.processing.ProcessingStage;
+import teralizer.processing.TaskContext;
+import teralizer.repository.SQLiteRepository;
+import teralizer.util.Configuration;
+import teralizer.util.ConsoleCommand;
+import teralizer.util.ConsoleCommandException;
 
 public class TestExecutionTask extends AbstractTask {
 

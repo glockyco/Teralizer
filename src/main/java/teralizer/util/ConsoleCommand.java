@@ -1,9 +1,5 @@
 package teralizer.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import teralizer.processing.ProcessingStage;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import teralizer.processing.ProcessingStage;
 
 public class ConsoleCommand {
 

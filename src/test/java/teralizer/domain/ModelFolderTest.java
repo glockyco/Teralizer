@@ -1,14 +1,12 @@
 package teralizer.domain;
 
-import net.jqwik.api.Example;
-import org.junit.Assert;
-
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.jqwik.api.Example;
+import org.junit.Assert;
 
 /**
  * A {@link ModelFolder} is a total bottom-up fold over the concrete {@link Model}

@@ -1,15 +1,14 @@
 package teralizer.spoon.generalization;
 
-import net.jqwik.api.Example;
-import org.junit.Assert;
-import teralizer.domain.PrimitiveValue;
-import teralizer.domain.Value;
-import teralizer.domain.MethodParameter;
-import spoon.Launcher;
-import spoon.reflect.declaration.CtClass;
-
 import java.lang.reflect.Method;
 import java.util.Collections;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import spoon.Launcher;
+import spoon.reflect.declaration.CtClass;
+import teralizer.domain.MethodParameter;
+import teralizer.domain.PrimitiveValue;
+import teralizer.domain.Value;
 
 public class BooleanSupplierRenderingTest {
 

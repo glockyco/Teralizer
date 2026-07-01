@@ -1,12 +1,11 @@
 package teralizer.spoon.generalization;
 
+import java.io.StringWriter;
+import java.nio.file.Path;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import spoon.Launcher;
 import spoon.reflect.declaration.CtClass;
-
-import java.io.StringWriter;
-import java.nio.file.Path;
 
 public class JqwikValueRecorderFactory {
 

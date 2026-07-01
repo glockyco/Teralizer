@@ -1,13 +1,12 @@
 package teralizer.jpf;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import teralizer.domain.PrimitiveValue;
 import teralizer.domain.Value;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Pins how {@link TestGeneralizationListener} classifies a tested method's output as a normal

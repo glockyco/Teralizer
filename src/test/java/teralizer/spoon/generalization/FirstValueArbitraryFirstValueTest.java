@@ -1,15 +1,14 @@
 package teralizer.spoon.generalization;
 
+import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
 import net.jqwik.api.Example;
 import org.apache.velocity.app.VelocityEngine;
 import org.junit.Assert;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
-
-import java.util.List;
-import java.util.Properties;
-import java.util.stream.Collectors;
 
 /**
  * {@link FirstValueArbitraryFactory} builds an arbitrary that prepends a seed value so

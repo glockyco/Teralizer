@@ -1,10 +1,9 @@
 package teralizer.spoon;
 
-import spoon.Launcher;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
+import spoon.Launcher;
 
 public class SpoonFactory {
 

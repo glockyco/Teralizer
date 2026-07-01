@@ -1,15 +1,7 @@
 package teralizer.transformer;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import net.jqwik.api.Example;
-import org.junit.Assert;
-import teralizer.domain.*;
-
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -18,6 +10,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import teralizer.domain.*;
+import teralizer.domain.Constant;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 public class GoldenRenderingTest {
     @Example

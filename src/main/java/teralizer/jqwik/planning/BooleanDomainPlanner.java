@@ -1,5 +1,8 @@
 package teralizer.jqwik.planning;
 
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
 import teralizer.domain.Constant;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
@@ -9,10 +12,6 @@ import teralizer.domain.TypeDomain;
 import teralizer.domain.Value;
 import teralizer.domain.Variable;
 import teralizer.transformer.ModelToJavaTransformer;
-
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
 
 public class BooleanDomainPlanner implements DomainPlanner {
 

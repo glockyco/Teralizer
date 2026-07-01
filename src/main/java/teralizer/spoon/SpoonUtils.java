@@ -1,5 +1,9 @@
 package teralizer.spoon;
 
+import static teralizer.util.Configuration.KNOWN_TEST_ANNOTATIONS;
+
+import java.util.List;
+import java.util.stream.Collectors;
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
@@ -12,13 +16,6 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.spoon.analysis.TestAnalysis;
-
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import static teralizer.util.Configuration.KNOWN_TEST_ANNOTATIONS;
-import static teralizer.util.Configuration.SUPPORTED_TEST_ANNOTATIONS;
 
 public class SpoonUtils {
 

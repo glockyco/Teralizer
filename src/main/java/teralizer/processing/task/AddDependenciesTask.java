@@ -1,13 +1,12 @@
 package teralizer.processing.task;
 
+import java.nio.file.Path;
+import java.util.function.Consumer;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.dependencies.GradleDependencyManager;
 import teralizer.processing.dependencies.MavenDependencyManager;
-
-import java.nio.file.Path;
-import java.util.function.Consumer;
 
 public class AddDependenciesTask extends AbstractTask {
 

@@ -1,14 +1,13 @@
 package teralizer.transformer;
 
 import gov.nasa.jpf.symbc.numeric.ConstraintExpressionVisitor;
-import teralizer.domain.Error;
-import teralizer.domain.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Stack;
+import teralizer.domain.*;
+import teralizer.domain.Error;
 
 public class SpfToModelTransformer {
 
@@ -362,4 +361,3 @@ public class SpfToModelTransformer {
         }
     }
 }
-

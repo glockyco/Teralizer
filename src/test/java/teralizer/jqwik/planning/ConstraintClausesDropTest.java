@@ -1,23 +1,21 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
-import net.jqwik.api.Example;
-import org.junit.Assert;
-import teralizer.domain.Invocation;
-import teralizer.domain.Model;
-import teralizer.domain.Operation;
-import teralizer.domain.Operator;
-import teralizer.transformer.NonGeneralizableExpressionException;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import teralizer.domain.Constant;
+import teralizer.domain.Invocation;
+import teralizer.domain.Model;
+import teralizer.domain.Operation;
+import teralizer.domain.Operator;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+import teralizer.transformer.NonGeneralizableExpressionException;
 
 public class ConstraintClausesDropTest {
 

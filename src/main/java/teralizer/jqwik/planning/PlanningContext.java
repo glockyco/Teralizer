@@ -1,12 +1,11 @@
 package teralizer.jqwik.planning;
 
-import teralizer.domain.Value;
-import teralizer.domain.MethodParameter;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import teralizer.domain.MethodParameter;
+import teralizer.domain.Value;
 
 public class PlanningContext {
     private final List<MethodParameter> parameters;

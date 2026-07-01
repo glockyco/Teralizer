@@ -1,16 +1,15 @@
 package teralizer.transformer;
 
-import teralizer.domain.Error;
-import teralizer.domain.*;
-import teralizer.jqwik.planning.MethodCapabilities;
-import teralizer.jqwik.planning.MethodCapability;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import teralizer.domain.*;
+import teralizer.domain.Error;
+import teralizer.jqwik.planning.MethodCapabilities;
+import teralizer.jqwik.planning.MethodCapability;
 
 /**
  * Renders a {@link Model} tree to a Java expression. Backed by {@link ModelFolder},

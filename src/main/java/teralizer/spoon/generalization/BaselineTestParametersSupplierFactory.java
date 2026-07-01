@@ -1,21 +1,20 @@
 package teralizer.spoon.generalization;
 
+import static teralizer.util.Configuration.TEST_PARAMETERS_CLASS_NAME;
+import static teralizer.util.Configuration.TEST_PARAMETERS_SUPPLIER_CLASS_NAME;
+
+import java.util.*;
+import java.util.stream.Collectors;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
-import teralizer.domain.Value;
 import teralizer.domain.MethodParameter;
+import teralizer.domain.Value;
 import teralizer.spoon.SpoonUtils;
 import teralizer.transformer.ModelToJavaTransformer;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static teralizer.util.Configuration.TEST_PARAMETERS_CLASS_NAME;
-import static teralizer.util.Configuration.TEST_PARAMETERS_SUPPLIER_CLASS_NAME;
 
 public class BaselineTestParametersSupplierFactory {
 

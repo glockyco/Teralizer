@@ -1,19 +1,16 @@
 package teralizer.transformer;
 
-import teralizer.domain.Constant;
-import teralizer.domain.TypeDomain;
-import teralizer.domain.Variable;
-
+import java.util.Arrays;
+import java.util.Collections;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.ArrayElementExpression;
-import teralizer.domain.ArrayExpression;
+import teralizer.domain.Constant;
 import teralizer.domain.Invocation;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-
-import java.util.Arrays;
-import java.util.Collections;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 /**
  * Regression guard for the {@link ModelFolder} migration: the old visitor used an

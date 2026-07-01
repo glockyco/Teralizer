@@ -1,11 +1,10 @@
 package teralizer.util;
 
-import teralizer.jqwik.planning.DomainPlanner;
-import teralizer.jqwik.planning.DomainPlanners;
-import teralizer.domain.TypeDomain;
-
 import java.util.EnumSet;
 import java.util.Set;
+import teralizer.domain.TypeDomain;
+import teralizer.jqwik.planning.DomainPlanner;
+import teralizer.jqwik.planning.DomainPlanners;
 
 /**
  * Single source of truth for type capability. Input-generation support is derived from the

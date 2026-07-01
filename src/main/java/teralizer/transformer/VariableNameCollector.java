@@ -1,9 +1,8 @@
 package teralizer.transformer;
 
+import java.util.Set;
 import teralizer.domain.ModelVisitor;
 import teralizer.domain.Variable;
-
-import java.util.Set;
 
 /**
  * Collects the names of every {@code Variable} node in a {@link teralizer.domain.Model}

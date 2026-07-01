@@ -1,5 +1,11 @@
 package teralizer.spoon.generalization;
 
+import static teralizer.util.Configuration.TEST_PARAMETERS_CLASS_NAME;
+import static teralizer.util.Configuration.TEST_PARAMETERS_SUPPLIER_CLASS_NAME;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
@@ -10,13 +16,6 @@ import teralizer.domain.MethodParameter;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.ParameterGenerationPlan;
 import teralizer.spoon.SpoonUtils;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static teralizer.util.Configuration.TEST_PARAMETERS_CLASS_NAME;
-import static teralizer.util.Configuration.TEST_PARAMETERS_SUPPLIER_CLASS_NAME;
 
 public class ImprovedTestParametersSupplierFactory {
 
