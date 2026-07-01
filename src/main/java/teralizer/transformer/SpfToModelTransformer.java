@@ -7,6 +7,7 @@ import teralizer.domain.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Stack;
 
 public class SpfToModelTransformer {
@@ -167,9 +168,16 @@ public class SpfToModelTransformer {
         public void postVisit(gov.nasa.jpf.symbc.numeric.MathRealExpression expression) {
             Expression right = expression.getArg2() == null ? null : this.stack.pop();
             Expression left = expression.getArg1() == null ? null : this.stack.pop();
-            Operator op = Operator.get(expression.getOp().toString());
-
-            this.stack.push(new Operation(left, op, right));
+            List<Expression> args = new ArrayList<>(2);
+            args.add(left);
+            if (right != null) {
+                args.add(right);
+            }
+            this.stack.push(new Invocation(
+                null,
+                "java.lang.Math",
+                expression.getOp().name().toLowerCase(Locale.ROOT),
+                args));
         }
 
         private Expression transformOperand(gov.nasa.jpf.symbc.numeric.Expression expression) {

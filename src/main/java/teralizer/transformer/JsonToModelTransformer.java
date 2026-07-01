@@ -25,8 +25,6 @@ public class JsonToModelTransformer {
         builder.registerTypeAdapter(VariableString.class, new VariableStringDeserializer());
         builder.registerTypeAdapter(ArrayExpression.class, new ArrayExpressionDeserializer());
         builder.registerTypeAdapter(ArrayElementExpression.class, new ArrayElementExpressionDeserializer());
-        builder.registerTypeAdapter(SymbolicIntegerFunction.class, new SymbolicIntegerFunctionDeserializer());
-        builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionDeserializer());
         builder.registerTypeAdapter(Invocation.class, new InvocationDeserializer());
         builder.registerTypeAdapter(Not.class, new NotDeserializer());
         builder.registerTypeAdapter(teralizer.domain.Error.class, new ErrorDeserializer());
@@ -140,30 +138,6 @@ public class JsonToModelTransformer {
             Expression elementSelector = context.deserialize(jsonObject.get("elementSelector"), Expression.class);
 
             return new ArrayElementExpression(arrayName, elementType, elementSelector);
-        }
-    }
-
-    private static class SymbolicIntegerFunctionDeserializer implements JsonDeserializer<SymbolicIntegerFunction> {
-        @Override
-        public SymbolicIntegerFunction deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            JsonObject jsonObject = jsonElement.getAsJsonObject();
-
-            String name = jsonObject.get("name").getAsString();
-            Expression[] args = context.deserialize(jsonObject.get("args"), Expression[].class);
-
-            return new SymbolicIntegerFunction(name, args);
-        }
-    }
-
-    private static class SymbolicRealFunctionDeserializer implements JsonDeserializer<SymbolicRealFunction> {
-        @Override
-        public SymbolicRealFunction deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            JsonObject jsonObject = jsonElement.getAsJsonObject();
-
-            String name = jsonObject.get("name").getAsString();
-            Expression[] args = context.deserialize(jsonObject.get("args"), Expression[].class);
-
-            return new SymbolicRealFunction(name, args);
         }
     }
 

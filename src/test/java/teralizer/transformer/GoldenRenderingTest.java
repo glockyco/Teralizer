@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,13 +30,13 @@ public class GoldenRenderingTest {
         Map<String, ModelCase> cases = new LinkedHashMap<>();
         cases.put("math.sqrt.operation", new ModelCase(
             new ModelToJavaTransformer(),
-            new Operation(new VariableReal("x"), Operator.SQRT, null)));
+            new Invocation(null, "java.lang.Math", "sqrt", Collections.singletonList(new VariableReal("x")))));
         cases.put("math.pow.operation", new ModelCase(
             new ModelToJavaTransformer(),
-            new Operation(new VariableReal("x"), Operator.POW, new ConstantReal(2.0))));
+            new Invocation(null, "java.lang.Math", "pow", Arrays.asList(new VariableReal("x"), new ConstantReal(2.0)))));
         cases.put("math.atan2.operation", new ModelCase(
             new ModelToJavaTransformer(),
-            new Operation(new VariableReal("y"), Operator.ATAN2, new VariableReal("x"))));
+            new Invocation(null, "java.lang.Math", "atan2", Arrays.asList(new VariableReal("y"), new VariableReal("x")))));
         cases.put("boolean.path.predicate", new ModelCase(
             new ModelToJavaTransformer(Collections.singletonMap("b", "boolean")),
             new Operation(new VariableInteger("b"), Operator.NE, new ConstantInteger(0))));

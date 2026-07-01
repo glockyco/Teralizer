@@ -211,16 +211,6 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     }
 
     @Override
-    public String fold(SymbolicIntegerFunction function, List<String> args) {
-        return function.name + "(" + String.join(", ", args) + ")";
-    }
-
-    @Override
-    public String fold(SymbolicRealFunction function, List<String> args) {
-        return function.name + "(" + String.join(", ", args) + ")";
-    }
-
-    @Override
     public String fold(Invocation invocation, String receiver, List<String> args) {
         MethodCapability capability = MethodCapabilities.get(invocation.method);
         if (capability == null || !capability.outputRenderable) {
@@ -299,28 +289,6 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 return "(" + left + " | " + right + ")";
             case XOR:
                 return "(" + left + " ^ " + right + ")";
-            case POW:
-                return "Math.pow(" + left + ", " + right + ")";
-            case SQRT:
-                return "Math.sqrt(" + left + ")";
-            case EXP:
-                return "Math.exp(" + left + ")";
-            case LOG:
-                return "Math.log(" + left + ")";
-            case SIN:
-                return "Math.sin(" + left + ")";
-            case COS:
-                return "Math.cos(" + left + ")";
-            case TAN:
-                return "Math.tan(" + left + ")";
-            case ASIN:
-                return "Math.asin(" + left + ")";
-            case ACOS:
-                return "Math.acos(" + left + ")";
-            case ATAN:
-                return "Math.atan(" + left + ")";
-            case ATAN2:
-                return "Math.atan2(" + left + ", " + right + ")";
             case SHIFTL:
                 return "(" + left + " << " + right + ")";
             case SHIFTR:
@@ -378,25 +346,19 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
 
     private static boolean isFloatingPoint(Expression expression) {
         if (expression instanceof VariableReal
-            || expression instanceof ConstantReal
-            || expression instanceof SymbolicRealFunction) {
+            || expression instanceof ConstantReal) {
             return true;
+        }
+        if (expression instanceof Invocation) {
+            Invocation invocation = (Invocation) expression;
+            MethodCapability capability = MethodCapabilities.get(invocation.method);
+            return capability != null
+                && capability.outputRenderable
+                && "java.lang.Math".equals(capability.staticQualifier);
         }
         if (expression instanceof Operation) {
             Operation inner = (Operation) expression;
             switch (inner.op) {
-                case POW:
-                case SQRT:
-                case EXP:
-                case LOG:
-                case SIN:
-                case COS:
-                case TAN:
-                case ASIN:
-                case ACOS:
-                case ATAN:
-                case ATAN2:
-                    return true;
                 case PLUS:
                 case MINUS:
                 case MUL:

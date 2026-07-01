@@ -13,8 +13,6 @@ public abstract class ModelVisitor {
     public void preVisit(VariableString variable) {}
     public void preVisit(ArrayExpression expression) {}
     public void preVisit(ArrayElementExpression expression) {}
-    public void preVisit(SymbolicIntegerFunction function) {}
-    public void preVisit(SymbolicRealFunction function) {}
     public void preVisit(Invocation invocation) {}
     public void preVisit(Not not) {}
     public void preVisit(Error error) {}
@@ -32,8 +30,6 @@ public abstract class ModelVisitor {
     public void postVisit(VariableString variable) {}
     public void postVisit(ArrayExpression expression) {}
     public void postVisit(ArrayElementExpression expression) {}
-    public void postVisit(SymbolicIntegerFunction function) {}
-    public void postVisit(SymbolicRealFunction function) {}
     public void postVisit(Invocation invocation) {}
     public void postVisit(Not not) {}
     public void postVisit(Error error) {}

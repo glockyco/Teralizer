@@ -30,12 +30,6 @@ public class ModelFolderTest {
         @Override public String fold(ArrayElementExpression e, String selector) {
             return "ArrayElementExpression[" + selector + "]";
         }
-        @Override public String fold(SymbolicIntegerFunction f, List<String> args) {
-            return "SymbolicIntegerFunction(" + String.join(",", args) + ")";
-        }
-        @Override public String fold(SymbolicRealFunction f, List<String> args) {
-            return "SymbolicRealFunction(" + String.join(",", args) + ")";
-        }
         @Override public String fold(Invocation invocation, String receiver, List<String> args) {
             return "Invocation{" + invocation.method + "}(" + receiver + "," + String.join(",", args) + ")";
         }
@@ -72,16 +66,6 @@ public class ModelFolderTest {
             "ArrayElementExpression[VariableInteger]",
             new ArrayElementExpression("a", "int", new VariableInteger("i")).fold(folder));
         Assert.assertEquals(
-            "SymbolicIntegerFunction(ConstantInteger,VariableInteger)",
-            new SymbolicIntegerFunction("f", new Expression[]{
-                new ConstantInteger(1), new VariableInteger("x")
-            }).fold(folder));
-        Assert.assertEquals(
-            "SymbolicRealFunction(ConstantReal,VariableReal)",
-            new SymbolicRealFunction("g", new Expression[]{
-                new ConstantReal(2.0), new VariableReal("y")
-            }).fold(folder));
-        Assert.assertEquals(
             "Invocation{startsWith}(VariableString,ConstantString)",
             new Invocation(new VariableString("z"), null, "startsWith", Arrays.asList(new ConstantString("s"))).fold(folder));
         Assert.assertEquals(
@@ -96,8 +80,8 @@ public class ModelFolderTest {
     void operationWithNullOperandFoldsWithoutExploding() {
         RecordingFolder folder = new RecordingFolder();
         Assert.assertEquals(
-            "Operation{sqrt}(ConstantInteger,null)",
-            new Operation(new ConstantInteger(4), Operator.SQRT, null).fold(folder));
+            "Operation{+}(ConstantInteger,null)",
+            new Operation(new ConstantInteger(4), Operator.PLUS, null).fold(folder));
     }
 
     /**
@@ -111,7 +95,6 @@ public class ModelFolderTest {
             ConstantInteger.class, ConstantReal.class, ConstantString.class,
             VariableInteger.class, VariableReal.class, VariableString.class,
             ArrayExpression.class, ArrayElementExpression.class,
-            SymbolicIntegerFunction.class, SymbolicRealFunction.class,
             Invocation.class, Not.class,
             Operation.class, Operator.class, Error.class, ExceptionModel.class));
 

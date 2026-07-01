@@ -85,6 +85,20 @@ public class ModelToJavaTransformerNonGeneralizableTest {
     }
 
     @Example
+    void bitwiseOnMathInvocationThrowsTypedException() {
+        Operation model = new Operation(
+            new Invocation(null, "java.lang.Math", "sqrt", Arrays.asList(new VariableReal("x"))),
+            Operator.AND,
+            new ConstantInteger(1));
+        try {
+            new ModelToJavaTransformer().transform(model);
+            Assert.fail("expected NonGeneralizableExpressionException");
+        } catch (NonGeneralizableExpressionException expected) {
+            Assert.assertTrue(expected.getMessage().contains("AND"));
+        }
+    }
+
+    @Example
     void bitwiseXorOnIntegerOperandsStillRenders() {
         // Integer bitwise stays valid Java and must keep rendering after the guard lands.
         Operation model = new Operation(new VariableInteger("a"), Operator.XOR, new VariableInteger("b"));

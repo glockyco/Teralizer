@@ -25,8 +25,6 @@ public class ModelToJsonTransformer {
         builder.registerTypeAdapter(VariableString.class, new VariableStringSerializer());
         builder.registerTypeAdapter(ArrayExpression.class, new ArrayExpressionSerializer());
         builder.registerTypeAdapter(ArrayElementExpression.class, new ArrayElementExpressionSerializer());
-        builder.registerTypeAdapter(SymbolicIntegerFunction.class, new SymbolicIntegerFunctionSerializer());
-        builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionSerializer());
         builder.registerTypeAdapter(Invocation.class, new InvocationSerializer());
         builder.registerTypeAdapter(Not.class, new NotSerializer());
         builder.registerTypeAdapter(teralizer.domain.Error.class, new ErrorSerializer());
@@ -159,42 +157,6 @@ public class ModelToJsonTransformer {
             jsonObject.add("arrayName", new JsonPrimitive(expression.arrayName));
             jsonObject.add("elementType", new JsonPrimitive(expression.elementType));
             jsonObject.add("elementSelector", context.serialize(expression.elementSelector));
-
-            return jsonObject;
-        }
-    }
-
-    private static class SymbolicIntegerFunctionSerializer implements JsonSerializer<SymbolicIntegerFunction> {
-        @Override
-        public JsonElement serialize(SymbolicIntegerFunction function, Type type, JsonSerializationContext context) {
-            JsonObject jsonObject = new JsonObject();
-
-            JsonArray jsonArgs = new JsonArray(function.args.length);
-            for (Expression arg : function.args) {
-                jsonArgs.add(context.serialize(arg));
-            }
-
-            jsonObject.add("_type", new JsonPrimitive(function.getClass().getSimpleName()));
-            jsonObject.add("name", new JsonPrimitive(function.name));
-            jsonObject.add("args", jsonArgs);
-
-            return jsonObject;
-        }
-    }
-
-    private static class SymbolicRealFunctionSerializer implements JsonSerializer<SymbolicRealFunction> {
-        @Override
-        public JsonElement serialize(SymbolicRealFunction function, Type type, JsonSerializationContext context) {
-            JsonObject jsonObject = new JsonObject();
-
-            JsonArray jsonArgs = new JsonArray(function.args.length);
-            for (Expression arg : function.args) {
-                jsonArgs.add(context.serialize(arg));
-            }
-
-            jsonObject.add("_type", new JsonPrimitive(function.getClass().getSimpleName()));
-            jsonObject.add("name", new JsonPrimitive(function.name));
-            jsonObject.add("args", jsonArgs);
 
             return jsonObject;
         }

@@ -29,6 +29,18 @@ public class OperatorTest {
     }
 
     @Example
+    void mathFunctionSymbolsAreNotOperators() {
+        for (String symbol : new String[] {"sqrt", "pow", "exp", "log", "sin", "cos", "tan", "asin", "acos", "atan", "atan2"}) {
+            try {
+                Operator.get(symbol);
+                Assert.fail("Expected math function symbol to be outside Operator: " + symbol);
+            } catch (IllegalArgumentException expected) {
+                Assert.assertTrue(expected.getMessage().contains(symbol));
+            }
+        }
+    }
+
+    @Example
     void unknownSymbolThrowsIllegalArgumentException() {
         try {
             Operator.get("definitely-not-an-operator");

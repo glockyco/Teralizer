@@ -84,6 +84,17 @@ public class ModelToJavaTransformerInvocationTest {
     }
 
     @Example
+    void rendersStaticStringValueOfInvocation() {
+        Invocation invocation = new Invocation(
+            null,
+            "java.lang.String",
+            "valueOf",
+            Collections.singletonList(new VariableInteger("i")));
+
+        Assert.assertEquals("String.valueOf(_p_.i)", new ModelToJavaTransformer().transform(invocation));
+    }
+
+    @Example
     void rendersNotAroundInvocation() {
         Invocation invocation = new Invocation(
             new VariableString("s"),

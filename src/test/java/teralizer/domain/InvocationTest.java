@@ -64,8 +64,6 @@ class InvocationTest {
         @Override public String fold(VariableString variable) { return "variable:" + variable.name; }
         @Override public String fold(ArrayExpression expression) { return "array:" + expression.name; }
         @Override public String fold(ArrayElementExpression expression, String elementSelector) { return "arrayElement:" + elementSelector; }
-        @Override public String fold(SymbolicIntegerFunction function, List<String> args) { return "integerFunction:" + function.name; }
-        @Override public String fold(SymbolicRealFunction function, List<String> args) { return "realFunction:" + function.name; }
         @Override public String fold(Invocation invocation, String receiver, List<String> args) {
             return "invocation:" + invocation.method + "(" + receiver + "; " + String.join(", ", args) + ")";
         }

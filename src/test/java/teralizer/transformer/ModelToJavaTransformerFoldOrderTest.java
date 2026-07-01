@@ -6,14 +6,15 @@ import teralizer.domain.ArrayElementExpression;
 import teralizer.domain.ArrayExpression;
 import teralizer.domain.ConstantInteger;
 import teralizer.domain.ConstantReal;
-import teralizer.domain.Expression;
+import teralizer.domain.ConstantString;
+import teralizer.domain.Invocation;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
-import teralizer.domain.SymbolicIntegerFunction;
-import teralizer.domain.SymbolicRealFunction;
 import teralizer.domain.VariableInteger;
 import teralizer.domain.VariableReal;
+import teralizer.domain.VariableString;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -41,24 +42,25 @@ public class ModelToJavaTransformerFoldOrderTest {
     }
 
     @Example
-    void symbolicIntegerFunctionPreservesArgumentOrder() {
-        // f(1, x) — args must stay in declared order, not be reversed by a stack pop.
-        Expression[] args = {
-            new ConstantInteger(1),
-            new VariableInteger("x")
-        };
-        Assert.assertEquals("f(1, _p_.x)", new ModelToJavaTransformer().transform(new SymbolicIntegerFunction("f", args)));
+    void staticInvocationPreservesArgumentOrder() {
+        Invocation invocation = new Invocation(
+            null,
+            "java.lang.Math",
+            "pow",
+            Arrays.asList(new ConstantReal(1.0), new VariableReal("y")));
+
+        Assert.assertEquals("Math.pow(1.0, _p_.y)", new ModelToJavaTransformer().transform(invocation));
     }
 
     @Example
-    void symbolicRealFunctionWithThreeArgsPreservesOrder() {
-        // g(1.0, y, 3) — the old popArgs(n) loop popped in reverse; three args catch a reversal.
-        Expression[] args = {
-            new ConstantReal(1.0),
-            new VariableReal("y"),
-            new ConstantInteger(3)
-        };
-        Assert.assertEquals("g(1.0, _p_.y, 3)", new ModelToJavaTransformer().transform(new SymbolicRealFunction("g", args)));
+    void instanceInvocationPreservesReceiverAndArgumentOrder() {
+        Invocation invocation = new Invocation(
+            new VariableString("s"),
+            null,
+            "replace",
+            Arrays.asList(new ConstantString("a"), new ConstantString("b")));
+
+        Assert.assertEquals("(_p_.s.replace(\"a\", \"b\"))", new ModelToJavaTransformer().transform(invocation));
     }
 
     @Example

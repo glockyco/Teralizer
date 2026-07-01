@@ -24,8 +24,6 @@ public abstract class ModelFolder<T> {
     public abstract T fold(VariableString variable);
     public abstract T fold(ArrayExpression expression);
     public abstract T fold(ArrayElementExpression expression, T elementSelector);
-    public abstract T fold(SymbolicIntegerFunction function, List<T> args);
-    public abstract T fold(SymbolicRealFunction function, List<T> args);
     public abstract T fold(Invocation invocation, T receiver, List<T> args);
     public abstract T fold(Not not, T operand);
     public abstract T fold(Operation operation, T left, T right);

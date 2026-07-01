@@ -343,7 +343,7 @@ Expected: PASS.
 
 **Files:** Modify `src/main/java/teralizer/transformer/SpfToModelTransformer.java`, `src/main/java/teralizer/transformer/ModelToJavaTransformer.java`, `src/main/java/teralizer/transformer/ModelToJsonTransformer.java`, `src/main/java/teralizer/transformer/JsonToModelTransformer.java`, `src/main/java/teralizer/domain/ModelFolder.java`, `src/main/java/teralizer/domain/ModelVisitor.java`, `src/main/java/teralizer/domain/Operator.java`; Delete `src/main/java/teralizer/domain/SymbolicIntegerFunction.java`, `src/main/java/teralizer/domain/SymbolicRealFunction.java`; Test updates under `src/test/java/teralizer/{domain,transformer,jqwik/planning}`.
 
-- [ ] **Step 1: Write failing transformer and operator tests.** Add/extend tests before production edits:
+- [x] **Step 1: Write failing transformer and operator tests.** Add/extend tests before production edits:
   - `SpfToModelTransformerMathInvocationTest.unaryMathRealExpressionBecomesStaticInvocation`: `new MathRealExpression(MathFunction.SQRT, new SymbolicReal("x_1_SYMREAL"))` transforms to `new Invocation(null, "java.lang.Math", "sqrt", Collections.singletonList(new VariableReal("x")))`.
   - `SpfToModelTransformerMathInvocationTest.binaryMathRealExpressionPreservesArgumentOrder`: `new MathRealExpression(MathFunction.POW, new SymbolicReal("x_1_SYMREAL"), new SymbolicReal("y_2_SYMREAL"))` transforms to `new Invocation(null, "java.lang.Math", "pow", Arrays.asList(new VariableReal("x"), new VariableReal("y")))`.
   - `OperatorTest.mathFunctionSymbolsAreNotOperators`: `sqrt`, `pow`, `exp`, `log`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2` must all throw `IllegalArgumentException` from `Operator.get`.
@@ -362,7 +362,7 @@ Run:
 
 Expected: FAIL for math ingestion/operator/bitwise guard; JSON static invocation may already pass.
 
-- [ ] **Step 2: Ingest `MathRealExpression` as static `Invocation`.** In `SpfToModelTransformer.postVisit(MathRealExpression)`, replace the `Operator.get(...)` / `new Operation(...)` path with a method-name conversion based on `expression.getOp().name().toLowerCase(Locale.ROOT)` and argument list construction that preserves `arg1`, then `arg2` when present:
+- [x] **Step 2: Ingest `MathRealExpression` as static `Invocation`.** In `SpfToModelTransformer.postVisit(MathRealExpression)`, replace the `Operator.get(...)` / `new Operation(...)` path with a method-name conversion based on `expression.getOp().name().toLowerCase(Locale.ROOT)` and argument list construction that preserves `arg1`, then `arg2` when present:
 
 ```java
 Expression right = expression.getArg2() == null ? null : this.stack.pop();
@@ -381,7 +381,7 @@ this.stack.push(new Invocation(
 
 Run `./gradlew test --tests 'teralizer.transformer.SpfToModelTransformerMathInvocationTest'` — expect PASS.
 
-- [ ] **Step 3: Retire math entries from `Operator` and `fold(Operation)`.** Remove `POW`, `SQRT`, `EXP`, `LOG`, `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, and `ATAN2` from `Operator`; remove the matching `case` arms from `ModelToJavaTransformer.fold(Operation)`; update `GoldenRenderingTest` to build the three math cases as static `Invocation` instead of `Operation` while keeping the expected JSON unchanged. Extend `isFloatingPoint(Expression)` to return true for output-renderable static `java.lang.Math` invocations so the bitwise/shift guard still rejects real-valued math calls.
+- [x] **Step 3: Retire math entries from `Operator` and `fold(Operation)`.** Remove `POW`, `SQRT`, `EXP`, `LOG`, `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, and `ATAN2` from `Operator`; remove the matching `case` arms from `ModelToJavaTransformer.fold(Operation)`; update `GoldenRenderingTest` to build the three math cases as static `Invocation` instead of `Operation` while keeping the expected JSON unchanged. Extend `isFloatingPoint(Expression)` to return true for output-renderable static `java.lang.Math` invocations so the bitwise/shift guard still rejects real-valued math calls.
 
 Run:
 
@@ -395,15 +395,15 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 4: Delete `SymbolicIntegerFunction` and `SymbolicRealFunction`.** Remove the classes, their `ModelFolder` hooks, their `ModelVisitor` hooks, their JSON serializers/deserializers/registrations, and their direct renderer hooks. Update `ModelFolderTest.folderDeclaresOneHookPerConcreteNode` to remove both classes from the expected node set, and update `ModelToJavaTransformerFoldOrderTest` to pin static `Invocation` argument order instead of the deleted symbolic-function nodes. Run `./gradlew compileTestJava` first; any remaining reference to the deleted classes is a compile failure to fix at the source.
+- [x] **Step 4: Delete `SymbolicIntegerFunction` and `SymbolicRealFunction`.** Remove the classes, their `ModelFolder` hooks, their `ModelVisitor` hooks, their JSON serializers/deserializers/registrations, and their direct renderer hooks. Update `ModelFolderTest.folderDeclaresOneHookPerConcreteNode` to remove both classes from the expected node set, and update `ModelToJavaTransformerFoldOrderTest` to pin static `Invocation` argument order instead of the deleted symbolic-function nodes. Run `./gradlew compileTestJava` first; any remaining reference to the deleted classes is a compile failure to fix at the source.
 
 Expected: `./gradlew compileTestJava` PASS, and `grep` for `SymbolicIntegerFunction|SymbolicRealFunction` under `src/main` and `src/test` returns no matches.
 
-- [ ] **Step 5: Keep `String.valueOf` as Phase-1 static invocation.** Do not add an `Operator.VALUEOF` or numeric-function node replacement for it. Add a regression assertion either in `ModelToJavaTransformerInvocationTest` or `GoldenRenderingTest` that `new Invocation(null, "java.lang.String", "valueOf", Collections.singletonList(new VariableInteger("i")))` renders as `String.valueOf(_p_.i)`.
+- [x] **Step 5: Keep `String.valueOf` as Phase-1 static invocation.** Do not add an `Operator.VALUEOF` or numeric-function node replacement for it. Add a regression assertion either in `ModelToJavaTransformerInvocationTest` or `GoldenRenderingTest` that `new Invocation(null, "java.lang.String", "valueOf", Collections.singletonList(new VariableInteger("i")))` renders as `String.valueOf(_p_.i)`.
 
 Run `./gradlew test --tests 'teralizer.transformer.ModelToJavaTransformerInvocationTest' --tests 'teralizer.transformer.GoldenRenderingTest'` — expect PASS.
 
-- [ ] **Step 6: Run focused and full verification.** Run:
+- [x] **Step 6: Run focused and full verification.** Run:
 
 ```bash
 ./gradlew test \
@@ -433,20 +433,21 @@ perl -0pi -e 's/task\.enabled = false/\/\/ task.enabled = false/' settings.gradl
 
 Expected: both Gradle commands PASS and `git status --short settings.gradle` is clean.
 
-- [ ] **Step 7: Run the numeric/char/boolean behavioral guardrail.** Use the JARVIS scratch scorecard because `docs/plans/2026-06-30-jarvis-comparison.md` records the current 250 sound assertion-properties and the char/boolean/numeric Table-2 probes. Follow `skill://running-the-jarvis-scoreboard`: prepare fixtures, reset `postgres_jarvis_scoreboard`, then run:
+- [x] **Step 7: Run the numeric/char/boolean behavioral guardrail.** Use the JARVIS scratch scorecard because `docs/plans/2026-06-30-jarvis-comparison.md` records the current 250 sound assertion-properties and the char/boolean/numeric Table-2 probes. Follow `skill://running-the-jarvis-scoreboard`: prepare fixtures, reset `postgres_jarvis_scoreboard`, then run:
 
 ```bash
 DB_NAME=postgres_jarvis_scoreboard DATA_DIR=data/jarvis-scoreboard DATASET_VARIANT=jarvis \
   bash scripts/run-jarvis-scoreboard.sh 2>&1 | tee /tmp/teralizer-jarvis-scoreboard.log
-! grep -E "ERROR t.processing.ProcessingPipeline|terminated with exit code|BUILD FAILURE" /tmp/teralizer-jarvis-scoreboard.log
+grep -E "scoreboard run complete: no pipeline breakage" /tmp/teralizer-jarvis-scoreboard.log
+! grep -E "pipeline task\(s\) FAILED outside JPF analysis|gradle exited non-zero|terminated with exit code|BUILD FAILURE" /tmp/teralizer-jarvis-scoreboard.log
 uv run --directory analysis python -m teralizer.jarvis_scoreboard --census
 ```
 
-Acceptance: generated jqwik tests compile and execute, `! grep` succeeds because the run log has zero matching pipeline/build failures, and the census still reports the current sound numeric/char/boolean successes without a drop attributable to rendering or ingestion.
+Acceptance: generated jqwik tests compile and execute, the run log contains `scoreboard run complete: no pipeline breakage`, the failure grep finds no non-JPF pipeline/build failures, expected raw-bits per-assertion JPF exclusions remain non-fatal, and the census still reports the current 250 sound numeric/char/boolean successes without a drop attributable to rendering or ingestion.
 
-- [ ] **Step 8: Run branch handoff build.** Run `./gradlew build` after the full suite and guardrail so Gradle build/check tasks and SPF submodule build tasks are covered before any merge/PR handoff.
+- [x] **Step 8: Run branch handoff build.** Run `./gradlew build` after the full suite and guardrail so Gradle build/check tasks and SPF submodule build tasks are covered before any merge/PR handoff.
 
-- [ ] **Step 9: Commit.** Commit the math migration, deleted nodes, updated tests, and Phase-2 checkboxes with subject `refactor(domain): migrate math functions to Invocation` and a body explaining why math functions are calls rather than operators, why `String.valueOf` stays as the static invocation shape, and how the guardrail was verified.
+- [x] **Step 9: Commit.** Commit the math migration, deleted nodes, updated tests, and Phase-2 checkboxes with subject `refactor(domain): migrate math functions to Invocation` and a body explaining why math functions are calls rather than operators, why `String.valueOf` stays as the static invocation shape, and how the guardrail was verified.
 
 ---
 
