@@ -894,9 +894,9 @@ Use it where the `Pattern`/`Matcher` block currently builds `temporaryParameters
 
 **Files:** Modify `docs/plans/2026-06-30-partial-sound-string-support.md`, `docs/plans/2026-06-26-teralizer-overview.md`, `docs/plans/2026-06-30-unified-expression-model-plan.md`, and regenerated `docs/plans/INDEX.md`.
 
-- [ ] **Step 1: Update dependent docs to current truth.** In `2026-06-30-partial-sound-string-support.md`, mark Task 4b implemented after the typed traversal lands; remove stale references that describe `SymbolicStringFunction`, `VariableString`/`ConstantString`, and `trim`/`replace` as unrenderable/deferred. Keep corpus verification (Task 7) active and gated on MUT-id. In the overview, move the current focus past the unified-expression refactor once Phase 4 verifies, leaving static MUT-id as the next implementation item and string corpus verification still gated on MUT-id.
+- [x] **Step 1: Update dependent docs to current truth.** In `2026-06-30-partial-sound-string-support.md`, mark Task 4b implemented after the typed traversal lands; remove stale references that describe `SymbolicStringFunction`, `VariableString`/`ConstantString`, and `trim`/`replace` as unrenderable/deferred. Keep corpus verification (Task 7) active and gated on MUT-id. In the overview, move the current focus past the unified-expression refactor once Phase 4 verifies, leaving static MUT-id as the next implementation item and string corpus verification still gated on MUT-id.
 
-- [ ] **Step 2: Run focused tests.** Run:
+- [x] **Step 2: Run focused tests.** Run:
 
 ```bash
 ./gradlew test \
@@ -913,7 +913,7 @@ Use it where the `Pattern`/`Matcher` block currently builds `temporaryParameters
 
 Expected: PASS.
 
-- [ ] **Step 3: Run full unit verification.** Run:
+- [x] **Step 3: Run full unit verification.** Run:
 
 ```bash
 ./gradlew test
@@ -921,9 +921,9 @@ Expected: PASS.
 
 Expected: PASS.
 
-- [ ] **Step 4: Run native SPF string tests with cleanup.** Use the cleanup wrapper/trap pattern from Phases 2–3 so `settings.gradle` is restored even on failure. Run the native tests for `TestSymbolicStringCaseChange`, `TestSymbolicStringSymcrete`, `TestSymbolicStringIsEmpty`, and `TestSymbolicStringEqualsIgnoreCase`. Expected: PASS and `git status --short settings.gradle` has no output.
+- [x] **Step 4: Run native SPF string tests with cleanup.** Use the cleanup wrapper/trap pattern from Phases 2–3 so `settings.gradle` is restored even on failure. Run the native tests for `TestSymbolicStringCaseChange`, `TestSymbolicStringSymcrete`, `TestSymbolicStringIsEmpty`, and `TestSymbolicStringEqualsIgnoreCase`. Expected: PASS and `git status --short settings.gradle` has no output.
 
-- [ ] **Step 5: Run the JARVIS behavioral guardrail with PIT disabled.** Because the branch now has the PIT-disable flag available, run the scorecard with PIT stages disabled:
+- [x] **Step 5: Run the JARVIS behavioral guardrail with PIT disabled.** Because the branch now has the PIT-disable flag available, run the scorecard with PIT stages disabled:
 
 ```bash
 GRADLE_OPTS=-Dteralizer.pitest.enabled=false bash scripts/run-jarvis-scoreboard.sh --reset-db --prepare-fixtures 2>&1 | tee /tmp/teralizer-jarvis-scoreboard-phase4.log
@@ -937,7 +937,7 @@ uv run --directory analysis python -m teralizer.jarvis_scoreboard --census
 
 Acceptance: no non-JPF pipeline/build failures, PIT tasks recorded as disabled skips, and the census still reports 250 sound numeric/char/boolean successes.
 
-- [ ] **Step 6: Run branch handoff build.** Run:
+- [x] **Step 6: Run branch handoff build.** Run:
 
 ```bash
 ./gradlew build
@@ -945,7 +945,7 @@ Acceptance: no non-JPF pipeline/build failures, PIT tasks recorded as disabled s
 
 Expected: PASS.
 
-- [ ] **Step 7: Validate planning docs.** Run:
+- [x] **Step 7: Validate planning docs.** Run:
 
 ```bash
 omp-plans index && omp-plans check
@@ -953,7 +953,7 @@ omp-plans index && omp-plans check
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit Phase 4.** Commit the code cleanup, doc sync, Phase-4 checkboxes, and regenerated index with subject `refactor(domain): finalize unified expression model` and a body explaining that registry metadata now drives rendering/planning/admission, temporary recovery now walks typed model variables instead of JSON, and the no-PIT JARVIS guardrail was used.
+- [ ] **Step 8: Commit Phase 4.** Commit the doc sync, Phase-4 verification checkboxes, and regenerated index with subject `docs(plans): finalize unified expression model` and a body explaining that registry metadata now drives rendering/planning/admission, temporary recovery now walks typed model variables instead of JSON, and the no-PIT JARVIS guardrail was used.
 
 ---
 

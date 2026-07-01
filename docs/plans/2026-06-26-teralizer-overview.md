@@ -29,14 +29,10 @@ work that depends on a re-run is deferred until (1) lands.
 
 Step 1 (beat JARVIS) is won and consolidated. The next implementation work, **in this order**:
 
-1. **`2026-06-30-unified-expression-model`** *(spec)* — **do first.** Rearchitect the `teralizer.domain`
-   expression model: one `Invocation` node for all method/function calls of any arity, a `Not` wrapper,
-   typed `Variable`/`Constant`, `Operation` for true operators only, and one capability registry. It
-   fixes the arity / ingestion-totality / scattered-soundness contract breaks corpus-wide and is the
-   clean foundation the remaining string ops need (they land in its Phase 1, not as ad-hoc hacks).
-2. **`2026-06-30-partial-sound-string-support`** *(plan, mostly implemented)* — finish on the unified
-   model: the leftover ops (`trim`/`toLowerCase`/`toUpperCase`/`replace`) fall out of the refactor's
-   Phase 1; Task 4b follows. Corpus verification (Task 7) stays gated on MUT-id and runs after step 3. **Funnel caveat:** the rerun shows
+1. **`2026-06-30-unified-expression-model`** *(spec)* — finalization is landing. The domain model now uses one `Invocation` node for calls, a `Not` wrapper,
+   typed `Variable`/`Constant`, binary-only `Operation`, and method capability metadata. After final verification, this exits the active implementation path.
+2. **`2026-06-30-partial-sound-string-support`** *(plan, mostly implemented)* — the unified model absorbed the leftover ops
+   (`trim`/`toLowerCase`/`toUpperCase`/`replace`) and typed temporary recovery. Corpus verification (Task 7) stays gated on MUT-id and runs after step 3. **Funnel caveat:** the rerun shows
    `ParameterType`/`ReturnType` rejects are dominated by *parameterless* methods, *unresolved* MUTs, and
    *custom-object* returns — **not** String — so this lever's corpus payoff is gated behind MUT-id.
 3. **`2026-06-30-static-mut-identification`** *(plan, draft)* — precedence-cascade MUT-id
@@ -71,7 +67,7 @@ carries the full status/parent tree and `archive/` the retired docs.
 - `2026-06-27-ensemble-mut-identification` *(spec, draft)* — killed-mutant focal-method oracle replacing LCBA.
 - `2026-06-28-mut-id-targeting-and-coverage` *(audit)* — MUT-id targets, mutation-data coverage, telemetry gaps.
 - `2026-06-30-static-mut-identification` *(plan, draft)* — static (no-PIT) MUT-id recall via a precedence cascade with hard abstain; the static subset of the ensemble spec.
-- `2026-06-30-partial-sound-string-support` *(plan, active)* — string ops SPF handles soundly (incl. `isEmpty`, `equalsIgnoreCase`, `String` returns); unsound/unsupported ops excluded structurally. Mostly implemented; Task 4b + corpus verification (gated on MUT-id) remain.
+- `2026-06-30-partial-sound-string-support` *(plan, active)* — string ops SPF handles soundly (incl. `isEmpty`, `equalsIgnoreCase`, `trim`, case transforms, `replace`, and `String` returns); unsound/unsupported ops excluded structurally. Corpus verification (Task 7) remains gated on MUT-id.
 
 **Active — independent track**
 - `2026-06-25-replication-package-documentation-improvements` *(plan)* — verifiable replication package for ACM artifact eval.

@@ -18,46 +18,19 @@ parent: 2026-06-26-teralizer-overview
 
 ---
 
-## Progress (as built — 2026-06-30)
+## Progress
 
-Implemented on the `string-support` branch (worktree); the full parent suite (192 tests) and the
-native jpf-symbc string tests are green. Commits: config plumbing `0707fad8`, capture `spc`
-`554fabd3`, render operators `2bcb8aa5`, `StringDomainPlanner` `45f7652c`, screen + `symbolic.strings`
-`541ce380`, crash-wrap → `UNSUPPORTED_TERM` `f79dc1b5`, String **return** oracles (identity +
-`concat`) `8fc1b395`, `isEmpty` `bb5e9607`. jpf-symbc submodule: symcrete fix `d624962`, typed
-unsupported-op exception `1e11e29`, `isEmpty` handler `361a45f`, `equalsIgnoreCase` handler `10cad7f` (both with native tests); parent-side `equalsIgnoreCase` render + pointer `0419b9f7`.
+The string-support seams are implemented on the `string-support` branch. String path-condition capture, string return capture, the structural string-op screen, conditional `symbolic.strings`, typed `UNSUPPORTED_TERM` exclusions, `isEmpty`, `equalsIgnoreCase`, and the unified-model string transforms (`trim`, `replace`, `toLowerCase`, `toUpperCase`) all route through the unified expression model.
 
-**Deviations from the plan as written (all sound):**
-
-- **The symcrete fix is the load-bearing prerequisite, not the lighter crash-wrap.** Grounding found a
-  real jpf-symbc soundness bug first: a branch on a symbolic `String` captured the wrong path,
-  decoupled from the concrete seed, because the boolean String ops never received the numeric
-  `IF_ICMP*` "YN symcrete fix." Fixed in `SymbolicStringHandler` (1-choice CG under
-  `collect_constraints` + concrete `select`); regression-guarded by native `TestSymbolicStringSymcrete`.
-  The crash-wrap (Task 6) landed on top.
-- **String returns via operator representability, not `SymbolicStringFunction` rewiring.**
-  `StringExpression extends Expression`, so identity returns were already captured; the work was making
-  `SpfToModelTransformer` represent every SPF `StringOperator` (so a derived return never crashes the
-  listener) plus a sound `CONCAT` fold arm. Unrenderable derived returns (`trim`/`replace`/…) fall to
-  `fold`'s default → `NonGeneralizableExpressionException` → excluded via the existing framework
-  (`AbstractTask` marks the record `is_included=false`; the task is `FAILED`), like numeric
-  transcendentals. No bespoke catch was added.
-- **`isEmpty` modeled as `s == ""`, not a dedicated `EMPTY` operator** (see Task 8) — reuses the
-  `EQUALS` path end-to-end.
-- **`equalsIgnoreCase` was a crashing stub, now implemented soundly.** `handleEqualsIgnoreCase` threw
-  `RuntimeException` (an admitted MUT would abort SPF) while the sound-set listed it as included; it now
-  delegates to the shared boolean-String path (`StringComparator.EQUALSIGNORECASE`, symcrete select)
-  with `fold` arms, matching `equals`. Native `TestSymbolicStringEqualsIgnoreCase` (both branches).
+Current representation:
+- SPF string constraints and derived string expressions become typed `Invocation` / `Not` / `Variable` / `Constant` model nodes.
+- `MethodCapabilities` is the source for supported string methods, renderability, return domains, and input-generation constraint kinds.
+- `StringDomainPlanner` structurally satisfies positive `equals`, `isEmpty`, `startsWith`, `endsWith`, and `contains` clauses; output-only transforms stay residual-filter checked via the rendered predicate.
+- Synthetic SPF temporaries are recovered by walking typed model variables, not by scraping serialized JSON for numeric symbol names.
 
 **Remaining:**
 
-- **Task 4b** (symbolic-temporary recovery) — gated on the spike: only needed if the string PC/return
-  introduce symbolic temporaries beyond the named formals; skip if not.
-- **Task 7** (corpus verification) — **gated on static MUT-id.** The RepoReapers rerun funnel shows the
-  current corpus surfaces ~0 *resolved* String-parameter MUTs: `ParameterTypeFilter` rejects are 100%
-  "no parameters," its defers plus the `ReturnType`/`MissingValue` defers are MUT-unresolved, and
-  `ReturnTypeFilter` type-rejects are custom domain objects, not String. So the string funnel payoff is
-  unmeasurable until MUT-id resolves String MUTs; run the disposable-DB verification then.
+- **Task 7** (corpus verification) is still gated on static MUT-id. The RepoReapers rerun funnel shows the current corpus surfaces ~0 *resolved* String-parameter MUTs: `ParameterTypeFilter` rejects are dominated by parameterless methods, its defers plus the `ReturnType`/`MissingValue` defers are MUT-unresolved, and `ReturnTypeFilter` type-rejects are custom domain objects, not String. The string funnel payoff is unmeasurable until MUT-id resolves String MUTs; run the disposable-DB verification then.
 
 ## Soundness invariants (non-negotiable)
 
@@ -66,32 +39,23 @@ unsupported-op exception `1e11e29`, `isEmpty` handler `361a45f`, `equalsIgnoreCa
 3. **Co-dependency.** Making `String` a *generated* parameter without rendering its operators forces exclusions (`ConstraintClauses.from` rethrows `NonGeneralizableExpressionException` for a clause that constrains a generated parameter). Seams (1)–(3) must ship together or not at all.
 4. **No regression** of the ~250 numeric/char/boolean sound generalizations.
 
-## Background (verified at source)
+## Current implementation map
 
-- `src/main/java/teralizer/jpf/TestGeneralizationListener.java:147` — `captureInvocation` reads only `pathCondition.header` (numeric `Constraint`) and **drops `pathCondition.spc`** (the `StringPathCondition`). `:171` — `spfOutput = returnInstruction.getReturnAttr(..., Expression.class)` where `Expression` is `gov.nasa.jpf.symbc.numeric.Expression`, so a string return attribute is not captured. `:238-241` — concrete `String` reference capture already yields a `StringValue`.
-- `src/main/java/teralizer/transformer/SpfToModelTransformer.java:19-45` — `transform(StringPathCondition)` and `transform(StringConstraint)` overloads already exist and produce `Expression` model nodes.
-- `src/main/java/teralizer/transformer/ModelToJavaTransformer.java:226-228` — `fold(SymbolicStringFunction)` emits **free-function** syntax `name(args)` (wrong for instance methods like `s.length()`). `:231-298` — `fold(Operation)`: all string operators fall to the `default` (`:295-297`) → `NonGeneralizableExpressionException`. `fold(VariableString)` (`:198-203`) and `fold(ConstantString)` (`:176-179`) already render correctly.
-- `src/main/java/teralizer/domain/Operator.java:42-67` — every string operator already exists in the enum.
-- `src/main/java/teralizer/jqwik/planning/DomainPlanners.java:8-9` — `REGISTERED` = `NumericDomainPlanner`, `BooleanDomainPlanner`. `TypeCapability` (`src/main/java/teralizer/util/TypeCapability.java:34-45`) derives input/return support from `REGISTERED.supports(domain)`, and `TypeDomain.from` (`TypeDomain.java:37-39`) already maps `String`/`java.lang.String` → `STRING`. **Registering a `StringDomainPlanner` is the single structural unlock** for the `ParameterTypeFilter`, `ReturnTypeFilter`, the two `TestGeneralizationTask` `removeIf` strips, and the planner.
-- `src/main/java/teralizer/jqwik/planning/InputGenerationPlanner.java:36-44,56-67` — the factory applies the **full** predicate (`ConstraintClauses.from` renders every conjunct) as the residual filter regardless of what a planner consumed. So string clauses are enforced by the filter **iff** `fold` can render them.
-- `jpf-symbc/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/SymbolicStringHandler.java:142-313` — SPF already handles `concat`, `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, `length`, `indexOf`, `lastIndexOf`, `charAt`, `substring`, `trim`, `replace`, `valueOf`, `parse*`, `toString`. The `else` at `:309-311` originally **threw `RuntimeException`** (crashing the whole JPF process) for anything else — `compareTo` still is unsupported (now a typed `UnsupportedSymbolicStringOpException`, Task 6), and `isEmpty` is now handled (see Progress). `handleCharAt` (`:320-355`, `sf.push(0,false)` at `:350`) has **no `PCChoiceGenerator` / no length constraint / no SIOOBE fork** → the missing-bounds unsoundness.
-- `src/main/java/teralizer/jpf/ExtractionOutcome.java:10-17` — `Kind` currently has only `EXTRACTED`, `TARGET_NOT_ENTERED`, `TARGET_NOT_EXITED`. A new kind is needed for the string screen's typed exclusion.
-- `src/main/resources/templates/jpf-config.vm:34` — `#symbolic.strings=true` is commented out; `src/main/java/teralizer/spoon/analysis/SpfSymbolicConfigSelector.java` already inspects the MUT body (direct-body-only) to select a `SpfSymbolicConfig` profile — the natural home for the string screen + the `symbolic.strings` toggle.
+- `src/main/java/teralizer/jpf/TestGeneralizationListener.java` captures the numeric path condition, the string path condition, concrete arguments, and symbolic string/numeric returns.
+- `src/main/java/teralizer/transformer/SpfToModelTransformer.java` maps SPF string constraints and derived string expressions to `Invocation`/`Not`, and refuses unsupported terms with `UnsupportedSpfTermException` instead of silently dropping operands.
+- `src/main/java/teralizer/transformer/ModelToJavaTransformer.java` renders `Invocation` via `MethodCapabilities` and raises `NonGeneralizableExpressionException` for unsupported or type-inconsistent calls.
+- `src/main/java/teralizer/jqwik/planning/MethodCapabilities.java` records supported method symbols, input-generatable constraints, output renderability, return domains, and static/instance shape.
+- `src/main/java/teralizer/jqwik/planning/StringDomainPlanner.java` consumes the input-generatable string constraints and leaves output-only transforms to the residual predicate.
+- `src/main/java/teralizer/processing/filter/StringOperationFilter.java` consults `MethodCapabilities` for the structural string-op screen.
+- `src/main/java/teralizer/transformer/VariableDescriptorCollector.java` recovers typed SPF temporaries from model variables.
+- `jpf-symbc/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/SymbolicStringHandler.java` handles the admitted string operations and reports unsupported ones as typed exclusions.
 
 ## Sound-set decision (v1)
 
-- **Include:** `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, `length`, `indexOf`, `concat`, `isEmpty` (modeled as `equals("")`), and computed `String` returns (`DerivedStringExpression`) — all handled by SPF and total along the concrete path.
-- **Exclude (typed):** `compareTo` (SPF crash → typed `UNSUPPORTED_TERM`); `charAt`, `substring` (SPF omits the SIOOBE fork → unsound) — excluded unconditionally in v1; the "index provably bounded by the captured PC" refinement is deferred.
-- **Deferred:** `matches`/regex, `regionMatches`, and `replace`/`trim` as generalized ops.
-
-## File map
-
-- Modify: `src/main/java/teralizer/jpf/TestGeneralizationListener.java` — capture `spc` + string return attr.
-- Modify: `src/main/java/teralizer/transformer/ModelToJavaTransformer.java` — string-operator `fold` arms + fix `SymbolicStringFunction` instance-call rendering.
-- Create: `src/main/java/teralizer/jqwik/planning/StringDomainPlanner.java` and `StringClauseInterpretation.java`; modify `DomainPlanners.java`.
-- Modify: `src/main/java/teralizer/spoon/analysis/SpfSymbolicConfigSelector.java` (or a new `StringSupportScreen`); `src/main/java/teralizer/util/SpfSymbolicConfig.java`; `src/main/resources/templates/jpf-config.vm`; `src/main/java/teralizer/jpf/ExtractionOutcome.java`.
-- Modify (submodule): `jpf-symbc/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/SymbolicStringHandler.java`.
-- Tests: `src/test/java/teralizer/transformer/ModelToJavaTransformer*Test.java`, `src/test/java/teralizer/jpf/TestGeneralizationListenerCaptureTest.java` + `JpfListenerHarness.java`, new `src/test/java/teralizer/jqwik/planning/StringDomainPlannerTest.java`, `src/test/java/teralizer/util/TypeCapabilityTest.java`.
+- **Input-generatable:** `equals`, `isEmpty`, `startsWith`, `endsWith`, `contains` on literal string constraints.
+- **Output-renderable / residual-filter checked:** `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, `isEmpty`, `concat`, `trim`, `replace`, `toLowerCase`, `toUpperCase`, and `String.valueOf`.
+- **Supported only for filtering / SPF awareness:** `length`, `indexOf`, `lastIndexOf`.
+- **Excluded (typed):** `compareTo`, `charAt`, `substring`, regex/region matching, and regex replacement variants whose soundness or generation contract is not modeled.
 
 ## Tasks
 
@@ -103,7 +67,7 @@ Discover the exact `Model` node produced for each slice operator before writing 
 
 - [x] **Step 1:** In a scratch harness test (pattern: `TestGeneralizationListenerSymbolicTest.java`), run a target whose MUT branches on `s.equals("foo")`, one on `s.length() > 3`, one on `s.startsWith("a")`, one on `s.indexOf('x')`, and one returning `a.concat(b)`, with `symbolic.strings=true` and a symbolic `String` parameter.
 - [x] **Step 2:** Temporarily transform `pathCondition.spc` in `captureInvocation` and log the resulting `teralizer.domain.Expression` tree (node class + `Operator`) for each.
-- [x] **Step 3:** Record, in this task's notes, the node shape per op (e.g. is `s.equals("foo")` an `Operation(EQUALS, VariableString, ConstantString)`? is `s.length()` a `SymbolicStringFunction("length", [VariableString])` or a derived integer expression?). Acceptance: Tasks 3 and 4 reference concrete node shapes, not guesses. Revert the scratch edits.
+- [x] **Step 3:** Record the node shape per op after the unified model landed: string predicates are `Invocation`/`Not`, string leaves are typed `Variable`/`Constant`, and string-returning transforms are instance `Invocation`s. Acceptance: Tasks 3 and 4 reference concrete node shapes, not guesses. Revert the scratch edits.
 - [x] **Step 4: Check ingestion totality.** In the same scratch run, confirm `a.concat(b)` is captured **whole** — `SpfToModelTransformer` has a TODO that silently drops `DerivedStringExpression.oprlist` (audit A-5); verify the captured model reflects the full concat, not a truncated term. Then round-trip the captured string spec through `Model→JSON→Model` (`ModelToJsonTransformer`/`JsonToModelTransformer`) and confirm string nodes survive (audit A-2 found a field-name mismatch in that path). Any gap becomes a fix step in Task 2 (capture) or a local `SpfToModelTransformer`/JSON fix — never a silent drop.
 
 ### Task 2: Listener — capture the string path condition + string return
@@ -137,7 +101,7 @@ NOTCONTAINS            -> (!l.contains(r))
 ```
 
 - [x] **Step 2: Run, expect FAIL.**
-- [x] **Step 3: Add the case arms** to `fold(Operation, left, right)` before the `default` branch (`ModelToJavaTransformer.java:295`). If Task 1 shows `length`/`indexOf`/`concat` arrive as `SymbolicStringFunction`, fix `fold(SymbolicStringFunction)` (`:226-228`) to emit **instance-call** Java (`args.get(0) + "." + method + "(" + rest + ")"`), mapping the SPF function name to the Java method; keep numeric `SymbolicIntegerFunction`/`SymbolicRealFunction` unchanged.
+- [x] **Step 3: Add the render paths** for admitted string invocations via `ModelToJavaTransformer.fold(Invocation)`, using `MethodCapabilities` for renderability and return-domain metadata. Numeric/math invocations render through the same `Invocation` path.
 - [x] **Step 4: Run, expect PASS**, and run `ModelToJavaTransformerNonGeneralizableTest` to confirm the *excluded* operators (e.g. `MATCHES`) still raise `NonGeneralizableExpressionException`.
 - [x] **Step 5: Commit.** `feat: render sound string operators to Java`
 
@@ -164,17 +128,17 @@ Build an arbitrary that *satisfies* the captured clauses (so generation is pract
 - [x] **Step 6: Run, expect PASS**, plus a test that a `String`-only-parameter MUT is no longer stripped by `TestGeneralizationTask`'s `removeIf` and no longer rejected by `ParameterTypeFilter`/`ReturnTypeFilter`.
 - [x] **Step 7: Commit.** `feat: add StringDomainPlanner with clause-satisfying arbitraries`
 
-### Task 4b: Recover symbolic temporaries via Model traversal (replace the regex-scrape)
+### Task 4b: Recover symbolic temporaries via typed Model traversal
 
-`TestGeneralizationTask.java:283-300` recovers SPF's symbolic temporaries by regex-scraping the serialized JSON spec for `INT_`/`REAL_` names — string symbols are missed, so their generated inputs would never be planned. Replace the regex with a typed `Model` traversal (the render path is already `ModelFolder`-strict, so this is the one real string-plumbing cleanup, not a visitor-hierarchy change).
+`TestGeneralizationTask` recovers SPF synthetic temporaries by walking the typed input/output `Model` trees and collecting `Variable(name, TypeDomain)` descriptors. This replaces the JSON regex scrape for numeric-only synthetic names and admits string temporaries when SPF emits them.
 
-**Files:** `TestGeneralizationTask.java`; new `src/main/java/teralizer/transformer/VariableDescriptorCollector.java`; a test alongside the generation tests.
+**Files:** `TestGeneralizationTask.java`; `src/main/java/teralizer/transformer/VariableDescriptorCollector.java`; `VariableDescriptorCollectorTest.java`; `TestGeneralizationTaskTest.java`.
 
-- [ ] **Step 1: Gate on the spike.** Only needed if Task 1 shows string PC/return introduce symbolic temporaries not already in `testedMethodParameters`. If strings only ever appear as named formal parameters, record that and skip (no regex change needed).
-- [ ] **Step 2: Write a failing test** that a spec containing a string symbol yields that symbol in `allParameters` (today the `INT_`/`REAL_` regex omits it).
-- [ ] **Step 3: Replace the regex-scrape** (`:283-300`) with a typed `Model` walk. `VariableNameCollector` returns only names, so add a small `VariableDescriptorCollector` (a `ModelVisitor` overriding the three `Variable*` `preVisit` hooks) that records name → `TypeDomain` (`VariableInteger`→INTEGER, `VariableReal`→REAL, `VariableString`→STRING). Walk `inputModel` + `outputModel`, take the collected symbols minus the formal `testedMethodParameters`, and build each `temporaryParameter` with the domain-derived type. Delete the `Pattern`/`Matcher` code.
-- [ ] **Step 4: Run, expect PASS**; confirm numeric temporaries are still recovered (no regression to existing generalizations).
-- [ ] **Step 5: Commit.** `refactor: recover symbolic temporaries via Model traversal, not JSON regex`
+- [x] **Step 1: Gate on the spike.** The unified model now represents string returns and string path constraints as typed variables/invocations, so a traversal is the correct source of temporary metadata.
+- [x] **Step 2: Write a failing test** that a spec containing a string temporary yields that symbol in the recovered temporary parameters.
+- [x] **Step 3: Replace the regex-scrape** with `VariableDescriptorCollector`, a `ModelVisitor` over typed `Variable` leaves. Walk `inputModel` + `outputModel`, subtract declared tested-method parameters, and build `MethodParameter`s using the collected `TypeDomain`.
+- [x] **Step 4: Run, expect PASS**; numeric temporaries remain recovered and string temporaries are no longer missed.
+- [x] **Step 5: Commit.** `refactor(task): recover temporaries from model variables`
 
 ### Task 5: Structural pre-screen + conditional `symbolic.strings`
 
