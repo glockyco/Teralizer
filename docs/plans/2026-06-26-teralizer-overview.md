@@ -27,20 +27,19 @@ work that depends on a re-run is deferred until (1) lands.
 
 ## Current focus
 
-Step 1 (beat JARVIS) is won and consolidated. The next implementation work, **in this order**:
+Step 1 (beat JARVIS) is won and consolidated. The unified expression-model refactor is implemented: the domain model uses one `Invocation` node for calls, a `Not` wrapper, typed `Variable`/`Constant`, binary-only `Operation`, and method capability metadata.
 
-1. **`2026-06-30-unified-expression-model`** *(spec)* — finalization is landing. The domain model now uses one `Invocation` node for calls, a `Not` wrapper,
-   typed `Variable`/`Constant`, binary-only `Operation`, and method capability metadata. After final verification, this exits the active implementation path.
-2. **`2026-06-30-partial-sound-string-support`** *(plan, mostly implemented)* — the unified model absorbed the leftover ops
-   (`trim`/`toLowerCase`/`toUpperCase`/`replace`) and typed temporary recovery. Corpus verification (Task 7) stays gated on MUT-id and runs after step 3. **Funnel caveat:** the rerun shows
+The next implementation work, **in this order**:
+
+1. **`2026-06-30-static-mut-identification`** *(plan, draft)* — precedence-cascade MUT-id
+   (abstain-on-ambiguity, evidence-gated mis-targeting checks) attacking the `MissingValue` blocker
+   (≈ half the corpus). This is the dominant lever and makes the string funnel payoff measurable.
+2. **`2026-06-30-partial-sound-string-support`** *(plan, mostly implemented)* — the implementation seams are in place, including
+   `trim`/`toLowerCase`/`toUpperCase`/`replace` and typed temporary recovery. Corpus verification (Task 7) stays gated on MUT-id and runs after static MUT-id. **Funnel caveat:** the rerun shows
    `ParameterType`/`ReturnType` rejects are dominated by *parameterless* methods, *unresolved* MUTs, and
    *custom-object* returns — **not** String — so this lever's corpus payoff is gated behind MUT-id.
-3. **`2026-06-30-static-mut-identification`** *(plan, draft)* — precedence-cascade MUT-id
-   (abstain-on-ambiguity, evidence-gated mis-targeting checks) attacking the `MissingValue` blocker
-   (≈ half the corpus); the dominant lever, and what makes the string funnel payoff measurable. Do
-   **after** the refactor + string finish.
 
-Sequencing decided: **refactor → finish strings → MUT-id**. No full re-run until all three land, so a single run measures the improved implementation.
+Sequencing decided: **refactor shipped → MUT-id → string corpus verification**. No full re-run until MUT-id and string corpus verification land, so a single run measures the improved implementation.
 
 ## Map (by current relevance)
 
@@ -58,7 +57,6 @@ carries the full status/parent tree and `archive/` the retired docs.
   Next: write RQ0 into the paper and migrate the granular numbers to an analysis notebook.
 
 **Active — generator & applicability tracks**
-- `2026-06-30-unified-expression-model` *(spec, draft)* — **do first.** Unify the `teralizer.domain` expression model (one `Invocation` node for any-arity calls, `Not`, typed `Variable`/`Constant`, `Operation` for true operators, one capability registry); phased migration, string-first. Foundation for the remaining string ops and a corpus-wide cleanup.
 - `2026-06-28-clause-driven-input-generation` *(spec)* — generator design: clause-driven
   planners, single type-capability source, fail-loud SPF→Model seam.
 - `2026-06-27-generalizable-input-rule` *(spec)* — shared input-eligibility rule for every consumer.
@@ -94,8 +92,6 @@ carries the full status/parent tree and `archive/` the retired docs.
   and the oracle is weak (only catches throw-behavior flips). Resolved void MUTs today are
   negligible (24 / 35,299 assertions ≈ 0.07%, ~0 yield); a breadth idea for after the value-oracle
   funnel is unclogged.
-
-**Superseded & shipped** — lineage in `INDEX.md` / `archive/`.
 
 ## Win condition (summary)
 
