@@ -36,9 +36,6 @@ public class ModelFolderTest {
         @Override public String fold(SymbolicRealFunction f, List<String> args) {
             return "SymbolicRealFunction(" + String.join(",", args) + ")";
         }
-        @Override public String fold(SymbolicStringFunction f, List<String> args) {
-            return "SymbolicStringFunction(" + String.join(",", args) + ")";
-        }
         @Override public String fold(Invocation invocation, String receiver, List<String> args) {
             return "Invocation{" + invocation.method + "}(" + receiver + "," + String.join(",", args) + ")";
         }
@@ -85,11 +82,6 @@ public class ModelFolderTest {
                 new ConstantReal(2.0), new VariableReal("y")
             }).fold(folder));
         Assert.assertEquals(
-            "SymbolicStringFunction(ConstantString,VariableString)",
-            new SymbolicStringFunction("h", new Expression[]{
-                new ConstantString("s"), new VariableString("z")
-            }).fold(folder));
-        Assert.assertEquals(
             "Invocation{startsWith}(VariableString,ConstantString)",
             new Invocation(new VariableString("z"), null, "startsWith", Arrays.asList(new ConstantString("s"))).fold(folder));
         Assert.assertEquals(
@@ -119,7 +111,7 @@ public class ModelFolderTest {
             ConstantInteger.class, ConstantReal.class, ConstantString.class,
             VariableInteger.class, VariableReal.class, VariableString.class,
             ArrayExpression.class, ArrayElementExpression.class,
-            SymbolicIntegerFunction.class, SymbolicRealFunction.class, SymbolicStringFunction.class,
+            SymbolicIntegerFunction.class, SymbolicRealFunction.class,
             Invocation.class, Not.class,
             Operation.class, Operator.class, Error.class, ExceptionModel.class));
 

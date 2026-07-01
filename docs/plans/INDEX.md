@@ -13,7 +13,7 @@
 - **Pipeline Architecture Review** [audit] `2026-06-28-pipeline-architecture-review` ← 2026-06-26-teralizer-overview
 - **JARVIS Comparison (RQ0)** [spec] `2026-06-30-jarvis-comparison` ← 2026-06-26-teralizer-overview
 - **Partial Sound String Support** [plan] `2026-06-30-partial-sound-string-support` (33/42) ← 2026-06-26-teralizer-overview
-- **Unified Expression Model — Implementation Plan** [plan] `2026-06-30-unified-expression-model-plan` (25/44) ← 2026-06-30-unified-expression-model
+- **Unified Expression Model — Implementation Plan** [plan] `2026-06-30-unified-expression-model-plan` (28/44) ← 2026-06-30-unified-expression-model
 
 ## draft
 

@@ -4,6 +4,7 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.ConstantInteger;
 import teralizer.domain.ConstantString;
+import teralizer.domain.Invocation;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
@@ -26,7 +27,7 @@ public class ConstraintClausesDropTest {
         // string clause references only the filtered s, so it is dropped even though it renders;
         // only the generalizable clause survives.
         Operation numeric = new Operation(new VariableInteger("a"), Operator.GT, new ConstantInteger(0));
-        Operation string = new Operation(new VariableString("s"), Operator.EQUALS, new ConstantString("x"));
+        Invocation string = new Invocation(new VariableString("s"), null, "equals", Collections.singletonList(new ConstantString("x")));
         Model model = new Operation(numeric, Operator.AND, string);
 
         Map<String, String> types = new HashMap<>();
@@ -61,7 +62,7 @@ public class ConstraintClausesDropTest {
     @Example
     void refusesToDropClauseConstrainingAGeneralizableParameter() {
         // Unsupported operator on a still-generated parameter: must not be dropped.
-        Operation bad = new Operation(new VariableInteger("a"), Operator.EQUALS, new ConstantInteger(0));
+        Invocation bad = new Invocation(new VariableInteger("a"), null, "equals", Collections.singletonList(new ConstantInteger(0)));
 
         Map<String, String> types = new HashMap<>();
         types.put("a", "int");

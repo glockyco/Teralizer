@@ -8,6 +8,7 @@ import teralizer.domain.Invocation;
 import teralizer.domain.Not;
 import teralizer.domain.VariableReal;
 import teralizer.domain.VariableString;
+import teralizer.domain.VariableInteger;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +31,45 @@ public class ModelToJavaTransformerInvocationTest {
             Collections.singletonList(new ConstantString("foo")));
 
         Assert.assertEquals("(_p_.s.equals(\"foo\"))", new ModelToJavaTransformer().transform(invocation));
+    }
+
+    @Example
+    void rendersStringPredicateAndTransformInvocations() {
+        Assert.assertEquals(
+            "(_p_.s.equalsIgnoreCase(\"foo\"))",
+            new ModelToJavaTransformer().transform(new Invocation(
+                new VariableString("s"), null, "equalsIgnoreCase", Collections.singletonList(new ConstantString("foo")))));
+        Assert.assertEquals(
+            "(_p_.s.startsWith(\"f\"))",
+            new ModelToJavaTransformer().transform(new Invocation(
+                new VariableString("s"), null, "startsWith", Collections.singletonList(new ConstantString("f")))));
+        Assert.assertEquals(
+            "(_p_.s.concat(\"!\"))",
+            new ModelToJavaTransformer().transform(new Invocation(
+                new VariableString("s"), null, "concat", Collections.singletonList(new ConstantString("!")))));
+        Assert.assertEquals(
+            "((_p_.s.trim()).toLowerCase())",
+            new ModelToJavaTransformer().transform(new Invocation(
+                new Invocation(new VariableString("s"), null, "trim", Collections.emptyList()),
+                null,
+                "toLowerCase",
+                Collections.emptyList())));
+    }
+
+    @Example
+    void stringInvocationOnNonStringReceiverThrowsTypedException() {
+        Invocation invocation = new Invocation(
+            new VariableInteger("a"),
+            null,
+            "equals",
+            Collections.singletonList(new ConstantInteger(0)));
+
+        try {
+            new ModelToJavaTransformer().transform(invocation);
+            Assert.fail("String invocation must not render on an integer receiver");
+        } catch (NonGeneralizableExpressionException expected) {
+            Assert.assertTrue(expected.getMessage().contains("equals"));
+        }
     }
 
     @Example

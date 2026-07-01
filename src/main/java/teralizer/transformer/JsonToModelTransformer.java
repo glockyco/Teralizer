@@ -27,7 +27,6 @@ public class JsonToModelTransformer {
         builder.registerTypeAdapter(ArrayElementExpression.class, new ArrayElementExpressionDeserializer());
         builder.registerTypeAdapter(SymbolicIntegerFunction.class, new SymbolicIntegerFunctionDeserializer());
         builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionDeserializer());
-        builder.registerTypeAdapter(SymbolicStringFunction.class, new SymbolicStringFunctionDeserializer());
         builder.registerTypeAdapter(Invocation.class, new InvocationDeserializer());
         builder.registerTypeAdapter(Not.class, new NotDeserializer());
         builder.registerTypeAdapter(teralizer.domain.Error.class, new ErrorDeserializer());
@@ -165,18 +164,6 @@ public class JsonToModelTransformer {
             Expression[] args = context.deserialize(jsonObject.get("args"), Expression[].class);
 
             return new SymbolicRealFunction(name, args);
-        }
-    }
-
-    private static class SymbolicStringFunctionDeserializer implements JsonDeserializer<SymbolicStringFunction> {
-        @Override
-        public SymbolicStringFunction deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext context) throws JsonParseException {
-            JsonObject jsonObject = jsonElement.getAsJsonObject();
-
-            String name = jsonObject.get("name").getAsString();
-            Expression[] args = context.deserialize(jsonObject.get("args"), Expression[].class);
-
-            return new SymbolicStringFunction(name, args);
         }
     }
 

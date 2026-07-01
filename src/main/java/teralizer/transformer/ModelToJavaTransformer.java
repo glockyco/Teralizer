@@ -221,11 +221,6 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     }
 
     @Override
-    public String fold(SymbolicStringFunction function, List<String> args) {
-        return function.name + "(" + String.join(", ", args) + ")";
-    }
-
-    @Override
     public String fold(Invocation invocation, String receiver, List<String> args) {
         MethodCapability capability = MethodCapabilities.get(invocation.method);
         if (capability == null || !capability.outputRenderable) {
@@ -237,6 +232,16 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
             if (capability.staticQualifier != null) {
                 throw new NonGeneralizableExpressionException(
                     "Cannot render static call '" + invocation.method + "' as an instance invocation.");
+            }
+            if (!isStringExpression(invocation.receiver)) {
+                throw new NonGeneralizableExpressionException(
+                    "Cannot render string call '" + invocation.method + "' on a non-string receiver.");
+            }
+            for (Expression arg : invocation.args) {
+                if (!isStringExpression(arg)) {
+                    throw new NonGeneralizableExpressionException(
+                        "Cannot render string call '" + invocation.method + "' with a non-string argument.");
+                }
             }
             return "(" + receiver + "." + invocation.method + "(" + argList + "))";
         }
@@ -264,12 +269,6 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
             throw new NonGeneralizableExpressionException(
                 "Cannot render operator '" + operation.op.name()
                     + "' on floating-point operands as Java; the raw-bits relation is not modeled.");
-        }
-        if (isStringOperator(operation.op)
-            && !(isStringExpression(operation.left) && isStringExpression(operation.right))) {
-            throw new NonGeneralizableExpressionException(
-                "Cannot render string operator '" + operation.op.name()
-                    + "' on non-string operands as Java.");
         }
         switch (operation.op) {
             case EQ:
@@ -328,28 +327,6 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 return "(" + left + " >> " + right + ")";
             case SHIFTUR:
                 return "(" + left + " >>> " + right + ")";
-            case EQUALS:
-                return "(" + left + ".equals(" + right + "))";
-            case NOTEQUALS:
-                return "(!" + left + ".equals(" + right + "))";
-            case EQUALSIGNORECASE:
-                return "(" + left + ".equalsIgnoreCase(" + right + "))";
-            case NOTEQUALSIGNORECASE:
-                return "(!" + left + ".equalsIgnoreCase(" + right + "))";
-            case STARTSWITH:
-                return "(" + left + ".startsWith(" + right + "))";
-            case NOTSTARTSWITH:
-                return "(!" + left + ".startsWith(" + right + "))";
-            case ENDSWITH:
-                return "(" + left + ".endsWith(" + right + "))";
-            case NOTENDSWITH:
-                return "(!" + left + ".endsWith(" + right + "))";
-            case CONTAINS:
-                return "(" + left + ".contains(" + right + "))";
-            case NOTCONTAINS:
-                return "(!" + left + ".contains(" + right + "))";
-            case CONCAT:
-                return "(" + left + ".concat(" + right + "))";
             default:
                 throw new NonGeneralizableExpressionException(
                     "Unable to transform operation '" + operation + "' (operator " + operation.op.name() + ") to Java.");
@@ -377,29 +354,26 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
         }
     }
 
-    private static boolean isStringOperator(Operator op) {
-        switch (op) {
-            case EQUALS:
-            case NOTEQUALS:
-            case EQUALSIGNORECASE:
-            case NOTEQUALSIGNORECASE:
-            case STARTSWITH:
-            case NOTSTARTSWITH:
-            case ENDSWITH:
-            case NOTENDSWITH:
-            case CONTAINS:
-            case NOTCONTAINS:
-            case CONCAT:
+    private static boolean isStringExpression(Expression expression) {
+        return expression instanceof VariableString
+            || expression instanceof ConstantString
+            || (expression instanceof Invocation && isStringReturningInvocation((Invocation) expression));
+    }
+
+    private static boolean isStringReturningInvocation(Invocation invocation) {
+        if (invocation.receiver == null) {
+            return "java.lang.String".equals(invocation.qualifier) && "valueOf".equals(invocation.method);
+        }
+        switch (invocation.method) {
+            case "concat":
+            case "trim":
+            case "replace":
+            case "toLowerCase":
+            case "toUpperCase":
                 return true;
             default:
                 return false;
         }
-    }
-
-    private static boolean isStringExpression(Expression expression) {
-        return expression instanceof VariableString
-            || expression instanceof ConstantString
-            || expression instanceof SymbolicStringFunction;
     }
 
     private static boolean isFloatingPoint(Expression expression) {

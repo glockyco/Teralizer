@@ -2,6 +2,7 @@ package teralizer.jqwik.planning;
 
 import teralizer.domain.ConstantString;
 import teralizer.domain.Expression;
+import teralizer.domain.Invocation;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
@@ -105,35 +106,35 @@ public class StringDomainPlanner implements DomainPlanner {
         ModelToJavaTransformer transformer = new ModelToJavaTransformer();
         for (ConstraintClause clause : clauses) {
             Model expression = clause.getExpression();
-            if (!(expression instanceof Operation)) {
-                continue;
-            }
-            Operation operation = (Operation) expression;
-            if (!(operation.left instanceof VariableString)
-                || !((VariableString) operation.left).name.equals(name)
-                || !(operation.right instanceof ConstantString)) {
-                continue;
-            }
-            String literal = transformer.transform((Expression) operation.right);
-            switch (operation.op) {
-                case EQUALS:
-                    derived.equality = literal;
-                    derived.equalityId = clause.getId();
-                    break;
-                case STARTSWITH:
-                    derived.prefix = literal;
-                    derived.prefixId = clause.getId();
-                    break;
-                case ENDSWITH:
-                    derived.suffix = literal;
-                    derived.suffixId = clause.getId();
-                    break;
-                case CONTAINS:
-                    derived.contains = literal;
-                    derived.containsId = clause.getId();
-                    break;
-                default:
-                    break;
+            if (expression instanceof Invocation) {
+                Invocation invocation = (Invocation) expression;
+                if (!(invocation.receiver instanceof VariableString)
+                    || !((VariableString) invocation.receiver).name.equals(name)
+                    || invocation.args.size() != 1
+                    || !(invocation.args.get(0) instanceof ConstantString)) {
+                    continue;
+                }
+                String literal = transformer.transform(invocation.args.get(0));
+                switch (invocation.method) {
+                    case "equals":
+                        derived.equality = literal;
+                        derived.equalityId = clause.getId();
+                        break;
+                    case "startsWith":
+                        derived.prefix = literal;
+                        derived.prefixId = clause.getId();
+                        break;
+                    case "endsWith":
+                        derived.suffix = literal;
+                        derived.suffixId = clause.getId();
+                        break;
+                    case "contains":
+                        derived.contains = literal;
+                        derived.containsId = clause.getId();
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         return derived;

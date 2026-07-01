@@ -17,6 +17,18 @@ public class OperatorTest {
     }
 
     @Example
+    void stringMethodSymbolsAreNotOperators() {
+        for (String symbol : new String[] {"equals", "notequals", "contains", "concat", "trim", "replace"}) {
+            try {
+                Operator.get(symbol);
+                Assert.fail("Expected string method symbol to be outside Operator: " + symbol);
+            } catch (IllegalArgumentException expected) {
+                Assert.assertTrue(expected.getMessage().contains(symbol));
+            }
+        }
+    }
+
+    @Example
     void unknownSymbolThrowsIllegalArgumentException() {
         try {
             Operator.get("definitely-not-an-operator");

@@ -7,6 +7,7 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.ConstantInteger;
 import teralizer.domain.ConstantString;
+import teralizer.domain.Invocation;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
 import teralizer.domain.VariableInteger;
@@ -16,16 +17,17 @@ import teralizer.domain.VariableString;
 public class ModelToJavaTransformerNonGeneralizableTest {
 
     @Example
-    void unsupportedStringOperatorThrowsTypedException() {
-        // MATCHES (regex) is a string operator with no Java-render case; the renderer must signal a
-        // typed non-generalizable outcome, not a bare RuntimeException, so callers can drop the
-        // clause instead of crashing the whole generalization.
-        Operation model = new Operation(new VariableString("s"), Operator.MATCHES, new ConstantString("x"));
+    void unsupportedStringInvocationThrowsTypedException() {
+        // substring remains unsupported because its SIOOBE fork is not modeled; the renderer must
+        // signal a typed non-generalizable outcome, not a bare RuntimeException, so callers can drop
+        // the clause instead of crashing the whole generalization.
+        Invocation model = new Invocation(
+            new VariableString("s"), null, "substring", Arrays.asList(new ConstantInteger(0), new ConstantInteger(1)));
         try {
             new ModelToJavaTransformer().transform(model);
             Assert.fail("expected NonGeneralizableExpressionException");
         } catch (NonGeneralizableExpressionException expected) {
-            Assert.assertTrue(expected.getMessage().contains("MATCHES"));
+            Assert.assertTrue(expected.getMessage().contains("substring"));
         }
     }
 
@@ -33,7 +35,8 @@ public class ModelToJavaTransformerNonGeneralizableTest {
     void typedExceptionIsNotAGenericRuntimeException() {
         // Callers distinguish "non-generalizable clause" from other runtime failures; the
         // signal must be a distinct type, not RuntimeException itself.
-        Operation model = new Operation(new VariableString("s"), Operator.MATCHES, new ConstantString("p"));
+        Invocation model = new Invocation(
+            new VariableString("s"), null, "substring", Arrays.asList(new ConstantInteger(0), new ConstantInteger(1)));
         try {
             new ModelToJavaTransformer().transform(model);
             Assert.fail("expected NonGeneralizableExpressionException");

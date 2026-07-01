@@ -4,6 +4,7 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.domain.ConstantInteger;
 import teralizer.domain.ConstantString;
+import teralizer.domain.Invocation;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
 import teralizer.domain.VariableInteger;
@@ -25,7 +26,7 @@ public class ModelToJavaTransformerPredicateTest {
         // clause references only the filtered s, so it is dropped even though it now renders; only
         // the generalizable clause survives.
         Operation numeric = new Operation(new VariableInteger("a"), Operator.GT, new ConstantInteger(0));
-        Operation string = new Operation(new VariableString("s"), Operator.EQUALS, new ConstantString("x"));
+        Invocation string = new Invocation(new VariableString("s"), null, "equals", Collections.singletonList(new ConstantString("x")));
         Operation model = new Operation(numeric, Operator.AND, string);
         Set<String> generalizable = Collections.singleton("a");
         Assert.assertEquals("(_p_.a > 0)", transformer().transformPredicate(model, generalizable));
@@ -34,7 +35,7 @@ public class ModelToJavaTransformerPredicateTest {
     @Example
     void allFilteredClausesRenderTrue() {
         // Only a clause over a filtered parameter remains -> it is dropped -> the predicate is true.
-        Operation string = new Operation(new VariableString("s"), Operator.EQUALS, new ConstantString("x"));
+        Invocation string = new Invocation(new VariableString("s"), null, "equals", Collections.singletonList(new ConstantString("x")));
         Assert.assertEquals("true", transformer().transformPredicate(string, Collections.emptySet()));
     }
 
@@ -60,7 +61,7 @@ public class ModelToJavaTransformerPredicateTest {
         // A string operator (EQUALS) on a non-string, still-generated parameter is non-generalizable:
         // dropping it would weaken the path predicate for a symbolized input -> unsound. The typed
         // outcome must surface instead of a silent omission.
-        Operation bad = new Operation(new VariableInteger("a"), Operator.EQUALS, new ConstantInteger(0));
+        Invocation bad = new Invocation(new VariableInteger("a"), null, "equals", Collections.singletonList(new ConstantInteger(0)));
         try {
             transformer().transformPredicate(bad, Collections.singleton("a"));
             Assert.fail("expected NonGeneralizableExpressionException");
@@ -73,7 +74,7 @@ public class ModelToJavaTransformerPredicateTest {
     void refusesToDropMixedClauseWithAGeneralizableParameter() {
         // A string operator (EQUALS) on a mixed int/string clause that also constrains the generated
         // 'a': it is non-generalizable yet references a symbolized parameter, so it cannot be dropped.
-        Operation mixed = new Operation(new VariableInteger("a"), Operator.EQUALS, new VariableString("s"));
+        Invocation mixed = new Invocation(new VariableInteger("a"), null, "equals", Collections.singletonList(new VariableString("s")));
         try {
             transformer().transformPredicate(mixed, Collections.singleton("a"));
             Assert.fail("expected NonGeneralizableExpressionException");

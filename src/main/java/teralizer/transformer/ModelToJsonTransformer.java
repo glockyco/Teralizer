@@ -27,7 +27,6 @@ public class ModelToJsonTransformer {
         builder.registerTypeAdapter(ArrayElementExpression.class, new ArrayElementExpressionSerializer());
         builder.registerTypeAdapter(SymbolicIntegerFunction.class, new SymbolicIntegerFunctionSerializer());
         builder.registerTypeAdapter(SymbolicRealFunction.class, new SymbolicRealFunctionSerializer());
-        builder.registerTypeAdapter(SymbolicStringFunction.class, new SymbolicStringFunctionSerializer());
         builder.registerTypeAdapter(Invocation.class, new InvocationSerializer());
         builder.registerTypeAdapter(Not.class, new NotSerializer());
         builder.registerTypeAdapter(teralizer.domain.Error.class, new ErrorSerializer());
@@ -186,24 +185,6 @@ public class ModelToJsonTransformer {
     private static class SymbolicRealFunctionSerializer implements JsonSerializer<SymbolicRealFunction> {
         @Override
         public JsonElement serialize(SymbolicRealFunction function, Type type, JsonSerializationContext context) {
-            JsonObject jsonObject = new JsonObject();
-
-            JsonArray jsonArgs = new JsonArray(function.args.length);
-            for (Expression arg : function.args) {
-                jsonArgs.add(context.serialize(arg));
-            }
-
-            jsonObject.add("_type", new JsonPrimitive(function.getClass().getSimpleName()));
-            jsonObject.add("name", new JsonPrimitive(function.name));
-            jsonObject.add("args", jsonArgs);
-
-            return jsonObject;
-        }
-    }
-
-    private static class SymbolicStringFunctionSerializer implements JsonSerializer<SymbolicStringFunction> {
-        @Override
-        public JsonElement serialize(SymbolicStringFunction function, Type type, JsonSerializationContext context) {
             JsonObject jsonObject = new JsonObject();
 
             JsonArray jsonArgs = new JsonArray(function.args.length);

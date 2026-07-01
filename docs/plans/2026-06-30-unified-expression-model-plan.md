@@ -190,7 +190,7 @@ public final class MethodCapability {
 
 - [x] **Step 3: Run, expect PASS.**
 
-- [x] **Step 4: Preserve the string `Operation` render arms** (`EQUALS`…`NOTCONTAINS`, `CONCAT`) until `SpfToModelTransformer` and `StringDomainPlanner` stop producing/consuming them. Run `ModelToJavaTransformerNonGeneralizableTest` + `ModelToJavaTransformerStringOperatorTest` to prove no intermediate regression. Remove these arms in Task 6 after string ingestion/planning has moved.
+- [x] **Step 4: Preserve the string `Operation` render arms** (`EQUALS`…`NOTCONTAINS`, `CONCAT`) until `SpfToModelTransformer` and `StringDomainPlanner` stop producing/consuming them. Task 6 removes these arms after string ingestion/planning has moved to `Invocation`.
 
 - [x] **Step 5: Commit.** `refactor(transformer): render calls via Invocation`
 
@@ -222,9 +222,9 @@ public final class MethodCapability {
 
 ### Task 6: delete `SymbolicStringFunction` + retire string `Operator` entries
 
-- [ ] **Step 1:** Remove `SymbolicStringFunction` usages; delete the class + its `ModelFolder`/`ModelVisitor` hooks (compile-guided). Remove `EQUALS`…`NOTCONTAINS`, `EQUALSIGNORECASE`/`NOT…`, `CONTAINS`, `CONCAT`, `EMPTY`/`NOTEMPTY`, `MATCHES`/`REGIONMATCHES`, string transform entries from `Operator`. Update the JSON adapters for the removed nodes.
-- [ ] **Step 2:** `./gradlew test` + native tests green.
-- [ ] **Step 3: Commit.** `refactor(domain): delete SymbolicStringFunction and string Operator entries`
+- [x] **Step 1:** Remove `SymbolicStringFunction` usages; delete the class + its `ModelFolder`/`ModelVisitor` hooks (compile-guided). Remove `EQUALS`…`NOTCONTAINS`, `EQUALSIGNORECASE`/`NOT…`, `CONTAINS`, `CONCAT`, `EMPTY`/`NOTEMPTY`, `MATCHES`/`REGIONMATCHES`, string transform entries from `Operator`. Update the JSON adapters for the removed nodes.
+- [x] **Step 2:** `./gradlew test` + native tests green.
+- [x] **Step 3: Commit.** `refactor(domain): delete SymbolicStringFunction and string Operator entries`
 
 ---
 
