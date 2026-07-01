@@ -49,6 +49,49 @@ done
 
 _psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
 
+active_project_abs=""
+active_project_log=""
+
+_log_cleanup() {
+  local log_abs="$1"
+  local message="$2"
+  echo "    cleanup: $message"
+  [[ -n "$log_abs" ]] && printf 'cleanup: %s\n' "$message" >> "$log_abs"
+}
+
+cleanup_leftover_project_processes() {
+  local project_abs="$1"
+  local log_abs="${2:-}"
+  [[ -n "$project_abs" && -d "$project_abs" ]] || return 0
+
+  local pids=()
+  local pid
+  while IFS= read -r pid; do
+    [[ -n "$pid" && "$pid" != "$$" ]] && pids+=("$pid")
+  done < <(pgrep -f "$project_abs" 2>/dev/null || true)
+  [[ ${#pids[@]} -gt 0 ]] || return 0
+
+  _log_cleanup "$log_abs" "terminating ${#pids[@]} leftover process(es) for $project_abs: ${pids[*]}"
+  for pid in "${pids[@]}"; do
+    kill -TERM "$pid" 2>/dev/null || true
+  done
+  sleep 2
+  for pid in "${pids[@]}"; do
+    if kill -0 "$pid" 2>/dev/null; then
+      _log_cleanup "$log_abs" "force-killing leftover process $pid for $project_abs"
+      kill -KILL "$pid" 2>/dev/null || true
+    fi
+  done
+}
+
+cleanup_active_project_processes() {
+  [[ -n "$active_project_abs" ]] || return 0
+  cleanup_leftover_project_processes "$active_project_abs" "$active_project_log"
+}
+
+trap cleanup_active_project_processes EXIT
+trap 'cleanup_active_project_processes; exit 130' INT TERM
+
 # Bring Postgres up only if it isn't already reachable (starting it restarts the container),
 # then wait for readiness.
 if ! _psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
@@ -91,13 +134,20 @@ for config_abs in "${configs[@]}"; do
   [[ -f "$DONE_DIR/project-$n" ]] && { skipped=$((skipped + 1)); continue; }
   config="${config_abs#"$ROOT_DIR"/}"
   log="$DATA_DIR/run-logs/project-$n.log"
+  log_abs="$ROOT_DIR/$log"
   root_path=$(sed -n 's/[[:space:]]*root-path[[:space:]]*=[[:space:]]*"\(.*\)".*/\1/p' "$config_abs" | head -1)
+  project_abs="$ROOT_DIR/$root_path"
   attempted=$((attempted + 1))
   echo "==> [$n] $root_path"
+  active_project_abs="$project_abs"
+  active_project_log="$log_abs"
   DB_NAME="$DB_NAME" DATA_DIR="$DATA_DIR" \
     "$ROOT_DIR/gradlew" run -Dteralizer.config="$PROFILE,$config" --no-daemon \
-    > "$ROOT_DIR/$log" 2>&1
+    > "$log_abs" 2>&1
   rc=$?
+  cleanup_leftover_project_processes "$project_abs" "$log_abs"
+  active_project_abs=""
+  active_project_log=""
   printf '%s\t%s\t%s\t%s\n' "$n" "$root_path" "$rc" "$log" >> "$STATUS_TSV"
   if [[ "$rc" -ne 0 ]]; then
     nonzero=$((nonzero + 1))
