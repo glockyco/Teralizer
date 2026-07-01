@@ -188,7 +188,13 @@ jooq {
 }
 
 run {
-    systemProperty 'teralizer.config', System.getProperty('teralizer.config')
+    // Forward every -Dteralizer.* system property to the application JVM, so a run can select its
+    // config file(s) (teralizer.config, comma-separated) and override any teralizer.* value.
+    System.getProperties().each { key, value ->
+        if (key.toString().startsWith('teralizer.')) {
+            systemProperty key.toString(), value.toString()
+        }
+    }
 }
 
 jar  {

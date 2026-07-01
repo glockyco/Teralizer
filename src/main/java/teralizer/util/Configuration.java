@@ -28,26 +28,39 @@ public class Configuration {
     public static final String TOOL_CONFIG_PROPERTY = TOOL_NAME_LOWER + ".config";
 
     static {
-        // Load default config from 'src/main/resources/reference.conf'.
-        Config defaultConfig = ConfigFactory.defaultReference();
+        CONFIG = buildConfig(
+            System.getProperty(TOOL_CONFIG_PROPERTY),
+            ConfigFactory.systemProperties(),
+            ConfigFactory.defaultReference()
+        );
+    }
 
-        // Load custom config from the path specified by '-Dteralizer.config'.
-        String customConfigPath = System.getProperty(TOOL_CONFIG_PROPERTY);
+    /**
+     * Build the effective configuration with standard precedence:
+     * {@code overrides} (JVM system properties) > the {@code configPaths} files > {@code reference}
+     * (reference.conf). {@code configPaths} is a comma-separated list; later files win over earlier
+     * ones, so a run can compose a shared profile with a per-project config
+     * (e.g. {@code -Dteralizer.config=profile.conf,project-N.conf}) and still override any value
+     * from the command line (e.g. {@code -Dteralizer.pitest.enabled=false}).
+     */
+    static Config buildConfig(String configPaths, Config overrides, Config reference) {
         Config customConfig = ConfigFactory.empty();
-        if (customConfigPath != null && !customConfigPath.isEmpty()) {
-            File customConfigFile = new File(customConfigPath);
-            if (customConfigFile.exists()) {
-                customConfig = ConfigFactory.parseFile(customConfigFile);
-                LOGGER.atDebug().log("Loaded custom configuration from: " + customConfigPath);
-            } else {
-                throw new RuntimeException("Configuration file not found: " + customConfigPath);
+        if (configPaths != null && !configPaths.isEmpty()) {
+            for (String path : configPaths.split(",")) {
+                String trimmed = path.trim();
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                File customConfigFile = new File(trimmed);
+                if (!customConfigFile.exists()) {
+                    throw new RuntimeException("Configuration file not found: " + trimmed);
+                }
+                // Later files take precedence: parse as primary, accumulate earlier as fallback.
+                customConfig = ConfigFactory.parseFile(customConfigFile).withFallback(customConfig);
+                LOGGER.atDebug().log("Loaded custom configuration from: " + trimmed);
             }
         }
-
-        // Combine the two configurations, using the custom config as the
-        // primary source of config values. Any values that are not present
-        // there fall back to the values provided by the default config.
-        CONFIG = customConfig.withFallback(defaultConfig).resolve();
+        return overrides.withFallback(customConfig).withFallback(reference).resolve();
     }
 
     public static final String MAVEN_CUSTOM_BUILD_FILE = "pom." + TOOL_NAME_LOWER + ".xml";
