@@ -561,12 +561,399 @@ Run the native SPF string tests with the same cleanup wrapper/trap used in Phase
 
 ## Phase 4 — Delete legacy + finalize
 
-### Task 10: cleanup + doc sync
+Phase 4 is a cleanup/finalization pass over the unified model after Phases 1–3. It does not add new string capabilities beyond the Phase-1 additions; it makes the remaining contracts explicit, deletes the last legacy shims, and syncs the dependent planning docs.
 
-- [ ] **Step 1:** Remove any remaining dead code, unused `Operator` entries, and the last hardcoded soundness lists (everything registry-driven). Confirm `MethodCapabilities` is the single source consulted by screen + fold + planners + ingestion admission.
-- [ ] **Step 2:** `./gradlew test` + native tests + numeric guardrail green.
-- [ ] **Step 3:** Update `2026-06-30-partial-sound-string-support` (remaining ops now landed) and the overview; `omp-plans index` + `check`.
-- [ ] **Step 4: Commit.** `refactor(domain): finalize unified expression model; registry as single source`
+**Fresh code-read findings (2026-07-01):**
+- `Operator` now contains true operators only (`==`, comparisons, arithmetic, bitwise, shifts). No enum entry is scheduled for removal; the remaining legacy shape is `Operation` itself still accepting a `null` operand, with a test pinning that obsolete unary-call shape.
+- `MethodCapability` still has only `method`, `staticQualifier`, `inputGeneratable`, and `outputRenderable`. As a result, `ModelToJavaTransformer` hardcodes string-returning invocations (`concat`, `trim`, `replace`, `toLowerCase`, `toUpperCase`) and math-return detection, while `StringDomainPlanner` hardcodes the input-generation methods in a `switch`.
+- `StringOperationFilter` already consults `MethodCapabilities.isSupported`, but `SpfToModelTransformer` still maps some unsupported SPF string operators (`replaceFirst`, `replaceAll`, `substring`) to `Invocation` nodes that the renderer later rejects. Ingestion admission should refuse those via the registry instead of constructing an unrenderable model node.
+- `TestGeneralizationTask` still regex-scrapes JSON for temporary `"INT_"`/`"REAL_"` symbols. That is the remaining pre-typed-leaf escape hatch and still misses string temporaries. It should walk the typed `Model` and collect `Variable(name, TypeDomain)` instead.
+- `2026-06-30-partial-sound-string-support` still describes `SymbolicStringFunction`, old per-type leaves, and `trim`/`replace` as deferred/unrenderable. The overview still says Task 4b follows this refactor. Phase 4 must update those docs to the current model.
+
+### Task 10: registry metadata drives rendering and string planning
+
+**Files:** Modify `src/main/java/teralizer/jqwik/planning/MethodCapability.java`, `MethodCapabilities.java`, `StringDomainPlanner.java`, `src/main/java/teralizer/transformer/ModelToJavaTransformer.java`; tests in `MethodCapabilitiesTest.java`, `StringDomainPlannerTest.java`, `ModelToJavaTransformerInvocationTest.java`, and `ModelToJavaTransformerNonGeneralizableTest.java`.
+
+- [ ] **Step 1: Write failing registry-metadata tests.** Extend `MethodCapabilitiesTest` before production edits:
+  - `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, and `isEmpty` have `returnDomain == TypeDomain.BOOLEAN`.
+  - `trim`, `replace`, `toLowerCase`, `toUpperCase`, `concat`, and `String.valueOf` have `returnDomain == TypeDomain.STRING`.
+  - `sqrt` and every `java.lang.Math` capability have `returnDomain == TypeDomain.REAL`.
+  - `length`, `indexOf`, and `lastIndexOf` are supported for filtering, have `returnDomain == TypeDomain.INTEGER`, and stay `outputRenderable == false`.
+  - input-constraint kinds are registry data: `equals -> EQUALITY`, `startsWith -> PREFIX`, `endsWith -> SUFFIX`, `contains -> CONTAINS`, `isEmpty -> EMPTY`, output-only transforms (`trim`, `replace`, `toLowerCase`, `toUpperCase`, `concat`) -> `NONE`.
+
+Run:
+
+```bash
+./gradlew test --tests 'teralizer.jqwik.planning.MethodCapabilitiesTest'
+```
+
+Expected: FAIL because `MethodCapability` has no return-domain or input-constraint metadata yet.
+
+- [ ] **Step 2: Add capability metadata.** Extend `MethodCapability` with the metadata the consumers currently hardcode:
+
+```java
+public final class MethodCapability {
+    public enum InputConstraintKind {
+        NONE,
+        EQUALITY,
+        PREFIX,
+        SUFFIX,
+        CONTAINS,
+        EMPTY
+    }
+
+    public final String method;
+    public final String staticQualifier;
+    public final TypeDomain receiverDomain; // null for static calls
+    public final TypeDomain returnDomain;
+    public final boolean inputGeneratable;
+    public final boolean outputRenderable;
+    public final InputConstraintKind inputConstraintKind;
+
+    MethodCapability(
+        String method,
+        String staticQualifier,
+        TypeDomain receiverDomain,
+        TypeDomain returnDomain,
+        boolean inputGeneratable,
+        boolean outputRenderable,
+        InputConstraintKind inputConstraintKind) {
+        this.method = method;
+        this.staticQualifier = staticQualifier;
+        this.receiverDomain = receiverDomain;
+        this.returnDomain = returnDomain;
+        this.inputGeneratable = inputGeneratable;
+        this.outputRenderable = outputRenderable;
+        this.inputConstraintKind = inputConstraintKind;
+    }
+}
+```
+
+Update `MethodCapabilities` helper methods so string predicate calls set `receiverDomain = TypeDomain.STRING` and `returnDomain = TypeDomain.BOOLEAN`, string transform calls set `receiverDomain = TypeDomain.STRING` and `returnDomain = TypeDomain.STRING`, math static calls set `returnDomain = TypeDomain.REAL`, and `String.valueOf` sets `returnDomain = TypeDomain.STRING`. Keep the existing public lookup methods.
+
+Run the MethodCapabilities test from Step 1 — expect PASS.
+
+- [ ] **Step 3: Route renderer type checks through capability metadata.** In `ModelToJavaTransformer`, replace `isStringReturningInvocation` and the hardcoded Math check in `isFloatingPoint` with a shared domain helper:
+
+```java
+private static TypeDomain expressionDomain(Expression expression) {
+    if (expression instanceof Variable) {
+        return ((Variable) expression).domain;
+    }
+    if (expression instanceof Constant) {
+        return ((Constant) expression).domain;
+    }
+    if (expression instanceof Invocation) {
+        MethodCapability capability = MethodCapabilities.get(((Invocation) expression).method);
+        return capability == null || !capability.outputRenderable ? null : capability.returnDomain;
+    }
+    return null;
+}
+```
+
+`isStringExpression` becomes `expressionDomain(expression) == TypeDomain.STRING`; the static-Math branch in `isFloatingPoint` becomes `expressionDomain(expression) == TypeDomain.REAL`. Keep the existing static qualifier validation in `fold(Invocation)`.
+
+Run:
+
+```bash
+./gradlew test \
+  --tests 'teralizer.transformer.ModelToJavaTransformerInvocationTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerNonGeneralizableTest'
+```
+
+Expected: PASS; the rendered Java strings should not change.
+
+- [ ] **Step 4: Route `StringDomainPlanner` through capability metadata.** In `deriveConstraints`, look up `MethodCapabilities.get(invocation.method)` and ignore the clause unless the capability is non-null and `inputGeneratable`. Replace the string-method `switch` with `capability.inputConstraintKind`. Add `EMPTY` handling for `isEmpty()` with zero arguments so `s.isEmpty()` structurally consumes the clause and emits `Arbitraries.of("")` rather than relying only on the residual filter.
+
+Add/extend `StringDomainPlannerTest` first:
+
+```java
+@Example
+void isEmptyClauseCollapsesToEmptyStringAndConsumesClause() {
+    Model model = new Invocation(new Variable("s", TypeDomain.STRING), null, "isEmpty", Collections.emptyList());
+    List<ConstraintClause> clauses = ConstraintClauses.from(model, Collections.singletonMap("s", "java.lang.String"));
+    ParameterGenerationPlan plan = new StringDomainPlanner().plan(
+        new MethodParameter("java.lang.String", "s"),
+        new PlanningContext(Collections.singletonList(new MethodParameter("java.lang.String", "s")), clauses));
+
+    Assert.assertEquals("return net.jqwik.api.Arbitraries.of(\"\")", plan.getRecipe().emit());
+    Assert.assertTrue(plan.getConsumedClauseIds().contains(0));
+}
+```
+
+Run:
+
+```bash
+./gradlew test --tests 'teralizer.jqwik.planning.StringDomainPlannerTest'
+```
+
+Expected: FAIL before the planner change, PASS after it.
+
+### Task 11: registry-gated ingestion and binary-only `Operation`
+
+**Files:** Modify `src/main/java/teralizer/transformer/SpfToModelTransformer.java`, `src/main/java/teralizer/domain/Operation.java`; tests in `SpfToModelTransformerStringInvocationTest.java`, `ModelFolderTest.java`, and `OperatorTest.java`.
+
+- [ ] **Step 1: Write failing ingestion-admission tests.** Extend `SpfToModelTransformerStringInvocationTest` before production edits:
+
+```java
+@Example
+void unsupportedOprlistStringOperatorIsRejectedAtIngestion() {
+    StringExpression expression = new StringSymbolic("value_1_SYMSTRING")._subString(1);
+
+    try {
+        new SpfToModelTransformer().transform(expression);
+        Assert.fail("expected unsupported substring to be refused before a Model node is built");
+    } catch (UnsupportedSpfTermException expected) {
+        Assert.assertTrue(expected.getMessage().contains("substring"));
+    }
+}
+```
+
+Run:
+
+```bash
+./gradlew test --tests 'teralizer.transformer.SpfToModelTransformerStringInvocationTest'
+```
+
+Expected: FAIL because `SUBSTRING` currently becomes `Invocation(..., "substring", ...)`.
+
+- [ ] **Step 2: Gate every string invocation constructed by SPF ingestion through `MethodCapabilities`.** Add helpers inside `ConstraintExpressionFactoryVisitor`:
+
+```java
+private static Invocation instanceInvocation(Expression receiver, String method, List<Expression> args) {
+    MethodCapability capability = MethodCapabilities.get(method);
+    if (capability == null || capability.staticQualifier != null || !capability.outputRenderable) {
+        throw new UnsupportedSpfTermException("String method '" + method + "' is not admitted by MethodCapabilities.");
+    }
+    return new Invocation(receiver, null, method, args);
+}
+
+private static Invocation staticInvocation(String qualifier, String method, List<Expression> args) {
+    MethodCapability capability = MethodCapabilities.get(method);
+    if (capability == null || !qualifier.equals(capability.staticQualifier) || !capability.outputRenderable) {
+        throw new UnsupportedSpfTermException("Static method '" + qualifier + "." + method + "' is not admitted by MethodCapabilities.");
+    }
+    return new Invocation(null, qualifier, method, args);
+}
+```
+
+Use these helpers in `invocationForComparator` and both `invocationForOperator` overloads. Remove the `REPLACEFIRST`, `REPLACEALL`, and `SUBSTRING` construction arms; unsupported operators now fall through to a typed `UnsupportedSpfTermException` or fail the helper check. Keep `replace`, `trim`, `toLowerCase`, `toUpperCase`, `concat`, and `String.valueOf` admitted.
+
+Run the test from Step 1 — expect PASS.
+
+- [ ] **Step 3: Make `Operation` binary-only.** Replace `ModelFolderTest.operationWithNullOperandFoldsWithoutExploding` with a failing invariant test:
+
+```java
+@Example
+void operationRequiresTwoOperands() {
+    try {
+        new Operation(new Constant(4L, TypeDomain.INTEGER), Operator.PLUS, null);
+        Assert.fail("operation must be binary after calls and negation moved to Invocation/Not");
+    } catch (IllegalArgumentException expected) {
+        Assert.assertTrue(expected.getMessage().contains("binary"));
+    }
+}
+```
+
+Then change `Operation`'s constructor to reject `left == null || right == null` with `IllegalArgumentException("Operation is binary; use Invocation or Not for unary/call expressions.")`, and simplify `toString()` to the binary branch. `SpfToModelTransformer`, `JsonToModelTransformer`, and all tests already construct binary operations in normal code.
+
+Run:
+
+```bash
+./gradlew test --tests 'teralizer.domain.ModelFolderTest' --tests 'teralizer.domain.OperatorTest'
+```
+
+Expected: PASS.
+
+### Task 12: typed model traversal for symbolic temporaries
+
+**Files:** Create `src/main/java/teralizer/transformer/VariableDescriptorCollector.java`; modify `src/main/java/teralizer/processing/task/TestGeneralizationTask.java`; tests in `src/test/java/teralizer/transformer/VariableDescriptorCollectorTest.java` and `src/test/java/teralizer/processing/task/TestGeneralizationTaskTest.java`.
+
+- [ ] **Step 1: Write failing collector tests.** Add `VariableDescriptorCollectorTest`:
+
+```java
+@Example
+void collectsVariableNamesWithDomainsAcrossNestedModels() {
+    Model input = new Operation(
+        new Variable("INT_1", TypeDomain.INTEGER),
+        Operator.GT,
+        new Constant(0L, TypeDomain.INTEGER));
+    Model output = new Invocation(
+        new Variable("STR_2", TypeDomain.STRING),
+        null,
+        "trim",
+        Collections.emptyList());
+
+    Map<String, TypeDomain> variables = VariableDescriptorCollector.collect(input, output);
+
+    Assert.assertEquals(TypeDomain.INTEGER, variables.get("INT_1"));
+    Assert.assertEquals(TypeDomain.STRING, variables.get("STR_2"));
+}
+```
+
+Run:
+
+```bash
+./gradlew test --tests 'teralizer.transformer.VariableDescriptorCollectorTest'
+```
+
+Expected: FAIL because the collector does not exist.
+
+- [ ] **Step 2: Implement `VariableDescriptorCollector`.** Implement a small `ModelVisitor` over typed leaves:
+
+```java
+package teralizer.transformer;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import teralizer.domain.Model;
+import teralizer.domain.ModelVisitor;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
+
+public final class VariableDescriptorCollector extends ModelVisitor {
+    private final Map<String, TypeDomain> variables = new LinkedHashMap<>();
+
+    public static Map<String, TypeDomain> collect(Model... models) {
+        VariableDescriptorCollector collector = new VariableDescriptorCollector();
+        for (Model model : models) {
+            if (model != null) {
+                model.accept(collector);
+            }
+        }
+        return new LinkedHashMap<>(collector.variables);
+    }
+
+    @Override
+    public void preVisit(Variable variable) {
+        this.variables.putIfAbsent(variable.name, variable.domain);
+    }
+}
+```
+
+Run the collector test — expect PASS.
+
+- [ ] **Step 3: Write failing temporary-parameter test.** Add to `TestGeneralizationTaskTest` a package-private helper test:
+
+```java
+@Example
+void recoversTypedTemporaryParametersFromInputAndOutputModels() {
+    List<MethodParameter> declared = Arrays.asList(new MethodParameter("int", "x"));
+    Model input = new Operation(new Variable("INT_1", TypeDomain.INTEGER), Operator.GT, new Constant(0L, TypeDomain.INTEGER));
+    Model output = new Invocation(new Variable("STR_2", TypeDomain.STRING), null, "trim", Collections.emptyList());
+
+    List<MethodParameter> recovered = TestGeneralizationTask.collectTemporaryParameters(input, output, declared);
+
+    Assert.assertTrue(recovered.stream().anyMatch(p -> p.getName().equals("INT_1") && p.getType().equals("int")));
+    Assert.assertTrue(recovered.stream().anyMatch(p -> p.getName().equals("STR_2") && p.getType().equals("java.lang.String")));
+    Assert.assertFalse(recovered.stream().anyMatch(p -> p.getName().equals("x")));
+}
+```
+
+Run:
+
+```bash
+./gradlew test --tests 'teralizer.processing.task.TestGeneralizationTaskTest'
+```
+
+Expected: FAIL because `collectTemporaryParameters` does not exist and the production path still uses the JSON regex.
+
+- [ ] **Step 4: Replace the regex scrape in `TestGeneralizationTask`.** Add a package-private static helper on `TestGeneralizationTask`:
+
+```java
+static List<MethodParameter> collectTemporaryParameters(
+    Model inputModel,
+    Model outputModel,
+    List<MethodParameter> testedMethodParameters) {
+    Set<String> declared = testedMethodParameters.stream()
+        .map(MethodParameter::getName)
+        .collect(Collectors.toSet());
+    return VariableDescriptorCollector.collect(inputModel, outputModel).entrySet().stream()
+        .filter(entry -> !declared.contains(entry.getKey()))
+        .map(entry -> new MethodParameter(javaTypeForTemporary(entry.getValue()), entry.getKey()))
+        .collect(Collectors.toList());
+}
+
+private static String javaTypeForTemporary(TypeDomain domain) {
+    switch (domain) {
+        case INTEGER:
+            return "int";
+        case REAL:
+            return "double";
+        case STRING:
+            return "java.lang.String";
+        default:
+            throw new IllegalArgumentException("Unsupported temporary domain " + domain);
+    }
+}
+```
+
+Use it where the `Pattern`/`Matcher` block currently builds `temporaryParameters`; delete the regex, `Pattern`, and `Matcher` imports. Run the TestGeneralizationTask test — expect PASS.
+
+### Task 13: docs, verification, and final commit
+
+**Files:** Modify `docs/plans/2026-06-30-partial-sound-string-support.md`, `docs/plans/2026-06-26-teralizer-overview.md`, `docs/plans/2026-06-30-unified-expression-model-plan.md`, and regenerated `docs/plans/INDEX.md`.
+
+- [ ] **Step 1: Update dependent docs to current truth.** In `2026-06-30-partial-sound-string-support.md`, mark Task 4b implemented after the typed traversal lands; remove stale references that describe `SymbolicStringFunction`, `VariableString`/`ConstantString`, and `trim`/`replace` as unrenderable/deferred. Keep corpus verification (Task 7) active and gated on MUT-id. In the overview, move the current focus past the unified-expression refactor once Phase 4 verifies, leaving static MUT-id as the next implementation item and string corpus verification still gated on MUT-id.
+
+- [ ] **Step 2: Run focused tests.** Run:
+
+```bash
+./gradlew test \
+  --tests 'teralizer.jqwik.planning.MethodCapabilitiesTest' \
+  --tests 'teralizer.jqwik.planning.StringDomainPlannerTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerInvocationTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerNonGeneralizableTest' \
+  --tests 'teralizer.transformer.SpfToModelTransformerStringInvocationTest' \
+  --tests 'teralizer.transformer.VariableDescriptorCollectorTest' \
+  --tests 'teralizer.processing.task.TestGeneralizationTaskTest' \
+  --tests 'teralizer.domain.ModelFolderTest' \
+  --tests 'teralizer.domain.OperatorTest'
+```
+
+Expected: PASS.
+
+- [ ] **Step 3: Run full unit verification.** Run:
+
+```bash
+./gradlew test
+```
+
+Expected: PASS.
+
+- [ ] **Step 4: Run native SPF string tests with cleanup.** Use the cleanup wrapper/trap pattern from Phases 2–3 so `settings.gradle` is restored even on failure. Run the native tests for `TestSymbolicStringCaseChange`, `TestSymbolicStringSymcrete`, `TestSymbolicStringIsEmpty`, and `TestSymbolicStringEqualsIgnoreCase`. Expected: PASS and `git status --short settings.gradle` has no output.
+
+- [ ] **Step 5: Run the JARVIS behavioral guardrail with PIT disabled.** Because the branch now has the PIT-disable flag available, run the scorecard with PIT stages disabled:
+
+```bash
+GRADLE_OPTS=-Dteralizer.pitest.enabled=false bash scripts/run-jarvis-scoreboard.sh --reset-db --prepare-fixtures 2>&1 | tee /tmp/teralizer-jarvis-scoreboard-phase4.log
+```
+
+Then check the log for `scoreboard run complete: no pipeline breakage`, check that no hard build/pipeline failures appear, and run:
+
+```bash
+uv run --directory analysis python -m teralizer.jarvis_scoreboard --census
+```
+
+Acceptance: no non-JPF pipeline/build failures, PIT tasks recorded as disabled skips, and the census still reports 250 sound numeric/char/boolean successes.
+
+- [ ] **Step 6: Run branch handoff build.** Run:
+
+```bash
+./gradlew build
+```
+
+Expected: PASS.
+
+- [ ] **Step 7: Validate planning docs.** Run:
+
+```bash
+omp-plans index && omp-plans check
+```
+
+Expected: PASS.
+
+- [ ] **Step 8: Commit Phase 4.** Commit the code cleanup, doc sync, Phase-4 checkboxes, and regenerated index with subject `refactor(domain): finalize unified expression model` and a body explaining that registry metadata now drives rendering/planning/admission, temporary recovery now walks typed model variables instead of JSON, and the no-PIT JARVIS guardrail was used.
 
 ---
 
