@@ -517,12 +517,14 @@ def get_mutation_gain(
         int(pid): set(grp["k"]) for pid, grp in initial.groupby("project_id")
     }
     rows = []
-    for (pid, variant), grp in generalized.groupby(["project_id", "variant"]):
+    for _, grp in generalized.groupby(["project_id", "variant"]):
+        pid = int(grp["project_id"].iloc[0])
+        variant = str(grp["variant"].iloc[0])
         gen_keys = set(grp["k"])
-        init_keys = initial_by_project.get(int(pid), set())
+        init_keys = initial_by_project.get(pid, set())
         rows.append(
             {
-                "project_id": int(pid),
+                "project_id": pid,
                 "variant": variant,
                 "initial_killed": len(init_keys),
                 "generalized_killed": len(gen_keys),

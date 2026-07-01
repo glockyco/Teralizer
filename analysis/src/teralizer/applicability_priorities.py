@@ -407,13 +407,21 @@ def compute_stage_failure_summary(funnel_df: pd.DataFrame) -> pd.DataFrame:
 
     Columns: first_failed_stage, first_failed_step, n_projects, pct.
     """
-    counts = (
-        funnel_df.groupby(["first_failed_stage", "first_failed_step"])
-        .size()
-        .reset_index(name="n_projects")
-        .sort_values("first_failed_step")
-        .reset_index(drop=True)
+    counter = Counter(
+        (row["first_failed_stage"], row["first_failed_step"])
+        for _, row in funnel_df.iterrows()
     )
+    rows = [
+        {
+            "first_failed_stage": stage,
+            "first_failed_step": step,
+            "n_projects": count,
+        }
+        for (stage, step), count in counter.items()
+    ]
+    counts = pd.DataFrame(
+        rows, columns=["first_failed_stage", "first_failed_step", "n_projects"]
+    ).sort_values("first_failed_step", ignore_index=True)
     total = counts["n_projects"].sum()
     counts["pct"] = (counts["n_projects"] / total * 100).round(1)
     return counts
