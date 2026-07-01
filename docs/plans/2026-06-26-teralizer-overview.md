@@ -27,22 +27,27 @@ work that depends on a re-run is deferred until (1) lands.
 
 ## Map (by current relevance)
 
-Read this after `INDEX.md`. Grouped by how load-bearing each doc is now, not by
-type; `INDEX.md` carries the full status/parent tree and `archive/` the retired docs.
+Read this after `INDEX.md`. Grouped by how load-bearing each doc is now; `INDEX.md`
+carries the full status/parent tree and `archive/` the retired docs.
 
-**Read first — current focus: (1) beat JARVIS won; primary next work = the listener/value-handling fixes the beyond-JARVIS census surfaced**
-- `2026-06-29-beyond-jarvis-census-findings` *(note)* — **primary next work.** The beyond-JARVIS census (generalize commons-lang/math's *own* tests past JARVIS's 10) produced 109 sound generalizations from one commons-math variant — strong breadth — but surfaced concrete, foundational listener/codegen fixes to do first: boxed-wrapper value capture (`TestGeneralizationListener.captureConcreteArguments` does `String.valueOf` on a JPF `ElementInfo` → `…@24c`), spf-eval listener ports (ObjectList unwrap, `exceptionHandled`, heap PC), generated-suite build robustness, and PIT-at-scale. Spec `2026-06-29-beyond-jarvis-generalization-census`; plan `2026-06-29-beyond-jarvis-census-implementation`.
-- `2026-06-28-clause-driven-input-generation` *(spec)* — current generator design: clause-driven planners, single type-capability source, fail-loud SPF→Model seam.
-- `2026-06-28-generation-coverage-telemetry` *(note)* — telemetry schema the generator self-reports against.
+**Read first — the JARVIS comparison (step 1) is won and consolidated**
+- `2026-06-30-jarvis-comparison` *(spec, RQ0)* — **the single home for the whole JARVIS
+  comparison**: unit (distinct MUT), metrics (IC by construction, PVC construct-validity,
+  mutation as the honest metric), and four axes with current-code evidence — Table-2
+  head-to-head (8/9 MUTs; PVC 4 win / 5 trail / 1 absent; SPF spike 8 FULL/1 PARTIAL/2
+  BLOCKED), budget elasticity (PVC ~10x, kills flat), breadth (26 MUTs / 250 sound
+  properties across 6 classes), and the soundness/automation tradeoff — plus threats and
+  provenance. The absorbed per-case, elasticity, and census fragments are in `archive/`.
+  Next: write RQ0 into the paper and migrate the granular numbers to an analysis notebook.
+
+**Active — generator & applicability tracks**
+- `2026-06-28-clause-driven-input-generation` *(spec)* — generator design: clause-driven
+  planners, single type-capability source, fail-loud SPF→Model seam.
 - `2026-06-27-generalizable-input-rule` *(spec)* — shared input-eligibility rule for every consumer.
-- `2026-06-28-residual-aware-generator-rerun` *(audit)* — pre-soundness-fix scorecard rerun; the later raw-bits fix excluded the eps `PrecisionTest` probes (scorecard now 12 probes, that row absent).
-- `2026-06-26-jarvis-case-coverage` *(audit)* — per-case Table-2 targets + provenance.
-- `2026-06-29-pvc-budget-elasticity` *(audit)* — PVC scales ~10-12x with the tries budget while mutation kills stay flat: PVC measures input diversity, not fault detection.
-- `2026-06-28-pipeline-architecture-review` *(audit)* — architecture/implementation findings feeding the paper's §5.3 roadmap; execution shipped in `archive/2026-06-28-pipeline-improvements`.
-
-**Active — applicability track (secondary to JARVIS)**
+- `2026-06-28-generation-coverage-telemetry` *(note)* — telemetry schema the generator self-reports against.
+- `2026-06-28-pipeline-architecture-review` *(audit)* — architecture findings feeding the paper's §5.3 roadmap.
 - `2026-06-27-ensemble-mut-identification` *(spec, draft)* — killed-mutant focal-method oracle replacing LCBA.
-- `2026-06-28-mut-id-targeting-and-coverage` *(audit)* — MUT-id concrete targets, mutation-data coverage, telemetry gaps.
+- `2026-06-28-mut-id-targeting-and-coverage` *(audit)* — MUT-id targets, mutation-data coverage, telemetry gaps.
 
 **Active — independent track**
 - `2026-06-25-replication-package-documentation-improvements` *(plan)* — verifiable replication package for ACM artifact eval.
@@ -53,16 +58,29 @@ type; `INDEX.md` carries the full status/parent tree and `archive/` the retired 
 
 **Backlog**
 - `2026-06-27-inherited-test-method-support` *(spec, draft)* — flatten inherited `@Test` methods so 5,758 dropped tests parse.
+- Census follow-ups (deferred): FastMath/Interval yield no FULL generalizations (investigate —
+  transcendentals → `NonGeneralizableExpressionException`, loop-style assertions → `DEFER`);
+  spf-eval listener ports — P3 bit-exact float/NaN-payload capture, P4 heap-PC capture for
+  object/boxed params, P5 `header.toString()` vs `stringPC()` for raw PC logging.
 
-**Superseded & shipped** — lineage in `INDEX.md` / `archive/`: `2026-06-27-residual-aware-input-generation` (superseded by clause-driven-input-generation), plus the shipped redesign, evidence-run, and receiver-constructor plans.
+**Superseded & shipped** — lineage in `INDEX.md` / `archive/`.
 
 ## Win condition (summary)
 
-"Beat JARVIS" = **capability** (9 of the 10 JARVIS Table-2 rows enter the pipeline as 12 passing assertion-level probes; the `PrecisionTest` eps row is sound-excluded as a raw-bits path) **+ transparent PVC** (per-row IMPROVED-vs-JARVIS, computed by `jarvis_scoreboard.compare_to_jarvis`; CLI `uv run --directory analysis python -m teralizer.jarvis_scoreboard`).
-
-Capability is won: the rejected paper handled 9/10 of these rows only because Teralizer's static-method/numeric selection excluded them; now `char`, instance-method/object-construction, and FastMath all enter and pass. Both `Precision.equals` raw-bits probes are now excluded in both directions — the Table-2 eps `PrecisionTest` and the non-Table-2 `maxUlps` — because SPF cannot capture their 1-ULP raw-bits branch, so the generalization is unsound (the eps probe passed at 100/200 tries but failed at 1000; fixed fail-loud at the `Double` peer, `2026-06-28-maxulps-raw-bits-lane`). IC stays a project-level sanity check (the JaCoCo rows conflate probes) until per-probe fixtures land. Row-scoped concessions: NaN/signed-zero for min/max and the `toIntExact` overflow path. Full criteria live in the archived `2026-06-26-beat-jarvis-phase1`.
-
-On PVC, IMPROVED beats JARVIS's published Scala-PBT PVC on **4 of the 9 scored rows** (both `char` rows, `toIntExact`, `IntervalTest`); the 5 trails are single-`double` rows where JARVIS's multiple-generator-per-scenario sampling out-diversifies a single 100-check arbitrary — a sampling-strategy difference, not a soundness or capability gap. The `PrecisionTest` row is absent (sound-excluded raw-bits). The per-row head-to-head lives in `2026-06-26-jarvis-case-coverage`; the generator's IMPROVED-vs-NAIVE behavior in `2026-06-28-residual-aware-generator-rerun`.
+"Beat JARVIS" = **capability** + **honestly-caveated metrics**, all consolidated in
+`2026-06-30-jarvis-comparison`:
+- **Capability:** 8 of JARVIS's 9 Table-2 MUTs soundly generalized (the 10 rows enter as 12
+  passing assertion-level probes); the one gap, `Precision.equals`, is a deliberate raw-bits
+  soundness abstention. The rejected paper handled 9/10 only because its static-method/numeric
+  selection excluded `char`, instance-method / object-construction, and FastMath — all now
+  enter and pass.
+- **PVC:** IMPROVED beats JARVIS's published Scala-PBT PVC on 4 of 9 scored rows (both `char`,
+  `toIntExact`, `IntervalTest`); the 5 trails are single-`double` rows (a sampling-strategy
+  difference, not a soundness/capability gap); `PrecisionTest` is absent (sound-excluded). PVC
+  is also budget-elastic (×10 with tries) while kills stay flat — so mutation score, not PVC,
+  is the honest metric.
+- **Breadth beyond JARVIS:** 26 distinct MUTs / 250 sound properties across 6 upstream classes
+  (`CharUtils` 2→10 within a JARVIS class; 4 whole classes JARVIS never reported).
 
 ## Pointers
 

@@ -1,9 +1,11 @@
 ---
 title: Beyond-JARVIS Census — Findings & Issue Backlog
 type: note
-status: active
+status: superseded
 created: 2026-06-29
 parent: 2026-06-29-beyond-jarvis-generalization-census
+superseded_by: 2026-06-30-jarvis-comparison
+archived: 2026-06-30
 ---
 
 # Beyond-JARVIS Census — Findings & Issue Backlog

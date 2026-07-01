@@ -1,9 +1,11 @@
 ---
 title: PVC Budget-Elasticity vs Mutation Score
 type: audit
-status: active
+status: superseded
 created: 2026-06-29
 parent: 2026-06-26-teralizer-overview
+superseded_by: 2026-06-30-jarvis-comparison
+archived: 2026-06-30
 ---
 
 # PVC Budget-Elasticity vs Mutation Score

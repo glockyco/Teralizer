@@ -1,9 +1,11 @@
 ---
 title: JARVIS Head-to-Head Evidence
 type: audit
-status: active
+status: superseded
 created: 2026-06-26
 parent: 2026-06-26-teralizer-overview
+superseded_by: 2026-06-30-jarvis-comparison
+archived: 2026-06-30
 ---
 
 Point-in-time JARVIS head-to-head evidence: per-case SPF spike verdicts, corpus provenance, and scorecard run outputs.

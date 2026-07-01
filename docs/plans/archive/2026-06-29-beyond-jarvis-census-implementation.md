@@ -1,9 +1,10 @@
 ---
 title: Beyond-JARVIS Census Implementation Plan
 type: plan
-status: active
+status: implemented
 created: 2026-06-29
 parent: 2026-06-29-beyond-jarvis-generalization-census
+archived: 2026-06-30
 ---
 
 # Beyond-JARVIS Census Implementation Plan

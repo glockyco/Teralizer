@@ -1,9 +1,10 @@
 ---
 title: Census Completion — PIT Timeout & Generated-Build Visibility
 type: spec
-status: draft
+status: implemented
 created: 2026-06-30
 parent: 2026-06-29-beyond-jarvis-generalization-census
+archived: 2026-06-30
 ---
 
 # Census Completion — PIT Timeout & Generated-Build Visibility

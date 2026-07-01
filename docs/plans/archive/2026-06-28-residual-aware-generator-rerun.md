@@ -1,9 +1,11 @@
 ---
 title: Residual-Aware Generator Scorecard Rerun
 type: audit
-status: active
+status: superseded
 created: 2026-06-28
 parent: 2026-06-27-residual-aware-input-generation
+superseded_by: 2026-06-30-jarvis-comparison
+archived: 2026-06-30
 ---
 
 Point-in-time evidence from JARVIS scorecard reruns on the typed
