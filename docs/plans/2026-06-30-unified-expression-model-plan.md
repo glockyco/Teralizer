@@ -769,7 +769,7 @@ Expected: PASS.
 
 **Files:** Create `src/main/java/teralizer/transformer/VariableDescriptorCollector.java`; modify `src/main/java/teralizer/processing/task/TestGeneralizationTask.java`; tests in `src/test/java/teralizer/transformer/VariableDescriptorCollectorTest.java` and `src/test/java/teralizer/processing/task/TestGeneralizationTaskTest.java`.
 
-- [ ] **Step 1: Write failing collector tests.** Add `VariableDescriptorCollectorTest`:
+- [x] **Step 1: Write failing collector tests.** Add `VariableDescriptorCollectorTest`:
 
 ```java
 @Example
@@ -799,7 +799,7 @@ Run:
 
 Expected: FAIL because the collector does not exist.
 
-- [ ] **Step 2: Implement `VariableDescriptorCollector`.** Implement a small `ModelVisitor` over typed leaves:
+- [x] **Step 2: Implement `VariableDescriptorCollector`.** Implement a small `ModelVisitor` over typed leaves:
 
 ```java
 package teralizer.transformer;
@@ -833,7 +833,7 @@ public final class VariableDescriptorCollector extends ModelVisitor {
 
 Run the collector test — expect PASS.
 
-- [ ] **Step 3: Write failing temporary-parameter test.** Add to `TestGeneralizationTaskTest` a package-private helper test:
+- [x] **Step 3: Write failing temporary-parameter test.** Add to `TestGeneralizationTaskTest` a package-private helper test:
 
 ```java
 @Example
@@ -858,7 +858,7 @@ Run:
 
 Expected: FAIL because `collectTemporaryParameters` does not exist and the production path still uses the JSON regex.
 
-- [ ] **Step 4: Replace the regex scrape in `TestGeneralizationTask`.** Add a package-private static helper on `TestGeneralizationTask`:
+- [x] **Step 4: Replace the regex scrape in `TestGeneralizationTask`.** Add a package-private static helper on `TestGeneralizationTask`:
 
 ```java
 static List<MethodParameter> collectTemporaryParameters(

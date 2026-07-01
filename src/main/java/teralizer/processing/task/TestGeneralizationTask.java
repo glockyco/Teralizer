@@ -11,8 +11,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -38,6 +36,7 @@ import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
+import teralizer.domain.TypeDomain;
 import teralizer.domain.Value;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
@@ -52,6 +51,7 @@ import teralizer.spoon.generalization.*;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 import teralizer.transformer.SpecificationGson;
+import teralizer.transformer.VariableDescriptorCollector;
 import teralizer.util.Configuration;
 import teralizer.util.TypeCapability;
 
@@ -89,6 +89,33 @@ public class TestGeneralizationTask extends AbstractTask {
                 i -> testedMethodParameters.get(i).getName(),
                 i -> inputValues.get(i + offset)
             ));
+    }
+
+    static List<MethodParameter> collectTemporaryParameters(
+        Model inputModel,
+        Model outputModel,
+        List<MethodParameter> testedMethodParameters
+    ) {
+        Set<String> declared = testedMethodParameters.stream()
+            .map(MethodParameter::getName)
+            .collect(Collectors.toSet());
+        return VariableDescriptorCollector.collect(inputModel, outputModel).entrySet().stream()
+            .filter(entry -> !declared.contains(entry.getKey()))
+            .map(entry -> new MethodParameter(javaTypeForTemporary(entry.getValue()), entry.getKey()))
+            .collect(Collectors.toList());
+    }
+
+    private static String javaTypeForTemporary(TypeDomain domain) {
+        switch (domain) {
+            case INTEGER:
+                return "int";
+            case REAL:
+                return "double";
+            case STRING:
+                return "java.lang.String";
+            default:
+                throw new IllegalArgumentException("Unsupported temporary domain " + domain);
+        }
     }
 
     @Override
@@ -279,24 +306,7 @@ public class TestGeneralizationTask extends AbstractTask {
             Map<String, String> testedMethodParameterTypes = testedMethodParameters.stream().collect(Collectors.toMap(MethodParameter::getName, MethodParameter::getType));
             ModelToJavaTransformer modelToJavaTransformer = new ModelToJavaTransformer(testedMethodParameterTypes);
 
-            String regex = "\"name\": \"((?>INT|REAL)_[0-9]+)\"";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher inputMatcher = pattern.matcher(inputSpecification);
-            Matcher outputMatcher = pattern.matcher(outputSpecification);
-
-            Set<String> distinctMatches = new HashSet<>();
-
-            while (inputMatcher.find()) {
-                String match = inputMatcher.group(1);
-                distinctMatches.add(match);
-            }
-
-            while (outputMatcher.find()) {
-                String match = outputMatcher.group(1);
-                distinctMatches.add(match);
-            }
-
-            List<MethodParameter> temporaryParameters = distinctMatches.stream().map(m -> new MethodParameter(m.startsWith("INT") ? "int" : "double", m)).collect(Collectors.toList());
+            List<MethodParameter> temporaryParameters = collectTemporaryParameters(inputModel, outputModel, testedMethodParameters);
 
             List<MethodParameter> allParameters = new ArrayList<>();
             allParameters.addAll(testedMethodParameters);
