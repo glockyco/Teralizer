@@ -8,7 +8,7 @@ parent: 2026-06-30-unified-expression-model
 
 # Unified Expression Model Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. **Execution scope: this document authorizes step-level execution of Phase 1 only. Phases 2–4 are committed scope but MUST each be expanded into their own step-level plan (with a fresh code-read) and checkpointed with the user before any code is written for them.**
+> **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. **Execution scope: Phase 1 is implemented. Phase 2 is expanded below for a user checkpoint and MUST NOT be coded until that checkpoint is approved. Phases 3–4 remain committed scope but MUST each be expanded into their own step-level plan (with a fresh code-read) and checkpointed with the user before any code is written for them.**
 
 **Goal:** Replace the type-fragmented `teralizer.domain` expression zoo with a uniform model — one `Invocation` node for method/function calls of any arity, a `Not` wrapper, typed `Variable`/`Constant`, `Operation` for true operators only — gated by a single capability registry.
 
@@ -230,24 +230,223 @@ public final class MethodCapability {
 
 ## Phase 2 — Function migration (numeric)
 
-Move math functions + `valueOf` to `Invocation`; the ~250 numeric generalizations are the guardrail.
+Move math functions to `Invocation`; keep `String.valueOf` as the static `Invocation` shape that Phase 1 already introduced; delete the remaining numeric function nodes and the math entries from `Operator`. The ~250 numeric/char/boolean JARVIS generalizations are the behavioral guardrail.
+
+**Fresh code-read findings (2026-07-01):**
+- `MethodCapabilities` already registers `sqrt`/`pow`/`exp`/`log`/`sin`/`cos`/`tan`/`asin`/`acos`/`atan`/`atan2` as static `java.lang.Math` output-renderable methods, and `valueOf` as static `java.lang.String` output-renderable.
+- `SpfToModelTransformer.postVisit(MathRealExpression)` still emits `Operation(left, Operator.SQRT…ATAN2, right)`; `DerivedStringExpression(VALUEOF)` already emits `Invocation(null, "java.lang.String", "valueOf", operands)`.
+- `SymbolicIntegerFunction` and `SymbolicRealFunction` remain only as model nodes, visitor/folder hooks, JSON adapters, renderer hooks, and tests; SPF does not need to keep producing them.
+- `ModelToJavaTransformer.isFloatingPoint` must learn that static `java.lang.Math` invocations are real-valued before math operators leave `Operator`, otherwise bitwise/shift guards can miss `Math.*` operands.
 
 ### Task 7: golden-snapshot harness
 
-**Files:** Create `src/test/java/teralizer/transformer/GoldenRenderingTest.java` + `src/test/resources/golden/*.json`.
+**Files:** Create `src/test/java/teralizer/transformer/GoldenRenderingTest.java`; Create `src/test/resources/golden/rendering-baseline.json`.
 
-- [ ] **Step 1:** Capture rendered Java for a deterministic representative set of numeric/char/boolean/string specs (build the `Model` directly, fold with `ModelToJavaTransformer`) and assert against committed golden strings. Commit the goldens as the pre-migration baseline. Run, expect PASS.
-- [ ] **Step 2: Commit.** `test(transformer): golden rendering snapshots for the numeric baseline`
+- [ ] **Step 1: Write the failing harness test only.** Add `GoldenRenderingTest` that builds a deterministic `LinkedHashMap<String, ModelCase>` and reads `/golden/rendering-baseline.json`. The first run intentionally fails because the resource is absent. Use these cases:
 
-### Task 8: math functions + `valueOf` → `Invocation`
+```java
+package teralizer.transformer;
 
-**Files:** Modify `SpfToModelTransformer.java`, `ModelToJavaTransformer.java`, `MethodCapabilities.java`; delete `SymbolicIntegerFunction`/`SymbolicRealFunction`.
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import teralizer.domain.*;
 
-- [ ] **Step 1:** Register `sqrt`/`pow`/`exp`/`log`/`sin`/`cos`/`tan`/`asin`/`acos`/`atan`/`atan2` (static `java.lang.Math`) and `valueOf` (static `java.lang.String`) in `MethodCapabilities`, with render matching the current `Math.x(...)` output.
-- [ ] **Step 2:** Ingest `MathRealExpression`/`SymbolicRealFunction`/`SymbolicIntegerFunction` + `DerivedStringExpression(VALUEOF)` → `Invocation`. Remove `SQRT`…`ATAN2` from `Operator` and their `fold(Operation)` arms; delete the two numeric function nodes + hooks.
-- [ ] **Step 3:** Update the `GoldenRenderingTest` goldens where rendering intentionally changed (parens/spacing); each changed golden's generated test must still compile+pass. Run `./gradlew test` — expect PASS.
-- [ ] **Step 4: Verify the behavioral guardrail** — run the numeric/char/boolean generalizations (existing generation tests or a disposable-DB spike) and confirm they compile + pass.
-- [ ] **Step 5: Commit.** `refactor: migrate math functions and valueOf to Invocation`
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class GoldenRenderingTest {
+    @Example
+    void currentRepresentativeModelsRenderAsTheBaseline() throws Exception {
+        Map<String, String> expected = readBaseline();
+        Map<String, String> actual = new LinkedHashMap<>();
+        for (Map.Entry<String, ModelCase> entry : cases().entrySet()) {
+            actual.put(entry.getKey(), entry.getValue().transformer.transform(entry.getValue().model));
+        }
+        Assert.assertEquals(expected, actual);
+    }
+
+    private static Map<String, ModelCase> cases() {
+        Map<String, ModelCase> cases = new LinkedHashMap<>();
+        cases.put("math.sqrt.operation", new ModelCase(
+            new ModelToJavaTransformer(),
+            new Operation(new VariableReal("x"), Operator.SQRT, null)));
+        cases.put("math.pow.operation", new ModelCase(
+            new ModelToJavaTransformer(),
+            new Operation(new VariableReal("x"), Operator.POW, new ConstantReal(2.0))));
+        cases.put("math.atan2.operation", new ModelCase(
+            new ModelToJavaTransformer(),
+            new Operation(new VariableReal("y"), Operator.ATAN2, new VariableReal("x"))));
+        cases.put("boolean.path.predicate", new ModelCase(
+            new ModelToJavaTransformer(Collections.singletonMap("b", "boolean")),
+            new Operation(new VariableInteger("b"), Operator.NE, new ConstantInteger(0))));
+        cases.put("char.bound.predicate", new ModelCase(
+            new ModelToJavaTransformer(Collections.singletonMap("c", "char")),
+            new Operation(new VariableInteger("c"), Operator.GT, new ConstantInteger(64))));
+        cases.put("string.transform.invocation", new ModelCase(
+            new ModelToJavaTransformer(),
+            new Invocation(new VariableString("s"), null, "trim", Collections.emptyList())));
+        return cases;
+    }
+
+    private static Map<String, String> readBaseline() throws Exception {
+        try (Reader reader = new InputStreamReader(
+            GoldenRenderingTest.class.getResourceAsStream("/golden/rendering-baseline.json"),
+            StandardCharsets.UTF_8)) {
+            Type type = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
+            return new Gson().fromJson(reader, type);
+        }
+    }
+
+    private static final class ModelCase {
+        final ModelToJavaTransformer transformer;
+        final Model model;
+
+        ModelCase(ModelToJavaTransformer transformer, Model model) {
+            this.transformer = transformer;
+            this.model = model;
+        }
+    }
+}
+```
+
+Run: `./gradlew test --tests 'teralizer.transformer.GoldenRenderingTest'`
+
+Expected: FAIL with a missing/null resource failure before any production code changes.
+
+- [ ] **Step 2: Add the baseline fixture.** Create `src/test/resources/golden/rendering-baseline.json` with exactly:
+
+```json
+{
+  "math.sqrt.operation": "Math.sqrt(_p_.x)",
+  "math.pow.operation": "Math.pow(_p_.x, 2.0)",
+  "math.atan2.operation": "Math.atan2(_p_.y, _p_.x)",
+  "boolean.path.predicate": "((_p_.b ? 1 : 0) != 0)",
+  "char.bound.predicate": "(_p_.c > 64)",
+  "string.transform.invocation": "(_p_.s.trim())"
+}
+```
+
+Run: `./gradlew test --tests 'teralizer.transformer.GoldenRenderingTest'`
+
+Expected: PASS.
+
+- [ ] **Step 3: Commit.** Commit only the golden harness + fixture with subject `test(transformer): add rendering baseline goldens` and a body explaining that this is a review prompt for Phase 2, not a byte-parity compatibility guarantee.
+
+### Task 8: math functions + numeric function nodes → `Invocation`
+
+**Files:** Modify `src/main/java/teralizer/transformer/SpfToModelTransformer.java`, `src/main/java/teralizer/transformer/ModelToJavaTransformer.java`, `src/main/java/teralizer/transformer/ModelToJsonTransformer.java`, `src/main/java/teralizer/transformer/JsonToModelTransformer.java`, `src/main/java/teralizer/domain/ModelFolder.java`, `src/main/java/teralizer/domain/ModelVisitor.java`, `src/main/java/teralizer/domain/Operator.java`; Delete `src/main/java/teralizer/domain/SymbolicIntegerFunction.java`, `src/main/java/teralizer/domain/SymbolicRealFunction.java`; Test updates under `src/test/java/teralizer/{domain,transformer,jqwik/planning}`.
+
+- [ ] **Step 1: Write failing transformer and operator tests.** Add/extend tests before production edits:
+  - `SpfToModelTransformerMathInvocationTest.unaryMathRealExpressionBecomesStaticInvocation`: `new MathRealExpression(MathFunction.SQRT, new SymbolicReal("x_1_SYMREAL"))` transforms to `new Invocation(null, "java.lang.Math", "sqrt", Collections.singletonList(new VariableReal("x")))`.
+  - `SpfToModelTransformerMathInvocationTest.binaryMathRealExpressionPreservesArgumentOrder`: `new MathRealExpression(MathFunction.POW, new SymbolicReal("x_1_SYMREAL"), new SymbolicReal("y_2_SYMREAL"))` transforms to `new Invocation(null, "java.lang.Math", "pow", Arrays.asList(new VariableReal("x"), new VariableReal("y")))`.
+  - `OperatorTest.mathFunctionSymbolsAreNotOperators`: `sqrt`, `pow`, `exp`, `log`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2` must all throw `IllegalArgumentException` from `Operator.get`.
+  - `ModelToJavaTransformerNonGeneralizableTest.bitwiseOnMathInvocationThrowsTypedException`: `new Operation(new Invocation(null, "java.lang.Math", "sqrt", singletonList(new VariableReal("x"))), Operator.AND, new ConstantInteger(1))` throws `NonGeneralizableExpressionException`.
+  - `InvocationJsonRoundTripTest.staticMathInvocationRoundTrips`: static `Math.pow(x, 2.0)` keeps `receiver == null`, `qualifier == "java.lang.Math"`, method, and arg order after JSON round trip.
+
+Run:
+
+```bash
+./gradlew test \
+  --tests 'teralizer.transformer.SpfToModelTransformerMathInvocationTest' \
+  --tests 'teralizer.domain.OperatorTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerNonGeneralizableTest' \
+  --tests 'teralizer.transformer.InvocationJsonRoundTripTest'
+```
+
+Expected: FAIL for math ingestion/operator/bitwise guard; JSON static invocation may already pass.
+
+- [ ] **Step 2: Ingest `MathRealExpression` as static `Invocation`.** In `SpfToModelTransformer.postVisit(MathRealExpression)`, replace the `Operator.get(...)` / `new Operation(...)` path with a method-name conversion based on `expression.getOp().name().toLowerCase(Locale.ROOT)` and argument list construction that preserves `arg1`, then `arg2` when present:
+
+```java
+Expression right = expression.getArg2() == null ? null : this.stack.pop();
+Expression left = expression.getArg1() == null ? null : this.stack.pop();
+List<Expression> args = new ArrayList<>(2);
+args.add(left);
+if (right != null) {
+    args.add(right);
+}
+this.stack.push(new Invocation(
+    null,
+    "java.lang.Math",
+    expression.getOp().name().toLowerCase(Locale.ROOT),
+    args));
+```
+
+Run `./gradlew test --tests 'teralizer.transformer.SpfToModelTransformerMathInvocationTest'` — expect PASS.
+
+- [ ] **Step 3: Retire math entries from `Operator` and `fold(Operation)`.** Remove `POW`, `SQRT`, `EXP`, `LOG`, `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, and `ATAN2` from `Operator`; remove the matching `case` arms from `ModelToJavaTransformer.fold(Operation)`; update `GoldenRenderingTest` to build the three math cases as static `Invocation` instead of `Operation` while keeping the expected JSON unchanged. Extend `isFloatingPoint(Expression)` to return true for output-renderable static `java.lang.Math` invocations so the bitwise/shift guard still rejects real-valued math calls.
+
+Run:
+
+```bash
+./gradlew test \
+  --tests 'teralizer.domain.OperatorTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerInvocationTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerNonGeneralizableTest' \
+  --tests 'teralizer.transformer.GoldenRenderingTest'
+```
+
+Expected: PASS.
+
+- [ ] **Step 4: Delete `SymbolicIntegerFunction` and `SymbolicRealFunction`.** Remove the classes, their `ModelFolder` hooks, their `ModelVisitor` hooks, their JSON serializers/deserializers/registrations, and their direct renderer hooks. Update `ModelFolderTest.folderDeclaresOneHookPerConcreteNode` to remove both classes from the expected node set, and update `ModelToJavaTransformerFoldOrderTest` to pin static `Invocation` argument order instead of the deleted symbolic-function nodes. Run `./gradlew compileTestJava` first; any remaining reference to the deleted classes is a compile failure to fix at the source.
+
+Expected: `./gradlew compileTestJava` PASS, and `grep` for `SymbolicIntegerFunction|SymbolicRealFunction` under `src/main` and `src/test` returns no matches.
+
+- [ ] **Step 5: Keep `String.valueOf` as Phase-1 static invocation.** Do not add an `Operator.VALUEOF` or numeric-function node replacement for it. Add a regression assertion either in `ModelToJavaTransformerInvocationTest` or `GoldenRenderingTest` that `new Invocation(null, "java.lang.String", "valueOf", Collections.singletonList(new VariableInteger("i")))` renders as `String.valueOf(_p_.i)`.
+
+Run `./gradlew test --tests 'teralizer.transformer.ModelToJavaTransformerInvocationTest' --tests 'teralizer.transformer.GoldenRenderingTest'` — expect PASS.
+
+- [ ] **Step 6: Run focused and full verification.** Run:
+
+```bash
+./gradlew test \
+  --tests 'teralizer.transformer.GoldenRenderingTest' \
+  --tests 'teralizer.transformer.SpfToModelTransformerMathInvocationTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerInvocationTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerNonGeneralizableTest' \
+  --tests 'teralizer.transformer.InvocationJsonRoundTripTest' \
+  --tests 'teralizer.transformer.ModelToJavaTransformerFoldOrderTest' \
+  --tests 'teralizer.domain.ModelFolderTest' \
+  --tests 'teralizer.domain.OperatorTest' \
+  --tests 'teralizer.jqwik.planning.MethodCapabilitiesTest'
+./gradlew test
+```
+
+Run the native SPF string tests with a cleanup wrapper/trap so `settings.gradle` is restored even on failure:
+
+```bash
+trap 'git checkout -- settings.gradle' EXIT
+perl -0pi -e 's/task\.enabled = false/\/\/ task.enabled = false/' settings.gradle
+./gradlew :jpf-symbc:test \
+  --tests 'gov.nasa.jpf.symbc.TestSymbolicStringCaseChange' \
+  --tests 'gov.nasa.jpf.symbc.TestSymbolicStringSymcrete' \
+  --tests 'gov.nasa.jpf.symbc.TestSymbolicStringIsEmpty' \
+  --tests 'gov.nasa.jpf.symbc.TestSymbolicStringEqualsIgnoreCase'
+```
+
+Expected: both Gradle commands PASS and `git status --short settings.gradle` is clean.
+
+- [ ] **Step 7: Run the numeric/char/boolean behavioral guardrail.** Use the JARVIS scratch scorecard because `docs/plans/2026-06-30-jarvis-comparison.md` records the current 250 sound assertion-properties and the char/boolean/numeric Table-2 probes. Follow `skill://running-the-jarvis-scoreboard`: prepare fixtures, reset `postgres_jarvis_scoreboard`, then run:
+
+```bash
+DB_NAME=postgres_jarvis_scoreboard DATA_DIR=data/jarvis-scoreboard DATASET_VARIANT=jarvis \
+  bash scripts/run-jarvis-scoreboard.sh 2>&1 | tee /tmp/teralizer-jarvis-scoreboard.log
+! grep -E "ERROR t.processing.ProcessingPipeline|terminated with exit code|BUILD FAILURE" /tmp/teralizer-jarvis-scoreboard.log
+uv run --directory analysis python -m teralizer.jarvis_scoreboard --census
+```
+
+Acceptance: generated jqwik tests compile and execute, `! grep` succeeds because the run log has zero matching pipeline/build failures, and the census still reports the current sound numeric/char/boolean successes without a drop attributable to rendering or ingestion.
+
+- [ ] **Step 8: Run branch handoff build.** Run `./gradlew build` after the full suite and guardrail so Gradle build/check tasks and SPF submodule build tasks are covered before any merge/PR handoff.
+
+- [ ] **Step 9: Commit.** Commit the math migration, deleted nodes, updated tests, and Phase-2 checkboxes with subject `refactor(domain): migrate math functions to Invocation` and a body explaining why math functions are calls rather than operators, why `String.valueOf` stays as the static invocation shape, and how the guardrail was verified.
 
 ---
 
