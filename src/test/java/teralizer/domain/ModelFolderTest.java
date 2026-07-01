@@ -39,6 +39,12 @@ public class ModelFolderTest {
         @Override public String fold(SymbolicStringFunction f, List<String> args) {
             return "SymbolicStringFunction(" + String.join(",", args) + ")";
         }
+        @Override public String fold(Invocation invocation, String receiver, List<String> args) {
+            return "Invocation{" + invocation.method + "}(" + receiver + "," + String.join(",", args) + ")";
+        }
+        @Override public String fold(Not not, String operand) {
+            return "Not(" + operand + ")";
+        }
         @Override public String fold(Operation op, String left, String right) {
             return "Operation{" + op.op + "}(" + left + "," + right + ")";
         }
@@ -84,6 +90,12 @@ public class ModelFolderTest {
                 new ConstantString("s"), new VariableString("z")
             }).fold(folder));
         Assert.assertEquals(
+            "Invocation{startsWith}(VariableString,ConstantString)",
+            new Invocation(new VariableString("z"), null, "startsWith", Arrays.asList(new ConstantString("s"))).fold(folder));
+        Assert.assertEquals(
+            "Not(Invocation{startsWith}(VariableString,ConstantString))",
+            new Not(new Invocation(new VariableString("z"), null, "startsWith", Arrays.asList(new ConstantString("s")))).fold(folder));
+        Assert.assertEquals(
             "Operation{+}(ConstantInteger,VariableInteger)",
             new Operation(new ConstantInteger(1), Operator.PLUS, new VariableInteger("x")).fold(folder));
     }
@@ -108,6 +120,7 @@ public class ModelFolderTest {
             VariableInteger.class, VariableReal.class, VariableString.class,
             ArrayExpression.class, ArrayElementExpression.class,
             SymbolicIntegerFunction.class, SymbolicRealFunction.class, SymbolicStringFunction.class,
+            Invocation.class, Not.class,
             Operation.class, Operator.class, Error.class, ExceptionModel.class));
 
         Set<Class<?>> hookParamTypes = Arrays.stream(ModelFolder.class.getDeclaredMethods())

@@ -224,6 +224,16 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
     }
 
     @Override
+    public String fold(Invocation invocation, String receiver, List<String> args) {
+        throw new NonGeneralizableExpressionException("Invocation rendering not wired yet: " + invocation.method);
+    }
+
+    @Override
+    public String fold(Not not, String operand) {
+        return "(!(" + operand + "))";
+    }
+
+    @Override
     public String fold(Operation operation, String left, String right) {
         if (isBitwiseOrShift(operation.op)
             && (isFloatingPoint(operation.left) || isFloatingPoint(operation.right))) {

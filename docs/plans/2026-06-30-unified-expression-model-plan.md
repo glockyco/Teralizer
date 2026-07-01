@@ -53,7 +53,7 @@ Introduce the new nodes + registry, migrate string ops onto them, and unlock `tr
 
 **Files:** Create `src/main/java/teralizer/domain/Invocation.java`, `Not.java`; Modify `ModelFolder.java`, `ModelVisitor.java`; Test `src/test/java/teralizer/domain/InvocationTest.java`.
 
-- [ ] **Step 1: Add folder + visitor hooks.** In `ModelFolder`, add:
+- [x] **Step 1: Add folder + visitor hooks.** In `ModelFolder`, add:
 
 ```java
 public abstract T fold(Invocation invocation, T receiver, java.util.List<T> args);
@@ -62,7 +62,7 @@ public abstract T fold(Not not, T operand);
 
 In `ModelVisitor`, add no-op `preVisit`/`postVisit` for `Invocation` and `Not` (mirror the existing pairs).
 
-- [ ] **Step 2: Write `Invocation`.**
+- [x] **Step 2: Write `Invocation`.**
 
 ```java
 package teralizer.domain;
@@ -116,11 +116,11 @@ public class Invocation implements Expression {
 }
 ```
 
-- [ ] **Step 3: Write `Not`** — one field `Expression operand`; `accept` visits operand; `fold` returns `folder.fold(this, operand.fold(folder))`; standard `equals`/`hashCode`/`toString` (`"!(" + operand + ")"`).
+- [x] **Step 3: Write `Not`** — one field `Expression operand`; `accept` visits operand; `fold` returns `folder.fold(this, operand.fold(folder))`; standard `equals`/`hashCode`/`toString` (`"!(" + operand + ")"`).
 
-- [ ] **Step 4: Compile.** Run `./gradlew compileJava` — expect **failure**: `ModelToJavaTransformer` (and any other `ModelFolder`) now miss the two new abstract hooks.
+- [x] **Step 4: Compile.** Run `./gradlew compileJava` — expect **failure**: `ModelToJavaTransformer` (and any other `ModelFolder`) now miss the two new abstract hooks.
 
-- [ ] **Step 5: Add temporary throwing hooks** to every `ModelFolder` subclass (`ModelToJavaTransformer` + the Model→JSON folder if present) so the tree compiles:
+- [x] **Step 5: Add temporary throwing hooks** to every `ModelFolder` subclass (`ModelToJavaTransformer` + the Model→JSON folder if present) so the tree compiles:
 
 ```java
 @Override public String fold(Invocation invocation, String receiver, java.util.List<String> args) {
@@ -131,9 +131,9 @@ public class Invocation implements Expression {
 
 (`Not` is trivial and final; `Invocation` gets its real body in Task 3.)
 
-- [ ] **Step 6: Test node mechanics.** In `InvocationTest`, assert `accept` visits receiver+args in order (use a counting `ModelVisitor`) and `equals`/`hashCode` for instance vs static. Run `./gradlew test --tests 'teralizer.domain.InvocationTest'` — expect PASS.
+- [x] **Step 6: Test node mechanics.** In `InvocationTest`, assert `accept` visits receiver+args in order (use a counting `ModelVisitor`) and `equals`/`hashCode` for instance vs static. Run `./gradlew test --tests 'teralizer.domain.InvocationTest'` — expect PASS.
 
-- [ ] **Step 7: Commit.** `feat(domain): add Invocation and Not expression nodes`
+- [x] **Step 7: Commit.** `feat(domain): add Invocation and Not expression nodes`
 
 ### Task 2: capability registry
 

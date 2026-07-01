@@ -27,6 +27,8 @@ public abstract class ModelFolder<T> {
     public abstract T fold(SymbolicIntegerFunction function, List<T> args);
     public abstract T fold(SymbolicRealFunction function, List<T> args);
     public abstract T fold(SymbolicStringFunction function, List<T> args);
+    public abstract T fold(Invocation invocation, T receiver, List<T> args);
+    public abstract T fold(Not not, T operand);
     public abstract T fold(Operation operation, T left, T right);
     public abstract T fold(Operator operator);
     public abstract T fold(Error error);
