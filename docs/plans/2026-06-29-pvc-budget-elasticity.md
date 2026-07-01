@@ -37,105 +37,53 @@ uv run --directory analysis python -m teralizer.jarvis_scoreboard --sweep
 
 | variant | probes | total PVC | killed | covered | covered score |
 |---|---|---|---|---|---|
-| NAIVE_100_TRIES | 14 | 1325 | 54 | 87 | 0.621 |
-| NAIVE_200_TRIES | 13 | 2937 | 54 | 87 | 0.621 |
-| NAIVE_1000_TRIES | 13 | 16071 | 54 | 87 | 0.621 |
-| IMPROVED_100_TRIES | 14 | 1281 | 54 | 87 | 0.621 |
-| IMPROVED_200_TRIES | 14 | 2766 | 54 | 87 | 0.621 |
-| IMPROVED_1000_TRIES | 13 | 13797 | 51 | 87 | 0.586 |
+| NAIVE_100_TRIES | 12 | 1073 | 51 | 78 | 0.654 |
+| NAIVE_200_TRIES | 12 | 2245 | 51 | 78 | 0.654 |
+| NAIVE_1000_TRIES | 12 | 11092 | 51 | 78 | 0.654 |
+| IMPROVED_100_TRIES | 12 | 1120 | 51 | 78 | 0.654 |
+| IMPROVED_200_TRIES | 12 | 2257 | 51 | 78 | 0.654 |
+| IMPROVED_1000_TRIES | 12 | 11095 | 51 | 78 | 0.654 |
 
-**PVC is budget-elastic; the covered mutation score is flat.** Total PVC rises
-~10-12x from 100 to 1000 tries (NAIVE 1325 -> 16071, 12.1x; IMPROVED 1281 -> 13797,
-10.8x), while the kill count holds at 54 and the covered score at 62% for every
-variant. The one exception, `IMPROVED_1000_TRIES` (51 kills, 58.6%), is an excluded
-probe (below), not a detection change. Extra tries buy input diversity, not fault
-detection.
+**PVC is budget-elastic; the covered mutation score is flat.** Total PVC rises ~10x from 100
+to 1000 tries (NAIVE 1073 -> 11092, 10.3x; IMPROVED 1120 -> 11095, 9.9x), while the kill count
+holds at 51 and the covered score at 65.4% for every variant -- flat across the whole budget,
+both generators. Extra tries buy input diversity, not fault detection.
 
-**Denominator: covered, not project-wide.** PIT mutates the whole project (2953
-mutants), but the generated tests reach only the 10-14 probe methods, so 2866 are
-`NO_COVERAGE` -- code the probes never touch. Scoring against all 2953 gives a
-meaningless 1.8%. The meaningful denominator is the 87 *covered* mutants the tests
-actually reach: 54 killed + 33 survived -> 62%. The 33 survived are the genuine
-quality gap (covered code where neither generator's oracle catches the mutation), and
-they are flat across the budget too. The JARVIS MUTs are tiny (`isAscii`, `min`/`max`,
-`abs`, ...), so the covered score does not discriminate NAIVE from IMPROVED -- both
-kill the same 54 of 87.
+**Denominator: covered, not project-wide.** PIT mutates the whole project (2953 mutants), but
+the generated tests reach only the 12 probe methods, so 2875 are `NO_COVERAGE` -- code the
+probes never touch. Scoring against all 2953 gives a meaningless 1.7%. The meaningful
+denominator is the 78 *covered* mutants the tests actually reach: 51 killed + 27 survived ->
+65.4%, flat across the budget. The JARVIS MUTs are tiny (`isAscii`, `min`/`max`, `abs`, ...),
+so the covered score does not discriminate NAIVE from IMPROVED -- both kill the same 51 of 78.
 
-### Per-probe PVC scales with the budget
+**Per-probe, the same pattern.** Each probe's PVC grows with the budget (roughly 7-20x from 100
+to 1000 tries, the rate tracking the parameter's domain, not test quality), while its kill
+count is unchanged. Exact per-probe figures belong in the analysis notebook, not hand-copied
+here.
 
-Each non-excluded probe's PVC grows with tries; the rate tracks the parameter's
-domain, not test quality. NAIVE, 100 -> 1000 tries:
+## Why the covered gap is structural, not a generator bug
 
-| probe | 100 | 200 | 1000 | growth |
-|---|---|---|---|---|
-| intervalGetSize | 88 | 260 | 1771 | ~20x |
-| precisionEquals | 252 | 724 | 5011 | ~20x |
-| maxDouble | 141 | 330 | 1800 | ~13x |
-| toIntExact | 93 | 182 | 845 | ~9x |
-| isAscii | 159 | 290 | 1069 | ~7x |
-
-A metric that swings 7-20x on the same probe with the same generator, purely from the
-sampling budget, is measuring the input space rather than fault-finding power -- the
-kill count for these probes is unchanged across the budget.
-
-## Exclusions at high tries
-
-The sweep is not exclusion-free; three probes drop out at higher budgets, each a known
-limitation surfaced by deeper sampling (prior runs only reached 200 tries):
-
-- `isAsciiPrintable` in `NAIVE_200_TRIES` and `NAIVE_1000_TRIES`: jqwik
-  `TooManyFilterMissesException`. NAIVE's random+filter exhausts the miss budget for
-  the sparse printable-char precondition -- the filter-based generation limit.
-  IMPROVED's by-construction generation passes it at every budget.
-- `precisionEquals` in `IMPROVED_1000_TRIES`: `AssertionError`. The documented
-  `Precision.equals` eps-soundness edge surfaces at 1000 tries; the unsound
-  generalization fails its own oracle and is correctly excluded (fail-loud), which is
-  why kills drop 54 -> 51.
-
-Both are real findings consistent with the documented generator limits, not
-regressions. The NAIVE filter-miss strengthens the by-construction case; the IMPROVED
-exclusion shows the fail-loud design catching an unsound generalization rather than
-silently passing it.
-
-## Surviving mutants: where the covered gap is
-
-The 33 survived (covered-but-unkilled) mutants are the same set across variants (36 in
-`IMPROVED_1000_TRIES`, the three extra being the fail-loud-excluded `precisionEquals`
-probe). They fall into three groups, none reachable by path-exact generalization:
-
-| group | count | examples | what would kill it |
-|---|---|---|---|
-| boundary / comparison flips | 19 | `toIntExact`, `isAsciiPrintable`, `max`/`min`, `Precision.equals` | a new *original* test on a different path |
-| removed defensive checks | 9 | `MathUtils.checkNotNull`, `PolynomialFunction.<init>` guards | a new *original* test (invalid input) |
-| arithmetic on edge paths | 5 | `abs` (overflow), `Precision.equals` (ULP/raw-bits) | a stronger assertion / raw-bits oracle |
-
-**The boundary survivors are not a constraint bug.** The generated `toIntExact` filter
-`n > -2147483648 && n < 2147483647` looks like a dropped-equality bug -- the no-throw
-path is inclusive `[MIN, MAX]`, yet the bound is strict. It is correct. `lcmp` is a
-tri-state comparison, and `jpf-symbc`'s `LCMP` handler records the *concrete* outcome
-as its own symbolic path: for the original input `n = 7`, `n vs MIN -> GT` and
-`n vs MAX -> LT`, so the path condition is the strict `n > MIN && n < MAX` -- the exact
-condition for the path that input took. The equality endpoints (`n == MIN`/`MAX`),
-where the `>`/`>=` boundary mutant flips, are the `EQ` choice: a *different* symbolic
-path the test never executed (collect-constraints mode records only the one executed
-outcome). The killing input is off the generalized path -- exactly like
-`isAsciiPrintable`'s `ch == 127`.
-
-**Consequence.** None of the survivors is an in-scope generator fix: better edge-case
-sampling cannot reach a path the original test never took, and Teralizer reuses the
-original assertion as its oracle. Raising the covered score needs new *original* tests
-on the exact-boundary / invalid-input paths, or stronger assertions (signed-zero/ULP)
--- both outside "generalize the existing test." The gap is a property of path-exact
-generalization and oracle strength, not a defect.
+The 27 covered-but-unkilled mutants are not reachable by path-exact generalization: boundary /
+comparison flips, removed defensive checks, and arithmetic on edge paths. `toIntExact` is
+illustrative -- the generated filter `n > MIN && n < MAX` is strict, not inclusive
+`[MIN, MAX]`, which looks like a dropped-equality bug but is correct. `lcmp` is tri-state, and
+`jpf-symbc`'s `LCMP` handler records the *concrete* outcome as its own symbolic path: for the
+original input `n = 7`, `n vs MIN -> GT` and `n vs MAX -> LT`, so the path condition is the
+strict `n > MIN && n < MAX` -- exactly the path that input took. The equality endpoints
+(`n == MIN`/`MAX`), where the boundary mutant flips, are the `EQ` choice: a *different*
+symbolic path the test never executed (collect-constraints mode records only the executed
+outcome). The killing input is off the generalized path. So none of the survivors is an
+in-scope generator fix: reaching them needs new *original* tests on the boundary / invalid-input
+paths, or stronger assertions -- both outside "generalize the existing test." The gap is a
+property of path-exact generalization and oracle strength, not a defect. The eps
+`precisionEquals` probe is separately sound-excluded (raw bits; see `2026-06-26-jarvis-case-coverage`).
 
 ## Implication
 
-Covered mutation score -- the RQ1 fault-detection signal on the code the tests reach
--- is invariant to the sampling budget (62%, flat; the project-wide 1.8% is the
-discarded denominator), while PVC inflates monotonically with it. PVC therefore
-measures input diversity, not fault-detection power, and overstates effectiveness as
-the budget
-grows. IMPROVED's value over NAIVE is path-exactness, fail-loud soundness, and
-low-budget efficiency -- not raw diversity, which NAIVE matches given enough tries.
-This is point-in-time evidence (jqwik sampling varies run to run); the qualitative
-result -- PVC budget-elastic, kills flat -- is robust.
+Covered mutation score -- the fault-detection signal on the code the tests reach -- is
+invariant to the sampling budget (65.4%, flat), while PVC inflates ~10x with it. PVC therefore
+measures input diversity, not fault-detection power, and overstates effectiveness as the budget
+grows. IMPROVED's value over NAIVE is path-exactness, fail-loud soundness, and low-budget
+efficiency -- not raw diversity, which NAIVE matches given enough tries. jqwik sampling varies
+run to run, so treat exact PVC totals as representative; the qualitative result -- PVC
+budget-elastic, kills flat -- is robust.

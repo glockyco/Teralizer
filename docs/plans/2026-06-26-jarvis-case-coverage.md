@@ -175,7 +175,7 @@ Scala-PBT column.
 | Table row | params | Teralizer IMPROVED PVC | JARVIS PBT PVC | verdict |
 |---|---|---:|---:|:--|
 | `CharUtilsTest::isAscii` | char | 148 | 59 | win |
-| `CharUtilsTest::isPrintable` | char | 82 | 45 | win |
+| `CharUtilsTest::isPrintable` | char | 127 | 45 | win |
 | `FastMathTest::testMinMaxDouble` | double² | 304 | 400 | trail |
 | `FastMathTest::toIntExact` | int | 90 | 65 | win |
 | `IntervalTest` | double² | 88 | 2 | win |
@@ -184,6 +184,11 @@ Scala-PBT column.
 | `PolynomialFunctionTest::testLinear` | double | 90 | 160 | trail |
 | `PrecisionTest` (eps) | double³ | — | 102 | absent (sound-excluded raw-bits) |
 | `UnivariateFunctionTest::testAbs` | double | 94 | 506 | trail |
+
+In distinct-MUT terms this is **8 of JARVIS's 9 MUTs**: the three `PolynomialFunction` rows
+share the `value` MUT and `testMinMaxDouble` is one row over two MUTs (`min`, `max`), so the 9
+scored rows collapse to 8 covered production methods; `Precision.equals` is the one uncovered
+MUT (a soundness abstention). Rows measure scenario-depth; MUTs measure method-breadth.
 
 **Capability — 9 of the 10 rows enter as 12 passing assertion-level probes.** Both
 `Precision.equals` raw-bits probes are excluded in both directions — the Table-2 eps
