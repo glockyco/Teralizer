@@ -45,8 +45,16 @@ public class StringOperationFilterTest {
     }
 
     @Example
+    void acceptsIsEmptyOnAStringParameterMethod() {
+        // isEmpty is now modeled soundly as receiver.equals(""), so it must no longer be rejected.
+        FilterResult result = check(
+            "class Subject { public static boolean blank(String s) { return s.isEmpty(); } }", "blank");
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
     void acceptsUnsupportedOperationWhenNoStringParameterIsSymbolic() {
-        // substring/isEmpty are used only on a concrete literal, and there is no String parameter to
+        // substring is used only on a concrete literal, and there is no String parameter to
         // symbolize, so nothing is unsound; the filter must not over-reject.
         FilterResult result = check(
             "class Subject { public static boolean check(int n) { return \"abc\".substring(n).isEmpty(); } }",

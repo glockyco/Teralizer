@@ -23,8 +23,7 @@ import java.util.List;
  * <ul>
  *   <li>{@code charAt}/{@code substring} omit the out-of-bounds fork, so the collected spec is
  *       under-constrained (unsound) for an index the method could throw on;</li>
- *   <li>{@code compareTo}/{@code isEmpty} are not implemented in {@code SymbolicStringHandler} and
- *       abort the run.</li>
+ *   <li>{@code compareTo} is not implemented in {@code SymbolicStringHandler} and aborts the run.</li>
  * </ul>
  *
  * <p>Direct-body-only and conservative, mirroring the raw-bits detection in
@@ -35,7 +34,7 @@ import java.util.List;
 public class StringOperationFilter extends AbstractFilter {
 
     private static final List<String> UNSUPPORTED_STRING_OPS =
-        Arrays.asList("charAt", "substring", "compareTo", "isEmpty");
+        Arrays.asList("charAt", "substring", "compareTo");
 
     private final Launcher launcher;
     private final AssertionRecord assertionRecord;

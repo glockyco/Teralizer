@@ -109,4 +109,12 @@ public final class Cut {
     public static String concatTail(String s) {
         return s.concat("!");
     }
+
+    /** Symbolic {@link String} in that branches on {@code isEmpty()} — the sound length()==0 op. */
+    public static int isEmptyBranch(String s) {
+        if (s.isEmpty()) {
+            return 1;
+        }
+        return 0;
+    }
 }
