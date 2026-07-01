@@ -69,6 +69,50 @@ public class SpfSymbolicConfigSelectorTest {
         Assert.assertEquals("z3", SpfSymbolicConfigSelector.select(method).getDp());
     }
 
+    @Example
+    void selectsSymbolicStringsForStringParameter() {
+        CtMethod<?> method = methodFromSource(
+            "class Subject {"
+                + "  public static boolean matches(String s) { return s.equals(\"x\"); }"
+                + "}",
+            "matches");
+
+        SpfSymbolicConfig config = SpfSymbolicConfigSelector.select(method);
+
+        Assert.assertTrue("a String parameter enables symbolic strings", config.isStrings());
+        Assert.assertEquals("z3", config.getDp());
+    }
+
+    @Example
+    void disablesSymbolicStringsWithoutAStringParameter() {
+        CtMethod<?> method = methodFromSource(
+            "class Subject {"
+                + "  public static int add(int a, int b) { return a + b; }"
+                + "}",
+            "add");
+
+        Assert.assertFalse(SpfSymbolicConfigSelector.select(method).isStrings());
+    }
+
+    @Example
+    void enablesSymbolicStringsAlongsideRawBits() {
+        CtMethod<?> method = methodFromSource(
+            "class Subject {"
+                + "  public static boolean tagged(String s, double x) {"
+                + "    long xi = Double.doubleToRawLongBits(x);"
+                + "    return s.equals(\"x\") && xi != 0L;"
+                + "  }"
+                + "}",
+            "tagged");
+
+        SpfSymbolicConfig config = SpfSymbolicConfigSelector.select(method);
+
+        Assert.assertTrue("String param enables strings even with raw-bits", config.isStrings());
+        Assert.assertEquals("raw-bits backend is preserved", "z3bitvector", config.getDp());
+        Assert.assertTrue(config.isFp());
+        Assert.assertEquals(64, config.getBvLength());
+    }
+
     private static CtMethod<?> methodFromSource(String source, String methodName) {
         CtClass<?> subject = Launcher.parseClass(source);
         return subject.getMethodsByName(methodName).get(0);

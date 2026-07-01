@@ -54,7 +54,13 @@ public final class SpfSymbolicConfigSelector {
             .getElements(new TypeFilter<>(CtInvocation.class))
             .stream()
             .anyMatch(SpfSymbolicConfigSelector::isRawBitsConversion);
-        return usesRawBits ? SpfSymbolicConfig.rawBits() : SpfSymbolicConfig.defaultProfile();
+        SpfSymbolicConfig base = usesRawBits ? SpfSymbolicConfig.rawBits() : SpfSymbolicConfig.defaultProfile();
+        return base.withStrings(hasStringParameter(testedMethod));
+    }
+
+    private static boolean hasStringParameter(CtMethod<?> testedMethod) {
+        return testedMethod.getParameters().stream()
+            .anyMatch(parameter -> "java.lang.String".equals(parameter.getType().getQualifiedName()));
     }
 
     private static boolean isRawBitsConversion(CtInvocation<?> invocation) {

@@ -152,6 +152,7 @@ public class TestFilteringTask extends AbstractTask {
             new ReturnTypeFilter(this.assertionRecord),
             new UnsupportedAssertionFilter(this.assertionRecord),
             new ParameterTypeFilter(gson, this.assertionRecord),
+            new StringOperationFilter(spoonLauncher, this.assertionRecord),
             new AssertionInLoopFilter(spoonLauncher, this.assertionRecord),
             new TestedMethodInLoopFilter(spoonLauncher, this.assertionRecord)
         );

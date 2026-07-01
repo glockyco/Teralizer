@@ -36,6 +36,11 @@ public final class SpfSymbolicConfig {
         return new SpfSymbolicConfig("z3bitvector", true, 64, false);
     }
 
+    /** This profile with symbolic strings toggled — strings are orthogonal to the numeric backend. */
+    public SpfSymbolicConfig withStrings(boolean strings) {
+        return new SpfSymbolicConfig(this.dp, this.fp, this.bvLength, strings);
+    }
+
     public String getDp() {
         return this.dp;
     }
