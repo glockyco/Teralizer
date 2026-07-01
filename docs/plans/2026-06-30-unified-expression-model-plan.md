@@ -159,18 +159,19 @@ public final class MethodCapability {
 
 - [x] **Step 4: Commit.** `feat(planning): add method capability registry`
 
-### Task 3: render `Invocation`/`Not`; retire string arms + guards
+### Task 3: render `Invocation`/`Not`; preserve legacy string arms until ingestion moves
 
 **Files:** Modify `ModelToJavaTransformer.java`; Test `ModelToJavaTransformerInvocationTest.java`.
 
-- [ ] **Step 1: Write failing tests** for the render contract:
-  - instance no-arg: `Invocation(Variable "s" STRING, null, "trim", [])` → `(_p_.s.trim())`
+- [x] **Step 1: Write failing tests** for the render contract:
+  - instance no-arg: `Invocation(Variable "s" STRING, null, "isEmpty", [])` → `(_p_.s.isEmpty())`
   - instance 1-arg: `Invocation(Variable "s", null, "equals", [Constant "foo"])` → `(_p_.s.equals("foo"))`
   - static 1-arg: `Invocation(null, "java.lang.Math", "sqrt", [Variable "x" REAL])` → `Math.sqrt(_p_.x)` (matches the current `SQRT` rendering)
   - negation: `Not(Invocation(... "equals" ...))` → `(!(_p_.s.equals("foo")))`
   - unsupported method (not in registry) → `NonGeneralizableExpressionException`
+  - static/instance qualifier mismatches → `NonGeneralizableExpressionException`
 
-- [ ] **Step 2: Implement `fold(Invocation, receiver, args)`:**
+- [x] **Step 2: Implement `fold(Invocation, receiver, args)`:**
 
 ```java
 @Override public String fold(Invocation inv, String receiver, java.util.List<String> args) {
@@ -185,13 +186,13 @@ public final class MethodCapability {
 }
 ```
 
-`fold(Not, operand)` stays `"(!(" + operand + "))"`.
+`fold(Not, operand)` renders `"(!" + operand + ")"`, preserving the operand's existing parentheses without duplicating them.
 
-- [ ] **Step 3: Run, expect PASS.**
+- [x] **Step 3: Run, expect PASS.**
 
-- [ ] **Step 4: Remove the string operator arms** (`EQUALS`…`NOTCONTAINS`, `CONCAT`) from `fold(Operation)` and delete `isStringOperator`/`isStringExpression`. Run `ModelToJavaTransformerNonGeneralizableTest` + the string operator test (now superseded by `...InvocationTest`; delete `ModelToJavaTransformerStringOperatorTest`).
+- [x] **Step 4: Preserve the string `Operation` render arms** (`EQUALS`…`NOTCONTAINS`, `CONCAT`) until `SpfToModelTransformer` and `StringDomainPlanner` stop producing/consuming them. Run `ModelToJavaTransformerNonGeneralizableTest` + `ModelToJavaTransformerStringOperatorTest` to prove no intermediate regression. Remove these arms in Task 6 after string ingestion/planning has moved.
 
-- [ ] **Step 5: Commit.** `refactor(transformer): render string calls via Invocation, not Operation arms`
+- [x] **Step 5: Commit.** `refactor(transformer): render calls via Invocation`
 
 ### Task 4: total string ingestion → `Invocation`/`Not`
 

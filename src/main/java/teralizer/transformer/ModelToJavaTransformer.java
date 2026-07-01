@@ -2,6 +2,8 @@ package teralizer.transformer;
 
 import teralizer.domain.Error;
 import teralizer.domain.*;
+import teralizer.jqwik.planning.MethodCapabilities;
+import teralizer.jqwik.planning.MethodCapability;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -225,12 +227,34 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
 
     @Override
     public String fold(Invocation invocation, String receiver, List<String> args) {
-        throw new NonGeneralizableExpressionException("Invocation rendering not wired yet: " + invocation.method);
+        MethodCapability capability = MethodCapabilities.get(invocation.method);
+        if (capability == null || !capability.outputRenderable) {
+            throw new NonGeneralizableExpressionException(
+                "Cannot render call '" + invocation.method + "' as Java.");
+        }
+        String argList = String.join(", ", args);
+        if (invocation.receiver != null) {
+            if (capability.staticQualifier != null) {
+                throw new NonGeneralizableExpressionException(
+                    "Cannot render static call '" + invocation.method + "' as an instance invocation.");
+            }
+            return "(" + receiver + "." + invocation.method + "(" + argList + "))";
+        }
+        if (capability.staticQualifier == null) {
+            throw new NonGeneralizableExpressionException(
+                "Cannot render instance call '" + invocation.method + "' without a receiver.");
+        }
+        if (!capability.staticQualifier.equals(invocation.qualifier)) {
+            throw new NonGeneralizableExpressionException(
+                "Cannot render static call '" + invocation.qualifier + "." + invocation.method
+                    + "'; expected qualifier '" + capability.staticQualifier + "'.");
+        }
+        return renderQualifier(capability.staticQualifier) + "." + invocation.method + "(" + argList + ")";
     }
 
     @Override
     public String fold(Not not, String operand) {
-        return "(!(" + operand + "))";
+        return "(!" + operand + ")";
     }
 
     @Override
@@ -330,6 +354,13 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 throw new NonGeneralizableExpressionException(
                     "Unable to transform operation '" + operation + "' (operator " + operation.op.name() + ") to Java.");
         }
+    }
+
+    private static String renderQualifier(String qualifier) {
+        if (qualifier != null && qualifier.startsWith("java.lang.")) {
+            return qualifier.substring("java.lang.".length());
+        }
+        return qualifier;
     }
 
     private static boolean isBitwiseOrShift(Operator op) {
