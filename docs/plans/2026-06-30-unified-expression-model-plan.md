@@ -1,7 +1,7 @@
 ---
 title: Unified Expression Model — Implementation Plan
 type: plan
-status: draft
+status: active
 created: 2026-06-30
 parent: 2026-06-30-unified-expression-model
 ---
