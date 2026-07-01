@@ -35,10 +35,14 @@ full re-run so a single run measures the improved implementation.
    with evidence-gated mis-targeting checks) attacking the `MissingValue` blocker (≈ half the corpus).
    **Do first** — it takes the safe single-producer recall, and its Task 1 diagnostic sizes the other
    levers before any recall-reducing veto lands.
-2. **`2026-06-30-partial-sound-string-support`** *(plan)* — generalize over the string operations SPF
-   handles soundly; attacks the `ParameterType` / `ReturnType` blocker.
+2. **`2026-06-30-partial-sound-string-support`** *(plan, mostly implemented)* — generalize over the
+   string ops SPF handles soundly (equals / equalsIgnoreCase / startsWith / endsWith / contains /
+   length / indexOf / concat / isEmpty + `String` returns). **Funnel caveat:** the rerun shows the
+   `ParameterType` / `ReturnType` rejects are dominated by *parameterless* methods, *unresolved* MUTs,
+   and *custom-object* returns — **not** String — so this lever's corpus payoff is gated behind MUT-id
+   (few resolved String MUTs surface until then). Capability + soundness are in place and tested now.
 
-Both are `draft` pending execution approval; each plan carries its own task breakdown and acceptance.
+MUT-id is `draft` (do first); string support is `active` and largely implemented on the `string-support` branch (see its Progress section — Task 4b + corpus verification remain). Each plan carries its own task breakdown and acceptance.
 
 ## Map (by current relevance)
 
@@ -64,7 +68,7 @@ carries the full status/parent tree and `archive/` the retired docs.
 - `2026-06-27-ensemble-mut-identification` *(spec, draft)* — killed-mutant focal-method oracle replacing LCBA.
 - `2026-06-28-mut-id-targeting-and-coverage` *(audit)* — MUT-id targets, mutation-data coverage, telemetry gaps.
 - `2026-06-30-static-mut-identification` *(plan, draft)* — static (no-PIT) MUT-id recall via a precedence cascade with hard abstain; the static subset of the ensemble spec.
-- `2026-06-30-partial-sound-string-support` *(plan, draft)* — generalize over the string operations SPF handles soundly; unsound/unsupported ops excluded structurally.
+- `2026-06-30-partial-sound-string-support` *(plan, active)* — string ops SPF handles soundly (incl. `isEmpty`, `equalsIgnoreCase`, `String` returns); unsound/unsupported ops excluded structurally. Mostly implemented; Task 4b + corpus verification (gated on MUT-id) remain.
 
 **Active — independent track**
 - `2026-06-25-replication-package-documentation-improvements` *(plan)* — verifiable replication package for ACM artifact eval.
