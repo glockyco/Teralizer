@@ -19,14 +19,13 @@ public final class ConstraintClauses {
     }
 
     /**
-     * Flattens the input predicate into top-level conjuncts and renders each to Java,
-     * dropping a clause only when it is non-generalizable and references no generated
-     * parameter (its variables all stay at their concrete value, so the clause is
-     * trivially satisfied). A clause that uses an unsupported operator but still
-     * constrains a generated parameter is never dropped — that would weaken the SPF
-     * path predicate — and the typed {@link NonGeneralizableExpressionException}
-     * surfaces instead. This keeps the planner's clause set consistent with the
-     * residual predicate rendered by {@link ModelToJavaTransformer#transformPredicate}.
+     * Flattens the input predicate into top-level conjuncts and renders each to Java. A conjunct
+     * whose referenced variables are all outside {@code generalizableParameterNames} stays at its
+     * concrete value on the path, so it is trivially satisfied and dropped -- independent of whether
+     * it renders. A conjunct that constrains a generated parameter is always rendered; if its
+     * operator is unsupported the typed {@link NonGeneralizableExpressionException} propagates rather
+     * than silently weakening the SPF path predicate. This keeps the planner's clause set consistent
+     * with the residual predicate rendered by {@link ModelToJavaTransformer#transformPredicate}.
      */
     public static List<ConstraintClause> from(Model inputModel, Map<String, String> parameterTypes, Set<String> generalizableParameterNames) {
         if (inputModel == null) {
@@ -40,18 +39,18 @@ public final class ConstraintClauses {
         List<ConstraintClause> clauses = new ArrayList<>();
         int id = 0;
         for (Model expression : expressions) {
-            String javaExpression;
-            try {
-                javaExpression = expression.fold(transformer);
-            } catch (NonGeneralizableExpressionException nonGeneralizable) {
-                Set<String> referenced = new LinkedHashSet<>();
-                expression.accept(new VariableNameCollector(referenced));
-                if (!referenced.isEmpty() && Collections.disjoint(referenced, generalizableParameterNames)) {
-                    continue;
-                }
-                throw nonGeneralizable;
+            Set<String> referenced = new LinkedHashSet<>();
+            expression.accept(new VariableNameCollector(referenced));
+            // A conjunct constraining only filtered-out (concrete) parameters is trivially satisfied,
+            // so drop it before rendering -- a renderable String clause over a filtered parameter must
+            // not survive and reference a `_p_` field that is never generated.
+            if (!referenced.isEmpty() && Collections.disjoint(referenced, generalizableParameterNames)) {
+                continue;
             }
-            clauses.add(new ConstraintClause(id++, expression, javaExpression));
+            // Constrains a generated parameter (or references none): render it; an unsupported
+            // operator here propagates as NonGeneralizableExpressionException rather than weakening
+            // the predicate.
+            clauses.add(new ConstraintClause(id++, expression, expression.fold(transformer)));
         }
         return clauses;
     }

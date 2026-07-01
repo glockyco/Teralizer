@@ -20,10 +20,10 @@ public class ModelToJavaTransformerPredicateTest {
     }
 
     @Example
-    void dropsNonGeneralizableClauseReferencingOnlyFilteredParameters() {
-        // (a > 0) AND (s.equals("x")): a is generated, s is filtered (stays concrete).
-        // The string clause is trivially satisfied by s's concrete value, so dropping it
-        // is sound; the rendered predicate keeps only the generalizable clause.
+    void dropsClauseReferencingOnlyFilteredParameters() {
+        // (a > 0) AND (s.equals("x")): a is generated, s is filtered (stays concrete). The string
+        // clause references only the filtered s, so it is dropped even though it now renders; only
+        // the generalizable clause survives.
         Operation numeric = new Operation(new VariableInteger("a"), Operator.GT, new ConstantInteger(0));
         Operation string = new Operation(new VariableString("s"), Operator.EQUALS, new ConstantString("x"));
         Operation model = new Operation(numeric, Operator.AND, string);
@@ -32,8 +32,8 @@ public class ModelToJavaTransformerPredicateTest {
     }
 
     @Example
-    void allClausesNonGeneralizableRendersTrue() {
-        // Only a string clause remains after filtering -> the predicate is vacuously true.
+    void allFilteredClausesRenderTrue() {
+        // Only a clause over a filtered parameter remains -> it is dropped -> the predicate is true.
         Operation string = new Operation(new VariableString("s"), Operator.EQUALS, new ConstantString("x"));
         Assert.assertEquals("true", transformer().transformPredicate(string, Collections.emptySet()));
     }
@@ -57,9 +57,9 @@ public class ModelToJavaTransformerPredicateTest {
 
     @Example
     void refusesToDropClauseThatConstrainsAGeneralizableParameter() {
-        // An unsupported operator on a still-generated parameter: dropping it would weaken
-        // the path predicate for a symbolized input -> unsound. The typed outcome must
-        // surface instead of a silent omission.
+        // A string operator (EQUALS) on a non-string, still-generated parameter is non-generalizable:
+        // dropping it would weaken the path predicate for a symbolized input -> unsound. The typed
+        // outcome must surface instead of a silent omission.
         Operation bad = new Operation(new VariableInteger("a"), Operator.EQUALS, new ConstantInteger(0));
         try {
             transformer().transformPredicate(bad, Collections.singleton("a"));
@@ -71,8 +71,8 @@ public class ModelToJavaTransformerPredicateTest {
 
     @Example
     void refusesToDropMixedClauseWithAGeneralizableParameter() {
-        // A non-generalizable clause that also mentions a generated variable: even though
-        // it has a non-generalizable operand, it constrains 'a', so it cannot be dropped.
+        // A string operator (EQUALS) on a mixed int/string clause that also constrains the generated
+        // 'a': it is non-generalizable yet references a symbolized parameter, so it cannot be dropped.
         Operation mixed = new Operation(new VariableInteger("a"), Operator.EQUALS, new VariableString("s"));
         try {
             transformer().transformPredicate(mixed, Collections.singleton("a"));

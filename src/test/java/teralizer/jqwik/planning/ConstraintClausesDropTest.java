@@ -21,9 +21,10 @@ import java.util.Set;
 public class ConstraintClausesDropTest {
 
     @Example
-    void dropsNonGeneralizableClauseReferencingOnlyFilteredParameters() {
-        // (a > 0) AND (s.equals("x")): a is generated, s is filtered out (stays concrete).
-        // The string clause is sound to drop; only the generalizable clause survives.
+    void dropsClauseReferencingOnlyFilteredParameters() {
+        // (a > 0) AND (s.equals("x")): a is generated, s is filtered out (stays concrete). The
+        // string clause references only the filtered s, so it is dropped even though it renders;
+        // only the generalizable clause survives.
         Operation numeric = new Operation(new VariableInteger("a"), Operator.GT, new ConstantInteger(0));
         Operation string = new Operation(new VariableString("s"), Operator.EQUALS, new ConstantString("x"));
         Model model = new Operation(numeric, Operator.AND, string);

@@ -127,23 +127,19 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
 
         List<String> rendered = new ArrayList<>();
         for (teralizer.domain.Model clause : clauses) {
-            String javaClause;
-            try {
-                javaClause = clause.fold(this);
-            } catch (NonGeneralizableExpressionException nonGeneralizable) {
-                // Drop only if the clause references at least one variable and every one of
-                // those variables is non-symbolized (stays concrete, so the clause is
-                // trivially satisfied). A clause with no variables, or one that constrains
-                // a generated parameter, must not be dropped — the former is not a
-                // filter-referencing clause and the latter would weaken the predicate.
-                Set<String> referenced = new LinkedHashSet<>();
-                clause.accept(new VariableNameCollector(referenced));
-                if (!referenced.isEmpty() && Collections.disjoint(referenced, generalizableParameterNames)) {
-                    continue;
-                }
-                throw nonGeneralizable;
+            // A clause whose referenced variables are all non-symbolized (outside the generated set)
+            // stays at its concrete value on the path, so it is trivially satisfied and sound to
+            // drop -- independent of whether it can be rendered. Checking this before rendering keeps
+            // a renderable clause over a filtered parameter (e.g. a String equality on a concrete
+            // argument) from emitting a reference to a `_p_` field that is never generated.
+            Set<String> referenced = new LinkedHashSet<>();
+            clause.accept(new VariableNameCollector(referenced));
+            if (!referenced.isEmpty() && Collections.disjoint(referenced, generalizableParameterNames)) {
+                continue;
             }
-            rendered.add(javaClause);
+            // The clause constrains a generated parameter (or references none): it must render; a
+            // non-generalizable operator here would weaken the predicate, so let it propagate.
+            rendered.add(clause.fold(this));
         }
         if (rendered.isEmpty()) {
             return "true";
@@ -235,6 +231,12 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 "Cannot render operator '" + operation.op.name()
                     + "' on floating-point operands as Java; the raw-bits relation is not modeled.");
         }
+        if (isStringOperator(operation.op)
+            && !(isStringExpression(operation.left) && isStringExpression(operation.right))) {
+            throw new NonGeneralizableExpressionException(
+                "Cannot render string operator '" + operation.op.name()
+                    + "' on non-string operands as Java.");
+        }
         switch (operation.op) {
             case EQ:
                 return "(" + left + " == " + right + ")";
@@ -292,6 +294,22 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 return "(" + left + " >> " + right + ")";
             case SHIFTUR:
                 return "(" + left + " >>> " + right + ")";
+            case EQUALS:
+                return "(" + left + ".equals(" + right + "))";
+            case NOTEQUALS:
+                return "(!" + left + ".equals(" + right + "))";
+            case STARTSWITH:
+                return "(" + left + ".startsWith(" + right + "))";
+            case NOTSTARTSWITH:
+                return "(!" + left + ".startsWith(" + right + "))";
+            case ENDSWITH:
+                return "(" + left + ".endsWith(" + right + "))";
+            case NOTENDSWITH:
+                return "(!" + left + ".endsWith(" + right + "))";
+            case CONTAINS:
+                return "(" + left + ".contains(" + right + "))";
+            case NOTCONTAINS:
+                return "(!" + left + ".contains(" + right + "))";
             default:
                 throw new NonGeneralizableExpressionException(
                     "Unable to transform operation '" + operation + "' (operator " + operation.op.name() + ") to Java.");
@@ -310,6 +328,28 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
             default:
                 return false;
         }
+    }
+
+    private static boolean isStringOperator(Operator op) {
+        switch (op) {
+            case EQUALS:
+            case NOTEQUALS:
+            case STARTSWITH:
+            case NOTSTARTSWITH:
+            case ENDSWITH:
+            case NOTENDSWITH:
+            case CONTAINS:
+            case NOTCONTAINS:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static boolean isStringExpression(Expression expression) {
+        return expression instanceof VariableString
+            || expression instanceof ConstantString
+            || expression instanceof SymbolicStringFunction;
     }
 
     private static boolean isFloatingPoint(Expression expression) {
