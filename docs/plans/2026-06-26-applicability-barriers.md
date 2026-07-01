@@ -10,6 +10,11 @@ parent: 2026-06-26-teralizer-overview
 
 ## Barrier inventory
 
+Companion telemetry spec: `2026-07-01-pipeline-observability-telemetry` defines the structured
+reason codes and provenance needed to revisit these barriers without parsing free-text task logs.
+Use it when implementing MUT-id, SPF/spec-extraction, build/report diagnostics, assertion support,
+or generated-property yield tracking.
+
 Class: **E** = engineering (self-inflicted, lift with effort) · **E/R** =
 engineering now, research for completeness · **R** = genuine research · **X** =
 external dependency. Impact figures are from RQ5 (controlled) / RQ6 (real-world).

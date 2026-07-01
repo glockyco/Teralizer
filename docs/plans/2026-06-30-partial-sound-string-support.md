@@ -30,7 +30,7 @@ Current representation:
 
 **Remaining:**
 
-- **Task 7** (corpus verification) is still gated on static MUT-id. The RepoReapers rerun funnel shows the current corpus surfaces ~0 *resolved* String-parameter MUTs: `ParameterTypeFilter` rejects are dominated by parameterless methods, its defers plus the `ReturnType`/`MissingValue` defers are MUT-unresolved, and `ReturnTypeFilter` type-rejects are custom domain objects, not String. The string funnel payoff is unmeasurable until MUT-id resolves String MUTs; run the disposable-DB verification then.
+- **Task 7** (corpus verification) is still gated on static MUT-id. The RepoReapers rerun funnel shows the current corpus surfaces ~0 *resolved* String-parameter MUTs: `ParameterTypeFilter` rejects are dominated by parameterless methods, its defers plus the `ReturnType`/`MissingValue` defers are MUT-unresolved, and `ReturnTypeFilter` type-rejects are custom domain objects, not String. The string funnel payoff is unmeasurable until MUT-id resolves String MUTs; run the disposable-DB verification then. When available, use `2026-07-01-pipeline-observability-telemetry`'s candidate type-eligibility fields to separate newly-resolved String opportunities from residual receiver/stateful setup blockers.
 
 ## Soundness invariants (non-negotiable)
 

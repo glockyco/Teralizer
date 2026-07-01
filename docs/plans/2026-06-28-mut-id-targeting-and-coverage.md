@@ -128,7 +128,9 @@ rejects — see `2026-06-26-applicability-barriers`).
 ## Telemetry to add (prioritization + reporting)
 
 The analysis above was harder than it should be because verdicts for
-dependent filters are missing. Recommended additions, by leverage:
+dependent filters are missing. The telemetry design for these gaps is
+`2026-07-01-pipeline-observability-telemetry`; this section records the MUT-id-specific analysis
+needs that spec should satisfy. Recommended additions, by leverage:
 
 1. **Independent verdicts for MUT-id-dependent filters.** `filter_result` records
    every filter's ACCEPT/REJECT/DEFER per assertion, but the method-dependent

@@ -18,6 +18,10 @@ Effort tags: S (hours), M (a day or few), L (multi-day / research). "Sound?" = w
 
 ## Cross-cutting priorities
 
+Observability companion: `2026-07-01-pipeline-observability-telemetry` owns the structured
+telemetry design for the failure surfaces in this audit, especially SPF/spec extraction,
+`BUILD_PROJECT_INSTRUMENTED`, report collection, and generated-build diagnostics.
+
 1. **Silent-failure surfaces everywhere.** `ModelVisitor` hooks default to no-ops; `Operator.get()` is assert-only; `SpfToModelTransformer` throws `UnsupportedOperationException` on three node kinds; the Error JSON serializer/deserializer field names disagree. Failures surface as crashes or silently-wrong specs rather than typed, attributable outcomes. (A-1, A-2, A-5, D-2)
 2. **One IR, three renderers, no shared contract.** `ModelToJavaTransformer`, `SpfToModelTransformer`, `Model(To/From)Json`, and the four generator code emitters each re-encode type/operator knowledge. Adding one expression kind (e.g. `doubleToRawLongBits`) means editing ~6 places with no compiler enforcement. (A-3, C-1)
 3. **Global SPF configuration blocks per-probe analysis.** `symbolic.dp`/`symbolic.fp`/`symbolic.bvlength` are global statics rendered from one template; the raw-bits lane (and any future precision/solver tradeoff) needs per-probe config. (B-4, D-3)

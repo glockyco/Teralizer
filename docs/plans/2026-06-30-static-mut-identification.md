@@ -16,6 +16,11 @@ parent: 2026-06-26-teralizer-overview
 
 **Tech stack:** Java 8, Spoon AST (`spoon.reflect.*`), JUnit tests under `src/test/java`.
 
+**Observability companion:** `2026-07-01-pipeline-observability-telemetry` defines the
+MUT-resolution provenance and candidate type-eligibility facts that make this plan's diagnostic
+steps queryable. Task 1 should consume those facts when they exist; if static MUT-id lands first,
+its resolver should be shaped so the same provenance can be emitted later without redesign.
+
 ---
 
 ## Targeting-validity invariants (non-negotiable — every task preserves these)

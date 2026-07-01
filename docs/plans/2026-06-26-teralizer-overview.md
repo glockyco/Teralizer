@@ -67,6 +67,11 @@ the full status and parent tree.
   replacing LCBA.
 - `2026-06-28-mut-id-targeting-and-coverage` *(audit)* — MUT-id targets, mutation-data
   coverage, telemetry gaps.
+- `2026-07-01-rerun-observability-priorities` *(audit)* — which rerun telemetry is worth adding
+  because it produces planning evidence.
+- `2026-07-01-pipeline-observability-telemetry` *(spec, draft)* — additive schema/design for
+  MUT-resolution provenance, SPF/spec rollups, build/report diagnostics, assertion semantics,
+  and generated-property lifecycle tracking.
 
 **Independent track**
 - `2026-06-25-replication-package-documentation-improvements` *(plan)* — verifiable
