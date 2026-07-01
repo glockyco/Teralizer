@@ -253,6 +253,7 @@ public final class JpfListenerHarness {
         context.put("symbolicDp", "z3");
         context.put("symbolicFp", false);
         context.put("symbolicBvLength", 32);
+        context.put("symbolicStrings", true);
         context.put("maxExecutionTime", maxExecutionTime);
         context.put("maxPathConditionSize", maxPathConditionSize);
         context.put("driverClassQualifiedName", targetClassQN);

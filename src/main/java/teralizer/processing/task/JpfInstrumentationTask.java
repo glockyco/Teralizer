@@ -452,6 +452,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("symbolicDp", symbolicConfig.getDp());
         context.put("symbolicFp", symbolicConfig.isFp());
         context.put("symbolicBvLength", symbolicConfig.getBvLength());
+        context.put("symbolicStrings", symbolicConfig.isStrings());
 
         context.put("maxExecutionTime", Configuration.getJpfMaxExecutionTime());
         context.put("maxPathConditionSize", Configuration.getJpfMaxPathConditionSize());

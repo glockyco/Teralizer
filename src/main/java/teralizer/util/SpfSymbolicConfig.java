@@ -17,21 +17,23 @@ public final class SpfSymbolicConfig {
     private final String dp;
     private final boolean fp;
     private final int bvLength;
+    private final boolean strings;
 
-    public SpfSymbolicConfig(String dp, boolean fp, int bvLength) {
+    public SpfSymbolicConfig(String dp, boolean fp, int bvLength, boolean strings) {
         this.dp = dp;
         this.fp = fp;
         this.bvLength = bvLength;
+        this.strings = strings;
     }
 
     /** Rational-real backend ({@code z3}) — the standard profile for numeric/boolean MUTs. */
     public static SpfSymbolicConfig defaultProfile() {
-        return new SpfSymbolicConfig("z3", false, 32);
+        return new SpfSymbolicConfig("z3", false, 32, false);
     }
 
     /** IEEE bit-vector + FP backend ({@code z3bitvector}, 64-bit) — keeps raw-bits operations symbolic. */
     public static SpfSymbolicConfig rawBits() {
-        return new SpfSymbolicConfig("z3bitvector", true, 64);
+        return new SpfSymbolicConfig("z3bitvector", true, 64, false);
     }
 
     public String getDp() {
@@ -44,5 +46,9 @@ public final class SpfSymbolicConfig {
 
     public int getBvLength() {
         return this.bvLength;
+    }
+
+    public boolean isStrings() {
+        return this.strings;
     }
 }

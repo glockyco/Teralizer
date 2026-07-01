@@ -40,6 +40,7 @@ public class JpfConfigTemplateTest {
         context.put("symbolicDp", "z3bitvector");
         context.put("symbolicFp", true);
         context.put("symbolicBvLength", 64);
+        context.put("symbolicStrings", true);
 
         StringWriter writer = new StringWriter();
         Template template = velocity.getTemplate("jpf-config.vm");
@@ -49,6 +50,7 @@ public class JpfConfigTemplateTest {
         Assert.assertTrue("dp must come from context", rendered.contains("symbolic.dp=z3bitvector"));
         Assert.assertTrue("fp must come from context", rendered.contains("symbolic.fp=true"));
         Assert.assertTrue("bvlength must come from context", rendered.contains("symbolic.bvlength=64"));
+        Assert.assertTrue("strings must come from context", rendered.contains("symbolic.strings=true"));
         Assert.assertFalse("dp must not be hardcoded to z3", rendered.contains("symbolic.dp=z3\n"));
     }
 
@@ -72,6 +74,7 @@ public class JpfConfigTemplateTest {
         context.put("inputSpecificationPath", "input-spec.json");
         context.put("outputSpecificationPath", "output-spec.json");
         context.put("reportPath", "report.txt");
+        context.put("symbolicStrings", false);
         return context;
     }
 
