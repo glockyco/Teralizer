@@ -310,6 +310,8 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
                 return "(" + left + ".contains(" + right + "))";
             case NOTCONTAINS:
                 return "(!" + left + ".contains(" + right + "))";
+            case CONCAT:
+                return "(" + left + ".concat(" + right + "))";
             default:
                 throw new NonGeneralizableExpressionException(
                     "Unable to transform operation '" + operation + "' (operator " + operation.op.name() + ") to Java.");
@@ -340,6 +342,7 @@ public class ModelToJavaTransformer extends ModelFolder<String> {
             case NOTENDSWITH:
             case CONTAINS:
             case NOTCONTAINS:
+            case CONCAT:
                 return true;
             default:
                 return false;

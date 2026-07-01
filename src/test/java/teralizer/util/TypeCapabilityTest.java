@@ -38,19 +38,20 @@ public class TypeCapabilityTest {
     }
 
     @Example
-    void supportsStringInputButNotReturnYet() {
+    void supportsStringInputAndReturn() {
         Assert.assertTrue(TypeCapability.supportsGeneratedInput("String"));
         Assert.assertTrue(TypeCapability.supportsGeneratedInput("java.lang.String"));
-        // A symbolic String return oracle is not captured yet, so String is input-only.
-        Assert.assertFalse(TypeCapability.supportsReturnValue("String"));
-        Assert.assertFalse(TypeCapability.supportsReturnValue("java.lang.String"));
+        // A symbolic String return is now captured as an output oracle (identity + concat render;
+        // unrenderable derived returns are excluded at render).
+        Assert.assertTrue(TypeCapability.supportsReturnValue("String"));
+        Assert.assertTrue(TypeCapability.supportsReturnValue("java.lang.String"));
     }
 
     @Example
     void supportsReturnValueForRepresentativeSubset() {
         Assert.assertTrue(TypeCapability.supportsReturnValue("int"));
         Assert.assertTrue(TypeCapability.supportsReturnValue("boolean"));
-        Assert.assertFalse(TypeCapability.supportsReturnValue("String"));
+        Assert.assertTrue(TypeCapability.supportsReturnValue("String"));
         Assert.assertFalse(TypeCapability.supportsReturnValue("int[]"));
     }
 }

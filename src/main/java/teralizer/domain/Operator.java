@@ -64,7 +64,16 @@ public enum Operator implements Model {
     MATCHES("matches", " matches "),
     NOMATCHES("nomatches", " notmatches "),
     REGIONMATCHES("regionmatches", " regionmatches "),
-    NOREGIONMATCHES("noregionmatches", " notregionmatches ");
+    NOREGIONMATCHES("noregionmatches", " notregionmatches "),
+    CONCAT("concat", " concat "),
+    REPLACE("replace", " replace "),
+    TRIM("trim", " trim "),
+    SUBSTRING("substring", " substring "),
+    REPLACEFIRST("replacefirst", " replacefirst "),
+    REPLACEALL("replaceall", " replaceall "),
+    TOLOWERCASE("tolowercase", " tolowercase "),
+    TOUPPERCASE("touppercase", " touppercase "),
+    VALUEOF("valueof", " valueof ");
 
     private final String[] symbols;
 

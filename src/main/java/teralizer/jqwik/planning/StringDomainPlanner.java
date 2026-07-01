@@ -29,8 +29,8 @@ import java.util.Set;
  * <p>Generated strings are always non-null and length-bounded. A clause id is marked consumed only
  * when the emitted arbitrary <em>structurally</em> enforces it, so anything not construction-enforced
  * (negations, non-literal operands, and any fragment left unenforced by the equality branch) stays
- * with the unconditional full-predicate residual filter the factory always applies. String returns
- * are not yet an output oracle (see {@link #supportsReturn}).
+ * with the unconditional full-predicate residual filter the factory always applies. A symbolic
+ * String return is usable as an output oracle (see {@link #supportsReturn}).
  */
 public class StringDomainPlanner implements DomainPlanner {
 
@@ -43,9 +43,11 @@ public class StringDomainPlanner implements DomainPlanner {
 
     @Override
     public boolean supportsReturn(TypeDomain domain) {
-        // String inputs are generatable, but a symbolic String return oracle is not captured yet,
-        // so String is not usable as a return type until return capture lands.
-        return false;
+        // A symbolic String return is captured as an output oracle: an identity return renders as the
+        // parameter, and a computed return renders through the sound fold arms (e.g. concat). Derived
+        // returns SPF can produce but fold cannot render (trim, replace, ...) fall to fold's default
+        // and are excluded like any non-generalizable expression, so String is a usable return type.
+        return domain == TypeDomain.STRING;
     }
 
     @Override

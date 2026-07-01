@@ -99,4 +99,14 @@ public final class Cut {
         }
         return 0;
     }
+
+    /** Symbolic {@link String} in, same {@link String} out — identity string-return capture. */
+    public static String echo(String s) {
+        return s;
+    }
+
+    /** Symbolic {@link String} in, {@code s.concat("!")} out — computed (derived) string return. */
+    public static String concatTail(String s) {
+        return s.concat("!");
+    }
 }

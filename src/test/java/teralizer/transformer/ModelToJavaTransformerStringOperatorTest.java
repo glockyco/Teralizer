@@ -62,6 +62,25 @@ public class ModelToJavaTransformerStringOperatorTest {
     }
 
     @Example
+    void rendersConcat() {
+        // A computed String return: concat is sound and total on non-null strings.
+        Assert.assertEquals("(_p_.s.concat(\"foo\"))", render(Operator.CONCAT));
+    }
+
+    @Example
+    void unsupportedDerivedStringOperatorStaysNonGeneralizable() {
+        // SPF can emit trim/replace/... as derived String expressions; fold has no arm for them, so
+        // they fall to the default and are excluded like any non-generalizable expression rather than
+        // rendering invalid Java.
+        try {
+            render(Operator.TRIM);
+            Assert.fail("expected NonGeneralizableExpressionException");
+        } catch (NonGeneralizableExpressionException expected) {
+            Assert.assertTrue(expected.getMessage().contains("TRIM"));
+        }
+    }
+
+    @Example
     void stringOperatorOnNonStringOperandsThrows() {
         // EQUALS is a String comparator; on non-string operands it must stay non-generalizable
         // rather than render an invalid `.equals` on a primitive.
