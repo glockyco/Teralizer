@@ -77,6 +77,12 @@ public class JpfExecutionTask extends AbstractTask {
                 throw (ExtractionAborted) e.getCause();
             }
             throw e;
+        } catch (gov.nasa.jpf.symbc.string.UnsupportedSymbolicStringOpException e) {
+            // SPF reached a String operation it cannot model; record a typed exclusion rather than
+            // an untyped crash, matching how the other non-EXTRACTED outcomes surface.
+            ExtractionOutcome outcome = ExtractionOutcome.unsupportedTerm(e.getMessage());
+            throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName()
+                + " - " + outcome.getKind().name() + ": " + outcome.getDetail());
         }
 
         if (jpf.foundErrors()) {

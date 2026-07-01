@@ -88,4 +88,15 @@ public final class Cut {
         }
         return 0;
     }
+
+    /**
+     * Symbolic {@link String} in that calls {@code compareTo} — an operation SymbolicStringHandler
+     * does not implement. Used to exercise the unsupported-op exclusion path.
+     */
+    public static int compareToBranch(String s) {
+        if (s.compareTo("m") < 0) {
+            return 1;
+        }
+        return 0;
+    }
 }

@@ -13,7 +13,9 @@ public final class ExtractionOutcome {
         /** The tested method never executed on the concrete path (e.g. an unreachable assertion). */
         TARGET_NOT_ENTERED,
         /** The tested method was entered but did not return in-state (no capture point reached). */
-        TARGET_NOT_EXITED
+        TARGET_NOT_EXITED,
+        /** A symbolic operation SPF cannot model soundly was reached (recorded as an exclusion). */
+        UNSUPPORTED_TERM
     }
 
     private final Kind kind;
@@ -52,5 +54,10 @@ public final class ExtractionOutcome {
                 "tested method entered but did not return in-state");
         }
         return new ExtractionOutcome(Kind.EXTRACTED, "specification extracted");
+    }
+
+    /** An unsupported/unsound symbolic term was reached at run time — recorded as an exclusion. */
+    public static ExtractionOutcome unsupportedTerm(String detail) {
+        return new ExtractionOutcome(Kind.UNSUPPORTED_TERM, detail);
     }
 }

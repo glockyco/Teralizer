@@ -166,7 +166,11 @@ public final class JpfListenerHarness {
         JPF jpf = new JPF(config);
         TestGeneralizationListener listener = new TestGeneralizationListener(config);
         jpf.addListener(listener);
-        runUnwrappingAborts(jpf);
+        try {
+            runUnwrappingAborts(jpf);
+        } catch (gov.nasa.jpf.symbc.string.UnsupportedSymbolicStringOpException e) {
+            return ExtractionOutcome.unsupportedTerm(e.getMessage());
+        }
 
         if (jpf.foundErrors()) {
             String details = jpf.getSearchErrors().stream()
