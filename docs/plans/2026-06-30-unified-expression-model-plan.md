@@ -242,7 +242,7 @@ Move math functions to `Invocation`; keep `String.valueOf` as the static `Invoca
 
 **Files:** Create `src/test/java/teralizer/transformer/GoldenRenderingTest.java`; Create `src/test/resources/golden/rendering-baseline.json`.
 
-- [ ] **Step 1: Write the failing harness test only.** Add `GoldenRenderingTest` that builds a deterministic `LinkedHashMap<String, ModelCase>` and reads `/golden/rendering-baseline.json`. The first run intentionally fails because the resource is absent. Use these cases:
+- [x] **Step 1: Write the failing harness test only.** Add `GoldenRenderingTest` that builds a deterministic `LinkedHashMap<String, ModelCase>` and reads `/golden/rendering-baseline.json`. The first run intentionally fails because the resource is absent. Use these cases:
 
 ```java
 package teralizer.transformer;
@@ -320,7 +320,7 @@ Run: `./gradlew test --tests 'teralizer.transformer.GoldenRenderingTest'`
 
 Expected: FAIL with a missing/null resource failure before any production code changes.
 
-- [ ] **Step 2: Add the baseline fixture.** Create `src/test/resources/golden/rendering-baseline.json` with exactly:
+- [x] **Step 2: Add the baseline fixture.** Create `src/test/resources/golden/rendering-baseline.json` with exactly:
 
 ```json
 {
@@ -337,7 +337,7 @@ Run: `./gradlew test --tests 'teralizer.transformer.GoldenRenderingTest'`
 
 Expected: PASS.
 
-- [ ] **Step 3: Commit.** Commit only the golden harness + fixture with subject `test(transformer): add rendering baseline goldens` and a body explaining that this is a review prompt for Phase 2, not a byte-parity compatibility guarantee.
+- [x] **Step 3: Commit.** Commit only the golden harness + fixture with subject `test(transformer): add rendering baseline goldens` and a body explaining that this is a review prompt for Phase 2, not a byte-parity compatibility guarantee.
 
 ### Task 8: math functions + numeric function nodes → `Invocation`
 

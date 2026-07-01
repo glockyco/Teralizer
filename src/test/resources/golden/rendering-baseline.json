@@ -1,0 +1,8 @@
+{
+  "math.sqrt.operation": "Math.sqrt(_p_.x)",
+  "math.pow.operation": "Math.pow(_p_.x, 2.0)",
+  "math.atan2.operation": "Math.atan2(_p_.y, _p_.x)",
+  "boolean.path.predicate": "((_p_.b ? 1 : 0) != 0)",
+  "char.bound.predicate": "(_p_.c > 64)",
+  "string.transform.invocation": "(_p_.s.trim())"
+}
