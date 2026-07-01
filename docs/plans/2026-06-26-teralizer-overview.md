@@ -27,22 +27,24 @@ work that depends on a re-run is deferred until (1) lands.
 
 ## Current focus
 
-Step 1 (beat JARVIS) is won and consolidated, so the next focused implementation work is two
-no-PIT improvements, each attacking one dominant applicability-funnel blocker. Land both before any
-full re-run so a single run measures the improved implementation.
+Step 1 (beat JARVIS) is won and consolidated. The next implementation work, **in this order**:
 
-1. **`2026-06-30-static-mut-identification`** *(plan)* — precedence-cascade MUT-id (abstain-on-ambiguity,
-   with evidence-gated mis-targeting checks) attacking the `MissingValue` blocker (≈ half the corpus).
-   **Do first** — it takes the safe single-producer recall, and its Task 1 diagnostic sizes the other
-   levers before any recall-reducing veto lands.
-2. **`2026-06-30-partial-sound-string-support`** *(plan, mostly implemented)* — generalize over the
-   string ops SPF handles soundly (equals / equalsIgnoreCase / startsWith / endsWith / contains /
-   length / indexOf / concat / isEmpty + `String` returns). **Funnel caveat:** the rerun shows the
-   `ParameterType` / `ReturnType` rejects are dominated by *parameterless* methods, *unresolved* MUTs,
-   and *custom-object* returns — **not** String — so this lever's corpus payoff is gated behind MUT-id
-   (few resolved String MUTs surface until then). Capability + soundness are in place and tested now.
+1. **`2026-06-30-unified-expression-model`** *(spec)* — **do first.** Rearchitect the `teralizer.domain`
+   expression model: one `Invocation` node for all method/function calls of any arity, a `Not` wrapper,
+   typed `Variable`/`Constant`, `Operation` for true operators only, and one capability registry. It
+   fixes the arity / ingestion-totality / scattered-soundness contract breaks corpus-wide and is the
+   clean foundation the remaining string ops need (they land in its Phase 1, not as ad-hoc hacks).
+2. **`2026-06-30-partial-sound-string-support`** *(plan, mostly implemented)* — finish on the unified
+   model: the leftover ops (`trim`/`toLowerCase`/`toUpperCase`/`replace`) fall out of the refactor's
+   Phase 1; Task 4b follows. Corpus verification (Task 7) stays gated on MUT-id and runs after step 3. **Funnel caveat:** the rerun shows
+   `ParameterType`/`ReturnType` rejects are dominated by *parameterless* methods, *unresolved* MUTs, and
+   *custom-object* returns — **not** String — so this lever's corpus payoff is gated behind MUT-id.
+3. **`2026-06-30-static-mut-identification`** *(plan, draft)* — precedence-cascade MUT-id
+   (abstain-on-ambiguity, evidence-gated mis-targeting checks) attacking the `MissingValue` blocker
+   (≈ half the corpus); the dominant lever, and what makes the string funnel payoff measurable. Do
+   **after** the refactor + string finish.
 
-MUT-id is `draft` (do first); string support is `active` and largely implemented on the `string-support` branch (see its Progress section — Task 4b + corpus verification remain). Each plan carries its own task breakdown and acceptance.
+Sequencing decided: **refactor → finish strings → MUT-id**. No full re-run until all three land, so a single run measures the improved implementation.
 
 ## Map (by current relevance)
 
@@ -60,6 +62,7 @@ carries the full status/parent tree and `archive/` the retired docs.
   Next: write RQ0 into the paper and migrate the granular numbers to an analysis notebook.
 
 **Active — generator & applicability tracks**
+- `2026-06-30-unified-expression-model` *(spec, draft)* — **do first.** Unify the `teralizer.domain` expression model (one `Invocation` node for any-arity calls, `Not`, typed `Variable`/`Constant`, `Operation` for true operators, one capability registry); phased migration, string-first. Foundation for the remaining string ops and a corpus-wide cleanup.
 - `2026-06-28-clause-driven-input-generation` *(spec)* — generator design: clause-driven
   planners, single type-capability source, fail-loud SPF→Model seam.
 - `2026-06-27-generalizable-input-rule` *(spec)* — shared input-eligibility rule for every consumer.
