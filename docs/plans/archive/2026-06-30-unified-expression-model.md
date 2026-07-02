@@ -1,9 +1,10 @@
 ---
 title: Unified Expression Model
 type: spec
-status: draft
+status: implemented
 created: 2026-06-30
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-02
 ---
 
 # Unified Expression Model
@@ -13,12 +14,12 @@ that represents variables, constants, true operators, and method/function calls 
 by a single capability registry. Adding an operation becomes one registry row + one SPF handler
 instead of edits across four sites that drift out of sync.
 
-**Sequencing (decided):** This refactor is the **next** work item and **precedes** static MUT-id. It
-is the clean foundation the remaining string operations need; the leftover string ops
-(`trim`, `toLowerCase`, `toUpperCase`, `replace`) are absorbed into Phase 1 rather than hacked in
-ad-hoc. Only after this lands do we move on to `2026-06-30-static-mut-identification`. The
-`2026-06-30-partial-sound-string-support` plan's Task 4b + corpus verification also fold into / follow
-this refactor.
+**Status:** Implemented — all four phases shipped. `Invocation`/`Not`/typed `Variable`/`Constant`
+replace the type-fragmented zoo; `MethodCapabilities` is the single capability registry;
+`ModelFolder` is compile-strict (all hooks abstract); `Operator` holds true operators only;
+`SpfToModelTransformer` is total (typed `UnsupportedSpfTermException`, no silent drops); the
+leftover string ops (`trim`, `toLowerCase`, `toUpperCase`, `replace`) landed in Phase 1. Static
+MUT-id (`2026-06-30-static-mut-identification`) follows this refactor.
 
 **Tech stack:** Java 8, Spoon AST, SPF/jpf-symbc (`SpfToModelTransformer` ingestion), the
 `ModelVisitor`/`ModelFolder` traversal infrastructure, jqwik planners, Gson JSON adapters.

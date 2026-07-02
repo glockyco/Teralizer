@@ -21,11 +21,6 @@
 - **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Static MUT Identification** [plan] `2026-06-30-static-mut-identification` (0/34) ← 2026-06-26-teralizer-overview
-- **Unified Expression Model** [spec] `2026-06-30-unified-expression-model` ← 2026-06-26-teralizer-overview
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 
-## superseded
-
-- **Residual-Aware Input Generation** [spec] `2026-06-27-residual-aware-input-generation` ← 2026-06-26-teralizer-overview
-
-_30 archived — see `docs/plans/archive/`._
+_32 archived — see `docs/plans/archive/`._

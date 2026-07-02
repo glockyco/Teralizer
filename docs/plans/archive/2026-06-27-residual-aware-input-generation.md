@@ -5,6 +5,7 @@ status: superseded
 created: 2026-06-27
 parent: 2026-06-26-teralizer-overview
 superseded_by: 2026-06-28-clause-driven-input-generation
+archived: 2026-07-02
 ---
 
 Define the next `IMPROVED` generator architecture as a typed, residual-aware compiler from SPF input specifications to jqwik arbitraries.
