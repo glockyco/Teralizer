@@ -30,9 +30,9 @@ No full evaluation rerun is planned until MUT identification and string corpus v
 
 The next implementation work, **in this order**:
 
-1. **`2026-06-30-static-mut-identification`** *(plan, draft)* — precedence-cascade MUT-id
-   (abstain-on-ambiguity, evidence-gated mis-targeting checks) targeting the `MissingValue`
-   blocker and making the string funnel payoff measurable.
+1. **`2026-07-02-static-mut-id-fusion`** *(plan, draft)* — confidence-ranked fusion MUT-id
+   (evidence-recording, tier-graded picks per `2026-07-02-mut-id-confidence-fusion`) targeting
+   the `MissingValue` blocker and making the string funnel payoff measurable.
 2. **`2026-06-30-partial-sound-string-support`** *(plan, active)* — run Task 7 corpus
    verification after static MUT-id resolves String-parameter/return MUTs. Scope is sound string
    operators, String returns, and structural exclusion of unsupported string terms.
@@ -47,8 +47,10 @@ the full status and parent tree.
   guardrails, and paper-facing interpretation for the JARVIS baseline.
 
 **Next implementation path**
-- `2026-06-30-static-mut-identification` *(plan, draft)* — static no-PIT MUT-id recall via a
-  precedence cascade with hard abstain; the next implementation item.
+- `2026-07-02-mut-id-confidence-fusion` *(spec)* — the MUT-id design authority: lexicographic
+  confidence tiers, two grades, `mut_resolution_observation` provenance.
+- `2026-07-02-static-mut-id-fusion` *(plan, draft)* — the AST-only v1 of that spec; the next
+  implementation item.
 - `2026-06-30-partial-sound-string-support` *(plan, active)* — sound string-operator support;
   corpus verification remains gated on MUT-id.
 

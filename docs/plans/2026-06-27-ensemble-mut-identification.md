@@ -15,12 +15,18 @@ MUT-id by enabling the already-existing `COLLECT_PIT_DATA_ORIGINAL` step (step
 12), which runs before `ANALYZE_TESTS` (step 13). No pipeline restructuring
 is needed — the step numbers already guarantee the correct execution order.
 
-**Relationship to static MUT-id:** `2026-06-30-static-mut-identification` is the
-AST-only first phase of this ensemble — it implements the precedence-cascade
-resolver (M1/M2/M3) using Spoon alone, no PIT. This spec's killed-mutant oracle
-slots in as the top-precedence signal without redesign once PIT_ORIGINAL is enabled.
-The static plan defers the ensemble-specific work (PIT data, `CtInvocation` recovery,
-per-assertion disambiguation within the focal set) to this spec.
+**Relationship to the fusion model:** `2026-07-02-mut-id-confidence-fusion` owns the
+MUT-id design — lexicographic confidence tiers, two grades, and the
+`mut_resolution_observation` provenance schema. This spec is its **runtime tier**: the
+killed-mutant oracle enters as the strongest *corroborator/refuter* (T2 promotion,
+coherent-shallow refutation, T4 disambiguation, `oracle_agreement` population), and as the
+top *identifier* only where static dataflow is ambiguous — not as an unconditional
+cascade-top. Rationale: the oracle answers "whose faults does this test detect?", static
+dataflow answers "whose output does the assertion check?" (what spec extraction needs);
+on divergence the static oracle-value method drives generalization and the oracle drives
+refutation. The AST-only first phase is `2026-07-02-static-mut-id-fusion` (plan); this
+spec's remaining scope is the PIT_ORIGINAL enablement, `CtInvocation` recovery, and
+per-assertion disambiguation within the focal set.
 
 ## Motivation
 

@@ -19,8 +19,8 @@ what to build.
 
 ## Relationship to active work
 
-- `2026-06-30-static-mut-identification` should use `mut_resolution_observation` and candidate
-  type eligibility for its diagnostic Task 1 and mis-targeting checks.
+- `2026-07-02-static-mut-id-fusion` implements `mut_resolution_observation` (Task 1/9) and uses
+  candidate type eligibility for its ranking and spike verification.
 - `2026-06-30-partial-sound-string-support` should use candidate type eligibility during corpus
   verification to separate newly resolved String opportunities from receiver/stateful setup blockers.
 - `2026-06-28-mut-id-targeting-and-coverage` supplies the MUT-id targeting evidence this spec makes
@@ -75,58 +75,29 @@ what to build.
 
 ### `mut_resolution_observation`
 
-One row per assertion after MUT analysis. This table is the foundation for static MUT-id diagnostics.
+One row per assertion after MUT analysis. This table is the foundation for static MUT-id
+diagnostics. **Schema authority: `2026-07-02-mut-id-confidence-fusion` §Data model** — the fusion
+spec defines the columns and enums; the summary here names only the design decisions the rest of
+this spec depends on:
 
-Required columns:
-
-| Column | Type | Meaning |
-|---|---|---|
-| `assertion_id` | FK | Assertion being analyzed. |
-| `project_id` | FK | Denormalized for faster rerun queries. |
-| `test_id` | FK | Denormalized test owner. |
-| `status` | text enum | `RESOLVED`, `ABSTAINED`, `UNRESOLVED_DECLARATION`, `LIBRARY_TARGET`, `AMBIGUOUS`. |
-| `signal` | text enum | Resolution mechanism that produced or rejected the MUT. |
-| `abstain_reason` | text enum nullable | Reason for `ABSTAINED`/`AMBIGUOUS`; null when resolved. |
-| `candidate_count` | integer | Number of producer candidates considered. |
-| `resolved_call_source` | text nullable | Source text of the accepted call. |
-| `resolved_method_name` | text nullable | Accepted method simple name. |
-| `resolved_declaring_type` | text nullable | Accepted declaring type, if resolvable. |
-| `resolved_parameter_types` | text nullable | Stable textual parameter signature. |
-| `resolved_return_type` | text nullable | Stable textual return type. |
-| `inspector_unwrapped` | boolean | Whether a getter/inspector was unwrapped to its receiver producer. |
-| `inspector_method_name` | text nullable | Getter/inspector method name when relevant. |
-| `receiver_producer_method_name` | text nullable | Receiver-producing method selected by unwrapping. |
-| `focal_type` | text nullable | CUT/focal type used for veto/telemetry. |
-| `focal_type_source` | text enum nullable | `TEST_CLASS_NAME`, `SOURCE_PACKAGE`, `RECEIVER_DOMINANCE`, `NONE`. |
-| `candidate_details` | jsonb nullable | Diagnostic-only candidate list; not used for normal joins. |
-
-`signal` values:
-
-- `DIRECT_ACTUAL_CALL`
-- `LOCAL_VARIABLE_PRODUCER`
-- `FIELD_PRODUCER`
-- `SUBEXPRESSION_PRODUCER`
-- `INSPECTOR_UNWRAP`
-- `ASSERT_THROWS_LAMBDA`
-- `FALLBACK_LCBA`
-- `NONE`
-
-`abstain_reason` values:
-
-- `NO_VISIBLE_CALL`
-- `MULTIPLE_PRODUCERS`
-- `CROSS_METHOD_SLICE`
-- `UNRESOLVED_RECEIVER_TYPE`
-- `NON_CUT_TARGET`
-- `LIBRARY_DECLARATION`
-- `UNSUPPORTED_ASSERTION_SHAPE`
+- `status` (pipeline consequence: `RESOLVED`, `CHARACTERIZATION_ONLY`, `NONE`) and
+  `confidence_tier` (`T1_PROVEN` … `T5_NONE`) are **orthogonal** columns — a library-target pick
+  can be T1-proven yet characterization-only. The former `ABSTAINED`/`AMBIGUOUS` terminal states
+  demote to ranked guesses with `candidate_details` populated.
+- The single `signal` column splits into `deciding_signal` (who decided) and
+  `corroborating_signals` (who agreed — the T2 promotion evidence).
+- `focal_type_source` uses the fusion vocabulary (`PATH_AND_NAME`, `NAME_ONLY`, `PATH_ONLY`,
+  `NONE`); receiver dominance is dropped.
+- `oracle_agreement` (`AGREED`, `REFUTED`, `ABSENT`; nullable) is reserved so the runtime tier
+  (`2026-06-27-ensemble-mut-identification`) has a home before PIT_ORIGINAL is enabled.
 
 Analysis enabled:
 
-- `MissingValue` split by resolver failure mode.
-- Getter-like / inspector-like mis-target rate.
-- Static MUT branch sizing before implementation.
-- Manual spot-check sample selection from newly resolved assertions.
+- `MissingValue` split by resolver failure mode and confidence tier.
+- Getter-like / inspector-like mis-target rate (`shallow_inspector_pick`).
+- Tier funnel: "X% proven (T1), Y% corroborated (T2), Z% single-weak (T3), W% guessed (T4)" —
+  the per-assertion threat-to-validity story.
+- Manual spot-check sample selection stratified by tier.
 
 ### Candidate type eligibility
 

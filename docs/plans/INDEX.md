@@ -19,8 +19,13 @@
 - **Ensemble MUT Identification** [spec] `2026-06-27-ensemble-mut-identification` ← 2026-06-26-teralizer-overview
 - **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
-- **Static MUT Identification** [plan] `2026-06-30-static-mut-identification` (0/34) ← 2026-06-26-teralizer-overview
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
+- **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
+- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (0/61) ← 2026-07-02-mut-id-confidence-fusion
+
+## superseded
+
+- **Static MUT Identification** [plan] `2026-06-30-static-mut-identification` (0/34) ← 2026-06-26-teralizer-overview
 
 _33 archived — see `docs/plans/archive/`._

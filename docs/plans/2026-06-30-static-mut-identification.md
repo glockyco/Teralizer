@@ -1,9 +1,10 @@
 ---
 title: Static MUT Identification
 type: plan
-status: draft
+status: superseded
 created: 2026-06-30
 parent: 2026-06-26-teralizer-overview
+superseded_by: 2026-07-02-static-mut-id-fusion
 ---
 
 # Static MUT Identification Implementation Plan
