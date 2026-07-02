@@ -146,6 +146,11 @@ JARVIS_TABLE2: tuple[JarvisRow, ...] = (
         cut_pvc=8,
         pbt_ic=876,
         pbt_pvc=102,
+        # The Table-2 PrecisionTest row is the eps overload equals(double, double, double).
+        # The scoreboard fixture also has precisionEqualsMaxUlps (equals(double, double, int))
+        # as an extra diagnostic for the raw-bits/ULP investigation; it is intentionally not
+        # a Table-2 ProbeSpec — the maxUlps overload has parameter space double^2 + int, not
+        # double^3, and JARVIS does not report it separately.
         probes=(ProbeSpec("precisionEquals", _PRECISION, "equals"),),
     ),
     JarvisRow(

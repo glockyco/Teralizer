@@ -193,6 +193,9 @@ public class JarvisMathScorecardTest {
 
   @Test
   public void precisionEqualsMaxUlps() {
+    // Extra diagnostic fixture for the raw-bits/ULP investigation — not a JARVIS Table-2 case.
+    // The Table-2 PrecisionTest row is the eps overload (double, double, double);
+    // this is the maxUlps overload (double, double, int), parameter space double^2 + int.
     assertTrue(Precision.equals(1.0, 1.0, 1));
     assertFalse(Precision.equals(1.0, 1.1, 1));
   }

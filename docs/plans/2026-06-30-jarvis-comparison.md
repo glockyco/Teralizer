@@ -112,8 +112,15 @@ Teralizer PVC vs JARVIS's published Scala-PBT PVC:
 
 **Capability — 8 of JARVIS's 9 MUTs are soundly generalized** (`CharUtils.isAscii`/
 `isAsciiPrintable`, `FastMath.min`/`max`/`toIntExact`, `Interval.getSize`,
-`PolynomialFunction.value`, `Abs.value`). The 10 rows enter as 12 passing assertion-level
-probes. The one gap is `Precision.equals` — a deliberate soundness abstention (the raw-bits/
+`PolynomialFunction.value`, `Abs.value`). The 10 Table-2 rows map to **11 tracked probes**
+(`min`/`max` split `testMinMaxDouble` into two). The scoreboard fixture also includes a
+12th diagnostic test, `precisionEqualsMaxUlps` (`Precision.equals(double, double, int maxUlps)`),
+which is not a Table-2 case — the Table-2 `PrecisionTest` row is the `eps` overload
+(`equals(double, double, double)`, parameter space `double³`), not the `maxUlps` overload
+(`double² + int`). The maxUlps test is an extra fixture for the raw-bits/ULP investigation; it is
+not tracked in `JARVIS_TABLE2`.
+
+The one gap is `Precision.equals` (eps) — a deliberate soundness abstention (the raw-bits/
 ULP case; SPF cannot capture the 1-ULP disjunct in rational-real mode, so the abs-branch-only
 generalization is unsound and fails loud rather than emit it). Principled, but a real coverage
 tradeoff: JARVIS generalizes it by over-approximating, Teralizer does not. That the rejected
@@ -146,7 +153,7 @@ Source: `postgres_jarvis_scoreboard`, full 6-variant + PIT sweep, current code. 
 `run-jarvis-scoreboard.sh --reset-db` then
 `uv run --directory analysis python -m teralizer.jarvis_scoreboard --sweep`.
 
-| variant | probes | total PVC | killed | covered | covered score |
+| variant | tests | total PVC | killed | covered | covered score |
 |---|--:|--:|--:|--:|--:|
 | NAIVE_100_TRIES | 12 | 1073 | 51 | 78 | 0.654 |
 | NAIVE_200_TRIES | 12 | 2245 | 51 | 78 | 0.654 |
@@ -157,13 +164,13 @@ Source: `postgres_jarvis_scoreboard`, full 6-variant + PIT sweep, current code. 
 
 **PVC inflates ~10× with the tries budget; kills and the covered mutation score are dead flat**
 (51 killed / 78 covered / 65.4% for every variant, both generators). The covered denominator
-is 78 of the project's 2953 mutants — the rest are `NO_COVERAGE`, code the probes never touch
+is 78 of the project's 2953 mutants — the rest are `NO_COVERAGE`, code the tests never touch
 (scoring against 2953 gives a meaningless 1.7%). Extra tries buy input diversity, not fault
 detection; the covered score does not even discriminate NAIVE from IMPROVED (both kill 51/78).
 
-Per-probe, the same, with a telling exception (`IMPROVED`, distinct values):
+Per-test, the same, with a telling exception (`IMPROVED`, distinct values):
 
-| probe | 100 | 200 | 1000 | note |
+| test | 100 | 200 | 1000 | note |
 |---|--:|--:|--:|---|
 | `intervalGetSize` | 88 | 260 | 1771 | ~20× (unbounded double) |
 | `minDouble` / `maxDouble` | 152 | 322 | 1837 | ~12× |
@@ -174,9 +181,9 @@ Per-probe, the same, with a telling exception (`IMPROVED`, distinct values):
 | `isAsciiPrintable` | 127 | 127 | 127 | **flat — bounded printable-char domain** |
 
 `isAsciiPrintable` caps at 127 because IMPROVED enumerates the whole printable-char partition
-by construction; more tries cannot add values. A metric that swings 7–20× on the same probe
+by construction; more tries cannot add values. A metric that swings 7–20× on the same test
 purely from the budget (or saturates a finite domain) measures the input space, not
-fault-finding power — the per-probe kill count is unchanged across the budget.
+fault-finding power — the per-test kill count is unchanged across the budget.
 
 **Why the covered gap is structural, not a generator bug.** The 27 covered-but-unkilled mutants
 (IMPROVED_100) break down as **10 boundary/comparison flips** (`ConditionalsBoundaryMutator` on
@@ -279,7 +286,7 @@ soundness. This is the qualitative axis; the exclusion ledger (Axis 3 rejection 
   commons-numbers delegates the assertion to a helper taking the MUT as a functional interface.
   So the scoreboard/census run against **pinned JARVIS-era fixtures** (`MATH_3_5`/`LANG_3_5`) as
   execution inputs; the modern corpus is supporting evidence only.
-- Granular tables reproduce from the stable analysis, not any scratch script: per-probe PVC is
+- Granular tables reproduce from the stable analysis, not any scratch script: per-test PVC is
   `jarvis_scoreboard.get_pvc_scores(conn, variants=[v])` grouped by `generated_method_name`;
   the survivor breakdown is distinct covered-and-unkilled mutants from `pit_mutation_report`
   (GENERALIZED, IMPROVED_100), same distinct mutant-key as `get_mutation_scores`.
