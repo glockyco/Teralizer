@@ -15,6 +15,13 @@ MUT-id by enabling the already-existing `COLLECT_PIT_DATA_ORIGINAL` step (step
 12), which runs before `ANALYZE_TESTS` (step 13). No pipeline restructuring
 is needed — the step numbers already guarantee the correct execution order.
 
+**Relationship to static MUT-id:** `2026-06-30-static-mut-identification` is the
+AST-only first phase of this ensemble — it implements the precedence-cascade
+resolver (M1/M2/M3) using Spoon alone, no PIT. This spec's killed-mutant oracle
+slots in as the top-precedence signal without redesign once PIT_ORIGINAL is enabled.
+The static plan defers the ensemble-specific work (PIT data, `CtInvocation` recovery,
+per-assertion disambiguation within the focal set) to this spec.
+
 ## Motivation
 
 The current static MUT identification (`TestAnalysis.findTestedMethodCall`,
