@@ -70,6 +70,9 @@ public class ProcessingPipeline {
         taskRecord.store();
 
         long startTime = -1;
+        // Linkage/JVM errors still need a terminal DB status; rethrow after persisting so the
+        // project run fails normally.
+        Error unrecoverableError = null;
         try {
             LOGGER.atDebug().log("Executing task {}.", currentTask);
 
@@ -96,7 +99,7 @@ public class ProcessingPipeline {
             taskRecord.setRuntime((endTime - startTime) / 1000.0f);
 
             LOGGER.atDebug().log("Task {} successfully executed.", currentTask);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             long endTime = System.currentTimeMillis();
 
             StringWriter stringWriter = new StringWriter();
@@ -130,6 +133,10 @@ public class ProcessingPipeline {
 
                 return false;
             });
+
+            if (e instanceof Error) {
+                unrecoverableError = (Error) e;
+            }
         }
 
         // When executing a test-, assertion- or generalization-level `CleanupTask`,
@@ -140,6 +147,9 @@ public class ProcessingPipeline {
             taskRecord.insert();
         } else {
             taskRecord.update();
+        }
+        if (unrecoverableError != null) {
+            throw unrecoverableError;
         }
     }
 }
