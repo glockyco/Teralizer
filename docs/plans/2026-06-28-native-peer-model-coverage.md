@@ -9,15 +9,15 @@ parent: 2026-06-26-teralizer-overview
 Improve SPF's symbolic coverage of JDK/library methods whose JPF model classes or
 native peers are missing or incomplete, so more RepoReapers paths stay symbolic
 instead of crashing or silently concretizing. Spun out of the maxUlps raw-bits lane
-(absorbs its `abs` task); the raw-bits ulps chain itself is being retired to archive
-as bounded-upstream (pending a confirming scorecard refresh).
+(absorbs its `abs` task); the raw-bits ulps chain is archived as bounded-upstream
+(`archive/2026-06-28-maxulps-raw-bits-lane.md`).
 
 ## Why this is its own lane
 
 The maxUlps lane bundled a `Math`/`FastMath` `abs` task (B-1) with the deep raw-bits
 SPF work (`doubleToRawLongBits` Model node, per-variable bit-width, concretization
 tagging). That chain is research-grade upstream-SPF work for one bonus probe and is
-being retired to archive as bounded-upstream after a confirming scorecard refresh.
+archived as bounded-upstream (`archive/2026-06-28-maxulps-raw-bits-lane.md`).
 Peer/model-class coverage is a separate, broader, partly-tractable concern
 with its own corpus evidence — it belongs in its own spec.
 
