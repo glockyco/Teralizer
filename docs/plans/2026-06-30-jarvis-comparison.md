@@ -118,7 +118,9 @@ Teralizer PVC vs JARVIS's published Scala-PBT PVC:
 which is not a Table-2 case — the Table-2 `PrecisionTest` row is the `eps` overload
 (`equals(double, double, double)`, parameter space `double³`), not the `maxUlps` overload
 (`double² + int`). The maxUlps test is an extra fixture for the raw-bits/ULP investigation; it is
-not tracked in `JARVIS_TABLE2`.
+not tracked in `JARVIS_TABLE2` and cannot offset the missing eps overload — it is a
+different method signature, not a substitute. Capability against the JARVIS target set
+remains 8/9.
 
 The one gap is `Precision.equals` (eps) — a deliberate soundness abstention (the raw-bits/
 ULP case; SPF cannot capture the 1-ULP disjunct in rational-real mode, so the abs-branch-only
