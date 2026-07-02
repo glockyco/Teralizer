@@ -21,5 +21,6 @@
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Static MUT Identification** [plan] `2026-06-30-static-mut-identification` (0/34) ← 2026-06-26-teralizer-overview
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
+- **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
 
 _33 archived — see `docs/plans/archive/`._
