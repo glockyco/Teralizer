@@ -53,13 +53,8 @@ the full status and parent tree.
   corpus verification remains gated on MUT-id.
 
 **Generator contracts**
-- `2026-06-30-unified-expression-model` *(spec, implemented)* — uniform `Invocation`/`Not`/typed
-  leaf model gated by `MethodCapabilities`; the foundation the string ops and static MUT-id
-  build on.
 - `2026-06-28-clause-driven-input-generation` *(spec)* — clause-driven planners, single
   type-capability source, fail-loud SPF→Model seam.
-- `2026-06-27-generalizable-input-rule` *(spec, implemented)* — shared input-eligibility rule for every
-  consumer.
 - `2026-06-28-generation-coverage-telemetry` *(note)* — telemetry schema the generator
   self-reports against.
 - `2026-06-28-pipeline-architecture-review` *(audit)* — architecture findings feeding the
