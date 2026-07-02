@@ -58,7 +58,7 @@ the full status and parent tree.
   build on.
 - `2026-06-28-clause-driven-input-generation` *(spec)* — clause-driven planners, single
   type-capability source, fail-loud SPF→Model seam.
-- `2026-06-27-generalizable-input-rule` *(spec)* — shared input-eligibility rule for every
+- `2026-06-27-generalizable-input-rule` *(spec, implemented)* — shared input-eligibility rule for every
   consumer.
 - `2026-06-28-generation-coverage-telemetry` *(note)* — telemetry schema the generator
   self-reports against.

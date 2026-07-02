@@ -1,9 +1,10 @@
 ---
 title: Generalizable Input Rule
 type: spec
-status: active
+status: implemented
 created: 2026-06-27
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-02
 ---
 
 Formal rule for when a concrete JUnit value becomes a symbolic Teralizer input.
@@ -20,12 +21,12 @@ For each tested method call:
 
 1. If the tested method is an instance method and the receiver expression is an inline `CtConstructorCall<?>`, derive inputs from the receiver constructor arguments using the synthetic method-argument index reserved for receiver constructors.
 2. For each declared tested-method parameter and concrete call argument:
-   - if the inferred argument type is in `Configuration.SUPPORTED_TYPES`, keep it as a direct scalar input;
+   - if the inferred argument type is supported by `TypeCapability.supportsGeneratedInput` (derived from the registered `DomainPlanner`s), keep it as a direct scalar input;
    - else if the concrete argument is an inline `CtConstructorCall<?>`, derive one input per supported constructor argument;
    - else leave the argument concrete and do not treat it as a generated input.
 3. A constructor expression is generalizable only when every constructor argument has a supported scalar type. One unsupported constructor argument makes the whole constructor expression non-generalizable for this path.
 
-The current supported scalar set is the allowlist in `Configuration.SUPPORTED_TYPES`; constructor-derived inputs do not bypass that type gate.
+The supported scalar set is derived from the registered `DomainPlanner`s via `TypeCapability`; constructor-derived inputs do not bypass that type gate.
 
 ## Naming contract
 
@@ -50,7 +51,7 @@ The names are part of the JPF variable contract: constraint extraction, concrete
 
 All consumers that decide, symbolize, record, or regenerate inputs must use the same derived input surface.
 
-- `ParameterTypeFilter` accepts an assertion when at least one derived input has a generalizable type. `TestAnalysisTask` stores the unwrapped constructor inputs from `GeneralizableInput.derive(...)` into `tested_method_parameters` / `tested_method_call_arguments` when the tested-method declaration resolves, so the filter sees the flattened constructor parameters and accepts inline-constructor cases. The residual reject path is `testedMethod == null` (unresolvable declaration), where no `CtMethod` exists for `derive` to consult.
+- `ParameterTypeFilter` accepts an assertion when at least one derived input has a generalizable type, checking via `TypeCapability.supportsGeneratedInput()`. `TestAnalysisTask` stores the unwrapped constructor inputs from `GeneralizableInput.derive(...)` into `tested_method_parameters` / `tested_method_call_arguments` when the tested-method declaration resolves, so the filter sees the flattened constructor parameters and accepts inline-constructor cases. The residual reject path is `testedMethod == null` (unresolvable declaration), where no `CtMethod` exists for `derive` to consult.
 - `JpfInstrumentationTask` creates the instrumented method signature from derived inputs. Direct scalar inputs become method parameters; constructor-derived inputs replace constructor arguments when the instrumented call is made and rebuild the receiver or argument constructor inside the instrumented method body.
 - `TestGeneralizationListener` must record the instrumented method's input values, because the original tested method frame sees reconstructed objects rather than flattened constructor values.
 - `TestGeneralizationTask` must build `TestParameters` from the same derived inputs and rewrite generated tests so `_p_.<name>` is substituted into direct arguments or constructor arguments.
