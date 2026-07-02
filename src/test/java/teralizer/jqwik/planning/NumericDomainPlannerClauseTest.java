@@ -67,6 +67,17 @@ public class NumericDomainPlannerClauseTest {
     }
 
     @Example
+    void nanRealBoundLeavesClauseResidual() {
+        // x >= NaN : NaN is meaningless as a bound, must not be consumed
+        Operation model = new Operation(new Variable("x", TypeDomain.REAL), Operator.GE, new Constant(Double.NaN, TypeDomain.REAL));
+        List<MethodParameter> parameters = Collections.singletonList(new MethodParameter("double", "x"));
+        List<ConstraintClause> clauses = ConstraintClauses.from(model, Collections.singletonMap("x", "double"));
+        PlanningContext context = new PlanningContext(parameters, clauses);
+        ParameterGenerationPlan plan = new NumericDomainPlanner().plan(parameters.get(0), context);
+        Assert.assertTrue("NaN bound must not be consumed", plan.getConsumedClauseIds().isEmpty());
+    }
+
+    @Example
     void leavesUnsupportedShapeResidual() {
         // a % 2 == 0 : neither an atomic bound nor affine -> unconsumed
         Operation model = new Operation(

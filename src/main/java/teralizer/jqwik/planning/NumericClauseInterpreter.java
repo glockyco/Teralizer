@@ -259,6 +259,9 @@ public final class NumericClauseInterpreter {
     }
 
     private static boolean applyRealConstantBound(RealConstraints constraints, Operator op, double value) {
+        if (Double.isNaN(value)) {
+            return false;
+        }
         switch (op) {
             case EQ:
                 constraints.addConstantEquality(value);
