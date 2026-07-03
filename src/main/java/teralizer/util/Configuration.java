@@ -99,6 +99,13 @@ public class Configuration {
      */
     public static final String GENERATED_TEST_LANGUAGE_LEVEL = "1.8";
 
+    /**
+     * Oldest maven-surefire-plugin able to run JUnit-platform (jqwik) tests. A project pinning
+     * an older surefire silently skips every generated property test while the build stays
+     * green — the worst failure mode, a false pass.
+     */
+    public static final String SUREFIRE_MIN_VERSION = "2.22.2";
+
     public static final Path MAVEN_JACOCO_CONFIG_PATH = Paths.get("src/main/resources/jacoco-config-maven.txt");
     public static final Path MAVEN_PITEST_CONFIG_PATH = Paths.get("src/main/resources/pitest-config-maven.txt");
 

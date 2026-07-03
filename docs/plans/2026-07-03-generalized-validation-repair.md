@@ -112,7 +112,7 @@ tasks.matching { it.name == 'compileTestJava' }.all {
 - Modify: `src/main/java/teralizer/processing/dependencies/MavenDependencyManager.java`
 - Create: `src/test/java/teralizer/processing/dependencies/MavenSurefireFloorTest.java`
 
-- [ ] **Step 1: Add the constant:**
+- [x] **Step 1: Add the constant:**
 
 ```java
 /**
@@ -123,10 +123,10 @@ tasks.matching { it.name == 'compileTestJava' }.all {
 public static final String SUREFIRE_MIN_VERSION = "2.22.2";
 ```
 
-- [ ] **Step 2: Write the failing test** (same dom4j-string model as Task 1): (a) `maven-surefire-plugin` pinned `2.17` under `/project/build/plugins` → version text becomes `2.22.2`; (b) pinned under `/project/build/pluginManagement/plugins` → also floored; (c) pinned `3.0.2` → unchanged; (d) no surefire plugin declared → unchanged (Maven's own default is platform-capable).
-- [ ] **Step 3: Run to verify failure.**
-- [ ] **Step 4: Implement `applySurefireFloor(Document)`** — package-private static; numeric `major.minor.patch` comparison (missing parts = 0); overwrite only the `<version>` text node. Wire into `addRequiredDependencies()` like Task 1.
-- [ ] **Step 5: Run to verify pass.**
+- [x] **Step 2: Write the failing test** (same dom4j-string model as Task 1): (a) `maven-surefire-plugin` pinned `2.17` under `/project/build/plugins` → version text becomes `2.22.2`; (b) pinned under `/project/build/pluginManagement/plugins` → also floored; (c) pinned `3.0.2` → unchanged; (d) no surefire plugin declared → unchanged (Maven's own default is platform-capable).
+- [x] **Step 3: Run to verify failure.**
+- [x] **Step 4: Implement `applySurefireFloor(Document)`** — package-private static; numeric `major.minor.patch` comparison (missing parts = 0); overwrite only the `<version>` text node. Wire into `addRequiredDependencies()` like Task 1.
+- [x] **Step 5: Run to verify pass.**
 
 **Commit subject:** `fix(pipeline): floor pinned surefire to a junit-platform-capable version`
 

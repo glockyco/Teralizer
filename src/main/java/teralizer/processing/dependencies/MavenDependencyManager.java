@@ -52,6 +52,7 @@ public class MavenDependencyManager {
         hasModifiedDocument |= this.addPitestPlugin();
         hasModifiedDocument |= this.addDependencyIfMissing(Configuration.JQWIK_DEPENDENCY);
         hasModifiedDocument |= applyTestCompilerFloor(this.document);
+        hasModifiedDocument |= applySurefireFloor(this.document);
 
         if (hasModifiedDocument) {
             XMLWriter writer = new XMLWriter(new FileWriter(this.pomFilePath.toFile()), OutputFormat.createPrettyPrint());
@@ -226,6 +227,91 @@ public class MavenDependencyManager {
         setChildText(properties, "maven.compiler.testSource", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
         setChildText(properties, "maven.compiler.testTarget", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
         return true;
+    }
+
+    /**
+     * Surefire only gains a JUnit-platform provider at 2.22.2; older explicit pins report a green
+     * Maven build while never discovering jqwik property classes. Existing plugin declarations are
+     * floored in place because adding a second surefire declaration would leave Maven plugin
+     * selection ambiguous. Unparseable versions are left untouched so property-managed or qualified
+     * project policies stay under the project's control.
+     */
+    static boolean applySurefireFloor(Document document) {
+        Element build = childElement(document.getRootElement(), "build");
+        if (build == null) {
+            return false;
+        }
+
+        boolean changed = applySurefireFloorToPlugins(childElement(build, "plugins"));
+        Element pluginManagement = childElement(build, "pluginManagement");
+        changed |= pluginManagement != null && applySurefireFloorToPlugins(childElement(pluginManagement, "plugins"));
+        return changed;
+    }
+
+    private static boolean applySurefireFloorToPlugins(Element plugins) {
+        if (plugins == null) {
+            return false;
+        }
+
+        boolean changed = false;
+        for (Iterator<Element> it = plugins.elementIterator(); it.hasNext(); ) {
+            Element plugin = it.next();
+            if (!isSurefirePlugin(plugin)) {
+                continue;
+            }
+
+            Element version = childElement(plugin, "version");
+            if (version != null && isVersionBelow(version.getTextTrim(), Configuration.SUREFIRE_MIN_VERSION)) {
+                version.setText(Configuration.SUREFIRE_MIN_VERSION);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    private static boolean isSurefirePlugin(Element plugin) {
+        String groupId = childText(plugin, "groupId");
+        String artifactId = childText(plugin, "artifactId");
+        return "maven-surefire-plugin".equals(artifactId) && (groupId == null || "org.apache.maven.plugins".equals(groupId));
+    }
+
+    private static boolean isVersionBelow(String version, String minimumVersion) {
+        int[] parsedVersion = parseNumericVersion(version);
+        int[] parsedMinimumVersion = parseNumericVersion(minimumVersion);
+        if (parsedVersion == null || parsedMinimumVersion == null) {
+            return false;
+        }
+
+        for (int i = 0; i < parsedVersion.length; i++) {
+            if (parsedVersion[i] != parsedMinimumVersion[i]) {
+                return parsedVersion[i] < parsedMinimumVersion[i];
+            }
+        }
+        return false;
+    }
+
+    private static int[] parseNumericVersion(String version) {
+        if (version == null) {
+            return null;
+        }
+
+        String[] parts = version.trim().split("\\.", -1);
+        if (parts.length == 0 || parts.length > 3) {
+            return null;
+        }
+
+        int[] parsed = new int[]{0, 0, 0};
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].isEmpty()) {
+                return null;
+            }
+            try {
+                parsed[i] = Integer.parseInt(parts[i]);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return parsed;
     }
 
     private static Element findCompilerPluginConfiguration(Document document) {
