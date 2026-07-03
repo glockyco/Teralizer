@@ -966,7 +966,7 @@ In `traceExpression`, for a `CtInvocation` that `isInspector`: if the receiver (
 
 **Files:** same two files.
 
-- [ ] **Step 1: Add failing tests:**
+- [x] **Step 1: Add failing tests:**
 
 ```java
     @Example
@@ -1026,8 +1026,8 @@ Add this helper next to `resolve`/`resolveNth` in the test class:
     }
 ```
 
-- [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Implement.**
+- [x] **Step 2: Run, expect FAIL.**
+- [x] **Step 3: Implement.**
 
 ```java
     /**
@@ -1069,8 +1069,8 @@ Add this helper next to `resolve`/`resolveNth` in the test class:
 
 Wire in: compute the focal once per `resolve(...)` call; in `corroboratorsFor`, add `FOCAL_CLASS_MEMBER` when the pick's declaring type's qualified name equals the focal's; thread `focalType`/`focalSource`/`focalAgreement` (pick's declaring type equals focal — null when focal is `NONE` or pick is null) through `build(...)`.
 
-- [ ] **Step 4: Run, expect PASS.**
-- [ ] **Step 5: Commit.** `git commit -am "feat(mut-id): resolve focal class by path+name, corroborate membership"`
+- [x] **Step 4: Run, expect PASS.**
+- [x] **Step 5: Commit.** `git commit -am "feat(mut-id): resolve focal class by path+name, corroborate membership"`
 
 ---
 

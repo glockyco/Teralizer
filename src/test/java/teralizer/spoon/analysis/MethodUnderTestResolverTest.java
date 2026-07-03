@@ -219,6 +219,44 @@ public class MethodUnderTestResolverTest {
         Assert.assertTrue(r.isShallowInspectorPick());
         Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier()); // dataflow-true, shallow-flagged
     }
+
+    @Example
+    void focalClass_nameDerived_corroboratesMembership() {
+        // Weak position pick inside assertThrows multi-call: Subject membership + no name match => T3.
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,\n"
+            + "    () -> { Subject s = new Subject(); s.helper(1); s.gcd(0, 0); }); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals("Subject", r.getFocalType());
+        Assert.assertEquals(MutResolution.FocalSource.NAME_ONLY, r.getFocalSource());
+        Assert.assertEquals(Boolean.TRUE, r.getFocalAgreement());
+        Assert.assertTrue(r.getCorroborators().contains(MutResolution.Corroborator.FOCAL_CLASS_MEMBER));
+        Assert.assertEquals(MutResolution.Tier.T3_SINGLE_WEAK, r.getTier());
+    }
+
+    @Example
+    void nameAndFocalAgreement_promoteToT2() {
+        // Test method named tGcd -> name-match on gcd; + focal membership => 2 indicators => T2.
+        String source =
+            "public class SubjectTest {\n"
+            + "  public void testGcd() { org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,\n"
+            + "    () -> { Subject s = new Subject(); s.helper(1); s.gcd(0, 0); }); }\n"
+            + "}";
+        MutResolution r = resolveNamed(source, "testGcd", SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Tier.T2_CORROBORATED, r.getTier());
+    }
+
+    @Example
+    void pathMirror_helper() {
+        Assert.assertEquals("src/main/java/com/x/Foo.java",
+            MethodUnderTestResolver.mirrorTestPath("src/test/java/com/x/FooTest.java"));
+        Assert.assertEquals("src/main/java/com/x/Foo.java",
+            MethodUnderTestResolver.mirrorTestPath("src/test/java/com/x/TestFoo.java"));
+        Assert.assertNull(MethodUnderTestResolver.mirrorTestPath("src/test/java/com/x/Helper.java"));
+        Assert.assertNull(MethodUnderTestResolver.mirrorTestPath("src/main/java/com/x/Foo.java"));
+    }
     // --- shared helpers (used by all tasks) ---
 
     static final String SUBJECT_SOURCE =
@@ -233,6 +271,20 @@ public class MethodUnderTestResolverTest {
 
     static MutResolution resolve(String testSource, String... otherSources) {
         return resolveNth(testSource, 0, otherSources);
+    }
+
+    static MutResolution resolveNamed(String testSource, String testMethodName, String... otherSources) {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(testSource, "SubjectTest.java"));
+        for (int i = 0; i < otherSources.length; i++) {
+            launcher.addInputResource(new VirtualFile(otherSources[i], "Other" + i + ".java"));
+        }
+        launcher.buildModel();
+        CtClass<?> testClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest")).get(0);
+        CtMethod<?> testMethod = testClass.getMethodsByName(testMethodName).get(0);
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        return MethodUnderTestResolver.resolve(testMethod, assertion);
     }
 
     static MutResolution resolveNth(String testSource, int assertionIndex, String... otherSources) {

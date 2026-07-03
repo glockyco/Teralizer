@@ -1,5 +1,6 @@
 package teralizer.spoon.analysis;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -20,9 +21,11 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.CtVariableWrite;
+import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtVariableReference;
@@ -31,11 +34,27 @@ import teralizer.util.Configuration;
 /**
  * Confidence-ranked method-under-test resolution for one assertion.
  *
- * <p>The resolver first identifies the expression whose value is asserted. For ordinary value
- * assertions, that is the "actual" argument. For {@code assertThrows}, that is the executable
- * body. A direct invocation in the actual position wins immediately, a one-hop local variable can
- * point back to the nearest invocation that assigned it, and {@code assertThrows} uses the last
- * invocation in the executed body.
+ * <p>This resolver separates three questions that are easy to conflate in assertion analysis:
+ * which expression supplies the observed oracle value, which production class the test appears to
+ * be about, and how strong the evidence is for the picked method. The returned
+ * {@link MutResolution} therefore records both the call selected for downstream generation and the
+ * provenance that made that call believable.
+ *
+ * <p>For value assertions, resolution starts at the assertion's "actual" argument and traces the
+ * data dependency back to the call that produced the asserted value. The trace follows
+ * straight-line local and field writes, descends through expression operands, and unwraps
+ * zero-argument inspectors such as {@code isEmpty()} when their receiver has a visible producer.
+ * A trace through a straight-line reaching definition is a proof; a producer found only through a
+ * nested or heuristic write is kept but graded weaker. If an inspector's receiver producer is not
+ * visible, the inspector remains the pick and is flagged as shallow instead of being hidden inside
+ * a generic "proven" result.
+ *
+ * <p>For {@code assertThrows}, the executable body is the slice: a single call is a proven
+ * producer, while multiple calls are ranked deterministically with the last call as the current
+ * positional winner. In both assertion families, weak picks can be corroborated by independent
+ * identity indicators: a method-name match with the test name and membership in the resolved focal
+ * class. The focal class is inferred from the test class name and, when real source positions are
+ * available, the mirrored {@code src/test/java -> src/main/java} path.
  *
  * <p>The result is total. A visible source-model method is
  * {@link MutResolution.Status#RESOLVED}; a visible call outside the source model is
@@ -49,36 +68,38 @@ public final class MethodUnderTestResolver {
     }
 
     public static MutResolution resolve(CtMethod<?> testMethod, CtInvocation<?> assertion) {
+        Focal focal = resolveFocalType(testMethod);
         if (assertion == null) {
-            return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE);
+            return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
         }
 
         if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
-            return resolveAssertThrows(testMethod, assertion);
+            return resolveAssertThrows(testMethod, assertion, focal);
         }
 
         Optional<Integer> index = TestAnalysis.getActualParameterIndex(assertion);
         if (!index.isPresent()) {
-            return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE);
+            return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
         }
 
         CtExpression<?> actual = assertion.getArguments().get(index.get());
-        return resolveValueAssertion(testMethod, assertion, actual);
+        return resolveValueAssertion(testMethod, assertion, actual, focal);
     }
 
     // --- assertThrows: the executed body is the slice ---
 
     private static MutResolution resolveAssertThrows(
         CtMethod<?> testMethod,
-        CtInvocation<?> assertion
+        CtInvocation<?> assertion,
+        Focal focal
     ) {
         CtElement body = getExecutedBody(assertion.getArguments().get(1)).orElse(null);
         if (body == null) {
-            return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE);
+            return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
         }
         List<CtInvocation<?>> invocations = body.getElements(CtInvocation.class::isInstance);
         if (invocations.isEmpty()) {
-            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL);
+            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL, focal);
         }
         CtInvocation<?> pick = invocations.get(invocations.size() - 1);
         if (invocations.size() == 1) {
@@ -89,7 +110,8 @@ public final class MethodUnderTestResolver {
                 MutResolution.Tier.T1_PROVEN,
                 alternativesExcluding(invocations, pick),
                 false,
-                false
+                false,
+                focal
             );
         }
         // Multiple calls: last-call position decided => guess-grade base.
@@ -99,7 +121,8 @@ public final class MethodUnderTestResolver {
             MutResolution.Signal.ASSERT_THROWS_LAMBDA,
             alternativesExcluding(invocations, pick),
             false,
-            false
+            false,
+            focal
         );
     }
 
@@ -108,11 +131,12 @@ public final class MethodUnderTestResolver {
     private static MutResolution resolveValueAssertion(
         CtMethod<?> testMethod,
         CtInvocation<?> assertion,
-        CtExpression<?> actual
+        CtExpression<?> actual,
+        Focal focal
     ) {
         List<Traced> producers = traceExpression(actual, testMethod, assertion, new HashSet<>());
         if (producers.isEmpty()) {
-            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL);
+            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL, focal);
         }
         Traced first = producers.get(0);
         List<MutResolution.Candidate> alternatives = alternativesAfterFirst(producers);
@@ -124,11 +148,12 @@ public final class MethodUnderTestResolver {
                 first.proven ? MutResolution.Tier.T1_PROVEN : MutResolution.Tier.T3_SINGLE_WEAK,
                 alternatives,
                 first.inspectorUnwrapped,
-                first.shallowInspectorPick
+                first.shallowInspectorPick,
+                focal
             );
         }
         return rankedBase(testMethod, first.producer, first.signal, alternatives,
-            first.inspectorUnwrapped, first.shallowInspectorPick);
+            first.inspectorUnwrapped, first.shallowInspectorPick, focal);
     }
 
     /** A traced producer: the call plus whether the trace was a straight-line reaching definition. */
@@ -483,6 +508,109 @@ public final class MethodUnderTestResolver {
         return left != null && right != null && left.getSimpleName().equals(right.getSimpleName());
     }
 
+    private static final class Focal {
+        final String qualifiedName;
+        final MutResolution.FocalSource source;
+
+        Focal(String qualifiedName, MutResolution.FocalSource source) {
+            this.qualifiedName = qualifiedName;
+            this.source = source;
+        }
+    }
+
+    private static Focal noFocal() {
+        return new Focal(null, MutResolution.FocalSource.NONE);
+    }
+
+    private static Focal resolveFocalType(CtMethod<?> testMethod) {
+        if (testMethod == null || testMethod.getDeclaringType() == null) {
+            return noFocal();
+        }
+        CtType<?> testType = testMethod.getDeclaringType();
+        String focalSimpleName = stripTestAffix(testType.getSimpleName());
+        CtType<?> nameDerived = focalSimpleName == null
+            ? null
+            : findTypeBySimpleName(testMethod, focalSimpleName, packageName(testType));
+        String mirroredPath = realMirrorPath(testType);
+        CtType<?> pathDerived = mirroredPath == null ? null : findTypeByPath(testMethod, mirroredPath);
+        if (nameDerived != null) {
+            MutResolution.FocalSource source = pathsEqual(mirroredPath, sourcePath(nameDerived))
+                ? MutResolution.FocalSource.PATH_AND_NAME
+                : MutResolution.FocalSource.NAME_ONLY;
+            return new Focal(nameDerived.getQualifiedName(), source);
+        }
+        if (pathDerived != null) {
+            return new Focal(pathDerived.getQualifiedName(), MutResolution.FocalSource.PATH_ONLY);
+        }
+        return noFocal();
+    }
+
+    private static CtType<?> findTypeBySimpleName(
+        CtMethod<?> testMethod,
+        String simpleName,
+        String preferredPackage
+    ) {
+        CtType<?> fallback = null;
+        for (CtElement element : testMethod.getFactory().getModel().getElements(CtType.class::isInstance)) {
+            CtType<?> type = (CtType<?>) element;
+            if (!simpleName.equals(type.getSimpleName())) {
+                continue;
+            }
+            if (preferredPackage.equals(packageName(type))) {
+                return type;
+            }
+            if (fallback == null) {
+                fallback = type;
+            }
+        }
+        return fallback;
+    }
+
+    private static CtType<?> findTypeByPath(CtMethod<?> testMethod, String mirroredPath) {
+        for (CtElement element : testMethod.getFactory().getModel().getElements(CtType.class::isInstance)) {
+            CtType<?> type = (CtType<?>) element;
+            if (pathsEqual(mirroredPath, sourcePath(type))) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    private static String realMirrorPath(CtType<?> testType) {
+        SourcePosition position = testType.getPosition();
+        if (position == null || !position.isValidPosition() || position.getFile() == null
+                || !position.getFile().isFile()) {
+            return null;
+        }
+        return mirrorTestPath(position.getFile().getPath());
+    }
+
+    private static String sourcePath(CtType<?> type) {
+        SourcePosition position = type.getPosition();
+        if (position == null || !position.isValidPosition() || position.getFile() == null) {
+            return null;
+        }
+        return position.getFile().getPath();
+    }
+
+    private static boolean pathsEqual(String left, String right) {
+        if (left == null || right == null) {
+            return false;
+        }
+        return normalizePath(left).equals(normalizePath(right));
+    }
+
+    private static String normalizePath(String path) {
+        return new File(path).getAbsoluteFile().toURI().normalize().getPath();
+    }
+
+    private static String packageName(CtType<?> type) {
+        if (type == null || type.getPackage() == null || type.getPackage().getQualifiedName() == null) {
+            return "";
+        }
+        return type.getPackage().getQualifiedName();
+    }
+
     // --- grading ---
 
     /** Grade a pick whose mechanism-tier is already known (T1 proofs, weak single producers). */
@@ -493,9 +621,10 @@ public final class MethodUnderTestResolver {
         MutResolution.Tier mechanismTier,
         List<MutResolution.Candidate> alternatives,
         boolean inspectorUnwrapped,
-        boolean shallow
+        boolean shallow,
+        Focal focal
     ) {
-        EnumSet<MutResolution.Corroborator> corroborators = corroboratorsFor(testMethod, pick);
+        EnumSet<MutResolution.Corroborator> corroborators = corroboratorsFor(testMethod, pick, focal);
         MutResolution.Tier tier = promote(mechanismTier, corroborators.size());
         return build(
             statusFor(pick),
@@ -507,7 +636,8 @@ public final class MethodUnderTestResolver {
             alternatives,
             alternatives.size() + 1,
             inspectorUnwrapped,
-            shallow
+            shallow,
+            focal
         );
     }
 
@@ -518,9 +648,10 @@ public final class MethodUnderTestResolver {
         MutResolution.Signal signal,
         List<MutResolution.Candidate> alternatives,
         boolean inspectorUnwrapped,
-        boolean shallow
+        boolean shallow,
+        Focal focal
     ) {
-        EnumSet<MutResolution.Corroborator> corroborators = corroboratorsFor(testMethod, pick);
+        EnumSet<MutResolution.Corroborator> corroborators = corroboratorsFor(testMethod, pick, focal);
         MutResolution.Tier tier = promote(MutResolution.Tier.T4_GUESS, corroborators.size());
         return build(
             statusFor(pick),
@@ -532,7 +663,8 @@ public final class MethodUnderTestResolver {
             alternatives,
             alternatives.size() + 1,
             inspectorUnwrapped,
-            shallow
+            shallow,
+            focal
         );
     }
 
@@ -555,14 +687,18 @@ public final class MethodUnderTestResolver {
         return base;
     }
 
-    /** Name matching is the first identity indicator; focal-class matching is added later. */
+    /** Name and focal-class matching are independent identity indicators. */
     private static EnumSet<MutResolution.Corroborator> corroboratorsFor(
         CtMethod<?> testMethod,
-        CtInvocation<?> pick
+        CtInvocation<?> pick,
+        Focal focal
     ) {
         EnumSet<MutResolution.Corroborator> set = EnumSet.noneOf(MutResolution.Corroborator.class);
         if (nameMatches(testMethod.getSimpleName(), pick.getExecutable().getSimpleName())) {
             set.add(MutResolution.Corroborator.NAME_MATCH);
+        }
+        if (Boolean.TRUE.equals(focalAgreement(pick, focal))) {
+            set.add(MutResolution.Corroborator.FOCAL_CLASS_MEMBER);
         }
         return set;
     }
@@ -580,6 +716,40 @@ public final class MethodUnderTestResolver {
             normalizedTest = normalizedTest.substring(4);
         }
         return normalizedTest.contains(candidateName.toLowerCase());
+    }
+
+    /**
+     * Mirror a test-source path to its production twin (Methods2Test path matching):
+     * src/test/java/<pkg>/FooTest.java -> src/main/java/<pkg>/Foo.java. Returns null when the path
+     * is not under src/test or the file name carries no Test/Tests/IT/ITCase/TestCase prefix/suffix.
+     */
+    static String mirrorTestPath(String testPath) {
+        if (testPath == null || !testPath.contains("src/test/java/")) {
+            return null;
+        }
+        int slash = testPath.lastIndexOf('/');
+        String dir = testPath.substring(0, slash + 1).replace("src/test/java/", "src/main/java/");
+        String file = testPath.substring(slash + 1);
+        if (!file.endsWith(".java")) {
+            return null;
+        }
+        String base = file.substring(0, file.length() - ".java".length());
+        String stripped = stripTestAffix(base);
+        return stripped == null ? null : dir + stripped + ".java";
+    }
+
+    /** FooTest/FooTests/FooIT/FooITCase/FooTestCase/TestFoo -> Foo; null when no affix present. */
+    static String stripTestAffix(String simpleName) {
+        String[] suffixes = { "TestCase", "ITCase", "Tests", "Test", "IT" };
+        for (String suffix : suffixes) {
+            if (simpleName.endsWith(suffix) && simpleName.length() > suffix.length()) {
+                return simpleName.substring(0, simpleName.length() - suffix.length());
+            }
+        }
+        if (simpleName.startsWith("Test") && simpleName.length() > 4) {
+            return simpleName.substring(4);
+        }
+        return null;
     }
 
     private static MutResolution.Status statusFor(CtInvocation<?> pick) {
@@ -608,7 +778,7 @@ public final class MethodUnderTestResolver {
         return MutResolution.NoPickReason.UNRESOLVED_SOURCE_DECLARATION;
     }
 
-    private static MutResolution none(MutResolution.NoPickReason reason) {
+    private static MutResolution none(MutResolution.NoPickReason reason, Focal focal) {
         return build(
             MutResolution.Status.NONE,
             MutResolution.Tier.T5_NONE,
@@ -619,7 +789,8 @@ public final class MethodUnderTestResolver {
             new ArrayList<MutResolution.Candidate>(),
             0,
             false,
-            false
+            false,
+            focal
         );
     }
 
@@ -633,9 +804,9 @@ public final class MethodUnderTestResolver {
         List<MutResolution.Candidate> alternatives,
         int candidateCount,
         boolean inspectorUnwrapped,
-        boolean shallow
+        boolean shallow,
+        Focal focal
     ) {
-        // Focal, shape, and provenance classification are populated by later resolver stages.
         return new MutResolution(
             status,
             tier,
@@ -647,12 +818,26 @@ public final class MethodUnderTestResolver {
             candidateCount,
             inspectorUnwrapped,
             shallow,
-            null,
-            MutResolution.FocalSource.NONE,
-            null,
+            focal.qualifiedName,
+            focal.source,
+            focalAgreement(pick, focal),
             null,
             null
         );
+    }
+
+    private static Boolean focalAgreement(CtInvocation<?> pick, Focal focal) {
+        if (pick == null || focal == null || focal.qualifiedName == null) {
+            return null;
+        }
+        String declaringType = declaringTypeName(pick);
+        return declaringType == null ? Boolean.FALSE : Boolean.valueOf(focal.qualifiedName.equals(declaringType));
+    }
+
+    private static String declaringTypeName(CtInvocation<?> pick) {
+        return pick.getExecutable().getDeclaringType() == null
+            ? null
+            : pick.getExecutable().getDeclaringType().getQualifiedName();
     }
 
     private static List<MutResolution.Candidate> alternativesAfterFirst(List<Traced> traces) {
