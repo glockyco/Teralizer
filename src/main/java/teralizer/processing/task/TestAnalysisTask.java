@@ -10,6 +10,7 @@ import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
+import org.jooq.generated.tables.records.MutResolutionObservationRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
 import spoon.reflect.code.CtExpression;
@@ -27,6 +28,8 @@ import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.spoon.analysis.GeneralizableInput;
+import teralizer.spoon.analysis.MethodUnderTestResolver;
+import teralizer.spoon.analysis.MutResolution;
 import teralizer.spoon.analysis.TestAnalysis;
 
 public class TestAnalysisTask extends AbstractTask {
@@ -85,7 +88,6 @@ public class TestAnalysisTask extends AbstractTask {
     }
 
     private void createAssertionRecords(CtMethod<?> testMethod, DSLContext create, Gson gson) {
-        List<AssertionRecord> records = new ArrayList<>();
 
         List<CtInvocation<?>> assertionCalls = TestAnalysis.findAllAsserts(testMethod);
 
@@ -111,7 +113,8 @@ public class TestAnalysisTask extends AbstractTask {
             record.setAssertionAbsolutePath(assertionCall.getPath().toString());
             record.setAssertionRelativePath(assertionCall.getPath().relativePath(testMethod).toString());
 
-            CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertionCall).orElse(null);
+            MutResolution resolution = MethodUnderTestResolver.resolve(testMethod, assertionCall);
+            CtInvocation<?> testedMethodCall = resolution.getPick();
             if (testedMethodCall != null) {
                 CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
                 List<GeneralizableInput> generalizableInputs = testedMethod == null
@@ -176,10 +179,11 @@ public class TestAnalysisTask extends AbstractTask {
             }
 
             record.setIsIncluded(true);
+            record.store();
 
-            records.add(record);
+            MutResolutionObservationRecord observation = create.newRecord(Tables.MUT_RESOLUTION_OBSERVATION);
+            MutResolutionObservationMapper.map(resolution, this.getProjectId(), this.getTestId(), record.getId(), gson, observation);
+            observation.store();
         }
-
-        create.batchStore(records).execute();
     }
 }

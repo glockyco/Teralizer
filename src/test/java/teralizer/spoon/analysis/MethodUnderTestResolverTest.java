@@ -373,7 +373,7 @@ public class MethodUnderTestResolverTest {
     }
     // --- shared helpers (used by all tasks) ---
 
-    static final String SUBJECT_SOURCE =
+    public static final String SUBJECT_SOURCE =
         "public class Subject {\n"
         + "  public int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }\n"
         + "  public int helper(int a) { return a; }\n"
@@ -383,7 +383,7 @@ public class MethodUnderTestResolverTest {
         + "  public void process(int x) { }\n"
         + "}";
 
-    static MutResolution resolve(String testSource, String... otherSources) {
+    public static MutResolution resolve(String testSource, String... otherSources) {
         return resolveNth(testSource, 0, otherSources);
     }
 
@@ -401,7 +401,7 @@ public class MethodUnderTestResolverTest {
         return MethodUnderTestResolver.resolve(testMethod, assertion);
     }
 
-    static MutResolution resolveNth(String testSource, int assertionIndex, String... otherSources) {
+    public static MutResolution resolveNth(String testSource, int assertionIndex, String... otherSources) {
         Launcher launcher = new Launcher();
         launcher.addInputResource(new VirtualFile(testSource, "SubjectTest.java"));
         for (int i = 0; i < otherSources.length; i++) {

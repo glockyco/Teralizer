@@ -84,10 +84,6 @@ public class TestAnalysis {
     // - assertThrows(Class<T> expectedType, Executable executable, String message)
     // - assertThrows(Class<T> expectedType, Executable executable, Supplier<String> messageSupplier)
 
-    public static Optional<CtInvocation<?>> findTestedMethodCall(CtMethod<?> method, CtInvocation<?> assertion) {
-        MutResolution resolution = MethodUnderTestResolver.resolve(method, assertion);
-        return Optional.ofNullable(resolution.getPick());
-    }
 
 
     public static Optional<CtInvocation<?>> findGeneralizableAssert(CtMethod<?> method) {

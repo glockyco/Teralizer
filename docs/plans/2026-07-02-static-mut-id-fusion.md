@@ -1292,7 +1292,7 @@ In `MethodUnderTestResolver.resolve(...)`, wrap the existing body: rename it `re
 - Test: `src/test/java/teralizer/processing/task/MutResolutionObservationMapperTest.java` (create)
 - Create: `src/main/java/teralizer/processing/task/MutResolutionObservationMapper.java`
 
-- [ ] **Step 1: Write the failing mapper test** (pure mapping, no DB — jOOQ records are instantiable directly, precedent `StringOperationFilterTest`):
+- [x] **Step 1: Write the failing mapper test** (pure mapping, no DB — jOOQ records are instantiable directly, precedent `StringOperationFilterTest`):
 
 ```java
 package teralizer.processing.task;
@@ -1353,9 +1353,9 @@ public class MutResolutionObservationMapperTest {
 
 (Make `resolve`/`resolveNth`/`SUBJECT_SOURCE` in `MethodUnderTestResolverTest` `public static` so this test can reuse them.)
 
-- [ ] **Step 2: Run, expect FAIL.** Run: `./gradlew test --tests 'teralizer.processing.task.MutResolutionObservationMapperTest'`.
+- [x] **Step 2: Run, expect FAIL.** Run: `./gradlew test --tests 'teralizer.processing.task.MutResolutionObservationMapperTest'`.
 
-- [ ] **Step 3: Write the mapper** (complete file):
+- [x] **Step 3: Write the mapper** (complete file):
 
 ```java
 package teralizer.processing.task;
@@ -1436,9 +1436,9 @@ final class MutResolutionObservationMapper {
 }
 ```
 
-- [ ] **Step 4: Run, expect PASS.**
+- [x] **Step 4: Run, expect PASS.**
 
-- [ ] **Step 5: Integrate into `TestAnalysisTask.createAssertionRecords`.** At `TestAnalysisTask.java:114`, replace
+- [x] **Step 5: Integrate into `TestAnalysisTask.createAssertionRecords`.** At `TestAnalysisTask.java:114`, replace
 
 ```java
             CtInvocation<?> testedMethodCall = TestAnalysis.findTestedMethodCall(testMethod, assertionCall).orElse(null);
@@ -1479,11 +1479,11 @@ jOOQ `batchStore` does not populate generated identity keys, and the observation
 
 and delete the trailing `create.batchStore(records).execute();` plus the now-unused `records` list.
 
-- [ ] **Step 6: Delete the dead façade.** Remove `TestAnalysis.findTestedMethodCall` and (if still present) `TestAnalysis.getExecutedBody`. `TestAnalysis` retains `findAllAsserts`, `getActualParameterIndex`, `isJUnit4Assertion`, `isJUnit5Assertion` (callers: `TestAnalysisTask`, `TestGeneralizationTask:378,525`). Run `./gradlew compileJava` — any compile error here means a missed caller; fix by migrating it to `MethodUnderTestResolver.resolve`.
+- [x] **Step 6: Delete the dead façade.** Remove `TestAnalysis.findTestedMethodCall` and (if still present) `TestAnalysis.getExecutedBody`. `TestAnalysis` retains `findAllAsserts`, `getActualParameterIndex`, `isJUnit4Assertion`, `isJUnit5Assertion` (callers: `TestAnalysisTask`, `TestGeneralizationTask:378,525`). Run `./gradlew compileJava` — any compile error here means a missed caller; fix by migrating it to `MethodUnderTestResolver.resolve`.
 
-- [ ] **Step 7: Full suite.** Run: `./gradlew test`. Expected: `BUILD SUCCESSFUL`.
+- [x] **Step 7: Full suite.** Run: `./gradlew test`. Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 8: Commit.**
+- [x] **Step 8: Commit.**
 
 ```bash
 git add src/main/java/teralizer/ src/test/java/teralizer/
