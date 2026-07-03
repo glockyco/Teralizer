@@ -881,7 +881,7 @@ When the asserted value is a zero-argument inspector on a computed receiver, the
 
 **Files:** same two files.
 
-- [ ] **Step 1: Add failing tests:**
+- [x] **Step 1: Add failing tests:**
 
 ```java
     @Example
@@ -923,8 +923,8 @@ When the asserted value is a zero-argument inspector on a computed receiver, the
     }
 ```
 
-- [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Implement.** Add:
+- [x] **Step 2: Run, expect FAIL.**
+- [x] **Step 3: Implement.** Add:
 
 ```java
     /**
@@ -957,8 +957,8 @@ When the asserted value is a zero-argument inspector on a computed receiver, the
 
 In `traceExpression`, for a `CtInvocation` that `isInspector`: if the receiver (`getTarget()`) is a `CtInvocation`, recurse on the receiver, re-tag `INSPECTOR_UNWRAP`, set `inspectorUnwrapped`; if the receiver is a `CtVariableRead`/`CtFieldRead`, trace the receiver's producer — found ⇒ that producer (`INSPECTOR_UNWRAP`), not found ⇒ the inspector itself with `shallowInspectorPick = true`. Non-inspector invocations keep current behavior. Thread the two booleans through `Traced` (add fields) into `graded(...)`.
 
-- [ ] **Step 4: Run, expect PASS.** All prior tests still green (note: `directInvocationInActualPosition_isT1Proven` uses `gcd(6,9)` which has arguments ⇒ not an inspector ⇒ unaffected).
-- [ ] **Step 5: Commit.** `git commit -am "feat(mut-id): unwrap inspectors to receiver producers, flag shallow picks"`
+- [x] **Step 4: Run, expect PASS.** All prior tests still green (note: `directInvocationInActualPosition_isT1Proven` uses `gcd(6,9)` which has arguments ⇒ not an inspector ⇒ unaffected).
+- [x] **Step 5: Commit.** `git commit -am "feat(mut-id): unwrap inspectors to receiver producers, flag shallow picks"`
 
 ---
 

@@ -181,6 +181,44 @@ public class MethodUnderTestResolverTest {
         Assert.assertEquals(1, r.getAlternatives().size());
         Assert.assertNotEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
     }
+
+    @Example
+    void inspectorOnComputedReceiver_unwrapsToProducer() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertTrue(new Subject().compute(5).isEmpty()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals("compute", r.getPick().getExecutable().getSimpleName());
+        Assert.assertEquals(MutResolution.Signal.INSPECTOR_UNWRAP, r.getDecidingSignal());
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertTrue(r.isInspectorUnwrapped());
+        Assert.assertFalse(r.isShallowInspectorPick());
+    }
+
+    @Example
+    void inspectorOnVariableWithProducer_unwrapsThroughVariable() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { java.util.List<Integer> l = new Subject().compute(5); org.junit.Assert.assertTrue(l.isEmpty()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals("compute", r.getPick().getExecutable().getSimpleName());
+        Assert.assertTrue(r.isInspectorUnwrapped());
+    }
+
+    @Example
+    void inspectorWithUnreachableReceiver_keptButFlaggedShallow() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  Subject sut = new Subject();\n"
+            + "  public void t() { org.junit.Assert.assertEquals(0, sut.getTotal()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals("getTotal", r.getPick().getExecutable().getSimpleName());
+        Assert.assertTrue(r.isShallowInspectorPick());
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier()); // dataflow-true, shallow-flagged
+    }
     // --- shared helpers (used by all tasks) ---
 
     static final String SUBJECT_SOURCE =

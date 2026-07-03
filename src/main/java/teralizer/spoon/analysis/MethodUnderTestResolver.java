@@ -97,7 +97,9 @@ public final class MethodUnderTestResolver {
             testMethod,
             pick,
             MutResolution.Signal.ASSERT_THROWS_LAMBDA,
-            alternativesExcluding(invocations, pick)
+            alternativesExcluding(invocations, pick),
+            false,
+            false
         );
     }
 
@@ -121,11 +123,12 @@ public final class MethodUnderTestResolver {
                 first.signal,
                 first.proven ? MutResolution.Tier.T1_PROVEN : MutResolution.Tier.T3_SINGLE_WEAK,
                 alternatives,
-                false,
-                false
+                first.inspectorUnwrapped,
+                first.shallowInspectorPick
             );
         }
-        return rankedBase(testMethod, first.producer, first.signal, alternatives);
+        return rankedBase(testMethod, first.producer, first.signal, alternatives,
+            first.inspectorUnwrapped, first.shallowInspectorPick);
     }
 
     /** A traced producer: the call plus whether the trace was a straight-line reaching definition. */
@@ -133,11 +136,25 @@ public final class MethodUnderTestResolver {
         final CtInvocation<?> producer;
         final boolean proven;
         final MutResolution.Signal signal;
+        final boolean inspectorUnwrapped;
+        final boolean shallowInspectorPick;
 
         Traced(CtInvocation<?> producer, boolean proven, MutResolution.Signal signal) {
+            this(producer, proven, signal, false, false);
+        }
+
+        Traced(
+            CtInvocation<?> producer,
+            boolean proven,
+            MutResolution.Signal signal,
+            boolean inspectorUnwrapped,
+            boolean shallowInspectorPick
+        ) {
             this.producer = producer;
             this.proven = proven;
             this.signal = signal;
+            this.inspectorUnwrapped = inspectorUnwrapped;
+            this.shallowInspectorPick = shallowInspectorPick;
         }
     }
 
@@ -154,8 +171,12 @@ public final class MethodUnderTestResolver {
         Set<CtVariableReference<?>> visited
     ) {
         if (expression instanceof CtInvocation<?>) {
+            CtInvocation<?> invocation = (CtInvocation<?>) expression;
+            if (isInspector(invocation)) {
+                return traceInspector(invocation, testMethod, assertion, visited);
+            }
             return single(new Traced(
-                (CtInvocation<?>) expression,
+                invocation,
                 true,
                 MutResolution.Signal.DIRECT_ACTUAL_CALL
             ));
@@ -208,6 +229,73 @@ public final class MethodUnderTestResolver {
             return traceLocalVariable(ref, testMethod, assertion, nextVisited);
         }
         return new ArrayList<>();
+    }
+
+    private static List<Traced> traceInspector(
+        CtInvocation<?> inspector,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion,
+        Set<CtVariableReference<?>> visited
+    ) {
+        CtExpression<?> receiver = inspector.getTarget();
+        if (receiver instanceof CtInvocation<?>) {
+            return markInspectorUnwrapped(traceExpression(receiver, testMethod, assertion, visited));
+        }
+        if (receiver instanceof CtVariableRead<?> || receiver instanceof CtFieldRead<?>) {
+            List<Traced> receiverProducers = traceExpression(receiver, testMethod, assertion, visited);
+            if (!receiverProducers.isEmpty()) {
+                return markInspectorUnwrapped(receiverProducers);
+            }
+            return single(new Traced(
+                inspector,
+                true,
+                MutResolution.Signal.DIRECT_ACTUAL_CALL,
+                false,
+                true
+            ));
+        }
+        return single(new Traced(inspector, true, MutResolution.Signal.DIRECT_ACTUAL_CALL));
+    }
+
+    private static List<Traced> markInspectorUnwrapped(List<Traced> inner) {
+        List<Traced> unwrapped = new ArrayList<>();
+        for (Traced traced : inner) {
+            unwrapped.add(new Traced(
+                traced.producer,
+                traced.proven,
+                MutResolution.Signal.INSPECTOR_UNWRAP,
+                true,
+                traced.shallowInspectorPick
+            ));
+        }
+        return unwrapped;
+    }
+
+    /**
+     * Ghafari-style inspector (ICST'15): zero-argument, non-void, and either a conventional
+     * accessor name or declared on a JDK type. Conservative by design.
+     */
+    static boolean isInspector(CtInvocation<?> invocation) {
+        if (!invocation.getArguments().isEmpty()) {
+            return false;
+        }
+        if (invocation.getType() == null || "void".equals(invocation.getType().getSimpleName())) {
+            return false;
+        }
+        String name = invocation.getExecutable().getSimpleName();
+        if (name.startsWith("get") || name.startsWith("is") || name.startsWith("has")) {
+            return true;
+        }
+        switch (name) {
+            case "size": case "length": case "isEmpty": case "toString": case "hashCode":
+            case "name": case "ordinal": case "value": case "count":
+                return true;
+            default:
+                break;
+        }
+        String declaring = invocation.getExecutable().getDeclaringType() == null
+            ? "" : invocation.getExecutable().getDeclaringType().getQualifiedName();
+        return declaring.startsWith("java.") || declaring.startsWith("javax.");
     }
 
     /*
@@ -327,7 +415,9 @@ public final class MethodUnderTestResolver {
             wrapped.add(new Traced(
                 traced.producer,
                 wrapperProven && traced.proven,
-                strongerSignal(wrapperSignal, traced.signal)
+                strongerSignal(wrapperSignal, traced.signal),
+                traced.inspectorUnwrapped,
+                traced.shallowInspectorPick
             ));
         }
         return wrapped;
@@ -426,7 +516,9 @@ public final class MethodUnderTestResolver {
         CtMethod<?> testMethod,
         CtInvocation<?> pick,
         MutResolution.Signal signal,
-        List<MutResolution.Candidate> alternatives
+        List<MutResolution.Candidate> alternatives,
+        boolean inspectorUnwrapped,
+        boolean shallow
     ) {
         EnumSet<MutResolution.Corroborator> corroborators = corroboratorsFor(testMethod, pick);
         MutResolution.Tier tier = promote(MutResolution.Tier.T4_GUESS, corroborators.size());
@@ -439,8 +531,8 @@ public final class MethodUnderTestResolver {
             pick,
             alternatives,
             alternatives.size() + 1,
-            false,
-            false
+            inspectorUnwrapped,
+            shallow
         );
     }
 
