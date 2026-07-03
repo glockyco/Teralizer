@@ -77,6 +77,13 @@ public final class MethodUnderTestResolver {
     private MethodUnderTestResolver() {
     }
 
+    /**
+     * Resolves the method under test for one assertion. Never returns null and never abstains
+     * silently: every outcome is a {@link MutResolution} whose status, tier, and deciding signal
+     * explain what was picked and how strong the evidence is. The pick itself is computed by
+     * {@link #resolveInternal}; this wrapper only enriches the result with the input-topology
+     * telemetry ({@code actualShape}, {@code receiverProvenance}) used to size future recipe work.
+     */
     public static MutResolution resolve(CtMethod<?> testMethod, CtInvocation<?> assertion) {
         MutResolution resolution = resolveInternal(testMethod, assertion);
         CtExpression<?> actual = actualExpression(testMethod, assertion);
@@ -271,6 +278,13 @@ public final class MethodUnderTestResolver {
 
     // --- assertThrows: the executed body is the slice ---
 
+    /**
+     * Resolves {@code assertThrows(E.class, executable)}: the executable body is the slice, since
+     * the throwing call is by definition inside it. A single invocation is cardinality-forced
+     * evidence (T1) — no other call could have thrown. With multiple invocations the last one wins
+     * positionally (constructor calls typically precede the throwing call), which is a guess-grade
+     * base that identity corroborators may promote; the losers are recorded as alternatives.
+     */
     private static MutResolution resolveAssertThrows(
         CtMethod<?> testMethod,
         CtInvocation<?> assertion,
@@ -309,8 +323,18 @@ public final class MethodUnderTestResolver {
         );
     }
 
-    // --- value assertions: producer tracing (extended in Tasks 4-8) ---
+    // --- value assertions: producer tracing ---
 
+    /**
+     * Resolves an ordinary value assertion by tracing the asserted "actual" expression back to its
+     * producing call(s). Four outcomes, in order: (1) dataflow found several producers (a composite
+     * expression) — rank them and keep the losers as alternatives; (2) dataflow found exactly one —
+     * a straight-line trace is a proof (T1), a heuristic trace is weak (T3), and a shallow
+     * inspector pick first gets one chance to be replaced by the pre-assertion production pool
+     * (the mutator-then-inspect shape); (3) dataflow REFUTED a producer (killed definition) — the
+     * result is NONE, and slice elimination must not resurrect the stale call; (4) dataflow was
+     * silent — fall back to the production pool, where cardinality one is again a proof.
+     */
     private static MutResolution resolveValueAssertion(
         CtMethod<?> testMethod,
         CtInvocation<?> assertion,
@@ -1092,6 +1116,14 @@ public final class MethodUnderTestResolver {
         return new Focal(null, MutResolution.FocalSource.NONE);
     }
 
+    /**
+     * Infers the focal (class-under-test) type from two independent conventions: the test class
+     * name with its Test/Tests/IT/ITCase/TestCase affix stripped (FooTest -> Foo, preferring the
+     * same package), and the mirrored src/test/java -> src/main/java source path when a real file
+     * position exists (virtual models have none). Both agreeing is the strongest source
+     * (PATH_AND_NAME); either alone is medium. The focal class never gates or vetoes a dataflow
+     * pick — it only scopes the class-relative ranking preference and the membership corroborator.
+     */
     private static Focal resolveFocalType(CtMethod<?> testMethod) {
         if (testMethod == null || testMethod.getDeclaringType() == null) {
             return noFocal();
