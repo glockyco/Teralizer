@@ -1,5 +1,6 @@
 -- Dialect: PostgreSQL
 
+DROP TABLE IF EXISTS mut_resolution_observation;
 DROP TABLE IF EXISTS jqwik_property_execution;
 DROP TABLE IF EXISTS jqwik_execution_run;
 DROP TABLE IF EXISTS task;
@@ -476,3 +477,50 @@ CREATE INDEX idx_jqwik_property_execution_project_id ON jqwik_property_execution
 CREATE INDEX idx_jqwik_property_execution_generalization_id ON jqwik_property_execution (generalization_id);
 CREATE INDEX idx_jqwik_property_execution_junit_test_report_id ON jqwik_property_execution (junit_test_report_id);
 CREATE INDEX idx_jqwik_property_execution_diagnostic_kind ON jqwik_property_execution (diagnostic_kind);
+
+CREATE TABLE mut_resolution_observation
+(
+    id                         BIGSERIAL PRIMARY KEY,
+
+    assertion_id               BIGINT  NOT NULL,
+    project_id                 BIGINT  NOT NULL,
+    test_id                    BIGINT  NOT NULL,
+
+    status                     TEXT    NOT NULL, -- RESOLVED | CHARACTERIZATION_ONLY | NONE
+    confidence_tier            TEXT    NOT NULL, -- T1_PROVEN | T2_CORROBORATED | T3_SINGLE_WEAK | T4_GUESS | T5_NONE
+    deciding_signal            TEXT    NOT NULL,
+    corroborating_signals      TEXT,             -- JSON array of NAME_MATCH | FOCAL_CLASS_MEMBER
+    no_pick_reason             TEXT,             -- null when RESOLVED
+
+    candidate_count            INTEGER NOT NULL,
+    resolved_call_source       TEXT,
+    resolved_method_name       TEXT,
+    resolved_declaring_type    TEXT,
+    resolved_parameter_types   TEXT,             -- JSON array of qualified type names
+    resolved_return_type       TEXT,
+
+    inspector_unwrapped        BOOLEAN NOT NULL DEFAULT FALSE,
+    shallow_inspector_pick     BOOLEAN NOT NULL DEFAULT FALSE,
+
+    focal_type                 TEXT,
+    focal_type_source          TEXT,             -- PATH_AND_NAME | NAME_ONLY | PATH_ONLY | NONE
+    focal_agreement            BOOLEAN,          -- null when focal_type_source = NONE or no pick
+
+    candidate_param_count      INTEGER,
+    candidate_param_supported  BOOLEAN,
+    candidate_return_supported BOOLEAN,
+
+    oracle_agreement           TEXT,             -- reserved: AGREED | REFUTED | ABSENT (PIT_ORIGINAL)
+    candidate_details          TEXT,             -- JSON array of ranked alternatives
+
+    actual_shape               TEXT,             -- AST shape of the asserted actual expression (spec enum)
+    receiver_provenance        TEXT,             -- INLINE_CTOR | LOCAL_CTOR | LOCAL_CTOR_MUTATED | LOCAL_OTHER | FIELD | PARAM_OR_STATIC | NONE
+
+    FOREIGN KEY (assertion_id) REFERENCES assertion (id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_mut_resolution_observation_project_id ON mut_resolution_observation (project_id);
+CREATE INDEX idx_mut_resolution_observation_assertion_id ON mut_resolution_observation (assertion_id);
+CREATE INDEX idx_mut_resolution_observation_status_tier ON mut_resolution_observation (status, confidence_tier);

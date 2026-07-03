@@ -53,13 +53,13 @@ The table must exist in a PostgreSQL schema for the jOOQ generator to produce th
 - Modify: `src/main/resources/db/create-tables.sql`
 - Generated: `build/generated-src/jooq/main/org/jooq/generated/**`
 
-- [ ] **Step 1: Add the DROP line.** In `src/main/resources/db/create-tables.sql`, the file starts with a block of `DROP TABLE IF EXISTS` lines in reverse-dependency order. Add a new first drop (before `DROP TABLE IF EXISTS jqwik_property_execution;`):
+- [x] **Step 1: Add the DROP line.** In `src/main/resources/db/create-tables.sql`, the file starts with a block of `DROP TABLE IF EXISTS` lines in reverse-dependency order. Add a new first drop (before `DROP TABLE IF EXISTS jqwik_property_execution;`):
 
 ```sql
 DROP TABLE IF EXISTS mut_resolution_observation;
 ```
 
-- [ ] **Step 2: Add the CREATE TABLE at the end of the file** (after the `jqwik_property_execution` indexes):
+- [x] **Step 2: Add the CREATE TABLE at the end of the file** (after the `jqwik_property_execution` indexes):
 
 ```sql
 CREATE TABLE mut_resolution_observation
@@ -110,7 +110,7 @@ CREATE INDEX idx_mut_resolution_observation_assertion_id ON mut_resolution_obser
 CREATE INDEX idx_mut_resolution_observation_status_tier ON mut_resolution_observation (status, confidence_tier);
 ```
 
-- [ ] **Step 3: Load the schema into a scratch codegen DB.** The jOOQ generator (`build.gradle:113-124`) connects to `jdbc:postgresql://${dbHost}:${dbPort}/${dbName}` where `dbName` comes from `.env` `DB_NAME`, else env var, else `postgres`. Never point codegen at `postgres_dev`/`postgres_test` — the DDL starts with DROPs. Use a scratch DB:
+- [x] **Step 3: Load the schema into a scratch codegen DB.** The jOOQ generator (`build.gradle:113-124`) connects to `jdbc:postgresql://${dbHost}:${dbPort}/${dbName}` where `dbName` comes from `.env` `DB_NAME`, else env var, else `postgres`. Never point codegen at `postgres_dev`/`postgres_test` — the DDL starts with DROPs. Use a scratch DB:
 
 ```bash
 ./gradlew startPostgres
@@ -121,7 +121,7 @@ docker exec -i postgres-teralizer psql -U postgres -d jooq_codegen_scratch < src
 
 Expected: a stream of `DROP TABLE` / `CREATE TABLE` / `CREATE INDEX` lines, no `ERROR`.
 
-- [ ] **Step 4: Run codegen against the scratch DB.** Check first whether `.env` exists and sets `DB_NAME` (`.env` beats the environment in `getEnv`, `build.gradle:22-24`). If it does, temporarily comment that line out for this step and restore it afterwards. Then:
+- [x] **Step 4: Run codegen against the scratch DB.** Check first whether `.env` exists and sets `DB_NAME` (`.env` beats the environment in `getEnv`, `build.gradle:22-24`). If it does, temporarily comment that line out for this step and restore it afterwards. Then:
 
 ```bash
 DB_NAME=jooq_codegen_scratch ./gradlew generateJooq
@@ -129,9 +129,9 @@ DB_NAME=jooq_codegen_scratch ./gradlew generateJooq
 
 Expected: `BUILD SUCCESSFUL`; `git status` shows new files `build/generated-src/jooq/main/org/jooq/generated/tables/MutResolutionObservation.java` and `.../tables/records/MutResolutionObservationRecord.java`, plus modified `Tables.java`, `Public.java`, `Keys.java`, `Indexes.java`, `Sequences.java`. If any *other* generated table class changes semantically, the scratch DB did not match the committed DDL — stop and re-check Step 3.
 
-- [ ] **Step 5: Compile.** Run: `./gradlew compileJava`. Expected: `BUILD SUCCESSFUL`.
+- [x] **Step 5: Compile.** Run: `./gradlew compileJava`. Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 6: Commit.**
+- [x] **Step 6: Commit.**
 
 ```bash
 git add src/main/resources/db/create-tables.sql build/generated-src/jooq

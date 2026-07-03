@@ -61,6 +61,11 @@ public class Sequences {
     public static final Sequence<Long> JUNIT_TEST_REPORT_ID_SEQ = Internal.createSequence("junit_test_report_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
 
     /**
+     * The sequence <code>public.mut_resolution_observation_id_seq</code>
+     */
+    public static final Sequence<Long> MUT_RESOLUTION_OBSERVATION_ID_SEQ = Internal.createSequence("mut_resolution_observation_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
      * The sequence <code>public.pit_coverage_report_id_seq</code>
      */
     public static final Sequence<Long> PIT_COVERAGE_REPORT_ID_SEQ = Internal.createSequence("pit_coverage_report_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);

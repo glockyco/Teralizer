@@ -13,6 +13,7 @@ import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JqwikExecutionRun;
 import org.jooq.generated.tables.JqwikPropertyExecution;
 import org.jooq.generated.tables.JunitTestReport;
+import org.jooq.generated.tables.MutResolutionObservation;
 import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
@@ -70,6 +71,11 @@ public class Tables {
      * The table <code>public.junit_test_report</code>.
      */
     public static final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
+
+    /**
+     * The table <code>public.mut_resolution_observation</code>.
+     */
+    public static final MutResolutionObservation MUT_RESOLUTION_OBSERVATION = MutResolutionObservation.MUT_RESOLUTION_OBSERVATION;
 
     /**
      * The table <code>public.pit_coverage_report</code>.

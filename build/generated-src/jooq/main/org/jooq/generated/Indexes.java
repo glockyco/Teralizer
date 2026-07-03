@@ -15,6 +15,7 @@ import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JqwikExecutionRun;
 import org.jooq.generated.tables.JqwikPropertyExecution;
 import org.jooq.generated.tables.JunitTestReport;
+import org.jooq.generated.tables.MutResolutionObservation;
 import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
@@ -73,6 +74,9 @@ public class Indexes {
     public static final Index IDX_JUNIT_TEST_REPORT_STEP = Internal.createIndex(DSL.name("idx_junit_test_report_step"), JunitTestReport.JUNIT_TEST_REPORT, new OrderField[] { JunitTestReport.JUNIT_TEST_REPORT.STEP }, false);
     public static final Index IDX_JUNIT_TEST_REPORT_TEST_ID = Internal.createIndex(DSL.name("idx_junit_test_report_test_id"), JunitTestReport.JUNIT_TEST_REPORT, new OrderField[] { JunitTestReport.JUNIT_TEST_REPORT.TEST_ID }, false);
     public static final Index IDX_JUNIT_TEST_REPORT_VARIANT = Internal.createIndex(DSL.name("idx_junit_test_report_variant"), JunitTestReport.JUNIT_TEST_REPORT, new OrderField[] { JunitTestReport.JUNIT_TEST_REPORT.VARIANT }, false);
+    public static final Index IDX_MUT_RESOLUTION_OBSERVATION_ASSERTION_ID = Internal.createIndex(DSL.name("idx_mut_resolution_observation_assertion_id"), MutResolutionObservation.MUT_RESOLUTION_OBSERVATION, new OrderField[] { MutResolutionObservation.MUT_RESOLUTION_OBSERVATION.ASSERTION_ID }, false);
+    public static final Index IDX_MUT_RESOLUTION_OBSERVATION_PROJECT_ID = Internal.createIndex(DSL.name("idx_mut_resolution_observation_project_id"), MutResolutionObservation.MUT_RESOLUTION_OBSERVATION, new OrderField[] { MutResolutionObservation.MUT_RESOLUTION_OBSERVATION.PROJECT_ID }, false);
+    public static final Index IDX_MUT_RESOLUTION_OBSERVATION_STATUS_TIER = Internal.createIndex(DSL.name("idx_mut_resolution_observation_status_tier"), MutResolutionObservation.MUT_RESOLUTION_OBSERVATION, new OrderField[] { MutResolutionObservation.MUT_RESOLUTION_OBSERVATION.STATUS, MutResolutionObservation.MUT_RESOLUTION_OBSERVATION.CONFIDENCE_TIER }, false);
     public static final Index IDX_PIT_COVERAGE_REPORT_COVERED_BLOCK_NUMBER = Internal.createIndex(DSL.name("idx_pit_coverage_report_covered_block_number"), PitCoverageReport.PIT_COVERAGE_REPORT, new OrderField[] { PitCoverageReport.PIT_COVERAGE_REPORT.COVERED_BLOCK_NUMBER }, false);
     public static final Index IDX_PIT_COVERAGE_REPORT_COVERED_CLASS_NAME = Internal.createIndex(DSL.name("idx_pit_coverage_report_covered_class_name"), PitCoverageReport.PIT_COVERAGE_REPORT, new OrderField[] { PitCoverageReport.PIT_COVERAGE_REPORT.COVERED_CLASS_NAME }, false);
     public static final Index IDX_PIT_COVERAGE_REPORT_COVERED_METHOD_DESCRIPTION = Internal.createIndex(DSL.name("idx_pit_coverage_report_covered_method_description"), PitCoverageReport.PIT_COVERAGE_REPORT, new OrderField[] { PitCoverageReport.PIT_COVERAGE_REPORT.COVERED_METHOD_DESCRIPTION }, false);

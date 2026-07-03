@@ -19,6 +19,7 @@ import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JqwikExecutionRun;
 import org.jooq.generated.tables.JqwikPropertyExecution;
 import org.jooq.generated.tables.JunitTestReport;
+import org.jooq.generated.tables.MutResolutionObservation;
 import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
@@ -86,6 +87,11 @@ public class Public extends SchemaImpl {
     public final JunitTestReport JUNIT_TEST_REPORT = JunitTestReport.JUNIT_TEST_REPORT;
 
     /**
+     * The table <code>public.mut_resolution_observation</code>.
+     */
+    public final MutResolutionObservation MUT_RESOLUTION_OBSERVATION = MutResolutionObservation.MUT_RESOLUTION_OBSERVATION;
+
+    /**
      * The table <code>public.pit_coverage_report</code>.
      */
     public final PitCoverageReport PIT_COVERAGE_REPORT = PitCoverageReport.PIT_COVERAGE_REPORT;
@@ -135,6 +141,7 @@ public class Public extends SchemaImpl {
             Sequences.JQWIK_EXECUTION_RUN_ID_SEQ,
             Sequences.JQWIK_PROPERTY_EXECUTION_ID_SEQ,
             Sequences.JUNIT_TEST_REPORT_ID_SEQ,
+            Sequences.MUT_RESOLUTION_OBSERVATION_ID_SEQ,
             Sequences.PIT_COVERAGE_REPORT_ID_SEQ,
             Sequences.PIT_MUTATION_REPORT_ID_SEQ,
             Sequences.PROJECT_ID_SEQ,
@@ -154,6 +161,7 @@ public class Public extends SchemaImpl {
             JqwikExecutionRun.JQWIK_EXECUTION_RUN,
             JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION,
             JunitTestReport.JUNIT_TEST_REPORT,
+            MutResolutionObservation.MUT_RESOLUTION_OBSERVATION,
             PitCoverageReport.PIT_COVERAGE_REPORT,
             PitMutationReport.PIT_MUTATION_REPORT,
             Project.PROJECT,
