@@ -279,6 +279,24 @@ Analysis enabled:
 - Project-level ranking by missing native peers, model gaps, depth/resource limits, listener bugs.
 - Before/after checks for SPF/model-class improvements.
 
+### Output-spec degeneracy (`assertion.output_spec_class`)
+
+One nullable column on `assertion`, written where the spec files are written
+(`SpecificationExtractor` call in `JpfExecutionTask`, or `JpfAnalysisTask` alongside
+`output_model_statistics`): `SYMBOLIC` (output model contains ≥1 variable), `CONSTANT` (lone
+constant), `NULL_CONCRETE` (no symbolic return attr — value concretized through unmodeled
+library/native code), `EXCEPTION` (captured throw). Trivially derivable from the output model;
+`output_model_statistics` cannot distinguish these (`operationCount = 0` for null, lone-constant,
+and lone-variable alike).
+
+Analysis enabled:
+
+- Direct measurement of silent concretization (`2026-06-28-pipeline-architecture-review` D-1).
+- Realized-vs-attempted value of expression-slice recipes (R1 gate,
+  `2026-07-02-recipe-seam-review`): a chain whose tail concretizes yields `NULL_CONCRETE`.
+- Wrong-pick quality signal for fusion tiers: incoherent/shallow picks skew to
+  `CONSTANT`/`NULL_CONCRETE`.
+
 ### `build_environment_observation`
 
 One row per project build stage where compiler configuration is discoverable.
