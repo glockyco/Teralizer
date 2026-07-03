@@ -202,16 +202,9 @@ public class JpfInstrumentationTask extends AbstractTask {
             CtTypeReference<?> targetType = target instanceof CtThisAccess
                 ? factory.Type().get(this.assertionRecord.getInstrumentedClassQualifiedName()).getReference()
                 : target.getType();
-            if (targetType instanceof CtTypeParameterReference) {
-                throw new RuntimeException(
-                    "Failed to identify valid type for parameter _target_"
-                        + " of tested method " + this.assertionRecord.getTestedMethodQualifiedName()
-                        + " in test method " + this.testRecord.getTestMethodQualifiedName() + "."
-                );
-            } else {
-                CtParameter<?> parameter = factory.createParameter(null, targetType, "_target_");
-                instrumentedParameters.add(parameter);
-            }
+            CtTypeReference<?> resolvedType = resolveTargetType(
+                factory, targetType, this.assertionRecord.getTestedClassQualifiedName());
+            instrumentedParameters.add(factory.createParameter(null, resolvedType, "_target_"));
         }
         for (GeneralizableInput input : generalizableInputs) {
             CtTypeReference<?> type = factory.Type().createReference(input.toMethodParameter().getType());
@@ -319,6 +312,27 @@ public class JpfInstrumentationTask extends AbstractTask {
             t.setImplicit(false);
         });
         return thrownTypes;
+    }
+
+    /**
+     * Determines the concrete type for the {@code _target_} receiver parameter. Normally the
+     * receiver expression's static type is a real class, but when the receiver is referenced
+     * through a generic type variable -- e.g. a field of type {@code C extends AbstractMqttChannel}
+     * in an abstract test base whose concrete subclass binds {@code C} to a real channel type --
+     * Spoon reports the erased type-parameter bound, which is not a usable parameter type. In that
+     * case fall back to the concrete declaring class the resolver already pinned for the tested
+     * method, so the generated wrapper receives a compilable, concrete receiver.
+     */
+    static CtTypeReference<?> resolveTargetType(
+        Factory factory, CtTypeReference<?> receiverType, String testedClassQualifiedName
+    ) {
+        if (!(receiverType instanceof CtTypeParameterReference)) {
+            return receiverType;
+        }
+        CtTypeReference<?> concreteType = factory.Type().createReference(testedClassQualifiedName);
+        concreteType.setSimplyQualified(false);
+        concreteType.setImplicit(false);
+        return concreteType;
     }
 
     /**

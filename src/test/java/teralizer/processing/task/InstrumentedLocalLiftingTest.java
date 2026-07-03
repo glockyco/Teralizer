@@ -10,6 +10,7 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
+import spoon.reflect.reference.CtTypeParameterReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.compiler.VirtualFile;
@@ -104,6 +105,32 @@ public class InstrumentedLocalLiftingTest {
         Assert.assertEquals("con", JpfInstrumentationTask.symbolicMarker(target));
         Assert.assertEquals("con", JpfInstrumentationTask.symbolicMarker(local));
         Assert.assertEquals("sym", JpfInstrumentationTask.symbolicMarker(input));
+    }
+
+    @Example
+    void typeParameterReceiverResolvesToPinnedConcreteClass() {
+        // The receiver is referenced through a generic type variable (e.g. a field of type
+        // `C extends AbstractMqttChannel` in an abstract test base), so Spoon reports the erased
+        // bound. The resolver already pinned the concrete declaring class -- _target_ must take it.
+        Launcher launcher = new Launcher();
+        CtTypeParameterReference typeParam = launcher.getFactory().Core().createTypeParameterReference();
+        typeParam.setSimpleName("C");
+
+        CtTypeReference<?> resolved = JpfInstrumentationTask.resolveTargetType(
+            launcher.getFactory(), typeParam, "net.xenqtt.message.MqttClientChannel");
+
+        Assert.assertEquals("net.xenqtt.message.MqttClientChannel", resolved.getQualifiedName());
+    }
+
+    @Example
+    void concreteReceiverTypePassesThroughUnchanged() {
+        Launcher launcher = new Launcher();
+        CtTypeReference<?> concrete = launcher.getFactory().Type().createReference("com.example.Widget");
+
+        CtTypeReference<?> resolved = JpfInstrumentationTask.resolveTargetType(
+            launcher.getFactory(), concrete, "should.Not.BeUsed");
+
+        Assert.assertSame(concrete, resolved);
     }
 
     private static CtInvocation<?> testedCallFrom(String testSource) {
