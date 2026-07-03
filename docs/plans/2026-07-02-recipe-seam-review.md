@@ -160,6 +160,7 @@ input. No schema change.
 | Signal | Where | Status |
 |---|---|---|
 | `output_spec_class` | spec writer → assertion-level column; rolls up into `jpf_extraction_summary` | telemetry spec updated (R-C) |
+| `concretization_events` (symbolic value entered unmodeled native method) | listener-only `EXECUTENATIVE` hook → assertion-level column | telemetry spec updated; mechanics in `2026-06-28-pipeline-architecture-review` D-1 |
 | Seed-kill share | derived query on `jqwik_property_execution` (`tries`, `diagnostic_kind`) | exists; wired into fusion Task 11 (R-D) |
 | Per-assertion JPF wall-clock | `task.runtime` on `EXECUTE_JPF` rows | already exists (finding 7) |
 | Tier / shape / provenance | `mut_resolution_observation` | fusion plan Tasks 1/8b |

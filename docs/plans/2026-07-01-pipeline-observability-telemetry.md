@@ -279,23 +279,34 @@ Analysis enabled:
 - Project-level ranking by missing native peers, model gaps, depth/resource limits, listener bugs.
 - Before/after checks for SPF/model-class improvements.
 
-### Output-spec degeneracy (`assertion.output_spec_class`)
+### Output-spec degeneracy (`assertion.output_spec_class`, `assertion.concretization_events`)
 
-One nullable column on `assertion`, written where the spec files are written
+Two nullable columns on `assertion`, written where the spec files are written
 (`SpecificationExtractor` call in `JpfExecutionTask`, or `JpfAnalysisTask` alongside
-`output_model_statistics`): `SYMBOLIC` (output model contains ≥1 variable), `CONSTANT` (lone
-constant), `NULL_CONCRETE` (no symbolic return attr — value concretized through unmodeled
-library/native code), `EXCEPTION` (captured throw). Trivially derivable from the output model;
-`output_model_statistics` cannot distinguish these (`operationCount = 0` for null, lone-constant,
-and lone-variable alike).
+`output_model_statistics`):
+
+- `output_spec_class`: `SYMBOLIC` (output model contains ≥1 variable), `CONSTANT` (lone
+  constant), `NULL_CONCRETE` (no symbolic return attr — value concretized through unmodeled
+  library/native code), `EXCEPTION` (captured throw). Trivially derivable from the output model;
+  `output_model_statistics` cannot distinguish these (`operationCount = 0` for null, lone-constant,
+  and lone-variable alike).
+- `concretization_events`: count of "symbolic value entered an unmodeled native method" events
+  during the extraction run, detected listener-only via an `executeInstruction` hook on
+  `EXECUTENATIVE` + `StackFrame.getArgumentAttrs` (mechanics:
+  `2026-06-28-pipeline-architecture-review` D-1). Zero means the collected PC lost nothing at
+  native boundaries; non-zero flags a potentially weakened (under-constrained) path condition.
 
 Analysis enabled:
 
-- Direct measurement of silent concretization (`2026-06-28-pipeline-architecture-review` D-1).
+- Direct measurement of silent concretization (`2026-06-28-pipeline-architecture-review` D-1) —
+  both where the *output* degenerated (`output_spec_class`) and where the *input PC* may have
+  (`concretization_events`).
 - Realized-vs-attempted value of expression-slice recipes (R1 gate,
   `2026-07-02-recipe-seam-review`): a chain whose tail concretizes yields `NULL_CONCRETE`.
 - Wrong-pick quality signal for fusion tiers: incoherent/shallow picks skew to
   `CONSTANT`/`NULL_CONCRETE`.
+- Soundness triage: `SYMBOLIC` output + non-zero `concretization_events` is the one combination
+  that can yield an unsound-looking-complete spec — the highest-priority manual-review bucket.
 
 ### `build_environment_observation`
 
