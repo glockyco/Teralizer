@@ -112,10 +112,31 @@ public class NaiveTestParametersSupplierFactory {
             if (argument == null) {
                 return null;
             }
-            String firstValue = new ModelToJavaTransformer().transform(argument);
-            values.add("(" + parameter.getType() + ") (" + firstValue + ")");
+            values.add(castOriginalValue(argument));
         }
         return "new " + TEST_PARAMETERS_CLASS_NAME + "(" + String.join(", ", values) + ")";
+    }
+
+    private static String castOriginalValue(Value argument) {
+        String firstValue = new ModelToJavaTransformer().transform(argument);
+        String narrowPrimitiveCast = boxedNarrowPrimitiveCast(argument.getJavaType());
+        if (narrowPrimitiveCast != null) {
+            return "(" + argument.getJavaType() + ") " + narrowPrimitiveCast + " (" + firstValue + ")";
+        }
+        return "(" + argument.getJavaType() + ") (" + firstValue + ")";
+    }
+
+    private static String boxedNarrowPrimitiveCast(String javaType) {
+        switch (javaType) {
+            case "java.lang.Short":
+                return "(short)";
+            case "java.lang.Byte":
+                return "(byte)";
+            case "java.lang.Character":
+                return "(char)";
+            default:
+                return null;
+        }
     }
 
     private static String createArbitrary(MethodParameter parameter) {

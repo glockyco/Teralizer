@@ -82,8 +82,27 @@ public class BaselineTestParametersSupplierFactory {
         if (argument.getJavaType().equals("boolean") || argument.getJavaType().equals("java.lang.Boolean")) {
             return "return net.jqwik.api.Arbitraries.just(" + value + ")";
         }
+        String narrowPrimitiveCast = boxedNarrowPrimitiveCast(argument.getJavaType());
+        if (narrowPrimitiveCast != null) {
+            // Java cannot box an int literal directly to Short/Byte/Character; the reference
+            // cast only boxes the exact primitive, so first narrow in a cast context.
+            return "return net.jqwik.api.Arbitraries.just((" + argument.getJavaType() + ") " + narrowPrimitiveCast + " (" + value + "))";
+        }
         // MIN_VALUE magnitudes are legal only as unary-minus operands; after a reference-type
         // cast, an unparenthesized '-' is parsed as binary subtraction instead.
         return "return net.jqwik.api.Arbitraries.just((" + argument.getJavaType() + ") (" + value + "))";
+    }
+
+    private static String boxedNarrowPrimitiveCast(String javaType) {
+        switch (javaType) {
+            case "java.lang.Short":
+                return "(short)";
+            case "java.lang.Byte":
+                return "(byte)";
+            case "java.lang.Character":
+                return "(char)";
+            default:
+                return null;
+        }
     }
 }

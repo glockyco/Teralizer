@@ -30,9 +30,7 @@ public class NumericDomainPlanner implements DomainPlanner {
             : Optional.empty();
         NumericClauseInterpretation interpretation = context.getInterpretation(parameter.getName());
         String body = createArbitrary(parameter, argument, interpretation.getConstraints());
-        String originalValue = argument
-            .map(arg -> "(" + arg.getJavaType() + ") (" + new ModelToJavaTransformer().transform(arg) + ")")
-            .orElse(null);
+        String originalValue = argument.map(NumericDomainPlanner::castOriginalValue).orElse(null);
         return new ParameterGenerationPlan(parameter, domain, new RawJavaRecipe(body), originalValue, interpretation.getConsumedClauseIds());
     }
 
@@ -116,8 +114,8 @@ public class NumericDomainPlanner implements DomainPlanner {
         result.append(String.format("%s %s = java.util.Collections.min(%s);%n", parameter.getType(), n.max(), n.upperBounds()));
 
         if (argument.isPresent()) {
-            String firstValue = new ModelToJavaTransformer().transform(argument.get());
-            result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.just((%s) (%s)); }%n", n.min(), n.max(), argument.get().getJavaType(), firstValue));
+            String firstValue = castOriginalValue(argument.get());
+            result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.just(%s); }%n", n.min(), n.max(), firstValue));
             result.append(String.format("return net.jqwik.api.Arbitraries.%s().between(%s, %s)", arbitraryType, n.min(), n.max()));
         } else {
             result.append(String.format("if (%s > %s) { return net.jqwik.api.Arbitraries.of(); }%n", n.min(), n.max()));
@@ -167,6 +165,28 @@ public class NumericDomainPlanner implements DomainPlanner {
             result.append(String.format("return net.jqwik.api.Arbitraries.%s().ofScale(%s).between(%s, %s, %s, %s)", arbitraryType, n.scale(), n.min(), n.minIncluded(), n.max(), n.maxIncluded()));
         }
         return result.toString();
+    }
+
+    private static String castOriginalValue(Value argument) {
+        String firstValue = new ModelToJavaTransformer().transform(argument);
+        String narrowPrimitiveCast = boxedNarrowPrimitiveCast(argument.getJavaType());
+        if (narrowPrimitiveCast != null) {
+            return "(" + argument.getJavaType() + ") " + narrowPrimitiveCast + " (" + firstValue + ")";
+        }
+        return "(" + argument.getJavaType() + ") (" + firstValue + ")";
+    }
+
+    private static String boxedNarrowPrimitiveCast(String javaType) {
+        switch (javaType) {
+            case "java.lang.Short":
+                return "(short)";
+            case "java.lang.Byte":
+                return "(byte)";
+            case "java.lang.Character":
+                return "(char)";
+            default:
+                return null;
+        }
     }
 
     private static String generateInclusionCheck(Names n, boolean isMin) {
