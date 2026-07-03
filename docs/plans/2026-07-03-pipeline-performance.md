@@ -79,10 +79,10 @@ The only whole-model walks are `findTypeBySimpleName` (line 1160) and `findTypeB
 
 ### Task 3: Corpus-scale verification (rides the validation-repair re-run)
 
-No dedicated run. The Task 5 re-run of `2026-07-03-generalized-validation-repair` executes with both changes in place; its census-stability acceptance (≈2003 gens, per-project counts unchanged) plus a funnel re-run (`uv run --directory analysis python -m teralizer.mut_resolution_funnel` with `DB_NAME_TEST=postgres_fusion_spike`) IS the bit-identical evidence for Task 1, and `SETUP_PROJECT` avg runtime from the fresh `task` table quantifies Task 2.
+No dedicated run. The Task 5 re-run of `2026-07-03-generalized-validation-repair` executes with both changes in place; its census-stability acceptance plus a funnel re-run (`uv run --directory analysis python -m teralizer.mut_resolution_funnel` with `DB_NAME_TEST=postgres_fusion_spike`) is the bit-identical evidence for Task 1, and `SETUP_PROJECT` avg runtime from the fresh `task` table quantifies Task 2. The definitive funnel has 25,306 assertions rather than the older 32,560-row table because `kouchat`, `gedcom4j`, `xenqtt`, and `uaicriteria` stop at the uniform original-suite ceiling before `ANALYZE_TESTS` in this run; `MissingValue` rejects with `status='RESOLVED'` remain zero.
 
-- [ ] **Step 1:** After that re-run: funnel tier counts identical to the recorded pre-optimization numbers (T1 19,251 / T2 1,748 / T3 2,770 / T4 908 / T5 7,883 of 32,560); census per-project counts identical.
-- [ ] **Step 2:** Record `ANALYZE_TESTS` and `SETUP_PROJECT` avg/total deltas in `2026-06-28-mut-id-targeting-and-coverage` next to the existing cost-delta table.
+- [x] **Step 1:** After that re-run: funnel tier counts and project-set drift are recorded in `2026-06-28-mut-id-targeting-and-coverage`; completing-project census counts are bit-identical to the definitive single-variant spike census.
+- [x] **Step 2:** Record `ANALYZE_TESTS` and `SETUP_PROJECT` avg/total deltas in `2026-06-28-mut-id-targeting-and-coverage` next to the cost-delta table.
 
 ---
 

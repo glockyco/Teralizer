@@ -16,9 +16,9 @@
 - **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
-- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (62/67) ← 2026-07-02-mut-id-confidence-fusion
-- **Generalized Validation-Layer Repair** [plan] `2026-07-03-generalized-validation-repair` (25/29) ← 2026-06-26-teralizer-overview
-- **Pipeline Performance — Resolver Memoization & Setup Classpath** [plan] `2026-07-03-pipeline-performance` (12/14) ← 2026-06-26-teralizer-overview
+- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (67/67) ← 2026-07-02-mut-id-confidence-fusion
+- **Generalized Validation-Layer Repair** [plan] `2026-07-03-generalized-validation-repair` (29/29) ← 2026-06-26-teralizer-overview
+- **Pipeline Performance — Resolver Memoization & Setup Classpath** [plan] `2026-07-03-pipeline-performance` (14/14) ← 2026-06-26-teralizer-overview
 
 ## draft
 

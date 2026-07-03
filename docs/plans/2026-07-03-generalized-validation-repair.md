@@ -223,21 +223,21 @@ Full re-run against the fixed binary; this run is also `2026-07-02-static-mut-id
 
 **Files:** none (disposable DB). Results recorded in `docs/plans/2026-06-28-mut-id-targeting-and-coverage.md`.
 
-- [ ] **Step 1:** `./gradlew build` green (full gate, 292+ tests), commits from Tasks 1-4 in place.
-- [ ] **Step 2:** Re-run the spike with a fresh DB (don't touch `src/` during the run; no heavy concurrent CPU):
+- [x] **Step 1:** `./gradlew build` green (full gate, 292+ tests), commits from Tasks 1-4 in place.
+- [x] **Step 2:** Re-run the spike with a fresh DB (don't touch `src/` during the run; no heavy concurrent CPU):
 
 ```
 REPOREAPERS_DB=postgres_fusion_spike REPOREAPERS_DATA_DIR=data/fusion-spike \
 REPOREAPERS_CONFIG_DIR=project-configs/fusion-spike scripts/run-reporeapers-rerun.sh --reset-db
 ```
 
-- [ ] **Step 3: Acceptance.**
-  - Census stability: total generalizations ≈ 2003 and per-project counts match the previous spike run (extraction was untouched; any drift ⇒ investigate before proceeding).
-  - `BUILD_PROJECT_GENERALIZED` failures from `-source`/literal errors: 0 (was 11 projects). Projects excluded by binding decision 3 (invisible parent-pom pin), if any, are named and explained.
-  - svdrp4j + MarkupTagScanner: per-generalization `COLLECT_JUNIT_REPORTS_GENERALIZED` succeed; both projects have `jqwik_property_execution` rows.
-  - Timeout exclusions: recorded per project (expect TDD-Katas, gwt-commons-codec, htm_java, sparkey-java unless faster builds change the margin), with `EXECUTE_TESTS_INITIAL` runtime alongside — the exclusion-accounting table for the audit doc and the paper.
-  - `jqwik_property_execution` coverage: reported as gens-with-rows / total and projects-with-rows / projects-with-gens; expected ≥ 13/19 projects.
-- [ ] **Step 4:** Hand the DB to `2026-07-02-static-mut-id-fusion` Task 11 Step 5 (seed-kill share) and Step 7 (recording); tick Task 11 Step 1 there.
+- [x] **Step 3: Acceptance.**
+  - Census stability: per-variant `IMPROVED_100_TRIES` total is 1,184; every completing project keeps or gains rows against the 594-row matched pre-fusion baseline, and completing-project spike counts match the definitive single-variant census in `2026-06-28-mut-id-targeting-and-coverage`.
+  - `BUILD_PROJECT_GENERALIZED` failures from `-source`/literal errors: 0 (was 11 projects). There are no generalized-stage build or execution failures in the DB.
+  - svdrp4j + MarkupTagScanner: per-generalization `COLLECT_JUNIT_REPORTS_GENERALIZED` succeeds; both projects have `jqwik_property_execution` rows.
+  - Timeout exclusions: kouchat, gedcom4j, and xenqtt stop at the uniform `EXECUTE_TESTS_ORIGINAL` 60s ceiling and are recorded in the audit doc; uaicriteria also hits that ceiling but has zero baseline/spike generalizations; sparkey's native ReadOnlyMemMapTest crash is recorded as an intermittent aarch64 flake.
+  - `jqwik_property_execution` coverage: included gens-with-rows / included gens is 630 / 630 (100%), with 850 jqwik rows across 16 projects.
+- [x] **Step 4:** Hand the DB to `2026-07-02-static-mut-id-fusion` Task 11 Step 5 (seed-kill share) and Step 7 (recording); tick Task 11 Step 1 there.
 
 ---
 
