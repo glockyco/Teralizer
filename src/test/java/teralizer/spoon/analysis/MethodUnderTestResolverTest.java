@@ -383,6 +383,33 @@ public class MethodUnderTestResolverTest {
         + "  public void process(int x) { }\n"
         + "}";
 
+    @Example
+    void explicitConstructorInvocation_neverPicked() {
+        // A local class whose constructor calls super() puts a CtInvocation with a
+        // CONSTRUCTOR executable into the test method body. Picking it would blow up
+        // TestAnalysisTask's CtMethod cast (spike regression: JadConfig, kouchat, ...).
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() {\n"
+            + "    class Local extends Subject { Local() { super(); } }\n"
+            + "    Local l = new Local();\n"
+            + "    org.junit.Assert.assertEquals(0, l.getTotal());\n"
+            + "  }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        if (r.getPick() != null) {
+            Assert.assertTrue("pick must never be a constructor executable",
+                r.getPick().getExecutable().getDeclaration() == null
+                    || r.getPick().getExecutable().getDeclaration() instanceof CtMethod<?>);
+            Assert.assertFalse("pick must not be super()/this()",
+                r.getPick().getExecutable().isConstructor());
+        }
+        for (MutResolution.Candidate candidate : r.getAlternatives()) {
+            Assert.assertFalse("<init> must not appear among candidates",
+                "<init>".equals(candidate.methodName) || "Local".equals(candidate.methodName));
+        }
+    }
+
     public static MutResolution resolve(String testSource, String... otherSources) {
         return resolveNth(testSource, 0, otherSources);
     }

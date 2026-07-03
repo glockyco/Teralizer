@@ -116,7 +116,11 @@ public class TestAnalysisTask extends AbstractTask {
             MutResolution resolution = MethodUnderTestResolver.resolve(testMethod, assertionCall);
             CtInvocation<?> testedMethodCall = resolution.getPick();
             if (testedMethodCall != null) {
-                CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+                // Guard, not cast: a pick outside the source model (or a non-method executable)
+                // stays characterization-only and must not abort the whole test's analysis.
+                CtMethod<?> testedMethod = testedMethodCall.getExecutable().getDeclaration() instanceof CtMethod<?>
+                    ? (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration()
+                    : null;
                 List<GeneralizableInput> generalizableInputs = testedMethod == null
                     ? null
                     : GeneralizableInput.derive(testedMethod, testedMethodCall);

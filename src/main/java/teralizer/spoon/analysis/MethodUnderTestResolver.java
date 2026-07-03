@@ -593,10 +593,14 @@ public final class MethodUnderTestResolver {
     /**
      * A production call is a source-slice invocation that is not part of assertion/oracle machinery,
      * not a test-owned helper, and not a platform-library call.  The exclusions keep elimination from
-     * picking code the downstream generator cannot or should not generalize.
+     * picking code the downstream generator cannot or should not generalize.  Explicit constructor
+     * invocations (super()/this() are CtInvocations whose executable is a CONSTRUCTOR) are excluded
+     * outright: a constructor is never the method under test, and downstream consumers cast the
+     * pick's declaration to CtMethod.
      */
     private static boolean isProductionCall(CtInvocation<?> invocation, CtMethod<?> testMethod) {
-        return !isAssertionLibraryCall(invocation)
+        return !invocation.getExecutable().isConstructor()
+            && !isAssertionLibraryCall(invocation)
             && !isTestOwnHelper(invocation, testMethod)
             && !isJavaOrJavaxCall(invocation);
     }

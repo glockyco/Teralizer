@@ -269,11 +269,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         returnType.setSimplyQualified(false);
         returnType.setImplicit(false);
 
-        Set<CtTypeReference<? extends Throwable>> thrownTypes = testedMethod.getThrownTypes();
-        thrownTypes.forEach(t -> {
-            t.setSimplyQualified(false);
-            t.setImplicit(false);
-        });
+        Set<CtTypeReference<? extends Throwable>> thrownTypes = collectThrownTypes(testedMethod, testedMethodCall);
 
         return factory.createMethod(
             instrumentedClass,
@@ -284,6 +280,33 @@ public class JpfInstrumentationTask extends AbstractTask {
             thrownTypes,
             instrumentedBody
         );
+    }
+
+    /**
+     * Collects every checked-exception type the instrumented wrapper must declare: the tested
+     * method's own {@code throws}, plus the declared {@code throws} of every call and constructor
+     * cloned into the wrapper body (e.g. a lifted receiver/argument constructor such as
+     * {@code new URL(String)}, which throws {@code MalformedURLException}). The original test
+     * method compiled with those calls inline, so its call site already handles these exceptions;
+     * omitting them from the wrapper breaks BUILD_PROJECT_INSTRUMENTED instead.
+     */
+    static Set<CtTypeReference<? extends Throwable>> collectThrownTypes(CtMethod<?> testedMethod, CtInvocation<?> testedMethodCall) {
+        Set<CtTypeReference<? extends Throwable>> thrownTypes = new HashSet<>(testedMethod.getThrownTypes());
+        for (CtElement element : testedMethodCall.getElements(CtAbstractInvocation.class::isInstance)) {
+            CtExecutableReference<?> executable = ((CtAbstractInvocation<?>) element).getExecutable();
+            if (executable == null) {
+                continue;
+            }
+            CtExecutable<?> declaration = executable.getExecutableDeclaration();
+            if (declaration != null) {
+                thrownTypes.addAll(declaration.getThrownTypes());
+            }
+        }
+        thrownTypes.forEach(t -> {
+            t.setSimplyQualified(false);
+            t.setImplicit(false);
+        });
+        return thrownTypes;
     }
 
     CtTypeReference<?> inferExpectedType(CtInvocation<?> call) {
