@@ -3,6 +3,7 @@
 ## @vtlvariable name="jpfSymbcModelClasspath" type="java.lang.String"
 ## @vtlvariable name="maxExecutionTime" type="java.lang.Double"
 ## @vtlvariable name="maxPathConditionSize" type="java.lang.Long"
+## @vtlvariable name="maxSearchDepth" type="java.lang.Integer"
 ## @vtlvariable name="driverClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="testClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="testMethodQualifiedName" type="java.lang.String"
@@ -48,7 +49,7 @@ test_generalization.input_values_path=${inputValuesPath}
 test_generalization.output_value_path=${outputValuePath}
 test_generalization.input_specification_path=${inputSpecificationPath}
 test_generalization.output_specification_path=${outputSpecificationPath}
-search.depth_limit=100
+search.depth_limit=${maxSearchDepth}
 search.multiple_errors=true
 report.class=gov.nasa.jpf.report.Reporter
 report.publisher=console

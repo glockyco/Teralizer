@@ -53,6 +53,26 @@ public class JpfConfigTemplateTest {
         Assert.assertFalse("dp must not be hardcoded to z3", rendered.contains("symbolic.dp=z3\n"));
     }
 
+    @Example
+    void rendersSearchDepthFromContext() {
+        VelocityEngine velocity = new VelocityEngine(templateProperties());
+        velocity.init();
+
+        VelocityContext context = baseContext();
+        context.put("symbolicDp", "z3");
+        context.put("symbolicFp", false);
+        context.put("symbolicBvLength", 32);
+        context.put("maxSearchDepth", 250);
+
+        StringWriter writer = new StringWriter();
+        Template template = velocity.getTemplate("jpf-config.vm");
+        template.merge(context, writer);
+
+        String rendered = writer.toString();
+        Assert.assertTrue("depth limit must come from context", rendered.contains("search.depth_limit=250"));
+        Assert.assertFalse("depth limit must not be hardcoded", rendered.contains("search.depth_limit=100"));
+    }
+
     private static VelocityContext baseContext() {
         VelocityContext context = new VelocityContext();
         context.put("driverClassQualifiedName", "example.Driver");
@@ -62,6 +82,7 @@ public class JpfConfigTemplateTest {
         context.put("classpath", "project/target/classes");
         context.put("maxExecutionTime", 30.0);
         context.put("maxPathConditionSize", 100000L);
+        context.put("maxSearchDepth", 100);
         context.put("testClassQualifiedName", "example.Test");
         context.put("testMethodQualifiedName", "example.Test.testValue");
         context.put("testedClassQualifiedName", "example.Subject");

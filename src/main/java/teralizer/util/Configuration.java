@@ -211,6 +211,15 @@ public class Configuration {
         return CONFIG.getLong(TOOL_NAME_LOWER + ".jpf.max-path-condition-size");
     }
 
+    /**
+     * JPF search depth ceiling for constraint collection. Every symbolic-operand branch consumes
+     * one choice point in collect mode, so loop-heavy tested methods burn depth linearly; the
+     * listener reports hitting this limit as a typed SEARCH_DEPTH_LIMIT abort.
+     */
+    public static int getJpfMaxSearchDepth() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".jpf.max-search-depth");
+    }
+
     // ----- JUnit ----- //
     public static int getJunitMaxExecutionTime() {
         return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.max-execution-time");
