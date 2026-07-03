@@ -83,6 +83,54 @@ public class GeneralizableInputTest {
         Assert.assertTrue(inputs.get(1).isReceiverConstructorArgument());
     }
 
+
+    @Example
+    void deriveSkipsEmptyVarargsTailWithoutThrowing() {
+        CtInvocation<?> assertion = assertionFromSource(
+            "package smoke;\n"
+                + "import static org.junit.Assert.assertEquals;\n"
+                + "public class SubjectTest {\n"
+                + "  public static final class Subject {\n"
+                + "    public static int join(int... xs) { return xs.length; }\n"
+                + "  }\n"
+                + "  @org.junit.Test public void valueInsideInterval() {\n"
+                + "    assertEquals(0, Subject.join());\n"
+                + "  }\n"
+                + "}\n"
+        );
+        CtInvocation<?> testedMethodCall = assertion.getArguments().get(1).filterChildren(CtInvocation.class::isInstance)
+            .map(CtInvocation.class::cast)
+            .first();
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+
+        Assert.assertTrue(inputs.isEmpty());
+    }
+
+    @Example
+    void deriveSkipsExpandedVarargsWithoutThrowing() {
+        CtInvocation<?> assertion = assertionFromSource(
+            "package smoke;\n"
+                + "import static org.junit.Assert.assertEquals;\n"
+                + "public class SubjectTest {\n"
+                + "  public static final class Subject {\n"
+                + "    public static int join(int... xs) { return xs.length; }\n"
+                + "  }\n"
+                + "  @org.junit.Test public void valueInsideInterval() {\n"
+                + "    assertEquals(3, Subject.join(1, 2, 3));\n"
+                + "  }\n"
+                + "}\n"
+        );
+        CtInvocation<?> testedMethodCall = assertion.getArguments().get(1).filterChildren(CtInvocation.class::isInstance)
+            .map(CtInvocation.class::cast)
+            .first();
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+
+        Assert.assertTrue(inputs.isEmpty());
+    }
     private static CtInvocation<?> assertionFromSource(String source) {
         Launcher launcher = new Launcher();
         launcher.addInputResource(new VirtualFile(source, "SubjectTest.java"));

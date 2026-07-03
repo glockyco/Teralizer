@@ -51,6 +51,15 @@ public class GeneralizableInput {
 
         for (int i = 0; i < parameters.size(); i++) {
             CtParameter<?> parameter = parameters.get(i);
+            if (i >= arguments.size() || parameter.isVarArgs()) {
+                /*
+                 * Varargs are deliberately not lifted in v1: the generator has no recipe
+                 * for producing a variable-length argument list, and calls such as join()
+                 * or join(1, 2, 3) do not have a stable one-parameter/one-argument
+                 * correspondence. Positional lifting would therefore be unsound.
+                 */
+                continue;
+            }
             CtExpression<?> argument = arguments.get(i);
             CtTypeReference<?> type = inferType(parameter, argument);
             String typeName = type.getQualifiedName();
