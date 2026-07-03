@@ -2,6 +2,7 @@ package teralizer.spoon.analysis;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +11,9 @@ import java.util.Set;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtArrayRead;
+import spoon.reflect.code.CtConditional;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExecutableReferenceExpression;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
@@ -20,16 +24,21 @@ import spoon.reflect.code.CtNewClass;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableRead;
+import spoon.reflect.code.CtThisAccess;
+import spoon.reflect.code.CtTypeAccess;
 import spoon.reflect.code.CtVariableWrite;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtVariableReference;
+import spoon.reflect.reference.CtTypeReference;
 import teralizer.util.Configuration;
+import teralizer.util.TypeCapability;
 
 /**
  * Confidence-ranked method-under-test resolution for one assertion.
@@ -135,25 +144,53 @@ public final class MethodUnderTestResolver {
         Focal focal
     ) {
         List<Traced> producers = traceExpression(actual, testMethod, assertion, new HashSet<>());
-        if (producers.isEmpty()) {
-            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL, focal);
+        if (producers.size() >= 2) {
+            List<Traced> ranked = rankTraces(producers, testMethod, focal);
+            Traced winner = ranked.get(0);
+            MutResolution.Signal signal = allSameSignal(ranked, MutResolution.Signal.SUBEXPRESSION_PRODUCER)
+                ? MutResolution.Signal.SUBEXPRESSION_PRODUCER
+                : MutResolution.Signal.RANKED_GUESS;
+            return rankedBase(
+                testMethod,
+                winner.producer,
+                signal,
+                alternativesAfterFirst(ranked),
+                winner.inspectorUnwrapped,
+                winner.shallowInspectorPick,
+                focal
+            );
         }
-        Traced first = producers.get(0);
-        List<MutResolution.Candidate> alternatives = alternativesAfterFirst(producers);
         if (producers.size() == 1) {
+            Traced first = producers.get(0);
+            if (first.shallowInspectorPick) {
+                List<CtInvocation<?>> pool = productionCallsBefore(testMethod, assertion);
+                pool.remove(first.producer);
+                if (!pool.isEmpty()) {
+                    return resolveFromProductionPool(testMethod, pool, focal);
+                }
+            }
             return graded(
                 testMethod,
                 first.producer,
                 first.signal,
                 first.proven ? MutResolution.Tier.T1_PROVEN : MutResolution.Tier.T3_SINGLE_WEAK,
-                alternatives,
+                new ArrayList<MutResolution.Candidate>(),
                 first.inspectorUnwrapped,
                 first.shallowInspectorPick,
                 focal
             );
         }
-        return rankedBase(testMethod, first.producer, first.signal, alternatives,
-            first.inspectorUnwrapped, first.shallowInspectorPick, focal);
+        /*
+         * Cardinality-1 elimination is a proof only when dataflow was silent: no producer was found,
+         * but exactly one production call exists in the pre-assertion slice.  If the trace reached a
+         * variable/field write whose right-hand side had no producer, dataflow has refuted an older
+         * producer by showing a killed definition (for example x = 5).  In that case slice
+         * elimination must not resurrect the stale call merely because it is unique in the prefix.
+         */
+        if (hasKilledDefinition(actual, testMethod, assertion, new HashSet<>())) {
+            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL, focal);
+        }
+        return resolveFromProductionPool(testMethod, productionCallsBefore(testMethod, assertion), focal);
     }
 
     /** A traced producer: the call plus whether the trace was a straight-line reaching definition. */
@@ -181,6 +218,337 @@ public final class MethodUnderTestResolver {
             this.inspectorUnwrapped = inspectorUnwrapped;
             this.shallowInspectorPick = shallowInspectorPick;
         }
+    }
+
+    /** The nearest write found by the same straight-line walk used for producer tracing. */
+    private static final class ReachingWrite {
+        final CtExpression<?> rhs;
+        final boolean proven;
+
+        ReachingWrite(CtExpression<?> rhs, boolean proven) {
+            this.rhs = rhs;
+            this.proven = proven;
+        }
+    }
+
+    /**
+     * Applies the pre-assertion slice fallback after dataflow has either stayed silent or produced a
+     * shallow inspector whose real receiver-producer was unreachable.  A single remaining
+     * production call is cardinality-forced evidence: there is exactly one non-oracle, non-library,
+     * non-test-helper method call in the slice that could have affected the later assertion, so it is
+     * graded as T1.  Larger pools are guesses: the same pool is ordered by the ranking comparator,
+     * alternatives preserve the losing candidates, and identity corroborators may promote the base
+     * T4 grade through rankedBase.
+     */
+    private static MutResolution resolveFromProductionPool(
+        CtMethod<?> testMethod,
+        List<CtInvocation<?>> pool,
+        Focal focal
+    ) {
+        if (pool.isEmpty()) {
+            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL, focal);
+        }
+        List<CtInvocation<?>> ranked = rankedProductionCalls(pool, testMethod, focal);
+        CtInvocation<?> pick = ranked.get(0);
+        if (ranked.size() == 1) {
+            return graded(
+                testMethod,
+                pick,
+                MutResolution.Signal.UNIQUE_PRODUCER_ELIMINATION,
+                MutResolution.Tier.T1_PROVEN,
+                new ArrayList<MutResolution.Candidate>(),
+                false,
+                false,
+                focal
+            );
+        }
+        return rankedBase(
+            testMethod,
+            pick,
+            MutResolution.Signal.RANKED_GUESS,
+            alternativesExcluding(ranked, pick),
+            false,
+            false,
+            focal
+        );
+    }
+
+    /**
+     * Ranks traced producers with the same comparator used for slice candidates, preserving each
+     * trace's original signal/flags on the winning producer.  This is only a ranking step; when all
+     * candidates came from one composite expression, the caller keeps SUBEXPRESSION_PRODUCER as the
+     * deciding signal because dataflow found the candidate set and ranking only broke the tie.
+     */
+    private static List<Traced> rankTraces(List<Traced> traces, CtMethod<?> testMethod, Focal focal) {
+        List<Traced> ranked = new ArrayList<>(traces);
+        final Comparator<CtInvocation<?>> comparator = rankingComparator(testMethod, focal);
+        ranked.sort(new Comparator<Traced>() {
+            @Override
+            public int compare(Traced left, Traced right) {
+                return comparator.compare(left.producer, right.producer);
+            }
+        });
+        return ranked;
+    }
+
+    /**
+     * Orders production calls deterministically.  The comparator is lexicographic, not weighted:
+     * (1) type-eligible candidates first because an ineligible pick would immediately die at the
+     * generator's parameter/return filters; (2) focal-class members first because the resolved CUT is
+     * the best static scope signal but must never veto dataflow; (3) method-name matches first because
+     * Methods2Test-style names are independent weak evidence; (4) later top-level statements first
+     * because proximity to the assertion is LCBA's one useful hint; (5) source position in ascending
+     * syntactic order as a stable tie-breaker.
+     */
+    private static List<CtInvocation<?>> rankedProductionCalls(
+        List<CtInvocation<?>> pool,
+        CtMethod<?> testMethod,
+        Focal focal
+    ) {
+        List<CtInvocation<?>> ranked = new ArrayList<>(pool);
+        ranked.sort(rankingComparator(testMethod, focal));
+        return ranked;
+    }
+
+    /**
+     * Builds the ranking comparator shared by traced multi-producer choices and slice-elimination
+     * pools.  Every comparison level is a descending preference except the final source-position
+     * tie-breaker, which keeps syntactic order stable and deterministic.
+     */
+    private static Comparator<CtInvocation<?>> rankingComparator(
+        final CtMethod<?> testMethod,
+        final Focal focal
+    ) {
+        return new Comparator<CtInvocation<?>>() {
+            @Override
+            public int compare(CtInvocation<?> left, CtInvocation<?> right) {
+                int byType = Boolean.compare(typeEligible(right), typeEligible(left));
+                if (byType != 0) {
+                    return byType;
+                }
+                int byFocal = Boolean.compare(isFocalMember(right, focal), isFocalMember(left, focal));
+                if (byFocal != 0) {
+                    return byFocal;
+                }
+                int byName = Boolean.compare(
+                    nameMatches(testMethod.getSimpleName(), right.getExecutable().getSimpleName()),
+                    nameMatches(testMethod.getSimpleName(), left.getExecutable().getSimpleName())
+                );
+                if (byName != 0) {
+                    return byName;
+                }
+                List<CtStatement> body = testMethod.getBody().getStatements();
+                int byPosition = Integer.compare(topLevelIndex(right, body), topLevelIndex(left, body));
+                if (byPosition != 0) {
+                    return byPosition;
+                }
+                return Integer.compare(sourceOrder(left), sourceOrder(right));
+            }
+        };
+    }
+
+    /**
+     * Returns every pre-assertion call that could plausibly be the MUT producer.  The pool contains
+     * CtInvocations in earlier top-level statements only: assertion arguments are oracle code and
+     * must not vote for themselves.  Assertion libraries are excluded by name/package because they
+     * encode test checks, not production behavior.  Calls declared on the test class or its
+     * superclasses are excluded as test helpers.  java/javax calls are excluded because the
+     * generalizer never targets platform-library methods as the MUT.
+     */
+    private static List<CtInvocation<?>> productionCallsBefore(
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion
+    ) {
+        List<CtInvocation<?>> pool = new ArrayList<>();
+        if (testMethod == null || testMethod.getBody() == null || assertion == null) {
+            return pool;
+        }
+        List<CtStatement> body = testMethod.getBody().getStatements();
+        int assertionIndex = topLevelIndex(assertion, body);
+        if (assertionIndex < 0) {
+            return pool;
+        }
+        for (CtStatement statement : body) {
+            for (CtElement element : statement.getElements(CtInvocation.class::isInstance)) {
+                CtInvocation<?> invocation = (CtInvocation<?>) element;
+                int index = topLevelIndex(invocation, body);
+                if (index >= 0 && index < assertionIndex && isProductionCall(invocation, testMethod)) {
+                    pool.add(invocation);
+                }
+            }
+        }
+        return pool;
+    }
+
+    /** Returns true when all traces carry the given signal; used to preserve composite dataflow. */
+    private static boolean allSameSignal(List<Traced> traces, MutResolution.Signal signal) {
+        for (Traced trace : traces) {
+            if (trace.signal != signal) {
+                return false;
+            }
+        }
+        return !traces.isEmpty();
+    }
+
+    /**
+     * A production call is a source-slice invocation that is not part of assertion/oracle machinery,
+     * not a test-owned helper, and not a platform-library call.  The exclusions keep elimination from
+     * picking code the downstream generator cannot or should not generalize.
+     */
+    private static boolean isProductionCall(CtInvocation<?> invocation, CtMethod<?> testMethod) {
+        return !isAssertionLibraryCall(invocation)
+            && !isTestOwnHelper(invocation, testMethod)
+            && !isJavaOrJavaxCall(invocation);
+    }
+
+    /** Assertion frameworks and mocking verification methods describe checks, not production work. */
+    private static boolean isAssertionLibraryCall(CtInvocation<?> invocation) {
+        String name = invocation.getExecutable().getSimpleName();
+        if (name.startsWith("assert") || name.startsWith("fail") || name.startsWith("verify")) {
+            return true;
+        }
+        String declaring = declaringTypeName(invocation);
+        return startsWithAny(declaring, "org.junit", "org.hamcrest", "org.assertj", "org.mockito", "org.testng");
+    }
+
+    /** Test-class and superclass methods are helpers around the test, never the production MUT. */
+    private static boolean isTestOwnHelper(CtInvocation<?> invocation, CtMethod<?> testMethod) {
+        String declaring = declaringTypeName(invocation);
+        if (declaring == null || testMethod == null || testMethod.getDeclaringType() == null) {
+            return false;
+        }
+        CtType<?> current = testMethod.getDeclaringType();
+        while (current != null) {
+            if (declaring.equals(current.getQualifiedName())) {
+                return true;
+            }
+            CtTypeReference<?> superclass = current.getSuperclass();
+            current = superclass == null ? null : superclass.getTypeDeclaration();
+        }
+        return false;
+    }
+
+    /** Platform-library calls are characterization-only at best and cannot be the production MUT. */
+    private static boolean isJavaOrJavaxCall(CtInvocation<?> invocation) {
+        return startsWithAny(declaringTypeName(invocation), "java.", "javax.");
+    }
+
+    /** Source-model methods with at least one generatable input and a supported return rank first. */
+    private static boolean typeEligible(CtInvocation<?> invocation) {
+        if (!(invocation.getExecutable().getDeclaration() instanceof CtMethod<?>)) {
+            return false;
+        }
+        CtMethod<?> method = (CtMethod<?>) invocation.getExecutable().getDeclaration();
+        boolean hasGeneratedInput = false;
+        for (CtParameter<?> parameter : method.getParameters()) {
+            if (TypeCapability.supportsGeneratedInput(typeName(parameter.getType()))) {
+                hasGeneratedInput = true;
+                break;
+            }
+        }
+        return hasGeneratedInput && TypeCapability.supportsReturnValue(typeName(method.getType()));
+    }
+
+    /** Converts a Spoon type reference into the qualified name expected by TypeCapability. */
+    private static String typeName(CtTypeReference<?> type) {
+        return type == null ? null : type.getQualifiedName();
+    }
+
+    /** Focal membership is a ranking preference and corroborator, never a hard gate. */
+    private static boolean isFocalMember(CtInvocation<?> invocation, Focal focal) {
+        return Boolean.TRUE.equals(focalAgreement(invocation, focal));
+    }
+
+    /** Null-safe prefix check for declaring-type package filters. */
+    private static boolean startsWithAny(String value, String... prefixes) {
+        if (value == null) {
+            return false;
+        }
+        for (String prefix : prefixes) {
+            if (value.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Source-position order is the deterministic final tie-breaker when semantic signals tie. */
+    private static int sourceOrder(CtInvocation<?> invocation) {
+        SourcePosition position = invocation.getPosition();
+        if (position == null || !position.isValidPosition()) {
+            return Integer.MAX_VALUE;
+        }
+        return position.getSourceStart();
+    }
+
+    /**
+     * Detects the "refuting" case for slice elimination.  The same reaching-definition walk used
+     * for producers is followed to the nearest write; if that write's RHS has no visible producer,
+     * an older producer has been killed and the correct result is NONE rather than resurrecting a
+     * unique earlier call from the slice.
+     */
+    private static boolean hasKilledDefinition(
+        CtExpression<?> expression,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion,
+        Set<CtVariableReference<?>> visited
+    ) {
+        if (expression instanceof CtBinaryOperator<?>) {
+            CtBinaryOperator<?> binary = (CtBinaryOperator<?>) expression;
+            return hasKilledDefinition(binary.getLeftHandOperand(), testMethod, assertion, visited)
+                || hasKilledDefinition(binary.getRightHandOperand(), testMethod, assertion, visited);
+        }
+        if (expression instanceof CtUnaryOperator<?>) {
+            return hasKilledDefinition(
+                ((CtUnaryOperator<?>) expression).getOperand(),
+                testMethod,
+                assertion,
+                visited
+            );
+        }
+        if (expression instanceof CtVariableRead<?>) {
+            CtVariableReference<?> ref = ((CtVariableRead<?>) expression).getVariable();
+            if (!(ref instanceof CtLocalVariableReference) || visited.contains(ref)) {
+                return false;
+            }
+            Set<CtVariableReference<?>> nextVisited = new HashSet<>(visited);
+            nextVisited.add(ref);
+            ReachingWrite write = nearestLocalWrite(ref, testMethod, assertion);
+            return write != null && rhsRefutesProducer(write.rhs, testMethod, assertion, nextVisited);
+        }
+        if (expression instanceof CtFieldRead<?>) {
+            CtFieldRead<?> fieldRead = (CtFieldRead<?>) expression;
+            if (!isThisOrUnqualified(fieldRead.getTarget()) || visited.contains(fieldRead.getVariable())) {
+                return false;
+            }
+            Set<CtVariableReference<?>> nextVisited = new HashSet<>(visited);
+            nextVisited.add(fieldRead.getVariable());
+            ReachingWrite write = nearestFieldWrite(fieldRead.getVariable(), testMethod, assertion);
+            return write != null && rhsRefutesProducer(write.rhs, testMethod, assertion, nextVisited);
+        }
+        return false;
+    }
+
+    /**
+     * A reached RHS refutes older producers when tracing it yields no producer.  Nested variable or
+     * field reads are checked recursively so copies of a killed value preserve the guard.
+     */
+    private static boolean rhsRefutesProducer(
+        CtExpression<?> rhs,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion,
+        Set<CtVariableReference<?>> visited
+    ) {
+        if (rhs == null) {
+            return false;
+        }
+        if (!traceExpression(rhs, testMethod, assertion, visited).isEmpty()) {
+            return false;
+        }
+        if (hasKilledDefinition(rhs, testMethod, assertion, visited)) {
+            return true;
+        }
+        return true;
     }
 
     /*
@@ -323,15 +691,35 @@ public final class MethodUnderTestResolver {
         return declaring.startsWith("java.") || declaring.startsWith("javax.");
     }
 
-    /*
-     * Local variables use reaching-definition semantics: the nearest prior write wins,
-     * even when that write is a literal that kills an older call-produced value.
+    /**
+     * Local variables use reaching-definition semantics: the nearest prior write wins, even when
+     * that write is a literal that kills an older call-produced value.  The helper returns the same
+     * nearest RHS used by the elimination guard so producer tracing and refutation agree.
      */
     private static List<Traced> traceLocalVariable(
         CtVariableReference<?> ref,
         CtMethod<?> testMethod,
         CtInvocation<?> assertion,
         Set<CtVariableReference<?>> visited
+    ) {
+        ReachingWrite write = nearestLocalWrite(ref, testMethod, assertion);
+        return wrapTrace(
+            traceExpression(write == null ? null : write.rhs, testMethod, assertion, visited),
+            write != null && write.proven,
+            MutResolution.Signal.LOCAL_VARIABLE_PRODUCER
+        );
+    }
+
+    /**
+     * Finds the nearest local declaration or assignment before the assertion.  Direct body writes are
+     * proven; nested writes/declarations are retained for recall but marked weak because a branch may
+     * not have executed.  If the top-level scan cannot see a nested declaration, the declaration
+     * fallback preserves the pre-existing weak behavior.
+     */
+    private static ReachingWrite nearestLocalWrite(
+        CtVariableReference<?> ref,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion
     ) {
         List<CtStatement> body = testMethod.getBody().getStatements();
         int assertionIndex = topLevelIndex(assertion, body);
@@ -364,8 +752,6 @@ public final class MethodUnderTestResolver {
                 }
             }
         }
-        // If the nearest in-scope write is not visible from the top-level statement
-        // scan, retain the old nested-declaration fallback but grade it as unproven.
         if (rhs == null && ref instanceof CtLocalVariableReference) {
             CtLocalVariable<?> declaration = ((CtLocalVariableReference<?>) ref).getDeclaration();
             if (declaration != null) {
@@ -373,23 +759,37 @@ public final class MethodUnderTestResolver {
                 writeProven = false;
             }
         }
-        return wrapTrace(
-            traceExpression(rhs, testMethod, assertion, visited),
-            writeProven,
-            MutResolution.Signal.LOCAL_VARIABLE_PRODUCER
-        );
+        return rhs == null ? null : new ReachingWrite(rhs, writeProven);
     }
 
-    /*
-     * Fields are intentionally narrower than locals: only writes to this.field (or
-     * unqualified field) inside the test method count. Setup methods and collaborators
-     * are out of scope, so absence of an in-method write means "no visible producer."
+    /**
+     * Fields are intentionally narrower than locals: only writes to this.field (or unqualified
+     * field) inside the test method count.  Setup methods and collaborators are out of scope, so
+     * absence of an in-method write means "no visible producer."
      */
     private static List<Traced> traceField(
         CtFieldReference<?> ref,
         CtMethod<?> testMethod,
         CtInvocation<?> assertion,
         Set<CtVariableReference<?>> visited
+    ) {
+        ReachingWrite write = nearestFieldWrite(ref, testMethod, assertion);
+        return wrapTrace(
+            traceExpression(write == null ? null : write.rhs, testMethod, assertion, visited),
+            write != null && write.proven,
+            MutResolution.Signal.FIELD_PRODUCER
+        );
+    }
+
+    /**
+     * Finds the nearest qualifying field assignment before the assertion.  Field state can be
+     * overwritten by several writes; only a single straight-line write proves the producer, while the
+     * nearest visible write remains a weak candidate.
+     */
+    private static ReachingWrite nearestFieldWrite(
+        CtFieldReference<?> ref,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion
     ) {
         List<CtStatement> body = testMethod.getBody().getStatements();
         int assertionIndex = topLevelIndex(assertion, body);
@@ -418,14 +818,7 @@ public final class MethodUnderTestResolver {
                 }
             }
         }
-        // Field state can be overwritten by several writes; only a single straight-line
-        // write proves the producer, otherwise the nearest visible write is weak.
-        boolean proven = writeCount == 1 && directWrite;
-        return wrapTrace(
-            traceExpression(rhs, testMethod, assertion, visited),
-            proven,
-            MutResolution.Signal.FIELD_PRODUCER
-        );
+        return rhs == null ? null : new ReachingWrite(rhs, writeCount == 1 && directWrite);
     }
 
     // Apply the outer mechanism while preserving stronger inner provenance such as

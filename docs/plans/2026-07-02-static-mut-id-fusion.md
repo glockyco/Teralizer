@@ -1080,7 +1080,7 @@ The last resolver piece: when dataflow yields no producer, the pre-assertion sli
 
 **Files:** same two files.
 
-- [ ] **Step 1: Add failing tests:**
+- [x] **Step 1: Add failing tests:**
 
 ```java
     @Example
@@ -1138,9 +1138,9 @@ The last resolver piece: when dataflow yields no producer, the pre-assertion sli
     }
 ```
 
-- [ ] **Step 2: Run, expect FAIL/PASS as follows.** The first two tests fail (both currently resolve `getTotal` shallow); the killed-definition and no-calls tests already pass via Tasks 3-4 — keep them as regression pins that Step 3 must not break.
+- [x] **Step 2: Run, expect FAIL/PASS as follows.** The first two tests fail (both currently resolve `getTotal` shallow); the killed-definition and no-calls tests already pass via Tasks 3-4 — keep them as regression pins that Step 3 must not break.
 
-- [ ] **Step 3: Implement.**
+- [x] **Step 3: Implement.**
 
 Production-call pool (`productionCallsBefore(testMethod, assertion)`):
 - All `CtInvocation`s in the test method body whose `topLevelIndex` precedes the assertion's, excluding invocations nested inside the assertion statement itself.
@@ -1161,8 +1161,8 @@ Wiring into `resolveValueAssertion` — replace the terminal `none(NO_VISIBLE_CA
 - Dataflow produced a **shallow inspector pick** → compute the pool excluding the inspector: pool size 1 ⇒ that call, `UNIQUE_PRODUCER_ELIMINATION`, T1 (cardinality-forced; the seed-check backstops coherence); pool ≥2 ⇒ rank pool, `RANKED_GUESS`; pool empty ⇒ keep the flagged shallow inspector (Task 6 behavior).
 - Dataflow empty (no variable/field/call visible at all, and no killed definition) → pool size 1 ⇒ `UNIQUE_PRODUCER_ELIMINATION` T1; ≥2 ⇒ `RANKED_GUESS`; 0 ⇒ `none(NO_VISIBLE_CALL)`.
 
-- [ ] **Step 4: Run, expect PASS.** Verify no prior test regressed — in particular `inspectorWithUnreachableReceiver_keptButFlaggedShallow` (its pool is empty: `new Subject()` is a constructor call, not a `CtInvocation`).
-- [ ] **Step 5: Commit.** `git commit -am "feat(mut-id): unique-producer elimination and ranked-guess tiers"`
+- [x] **Step 4: Run, expect PASS.** Verify no prior test regressed — in particular `inspectorWithUnreachableReceiver_keptButFlaggedShallow` (its pool is empty: `new Subject()` is a constructor call, not a `CtInvocation`).
+- [x] **Step 5: Commit.** `git commit -am "feat(mut-id): unique-producer elimination and ranked-guess tiers"`
 
 ---
 

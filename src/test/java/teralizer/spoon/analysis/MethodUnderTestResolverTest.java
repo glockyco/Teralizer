@@ -257,6 +257,60 @@ public class MethodUnderTestResolverTest {
         Assert.assertNull(MethodUnderTestResolver.mirrorTestPath("src/test/java/com/x/Helper.java"));
         Assert.assertNull(MethodUnderTestResolver.mirrorTestPath("src/main/java/com/x/Foo.java"));
     }
+
+    @Example
+    void uniqueProductionCallInSlice_isT1Elimination() {
+        // Mutator-then-inspect: process() is the only production call; getTotal() is the asserted
+        // inspector with unreachable receiver-producer -- elimination picks process.
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { Subject s = new Subject(); s.process(5); org.junit.Assert.assertEquals(5, s.getTotal()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        // getTotal is a shallow inspector; the slice holds exactly one other production call.
+        Assert.assertEquals("process", r.getPick().getExecutable().getSimpleName());
+        Assert.assertEquals(MutResolution.Signal.UNIQUE_PRODUCER_ELIMINATION, r.getDecidingSignal());
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+    }
+
+    @Example
+    void multipleFeasibleCandidates_rankedGuessWithAlternatives() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { Subject s = new Subject(); s.process(5); s.helper(2); org.junit.Assert.assertEquals(5, s.getTotal()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertNotNull(r.getPick());
+        Assert.assertEquals(MutResolution.Signal.RANKED_GUESS, r.getDecidingSignal());
+        Assert.assertEquals(2, r.getCandidateCount());
+        Assert.assertEquals(1, r.getAlternatives().size());
+        // helper(int->int) is type-eligible, process(int->void) is not => ranking prefers helper.
+        Assert.assertEquals("helper", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void killedDefinition_notResurrectedBySliceElimination() {
+        // Dataflow refuted gcd (the write of 5 kills it); elimination must NOT bring it back.
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { int x = new Subject().gcd(6, 9); x = 5; org.junit.Assert.assertEquals(5, x); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Status.NONE, r.getStatus());
+        Assert.assertEquals(MutResolution.NoPickReason.NO_VISIBLE_CALL, r.getNoPickReason());
+    }
+
+    @Example
+    void noCallsAtAll_isT5None() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { int x = 1 + 2; org.junit.Assert.assertEquals(3, x); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Status.NONE, r.getStatus());
+        Assert.assertEquals(MutResolution.Tier.T5_NONE, r.getTier());
+        Assert.assertEquals(MutResolution.NoPickReason.NO_VISIBLE_CALL, r.getNoPickReason());
+    }
     // --- shared helpers (used by all tasks) ---
 
     static final String SUBJECT_SOURCE =
