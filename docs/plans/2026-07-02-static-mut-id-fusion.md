@@ -1497,7 +1497,7 @@ git commit -m "feat(mut-id): wire fusion resolver into TestAnalysisTask with obs
 **Files:**
 - Create: `analysis/src/teralizer/mut_resolution_funnel.py`
 
-- [ ] **Step 1: Write the module** (complete file; conventions mirror `analysis/src/teralizer/mut_id_targets.py` — pandas + SQLAlchemy `text()`, module-level `main`, `db_config`):
+- [x] **Step 1: Write the module** (complete file; conventions mirror `analysis/src/teralizer/mut_id_targets.py` — pandas + SQLAlchemy `text()`, module-level `main`, `db_config`):
 
 ```python
 """MUT-resolution confidence-tier funnel.
@@ -1616,9 +1616,9 @@ if __name__ == "__main__":
 
 **Check `db_config` first:** open `analysis/src/teralizer/config.py` and match how `mut_id_targets.py` actually acquires a connection (if it uses a different helper than `db_config.create_engine()`, mirror that exactly).
 
-- [ ] **Step 2: Validate.** Run: `uv run --directory analysis python validate.py --changed`. Expected: ruff/ty/pytest pass. (The module needs a populated DB to produce output; validation only needs it to lint/type-check.)
+- [x] **Step 2: Validate.** Run: `uv run --directory analysis python validate.py --changed`. Expected: ruff/ty/pytest pass. (The module needs a populated DB to produce output; validation only needs it to lint/type-check.)
 
-- [ ] **Step 3: Commit.**
+- [x] **Step 3: Commit.**
 
 ```bash
 git add analysis/src/teralizer/mut_resolution_funnel.py
