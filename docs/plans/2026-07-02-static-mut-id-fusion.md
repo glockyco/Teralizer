@@ -1,7 +1,7 @@
 ---
 title: Static MUT-id Fusion (v1)
 type: plan
-status: draft
+status: active
 created: 2026-07-02
 parent: 2026-07-02-mut-id-confidence-fusion
 ---

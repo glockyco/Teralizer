@@ -14,7 +14,9 @@
 - **Partial Sound String Support** [plan] `2026-06-30-partial-sound-string-support` (38/42) ← 2026-06-26-teralizer-overview
 - **Rerun Observability Priorities** [audit] `2026-07-01-rerun-observability-priorities` ← 2026-06-26-teralizer-overview
 - **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
+- **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
+- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (0/67) ← 2026-07-02-mut-id-confidence-fusion
 
 ## draft
 
@@ -23,8 +25,6 @@
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
-- **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
-- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (0/67) ← 2026-07-02-mut-id-confidence-fusion
 
 ## superseded
 
