@@ -1178,7 +1178,7 @@ pick, tier, or status.
 - Modify: `src/main/java/teralizer/spoon/analysis/MutResolution.java` (add `withTopology`)
 - Test: `src/test/java/teralizer/spoon/analysis/MethodUnderTestResolverTest.java`
 
-- [ ] **Step 1: Add failing tests:**
+- [x] **Step 1: Add failing tests:**
 
 ```java
     @Example
@@ -1242,9 +1242,9 @@ pick, tier, or status.
     }
 ```
 
-- [ ] **Step 2: Run, expect FAIL.**
+- [x] **Step 2: Run, expect FAIL.**
 
-- [ ] **Step 3: Implement.** In `MutResolution`, add a package-private enrichment copy (keeps every existing constructor call site unchanged):
+- [x] **Step 3: Implement.** In `MutResolution`, add a package-private enrichment copy (keeps every existing constructor call site unchanged):
 
 ```java
     MutResolution withTopology(ActualShape shape, ReceiverProvenance provenance) {
@@ -1279,8 +1279,8 @@ In `MethodUnderTestResolver.resolve(...)`, wrap the existing body: rename it `re
 - `CtTypeAccess` (static) or null target or parameter read → `PARAM_OR_STATIC`;
 - `CtVariableRead` of a local: find its reaching definition (reuse Task 4's walk). Definition RHS is a `CtConstructorCall` → any statement strictly between the definition and the assertion that invokes a method on that variable? `LOCAL_CTOR_MUTATED` : `LOCAL_CTOR`. Definition RHS anything else → `LOCAL_OTHER`.
 
-- [ ] **Step 4: Run, expect PASS** (all prior tests too — topology must not change any pick/tier).
-- [ ] **Step 5: Commit.** `git commit -am "feat(mut-id): classify input topology (actual shape, receiver provenance)"`
+- [x] **Step 4: Run, expect PASS** (all prior tests too — topology must not change any pick/tier).
+- [x] **Step 5: Commit.** `git commit -am "feat(mut-id): classify input topology (actual shape, receiver provenance)"`
 
 ---
 

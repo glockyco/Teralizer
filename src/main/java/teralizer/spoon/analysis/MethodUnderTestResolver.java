@@ -19,6 +19,7 @@ import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtNewClass;
 import spoon.reflect.code.CtStatement;
@@ -77,6 +78,17 @@ public final class MethodUnderTestResolver {
     }
 
     public static MutResolution resolve(CtMethod<?> testMethod, CtInvocation<?> assertion) {
+        MutResolution resolution = resolveInternal(testMethod, assertion);
+        CtExpression<?> actual = actualExpression(testMethod, assertion);
+        return resolution.withTopology(classifyShape(actual), receiverProvenance(actual, testMethod, assertion));
+    }
+
+    /**
+     * Computes the MUT pick/tier exactly as before topology enrichment.  Keeping this body separate
+     * makes the topology pass visibly pure telemetry: it can describe the assertion's input shape,
+     * but it cannot influence status, tier, pick, alternatives, or no-pick reason.
+     */
+    private static MutResolution resolveInternal(CtMethod<?> testMethod, CtInvocation<?> assertion) {
         Focal focal = resolveFocalType(testMethod);
         if (assertion == null) {
             return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
@@ -93,6 +105,168 @@ public final class MethodUnderTestResolver {
 
         CtExpression<?> actual = assertion.getArguments().get(index.get());
         return resolveValueAssertion(testMethod, assertion, actual, focal);
+    }
+
+    /**
+     * Extracts the assertion's actual expression for topology classification.  Unsupported
+     * assertions and assertThrows return null because their "actual" is not a value expression in
+     * the sense used by the R1/R2 topology taxonomy.
+     */
+    private static CtExpression<?> actualExpression(CtMethod<?> testMethod, CtInvocation<?> assertion) {
+        if (assertion == null
+                || assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
+            return null;
+        }
+        Optional<Integer> index = TestAnalysis.getActualParameterIndex(assertion);
+        if (!index.isPresent() || index.get() >= assertion.getArguments().size()) {
+            return null;
+        }
+        return assertion.getArguments().get(index.get());
+    }
+
+    /**
+     * Classifies the asserted value shape for observation only.  LITERAL/VARIABLE/FIELD_ACCESS are
+     * leaf oracle values; SINGLE_CALL and CTOR_RECEIVER_CALL identify one method call, with the
+     * latter marking inline receiver construction; CHAINED_CALLS_END0ARG/ENDNARG distinguish
+     * chained call oracles by whether the outermost call has input arguments; CTOR_ONLY is a bare
+     * constructor expression; OPERATOR_COMPOSITE covers binary/unary/conditional expressions whose
+     * inputs are embedded in operators; ARRAY_INDEX and LAMBDA_OR_METHODREF reserve other expression
+     * families.  NONE means no supported value topology.  This taxonomy never changes the MUT pick.
+     */
+    private static MutResolution.ActualShape classifyShape(CtExpression<?> actual) {
+        if (actual == null) {
+            return MutResolution.ActualShape.NONE;
+        }
+        if (actual instanceof CtLiteral<?>) {
+            return MutResolution.ActualShape.LITERAL;
+        }
+        if (actual instanceof CtVariableRead<?>) {
+            return MutResolution.ActualShape.VARIABLE;
+        }
+        if (actual instanceof CtFieldRead<?>) {
+            return MutResolution.ActualShape.FIELD_ACCESS;
+        }
+        if (actual instanceof CtBinaryOperator<?>
+                || actual instanceof CtUnaryOperator<?>
+                || actual instanceof CtConditional<?>) {
+            return MutResolution.ActualShape.OPERATOR_COMPOSITE;
+        }
+        if (actual instanceof CtArrayRead<?>) {
+            return MutResolution.ActualShape.ARRAY_INDEX;
+        }
+        if (actual instanceof CtLambda<?> || actual instanceof CtExecutableReferenceExpression<?, ?>) {
+            return MutResolution.ActualShape.LAMBDA_OR_METHODREF;
+        }
+        if (actual instanceof CtConstructorCall<?>) {
+            return MutResolution.ActualShape.CTOR_ONLY;
+        }
+        if (actual instanceof CtInvocation<?>) {
+            CtInvocation<?> outermost = (CtInvocation<?>) actual;
+            int invocationCount = 0;
+            CtExpression<?> current = actual;
+            while (current instanceof CtInvocation<?>) {
+                invocationCount++;
+                current = ((CtInvocation<?>) current).getTarget();
+            }
+            if (invocationCount == 1) {
+                return current instanceof CtConstructorCall<?>
+                    ? MutResolution.ActualShape.CTOR_RECEIVER_CALL
+                    : MutResolution.ActualShape.SINGLE_CALL;
+            }
+            return outermost.getArguments().isEmpty()
+                ? MutResolution.ActualShape.CHAINED_CALLS_END0ARG
+                : MutResolution.ActualShape.CHAINED_CALLS_ENDNARG;
+        }
+        return MutResolution.ActualShape.NONE;
+    }
+
+    /**
+     * Classifies where the receiver of an invocation-rooted actual came from, again as telemetry
+     * only.  INLINE_CTOR marks a root receiver constructed in the assertion; LOCAL_CTOR means a local
+     * variable was initialized from a constructor and left untouched; LOCAL_CTOR_MUTATED marks the
+     * R2 statement-slice family where a local constructor receiver was mutated before inspection;
+     * LOCAL_OTHER covers locals not rooted in a constructor; FIELD covers field receivers; and
+     * PARAM_OR_STATIC covers parameters, static calls, and receiver-less invocations.
+     */
+    private static MutResolution.ReceiverProvenance receiverProvenance(
+        CtExpression<?> actual,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion
+    ) {
+        if (!(actual instanceof CtInvocation<?>)) {
+            return MutResolution.ReceiverProvenance.NONE;
+        }
+        CtExpression<?> receiver = rootReceiver((CtInvocation<?>) actual);
+        if (receiver instanceof CtConstructorCall<?>) {
+            return MutResolution.ReceiverProvenance.INLINE_CTOR;
+        }
+        if (receiver instanceof CtFieldRead<?>) {
+            return MutResolution.ReceiverProvenance.FIELD;
+        }
+        if (receiver instanceof CtTypeAccess<?> || receiver == null) {
+            return MutResolution.ReceiverProvenance.PARAM_OR_STATIC;
+        }
+        if (receiver instanceof CtVariableRead<?>) {
+            CtVariableReference<?> ref = ((CtVariableRead<?>) receiver).getVariable();
+            if (!(ref instanceof CtLocalVariableReference)) {
+                return MutResolution.ReceiverProvenance.PARAM_OR_STATIC;
+            }
+            ReachingWrite write = nearestLocalWrite(ref, testMethod, assertion);
+            if (write == null) {
+                return MutResolution.ReceiverProvenance.LOCAL_OTHER;
+            }
+            if (write.rhs instanceof CtConstructorCall<?>) {
+                return localReceiverMutatedBetween(ref, write.index, testMethod, assertion)
+                    ? MutResolution.ReceiverProvenance.LOCAL_CTOR_MUTATED
+                    : MutResolution.ReceiverProvenance.LOCAL_CTOR;
+            }
+            return MutResolution.ReceiverProvenance.LOCAL_OTHER;
+        }
+        if (receiver instanceof CtThisAccess<?>) {
+            return MutResolution.ReceiverProvenance.PARAM_OR_STATIC;
+        }
+        return MutResolution.ReceiverProvenance.NONE;
+    }
+
+    /** Walks an invocation chain to its first non-invocation receiver expression. */
+    private static CtExpression<?> rootReceiver(CtInvocation<?> invocation) {
+        CtExpression<?> current = invocation.getTarget();
+        while (current instanceof CtInvocation<?>) {
+            current = ((CtInvocation<?>) current).getTarget();
+        }
+        return current;
+    }
+
+    /**
+     * Detects mutation of a local constructor receiver between its definition and the assertion by
+     * looking for intervening method invocations targeted at that same local.  This is the topology
+     * marker for statement-slice recipes; it does not validate or alter the selected MUT.
+     */
+    private static boolean localReceiverMutatedBetween(
+        CtVariableReference<?> ref,
+        int definitionIndex,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion
+    ) {
+        List<CtStatement> body = testMethod.getBody().getStatements();
+        int assertionIndex = topLevelIndex(assertion, body);
+        for (CtStatement statement : body) {
+            for (CtElement element : statement.getElements(CtInvocation.class::isInstance)) {
+                CtInvocation<?> invocation = (CtInvocation<?>) element;
+                int index = topLevelIndex(invocation, body);
+                if (index > definitionIndex && index < assertionIndex && targetsLocal(invocation, ref)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** True when an invocation is called directly on the given local variable receiver. */
+    private static boolean targetsLocal(CtInvocation<?> invocation, CtVariableReference<?> ref) {
+        CtExpression<?> target = invocation.getTarget();
+        return target instanceof CtVariableRead<?>
+            && ((CtVariableRead<?>) target).getVariable().equals(ref);
     }
 
     // --- assertThrows: the executed body is the slice ---
@@ -224,10 +398,12 @@ public final class MethodUnderTestResolver {
     private static final class ReachingWrite {
         final CtExpression<?> rhs;
         final boolean proven;
+        final int index;
 
-        ReachingWrite(CtExpression<?> rhs, boolean proven) {
+        ReachingWrite(CtExpression<?> rhs, boolean proven, int index) {
             this.rhs = rhs;
             this.proven = proven;
+            this.index = index;
         }
     }
 
@@ -757,9 +933,10 @@ public final class MethodUnderTestResolver {
             if (declaration != null) {
                 rhs = declaration.getAssignment();
                 writeProven = false;
+                bestIndex = topLevelIndex(declaration, body);
             }
         }
-        return rhs == null ? null : new ReachingWrite(rhs, writeProven);
+        return rhs == null ? null : new ReachingWrite(rhs, writeProven, bestIndex);
     }
 
     /**
@@ -818,7 +995,7 @@ public final class MethodUnderTestResolver {
                 }
             }
         }
-        return rhs == null ? null : new ReachingWrite(rhs, writeCount == 1 && directWrite);
+        return rhs == null ? null : new ReachingWrite(rhs, writeCount == 1 && directWrite, bestIndex);
     }
 
     // Apply the outer mechanism while preserving stronger inner provenance such as

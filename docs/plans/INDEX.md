@@ -16,7 +16,7 @@
 - **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
-- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (41/67) ← 2026-07-02-mut-id-confidence-fusion
+- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (46/67) ← 2026-07-02-mut-id-confidence-fusion
 
 ## draft
 

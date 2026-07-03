@@ -113,6 +113,13 @@ public final class MutResolution {
         this.receiverProvenance = receiverProvenance;
     }
 
+    MutResolution withTopology(ActualShape shape, ReceiverProvenance provenance) {
+        return new MutResolution(this.status, this.tier, this.decidingSignal, this.corroborators,
+            this.noPickReason, this.pick, this.alternatives, this.candidateCount,
+            this.inspectorUnwrapped, this.shallowInspectorPick, this.focalType, this.focalSource,
+            this.focalAgreement, shape, provenance);
+    }
+
     public Status getStatus() { return this.status; }
     public Tier getTier() { return this.tier; }
     public Signal getDecidingSignal() { return this.decidingSignal; }
