@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="org.hampelratte.svdrp.commands._LSTCTest_Generalized_testWithGroupsAndIds_1995_Test" time="0.005" tests="1" errors="0" skipped="0" failures="0" flakes="0">
+  <testcase name="testWithGroupsAndIds" classname=" LSTCTest Generalized testWithGroupsAndIds 1995 Test" time="0.005">
+    <system-out><![CDATA[timestamp = 2026-07-03T12:54:16.535,  LSTCTest Generalized testWithGroupsAndIds 1995 Test:testWithGroupsAndIds = 
+                              |-----------------------jqwik-----------------------
+tries = 1                     | # of calls to property
+checks = 1                    | # of not rejected calls
+generation = EXHAUSTIVE       | parameters are exhaustively generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = FIRST       | edge cases are generated first
+edge-cases#total = 0          | # of all combined edge cases
+edge-cases#tried = 0          | # of edge cases tried in current run
+seed = 0                      | random seed to reproduce generated values
+
+
+]]></system-out>
+  </testcase>
+</testsuite>

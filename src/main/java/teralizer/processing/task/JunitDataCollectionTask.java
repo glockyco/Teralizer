@@ -347,7 +347,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         );
     }
 
-    private List<ReportTestCase> parseTestCaseReports(Path testReportPath, String testClassQualifiedName, String testMethodQualifiedName) {
+    static List<ReportTestCase> parseTestCaseReports(Path testReportPath, String testClassQualifiedName, String testMethodQualifiedName) {
         try {
             TestSuiteXmlParser testSuiteReportParser = new TestSuiteXmlParser(new NullConsoleLogger());
             List<ReportTestSuite> testSuiteReports = testSuiteReportParser.parse(testReportPath.toString());
@@ -367,10 +367,10 @@ public class JunitDataCollectionTask extends AbstractTask {
                 .filter(testCaseReport -> {
                     if (testMethodQualifiedName != null) {
                         String reportMethodQualifiedName = testCaseReport.getFullName().replaceAll("\\(.*", "");
-                        return reportMethodQualifiedName.equals(testMethodQualifiedName);
+                        return matchesQualifiedName(testMethodQualifiedName, reportMethodQualifiedName);
                     } else if (testClassQualifiedName != null) {
-                        String reportClassQualifiedName = testCaseReport.getFullClassName();
-                        return reportClassQualifiedName.equals(testClassQualifiedName);
+                        String reportClassQualifiedName = replaceSpaces(testCaseReport.getFullClassName());
+                        return matchesQualifiedName(testClassQualifiedName, reportClassQualifiedName);
                     }
                     return true;
                 })
@@ -384,6 +384,19 @@ public class JunitDataCollectionTask extends AbstractTask {
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * A surefire report identifies a testcase either by fully-qualified name (surefire < 3.0.2,
+     * and all vintage-engine tests) or — for JUnit-platform tests since surefire 3.0.2 — by the
+     * engine's display name, which jqwik beautifies by replacing underscores with spaces and
+     * dropping the package. After space→underscore normalization the display-name shape is the
+     * package-less suffix of the expected qualified name; the '.' boundary keeps simple-name
+     * collisions from matching.
+     */
+    static boolean matchesQualifiedName(String expectedQualifiedName, String normalizedReportName) {
+        return expectedQualifiedName.equals(normalizedReportName)
+            || expectedQualifiedName.endsWith("." + normalizedReportName);
     }
 
     private static String replaceSpaces(String text) {

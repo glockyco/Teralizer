@@ -162,7 +162,7 @@ return "return net.jqwik.api.Arbitraries.just((" + argument.getJavaType() + ") (
 
 Surefire ≥3.0.2 writes JUnit-platform testcases with the *display name* as `classname`: jqwik beautifies `_LSTCTest_Generalized_testWithGroupsAndIds_1995_Test` to `" LSTCTest Generalized testWithGroupsAndIds 1995 Test"` (underscores→spaces, package dropped). The existing `replaceSpaces` restores underscores — including the leading one — but cannot restore the package, so the exact-equality check at lines 369-373 fails.
 
-- [ ] **Step 1: Extract a testable predicate.** Add package-private static methods to `JunitDataCollectionTask`:
+- [x] **Step 1: Extract a testable predicate.** Add package-private static methods to `JunitDataCollectionTask`:
 
 ```java
 /**
@@ -179,7 +179,7 @@ static boolean matchesQualifiedName(String expectedQualifiedName, String normali
 }
 ```
 
-- [ ] **Step 2: Write the failing test** (string-level, no XML needed):
+- [x] **Step 2: Write the failing test** (string-level, no XML needed):
 
 ```java
 public class SurefireReportMatchingTest {
@@ -202,10 +202,10 @@ public class SurefireReportMatchingTest {
 }
 ```
 
-- [ ] **Step 3: Run to verify the method is missing; implement; wire** both filter branches of `parseTestCaseReports` through it (method-name branch keeps the `replaceAll("\\(.*", "")` paren-stripping before the call; class-name branch normalizes the report's `getFullClassName()` through `replaceSpaces` first — display-name shapes never carry a package, FQN shapes pass through `endsWith` unaffected... they equal-match first).
-- [ ] **Step 4: Run to verify pass.**
-- [ ] **Step 5: Fail loud on silently-skipped generalized classes.** In `TestExecutionTask.executeInternal`, after the `consoleCommand.execute(...)` try/catch for `EXECUTE_TESTS_GENERALIZED` only: the generalized class list from line 62 is non-empty (guaranteed by line 68), so require that at least one report file for a generalized class exists under `this.projectRecord.getTestReportsPath()` — file name containing `Generalized` (both surefire naming shapes — FQN and space-mangled — preserve that token). Zero such files ⇒ `throw new RuntimeException("Test execution reported success but produced no reports for any generalized test class. The project's test runner likely cannot run JUnit-platform tests (surefire < 2.22); refusing to record a false pass.")`. Guard `Files.exists(reportsPath)` first.
-- [ ] **Step 6: Regression-verify matching against real fixtures.** Copy two real report XMLs (one FQN-shape from unicrypt, one display-name-shape from svdrp4j — sanitize paths) into `src/test/resources/surefire-reports/` and add an `@Example` running the full `TestSuiteXmlParser` + filter path over them.
+- [x] **Step 3: Run to verify the method is missing; implement; wire** both filter branches of `parseTestCaseReports` through it (method-name branch keeps the `replaceAll("\\(.*", "")` paren-stripping before the call; class-name branch normalizes the report's `getFullClassName()` through `replaceSpaces` first — display-name shapes never carry a package, FQN shapes pass through `endsWith` unaffected... they equal-match first).
+- [x] **Step 4: Run to verify pass.**
+- [x] **Step 5: Fail loud on silently-skipped generalized classes.** In `TestExecutionTask.executeInternal`, after the `consoleCommand.execute(...)` try/catch for `EXECUTE_TESTS_GENERALIZED` only: the generalized class list from line 62 is non-empty (guaranteed by line 68), so require that at least one report file for a generalized class exists under `this.projectRecord.getTestReportsPath()` — file name containing `Generalized` (both surefire naming shapes — FQN and space-mangled — preserve that token). Zero such files ⇒ `throw new RuntimeException("Test execution reported success but produced no reports for any generalized test class. The project's test runner likely cannot run JUnit-platform tests (surefire < 2.22); refusing to record a false pass.")`. Guard `Files.exists` before listing the directory.
+- [x] **Step 6: Regression-verify matching against real fixtures.** Copy two real report XMLs (one FQN-shape from unicrypt, one display-name-shape from svdrp4j — sanitize paths) into `src/test/resources/surefire-reports/` and add an `@Example` running the full `TestSuiteXmlParser` + filter path over them.
 
 **Commit subject:** `fix(pipeline): match display-name surefire reports and refuse false-green generalized runs`
 

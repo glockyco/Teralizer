@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="ch.bfh.unicrypt.helper.math._PermutationTest_Generalized_generalTest_1512_Test" time="0.006" tests="1" errors="0" skipped="0" failures="0">
+  <testcase name="generalTest" classname="ch.bfh.unicrypt.helper.math._PermutationTest_Generalized_generalTest_1512_Test" time="0.006">
+    <system-out><![CDATA[timestamp = 2026-07-03T14:38:28.252,  PermutationTest Generalized generalTest 1512 Test:generalTest = 
+                              |-----------------------jqwik-----------------------
+tries = 20                    | # of calls to property
+checks = 20                   | # of not rejected calls
+generation = RANDOMIZED       | parameters are randomly generated
+after-failure = SAMPLE_FIRST  | try previously failed sample, then previous seed
+when-fixed-seed = ALLOW       | fixing the random seed is allowed
+edge-cases#mode = FIRST       | edge cases are generated first
+edge-cases#total = 2          | # of all combined edge cases
+edge-cases#tried = 2          | # of edge cases tried in current run
+seed = 0                      | random seed to reproduce generated values
+
+
+]]></system-out>
+  </testcase>
+</testsuite>

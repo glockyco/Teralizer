@@ -132,6 +132,32 @@ public class TestExecutionTask extends AbstractTask {
                 }
             }
         }
+
+        if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {
+            // The generalized class list is non-empty by construction here. A test runner without
+            // a JUnit-platform provider, such as surefire before 2.22, can still report success
+            // after silently skipping every generated jqwik class; do not record that false green.
+            requireGeneralizedReportsPresent(this.projectRecord.getTestReportsPath());
+        }
+    }
+
+    static void requireGeneralizedReportsPresent(Path testReportsPath) throws IOException {
+        boolean hasGeneralizedReport = false;
+        if (Files.exists(testReportsPath)) {
+            try (Stream<Path> reportPaths = Files.list(testReportsPath)) {
+                hasGeneralizedReport = reportPaths
+                    .map(path -> path.getFileName().toString())
+                    .anyMatch(fileName -> fileName.contains("Generalized"));
+            }
+        }
+
+        if (!hasGeneralizedReport) {
+            throw new RuntimeException(
+                "Test execution reported success but produced no reports for any generalized test class. " +
+                "The project's test runner likely cannot run JUnit-platform tests (surefire < 2.22); " +
+                "refusing to record a false pass."
+            );
+        }
     }
 
     private List<String> buildGradleCommand(List<String> includedTests) {
