@@ -30,14 +30,17 @@ No full evaluation rerun is planned until MUT identification and string corpus v
 
 The next implementation work, **in this order**:
 
-1. **`2026-07-03-generalized-validation-repair`** *(plan, active)* — fix the generalized
+1. **`2026-07-03-pipeline-performance`** *(plan, active)* — resolver type-index/focal memo
+   (fixes the 77× `ANALYZE_TESTS` regression) and setup-classpath-from-file; lands before the
+   spike re-run so the re-run validates it corpus-wide.
+2. **`2026-07-03-generalized-validation-repair`** *(plan, active)* — fix the generalized
    build/execute/collect stages (test-source floor, surefire floor, cast-operand literal,
    display-name report matching) so `jqwik_property_execution` covers the spike corpus; its
    Task 5 re-run doubles as the fusion plan's Task 11 Step 1.
-2. **`2026-07-02-static-mut-id-fusion`** *(plan, active)* — Tasks 1-10 landed; Task 11
-   empirical verification remains (extraction-side steps can run now; seed-kill share waits
+3. **`2026-07-02-static-mut-id-fusion`** *(plan, active)* — Tasks 1-10 landed; Task 11
+   empirical verification remains (extraction-side steps recorded; seed-kill share waits
    on the validation repair).
-3. **`2026-06-30-partial-sound-string-support`** *(plan, active)* — run Task 7 corpus
+4. **`2026-06-30-partial-sound-string-support`** *(plan, active)* — run Task 7 corpus
    verification after static MUT-id resolves String-parameter/return MUTs. Scope is sound string
    operators, String returns, and structural exclusion of unsupported string terms.
 
@@ -53,6 +56,8 @@ the full status and parent tree.
 **Next implementation path**
 - `2026-07-03-generalized-validation-repair` *(plan)* — validation-layer fixes + the spike
   re-run gating Task 11's seed-kill metric.
+- `2026-07-03-pipeline-performance` *(plan)* — resolver memoization + setup classpath;
+  measured hot spots only, semantics bit-identical.
 - `2026-07-02-mut-id-confidence-fusion` *(spec)* — the MUT-id design authority: lexicographic
   confidence tiers, two grades, `mut_resolution_observation` provenance.
 - `2026-07-02-static-mut-id-fusion` *(plan)* — the AST-only v1 of that spec; Task 11 pending.
@@ -93,8 +98,6 @@ the full status and parent tree.
   methods so inherited tests parse.
 - `2026-07-03-harness-support-artifact` *(spec, draft)* — extract the inlined telemetry
   harness into a precompiled support jar; deletes the generated-file language-level coupling.
-- `MethodUnderTestResolver` per-test cost (~120ms vs old ~2ms) — memoize per-class facts per
-  test-class/model **before any full-corpus run** (at 1,174 projects: hours vs half a day).
 - FastMath/Interval generalization investigation.
 - SPF-eval listener ports: bit-exact float/NaN-payload capture, heap-PC capture for object/boxed
   params, and raw-PC logging.
