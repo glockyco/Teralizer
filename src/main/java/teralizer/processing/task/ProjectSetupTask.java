@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,7 +15,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.gradle.tooling.GradleConnector;
@@ -283,54 +283,77 @@ public class ProjectSetupTask extends AbstractTask {
         this.setupMavenProjectClasspath(projectRecord);
     }
 
+    /**
+     * Maven's dependency plugin can write the computed classpath directly to a file, avoiding a
+     * full-console log scrape for a fragile "Dependencies classpath:" marker line. `-q` also asks
+     * Maven to skip console work we do not consume.
+     * With quiet output, healthy builds can still route warnings to stderr; Maven's exit code is the
+     * success contract, so stderr on exit 0 is logged instead of failing the project setup.
+     */
     private void setupMavenProjectClasspath(ProjectRecord projectRecord) throws IOException, InterruptedException {
-        String classpath = "";
-
         StringBuilder output = new StringBuilder();
         StringBuilder error = new StringBuilder();
+        Path classpathOutputFile = Files.createTempFile("teralizer-classpath", ".txt").toAbsolutePath();
 
-        ProcessBuilder processBuilder = new ProcessBuilder("mvn", "dependency:build-classpath");
-        processBuilder.directory(projectRecord.getRootPath().toFile());
-        Process process = processBuilder.start();
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                "mvn",
+                "-q",
+                "dependency:build-classpath",
+                "-Dmdep.outputFile=" + classpathOutputFile);
+            processBuilder.directory(projectRecord.getRootPath().toFile());
+            Process process = processBuilder.start();
 
-        try (
-            InputStreamReader outputStream = new InputStreamReader(process.getInputStream());
-            BufferedReader outputReader = new BufferedReader(outputStream);
-            InputStreamReader errorStream = new InputStreamReader(process.getErrorStream());
-            BufferedReader errorReader = new BufferedReader(errorStream)
-        ) {
-            String line;
-            String previousLine = "";
-            while ((line = outputReader.readLine()) != null) {
-                output.append(line).append("\n");
-                if (previousLine.contains("Dependencies classpath:")) {
-                    classpath = line.trim();
+            try (
+                InputStreamReader outputStream = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8);
+                BufferedReader outputReader = new BufferedReader(outputStream);
+                InputStreamReader errorStream = new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8);
+                BufferedReader errorReader = new BufferedReader(errorStream)
+            ) {
+                String line;
+                while ((line = outputReader.readLine()) != null) {
+                    output.append(line).append("\n");
                 }
-                previousLine = line;
+                while ((line = errorReader.readLine()) != null) {
+                    error.append(line).append("\n");
+                }
             }
 
-            error.append(errorReader.lines().collect(Collectors.joining("\n")));
-        }
+            int exitCode = process.waitFor();
 
-        int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                String errorMessage = "Output:\n\n" + output + (error.toString().isEmpty() ? "" : "\n\nError:\n\n" + error);
+                throw new RuntimeException(errorMessage);
+            }
 
-        if (exitCode == 0 && error.toString().isEmpty()) {
             LOGGER.atDebug().log(output.toString());
-        } else {
-            String errorMessage = "Output:\n\n" + output + (error.toString().isEmpty() ? "" : "\n\nError:\n\n" + error);
-            throw new RuntimeException(errorMessage);
-        }
+            if (!error.toString().isEmpty()) {
+                LOGGER.atDebug().log(error.toString());
+            }
 
+            String classpath = new String(Files.readAllBytes(classpathOutputFile), StandardCharsets.UTF_8).trim();
+            projectRecord.setClasspath(assembleClasspath(
+                classpath,
+                projectRecord.getMainCompiledPath(),
+                projectRecord.getTestCompiledPath(),
+                Paths.get(System.getProperty("user.dir"))));
+        } finally {
+            Files.deleteIfExists(classpathOutputFile);
+        }
+    }
+
+    static String assembleClasspath(String rawClasspath, Path mainCompiled, Path testCompiled, Path workingDir) {
         List<String> classpathElements = new ArrayList<>();
 
-        classpathElements.add(projectRecord.getMainCompiledPath().toString());
-        classpathElements.add(projectRecord.getTestCompiledPath().toString());
+        classpathElements.add(mainCompiled.toString());
+        classpathElements.add(testCompiled.toString());
 
-        if (!classpath.isEmpty()) {
-            Path workingPath = Paths.get(System.getProperty("user.dir"));
-            Arrays.stream(classpath.split(File.pathSeparator)).map(path -> workingPath.relativize(Paths.get(path)).toString()).forEach(classpathElements::add);
+        if (rawClasspath != null && !rawClasspath.trim().isEmpty()) {
+            Arrays.stream(rawClasspath.trim().split(File.pathSeparator))
+                .map(path -> workingDir.relativize(Paths.get(path)).toString())
+                .forEach(classpathElements::add);
         }
 
-        projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
+        return String.join(File.pathSeparator, classpathElements);
     }
 }
