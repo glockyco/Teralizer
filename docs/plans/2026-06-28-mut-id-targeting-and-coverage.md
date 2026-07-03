@@ -357,6 +357,31 @@ assertions and 987 `SINGLE_CALL × LOCAL_CTOR_MUTATED` assertions. That is not
 evidence to prioritize R2 ahead of R1; keep T3 statement slicing out of scope
 until the full-corpus rerun sizes it.
 
+### Widened-failure triage (why validated generalizations fail after the seed)
+
+Of 850 validated generalizations, 156 fail on a post-seed trial
+(`tries > 1 ∧ ASSERTION_FAILED`); 155 of those are `output_spec_class = 'NULL_CONCRETE'`.
+Failure rate by oracle class: NULL_CONCRETE 155/716 (21.6%) vs SYMBOLIC 1/131 (0.76%).
+126/156 additionally carry an empty path condition. Mechanism (verified on octotron
+`_ValueTest_Generalized_TestGet_641`): inputs are widened while the expected side stays the
+original concrete literal because no output model exists (boxed-primitive returns lose the
+symbolic attr at boxing) — the property claims a universal the extraction never licensed and
+jqwik correctly falsifies it. Not target-program bugs; self-inflicted by construction.
+`NonPassingTestFilter` excluded every one (shipped-suite soundness held).
+
+Dispositions:
+- Prevention at source: `2026-07-03-widening-license` (generation-time license rule +
+  `ORACLE_NOT_WIDENABLE` typed exclusion); completeness recovery:
+  `2026-07-03-boxed-output-capture` (boxed returns become SYMBOLIC).
+- The single SYMBOLIC widened failure (CormenImpl,
+  `assertTrue((a <= pickedNumber) && (pickedNumber <= b))`, 1/7 clauses used) is a
+  dropped-clause case on a randomness-driven MUT — singleton; no action until populated.
+- Seed-kills: 23/850 (2.7%) — below R-B's pay-off threshold; R-B rejected per its own gate
+  (see `2026-07-02-recipe-seam-review`).
+- 48/850 end filter-degenerate (`FILTER_EXHAUSTED_SEED_ONLY` 40,
+  `LIMITED_TOO_MANY_FILTER_MISSES` 8) — completeness evidence for
+  `2026-06-28-clause-driven-input-generation` phases C/D.
+
 ## Relationship to existing docs
 
 - Design of the resolver: `2026-06-27-ensemble-mut-identification` (the oracle is

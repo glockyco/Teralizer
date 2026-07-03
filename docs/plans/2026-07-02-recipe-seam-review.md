@@ -111,17 +111,15 @@ production callsite; CtPath resolution + class-name rewriting centralize in one 
 Behavior-preserving refactor → verifiable by the census no-regression check. Sequence: after
 fusion v1 lands (its Task 9 keeps the current contract), before any R1 work.
 
-### R-B · Early coherence gate (post-JPF, pre-build) — evidence-gated
-Compare the captured concrete output (`output_value_path`, finding 4) against the assertion's
-statically-known expected argument when that argument is a literal (the dominant
-`assertEquals(literal, call)` shape; skip float/double-with-delta and non-literal expected).
-Mismatch ⇒ typed exclusion `INCOHERENT_PICK` before `BUILD_PROJECT_GENERALIZED`. Same strength as
-the seed trial (same coincidence caveat), paid at JPF-analysis cost instead of
-build+run cost. Chief beneficiary: fusion T4 guesses. Gate on Task 11's measured seed-kill share
-— if newly-attempted generalizations show a low `tries=1` failure share, skip this; if high, it
-pays for itself immediately. Effort S–M.
+### R-B · Early coherence gate (post-JPF, pre-build) — rejected by its own gate
+The measured seed-kill share among validated generalizations is 2.7% (23/850, definitive
+single-variant spike) — below the threshold where a pre-build check pays for itself. The
+dominant incoherence class is not seed-failure but post-seed widened failure, and that class
+is prevented at its source by the widening license (`2026-07-03-widening-license`), which
+subsumes R-B's purpose at generation time instead of JPF-analysis time. Revisit only if a
+future corpus shows a materially higher seed-kill share among newly-attempted picks.
 
-### R-C · `output_spec_class` telemetry — do now (one column)
+### R-C · `output_spec_class` telemetry — shipped
 `SYMBOLIC | CONSTANT | NULL_CONCRETE | EXCEPTION`, computed where the spec is written
 (`SpecificationExtractor`/`JpfAnalysisTask`) — trivially derivable from the output model
 (null / lone `Constant` / anything else / `CapturedException`). Closes finding 3's blindness;
@@ -129,11 +127,10 @@ directly measures the architecture audit's D-1 (silent concretization); the deno
 viability and the fusion-guess quality signal (incoherent picks skew to CONSTANT/NULL). Added to
 `2026-07-01-pipeline-observability-telemetry`. Effort S.
 
-### R-D · Seed-kill share in the fusion verification — free
-Task 11 Step 5 of `2026-07-02-static-mut-id-fusion` now also reports
-`tries = 1 ∧ ASSERTION_FAILED` share among newly-attempted generalizations (finding 6) — the
-direct empirical test of the "coherence backstop bounds T4 damage" claim, and R-B's decision
-input. No schema change.
+### R-D · Seed-kill share in the fusion verification — done
+Recorded in `2026-06-28-mut-id-targeting-and-coverage`: 23/850 (2.7%) raw; the
+newly-attempted-subset figure (4/17) is too thinly matched across the baseline join to carry
+weight. This is R-B's decision input; verdict above.
 
 ### Considered and rejected
 - *Expected-side capture inside the SPF driver* — R-B achieves the same check statically for the
@@ -164,13 +161,14 @@ input. No schema change.
 | Seed-kill share | derived query on `jqwik_property_execution` (`tries`, `diagnostic_kind`) | exists; wired into fusion Task 11 (R-D) |
 | Per-assertion JPF wall-clock | `task.runtime` on `EXECUTE_JPF` rows | already exists (finding 7) |
 | Tier / shape / provenance | `mut_resolution_observation` | fusion plan Tasks 1/8b |
-| Incoherence-at-JPF | R-B's typed exclusion (`filter_result.reason_code = INCOHERENT_PICK`) | gated on R-D evidence |
+| Incoherence prevention | `generalization.exclusion_info = 'ORACLE_NOT_WIDENABLE'` (widening license) | design in `2026-07-03-widening-license` |
 
-## Sequencing (proposed)
+## Sequencing
 
-1. Fusion v1 (`2026-07-02-static-mut-id-fusion`) + R-C's column + R-D's one-line query — one wave.
-2. R1 viability spike (spike 1) while Task 11's rerun executes.
+1. Fusion v1 + R-C's column + R-D's query — shipped.
+2. Widening license (`2026-07-03-widening-license`) + boxed output capture
+   (`2026-07-03-boxed-output-capture`) — the incoherence class R-B targeted, fixed at source.
 3. R-A recipe extraction (behavior-preserving; census-verified).
-4. R1 expression-slice spec — written against the recipe seam, scoped by spike-1 results and the
-   `actual_shape` telemetry; R-B folded in if R-D's numbers justify it.
+4. R1 viability spike (spike 1), then the R1 expression-slice spec — written against the recipe
+   seam, scoped by spike-1 results and the `actual_shape` telemetry.
 5. R2 decision from `receiver_provenance` counts (topology spike's gate).

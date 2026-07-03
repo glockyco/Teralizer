@@ -51,6 +51,21 @@ Collapse the Baseline/Naive/Improved factory triplication so the planner is the 
 ### The residual filter stays unconditional
 `filter(inputJava)` is always emitted; recipes narrow, the filter enforces. Removing it for "consumed" clauses is **out of scope** (no outcome change, only added unsoundness surface).
 
+### The widening license — oracle side of the same invariant
+Input-side discipline (clauses by construction + the unconditional filter) has an output-side
+counterpart: **an input may be widened only as far as the extraction evidence licenses** —
+the oracle must co-vary (SYMBOLIC), be path-proven constant (CONSTANT), or have its relation
+pinned in the path condition (boolean-in-PC case). The license rule, its exclusion policy
+(`ORACLE_NOT_WIDENABLE`), and its evidence (21.6% of NULL_CONCRETE validated generalizations
+fail after the seed by construction, vs 0.76% for SYMBOLIC) live in
+`2026-07-03-widening-license`. Planners inherit the invariant by reference: a recipe that
+widens is only reachable for licensed generalizations.
+
+Filter-degeneracy evidence for this spec's phases C/D: on the definitive single-variant spike,
+48 of 850 validated generalizations end `FILTER_EXHAUSTED_SEED_ONLY` or
+`LIMITED_TOO_MANY_FILTER_MISSES` — the residual filter rejecting nearly everything the
+unencoded arbitrary produces. Those are the completeness rows clause-encoding recovers.
+
 ### Typed recipes — decouple planning from rendering (follow-up)
 A "recipe" is currently a pre-rendered jqwik-Java string — and so is the rest of the plan→Java boundary. The planners build `Arbitraries.*` source with `String.format` and call `ModelToJavaTransformer` directly; `originalValue` is a rendered `(type) (value)` string; `ConstraintClause.getJavaExpression` holds the residual `filter(inputJava)` predicate as pre-rendered Java; and the numeric bound expressions (`n.min()`/`n.max()`, e.g. `(char) (65.0)`) are rendered before being interpolated into the recipe. So the planning layer does code generation across all of these, and the cast, first-value guard, arbitrary selection, predicate, and bounds rendering are scattered across the planners, the clause interpreter, `ConstraintClauses`, `defaultRecipe`, and both supplier factories — the same surface where the `double ^ double` and int-as-`(char)` bugs lived.
 

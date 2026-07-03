@@ -30,16 +30,13 @@ No full evaluation rerun is planned until MUT identification and string corpus v
 
 The next implementation work, **in this order**:
 
-1. **`2026-07-03-pipeline-performance`** *(plan, active)* — resolver type-index/focal memo
-   (fixes the 77× `ANALYZE_TESTS` regression) and setup-classpath-from-file; lands before the
-   spike re-run so the re-run validates it corpus-wide.
-2. **`2026-07-03-generalized-validation-repair`** *(plan, active)* — fix the generalized
-   build/execute/collect stages (test-source floor, surefire floor, cast-operand literal,
-   display-name report matching) so `jqwik_property_execution` covers the spike corpus; its
-   Task 5 re-run doubles as the fusion plan's Task 11 Step 1.
-3. **`2026-07-02-static-mut-id-fusion`** *(plan, active)* — Tasks 1-10 landed; Task 11
-   empirical verification remains (extraction-side steps recorded; seed-kill share waits
-   on the validation repair).
+1. **`2026-07-03-widening-license`** *(spec, active)* — generation-time license rule: inputs
+   widen only as far as the extraction evidence reaches; kills the 21.6% self-inflicted
+   widened-failure class via `ORACLE_NOT_WIDENABLE` typed exclusions.
+2. **`2026-07-03-boxed-output-capture`** *(spec, active)* — capture the symbolic attr from
+   boxed-primitive returns; the completeness recovery for what the license gates out.
+3. **R-A `GeneralizationRecipe` extraction** (per `2026-07-02-recipe-seam-review`) —
+   behavior-preserving; census-verified; the structural home for per-input decisions.
 4. **`2026-06-30-partial-sound-string-support`** *(plan, active)* — run Task 7 corpus
    verification after static MUT-id resolves String-parameter/return MUTs. Scope is sound string
    operators, String returns, and structural exclusion of unsupported string terms.
@@ -54,13 +51,11 @@ the full status and parent tree.
   guardrails, and paper-facing interpretation for the JARVIS baseline.
 
 **Next implementation path**
-- `2026-07-03-generalized-validation-repair` *(plan)* — validation-layer fixes + the spike
-  re-run gating Task 11's seed-kill metric.
-- `2026-07-03-pipeline-performance` *(plan)* — resolver memoization + setup classpath;
-  measured hot spots only, semantics bit-identical.
+- `2026-07-03-widening-license` *(spec)* — the oracle-coherence license; names the
+  license-based-generalization invariant.
+- `2026-07-03-boxed-output-capture` *(spec)* — boxed returns become SYMBOLIC output specs.
 - `2026-07-02-mut-id-confidence-fusion` *(spec)* — the MUT-id design authority: lexicographic
   confidence tiers, two grades, `mut_resolution_observation` provenance.
-- `2026-07-02-static-mut-id-fusion` *(plan)* — the AST-only v1 of that spec; Task 11 pending.
 - `2026-06-30-partial-sound-string-support` *(plan, active)* — sound string-operator support;
   corpus verification remains gated on MUT-id.
 - `2026-07-03-symbolic-sibling-throws` *(spec, draft)* — SPF search survives application
