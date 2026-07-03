@@ -1649,7 +1649,7 @@ Prove: recall rose, tiers are honest, the working corpus did not regress, and th
 - Modify: `docs/plans/2026-06-28-mut-id-targeting-and-coverage.md` (done in Task 11)
 - Modify: `docs/plans/INDEX.md` (regenerated)
 
-- [ ] **Step 1:** Verify spec acceptance criteria (`2026-07-02-mut-id-confidence-fusion` §Acceptance) each map to a completed task; tick remaining checkboxes here.
+- [x] **Step 1:** Verify spec acceptance criteria (`2026-07-02-mut-id-confidence-fusion` §Acceptance) each map to a completed task; tick remaining checkboxes here. Code-side criteria (totality, observation rows, grade separation, characterization tests) are satisfied by Tasks 1-10; the empirical criteria (tier funnel counts, census non-regression, mis-targeting spot check, cost + seed-kill share, topology distribution) are Task 11's deliverables and remain open until the operator-assisted spike rerun.
 - [ ] **Step 2:** Set this plan's `status: implemented` is **not** done by hand — run `omp-plans complete 2026-07-02-static-mut-id-fusion` (moves to archive, regenerates INDEX, validates).
 - [ ] **Step 3:** Commit any doc deltas: `git commit -am "docs(plans): record MUT-id fusion spike results"`.
 
