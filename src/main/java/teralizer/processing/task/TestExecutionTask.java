@@ -135,26 +135,13 @@ public class TestExecutionTask extends AbstractTask {
     }
 
     private List<String> buildGradleCommand(List<String> includedTests) {
-        List<String> command;
-        if (this.stage == ProcessingStage.EXECUTE_TESTS_ORIGINAL) {
-            command = new ArrayList<>(Arrays.asList(
-                "./gradlew",
-                "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE,
-                "--info",
-                "-Djacoco.skip=false",
-                "test"
-            ));
-        } else {
-            command = new ArrayList<>(Arrays.asList(
-                "./gradlew",
-                "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE,
-                "--info",
-                "-Djacoco.skip=false",
-                "-DforkCount=1",
-                "-DreuseForks=false",
-                "test"
-            ));
-        }
+        List<String> command = new ArrayList<>(Arrays.asList(
+            "./gradlew",
+            "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE,
+            "--info",
+            "-Djacoco.skip=false",
+            "test"
+        ));
 
         if (includedTests != null) {
             // @TODO: Avoid "Argument list too long" errors if there are many included tests.
@@ -168,24 +155,12 @@ public class TestExecutionTask extends AbstractTask {
     }
 
     private List<String> buildMavenCommand(List<String> includedTests) throws IOException {
-        List<String> command;
-        if (this.stage == ProcessingStage.EXECUTE_TESTS_ORIGINAL) {
-            command = new ArrayList<>(Arrays.asList(
-                "mvn",
-                "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
-                "-Djacoco.skip=false",
-                "test"
-            ));
-        } else {
-            command = new ArrayList<>(Arrays.asList(
-                "mvn",
-                "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
-                "-Djacoco.skip=false",
-                "-DforkCount=1",
-                "-DreuseForks=false",
-                "test"
-            ));
-        }
+        List<String> command = new ArrayList<>(Arrays.asList(
+            "mvn",
+            "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
+            "-Djacoco.skip=false",
+            "test"
+        ));
 
         if (includedTests != null && !includedTests.isEmpty()) {
             // We are setting the included tests via includesFile (rather than -Dtest=...)
