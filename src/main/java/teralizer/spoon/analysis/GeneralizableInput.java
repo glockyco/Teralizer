@@ -80,6 +80,22 @@ public class GeneralizableInput {
         return inputs;
     }
 
+    static GeneralizableInput fromRecipe(
+        int methodArgumentIndex,
+        int constructorArgumentIndex,
+        MethodParameter parameter,
+        MethodArgument argument,
+        CtExpression<?> sourceExpression
+    ) {
+        return new GeneralizableInput(
+            methodArgumentIndex,
+            constructorArgumentIndex,
+            parameter,
+            argument,
+            sourceExpression
+        );
+    }
+
     private static List<GeneralizableInput> deriveConstructorInputs(
         int methodArgumentIndex,
         String methodParameterName,

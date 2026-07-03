@@ -1,0 +1,137 @@
+package teralizer.spoon.analysis;
+
+import com.google.gson.Gson;
+import java.util.List;
+import net.jqwik.api.Example;
+import org.junit.Assert;
+import spoon.Launcher;
+import spoon.reflect.CtModel;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.visitor.filter.NamedElementFilter;
+import spoon.support.compiler.VirtualFile;
+
+public class GeneralizationRecipeTest {
+    @Example
+    void roundTripsRecipeJsonWithoutLosingSites() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesConstructorArgument");
+        GeneralizationRecipe recipe = recipeFor(scenario);
+
+        GeneralizationRecipe roundTripped = GeneralizationRecipe.fromJson(new Gson(), recipe.toJson(new Gson()));
+
+        Assert.assertEquals(GeneralizationRecipe.CURRENT_VERSION, roundTripped.getVersion());
+        Assert.assertEquals(recipe.getOracleExpressionPath(), roundTripped.getOracleExpressionPath());
+        Assert.assertEquals(recipe.getOracleType(), roundTripped.getOracleType());
+        Assert.assertEquals(3, roundTripped.getInputSites().size());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.RECEIVER_CTOR_ARG, roundTripped.getInputSites().get(0).getKind());
+        Assert.assertEquals("_ctor_receiver_zero_lower", roundTripped.getInputSites().get(0).getName());
+        Assert.assertEquals("int", roundTripped.getInputSites().get(0).getType());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.RECEIVER_CTOR_ARG, roundTripped.getInputSites().get(1).getKind());
+        Assert.assertEquals("_ctor_receiver_one_upper", roundTripped.getInputSites().get(1).getName());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.METHOD_ARG, roundTripped.getInputSites().get(2).getKind());
+        Assert.assertEquals("value", roundTripped.getInputSites().get(2).getName());
+    }
+
+    @Example
+    void resolvesRecipeSitesAgainstTheOriginalModel() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesReceiverConstructor");
+        GeneralizationRecipe recipe = recipeFor(scenario);
+
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(scenario.testMethod, scenario.model.getRootPackage());
+
+        Assert.assertEquals("size", resolved.getOracleExpression().getExecutable().getSimpleName());
+        Assert.assertEquals("size", resolved.getOracleMethod().getSimpleName());
+        Assert.assertEquals(2, resolved.getInputs().size());
+        Assert.assertTrue(resolved.getInputs().get(0).isReceiverConstructorArgument());
+        Assert.assertEquals("1.0", resolved.getInputs().get(0).getSourceExpression().toString());
+        Assert.assertEquals("10.0", resolved.getInputs().get(1).getSourceExpression().toString());
+    }
+
+    @Example
+    void rewritesOnlyThePersistedClassQualifiedNameInRecipePaths() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesConstructorArgument");
+        GeneralizationRecipe recipe = recipeFor(scenario);
+
+        GeneralizationRecipe rewritten = recipe.rewriteForClone("smoke.SubjectTest", "smoke.SubjectProperty");
+
+        Assert.assertEquals(recipe.getOracleExpressionPath(), rewritten.getOracleExpressionPath());
+        Assert.assertEquals(
+            "#type[name=smoke.SubjectProperty]",
+            GeneralizationRecipe.rewriteCtPathForClone(
+                "#type[name=smoke.SubjectTest]",
+                "smoke.SubjectTest",
+                "smoke.SubjectProperty"
+            )
+        );
+        Assert.assertEquals(recipe.getInputSites().get(0).getPath(), rewritten.getInputSites().get(0).getPath());
+    }
+
+    @Example
+    void staleRecipePathFailsWithTypedResolutionError() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesConstructorArgument");
+        GeneralizationRecipe stale = recipeFor(scenario).withOracleExpressionPath("#type[name=smoke.SubjectTest]#method[name=missing]");
+
+        try {
+            stale.resolveAgainst(scenario.testMethod, scenario.model.getRootPackage());
+            Assert.fail("stale recipe path should fail during analysis-time validation");
+        } catch (GeneralizationRecipe.ResolutionException expected) {
+            Assert.assertEquals(GeneralizationRecipe.PathRole.ORACLE_EXPRESSION, expected.getRole());
+            Assert.assertTrue(expected.getMessage().contains("missing"));
+        }
+    }
+
+    private static GeneralizationRecipe recipeFor(Scenario scenario) {
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(scenario.oracleMethod, scenario.oracleExpression);
+        return GeneralizationRecipe.from(scenario.oracleMethod, scenario.oracleExpression, inputs);
+    }
+
+    private static Scenario scenarioFromSource(String source, String methodName) {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(source, "SubjectTest.java"));
+        launcher.buildModel();
+        CtModel model = launcher.getModel();
+        CtClass<?> testClass = model.getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest")).get(0);
+        CtMethod<?> testMethod = testClass.getMethodsByName(methodName).get(0);
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtInvocation<?> testedCall = assertion.getElements(CtInvocation.class::isInstance).stream()
+            .map(CtInvocation.class::cast)
+            .filter(invocation -> !invocation.equals(assertion))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+        return new Scenario(model, testMethod, testedCall, (CtMethod<?>) testedCall.getExecutable().getDeclaration());
+    }
+
+    private static final class Scenario {
+        private final CtModel model;
+        private final CtMethod<?> testMethod;
+        private final CtInvocation<?> oracleExpression;
+        private final CtMethod<?> oracleMethod;
+
+        private Scenario(CtModel model, CtMethod<?> testMethod, CtInvocation<?> oracleExpression, CtMethod<?> oracleMethod) {
+            this.model = model;
+            this.testMethod = testMethod;
+            this.oracleExpression = oracleExpression;
+            this.oracleMethod = oracleMethod;
+        }
+    }
+
+    private static final String SOURCE = ""
+        + "package smoke;\n"
+        + "import static org.junit.Assert.assertEquals;\n"
+        + "public class SubjectTest {\n"
+        + "  public static final class Interval {\n"
+        + "    private final int lower;\n"
+        + "    private final int upper;\n"
+        + "    public Interval(int lower, int upper) { this.lower = lower; this.upper = upper; }\n"
+        + "    public boolean contains(int value) { return lower <= value && value <= upper; }\n"
+        + "    public double size() { return upper - lower; }\n"
+        + "  }\n"
+        + "  public void usesConstructorArgument() {\n"
+        + "    assertEquals(true, new Interval(1, 10).contains(5));\n"
+        + "  }\n"
+        + "  public void usesReceiverConstructor() {\n"
+        + "    assertEquals(9.0, new Interval(1.0, 10.0).size(), 0.0);\n"
+        + "  }\n"
+        + "}\n";
+}

@@ -326,311 +326,325 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     }
 
     /**
+     * Setter for <code>public.assertion.generalization_recipe</code>.
+     */
+    public void setGeneralizationRecipe(String value) {
+        set(22, value);
+    }
+
+    /**
+     * Getter for <code>public.assertion.generalization_recipe</code>.
+     */
+    public String getGeneralizationRecipe() {
+        return (String) get(22);
+    }
+
+    /**
      * Setter for <code>public.assertion.instrumented_file_path</code>.
      */
     public void setInstrumentedFilePath(String value) {
-        set(22, value);
+        set(23, value);
     }
 
     /**
      * Getter for <code>public.assertion.instrumented_file_path</code>.
      */
     public String getInstrumentedFilePath() {
-        return (String) get(22);
+        return (String) get(23);
     }
 
     /**
      * Setter for <code>public.assertion.instrumented_class_qualified_name</code>.
      */
     public void setInstrumentedClassQualifiedName(String value) {
-        set(23, value);
+        set(24, value);
     }
 
     /**
      * Getter for <code>public.assertion.instrumented_class_qualified_name</code>.
      */
     public String getInstrumentedClassQualifiedName() {
-        return (String) get(23);
+        return (String) get(24);
     }
 
     /**
      * Setter for <code>public.assertion.instrumented_method_qualified_name</code>.
      */
     public void setInstrumentedMethodQualifiedName(String value) {
-        set(24, value);
+        set(25, value);
     }
 
     /**
      * Getter for <code>public.assertion.instrumented_method_qualified_name</code>.
      */
     public String getInstrumentedMethodQualifiedName() {
-        return (String) get(24);
+        return (String) get(25);
     }
 
     /**
      * Setter for <code>public.assertion.instrumented_package_name</code>.
      */
     public void setInstrumentedPackageName(String value) {
-        set(25, value);
+        set(26, value);
     }
 
     /**
      * Getter for <code>public.assertion.instrumented_package_name</code>.
      */
     public String getInstrumentedPackageName() {
-        return (String) get(25);
+        return (String) get(26);
     }
 
     /**
      * Setter for <code>public.assertion.instrumented_class_name</code>.
      */
     public void setInstrumentedClassName(String value) {
-        set(26, value);
+        set(27, value);
     }
 
     /**
      * Getter for <code>public.assertion.instrumented_class_name</code>.
      */
     public String getInstrumentedClassName() {
-        return (String) get(26);
+        return (String) get(27);
     }
 
     /**
      * Setter for <code>public.assertion.instrumented_method_name</code>.
      */
     public void setInstrumentedMethodName(String value) {
-        set(27, value);
+        set(28, value);
     }
 
     /**
      * Getter for <code>public.assertion.instrumented_method_name</code>.
      */
     public String getInstrumentedMethodName() {
-        return (String) get(27);
+        return (String) get(28);
     }
 
     /**
      * Setter for <code>public.assertion.driver_file_path</code>.
      */
     public void setDriverFilePath(String value) {
-        set(28, value);
+        set(29, value);
     }
 
     /**
      * Getter for <code>public.assertion.driver_file_path</code>.
      */
     public String getDriverFilePath() {
-        return (String) get(28);
+        return (String) get(29);
     }
 
     /**
      * Setter for <code>public.assertion.driver_class_qualified_name</code>.
      */
     public void setDriverClassQualifiedName(String value) {
-        set(29, value);
+        set(30, value);
     }
 
     /**
      * Getter for <code>public.assertion.driver_class_qualified_name</code>.
      */
     public String getDriverClassQualifiedName() {
-        return (String) get(29);
+        return (String) get(30);
     }
 
     /**
      * Setter for <code>public.assertion.driver_package_name</code>.
      */
     public void setDriverPackageName(String value) {
-        set(30, value);
+        set(31, value);
     }
 
     /**
      * Getter for <code>public.assertion.driver_package_name</code>.
      */
     public String getDriverPackageName() {
-        return (String) get(30);
+        return (String) get(31);
     }
 
     /**
      * Setter for <code>public.assertion.driver_class_name</code>.
      */
     public void setDriverClassName(String value) {
-        set(31, value);
+        set(32, value);
     }
 
     /**
      * Getter for <code>public.assertion.driver_class_name</code>.
      */
     public String getDriverClassName() {
-        return (String) get(31);
+        return (String) get(32);
     }
 
     /**
      * Setter for <code>public.assertion.jpf_config_path</code>.
      */
     public void setJpfConfigPath(String value) {
-        set(32, value);
+        set(33, value);
     }
 
     /**
      * Getter for <code>public.assertion.jpf_config_path</code>.
      */
     public String getJpfConfigPath() {
-        return (String) get(32);
+        return (String) get(33);
     }
 
     /**
      * Setter for <code>public.assertion.input_values_path</code>.
      */
     public void setInputValuesPath(String value) {
-        set(33, value);
+        set(34, value);
     }
 
     /**
      * Getter for <code>public.assertion.input_values_path</code>.
      */
     public String getInputValuesPath() {
-        return (String) get(33);
+        return (String) get(34);
     }
 
     /**
      * Setter for <code>public.assertion.output_value_path</code>.
      */
     public void setOutputValuePath(String value) {
-        set(34, value);
+        set(35, value);
     }
 
     /**
      * Getter for <code>public.assertion.output_value_path</code>.
      */
     public String getOutputValuePath() {
-        return (String) get(34);
+        return (String) get(35);
     }
 
     /**
      * Setter for <code>public.assertion.input_specification_path</code>.
      */
     public void setInputSpecificationPath(String value) {
-        set(35, value);
+        set(36, value);
     }
 
     /**
      * Getter for <code>public.assertion.input_specification_path</code>.
      */
     public String getInputSpecificationPath() {
-        return (String) get(35);
+        return (String) get(36);
     }
 
     /**
      * Setter for <code>public.assertion.output_specification_path</code>.
      */
     public void setOutputSpecificationPath(String value) {
-        set(36, value);
+        set(37, value);
     }
 
     /**
      * Getter for <code>public.assertion.output_specification_path</code>.
      */
     public String getOutputSpecificationPath() {
-        return (String) get(36);
+        return (String) get(37);
     }
 
     /**
      * Setter for <code>public.assertion.equivalent_assertions</code>.
      */
     public void setEquivalentAssertions(String value) {
-        set(37, value);
+        set(38, value);
     }
 
     /**
      * Getter for <code>public.assertion.equivalent_assertions</code>.
      */
     public String getEquivalentAssertions() {
-        return (String) get(37);
+        return (String) get(38);
     }
 
     /**
      * Setter for <code>public.assertion.input_model_statistics</code>.
      */
     public void setInputModelStatistics(String value) {
-        set(38, value);
+        set(39, value);
     }
 
     /**
      * Getter for <code>public.assertion.input_model_statistics</code>.
      */
     public String getInputModelStatistics() {
-        return (String) get(38);
+        return (String) get(39);
     }
 
     /**
      * Setter for <code>public.assertion.output_model_statistics</code>.
      */
     public void setOutputModelStatistics(String value) {
-        set(39, value);
+        set(40, value);
     }
 
     /**
      * Getter for <code>public.assertion.output_model_statistics</code>.
      */
     public String getOutputModelStatistics() {
-        return (String) get(39);
+        return (String) get(40);
     }
 
     /**
      * Setter for <code>public.assertion.output_spec_class</code>.
      */
     public void setOutputSpecClass(String value) {
-        set(40, value);
+        set(41, value);
     }
 
     /**
      * Getter for <code>public.assertion.output_spec_class</code>.
      */
     public String getOutputSpecClass() {
-        return (String) get(40);
+        return (String) get(41);
     }
 
     /**
      * Setter for <code>public.assertion.concretization_events</code>.
      */
     public void setConcretizationEvents(Integer value) {
-        set(41, value);
+        set(42, value);
     }
 
     /**
      * Getter for <code>public.assertion.concretization_events</code>.
      */
     public Integer getConcretizationEvents() {
-        return (Integer) get(41);
+        return (Integer) get(42);
     }
 
     /**
      * Setter for <code>public.assertion.is_included</code>.
      */
     public void setIsIncluded(Boolean value) {
-        set(42, value);
+        set(43, value);
     }
 
     /**
      * Getter for <code>public.assertion.is_included</code>.
      */
     public Boolean getIsIncluded() {
-        return (Boolean) get(42);
+        return (Boolean) get(43);
     }
 
     /**
      * Setter for <code>public.assertion.exclusion_info</code>.
      */
     public void setExclusionInfo(String value) {
-        set(43, value);
+        set(44, value);
     }
 
     /**
      * Getter for <code>public.assertion.exclusion_info</code>.
      */
     public String getExclusionInfo() {
-        return (String) get(43);
+        return (String) get(44);
     }
 
     // -------------------------------------------------------------------------
@@ -656,7 +670,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     /**
      * Create a detached, initialised AssertionRecord
      */
-    public AssertionRecord(Long id, Long projectId, Long testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodAbsolutePath, String testedMethodRelativePath, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputValuesPath, String outputValuePath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, String inputModelStatistics, String outputModelStatistics, String outputSpecClass, Integer concretizationEvents, Boolean isIncluded, String exclusionInfo) {
+    public AssertionRecord(Long id, Long projectId, Long testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodAbsolutePath, String testedMethodRelativePath, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String generalizationRecipe, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputValuesPath, String outputValuePath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, String inputModelStatistics, String outputModelStatistics, String outputSpecClass, Integer concretizationEvents, Boolean isIncluded, String exclusionInfo) {
         super(Assertion.ASSERTION);
 
         setId(id);
@@ -681,6 +695,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
         setTestedMethodCallSourceCode(testedMethodCallSourceCode);
         setTestedMethodCallAbsolutePath(testedMethodCallAbsolutePath);
         setTestedMethodCallRelativePath(testedMethodCallRelativePath);
+        setGeneralizationRecipe(generalizationRecipe);
         setInstrumentedFilePath(instrumentedFilePath);
         setInstrumentedClassQualifiedName(instrumentedClassQualifiedName);
         setInstrumentedMethodQualifiedName(instrumentedMethodQualifiedName);

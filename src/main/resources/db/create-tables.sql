@@ -103,6 +103,7 @@ CREATE TABLE assertion
     tested_method_call_source_code     TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
     tested_method_call_absolute_path   TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
     tested_method_call_relative_path   TEXT, -- can be null if we cannot identify a tested class / method or if the tested class / method is from a JDK type such as java.lang.String
+    generalization_recipe             TEXT, -- persisted GeneralizationRecipe JSON; null until a generalization-grade method-under-test pick exists
 
     instrumented_file_path             TEXT, -- can be null before JPF instrumentation
     instrumented_class_qualified_name  TEXT, -- can be null before JPF instrumentation

@@ -1,5 +1,6 @@
 package teralizer.processing.task;
 
+import com.google.gson.Gson;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -35,6 +36,7 @@ import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.GeneralizableInput;
+import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.SpfSymbolicConfigSelector;
 import teralizer.util.Configuration;
 import teralizer.util.SpfSymbolicConfig;
@@ -85,20 +87,29 @@ public class JpfInstrumentationTask extends AbstractTask {
         VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);
         Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
         Factory factory = spoonLauncher.getFactory();
+        Gson gson = context.get(TaskContext.GSON);
 
         this.updateAssertionRecord();
 
         CtClass<?> instrumentedClass = this.createInstrumentedClass(factory);
-        CtInvocation<?> testedMethodCall = this.getTestedMethodCall(instrumentedClass);
-        CtPath testedMethodPath = new CtPathStringBuilder().fromString(this.assertionRecord.getTestedMethodAbsolutePath());
-        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodPath.evaluateOn(factory.getModel().getRootPackage()).get(0);
-        CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall);
-        CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(factory, instrumentedClass, instrumentedMethod, testedMethod, testedMethodCall);
+        GeneralizationRecipe.Resolved recipe = GeneralizationRecipe
+            .fromJson(gson, this.assertionRecord.getGeneralizationRecipe())
+            .rewriteForClone(
+                this.testRecord.getTestClassQualifiedName(),
+                this.assertionRecord.getInstrumentedClassQualifiedName()
+            )
+            .resolveAgainst(instrumentedClass.getMethod(this.testRecord.getTestMethodName()), factory.getModel().getRootPackage());
+        CtInvocation<?> testedMethodCall = recipe.getOracleExpression();
+        CtMethod<?> testedMethod = recipe.getOracleMethod();
+        List<GeneralizableInput> generalizableInputs = recipe.getInputs();
+        CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall, generalizableInputs);
+        CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(factory, instrumentedClass, instrumentedMethod, testedMethod, testedMethodCall, generalizableInputs);
         testedMethodCall.replace(instrumentedMethodCall);
 
         CtMethod<?> testMethod = instrumentedClass.getMethod(this.testRecord.getTestMethodName());
         CtPath targetAssertionPath = new CtPathStringBuilder().fromString(
-            this.assertionRecord.getAssertionRelativePath().replace(
+            GeneralizationRecipe.rewriteCtPathForClone(
+                this.assertionRecord.getAssertionRelativePath(),
                 this.testRecord.getTestClassQualifiedName(),
                 this.assertionRecord.getInstrumentedClassQualifiedName()));
         CtInvocation<?> targetAssertion = (CtInvocation<?>) targetAssertionPath.evaluateOn(testMethod).get(0);
@@ -168,7 +179,8 @@ public class JpfInstrumentationTask extends AbstractTask {
         );
 
         CtPath testMethodPath = new CtPathStringBuilder().fromString(
-            this.testRecord.getTestMethodRelativePath().replace(
+            GeneralizationRecipe.rewriteCtPathForClone(
+                this.testRecord.getTestMethodRelativePath(),
                 this.testRecord.getTestClassQualifiedName(),
                 this.assertionRecord.getInstrumentedClassQualifiedName()));
         CtMethod<?> testMethod = (CtMethod<?>) testMethodPath.evaluateOn(instrumentedClass).get(0);
@@ -178,22 +190,14 @@ public class JpfInstrumentationTask extends AbstractTask {
         return instrumentedClass;
     }
 
-    private CtInvocation<?> getTestedMethodCall(CtClass<?> instrumentedClass) {
-        CtMethod<?> testMethod = instrumentedClass.getMethod(this.testRecord.getTestMethodName());
-        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(
-            this.assertionRecord.getTestedMethodCallRelativePath().replace(
-                this.testRecord.getTestClassQualifiedName(),
-                this.assertionRecord.getInstrumentedClassQualifiedName()));
-        return (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
-    }
 
     private CtMethod<?> createInstrumentedMethod(
         Factory factory,
         CtClass<?> instrumentedClass,
         CtMethod<?> testedMethod,
-        CtInvocation<?> testedMethodCall
+        CtInvocation<?> testedMethodCall,
+        List<GeneralizableInput> generalizableInputs
     ) {
-        List<GeneralizableInput> generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
         boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
 
         List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
@@ -527,10 +531,10 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtClass<?> instrumentedClass,
         CtMethod<?> instrumentedMethod,
         CtMethod<?> testedMethod,
-        CtInvocation<?> testedMethodCall
+        CtInvocation<?> testedMethodCall,
+        List<GeneralizableInput> generalizableInputs
     ) {
         CtInvocation<?> instrumentedMethodCall = factory.createInvocation(factory.createThisAccess(instrumentedClass.getReference()), instrumentedMethod.getReference());
-        List<GeneralizableInput> generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
         boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
         if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
             CtExpression<?> target = testedMethodCall.getTarget();

@@ -48,6 +48,7 @@ import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.GeneralizableInput;
+import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.*;
 import teralizer.transformer.JsonToModelTransformer;
@@ -216,7 +217,8 @@ public class TestGeneralizationTask extends AbstractTask {
         generalizedClassDeclaration.addComment(factory.createInlineComment("Output specification: " + this.assertionRecord.getOutputSpecificationPath()));
 
         CtPath testMethodPath = new CtPathStringBuilder().fromString(
-            this.testRecord.getTestMethodRelativePath().replace(
+            GeneralizationRecipe.rewriteCtPathForClone(
+                this.testRecord.getTestMethodRelativePath(),
                 this.testRecord.getTestClassQualifiedName(),
                 this.generalizationRecord.getClassQualifiedName()));
         CtMethod<?> testMethod = (CtMethod<?>) testMethodPath.evaluateOn(generalizedClassDeclaration).get(0);
@@ -261,22 +263,22 @@ public class TestGeneralizationTask extends AbstractTask {
         }
 
         CtPath assertionPath = new CtPathStringBuilder().fromString(
-            this.assertionRecord.getAssertionRelativePath().replace(
+            GeneralizationRecipe.rewriteCtPathForClone(
+                this.assertionRecord.getAssertionRelativePath(),
                 this.testRecord.getTestClassQualifiedName(),
                 this.generalizationRecord.getClassQualifiedName()));
         CtInvocation<?> assertion = (CtInvocation<?>) assertionPath.evaluateOn(testMethod).get(0);
 
-        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(
-            this.assertionRecord.getTestedMethodCallRelativePath().replace(
+        GeneralizationRecipe.Resolved recipe = GeneralizationRecipe
+            .fromJson(gson, this.assertionRecord.getGeneralizationRecipe())
+            .rewriteForClone(
                 this.testRecord.getTestClassQualifiedName(),
-                this.generalizationRecord.getClassQualifiedName()));
-        CtInvocation<?> testedMethodCall = (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
-
-        CtPath testedMethodPath = new CtPathStringBuilder().fromString(
-            this.assertionRecord.getTestedMethodAbsolutePath().replace(
-                this.testRecord.getTestClassQualifiedName(),
-                this.generalizationRecord.getClassQualifiedName()));
-        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodPath.evaluateOn(factory.getModel().getRootPackage()).get(0);
+                this.generalizationRecord.getClassQualifiedName()
+            )
+            .resolveAgainst(testMethod, factory.getModel().getRootPackage());
+        CtInvocation<?> testedMethodCall = recipe.getOracleExpression();
+        CtMethod<?> testedMethod = recipe.getOracleMethod();
+        List<GeneralizableInput> inputs = recipe.getInputs();
 
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
         //   Otherwise, we will have issues mapping the class names to the correct Arbitraries.
@@ -504,7 +506,6 @@ public class TestGeneralizationTask extends AbstractTask {
 
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
-        List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
         List<GeneralizableInput> receiverConstructorInputs = inputs.stream()
             .filter(GeneralizableInput::isReceiverConstructorArgument)
             .collect(Collectors.toList());

@@ -30,6 +30,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
 import teralizer.processing.ProcessingStage;
+import teralizer.spoon.analysis.GeneralizationRecipe;
 
 public class TestAnalysisTaskTest {
     @Example
@@ -71,6 +72,30 @@ public class TestAnalysisTaskTest {
         Assert.assertNull(record.getTestedMethodReturnType());
         Assert.assertNull(record.getTestedMethodAbsolutePath());
         Assert.assertNull(record.getTestedMethodRelativePath());
+    }
+
+    @Example
+    void storesValidatedGeneralizationRecipeForGeneralizationGradePick() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "public class SubjectTest {\n"
+                + "  static final class Subject { int id(int x) { return x; } }\n"
+                + "  public void t() {\n"
+                + "    org.junit.Assert.assertEquals(1, new Subject().id(1));\n"
+                + "  }\n"
+                + "}\n"
+        );
+        RecordingStore store = new RecordingStore();
+
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson());
+
+        AssertionRecord record = store.assertions.get(0);
+        Assert.assertNotNull(record.getGeneralizationRecipe());
+        GeneralizationRecipe.Resolved resolved = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe())
+            .resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage());
+        Assert.assertEquals("id", resolved.getOracleExpression().getExecutable().getSimpleName());
+        Assert.assertEquals(1, resolved.getInputs().size());
+        Assert.assertEquals("x", resolved.getInputs().get(0).toMethodParameter().getName());
     }
 
     @Example

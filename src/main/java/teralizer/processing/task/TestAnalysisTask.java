@@ -33,6 +33,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.spoon.analysis.GeneralizableInput;
+import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.MethodUnderTestResolver;
 import teralizer.spoon.analysis.MutResolution;
 import teralizer.spoon.analysis.TestAnalysis;
@@ -140,8 +141,10 @@ public class TestAnalysisTask extends AbstractTask {
 
                     List<MethodArgument> methodArguments = new ArrayList<>();
                     List<GeneralizableInput> generalizableInputs = null;
+                    GeneralizationRecipe generalizationRecipe = null;
                     if (callAbsolutePath != null && callRelativePath != null && testedMethod != null) {
                         generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+                        generalizationRecipe = GeneralizationRecipe.from(testedMethod, testedMethodCall, generalizableInputs);
                     }
                     if (generalizableInputs == null) {
                         for (CtExpression<?> argument : testedMethodCall.getArguments()) {
@@ -213,6 +216,7 @@ public class TestAnalysisTask extends AbstractTask {
                         record.setTestedMethodReturnType(typeNameOf(testedMethod.getType()));
                         record.setTestedMethodAbsolutePath(methodAbsolutePath);
                         record.setTestedMethodRelativePath(methodRelativePath);
+                        record.setGeneralizationRecipe(generalizationRecipe.toJson(gson));
                     }
                 }
 

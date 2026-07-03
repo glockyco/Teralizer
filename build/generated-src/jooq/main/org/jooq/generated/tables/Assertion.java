@@ -159,6 +159,11 @@ public class Assertion extends TableImpl<AssertionRecord> {
     public final TableField<AssertionRecord, String> TESTED_METHOD_CALL_RELATIVE_PATH = createField(DSL.name("tested_method_call_relative_path"), SQLDataType.CLOB, this, "");
 
     /**
+     * The column <code>public.assertion.generalization_recipe</code>.
+     */
+    public final TableField<AssertionRecord, String> GENERALIZATION_RECIPE = createField(DSL.name("generalization_recipe"), SQLDataType.CLOB, this, "");
+
+    /**
      * The column <code>public.assertion.instrumented_file_path</code>.
      */
     public final TableField<AssertionRecord, String> INSTRUMENTED_FILE_PATH = createField(DSL.name("instrumented_file_path"), SQLDataType.CLOB, this, "");
