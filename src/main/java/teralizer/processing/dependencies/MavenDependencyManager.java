@@ -51,6 +51,7 @@ public class MavenDependencyManager {
         hasModifiedDocument |= this.addDependencyIfMissing(Configuration.PITEST_DEPENDENCY);
         hasModifiedDocument |= this.addPitestPlugin();
         hasModifiedDocument |= this.addDependencyIfMissing(Configuration.JQWIK_DEPENDENCY);
+        hasModifiedDocument |= applyTestCompilerFloor(this.document);
 
         if (hasModifiedDocument) {
             XMLWriter writer = new XMLWriter(new FileWriter(this.pomFilePath.toFile()), OutputFormat.createPrettyPrint());
@@ -165,6 +166,145 @@ public class MavenDependencyManager {
         Comment comment = DocumentHelper.createComment("Added by " + Configuration.TOOL_NAME + ".");
         pluginElement.content().add(0, comment);
         return pluginElement.detach();
+    }
+
+    /**
+     * Generated property tests inline a telemetry harness that uses Java 8 syntax. Only test
+     * compilation is floored here, so the target project's main sources keep their declared
+     * language level. The floor is applied only when a below-floor pin is visible in the copied
+     * POM: parent-POM inheritance and plugin defaults are intentionally left untouched because a
+     * visible build failure is safer than guessing at an effective level that may already be high
+     * enough.
+     */
+    static boolean applyTestCompilerFloor(Document document) {
+        Element compilerConfiguration = findCompilerPluginConfiguration(document);
+        if (compilerConfiguration != null) {
+            Element testSource = childElement(compilerConfiguration, "testSource");
+            if (testSource != null) {
+                return applyTestCompilerFloorToPluginConfiguration(compilerConfiguration, testSource.getTextTrim());
+            }
+
+            Element source = childElement(compilerConfiguration, "source");
+            if (source != null) {
+                return applyTestCompilerFloorToPluginConfiguration(compilerConfiguration, source.getTextTrim());
+            }
+        }
+
+        Element properties = childElement(document.getRootElement(), "properties");
+        if (properties == null) {
+            return false;
+        }
+
+        Element testSource = childElement(properties, "maven.compiler.testSource");
+        if (testSource != null) {
+            return applyTestCompilerFloorToProperties(properties, testSource.getTextTrim());
+        }
+
+        Element source = childElement(properties, "maven.compiler.source");
+        if (source != null) {
+            return applyTestCompilerFloorToProperties(properties, source.getTextTrim());
+        }
+
+        // The release property is a Java 9+ cross-compilation knob, so it never indicates a
+        // below-Java-8 test source level for this floor.
+        return false;
+    }
+
+    private static boolean applyTestCompilerFloorToPluginConfiguration(Element compilerConfiguration, String languageLevel) {
+        if (!isBelowGeneratedTestLanguageLevel(languageLevel)) {
+            return false;
+        }
+        setChildText(compilerConfiguration, "testSource", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
+        setChildText(compilerConfiguration, "testTarget", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
+        return true;
+    }
+
+    private static boolean applyTestCompilerFloorToProperties(Element properties, String languageLevel) {
+        if (!isBelowGeneratedTestLanguageLevel(languageLevel)) {
+            return false;
+        }
+        setChildText(properties, "maven.compiler.testSource", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
+        setChildText(properties, "maven.compiler.testTarget", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
+        return true;
+    }
+
+    private static Element findCompilerPluginConfiguration(Document document) {
+        Element build = childElement(document.getRootElement(), "build");
+        if (build == null) {
+            return null;
+        }
+
+        Element compilerPlugin = findCompilerPlugin(childElement(build, "plugins"));
+        if (compilerPlugin == null) {
+            Element pluginManagement = childElement(build, "pluginManagement");
+            compilerPlugin = pluginManagement == null ? null : findCompilerPlugin(childElement(pluginManagement, "plugins"));
+        }
+        return compilerPlugin == null ? null : childElement(compilerPlugin, "configuration");
+    }
+
+    private static Element findCompilerPlugin(Element plugins) {
+        if (plugins == null) {
+            return null;
+        }
+
+        for (Iterator<Element> it = plugins.elementIterator(); it.hasNext(); ) {
+            Element plugin = it.next();
+            String groupId = childText(plugin, "groupId");
+            String artifactId = childText(plugin, "artifactId");
+            if ("maven-compiler-plugin".equals(artifactId) && (groupId == null || "org.apache.maven.plugins".equals(groupId))) {
+                return plugin;
+            }
+        }
+        return null;
+    }
+
+    private static boolean isBelowGeneratedTestLanguageLevel(String languageLevel) {
+        if (languageLevel == null) {
+            return false;
+        }
+
+        switch (languageLevel.trim()) {
+            case "1.1":
+            case "1.2":
+            case "1.3":
+            case "1.4":
+            case "1.5":
+            case "1.6":
+            case "1.7":
+            case "5":
+            case "6":
+            case "7":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static void setChildText(Element parent, String childName, String text) {
+        Element child = childElement(parent, childName);
+        if (child == null) {
+            child = parent.addElement(childName);
+        }
+        child.setText(text);
+    }
+
+    private static String childText(Element parent, String childName) {
+        Element child = childElement(parent, childName);
+        return child == null ? null : child.getTextTrim();
+    }
+
+    private static Element childElement(Element parent, String childName) {
+        if (parent == null) {
+            return null;
+        }
+
+        for (Iterator<Element> it = parent.elementIterator(); it.hasNext(); ) {
+            Element child = it.next();
+            if (childName.equals(child.getName())) {
+                return child;
+            }
+        }
+        return null;
     }
 
     public static void updatePitestTargets(Path pomFilePath, List<String> targetClasses, List<String> targetTests) throws DocumentException, IOException {

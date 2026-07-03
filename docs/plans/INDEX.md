@@ -17,7 +17,7 @@
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
 - **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (58/67) ← 2026-07-02-mut-id-confidence-fusion
-- **Generalized Validation-Layer Repair** [plan] `2026-07-03-generalized-validation-repair` (0/27) ← 2026-06-26-teralizer-overview
+- **Generalized Validation-Layer Repair** [plan] `2026-07-03-generalized-validation-repair` (7/27) ← 2026-06-26-teralizer-overview
 
 ## draft
 

@@ -58,6 +58,7 @@ public class GradleDependencyManager {
         hasModifiedDocument |= this.addDependencyIfMissing(Configuration.PITEST_DEPENDENCY);
         hasModifiedDocument |= this.addPitestPlugin();
         hasModifiedDocument |= this.addDependencyIfMissing(Configuration.JQWIK_DEPENDENCY);
+        hasModifiedDocument |= this.addTestCompilerFloor();
 
         if (hasModifiedDocument) {
             Files.write(this.buildFilePath, this.buildFileContent.toString().getBytes());
@@ -160,6 +161,39 @@ public class GradleDependencyManager {
         this.appendToBuildFile(new String(Files.readAllBytes(Configuration.GRADLE_PITEST_CONFIG_PATH)));
         this.reportInfo.accept("Added plugin / config: pitest");
         return true;
+    }
+
+    private boolean addTestCompilerFloor() {
+        if (this.hasCompileTestJavaCompatibilityConfig()) {
+            this.reportInfo.accept("Found config: compileTestJava source compatibility");
+            return false;
+        }
+
+        this.appendToBuildFile(String.format(
+            "tasks.matching { it.name == 'compileTestJava' }.all {\n"
+                + "    if (JavaVersion.toVersion(sourceCompatibility) < JavaVersion.VERSION_1_8) {\n"
+                + "        sourceCompatibility = '%s'\n"
+                + "        targetCompatibility = '%s'\n"
+                + "    }\n"
+                + "}",
+            Configuration.GENERATED_TEST_LANGUAGE_LEVEL,
+            Configuration.GENERATED_TEST_LANGUAGE_LEVEL
+        ));
+        this.reportInfo.accept("Added config: compileTestJava source compatibility");
+        return true;
+    }
+
+    private boolean hasCompileTestJavaCompatibilityConfig() {
+        String buildFile = this.buildFileContent.toString();
+        int index = buildFile.indexOf("compileTestJava");
+        while (index >= 0) {
+            String window = buildFile.substring(index, Math.min(buildFile.length(), index + 500));
+            if (window.contains("sourceCompatibility") || window.contains("targetCompatibility")) {
+                return true;
+            }
+            index = buildFile.indexOf("compileTestJava", index + "compileTestJava".length());
+        }
+        return false;
     }
 
     private void prependToBuildFile(String content) {

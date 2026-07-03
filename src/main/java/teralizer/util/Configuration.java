@@ -92,6 +92,13 @@ public class Configuration {
     public static final Dependency PITEST_DEPENDENCY = new Dependency("org.pitest", "pitest-junit5-plugin", "1.2.1");
     public static final Dependency JQWIK_DEPENDENCY = new Dependency("net.jqwik", "jqwik", "1.8.5");
 
+    /**
+     * Language level the generated test harness (jqwik-value-recorder template) requires.
+     * Generated property tests use lambdas and method references, so the *test* compilation
+     * of a target project must be at least this level; main compilation is never touched.
+     */
+    public static final String GENERATED_TEST_LANGUAGE_LEVEL = "1.8";
+
     public static final Path MAVEN_JACOCO_CONFIG_PATH = Paths.get("src/main/resources/jacoco-config-maven.txt");
     public static final Path MAVEN_PITEST_CONFIG_PATH = Paths.get("src/main/resources/pitest-config-maven.txt");
 

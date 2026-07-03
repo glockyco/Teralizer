@@ -54,7 +54,7 @@ Validation-layer status on `postgres_fusion_spike` (23-project corpus, 2003 gene
 - Modify: `src/main/java/teralizer/processing/dependencies/GradleDependencyManager.java`
 - Create: `src/test/java/teralizer/processing/dependencies/MavenTestCompilerFloorTest.java`
 
-- [ ] **Step 1: Add the constants to `Configuration`** (near the existing `*_DEPENDENCY` constants):
+- [x] **Step 1: Add the constants to `Configuration`** (near the existing `*_DEPENDENCY` constants):
 
 ```java
 /**
@@ -65,7 +65,7 @@ Validation-layer status on `postgres_fusion_spike` (23-project corpus, 2003 gene
 public static final String GENERATED_TEST_LANGUAGE_LEVEL = "1.8";
 ```
 
-- [ ] **Step 2: Write the failing test.** Model: read a pom string with dom4j, run the floor, assert the mutated XML. Cover four cases: (a) plugin config pins `<source>1.5</source>` → `testSource`/`testTarget` set to `1.8`; (b) properties pin `<maven.compiler.source>1.7</maven.compiler.source>` → `maven.compiler.testSource`/`testTarget` properties set to `1.8`; (c) pom at `1.8` → document unchanged; (d) no pin anywhere → document unchanged. Test the new package-private static method directly (no `ProjectRecord` needed):
+- [x] **Step 2: Write the failing test.** Model: read a pom string with dom4j, run the floor, assert the mutated XML. Cover four cases: (a) plugin config pins `<source>1.5</source>` → `testSource`/`testTarget` set to `1.8`; (b) properties pin `<maven.compiler.source>1.7</maven.compiler.source>` → `maven.compiler.testSource`/`testTarget` properties set to `1.8`; (c) pom at `1.8` → document unchanged; (d) no pin anywhere → document unchanged. Test the new package-private static method directly (no `ProjectRecord` needed):
 
 ```java
 public class MavenTestCompilerFloorTest {
@@ -85,10 +85,10 @@ public class MavenTestCompilerFloorTest {
 }
 ```
 
-- [ ] **Step 3: Run it to verify it fails** — `./gradlew test --tests 'teralizer.processing.dependencies.MavenTestCompilerFloorTest'` → compile error (method missing).
-- [ ] **Step 4: Implement `applyTestCompilerFloor(Document)` in `MavenDependencyManager`** as a package-private static method (mirrors the static `updatePitestTargets` precedent). Effective-level detection order: compiler-plugin `<configuration>` `testSource` → `source`, then properties `maven.compiler.testSource` → `maven.compiler.source` → `maven.compiler.release`. Below-floor set: `{1.1…1.7, 5, 6, 7}` (a `release` value is 9+ by definition, never below floor; unknown/absent → return false). Where a below-floor pin was found in plugin config, set/overwrite `testSource`+`testTarget` in that `<configuration>`; where found in properties, set the `maven.compiler.testSource`/`maven.compiler.testTarget` properties. Use `Configuration.GENERATED_TEST_LANGUAGE_LEVEL`. Wire the call into `addRequiredDependencies()` as `hasModifiedDocument |= applyTestCompilerFloor(this.document);` before the write-out at line 55.
-- [ ] **Step 5: Run the test to verify it passes.**
-- [ ] **Step 6: Gradle parity.** In `GradleDependencyManager`, add `addTestCompilerFloor()` called from `addRequiredDependencies()`, appending (via the existing `appendToBuildFile`, which brackets with the `TOOL_COMMENT` markers) a version-portable block; skip when the build file already contains `compileTestJava`-level compatibility config:
+- [x] **Step 3: Run it to verify it fails** — `./gradlew test --tests 'teralizer.processing.dependencies.MavenTestCompilerFloorTest'` → compile error (method missing).
+- [x] **Step 4: Implement `applyTestCompilerFloor(Document)` in `MavenDependencyManager`** as a package-private static method (mirrors the static `updatePitestTargets` precedent). Effective-level detection order: compiler-plugin `<configuration>` `testSource` → `source`, then properties `maven.compiler.testSource` → `maven.compiler.source` → `maven.compiler.release`. Below-floor set: `{1.1…1.7, 5, 6, 7}` (a `release` value is 9+ by definition, never below floor; unknown/absent → return false). Where a below-floor pin was found in plugin config, set/overwrite `testSource`+`testTarget` in that `<configuration>`; where found in properties, set the `maven.compiler.testSource`/`maven.compiler.testTarget` properties. Use `Configuration.GENERATED_TEST_LANGUAGE_LEVEL`. Wire the call into `addRequiredDependencies()` as `hasModifiedDocument |= applyTestCompilerFloor(this.document);` before the write-out at line 55.
+- [x] **Step 5: Run the test to verify it passes.**
+- [x] **Step 6: Gradle parity.** In `GradleDependencyManager`, add `addTestCompilerFloor()` called from `addRequiredDependencies()`, appending (via the existing `appendToBuildFile`, which brackets with the `TOOL_COMMENT` markers) a version-portable block; skip when the build file already contains `compileTestJava`-level compatibility config:
 
 ```groovy
 tasks.matching { it.name == 'compileTestJava' }.all {
@@ -99,7 +99,7 @@ tasks.matching { it.name == 'compileTestJava' }.all {
 }
 ```
 
-- [ ] **Step 7: Verify each observed-failing project is actually covered.** For each of the 10 lambda-failure projects, confirm its `pom.xml` (read-only, under `projects/`) carries an explicit below-floor pin reachable by Step 4's detection. Any project whose pin is *not* visible (parent-pom inheritance) → note it in the task summary; it stays failing by design (binding decision 3).
+- [x] **Step 7: Verify each observed-failing project is actually covered.** For each of the 10 lambda-failure projects, confirm its `pom.xml` (read-only, under `projects/`) carries an explicit below-floor pin reachable by Step 4's detection. Any project whose pin is *not* visible (parent-pom inheritance) → note it in the task summary; it stays failing by design (binding decision 3).
 
 **Commit subject:** `fix(pipeline): floor generated-test compilation at the harness language level`
 
