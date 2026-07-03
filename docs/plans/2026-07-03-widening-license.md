@@ -27,10 +27,11 @@ Decided per generalization at `GENERALIZE_TESTS` time (all lifted inputs feed th
 | # | condition | verdict |
 |---|---|---|
 | 1 | output model is SYMBOLIC or CONSTANT (expected side is replaced by the rendered spec) | **widen** — today's behavior; the oracle co-varies (SYMBOLIC) or SPF proved path-constancy (CONSTANT) |
-| 2 | NULL_CONCRETE ∧ tested method returns `boolean`/`java.lang.Boolean` ∧ the path condition contains at least one clause naming **every** widened parameter ∧ `concretization_events = 0` | **widen** — the asserted relation lives in the PC (the classifier-javadoc benign case); path-exactness pins the branch for every admitted input |
-| 3 | anything else — including every empty-PC case | **no license** → typed exclusion `ORACLE_NOT_WIDENABLE` |
+| 2 | output is EXCEPTION (`CapturedOutput.THROWN` — the oracle is "this throws") | **widen** — reaching the throw is a property of the path itself, pinned by the path condition for every admitted input (an unconditional throw holds even with an empty PC); presence-based evidence, so no `concretization_events` condition applies |
+| 3 | NULL_CONCRETE ∧ tested method returns `boolean`/`java.lang.Boolean` ∧ the path condition contains at least one clause naming **every** widened parameter ∧ `concretization_events = 0` | **widen** — the asserted relation lives in the PC (the classifier-javadoc benign case); path-exactness pins the branch for every admitted input |
+| 4 | anything else — including every empty-PC NULL_CONCRETE case | **no license** → typed exclusion `ORACLE_NOT_WIDENABLE` |
 
-Justification for rule 2's shape, and its known residual risk:
+Justification for rule 3's shape, and its known residual risk:
 - A *computed* boolean (`return a == b`) compiles to a branch, so a boolean result depending on a symbolic input forces a PC clause naming it — requiring the clause is requiring the evidence.
 - A *pass-through* boolean (`return this.storedFlag` — store/load, no branch) varies with input while leaving the PC empty. This is why an empty PC is never licensable, even for boolean returns (observed: octotron `GetBoolean()` widened failures).
 - Residual risk, accepted and documented rather than solved: a PC clause naming a parameter can come from a branch unrelated to the returned boolean while the return itself is pass-through. Rare; still caught by the validation net (`NonPassingTestFilter`); revisit only if post-change telemetry shows the class is populated.
