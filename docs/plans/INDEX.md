@@ -13,6 +13,7 @@
 - **JARVIS Comparison (RQ0)** [spec] `2026-06-30-jarvis-comparison` ← 2026-06-26-teralizer-overview
 - **Partial Sound String Support** [plan] `2026-06-30-partial-sound-string-support` (38/42) ← 2026-06-26-teralizer-overview
 - **Rerun Observability Priorities** [audit] `2026-07-01-rerun-observability-priorities` ← 2026-06-26-teralizer-overview
+- **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
 
 ## draft
 
@@ -22,7 +23,7 @@
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
-- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (0/61) ← 2026-07-02-mut-id-confidence-fusion
+- **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (0/67) ← 2026-07-02-mut-id-confidence-fusion
 
 ## superseded
 

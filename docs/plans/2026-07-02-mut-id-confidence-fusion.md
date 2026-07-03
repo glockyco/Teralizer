@@ -58,6 +58,25 @@ Characterization-grade picks never generalize — they exist so applicability an
 "what *would* the focal method be, and would its types pass the filters?" (the A1/A2 questions in
 `2026-07-01-rerun-observability-priorities`).
 
+## Three roles, one recipe (scope boundary)
+
+MUT identification serves three distinct roles that the pre-fusion architecture conflated into
+one `CtInvocation` (evidence: `2026-07-02-input-topology-spike`):
+
+1. **Input sites** — expression positions where generated values enter (method args, constructor
+   args, literals). SPF symbolizes these.
+2. **Oracle expression** — the expression whose value the assertion checks; its SPF-derived form
+   becomes the expected side; its *type* is what `ReturnTypeFilter` must gate.
+3. **Focal attribution** — the production method the test is *about*; what the tiers grade and
+   the paper reports.
+
+`assertEquals(3, gcd(a,b))` collapses all three onto `gcd`; `new Thing(a,b).isOk()` splits them
+(inputs at the constructor — already supported via `GeneralizableInput`'s
+receiver-constructor path — oracle at `isOk`). This spec governs **role 3** (attribution) and
+records enough provenance (`actual_shape`, `receiver_provenance` below) to size the recipe
+increments for roles 1–2: expression-slice recipes (T2) and statement-slice recipes (T3) per the
+spike audit. The resolver never blocks a recipe increment: attribution and recipe decouple.
+
 ## The fusion model
 
 Two-stage: (A) resolve the focal class, (B) identify the focal method. **Lexicographic across
@@ -167,6 +186,8 @@ characterization-only.
 | `candidate_return_supported` | BOOLEAN nullable | return passes `TypeCapability.supportsReturnValue` |
 | `oracle_agreement` | TEXT nullable | reserved: `AGREED`, `REFUTED`, `ABSENT` (populated when PIT_ORIGINAL lands) |
 | `candidate_details` | TEXT nullable (JSON) | ranked alternatives incl. the losers of T4 guesses |
+| `actual_shape` | TEXT nullable | AST shape of the asserted actual expression: `LITERAL`, `VARIABLE`, `FIELD_ACCESS`, `SINGLE_CALL`, `CHAINED_CALLS_END0ARG`, `CHAINED_CALLS_ENDNARG`, `CTOR_ONLY`, `CTOR_RECEIVER_CALL`, `OPERATOR_COMPOSITE`, `ARRAY_INDEX`, `LAMBDA_OR_METHODREF`, `NONE` |
+| `receiver_provenance` | TEXT nullable | where the pick's receiver comes from: `INLINE_CTOR`, `LOCAL_CTOR`, `LOCAL_CTOR_MUTATED`, `LOCAL_OTHER`, `FIELD`, `PARAM_OR_STATIC`, `NONE` (static/receiverless) |
 
 `deciding_signal` values: `DIRECT_ACTUAL_CALL`, `LOCAL_VARIABLE_PRODUCER`, `FIELD_PRODUCER`,
 `SUBEXPRESSION_PRODUCER`, `INSPECTOR_UNWRAP`, `UNIQUE_PRODUCER_ELIMINATION`,
@@ -238,3 +259,9 @@ table; SQL casts to jsonb where needed (`create-views.sql` precedent).
   (`2026-06-27-inherited-test-method-support`); the differential-oracle conjunct (retain the
   original asserted relationship as an independent conjunct in emitted tests) — revisit if spike
   mis-targeting for T3/T4 is worse than the He et al. baseline.
+- **Recipe increments (separate specs, gated on this plan's telemetry):** expression-slice
+  recipes (T2 — `build(x).size()`, operator composites, ctor-only equality; ~7–8k upper-bound
+  opportunity) and statement-slice recipes (T3 — the 34.6k zero-arg-inspector family, gated on
+  `receiver_provenance` counts). Sizing and taxonomy: `2026-07-02-input-topology-spike`.
+- **Out of scope permanently:** fixture/cross-method receiver state (T4), environment/mocks/IO
+  (T5), identity/type-check oracles (`instanceof`, `assertSame`).

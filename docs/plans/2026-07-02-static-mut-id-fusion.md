@@ -97,6 +97,9 @@ CREATE TABLE mut_resolution_observation
     oracle_agreement           TEXT,             -- reserved: AGREED | REFUTED | ABSENT (PIT_ORIGINAL)
     candidate_details          TEXT,             -- JSON array of ranked alternatives
 
+    actual_shape               TEXT,             -- AST shape of the asserted actual expression (spec enum)
+    receiver_provenance        TEXT,             -- INLINE_CTOR | LOCAL_CTOR | LOCAL_CTOR_MUTATED | LOCAL_OTHER | FIELD | PARAM_OR_STATIC | NONE
+
     FOREIGN KEY (assertion_id) REFERENCES assertion (id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
@@ -189,6 +192,16 @@ public final class MutResolution {
 
     public enum FocalSource { PATH_AND_NAME, NAME_ONLY, PATH_ONLY, NONE }
 
+    public enum ActualShape {
+        LITERAL, VARIABLE, FIELD_ACCESS, SINGLE_CALL, CHAINED_CALLS_END0ARG,
+        CHAINED_CALLS_ENDNARG, CTOR_ONLY, CTOR_RECEIVER_CALL, OPERATOR_COMPOSITE,
+        ARRAY_INDEX, LAMBDA_OR_METHODREF, NONE
+    }
+
+    public enum ReceiverProvenance {
+        INLINE_CTOR, LOCAL_CTOR, LOCAL_CTOR_MUTATED, LOCAL_OTHER, FIELD, PARAM_OR_STATIC, NONE
+    }
+
     /** A losing candidate, recorded for T4 provenance. */
     public static final class Candidate {
         public final String methodName;
@@ -215,11 +228,14 @@ public final class MutResolution {
     private final String focalType;
     private final FocalSource focalSource;
     private final Boolean focalAgreement;
+    private final ActualShape actualShape;
+    private final ReceiverProvenance receiverProvenance;
 
     MutResolution(Status status, Tier tier, Signal decidingSignal, Set<Corroborator> corroborators,
                   NoPickReason noPickReason, CtInvocation<?> pick, List<Candidate> alternatives,
                   int candidateCount, boolean inspectorUnwrapped, boolean shallowInspectorPick,
-                  String focalType, FocalSource focalSource, Boolean focalAgreement) {
+                  String focalType, FocalSource focalSource, Boolean focalAgreement,
+                  ActualShape actualShape, ReceiverProvenance receiverProvenance) {
         this.status = status;
         this.tier = tier;
         this.decidingSignal = decidingSignal;
@@ -233,6 +249,8 @@ public final class MutResolution {
         this.focalType = focalType;
         this.focalSource = focalSource;
         this.focalAgreement = focalAgreement;
+        this.actualShape = actualShape;
+        this.receiverProvenance = receiverProvenance;
     }
 
     public Status getStatus() { return this.status; }
@@ -249,6 +267,8 @@ public final class MutResolution {
     public String getFocalType() { return this.focalType; }
     public FocalSource getFocalSource() { return this.focalSource; }
     public Boolean getFocalAgreement() { return this.focalAgreement; }
+    public ActualShape getActualShape() { return this.actualShape == null ? ActualShape.NONE : this.actualShape; }
+    public ReceiverProvenance getReceiverProvenance() { return this.receiverProvenance == null ? ReceiverProvenance.NONE : this.receiverProvenance; }
 }
 ```
 
@@ -641,9 +661,10 @@ public final class MethodUnderTestResolver {
                                        MutResolution.NoPickReason reason, CtInvocation<?> pick,
                                        List<MutResolution.Candidate> alternatives, int candidateCount,
                                        boolean inspectorUnwrapped, boolean shallow) {
-        // Focal fields are filled by Task 7; NONE until then.
+        // Focal fields: Task 7. Shape/provenance classification: Task 8b.
         return new MutResolution(status, tier, signal, corroborators, reason, pick, alternatives,
-            candidateCount, inspectorUnwrapped, shallow, null, MutResolution.FocalSource.NONE, null);
+            candidateCount, inspectorUnwrapped, shallow, null, MutResolution.FocalSource.NONE, null,
+            null, null);
     }
 
     private static List<MutResolution.Candidate> alternativesExcluding(List<CtInvocation<?>> pool,
@@ -1145,6 +1166,124 @@ Wiring into `resolveValueAssertion` — replace the terminal `none(NO_VISIBLE_CA
 
 ---
 
+### Task 8b: Input-topology classification (`actual_shape`, `receiver_provenance`)
+
+Pure telemetry — classifies *where inputs would enter and where the oracle sits* for every
+assertion, so the recipe-increment decisions (expression slices, statement slices) become
+`GROUP BY` queries. Design + taxonomy: `2026-07-02-input-topology-spike`. No influence on the
+pick, tier, or status.
+
+**Files:**
+- Modify: `src/main/java/teralizer/spoon/analysis/MethodUnderTestResolver.java`
+- Modify: `src/main/java/teralizer/spoon/analysis/MutResolution.java` (add `withTopology`)
+- Test: `src/test/java/teralizer/spoon/analysis/MethodUnderTestResolverTest.java`
+
+- [ ] **Step 1: Add failing tests:**
+
+```java
+    @Example
+    void topology_inlineCtorReceiver() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertTrue(new Subject().isPrime(7)); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.ActualShape.CTOR_RECEIVER_CALL, r.getActualShape());
+        Assert.assertEquals(MutResolution.ReceiverProvenance.INLINE_CTOR, r.getReceiverProvenance());
+    }
+
+    @Example
+    void topology_localCtorReceiver_cleanVsMutated() {
+        MutResolution clean = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { Subject s = new Subject(); org.junit.Assert.assertEquals(0, s.getTotal()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.ActualShape.SINGLE_CALL, clean.getActualShape());
+        Assert.assertEquals(MutResolution.ReceiverProvenance.LOCAL_CTOR, clean.getReceiverProvenance());
+
+        MutResolution mutated = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { Subject s = new Subject(); s.process(5); org.junit.Assert.assertEquals(5, s.getTotal()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        // the pick here is process (Task 8 elimination); topology describes the ASSERTED expression,
+        // whose receiver s is a mutated local ctor -- the R2 (statement-slice) family marker.
+        Assert.assertEquals(MutResolution.ReceiverProvenance.LOCAL_CTOR_MUTATED, mutated.getReceiverProvenance());
+    }
+
+    @Example
+    void topology_fieldReceiver_andOperatorShape() {
+        MutResolution field = resolve(
+            "public class SubjectTest {\n"
+            + "  Subject sut = new Subject();\n"
+            + "  public void t() { org.junit.Assert.assertEquals(0, sut.getTotal()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.ReceiverProvenance.FIELD, field.getReceiverProvenance());
+
+        MutResolution op = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertTrue(new Subject().gcd(6, 9) > 0); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.ActualShape.OPERATOR_COMPOSITE, op.getActualShape());
+    }
+
+    @Example
+    void topology_chainedCalls() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertTrue(new Subject().compute(5).isEmpty()); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.ActualShape.CHAINED_CALLS_END0ARG, r.getActualShape());
+        Assert.assertEquals(MutResolution.ReceiverProvenance.INLINE_CTOR, r.getReceiverProvenance());
+    }
+```
+
+- [ ] **Step 2: Run, expect FAIL.**
+
+- [ ] **Step 3: Implement.** In `MutResolution`, add a package-private enrichment copy (keeps every existing constructor call site unchanged):
+
+```java
+    MutResolution withTopology(ActualShape shape, ReceiverProvenance provenance) {
+        return new MutResolution(this.status, this.tier, this.decidingSignal, this.corroborators,
+            this.noPickReason, this.pick, this.alternatives, this.candidateCount,
+            this.inspectorUnwrapped, this.shallowInspectorPick, this.focalType, this.focalSource,
+            this.focalAgreement, shape, provenance);
+    }
+```
+
+In `MethodUnderTestResolver.resolve(...)`, wrap the existing body: rename it `resolveInternal`, then:
+
+```java
+    public static MutResolution resolve(CtMethod<?> testMethod, CtInvocation<?> assertion) {
+        MutResolution resolution = resolveInternal(testMethod, assertion);
+        CtExpression<?> actual = actualExpression(testMethod, assertion); // null for assertThrows/unsupported
+        return resolution.withTopology(classifyShape(actual), receiverProvenance(actual, testMethod, assertion));
+    }
+```
+
+`actualExpression`: null assertion or `assertThrows` or missing actual index → null; else the argument at `TestAnalysis.getActualParameterIndex`.
+
+`classifyShape(CtExpression<?> actual)` — AST-exact version of the spike classifier (`analysis/src/teralizer/input_topology.py` documents the taxonomy):
+- null → `NONE`; `CtLiteral` → `LITERAL`; `CtVariableRead` → `VARIABLE`; `CtFieldRead` → `FIELD_ACCESS`;
+- `CtBinaryOperator`/`CtUnaryOperator`/`CtConditional` → `OPERATOR_COMPOSITE`; `CtArrayRead` → `ARRAY_INDEX`;
+- `CtLambda`/`CtExecutableReferenceExpression` → `LAMBDA_OR_METHODREF`; `CtConstructorCall` → `CTOR_ONLY`;
+- `CtInvocation`: walk `getTarget()` transitively; count invocations in the chain. 1 invocation whose target is a `CtConstructorCall` → `CTOR_RECEIVER_CALL`; 1 invocation otherwise → `SINGLE_CALL`; ≥2 → outermost call has zero args ? `CHAINED_CALLS_END0ARG` : `CHAINED_CALLS_ENDNARG`;
+- anything else (type casts are metadata, not nodes) → recurse-free default `NONE`.
+
+`receiverProvenance(actual, testMethod, assertion)` — only for an invocation-rooted actual (else `NONE`). Take the *root receiver* (walk `getTarget()` past invocations to the first non-invocation):
+- `CtConstructorCall` → `INLINE_CTOR`; `CtFieldRead`/`CtThisAccess`-qualified field → `FIELD`;
+- `CtTypeAccess` (static) or null target or parameter read → `PARAM_OR_STATIC`;
+- `CtVariableRead` of a local: find its reaching definition (reuse Task 4's walk). Definition RHS is a `CtConstructorCall` → any statement strictly between the definition and the assertion that invokes a method on that variable? `LOCAL_CTOR_MUTATED` : `LOCAL_CTOR`. Definition RHS anything else → `LOCAL_OTHER`.
+
+- [ ] **Step 4: Run, expect PASS** (all prior tests too — topology must not change any pick/tier).
+- [ ] **Step 5: Commit.** `git commit -am "feat(mut-id): classify input topology (actual shape, receiver provenance)"`
+
+---
+
 ### Task 9: `TestAnalysisTask` integration — observation rows + grade separation
 
 **Files:**
@@ -1206,6 +1345,8 @@ public class MutResolutionObservationMapperTest {
         Assert.assertEquals("T5_NONE", record.getConfidenceTier());
         Assert.assertEquals("NO_VISIBLE_CALL", record.getNoPickReason());
         Assert.assertNull(record.getResolvedMethodName());
+        Assert.assertEquals("VARIABLE", record.getActualShape());
+        Assert.assertEquals("NONE", record.getReceiverProvenance());
     }
 }
 ```
@@ -1288,6 +1429,9 @@ final class MutResolutionObservationMapper {
         if (!resolution.getAlternatives().isEmpty()) {
             record.setCandidateDetails(gson.toJson(resolution.getAlternatives()));
         }
+
+        record.setActualShape(resolution.getActualShape().name());
+        record.setReceiverProvenance(resolution.getReceiverProvenance().name());
     }
 }
 ```
@@ -1426,6 +1570,21 @@ def get_guess_provenance(conn: Connection) -> pd.DataFrame:
     return pd.read_sql(sql, conn)
 
 
+def get_topology_cross_tab(conn: Connection) -> pd.DataFrame:
+    """actual_shape x receiver_provenance -- the R1/R2 recipe-increment sizing
+    (decision gates in docs/plans/2026-07-02-input-topology-spike.md)."""
+    sql = text(
+        """
+        SELECT actual_shape, receiver_provenance, COUNT(*) AS assertions,
+               SUM(CASE WHEN status = 'RESOLVED' THEN 1 ELSE 0 END) AS resolved
+        FROM mut_resolution_observation
+        GROUP BY actual_shape, receiver_provenance
+        ORDER BY assertions DESC
+        """
+    )
+    return pd.read_sql(sql, conn)
+
+
 def main() -> None:
     engine = db_config.create_engine()
     with engine.connect() as conn:
@@ -1446,6 +1605,9 @@ def main() -> None:
         guesses = get_guess_provenance(conn)
         print(f"\n== T4 guesses: {len(guesses)} ==")
         print(guesses.head(20).to_string(index=False))
+
+        print("\n== Input topology (shape x provenance) ==")
+        print(get_topology_cross_tab(conn).to_string(index=False))
 
 
 if __name__ == "__main__":
@@ -1476,7 +1638,8 @@ Prove: recall rose, tiers are honest, the working corpus did not regress, and th
 - [ ] **Step 3: No-regression census.** Compare generalization counts per project against the pre-fusion baseline for the same 20 projects (operator has the baseline; the ~250-generalization census is the reference). Acceptance: no project loses generalizations. Any loss ⇒ diff the picks for that project's assertions (`resolved_method_name` vs the old `tested_method_name`) — a changed pick on a previously-working assertion is a contract-1 violation; fix before proceeding. Divergences (a)/(b) from the behavior contract are the only sanctioned pick changes.
 - [ ] **Step 4: Mis-targeting spot check, stratified.** Sample manually: 10 T1, 5 T2, 10 T3, 20 T4 newly-resolved assertions (`ORDER BY random()` with a fixed seed via `setseed`). Read each test's source; record whether the pick is the developer-intended method. Acceptance: T1 = 100% intended (any miss is a resolver bug — fix and re-run); T3/T4 rates recorded in the audit doc (no threshold — they are the honesty story and the He-et-al. comparison point).
 - [ ] **Step 5: Compute cost.** From the `task` table, compare total wall-clock of the JPF block (stages `EXECUTE_JPF`/`ANALYZE_JPF`) and generalized-build/test stages before vs after fusion for the same projects. Record the delta alongside the newly-attempted assertion count (previously-`MissingValue` assertions now entering JPF, from Step 2).
-- [ ] **Step 6: Record everything** in `2026-06-28-mut-id-targeting-and-coverage` (tables: tier shares, MV delta, spot-check rates, cost delta) and check this task's boxes.
+- [ ] **Step 6: Topology distribution (the R1/R2 decision gate).** From the funnel's shape × provenance cross-tab, record: (a) the realized R1 opportunity — `CHAINED_*`/`OPERATOR_COMPOSITE`/`CTOR_ONLY` rows with input sites; (b) the R2 sub-family — `SINGLE_CALL` × `LOCAL_CTOR`/`LOCAL_CTOR_MUTATED` counts. Per `2026-07-02-input-topology-spike` §R2: >5k clean `LOCAL_CTOR`-rooted zero-arg inspectors ⇒ design R2 properly; else T3 stays out of scope.
+- [ ] **Step 7: Record everything** in `2026-06-28-mut-id-targeting-and-coverage` (tables: tier shares, MV delta, spot-check rates, cost delta, topology distribution) and check this task's boxes.
 
 ---
 
@@ -1494,7 +1657,7 @@ Prove: recall rose, tiers are honest, the working corpus did not regress, and th
 
 ## Self-review
 
-- **Spec coverage:** fusion tiers T1 (Tasks 3-6, 8), T2/T3 promotion (Tasks 3, 7), T4 ranking (Task 8), T5 (Task 3); grades + observation schema (Tasks 1, 9); focal path+name (Task 7); shallow flag (Task 6); tier funnel + invariant-3 tooling (Task 10); acceptance evidence (Task 11). Oracle tiers/`oracle_agreement` are spec-deferred (PIT_ORIGINAL) — reserved column only, by design.
+- **Spec coverage:** fusion tiers T1 (Tasks 3-6, 8), T2/T3 promotion (Tasks 3, 7), T4 ranking (Task 8), T5 (Task 3); grades + observation schema (Tasks 1, 9); focal path+name (Task 7); shallow flag (Task 6); input topology (`actual_shape`/`receiver_provenance`, Task 8b, per `2026-07-02-input-topology-spike`); tier funnel + invariant-3 tooling (Task 10); acceptance evidence + R1/R2 decision gate (Task 11). Oracle tiers/`oracle_agreement` are spec-deferred (PIT_ORIGINAL) — reserved column only, by design.
 - **Type consistency:** `MutResolution` enum names in Task 2 == mapper strings in Task 9 == DDL comments in Task 1 == funnel SQL literals in Task 10 (`T4_GUESS`, `RANKED_GUESS`, `NO_VISIBLE_CALL` checked).
 - **No placeholders** except two deliberate verbatim-copy instructions (`getExecutedBody`, `db_config` acquisition) that point at exact sources — copying stale code into the plan would rot faster than pointing at it.
 - **Known judgment calls for the executor:** Spoon's model for `Integer.parseInt` declaring-type resolution without jars (Task 3 Step 4 names the invariant to hold); `db_config` helper name (Task 10 Step 1 says verify first).
