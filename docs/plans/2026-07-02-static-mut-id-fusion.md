@@ -147,7 +147,7 @@ Pure data holder + enums; the resolver's return type and the observation writer'
 **Files:**
 - Create: `src/main/java/teralizer/spoon/analysis/MutResolution.java`
 
-- [ ] **Step 1: Write the class** (complete file):
+- [x] **Step 1: Write the class** (complete file):
 
 ```java
 package teralizer.spoon.analysis;
@@ -272,9 +272,9 @@ public final class MutResolution {
 }
 ```
 
-- [ ] **Step 2: Compile.** Run: `./gradlew compileJava`. Expected: `BUILD SUCCESSFUL`.
+- [x] **Step 2: Compile.** Run: `./gradlew compileJava`. Expected: `BUILD SUCCESSFUL`.
 
-- [ ] **Step 3: Commit.**
+- [x] **Step 3: Commit.**
 
 ```bash
 git add src/main/java/teralizer/spoon/analysis/MutResolution.java
