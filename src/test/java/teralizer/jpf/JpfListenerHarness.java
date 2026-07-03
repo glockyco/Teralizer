@@ -101,7 +101,19 @@ public final class JpfListenerHarness {
         String instrumentedMethodQN,
         String testedMethodQN
     ) {
-        Config config = buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN);
+        return run(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN, true);
+    }
+
+    public static Capture run(
+        Path workDir,
+        String targetClassQN,
+        String symbolicMethod,
+        String instrumentedMethodQN,
+        String testedMethodQN,
+        boolean symbolicStrings
+    ) {
+        Config config = buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
+            symbolicStrings);
         JPF jpf = new JPF(config);
         TestGeneralizationListener listener = new TestGeneralizationListener(config);
         jpf.addListener(listener);
@@ -198,8 +210,19 @@ public final class JpfListenerHarness {
         String instrumentedMethodQN,
         String testedMethodQN
     ) {
+        return buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN, true);
+    }
+
+    public static Config buildConfig(
+        Path workDir,
+        String targetClassQN,
+        String symbolicMethod,
+        String instrumentedMethodQN,
+        String testedMethodQN,
+        boolean symbolicStrings
+    ) {
         return buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
-            DEFAULT_MAX_EXECUTION_TIME, DEFAULT_MAX_PATH_CONDITION_SIZE);
+            DEFAULT_MAX_EXECUTION_TIME, DEFAULT_MAX_PATH_CONDITION_SIZE, symbolicStrings);
     }
 
     /** Build the JPF {@link Config} under explicit extraction ceilings (see {@link #buildConfig}). */
@@ -212,6 +235,21 @@ public final class JpfListenerHarness {
         double maxExecutionTime,
         long maxPathConditionSize
     ) {
+        return buildConfig(workDir, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
+            maxExecutionTime, maxPathConditionSize, true);
+    }
+
+    /** Build the JPF {@link Config} under explicit extraction ceilings (see {@link #buildConfig}). */
+    public static Config buildConfig(
+        Path workDir,
+        String targetClassQN,
+        String symbolicMethod,
+        String instrumentedMethodQN,
+        String testedMethodQN,
+        double maxExecutionTime,
+        long maxPathConditionSize,
+        boolean symbolicStrings
+    ) {
         Path jpfConfigPath = workDir.resolve("scenario.jpf");
         Path inputValuesPath = workDir.resolve("concrete-input.json");
         Path outputValuePath = workDir.resolve("concrete-output.json");
@@ -222,7 +260,7 @@ public final class JpfListenerHarness {
         writeConfig(
             jpfConfigPath, targetClassQN, symbolicMethod, instrumentedMethodQN, testedMethodQN,
             inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath, reportPath,
-            maxExecutionTime, maxPathConditionSize
+            maxExecutionTime, maxPathConditionSize, symbolicStrings
         );
 
         return JPF.createConfig(new String[]{jpfConfigPath.toString()});
@@ -240,7 +278,8 @@ public final class JpfListenerHarness {
         Path outputSpecificationPath,
         Path reportPath,
         double maxExecutionTime,
-        long maxPathConditionSize
+        long maxPathConditionSize,
+        boolean symbolicStrings
     ) {
         VelocityEngine velocity = new VelocityEngine(templateProperties());
         velocity.init();
@@ -251,12 +290,12 @@ public final class JpfListenerHarness {
         context.put("classpath", fixturesClasspath());
         context.put("symbolicMethod", symbolicMethod);
         // Plain-arithmetic solver defaults (the non-raw-bits SpfSymbolicConfigSelector selection).
-        // Harness scenarios drive concrete (con) parameters, so the solver is not exercised; these
-        // values only keep the rendered config valid.
+        // String symbolization is caller-selected so numeric fixtures mirror production's
+        // no-String-parameter profile while String fixtures still exercise SymbolicStringHandler.
         context.put("symbolicDp", "z3");
         context.put("symbolicFp", false);
         context.put("symbolicBvLength", 32);
-        context.put("symbolicStrings", true);
+        context.put("symbolicStrings", symbolicStrings);
         context.put("maxExecutionTime", maxExecutionTime);
         context.put("maxPathConditionSize", maxPathConditionSize);
         context.put("maxSearchDepth", 100);

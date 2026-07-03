@@ -193,10 +193,11 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             JVMReturnInstruction returnInstruction = (JVMReturnInstruction) exitInstruction;
             String concreteOutputType = returnInstruction.getMethodInfo().getReturnTypeName();
 
+            Object concreteOutputValue = null;
             if (returnInstruction instanceof RETURN || "void".equals(concreteOutputType)) {
                 output = CapturedOutput.ofVoid();
             } else {
-                Object concreteOutputValue = returnInstruction.getReturnValue(currentThread);
+                concreteOutputValue = returnInstruction.getReturnValue(currentThread);
                 output = CapturedOutput.ofReturnValue(captureValue(concreteOutputType, concreteOutputValue));
             }
 
@@ -205,6 +206,10 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             // or a non-Expression attribute. getReturnAttr(ti, Expression.class) unwraps via
             // ObjectList.getFirst and selects the Expression attribute (null if none).
             spfOutput = returnInstruction.getReturnAttr(vm.getCurrentThread(), Expression.class);
+            Expression boxedFieldOutput = boxedPrimitiveValueFieldAttr(concreteOutputType, concreteOutputValue);
+            if (boxedFieldOutput != null) {
+                spfOutput = boxedFieldOutput;
+            }
             Expression spfOutput_ = spfOutput; // To use spfOutput in the lambda, it needs to be (effectively) final.
             LOGGER.atTrace().log(() -> "Output: " + (spfOutput_ == null ? null : spfOutput_.toString()));
         } else if (exitInstruction instanceof ATHROW) {
@@ -320,6 +325,39 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
                 return new PrimitiveValue(javaType, elementInfo.getCharField("value"));
             default:
                 return new ReferenceValue(javaType);
+        }
+    }
+
+    /**
+     * Boxed primitive returns are heap references at {@code areturn}, so the reference slot usually
+     * has no symbolic expression: boxing stores the primitive into the wrapper's {@code value} field,
+     * and SPF keeps the primitive attr on that field. Reading only the returned reference therefore
+     * mistakes a symbolic boxed result for a concrete/null output model. If JPF returns an interned
+     * box or native peer object whose field has no attr, capture degrades to the ordinary null model
+     * rather than inventing an unsound expression.
+     */
+    private static Expression boxedPrimitiveValueFieldAttr(String javaType, Object concreteValue) {
+        if (!(concreteValue instanceof ElementInfo) || !isBoxedPrimitive(javaType)) {
+            return null;
+        }
+        ElementInfo elementInfo = (ElementInfo) concreteValue;
+        FieldInfo valueField = elementInfo.getClassInfo().getInstanceField("value");
+        return valueField == null ? null : elementInfo.getFieldAttr(valueField, Expression.class);
+    }
+
+    private static boolean isBoxedPrimitive(String javaType) {
+        switch (javaType) {
+            case "java.lang.Byte":
+            case "java.lang.Short":
+            case "java.lang.Integer":
+            case "java.lang.Long":
+            case "java.lang.Float":
+            case "java.lang.Double":
+            case "java.lang.Boolean":
+            case "java.lang.Character":
+                return true;
+            default:
+                return false;
         }
     }
 

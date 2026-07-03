@@ -57,6 +57,41 @@ public final class Cut {
         return value + value;
     }
 
+    /** Symbolic {@code long} in, boxed {@link Long} out through autoboxing. */
+    public static Long boxedLongPlusOne(long value) {
+        return value + 1L;
+    }
+
+    /** Symbolic {@code int} in, boxed {@link Integer} out through autoboxing. */
+    public static Integer boxedIntegerPlusOne(int value) {
+        return value + 1;
+    }
+
+    /** Symbolic {@code boolean} in, boxed {@link Boolean} out through autoboxing. */
+    public static Boolean boxedBooleanNot(boolean value) {
+        return !value;
+    }
+
+    /** Symbolic {@code long} in, explicitly allocated boxed {@link Long} out. */
+    public static Long boxedLongPlusOneAllocated(long value) {
+        return new Long(value + 1L);
+    }
+
+    /** Symbolic {@code boolean} in, explicitly allocated boxed {@link Boolean} out. */
+    public static Boolean boxedBooleanNotAllocated(boolean value) {
+        return new Boolean(!value);
+    }
+
+    /** Symbolic {@code boolean} in, explicitly allocated boxed {@link Boolean} identity out. */
+    public static Boolean boxedBooleanIdentityAllocated(boolean value) {
+        return new Boolean(value);
+    }
+
+    /** Concrete boxed return with no symbolic input dependency. */
+    public static Long boxedConcreteLong(long value) {
+        return 42L;
+    }
+
     /**
      * Recursive tested method. {@code triangular(3)} returns 6 via {@code 3 + triangular(2)}; the
      * inner frames return 3 / 1 / 0. Frame-identity detection must capture the <em>outermost</em>
