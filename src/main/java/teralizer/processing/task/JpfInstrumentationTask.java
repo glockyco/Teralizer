@@ -28,6 +28,7 @@ import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeParameterReference;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.reflect.reference.CtVariableReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -221,6 +222,16 @@ public class JpfInstrumentationTask extends AbstractTask {
             instrumentedParameters.add(parameter);
         }
 
+        LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> liftedLocals =
+            collectLiftableLocals(testedMethod, testedMethodCall, generalizableInputs);
+        Map<CtVariableReference<?>, String> liftedNames = liftedParameterNames(liftedLocals.keySet());
+        for (Map.Entry<CtVariableReference<?>, CtTypeReference<?>> lifted : liftedLocals.entrySet()) {
+            CtTypeReference<?> type = lifted.getValue().clone();
+            type.setSimplyQualified(false);
+            type.setImplicit(false);
+            instrumentedParameters.add(factory.createParameter(null, type, liftedNames.get(lifted.getKey())));
+        }
+
         CtInvocation<?> instrumentedTestedMethodCall = testedMethodCall.clone();
         List<CtExpression<?>> arguments = new ArrayList<>();
         for (int i = 0; i < testedMethodCall.getArguments().size(); i++) {
@@ -246,6 +257,7 @@ public class JpfInstrumentationTask extends AbstractTask {
             }
         }
         instrumentedTestedMethodCall.setArguments(arguments);
+        liftLocalReads(instrumentedTestedMethodCall, liftedNames, factory);
         if (!testedMethod.isStatic()) {
             if (hasReceiverConstructorInputs) {
                 CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getTarget().clone();
@@ -307,6 +319,138 @@ public class JpfInstrumentationTask extends AbstractTask {
             t.setImplicit(false);
         });
         return thrownTypes;
+    }
+
+    /**
+     * Finds every test-method local (or test-method parameter) that a CLONED part of the wrapper
+     * body would still reference. Generalizable argument positions are replaced by wrapper
+     * parameters and contribute nothing; everything cloned verbatim -- unsupported-type arguments,
+     * non-lifted constructor arguments -- may carry reads of variables that only exist in the test
+     * method's scope. Left alone, those reads make the generated wrapper uncompilable, and one bad
+     * wrapper fails BUILD_PROJECT_INSTRUMENTED for the whole project. Each such variable becomes an
+     * additional wrapper parameter, passed concretely from the call site (the same environment-
+     * carrying pattern as the {@code _target_} receiver parameter).
+     */
+    static LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> collectLiftableLocals(
+        CtMethod<?> testedMethod,
+        CtInvocation<?> testedMethodCall,
+        List<GeneralizableInput> generalizableInputs
+    ) {
+        LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted = new LinkedHashMap<>();
+        boolean hasReceiverConstructorInputs = generalizableInputs.stream()
+            .anyMatch(GeneralizableInput::isReceiverConstructorArgument);
+
+        for (int i = 0; i < testedMethodCall.getArguments().size(); i++) {
+            final int argumentIndex = i;
+            List<GeneralizableInput> inputsForArgument = generalizableInputs.stream()
+                .filter(input -> input.getMethodArgumentIndex() == argumentIndex)
+                .collect(Collectors.toList());
+            CtExpression<?> argument = testedMethodCall.getArguments().get(i);
+            if (inputsForArgument.isEmpty()) {
+                collectOutOfScopeReads(argument, testedMethodCall, lifted);
+            } else if (inputsForArgument.get(0).isConstructorArgument()) {
+                collectFromConstructorCall((CtConstructorCall<?>) argument, inputsForArgument, testedMethodCall, lifted);
+            }
+            // Fully-replaced generalizable arguments contribute nothing.
+        }
+        if (!testedMethod.isStatic() && hasReceiverConstructorInputs) {
+            List<GeneralizableInput> receiverInputs = generalizableInputs.stream()
+                .filter(GeneralizableInput::isReceiverConstructorArgument)
+                .collect(Collectors.toList());
+            collectFromConstructorCall((CtConstructorCall<?>) testedMethodCall.getTarget(), receiverInputs, testedMethodCall, lifted);
+        }
+        // A plain (non-constructor) receiver is replaced wholesale by _target_, never cloned.
+        return lifted;
+    }
+
+    /** Scans the constructor arguments that input lifting did NOT replace with wrapper parameters. */
+    private static void collectFromConstructorCall(
+        CtConstructorCall<?> constructorCall,
+        List<GeneralizableInput> liftedInputs,
+        CtInvocation<?> testedMethodCall,
+        LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted
+    ) {
+        Set<Integer> replaced = liftedInputs.stream()
+            .map(GeneralizableInput::getConstructorArgumentIndex)
+            .collect(Collectors.toSet());
+        List<CtExpression<?>> constructorArguments = constructorCall.getArguments();
+        for (int i = 0; i < constructorArguments.size(); i++) {
+            if (!replaced.contains(i)) {
+                collectOutOfScopeReads(constructorArguments.get(i), testedMethodCall, lifted);
+            }
+        }
+    }
+
+    /**
+     * Collects reads of variables declared OUTSIDE the tested call expression: test-method locals,
+     * test-method parameters, and catch variables. Field reads are excluded (they resolve against
+     * the instrumented class, which retains the test class's fields), as are reads of variables the
+     * expression itself declares (lambda parameters, locals inside the argument expression).
+     */
+    private static void collectOutOfScopeReads(
+        CtExpression<?> expression,
+        CtInvocation<?> testedMethodCall,
+        LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted
+    ) {
+        for (CtElement element : expression.getElements(CtVariableRead.class::isInstance)) {
+            CtVariableRead<?> read = (CtVariableRead<?>) element;
+            if (read instanceof CtFieldRead) {
+                continue;
+            }
+            CtVariableReference<?> reference = read.getVariable();
+            CtElement declaration = reference.getDeclaration();
+            if (declaration != null && declaration.hasParent(testedMethodCall)) {
+                continue; // declared inside the expression itself -- already in wrapper scope
+            }
+            CtTypeReference<?> type = reference.getType();
+            if (type == null || type instanceof CtTypeParameterReference) {
+                throw new RuntimeException(
+                    "Cannot lift test-local variable '" + reference.getSimpleName()
+                        + "' (unresolvable type) referenced by tested call " + testedMethodCall);
+            }
+            lifted.putIfAbsent(reference, type);
+        }
+    }
+
+    /**
+     * Deterministic wrapper-parameter names for lifted locals: {@code _local_<name>}, with an
+     * ordinal suffix when distinct variables share a simple name (shadowing across blocks).
+     */
+    static Map<CtVariableReference<?>, String> liftedParameterNames(Set<CtVariableReference<?>> references) {
+        Map<CtVariableReference<?>, String> names = new LinkedHashMap<>();
+        Map<String, Integer> seen = new HashMap<>();
+        for (CtVariableReference<?> reference : references) {
+            String base = "_local_" + reference.getSimpleName();
+            int ordinal = seen.merge(reference.getSimpleName(), 1, Integer::sum);
+            names.put(reference, ordinal == 1 ? base : base + "_" + ordinal);
+        }
+        return names;
+    }
+
+    /**
+     * Rewrites reads of lifted variables inside the CLONED wrapper call to the lifted parameter
+     * names. Matching is by variable simple name: within one Java method, a simple name denotes at
+     * most one visible local at the tested call's position, and cloned reads keep that name.
+     */
+    private static void liftLocalReads(
+        CtInvocation<?> clonedCall,
+        Map<CtVariableReference<?>, String> liftedNames,
+        Factory factory
+    ) {
+        Map<String, String> bySimpleName = new HashMap<>();
+        for (Map.Entry<CtVariableReference<?>, String> entry : liftedNames.entrySet()) {
+            bySimpleName.put(entry.getKey().getSimpleName(), entry.getValue());
+        }
+        for (CtElement element : clonedCall.getElements(CtVariableRead.class::isInstance)) {
+            CtVariableRead<?> read = (CtVariableRead<?>) element;
+            if (read instanceof CtFieldRead) {
+                continue;
+            }
+            String liftedName = bySimpleName.get(read.getVariable().getSimpleName());
+            if (liftedName != null) {
+                read.replace(factory.createCodeSnippetExpression(liftedName));
+            }
+        }
     }
 
     CtTypeReference<?> inferExpectedType(CtInvocation<?> call) {
@@ -385,6 +529,14 @@ public class JpfInstrumentationTask extends AbstractTask {
         for (GeneralizableInput input : generalizableInputs) {
             instrumentedMethodCall.addArgument(input.getSourceExpression());
         }
+        // Lifted test-locals are passed by name: the call site sits inside the test method,
+        // where those locals are in scope. Order matches the wrapper's parameter list because
+        // both sides derive it from the same collectLiftableLocals result.
+        LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> liftedLocals =
+            collectLiftableLocals(testedMethod, testedMethodCall, generalizableInputs);
+        for (CtVariableReference<?> reference : liftedLocals.keySet()) {
+            instrumentedMethodCall.addArgument(factory.createCodeSnippetExpression(reference.getSimpleName()));
+        }
         return instrumentedMethodCall;
     }
 
@@ -461,7 +613,7 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod) throws IOException {
-        String symbolicParams = instrumentedMethod.getParameters().stream().map(p -> TypeCapability.supportsGeneratedInput(p.getType().getSimpleName()) ? "sym" : "con").collect(Collectors.joining("#"));
+        String symbolicParams = instrumentedMethod.getParameters().stream().map(JpfInstrumentationTask::symbolicMarker).collect(Collectors.joining("#"));
         String symbolicMethod = this.assertionRecord.getInstrumentedMethodQualifiedName() + "(" + symbolicParams + ")";
 
         VelocityContext context = new VelocityContext();
@@ -509,5 +661,21 @@ public class JpfInstrumentationTask extends AbstractTask {
             Template template = velocityEngine.getTemplate("jpf-config.vm");
             template.merge(context, fileWriter);
         }
+    }
+
+    /**
+     * Decides whether a wrapper parameter is symbolized ({@code sym}) or stays concrete
+     * ({@code con}) in the generated {@code symbolic.method} spec. The {@code _target_} receiver
+     * and {@code _local_*} lifted test-locals carry the test's fixed environment -- symbolizing
+     * them would let SPF vary state the test does not control (a String receiver was previously
+     * symbolized purely because String is an input-generatable type). Everything else is a
+     * genuine input site and is symbolized when its type has a generator.
+     */
+    static String symbolicMarker(CtParameter<?> parameter) {
+        String name = parameter.getSimpleName();
+        if ("_target_".equals(name) || name.startsWith("_local_")) {
+            return "con";
+        }
+        return TypeCapability.supportsGeneratedInput(parameter.getType().getSimpleName()) ? "sym" : "con";
     }
 }
