@@ -12,7 +12,7 @@ parent: 2026-06-26-teralizer-overview
 
 **Goal:** Make the generalized validation stages (`BUILD_PROJECT_GENERALIZED` → `EXECUTE_TESTS_GENERALIZED` → `COLLECT_JUNIT_REPORTS_GENERALIZED`) succeed across the fusion-spike corpus so that `jqwik_property_execution` coverage rises from 2/19 projects (168/2003 generalizations) to every project that fits the execution budget — the precondition for the seed-kill share metric in `2026-07-02-static-mut-id-fusion` Task 11 Step 5.
 
-**Architecture:** Three independent defects, each fixed at its source seam: (1) the generated telemetry harness requires Java 8 syntax but projects pin `-source 1.5/1.6/1.7` — floor the *test* compilation level in the Teralizer-owned build-file copy; (2) `BaselineTestParametersSupplierFactory` renders `(java.lang.Long) -9223372036854775808L`, which javac re-parses as binary minus (JLS 15.16: reference-type casts take `UnaryExpressionNotPlusMinus`) — parenthesize the cast operand; (3) generalized-test reports are unmatchable (surefire ≥3.0.2 writes jqwik *display names* as `classname`) or absent entirely (surefire <2.22 has no JUnit-platform provider, silently skipping every jqwik class while the stage reports SUCCEEDED) — normalize the collector's matching, floor pinned surefire versions, and fail loud when generalized classes produce no reports.
+**Architecture:** Three independent defects, each fixed at its source seam: (1) the generated telemetry harness requires Java 8 syntax but projects pin `-source 1.5/1.6/1.7` — floor the *test* compilation level in the Teralizer-owned build-file copy; (2) `BaselineTestParametersSupplierFactory` renders `(java.lang.Long) -9223372036854775808L`, which javac re-parses as binary minus (JLS 15.16: reference-type casts take `UnaryExpressionNotPlusMinus`) — parenthesize the cast operand; (3) generalized-test reports are unmatchable (surefire ≥3.0.2 writes jqwik *display names* as `classname`) or absent entirely (surefire <2.22 has no JUnit-platform provider, silently skipping every jqwik class while the stage reports SUCCEEDED) — normalize the collector's matching, derive a generalized-only Maven build-file copy with a floored surefire runner, and fail loud when generalized classes produce no reports.
 
 **Tech stack:** Java 8, dom4j (pom mutation), Spoon codegen, maven-surefire report parser (`TestSuiteXmlParser`), jqwik `@Example` + `org.junit.Assert` tests.
 
@@ -110,11 +110,15 @@ tasks.matching { it.name == 'compileTestJava' }.all {
 **Files:**
 - Modify: `src/main/java/teralizer/util/Configuration.java`
 - Modify: `src/main/java/teralizer/processing/dependencies/MavenDependencyManager.java`
-- Create: `src/test/java/teralizer/processing/dependencies/MavenSurefireFloorTest.java`
+- Modify: `src/main/java/teralizer/processing/task/TestExecutionTask.java`
+- Modify: `src/main/java/teralizer/processing/task/CleanupTask.java`
+- Modify: `src/test/java/teralizer/processing/dependencies/MavenSurefireFloorTest.java`
 
-- [x] **Step 1: Add the constant:**
+- [x] **Step 1: Add the constants:**
 
 ```java
+public static final String MAVEN_GENERALIZED_BUILD_FILE = "pom." + TOOL_NAME_LOWER + ".generalized.xml";
+
 /**
  * Oldest maven-surefire-plugin able to run JUnit-platform (jqwik) tests. A project pinning
  * an older surefire silently skips every generated property test while the build stays
@@ -123,12 +127,14 @@ tasks.matching { it.name == 'compileTestJava' }.all {
 public static final String SUREFIRE_MIN_VERSION = "2.22.2";
 ```
 
-- [x] **Step 2: Write the failing test** (same dom4j-string model as Task 1): (a) `maven-surefire-plugin` pinned `2.17` under `/project/build/plugins` → version text becomes `2.22.2`; (b) pinned under `/project/build/pluginManagement/plugins` → also floored; (c) pinned `3.0.2` → unchanged; (d) no surefire plugin declared → unchanged (Maven's own default is platform-capable).
-- [x] **Step 3: Run to verify failure.**
-- [x] **Step 4: Implement `applySurefireFloor(Document)`** — package-private static; numeric `major.minor.patch` comparison (missing parts = 0); overwrite only the `<version>` text node. Wire into `addRequiredDependencies()` like Task 1.
-- [x] **Step 5: Run to verify pass.**
+- [x] **Step 2: Preserve the pure floor operation.** `MavenDependencyManager.applySurefireFloor(Document)` remains package-private and document-local: it finds explicit `maven-surefire-plugin` pins under `/project/build/plugins` and `/project/build/pluginManagement/plugins`, floors versions below `Configuration.SUREFIRE_MIN_VERSION`, leaves `3.0.2`/newer unchanged, and leaves poms with no explicit surefire declaration unchanged.
+- [x] **Step 3: Derive the generalized Maven build file.** Add `MavenDependencyManager.deriveGeneralizedBuildFile(Path sharedPomPath, Path generalizedPomPath)`: read the finalized shared `pom.teralizer.xml` from disk with `SAXReader`, run `applySurefireFloor` on that clone, and write `pom.teralizer.generalized.xml` with the existing pretty-print `XMLWriter` shape. The method always writes the generalized copy, even when no floor is applied, so downstream generalized execution can rely on the file's existence.
+- [x] **Step 4: Keep native suites on the native runner.** `addRequiredDependencies()` applies dependency, Jacoco/PIT, jqwik, and test-compiler mutations to the shared pom and rewrites that shared file only when those mutations changed it; after that write-out point, it derives the generalized copy from the final on-disk shared pom. It does not apply the surefire floor to the shared pom.
+- [x] **Step 5: Use the derived copy only for generalized execution.** `TestExecutionTask.buildMavenCommand` passes `--file pom.teralizer.generalized.xml` only for `EXECUTE_TESTS_GENERALIZED`; `EXECUTE_TESTS_ORIGINAL`, `EXECUTE_TESTS_INITIAL`, and other Maven stages continue to pass `--file pom.teralizer.xml`.
+- [x] **Step 6: Clean up both Maven build-file copies.** `CleanupTask` deletes `pom.teralizer.generalized.xml` alongside `pom.teralizer.xml` and the custom Gradle build file during `CLEANUP_PROJECT`.
+- [x] **Step 7: Verify derivation behavior.** Extend `MavenSurefireFloorTest` with a temp-dir derivation case that proves a source pom pinned below the floor produces a generalized copy at `Configuration.SUREFIRE_MIN_VERSION` while the source bytes stay identical, plus a `3.0.2` case proving the derivation floors never assign.
 
-**Commit subject:** `fix(pipeline): floor pinned surefire to a junit-platform-capable version`
+**Commit subject:** `fix(pipeline): scope surefire floor to generalized test execution`
 
 ---
 

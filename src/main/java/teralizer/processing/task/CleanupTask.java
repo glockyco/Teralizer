@@ -68,8 +68,9 @@ public class CleanupTask extends AbstractTask {
 
         if (this.stage == ProcessingStage.CLEANUP_PROJECT && this.projectRecord == null) {
             File mavenBuildFile = this.projectPath.resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE).toFile();
+            File generalizedMavenBuildFile = this.projectPath.resolve(Configuration.MAVEN_GENERALIZED_BUILD_FILE).toFile();
             File gradleBuildFile =  this.projectPath.resolve(Configuration.GRADLE_CUSTOM_BUILD_FILE).toFile();
-            List<File> buildFiles = Arrays.asList(mavenBuildFile, gradleBuildFile);
+            List<File> buildFiles = Arrays.asList(mavenBuildFile, generalizedMavenBuildFile, gradleBuildFile);
             for (File buildFile : buildFiles) {
                 if (buildFile.exists()) {
                     LOGGER.atInfo().log("Deleting " + Configuration.TOOL_NAME + " build file '" + buildFile + "'.");

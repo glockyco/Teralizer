@@ -63,6 +63,7 @@ public class Configuration {
     }
 
     public static final String MAVEN_CUSTOM_BUILD_FILE = "pom." + TOOL_NAME_LOWER + ".xml";
+    public static final String MAVEN_GENERALIZED_BUILD_FILE = "pom." + TOOL_NAME_LOWER + ".generalized.xml";
     public static final String MAVEN_DEFAULT_BUILD_FILE = "pom.xml";
 
     public static final String GRADLE_CUSTOM_BUILD_FILE = "build." + TOOL_NAME_LOWER + ".gradle";

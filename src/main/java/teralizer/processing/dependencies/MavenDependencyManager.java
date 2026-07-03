@@ -52,13 +52,32 @@ public class MavenDependencyManager {
         hasModifiedDocument |= this.addPitestPlugin();
         hasModifiedDocument |= this.addDependencyIfMissing(Configuration.JQWIK_DEPENDENCY);
         hasModifiedDocument |= applyTestCompilerFloor(this.document);
-        hasModifiedDocument |= applySurefireFloor(this.document);
 
         if (hasModifiedDocument) {
             XMLWriter writer = new XMLWriter(new FileWriter(this.pomFilePath.toFile()), OutputFormat.createPrettyPrint());
             writer.write(this.document);
             writer.close();
         }
+        Path generalizedPomFilePath = this.projectRecord.getRootPath().resolve(Configuration.MAVEN_GENERALIZED_BUILD_FILE);
+        deriveGeneralizedBuildFile(this.pomFilePath, generalizedPomFilePath);
+    }
+
+    /**
+     * Generalized tests need a JUnit-platform-capable surefire runner, while original and
+     * initial suites must keep the project's declared runner behavior. Flooring the shared
+     * Teralizer POM would make native-suite stages execute under a different surefire than the
+     * project pins, which can alter discovery and execution enough to hang or exceed the
+     * uniform execution ceiling. The derived POM is written unconditionally so generalized
+     * execution can depend on its existence without changing the build file used by native
+     * suites.
+     */
+    static void deriveGeneralizedBuildFile(Path sharedPomPath, Path generalizedPomPath) throws DocumentException, IOException {
+        Document generalizedDocument = new SAXReader().read(sharedPomPath.toFile());
+        applySurefireFloor(generalizedDocument);
+
+        XMLWriter writer = new XMLWriter(new FileWriter(generalizedPomPath.toFile()), OutputFormat.createPrettyPrint());
+        writer.write(generalizedDocument);
+        writer.close();
     }
 
     private Element getOrCreateDependenciesElement(Element root) {

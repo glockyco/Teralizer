@@ -1,9 +1,13 @@
 package teralizer.processing.dependencies;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import net.jqwik.api.Example;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.junit.Assert;
+import teralizer.util.Configuration;
 
 public class MavenSurefireFloorTest {
 
@@ -49,8 +53,42 @@ public class MavenSurefireFloorTest {
         Assert.assertEquals(before, doc.asXML());
     }
 
+    @Example
+    void generalizedBuildFileDerivationFloorsCopyWithoutMutatingSharedPom() throws Exception {
+        Path tempDir = Files.createTempDirectory("teralizer-surefire-floor");
+        Path sharedPomPath = tempDir.resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE);
+        Path generalizedPomPath = tempDir.resolve(Configuration.MAVEN_GENERALIZED_BUILD_FILE);
+        byte[] sharedPomBytes = pluginPomXml("<plugins>", "</plugins>", "2.17", true).getBytes(StandardCharsets.UTF_8);
+        Files.write(sharedPomPath, sharedPomBytes);
+
+        MavenDependencyManager.deriveGeneralizedBuildFile(sharedPomPath, generalizedPomPath);
+
+        Assert.assertTrue(Files.exists(generalizedPomPath));
+        Assert.assertTrue(readUtf8(generalizedPomPath).contains("<version>" + Configuration.SUREFIRE_MIN_VERSION + "</version>"));
+        Assert.assertArrayEquals(sharedPomBytes, Files.readAllBytes(sharedPomPath));
+    }
+
+    @Example
+    void generalizedBuildFileDerivationCopiesNewerSurefirePinWithoutAssigningFloor() throws Exception {
+        Path tempDir = Files.createTempDirectory("teralizer-surefire-floor");
+        Path sharedPomPath = tempDir.resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE);
+        Path generalizedPomPath = tempDir.resolve(Configuration.MAVEN_GENERALIZED_BUILD_FILE);
+        Files.write(sharedPomPath, pluginPomXml("<plugins>", "</plugins>", "3.0.2", true).getBytes(StandardCharsets.UTF_8));
+
+        MavenDependencyManager.deriveGeneralizedBuildFile(sharedPomPath, generalizedPomPath);
+
+        String generalizedPom = readUtf8(generalizedPomPath);
+        Assert.assertTrue(Files.exists(generalizedPomPath));
+        Assert.assertTrue(generalizedPom.contains("<version>3.0.2</version>"));
+        Assert.assertFalse(generalizedPom.contains("<version>" + Configuration.SUREFIRE_MIN_VERSION + "</version>"));
+    }
+
     private static Document pluginPom(String pluginsOpen, String pluginsClose, String version, boolean includeGroupId) throws Exception {
-        return namespacedPom(
+        return DocumentHelper.parseText(pluginPomXml(pluginsOpen, pluginsClose, version, includeGroupId));
+    }
+
+    private static String pluginPomXml(String pluginsOpen, String pluginsClose, String version, boolean includeGroupId) {
+        return namespacedPomXml(
             "<build>"
                 + pluginsOpen
                 + "<plugin>"
@@ -64,17 +102,23 @@ public class MavenSurefireFloorTest {
     }
 
     private static Document namespacedPom(String body) throws Exception {
-        return DocumentHelper.parseText(
-            "<project xmlns=\"http://maven.apache.org/POM/4.0.0\""
-                + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-                + " xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0"
-                + " https://maven.apache.org/xsd/maven-4.0.0.xsd\">"
-                + "<modelVersion>4.0.0</modelVersion>"
-                + "<groupId>example</groupId>"
-                + "<artifactId>subject</artifactId>"
-                + "<version>1.0</version>"
-                + body
-                + "</project>"
-        );
+        return DocumentHelper.parseText(namespacedPomXml(body));
+    }
+
+    private static String namespacedPomXml(String body) {
+        return "<project xmlns=\"http://maven.apache.org/POM/4.0.0\""
+            + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+            + " xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0"
+            + " https://maven.apache.org/xsd/maven-4.0.0.xsd\">"
+            + "<modelVersion>4.0.0</modelVersion>"
+            + "<groupId>example</groupId>"
+            + "<artifactId>subject</artifactId>"
+            + "<version>1.0</version>"
+            + body
+            + "</project>";
+    }
+
+    private static String readUtf8(Path path) throws Exception {
+        return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
     }
 }

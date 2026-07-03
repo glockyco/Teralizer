@@ -181,9 +181,13 @@ public class TestExecutionTask extends AbstractTask {
     }
 
     private List<String> buildMavenCommand(List<String> includedTests) throws IOException {
+        // Generalized runs need the platform-capable runner; native runs keep the project's own.
+        String mavenBuildFile = this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED
+            ? Configuration.MAVEN_GENERALIZED_BUILD_FILE
+            : Configuration.MAVEN_CUSTOM_BUILD_FILE;
         List<String> command = new ArrayList<>(Arrays.asList(
             "mvn",
-            "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
+            "--file", mavenBuildFile,
             "-Djacoco.skip=false",
             "test"
         ));
