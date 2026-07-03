@@ -292,7 +292,7 @@ Extract today's logic into `MethodUnderTestResolver`, unchanged in *which call i
 - Create: `src/main/java/teralizer/spoon/analysis/MethodUnderTestResolver.java`
 - Modify: `src/main/java/teralizer/spoon/analysis/TestAnalysis.java:87-176`
 
-- [ ] **Step 1: Write the failing tests.** Complete file (the helpers at the bottom are reused by all later tasks — write them now):
+- [x] **Step 1: Write the failing tests.** Complete file (the helpers at the bottom are reused by all later tasks — write them now):
 
 ```java
 package teralizer.spoon.analysis;
@@ -427,12 +427,12 @@ public class MethodUnderTestResolverTest {
 }
 ```
 
-- [ ] **Step 2: Run, expect FAIL** (class absent).
+- [x] **Step 2: Run, expect FAIL** (class absent).
 
 Run: `./gradlew test --tests 'teralizer.spoon.analysis.MethodUnderTestResolverTest'`
 Expected: compilation error — `MethodUnderTestResolver` does not exist.
 
-- [ ] **Step 3: Write the resolver skeleton.** Complete file. This reproduces `TestAnalysis.findTestedMethodCall` (`TestAnalysis.java:87-176`) pick-for-pick, wrapped in grading. Move `getExecutedBody` (`TestAnalysis.java:178-...`) here verbatim as a private method (it stays in `TestAnalysis` too until Task 9 deletes it — duplication for two tasks is acceptable to keep both compiling).
+- [x] **Step 3: Write the resolver skeleton.** Complete file. This reproduces `TestAnalysis.findTestedMethodCall` (`TestAnalysis.java:87-176`) pick-for-pick, wrapped in grading. Move `getExecutedBody` (`TestAnalysis.java:178-...`) here verbatim as a private method (it stays in `TestAnalysis` too until Task 9 deletes it — duplication for two tasks is acceptable to keep both compiling).
 
 ```java
 package teralizer.spoon.analysis;
@@ -696,12 +696,12 @@ public final class MethodUnderTestResolver {
 
 **Note on `getExecutedBody`:** copy the complete method (and any private helpers it calls that are not otherwise referenced) from `TestAnalysis.java` verbatim, replacing the placeholder body above. `TestAnalysis.getActualParameterIndex` is `public` (used by `TestGeneralizationTask:378,525`) — call it, do not copy it.
 
-- [ ] **Step 4: Run, expect PASS.**
+- [x] **Step 4: Run, expect PASS.**
 
 Run: `./gradlew test --tests 'teralizer.spoon.analysis.MethodUnderTestResolverTest'`
 Expected: all 6 tests PASS. If `libraryPick_isCharacterizationOnly` fails on the `NoPickReason`, inspect what Spoon returns for `Integer.parseInt`'s declaring type in a jar-less model and adjust `noPickReasonFor`'s library check (the invariant to preserve: source-model declarations ⇒ `RESOLVED`; everything else ⇒ `CHARACTERIZATION_ONLY` with a non-null reason).
 
-- [ ] **Step 5: Delegate from `TestAnalysis`.** Replace the body of `findTestedMethodCall` (`TestAnalysis.java:87-176`) with:
+- [x] **Step 5: Delegate from `TestAnalysis`.** Replace the body of `findTestedMethodCall` (`TestAnalysis.java:87-176`) with:
 
 ```java
     public static Optional<CtInvocation<?>> findTestedMethodCall(CtMethod<?> method, CtInvocation<?> assertion) {
@@ -712,9 +712,9 @@ Expected: all 6 tests PASS. If `libraryPick_isCharacterizationOnly` fails on the
 
 Delete the now-unused private members of `TestAnalysis` that only `findTestedMethodCall` used (`getExecutedBody` stays until Task 9 only if something else references it; if nothing does, delete it now and keep the resolver's copy as the single one).
 
-- [ ] **Step 6: Full suite green.** Run: `./gradlew test`. Expected: `BUILD SUCCESSFUL` (pre-existing failures, if any, must be identical before/after — check with `git stash && ./gradlew test` if unsure).
+- [x] **Step 6: Full suite green.** Run: `./gradlew test`. Expected: `BUILD SUCCESSFUL` (pre-existing failures, if any, must be identical before/after — check with `git stash && ./gradlew test` if unsure).
 
-- [ ] **Step 7: Commit.**
+- [x] **Step 7: Commit.**
 
 ```bash
 git add src/main/java/teralizer/spoon/analysis/ src/test/java/teralizer/spoon/analysis/MethodUnderTestResolverTest.java
