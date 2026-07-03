@@ -5,10 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-
 import net.jqwik.api.Example;
-import org.junit.Assert;
 import org.apache.maven.plugins.surefire.report.ReportTestCase;
+import org.junit.Assert;
 
 public class SurefireReportMatchingTest {
     private static final Path SUREFIRE_REPORT_FIXTURES = Paths.get("src/test/resources/surefire-reports");
