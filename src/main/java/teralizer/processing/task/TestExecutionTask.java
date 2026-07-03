@@ -49,6 +49,7 @@ public class TestExecutionTask extends AbstractTask {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
         List<String> includedTests;
+        List<String> includedGeneralizedTests = null;
         switch (this.stage) {
             case EXECUTE_TESTS_ORIGINAL:
                 // Use `null` to include all tests.
@@ -59,7 +60,8 @@ public class TestExecutionTask extends AbstractTask {
                 break;
             case EXECUTE_TESTS_GENERALIZED:
                 includedTests = SQLiteRepository.fetchIncludedTestClasses(create, this.projectRecord.getId());
-                includedTests.addAll(SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.variant, this.projectRecord.getId()));
+                includedGeneralizedTests = SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.variant, this.projectRecord.getId());
+                includedTests.addAll(includedGeneralizedTests);
                 break;
             default:
                 throw new RuntimeException("Cannot execute tests. Unsupported processing stage " + this.stage + ".");
@@ -134,14 +136,17 @@ public class TestExecutionTask extends AbstractTask {
         }
 
         if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {
-            // The generalized class list is non-empty by construction here. A test runner without
-            // a JUnit-platform provider, such as surefire before 2.22, can still report success
-            // after silently skipping every generated jqwik class; do not record that false green.
-            requireGeneralizedReportsPresent(this.projectRecord.getTestReportsPath());
+            boolean generalizedTestsIncluded = includedGeneralizedTests != null && !includedGeneralizedTests.isEmpty();
+            requireGeneralizedReportsPresent(this.projectRecord.getTestReportsPath(), generalizedTestsIncluded);
         }
     }
 
-    static void requireGeneralizedReportsPresent(Path testReportsPath) throws IOException {
+    static void requireGeneralizedReportsPresent(Path testReportsPath, boolean generalizedTestsIncluded) throws IOException {
+        if (!generalizedTestsIncluded) {
+            // Zero reports is correct when no generalized class was included. License refusals can
+            // empty a project's generalized set, and that healthy run must not be recorded FAILED.
+            return;
+        }
         boolean hasGeneralizedReport = false;
         if (Files.exists(testReportsPath)) {
             try (Stream<Path> reportPaths = Files.list(testReportsPath)) {

@@ -61,7 +61,7 @@ public class SurefireReportMatchingTest {
 
         RuntimeException exception = Assert.assertThrows(
             RuntimeException.class,
-            () -> TestExecutionTask.requireGeneralizedReportsPresent(reportsPath));
+            () -> TestExecutionTask.requireGeneralizedReportsPresent(reportsPath, true));
 
         Assert.assertEquals(
             "Test execution reported success but produced no reports for any generalized test class. " +
@@ -71,10 +71,17 @@ public class SurefireReportMatchingTest {
     }
 
     @Example
+    public void empty_report_directory_is_allowed_when_no_generalized_classes_were_included() throws IOException {
+        Path reportsPath = Files.createTempDirectory("teralizer-no-generalized-classes-surefire-reports");
+
+        TestExecutionTask.requireGeneralizedReportsPresent(reportsPath, false);
+    }
+
+    @Example
     public void generalized_report_file_satisfies_false_green_guard() throws IOException {
         Path reportsPath = Files.createTempDirectory("teralizer-generalized-surefire-reports");
         Files.createFile(reportsPath.resolve("TEST-org.x._Foo_Generalized_bar_1_Test.xml"));
 
-        TestExecutionTask.requireGeneralizedReportsPresent(reportsPath);
+        TestExecutionTask.requireGeneralizedReportsPresent(reportsPath, true);
     }
 }
