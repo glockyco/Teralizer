@@ -141,6 +141,12 @@ public final class MethodUnderTestResolver {
         }
     }
 
+    /*
+     * Producer tracing walks from the asserted value back to the call that produced it.
+     * It only treats straight-line writes in the method body as proven; writes hidden in
+     * control-flow blocks are useful candidates, but they are weaker because the branch
+     * may not have executed on every path reaching the assertion.
+     */
     private static List<Traced> traceExpression(
         CtExpression<?> expression,
         CtMethod<?> testMethod,
@@ -153,6 +159,28 @@ public final class MethodUnderTestResolver {
                 true,
                 MutResolution.Signal.DIRECT_ACTUAL_CALL
             ));
+        }
+        // Operators do not produce values themselves; their operands might.  A single
+        // operand producer is still a proof for this expression, while a composite
+        // with multiple producers becomes a ranked choice until the full ranker lands.
+        if (expression instanceof CtBinaryOperator<?>) {
+            CtBinaryOperator<?> binary = (CtBinaryOperator<?>) expression;
+            List<Traced> traces = new ArrayList<>();
+            traces.addAll(traceExpression(binary.getLeftHandOperand(), testMethod, assertion, visited));
+            traces.addAll(traceExpression(binary.getRightHandOperand(), testMethod, assertion, visited));
+            return wrapTrace(
+                traces,
+                traces.size() == 1,
+                MutResolution.Signal.SUBEXPRESSION_PRODUCER
+            );
+        }
+        if (expression instanceof CtUnaryOperator<?>) {
+            CtUnaryOperator<?> unary = (CtUnaryOperator<?>) expression;
+            return wrapTrace(
+                traceExpression(unary.getOperand(), testMethod, assertion, visited),
+                true,
+                MutResolution.Signal.SUBEXPRESSION_PRODUCER
+            );
         }
         if (expression instanceof CtFieldRead<?>) {
             CtFieldRead<?> fieldRead = (CtFieldRead<?>) expression;
@@ -182,6 +210,10 @@ public final class MethodUnderTestResolver {
         return new ArrayList<>();
     }
 
+    /*
+     * Local variables use reaching-definition semantics: the nearest prior write wins,
+     * even when that write is a literal that kills an older call-produced value.
+     */
     private static List<Traced> traceLocalVariable(
         CtVariableReference<?> ref,
         CtMethod<?> testMethod,
@@ -219,6 +251,8 @@ public final class MethodUnderTestResolver {
                 }
             }
         }
+        // If the nearest in-scope write is not visible from the top-level statement
+        // scan, retain the old nested-declaration fallback but grade it as unproven.
         if (rhs == null && ref instanceof CtLocalVariableReference) {
             CtLocalVariable<?> declaration = ((CtLocalVariableReference<?>) ref).getDeclaration();
             if (declaration != null) {
@@ -233,6 +267,11 @@ public final class MethodUnderTestResolver {
         );
     }
 
+    /*
+     * Fields are intentionally narrower than locals: only writes to this.field (or
+     * unqualified field) inside the test method count. Setup methods and collaborators
+     * are out of scope, so absence of an in-method write means "no visible producer."
+     */
     private static List<Traced> traceField(
         CtFieldReference<?> ref,
         CtMethod<?> testMethod,
@@ -266,6 +305,8 @@ public final class MethodUnderTestResolver {
                 }
             }
         }
+        // Field state can be overwritten by several writes; only a single straight-line
+        // write proves the producer, otherwise the nearest visible write is weak.
         boolean proven = writeCount == 1 && directWrite;
         return wrapTrace(
             traceExpression(rhs, testMethod, assertion, visited),
@@ -274,6 +315,8 @@ public final class MethodUnderTestResolver {
         );
     }
 
+    // Apply the outer mechanism while preserving stronger inner provenance such as
+    // field-over-subexpression and local-over-subexpression.
     private static List<Traced> wrapTrace(
         List<Traced> inner,
         boolean wrapperProven,

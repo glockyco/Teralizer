@@ -839,7 +839,7 @@ git commit -m "feat(mut-id): trace producers through variable copies and field w
 
 **Files:** same two files.
 
-- [ ] **Step 1: Add failing tests:**
+- [x] **Step 1: Add failing tests:**
 
 ```java
     @Example
@@ -868,10 +868,10 @@ git commit -m "feat(mut-id): trace producers through variable copies and field w
     }
 ```
 
-- [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Extend `traceExpression`:** `CtBinaryOperator` → union of both operands' traces, each re-tagged `signal = SUBEXPRESSION_PRODUCER`, `proven` only if the union has exactly one element; `CtUnaryOperator` → trace the operand, re-tagged `SUBEXPRESSION_PRODUCER`. (Spoon models casts as metadata on the expression, not wrapper nodes — nothing to do for casts.)
-- [ ] **Step 4: Run, expect PASS.**
-- [ ] **Step 5: Commit.** `git commit -am "feat(mut-id): descend sub-expressions to producer calls"`
+- [x] **Step 2: Run, expect FAIL.**
+- [x] **Step 3: Extend `traceExpression`:** `CtBinaryOperator` → union of both operands' traces, each re-tagged `signal = SUBEXPRESSION_PRODUCER`, `proven` only if the union has exactly one element; `CtUnaryOperator` → trace the operand, re-tagged `SUBEXPRESSION_PRODUCER`. (Spoon models casts as metadata on the expression, not wrapper nodes — nothing to do for casts.)
+- [x] **Step 4: Run, expect PASS.**
+- [x] **Step 5: Commit.** `git commit -am "feat(mut-id): descend sub-expressions to producer calls"`
 
 ---
 

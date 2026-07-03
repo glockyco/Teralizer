@@ -156,6 +156,31 @@ public class MethodUnderTestResolverTest {
         Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
         Assert.assertNotEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
     }
+
+    @Example
+    void comparisonOperand_isT1() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertTrue(new Subject().gcd(6, 9) > 0); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals(MutResolution.Signal.SUBEXPRESSION_PRODUCER, r.getDecidingSignal());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void twoProducerComposite_isRankedNotAbstained() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertEquals(5, new Subject().gcd(6, 9) + new Subject().helper(2)); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertNotNull(r.getPick());
+        Assert.assertEquals(2, r.getCandidateCount());
+        Assert.assertEquals(1, r.getAlternatives().size());
+        Assert.assertNotEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+    }
     // --- shared helpers (used by all tasks) ---
 
     static final String SUBJECT_SOURCE =
