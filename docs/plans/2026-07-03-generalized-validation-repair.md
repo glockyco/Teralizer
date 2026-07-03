@@ -138,16 +138,16 @@ public static final String SUREFIRE_MIN_VERSION = "2.22.2";
 - Modify: `src/main/java/teralizer/spoon/generalization/BaselineTestParametersSupplierFactory.java:85`
 - Create: `src/test/java/teralizer/spoon/generalization/BaselineSupplierRenderingTest.java` (mirror `NaiveSupplierRenderingTest`)
 
-- [ ] **Step 1: Write the failing test:** a `Long`-typed argument with value `Long.MIN_VALUE` renders a supplier body whose cast operand is parenthesized — `((java.lang.Long) (-9223372036854775808L))` — and an `Integer.MIN_VALUE` case likewise. Assert on the rendered string containing `") (-"` (operand opens with a paren) rather than `") -"`.
-- [ ] **Step 2: Run to verify failure** (current rendering emits `(java.lang.Long) -9223372036854775808L`).
-- [ ] **Step 3: Fix line 85:**
+- [x] **Step 1: Write the failing test:** a `Long`-typed argument with value `Long.MIN_VALUE` renders a supplier body whose cast operand is parenthesized — `((java.lang.Long) (-9223372036854775808L))` — and an `Integer.MIN_VALUE` case likewise. Assert on the rendered string containing `") (-"` (operand opens with a paren) rather than `") -"`.
+- [x] **Step 2: Run to verify failure** (current rendering emits `(java.lang.Long) -9223372036854775808L`).
+- [x] **Step 3: Fix line 85:**
 
 ```java
 return "return net.jqwik.api.Arbitraries.just((" + argument.getJavaType() + ") (" + value + "))";
 ```
 
-- [ ] **Step 4: Run to verify pass.**
-- [ ] **Step 5: Sweep for siblings.** `ast_grep`/grep every renderer emitting `just((` + type + `) ` + value (Naive/Improved factories, `InputGenerationPlanner`, `FirstValueArbitrary` template, `jqwik-value-recorder.vm`): any site that can interpolate a *negative numeric literal* after a *reference-type* cast gets the same parenthesization. (`NumericDomainPlanner` already parenthesizes — `(%s) (%s)` — and primitive-keyword casts like `(long)` are immune; both need no change. Null-literal casts are immune.) List swept sites in the task summary.
+- [x] **Step 4: Run to verify pass.**
+- [x] **Step 5: Sweep for siblings.** `ast_grep`/grep every renderer emitting `just((` + type + `) ` + value (Naive/Improved factories, `InputGenerationPlanner`, `FirstValueArbitrary` template, `jqwik-value-recorder.vm`): any site that can interpolate a *negative numeric literal* after a *reference-type* cast gets the same parenthesization. (`NumericDomainPlanner` already parenthesizes — `(%s) (%s)` — and primitive-keyword casts like `(long)` are immune; both need no change. Null-literal casts are immune.) List swept sites in the task summary.
 
 **Commit subject:** `fix(codegen): parenthesize cast operands so MIN_VALUE literals stay unary-minus operands`
 

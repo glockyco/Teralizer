@@ -82,6 +82,8 @@ public class BaselineTestParametersSupplierFactory {
         if (argument.getJavaType().equals("boolean") || argument.getJavaType().equals("java.lang.Boolean")) {
             return "return net.jqwik.api.Arbitraries.just(" + value + ")";
         }
-        return "return net.jqwik.api.Arbitraries.just((" + argument.getJavaType() + ") " + value + ")";
+        // MIN_VALUE magnitudes are legal only as unary-minus operands; after a reference-type
+        // cast, an unparenthesized '-' is parsed as binary subtraction instead.
+        return "return net.jqwik.api.Arbitraries.just((" + argument.getJavaType() + ") (" + value + "))";
     }
 }
