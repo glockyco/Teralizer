@@ -17,6 +17,7 @@
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
 - **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (58/67) ← 2026-07-02-mut-id-confidence-fusion
+- **Generalized Validation-Layer Repair** [plan] `2026-07-03-generalized-validation-repair` (0/27) ← 2026-06-26-teralizer-overview
 
 ## draft
 
@@ -25,6 +26,8 @@
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
+- **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
+- **Symbolic-Sibling Throws in SPF Extraction** [spec] `2026-07-03-symbolic-sibling-throws` ← 2026-06-26-teralizer-overview
 
 ## superseded
 

@@ -30,10 +30,14 @@ No full evaluation rerun is planned until MUT identification and string corpus v
 
 The next implementation work, **in this order**:
 
-1. **`2026-07-02-static-mut-id-fusion`** *(plan, draft)* — confidence-ranked fusion MUT-id
-   (evidence-recording, tier-graded picks per `2026-07-02-mut-id-confidence-fusion`) targeting
-   the `MissingValue` blocker and making the string funnel payoff measurable.
-2. **`2026-06-30-partial-sound-string-support`** *(plan, active)* — run Task 7 corpus
+1. **`2026-07-03-generalized-validation-repair`** *(plan, active)* — fix the generalized
+   build/execute/collect stages (test-source floor, surefire floor, cast-operand literal,
+   display-name report matching) so `jqwik_property_execution` covers the spike corpus; its
+   Task 5 re-run doubles as the fusion plan's Task 11 Step 1.
+2. **`2026-07-02-static-mut-id-fusion`** *(plan, active)* — Tasks 1-10 landed; Task 11
+   empirical verification remains (extraction-side steps can run now; seed-kill share waits
+   on the validation repair).
+3. **`2026-06-30-partial-sound-string-support`** *(plan, active)* — run Task 7 corpus
    verification after static MUT-id resolves String-parameter/return MUTs. Scope is sound string
    operators, String returns, and structural exclusion of unsupported string terms.
 
@@ -47,12 +51,15 @@ the full status and parent tree.
   guardrails, and paper-facing interpretation for the JARVIS baseline.
 
 **Next implementation path**
+- `2026-07-03-generalized-validation-repair` *(plan)* — validation-layer fixes + the spike
+  re-run gating Task 11's seed-kill metric.
 - `2026-07-02-mut-id-confidence-fusion` *(spec)* — the MUT-id design authority: lexicographic
   confidence tiers, two grades, `mut_resolution_observation` provenance.
-- `2026-07-02-static-mut-id-fusion` *(plan, draft)* — the AST-only v1 of that spec; the next
-  implementation item.
+- `2026-07-02-static-mut-id-fusion` *(plan)* — the AST-only v1 of that spec; Task 11 pending.
 - `2026-06-30-partial-sound-string-support` *(plan, active)* — sound string-operator support;
   corpus verification remains gated on MUT-id.
+- `2026-07-03-symbolic-sibling-throws` *(spec, draft)* — SPF search survives application
+  throws on off-concrete-path symbolic siblings (xenqtt −8 residual); spike before finalizing.
 
 **Generator contracts**
 - `2026-06-28-clause-driven-input-generation` *(spec)* — clause-driven planners, single
@@ -84,6 +91,10 @@ the full status and parent tree.
 **Backlog**
 - `2026-06-27-inherited-test-method-support` *(spec, draft)* — flatten inherited `@Test`
   methods so inherited tests parse.
+- `2026-07-03-harness-support-artifact` *(spec, draft)* — extract the inlined telemetry
+  harness into a precompiled support jar; deletes the generated-file language-level coupling.
+- `MethodUnderTestResolver` per-test cost (~120ms vs old ~2ms) — memoize per-class facts per
+  test-class/model **before any full-corpus run** (at 1,174 projects: hours vs half a day).
 - FastMath/Interval generalization investigation.
 - SPF-eval listener ports: bit-exact float/NaN-payload capture, heap-PC capture for object/boxed
   params, and raw-PC logging.
