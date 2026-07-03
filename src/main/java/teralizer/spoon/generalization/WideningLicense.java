@@ -19,7 +19,10 @@ import teralizer.transformer.VariableNameCollector;
  * the output model is {@link OutputSpecClass#SYMBOLIC}, the expected expression is rendered from
  * symbolic evidence and varies with the generated values. When it is {@link OutputSpecClass#CONSTANT},
  * SPF proved that the value is path-constant, so widening within the admitted path keeps the concrete
- * oracle valid. Both classes are licensed exactly as before.
+ * oracle valid. When it is {@link OutputSpecClass#EXCEPTION}, the oracle is reaching the throw
+ * itself: that reachability is a property of the path pinned by the path condition for every admitted
+ * input, and an unconditional throw with an empty path condition holds for every input. These classes
+ * are licensed exactly as before.
  *
  * <p>{@link OutputSpecClass#NULL_CONCRETE} has two siblings that look identical at the persisted
  * output-model boundary. A computed boolean result can be represented only by the path condition:
@@ -69,6 +72,9 @@ public final class WideningLicense {
         Set<String> pathNames = pathConditionParameterNames == null ? Collections.emptySet() : pathConditionParameterNames;
 
         if (outputSpecClass == OutputSpecClass.SYMBOLIC || outputSpecClass == OutputSpecClass.CONSTANT) {
+            return WIDEN;
+        }
+        if (outputSpecClass == OutputSpecClass.EXCEPTION) {
             return WIDEN;
         }
         if (outputSpecClass != OutputSpecClass.NULL_CONCRETE) {

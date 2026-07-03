@@ -38,6 +38,49 @@ public class WideningLicenseTest {
     }
 
     @Example
+    void exceptionOutputWithEmptyPathConditionWidensBecauseUnconditionalThrowAppliesToEveryInput() {
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(
+            OutputSpecClass.EXCEPTION,
+            "int",
+            names("x"),
+            Collections.emptySet(),
+            0
+        );
+
+        Assert.assertTrue(verdict.allowsWidening());
+        Assert.assertNull(verdict.getExclusionInfo());
+    }
+
+    @Example
+    void exceptionOutputWithPathClausesWidensBecauseThrowReachabilityIsPinnedByPathCondition() {
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(
+            OutputSpecClass.EXCEPTION,
+            "int",
+            names("x"),
+            names("x"),
+            0
+        );
+
+        Assert.assertTrue(verdict.allowsWidening());
+        Assert.assertNull(verdict.getExclusionInfo());
+    }
+
+    @Example
+    void exceptionOutputWithConcretizationEventsWidensBecauseThrowPresenceIsAlreadyEvidence() {
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(
+            OutputSpecClass.EXCEPTION,
+            "int",
+            names("x"),
+            names("x"),
+            7
+        );
+
+        Assert.assertTrue("exception oracles are presence-based evidence, not path-value inference",
+            verdict.allowsWidening());
+        Assert.assertNull(verdict.getExclusionInfo());
+    }
+
+    @Example
     void nullConcreteBooleanWithEveryWidenedParameterNamedAndNoConcretizationEventsWidens() {
         WideningLicense.Verdict verdict = WideningLicense.evaluate(
             OutputSpecClass.NULL_CONCRETE,
