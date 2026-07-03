@@ -2,12 +2,17 @@ package teralizer.spoon.analysis;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
+import spoon.reflect.CtModel;
 import spoon.reflect.code.CtArrayRead;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBinaryOperator;
@@ -76,6 +81,20 @@ public final class MethodUnderTestResolver {
 
     private MethodUnderTestResolver() {
     }
+
+    /**
+     * Spoon builds one model per project pipeline; weak keys let a completed project's model be
+     * collected while still sharing the type index across every assertion resolved from that model.
+     */
+    private static final Map<CtModel, TypeIndex> TYPE_INDEXES =
+        Collections.synchronizedMap(new WeakHashMap<CtModel, TypeIndex>());
+
+    /**
+     * Focal identity depends only on the declaring test class, not on the assertion being resolved.
+     * Weak keys keep memoization from extending the lifetime of Spoon test types across projects.
+     */
+    private static final Map<CtType<?>, Focal> FOCAL_CACHE =
+        Collections.synchronizedMap(new WeakHashMap<CtType<?>, Focal>());
 
     /**
      * Resolves the method under test for one assertion. Never returns null and never abstains
@@ -1106,6 +1125,37 @@ public final class MethodUnderTestResolver {
         return left != null && right != null && left.getSimpleName().equals(right.getSimpleName());
     }
 
+    /**
+     * Indexes focal-type lookup once per Spoon model instead of linearly scanning every type for
+     * every assertion. The index records model encounter order because first-match fallback and
+     * first path match are observable determinism contracts, while the per-simple-name list still
+     * allows the same-package preference to win before falling back to the encounter-order head.
+     */
+    private static final class TypeIndex {
+        final Map<String, List<CtType<?>>> bySimpleName = new LinkedHashMap<>();
+        final Map<String, CtType<?>> byNormalizedPath = new LinkedHashMap<>();
+
+        TypeIndex(CtModel model) {
+            for (CtElement element : model.getElements(CtType.class::isInstance)) {
+                CtType<?> type = (CtType<?>) element;
+                List<CtType<?>> namedTypes = this.bySimpleName.get(type.getSimpleName());
+                if (namedTypes == null) {
+                    namedTypes = new ArrayList<>();
+                    this.bySimpleName.put(type.getSimpleName(), namedTypes);
+                }
+                namedTypes.add(type);
+
+                String sourcePath = sourcePath(type);
+                if (sourcePath != null) {
+                    String normalizedPath = normalizePath(sourcePath);
+                    if (!this.byNormalizedPath.containsKey(normalizedPath)) {
+                        this.byNormalizedPath.put(normalizedPath, type);
+                    }
+                }
+            }
+        }
+    }
+
     private static final class Focal {
         final String qualifiedName;
         final MutResolution.FocalSource source;
@@ -1133,22 +1183,38 @@ public final class MethodUnderTestResolver {
             return noFocal();
         }
         CtType<?> testType = testMethod.getDeclaringType();
+        synchronized (FOCAL_CACHE) {
+            Focal cached = FOCAL_CACHE.get(testType);
+            if (cached != null) {
+                return cached;
+            }
+        }
+
         String focalSimpleName = stripTestAffix(testType.getSimpleName());
         CtType<?> nameDerived = focalSimpleName == null
             ? null
             : findTypeBySimpleName(testMethod, focalSimpleName, packageName(testType));
         String mirroredPath = realMirrorPath(testType);
         CtType<?> pathDerived = mirroredPath == null ? null : findTypeByPath(testMethod, mirroredPath);
+        Focal focal;
         if (nameDerived != null) {
             MutResolution.FocalSource source = pathsEqual(mirroredPath, sourcePath(nameDerived))
                 ? MutResolution.FocalSource.PATH_AND_NAME
                 : MutResolution.FocalSource.NAME_ONLY;
-            return new Focal(nameDerived.getQualifiedName(), source);
+            focal = new Focal(nameDerived.getQualifiedName(), source);
+        } else if (pathDerived != null) {
+            focal = new Focal(pathDerived.getQualifiedName(), MutResolution.FocalSource.PATH_ONLY);
+        } else {
+            focal = noFocal();
         }
-        if (pathDerived != null) {
-            return new Focal(pathDerived.getQualifiedName(), MutResolution.FocalSource.PATH_ONLY);
+        synchronized (FOCAL_CACHE) {
+            Focal existing = FOCAL_CACHE.get(testType);
+            if (existing != null) {
+                return existing;
+            }
+            FOCAL_CACHE.put(testType, focal);
         }
-        return noFocal();
+        return focal;
     }
 
     private static CtType<?> findTypeBySimpleName(
@@ -1156,30 +1222,38 @@ public final class MethodUnderTestResolver {
         String simpleName,
         String preferredPackage
     ) {
-        CtType<?> fallback = null;
-        for (CtElement element : testMethod.getFactory().getModel().getElements(CtType.class::isInstance)) {
-            CtType<?> type = (CtType<?>) element;
-            if (!simpleName.equals(type.getSimpleName())) {
-                continue;
+        CtModel model = testMethod.getFactory().getModel();
+        TypeIndex index;
+        synchronized (TYPE_INDEXES) {
+            index = TYPE_INDEXES.get(model);
+            if (index == null) {
+                index = new TypeIndex(model);
+                TYPE_INDEXES.put(model, index);
             }
+        }
+        List<CtType<?>> candidates = index.bySimpleName.get(simpleName);
+        if (candidates == null || candidates.isEmpty()) {
+            return null;
+        }
+        for (CtType<?> type : candidates) {
             if (preferredPackage.equals(packageName(type))) {
                 return type;
             }
-            if (fallback == null) {
-                fallback = type;
-            }
         }
-        return fallback;
+        return candidates.get(0);
     }
 
     private static CtType<?> findTypeByPath(CtMethod<?> testMethod, String mirroredPath) {
-        for (CtElement element : testMethod.getFactory().getModel().getElements(CtType.class::isInstance)) {
-            CtType<?> type = (CtType<?>) element;
-            if (pathsEqual(mirroredPath, sourcePath(type))) {
-                return type;
+        CtModel model = testMethod.getFactory().getModel();
+        TypeIndex index;
+        synchronized (TYPE_INDEXES) {
+            index = TYPE_INDEXES.get(model);
+            if (index == null) {
+                index = new TypeIndex(model);
+                TYPE_INDEXES.put(model, index);
             }
         }
-        return null;
+        return index.byNormalizedPath.get(normalizePath(mirroredPath));
     }
 
     private static String realMirrorPath(CtType<?> testType) {

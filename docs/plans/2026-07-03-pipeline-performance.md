@@ -41,19 +41,19 @@ parent: 2026-06-26-teralizer-overview
 
 The only whole-model walks are `findTypeBySimpleName` (line 1160) and `findTypeByPath` (line 1176), both called from `resolveFocalType` (line 1131), which `resolveInternal` invokes **per assertion** (line 99) although its result depends only on `testMethod.getDeclaringType()`.
 
-- [ ] **Step 1: Write the failing behavioral tests** (they pass before AND after — they pin the contract the optimization must preserve; plus one identity test that fails before memoization exists is impractical here, so contract tests + timing sanity are the guard):
+- [x] **Step 1: Write the failing behavioral tests** (they pass before AND after — they pin the contract the optimization must preserve; plus one identity test that fails before memoization exists is impractical here, so contract tests + timing sanity are the guard):
   - duplicate simple names across two packages: focal resolution from a test in package `a` picks the `a`-package type (preferred package), from an unrelated package picks the first-in-model-order type;
   - repeated `resolve` calls on two assertions of the same test method return equal focal (`testedClassQualifiedName`, `FocalSource`) — same for a second test class in the same model;
   - a model with a name-derived AND path-derived focal still reports `PATH_AND_NAME`/`NAME_ONLY`/`PATH_ONLY` exactly as today (cover all three via three small virtual models — mirror the existing test's `VirtualFile` setup; path-derived cases need real files on disk if `SourcePosition.getFile()` must be a real file — check how existing tests handle `realMirrorPath` returning null for virtual files, and scope the path-index tests accordingly: if virtual models never exercise the path arm, say so in the test javadoc and rely on the census re-verification for that arm).
-- [ ] **Step 2: Run** `./gradlew test --tests 'teralizer.spoon.analysis.MethodUnderTestResolverTest'` → green (baseline).
-- [ ] **Step 3: Implement the index.** Private static final `Map<CtModel, TypeIndex>` behind a `WeakHashMap` wrapped in `Collections.synchronizedMap` (models die with the per-project pipeline; weak keys prevent cross-project leaks). `TypeIndex` holds, built in ONE `model.getElements(CtType.class::isInstance)` walk in model iteration order:
+- [x] **Step 2: Run** `./gradlew test --tests 'teralizer.spoon.analysis.MethodUnderTestResolverTest'` → green (baseline).
+- [x] **Step 3: Implement the index.** Private static final `Map<CtModel, TypeIndex>` behind a `WeakHashMap` wrapped in `Collections.synchronizedMap` (models die with the per-project pipeline; weak keys prevent cross-project leaks). `TypeIndex` holds, built in ONE `model.getElements(CtType.class::isInstance)` walk in model iteration order:
   - `Map<String, List<CtType<?>>> bySimpleName` (`LinkedHashMap`, lists in encounter order),
   - `Map<String, CtType<?>> byNormalizedPath` (first-wins; keys via the existing `normalizePath`, skipping types whose `sourcePath(...)` is null).
   Rewrite `findTypeBySimpleName`/`findTypeByPath` to query the index — `findTypeBySimpleName` scans the (short) per-name list for `preferredPackage`, else returns the list head; `findTypeByPath` is a map lookup with `normalizePath(mirroredPath)`. Javadoc on `TypeIndex`: why it exists (the linear scans were O(model) per assertion — quadratic over a project's assertion count) and the order-preservation contract.
-- [ ] **Step 4: Memoize the focal.** Private static final synchronized `WeakHashMap<CtType<?>, Focal>`; `resolveFocalType` computes once per declaring type. `Focal` must be immutable (verify; it is a small value holder today).
-- [ ] **Step 5: Run the test class** → green. Also run the two neighbor suites touching resolution: `./gradlew test --tests 'teralizer.processing.task.TestAnalysisTaskTest' --tests 'teralizer.processing.task.MutResolutionObservationMapperTest'` → green.
-- [ ] **Step 6: Timing sanity (informal, not committed):** time `./gradlew test --tests 'teralizer.spoon.analysis.MethodUnderTestResolverTest'` before/after locally; report the delta in the task summary (no assertion on wall-clock in tests — flaky).
-- [ ] **Step 7:** `./gradlew spotlessApply`, tick these boxes, commit.
+- [x] **Step 4: Memoize the focal.** Private static final synchronized `WeakHashMap<CtType<?>, Focal>`; `resolveFocalType` computes once per declaring type. `Focal` must be immutable (verify; it is a small value holder today).
+- [x] **Step 5: Run the test class** → green. Also run the two neighbor suites touching resolution: `./gradlew test --tests 'teralizer.processing.task.TestAnalysisTaskTest' --tests 'teralizer.processing.task.MutResolutionObservationMapperTest'` → green.
+- [x] **Step 6: Timing sanity (informal, not committed):** time `./gradlew test --tests 'teralizer.spoon.analysis.MethodUnderTestResolverTest'` before/after locally; report the delta in the task summary (no assertion on wall-clock in tests — flaky).
+- [x] **Step 7:** `./gradlew spotlessApply`, tick these boxes, commit.
 
 **Commit subject:** `perf(mut-id): index type lookups and memoize focal resolution`
 

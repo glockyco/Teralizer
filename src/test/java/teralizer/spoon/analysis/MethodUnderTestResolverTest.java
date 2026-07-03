@@ -371,6 +371,101 @@ public class MethodUnderTestResolverTest {
         Assert.assertEquals(MutResolution.ActualShape.CHAINED_CALLS_END0ARG, r.getActualShape());
         Assert.assertEquals(MutResolution.ReceiverProvenance.INLINE_CTOR, r.getReceiverProvenance());
     }
+
+    @Example
+    void focalClass_prefersMatchingPackageBeforeModelOrderFallback() {
+        CtModel model = modelOf(
+            "package a; public class Duplicate { public int value() { return 1; } }",
+            "package b; public class Duplicate { public int value() { return 2; } }",
+            "package a; public class DuplicateTest {"
+            + "  public void t() { org.junit.Assert.assertEquals(1, new Duplicate().value()); }"
+            + "}",
+            "package c; public class DuplicateTest {"
+            + "  public void t() { org.junit.Assert.assertEquals(1, new a.Duplicate().value()); }"
+            + "}");
+
+        MutResolution preferredPackage = resolveFrom(model, "a.DuplicateTest", "t", 0);
+        Assert.assertEquals("a.Duplicate", preferredPackage.getFocalType());
+        Assert.assertEquals(MutResolution.FocalSource.NAME_ONLY, preferredPackage.getFocalSource());
+
+        MutResolution modelOrderFallback = resolveFrom(model, "c.DuplicateTest", "t", 0);
+        Assert.assertEquals("a.Duplicate", modelOrderFallback.getFocalType());
+        Assert.assertEquals(MutResolution.FocalSource.NAME_ONLY, modelOrderFallback.getFocalSource());
+    }
+
+    @Example
+    void repeatedAssertionsShareFocalWhileDifferentTestClassesStayIsolated() {
+        CtModel model = modelOf(
+            "package a; public class Alpha { public int first() { return 1; }"
+            + "  public int second() { return 2; } }",
+            "package b; public class Beta { public int first() { return 1; }"
+            + "  public int second() { return 2; } }",
+            "package a; public class AlphaTest { public void t() {"
+            + "  Alpha subject = new Alpha();"
+            + "  org.junit.Assert.assertEquals(1, subject.first());"
+            + "  org.junit.Assert.assertEquals(2, subject.second());"
+            + "} }",
+            "package b; public class BetaTest { public void t() {"
+            + "  Beta subject = new Beta();"
+            + "  org.junit.Assert.assertEquals(1, subject.first());"
+            + "  org.junit.Assert.assertEquals(2, subject.second());"
+            + "} }");
+
+        MutResolution alphaFirst = resolveFrom(model, "a.AlphaTest", "t", 0);
+        MutResolution alphaSecond = resolveFrom(model, "a.AlphaTest", "t", 1);
+        Assert.assertEquals(alphaFirst.getFocalType(), alphaSecond.getFocalType());
+        Assert.assertEquals(alphaFirst.getFocalSource(), alphaSecond.getFocalSource());
+        Assert.assertEquals("a.Alpha", alphaFirst.getFocalType());
+        Assert.assertEquals(MutResolution.FocalSource.NAME_ONLY, alphaFirst.getFocalSource());
+
+        MutResolution betaFirst = resolveFrom(model, "b.BetaTest", "t", 0);
+        MutResolution betaSecond = resolveFrom(model, "b.BetaTest", "t", 1);
+        Assert.assertEquals(betaFirst.getFocalType(), betaSecond.getFocalType());
+        Assert.assertEquals(betaFirst.getFocalSource(), betaSecond.getFocalSource());
+        Assert.assertEquals("b.Beta", betaFirst.getFocalType());
+        Assert.assertEquals(MutResolution.FocalSource.NAME_ONLY, betaFirst.getFocalSource());
+    }
+
+    /**
+     * Virtual-file Spoon models do not provide real files on disk, so focal resolution cannot
+     * exercise the path-derived arm in this unit suite; corpus identity checks cover that arm.
+     */
+    @Example
+    void virtualFileFocalResolutionReportsNameOnlyBecausePathMirrorIsUnavailable() {
+        MutResolution r = resolve(
+            "public class SubjectTest {"
+            + "  public void t() { org.junit.Assert.assertEquals(0, new Subject().getTotal()); }"
+            + "}",
+            SUBJECT_SOURCE);
+
+        Assert.assertEquals("Subject", r.getFocalType());
+        Assert.assertEquals(MutResolution.FocalSource.NAME_ONLY, r.getFocalSource());
+    }
+
+    private static CtModel modelOf(String... sources) {
+        Launcher launcher = new Launcher();
+        for (int i = 0; i < sources.length; i++) {
+            launcher.addInputResource(new VirtualFile(sources[i], "Source" + i + ".java"));
+        }
+        launcher.buildModel();
+        return launcher.getModel();
+    }
+
+    private static MutResolution resolveFrom(
+        CtModel model,
+        String testClassName,
+        String testMethodName,
+        int assertionIndex
+    ) {
+        CtClass<?> testClass = model.getElements(CtClass.class::isInstance).stream()
+            .map(CtClass.class::cast)
+            .filter(type -> testClassName.equals(type.getQualifiedName()))
+            .findFirst()
+            .get();
+        CtMethod<?> testMethod = testClass.getMethodsByName(testMethodName).get(0);
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(assertionIndex);
+        return MethodUnderTestResolver.resolve(testMethod, assertion);
+    }
     // --- shared helpers (used by all tasks) ---
 
     public static final String SUBJECT_SOURCE =

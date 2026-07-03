@@ -18,7 +18,7 @@
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
 - **Static MUT-id Fusion (v1)** [plan] `2026-07-02-static-mut-id-fusion` (62/67) ← 2026-07-02-mut-id-confidence-fusion
 - **Generalized Validation-Layer Repair** [plan] `2026-07-03-generalized-validation-repair` (23/27) ← 2026-06-26-teralizer-overview
-- **Pipeline Performance — Resolver Memoization & Setup Classpath** [plan] `2026-07-03-pipeline-performance` (0/14) ← 2026-06-26-teralizer-overview
+- **Pipeline Performance — Resolver Memoization & Setup Classpath** [plan] `2026-07-03-pipeline-performance` (7/14) ← 2026-06-26-teralizer-overview
 
 ## draft
 
