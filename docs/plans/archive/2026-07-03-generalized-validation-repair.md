@@ -1,9 +1,10 @@
 ---
 title: Generalized Validation-Layer Repair
 type: plan
-status: active
+status: implemented
 created: 2026-07-03
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-03
 ---
 
 # Generalized Validation-Layer Repair Implementation Plan
