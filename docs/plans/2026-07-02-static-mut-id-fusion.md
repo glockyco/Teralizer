@@ -731,7 +731,7 @@ Replace the single-hop `nearestWriteProducer` with a recursive `trace` that foll
 - Modify: `src/main/java/teralizer/spoon/analysis/MethodUnderTestResolver.java`
 - Test: `src/test/java/teralizer/spoon/analysis/MethodUnderTestResolverTest.java`
 
-- [ ] **Step 1: Add failing tests** to `MethodUnderTestResolverTest`:
+- [x] **Step 1: Add failing tests** to `MethodUnderTestResolverTest`:
 
 ```java
     @Example
@@ -794,9 +794,9 @@ Replace the single-hop `nearestWriteProducer` with a recursive `trace` that foll
     }
 ```
 
-- [ ] **Step 2: Run, expect FAIL.** Run: `./gradlew test --tests 'teralizer.spoon.analysis.MethodUnderTestResolverTest'`. Expected: the 5 new tests fail (transitive copy, field write, nested block resolve nothing today; killed definition wrongly resolves `gcd`).
+- [x] **Step 2: Run, expect FAIL.** Run: `./gradlew test --tests 'teralizer.spoon.analysis.MethodUnderTestResolverTest'`. Expected: the 5 new tests fail (transitive copy, field write, nested block resolve nothing today; killed definition wrongly resolves `gcd`).
 
-- [ ] **Step 3: Implement the trace.** Inside `MethodUnderTestResolver`, add a result type and replace `nearestWriteProducer` usage:
+- [x] **Step 3: Implement the trace.** Inside `MethodUnderTestResolver`, add a result type and replace `nearestWriteProducer` usage:
 
 ```java
     /** A traced producer: the call plus whether the trace was a straight-line reaching definition. */
@@ -824,9 +824,9 @@ Implementation rules (encode exactly; each maps to a test above):
 
 Wire into `resolveValueAssertion`: one traced producer with `proven=true` → `graded(..., T1_PROVEN, ...)`; one with `proven=false` → `graded(..., T3_SINGLE_WEAK, ...)`; multiple → hold onto the list (Task 8 ranks it; until Task 8, pick the first and grade via `rankedBase` with the rest as alternatives); empty → keep the current `none(NO_VISIBLE_CALL)` (Task 8 replaces this with slice elimination).
 
-- [ ] **Step 4: Run, expect PASS** (same command). All Task 3 tests must still pass.
+- [x] **Step 4: Run, expect PASS** (same command). All Task 3 tests must still pass.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 git add src/main/java/teralizer/spoon/analysis/MethodUnderTestResolver.java src/test/java/teralizer/spoon/analysis/MethodUnderTestResolverTest.java

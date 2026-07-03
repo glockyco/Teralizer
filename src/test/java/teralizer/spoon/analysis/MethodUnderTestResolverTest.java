@@ -97,6 +97,65 @@ public class MethodUnderTestResolverTest {
         Assert.assertEquals("parseInt", r.getPick().getExecutable().getSimpleName());
     }
 
+
+    @Example
+    void transitiveVariableCopy_isT1() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { int a = new Subject().gcd(6, 9); int b = a; org.junit.Assert.assertEquals(3, b); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void reassignedVariable_nearestWriteWins_isT1() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { int x = new Subject().helper(1); x = new Subject().gcd(6, 9); org.junit.Assert.assertEquals(3, x); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void killedDefinition_yieldsNoProducerFromVariable() {
+        // int x = gcd(...); x = 5; assert(x) -- the literal write kills the call definition.
+        // (Pre-fusion code wrongly returned gcd here; contract divergence (a).)
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { int x = new Subject().gcd(6, 9); x = 5; org.junit.Assert.assertEquals(5, x); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertNotEquals("gcd",
+            r.getPick() == null ? null : r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void fieldWriteProducer_isT1() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  int r;\n"
+            + "  public void t() { this.r = new Subject().gcd(6, 9); org.junit.Assert.assertEquals(3, this.r); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals(MutResolution.Signal.FIELD_PRODUCER, r.getDecidingSignal());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void writeInsideNestedBlock_isUnproven_T3orBetter() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t(boolean c) { int x = 0; if (c) { x = new Subject().gcd(6, 9); } org.junit.Assert.assertEquals(3, x); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+        Assert.assertNotEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+    }
     // --- shared helpers (used by all tasks) ---
 
     static final String SUBJECT_SOURCE =

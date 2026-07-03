@@ -2,21 +2,28 @@ package teralizer.spoon.analysis;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import spoon.reflect.code.CtAssignment;
+import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtExecutableReferenceExpression;
+import spoon.reflect.code.CtFieldRead;
+import spoon.reflect.code.CtFieldWrite;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtLambda;
-import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtNewClass;
+import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.CtVariableWrite;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtVariableReference;
 import teralizer.util.Configuration;
@@ -94,92 +101,253 @@ public final class MethodUnderTestResolver {
         );
     }
 
-    // --- value assertions: today's one-hop logic (extended in Tasks 4-8) ---
+    // --- value assertions: producer tracing (extended in Tasks 4-8) ---
 
     private static MutResolution resolveValueAssertion(
         CtMethod<?> testMethod,
         CtInvocation<?> assertion,
         CtExpression<?> actual
     ) {
-        if (actual instanceof CtInvocation<?>) {
+        List<Traced> producers = traceExpression(actual, testMethod, assertion, new HashSet<>());
+        if (producers.isEmpty()) {
+            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL);
+        }
+        Traced first = producers.get(0);
+        List<MutResolution.Candidate> alternatives = alternativesAfterFirst(producers);
+        if (producers.size() == 1) {
             return graded(
                 testMethod,
-                (CtInvocation<?>) actual,
-                MutResolution.Signal.DIRECT_ACTUAL_CALL,
-                MutResolution.Tier.T1_PROVEN,
-                new ArrayList<MutResolution.Candidate>(),
+                first.producer,
+                first.signal,
+                first.proven ? MutResolution.Tier.T1_PROVEN : MutResolution.Tier.T3_SINGLE_WEAK,
+                alternatives,
                 false,
                 false
             );
         }
-        if (actual instanceof CtVariableRead<?>) {
-            CtVariableReference<?> ref = ((CtVariableRead<?>) actual).getVariable();
-            if (!(ref instanceof CtLocalVariableReference)) {
-                return none(MutResolution.NoPickReason.NO_VISIBLE_CALL);
-            }
-            CtInvocation<?> producer = nearestWriteProducer(testMethod, assertion, ref);
-            if (producer != null) {
-                return graded(
-                    testMethod,
-                    producer,
-                    MutResolution.Signal.LOCAL_VARIABLE_PRODUCER,
-                    MutResolution.Tier.T1_PROVEN,
-                    new ArrayList<MutResolution.Candidate>(),
-                    false,
-                    false
-                );
-            }
-        }
-        return none(MutResolution.NoPickReason.NO_VISIBLE_CALL);
+        return rankedBase(testMethod, first.producer, first.signal, alternatives);
     }
 
-    /**
-     * Reaching definition on the top-level statement list: nearest write to {@code ref} before the
-     * assertion whose RHS is an invocation; falls back to the declaration initializer.
-     */
-    private static CtInvocation<?> nearestWriteProducer(
+    /** A traced producer: the call plus whether the trace was a straight-line reaching definition. */
+    private static final class Traced {
+        final CtInvocation<?> producer;
+        final boolean proven;
+        final MutResolution.Signal signal;
+
+        Traced(CtInvocation<?> producer, boolean proven, MutResolution.Signal signal) {
+            this.producer = producer;
+            this.proven = proven;
+            this.signal = signal;
+        }
+    }
+
+    private static List<Traced> traceExpression(
+        CtExpression<?> expression,
         CtMethod<?> testMethod,
         CtInvocation<?> assertion,
-        CtVariableReference<?> ref
+        Set<CtVariableReference<?>> visited
     ) {
-        List<CtStatement> statements = testMethod.getBody().getStatements();
-        int assertionIndex = 0;
-        for (int i = 0; i < statements.size(); i++) {
-            if (statements.get(i) == assertion) {
-                assertionIndex = i;
-                break;
-            }
+        if (expression instanceof CtInvocation<?>) {
+            return single(new Traced(
+                (CtInvocation<?>) expression,
+                true,
+                MutResolution.Signal.DIRECT_ACTUAL_CALL
+            ));
         }
-        for (int i = assertionIndex - 1; i >= 0; i--) {
-            CtStatement statement = statements.get(i);
-            if (statement instanceof CtLocalVariable<?>) {
-                CtLocalVariable<?> localVar = (CtLocalVariable<?>) statement;
-                if (localVar.getReference().equals(ref)) {
-                    CtExpression<?> assignment = localVar.getAssignment();
-                    if (assignment instanceof CtInvocation<?>) {
-                        return (CtInvocation<?>) assignment;
+        if (expression instanceof CtFieldRead<?>) {
+            CtFieldRead<?> fieldRead = (CtFieldRead<?>) expression;
+            if (!isThisOrUnqualified(fieldRead.getTarget())) {
+                return new ArrayList<>();
+            }
+            CtFieldReference<?> ref = fieldRead.getVariable();
+            if (visited.contains(ref)) {
+                return new ArrayList<>();
+            }
+            Set<CtVariableReference<?>> nextVisited = new HashSet<>(visited);
+            nextVisited.add(ref);
+            return traceField(ref, testMethod, assertion, nextVisited);
+        }
+        if (expression instanceof CtVariableRead<?>) {
+            CtVariableReference<?> ref = ((CtVariableRead<?>) expression).getVariable();
+            if (!(ref instanceof CtLocalVariableReference)) {
+                return new ArrayList<>();
+            }
+            if (visited.contains(ref)) {
+                return new ArrayList<>();
+            }
+            Set<CtVariableReference<?>> nextVisited = new HashSet<>(visited);
+            nextVisited.add(ref);
+            return traceLocalVariable(ref, testMethod, assertion, nextVisited);
+        }
+        return new ArrayList<>();
+    }
+
+    private static List<Traced> traceLocalVariable(
+        CtVariableReference<?> ref,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion,
+        Set<CtVariableReference<?>> visited
+    ) {
+        List<CtStatement> body = testMethod.getBody().getStatements();
+        int assertionIndex = topLevelIndex(assertion, body);
+        CtExpression<?> rhs = null;
+        boolean writeProven = false;
+        int bestIndex = -1;
+        for (CtStatement statement : body) {
+            for (CtElement localElement : statement.getElements(CtLocalVariable.class::isInstance)) {
+                CtLocalVariable<?> local = (CtLocalVariable<?>) localElement;
+                if (local.getReference().equals(ref)) {
+                    int index = topLevelIndex(local, body);
+                    if (index >= 0 && index < assertionIndex && index >= bestIndex) {
+                        bestIndex = index;
+                        rhs = local.getAssignment();
+                        writeProven = isDirectBodyStatement(local, body);
                     }
-                    return null;
                 }
-            } else if (statement instanceof CtAssignment<?, ?>) {
-                CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) statement;
+            }
+            for (CtElement assignmentElement : statement.getElements(CtAssignment.class::isInstance)) {
+                CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) assignmentElement;
                 CtExpression<?> assigned = assignment.getAssigned();
                 if (assigned instanceof CtVariableWrite<?>
                         && ((CtVariableWrite<?>) assigned).getVariable().equals(ref)) {
-                    CtExpression<?> value = assignment.getAssignment();
-                    if (value instanceof CtInvocation<?>) {
-                        return (CtInvocation<?>) value;
+                    int index = topLevelIndex(assignment, body);
+                    if (index >= 0 && index < assertionIndex && index >= bestIndex) {
+                        bestIndex = index;
+                        rhs = assignment.getAssignment();
+                        writeProven = isDirectBodyStatement(assignment, body);
                     }
-                    return null;
                 }
             }
         }
-        // Declaration not on the top-level path (nested block): fall back to the initializer.
-        CtLocalVariable<?> declaration = ((CtLocalVariableReference<?>) ref).getDeclaration();
-        if (declaration != null && declaration.getAssignment() instanceof CtInvocation<?>) {
-            return (CtInvocation<?>) declaration.getAssignment();
+        if (rhs == null && ref instanceof CtLocalVariableReference) {
+            CtLocalVariable<?> declaration = ((CtLocalVariableReference<?>) ref).getDeclaration();
+            if (declaration != null) {
+                rhs = declaration.getAssignment();
+                writeProven = false;
+            }
         }
-        return null;
+        return wrapTrace(
+            traceExpression(rhs, testMethod, assertion, visited),
+            writeProven,
+            MutResolution.Signal.LOCAL_VARIABLE_PRODUCER
+        );
+    }
+
+    private static List<Traced> traceField(
+        CtFieldReference<?> ref,
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion,
+        Set<CtVariableReference<?>> visited
+    ) {
+        List<CtStatement> body = testMethod.getBody().getStatements();
+        int assertionIndex = topLevelIndex(assertion, body);
+        CtExpression<?> rhs = null;
+        boolean directWrite = false;
+        int writeCount = 0;
+        int bestIndex = -1;
+        for (CtStatement statement : body) {
+            for (CtElement assignmentElement : statement.getElements(CtAssignment.class::isInstance)) {
+                CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) assignmentElement;
+                CtExpression<?> assigned = assignment.getAssigned();
+                if (assigned instanceof CtFieldWrite<?>) {
+                    CtFieldWrite<?> fieldWrite = (CtFieldWrite<?>) assigned;
+                    int index = topLevelIndex(assignment, body);
+                    if (sameField(fieldWrite.getVariable(), ref)
+                            && isThisOrUnqualified(fieldWrite.getTarget())
+                            && index >= 0
+                            && index < assertionIndex) {
+                        writeCount++;
+                        if (index >= bestIndex) {
+                            bestIndex = index;
+                            rhs = assignment.getAssignment();
+                            directWrite = isDirectBodyStatement(assignment, body);
+                        }
+                    }
+                }
+            }
+        }
+        boolean proven = writeCount == 1 && directWrite;
+        return wrapTrace(
+            traceExpression(rhs, testMethod, assertion, visited),
+            proven,
+            MutResolution.Signal.FIELD_PRODUCER
+        );
+    }
+
+    private static List<Traced> wrapTrace(
+        List<Traced> inner,
+        boolean wrapperProven,
+        MutResolution.Signal wrapperSignal
+    ) {
+        List<Traced> wrapped = new ArrayList<>();
+        for (Traced traced : inner) {
+            wrapped.add(new Traced(
+                traced.producer,
+                wrapperProven && traced.proven,
+                strongerSignal(wrapperSignal, traced.signal)
+            ));
+        }
+        return wrapped;
+    }
+
+    private static List<Traced> single(Traced traced) {
+        List<Traced> traces = new ArrayList<>();
+        traces.add(traced);
+        return traces;
+    }
+
+    private static MutResolution.Signal strongerSignal(
+        MutResolution.Signal outer,
+        MutResolution.Signal inner
+    ) {
+        return signalStrength(outer) >= signalStrength(inner) ? outer : inner;
+    }
+
+    private static int signalStrength(MutResolution.Signal signal) {
+        switch (signal) {
+            case INSPECTOR_UNWRAP:
+                return 5;
+            case FIELD_PRODUCER:
+                return 4;
+            case LOCAL_VARIABLE_PRODUCER:
+                return 3;
+            case SUBEXPRESSION_PRODUCER:
+                return 2;
+            case DIRECT_ACTUAL_CALL:
+                return 1;
+            default:
+                return 0;
+        }
+    }
+
+    private static int topLevelIndex(CtElement element, List<CtStatement> body) {
+        CtElement current = element;
+        while (current != null) {
+            for (int i = 0; i < body.size(); i++) {
+                if (body.get(i) == current) {
+                    return i;
+                }
+            }
+            current = current.getParent();
+        }
+        return -1;
+    }
+
+    private static boolean isDirectBodyStatement(CtElement element, List<CtStatement> body) {
+        for (CtStatement statement : body) {
+            if (statement == element) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isThisOrUnqualified(CtExpression<?> target) {
+        return target == null || "this".equals(target.toString());
+    }
+
+    private static boolean sameField(CtFieldReference<?> left, CtFieldReference<?> right) {
+        return left != null && right != null && left.getSimpleName().equals(right.getSimpleName());
     }
 
     // --- grading ---
@@ -350,6 +518,14 @@ public final class MethodUnderTestResolver {
             null,
             null
         );
+    }
+
+    private static List<MutResolution.Candidate> alternativesAfterFirst(List<Traced> traces) {
+        List<MutResolution.Candidate> alternatives = new ArrayList<>();
+        for (int i = 1; i < traces.size(); i++) {
+            alternatives.add(toCandidate(traces.get(i).producer));
+        }
+        return alternatives;
     }
 
     private static List<MutResolution.Candidate> alternativesExcluding(
