@@ -38,6 +38,8 @@ import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.TypeDomain;
 import teralizer.domain.Value;
+import teralizer.jpf.OutputSpecClassifier;
+import teralizer.jqwik.planning.ConstraintClauses;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
 import teralizer.processing.GeneralizationAlgorithm;
@@ -264,6 +266,18 @@ public class TestGeneralizationTask extends AbstractTask {
                 this.generalizationRecord.getClassQualifiedName()));
         CtInvocation<?> assertion = (CtInvocation<?>) assertionPath.evaluateOn(testMethod).get(0);
 
+        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(
+            this.assertionRecord.getTestedMethodCallRelativePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.generalizationRecord.getClassQualifiedName()));
+        CtInvocation<?> testedMethodCall = (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
+
+        CtPath testedMethodPath = new CtPathStringBuilder().fromString(
+            this.assertionRecord.getTestedMethodAbsolutePath().replace(
+                this.testRecord.getTestClassQualifiedName(),
+                this.generalizationRecord.getClassQualifiedName()));
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodPath.evaluateOn(factory.getModel().getRootPackage()).get(0);
+
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
         //   Otherwise, we will have issues mapping the class names to the correct Arbitraries.
         Type type = new TypeToken<List<MethodParameter>>() {}.getType();
@@ -337,14 +351,45 @@ public class TestGeneralizationTask extends AbstractTask {
                 throw new RuntimeException("Failing generalization to avoid potential 'code too large' compilation errors.");
             }
 
-            switch (Configuration.getGeneralizationAlgorithm(this.getVariant())) {
+            GeneralizationAlgorithm algorithm = Configuration.getGeneralizationAlgorithm(this.getVariant());
+            InputGenerationPlan inputGenerationPlan = null;
+            Set<String> pathConditionParameterNames;
+            switch (algorithm) {
+                case NAIVE:
+                    pathConditionParameterNames = WideningLicense.referencedParameterNames(
+                        ConstraintClauses.from(inputModel, testedMethodParameterTypes, generalizableParameterNames));
+                    break;
+                case IMPROVED:
+                    inputGenerationPlan = new InputGenerationPlanner().plan(allParameters, testedMethodArguments, inputModel);
+                    pathConditionParameterNames = WideningLicense.referencedParameterNames(inputGenerationPlan.getClauses());
+                    break;
+                default:
+                    throw new RuntimeException("Unsupported variant " + this.getVariant() + ".");
+            }
+
+            String outputValueString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputValuePath())));
+            CapturedOutput output = specificationGson.fromJson(outputValueString, CapturedOutput.class);
+            WideningLicense.Verdict wideningLicense = WideningLicense.evaluate(
+                OutputSpecClassifier.classify(output.getKind(), outputModel),
+                testedMethod.getType() == null ? null : testedMethod.getType().getQualifiedName(),
+                generalizableParameterNames,
+                pathConditionParameterNames,
+                this.assertionRecord.getConcretizationEvents()
+            );
+            if (!wideningLicense.allowsWidening()) {
+                this.generalizationRecord.setIsIncluded(false);
+                this.generalizationRecord.setExclusionInfo(wideningLicense.getExclusionInfo());
+                this.generalizationRecord.store();
+                return;
+            }
+
+            switch (algorithm) {
                 case NAIVE: {
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
                     testParametersSupplierClassDeclaration = NaiveTestParametersSupplierFactory.createSupplierClass(factory, allParameters, testedMethodArguments, inputJava);
                     break;
                 }
                 case IMPROVED: {
-                    InputGenerationPlan inputGenerationPlan = new InputGenerationPlanner().plan(allParameters, testedMethodArguments, inputModel);
                     testParametersClassDeclaration = TestParametersFactory.createParametersClass(factory, allParameters);
                     testParametersSupplierClassDeclaration = ImprovedTestParametersSupplierFactory.createSupplierClass(factory, allParameters, inputJava, inputGenerationPlan);
 
@@ -356,13 +401,6 @@ public class TestGeneralizationTask extends AbstractTask {
                 default:
                     throw new RuntimeException("Unsupported variant " + this.getVariant() + ".");
             }
-
-            // ------------------------------------------------------------------------------------------------------ //
-            // Replace expected values in asserts with generalized values.                                            //
-            // ------------------------------------------------------------------------------------------------------ //
-
-            String outputValueString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputValuePath())));
-            CapturedOutput output = specificationGson.fromJson(outputValueString, CapturedOutput.class);
 
             if (outputJava != null && output.getKind() == CapturedOutput.Kind.RETURNED_VALUE) {
                 String outputType = output.getReturnValue().getJavaType();
@@ -464,17 +502,6 @@ public class TestGeneralizationTask extends AbstractTask {
         // Replace tested method arguments with values from `testParameters`.                                     //
         // ------------------------------------------------------------------------------------------------------ //
 
-        CtPath testedMethodCallPath = new CtPathStringBuilder().fromString(
-            this.assertionRecord.getTestedMethodCallRelativePath().replace(
-                this.testRecord.getTestClassQualifiedName(),
-                this.generalizationRecord.getClassQualifiedName()));
-        CtInvocation<?> testedMethodCall = (CtInvocation<?>) testedMethodCallPath.evaluateOn(testMethod).get(0);
-
-        CtPath testedMethodPath = new CtPathStringBuilder().fromString(
-            this.assertionRecord.getTestedMethodAbsolutePath().replace(
-                this.testRecord.getTestClassQualifiedName(),
-                this.generalizationRecord.getClassQualifiedName()));
-        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodPath.evaluateOn(factory.getModel().getRootPackage()).get(0);
 
         List<CtExpression<?>> args = testedMethodCall.getArguments();
         List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
