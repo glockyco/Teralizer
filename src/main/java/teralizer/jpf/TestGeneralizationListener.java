@@ -7,6 +7,7 @@ import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.numeric.Constraint;
 import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
+import gov.nasa.jpf.util.ObjectList;
 import gov.nasa.jpf.util.MethodSpec;
 import gov.nasa.jpf.vm.*;
 import java.nio.file.Path;
@@ -48,6 +49,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private List<Value> instrumentedInputArguments;
     private boolean targetEntered;
     private Invocation invocation;
+    private int concretizationEvents;
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -69,6 +71,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.pendingThrownException = null;
         this.targetEntered = false;
         this.invocation = null;
+        this.concretizationEvents = 0;
     }
 
     @Override
@@ -107,6 +110,40 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             this.targetEntered = true;
             this.targetDepth = currentThread.getTopFrame().getDepth();
         }
+    }
+
+    @Override
+    public void executeInstruction(VM vm, ThreadInfo currentThread, Instruction insn) {
+        if (!this.isExtractionActive() || !(insn instanceof EXECUTENATIVE)) {
+            return;
+        }
+
+        MethodInfo executedMethod = ((EXECUTENATIVE) insn).getExecutedMethod();
+        StackFrame callerFrame = currentThread.getCallerStackFrame();
+        if (callerFrame != null && containsSymbolicExpression(callerFrame.getArgumentAttrs(executedMethod))) {
+            this.concretizationEvents++;
+        }
+    }
+
+    /**
+     * Count symbolic values at the native-call boundary before JPF boxes the concrete arguments for
+     * MJI. Native peers only preserve such attrs when they explicitly read and reattach them, so each
+     * symbolic argument here marks a boundary where the downstream path condition may be weakened.
+     */
+    private static boolean containsSymbolicExpression(Object[] argumentAttrs) {
+        if (argumentAttrs == null) {
+            return false;
+        }
+        for (Object argumentAttr : argumentAttrs) {
+            if (ObjectList.containsType(argumentAttr, Expression.class)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isExtractionActive() {
+        return this.targetEntered && this.invocation == null;
     }
 
     @Override
@@ -227,6 +264,11 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     /** Whether the tested method was entered at least once on the explored path. */
     public boolean wasTargetEntered() {
         return this.targetEntered;
+    }
+
+    /** Number of native-call boundaries that received at least one symbolic argument attr. */
+    public int getConcretizationEvents() {
+        return this.concretizationEvents;
     }
 
     private List<Value> captureConcreteArguments(ThreadInfo currentThread) {
