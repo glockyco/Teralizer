@@ -135,8 +135,8 @@ public class TestGeneralizationTaskTest {
     }
 
     private static ExecutedGeneralization executeGeneralization(Scenario scenario) throws Exception {
-        configureImprovedVariant();
-
+        // The IMPROVED_100_TRIES variant definition comes from src/test/resources/reference.conf
+        // (merged into defaultReference()), which is immune to Configuration's static-init order.
         RecordingGeneralizations store = new RecordingGeneralizations();
         TaskContext context = new TaskContext();
         context.put(TaskContext.DSL_CONTEXT, store.dsl());
@@ -250,10 +250,6 @@ public class TestGeneralizationTaskTest {
         return new com.google.gson.reflect.TypeToken<List<Value>>() {}.getType();
     }
 
-    private static void configureImprovedVariant() {
-        System.setProperty("teralizer.generalizations.IMPROVED_100_TRIES.algorithm", "IMPROVED");
-        System.setProperty("teralizer.generalizations.IMPROVED_100_TRIES.jqwik.tries", "100");
-    }
 
     private static VelocityEngine velocityEngine() {
         Properties properties = new Properties();
