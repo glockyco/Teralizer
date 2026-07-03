@@ -126,6 +126,8 @@ CREATE TABLE assertion
     equivalent_assertions              TEXT, -- can be null before JPF analysis
     input_model_statistics             TEXT, -- can be null before JPF analysis
     output_model_statistics            TEXT, -- can be null before JPF analysis
+    output_spec_class                  TEXT, -- can be null before JPF execution; SYMBOLIC | CONSTANT | NULL_CONCRETE | EXCEPTION
+    concretization_events              INTEGER, -- can be null before JPF execution
 
     is_included                        BOOLEAN NOT NULL,
     exclusion_info                     TEXT, -- can be null for tests that are not excluded
