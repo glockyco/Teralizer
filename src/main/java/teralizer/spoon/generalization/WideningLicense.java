@@ -20,9 +20,12 @@ import teralizer.transformer.VariableNameCollector;
  * symbolic evidence and varies with the generated values. When it is {@link OutputSpecClass#CONSTANT},
  * SPF proved that the value is path-constant, so widening within the admitted path keeps the concrete
  * oracle valid. When it is {@link OutputSpecClass#EXCEPTION}, the oracle is reaching the throw
- * itself: that reachability is a property of the path pinned by the path condition for every admitted
- * input, and an unconditional throw with an empty path condition holds for every input. These classes
- * are licensed exactly as before.
+ * itself. That reachability is a control-flow property: if no concretized branch occurred, then every
+ * branch on the way to the throw either left a path-condition clause that generated inputs must
+ * satisfy or did not depend on symbolic inputs. An empty path condition is an unconditional throw;
+ * otherwise every widened parameter must be named by the path condition. Concretized branches break
+ * this path-uniqueness argument for throws exactly as they do for booleans, because control flow can
+ * diverge inside the concretized region without path-condition evidence.
  *
  * <p>{@link OutputSpecClass#NULL_CONCRETE} has two siblings that look identical at the persisted
  * output-model boundary. A computed boolean result can be represented only by the path condition:
@@ -75,7 +78,10 @@ public final class WideningLicense {
             return WIDEN;
         }
         if (outputSpecClass == OutputSpecClass.EXCEPTION) {
-            return WIDEN;
+            if (concretizationEvents != null && concretizationEvents > 0) {
+                return REFUSE;
+            }
+            return pathNames.isEmpty() || pathNames.containsAll(widened) ? WIDEN : REFUSE;
         }
         if (outputSpecClass != OutputSpecClass.NULL_CONCRETE) {
             return REFUSE;

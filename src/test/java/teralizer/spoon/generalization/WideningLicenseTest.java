@@ -52,12 +52,12 @@ public class WideningLicenseTest {
     }
 
     @Example
-    void exceptionOutputWithPathClausesWidensBecauseThrowReachabilityIsPinnedByPathCondition() {
+    void exceptionOutputWithEveryWidenedParameterNamedAndNoConcretizationEventsWidens() {
         WideningLicense.Verdict verdict = WideningLicense.evaluate(
             OutputSpecClass.EXCEPTION,
             "int",
-            names("x"),
-            names("x"),
+            names("left", "right"),
+            names("left", "right", "temp"),
             0
         );
 
@@ -66,18 +66,33 @@ public class WideningLicenseTest {
     }
 
     @Example
-    void exceptionOutputWithConcretizationEventsWidensBecauseThrowPresenceIsAlreadyEvidence() {
+    void exceptionOutputWithConcretizationEventsIsRefused() {
         WideningLicense.Verdict verdict = WideningLicense.evaluate(
             OutputSpecClass.EXCEPTION,
             "int",
             names("x"),
-            names("x"),
+            Collections.emptySet(),
             7
         );
 
-        Assert.assertTrue("exception oracles are presence-based evidence, not path-value inference",
-            verdict.allowsWidening());
-        Assert.assertNull(verdict.getExclusionInfo());
+        // This replaces the old deliberate-widen assertion: concretized branches can decide
+        // throw reachability without path-condition evidence, so THROWN is not universal here.
+        Assert.assertFalse(verdict.allowsWidening());
+        Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, verdict.getExclusionInfo());
+    }
+
+    @Example
+    void exceptionOutputMissingAWidenedParameterInPathConditionIsRefused() {
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(
+            OutputSpecClass.EXCEPTION,
+            "int",
+            names("left", "right"),
+            names("left"),
+            0
+        );
+
+        Assert.assertFalse(verdict.allowsWidening());
+        Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, verdict.getExclusionInfo());
     }
 
     @Example
