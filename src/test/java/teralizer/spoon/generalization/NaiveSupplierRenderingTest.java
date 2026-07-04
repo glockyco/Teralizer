@@ -35,6 +35,24 @@ public class NaiveSupplierRenderingTest {
     }
 
     @Example
+    void wrapsFilteredArbitrarySoDedupSeesOnlyExecutableTuples() {
+        MethodParameter x = new MethodParameter("int", "x");
+        Map<String, Value> arguments = new HashMap<>();
+        arguments.put("x", new PrimitiveValue("int", 2));
+
+        CtClass<?> supplierClass = NaiveTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(),
+            Collections.singletonList(x),
+            arguments,
+            "(_p_.x > 0)"
+        );
+        String code = supplierClass.toString();
+
+        Assert.assertTrue("seed wrapper must contain the residual filter, not sit below it",
+            firstValueWrapperArgumentContainsFilter(code));
+    }
+
+    @Example
     void omitsSeedInjectionWhenNoOriginalArguments() {
         MethodParameter a = new MethodParameter("int", "a");
         MethodParameter b = new MethodParameter("int", "b");
@@ -45,4 +63,25 @@ public class NaiveSupplierRenderingTest {
 
         Assert.assertFalse("no original values -> no seed injection", code.contains("FirstValueArbitrary"));
     }
+    private static boolean firstValueWrapperArgumentContainsFilter(String code) {
+        int start = code.indexOf("new FirstValueArbitrary<TestParameters>");
+        if (start < 0) {
+            return false;
+        }
+        int open = code.indexOf('(', start);
+        int depth = 0;
+        for (int i = open; i < code.length(); i++) {
+            char ch = code.charAt(i);
+            if (ch == '(') {
+                depth++;
+            } else if (ch == ')') {
+                depth--;
+                if (depth == 0) {
+                    return code.substring(open, i).contains(".filter(");
+                }
+            }
+        }
+        return false;
+    }
+
 }

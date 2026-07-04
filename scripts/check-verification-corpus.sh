@@ -8,7 +8,7 @@ set -uo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 DB_NAME="${VERIFICATION_DB:-postgres_verification}"
 GOLDEN_DIR="$ROOT_DIR/verification/golden"
-HEADER=$'fixture\tgen_count\tgen_index\tvariant\tis_included\texclusion_info\toutput_spec_class\tdiagnostic_kind'
+HEADER=$'fixture\tgen_count\tgen_index\tvariant\tis_included\texclusion_info\toutput_spec_class\tdiagnostic_kind\ttries\tdistinct_tuples'
 
 case "$DB_NAME" in
   postgres|postgres_dev|postgres_test|postgres_timeout_retry|postgres_fusion_spike|postgres_reporeapers_rerun|*_replication)
@@ -52,14 +52,16 @@ WITH latest_project AS (
       CASE WHEN g.is_included THEN 'true' ELSE 'false' END AS is_included,
       COALESCE(g.exclusion_info, '') AS exclusion_info,
       COALESCE(a.output_spec_class, '') AS output_spec_class,
-      COALESCE(string_agg(DISTINCT jpe.diagnostic_kind, ',' ORDER BY jpe.diagnostic_kind), '') AS diagnostic_kind
+      COALESCE(string_agg(DISTINCT jpe.diagnostic_kind, ',' ORDER BY jpe.diagnostic_kind), '') AS diagnostic_kind,
+      COALESCE(MAX(jpe.tries)::text, '') AS tries,
+      COALESCE(MAX(jpe.distinct_tuples)::text, '') AS distinct_tuples
   FROM latest_project lp
   JOIN generalization g ON g.project_id = lp.id
   JOIN assertion a ON a.id = g.assertion_id
   LEFT JOIN jqwik_property_execution jpe ON jpe.generalization_id = g.id
   GROUP BY lp.fixture, lp.id, g.id, g.variant, g.is_included, g.exclusion_info, a.output_spec_class
 )
-SELECT fixture, gen_count, gen_index, variant, is_included, exclusion_info, output_spec_class, diagnostic_kind
+SELECT fixture, gen_count, gen_index, variant, is_included, exclusion_info, output_spec_class, diagnostic_kind, tries, distinct_tuples
 FROM observed
 ORDER BY fixture, gen_index;
 " > "$actual_rows" || { echo "Failed to query golden rows" >&2; exit 1; }

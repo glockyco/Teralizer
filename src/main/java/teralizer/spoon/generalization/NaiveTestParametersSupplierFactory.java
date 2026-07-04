@@ -87,14 +87,14 @@ public class NaiveTestParametersSupplierFactory {
             }
 
             if (isFirst) {
-                if (originalTuple != null) {
-                    chain = "new FirstValueArbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">(" + originalTuple + ", " + chain + ")";
-                }
                 chain += "\n.filter(new java.util.function.Predicate<" + TEST_PARAMETERS_CLASS_NAME + ">() {\n";
                 chain += "    public boolean test(final " + TEST_PARAMETERS_CLASS_NAME + " _p_) {\n";
                 chain += "        return " + (inputJava == null ? "true" : inputJava) + ";\n";
                 chain += "    }\n";
                 chain += "})";
+                if (originalTuple != null) {
+                    chain = "new FirstValueArbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">(" + originalTuple + ", " + chain + ")";
+                }
             }
 
             supplierBodies.add("return " + chain);

@@ -103,15 +103,15 @@ public class ImprovedTestParametersSupplierFactory {
         }
 
         String body = builder.toString();
-        if (originalTuple != null) {
-            body = "new FirstValueArbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">(" + originalTuple + ", " + body + ")";
-        }
         if (applyInputFilter) {
             body += "\n.filter(new java.util.function.Predicate<TestParameters>() {\n"
                 + "    public boolean test(final TestParameters _p_) {\n"
                 + "        return " + inputJava + ";\n"
                 + "    }\n"
                 + "})";
+        }
+        if (originalTuple != null) {
+            body = "new FirstValueArbitrary<" + TEST_PARAMETERS_CLASS_NAME + ">(" + originalTuple + ", " + body + ")";
         }
 
         supplierMethod.getBody().addStatement(factory.createCodeSnippetStatement("return " + body));

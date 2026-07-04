@@ -197,6 +197,30 @@ public class ImprovedSupplierRenderingTest {
     }
 
     @Example
+    void wrapsFilteredArbitrarySoDedupSeesOnlyExecutableTuples() {
+        MethodParameter x = new MethodParameter("int", "x");
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(
+            Collections.singletonList(x),
+            Collections.singletonMap("x", new PrimitiveValue("int", 2)),
+            new Operation(
+                new Variable("x", TypeDomain.INTEGER),
+                Operator.GT,
+                new Constant((long) 0, TypeDomain.INTEGER)
+            )
+        );
+        CtClass<?> supplierClass = ImprovedTestParametersSupplierFactory.createSupplierClass(
+            new Launcher().getFactory(),
+            Collections.singletonList(x),
+            null,
+            plan
+        );
+
+        String code = supplierClass.toString();
+        Assert.assertTrue("seed wrapper must contain the residual filter, not sit below it",
+            firstValueWrapperArgumentContainsFilter(code));
+    }
+
+    @Example
     void keepsFullFilterEvenWhenAllClausesConsumedByConstruction() {
         MethodParameter x = new MethodParameter("int", "x");
         // Simulate post-aggregation state: the clause x < 5 is consumed by the numeric planner,
@@ -228,4 +252,25 @@ public class ImprovedSupplierRenderingTest {
         Assert.assertTrue("filter must use the full predicate including consumed clauses",
             supplierClass.toString().contains("return (_p_.x < 5);"));
     }
+    private static boolean firstValueWrapperArgumentContainsFilter(String code) {
+        int start = code.indexOf("new FirstValueArbitrary<TestParameters>");
+        if (start < 0) {
+            return false;
+        }
+        int open = code.indexOf('(', start);
+        int depth = 0;
+        for (int i = open; i < code.length(); i++) {
+            char ch = code.charAt(i);
+            if (ch == '(') {
+                depth++;
+            } else if (ch == ')') {
+                depth--;
+                if (depth == 0) {
+                    return code.substring(open, i).contains(".filter(");
+                }
+            }
+        }
+        return false;
+    }
+
 }

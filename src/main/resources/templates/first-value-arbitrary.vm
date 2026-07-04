@@ -1,32 +1,67 @@
 ## Generated FirstValueArbitrary wrapper. Fully static (no interpolation); emitted verbatim
 ## via a Velocity literal block (#[[ ... ]]#) so Java generics/'$'/'#' need no escaping.
 #[[
+/**
+ * Wraps the generated tuple arbitrary so the captured concrete tuple is executed as the first
+ * jqwik edge case and random exploration spends its bounded retry budget on unseen tuples.
+ *
+ * The random-phase state is sound for generated Teralizer properties because they run with a
+ * fixed jqwik seed, shrinking is disabled, and jqwik executes properties single-threaded. If any
+ * of those preconditions changes, this stateful deduplication must be revisited. The retry lives
+ * inside the generator instead of using Arbitrary.filter(...), so duplicate draws do not affect
+ * jqwik's discard-ratio accounting or interact with TOO_MANY_FILTER_MISSES handling.
+ */
 private static class FirstValueArbitrary<T> implements net.jqwik.api.Arbitrary<T> {
     private T firstValue;
 
     private net.jqwik.api.Arbitrary<T> delegate;
 
+    private static final java.util.Set<String> emittedRows = new java.util.LinkedHashSet<String>();
+
     public FirstValueArbitrary(T firstValue, net.jqwik.api.Arbitrary<T> delegate) {
         this.firstValue = firstValue;
         this.delegate = delegate;
+        this.emittedRows.add(valueIdentity(firstValue));
     }
 
     public net.jqwik.api.RandomGenerator<T> generator(int genSize) {
         final net.jqwik.api.RandomGenerator<T> delegateGenerator = delegate.generator(genSize);
+        final int retryLimit = retryLimit(genSize);
         return new net.jqwik.api.RandomGenerator<T>() {
-            private boolean emitted = false;
             public net.jqwik.api.Shrinkable<T> next(java.util.Random random) {
-                if (!emitted) {
-                    emitted = true;
-                    return new net.jqwik.engine.properties.shrinking.Unshrinkable<T>(new java.util.function.Supplier<T>() {
-                        public T get() {
-                            return firstValue;
-                        }
-                    }, net.jqwik.api.ShrinkingDistance.MIN);
+                net.jqwik.api.Shrinkable<T> candidate = delegateGenerator.next(random);
+                String candidateIdentity = valueIdentity(candidate.value());
+                int retries = 0;
+                while (emittedRows.contains(candidateIdentity) && retries < retryLimit) {
+                    retries++;
+                    candidate = delegateGenerator.next(random);
+                    candidateIdentity = valueIdentity(candidate.value());
                 }
-                return delegateGenerator.next(random);
+                emittedRows.add(candidateIdentity);
+                return candidate;
             }
         };
+    }
+
+    /**
+     * The engine builds the random phase through this overload; its default implementation
+     * wraps the one-arg generator with probabilistic edge-case re-injection that bypasses the
+     * dedup in next(...). Generated properties run EdgeCasesMode.FIRST, so every edge case has
+     * already executed exactly once before the random phase - re-injection could only repeat
+     * seen values. Ignore the flag and return the deduplicating generator.
+     */
+    public net.jqwik.api.RandomGenerator<T> generator(int genSize, boolean withEdgeCases) {
+        return generator(genSize);
+    }
+
+    private int retryLimit(int genSize) {
+        long normalizedSize = Math.max(1L, (long) genSize);
+        long limit = Math.max(10000L, normalizedSize * 100L);
+        return limit > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) limit;
+    }
+
+    private String valueIdentity(T value) {
+        return JqwikValueRecorder.serializeRow((TestParameters) value);
     }
 
     public java.util.Optional<net.jqwik.api.ExhaustiveGenerator<T>> exhaustive(long maxNumberOfSamples) {
@@ -35,16 +70,15 @@ private static class FirstValueArbitrary<T> implements net.jqwik.api.Arbitrary<T
 
     public net.jqwik.api.EdgeCases<T> edgeCases(int maxEdgeCases) {
         final java.util.List<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>> suppliers = new java.util.ArrayList<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>>();
-        suppliers.add(new java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>() {
+        java.util.Set<String> edgeCaseRows = new java.util.LinkedHashSet<String>();
+        addEdgeCaseIfUnseen(suppliers, edgeCaseRows, new java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>() {
             public net.jqwik.api.Shrinkable<T> get() {
-                return new net.jqwik.engine.properties.shrinking.Unshrinkable<T>(new java.util.function.Supplier<T>() {
-                    public T get() {
-                        return firstValue;
-                    }
-                }, net.jqwik.api.ShrinkingDistance.MIN);
+                return firstValueShrinkable();
             }
         });
-        suppliers.addAll(delegate.edgeCases().suppliers());
+        for (java.util.function.Supplier<net.jqwik.api.Shrinkable<T>> supplier : delegate.edgeCases().suppliers()) {
+            addEdgeCaseIfUnseen(suppliers, edgeCaseRows, supplier);
+        }
         return new net.jqwik.api.EdgeCases<T>() {
             public java.util.List<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>> suppliers() {
                 return suppliers;
@@ -57,6 +91,31 @@ private static class FirstValueArbitrary<T> implements net.jqwik.api.Arbitrary<T
                 return shrinkables.iterator();
             }
         };
+    }
+
+    private void addEdgeCaseIfUnseen(
+        java.util.List<java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>> suppliers,
+        java.util.Set<String> edgeCaseRows,
+        java.util.function.Supplier<net.jqwik.api.Shrinkable<T>> supplier
+    ) {
+        final net.jqwik.api.Shrinkable<T> shrinkable = supplier.get();
+        if (!edgeCaseRows.add(valueIdentity(shrinkable.value()))) {
+            return;
+        }
+        emittedRows.add(valueIdentity(shrinkable.value()));
+        suppliers.add(new java.util.function.Supplier<net.jqwik.api.Shrinkable<T>>() {
+            public net.jqwik.api.Shrinkable<T> get() {
+                return shrinkable;
+            }
+        });
+    }
+
+    private net.jqwik.api.Shrinkable<T> firstValueShrinkable() {
+        return new net.jqwik.engine.properties.shrinking.Unshrinkable<T>(new java.util.function.Supplier<T>() {
+            public T get() {
+                return firstValue;
+            }
+        }, net.jqwik.api.ShrinkingDistance.MIN);
     }
 }
 ]]#
