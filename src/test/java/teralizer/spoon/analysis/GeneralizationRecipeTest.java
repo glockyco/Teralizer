@@ -36,6 +36,32 @@ public class GeneralizationRecipeTest {
     }
 
     @Example
+    void rejectsVersionTwoInputSiteWithoutKind() {
+        String missingKindJson = "{"
+            + "\"version\":2,"
+            + "\"schema\":\"teralizer.generalization.recipe\","
+            + "\"oracleExpressionPath\":\"#statement[index=0]\","
+            + "\"oracleMethodPath\":\"#type[name=smoke.SubjectTest]\","
+            + "\"oracleType\":\"boolean\","
+            + "\"oracleExpressionType\":\"boolean\","
+            + "\"inputSites\":[{"
+            + "\"path\":\"#statement[index=0]\","
+            + "\"name\":\"value\","
+            + "\"type\":\"int\","
+            + "\"methodArgumentIndex\":0,"
+            + "\"constructorArgumentIndex\":-1"
+            + "}]"
+            + "}";
+
+        try {
+            GeneralizationRecipe.fromJson(new Gson(), missingKindJson);
+            Assert.fail("input site kind must be required");
+        } catch (IllegalArgumentException expected) {
+            Assert.assertTrue(expected.getMessage().contains("Input site kind is required"));
+        }
+    }
+
+    @Example
     void roundTripsRecipeJsonWithoutLosingSites() {
         Scenario scenario = scenarioFromSource(SOURCE, "usesConstructorArgument");
         GeneralizationRecipe recipe = recipeFor(scenario);
@@ -80,6 +106,23 @@ public class GeneralizationRecipeTest {
         Assert.assertNull(roundTripped.getOracleExpressionType());
         Assert.assertEquals(recipe.getOracleExpressionPath(), roundTripped.getOracleExpressionPath());
         Assert.assertEquals(recipe.getOracleType(), roundTripped.getOracleType());
+    }
+
+    @Example
+    void roundTripsExpressionInputSiteKind() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesBinaryOperator");
+        CtExpression<?> oracleExpression = actualAssertExpression(scenario.testMethod);
+        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(scenario.oracleMethod, oracleExpression, inputs, "boolean");
+
+        String json = recipe.toJson(new Gson());
+        GeneralizationRecipe roundTripped = GeneralizationRecipe.fromJson(new Gson(), json);
+
+        Assert.assertTrue(json.contains("\"kind\":\"EXPRESSION_SITE\""));
+        Assert.assertEquals(inputs.size(), roundTripped.getInputSites().size());
+        for (GeneralizationRecipe.InputSite site : roundTripped.getInputSites()) {
+            Assert.assertEquals(GeneralizationRecipe.InputKind.EXPRESSION_SITE, site.getKind());
+        }
     }
 
 

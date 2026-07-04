@@ -13,6 +13,33 @@ import spoon.support.compiler.VirtualFile;
 
 public class GeneralizableInputTest {
     @Example
+    void derivesMethodArgumentInputsWithMethodKind() {
+        CtInvocation<?> assertion = assertionFromSource(
+            "package smoke;\n"
+                + "import static org.junit.Assert.assertEquals;\n"
+                + "public class SubjectTest {\n"
+                + "  public static final class Subject {\n"
+                + "    public static int sum(int left, int right) { return left + right; }\n"
+                + "  }\n"
+                + "  @org.junit.Test public void valueInsideInterval() {\n"
+                + "    assertEquals(7, Subject.sum(3, 4));\n"
+                + "  }\n"
+                + "}\n"
+        );
+        CtInvocation<?> testedMethodCall = assertion.getArguments().get(1).filterChildren(CtInvocation.class::isInstance)
+            .map(CtInvocation.class::cast)
+            .first();
+        CtMethod<?> testedMethod = (CtMethod<?>) testedMethodCall.getExecutable().getDeclaration();
+
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+
+        Assert.assertEquals(2, inputs.size());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.METHOD_ARG, inputs.get(0).getKind());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.METHOD_ARG, inputs.get(1).getKind());
+        Assert.assertFalse(inputs.get(0).isConstructorArgument());
+        Assert.assertFalse(inputs.get(1).isConstructorArgument());
+    }
+    @Example
     void derivesSyntheticInputsFromInlineConstructorArguments() {
         CtInvocation<?> assertion = assertionFromSource(
             "package smoke;\n"
@@ -45,8 +72,11 @@ public class GeneralizableInputTest {
         Assert.assertEquals("1", inputs.get(0).toMethodArgument().getValue());
         Assert.assertEquals("_ctor_interval_one_upper", inputs.get(1).toMethodParameter().getName());
         Assert.assertEquals("10", inputs.get(1).toMethodArgument().getValue());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.CTOR_ARG, inputs.get(0).getKind());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.CTOR_ARG, inputs.get(1).getKind());
         Assert.assertEquals("value", inputs.get(2).toMethodParameter().getName());
         Assert.assertEquals("5", inputs.get(2).toMethodArgument().getValue());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.METHOD_ARG, inputs.get(2).getKind());
     }
 
     @Example
@@ -81,6 +111,8 @@ public class GeneralizableInputTest {
         Assert.assertEquals("10.0", inputs.get(1).toMethodArgument().getValue());
         Assert.assertTrue(inputs.get(0).isReceiverConstructorArgument());
         Assert.assertTrue(inputs.get(1).isReceiverConstructorArgument());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.RECEIVER_CTOR_ARG, inputs.get(0).getKind());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.RECEIVER_CTOR_ARG, inputs.get(1).getKind());
     }
 
 

@@ -28,11 +28,11 @@ parent: 2026-07-04-recipe-unification
 - Modify: consumers of `isReceiverConstructorArgument()`/`isExpressionSite()`/`isConstructorArgument()` (grep first; JpfInstrumentationTask, TestGeneralizationTask, TestAnalysisTask expected)
 - Test: `src/test/java/teralizer/spoon/analysis/GeneralizableInputTest.java`, `GeneralizableInputExpressionTest.java`, `GeneralizationRecipeTest.java` (extend)
 
-- [ ] **Step 1: Write failing tests.** Every derivation path stamps the right kind: `derive` on a plain call yields `METHOD_ARG` sites, inline-ctor args yield `CTOR_ARG`, receiver-ctor args yield `RECEIVER_CTOR_ARG`, `deriveFromExpression` yields `EXPRESSION_SITE`. Recipe JSON round-trips the kind per site.
-- [ ] **Step 2: RED**, `./gradlew test --tests 'teralizer.spoon.analysis.*'`.
-- [ ] **Step 3: Implement.** `GeneralizableInput` gains `private final GeneralizationRecipe.InputKind kind` set by each derivation path. The boolean accessors become kind checks (`isExpressionSite()` ⇒ `kind == EXPRESSION_SITE`, etc.). The int fields STAY in this task as private positional detail for the still-index-keyed consumers. `InputKind` gains `EXPRESSION_SITE`. InSite JSON gains `kind` (schema stays v2 in this task — the version bump belongs to Task 2 where the fields change).
-- [ ] **Step 4: GREEN** on `teralizer.spoon.analysis.*` and `teralizer.processing.*`, then one `scripts/verify-pipeline.sh` run (goldens must not move).
-- [ ] **Step 5: Commit.** `refactor(recipe): type input sites with InputKind`
+- [x] **Step 1: Write failing tests.** Every derivation path stamps the right kind: `derive` on a plain call yields `METHOD_ARG` sites, inline-ctor args yield `CTOR_ARG`, receiver-ctor args yield `RECEIVER_CTOR_ARG`, `deriveFromExpression` yields `EXPRESSION_SITE`. Recipe JSON round-trips the kind per site.
+- [x] **Step 2: RED**, `./gradlew test --tests 'teralizer.spoon.analysis.*'`.
+- [x] **Step 3: Implement.** `GeneralizableInput` gains `private final GeneralizationRecipe.InputKind kind` set by each derivation path. The boolean accessors become kind checks (`isExpressionSite()` ⇒ `kind == EXPRESSION_SITE`, etc.). The int fields STAY in this task as private positional detail for the still-index-keyed consumers. `InputKind` gains `EXPRESSION_SITE`. InSite JSON gains `kind` (schema stays v2 in this task — the version bump belongs to Task 2 where the fields change).
+- [x] **Step 4: GREEN** on `teralizer.spoon.analysis.*` and `teralizer.processing.*`, then one `scripts/verify-pipeline.sh` run (goldens must not move).
+- [x] **Step 5: Commit.** `refactor(recipe): type input sites with InputKind`
 
 ---
 

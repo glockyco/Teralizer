@@ -22,6 +22,7 @@ public class GeneralizableInput {
 
     private final int methodArgumentIndex;
     private final int constructorArgumentIndex;
+    private final GeneralizationRecipe.InputKind kind;
     private final MethodParameter parameter;
     private final MethodArgument argument;
     private final CtExpression<?> sourceExpression;
@@ -29,12 +30,14 @@ public class GeneralizableInput {
     private GeneralizableInput(
         int methodArgumentIndex,
         int constructorArgumentIndex,
+        GeneralizationRecipe.InputKind kind,
         MethodParameter parameter,
         MethodArgument argument,
         CtExpression<?> sourceExpression
     ) {
         this.methodArgumentIndex = methodArgumentIndex;
         this.constructorArgumentIndex = constructorArgumentIndex;
+        this.kind = kind;
         this.parameter = parameter;
         this.argument = argument;
         this.sourceExpression = sourceExpression;
@@ -72,6 +75,7 @@ public class GeneralizableInput {
                 inputs.add(new GeneralizableInput(
                     i,
                     -1,
+                    GeneralizationRecipe.InputKind.METHOD_ARG,
                     new MethodParameter(typeName, parameter.getSimpleName()),
                     new MethodArgument(typeName, argument.toString()),
                     argument
@@ -93,6 +97,7 @@ public class GeneralizableInput {
     static GeneralizableInput fromRecipe(
         int methodArgumentIndex,
         int constructorArgumentIndex,
+        GeneralizationRecipe.InputKind kind,
         MethodParameter parameter,
         MethodArgument argument,
         CtExpression<?> sourceExpression
@@ -100,6 +105,7 @@ public class GeneralizableInput {
         return new GeneralizableInput(
             methodArgumentIndex,
             constructorArgumentIndex,
+            kind,
             parameter,
             argument,
             sourceExpression
@@ -142,6 +148,7 @@ public class GeneralizableInput {
         inputs.add(new GeneralizableInput(
             EXPRESSION_SITE_ARGUMENT_INDEX,
             -1,
+            GeneralizationRecipe.InputKind.EXPRESSION_SITE,
             new MethodParameter(typeName, name),
             new MethodArgument(typeName, literal.toString()),
             literal
@@ -177,6 +184,9 @@ public class GeneralizableInput {
             inputs.add(new GeneralizableInput(
                 methodArgumentIndex,
                 i,
+                methodArgumentIndex == RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX
+                    ? GeneralizationRecipe.InputKind.RECEIVER_CTOR_ARG
+                    : GeneralizationRecipe.InputKind.CTOR_ARG,
                 new MethodParameter(typeName, inputName),
                 new MethodArgument(typeName, argument.toString()),
                 argument
@@ -236,16 +246,20 @@ public class GeneralizableInput {
         return this.constructorArgumentIndex;
     }
 
+    public GeneralizationRecipe.InputKind getKind() {
+        return this.kind;
+    }
+
     public boolean isConstructorArgument() {
-        return this.constructorArgumentIndex >= 0;
+        return this.kind == GeneralizationRecipe.InputKind.CTOR_ARG;
     }
 
     public boolean isReceiverConstructorArgument() {
-        return this.methodArgumentIndex == RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX;
+        return this.kind == GeneralizationRecipe.InputKind.RECEIVER_CTOR_ARG;
     }
 
     public boolean isExpressionSite() {
-        return this.methodArgumentIndex == EXPRESSION_SITE_ARGUMENT_INDEX;
+        return this.kind == GeneralizationRecipe.InputKind.EXPRESSION_SITE;
     }
 
     public MethodParameter toMethodParameter() {

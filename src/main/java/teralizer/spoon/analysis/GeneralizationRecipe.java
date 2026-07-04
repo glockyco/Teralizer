@@ -31,7 +31,8 @@ public final class GeneralizationRecipe {
     public enum InputKind {
         METHOD_ARG,
         CTOR_ARG,
-        RECEIVER_CTOR_ARG
+        RECEIVER_CTOR_ARG,
+        EXPRESSION_SITE
     }
 
     public enum PathRole {
@@ -107,6 +108,11 @@ public final class GeneralizationRecipe {
             throw new IllegalArgumentException("Unsupported generalization recipe schema/version.");
         }
         List<InputSite> sites = recipe.inputSites == null ? Collections.emptyList() : recipe.inputSites;
+        for (int i = 0; i < sites.size(); i++) {
+            if (sites.get(i).kind == null) {
+                throw new IllegalArgumentException("Input site kind is required at index " + i + ".");
+            }
+        }
         return new GeneralizationRecipe(
             recipe.version,
             recipe.schema,
@@ -136,6 +142,7 @@ public final class GeneralizationRecipe {
             inputs.add(GeneralizableInput.fromRecipe(
                 site.methodArgumentIndex,
                 site.constructorArgumentIndex,
+                site.kind,
                 new MethodParameter(site.type, site.name),
                 new MethodArgument(site.type, expression.toString()),
                 expression
@@ -253,14 +260,7 @@ public final class GeneralizationRecipe {
         }
 
         private static InputSite from(GeneralizableInput input, CtMethod<?> containingMethod) {
-            InputKind kind;
-            if (input.isReceiverConstructorArgument()) {
-                kind = InputKind.RECEIVER_CTOR_ARG;
-            } else if (input.isConstructorArgument()) {
-                kind = InputKind.CTOR_ARG;
-            } else {
-                kind = InputKind.METHOD_ARG;
-            }
+            InputKind kind = input.getKind();
             return new InputSite(
                 input.getSourceExpression().getPath().relativePath(containingMethod).toString(),
                 input.toMethodParameter().getName(),

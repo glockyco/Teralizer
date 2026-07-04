@@ -121,6 +121,7 @@ public class GeneralizableInputExpressionTest {
 
     private static void assertExpressionSite(GeneralizableInput input, String name, String type, String value) {
         Assert.assertTrue(input.isExpressionSite());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.EXPRESSION_SITE, input.getKind());
         Assert.assertEquals(name, input.toMethodParameter().getName());
         Assert.assertEquals(type, input.toMethodParameter().getType());
         Assert.assertEquals(value, input.toMethodArgument().getValue());
