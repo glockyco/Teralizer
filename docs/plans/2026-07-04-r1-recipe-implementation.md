@@ -117,11 +117,11 @@ public static boolean isSelfContained(CtExpression<?> expression) {
 - Modify: whatever populates the filter's input — the filter reads `assertionRecord`; add the recipe's `oracleExpressionType` to the assertion record write in `TestAnalysisTask` (column `tested_method_return_type` stays; new column NOT needed — the filter reads the recipe JSON via `assertionRecord.getGeneralizationRecipe()`).
 - Test: `src/test/java/teralizer/processing/filter/ReturnTypeFilterTest.java` (extend or create following the existing filter-test pattern; check `src/test/java/teralizer/processing/filter/` for the harness style first)
 
-- [ ] **Step 1: Write failing tests.** An assertion record whose recipe carries `oracleExpressionType = "boolean"` but `tested_method_return_type = "int"` → ACCEPT (expression type wins). Recipe absent → today's behavior (DEFER on null return type, etc.).
-- [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Implement.** Parse the recipe (null-safe) at the top of `check()`; when present use `recipe.getOracleExpressionType()` in place of `getTestedMethodReturnType()` for the void/support checks (keep the DEFER branch for a null expression type).
-- [ ] **Step 4: Run, expect PASS.**
-- [ ] **Step 5: Commit.** `feat(filter): gate return type on the recipe's expression type`
+- [x] **Step 1: Write failing tests.** An assertion record whose recipe carries `oracleExpressionType = "boolean"` but `tested_method_return_type = "int"` → ACCEPT (expression type wins). Recipe absent → today's behavior (DEFER on null return type, etc.).
+- [x] **Step 2: Run, expect FAIL.**
+- [x] **Step 3: Implement.** Parse the recipe (null-safe) at the top of `check()`; when present use `recipe.getOracleExpressionType()` in place of `getTestedMethodReturnType()` for the void/support checks (keep the DEFER branch for a null expression type).
+- [x] **Step 4: Run, expect PASS.**
+- [x] **Step 5: Commit.** `feat(filter): gate return type on the recipe's expression type`
 
 ---
 

@@ -105,9 +105,6 @@ public final class GeneralizationRecipe {
             throw new IllegalArgumentException("Unsupported generalization recipe schema/version.");
         }
         List<InputSite> sites = recipe.inputSites == null ? Collections.emptyList() : recipe.inputSites;
-        if (recipe.oracleExpressionType == null) {
-            throw new IllegalArgumentException("Generalization recipe oracleExpressionType is null.");
-        }
         return new GeneralizationRecipe(
             recipe.version,
             recipe.schema,

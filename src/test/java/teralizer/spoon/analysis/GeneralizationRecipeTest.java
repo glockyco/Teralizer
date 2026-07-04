@@ -68,6 +68,20 @@ public class GeneralizationRecipeTest {
         Assert.assertEquals(recipe.getOracleType(), roundTripped.getOracleType());
     }
 
+    @Example
+    void roundTripsNullExpressionOracleType() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesBinaryOperator");
+        CtExpression<?> oracleExpression = actualAssertExpression(scenario.testMethod);
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(scenario.oracleMethod, scenario.oracleExpression);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(scenario.oracleMethod, oracleExpression, inputs, null);
+
+        GeneralizationRecipe roundTripped = GeneralizationRecipe.fromJson(new Gson(), recipe.toJson(new Gson()));
+
+        Assert.assertNull(roundTripped.getOracleExpressionType());
+        Assert.assertEquals(recipe.getOracleExpressionPath(), roundTripped.getOracleExpressionPath());
+        Assert.assertEquals(recipe.getOracleType(), roundTripped.getOracleType());
+    }
+
 
     @Example
     void resolvesRecipeSitesAgainstTheOriginalModel() {
