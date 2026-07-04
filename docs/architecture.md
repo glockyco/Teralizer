@@ -14,7 +14,19 @@ The system follows a multi-stage pipeline architecture defined in `src/main/java
 7. **Initial Testing** (stages 21-25): Build and test project before generalization, collect baseline metrics
 8. **Test Generalization** (stages 26-33): Generate property-based tests, build generalized project, execute and collect final metrics
 
-### Key Components
+### Package responsibilities
+
+- `processing` / `processing.task`: stage orchestration — DB records, scheduling, file I/O.
+  Tasks orchestrate; they should not own transformation logic (see §Code generation).
+- `processing.filter`: typed per-test/per-assertion gates (`FilterResult`, ACCEPT/REJECT/DEFER).
+- `spoon.analysis`: MUT resolution, recipes, structural screens — reads test ASTs, never writes.
+- `spoon.generalization`: jqwik supplier/parameter codegen + the widening-license policy.
+- `jpf`: the SPF listener, capture records, extraction outcomes — everything that runs inside JPF.
+- `transformer`: total mappings SPF ↔ Model ↔ JSON ↔ Java; unsupported terms throw typed.
+- `jqwik` / `jqwik.planning`: clause interpretation and per-parameter generation plans.
+- `domain`: the Model expression tree and value records; no dependencies on any other package.
+
+### Key components
 
 - **ProcessingPipeline**: Orchestrates task execution in dependency order
 - **TaskContext**: Shared state containing database connections, configuration, and utilities
@@ -22,8 +34,20 @@ The system follows a multi-stage pipeline architecture defined in `src/main/java
   signals, ranked alternatives). It is a total function: every assertion gets a graded
   resolution, persisted as provenance in `mut_resolution_observation`. Only
   generalization-grade picks populate the `tested_*` columns.
-- **Filters**: Quality gates determining test generalization suitability (in `src/main/java/teralizer/processing/filter/`)
-- **Transformers**: Convert between data representations (SPF models ↔ JSON ↔ Java code)
+
+## Code generation
+
+Three technologies, each with one job (worked examples of every artifact: `docs/artifacts.md`):
+
+- **Spoon AST construction** — all generated Java that later passes see or that must resolve
+  references: instrumented classes, generalized test classes, supplier/parameter classes.
+- **Velocity templates** — genuinely textual artifacts: the JPF config (`jpf-config.vm`), the
+  driver class (`driver-class.vm`), the value-recorder harness. The harness-as-Java case is
+  scheduled to move into a precompiled support jar (harness-support-artifact spec).
+- **Code snippets** (`createCodeSnippetExpression`/`...Statement`) — leaf identifier references
+  ONLY (`_p_.x`, `site0`, a lifted-local name). A snippet is invisible to the Spoon model: no
+  reference resolution, no typing, no later AST pass sees inside it. Building statements or
+  structured expressions by string concatenation is PROHIBITED; construct nodes instead.
 
 ## Cross-stage contracts
 

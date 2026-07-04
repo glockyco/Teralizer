@@ -33,6 +33,14 @@ invalidate later readings), then decision-gates (spikes and censuses that *rank*
 below them), then the fixes those gates rank, then measurement infrastructure, then recall
 expansion, then maintainability. Evidence-gated items never start before their gate.
 
+**P1a — quality wave (before the next feature wave; new work must build on the unified path)**
+1. **Comprehension + hygiene batch** (`2026-07-04-architecture-implementation-review`
+   Tiers B/C) — artifact gallery, codegen rules, snippet fixes, naming/package repairs,
+   resolver micro-fixes. One batch, verification-economical.
+2. **Recipe unification wave** (Tier A: A3 shared `InputKind` → A1 expression-recipe
+   unification → A2 Task/Builder split → A4 resolver extraction) — spec → approval → plan.
+   Subsumes most of the old C-1 single-emitter item.
+
 **P1 — decision gates (produce the evidence that ranks P2)**
 1. **`2026-07-04-concretization-census`** *(spec, draft — awaiting review)* — identity
    telemetry + ranked census of concretizing methods. Produces the ROI ranking that gates
@@ -77,9 +85,9 @@ expansion, then maintainability. Evidence-gated items never start before their g
     artifact eval; independent of pipeline work, schedule by paper deadline.
 12. **`2026-07-03-harness-support-artifact`** *(spec, draft)* — precompiled telemetry jar;
     deletes the generated-file language-level defect class. Worthwhile, no urgency coupling.
-13. **C-1 single emitter** (`2026-06-28-pipeline-architecture-review`) — last open
-    architecture-review residue besides D-1 (D-1's telemetry half = the census). Codegen
-    drift risk, effort M.
+13. **C-1 single-emitter residue check** (`2026-06-28-pipeline-architecture-review`) —
+    after the recipe unification wave (P1a.2), verify what if anything remains of the
+    factory-drift concern; expected to shrink to nothing.
 14. **Small items, no docs needed:** typed exclusion taxonomy (crash exclusions still carry
     raw stack traces); manual read of the 9 T1-widened failures (license residual-risk
     story); deferred mis-pick fixture.
