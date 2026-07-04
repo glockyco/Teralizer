@@ -53,8 +53,8 @@ Current representation:
 ## Sound-set decision (v1)
 
 - **Input-generatable:** `equals`, `isEmpty`, `startsWith`, `endsWith`, `contains` on literal string constraints.
-- **Output-renderable / residual-filter checked:** `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, `isEmpty`, `concat`, `trim`, `replace`, `toLowerCase`, `toUpperCase`, and `String.valueOf`.
-- **Supported only for filtering / SPF awareness:** `length`, `indexOf`, `lastIndexOf`.
+- **Output-renderable / residual-filter checked:** `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, `isEmpty`, `concat`, `trim`, `replace`, `toLowerCase`, `toUpperCase`, `length`, and `String.valueOf`. `length` renders from the `SymbolicLengthInteger` parent tie as a `length()` invocation, so length clauses stay residual instead of flattening to a free integer.
+- **Screen-admitted, ingestion-refused (typed):** `indexOf`, `lastIndexOf`. The structural screen lets them reach SPF, but their derived symbols carry no renderable model mapping, so `SpfToModelTransformer` refuses them as `UNSUPPORTED_TERM` rather than flattening to free variables.
 - **Excluded (typed):** `compareTo`, `charAt`, `substring`, regex/region matching, and regex replacement variants whose soundness or generation contract is not modeled.
 
 ## Tasks

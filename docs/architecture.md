@@ -46,6 +46,13 @@ Facts that span multiple pipeline stages and are load-bearing for any change:
   Boxed-primitive returns are captured from the box's `value` field attr. The vendored fork
   preserves it for `Integer.valueOf` and explicit constructors but loses it on
   `Long/Boolean.valueOf`, where extraction degrades to NULL_CONCRETE, never to unsoundness.
+- **Ingestion totality** (`SpfToModelTransformer`): every SPF term entering the model maps
+  faithfully or is refused with a typed `UnsupportedSpfTermException` (surfacing as an
+  `UNSUPPORTED_TERM` exclusion at the JPF task boundary). String-derived integer symbols
+  (`SymbolicLengthInteger`, the `SymbolicIndexOf*`/`SymbolicCharAt*` family) carry a parent
+  string expression; dropping that tie yields a free integer variable that corrupts temporary
+  recovery and the license's path-condition evidence. `length` maps to a `length()` invocation
+  on its parent; the rest of the family is refused.
 - **Build-file copies**: the pipeline never mutates a target project's own build file. It works
   on `pom.teralizer.xml` / `build.teralizer.gradle` (copied at setup, mutated by the dependency
   managers: dependency injection, jacoco/pitest plugins, test-source floor) and derives
