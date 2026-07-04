@@ -13,7 +13,7 @@ PostgreSQL database with schema defined in `src/main/resources/db/create-tables.
   `generalization_recipe` (JSON contract consumed by instrumentation and generation)
 - `mut_resolution_observation` - MUT-id resolver provenance (confidence tier, deciding signal,
   candidates, input topology) for every assertion, including unresolved ones
-- `generalization` - Generated property-based test information; `is_included` +
+- `generalization` - Generated property-based test information. `is_included` and
   `exclusion_info` carry typed exclusion labels (e.g. `ORACLE_NOT_WIDENABLE`)
 - `task` - Processing pipeline task execution tracking (stage, variant, status, runtime)
 
@@ -36,10 +36,10 @@ Materialized views defined in `src/main/resources/db/create-views.sql` provide a
 
 - **postgres_dev**: Contains eqbench and commons-utils projects
 - **postgres_test**: Contains repo-reapers projects
-- **postgres_reporeapers_rerun**: pre-fusion baseline corpus (protected; comparisons join on
+- **postgres_reporeapers_rerun**: pre-fusion baseline corpus, protected (comparisons join on
   `root_path`, never `id`)
 - Scratch databases (`postgres_verification`, `postgres_<purpose>_verify`) are created and
-  dropped by runner scripts; never experiment on the databases above
+  dropped by runner scripts. Never experiment on the databases above
 - Centralized config in `analysis/src/teralizer/config.py` provides `db_config.get_dev_engine()` and `db_config.get_test_engine()`
 
 ## Database Operations

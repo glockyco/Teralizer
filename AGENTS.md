@@ -23,26 +23,26 @@ Run everything from the project root. Validate before committing (`validate.py -
 `--notebook <NAME.ipynb>` for one notebook; no flag = full run).
 
 ## Verification tiers
-Match the gate to the change; goldens are observed truth (on a mismatch, investigate — never
-edit a golden to match broken output).
+Match the gate to the change. Goldens are observed truth: on a mismatch, investigate instead of
+editing the golden to match broken output.
 
 | Change | Gate |
 |---|---|
 | Analysis code (`analysis/`) | `validate.py --changed` |
-| Java unit-level | `./gradlew test --tests '<Class>'` while iterating; one full `./gradlew build` before commit |
+| Java unit-level | `./gradlew test --tests '<Class>'` while iterating, one full `./gradlew build` before commit |
 | Pipeline behavior (codegen, SPF, filters, licenses, build files) | `scripts/verify-pipeline.sh` (~5 min, 9 fixtures, deterministic) |
-| One fixture while iterating | reset + `DB_NAME=postgres_verification ./gradlew run -Dteralizer.config=project-configs/verification/fixture-<name>.conf` (~45 s) |
-| Real-world seams (surefire versions, reports, big suites) | sentinel subset (~10 min; five stable projects, expected census in the config headers) |
-| Full spike / corpus | evaluation events only — never a debugging loop |
+| One fixture while iterating | `scripts/run-verification-corpus.sh --only <fixture-name>` (~45 s) |
+| Real-world seams (surefire versions, reports, big suites) | sentinel subset (~10 min, five stable projects, expected census in the config headers) |
+| Full spike / corpus | evaluation events only, never a debugging loop |
 
 New pipeline defect ⇒ add a fixture reproducing it under `verification/fixtures/` with the fix
-(golden pins it). kouchat, gedcom4j, xenqtt, uaicriteria, sparkey are excluded from verification
-subsets (60s-ceiling jitter / native flakes); they stay evaluation-corpus members.
+(golden pins it). kouchat, gedcom4j, xenqtt, uaicriteria, and sparkey are excluded from
+verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-corpus members.
 
 ## Tests (Java)
-- jqwik `@Example` + `org.junit.Assert` — JUnit 4 `@Test` is NOT discovered (no vintage engine
+- jqwik `@Example` + `org.junit.Assert`. JUnit 4 `@Test` is NOT discovered (no vintage engine
   in Teralizer's own suite).
-- Spoon-model tests build models via `VirtualFile` + `Launcher`; virtual files have no
+- Spoon-model tests build models via `VirtualFile` + `Launcher`. Virtual files have no
   `SourcePosition.getFile()`, so path-derived logic needs real files or the fixture corpus.
 - JPF listener tests: `JpfListenerHarness` + target classes in `src/test/java/teralizer/jpf/targets/`.
 - `./gradlew spotlessApply` before committing (build gate enforces formatting).
@@ -78,9 +78,9 @@ dropped by their runner scripts. Direct query:
   `git submodule update --init --recursive`, then rebuild.
 - **HOCON merge:** profile configs MERGE with `reference.conf` — a block like
   `teralizer.generalizations` accumulates keys across files instead of replacing them. Define
-  variants only in profile configs; check merged effects after editing either side.
+  variants only in profile configs and check merged effects after editing either side.
 - **`Configuration` freezes at class load:** tests never `System.setProperty` for config keys
-  (works only under lucky class-load order) — put test defaults in
+  (works only under lucky class-load order). Put test defaults in
   `src/test/resources/reference.conf` instead.
 - **`CREATE DATABASE` fails with a template1 collation mismatch** (after OS lib upgrades):
   `ALTER DATABASE template1 REFRESH COLLATION VERSION;` then retry (runner scripts guard this).
