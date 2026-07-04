@@ -12,6 +12,10 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 mainClassName = 'teralizer.TestGeneralizationRunner'
+// The runner never needs a display; without this, target code touching AWT-adjacent classes
+// (observed once via an in-process JPF run on macOS) initializes AppKit, whose non-daemon
+// AWT-Shutdown thread can keep the JVM alive after main() returns.
+applicationDefaultJvmArgs = ['-Djava.awt.headless=true']
 
 def dotEnvFile = file(".env")
 def envProps = new Properties()
