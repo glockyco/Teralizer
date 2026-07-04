@@ -139,6 +139,9 @@ for config_abs in "${configs[@]}"; do
   project_abs="$ROOT_DIR/$root_path"
   attempted=$((attempted + 1))
   echo "==> [$n] $root_path"
+  # A prior run whose BUILD_PROJECT_GENERALIZED failed can drop the cleanup task and leave
+  # generated tests behind; they break the next BUILD_PROJECT_ORIGINAL, so sweep them first.
+  find "$project_abs/src/test" -name '_*_Generalized_*_Test.java' -delete 2>/dev/null
   active_project_abs="$project_abs"
   active_project_log="$log_abs"
   DB_NAME="$DB_NAME" DATA_DIR="$DATA_DIR" \

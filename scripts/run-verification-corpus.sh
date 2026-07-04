@@ -3,6 +3,10 @@
 # Run Teralizer's synthetic verification fixtures through the full pipeline on a scratch DB.
 # The corpus is intentionally small, so every invocation resets the DB and reruns every fixture
 # instead of carrying resumability markers that would hide stale partial state.
+#
+# Usage: scripts/run-verification-corpus.sh [--only <fixture-name>]
+#   --only  run a single fixture (fast iteration; the DB then holds only that fixture, so use
+#           ad-hoc SQL against it — the full golden check expects the whole corpus)
 set -uo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
@@ -25,11 +29,15 @@ fi
 usage() {
   sed -n '2,12p' "$0"
 }
+only=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help) usage; exit 0 ;;
+    # Iterating on one behavior family: same reset + golden-comparable run, one fixture only.
+    --only) only="$2"; shift ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
+  shift
 done
 
 _psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
@@ -109,8 +117,8 @@ find "$FIXTURE_ROOT" -type f \( \
 \) -delete
 find "$FIXTURE_ROOT" -type d -path '*/data/verification' -prune -exec rm -rf {} +
 
-mapfile -t configs < <(find "$ROOT_DIR/$CONFIG_DIR" -maxdepth 1 -name 'fixture-*.conf' | sort)
-[[ ${#configs[@]} -gt 0 ]] || { echo "No fixture configs under $CONFIG_DIR" >&2; exit 1; }
+mapfile -t configs < <(find "$ROOT_DIR/$CONFIG_DIR" -maxdepth 1 -name "fixture-${only:-*}.conf" | sort)
+[[ ${#configs[@]} -gt 0 ]] || { echo "No fixture configs matching '${only:-*}' under $CONFIG_DIR" >&2; exit 1; }
 
 attempted=0; nonzero=0
 for config_abs in "${configs[@]}"; do
