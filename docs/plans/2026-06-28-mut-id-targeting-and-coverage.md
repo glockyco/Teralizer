@@ -417,6 +417,24 @@ R-A `GeneralizationRecipe` extraction as behavior-preserving):
   Fix: null-safe reference creation in the default branch; verify with a parameter-factory
   model test over a `java.lang.String` input plus a single-project pipeline run (antiaction).
 
+### Fixture-corpus findings (verification tier live)
+
+The nine-fixture pipeline corpus (`2026-07-04-pipeline-fixture-corpus`) pins every behavior
+family from the 2026-07-03/04 sessions; two findings from recording its goldens:
+
+- Pass-through booleans split by boxing, not by pass-through: a primitive store/load keeps the
+  symbolic attr on the stack slot (SYMBOLIC, licensed, sound — pinned), while the refusal arm
+  the license was designed for requires the boxed shape (`Boolean.valueOf`), matching the
+  octotron evidence. The license spec's justification holds; the fixture sketch was corrected.
+- String `length()` predicate extraction records NO clauses at all: the fixture's
+  `s.length() > 3` MUT yields `total_constraint_count = NULL`, `used_constraint_count = NULL`,
+  `concretization_events = 0` → `ORACLE_NOT_WIDENABLE` refusal. Not a license naming mismatch
+  (nothing was extracted to mismatch) and not concretization; spf-eval says SPF specifies
+  length constraints, so the loss is somewhere in Teralizer's config/ingestion for
+  string-length clauses. Completeness gap, not unsoundness; pinned by the
+  `string-sound-set` golden, which will flip loudly when fixed. Investigation owner:
+  the string-support plan's sound-set lane.
+
 ## Relationship to existing docs
 
 - Design of the resolver: `2026-06-27-ensemble-mut-identification` (the oracle is
