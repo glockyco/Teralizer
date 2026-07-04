@@ -24,6 +24,7 @@ import org.jooq.tools.jdbc.MockResult;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtTypeReference;
@@ -93,7 +94,7 @@ public class TestAnalysisTaskTest {
         Assert.assertNotNull(record.getGeneralizationRecipe());
         GeneralizationRecipe.Resolved resolved = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe())
             .resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage());
-        Assert.assertEquals("id", resolved.getOracleExpression().getExecutable().getSimpleName());
+        Assert.assertEquals("id", ((CtInvocation<?>) resolved.getOracleExpression()).getExecutable().getSimpleName());
         Assert.assertEquals(1, resolved.getInputs().size());
         Assert.assertEquals("x", resolved.getInputs().get(0).toMethodParameter().getName());
     }

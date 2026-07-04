@@ -242,7 +242,8 @@ public class TestGeneralizationTaskTest {
             GeneralizationRecipe.from(
                 testedMethod,
                 testedCall,
-                GeneralizableInput.derive(testedMethod, testedCall)
+                GeneralizableInput.derive(testedMethod, testedCall),
+                testedMethod.getType().getQualifiedName()
             ).toJson(gson)
         );
         assertionRecord.setInputValuesPath(inputValues.toString());

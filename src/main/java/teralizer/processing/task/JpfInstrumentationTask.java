@@ -99,7 +99,8 @@ public class JpfInstrumentationTask extends AbstractTask {
                 this.assertionRecord.getInstrumentedClassQualifiedName()
             )
             .resolveAgainst(instrumentedClass.getMethod(this.testRecord.getTestMethodName()), factory.getModel().getRootPackage());
-        CtInvocation<?> testedMethodCall = recipe.getOracleExpression();
+        // Recipes handled here are invocation-shaped because replay rewrites the focal call.
+        CtInvocation<?> testedMethodCall = (CtInvocation<?>) recipe.getOracleExpression();
         CtMethod<?> testedMethod = recipe.getOracleMethod();
         List<GeneralizableInput> generalizableInputs = recipe.getInputs();
         CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall, generalizableInputs);

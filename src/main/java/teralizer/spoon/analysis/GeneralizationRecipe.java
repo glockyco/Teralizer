@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.path.CtPath;
@@ -24,7 +23,7 @@ import teralizer.domain.MethodParameter;
  * rewriting seam used when a cloned test class replaces the original class name in Spoon CtPaths.
  */
 public final class GeneralizationRecipe {
-    public static final int CURRENT_VERSION = 1;
+    public static final int CURRENT_VERSION = 2;
     private static final String SCHEMA = "teralizer.generalization.recipe";
 
     public enum InputKind {
@@ -44,6 +43,7 @@ public final class GeneralizationRecipe {
     private final String oracleExpressionPath;
     private final String oracleMethodPath;
     private final String oracleType;
+    private final String oracleExpressionType;
     private final List<InputSite> inputSites;
 
     private GeneralizationRecipe(
@@ -52,6 +52,7 @@ public final class GeneralizationRecipe {
         String oracleExpressionPath,
         String oracleMethodPath,
         String oracleType,
+        String oracleExpressionType,
         List<InputSite> inputSites
     ) {
         this.version = version;
@@ -59,13 +60,15 @@ public final class GeneralizationRecipe {
         this.oracleExpressionPath = oracleExpressionPath;
         this.oracleMethodPath = oracleMethodPath;
         this.oracleType = oracleType;
+        this.oracleExpressionType = oracleExpressionType;
         this.inputSites = Collections.unmodifiableList(new ArrayList<>(inputSites));
     }
 
     public static GeneralizationRecipe from(
         CtMethod<?> oracleMethod,
-        CtInvocation<?> oracleExpression,
-        List<GeneralizableInput> inputs
+        CtExpression<?> oracleExpression,
+        List<GeneralizableInput> inputs,
+        String oracleExpressionType
     ) {
         CtMethod<?> containingMethod = oracleExpression.getParent(CtMethod.class);
         if (containingMethod == null) {
@@ -86,6 +89,7 @@ public final class GeneralizationRecipe {
             oracleExpressionPath,
             oracleMethodPath,
             oracleType,
+            oracleExpressionType,
             sites
         );
         recipe.resolveAgainst(containingMethod, oracleMethod.getFactory().getModel().getRootPackage());
@@ -101,12 +105,16 @@ public final class GeneralizationRecipe {
             throw new IllegalArgumentException("Unsupported generalization recipe schema/version.");
         }
         List<InputSite> sites = recipe.inputSites == null ? Collections.emptyList() : recipe.inputSites;
+        if (recipe.oracleExpressionType == null) {
+            throw new IllegalArgumentException("Generalization recipe oracleExpressionType is null.");
+        }
         return new GeneralizationRecipe(
             recipe.version,
             recipe.schema,
             recipe.oracleExpressionPath,
             recipe.oracleMethodPath,
             recipe.oracleType,
+            recipe.oracleExpressionType,
             sites
         );
     }
@@ -116,11 +124,11 @@ public final class GeneralizationRecipe {
     }
 
     public Resolved resolveAgainst(CtMethod<?> containingMethod, CtElement modelRoot) {
-        CtInvocation<?> oracleExpression = resolveOne(
+        CtExpression<?> oracleExpression = resolveOne(
             PathRole.ORACLE_EXPRESSION,
             this.oracleExpressionPath,
             containingMethod,
-            CtInvocation.class
+            CtExpression.class
         );
         CtMethod<?> oracleMethod = resolveOne(PathRole.ORACLE_METHOD, this.oracleMethodPath, modelRoot, CtMethod.class);
         List<GeneralizableInput> inputs = new ArrayList<>();
@@ -144,6 +152,7 @@ public final class GeneralizationRecipe {
             rewriteCtPathForClone(this.oracleExpressionPath, originalClassQualifiedName, cloneClassQualifiedName),
             rewriteCtPathForClone(this.oracleMethodPath, originalClassQualifiedName, cloneClassQualifiedName),
             this.oracleType,
+            this.oracleExpressionType,
             this.inputSites
         );
     }
@@ -162,6 +171,7 @@ public final class GeneralizationRecipe {
             path,
             this.oracleMethodPath,
             this.oracleType,
+            this.oracleExpressionType,
             this.inputSites
         );
     }
@@ -210,6 +220,10 @@ public final class GeneralizationRecipe {
     public String getOracleType() {
         return this.oracleType;
     }
+    public String getOracleExpressionType() {
+        return this.oracleExpressionType;
+    }
+
 
     public List<InputSite> getInputSites() {
         return this.inputSites;
@@ -285,10 +299,10 @@ public final class GeneralizationRecipe {
 
     public static final class Resolved {
         private final CtMethod<?> oracleMethod;
-        private final CtInvocation<?> oracleExpression;
+        private final CtExpression<?> oracleExpression;
         private final List<GeneralizableInput> inputs;
 
-        private Resolved(CtMethod<?> oracleMethod, CtInvocation<?> oracleExpression, List<GeneralizableInput> inputs) {
+        private Resolved(CtMethod<?> oracleMethod, CtExpression<?> oracleExpression, List<GeneralizableInput> inputs) {
             this.oracleMethod = oracleMethod;
             this.oracleExpression = oracleExpression;
             this.inputs = Collections.unmodifiableList(new ArrayList<>(inputs));
@@ -298,7 +312,7 @@ public final class GeneralizationRecipe {
             return this.oracleMethod;
         }
 
-        public CtInvocation<?> getOracleExpression() {
+        public CtExpression<?> getOracleExpression() {
             return this.oracleExpression;
         }
 

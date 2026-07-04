@@ -26,19 +26,19 @@ parent: 2026-07-04-r1-expression-slice-recipes
 - Modify: `src/main/java/teralizer/spoon/analysis/GeneralizationRecipe.java`
 - Test: `src/test/java/teralizer/spoon/analysis/GeneralizationRecipeTest.java` (extend)
 
-- [ ] **Step 1: Write failing tests** (jqwik `@Example`, `org.junit.Assert`):
+- [x] **Step 1: Write failing tests** (jqwik `@Example`, `org.junit.Assert`):
   - `CURRENT_VERSION` is 2 and `fromJson` rejects a version-1 payload with `IllegalArgumentException`.
   - A recipe built from an expression (`from(oracleMethod, someCtExpression, inputs, expressionType)`) round-trips through `toJson`/`fromJson` preserving `oracleExpressionType`.
   - `resolveAgainst` returns the oracle as `CtExpression` for a binary-operator expression path (build a small Spoon model with `Launcher`/`VirtualFile`; note virtual files have no `SourcePosition.getFile()` — path-based assertions only, per AGENTS.md).
-- [ ] **Step 2: Run, expect FAIL.** `./gradlew test --tests 'teralizer.spoon.analysis.GeneralizationRecipeTest'`
-- [ ] **Step 3: Implement.**
+- [x] **Step 2: Run, expect FAIL.** `./gradlew test --tests 'teralizer.spoon.analysis.GeneralizationRecipeTest'`
+- [x] **Step 3: Implement.**
   - `CURRENT_VERSION = 2`.
   - Field `private final String oracleExpressionType;` serialized alongside `oracleType`; constructor, `fromJson` (null-check it like the other fields), `toJson` unchanged mechanics.
   - `from(...)` signature becomes `from(CtMethod<?> oracleMethod, CtExpression<?> oracleExpression, List<GeneralizableInput> inputs, String oracleExpressionType)`; the path derivation (`getPath().relativePath(containingMethod)`) already works on any `CtElement`.
   - `resolveAgainst` resolves `oracleExpressionPath` with target class `CtExpression.class` (was `CtInvocation.class`); `Resolved` carries `CtExpression<?> oracleExpression`.
   - Update ALL existing callers in the same commit (`TestAnalysisTask.java:147` passes the tested call as the expression and `testedMethod.getType()` as the expression type for T0/T1; `JpfInstrumentationTask`/`TestGeneralizationTask` consumers adjust to `CtExpression` and cast where they genuinely need the invocation — mark each such cast site, Tasks 5/7 remove them).
-- [ ] **Step 4: Run, expect PASS**, plus `./gradlew test --tests 'teralizer.spoon.analysis.*'` and the existing recipe consumers' tests (`./gradlew test --tests 'teralizer.processing.*'`).
-- [ ] **Step 5: Commit.** `feat(recipe): move schema to v2 with expression oracle`
+- [x] **Step 4: Run, expect PASS**, plus `./gradlew test --tests 'teralizer.spoon.analysis.*'` and the existing recipe consumers' tests (`./gradlew test --tests 'teralizer.processing.*'`).
+- [x] **Step 5: Commit.** `feat(recipe): move schema to v2 with expression oracle`
 
 ---
 

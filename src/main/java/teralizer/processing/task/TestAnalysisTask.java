@@ -144,7 +144,12 @@ public class TestAnalysisTask extends AbstractTask {
                     GeneralizationRecipe generalizationRecipe = null;
                     if (callAbsolutePath != null && callRelativePath != null && testedMethod != null) {
                         generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
-                        generalizationRecipe = GeneralizationRecipe.from(testedMethod, testedMethodCall, generalizableInputs);
+                        generalizationRecipe = GeneralizationRecipe.from(
+                            testedMethod,
+                            testedMethodCall,
+                            generalizableInputs,
+                            testedMethod.getType().getQualifiedName()
+                        );
                     }
                     if (generalizableInputs == null) {
                         for (CtExpression<?> argument : testedMethodCall.getArguments()) {

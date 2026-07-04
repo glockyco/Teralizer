@@ -6,6 +6,8 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtBinaryOperator;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
@@ -13,6 +15,26 @@ import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
 
 public class GeneralizationRecipeTest {
+    @Example
+    void usesSchemaVersionTwoAndRejectsVersionOnePayload() {
+        Assert.assertEquals(2, GeneralizationRecipe.CURRENT_VERSION);
+        String versionOneJson = "{"
+            + "\"version\":1,"
+            + "\"schema\":\"teralizer.generalization.recipe\","
+            + "\"oracleExpressionPath\":\"#statement[index=0]\","
+            + "\"oracleMethodPath\":\"#type[name=smoke.SubjectTest]\","
+            + "\"oracleType\":\"boolean\","
+            + "\"inputSites\":[]"
+            + "}";
+
+        try {
+            GeneralizationRecipe.fromJson(new Gson(), versionOneJson);
+            Assert.fail("version-1 recipes must be rejected");
+        } catch (IllegalArgumentException expected) {
+            Assert.assertTrue(expected.getMessage().contains("Unsupported generalization recipe schema/version"));
+        }
+    }
+
     @Example
     void roundTripsRecipeJsonWithoutLosingSites() {
         Scenario scenario = scenarioFromSource(SOURCE, "usesConstructorArgument");
@@ -32,6 +54,20 @@ public class GeneralizationRecipeTest {
         Assert.assertEquals(GeneralizationRecipe.InputKind.METHOD_ARG, roundTripped.getInputSites().get(2).getKind());
         Assert.assertEquals("value", roundTripped.getInputSites().get(2).getName());
     }
+    @Example
+    void roundTripsExpressionOracleType() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesBinaryOperator");
+        CtExpression<?> oracleExpression = actualAssertExpression(scenario.testMethod);
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(scenario.oracleMethod, scenario.oracleExpression);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(scenario.oracleMethod, oracleExpression, inputs, "boolean");
+
+        GeneralizationRecipe roundTripped = GeneralizationRecipe.fromJson(new Gson(), recipe.toJson(new Gson()));
+
+        Assert.assertEquals("boolean", roundTripped.getOracleExpressionType());
+        Assert.assertEquals(recipe.getOracleExpressionPath(), roundTripped.getOracleExpressionPath());
+        Assert.assertEquals(recipe.getOracleType(), roundTripped.getOracleType());
+    }
+
 
     @Example
     void resolvesRecipeSitesAgainstTheOriginalModel() {
@@ -40,13 +76,27 @@ public class GeneralizationRecipeTest {
 
         GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(scenario.testMethod, scenario.model.getRootPackage());
 
-        Assert.assertEquals("size", resolved.getOracleExpression().getExecutable().getSimpleName());
+        Assert.assertEquals("size", ((CtInvocation<?>) resolved.getOracleExpression()).getExecutable().getSimpleName());
         Assert.assertEquals("size", resolved.getOracleMethod().getSimpleName());
         Assert.assertEquals(2, resolved.getInputs().size());
         Assert.assertTrue(resolved.getInputs().get(0).isReceiverConstructorArgument());
         Assert.assertEquals("1.0", resolved.getInputs().get(0).getSourceExpression().toString());
         Assert.assertEquals("10.0", resolved.getInputs().get(1).getSourceExpression().toString());
     }
+    @Example
+    void resolvesBinaryOperatorOracleAsExpression() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesBinaryOperator");
+        CtExpression<?> oracleExpression = actualAssertExpression(scenario.testMethod);
+        Assert.assertTrue(oracleExpression instanceof CtBinaryOperator);
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(scenario.oracleMethod, scenario.oracleExpression);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(scenario.oracleMethod, oracleExpression, inputs, "boolean");
+
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(scenario.testMethod, scenario.model.getRootPackage());
+
+        Assert.assertTrue(resolved.getOracleExpression() instanceof CtExpression);
+        Assert.assertTrue(resolved.getOracleExpression() instanceof CtBinaryOperator);
+    }
+
 
     @Example
     void rewritesOnlyThePersistedClassQualifiedNameInRecipePaths() {
@@ -83,7 +133,13 @@ public class GeneralizationRecipeTest {
 
     private static GeneralizationRecipe recipeFor(Scenario scenario) {
         List<GeneralizableInput> inputs = GeneralizableInput.derive(scenario.oracleMethod, scenario.oracleExpression);
-        return GeneralizationRecipe.from(scenario.oracleMethod, scenario.oracleExpression, inputs);
+        return GeneralizationRecipe.from(scenario.oracleMethod, scenario.oracleExpression, inputs, scenario.oracleMethod.getType().getQualifiedName());
+    }
+
+    private static CtExpression<?> actualAssertExpression(CtMethod<?> testMethod) {
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        int actualIndex = TestAnalysis.getActualParameterIndex(assertion).get();
+        return assertion.getArguments().get(actualIndex);
     }
 
     private static Scenario scenarioFromSource(String source, String methodName) {
@@ -119,6 +175,7 @@ public class GeneralizationRecipeTest {
     private static final String SOURCE = ""
         + "package smoke;\n"
         + "import static org.junit.Assert.assertEquals;\n"
+        + "import static org.junit.Assert.assertTrue;\n"
         + "public class SubjectTest {\n"
         + "  public static final class Interval {\n"
         + "    private final int lower;\n"
@@ -132,6 +189,9 @@ public class GeneralizationRecipeTest {
         + "  }\n"
         + "  public void usesReceiverConstructor() {\n"
         + "    assertEquals(9.0, new Interval(1.0, 10.0).size(), 0.0);\n"
+        + "  }\n"
+        + "  public void usesBinaryOperator() {\n"
+        + "    assertTrue(new Interval(1, 10).contains(5) && new Interval(2, 8).contains(6));\n"
         + "  }\n"
         + "}\n";
 }
