@@ -27,7 +27,7 @@ class TestGeneralizationListenerExpressionModeTest {
         TestGeneralizationListener listener = runExpressionMode(workDir, "comparisonWrapper", "helperA");
 
         assertTrue(listener.wasTargetEntered(), "the focal helper is entered on the concrete path");
-        Invocation invocation = listener.getInvocation();
+        CapturedInvocation invocation = listener.getInvocation();
         assertNotNull(invocation, "expression mode captures at wrapper exit");
 
         Value output = invocation.getOutput().getReturnValue();
@@ -44,7 +44,7 @@ class TestGeneralizationListenerExpressionModeTest {
         TestGeneralizationListener listener = runExpressionMode(workDir, "shortCircuitWrapper", "skippedHelper");
 
         assertFalse(listener.wasTargetEntered(), "the focal helper is skipped by Java short-circuiting");
-        Invocation invocation = listener.getInvocation();
+        CapturedInvocation invocation = listener.getInvocation();
         assertNotNull(invocation, "expression mode still captures at wrapper exit");
 
         Value output = invocation.getOutput().getReturnValue();

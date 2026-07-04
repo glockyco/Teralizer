@@ -13,14 +13,14 @@ import teralizer.domain.Value;
  * so downstream serialization runs after the search terminates without depending on any SPF object
  * remaining live.
  */
-public final class Invocation {
+public final class CapturedInvocation {
 
     private final List<Value> concreteInputs;
     private final CapturedOutput output;
     private final Expression modelInput;
     private final Expression modelOutput;
 
-    public Invocation(
+    public CapturedInvocation(
         List<Value> concreteInputs,
         CapturedOutput output,
         Expression modelInput,

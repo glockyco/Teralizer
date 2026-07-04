@@ -49,7 +49,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private CapturedException pendingThrownException;
     private List<Value> instrumentedInputArguments;
     private boolean targetEntered;
-    private Invocation invocation;
+    private CapturedInvocation invocation;
     private int concretizationEvents;
 
     public TestGeneralizationListener(Config config) {
@@ -180,7 +180,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         }
     }
 
-    private Invocation captureInvocation(VM vm, ThreadInfo currentThread) {
+    private CapturedInvocation captureInvocation(VM vm, ThreadInfo currentThread) {
         PathCondition pathCondition = PathCondition.getPC(vm);
         this.checkPcSizeLimitExceeded(pathCondition);
 
@@ -250,7 +250,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             modelOutput = spfToModelTransformer.transform(capturedException);
         }
 
-        return new Invocation(concreteInputs, output, modelInput, modelOutput);
+        return new CapturedInvocation(concreteInputs, output, modelInput, modelOutput);
     }
 
     /**
@@ -272,7 +272,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     }
 
     /** The captured invocation, or {@code null} if the tested method never returned in-state. */
-    public Invocation getInvocation() {
+    public CapturedInvocation getInvocation() {
         return this.invocation;
     }
 

@@ -8,7 +8,7 @@ import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpecificationGson;
 
 /**
- * Serializes a captured {@link Invocation} to the four specification files. Pure with respect to
+ * Serializes a captured {@link CapturedInvocation} to the four specification files. Pure with respect to
  * JPF/SPF: it operates only on Model POJOs and typed value records, so it runs after the JPF search
  * has terminated without depending on any SPF object remaining valid.
  *
@@ -22,7 +22,7 @@ public final class SpecificationExtractor {
     private final Gson gson = SpecificationGson.create();
 
     public void write(
-        Invocation invocation,
+        CapturedInvocation invocation,
         Path inputValuesPath,
         Path outputValuePath,
         Path inputSpecificationPath,

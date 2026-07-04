@@ -24,10 +24,10 @@ public final class OutputSpecClassifier {
      * boolean relation that lives in the path condition because the return value has no separate
      * attribute, and an unlicensed concrete oracle whose expected side cannot co-vary with widened
      * inputs. The classifier intentionally names only the model shape; {@link
-     * teralizer.spoon.generalization.WideningLicense} consumes this class together with return type,
+     * teralizer.generalization.WideningLicense} consumes this class together with return type,
      * path-condition, and concretization evidence to decide which sibling may be widened.
      */
-    public static OutputSpecClass classify(Invocation invocation) {
+    public static OutputSpecClass classify(CapturedInvocation invocation) {
         return classify(invocation.getOutput().getKind(), invocation.getModelOutput());
     }
 

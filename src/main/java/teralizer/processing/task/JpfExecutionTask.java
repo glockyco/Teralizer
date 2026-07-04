@@ -17,7 +17,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.jpf.ExtractionAborted;
 import teralizer.jpf.ExtractionOutcome;
-import teralizer.jpf.Invocation;
+import teralizer.jpf.CapturedInvocation;
 import teralizer.jpf.OutputSpecClassifier;
 import teralizer.jpf.SpecificationExtractor;
 import teralizer.jpf.TestGeneralizationListener;
@@ -115,7 +115,7 @@ public class JpfExecutionTask extends AbstractTask {
             throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName()
                 + " - " + outcome.getKind().name() + ": " + outcome.getDetail());
         }
-        Invocation invocation = listener.getInvocation();
+        CapturedInvocation invocation = listener.getInvocation();
         new SpecificationExtractor().write(
             invocation,
             Paths.get(this.assertionRecord.getInputValuesPath()),

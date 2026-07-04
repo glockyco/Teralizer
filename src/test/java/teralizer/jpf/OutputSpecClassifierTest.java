@@ -16,7 +16,7 @@ public class OutputSpecClassifierTest {
 
     @Example
     void classifiesThrownOutputAsException() {
-        Invocation invocation = new Invocation(
+        CapturedInvocation invocation = new CapturedInvocation(
             Collections.emptyList(),
             CapturedOutput.ofThrow(new CapturedException("java.lang.IllegalArgumentException", "bad")),
             null,
@@ -29,7 +29,7 @@ public class OutputSpecClassifierTest {
 
     @Example
     void classifiesNullModelOutputAsNullConcrete() {
-        Invocation invocation = new Invocation(
+        CapturedInvocation invocation = new CapturedInvocation(
             Collections.emptyList(),
             CapturedOutput.ofReturnValue(new PrimitiveValue("boolean", true)),
             null,
@@ -42,7 +42,7 @@ public class OutputSpecClassifierTest {
 
     @Example
     void classifiesAnyVariableInModelOutputAsSymbolic() {
-        Invocation invocation = new Invocation(
+        CapturedInvocation invocation = new CapturedInvocation(
             Collections.emptyList(),
             CapturedOutput.ofReturnValue(new PrimitiveValue("int", 4)),
             null,
@@ -58,7 +58,7 @@ public class OutputSpecClassifierTest {
 
     @Example
     void classifiesVariableFreeModelOutputAsConstant() {
-        Invocation invocation = new Invocation(
+        CapturedInvocation invocation = new CapturedInvocation(
             Collections.emptyList(),
             CapturedOutput.ofReturnValue(new PrimitiveValue("int", 4)),
             null,

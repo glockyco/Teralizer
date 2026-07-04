@@ -130,7 +130,7 @@ public final class JpfListenerHarness {
         }
 
         // The listener now only observes; the specification files are written post-run from the
-        // captured Invocation, exactly as JpfExecutionTask does in the pipeline.
+        // captured CapturedInvocation, exactly as JpfExecutionTask does in the pipeline.
         Path inputValuesPath = workDir.resolve("concrete-input.json");
         Path outputValuePath = workDir.resolve("concrete-output.json");
         Path inputSpecificationPath = workDir.resolve("symbolic-input.json");
