@@ -54,11 +54,15 @@ Codegen consumes ONLY the path-based rewrite (`Resolved.replaceInputSitesWithPar
 - `JpfInstrumentationTask`: one `createInstrumentedMethod`, one `createInstrumentedMethodCall`.
   The `_target_` receiver parameter and `_local_*` lifted locals remain — they become
   explicit wrapper-environment concerns computed AFTER site rewriting, not a second rewrite
-  mechanism. The wrapper return type is always `oracleExpressionType`. For a plain call that
-  is the assertion-context-inferred type, computed at analysis time and stored in the recipe:
-  the `inferExpectedType` call moves from instrumentation time to analysis time, where the
-  original, un-cloned AST is available. One derivation, persisted, consistent with the recipe
-  principle.
+  mechanism. Two type roles stay distinct. The recipe's `oracleExpressionType` is the
+  oracle's SEMANTIC type — the tested method's declared return type for a plain call, the
+  expression's static type for a composite — and it feeds `ReturnTypeFilter` and the
+  widening license. The WRAPPER's Java return type is a codegen concern: the
+  assertion-context-inferred type (`inferExpectedType`, e.g. `long` for an
+  `assertEquals(long, long)` overload around an int-returning call), computed at
+  instrumentation time from the resolved oracle expression as today. Conflating the two
+  breaks the filter: an `assertEquals(Object, Object)` context would infer `Object` and
+  wrongly reject a supported oracle.
 - `TestGeneralizationTask`: the index-keyed argument-replacement block is deleted. The
   path-based rewrite is the only site rewrite.
 - The listener's two capture modes collapse: capture is ALWAYS at the wrapper exit.
