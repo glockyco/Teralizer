@@ -33,7 +33,6 @@ import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
-import teralizer.spoon.analysis.ExpectedTypeInference;
 import teralizer.spoon.analysis.ExpressionSliceScreen;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
@@ -155,7 +154,7 @@ public class TestAnalysisTask extends AbstractTask {
                             oracleExpression,
                             generalizableInputs,
                             oracleExpression == testedMethodCall
-                                ? typeNameOf(ExpectedTypeInference.inferExpectedType(testedMethodCall))
+                                ? typeNameOf(testedMethod.getType())
                                 : typeNameOf(oracleExpression.getType())
                         );
                     }

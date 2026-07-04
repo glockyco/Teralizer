@@ -127,7 +127,7 @@ public class TestAnalysisTaskTest {
     }
 
     @Example
-    void assertEqualsDirectCallStoresPathBasedMethodArgumentSitesAndExpectedType() {
+    void assertEqualsDirectCallStoresPathBasedMethodArgumentSitesAndSemanticType() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "public class SubjectTest {\n"
@@ -143,7 +143,7 @@ public class TestAnalysisTaskTest {
 
         AssertionRecord record = store.assertions.get(0);
         GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
-        Assert.assertEquals("long", recipe.getOracleExpressionType());
+        Assert.assertEquals("int", recipe.getOracleExpressionType());
         GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage());
         Assert.assertTrue(resolved.getOracleExpression() instanceof CtInvocation<?>);
         Assert.assertEquals("add", ((CtInvocation<?>) resolved.getOracleExpression()).getExecutable().getSimpleName());

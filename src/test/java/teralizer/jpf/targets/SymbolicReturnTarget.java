@@ -15,7 +15,7 @@ public final class SymbolicReturnTarget {
         wrapper(5);
     }
 
-    public static void wrapper(int value) {
-        Cut.twice(value);
+    public static int wrapper(int value) {
+        return Cut.twice(value);
     }
 }

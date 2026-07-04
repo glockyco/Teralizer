@@ -32,7 +32,6 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private final String instrumentedMethodQualifiedName;
     private final MethodSpec instrumentedMethodSpec;
     private final MethodSpec testedMethodSpec;
-    private final boolean expressionRecipe;
 
     private final Path inputValuesPath;
     private final Path outputValuePath;
@@ -55,7 +54,6 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
         this.instrumentedMethodSpec = MethodSpec.createMethodSpec(this.instrumentedMethodQualifiedName);
-        this.expressionRecipe = config.getBoolean("test_generalization.expression_recipe", false);
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
         this.inputValuesPath = Paths.get(config.getString("test_generalization.input_values_path"));
         this.outputValuePath = Paths.get(config.getString("test_generalization.output_value_path"));
@@ -103,21 +101,15 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             this.isInInstrumentedMethod = true;
             this.instrumentedInputArguments = this.captureConcreteArguments(currentThread);
         }
-        // Pin the capture frame's stack position at its first entry reached from inside the wrapper.
-        // In expression mode the wrapper is the capture frame; in invocation mode the tested call is.
-        // Its matching exit (same depth) is the outermost frame under recursion and the first call
-        // under a looped wrapper. The single constraint-collection path does not backtrack, so the
-        // pinned depth stays valid for the rest of the run.
-        if (this.expressionRecipe && this.targetDepth < 0 && this.instrumentedMethodSpec.matches(enteredMethod)) {
+        // Pin the instrumented wrapper's stack position at first entry. Its matching exit at the
+        // same depth is the capture point for every recipe; target entry remains an observation for
+        // outcome classification.
+        if (this.targetDepth < 0 && this.instrumentedMethodSpec.matches(enteredMethod)) {
             LOGGER.atDebug().log("Entering instrumented method: " + enteredMethod.toString());
             this.targetDepth = currentThread.getTopFrame().getDepth();
         }
         if (this.isInInstrumentedMethod && this.testedMethodSpec.matches(enteredMethod)) {
             this.targetEntered = true;
-            if (!this.expressionRecipe && this.targetDepth < 0) {
-                LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
-                this.targetDepth = currentThread.getTopFrame().getDepth();
-            }
         }
     }
 
@@ -152,7 +144,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     }
 
     private boolean isExtractionActive() {
-        return (this.expressionRecipe ? this.targetDepth >= 0 : this.targetEntered) && this.invocation == null;
+        return this.targetDepth >= 0 && this.invocation == null;
     }
 
     @Override
@@ -166,11 +158,11 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     @Override
     public void methodExited(VM vm, ThreadInfo currentThread, MethodInfo exitedMethod) {
-        boolean captureMethodExited = this.expressionRecipe
-            ? this.instrumentedMethodSpec.matches(exitedMethod)
-            : this.testedMethodSpec.matches(exitedMethod);
-        if (captureMethodExited && this.isExtractionActive()
-                && currentThread.getTopFrame().getDepth() == this.targetDepth) {
+        boolean captureMethodExited = this.instrumentedMethodSpec.matches(exitedMethod);
+        boolean atPinnedDepth = currentThread.getTopFrame() != null
+            && currentThread.getTopFrame().getDepth() == this.targetDepth;
+        boolean exceptionalWrapperUnwind = this.pendingThrownException != null && this.isInInstrumentedMethod;
+        if (captureMethodExited && this.isExtractionActive() && (atPinnedDepth || exceptionalWrapperUnwind)) {
             LOGGER.atDebug().log("Exiting capture method: " + exitedMethod.toString());
             this.invocation = this.captureInvocation(vm, currentThread);
             vm.getSearch().terminate();
@@ -209,28 +201,27 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             } else {
                 concreteOutputValue = returnInstruction.getReturnValue(currentThread);
                 output = CapturedOutput.ofReturnValue(captureValue(concreteOutputType, concreteOutputValue));
-            }
 
-            // Typed overload: JPF stores stacked slot attributes as an ObjectList, so the untyped
-            // getReturnAttr returns the raw attribute and a direct (Expression) cast fails on a list
-            // or a non-Expression attribute. getReturnAttr(ti, Expression.class) unwraps via
-            // ObjectList.getFirst and selects the Expression attribute (null if none).
-            spfOutput = returnInstruction.getReturnAttr(vm.getCurrentThread(), Expression.class);
-            Expression boxedFieldOutput = boxedPrimitiveValueFieldAttr(concreteOutputType, concreteOutputValue);
-            if (boxedFieldOutput != null) {
-                spfOutput = boxedFieldOutput;
+                // Typed overload: JPF stores stacked slot attributes as an ObjectList, so the untyped
+                // getReturnAttr returns the raw attribute and a direct (Expression) cast fails on a list
+                // or a non-Expression attribute. getReturnAttr(ti, Expression.class) unwraps via
+                // ObjectList.getFirst and selects the Expression attribute (null if none).
+                spfOutput = returnInstruction.getReturnAttr(vm.getCurrentThread(), Expression.class);
+                Expression boxedFieldOutput = boxedPrimitiveValueFieldAttr(concreteOutputType, concreteOutputValue);
+                if (boxedFieldOutput != null) {
+                    spfOutput = boxedFieldOutput;
+                }
             }
+            this.pendingThrownException = null;
             Expression spfOutput_ = spfOutput; // To use spfOutput in the lambda, it needs to be (effectively) final.
             LOGGER.atTrace().log(() -> "Output: " + (spfOutput_ == null ? null : spfOutput_.toString()));
-        } else if (exitInstruction instanceof ATHROW) {
-            if (this.pendingThrownException == null) {
-                throw new RuntimeException("JPF reported exceptional exit from " + this.testedMethodSpec.getSource() + " without a captured exceptionThrown notification.");
-            }
-
+        } else if (this.pendingThrownException != null) {
             capturedException = this.pendingThrownException;
             output = CapturedOutput.ofThrow(capturedException);
             LOGGER.atTrace().log("Output: Exception thrown " + capturedException.getName());
             this.pendingThrownException = null;
+        } else if (exitInstruction instanceof ATHROW) {
+            throw new RuntimeException("JPF reported exceptional exit from " + this.testedMethodSpec.getSource() + " without a captured exceptionThrown notification.");
         } else {
             throw new RuntimeException("Unexpected exit instruction: " + exitInstruction);
         }
@@ -314,28 +305,37 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     }
 
     private static Value captureReferenceValue(String javaType, ElementInfo elementInfo) {
-        switch (javaType) {
+        String capturedType = referenceCaptureType(javaType, elementInfo);
+        switch (capturedType) {
             case "java.lang.String":
                 return new StringValue(elementInfo.asString());
             case "java.lang.Byte":
-                return new PrimitiveValue(javaType, elementInfo.getByteField("value"));
+                return new PrimitiveValue(capturedType, elementInfo.getByteField("value"));
             case "java.lang.Short":
-                return new PrimitiveValue(javaType, elementInfo.getShortField("value"));
+                return new PrimitiveValue(capturedType, elementInfo.getShortField("value"));
             case "java.lang.Integer":
-                return new PrimitiveValue(javaType, elementInfo.getIntField("value"));
+                return new PrimitiveValue(capturedType, elementInfo.getIntField("value"));
             case "java.lang.Long":
-                return new PrimitiveValue(javaType, elementInfo.getLongField("value"));
+                return new PrimitiveValue(capturedType, elementInfo.getLongField("value"));
             case "java.lang.Float":
-                return new PrimitiveValue(javaType, elementInfo.getFloatField("value"));
+                return new PrimitiveValue(capturedType, elementInfo.getFloatField("value"));
             case "java.lang.Double":
-                return new PrimitiveValue(javaType, elementInfo.getDoubleField("value"));
+                return new PrimitiveValue(capturedType, elementInfo.getDoubleField("value"));
             case "java.lang.Boolean":
-                return new PrimitiveValue(javaType, elementInfo.getBooleanField("value"));
+                return new PrimitiveValue(capturedType, elementInfo.getBooleanField("value"));
             case "java.lang.Character":
-                return new PrimitiveValue(javaType, elementInfo.getCharField("value"));
+                return new PrimitiveValue(capturedType, elementInfo.getCharField("value"));
             default:
                 return new ReferenceValue(javaType);
         }
+    }
+
+    private static String referenceCaptureType(String declaredType, ElementInfo elementInfo) {
+        if (isStringOrBoxedPrimitive(declaredType)) {
+            return declaredType;
+        }
+        String runtimeType = elementInfo.getClassInfo().getName();
+        return isStringOrBoxedPrimitive(runtimeType) ? runtimeType : declaredType;
     }
 
     /**
@@ -347,12 +347,20 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
      * rather than inventing an unsound expression.
      */
     private static Expression boxedPrimitiveValueFieldAttr(String javaType, Object concreteValue) {
-        if (!(concreteValue instanceof ElementInfo) || !isBoxedPrimitive(javaType)) {
+        if (!(concreteValue instanceof ElementInfo)) {
             return null;
         }
         ElementInfo elementInfo = (ElementInfo) concreteValue;
+        String captureType = isBoxedPrimitive(javaType) ? javaType : elementInfo.getClassInfo().getName();
+        if (!isBoxedPrimitive(captureType)) {
+            return null;
+        }
         FieldInfo valueField = elementInfo.getClassInfo().getInstanceField("value");
         return valueField == null ? null : elementInfo.getFieldAttr(valueField, Expression.class);
+    }
+
+    private static boolean isStringOrBoxedPrimitive(String javaType) {
+        return "java.lang.String".equals(javaType) || isBoxedPrimitive(javaType);
     }
 
     private static boolean isBoxedPrimitive(String javaType) {

@@ -20,7 +20,7 @@ public final class BoxedIdentityTarget {
         wrapper(7);
     }
 
-    public static void wrapper(Integer value) {
-        Cut.boxedIdentity(value);
+    public static Integer wrapper(Integer value) {
+        return Cut.boxedIdentity(value);
     }
 }

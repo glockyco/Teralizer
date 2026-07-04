@@ -2,7 +2,7 @@ package teralizer.jpf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,28 +14,28 @@ import org.junit.jupiter.api.Test;
 class ExtractionOutcomeTest {
 
     @Test
-    void targetNeverEnteredClassifiesAsTargetNotEntered() {
-        ExtractionOutcome outcome = ExtractionOutcome.fromState(false, false);
+    void oracleCallWithoutTargetEntryClassifiesAsTargetNotEntered() {
+        ExtractionOutcome outcome = ExtractionOutcome.fromState(false, false, true);
         assertEquals(ExtractionOutcome.Kind.TARGET_NOT_ENTERED, outcome.getKind());
         assertFalse(outcome.getDetail().isEmpty(), "an actionable reason, never empty/unknown");
     }
 
     @Test
+    void wrapperExitWithoutTargetEntryStillExtractsForCompositeOracle() {
+        ExtractionOutcome outcome = ExtractionOutcome.fromState(false, true, false);
+        assertEquals(ExtractionOutcome.Kind.EXTRACTED, outcome.getKind());
+        assertTrue(outcome.getDetail().contains("not entered"), "target entry remains observable");
+    }
+
+    @Test
     void enteredButNotExitedClassifiesAsTargetNotExited() {
         assertEquals(ExtractionOutcome.Kind.TARGET_NOT_EXITED,
-            ExtractionOutcome.fromState(true, false).getKind());
+            ExtractionOutcome.fromState(true, false, true).getKind());
     }
 
     @Test
     void enteredAndExitedClassifiesAsExtracted() {
         assertEquals(ExtractionOutcome.Kind.EXTRACTED,
-            ExtractionOutcome.fromState(true, true).getKind());
-    }
-
-    @Test
-    void exitedWithoutEnteredIsRejectedAsCorruptState() {
-        // An exit without an entry is impossible; silently returning TARGET_NOT_ENTERED would mask a
-        // listener bug, so the classifier must fail fast rather than fabricate a plausible outcome.
-        assertThrows(IllegalArgumentException.class, () -> ExtractionOutcome.fromState(false, true));
+            ExtractionOutcome.fromState(true, true, true).getKind());
     }
 }

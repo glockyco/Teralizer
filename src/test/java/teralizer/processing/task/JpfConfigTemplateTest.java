@@ -71,6 +71,7 @@ public class JpfConfigTemplateTest {
         String rendered = writer.toString();
         Assert.assertTrue("depth limit must come from context", rendered.contains("search.depth_limit=250"));
         Assert.assertFalse("depth limit must not be hardcoded", rendered.contains("search.depth_limit=100"));
+        Assert.assertFalse("capture mode must not be configured", rendered.contains("test_generalization.expression" + "_recipe"));
     }
 
     private static VelocityContext baseContext() {
@@ -89,7 +90,6 @@ public class JpfConfigTemplateTest {
         context.put("testedMethodQualifiedName", "example.Subject.value");
         context.put("instrumentedClassQualifiedName", "example.InstrumentedTest");
         context.put("instrumentedMethodQualifiedName", "example.InstrumentedTest.value");
-        context.put("expressionRecipe", false);
         context.put("inputValuesPath", "input-values.json");
         context.put("outputValuePath", "output-value.json");
         context.put("inputSpecificationPath", "input-spec.json");

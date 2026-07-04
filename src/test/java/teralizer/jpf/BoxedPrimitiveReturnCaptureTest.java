@@ -31,6 +31,14 @@ class BoxedPrimitiveReturnCaptureTest {
     }
 
     @Example
+    void capturesObjectDeclaredBoxedIntegerComputedReturnAsSymbolic() throws IOException {
+        JpfListenerHarness.Capture capture = run("integerObjectWrapper", "Cut.boxedIntegerPlusOne");
+
+        assertPrimitiveOutput(capture, "java.lang.Integer", Integer.valueOf(7));
+        assertSymbolicOutput(capture, "Object-declared Integer computed return");
+    }
+
+    @Example
     void capturesAllocatedBoxedBooleanIdentityReturnAsSymbolic() throws IOException {
         JpfListenerHarness.Capture capture =
             run("allocatedBooleanIdentityWrapper", "Cut.boxedBooleanIdentityAllocated");

@@ -24,6 +24,7 @@ import teralizer.jpf.TestGeneralizationListener;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.spoon.analysis.GeneralizationRecipe;
 
 public class JpfExecutionTask extends AbstractTask {
 
@@ -60,7 +61,6 @@ public class JpfExecutionTask extends AbstractTask {
 
     private void executeTask(TaskContext context, Consumer<String> reportInfo) {
         Config config = JPF.createConfig(new String[]{this.assertionRecord.getJpfConfigPath()});
-        boolean expressionRecipe = config.getBoolean("test_generalization.expression_recipe", false);
 
         JPF jpf = new JPF(config);
         TestGeneralizationListener listener = new TestGeneralizationListener(config);
@@ -106,11 +106,9 @@ public class JpfExecutionTask extends AbstractTask {
             throw new RuntimeException("Failed to initialize VM during JPF execution.");
         }
 
+        boolean targetNotEnteredIsFailure = this.targetNotEnteredIsFailure(context);
         ExtractionOutcome outcome = ExtractionOutcome.fromState(
-            listener.wasTargetEntered(), listener.getInvocation() != null, expressionRecipe);
-        if (expressionRecipe) {
-            reportInfo.accept("wasTargetEntered=" + listener.wasTargetEntered());
-        }
+            listener.wasTargetEntered(), listener.getInvocation() != null, targetNotEnteredIsFailure);
         if (outcome.getKind() != ExtractionOutcome.Kind.EXTRACTED) {
             throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName()
                 + " - " + outcome.getKind().name() + ": " + outcome.getDetail());
@@ -125,5 +123,14 @@ public class JpfExecutionTask extends AbstractTask {
         this.assertionRecord.setOutputSpecClass(OutputSpecClassifier.classify(invocation).name());
         this.assertionRecord.setConcretizationEvents(listener.getConcretizationEvents());
         this.assertionRecord.store();
+    }
+
+    private boolean targetNotEnteredIsFailure(TaskContext context) {
+        GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(
+            context.get(TaskContext.GSON),
+            this.assertionRecord.getGeneralizationRecipe()
+        );
+        return recipe.getInputSites().stream()
+            .noneMatch(site -> site.getKind() == GeneralizationRecipe.InputKind.EXPRESSION_SITE);
     }
 }

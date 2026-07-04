@@ -15,7 +15,7 @@ public final class CatchesInternallyTarget {
         wrapper(5);
     }
 
-    public static void wrapper(int value) {
-        Cut.catchesInternally(value);
+    public static int wrapper(int value) {
+        return Cut.catchesInternally(value);
     }
 }

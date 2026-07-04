@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import teralizer.domain.CapturedException;
+import teralizer.domain.CapturedOutput;
 import teralizer.domain.PrimitiveValue;
 import teralizer.domain.Value;
 
@@ -36,6 +38,22 @@ class TestGeneralizationListenerOutcomeTest {
         Value output = capture.getOutput().getReturnValue();
         assertEquals("int", output.getJavaType(), "the output is a normal return, not the handled exception");
         assertEquals(Integer.valueOf(5), ((PrimitiveValue) output).getValue(), "the returned value");
+    }
+
+    @Test
+    void recordsThrownExceptionWhenWrapperUnwindsExceptionally(@TempDir Path workDir) {
+        JpfListenerHarness.Capture capture = JpfListenerHarness.run(
+            workDir,
+            PKG + "ThrowingWrapperTarget",
+            PKG + "ThrowingWrapperTarget.wrapper(con)",
+            PKG + "ThrowingWrapperTarget.wrapper",
+            PKG + "Cut.alwaysThrows"
+        );
+
+        assertEquals(CapturedOutput.Kind.THROWN, capture.getOutput().getKind(), "the wrapper exit is a throw");
+        CapturedException thrown = capture.getOutput().getThrownException();
+        assertEquals("java.lang.IllegalArgumentException", thrown.getName(), "thrown exception type");
+        assertEquals("boom 5", thrown.getMessage(), "thrown exception message");
     }
 
     @Test

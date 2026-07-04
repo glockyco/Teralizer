@@ -14,7 +14,7 @@ public final class StringReturnTarget {
         wrapper(7);
     }
 
-    public static void wrapper(Integer value) {
-        Cut.describe(value);
+    public static String wrapper(Integer value) {
+        return Cut.describe(value);
     }
 }

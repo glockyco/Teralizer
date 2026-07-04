@@ -25,7 +25,7 @@ import teralizer.spoon.analysis.TestAnalysis;
 public class JpfInstrumentationTaskTest {
 
     @Example
-    void expressionRecipeWrapperReturnsRewrittenOracleExpression() throws Exception {
+    void compositeRecipeWrapperReturnsRewrittenOracleExpression() throws Exception {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "import static org.junit.Assert.assertTrue;\n"
@@ -80,7 +80,7 @@ public class JpfInstrumentationTaskTest {
     }
 
     @Example
-    void expressionRecipeWrapperRewritesEveryCompositeSiteFromRecipePaths() throws Exception {
+    void compositeRecipeWrapperRewritesEveryCompositeSiteFromRecipePaths() throws Exception {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "import static org.junit.Assert.assertTrue;\n"
@@ -126,6 +126,99 @@ public class JpfInstrumentationTaskTest {
         Assert.assertEquals("site1", leftCall.getArguments().get(1).toString());
         Assert.assertEquals("site2", rightCall.getArguments().get(0).toString());
         Assert.assertEquals("site3", rightCall.getArguments().get(1).toString());
+    }
+
+
+    @Example
+    void compositeInstanceRecipeKeepsReceiverInBodyAndCallSite() throws Exception {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "import static org.junit.Assert.assertTrue;\n"
+                + "public class SubjectTest {\n"
+                + "  public void t() {\n"
+                + "    assertTrue(new Pair(2).compareTo(new Pair(5)) < 0);\n"
+                + "  }\n"
+                + "}\n",
+            "package smoke;\n"
+                + "public class ExpressionSliceCut { }\n"
+                + "class Pair implements Comparable<Pair> {\n"
+                + "  private final int value;\n"
+                + "  Pair(int value) { this.value = value; }\n"
+                + "  public int compareTo(Pair other) { return java.lang.Integer.compare(this.value, other.value); }\n"
+                + "}\n"
+        );
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtExpression<?> oracleExpression = assertion.getArguments().get(0);
+        CtInvocation<?> testedCall = oracleExpression.getElements(CtInvocation.class::isInstance).stream()
+            .map(invocation -> (CtInvocation<?>) invocation)
+            .filter(invocation -> invocation.getExecutable().getSimpleName().equals("compareTo"))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
+        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(
+            testedMethod,
+            oracleExpression,
+            inputs,
+            oracleExpression.getType().getQualifiedName()
+        );
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(
+            testMethod,
+            testMethod.getFactory().getModel().getRootPackage()
+        );
+
+        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper", "boolean");
+        CtInvocation<?> wrapperCall = createInstrumentedMethodCall(testMethod, wrapper, resolved);
+
+        Assert.assertEquals(2, wrapper.getParameters().size());
+        Assert.assertEquals("site0", wrapper.getParameters().get(0).getSimpleName());
+        Assert.assertEquals("site1", wrapper.getParameters().get(1).getSimpleName());
+        Assert.assertFalse(
+            "composite recipes keep the receiver expression inside the wrapper instead of hoisting _target_",
+            wrapper.toString().contains("_target_")
+        );
+        String body = wrapper.getBody().getStatement(0).toString();
+        Assert.assertTrue(body, body.contains("new smoke.Pair(site0).compareTo(new smoke.Pair(site1))"));
+        Assert.assertFalse(body, body.contains("new Pair(2)"));
+        Assert.assertEquals(2, wrapperCall.getArguments().size());
+        Assert.assertEquals("2", wrapperCall.getArguments().get(0).toString());
+        Assert.assertEquals("5", wrapperCall.getArguments().get(1).toString());
+    }
+
+    @Example
+    void plainInstanceCallRecipeHoistsReceiverTarget() throws Exception {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "public class SubjectTest {\n"
+                + "  public void t() {\n"
+                + "    Pair pair = new Pair(2);\n"
+                + "    org.junit.Assert.assertEquals(1, pair.compareTo(new Pair(1)));\n"
+                + "  }\n"
+                + "}\n",
+            "package smoke;\n"
+                + "public class ExpressionSliceCut { }\n"
+                + "class Pair implements Comparable<Pair> {\n"
+                + "  private final int value;\n"
+                + "  Pair(int value) { this.value = value; }\n"
+                + "  public int compareTo(Pair other) { return java.lang.Integer.compare(this.value, other.value); }\n"
+                + "}\n"
+        );
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtInvocation<?> testedCall = (CtInvocation<?>) assertion.getArguments().get(1);
+        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
+        List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedCall);
+
+        CtMethod<?> wrapper = createInvocationInstrumentedMethod(testMethod, testedMethod, testedCall, inputs, "call_wrapper", "long");
+        CtInvocation<?> wrapperCall = createInstrumentedMethodCall(
+            testMethod,
+            wrapper,
+            GeneralizationRecipe.from(testedMethod, testedCall, inputs, "long")
+                .resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage())
+        );
+
+        Assert.assertTrue("plain instance-call recipes keep an explicit receiver parameter", wrapper.toString().contains("_target_"));
+        Assert.assertEquals("_target_", wrapper.getParameters().get(0).getSimpleName());
+        Assert.assertEquals("pair", wrapperCall.getArguments().get(0).toString());
     }
 
     @Example
@@ -200,6 +293,29 @@ public class JpfInstrumentationTaskTest {
             recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage()),
             methodName,
             oracleExpressionType
+        );
+    }
+
+    private static CtInvocation<?> createInstrumentedMethodCall(
+        CtMethod<?> testMethod,
+        CtMethod<?> instrumentedMethod,
+        GeneralizationRecipe.Resolved recipe
+    ) throws Exception {
+        JpfInstrumentationTask task = task(instrumentedMethod.getSimpleName());
+        Method method = JpfInstrumentationTask.class.getDeclaredMethod(
+            "createInstrumentedMethodCall",
+            Factory.class,
+            CtClass.class,
+            CtMethod.class,
+            GeneralizationRecipe.Resolved.class
+        );
+        method.setAccessible(true);
+        return (CtInvocation<?>) method.invoke(
+            task,
+            testMethod.getFactory(),
+            testMethod.getParent(CtClass.class),
+            instrumentedMethod,
+            recipe
         );
     }
 

@@ -11,41 +11,46 @@ public final class BoxedComputedReturnTarget {
         allocatedLongWrapper(5L);
         integerCacheWrapper(6);
         integerOutsideCacheWrapper(127);
+        integerObjectWrapper(6);
         booleanWrapper(true);
         allocatedBooleanWrapper(true);
         allocatedBooleanIdentityWrapper(true);
         concreteLongWrapper(5L);
     }
 
-    public static void longWrapper(long value) {
-        Cut.boxedLongPlusOne(value);
+    public static Long longWrapper(long value) {
+        return Cut.boxedLongPlusOne(value);
     }
 
-    public static void allocatedLongWrapper(long value) {
-        Cut.boxedLongPlusOneAllocated(value);
+    public static Long allocatedLongWrapper(long value) {
+        return Cut.boxedLongPlusOneAllocated(value);
     }
 
-    public static void integerCacheWrapper(int value) {
-        Cut.boxedIntegerPlusOne(value);
+    public static Integer integerCacheWrapper(int value) {
+        return Cut.boxedIntegerPlusOne(value);
     }
 
-    public static void integerOutsideCacheWrapper(int value) {
-        Cut.boxedIntegerPlusOne(value);
+    public static Object integerObjectWrapper(int value) {
+        return Cut.boxedIntegerPlusOne(value);
     }
 
-    public static void booleanWrapper(boolean value) {
-        Cut.boxedBooleanNot(value);
+    public static Integer integerOutsideCacheWrapper(int value) {
+        return Cut.boxedIntegerPlusOne(value);
     }
 
-    public static void allocatedBooleanWrapper(boolean value) {
-        Cut.boxedBooleanNotAllocated(value);
+    public static Boolean booleanWrapper(boolean value) {
+        return Cut.boxedBooleanNot(value);
     }
 
-    public static void allocatedBooleanIdentityWrapper(boolean value) {
-        Cut.boxedBooleanIdentityAllocated(value);
+    public static Boolean allocatedBooleanWrapper(boolean value) {
+        return Cut.boxedBooleanNotAllocated(value);
     }
 
-    public static void concreteLongWrapper(long value) {
-        Cut.boxedConcreteLong(value);
+    public static Boolean allocatedBooleanIdentityWrapper(boolean value) {
+        return Cut.boxedBooleanIdentityAllocated(value);
+    }
+
+    public static Long concreteLongWrapper(long value) {
+        return Cut.boxedConcreteLong(value);
     }
 }

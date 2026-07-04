@@ -14,7 +14,7 @@ public final class BoxedCharTarget {
         wrapper('A');
     }
 
-    public static void wrapper(Character value) {
-        Cut.boxedChar(value);
+    public static Character wrapper(Character value) {
+        return Cut.boxedChar(value);
     }
 }

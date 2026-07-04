@@ -36,6 +36,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.SpoonUtils;
+import teralizer.spoon.analysis.ExpectedTypeInference;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.SpfSymbolicConfigSelector;
@@ -103,11 +104,15 @@ public class JpfInstrumentationTask extends AbstractTask {
             .resolveAgainst(instrumentedClass.getMethod(this.testRecord.getTestMethodName()), factory.getModel().getRootPackage());
         CtExpression<?> oracleExpression = recipe.getOracleExpression();
         CtMethod<?> testedMethod = recipe.getOracleMethod();
+        boolean plainCallRecipe = isPlainCallRecipe(recipe);
+        String wrapperReturnType = plainCallRecipe
+            ? TestAnalysisTask.typeNameOf(ExpectedTypeInference.inferExpectedType((CtInvocation<?>) oracleExpression))
+            : clonedRecipe.getOracleExpressionType();
         CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(
             factory,
             instrumentedClass,
             recipe,
-            clonedRecipe.getOracleExpressionType()
+            wrapperReturnType
         );
         CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(
             factory,
@@ -220,7 +225,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         );
 
         boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
-        boolean needsTarget = !testedMethod.isStatic() && !hasReceiverConstructorInputs;
+        boolean needsTarget = isPlainCallRecipe(recipe) && !testedMethod.isStatic() && !hasReceiverConstructorInputs;
         List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
         if (needsTarget) {
             CtInvocation<?> oracleCall = findOracleInvocation(oracleExpression, testedMethod);
@@ -452,7 +457,8 @@ public class JpfInstrumentationTask extends AbstractTask {
         List<GeneralizableInput> generalizableInputs = recipe.getInputs();
         CtInvocation<?> instrumentedMethodCall = factory.createInvocation(factory.createThisAccess(instrumentedClass.getReference()), instrumentedMethod.getReference());
         boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
-        if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
+        boolean needsTarget = isPlainCallRecipe(recipe) && !testedMethod.isStatic() && !hasReceiverConstructorInputs;
+        if (needsTarget) {
             CtExpression<?> target = findOracleInvocation(oracleExpression, testedMethod).getTarget();
             if (target instanceof CtThisAccess) {
                 instrumentedMethodCall.addArgument(factory.createThisAccess(target.getType(), false));
@@ -469,7 +475,7 @@ public class JpfInstrumentationTask extends AbstractTask {
             factory,
             input -> input.toMethodParameter().getName()
         );
-        if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
+        if (needsTarget) {
             findOracleInvocation(rewrittenExpression, testedMethod).setTarget(factory.createCodeSnippetExpression("_target_"));
         }
         LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> liftedLocals =
@@ -600,6 +606,10 @@ public class JpfInstrumentationTask extends AbstractTask {
             Template template = velocityEngine.getTemplate("jpf-config.vm");
             template.merge(context, fileWriter);
         }
+    }
+
+    private static boolean isPlainCallRecipe(GeneralizationRecipe.Resolved recipe) {
+        return recipe.getInputs().stream().noneMatch(GeneralizableInput::isExpressionSite);
     }
 
     /**

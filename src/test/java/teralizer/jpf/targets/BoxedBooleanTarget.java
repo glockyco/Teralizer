@@ -14,7 +14,7 @@ public final class BoxedBooleanTarget {
         wrapper(true);
     }
 
-    public static void wrapper(Boolean value) {
-        Cut.boxedNegate(value);
+    public static Boolean wrapper(Boolean value) {
+        return Cut.boxedNegate(value);
     }
 }

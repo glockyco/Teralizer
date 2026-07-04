@@ -23,8 +23,8 @@ class TestGeneralizationListenerExpressionModeTest {
     private static final String TARGET = PKG + "ExpressionWrapperTarget";
 
     @Test
-    void expressionModeCapturesCompositeExpressionAtWrapperExit(@TempDir Path workDir) {
-        TestGeneralizationListener listener = runExpressionMode(workDir, "comparisonWrapper", "helperA");
+    void singleModeCapturesCompositeExpressionAtWrapperExit(@TempDir Path workDir) {
+        TestGeneralizationListener listener = runSingleMode(workDir, "comparisonWrapper", "helperA");
 
         assertTrue(listener.wasTargetEntered(), "the focal helper is entered on the concrete path");
         CapturedInvocation invocation = listener.getInvocation();
@@ -40,8 +40,8 @@ class TestGeneralizationListenerExpressionModeTest {
     }
 
     @Test
-    void expressionModeExtractsWhenFocalHelperIsShortCircuitedPast(@TempDir Path workDir) {
-        TestGeneralizationListener listener = runExpressionMode(workDir, "shortCircuitWrapper", "skippedHelper");
+    void singleModeExtractsWhenFocalHelperIsShortCircuitedPast(@TempDir Path workDir) {
+        TestGeneralizationListener listener = runSingleMode(workDir, "shortCircuitWrapper", "skippedHelper");
 
         assertFalse(listener.wasTargetEntered(), "the focal helper is skipped by Java short-circuiting");
         CapturedInvocation invocation = listener.getInvocation();
@@ -51,11 +51,11 @@ class TestGeneralizationListenerExpressionModeTest {
         assertEquals("boolean", output.getJavaType(), "the captured output is the wrapper expression result");
         assertEquals(Boolean.TRUE, ((PrimitiveValue) output).getValue(), "the left side makes the expression true");
         assertEquals(ExtractionOutcome.Kind.EXTRACTED,
-            ExtractionOutcome.fromState(listener.wasTargetEntered(), invocation != null, true).getKind(),
-            "target-not-entered is an observation, not a failure, for expression recipes");
+            ExtractionOutcome.fromState(listener.wasTargetEntered(), invocation != null, false).getKind(),
+            "target-not-entered is an observation, not a failure, for composite recipes");
     }
 
-    private static TestGeneralizationListener runExpressionMode(
+    private static TestGeneralizationListener runSingleMode(
         Path workDir,
         String instrumentedMethodName,
         String testedMethodName
@@ -68,7 +68,6 @@ class TestGeneralizationListenerExpressionModeTest {
             TARGET + "." + testedMethodName,
             false
         );
-        config.setProperty("test_generalization.expression_recipe", "true");
         JPF jpf = new JPF(config);
         TestGeneralizationListener listener = new TestGeneralizationListener(config);
         jpf.addListener(listener);

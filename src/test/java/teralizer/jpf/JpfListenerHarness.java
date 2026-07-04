@@ -193,7 +193,7 @@ public final class JpfListenerHarness {
             throw new IllegalStateException("JPF VM failed to initialize for " + symbolicMethod);
         }
 
-        return ExtractionOutcome.fromState(listener.wasTargetEntered(), listener.getInvocation() != null);
+        return ExtractionOutcome.fromState(listener.wasTargetEntered(), listener.getInvocation() != null, true);
     }
 
     /**
@@ -299,7 +299,6 @@ public final class JpfListenerHarness {
         context.put("maxExecutionTime", maxExecutionTime);
         context.put("maxPathConditionSize", maxPathConditionSize);
         context.put("maxSearchDepth", 100);
-        context.put("expressionRecipe", false);
         context.put("driverClassQualifiedName", targetClassQN);
         // Only test_generalization.{instrumented_method,tested_method} and the four spec paths are
         // read by the listener; the remaining identity keys are populated for template completeness

@@ -36,43 +36,33 @@ public final class ExtractionOutcome {
     }
 
     /**
-     * Classify a run from the listener's observable state: the tested method either never executed
-     * on the concrete path, entered but never returned in-state, or returned and produced a spec.
-     * An exit without an entry is impossible; it fails fast rather than being mislabeled.
+     * Classify a run from the listener's observable state. The capture point is always the
+     * instrumented wrapper exit; target entry is an observation unless the recipe's oracle expression
+     * is the tested call itself, in which case a missing target entry remains the unreachable-call
+     * failure.
      */
     public static ExtractionOutcome fromState(
         boolean targetEntered,
         boolean targetExited,
-        boolean expressionRecipe
+        boolean targetNotEnteredIsFailure
     ) {
-        if (expressionRecipe) {
-            if (targetExited) {
-                return new ExtractionOutcome(Kind.EXTRACTED, targetEntered
-                    ? "specification extracted; tested method entered"
-                    : "specification extracted; tested method not entered on the concrete path");
-            }
-            return new ExtractionOutcome(Kind.TARGET_NOT_EXITED,
-                targetEntered
-                    ? "instrumented expression wrapper did not return in-state after tested method entry"
-                    : "instrumented expression wrapper did not return in-state");
-        }
-        if (targetExited && !targetEntered) {
-            throw new IllegalArgumentException(
-                "corrupt extraction state: tested method exited without being entered");
-        }
-        if (!targetEntered) {
+        if (targetNotEnteredIsFailure && !targetEntered) {
             return new ExtractionOutcome(Kind.TARGET_NOT_ENTERED,
                 "tested method never entered on the concrete path (unreachable assertion)");
         }
-        if (!targetExited) {
-            return new ExtractionOutcome(Kind.TARGET_NOT_EXITED,
-                "tested method entered but did not return in-state");
+        if (targetExited) {
+            return new ExtractionOutcome(Kind.EXTRACTED, targetEntered
+                ? "specification extracted; tested method entered"
+                : "specification extracted; tested method not entered on the concrete path");
         }
-        return new ExtractionOutcome(Kind.EXTRACTED, "specification extracted");
+        return new ExtractionOutcome(Kind.TARGET_NOT_EXITED,
+            targetEntered
+                ? "instrumented wrapper did not return in-state after tested method entry"
+                : "instrumented wrapper did not return in-state");
     }
 
     public static ExtractionOutcome fromState(boolean targetEntered, boolean targetExited) {
-        return fromState(targetEntered, targetExited, false);
+        return fromState(targetEntered, targetExited, true);
     }
 
     /** An unsupported/unsound symbolic term was reached at run time — recorded as an exclusion. */

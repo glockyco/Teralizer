@@ -48,6 +48,11 @@ public final class Cut {
         }
     }
 
+    /** Throws out of the wrapper frame so wrapper-exit capture sees an exceptional unwind. */
+    public static int alwaysThrows(int value) {
+        throw new IllegalArgumentException("boom " + value);
+    }
+
     /**
      * Symbolic int in, symbolic int out: when the argument is made symbolic, the return value
      * carries a symbolic {@code Expression} attribute. Exercises the symbolic-return capture path —
