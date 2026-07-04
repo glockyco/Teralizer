@@ -49,12 +49,12 @@ import teralizer.domain.ReferenceValue;
 import teralizer.domain.TypeDomain;
 import teralizer.domain.Value;
 import teralizer.domain.Variable;
+import teralizer.generalization.WideningLicense;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
-import teralizer.generalization.WideningLicense;
 import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpecificationGson;
 
