@@ -43,6 +43,7 @@ import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
+import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.util.Configuration;
 import teralizer.util.TypeCapability;
 
@@ -277,8 +278,7 @@ public final class MethodUnderTestResolver {
         List<CtStatement> body = testMethod.getBody().getStatements();
         int assertionIndex = topLevelIndex(assertion, body);
         for (CtStatement statement : body) {
-            for (CtElement element : statement.getElements(CtInvocation.class::isInstance)) {
-                CtInvocation<?> invocation = (CtInvocation<?>) element;
+            for (CtInvocation<?> invocation : statement.getElements(new TypeFilter<>(CtInvocation.class))) {
                 int index = topLevelIndex(invocation, body);
                 if (index > definitionIndex && index < assertionIndex && targetsLocal(invocation, ref)) {
                     return true;
@@ -313,7 +313,7 @@ public final class MethodUnderTestResolver {
         if (body == null) {
             return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
         }
-        List<CtInvocation<?>> invocations = body.getElements(CtInvocation.class::isInstance);
+        List<CtInvocation<?>> invocations = body.getElements(new TypeFilter<>(CtInvocation.class));
         if (invocations.isEmpty()) {
             return none(MutResolution.NoPickReason.NO_VISIBLE_CALL, focal);
         }
@@ -588,8 +588,7 @@ public final class MethodUnderTestResolver {
             return pool;
         }
         for (CtStatement statement : body) {
-            for (CtElement element : statement.getElements(CtInvocation.class::isInstance)) {
-                CtInvocation<?> invocation = (CtInvocation<?>) element;
+            for (CtInvocation<?> invocation : statement.getElements(new TypeFilter<>(CtInvocation.class))) {
                 int index = topLevelIndex(invocation, body);
                 if (index >= 0 && index < assertionIndex && isProductionCall(invocation, testMethod)) {
                     pool.add(invocation);
@@ -950,8 +949,7 @@ public final class MethodUnderTestResolver {
         boolean writeProven = false;
         int bestIndex = -1;
         for (CtStatement statement : body) {
-            for (CtElement localElement : statement.getElements(CtLocalVariable.class::isInstance)) {
-                CtLocalVariable<?> local = (CtLocalVariable<?>) localElement;
+            for (CtLocalVariable<?> local : statement.getElements(new TypeFilter<>(CtLocalVariable.class))) {
                 if (local.getReference().equals(ref)) {
                     int index = topLevelIndex(local, body);
                     if (index >= 0 && index < assertionIndex && index >= bestIndex) {
@@ -961,8 +959,7 @@ public final class MethodUnderTestResolver {
                     }
                 }
             }
-            for (CtElement assignmentElement : statement.getElements(CtAssignment.class::isInstance)) {
-                CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) assignmentElement;
+            for (CtAssignment<?, ?> assignment : statement.getElements(new TypeFilter<>(CtAssignment.class))) {
                 CtExpression<?> assigned = assignment.getAssigned();
                 if (assigned instanceof CtVariableWrite<?>
                         && ((CtVariableWrite<?>) assigned).getVariable().equals(ref)) {
@@ -1022,8 +1019,7 @@ public final class MethodUnderTestResolver {
         int writeCount = 0;
         int bestIndex = -1;
         for (CtStatement statement : body) {
-            for (CtElement assignmentElement : statement.getElements(CtAssignment.class::isInstance)) {
-                CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) assignmentElement;
+            for (CtAssignment<?, ?> assignment : statement.getElements(new TypeFilter<>(CtAssignment.class))) {
                 CtExpression<?> assigned = assignment.getAssigned();
                 if (assigned instanceof CtFieldWrite<?>) {
                     CtFieldWrite<?> fieldWrite = (CtFieldWrite<?>) assigned;
@@ -1136,8 +1132,7 @@ public final class MethodUnderTestResolver {
         final Map<String, CtType<?>> byNormalizedPath = new LinkedHashMap<>();
 
         TypeIndex(CtModel model) {
-            for (CtElement element : model.getElements(CtType.class::isInstance)) {
-                CtType<?> type = (CtType<?>) element;
+            for (CtType<?> type : model.getElements(new TypeFilter<>(CtType.class))) {
                 List<CtType<?>> namedTypes = this.bySimpleName.get(type.getSimpleName());
                 if (namedTypes == null) {
                     namedTypes = new ArrayList<>();
@@ -1569,12 +1564,12 @@ public final class MethodUnderTestResolver {
         } else if (element instanceof CtNewClass) {
             // Check the execute method
             CtNewClass<?> newClass = (CtNewClass<?>) element;
-            body = ((CtMethod<?>) newClass.getElements(CtMethod.class::isInstance).stream()
-                .filter(m -> ((CtMethod<?>) m).getSimpleName().equals("execute"))
+            body = newClass.getElements(new TypeFilter<>(CtMethod.class)).stream()
+                .filter(m -> m.getSimpleName().equals("execute"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(
                     "Could not find execute method of anonymous class"
-                ))).getBody();
+                )).getBody();
         } else if (element instanceof CtVariableRead) {
             // Check declaration of variable
             CtLocalVariableReference<?> reference =

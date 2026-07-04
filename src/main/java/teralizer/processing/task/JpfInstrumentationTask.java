@@ -31,6 +31,7 @@ import spoon.reflect.reference.CtTypeParameterReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
@@ -374,8 +375,8 @@ public class JpfInstrumentationTask extends AbstractTask {
 
     private static Set<CtTypeReference<? extends Throwable>> collectThrownTypes(CtMethod<?> testedMethod, CtElement wrapperBodyExpression) {
         Set<CtTypeReference<? extends Throwable>> thrownTypes = new HashSet<>(testedMethod.getThrownTypes());
-        for (CtElement element : wrapperBodyExpression.getElements(CtAbstractInvocation.class::isInstance)) {
-            CtExecutableReference<?> executable = ((CtAbstractInvocation<?>) element).getExecutable();
+        for (CtAbstractInvocation<?> invocation : wrapperBodyExpression.getElements(new TypeFilter<>(CtAbstractInvocation.class))) {
+            CtExecutableReference<?> executable = invocation.getExecutable();
             if (executable == null) {
                 continue;
             }
@@ -483,8 +484,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtInvocation<?> testedMethodCall,
         LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted
     ) {
-        for (CtElement element : expression.getElements(CtVariableRead.class::isInstance)) {
-            CtVariableRead<?> read = (CtVariableRead<?>) element;
+        for (CtVariableRead<?> read : expression.getElements(new TypeFilter<>(CtVariableRead.class))) {
             if (read instanceof CtFieldRead) {
                 continue;
             }
@@ -532,8 +532,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         for (Map.Entry<CtVariableReference<?>, String> entry : liftedNames.entrySet()) {
             bySimpleName.put(entry.getKey().getSimpleName(), entry.getValue());
         }
-        for (CtElement element : clonedCall.getElements(CtVariableRead.class::isInstance)) {
-            CtVariableRead<?> read = (CtVariableRead<?>) element;
+        for (CtVariableRead<?> read : clonedCall.getElements(new TypeFilter<>(CtVariableRead.class))) {
             if (read instanceof CtFieldRead) {
                 continue;
             }
