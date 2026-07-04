@@ -69,7 +69,7 @@ public class StringOperationFilterTest {
 
     @Example
     void acceptsIsEmptyOnAStringParameterMethod() {
-        // isEmpty is now modeled soundly as receiver.equals(""), so it must no longer be rejected.
+        // isEmpty is in the sound set (modeled as receiver.equals("")), so the screen accepts it.
         FilterResult result = check(
             "class Subject { public static boolean blank(String s) { return s.isEmpty(); } }", "blank");
         Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());

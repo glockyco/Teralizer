@@ -203,8 +203,10 @@ public class JpfInstrumentationTask extends AbstractTask {
         List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
         if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
             CtExpression<?> target = testedMethodCall.getTarget();
+            // A this-receiver has no usable static type on the expression; the wrapper lives in
+            // the instrumented class, so its own reference is the receiver type.
             CtTypeReference<?> targetType = target instanceof CtThisAccess
-                ? factory.Type().get(this.assertionRecord.getInstrumentedClassQualifiedName()).getReference()
+                ? instrumentedClass.getReference()
                 : target.getType();
             CtTypeReference<?> resolvedType = resolveTargetType(
                 factory, targetType, this.assertionRecord.getTestedClassQualifiedName());

@@ -92,8 +92,9 @@ public class InstrumentedLocalLiftingTest {
     @Example
     void targetAndLiftedLocalsAreAlwaysConcreteForSpf() {
         // The receiver and lifted locals carry the test's fixed environment; symbolizing
-        // them would let SPF vary state the test does not control. A String _target_
-        // was previously marked sym because String is an input-generatable type.
+        // them would let SPF vary state the test does not control. The String _target_ is
+        // the trap case: String is an input-generatable type, but generatability must not
+        // decide the marker - only the parameter's role may.
         Launcher launcher = new Launcher();
         CtParameter<?> target = launcher.getFactory().createParameter(
             null, launcher.getFactory().Type().STRING, "_target_");
