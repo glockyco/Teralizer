@@ -54,7 +54,7 @@ import teralizer.processing.TaskContext;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
-import teralizer.spoon.generalization.WideningLicense;
+import teralizer.generalization.WideningLicense;
 import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpecificationGson;
 

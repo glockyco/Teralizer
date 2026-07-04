@@ -1,4 +1,4 @@
-package teralizer.spoon.generalization;
+package teralizer.generalization;
 
 import java.util.Collection;
 import java.util.Collections;

@@ -33,6 +33,7 @@ import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import teralizer.generalization.WideningLicense;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
