@@ -322,11 +322,7 @@ public class TestGeneralizationTask extends AbstractTask {
             String inputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputSpecificationPath())));
             String outputSpecification = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputSpecificationPath())));
 
-            // @TODO: Check if we can avoid the Model->JSON->Model conversion.
-            //   We don't HAVE to store the model as JSON after the JPF execution step. However, if we don't store it,
-            //   we cannot re-execute the later steps without also re-executing the JPF execution step. Of course, we
-            //   can "simply" skip the JSON reading for any runs that have executed the JPF execution before, but that
-            //   then makes it tricky to compare the runtimes of runs WITH vs. WITHOUT reading of JSON files.
+            // JSON persistence is the cross-run contract for resuming later pipeline stages.
             JsonToModelTransformer jsonToModelTransformer = new JsonToModelTransformer();
             Model inputModel = jsonToModelTransformer.transform(inputSpecification);
             Model outputModel = jsonToModelTransformer.transform(outputSpecification);
