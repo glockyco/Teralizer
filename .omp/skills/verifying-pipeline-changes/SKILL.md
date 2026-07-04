@@ -49,3 +49,4 @@ Never verify against kouchat, gedcom4j, xenqtt, uaicriteria (60s-ceiling jitter)
 | Verifying only at unit level for generator/engine seams | jqwik engine seams (edge-case injection, generator overloads) bypass naive wrappers — only the full-pipeline fixture catches them. |
 | Reusing a protected DB for an experiment | Scratch DBs (`postgres_<purpose>_verify`) are created and dropped by runners. Protected DBs are listed in AGENTS.md. |
 | Skipping the second `verify-pipeline.sh` run | One green run doesn't prove determinism. Two identical runs do. |
+| Deleting a timed-out/failed project and rerunning it for a cleaner number | Runtime limits are real filters; the first run IS the observation. Record it. Selective reruns bias every census. Repeat runs are only valid when ALL outcomes are compared (the determinism double-run), never to pick the better one. |

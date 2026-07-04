@@ -35,6 +35,12 @@ editing the golden to match broken output.
 | Real-world seams (surefire versions, reports, big suites) | sentinel subset (~10 min, five stable projects, expected census in the config headers) |
 | Full spike / corpus | evaluation events only, never a debugging loop |
 
+First-run numbers stand. Runtime limits (timeouts, memory) are real filters, part of the
+measured system — a stage that times out is a result, not noise. Never delete-and-rerun a
+project or fixture to get a cleaner number; that biases every census. Deliberate repeat runs
+that compare ALL outcomes (the determinism double-run of `verify-pipeline.sh`) are fine;
+picking the better of two runs is not.
+
 New pipeline defect ⇒ add a fixture reproducing it under `verification/fixtures/` with the fix
 (golden pins it). kouchat, gedcom4j, xenqtt, uaicriteria, and sparkey are excluded from
 verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-corpus members.
