@@ -382,6 +382,34 @@ Dispositions:
   `LIMITED_TOO_MANY_FILTER_MISSES` 8) — completeness evidence for
   `2026-06-28-clause-driven-input-generation` phases C/D.
 
+### Post-license verification (widening license + boxed capture implemented)
+
+Definitive re-run with `2026-07-03-widening-license` and `2026-07-03-boxed-output-capture`
+in place (all 19 gen-producing projects completed — kouchat, gedcom4j, and xenqtt passed the
+execution ceiling this run; census per-project counts bit-identical, which also verifies the
+R-A `GeneralizationRecipe` extraction as behavior-preserving):
+
+- License outcomes: 1,376 generalizations; 417 included; 587 `ORACLE_NOT_WIDENABLE`
+  (all NULL_CONCRETE — zero SYMBOLIC/CONSTANT/EXCEPTION refusals). 278 NULL_CONCRETE stay
+  included (licensed boolean-in-PC cases and non-widening shapes).
+- Widened failures: 156 → 28 SYMBOLIC + 1 NULL_CONCRETE of 510 validated rows. The SYMBOLIC
+  rows are the *informative* class (26 from kouchat's first-ever validation — mis-pick
+  candidates for the mis-targeting story); the single NULL_CONCRETE row is the license's
+  documented residual risk (PC clause from an unrelated branch), as predicted.
+- Seed-kills 72/510: 61 kouchat + 7 htm_java — first-time validators whose incoherent picks
+  (`updateTimeSpent` resolved for inspector assertions) were previously invisible, not a
+  regression; 4 CormenImpl as before.
+- Boxed capture: characterization showed the vendored fork preserves the box-field attr for
+  `Integer.valueOf` (both cache paths) and explicit `new Long/Boolean(...)`, but loses it on
+  `Long.valueOf`/`Boolean.valueOf` autoboxing — so recovery is partial by design (octotron's
+  `Value` accessors stay NULL_CONCRETE); the lossy paths degrade to refusal, never
+  unsoundness. Full recovery is upstream jpf-symbc work (bounded task, not inline).
+- New finding (pre-existing, unmasked by the license fix letting EXCEPTION gens through
+  again): 74/75 EXCEPTION and 138 SYMBOLIC generalizations die in GENERALIZE_TESTS with an
+  NPE at `SpoonUtils.getTypeReference:70` via `TestParametersFactory.createParametersClass`
+  — identical counts across pre-license runs (1/75 EXCEPTION included in every run), so not
+  a regression; it is the next completeness blocker for the EXCEPTION/THROWN oracle family.
+
 ## Relationship to existing docs
 
 - Design of the resolver: `2026-06-27-ensemble-mut-identification` (the oracle is
