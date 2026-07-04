@@ -10,6 +10,7 @@ within the same execution paths. Java/Gradle pipeline + PostgreSQL + a Python an
 |---|---|
 | Build (incl. SPF submodules) | `./gradlew build` |
 | Verify pipeline fixture corpus | `scripts/verify-pipeline.sh` |
+| Verify sentinel spike subset | `REPOREAPERS_DB=postgres_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db` |
 | Run one config | `./gradlew run -Dteralizer.config=<config-file>` |
 | Start / stop DB | `./gradlew startPostgres` / `./gradlew stopPostgres` |
 | DB UI | `docker compose up adminer` → http://localhost:18080 (password: `teralizer`) |

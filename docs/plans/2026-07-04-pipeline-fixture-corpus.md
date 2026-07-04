@@ -85,8 +85,8 @@ design — model tests already pin them and pipeline fixtures would add runtime 
 
 **Files:** `project-configs/sentinel/` (five configs copied from `project-configs/fusion-spike/`), a short README-style note inside the config dir header comments; `AGENTS.md` command-table row.
 
-- [ ] **Step 1:** Create the config subset; verify with one run into a scratch DB that all five complete and match their recorded census values.
-- [ ] **Step 2:** Commit.
+- [x] **Step 1:** Create the config subset; verify with one run into a scratch DB that all five complete and match their recorded census values.
+- [x] **Step 2:** Commit.
 
 ---
 
