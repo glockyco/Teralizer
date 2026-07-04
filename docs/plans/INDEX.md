@@ -28,8 +28,4 @@
 - **Symbolic-Sibling Throws in SPF Extraction** [spec] `2026-07-03-symbolic-sibling-throws` ← 2026-06-26-teralizer-overview
 - **Concretization Census — Which SPF Gaps Are Worth Closing** [spec] `2026-07-04-concretization-census` ← 2026-06-26-teralizer-overview
 
-## superseded
-
-- **Static MUT Identification** [plan] `2026-06-30-static-mut-identification` (0/34) ← 2026-06-26-teralizer-overview
-
-_40 archived — see `docs/plans/archive/`._
+_41 archived — see `docs/plans/archive/`._

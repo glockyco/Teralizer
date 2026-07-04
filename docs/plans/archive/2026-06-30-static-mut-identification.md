@@ -5,6 +5,7 @@ status: superseded
 created: 2026-06-30
 parent: 2026-06-26-teralizer-overview
 superseded_by: 2026-07-02-static-mut-id-fusion
+archived: 2026-07-04
 ---
 
 # Static MUT Identification Implementation Plan

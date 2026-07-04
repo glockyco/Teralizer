@@ -30,7 +30,7 @@ Current representation:
 
 **Remaining:**
 
-- **Task 7** (corpus verification) is still gated on static MUT-id. The RepoReapers rerun funnel shows the current corpus surfaces ~0 *resolved* String-parameter MUTs: `ParameterTypeFilter` rejects are dominated by parameterless methods, its defers plus the `ReturnType`/`MissingValue` defers are MUT-unresolved, and `ReturnTypeFilter` type-rejects are custom domain objects, not String. The string funnel payoff is unmeasurable until MUT-id resolves String MUTs; run the disposable-DB verification then. When available, use `2026-07-01-pipeline-observability-telemetry`'s candidate type-eligibility fields to separate newly-resolved String opportunities from residual receiver/stateful setup blockers.
+- **Task 7** (corpus verification) is unblocked: MUT-id fusion v1 resolves best-effort picks with confidence tiers, so String-parameter MUTs now reach the string seams. Run the empirical checks on the sentinel subset (scratch DB, expected census in the config headers). The same run doubles as the first real-world exposure of the ingestion-totality change: derived string symbols (`indexOf`/`lastIndexOf` family) that previously flattened to free variables now surface as typed `UNSUPPORTED_TERM` exclusions, so the sentinel census may shift in both directions (length-bearing MUTs gained, indexOf-family MUTs excluded). Full-corpus funnel measurement stays an evaluation event; when the observability telemetry lands, use its candidate type-eligibility fields to separate newly-resolved String opportunities from residual receiver/stateful setup blockers.
 
 ## Soundness invariants (non-negotiable)
 
@@ -172,8 +172,8 @@ Make an unsupported string op degrade to a clean per-assertion exclusion, never 
 **Files:** none (disposable DB).
 
 - [ ] **Step 1: Build + unit tests.** `./gradlew build` fully green (string operator, planner, listener, screen, jpf-symbc tests).
-- [ ] **Step 2: Enable on the disposable spike DB** (`postgres_reporeapers_rerun` or fresh disposable) for projects with string-parameter MUTs; confirm new sound string generalizations appear and their generated tests pass on sampled strings **and** the concrete seed.
-- [ ] **Step 3: Screen check.** Confirm MUTs using `charAt`/`substring`/`compareTo` are recorded as `UNSUPPORTED_TERM` exclusions (not crashes, not silent generalizations).
+- [ ] **Step 2: Run the sentinel subset** (`REPOREAPERS_DB=postgres_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db`); confirm sound string generalizations appear where string-parameter MUTs resolve and their generated tests pass on sampled strings **and** the concrete seed. Drop the scratch DB and data dir afterwards.
+- [ ] **Step 3: Screen + ingestion check.** Confirm MUTs using `charAt`/`substring`/`compareTo` are recorded as `UNSUPPORTED_TERM` exclusions from the screen, and MUTs whose paths reach `indexOf`/`lastIndexOf` derived symbols are recorded as `UNSUPPORTED_TERM` exclusions from ingestion (not crashes, not silent free-variable generalizations).
 - [ ] **Step 4: No-regression + totality.** Numeric/char/boolean generalization counts on `postgres_jarvis_census` unchanged; measure the `ParameterType`/`ReturnType` first-reject drop. Confirm `concat`-bearing string specs are captured whole (no `oprlist` truncation) and string symbols survive the `Model→JSON→Model` round-trip. Acceptance: sound string generalizations added, unsound ops excluded, zero numeric regression, no process crashes, no silently-dropped string terms.
 
 ### Task 8 (optional): add `isEmpty` as a sound SPF op
