@@ -91,10 +91,7 @@ consumes ctor-lifted sites today.
 
 ### Generation (`TestGeneralizationTask`)
 
-No structural change: the supplier re-executes the wrapper-shaped expression with generated
-inputs, the expected side comes from the SPF output model as today, and the widening license
-applies unchanged — the spike showed it already covers the degenerate expression classes
-(boolean-in-PC licensed, concretized non-boolean refused).
+No structural change: the supplier re-executes the wrapper-shaped expression with generated inputs, the expected side comes from the SPF output model as today, and the widening license uses `oracleExpressionType` as its return-type input for expression-shaped recipes while invocation-shaped recipes continue to use the focal method return type.
 
 ## Risks (bounded, named)
 

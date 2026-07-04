@@ -269,13 +269,13 @@ public class TestGeneralizationTask extends AbstractTask {
                 this.generalizationRecord.getClassQualifiedName()));
         CtInvocation<?> assertion = (CtInvocation<?>) assertionPath.evaluateOn(testMethod).get(0);
 
-        GeneralizationRecipe.Resolved recipe = GeneralizationRecipe
+        GeneralizationRecipe clonedRecipe = GeneralizationRecipe
             .fromJson(gson, this.assertionRecord.getGeneralizationRecipe())
             .rewriteForClone(
                 this.testRecord.getTestClassQualifiedName(),
                 this.generalizationRecord.getClassQualifiedName()
-            )
-            .resolveAgainst(testMethod, factory.getModel().getRootPackage());
+            );
+        GeneralizationRecipe.Resolved recipe = clonedRecipe.resolveAgainst(testMethod, factory.getModel().getRootPackage());
         CtExpression<?> oracleExpression = recipe.getOracleExpression();
         CtMethod<?> testedMethod = recipe.getOracleMethod();
         List<GeneralizableInput> inputs = recipe.getInputs();
@@ -373,9 +373,12 @@ public class TestGeneralizationTask extends AbstractTask {
 
             String outputValueString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputValuePath())));
             CapturedOutput output = specificationGson.fromJson(outputValueString, CapturedOutput.class);
+            String licenseReturnType = expressionRecipe
+                ? clonedRecipe.getOracleExpressionType()
+                : testedMethod.getType() == null ? null : testedMethod.getType().getQualifiedName();
             WideningLicense.Verdict wideningLicense = WideningLicense.evaluate(
                 OutputSpecClassifier.classify(output.getKind(), outputModel),
-                testedMethod.getType() == null ? null : testedMethod.getType().getQualifiedName(),
+                licenseReturnType,
                 generalizableParameterNames,
                 pathConditionParameterNames,
                 this.assertionRecord.getConcretizationEvents()

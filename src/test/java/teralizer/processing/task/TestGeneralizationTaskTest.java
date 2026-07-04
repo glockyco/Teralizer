@@ -31,6 +31,7 @@ import org.jooq.tools.jdbc.MockExecuteContext;
 import org.jooq.tools.jdbc.MockResult;
 import org.junit.Assert;
 import spoon.Launcher;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
@@ -136,6 +137,41 @@ public class TestGeneralizationTaskTest {
         Assert.assertFalse("refused generalization must not write a doomed artifact", Files.exists(result.generatedPath));
     }
 
+    @Example
+    void expressionRecipeLicensesNullConcreteBooleanOracleByExpressionType() throws Exception {
+        Scenario scenario = expressionScenario(
+            new Operation(new Variable("site0", TypeDomain.INTEGER), Operator.GT, new Variable("site1", TypeDomain.INTEGER)),
+            null,
+            CapturedOutput.ofReturnValue(new PrimitiveValue("boolean", true)),
+            0
+        );
+
+        ExecutedGeneralization result = executeGeneralization(scenario);
+
+        Assert.assertTrue(result.record.getIsIncluded());
+        Assert.assertNull(result.record.getExclusionInfo());
+        Assert.assertTrue(Files.exists(result.generatedPath));
+    }
+
+    @Example
+    void invocationRecipeLicensesNullConcreteBooleanOracleByMethodReturnType() throws Exception {
+        Scenario scenario = scenario(
+            "returnsInput",
+            "id",
+            new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant(0L, TypeDomain.INTEGER)),
+            null,
+            CapturedOutput.ofReturnValue(new PrimitiveValue("boolean", true)),
+            0,
+            "boolean"
+        );
+
+        ExecutedGeneralization result = executeGeneralization(scenario);
+
+        Assert.assertFalse(result.record.getIsIncluded());
+        Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, result.record.getExclusionInfo());
+        Assert.assertFalse("refused generalization must not write a doomed artifact", Files.exists(result.generatedPath));
+    }
+
     private static ExecutedGeneralization executeGeneralization(Scenario scenario) throws Exception {
         // The IMPROVED_100_TRIES variant definition comes from src/test/resources/reference.conf
         // (merged into defaultReference()), which is immune to Configuration's static-init order.
@@ -165,6 +201,18 @@ public class TestGeneralizationTaskTest {
         Model outputModel,
         CapturedOutput output,
         Integer concretizationEvents
+    ) throws IOException {
+        return scenario(testMethodName, testedMethodName, inputModel, outputModel, output, concretizationEvents, null);
+    }
+
+    private static Scenario scenario(
+        String testMethodName,
+        String testedMethodName,
+        Model inputModel,
+        Model outputModel,
+        CapturedOutput output,
+        Integer concretizationEvents,
+        String oracleExpressionTypeOverride
     ) throws IOException {
         Path root = Files.createTempDirectory("teralizer-generalization-test");
         Path testSourceRoot = root.resolve("src/test/java");
@@ -238,12 +286,113 @@ public class TestGeneralizationTaskTest {
         assertionRecord.setTestedMethodAbsolutePath(testedMethod.getPath().toString());
         assertionRecord.setTestedMethodRelativePath(testedMethod.getPath().relativePath(subjectClass).toString());
         assertionRecord.setTestedMethodCallRelativePath(testedCall.getPath().relativePath(testMethod).toString());
+        String oracleExpressionType = oracleExpressionTypeOverride == null
+            ? testedMethod.getType().getQualifiedName()
+            : oracleExpressionTypeOverride;
         assertionRecord.setGeneralizationRecipe(
             GeneralizationRecipe.from(
                 testedMethod,
                 testedCall,
                 GeneralizableInput.derive(testedMethod, testedCall),
-                testedMethod.getType().getQualifiedName()
+                oracleExpressionType
+            ).toJson(gson)
+        );
+        assertionRecord.setInputValuesPath(inputValues.toString());
+        assertionRecord.setInputSpecificationPath(inputSpecification.toString());
+        assertionRecord.setOutputValuePath(outputValue.toString());
+        assertionRecord.setOutputSpecificationPath(outputSpecification.toString());
+        assertionRecord.setConcretizationEvents(concretizationEvents);
+        assertionRecord.setIsIncluded(true);
+
+        return new Scenario(project, test, assertionRecord, launcher, testFile);
+    }
+
+    private static Scenario expressionScenario(
+        Model inputModel,
+        Model outputModel,
+        CapturedOutput output,
+        Integer concretizationEvents
+    ) throws IOException {
+        Path root = Files.createTempDirectory("teralizer-generalization-expression-test");
+        Path testSourceRoot = root.resolve("src/test/java");
+        Path packageDirectory = testSourceRoot.resolve("example");
+        Files.createDirectories(packageDirectory);
+        Path testFile = packageDirectory.resolve("SubjectTest.java");
+        Files.write(testFile, EXPRESSION_SOURCE.getBytes(StandardCharsets.UTF_8));
+
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(EXPRESSION_SOURCE, testFile.toString()));
+        launcher.buildModel();
+
+        CtClass<?> testClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest"))
+            .get(0);
+        CtClass<?> subjectClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "Subject"))
+            .get(0);
+        CtMethod<?> testMethod = testClass.getMethodsByName("intComparisonIsPositive").get(0);
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtExpression<?> oracleExpression = assertion.getArguments().get(0);
+        CtInvocation<?> testedCall = oracleExpression.getElements(CtInvocation.class::isInstance).stream()
+            .map(CtInvocation.class::cast)
+            .filter(call -> call.getExecutable().getSimpleName().equals("compare"))
+            .findFirst()
+            .get();
+        CtMethod<?> testedMethod = subjectClass.getMethodsByName("compare").get(0);
+        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
+
+        Gson gson = new Gson();
+        Gson specificationGson = SpecificationGson.create();
+        Path data = root.resolve("data");
+        Path inputValues = root.resolve("input-values.json");
+        Path inputSpecification = root.resolve("input-specification.json");
+        Path outputValue = root.resolve("output-value.json");
+        Path outputSpecification = root.resolve("output-specification.json");
+        Files.write(
+            inputValues,
+            specificationGson.toJson(Arrays.asList(new PrimitiveValue("int", 4), new PrimitiveValue("int", 1)), inputValuesType()).getBytes(StandardCharsets.UTF_8)
+        );
+        ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
+        Files.write(inputSpecification, modelToJsonTransformer.transform(inputModel).getBytes(StandardCharsets.UTF_8));
+        Files.write(outputValue, specificationGson.toJson(output).getBytes(StandardCharsets.UTF_8));
+        Files.write(outputSpecification, modelToJsonTransformer.transform(outputModel).getBytes(StandardCharsets.UTF_8));
+
+        ProjectRecord project = new ProjectRecord();
+        project.setId(7L);
+        project.setDataPath(data);
+        project.setTestSourcePath(testSourceRoot);
+
+        TestRecord test = new TestRecord();
+        test.setId(11L);
+        test.setProjectId(project.getId());
+        test.setTestFilePath(testFile.toString());
+        test.setTestClassQualifiedName("example.SubjectTest");
+        test.setTestMethodQualifiedName("example.SubjectTest.intComparisonIsPositive");
+        test.setTestPackageName("example");
+        test.setTestClassName("SubjectTest");
+        test.setTestMethodName("intComparisonIsPositive");
+        test.setTestMethodRelativePath(testMethod.getPath().relativePath(testClass).toString());
+        test.setIsIncluded(true);
+
+        AssertionRecord assertionRecord = new AssertionRecord();
+        assertionRecord.setId(13L);
+        assertionRecord.setProjectId(project.getId());
+        assertionRecord.setTestId(test.getId());
+        assertionRecord.setAssertionName(assertion.getExecutable().getSimpleName());
+        assertionRecord.setAssertionRelativePath(assertion.getPath().relativePath(testMethod).toString());
+        assertionRecord.setTestedMethodName("compare");
+        assertionRecord.setTestedMethodParameters(gson.toJson(Arrays.asList(inputs.get(0).toMethodParameter(), inputs.get(1).toMethodParameter())));
+        assertionRecord.setTestedMethodReturnType(TestAnalysisTask.typeNameOf(testedMethod.getType()));
+        assertionRecord.setTestedMethodAbsolutePath(testedMethod.getPath().toString());
+        assertionRecord.setTestedMethodRelativePath(testedMethod.getPath().relativePath(subjectClass).toString());
+        assertionRecord.setTestedMethodCallRelativePath(testedCall.getPath().relativePath(testMethod).toString());
+        assertionRecord.setGeneralizationRecipe(
+            GeneralizationRecipe.from(
+                testedMethod,
+                oracleExpression,
+                inputs,
+                oracleExpression.getType().getQualifiedName()
             ).toJson(gson)
         );
         assertionRecord.setInputValuesPath(inputValues.toString());
@@ -284,6 +433,17 @@ public class TestGeneralizationTaskTest {
         + "class Subject {\n"
         + "  int id(int x) { return x; }\n"
         + "  boolean positive(int x) { return x > 0; }\n"
+        + "}\n";
+
+    private static final String EXPRESSION_SOURCE = ""
+        + "package example;\n"
+        + "public class SubjectTest {\n"
+        + "  @org.junit.Test public void intComparisonIsPositive() {\n"
+        + "    org.junit.Assert.assertTrue(new Subject().compare(4, 1) > 0);\n"
+        + "  }\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  int compare(int left, int right) { return java.lang.Integer.compare(left, right); }\n"
         + "}\n";
 
     private static final class Scenario {
