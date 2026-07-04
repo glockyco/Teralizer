@@ -111,6 +111,38 @@ public class GeneralizationRecipeTest {
         Assert.assertTrue(resolved.getOracleExpression() instanceof CtBinaryOperator);
     }
 
+    @Example
+    void resolvedRewritesExpressionSitesInsideClonedExpressionAndMethod() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesBinaryOperator");
+        CtExpression<?> oracleExpression = actualAssertExpression(scenario.testMethod);
+        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(scenario.oracleMethod, oracleExpression, inputs, "boolean");
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(scenario.testMethod, scenario.model.getRootPackage());
+
+        CtExpression<?> expressionClone = resolved.getOracleExpression().clone();
+        resolved.replaceInputSitesWithParameterReads(
+            expressionClone,
+            scenario.testMethod.getFactory(),
+            input -> input.toMethodParameter().getName()
+        );
+        String expressionText = expressionClone.toString();
+        Assert.assertTrue(expressionText, expressionText.contains("site0"));
+        Assert.assertTrue(expressionText, expressionText.contains("site5"));
+        Assert.assertFalse(expressionText, expressionText.contains("contains(5)"));
+
+        CtMethod<?> methodClone = scenario.testMethod.clone();
+        resolved.replaceInputSitesWithParameterReads(
+            methodClone,
+            scenario.testMethod.getFactory(),
+            input -> "_p_." + input.toMethodParameter().getName()
+        );
+        CtExpression<?> rewrittenAssertExpression = actualAssertExpression(methodClone);
+        String methodText = rewrittenAssertExpression.toString();
+        Assert.assertTrue(methodText, methodText.contains("_p_.site0"));
+        Assert.assertTrue(methodText, methodText.contains("_p_.site5"));
+        Assert.assertFalse(methodText, methodText.contains("contains(6)"));
+    }
+
 
     @Example
     void rewritesOnlyThePersistedClassQualifiedNameInRecipePaths() {

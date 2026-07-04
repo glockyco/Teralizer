@@ -4,9 +4,11 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 import teralizer.domain.MethodArgument;
@@ -315,6 +317,57 @@ public final class GeneralizationRecipe {
 
         public List<GeneralizableInput> getInputs() {
             return this.inputs;
+        }
+
+        public void replaceInputSitesWithParameterReads(
+            CtElement rewrittenContainer,
+            Factory factory,
+            Function<GeneralizableInput, String> parameterNameFor
+        ) {
+            if (rewrittenContainer == null) {
+                throw new IllegalArgumentException("Rewritten container is null.");
+            }
+            if (factory == null) {
+                throw new IllegalArgumentException("Factory is null.");
+            }
+            if (parameterNameFor == null) {
+                throw new IllegalArgumentException("Parameter-name mapping function is null.");
+            }
+
+            CtElement originalContainer = originalContainerFor(rewrittenContainer);
+            for (GeneralizableInput input : this.inputs) {
+                if (!input.isExpressionSite()) {
+                    continue;
+                }
+                CtPath pathInContainer = input.getSourceExpression().getPath().relativePath(originalContainer);
+                List<CtElement> matches = pathInContainer.evaluateOn(rewrittenContainer);
+                if (matches.size() != 1 || !(matches.get(0) instanceof CtExpression<?>)) {
+                    throw new IllegalStateException(
+                        "Expected one expression site inside rewritten container but found "
+                            + matches.size()
+                            + " for "
+                            + pathInContainer
+                    );
+                }
+                CtExpression<?> site = (CtExpression<?>) matches.get(0);
+                site.replace(factory.createCodeSnippetExpression(parameterNameFor.apply(input)));
+            }
+        }
+
+        private CtElement originalContainerFor(CtElement rewrittenContainer) {
+            if (rewrittenContainer instanceof CtExpression<?>) {
+                return this.oracleExpression;
+            }
+            if (rewrittenContainer instanceof CtMethod<?>) {
+                CtMethod<?> containingMethod = this.oracleExpression.getParent(CtMethod.class);
+                if (containingMethod == null) {
+                    throw new IllegalStateException("Resolved oracle expression has no enclosing method.");
+                }
+                return containingMethod;
+            }
+            throw new IllegalArgumentException(
+                "Unsupported rewritten container type " + rewrittenContainer.getClass().getSimpleName() + "."
+            );
         }
     }
 

@@ -163,9 +163,9 @@ public static boolean isSelfContained(CtExpression<?> expression) {
 - Modify: `src/main/java/teralizer/processing/task/TestGeneralizationTask.java:503-522` (argument-replacement region)
 - Test: fixture-level (Task 8) + extend the task's unit tests only if a seam is unit-testable without Spoon-file positions
 
-- [ ] **Step 1: Implement** (fixture-verified): when the recipe is expression-shaped, resolve each site path inside the cloned test method's asserted expression and replace it with `_p_.<name>` — same mechanism as Task 5's wrapper rewrite; reuse one shared helper (put it on `GeneralizationRecipe.Resolved` so both consumers call it). The index-keyed T0/T1 replacement stays.
-- [ ] **Step 2: Run** `./gradlew build` (compile + unit green).
-- [ ] **Step 3: Commit.** `feat(generation): rewrite expression sites from recipe paths`
+- [x] **Step 1: Implement** (fixture-verified): when the recipe is expression-shaped, resolve each site path inside the cloned test method's asserted expression and replace it with `_p_.<name>` — same mechanism as Task 5's wrapper rewrite; reuse one shared helper (put it on `GeneralizationRecipe.Resolved` so both consumers call it). The index-keyed T0/T1 replacement stays.
+- [x] **Step 2: Run** `./gradlew build` (compile + unit green).
+- [x] **Step 3: Commit.** `feat(generation): rewrite expression sites from recipe paths`
 
 ---
 

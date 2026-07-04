@@ -80,6 +80,55 @@ public class JpfInstrumentationTaskTest {
     }
 
     @Example
+    void expressionRecipeWrapperRewritesEveryCompositeSiteFromRecipePaths() throws Exception {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "import static org.junit.Assert.assertTrue;\n"
+                + "public class SubjectTest {\n"
+                + "  public void t() {\n"
+                + "    assertTrue(ExpressionSliceCut.intCompare(4, 1) > ExpressionSliceCut.intCompare(3, 2));\n"
+                + "  }\n"
+                + "}\n",
+            "package smoke;\n"
+                + "public class ExpressionSliceCut {\n"
+                + "  public static int intCompare(int left, int right) { return java.lang.Integer.compare(left, right); }\n"
+                + "}\n"
+        );
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtExpression<?> oracleExpression = assertion.getArguments().get(0);
+        CtInvocation<?> testedCall = oracleExpression.getElements(CtInvocation.class::isInstance).stream()
+            .map(invocation -> (CtInvocation<?>) invocation)
+            .filter(invocation -> invocation.getExecutable().getSimpleName().equals("intCompare"))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
+        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(
+            testedMethod,
+            oracleExpression,
+            inputs,
+            oracleExpression.getType().getQualifiedName()
+        );
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(
+            testMethod,
+            testMethod.getFactory().getModel().getRootPackage()
+        );
+
+        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper");
+
+        Assert.assertEquals(4, wrapper.getParameters().size());
+        CtReturn<?> statement = (CtReturn<?>) wrapper.getBody().getStatement(0);
+        Assert.assertTrue(statement.getReturnedExpression() instanceof CtBinaryOperator<?>);
+        CtBinaryOperator<?> returned = (CtBinaryOperator<?>) statement.getReturnedExpression();
+        CtInvocation<?> leftCall = (CtInvocation<?>) returned.getLeftHandOperand();
+        CtInvocation<?> rightCall = (CtInvocation<?>) returned.getRightHandOperand();
+        Assert.assertEquals("site0", leftCall.getArguments().get(0).toString());
+        Assert.assertEquals("site1", leftCall.getArguments().get(1).toString());
+        Assert.assertEquals("site2", rightCall.getArguments().get(0).toString());
+        Assert.assertEquals("site3", rightCall.getArguments().get(1).toString());
+    }
+
+    @Example
     void receiverlessStaticInvocationRecipeKeepsIndexKeyedWrapperShape() throws Exception {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
@@ -113,32 +162,21 @@ public class JpfInstrumentationTaskTest {
         GeneralizationRecipe.Resolved recipe,
         String methodName
     ) throws Exception {
-        CtInvocation<?> testedCall = recipe.getOracleExpression().getElements(CtInvocation.class::isInstance).stream()
-            .map(invocation -> (CtInvocation<?>) invocation)
-            .filter(invocation -> invocation.getExecutable().getSimpleName().equals(recipe.getOracleMethod().getSimpleName()))
-            .findFirst()
-            .orElseThrow(IllegalStateException::new);
         JpfInstrumentationTask task = task(methodName);
         Method method = JpfInstrumentationTask.class.getDeclaredMethod(
             "createInstrumentedMethod",
             Factory.class,
             CtClass.class,
-            CtMethod.class,
-            CtExpression.class,
-            CtInvocation.class,
-            String.class,
-            List.class
+            GeneralizationRecipe.Resolved.class,
+            String.class
         );
         method.setAccessible(true);
         return (CtMethod<?>) method.invoke(
             task,
             testMethod.getFactory(),
             testMethod.getParent(CtClass.class),
-            recipe.getOracleMethod(),
-            recipe.getOracleExpression(),
-            testedCall,
-            "boolean",
-            recipe.getInputs()
+            recipe,
+            "boolean"
         );
     }
 

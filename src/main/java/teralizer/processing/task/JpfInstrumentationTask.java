@@ -109,11 +109,8 @@ public class JpfInstrumentationTask extends AbstractTask {
             ? this.createInstrumentedMethod(
                 factory,
                 instrumentedClass,
-                testedMethod,
-                oracleExpression,
-                null,
-                clonedRecipe.getOracleExpressionType(),
-                generalizableInputs
+                recipe,
+                clonedRecipe.getOracleExpressionType()
             )
             : this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall, generalizableInputs);
         CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(
@@ -317,15 +314,12 @@ public class JpfInstrumentationTask extends AbstractTask {
     private CtMethod<?> createInstrumentedMethod(
         Factory factory,
         CtClass<?> instrumentedClass,
-        CtMethod<?> testedMethod,
-        CtExpression<?> oracleExpression,
-        CtInvocation<?> testedMethodCall,
-        String oracleExpressionType,
-        List<GeneralizableInput> generalizableInputs
+        GeneralizationRecipe.Resolved recipe,
+        String oracleExpressionType
     ) {
-        if (generalizableInputs.stream().noneMatch(GeneralizableInput::isExpressionSite)) {
-            return this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall, generalizableInputs);
-        }
+        CtMethod<?> testedMethod = recipe.getOracleMethod();
+        CtExpression<?> oracleExpression = recipe.getOracleExpression();
+        List<GeneralizableInput> generalizableInputs = recipe.getInputs();
 
         List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
         for (GeneralizableInput input : generalizableInputs) {
@@ -335,7 +329,12 @@ public class JpfInstrumentationTask extends AbstractTask {
             instrumentedParameters.add(factory.createParameter(null, type, input.toMethodParameter().getName()));
         }
 
-        CtExpression<?> rewrittenExpression = cloneExpressionWithParameterReads(factory, oracleExpression, generalizableInputs);
+        CtExpression<?> rewrittenExpression = oracleExpression.clone();
+        recipe.replaceInputSitesWithParameterReads(
+            rewrittenExpression,
+            factory,
+            input -> input.toMethodParameter().getName()
+        );
         CtReturn returnStatement = factory.Core().createReturn();
         returnStatement.setReturnedExpression(rewrittenExpression);
         CtBlock<?> instrumentedBody = factory.createBlock();
@@ -358,31 +357,6 @@ public class JpfInstrumentationTask extends AbstractTask {
         );
     }
 
-    private static CtExpression<?> cloneExpressionWithParameterReads(
-        Factory factory,
-        CtExpression<?> oracleExpression,
-        List<GeneralizableInput> generalizableInputs
-    ) {
-        CtExpression<?> rewrittenExpression = oracleExpression.clone();
-        for (GeneralizableInput input : generalizableInputs) {
-            if (!input.isExpressionSite()) {
-                continue;
-            }
-            CtPath pathInExpression = input.getSourceExpression().getPath().relativePath(oracleExpression);
-            List<CtElement> matches = pathInExpression.evaluateOn(rewrittenExpression);
-            if (matches.size() != 1 || !(matches.get(0) instanceof CtExpression<?>)) {
-                throw new IllegalStateException(
-                    "Expected one expression site inside cloned oracle expression but found "
-                        + matches.size()
-                        + " for "
-                        + pathInExpression
-                );
-            }
-            CtExpression<?> site = (CtExpression<?>) matches.get(0);
-            site.replace(factory.createCodeSnippetExpression(input.toMethodParameter().getName()));
-        }
-        return rewrittenExpression;
-    }
 
     /**
      * Collects every checked-exception type the instrumented wrapper must declare: the tested

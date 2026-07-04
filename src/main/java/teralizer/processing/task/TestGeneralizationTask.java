@@ -276,10 +276,11 @@ public class TestGeneralizationTask extends AbstractTask {
                 this.generalizationRecord.getClassQualifiedName()
             )
             .resolveAgainst(testMethod, factory.getModel().getRootPackage());
-        // Recipes handled here are invocation-shaped because replay rewrites the focal call.
-        CtInvocation<?> testedMethodCall = (CtInvocation<?>) recipe.getOracleExpression();
+        CtExpression<?> oracleExpression = recipe.getOracleExpression();
         CtMethod<?> testedMethod = recipe.getOracleMethod();
         List<GeneralizableInput> inputs = recipe.getInputs();
+        boolean expressionRecipe = inputs.stream().anyMatch(GeneralizableInput::isExpressionSite);
+        CtInvocation<?> testedMethodCall = expressionRecipe ? null : (CtInvocation<?>) oracleExpression;
 
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
         //   Otherwise, we will have issues mapping the class names to the correct Arbitraries.
@@ -506,44 +507,52 @@ public class TestGeneralizationTask extends AbstractTask {
         // ------------------------------------------------------------------------------------------------------ //
 
 
-        List<CtExpression<?>> args = testedMethodCall.getArguments();
-        List<GeneralizableInput> receiverConstructorInputs = inputs.stream()
-            .filter(GeneralizableInput::isReceiverConstructorArgument)
-            .collect(Collectors.toList());
-        if (!receiverConstructorInputs.isEmpty()) {
-            CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getTarget();
-            List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
-            for (GeneralizableInput input : receiverConstructorInputs) {
-                constructorArguments.set(
-                    input.getConstructorArgumentIndex(),
-                    factory.Code().createCodeSnippetExpression("_p_." + input.toMethodParameter().getName())
-                );
-            }
-            constructorCall.setArguments(constructorArguments);
-        }
-
-
-        for (int i = 0; i < args.size(); i++) {
-            final int argumentIndex = i;
-            List<GeneralizableInput> inputsForArgument = inputs.stream()
-                .filter(input -> input.getMethodArgumentIndex() == argumentIndex)
+        if (expressionRecipe) {
+            recipe.replaceInputSitesWithParameterReads(
+                testMethod,
+                factory,
+                input -> "_p_." + input.toMethodParameter().getName()
+            );
+        } else {
+            List<CtExpression<?>> args = testedMethodCall.getArguments();
+            List<GeneralizableInput> receiverConstructorInputs = inputs.stream()
+                .filter(GeneralizableInput::isReceiverConstructorArgument)
                 .collect(Collectors.toList());
-            if (inputsForArgument.isEmpty()) {
-                continue;
-            }
-
-            if (inputsForArgument.get(0).isConstructorArgument()) {
-                CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) args.get(i);
+            if (!receiverConstructorInputs.isEmpty()) {
+                CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getTarget();
                 List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
-                for (GeneralizableInput input : inputsForArgument) {
+                for (GeneralizableInput input : receiverConstructorInputs) {
                     constructorArguments.set(
                         input.getConstructorArgumentIndex(),
                         factory.Code().createCodeSnippetExpression("_p_." + input.toMethodParameter().getName())
                     );
                 }
                 constructorCall.setArguments(constructorArguments);
-            } else {
-                args.set(i, factory.Code().createCodeSnippetExpression("_p_." + inputsForArgument.get(0).toMethodParameter().getName()));
+            }
+
+
+            for (int i = 0; i < args.size(); i++) {
+                final int argumentIndex = i;
+                List<GeneralizableInput> inputsForArgument = inputs.stream()
+                    .filter(input -> input.getMethodArgumentIndex() == argumentIndex)
+                    .collect(Collectors.toList());
+                if (inputsForArgument.isEmpty()) {
+                    continue;
+                }
+
+                if (inputsForArgument.get(0).isConstructorArgument()) {
+                    CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) args.get(i);
+                    List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
+                    for (GeneralizableInput input : inputsForArgument) {
+                        constructorArguments.set(
+                            input.getConstructorArgumentIndex(),
+                            factory.Code().createCodeSnippetExpression("_p_." + input.toMethodParameter().getName())
+                        );
+                    }
+                    constructorCall.setArguments(constructorArguments);
+                } else {
+                    args.set(i, factory.Code().createCodeSnippetExpression("_p_." + inputsForArgument.get(0).toMethodParameter().getName()));
+                }
             }
         }
 
