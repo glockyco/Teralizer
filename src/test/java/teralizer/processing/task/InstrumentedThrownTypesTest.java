@@ -11,6 +11,7 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.support.compiler.VirtualFile;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.codegen.InstrumentedClassBuilder;
 
 public class InstrumentedThrownTypesTest {
 
@@ -33,7 +34,7 @@ public class InstrumentedThrownTypesTest {
             + "}");
 
         Set<CtTypeReference<? extends Throwable>> thrown =
-            JpfInstrumentationTask.collectThrownTypes(
+            InstrumentedClassBuilder.collectThrownTypes(
                 (CtMethod<?>) testedCall.getExecutable().getDeclaration(), testedCall);
 
         Assert.assertTrue("wrapper must declare MalformedURLException from the lifted ctor",
@@ -53,7 +54,7 @@ public class InstrumentedThrownTypesTest {
             + "}");
 
         Set<CtTypeReference<? extends Throwable>> thrown =
-            JpfInstrumentationTask.collectThrownTypes(
+            InstrumentedClassBuilder.collectThrownTypes(
                 (CtMethod<?>) testedCall.getExecutable().getDeclaration(), testedCall);
 
         Assert.assertTrue("tested method's own throws must be preserved",

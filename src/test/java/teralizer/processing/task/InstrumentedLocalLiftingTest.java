@@ -18,6 +18,7 @@ import spoon.support.compiler.VirtualFile;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.codegen.InstrumentedClassBuilder;
 
 public class InstrumentedLocalLiftingTest {
 
@@ -105,9 +106,9 @@ public class InstrumentedLocalLiftingTest {
         CtParameter<?> input = launcher.getFactory().createParameter(
             null, launcher.getFactory().Type().INTEGER_PRIMITIVE, "n");
 
-        Assert.assertEquals("con", JpfInstrumentationTask.symbolicMarker(target));
-        Assert.assertEquals("con", JpfInstrumentationTask.symbolicMarker(local));
-        Assert.assertEquals("sym", JpfInstrumentationTask.symbolicMarker(input));
+        Assert.assertEquals("con", InstrumentedClassBuilder.symbolicMarker(target));
+        Assert.assertEquals("con", InstrumentedClassBuilder.symbolicMarker(local));
+        Assert.assertEquals("sym", InstrumentedClassBuilder.symbolicMarker(input));
     }
 
     @Example
@@ -119,7 +120,7 @@ public class InstrumentedLocalLiftingTest {
         CtTypeParameterReference typeParam = launcher.getFactory().Core().createTypeParameterReference();
         typeParam.setSimpleName("C");
 
-        CtTypeReference<?> resolved = JpfInstrumentationTask.resolveTargetType(
+        CtTypeReference<?> resolved = InstrumentedClassBuilder.resolveTargetType(
             launcher.getFactory(), typeParam, "net.xenqtt.message.MqttClientChannel");
 
         Assert.assertEquals("net.xenqtt.message.MqttClientChannel", resolved.getQualifiedName());
@@ -130,7 +131,7 @@ public class InstrumentedLocalLiftingTest {
         Launcher launcher = new Launcher();
         CtTypeReference<?> concrete = launcher.getFactory().Type().createReference("com.example.Widget");
 
-        CtTypeReference<?> resolved = JpfInstrumentationTask.resolveTargetType(
+        CtTypeReference<?> resolved = InstrumentedClassBuilder.resolveTargetType(
             launcher.getFactory(), concrete, "should.Not.BeUsed");
 
         Assert.assertSame(concrete, resolved);
@@ -160,7 +161,7 @@ public class InstrumentedLocalLiftingTest {
         if (!testedMethod.isStatic()) {
             ((CtInvocation<?>) rewrittenExpression).setTarget(call.getFactory().createCodeSnippetExpression("_target_"));
         }
-        return JpfInstrumentationTask.collectLiftableLocals(
+        return InstrumentedClassBuilder.collectLiftableLocals(
             rewrittenExpression,
             resolved.getOracleExpression(),
             inputs

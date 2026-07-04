@@ -1,4 +1,4 @@
-package teralizer.processing.task;
+package teralizer.spoon.codegen;
 
 import java.util.List;
 import net.jqwik.api.Example;
@@ -16,12 +16,11 @@ import spoon.support.compiler.VirtualFile;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
-import teralizer.spoon.codegen.InstrumentedClassBuilder;
 
-public class JpfInstrumentationTaskTest {
+public class InstrumentedClassBuilderTest {
 
     @Example
-    void compositeRecipeWrapperReturnsRewrittenOracleExpression() throws Exception {
+    void compositeRecipeWrapperReturnsRewrittenOracleExpression() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "import static org.junit.Assert.assertTrue;\n"
@@ -35,27 +34,10 @@ public class JpfInstrumentationTaskTest {
                 + "  public static int intCompare(int left, int right) { return java.lang.Integer.compare(left, right); }\n"
                 + "}\n"
         );
-        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
-        CtExpression<?> oracleExpression = assertion.getArguments().get(0);
-        CtInvocation<?> testedCall = oracleExpression.getElements(CtInvocation.class::isInstance).stream()
-            .map(invocation -> (CtInvocation<?>) invocation)
-            .filter(invocation -> invocation.getExecutable().getSimpleName().equals("intCompare"))
-            .findFirst()
-            .orElseThrow(IllegalStateException::new);
-        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
-        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
-        GeneralizationRecipe recipe = GeneralizationRecipe.from(
-            testedMethod,
-            oracleExpression,
-            inputs,
-            oracleExpression.getType().getQualifiedName()
-        );
-        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(
-            testMethod,
-            testMethod.getFactory().getModel().getRootPackage()
-        );
+        GeneralizationRecipe recipe = compositeOracleRecipe(testMethod);
 
-        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper", "boolean");
+        CtClass<?> instrumented = build(testMethod, recipe, "expr_wrapper", "boolean");
+        CtMethod<?> wrapper = instrumented.getMethodsByName("expr_wrapper").get(0);
 
         Assert.assertEquals("boolean", wrapper.getType().getQualifiedName());
         Assert.assertEquals(2, wrapper.getParameters().size());
@@ -76,7 +58,7 @@ public class JpfInstrumentationTaskTest {
     }
 
     @Example
-    void compositeRecipeWrapperRewritesEveryCompositeSiteFromRecipePaths() throws Exception {
+    void compositeRecipeWrapperRewritesEveryCompositeSiteFromRecipePaths() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "import static org.junit.Assert.assertTrue;\n"
@@ -90,27 +72,10 @@ public class JpfInstrumentationTaskTest {
                 + "  public static int intCompare(int left, int right) { return java.lang.Integer.compare(left, right); }\n"
                 + "}\n"
         );
-        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
-        CtExpression<?> oracleExpression = assertion.getArguments().get(0);
-        CtInvocation<?> testedCall = oracleExpression.getElements(CtInvocation.class::isInstance).stream()
-            .map(invocation -> (CtInvocation<?>) invocation)
-            .filter(invocation -> invocation.getExecutable().getSimpleName().equals("intCompare"))
-            .findFirst()
-            .orElseThrow(IllegalStateException::new);
-        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
-        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
-        GeneralizationRecipe recipe = GeneralizationRecipe.from(
-            testedMethod,
-            oracleExpression,
-            inputs,
-            oracleExpression.getType().getQualifiedName()
-        );
-        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(
-            testMethod,
-            testMethod.getFactory().getModel().getRootPackage()
-        );
+        GeneralizationRecipe recipe = compositeOracleRecipe(testMethod);
 
-        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper", "boolean");
+        CtClass<?> instrumented = build(testMethod, recipe, "expr_wrapper", "boolean");
+        CtMethod<?> wrapper = instrumented.getMethodsByName("expr_wrapper").get(0);
 
         Assert.assertEquals(4, wrapper.getParameters().size());
         CtReturn<?> statement = (CtReturn<?>) wrapper.getBody().getStatement(0);
@@ -124,9 +89,8 @@ public class JpfInstrumentationTaskTest {
         Assert.assertEquals("site3", rightCall.getArguments().get(1).toString());
     }
 
-
     @Example
-    void compositeInstanceRecipeKeepsReceiverInBodyAndCallSite() throws Exception {
+    void compositeInstanceRecipeKeepsReceiverInBodyAndCallSite() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "import static org.junit.Assert.assertTrue;\n"
@@ -143,28 +107,16 @@ public class JpfInstrumentationTaskTest {
                 + "  public int compareTo(Pair other) { return java.lang.Integer.compare(this.value, other.value); }\n"
                 + "}\n"
         );
-        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
-        CtExpression<?> oracleExpression = assertion.getArguments().get(0);
-        CtInvocation<?> testedCall = oracleExpression.getElements(CtInvocation.class::isInstance).stream()
-            .map(invocation -> (CtInvocation<?>) invocation)
-            .filter(invocation -> invocation.getExecutable().getSimpleName().equals("compareTo"))
+        GeneralizationRecipe recipe = compositeOracleRecipe(testMethod);
+
+        CtClass<?> instrumented = build(testMethod, recipe, "expr_wrapper", "boolean");
+        CtMethod<?> wrapper = instrumented.getMethodsByName("expr_wrapper").get(0);
+        CtInvocation<?> wrapperCall = instrumented.getMethodsByName("t").get(0)
+            .getElements(CtInvocation.class::isInstance).stream()
+            .map(CtInvocation.class::cast)
+            .filter(invocation -> invocation.getExecutable().getSimpleName().equals("expr_wrapper"))
             .findFirst()
             .orElseThrow(IllegalStateException::new);
-        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
-        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
-        GeneralizationRecipe recipe = GeneralizationRecipe.from(
-            testedMethod,
-            oracleExpression,
-            inputs,
-            oracleExpression.getType().getQualifiedName()
-        );
-        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(
-            testMethod,
-            testMethod.getFactory().getModel().getRootPackage()
-        );
-
-        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper", "boolean");
-        CtInvocation<?> wrapperCall = createInstrumentedMethodCall(testMethod, wrapper, resolved);
 
         Assert.assertEquals(2, wrapper.getParameters().size());
         Assert.assertEquals("site0", wrapper.getParameters().get(0).getSimpleName());
@@ -182,7 +134,7 @@ public class JpfInstrumentationTaskTest {
     }
 
     @Example
-    void plainInstanceCallRecipeHoistsReceiverTarget() throws Exception {
+    void plainInstanceCallRecipeHoistsReceiverTarget() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "public class SubjectTest {\n"
@@ -203,14 +155,16 @@ public class JpfInstrumentationTaskTest {
         CtInvocation<?> testedCall = (CtInvocation<?>) assertion.getArguments().get(1);
         CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
         List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedCall);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(testedMethod, testedCall, inputs, "long");
 
-        CtMethod<?> wrapper = createInvocationInstrumentedMethod(testMethod, testedMethod, testedCall, inputs, "call_wrapper", "long");
-        CtInvocation<?> wrapperCall = createInstrumentedMethodCall(
-            testMethod,
-            wrapper,
-            GeneralizationRecipe.from(testedMethod, testedCall, inputs, "long")
-                .resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage())
-        );
+        CtClass<?> instrumented = build(testMethod, recipe, "call_wrapper", "long");
+        CtMethod<?> wrapper = instrumented.getMethodsByName("call_wrapper").get(0);
+        CtInvocation<?> wrapperCall = instrumented.getMethodsByName("t").get(0)
+            .getElements(CtInvocation.class::isInstance).stream()
+            .map(CtInvocation.class::cast)
+            .filter(invocation -> invocation.getExecutable().getSimpleName().equals("call_wrapper"))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
 
         Assert.assertTrue("plain instance-call recipes keep an explicit receiver parameter", wrapper.toString().contains("_target_"));
         Assert.assertEquals("_target_", wrapper.getParameters().get(0).getSimpleName());
@@ -218,7 +172,7 @@ public class JpfInstrumentationTaskTest {
     }
 
     @Example
-    void receiverlessStaticInvocationRecipeUsesPathBasedWrapperShape() throws Exception {
+    void receiverlessStaticInvocationRecipeUsesPathBasedWrapperShape() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "public class SubjectTest {\n"
@@ -235,8 +189,10 @@ public class JpfInstrumentationTaskTest {
         CtInvocation<?> testedCall = (CtInvocation<?>) assertion.getArguments().get(1);
         CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
         List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedCall);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(testedMethod, testedCall, inputs, "long");
 
-        CtMethod<?> wrapper = createInvocationInstrumentedMethod(testMethod, testedMethod, testedCall, inputs, "call_wrapper", "long");
+        CtClass<?> instrumented = build(testMethod, recipe, "call_wrapper", "long");
+        CtMethod<?> wrapper = instrumented.getMethodsByName("call_wrapper").get(0);
 
         Assert.assertEquals("long", wrapper.getType().getQualifiedName());
         Assert.assertEquals(2, wrapper.getParameters().size());
@@ -246,57 +202,46 @@ public class JpfInstrumentationTaskTest {
         Assert.assertTrue(statement, statement.contains("add(left, right)"));
     }
 
-    private static CtMethod<?> createExpressionInstrumentedMethod(
+    private static GeneralizationRecipe compositeOracleRecipe(CtMethod<?> testMethod) {
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtExpression<?> oracleExpression = assertion.getArguments().get(0);
+        CtInvocation<?> testedCall = oracleExpression.getElements(CtInvocation.class::isInstance).stream()
+            .map(invocation -> (CtInvocation<?>) invocation)
+            .filter(invocation -> invocation.getExecutable().getSimpleName().equals("intCompare")
+                || invocation.getExecutable().getSimpleName().equals("compareTo"))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
+        List<GeneralizableInput> inputs = GeneralizableInput.deriveFromExpression(oracleExpression);
+        return GeneralizationRecipe.from(testedMethod, oracleExpression, inputs, oracleExpression.getType().getQualifiedName());
+    }
+
+    private static CtClass<?> build(
         CtMethod<?> testMethod,
-        GeneralizationRecipe.Resolved recipe,
+        GeneralizationRecipe recipe,
         String methodName,
         String oracleExpressionType
     ) {
-        return new InstrumentedClassBuilder().createInstrumentedMethod(
-            testMethod.getFactory(),
-            testMethod.getParent(CtClass.class),
-            recipe,
+        CtClass<?> sourceClass = testMethod.getParent(CtClass.class);
+        InstrumentedClassBuilder.Names names = new InstrumentedClassBuilder.Names(
+            "smoke",
+            "smoke",
+            "SubjectTest",
+            "_SubjectTest_Instrumented_t_13_Test",
+            "smoke.SubjectTest",
+            "smoke._SubjectTest_Instrumented_t_13_Test",
+            testMethod.getPath().relativePath(sourceClass).toString(),
+            TestAnalysis.findAllAsserts(testMethod).get(0).getPath().relativePath(testMethod).toString(),
             methodName,
             "smoke.ExpressionSliceCut",
             oracleExpressionType
         );
-    }
-
-    private static CtMethod<?> createInvocationInstrumentedMethod(
-        CtMethod<?> testMethod,
-        CtMethod<?> testedMethod,
-        CtInvocation<?> testedCall,
-        List<GeneralizableInput> inputs,
-        String methodName,
-        String oracleExpressionType
-    ) {
-        GeneralizationRecipe recipe = GeneralizationRecipe.from(
-            testedMethod,
-            testedCall,
-            inputs,
-            oracleExpressionType
+        GeneralizationRecipe clonedRecipe = recipe.rewriteForClone(
+            names.getSourceTestClassQualifiedName(),
+            names.getInstrumentedClassQualifiedName()
         );
-        return createExpressionInstrumentedMethod(
-            testMethod,
-            recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage()),
-            methodName,
-            oracleExpressionType
-        );
+        return new InstrumentedClassBuilder().build(testMethod.getFactory(), clonedRecipe, names);
     }
-
-    private static CtInvocation<?> createInstrumentedMethodCall(
-        CtMethod<?> testMethod,
-        CtMethod<?> instrumentedMethod,
-        GeneralizationRecipe.Resolved recipe
-    ) {
-        return new InstrumentedClassBuilder().createInstrumentedMethodCall(
-            testMethod.getFactory(),
-            testMethod.getParent(CtClass.class),
-            instrumentedMethod,
-            recipe
-        );
-    }
-
 
     private static CtMethod<?> testMethodFromSource(String testSource, String cutSource) {
         Launcher launcher = new Launcher();
