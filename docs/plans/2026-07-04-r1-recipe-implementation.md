@@ -176,7 +176,7 @@ public static boolean isSelfContained(CtExpression<?> expression) {
 - Create: `project-configs/verification/fixture-expression-slice.conf`
 - Create: `verification/golden/expression-slice.tsv`
 
-- [ ] **Step 1: CUT + test.** `ExpressionSliceCut` with the spike's helpers (`intCompare`, `timesTwo`, `buildList`, plus `Box`/`Pair` as in `verification/spikes/r1-viability/`); test methods asserting expressions DIRECTLY (the spike wrapped them — this fixture exercises the real seam):
+- [x] **Step 1: CUT + test.** `ExpressionSliceCut` with the spike's helpers (`intCompare`, `timesTwo`, `buildList`, plus `Box`/`Pair` as in `verification/spikes/r1-viability/`); test methods asserting expressions DIRECTLY (the spike wrapped them — this fixture exercises the real seam):
 
 ```java
 assertTrue(ExpressionSliceCut.intCompare(4, 1) > 0);
@@ -189,8 +189,8 @@ assertEquals(3, ExpressionSliceCut.buildList(3).size());
 ```
 
   (`equalsPair` note: the ctor-equality arm stays a project method per the spec's real-`equals` exclusion.)
-- [ ] **Step 2: Run** `scripts/run-verification-corpus.sh --only expression-slice`; inspect the DB; the expected SHAPE from the spike: composites/compareTo/equalsPair included via license, cast/arithmetic/chain included SYMBOLIC, `buildList(...).size()` refused `ORACLE_NOT_WIDENABLE`. Record OBSERVED values in the golden. Any contradiction with the spike shape → STOP, investigate, escalate with evidence.
-- [ ] **Step 3: Commit.** `feat(verification): pin expression-slice recipes with a fixture golden`
+- [x] **Step 2: Run** `scripts/run-verification-corpus.sh --only expression-slice`; inspect the DB; the expected SHAPE from the spike: composites/compareTo/equalsPair included via license, cast/arithmetic/chain included SYMBOLIC, `buildList(...).size()` refused `ORACLE_NOT_WIDENABLE`. Record OBSERVED values in the golden. Any contradiction with the spike shape → STOP, investigate, escalate with evidence.
+- [x] **Step 3: Commit.** `feat(verification): pin expression-slice recipes with a fixture golden`
 
 ---
 

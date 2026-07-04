@@ -1,0 +1,9 @@
+fixture	gen_count	gen_index	variant	is_included	exclusion_info	output_spec_class	diagnostic_kind	tries	distinct_tuples
+expression-slice	8	1	IMPROVED_100_TRIES	true		SYMBOLIC	FULL	100	100
+expression-slice	8	2	IMPROVED_100_TRIES	true		SYMBOLIC	FULL	100	100
+expression-slice	8	3	IMPROVED_100_TRIES	true		SYMBOLIC	FULL	100	100
+expression-slice	8	4	IMPROVED_100_TRIES	false	ORACLE_NOT_WIDENABLE	NULL_CONCRETE			
+expression-slice	8	5	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	100	100
+expression-slice	8	6	IMPROVED_100_TRIES	true		SYMBOLIC	FULL	100	100
+expression-slice	8	7	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	100	100
+expression-slice	8	8	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	100	100
