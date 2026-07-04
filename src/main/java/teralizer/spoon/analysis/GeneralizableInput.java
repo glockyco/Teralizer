@@ -2,9 +2,12 @@ package teralizer.spoon.analysis;
 
 import java.util.ArrayList;
 import java.util.List;
+import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
+import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
@@ -14,6 +17,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.util.TypeCapability;
 
 public class GeneralizableInput {
+    private static final int EXPRESSION_SITE_ARGUMENT_INDEX = -2;
     private static final int RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX = -1;
 
     private final int methodArgumentIndex;
@@ -80,6 +84,12 @@ public class GeneralizableInput {
         return inputs;
     }
 
+    public static List<GeneralizableInput> deriveFromExpression(CtExpression<?> expression) {
+        List<GeneralizableInput> inputs = new ArrayList<>();
+        deriveExpressionSites(expression, inputs);
+        return inputs;
+    }
+
     static GeneralizableInput fromRecipe(
         int methodArgumentIndex,
         int constructorArgumentIndex,
@@ -94,6 +104,48 @@ public class GeneralizableInput {
             argument,
             sourceExpression
         );
+    }
+
+    private static void deriveExpressionSites(CtExpression<?> expression, List<GeneralizableInput> inputs) {
+        if (expression instanceof CtInvocation<?>) {
+            CtInvocation<?> invocation = (CtInvocation<?>) expression;
+            deriveExpressionSites(invocation.getTarget(), inputs);
+            deriveExpressionArgumentSites(invocation.getArguments(), inputs);
+        } else if (expression instanceof CtConstructorCall<?>) {
+            deriveExpressionArgumentSites(((CtConstructorCall<?>) expression).getArguments(), inputs);
+        } else if (expression instanceof CtBinaryOperator<?>) {
+            CtBinaryOperator<?> operator = (CtBinaryOperator<?>) expression;
+            deriveExpressionSites(operator.getLeftHandOperand(), inputs);
+            deriveExpressionSites(operator.getRightHandOperand(), inputs);
+        } else if (expression instanceof CtUnaryOperator<?>) {
+            deriveExpressionSites(((CtUnaryOperator<?>) expression).getOperand(), inputs);
+        }
+    }
+
+    private static void deriveExpressionArgumentSites(List<CtExpression<?>> arguments, List<GeneralizableInput> inputs) {
+        for (CtExpression<?> argument : arguments) {
+            if (argument instanceof CtLiteral<?>) {
+                addExpressionSite((CtLiteral<?>) argument, inputs);
+            } else {
+                deriveExpressionSites(argument, inputs);
+            }
+        }
+    }
+
+    private static void addExpressionSite(CtLiteral<?> literal, List<GeneralizableInput> inputs) {
+        CtTypeReference<?> type = literal.getType();
+        if (type == null || !TypeCapability.supportsGeneratedInput(type.getQualifiedName())) {
+            return;
+        }
+        String typeName = type.getQualifiedName();
+        String name = sanitize("site" + inputs.size());
+        inputs.add(new GeneralizableInput(
+            EXPRESSION_SITE_ARGUMENT_INDEX,
+            -1,
+            new MethodParameter(typeName, name),
+            new MethodArgument(typeName, literal.toString()),
+            literal
+        ));
     }
 
     private static List<GeneralizableInput> deriveConstructorInputs(
@@ -190,6 +242,10 @@ public class GeneralizableInput {
 
     public boolean isReceiverConstructorArgument() {
         return this.methodArgumentIndex == RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX;
+    }
+
+    public boolean isExpressionSite() {
+        return this.methodArgumentIndex == EXPRESSION_SITE_ARGUMENT_INDEX;
     }
 
     public MethodParameter toMethodParameter() {

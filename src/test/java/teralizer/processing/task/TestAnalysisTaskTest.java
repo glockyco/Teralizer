@@ -31,6 +31,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
 import teralizer.processing.ProcessingStage;
+import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 
 public class TestAnalysisTaskTest {
@@ -100,6 +101,64 @@ public class TestAnalysisTaskTest {
     }
 
     @Example
+    void assertTrueCompositeConditionStoresExpressionRecipe() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "import static org.junit.Assert.assertTrue;\n"
+                + "public class SubjectTest {\n"
+                + "  static int intCompare(int site0, int site1) { return java.lang.Integer.compare(site0, site1); }\n"
+                + "  public void t() {\n"
+                + "    assertTrue(intCompare(4, 1) > 0);\n"
+                + "  }\n"
+                + "}\n"
+        );
+        RecordingStore store = new RecordingStore();
+
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson());
+
+        AssertionRecord record = store.assertions.get(0);
+        GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
+        Assert.assertEquals("boolean", recipe.getOracleExpressionType());
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage());
+        Assert.assertTrue(resolved.getOracleExpression().toString().contains("intCompare(4, 1) > 0"));
+        Assert.assertEquals(2, resolved.getInputs().size());
+        assertExpressionInput(resolved.getInputs().get(0), "site0", "int", "4");
+        assertExpressionInput(resolved.getInputs().get(1), "site1", "int", "1");
+    }
+
+    @Example
+    void assertEqualsDirectCallKeepsInvocationRecipeShape() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "public class SubjectTest {\n"
+                + "  static int add(int left, int right) { return left + right; }\n"
+                + "  public void t() {\n"
+                + "    org.junit.Assert.assertEquals(7, add(3, 4));\n"
+                + "  }\n"
+                + "}\n"
+        );
+        RecordingStore store = new RecordingStore();
+
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson());
+
+        AssertionRecord record = store.assertions.get(0);
+        GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
+        Assert.assertEquals("int", recipe.getOracleExpressionType());
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage());
+        Assert.assertTrue(resolved.getOracleExpression() instanceof CtInvocation<?>);
+        Assert.assertEquals("add", ((CtInvocation<?>) resolved.getOracleExpression()).getExecutable().getSimpleName());
+        Assert.assertEquals(2, resolved.getInputs().size());
+        Assert.assertFalse(resolved.getInputs().get(0).isExpressionSite());
+        Assert.assertEquals(0, resolved.getInputs().get(0).getMethodArgumentIndex());
+        Assert.assertEquals("left", resolved.getInputs().get(0).toMethodParameter().getName());
+        Assert.assertEquals("3", resolved.getInputs().get(0).toMethodArgument().getValue());
+        Assert.assertFalse(resolved.getInputs().get(1).isExpressionSite());
+        Assert.assertEquals(1, resolved.getInputs().get(1).getMethodArgumentIndex());
+        Assert.assertEquals("right", resolved.getInputs().get(1).toMethodParameter().getName());
+        Assert.assertEquals("4", resolved.getInputs().get(1).toMethodArgument().getValue());
+    }
+
+    @Example
     void assertionRuntimeFailureDoesNotAbortLaterAssertions() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
@@ -120,6 +179,13 @@ public class TestAnalysisTaskTest {
         Assert.assertEquals(1, store.assertions.size());
         Assert.assertEquals(1, store.observationCount);
         Assert.assertTrue(store.assertions.get(0).getAssertionSourceCode().contains("id(2)"));
+    }
+
+    private static void assertExpressionInput(GeneralizableInput input, String name, String type, String value) {
+        Assert.assertTrue(input.isExpressionSite());
+        Assert.assertEquals(name, input.toMethodParameter().getName());
+        Assert.assertEquals(type, input.toMethodParameter().getType());
+        Assert.assertEquals(value, input.toMethodArgument().getValue());
     }
 
     private static TestAnalysisTask task() {

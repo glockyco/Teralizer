@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.jooq.DSLContext;
@@ -32,6 +33,7 @@ import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.spoon.analysis.ExpressionSliceScreen;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.MethodUnderTestResolver;
@@ -143,13 +145,27 @@ public class TestAnalysisTask extends AbstractTask {
                     List<GeneralizableInput> generalizableInputs = null;
                     GeneralizationRecipe generalizationRecipe = null;
                     if (callAbsolutePath != null && callRelativePath != null && testedMethod != null) {
-                        generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
-                        generalizationRecipe = GeneralizationRecipe.from(
-                            testedMethod,
-                            testedMethodCall,
-                            generalizableInputs,
-                            testedMethod.getType().getQualifiedName()
-                        );
+                        CtExpression<?> actualExpression = actualExpressionFor(assertionCall);
+                        if (actualExpression != null
+                            && actualExpression != testedMethodCall
+                            && ExpressionSliceScreen.isSelfContained(actualExpression)
+                            && containsElement(actualExpression, testedMethodCall)) {
+                            generalizableInputs = GeneralizableInput.deriveFromExpression(actualExpression);
+                            generalizationRecipe = GeneralizationRecipe.from(
+                                testedMethod,
+                                actualExpression,
+                                generalizableInputs,
+                                typeNameOf(actualExpression.getType())
+                            );
+                        } else {
+                            generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
+                            generalizationRecipe = GeneralizationRecipe.from(
+                                testedMethod,
+                                testedMethodCall,
+                                generalizableInputs,
+                                testedMethod.getType().getQualifiedName()
+                            );
+                        }
                     }
                     if (generalizableInputs == null) {
                         for (CtExpression<?> argument : testedMethodCall.getArguments()) {
@@ -264,6 +280,18 @@ public class TestAnalysisTask extends AbstractTask {
         String compact = source.replaceAll("\\s+", " ").trim();
         return compact.length() <= 120 ? compact : compact.substring(0, 117) + "...";
     }
+    private static CtExpression<?> actualExpressionFor(CtInvocation<?> assertionCall) {
+        Optional<Integer> actualIndex = TestAnalysis.getActualParameterIndex(assertionCall);
+        if (!actualIndex.isPresent() || actualIndex.get() < 0 || actualIndex.get() >= assertionCall.getArguments().size()) {
+            return null;
+        }
+        return assertionCall.getArguments().get(actualIndex.get());
+    }
+
+    private static boolean containsElement(CtExpression<?> expression, CtInvocation<?> element) {
+        return expression == element || !expression.getElements(candidate -> candidate == element).isEmpty();
+    }
+
     /*
      * Spoon no-classpath models can leave expression type references unresolved. A
      * typed sentinel keeps the serialized argument shape explicit without pretending

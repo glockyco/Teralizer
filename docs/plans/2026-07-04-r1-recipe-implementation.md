@@ -98,15 +98,15 @@ public static boolean isSelfContained(CtExpression<?> expression) {
 - Modify: `src/main/java/teralizer/processing/task/TestAnalysisTask.java:143-148` (recipe branch)
 - Test: `src/test/java/teralizer/spoon/analysis/GeneralizableInputExpressionTest.java`
 
-- [ ] **Step 1: Write failing tests.** For an admitted composite (`intCompare(4, 1) > 0` in a Spoon model):
+- [x] **Step 1: Write failing tests.** For an admitted composite (`intCompare(4, 1) > 0` in a Spoon model):
   - `GeneralizableInput.deriveFromExpression(expression)` returns two sites (the literals `4` and `1`), typed `int`, with deterministic distinct names.
   - Literal operands of the operator itself (`> 0`'s right side... the `0`) are NOT lifted — only call/ctor argument positions become sites (the spec's screen rule).
   - For a non-admitted expression the method is never consulted (screen gate lives in the caller); for an expression that IS a lone invocation, derivation falls back to `derive(testedMethod, call)` output (same sites, same names) so T0/T1 recipes are unchanged.
-- [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Implement `deriveFromExpression`.** Walk the expression; for every `CtInvocation`/`CtConstructorCall` argument position holding a `CtLiteral` of a `TypeCapability.supportsGeneratedInput` type, create a `GeneralizableInput` whose `sourceExpression` is that literal (indices set to a new `EXPRESSION_SITE` sentinel `-2`; path is what locates it downstream). Name sites `site0`, `site1`, … in traversal order, `sanitize`d like ctor inputs.
-- [ ] **Step 4: Wire analysis.** In `TestAnalysisTask`, after MUT resolution succeeds: locate the assertion's actual expression (`TestAnalysis.getActualParameterIndex(assertion)` → `assertion.getArguments().get(idx)`; for `assertTrue`/`assertFalse` the condition argument). If that expression is NOT the tested call itself AND `ExpressionSliceScreen.isSelfContained(actualExpression)` AND it contains the resolved tested call: derive sites from the expression, build the recipe with the expression + its `getType().getQualifiedName()` as `oracleExpressionType`. Otherwise: today's exact path (recipe from the tested call, expression type = method return type).
-- [ ] **Step 5: Run, expect PASS**, plus `./gradlew test --tests 'teralizer.processing.task.*'`.
-- [ ] **Step 6: Commit.** `feat(analysis): derive expression-slice recipes behind the admit screen`
+- [x] **Step 2: Run, expect FAIL.**
+- [x] **Step 3: Implement `deriveFromExpression`.** Walk the expression; for every `CtInvocation`/`CtConstructorCall` argument position holding a `CtLiteral` of a `TypeCapability.supportsGeneratedInput` type, create a `GeneralizableInput` whose `sourceExpression` is that literal (indices set to a new `EXPRESSION_SITE` sentinel `-2`; path is what locates it downstream). Name sites `site0`, `site1`, … in traversal order, `sanitize`d like ctor inputs.
+- [x] **Step 4: Wire analysis.** In `TestAnalysisTask`, after MUT resolution succeeds: locate the assertion's actual expression (`TestAnalysis.getActualParameterIndex(assertion)` → `assertion.getArguments().get(idx)`; for `assertTrue`/`assertFalse` the condition argument). If that expression is NOT the tested call itself AND `ExpressionSliceScreen.isSelfContained(actualExpression)` AND it contains the resolved tested call: derive sites from the expression, build the recipe with the expression + its `getType().getQualifiedName()` as `oracleExpressionType`. Otherwise: today's exact path (recipe from the tested call, expression type = method return type).
+- [x] **Step 5: Run, expect PASS**, plus `./gradlew test --tests 'teralizer.processing.task.*'`.
+- [x] **Step 6: Commit.** `feat(analysis): derive expression-slice recipes behind the admit screen`
 
 ---
 
