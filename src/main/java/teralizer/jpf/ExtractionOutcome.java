@@ -40,7 +40,22 @@ public final class ExtractionOutcome {
      * on the concrete path, entered but never returned in-state, or returned and produced a spec.
      * An exit without an entry is impossible; it fails fast rather than being mislabeled.
      */
-    public static ExtractionOutcome fromState(boolean targetEntered, boolean targetExited) {
+    public static ExtractionOutcome fromState(
+        boolean targetEntered,
+        boolean targetExited,
+        boolean expressionRecipe
+    ) {
+        if (expressionRecipe) {
+            if (targetExited) {
+                return new ExtractionOutcome(Kind.EXTRACTED, targetEntered
+                    ? "specification extracted; tested method entered"
+                    : "specification extracted; tested method not entered on the concrete path");
+            }
+            return new ExtractionOutcome(Kind.TARGET_NOT_EXITED,
+                targetEntered
+                    ? "instrumented expression wrapper did not return in-state after tested method entry"
+                    : "instrumented expression wrapper did not return in-state");
+        }
         if (targetExited && !targetEntered) {
             throw new IllegalArgumentException(
                 "corrupt extraction state: tested method exited without being entered");
@@ -54,6 +69,10 @@ public final class ExtractionOutcome {
                 "tested method entered but did not return in-state");
         }
         return new ExtractionOutcome(Kind.EXTRACTED, "specification extracted");
+    }
+
+    public static ExtractionOutcome fromState(boolean targetEntered, boolean targetExited) {
+        return fromState(targetEntered, targetExited, false);
     }
 
     /** An unsupported/unsound symbolic term was reached at run time — recorded as an exclusion. */

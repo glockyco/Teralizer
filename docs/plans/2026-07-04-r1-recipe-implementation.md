@@ -147,13 +147,13 @@ public static boolean isSelfContained(CtExpression<?> expression) {
 - Modify: `src/main/resources/templates/jpf-config.vm` + `JpfInstrumentationTask` config write (new boolean `test_generalization.expression_recipe`)
 - Test: `src/test/java/teralizer/jpf/` — extend the `JpfListenerHarness` tests with a target whose wrapper computes a composite of two helper calls (pattern: existing targets in `src/test/java/teralizer/jpf/targets/`)
 
-- [ ] **Step 1: Write failing tests.**
+- [x] **Step 1: Write failing tests.**
   - Expression mode: capture fires at the instrumented-wrapper exit; the input model reflects the whole expression's PC; a wrapper whose focal helper is short-circuited past still extracts (target-entered=false is not a failure).
   - Invocation mode (flag off): existing capture semantics byte-identical — rerun `TestGeneralizationListenerCaptureTest` + `...SymbolicTest` unmodified.
-- [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Implement.** New config key read in the constructor. In expression mode the pinned frame is the *instrumented* method (`instrumentedMethodSpec`) instead of the tested method — the depth-pinning and single-capture logic transfer verbatim; `ExtractionOutcome.fromState` gains the mode so `TARGET_NOT_ENTERED` only fires for invocation mode; the listener still records `wasTargetEntered` (it lands in task info for telemetry).
-- [ ] **Step 4: Run, expect PASS** for the whole `teralizer.jpf.*` suite.
-- [ ] **Step 5: Commit.** `feat(listener): capture at the wrapper exit for expression recipes`
+- [x] **Step 2: Run, expect FAIL.**
+- [x] **Step 3: Implement.** New config key read in the constructor. In expression mode the pinned frame is the *instrumented* method (`instrumentedMethodSpec`) instead of the tested method — the depth-pinning and single-capture logic transfer verbatim; `ExtractionOutcome.fromState` gains the mode so `TARGET_NOT_ENTERED` only fires for invocation mode; the listener still records `wasTargetEntered` (it lands in task info for telemetry).
+- [x] **Step 4: Run, expect PASS** for the whole `teralizer.jpf.*` suite.
+- [x] **Step 5: Commit.** `feat(listener): capture at the wrapper exit for expression recipes`
 
 ---
 

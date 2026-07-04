@@ -89,6 +89,7 @@ public class JpfConfigTemplateTest {
         context.put("testedMethodQualifiedName", "example.Subject.value");
         context.put("instrumentedClassQualifiedName", "example.InstrumentedTest");
         context.put("instrumentedMethodQualifiedName", "example.InstrumentedTest.value");
+        context.put("expressionRecipe", false);
         context.put("inputValuesPath", "input-values.json");
         context.put("outputValuePath", "output-value.json");
         context.put("inputSpecificationPath", "input-spec.json");

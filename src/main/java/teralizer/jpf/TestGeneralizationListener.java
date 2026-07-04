@@ -32,6 +32,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private final String instrumentedMethodQualifiedName;
     private final MethodSpec instrumentedMethodSpec;
     private final MethodSpec testedMethodSpec;
+    private final boolean expressionRecipe;
 
     private final Path inputValuesPath;
     private final Path outputValuePath;
@@ -54,6 +55,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
         this.instrumentedMethodSpec = MethodSpec.createMethodSpec(this.instrumentedMethodQualifiedName);
+        this.expressionRecipe = config.getBoolean("test_generalization.expression_recipe", false);
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
         this.inputValuesPath = Paths.get(config.getString("test_generalization.input_values_path"));
         this.outputValuePath = Paths.get(config.getString("test_generalization.output_value_path"));
@@ -101,14 +103,21 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             this.isInInstrumentedMethod = true;
             this.instrumentedInputArguments = this.captureConcreteArguments(currentThread);
         }
-        // Pin the tested call's stack position at its first entry reached from inside the wrapper.
+        // Pin the capture frame's stack position at its first entry reached from inside the wrapper.
+        // In expression mode the wrapper is the capture frame; in invocation mode the tested call is.
         // Its matching exit (same depth) is the outermost frame under recursion and the first call
         // under a looped wrapper. The single constraint-collection path does not backtrack, so the
         // pinned depth stays valid for the rest of the run.
-        if (this.isInInstrumentedMethod && this.targetDepth < 0 && this.testedMethodSpec.matches(enteredMethod)) {
-            LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
-            this.targetEntered = true;
+        if (this.expressionRecipe && this.targetDepth < 0 && this.instrumentedMethodSpec.matches(enteredMethod)) {
+            LOGGER.atDebug().log("Entering instrumented method: " + enteredMethod.toString());
             this.targetDepth = currentThread.getTopFrame().getDepth();
+        }
+        if (this.isInInstrumentedMethod && this.testedMethodSpec.matches(enteredMethod)) {
+            this.targetEntered = true;
+            if (!this.expressionRecipe && this.targetDepth < 0) {
+                LOGGER.atDebug().log("Entering tested method: " + enteredMethod.toString());
+                this.targetDepth = currentThread.getTopFrame().getDepth();
+            }
         }
     }
 
@@ -143,12 +152,12 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     }
 
     private boolean isExtractionActive() {
-        return this.targetEntered && this.invocation == null;
+        return (this.expressionRecipe ? this.targetDepth >= 0 : this.targetEntered) && this.invocation == null;
     }
 
     @Override
     public void exceptionThrown(VM vm, ThreadInfo currentThread, ElementInfo thrownException) {
-        if (!this.targetEntered || this.invocation != null) {
+        if (!this.isExtractionActive()) {
             return;
         }
 
@@ -157,16 +166,17 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     @Override
     public void methodExited(VM vm, ThreadInfo currentThread, MethodInfo exitedMethod) {
-        if (this.instrumentedMethodSpec.matches(exitedMethod)) {
-            this.isInInstrumentedMethod = false;
-        }
-        // Capture exactly once, at the exit of the pinned tested frame (matched by stack depth);
-        // leave() notifies methodExited before popFrame(), so that frame is still the top here.
-        if (this.testedMethodSpec.matches(exitedMethod) && this.targetEntered && this.invocation == null
+        boolean captureMethodExited = this.expressionRecipe
+            ? this.instrumentedMethodSpec.matches(exitedMethod)
+            : this.testedMethodSpec.matches(exitedMethod);
+        if (captureMethodExited && this.isExtractionActive()
                 && currentThread.getTopFrame().getDepth() == this.targetDepth) {
-            LOGGER.atDebug().log("Exiting tested method: " + exitedMethod.toString());
+            LOGGER.atDebug().log("Exiting capture method: " + exitedMethod.toString());
             this.invocation = this.captureInvocation(vm, currentThread);
             vm.getSearch().terminate();
+        }
+        if (this.instrumentedMethodSpec.matches(exitedMethod)) {
+            this.isInInstrumentedMethod = false;
         }
     }
 

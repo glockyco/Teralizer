@@ -11,6 +11,7 @@
 ## @vtlvariable name="testedMethodQualifiedName" type="java.lang.String"
 ## @vtlvariable name="instrumentedClassQualifiedName" type="java.lang.String"
 ## @vtlvariable name="instrumentedMethodQualifiedName" type="java.lang.String"
+## @vtlvariable name="expressionRecipe" type="java.lang.Boolean"
 ## @vtlvariable name="inputValuesPath" type="java.lang.String"
 ## @vtlvariable name="outputValuePath" type="java.lang.String"
 ## @vtlvariable name="inputSpecificationPath" type="java.lang.String"
@@ -45,6 +46,7 @@ test_generalization.tested_class=${testedClassQualifiedName}
 test_generalization.tested_method=${testedMethodQualifiedName}
 test_generalization.instrumented_class=${instrumentedClassQualifiedName}
 test_generalization.instrumented_method=${instrumentedMethodQualifiedName}
+test_generalization.expression_recipe=${expressionRecipe}
 test_generalization.input_values_path=${inputValuesPath}
 test_generalization.output_value_path=${outputValuePath}
 test_generalization.input_specification_path=${inputSpecificationPath}

@@ -43,7 +43,7 @@ public class JpfExecutionTask extends AbstractTask {
         if (this.testRecord == null) {
             this.scheduleTasks(context, scheduleTask);
         } else {
-            this.executeTask(context);
+            this.executeTask(context, reportInfo);
         }
     }
 
@@ -58,8 +58,9 @@ public class JpfExecutionTask extends AbstractTask {
         }
     }
 
-    private void executeTask(TaskContext context) {
+    private void executeTask(TaskContext context, Consumer<String> reportInfo) {
         Config config = JPF.createConfig(new String[]{this.assertionRecord.getJpfConfigPath()});
+        boolean expressionRecipe = config.getBoolean("test_generalization.expression_recipe", false);
 
         JPF jpf = new JPF(config);
         TestGeneralizationListener listener = new TestGeneralizationListener(config);
@@ -106,7 +107,10 @@ public class JpfExecutionTask extends AbstractTask {
         }
 
         ExtractionOutcome outcome = ExtractionOutcome.fromState(
-            listener.wasTargetEntered(), listener.getInvocation() != null);
+            listener.wasTargetEntered(), listener.getInvocation() != null, expressionRecipe);
+        if (expressionRecipe) {
+            reportInfo.accept("wasTargetEntered=" + listener.wasTargetEntered());
+        }
         if (outcome.getKind() != ExtractionOutcome.Kind.EXTRACTED) {
             throw new RuntimeException(this.assertionRecord.getInstrumentedMethodQualifiedName()
                 + " - " + outcome.getKind().name() + ": " + outcome.getDetail());

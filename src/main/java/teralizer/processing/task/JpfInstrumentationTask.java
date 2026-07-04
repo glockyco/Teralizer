@@ -140,7 +140,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         this.createInstrumentedClassFile(spoonLauncher, instrumentedClass);
 
         this.createDriverClassFile(velocityEngine, spoonLauncher);
-        this.createJpfConfigFile(velocityEngine, instrumentedMethod, testedMethod);
+        this.createJpfConfigFile(velocityEngine, instrumentedMethod, testedMethod, expressionRecipe);
     }
 
     private void updateAssertionRecord() {
@@ -753,7 +753,7 @@ public class JpfInstrumentationTask extends AbstractTask {
             .collect(Collectors.toSet());
     }
 
-    private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod) throws IOException {
+    private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod, boolean expressionRecipe) throws IOException {
         String symbolicParams = instrumentedMethod.getParameters().stream().map(JpfInstrumentationTask::symbolicMarker).collect(Collectors.joining("#"));
         String symbolicMethod = this.assertionRecord.getInstrumentedMethodQualifiedName() + "(" + symbolicParams + ")";
 
@@ -772,6 +772,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("maxExecutionTime", Configuration.getJpfMaxExecutionTime());
         context.put("maxPathConditionSize", Configuration.getJpfMaxPathConditionSize());
         context.put("maxSearchDepth", Configuration.getJpfMaxSearchDepth());
+        context.put("expressionRecipe", expressionRecipe);
 
         context.put("driverClassQualifiedName", this.assertionRecord.getDriverClassQualifiedName());
         context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());
