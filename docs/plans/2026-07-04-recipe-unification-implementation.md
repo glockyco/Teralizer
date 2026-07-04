@@ -67,9 +67,9 @@ Ordered steps:
 - Modify: `JpfInstrumentationTask.java`, `TestGeneralizationTask.java` (orchestration only: scheduling, records, paths, Velocity, file writes)
 - Test: `src/test/java/teralizer/spoon/codegen/InstrumentedClassBuilderTest.java`, `GeneralizedTestBuilderTest.java` (direct builder tests against Spoon models; port the codegen assertions that currently live in the task tests)
 
-- [ ] **Step 1:** Extract `InstrumentedClassBuilder`: inputs are the resolved recipe, the instrumented class/method names, and the factory. Output is the finished `CtClass`. No DB records, no filesystem, no Velocity. The task calls it and keeps everything else. Targeted tests green (existing instrumentation tests keep passing unmodified — the split must not change printed output).
-- [ ] **Step 2:** Same for `GeneralizedTestBuilder` (inputs additionally: the plan/license results and variant config the codegen genuinely consumes). Targeted tests green.
-- [ ] **Step 3:** One `scripts/verify-pipeline.sh` run, goldens unmoved. Both tasks at or under ~300 lines each. Commit per builder: `refactor(codegen): extract the instrumented-class builder`, `refactor(codegen): extract the generalized-test builder`
+- [x] **Step 1:** Extract `InstrumentedClassBuilder`: inputs are the resolved recipe, the instrumented class/method names, and the factory. Output is the finished `CtClass`. No DB records, no filesystem, no Velocity. The task calls it and keeps everything else. Targeted tests green (existing instrumentation tests keep passing unmodified — the split must not change printed output).
+- [x] **Step 2:** Same for `GeneralizedTestBuilder` (inputs additionally: the plan/license results and variant config the codegen genuinely consumes). Targeted tests green.
+- [x] **Step 3:** One `scripts/verify-pipeline.sh` run, goldens unmoved. Both tasks at or under ~300 lines each. Commit per builder: `refactor(codegen): extract the instrumented-class builder`, `refactor(codegen): extract the generalized-test builder`
 
 ---
 

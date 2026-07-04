@@ -55,6 +55,7 @@ import teralizer.processing.TaskContext;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.codegen.GeneralizedTestBuilder;
 import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpecificationGson;
 
@@ -70,7 +71,7 @@ public class TestGeneralizationTaskTest {
             new PrimitiveValue("double", 2.0)
         );
 
-        Map<String, Value> mapped = TestGeneralizationTask.mapTestedMethodArguments(parameters, values);
+        Map<String, Value> mapped = GeneralizedTestBuilder.mapTestedMethodArguments(parameters, values);
 
         Assert.assertEquals(1, mapped.size());
         Assert.assertEquals("double", mapped.get("x").getJavaType());
@@ -90,7 +91,7 @@ public class TestGeneralizationTaskTest {
             "trim",
             java.util.Collections.emptyList());
 
-        List<MethodParameter> recovered = TestGeneralizationTask.collectTemporaryParameters(input, output, declared);
+        List<MethodParameter> recovered = GeneralizedTestBuilder.collectTemporaryParameters(input, output, declared);
 
         Assert.assertTrue(recovered.stream().anyMatch(p -> p.getName().equals("INT_1") && p.getType().equals("int")));
         Assert.assertTrue(recovered.stream().anyMatch(p -> p.getName().equals("STR_2") && p.getType().equals("java.lang.String")));
