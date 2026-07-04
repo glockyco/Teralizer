@@ -16,8 +16,6 @@
 - **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
-- **R1 Expression-Slice Recipes** [spec] `2026-07-04-r1-expression-slice-recipes` ← 2026-06-26-teralizer-overview
-- **R1 Expression-Slice Implementation** [plan] `2026-07-04-r1-recipe-implementation` (—) ← 2026-07-04-r1-expression-slice-recipes
 - **R1 Viability Spike — Expression-Slice Shapes Through SPF** [audit] `2026-07-04-r1-viability-spike` ← 2026-07-02-recipe-seam-review
 
 ## draft
@@ -31,4 +29,4 @@
 - **Symbolic-Sibling Throws in SPF Extraction** [spec] `2026-07-03-symbolic-sibling-throws` ← 2026-06-26-teralizer-overview
 - **Concretization Census — Which SPF Gaps Are Worth Closing** [spec] `2026-07-04-concretization-census` ← 2026-06-26-teralizer-overview
 
-_41 archived — see `docs/plans/archive/`._
+_43 archived — see `docs/plans/archive/`._

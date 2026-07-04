@@ -1,9 +1,10 @@
 ---
 title: R1 Expression-Slice Recipes
 type: spec
-status: active
+status: implemented
 created: 2026-07-04
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-04
 ---
 
 # R1 Expression-Slice Recipes

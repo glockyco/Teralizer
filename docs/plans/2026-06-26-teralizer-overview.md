@@ -33,20 +33,15 @@ invalidate later readings), then decision-gates (spikes and censuses that *rank*
 below them), then the fixes those gates rank, then measurement infrastructure, then recall
 expansion, then maintainability. Evidence-gated items never start before their gate.
 
-**P0 — verification debt (blocks clean readings)**
-1. **Sentinel exposure of the ingestion-totality change** — no doc; run the sentinel subset
-   once (~10 min). The ingestion contract change (typed refusal of derived string symbols)
-   has never seen real-world projects; its census shift must be known before any other run
-   is interpreted. Doubles as `2026-06-30-partial-sound-string-support` Task 7 Steps 2–3,
-   likely completing that plan.
-
 **P1 — decision gates (produce the evidence that ranks P2)**
-2. **R1 viability spike** (`2026-07-02-recipe-seam-review` §Spikes) — ~1 day, hand-built
-   wrappers, no pipeline changes. Decides whether the R1 expression-slice spec gets written
-   at all and which topology buckets pay; scopes the next implementation wave.
-3. **`2026-07-04-concretization-census`** *(spec, draft — awaiting review)* — identity
+1. **`2026-07-04-concretization-census`** *(spec, draft — awaiting review)* — identity
    telemetry + ranked census of concretizing methods. Produces the ROI ranking that gates
    every SPF-gap fix below (boxed-capture, native peers, string-op growth).
+2. **R2 decision data** — the `actual_shape` + `receiver_provenance` telemetry
+   (`2026-07-02-input-topology-spike` §Telemetry) on the next rerun sizes the
+   zero-arg-inspector sub-family R2 could soundly take, and measures R1's realized share
+   beyond the sentinel signal (694 expression attempts, 2 sound wins, all refusals typed —
+   the honest baseline).
 
 **P2 — evidence-ranked fixes (start as their gate resolves)**
 4. **Boxed-capture upstream** (`Long/Boolean.valueOf` attr loss) — the worked candidate for

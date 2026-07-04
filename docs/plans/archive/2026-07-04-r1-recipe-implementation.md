@@ -1,9 +1,10 @@
 ---
 title: R1 Expression-Slice Implementation
 type: plan
-status: active
+status: implemented
 created: 2026-07-04
 parent: 2026-07-04-r1-expression-slice-recipes
+archived: 2026-07-04
 ---
 
 # R1 Expression-Slice Implementation Plan
@@ -196,10 +197,15 @@ assertEquals(3, ExpressionSliceCut.buildList(3).size());
 
 ## Task 9: Full gates
 
-- [ ] **Step 1:** `scripts/verify-pipeline.sh` twice — green and identical, the nine pre-existing goldens unmoved.
-- [ ] **Step 2:** `./gradlew build` green.
-- [ ] **Step 3:** Sentinel subset (scratch DB per AGENTS.md) — census identical to the headers' pinned values (sentinels contain no currently-generalizing R1 shapes; a shift means an unintended T0/T1 behavior change). First-run numbers stand; a runtime-limit failure is recorded, not rerun.
-- [ ] **Step 4:** Commit any golden/doc deltas; `omp-plans complete 2026-07-04-r1-expression-slice-recipes` and `omp-plans complete 2026-07-04-r1-recipe-implementation` only after all gates pass.
+- [x] **Step 1:** `scripts/verify-pipeline.sh` twice — green and identical, the nine pre-existing goldens unmoved.
+- [x] **Step 2:** `./gradlew build` green.
+- [x] **Step 3:** Sentinel subset (scratch DB per AGENTS.md) — the invocation-shaped
+  (T0/T1) census is identical to the pre-R1 baseline, and every expression-shaped row is
+  additive and sound (included rows FULL, refusals typed `ORACLE_NOT_WIDENABLE`, zero
+  assertion failures). The sentinels DO carry R1-admissible shapes, so the total census
+  moves; the header pins record the post-R1 totals with the invocation-shaped subset
+  beside them. First-run numbers stand; a runtime-limit failure is recorded, not rerun.
+- [x] **Step 4:** Commit any golden/doc deltas; `omp-plans complete 2026-07-04-r1-expression-slice-recipes` and `omp-plans complete 2026-07-04-r1-recipe-implementation` only after all gates pass.
 
 ---
 
