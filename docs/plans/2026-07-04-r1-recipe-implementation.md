@@ -48,11 +48,11 @@ parent: 2026-07-04-r1-expression-slice-recipes
 - Create: `src/main/java/teralizer/spoon/analysis/ExpressionSliceScreen.java`
 - Test: `src/test/java/teralizer/spoon/analysis/ExpressionSliceScreenTest.java`
 
-- [ ] **Step 1: Write failing tests.** Build expressions in a Spoon model (`Launcher` + `VirtualFile`) and assert `ExpressionSliceScreen.isSelfContained(expr)`:
+- [x] **Step 1: Write failing tests.** Build expressions in a Spoon model (`Launcher` + `VirtualFile`) and assert `ExpressionSliceScreen.isSelfContained(expr)`:
   - admitted: literal; static call with literal args; ctor call; binary operator over two static calls; unary negation; cast of a call; chained instance call whose root receiver is a static-factory call (`Box.of(5).value()`).
   - rejected: variable read; field read; array access; lambda; call whose root receiver is a variable (`c.compare(a, b)`); assignment.
-- [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Implement.** A recursive structural check:
+- [x] **Step 2: Run, expect FAIL.**
+- [x] **Step 3: Implement.** A recursive structural check:
 
 ```java
 public static boolean isSelfContained(CtExpression<?> expression) {
@@ -86,8 +86,8 @@ public static boolean isSelfContained(CtExpression<?> expression) {
 ```
 
   Verify the cast claim against Spoon's actual model in the test (a `(long) call()` expression) and adjust if Spoon materializes a distinct node.
-- [ ] **Step 4: Run, expect PASS.**
-- [ ] **Step 5: Commit.** `feat(analysis): add the expression-slice admit screen`
+- [x] **Step 4: Run, expect PASS.**
+- [x] **Step 5: Commit.** `feat(analysis): add the expression-slice admit screen`
 
 ---
 
