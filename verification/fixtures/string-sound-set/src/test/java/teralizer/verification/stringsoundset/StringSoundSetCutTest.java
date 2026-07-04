@@ -12,7 +12,7 @@ public class StringSoundSetCutTest {
     }
 
     @Test
-    public void lengthPredicateCurrentlyNeedsTheConservativeLicenseGap() {
+    public void lengthPredicateStaysResidualAndWidens() {
         assertTrue(new StringSoundSetCut().hasNonNegativeLength("bar"));
     }
 
