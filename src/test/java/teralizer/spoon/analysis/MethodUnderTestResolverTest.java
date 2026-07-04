@@ -147,6 +147,50 @@ public class MethodUnderTestResolverTest {
     }
 
     @Example
+    void qualifiedThisFieldReadProducer_isT1() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  int r;\n"
+            + "  public void t() { this.r = new Subject().gcd(6, 9); org.junit.Assert.assertEquals(3, SubjectTest.this.r); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals(MutResolution.Signal.FIELD_PRODUCER, r.getDecidingSignal());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+
+    @Example
+    void enclosingThisFieldReadProducer_isT1() {
+        CtModel model = modelOf(
+            "public class SubjectTest {\n"
+            + "  int r;\n"
+            + "  class InnerTest {\n"
+            + "    public void t() { SubjectTest.this.r = new Subject().gcd(6, 9); org.junit.Assert.assertEquals(3, SubjectTest.this.r); }\n"
+            + "  }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        MutResolution r = resolveFrom(model, "SubjectTest$InnerTest", "t", 0);
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals(MutResolution.Signal.FIELD_PRODUCER, r.getDecidingSignal());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void shadowedFieldWriteDoesNotProduceEnclosingFieldRead() {
+        CtModel model = modelOf(
+            "public class SubjectTest {\n"
+            + "  int r;\n"
+            + "  class InnerTest {\n"
+            + "    int r;\n"
+            + "    public void t() { this.r = new Subject().gcd(6, 9); org.junit.Assert.assertEquals(0, SubjectTest.this.r); }\n"
+            + "  }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        MutResolution r = resolveFrom(model, "SubjectTest$InnerTest", "t", 0);
+        Assert.assertNotEquals(MutResolution.Signal.FIELD_PRODUCER, r.getDecidingSignal());
+    }
+    @Example
     void writeInsideNestedBlock_isUnproven_T3orBetter() {
         MutResolution r = resolve(
             "public class SubjectTest {\n"

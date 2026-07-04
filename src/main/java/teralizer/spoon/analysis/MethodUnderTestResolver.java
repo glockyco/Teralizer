@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
 import spoon.reflect.CtModel;
@@ -1114,11 +1115,19 @@ public final class MethodUnderTestResolver {
     }
 
     private static boolean isThisOrUnqualified(CtExpression<?> target) {
-        return target == null || "this".equals(target.toString());
+        return target == null || target instanceof CtThisAccess;
     }
 
     private static boolean sameField(CtFieldReference<?> left, CtFieldReference<?> right) {
-        return left != null && right != null && left.getSimpleName().equals(right.getSimpleName());
+        return left != null
+            && right != null
+            && left.getSimpleName().equals(right.getSimpleName())
+            && Objects.equals(fieldDeclaringTypeName(left), fieldDeclaringTypeName(right));
+    }
+
+    private static String fieldDeclaringTypeName(CtFieldReference<?> field) {
+        CtTypeReference<?> declaringType = field.getDeclaringType();
+        return declaringType == null ? null : declaringType.getQualifiedName();
     }
 
     /**
