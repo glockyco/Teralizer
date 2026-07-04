@@ -1,10 +1,9 @@
 ---
 title: Widening License — Oracle-Coherent Input Generalization
 type: spec
-status: implemented
+status: active
 created: 2026-07-03
 parent: 2026-06-26-teralizer-overview
-archived: 2026-07-04
 ---
 
 # Widening License — Oracle-Coherent Input Generalization
@@ -28,9 +27,16 @@ Decided per generalization at `GENERALIZE_TESTS` time (all lifted inputs feed th
 | # | condition | verdict |
 |---|---|---|
 | 1 | output model is SYMBOLIC or CONSTANT (expected side is replaced by the rendered spec) | **widen** — today's behavior; the oracle co-varies (SYMBOLIC) or SPF proved path-constancy (CONSTANT) |
-| 2 | output is EXCEPTION (`CapturedOutput.THROWN` — the oracle is "this throws") | **widen** — reaching the throw is a property of the path itself, pinned by the path condition for every admitted input (an unconditional throw holds even with an empty PC); presence-based evidence, so no `concretization_events` condition applies |
+| 2 | output is EXCEPTION (`CapturedOutput.THROWN` — the oracle is "this throws") ∧ `concretization_events = 0` ∧ (path condition empty OR it names every widened parameter) | **widen** — reaching the throw is a control-flow property: with no concretized branches, every branch taken on the way to the throw either left a PC clause (enforced on generated inputs) or did not depend on the symbolic inputs, so every admitted input reaches the same throw. An unconditional throw (empty PC, zero events) holds for every input |
 | 3 | NULL_CONCRETE ∧ tested method returns `boolean`/`java.lang.Boolean` ∧ the path condition contains at least one clause naming **every** widened parameter ∧ `concretization_events = 0` | **widen** — the asserted relation lives in the PC (the classifier-javadoc benign case); path-exactness pins the branch for every admitted input |
 | 4 | anything else — including every empty-PC NULL_CONCRETE case | **no license** → typed exclusion `ORACLE_NOT_WIDENABLE` |
+
+Rule 2's events condition is empirically load-bearing, not defensive: a corpus with
+String inputs flowing into unmodeled parsing (`concretization_events > 0`, empty PC)
+produced THROWN oracles whose widened inputs branch inside the concretized region and
+fail elsewhere instead of reaching the expected throw — every such property fails
+validation after a full build+run cycle. Concretized branches break the path-uniqueness
+argument for throws exactly as they do for booleans (rule 3).
 
 Justification for rule 3's shape, and its known residual risk:
 - A *computed* boolean (`return a == b`) compiles to a branch, so a boolean result depending on a symbolic input forces a PC clause naming it — requiring the clause is requiring the evidence.

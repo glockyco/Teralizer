@@ -16,6 +16,7 @@
 - **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
+- **Widening License — Oracle-Coherent Input Generalization** [spec] `2026-07-03-widening-license` ← 2026-06-26-teralizer-overview
 - **Pipeline Fixture Corpus — Fast Deterministic Verification** [plan] `2026-07-04-pipeline-fixture-corpus` (0/13) ← 2026-06-26-teralizer-overview
 
 ## draft
@@ -32,4 +33,4 @@
 
 - **Static MUT Identification** [plan] `2026-06-30-static-mut-identification` (0/34) ← 2026-06-26-teralizer-overview
 
-_38 archived — see `docs/plans/archive/`._
+_37 archived — see `docs/plans/archive/`._
