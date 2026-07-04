@@ -408,7 +408,14 @@ R-A `GeneralizationRecipe` extraction as behavior-preserving):
   again): 74/75 EXCEPTION and 138 SYMBOLIC generalizations die in GENERALIZE_TESTS with an
   NPE at `SpoonUtils.getTypeReference:70` via `TestParametersFactory.createParametersClass`
   — identical counts across pre-license runs (1/75 EXCEPTION included in every run), so not
-  a regression; it is the next completeness blocker for the EXCEPTION/THROWN oracle family.
+  a regression. Root cause (diagnosed): the method's default branch calls
+  `factory.Type().get(typeName).getReference()`, and Spoon's `Type().get` is model-only —
+  null for any type outside the source model (`java.lang.String`, JDK types) — while the
+  null-safe `createReference` is what the surrounding factories already use for fields.
+  The class appears now because fusion resolves String-parameter MUTs for the first time
+  (pre-fusion funnel had ≈0), so String-typed inputs reach the parameter factories at all.
+  Fix: null-safe reference creation in the default branch; verify with a parameter-factory
+  model test over a `java.lang.String` input plus a single-project pipeline run (antiaction).
 
 ## Relationship to existing docs
 

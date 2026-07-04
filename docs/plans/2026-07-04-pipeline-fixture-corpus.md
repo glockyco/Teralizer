@@ -1,0 +1,88 @@
+---
+title: Pipeline Fixture Corpus — Fast Deterministic Verification
+type: plan
+status: active
+created: 2026-07-04
+parent: 2026-06-26-teralizer-overview
+---
+
+# Pipeline Fixture Corpus Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** A Teralizer-owned corpus of tiny synthetic Maven projects that exercises the FULL pipeline (setup → build → SPF extraction → generalization → jqwik validation → collection) in minutes, deterministically, with golden assertions on the DB outcomes — so code changes are verified without a ~60-minute spike re-run.
+
+**Architecture:** Verification is tiered. Tier 0 = unit/model tests (exists). **Tier 1 = this corpus**: one fixture project per behavior family, run by a script (mirroring `scripts/run-reporeapers-rerun.sh`) into a scratch DB (`postgres_verification`), checked by a golden-assertion script against expected per-fixture outcomes (gen counts, `output_spec_class`, `exclusion_info` labels, `jqwik_property_execution.diagnostic_kind`). Tier 2 = a sentinel subset of five stable real spike projects (defined below; no new code). Tier 3 = full spike/corpus — evaluation events only, uniform-settings doctrine applies there and only there.
+
+**Tech stack:** minimal Maven projects (JUnit 4.13.2, `-source/-target 1.8`, no external deps beyond JUnit), bash runner, SQL/Python golden checks (`uv`-run, matching `analysis/` conventions if Python).
+
+**Ground rules for every task:**
+- Fixtures live under `verification/fixtures/<name>/` (top level; NOT `projects/`, which is read-only submodules). Fixture `target/` build output and Teralizer's per-run artifacts under fixtures must be gitignored; generated `_*_Generalized_*` sources under fixtures are transient run output, never committed.
+- Determinism is the point: jqwik seed is already pinned (`seed = "0"` in generated tests); fixture tests must avoid time/randomness/network/filesystem-order dependence; suites must run in ≪ the 60s ceiling.
+- The scratch DB is `postgres_verification` — created/dropped by the runner; NEVER a core or spike DB.
+- Dense logic javadoc/comments explain WHY; no runtime numbers/dates in comments. jqwik `@Example` + `org.junit.Assert` for any Teralizer-side test code.
+- Commit per task via `bun ~/.omp/agent/skills/commit/commit-helper.ts` (prose body). Never push.
+
+---
+
+## Fixture families (initial set)
+
+Each fixture = one Maven project with one small CUT + one JUnit-4 test class whose assertions land in exactly the target family. Expected outcomes are recorded in the golden file, derived from the *current verified behavior* (post-widening-license, post-boxed-capture).
+
+| fixture | exercises | expected outcome sketch |
+|---|---|---|
+| `symbolic-int` | computed int return, `assertEquals(literal, f(x))` | SYMBOLIC spec; licensed; jqwik FULL |
+| `boxed-returns` | `Integer.valueOf` computed return (attr survives) + `Long.valueOf` (attr lost in vendored fork) | one SYMBOLIC + licensed; one NULL_CONCRETE + `ORACLE_NOT_WIDENABLE` — pins the characterization |
+| `thrown-oracle` | MUT throwing on the concrete path, `assertThrows`-style + try/fail shape | EXCEPTION spec; licensed (post-THROWN-fix); exercises the `SpoonUtils.getTypeReference` String-parameter path once that fix lands |
+| `boolean-in-pc` | computed boolean (`return a == b`) vs pass-through boolean (store/load) | first: NULL_CONCRETE licensed (clauses name params); second: `ORACLE_NOT_WIDENABLE` — pins both license arms |
+| `min-value-seeds` | `Long.MIN_VALUE`/`Integer.MIN_VALUE`/`Short` seeds through supplier rendering | builds + validates; pins the cast-operand and narrow-boxed-bridge fixes |
+| `string-sound-set` | `equals(const)`/`length`/`isEmpty` string MUTs | sound string generalizations; unsupported ops → `UNSUPPORTED_TERM` exclusions (string-support plan's Task 7 Step 3 shape, in miniature) |
+| `old-surefire` | pom pins surefire 2.17 + `-source 1.7` | test-source floor + surefire floor in derived pom; display-name/FQN report matching; validates the whole validation-repair family |
+
+Growth rule: every future pipeline defect gets a fixture reproducing it before/with its fix (the JadConfig-literal pattern, retroactively encoded by `min-value-seeds`).
+
+## Sentinel subset (Tier 2 — definition only, no code)
+
+`TDD-Katas`, `JadConfig`, `svdrp4j`, `unicrypt`, `MarkupTagScanner` — bit-identical census across all four 2026-07-03/04 spike runs, jointly covering: large stable suite, boxed converters + MIN_VALUE seeds, display-name reports + boolean-in-PC, all-refused NULL_CONCRETE, old-surefire floor. Run via `REPOREAPERS_CONFIG_DIR` pointing at a five-config subset directory into a scratch DB (~15 min). The flaky five (kouchat, gedcom4j, xenqtt, uaicriteria, sparkey) are NEVER part of verification subsets — they jitter at the 60s ceiling or carry native flakes; they remain evaluation-corpus members only.
+
+---
+
+### Task 1: Runner + scratch-DB plumbing + first fixture end-to-end
+
+**Files:**
+- Create: `verification/fixtures/symbolic-int/` (pom + CUT + test)
+- Create: `scripts/run-verification-corpus.sh` (mirror `scripts/run-reporeapers-rerun.sh`: per-fixture Teralizer invocation, `--reset-db` semantics, status ledger; drop done-markers — the corpus is small enough to always run whole)
+- Create: `project-configs/verification.conf` (profile: `IMPROVED_100_TRIES` only, PIT disabled, standard ceilings) + `project-configs/verification/fixture-<name>.conf` per fixture
+- Modify: `.gitignore` (fixture build output)
+
+- [ ] **Step 1:** Write the `symbolic-int` fixture: CUT with `int increment(int x) { if (x > 0) return x + 1; return x - 1; }`-class method; test `assertEquals(3, new Cut().increment(2))`. Pom: minimal, JUnit 4.13.2, source/target 1.8.
+- [ ] **Step 2:** Runner script: creates `postgres_verification` (drop-if-exists; `ALTER DATABASE template1 REFRESH COLLATION VERSION` guard like the jarvis skill documents), runs each fixture config via `./gradlew run -Dteralizer.config=...` with `DB_NAME=postgres_verification`, records exit codes to a ledger, deletes stale `_*_Generalized_*` files under `verification/fixtures/` first.
+- [ ] **Step 3:** Run it; inspect the DB by hand; record the observed outcome for `symbolic-int` as the first golden entry.
+- [ ] **Step 4:** Golden-check script (`scripts/check-verification-corpus.sh` or a small Python module under `analysis/` — follow `analysis/` conventions if Python): per fixture, assert gen count, per-gen `is_included`/`exclusion_info`, assertion `output_spec_class`, and `jqwik_property_execution.diagnostic_kind`. Non-zero exit on any mismatch, with a readable diff.
+- [ ] **Step 5:** Wire a top-level entry point (`scripts/verify-pipeline.sh` = run + check) and document it in `AGENTS.md`'s command table.
+- [ ] **Step 6:** Commit.
+
+### Task 2: Remaining fixture families
+
+**Files:** `verification/fixtures/<name>/` + `project-configs/verification/fixture-<name>.conf` per family from the table; golden entries per fixture.
+
+- [ ] **Step 1:** `boxed-returns`, `boolean-in-pc`, `min-value-seeds` (pure-Java families; golden entries pin the license arms and codegen fixes).
+- [ ] **Step 2:** `thrown-oracle` (after/with the `SpoonUtils` NPE fix — its golden entry pins that fix).
+- [ ] **Step 3:** `string-sound-set` (needs `symbolic.strings` handling — check how string-parameter MUTs are configured in the string-support plan's shipped tasks; scope to the sound set).
+- [ ] **Step 4:** `old-surefire` (pom pins surefire 2.17, `-source 1.7`; golden entry asserts the derived generalized pom + successful collection).
+- [ ] **Step 5:** Full corpus run end-to-end; record total wall time in the task summary (target: single-digit minutes); commit.
+
+### Task 3: Sentinel subset definition
+
+**Files:** `project-configs/sentinel/` (five configs copied from `project-configs/fusion-spike/`), a short README-style note inside the config dir header comments; `AGENTS.md` command-table row.
+
+- [ ] **Step 1:** Create the config subset; verify with one run into a scratch DB that all five complete and match their recorded census values.
+- [ ] **Step 2:** Commit.
+
+---
+
+## Self-review
+
+- **Coverage:** every defect family found in the 2026-07-03 sessions maps to a fixture; the tiers give every future change a verification home cheaper than a spike run.
+- **Determinism:** fixtures avoid ceiling jitter by construction; flaky five excluded from all verification tiers.
+- **No placeholders:** fixture behavior sketches are concrete; golden values are recorded from observed runs, not invented.
