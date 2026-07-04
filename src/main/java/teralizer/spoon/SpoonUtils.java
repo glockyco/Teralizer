@@ -20,12 +20,12 @@ import teralizer.spoon.analysis.TestAnalysis;
 public class SpoonUtils {
 
     /**
-     * Creates a type reference for generated declarations.
-     *
-     * <p>{@code factory.Type().get(name)} is a model-only lookup: it returns {@code null}
-     * for shadow types such as JDK classes that are not declared in the Spoon source model.
-     * Keep the explicit primitive and boxed simple-name mappings below, then create references
-     * for all other well-formed names so callers can refer to model and non-model types alike.
+     * Creates a type reference for generated declarations from a type name that may denote a
+     * model type, a JDK type, or any other type outside the Spoon source model. References are
+     * therefore created by name, never looked up in the model — a model lookup cannot see
+     * shadow types and would leave JDK-typed inputs (e.g. {@code java.lang.String}) without a
+     * reference. The explicit switch arms exist because simple boxed names ("Long") must map
+     * to their {@code java.lang} references; created references would keep them unqualified.
      */
     public static CtTypeReference<?> getTypeReference(Factory factory, String typeName) {
         switch (typeName) {
