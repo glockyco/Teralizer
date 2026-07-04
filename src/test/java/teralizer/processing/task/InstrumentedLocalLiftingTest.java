@@ -6,6 +6,7 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
@@ -15,6 +16,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.support.compiler.VirtualFile;
 import teralizer.spoon.analysis.GeneralizableInput;
+import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
 
 public class InstrumentedLocalLiftingTest {
@@ -43,7 +45,7 @@ public class InstrumentedLocalLiftingTest {
         List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, call);
 
         LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted =
-            JpfInstrumentationTask.collectLiftableLocals(testedMethod, call, inputs);
+            collectLiftableLocals(testedMethod, call, inputs);
 
         Assert.assertEquals(1, lifted.size());
         CtVariableReference<?> ref = lifted.keySet().iterator().next();
@@ -69,7 +71,7 @@ public class InstrumentedLocalLiftingTest {
         List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, call);
 
         LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted =
-            JpfInstrumentationTask.collectLiftableLocals(testedMethod, call, inputs);
+            collectLiftableLocals(testedMethod, call, inputs);
 
         Assert.assertEquals(3, lifted.size());
         Assert.assertTrue(lifted.keySet().stream().anyMatch(r -> r.getSimpleName().equals("actual")));
@@ -86,7 +88,7 @@ public class InstrumentedLocalLiftingTest {
         CtMethod<?> testedMethod = (CtMethod<?>) call.getExecutable().getDeclaration();
         List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, call);
 
-        Assert.assertTrue(JpfInstrumentationTask.collectLiftableLocals(testedMethod, call, inputs).isEmpty());
+        Assert.assertTrue(collectLiftableLocals(testedMethod, call, inputs).isEmpty());
     }
 
     @Example
@@ -132,6 +134,37 @@ public class InstrumentedLocalLiftingTest {
             launcher.getFactory(), concrete, "should.Not.BeUsed");
 
         Assert.assertSame(concrete, resolved);
+    }
+
+    private static LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> collectLiftableLocals(
+        CtMethod<?> testedMethod,
+        CtInvocation<?> call,
+        List<GeneralizableInput> inputs
+    ) {
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(
+            testedMethod,
+            call,
+            inputs,
+            testedMethod.getType().getQualifiedName()
+        );
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(
+            call.getParent(CtMethod.class),
+            call.getFactory().getModel().getRootPackage()
+        );
+        CtExpression<?> rewrittenExpression = resolved.getOracleExpression().clone();
+        resolved.replaceInputSitesWithParameterReads(
+            rewrittenExpression,
+            call.getFactory(),
+            input -> input.toMethodParameter().getName()
+        );
+        if (!testedMethod.isStatic()) {
+            ((CtInvocation<?>) rewrittenExpression).setTarget(call.getFactory().createCodeSnippetExpression("_target_"));
+        }
+        return JpfInstrumentationTask.collectLiftableLocals(
+            rewrittenExpression,
+            resolved.getOracleExpression(),
+            inputs
+        );
     }
 
     private static CtInvocation<?> testedCallFrom(String testSource) {

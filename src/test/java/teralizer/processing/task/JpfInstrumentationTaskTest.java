@@ -59,7 +59,7 @@ public class JpfInstrumentationTaskTest {
             testMethod.getFactory().getModel().getRootPackage()
         );
 
-        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper");
+        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper", "boolean");
 
         Assert.assertEquals("boolean", wrapper.getType().getQualifiedName());
         Assert.assertEquals(2, wrapper.getParameters().size());
@@ -114,7 +114,7 @@ public class JpfInstrumentationTaskTest {
             testMethod.getFactory().getModel().getRootPackage()
         );
 
-        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper");
+        CtMethod<?> wrapper = createExpressionInstrumentedMethod(testMethod, resolved, "expr_wrapper", "boolean");
 
         Assert.assertEquals(4, wrapper.getParameters().size());
         CtReturn<?> statement = (CtReturn<?>) wrapper.getBody().getStatement(0);
@@ -129,7 +129,7 @@ public class JpfInstrumentationTaskTest {
     }
 
     @Example
-    void receiverlessStaticInvocationRecipeKeepsIndexKeyedWrapperShape() throws Exception {
+    void receiverlessStaticInvocationRecipeUsesPathBasedWrapperShape() throws Exception {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "public class SubjectTest {\n"
@@ -147,7 +147,7 @@ public class JpfInstrumentationTaskTest {
         CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
         List<GeneralizableInput> inputs = GeneralizableInput.derive(testedMethod, testedCall);
 
-        CtMethod<?> wrapper = createInvocationInstrumentedMethod(testMethod, testedMethod, testedCall, inputs, "call_wrapper");
+        CtMethod<?> wrapper = createInvocationInstrumentedMethod(testMethod, testedMethod, testedCall, inputs, "call_wrapper", "long");
 
         Assert.assertEquals("long", wrapper.getType().getQualifiedName());
         Assert.assertEquals(2, wrapper.getParameters().size());
@@ -160,7 +160,8 @@ public class JpfInstrumentationTaskTest {
     private static CtMethod<?> createExpressionInstrumentedMethod(
         CtMethod<?> testMethod,
         GeneralizationRecipe.Resolved recipe,
-        String methodName
+        String methodName,
+        String oracleExpressionType
     ) throws Exception {
         JpfInstrumentationTask task = task(methodName);
         Method method = JpfInstrumentationTask.class.getDeclaredMethod(
@@ -176,7 +177,7 @@ public class JpfInstrumentationTaskTest {
             testMethod.getFactory(),
             testMethod.getParent(CtClass.class),
             recipe,
-            "boolean"
+            oracleExpressionType
         );
     }
 
@@ -185,25 +186,20 @@ public class JpfInstrumentationTaskTest {
         CtMethod<?> testedMethod,
         CtInvocation<?> testedCall,
         List<GeneralizableInput> inputs,
-        String methodName
+        String methodName,
+        String oracleExpressionType
     ) throws Exception {
-        JpfInstrumentationTask task = task(methodName);
-        Method method = JpfInstrumentationTask.class.getDeclaredMethod(
-            "createInstrumentedMethod",
-            Factory.class,
-            CtClass.class,
-            CtMethod.class,
-            CtInvocation.class,
-            List.class
-        );
-        method.setAccessible(true);
-        return (CtMethod<?>) method.invoke(
-            task,
-            testMethod.getFactory(),
-            testMethod.getParent(CtClass.class),
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(
             testedMethod,
             testedCall,
-            inputs
+            inputs,
+            oracleExpressionType
+        );
+        return createExpressionInstrumentedMethod(
+            testMethod,
+            recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage()),
+            methodName,
+            oracleExpressionType
         );
     }
 

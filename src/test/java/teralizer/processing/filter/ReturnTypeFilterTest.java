@@ -17,7 +17,7 @@ public class ReturnTypeFilterTest {
     private static String recipeJson(String oracleExpressionType) {
         String expressionTypeJson = oracleExpressionType == null ? "null" : "\"" + oracleExpressionType + "\"";
         return "{"
-            + "\"version\":2,"
+            + "\"version\":3,"
             + "\"schema\":\"teralizer.generalization.recipe\","
             + "\"oracleExpressionPath\":\"#expression\","
             + "\"oracleMethodPath\":\"#method\","

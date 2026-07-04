@@ -103,25 +103,17 @@ public class JpfInstrumentationTask extends AbstractTask {
             .resolveAgainst(instrumentedClass.getMethod(this.testRecord.getTestMethodName()), factory.getModel().getRootPackage());
         CtExpression<?> oracleExpression = recipe.getOracleExpression();
         CtMethod<?> testedMethod = recipe.getOracleMethod();
-        List<GeneralizableInput> generalizableInputs = recipe.getInputs();
-        boolean expressionRecipe = generalizableInputs.stream().anyMatch(GeneralizableInput::isExpressionSite);
-        CtInvocation<?> testedMethodCall = expressionRecipe ? null : (CtInvocation<?>) oracleExpression;
-        CtMethod<?> instrumentedMethod = expressionRecipe
-            ? this.createInstrumentedMethod(
-                factory,
-                instrumentedClass,
-                recipe,
-                clonedRecipe.getOracleExpressionType()
-            )
-            : this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall, generalizableInputs);
+        CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(
+            factory,
+            instrumentedClass,
+            recipe,
+            clonedRecipe.getOracleExpressionType()
+        );
         CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(
             factory,
             instrumentedClass,
             instrumentedMethod,
-            testedMethod,
-            testedMethodCall,
-            generalizableInputs,
-            expressionRecipe
+            recipe
         );
         oracleExpression.replace(instrumentedMethodCall);
 
@@ -138,7 +130,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         this.createInstrumentedClassFile(spoonLauncher, instrumentedClass);
 
         this.createDriverClassFile(velocityEngine, spoonLauncher);
-        this.createJpfConfigFile(velocityEngine, instrumentedMethod, testedMethod, expressionRecipe);
+        this.createJpfConfigFile(velocityEngine, instrumentedMethod, testedMethod);
     }
 
     private void updateAssertionRecord() {
@@ -210,109 +202,6 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
 
-    private CtMethod<?> createInstrumentedMethod(
-        Factory factory,
-        CtClass<?> instrumentedClass,
-        CtMethod<?> testedMethod,
-        CtInvocation<?> testedMethodCall,
-        List<GeneralizableInput> generalizableInputs
-    ) {
-        boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
-
-        List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
-        if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
-            CtExpression<?> target = testedMethodCall.getTarget();
-            // A this-receiver has no usable static type on the expression; the wrapper lives in
-            // the instrumented class, so its own reference is the receiver type.
-            CtTypeReference<?> targetType = target instanceof CtThisAccess
-                ? instrumentedClass.getReference()
-                : target.getType();
-            CtTypeReference<?> resolvedType = resolveTargetType(
-                factory, targetType, this.assertionRecord.getTestedClassQualifiedName());
-            instrumentedParameters.add(factory.createParameter(null, resolvedType, "_target_"));
-        }
-        for (GeneralizableInput input : generalizableInputs) {
-            CtTypeReference<?> type = factory.Type().createReference(input.toMethodParameter().getType());
-            type.setSimplyQualified(false);
-            type.setImplicit(false);
-
-            CtParameter<?> parameter = factory.createParameter(null, type, input.toMethodParameter().getName());
-            instrumentedParameters.add(parameter);
-        }
-
-        LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> liftedLocals =
-            collectLiftableLocals(testedMethod, testedMethodCall, generalizableInputs);
-        Map<CtVariableReference<?>, String> liftedNames = liftedParameterNames(liftedLocals.keySet());
-        for (Map.Entry<CtVariableReference<?>, CtTypeReference<?>> lifted : liftedLocals.entrySet()) {
-            CtTypeReference<?> type = lifted.getValue().clone();
-            type.setSimplyQualified(false);
-            type.setImplicit(false);
-            instrumentedParameters.add(factory.createParameter(null, type, liftedNames.get(lifted.getKey())));
-        }
-
-        CtInvocation<?> instrumentedTestedMethodCall = testedMethodCall.clone();
-        List<CtExpression<?>> arguments = new ArrayList<>();
-        for (int i = 0; i < testedMethodCall.getArguments().size(); i++) {
-            final int argumentIndex = i;
-            List<GeneralizableInput> inputsForArgument = generalizableInputs.stream()
-                .filter(input -> input.getMethodArgumentIndex() == argumentIndex)
-                .collect(Collectors.toList());
-            if (inputsForArgument.isEmpty()) {
-                arguments.add(testedMethodCall.getArguments().get(i).clone());
-            } else if (inputsForArgument.get(0).isConstructorArgument()) {
-                CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getArguments().get(i).clone();
-                List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
-                for (GeneralizableInput input : inputsForArgument) {
-                    constructorArguments.set(
-                        input.getConstructorArgumentIndex(),
-                        factory.createCodeSnippetExpression(input.toMethodParameter().getName())
-                    );
-                }
-                constructorCall.setArguments(constructorArguments);
-                arguments.add(constructorCall);
-            } else {
-                arguments.add(factory.createCodeSnippetExpression(inputsForArgument.get(0).toMethodParameter().getName()));
-            }
-        }
-        instrumentedTestedMethodCall.setArguments(arguments);
-        liftLocalReads(instrumentedTestedMethodCall, liftedNames, factory);
-        if (!testedMethod.isStatic()) {
-            if (hasReceiverConstructorInputs) {
-                CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getTarget().clone();
-                List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
-                generalizableInputs.stream()
-                    .filter(GeneralizableInput::isReceiverConstructorArgument)
-                    .forEach(input -> constructorArguments.set(
-                        input.getConstructorArgumentIndex(),
-                        factory.createCodeSnippetExpression(input.toMethodParameter().getName())
-                    ));
-                constructorCall.setArguments(constructorArguments);
-                instrumentedTestedMethodCall.setTarget(constructorCall);
-            } else {
-                instrumentedTestedMethodCall.setTarget(factory.createCodeSnippetExpression(instrumentedParameters.get(0).getSimpleName()));
-            }
-        }
-
-        CtReturn returnStatement = factory.Core().createReturn();
-        returnStatement.setReturnedExpression(instrumentedTestedMethodCall);
-        CtBlock<?> instrumentedBody = factory.createBlock();
-        instrumentedBody.addStatement(returnStatement);
-        CtTypeReference<?> returnType = this.inferExpectedType(testedMethodCall);
-        returnType.setSimplyQualified(false);
-        returnType.setImplicit(false);
-
-        Set<CtTypeReference<? extends Throwable>> thrownTypes = collectThrownTypes(testedMethod, testedMethodCall);
-
-        return factory.createMethod(
-            instrumentedClass,
-            new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
-            returnType,
-            this.assertionRecord.getInstrumentedMethodName(),
-            instrumentedParameters,
-            thrownTypes,
-            instrumentedBody
-        );
-    }
 
     private CtMethod<?> createInstrumentedMethod(
         Factory factory,
@@ -323,8 +212,27 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtMethod<?> testedMethod = recipe.getOracleMethod();
         CtExpression<?> oracleExpression = recipe.getOracleExpression();
         List<GeneralizableInput> generalizableInputs = recipe.getInputs();
+        CtExpression<?> rewrittenExpression = oracleExpression.clone();
+        recipe.replaceInputSitesWithParameterReads(
+            rewrittenExpression,
+            factory,
+            input -> input.toMethodParameter().getName()
+        );
 
+        boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
+        boolean needsTarget = !testedMethod.isStatic() && !hasReceiverConstructorInputs;
         List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
+        if (needsTarget) {
+            CtInvocation<?> oracleCall = findOracleInvocation(oracleExpression, testedMethod);
+            CtTypeReference<?> targetType = oracleCall.getTarget() instanceof CtThisAccess
+                ? instrumentedClass.getReference()
+                : oracleCall.getTarget().getType();
+            CtTypeReference<?> resolvedType = resolveTargetType(
+                factory, targetType, this.assertionRecord.getTestedClassQualifiedName());
+            instrumentedParameters.add(factory.createParameter(null, resolvedType, "_target_"));
+            findOracleInvocation(rewrittenExpression, testedMethod)
+                .setTarget(factory.createCodeSnippetExpression("_target_"));
+        }
         for (GeneralizableInput input : generalizableInputs) {
             CtTypeReference<?> type = factory.Type().createReference(input.toMethodParameter().getType());
             type.setSimplyQualified(false);
@@ -332,12 +240,17 @@ public class JpfInstrumentationTask extends AbstractTask {
             instrumentedParameters.add(factory.createParameter(null, type, input.toMethodParameter().getName()));
         }
 
-        CtExpression<?> rewrittenExpression = oracleExpression.clone();
-        recipe.replaceInputSitesWithParameterReads(
-            rewrittenExpression,
-            factory,
-            input -> input.toMethodParameter().getName()
-        );
+        LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> liftedLocals =
+            collectLiftableLocals(rewrittenExpression, oracleExpression, generalizableInputs);
+        Map<CtVariableReference<?>, String> liftedNames = liftedParameterNames(liftedLocals.keySet());
+        for (Map.Entry<CtVariableReference<?>, CtTypeReference<?>> lifted : liftedLocals.entrySet()) {
+            CtTypeReference<?> type = lifted.getValue().clone();
+            type.setSimplyQualified(false);
+            type.setImplicit(false);
+            instrumentedParameters.add(factory.createParameter(null, type, liftedNames.get(lifted.getKey())));
+        }
+        liftLocalReads(rewrittenExpression, liftedNames, factory);
+
         CtReturn returnStatement = factory.Core().createReturn();
         returnStatement.setReturnedExpression(rewrittenExpression);
         CtBlock<?> instrumentedBody = factory.createBlock();
@@ -423,55 +336,35 @@ public class JpfInstrumentationTask extends AbstractTask {
      * additional wrapper parameter, passed concretely from the call site (the same environment-
      * carrying pattern as the {@code _target_} receiver parameter).
      */
+    private static CtInvocation<?> findOracleInvocation(CtExpression<?> expression, CtMethod<?> oracleMethod) {
+        if (expression instanceof CtInvocation<?>
+            && ((CtInvocation<?>) expression).getExecutable().getSimpleName().equals(oracleMethod.getSimpleName())) {
+            return (CtInvocation<?>) expression;
+        }
+        return expression.getElements(CtInvocation.class::isInstance).stream()
+            .map(CtInvocation.class::cast)
+            .filter(invocation -> invocation.getExecutable().getSimpleName().equals(oracleMethod.getSimpleName()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("Could not find oracle invocation in expression " + expression));
+    }
+
     static LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> collectLiftableLocals(
-        CtMethod<?> testedMethod,
-        CtInvocation<?> testedMethodCall,
+        CtExpression<?> rewrittenExpression,
+        CtExpression<?> originalExpression,
         List<GeneralizableInput> generalizableInputs
     ) {
         LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted = new LinkedHashMap<>();
-        boolean hasReceiverConstructorInputs = generalizableInputs.stream()
-            .anyMatch(GeneralizableInput::isReceiverConstructorArgument);
-
-        for (int i = 0; i < testedMethodCall.getArguments().size(); i++) {
-            final int argumentIndex = i;
-            List<GeneralizableInput> inputsForArgument = generalizableInputs.stream()
-                .filter(input -> input.getMethodArgumentIndex() == argumentIndex)
-                .collect(Collectors.toList());
-            CtExpression<?> argument = testedMethodCall.getArguments().get(i);
-            if (inputsForArgument.isEmpty()) {
-                collectOutOfScopeReads(argument, testedMethodCall, lifted);
-            } else if (inputsForArgument.get(0).isConstructorArgument()) {
-                collectFromConstructorCall((CtConstructorCall<?>) argument, inputsForArgument, testedMethodCall, lifted);
-            }
-            // Fully-replaced generalizable arguments contribute nothing.
-        }
-        if (!testedMethod.isStatic() && hasReceiverConstructorInputs) {
-            List<GeneralizableInput> receiverInputs = generalizableInputs.stream()
-                .filter(GeneralizableInput::isReceiverConstructorArgument)
-                .collect(Collectors.toList());
-            collectFromConstructorCall((CtConstructorCall<?>) testedMethodCall.getTarget(), receiverInputs, testedMethodCall, lifted);
-        }
-        // A plain (non-constructor) receiver is replaced wholesale by _target_, never cloned.
+        collectOutOfScopeReads(
+            rewrittenExpression,
+            originalExpression,
+            generalizableInputs.stream()
+                .map(input -> input.toMethodParameter().getName())
+                .collect(Collectors.toSet()),
+            lifted
+        );
         return lifted;
     }
 
-    /** Scans the constructor arguments that input lifting did NOT replace with wrapper parameters. */
-    private static void collectFromConstructorCall(
-        CtConstructorCall<?> constructorCall,
-        List<GeneralizableInput> liftedInputs,
-        CtInvocation<?> testedMethodCall,
-        LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted
-    ) {
-        Set<Integer> replaced = liftedInputs.stream()
-            .map(GeneralizableInput::getConstructorArgumentIndex)
-            .collect(Collectors.toSet());
-        List<CtExpression<?>> constructorArguments = constructorCall.getArguments();
-        for (int i = 0; i < constructorArguments.size(); i++) {
-            if (!replaced.contains(i)) {
-                collectOutOfScopeReads(constructorArguments.get(i), testedMethodCall, lifted);
-            }
-        }
-    }
 
     /**
      * Collects reads of variables declared OUTSIDE the tested call expression: test-method locals,
@@ -481,7 +374,8 @@ public class JpfInstrumentationTask extends AbstractTask {
      */
     private static void collectOutOfScopeReads(
         CtExpression<?> expression,
-        CtInvocation<?> testedMethodCall,
+        CtExpression<?> originalExpression,
+        Set<String> parameterNames,
         LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> lifted
     ) {
         for (CtVariableRead<?> read : expression.getElements(new TypeFilter<>(CtVariableRead.class))) {
@@ -489,15 +383,18 @@ public class JpfInstrumentationTask extends AbstractTask {
                 continue;
             }
             CtVariableReference<?> reference = read.getVariable();
+            if (parameterNames.contains(reference.getSimpleName())) {
+                continue;
+            }
             CtElement declaration = reference.getDeclaration();
-            if (declaration != null && declaration.hasParent(testedMethodCall)) {
+            if (declaration != null && declaration.hasParent(originalExpression)) {
                 continue; // declared inside the expression itself -- already in wrapper scope
             }
             CtTypeReference<?> type = reference.getType();
             if (type == null || type instanceof CtTypeParameterReference) {
                 throw new RuntimeException(
                     "Cannot lift test-local variable '" + reference.getSimpleName()
-                        + "' (unresolvable type) referenced by tested call " + testedMethodCall);
+                        + "' (unresolvable type) referenced by oracle expression " + originalExpression);
             }
             lifted.putIfAbsent(reference, type);
         }
@@ -524,7 +421,7 @@ public class JpfInstrumentationTask extends AbstractTask {
      * most one visible local at the tested call's position, and cloned reads keep that name.
      */
     private static void liftLocalReads(
-        CtInvocation<?> clonedCall,
+        CtExpression<?> clonedExpression,
         Map<CtVariableReference<?>, String> liftedNames,
         Factory factory
     ) {
@@ -532,7 +429,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         for (Map.Entry<CtVariableReference<?>, String> entry : liftedNames.entrySet()) {
             bySimpleName.put(entry.getKey().getSimpleName(), entry.getValue());
         }
-        for (CtVariableRead<?> read : clonedCall.getElements(new TypeFilter<>(CtVariableRead.class))) {
+        for (CtVariableRead<?> read : clonedExpression.getElements(new TypeFilter<>(CtVariableRead.class))) {
             if (read instanceof CtFieldRead) {
                 continue;
             }
@@ -543,99 +440,20 @@ public class JpfInstrumentationTask extends AbstractTask {
         }
     }
 
-    CtTypeReference<?> inferExpectedType(CtInvocation<?> call) {
-        CtElement parent = call.getParent();
-        Factory factory = call.getFactory();
-
-        // Assignment: x = foo();
-        if (parent instanceof CtAssignment) {
-            CtAssignment<?, ?> assignment = (CtAssignment<?, ?>) parent;
-            return this.eraseGenerics(assignment.getAssigned().getType(), factory);
-        }
-
-        // Variable declaration: Type x = foo();
-        if (parent instanceof CtVariable) {
-            CtVariable<?> variable = (CtVariable<?>) parent;
-            return this.eraseGenerics(variable.getType(), factory);
-        }
-
-        // Method argument: bar(foo());
-        if (parent instanceof CtInvocation) {
-            CtInvocation<?> invocation = (CtInvocation<?>) parent;
-            int argIndex = invocation.getArguments().indexOf(call);
-            if (argIndex >= 0) {
-                CtExecutableReference<?> execRef = invocation.getExecutable();
-                List<CtTypeReference<?>> paramTypes = execRef.getParameters();
-                if (argIndex < paramTypes.size()) {
-                    return this.eraseGenerics(paramTypes.get(argIndex), factory);
-                } else if (!paramTypes.isEmpty()) {
-                    return this.eraseGenerics(paramTypes.get(paramTypes.size() - 1), factory);
-                }
-            }
-        }
-
-        // Return statement: return foo();
-        if (parent instanceof CtReturn) {
-            CtMethod<?> enclosingMethod = call.getParent(CtMethod.class);
-            if (enclosingMethod != null) {
-                return this.eraseGenerics(enclosingMethod.getType(), factory);
-            }
-        }
-
-        // Conditional expression: foo() ? ... : ...
-        if (parent instanceof CtConditional) {
-            return factory.Type().BOOLEAN_PRIMITIVE;
-        }
-
-        // Fallback: type of the called method
-        return this.eraseGenerics(call.getType(), factory);
-    }
-
-    private CtTypeReference<?> eraseGenerics(CtTypeReference<?> type, Factory factory) {
-        if (type == null || type.isGenerics() || type instanceof CtTypeParameterReference) {
-            return factory.Type().OBJECT;
-        }
-        return type;
-    }
 
     private CtInvocation<?> createInstrumentedMethodCall(
         Factory factory,
         CtClass<?> instrumentedClass,
         CtMethod<?> instrumentedMethod,
-        CtMethod<?> testedMethod,
-        CtInvocation<?> testedMethodCall,
-        List<GeneralizableInput> generalizableInputs
+        GeneralizationRecipe.Resolved recipe
     ) {
-        return this.createInstrumentedMethodCall(
-            factory,
-            instrumentedClass,
-            instrumentedMethod,
-            testedMethod,
-            testedMethodCall,
-            generalizableInputs,
-            false
-        );
-    }
-
-    private CtInvocation<?> createInstrumentedMethodCall(
-        Factory factory,
-        CtClass<?> instrumentedClass,
-        CtMethod<?> instrumentedMethod,
-        CtMethod<?> testedMethod,
-        CtInvocation<?> testedMethodCall,
-        List<GeneralizableInput> generalizableInputs,
-        boolean expressionRecipe
-    ) {
+        CtMethod<?> testedMethod = recipe.getOracleMethod();
+        CtExpression<?> oracleExpression = recipe.getOracleExpression();
+        List<GeneralizableInput> generalizableInputs = recipe.getInputs();
         CtInvocation<?> instrumentedMethodCall = factory.createInvocation(factory.createThisAccess(instrumentedClass.getReference()), instrumentedMethod.getReference());
-        if (expressionRecipe) {
-            for (GeneralizableInput input : generalizableInputs) {
-                instrumentedMethodCall.addArgument(input.getSourceExpression());
-            }
-            return instrumentedMethodCall;
-        }
         boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
         if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
-            CtExpression<?> target = testedMethodCall.getTarget();
+            CtExpression<?> target = findOracleInvocation(oracleExpression, testedMethod).getTarget();
             if (target instanceof CtThisAccess) {
                 instrumentedMethodCall.addArgument(factory.createThisAccess(target.getType(), false));
             } else {
@@ -645,11 +463,17 @@ public class JpfInstrumentationTask extends AbstractTask {
         for (GeneralizableInput input : generalizableInputs) {
             instrumentedMethodCall.addArgument(input.getSourceExpression());
         }
-        // Lifted test-locals are passed by name: the call site sits inside the test method,
-        // where those locals are in scope. Order matches the wrapper's parameter list because
-        // both sides derive it from the same collectLiftableLocals result.
+        CtExpression<?> rewrittenExpression = oracleExpression.clone();
+        recipe.replaceInputSitesWithParameterReads(
+            rewrittenExpression,
+            factory,
+            input -> input.toMethodParameter().getName()
+        );
+        if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
+            findOracleInvocation(rewrittenExpression, testedMethod).setTarget(factory.createCodeSnippetExpression("_target_"));
+        }
         LinkedHashMap<CtVariableReference<?>, CtTypeReference<?>> liftedLocals =
-            collectLiftableLocals(testedMethod, testedMethodCall, generalizableInputs);
+            collectLiftableLocals(rewrittenExpression, oracleExpression, generalizableInputs);
         for (CtVariableReference<?> reference : liftedLocals.keySet()) {
             instrumentedMethodCall.addArgument(factory.createCodeSnippetExpression(reference.getSimpleName()));
         }
@@ -728,7 +552,7 @@ public class JpfInstrumentationTask extends AbstractTask {
             .collect(Collectors.toSet());
     }
 
-    private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod, boolean expressionRecipe) throws IOException {
+    private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod) throws IOException {
         String symbolicParams = instrumentedMethod.getParameters().stream().map(JpfInstrumentationTask::symbolicMarker).collect(Collectors.joining("#"));
         String symbolicMethod = this.assertionRecord.getInstrumentedMethodQualifiedName() + "(" + symbolicParams + ")";
 
@@ -747,7 +571,6 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("maxExecutionTime", Configuration.getJpfMaxExecutionTime());
         context.put("maxPathConditionSize", Configuration.getJpfMaxPathConditionSize());
         context.put("maxSearchDepth", Configuration.getJpfMaxSearchDepth());
-        context.put("expressionRecipe", expressionRecipe);
 
         context.put("driverClassQualifiedName", this.assertionRecord.getDriverClassQualifiedName());
         context.put("testClassQualifiedName", this.testRecord.getTestClassQualifiedName());

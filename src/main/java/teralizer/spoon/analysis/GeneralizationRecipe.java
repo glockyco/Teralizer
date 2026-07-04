@@ -25,7 +25,7 @@ import teralizer.domain.MethodParameter;
  * rewriting seam used when a cloned test class replaces the original class name in Spoon CtPaths.
  */
 public final class GeneralizationRecipe {
-    public static final int CURRENT_VERSION = 2;
+    public static final int CURRENT_VERSION = 3;
     private static final String SCHEMA = "teralizer.generalization.recipe";
 
     public enum InputKind {
@@ -140,15 +140,13 @@ public final class GeneralizationRecipe {
         for (InputSite site : this.inputSites) {
             CtExpression<?> expression = resolveOne(PathRole.INPUT_SITE, site.path, containingMethod, CtExpression.class);
             inputs.add(GeneralizableInput.fromRecipe(
-                site.methodArgumentIndex,
-                site.constructorArgumentIndex,
                 site.kind,
                 new MethodParameter(site.type, site.name),
                 new MethodArgument(site.type, expression.toString()),
                 expression
             ));
         }
-        return new Resolved(oracleMethod, oracleExpression, inputs);
+        return new Resolved(this.oracleExpressionPath, oracleMethod, oracleExpression, inputs, this.inputSites);
     }
 
     public GeneralizationRecipe rewriteForClone(String originalClassQualifiedName, String cloneClassQualifiedName) {
@@ -240,34 +238,25 @@ public final class GeneralizationRecipe {
         private final String name;
         private final String type;
         private final InputKind kind;
-        private final int methodArgumentIndex;
-        private final int constructorArgumentIndex;
 
         private InputSite(
             String path,
             String name,
             String type,
-            InputKind kind,
-            int methodArgumentIndex,
-            int constructorArgumentIndex
+            InputKind kind
         ) {
             this.path = path;
             this.name = name;
             this.type = type;
             this.kind = kind;
-            this.methodArgumentIndex = methodArgumentIndex;
-            this.constructorArgumentIndex = constructorArgumentIndex;
         }
 
         private static InputSite from(GeneralizableInput input, CtMethod<?> containingMethod) {
-            InputKind kind = input.getKind();
             return new InputSite(
                 input.getSourceExpression().getPath().relativePath(containingMethod).toString(),
                 input.toMethodParameter().getName(),
                 input.toMethodParameter().getType(),
-                kind,
-                input.getMethodArgumentIndex(),
-                input.getConstructorArgumentIndex()
+                input.getKind()
             );
         }
 
@@ -286,25 +275,27 @@ public final class GeneralizationRecipe {
         public InputKind getKind() {
             return this.kind;
         }
-
-        public int getMethodArgumentIndex() {
-            return this.methodArgumentIndex;
-        }
-
-        public int getConstructorArgumentIndex() {
-            return this.constructorArgumentIndex;
-        }
     }
 
     public static final class Resolved {
+        private final String oracleExpressionPath;
         private final CtMethod<?> oracleMethod;
         private final CtExpression<?> oracleExpression;
         private final List<GeneralizableInput> inputs;
+        private final List<InputSite> inputSites;
 
-        private Resolved(CtMethod<?> oracleMethod, CtExpression<?> oracleExpression, List<GeneralizableInput> inputs) {
+        private Resolved(
+            String oracleExpressionPath,
+            CtMethod<?> oracleMethod,
+            CtExpression<?> oracleExpression,
+            List<GeneralizableInput> inputs,
+            List<InputSite> inputSites
+        ) {
+            this.oracleExpressionPath = oracleExpressionPath;
             this.oracleMethod = oracleMethod;
             this.oracleExpression = oracleExpression;
             this.inputs = Collections.unmodifiableList(new ArrayList<>(inputs));
+            this.inputSites = Collections.unmodifiableList(new ArrayList<>(inputSites));
         }
 
         public CtMethod<?> getOracleMethod() {
@@ -334,12 +325,9 @@ public final class GeneralizationRecipe {
                 throw new IllegalArgumentException("Parameter-name mapping function is null.");
             }
 
-            CtElement originalContainer = originalContainerFor(rewrittenContainer);
-            for (GeneralizableInput input : this.inputs) {
-                if (!input.isExpressionSite()) {
-                    continue;
-                }
-                CtPath pathInContainer = input.getSourceExpression().getPath().relativePath(originalContainer);
+            for (int i = 0; i < this.inputs.size(); i++) {
+                GeneralizableInput input = this.inputs.get(i);
+                CtPath pathInContainer = pathInContainer(this.inputSites.get(i).path, rewrittenContainer);
                 List<CtElement> matches = pathInContainer.evaluateOn(rewrittenContainer);
                 if (matches.size() != 1 || !(matches.get(0) instanceof CtExpression<?>)) {
                     throw new IllegalStateException(
@@ -352,6 +340,17 @@ public final class GeneralizationRecipe {
                 CtExpression<?> site = (CtExpression<?>) matches.get(0);
                 site.replace(factory.createCodeSnippetExpression(parameterNameFor.apply(input)));
             }
+        }
+
+        private CtPath pathInContainer(String sitePath, CtElement rewrittenContainer) {
+            if (rewrittenContainer instanceof CtExpression<?>) {
+                if (!sitePath.startsWith(this.oracleExpressionPath)) {
+                    throw new IllegalStateException("Input site is outside oracle expression: " + sitePath);
+                }
+                String relativeSitePath = sitePath.substring(this.oracleExpressionPath.length());
+                return new CtPathStringBuilder().fromString(relativeSitePath.isEmpty() ? "." : relativeSitePath);
+            }
+            return new CtPathStringBuilder().fromString(sitePath);
         }
 
         private CtElement originalContainerFor(CtElement rewrittenContainer) {

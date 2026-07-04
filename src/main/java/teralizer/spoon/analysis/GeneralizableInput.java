@@ -17,26 +17,17 @@ import teralizer.domain.MethodParameter;
 import teralizer.util.TypeCapability;
 
 public class GeneralizableInput {
-    private static final int EXPRESSION_SITE_ARGUMENT_INDEX = -2;
-    private static final int RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX = -1;
-
-    private final int methodArgumentIndex;
-    private final int constructorArgumentIndex;
     private final GeneralizationRecipe.InputKind kind;
     private final MethodParameter parameter;
     private final MethodArgument argument;
     private final CtExpression<?> sourceExpression;
 
     private GeneralizableInput(
-        int methodArgumentIndex,
-        int constructorArgumentIndex,
         GeneralizationRecipe.InputKind kind,
         MethodParameter parameter,
         MethodArgument argument,
         CtExpression<?> sourceExpression
     ) {
-        this.methodArgumentIndex = methodArgumentIndex;
-        this.constructorArgumentIndex = constructorArgumentIndex;
         this.kind = kind;
         this.parameter = parameter;
         this.argument = argument;
@@ -49,7 +40,7 @@ public class GeneralizableInput {
         List<CtExpression<?>> arguments = testedMethodCall.getArguments();
         if (!testedMethod.isStatic() && testedMethodCall.getTarget() instanceof CtConstructorCall<?>) {
             inputs.addAll(deriveConstructorInputs(
-                RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX,
+                GeneralizationRecipe.InputKind.RECEIVER_CTOR_ARG,
                 "receiver",
                 (CtConstructorCall<?>) testedMethodCall.getTarget()
             ));
@@ -73,15 +64,13 @@ public class GeneralizableInput {
 
             if (TypeCapability.supportsGeneratedInput(typeName)) {
                 inputs.add(new GeneralizableInput(
-                    i,
-                    -1,
                     GeneralizationRecipe.InputKind.METHOD_ARG,
                     new MethodParameter(typeName, parameter.getSimpleName()),
                     new MethodArgument(typeName, argument.toString()),
                     argument
                 ));
             } else if (argument instanceof CtConstructorCall<?>) {
-                inputs.addAll(deriveConstructorInputs(i, parameter.getSimpleName(), (CtConstructorCall<?>) argument));
+                inputs.addAll(deriveConstructorInputs(GeneralizationRecipe.InputKind.CTOR_ARG, parameter.getSimpleName(), (CtConstructorCall<?>) argument));
             }
         }
 
@@ -95,16 +84,12 @@ public class GeneralizableInput {
     }
 
     static GeneralizableInput fromRecipe(
-        int methodArgumentIndex,
-        int constructorArgumentIndex,
         GeneralizationRecipe.InputKind kind,
         MethodParameter parameter,
         MethodArgument argument,
         CtExpression<?> sourceExpression
     ) {
         return new GeneralizableInput(
-            methodArgumentIndex,
-            constructorArgumentIndex,
             kind,
             parameter,
             argument,
@@ -146,8 +131,6 @@ public class GeneralizableInput {
         String typeName = type.getQualifiedName();
         String name = sanitize("site" + inputs.size());
         inputs.add(new GeneralizableInput(
-            EXPRESSION_SITE_ARGUMENT_INDEX,
-            -1,
             GeneralizationRecipe.InputKind.EXPRESSION_SITE,
             new MethodParameter(typeName, name),
             new MethodArgument(typeName, literal.toString()),
@@ -156,7 +139,7 @@ public class GeneralizableInput {
     }
 
     private static List<GeneralizableInput> deriveConstructorInputs(
-        int methodArgumentIndex,
+        GeneralizationRecipe.InputKind kind,
         String methodParameterName,
         CtConstructorCall<?> constructorCall
     ) {
@@ -182,11 +165,7 @@ public class GeneralizableInput {
             String inputName = constructorInputName(methodParameterName, i, constructorParameterName);
             String typeName = type.getQualifiedName();
             inputs.add(new GeneralizableInput(
-                methodArgumentIndex,
-                i,
-                methodArgumentIndex == RECEIVER_CONSTRUCTOR_ARGUMENT_INDEX
-                    ? GeneralizationRecipe.InputKind.RECEIVER_CTOR_ARG
-                    : GeneralizationRecipe.InputKind.CTOR_ARG,
+                kind,
                 new MethodParameter(typeName, inputName),
                 new MethodArgument(typeName, argument.toString()),
                 argument
@@ -209,11 +188,11 @@ public class GeneralizableInput {
         return parameterType;
     }
 
-    private static String constructorInputName(String methodParameterName, int constructorArgumentIndex, String constructorParameterName) {
+    private static String constructorInputName(String methodParameterName, int constructorInputOrdinal, String constructorParameterName) {
         return "_ctor_"
             + sanitize(methodParameterName)
             + "_"
-            + indexName(constructorArgumentIndex)
+            + indexName(constructorInputOrdinal)
             + "_"
             + sanitize(constructorParameterName);
     }
@@ -238,13 +217,6 @@ public class GeneralizableInput {
         return sanitized.toString();
     }
 
-    public int getMethodArgumentIndex() {
-        return this.methodArgumentIndex;
-    }
-
-    public int getConstructorArgumentIndex() {
-        return this.constructorArgumentIndex;
-    }
 
     public GeneralizationRecipe.InputKind getKind() {
         return this.kind;

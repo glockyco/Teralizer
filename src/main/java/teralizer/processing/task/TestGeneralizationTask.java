@@ -24,7 +24,6 @@ import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
-import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.*;
@@ -516,54 +515,11 @@ public class TestGeneralizationTask extends AbstractTask {
         // ------------------------------------------------------------------------------------------------------ //
 
 
-        if (expressionRecipe) {
-            recipe.replaceInputSitesWithParameterReads(
-                testMethod,
-                factory,
-                input -> "_p_." + input.toMethodParameter().getName()
-            );
-        } else {
-            List<CtExpression<?>> args = testedMethodCall.getArguments();
-            List<GeneralizableInput> receiverConstructorInputs = inputs.stream()
-                .filter(GeneralizableInput::isReceiverConstructorArgument)
-                .collect(Collectors.toList());
-            if (!receiverConstructorInputs.isEmpty()) {
-                CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) testedMethodCall.getTarget();
-                List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
-                for (GeneralizableInput input : receiverConstructorInputs) {
-                    constructorArguments.set(
-                        input.getConstructorArgumentIndex(),
-                        factory.Code().createCodeSnippetExpression("_p_." + input.toMethodParameter().getName())
-                    );
-                }
-                constructorCall.setArguments(constructorArguments);
-            }
-
-
-            for (int i = 0; i < args.size(); i++) {
-                final int argumentIndex = i;
-                List<GeneralizableInput> inputsForArgument = inputs.stream()
-                    .filter(input -> input.getMethodArgumentIndex() == argumentIndex)
-                    .collect(Collectors.toList());
-                if (inputsForArgument.isEmpty()) {
-                    continue;
-                }
-
-                if (inputsForArgument.get(0).isConstructorArgument()) {
-                    CtConstructorCall<?> constructorCall = (CtConstructorCall<?>) args.get(i);
-                    List<CtExpression<?>> constructorArguments = new ArrayList<>(constructorCall.getArguments());
-                    for (GeneralizableInput input : inputsForArgument) {
-                        constructorArguments.set(
-                            input.getConstructorArgumentIndex(),
-                            factory.Code().createCodeSnippetExpression("_p_." + input.toMethodParameter().getName())
-                        );
-                    }
-                    constructorCall.setArguments(constructorArguments);
-                } else {
-                    args.set(i, factory.Code().createCodeSnippetExpression("_p_." + inputsForArgument.get(0).toMethodParameter().getName()));
-                }
-            }
-        }
+        recipe.replaceInputSitesWithParameterReads(
+            testMethod,
+            factory,
+            input -> "_p_." + input.toMethodParameter().getName()
+        );
 
         testMethod.getBody().insertBegin(factory.Code().createCodeSnippetStatement("JqwikValueRecorder.record(_p_)"));
 

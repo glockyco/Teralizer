@@ -16,49 +16,37 @@ import spoon.support.compiler.VirtualFile;
 
 public class GeneralizationRecipeTest {
     @Example
-    void usesSchemaVersionTwoAndRejectsVersionOnePayload() {
-        Assert.assertEquals(2, GeneralizationRecipe.CURRENT_VERSION);
-        String versionOneJson = "{"
-            + "\"version\":1,"
-            + "\"schema\":\"teralizer.generalization.recipe\","
-            + "\"oracleExpressionPath\":\"#statement[index=0]\","
-            + "\"oracleMethodPath\":\"#type[name=smoke.SubjectTest]\","
-            + "\"oracleType\":\"boolean\","
-            + "\"inputSites\":[]"
-            + "}";
+    void usesSchemaVersionThreeAndRejectsOlderPayloads() {
+        Assert.assertEquals(3, GeneralizationRecipe.CURRENT_VERSION);
+        for (int version : new int[] {1, 2}) {
+            String oldJson = "{"
+                + "\"version\":" + version + ","
+                + "\"schema\":\"teralizer.generalization.recipe\","
+                + "\"oracleExpressionPath\":\"#statement[index=0]\","
+                + "\"oracleMethodPath\":\"#type[name=smoke.SubjectTest]\","
+                + "\"oracleType\":\"boolean\","
+                + "\"oracleExpressionType\":\"boolean\","
+                + "\"inputSites\":[]"
+                + "}";
 
-        try {
-            GeneralizationRecipe.fromJson(new Gson(), versionOneJson);
-            Assert.fail("version-1 recipes must be rejected");
-        } catch (IllegalArgumentException expected) {
-            Assert.assertTrue(expected.getMessage().contains("Unsupported generalization recipe schema/version"));
+            try {
+                GeneralizationRecipe.fromJson(new Gson(), oldJson);
+                Assert.fail("older recipes must be rejected");
+            } catch (IllegalArgumentException expected) {
+                Assert.assertTrue(expected.getMessage().contains("Unsupported generalization recipe schema/version"));
+            }
         }
     }
 
     @Example
-    void rejectsVersionTwoInputSiteWithoutKind() {
-        String missingKindJson = "{"
-            + "\"version\":2,"
-            + "\"schema\":\"teralizer.generalization.recipe\","
-            + "\"oracleExpressionPath\":\"#statement[index=0]\","
-            + "\"oracleMethodPath\":\"#type[name=smoke.SubjectTest]\","
-            + "\"oracleType\":\"boolean\","
-            + "\"oracleExpressionType\":\"boolean\","
-            + "\"inputSites\":[{"
-            + "\"path\":\"#statement[index=0]\","
-            + "\"name\":\"value\","
-            + "\"type\":\"int\","
-            + "\"methodArgumentIndex\":0,"
-            + "\"constructorArgumentIndex\":-1"
-            + "}]"
-            + "}";
+    void schemaVersionThreePersistsSitesWithoutLegacyIndexes() {
+        Scenario scenario = scenarioFromSource(SOURCE, "usesConstructorArgument");
+        String json = recipeFor(scenario).toJson(new Gson());
 
-        try {
-            GeneralizationRecipe.fromJson(new Gson(), missingKindJson);
-            Assert.fail("input site kind must be required");
-        } catch (IllegalArgumentException expected) {
-            Assert.assertTrue(expected.getMessage().contains("Input site kind is required"));
-        }
+        Assert.assertTrue(json.contains("\"kind\":\"RECEIVER_CTOR_ARG\""));
+        Assert.assertTrue(json.contains("\"path\":\""));
+        Assert.assertFalse(json, json.contains("method" + "Argument" + "Index"));
+        Assert.assertFalse(json, json.contains("constructor" + "Argument" + "Index"));
     }
 
     @Example
