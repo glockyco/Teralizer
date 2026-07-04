@@ -21,11 +21,13 @@ public class ProjectSetupClasspathTest {
             testCompiled,
             workingDir);
 
+        // Expected relative paths are built through Paths so the separator matches the
+        // platform (CI runs this on Windows, where relativize produces backslashes).
         Assert.assertEquals(
             mainCompiled + File.pathSeparator +
                 testCompiled + File.pathSeparator +
-                ".m2/repository/org/example/first.jar" + File.pathSeparator +
-                ".m2/repository/org/example/second.jar",
+                Paths.get(".m2", "repository", "org", "example", "first.jar") + File.pathSeparator +
+                Paths.get(".m2", "repository", "org", "example", "second.jar"),
             classpath);
     }
 
