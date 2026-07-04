@@ -33,6 +33,7 @@ import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.spoon.analysis.ExpectedTypeInference;
 import teralizer.spoon.analysis.ExpressionSliceScreen;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
@@ -145,27 +146,18 @@ public class TestAnalysisTask extends AbstractTask {
                     List<GeneralizableInput> generalizableInputs = null;
                     GeneralizationRecipe generalizationRecipe = null;
                     if (callAbsolutePath != null && callRelativePath != null && testedMethod != null) {
-                        CtExpression<?> actualExpression = actualExpressionFor(assertionCall);
-                        if (actualExpression != null
-                            && actualExpression != testedMethodCall
-                            && ExpressionSliceScreen.isSelfContained(actualExpression)
-                            && containsElement(actualExpression, testedMethodCall)) {
-                            generalizableInputs = GeneralizableInput.deriveFromExpression(actualExpression);
-                            generalizationRecipe = GeneralizationRecipe.from(
-                                testedMethod,
-                                actualExpression,
-                                generalizableInputs,
-                                typeNameOf(actualExpression.getType())
-                            );
-                        } else {
-                            generalizableInputs = GeneralizableInput.derive(testedMethod, testedMethodCall);
-                            generalizationRecipe = GeneralizationRecipe.from(
-                                testedMethod,
-                                testedMethodCall,
-                                generalizableInputs,
-                                testedMethod.getType().getQualifiedName()
-                            );
-                        }
+                        CtExpression<?> oracleExpression = oracleExpressionFor(assertionCall, testedMethodCall);
+                        generalizableInputs = oracleExpression == testedMethodCall
+                            ? GeneralizableInput.derive(testedMethod, testedMethodCall)
+                            : GeneralizableInput.deriveFromExpression(oracleExpression);
+                        generalizationRecipe = GeneralizationRecipe.from(
+                            testedMethod,
+                            oracleExpression,
+                            generalizableInputs,
+                            oracleExpression == testedMethodCall
+                                ? typeNameOf(ExpectedTypeInference.inferExpectedType(testedMethodCall))
+                                : typeNameOf(oracleExpression.getType())
+                        );
                     }
                     if (generalizableInputs == null) {
                         for (CtExpression<?> argument : testedMethodCall.getArguments()) {
@@ -280,6 +272,17 @@ public class TestAnalysisTask extends AbstractTask {
         String compact = source.replaceAll("\\s+", " ").trim();
         return compact.length() <= 120 ? compact : compact.substring(0, 117) + "...";
     }
+    private static CtExpression<?> oracleExpressionFor(CtInvocation<?> assertionCall, CtInvocation<?> testedMethodCall) {
+        CtExpression<?> actualExpression = actualExpressionFor(assertionCall);
+        if (actualExpression != null
+            && actualExpression != testedMethodCall
+            && ExpressionSliceScreen.isSelfContained(actualExpression)
+            && containsElement(actualExpression, testedMethodCall)) {
+            return actualExpression;
+        }
+        return testedMethodCall;
+    }
+
     private static CtExpression<?> actualExpressionFor(CtInvocation<?> assertionCall) {
         Optional<Integer> actualIndex = TestAnalysis.getActualParameterIndex(assertionCall);
         if (!actualIndex.isPresent() || actualIndex.get() < 0 || actualIndex.get() >= assertionCall.getArguments().size()) {

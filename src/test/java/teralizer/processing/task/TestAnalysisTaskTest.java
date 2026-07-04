@@ -127,7 +127,7 @@ public class TestAnalysisTaskTest {
     }
 
     @Example
-    void assertEqualsDirectCallKeepsInvocationRecipeShape() {
+    void assertEqualsDirectCallStoresPathBasedMethodArgumentSitesAndExpectedType() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
                 + "public class SubjectTest {\n"
@@ -143,17 +143,17 @@ public class TestAnalysisTaskTest {
 
         AssertionRecord record = store.assertions.get(0);
         GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
-        Assert.assertEquals("int", recipe.getOracleExpressionType());
+        Assert.assertEquals("long", recipe.getOracleExpressionType());
         GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage());
         Assert.assertTrue(resolved.getOracleExpression() instanceof CtInvocation<?>);
         Assert.assertEquals("add", ((CtInvocation<?>) resolved.getOracleExpression()).getExecutable().getSimpleName());
         Assert.assertEquals(2, resolved.getInputs().size());
-        Assert.assertFalse(resolved.getInputs().get(0).isExpressionSite());
-        Assert.assertEquals(0, resolved.getInputs().get(0).getMethodArgumentIndex());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.METHOD_ARG, resolved.getInputs().get(0).getKind());
+        Assert.assertTrue(resolved.getInputs().get(0).getSourceExpression().getPath().toString().contains("argument[index=0]"));
         Assert.assertEquals("left", resolved.getInputs().get(0).toMethodParameter().getName());
         Assert.assertEquals("3", resolved.getInputs().get(0).toMethodArgument().getValue());
-        Assert.assertFalse(resolved.getInputs().get(1).isExpressionSite());
-        Assert.assertEquals(1, resolved.getInputs().get(1).getMethodArgumentIndex());
+        Assert.assertEquals(GeneralizationRecipe.InputKind.METHOD_ARG, resolved.getInputs().get(1).getKind());
+        Assert.assertTrue(resolved.getInputs().get(1).getSourceExpression().getPath().toString().contains("argument[index=1]"));
         Assert.assertEquals("right", resolved.getInputs().get(1).toMethodParameter().getName());
         Assert.assertEquals("4", resolved.getInputs().get(1).toMethodArgument().getValue());
     }
