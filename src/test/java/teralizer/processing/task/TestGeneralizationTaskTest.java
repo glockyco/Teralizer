@@ -138,7 +138,7 @@ public class TestGeneralizationTaskTest {
     }
 
     @Example
-    void expressionRecipeLicensesNullConcreteBooleanOracleByExpressionType() throws Exception {
+    void compositeRecipeLicensesNullConcreteBooleanOracleByExpressionType() throws Exception {
         Scenario scenario = expressionScenario(
             new Operation(new Variable("site0", TypeDomain.INTEGER), Operator.GT, new Variable("site1", TypeDomain.INTEGER)),
             null,
@@ -154,7 +154,7 @@ public class TestGeneralizationTaskTest {
     }
 
     @Example
-    void invocationRecipeLicensesNullConcreteBooleanOracleByMethodReturnType() throws Exception {
+    void plainCallRecipeLicensesNullConcreteBooleanOracleByExpressionType() throws Exception {
         Scenario scenario = scenario(
             "returnsInput",
             "id",
@@ -167,9 +167,9 @@ public class TestGeneralizationTaskTest {
 
         ExecutedGeneralization result = executeGeneralization(scenario);
 
-        Assert.assertFalse(result.record.getIsIncluded());
-        Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, result.record.getExclusionInfo());
-        Assert.assertFalse("refused generalization must not write a doomed artifact", Files.exists(result.generatedPath));
+        Assert.assertTrue(result.record.getIsIncluded());
+        Assert.assertNull(result.record.getExclusionInfo());
+        Assert.assertTrue(Files.exists(result.generatedPath));
     }
 
     private static ExecutedGeneralization executeGeneralization(Scenario scenario) throws Exception {

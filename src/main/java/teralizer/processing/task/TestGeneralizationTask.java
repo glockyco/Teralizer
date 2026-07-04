@@ -47,7 +47,6 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.SpoonUtils;
-import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.*;
@@ -285,11 +284,6 @@ public class TestGeneralizationTask extends AbstractTask {
                 this.generalizationRecord.getClassQualifiedName()
             );
         GeneralizationRecipe.Resolved recipe = clonedRecipe.resolveAgainst(testMethod, factory.getModel().getRootPackage());
-        CtExpression<?> oracleExpression = recipe.getOracleExpression();
-        CtMethod<?> testedMethod = recipe.getOracleMethod();
-        List<GeneralizableInput> inputs = recipe.getInputs();
-        boolean expressionRecipe = inputs.stream().anyMatch(GeneralizableInput::isExpressionSite);
-        CtInvocation<?> testedMethodCall = expressionRecipe ? null : (CtInvocation<?>) oracleExpression;
 
         // @TODO: The MethodParameter.type needs to be the FULLY QUALIFIED name of the class.
         //   Otherwise, we will have issues mapping the class names to the correct Arbitraries.
@@ -378,9 +372,7 @@ public class TestGeneralizationTask extends AbstractTask {
 
             String outputValueString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getOutputValuePath())));
             CapturedOutput output = specificationGson.fromJson(outputValueString, CapturedOutput.class);
-            String licenseReturnType = expressionRecipe
-                ? clonedRecipe.getOracleExpressionType()
-                : testedMethod.getType() == null ? null : testedMethod.getType().getQualifiedName();
+            String licenseReturnType = clonedRecipe.getOracleExpressionType();
             WideningLicense.Verdict wideningLicense = WideningLicense.evaluate(
                 OutputSpecClassifier.classify(output.getKind(), outputModel),
                 licenseReturnType,
