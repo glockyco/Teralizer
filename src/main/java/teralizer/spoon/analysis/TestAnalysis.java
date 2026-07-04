@@ -1,6 +1,8 @@
 package teralizer.spoon.analysis;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtElement;
@@ -10,6 +12,12 @@ import spoon.reflect.reference.CtTypeReference;
 import teralizer.util.Configuration;
 
 public class TestAnalysis {
+    private static final int NO_INDEX = -1;
+    private static final Map<AssertionIndexKey, AssertionIndexes> ASSERT_EQUALS_INDEXES =
+        createAssertEqualsIndexTable();
+    private static final Map<AssertionIndexKey, AssertionIndexes> CONDITION_INDEXES =
+        createConditionIndexTable();
+
 
     // JUnit 4:
     //
@@ -116,114 +124,175 @@ public class TestAnalysis {
     }
 
     public static Optional<Integer> getActualParameterIndex(CtInvocation<?> assertion) {
-        boolean isJunit4 = isJUnit4Assertion(assertion);
-        boolean isJunit5 = isJUnit5Assertion(assertion);
-
-        if (!isJunit4 && !isJunit5) {
-            throw new RuntimeException("Not a JUnit 4 or 5 assertion:\n" + assertion);
-        }
-
+        AssertionFramework framework = assertionFramework(assertion);
         int argumentCount = assertion.getArguments().size();
 
         switch (assertion.getExecutable().getSimpleName()) {
             case Configuration.ASSERT_EQUALS:
-                if (isJunit4) {
-                    if (argumentCount == 4) {
-                        // The parameters are: message, expected, actual, delta
-                        return Optional.of(2);
-                    } else if (argumentCount == 3) {
-                        if (assertion.getExecutable().getParameters().stream().allMatch(p -> p.getSimpleName().equals("double"))) {
-                            // The parameters are: expected, actual, delta
-                            return Optional.of(1);
-                        } else {
-                            // The parameters are: message, expected, actual
-                            return Optional.of(2);
-                        }
-                    } else if (argumentCount == 2) {
-                        // The parameters are: expected, actual
-                        return Optional.of(1);
-                    } else {
-                        throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
-                    }
-                } else { // if (isJunit5) {
-                    if (argumentCount == 2 || argumentCount == 3 || argumentCount == 4) {
-                        // The parameters are: expected, actual(, delta)(, message | messageSupplier)
-                        return Optional.of(1);
-                    } else {
-                        throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
-                    }
-                }
+                return assertEqualsIndexes(assertion, framework, argumentCount).actualIndex();
             case Configuration.ASSERT_TRUE:
             case Configuration.ASSERT_FALSE:
-                if (isJunit4) {
-                    if (argumentCount == 2) {
-                        // The parameters are: message, condition
-                        return Optional.of(1);
-                    } else if (argumentCount == 1) {
-                        // The parameters are: condition
-                        return Optional.of(0);
-                    } else {
-                        throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
-                    }
-                } else { // if (isJunit5) {
-                    if (argumentCount == 1 || argumentCount == 2) {
-                        // The parameters are: condition | booleanSupplier(, message | message Supplier)
-                        return Optional.of(0);
-                    } else {
-                        throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
-                    }
+                AssertionIndexes conditionIndexes = CONDITION_INDEXES.get(
+                    new AssertionIndexKey(framework, argumentCount, false));
+                if (conditionIndexes == null) {
+                    throw unexpectedParameterCount(assertion);
                 }
+                return conditionIndexes.actualIndex();
             default:
                 return Optional.empty();
         }
     }
 
     public static Optional<Integer> getExpectedParameterIndex(CtInvocation<?> assertion) {
-        boolean isJunit4 = isJUnit4Assertion(assertion);
-        boolean isJunit5 = isJUnit5Assertion(assertion);
-
-        if (!isJunit4 && !isJunit5) {
-            throw new RuntimeException("Not a JUnit 4 or 5 assertion:\n" + assertion);
-        }
-
+        AssertionFramework framework = assertionFramework(assertion);
         int argumentCount = assertion.getArguments().size();
 
         if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_EQUALS)) {
-            if (isJunit4) {
-                if (argumentCount == 4) {
-                    // The parameters are: message, expected, actual, delta
-                    return Optional.of(1);
-                } else if (argumentCount == 3) {
-                    if (assertion.getExecutable().getParameters().stream().allMatch(p -> p.getSimpleName().equals("double"))) {
-                        // The parameters are: expected, actual, delta
-                        return Optional.of(0);
-                    } else {
-                        // The parameters are: message, expected, actual
-                        return Optional.of(1);
-                    }
-                } else if (argumentCount == 2) {
-                    // The parameters are: expected, actual
-                    return Optional.of(0);
-                } else {
-                    throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
-                }
-            } else { // if (isJunit5) {
-                if (argumentCount == 2 || argumentCount == 3 || argumentCount == 4) {
-                    // The parameters are: expected, actual(, delta)(, message | messageSupplier)
-                    return Optional.of(0);
-                } else {
-                    throw new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
-                }
-            }
+            return assertEqualsIndexes(assertion, framework, argumentCount).expectedIndex();
         } else if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
-            if (isJunit4) {
+            if (framework == AssertionFramework.JUNIT4) {
                 throw new RuntimeException("Unexpected JUnit 4 assertion:\n" + assertion);
-            } else { // if (isJunit5) {
-                // The parameters are: expectedType, executable(, message | messageSupplier)
+            } else {
                 return Optional.of(0);
             }
         }
         return Optional.empty();
+    }
+
+    private static AssertionIndexes assertEqualsIndexes(
+        CtInvocation<?> assertion,
+        AssertionFramework framework,
+        int argumentCount
+    ) {
+        AssertionIndexes indexes = ASSERT_EQUALS_INDEXES.get(
+            new AssertionIndexKey(framework, argumentCount, isDoubleDelta(assertion)));
+        if (indexes == null) {
+            throw unexpectedParameterCount(assertion);
+        }
+        return indexes;
+    }
+
+    private static AssertionFramework assertionFramework(CtInvocation<?> assertion) {
+        if (isJUnit4Assertion(assertion)) {
+            return AssertionFramework.JUNIT4;
+        }
+        if (isJUnit5Assertion(assertion)) {
+            return AssertionFramework.JUNIT5;
+        }
+        throw new RuntimeException("Not a JUnit 4 or 5 assertion:\n" + assertion);
+    }
+
+    private static boolean isDoubleDelta(CtInvocation<?> assertion) {
+        return assertion.getExecutable().getParameters().stream()
+            .allMatch(parameter -> parameter.getSimpleName().equals("double"));
+    }
+
+    private static RuntimeException unexpectedParameterCount(CtInvocation<?> assertion) {
+        return new RuntimeException("Unexpected number of assertion parameters for assertion:\n" + assertion);
+    }
+
+    private static Map<AssertionIndexKey, AssertionIndexes> createAssertEqualsIndexTable() {
+        Map<AssertionIndexKey, AssertionIndexes> table = new HashMap<>();
+        putAssertEquals(table, AssertionFramework.JUNIT4, 2, false, 0, 1);
+        putAssertEquals(table, AssertionFramework.JUNIT4, 2, true, 0, 1);
+        putAssertEquals(table, AssertionFramework.JUNIT4, 3, false, 1, 2);
+        putAssertEquals(table, AssertionFramework.JUNIT4, 3, true, 0, 1);
+        putAssertEquals(table, AssertionFramework.JUNIT4, 4, false, 1, 2);
+        putAssertEquals(table, AssertionFramework.JUNIT4, 4, true, 1, 2);
+        putAssertEquals(table, AssertionFramework.JUNIT5, 2, false, 0, 1);
+        putAssertEquals(table, AssertionFramework.JUNIT5, 2, true, 0, 1);
+        putAssertEquals(table, AssertionFramework.JUNIT5, 3, false, 0, 1);
+        putAssertEquals(table, AssertionFramework.JUNIT5, 3, true, 0, 1);
+        putAssertEquals(table, AssertionFramework.JUNIT5, 4, false, 0, 1);
+        putAssertEquals(table, AssertionFramework.JUNIT5, 4, true, 0, 1);
+        return table;
+    }
+
+    private static Map<AssertionIndexKey, AssertionIndexes> createConditionIndexTable() {
+        Map<AssertionIndexKey, AssertionIndexes> table = new HashMap<>();
+        putCondition(table, AssertionFramework.JUNIT4, 1, 0);
+        putCondition(table, AssertionFramework.JUNIT4, 2, 1);
+        putCondition(table, AssertionFramework.JUNIT5, 1, 0);
+        putCondition(table, AssertionFramework.JUNIT5, 2, 0);
+        return table;
+    }
+
+    private static void putAssertEquals(
+        Map<AssertionIndexKey, AssertionIndexes> table,
+        AssertionFramework framework,
+        int argumentCount,
+        boolean doubleDelta,
+        int expectedIndex,
+        int actualIndex
+    ) {
+        table.put(
+            new AssertionIndexKey(framework, argumentCount, doubleDelta),
+            new AssertionIndexes(expectedIndex, actualIndex));
+    }
+
+    private static void putCondition(
+        Map<AssertionIndexKey, AssertionIndexes> table,
+        AssertionFramework framework,
+        int argumentCount,
+        int actualIndex
+    ) {
+        table.put(
+            new AssertionIndexKey(framework, argumentCount, false),
+            new AssertionIndexes(NO_INDEX, actualIndex));
+    }
+
+    private enum AssertionFramework {
+        JUNIT4,
+        JUNIT5
+    }
+
+    private static final class AssertionIndexKey {
+        private final AssertionFramework framework;
+        private final int argumentCount;
+        private final boolean doubleDelta;
+
+        private AssertionIndexKey(AssertionFramework framework, int argumentCount, boolean doubleDelta) {
+            this.framework = framework;
+            this.argumentCount = argumentCount;
+            this.doubleDelta = doubleDelta;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof AssertionIndexKey)) {
+                return false;
+            }
+            AssertionIndexKey other = (AssertionIndexKey) obj;
+            return this.framework == other.framework
+                && this.argumentCount == other.argumentCount
+                && this.doubleDelta == other.doubleDelta;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = this.framework.hashCode();
+            result = 31 * result + this.argumentCount;
+            result = 31 * result + (this.doubleDelta ? 1 : 0);
+            return result;
+        }
+    }
+
+    private static final class AssertionIndexes {
+        private final int expectedIndex;
+        private final int actualIndex;
+
+        private AssertionIndexes(int expectedIndex, int actualIndex) {
+            this.expectedIndex = expectedIndex;
+            this.actualIndex = actualIndex;
+        }
+
+        private Optional<Integer> expectedIndex() {
+            return this.expectedIndex == NO_INDEX ? Optional.empty() : Optional.of(this.expectedIndex);
+        }
+
+        private Optional<Integer> actualIndex() {
+            return this.actualIndex == NO_INDEX ? Optional.empty() : Optional.of(this.actualIndex);
+        }
     }
 
     public static boolean isJUnit4Assertion(CtInvocation<?> assertion) {
