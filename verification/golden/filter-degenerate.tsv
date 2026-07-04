@@ -1,0 +1,2 @@
+fixture	gen_count	gen_index	variant	is_included	exclusion_info	output_spec_class	diagnostic_kind	tries	distinct_tuples
+filter-degenerate	1	1	IMPROVED_100_TRIES	true		SYMBOLIC	LIMITED_TOO_MANY_FILTER_MISSES	39	38

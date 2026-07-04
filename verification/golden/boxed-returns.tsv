@@ -1,0 +1,3 @@
+fixture	gen_count	gen_index	variant	is_included	exclusion_info	output_spec_class	diagnostic_kind	tries	distinct_tuples
+boxed-returns	2	1	IMPROVED_100_TRIES	true		SYMBOLIC	FULL	100	100
+boxed-returns	2	2	IMPROVED_100_TRIES	false	ORACLE_NOT_WIDENABLE	NULL_CONCRETE			

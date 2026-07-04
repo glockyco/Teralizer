@@ -34,11 +34,11 @@ Each fixture = one Maven project with one small CUT + one JUnit-4 test class who
 | `symbolic-int` | computed int return, `assertEquals(literal, f(x))` | SYMBOLIC spec; licensed; jqwik FULL |
 | `boxed-returns` | `Integer.valueOf` computed return (attr survives) + `Long.valueOf` (attr lost in vendored fork) | one SYMBOLIC + licensed; one NULL_CONCRETE + `ORACLE_NOT_WIDENABLE` — pins the characterization |
 | `thrown-oracle` | both arms of license rule 2: (a) MUT throwing on the concrete path with clean evidence (no concretization, PC empty or naming the params); (b) MUT whose throw sits behind a concretized branch (e.g. a String input passed through an unmodeled JDK call before the throw) | (a) EXCEPTION spec, licensed, jqwik FULL; (b) EXCEPTION spec, `ORACLE_NOT_WIDENABLE` — pins the corrected rule 2 (antiaction falsification). The String-input variant also pins the `SpoonUtils.getTypeReference` NPE fix |
-| `boolean-in-pc` | computed boolean (`return a == b`) vs pass-through boolean (store/load) | first: NULL_CONCRETE licensed (clauses name params); second: `ORACLE_NOT_WIDENABLE` — pins both license arms |
+| `boolean-in-pc` | computed boolean (`return a == b`) + primitive pass-through boolean + boxed pass-through boolean (`Boolean.valueOf`) | computed: NULL_CONCRETE licensed (clauses name params); primitive pass-through: SYMBOLIC licensed; boxed pass-through: NULL_CONCRETE + `ORACLE_NOT_WIDENABLE` — pins the license arms and the primitive/boxed distinction |
 | `min-value-seeds` | `Long.MIN_VALUE`/`Integer.MIN_VALUE`/`Short` seeds through supplier rendering | builds + validates; pins the cast-operand and narrow-boxed-bridge fixes |
-| `string-sound-set` | `equals(const)`/`length`/`isEmpty` string MUTs | sound string generalizations; unsupported ops → `UNSUPPORTED_TERM` exclusions (string-support plan's Task 7 Step 3 shape, in miniature) |
+| `string-sound-set` | `equals(const)`/`length`/`isEmpty` string MUTs plus an unsupported `compareTo` assertion | `equals(const)` and `isEmpty` are NULL_CONCRETE, licensed, jqwik FULL 1/1; the length predicate records the current conservative `ORACLE_NOT_WIDENABLE` NULL_CONCRETE gap; `compareTo` is rejected by `StringOperationFilter` before golden generation |
 | `old-surefire` | pom pins surefire 2.17 + `-source 1.7` | test-source floor + surefire floor in derived pom; display-name/FQN report matching; validates the whole validation-repair family |
-| `all-refused` | a project whose only test targets a pass-through boolean (every generalization license-refused) | gens recorded, 0 included, `EXECUTE_TESTS_GENERALIZED` SUCCEEDED with zero generalized classes — pins the fail-loud false-positive fix |
+| `all-refused` | a project whose only test targets boxed pass-through boolean (`Boolean.valueOf`) | gens recorded, 0 included, `EXECUTE_TESTS_GENERALIZED` SUCCEEDED with zero generalized classes — pins the fail-loud false-positive fix |
 | `filter-degenerate` | a numeric MUT whose PC clause no planner encodes (falls to the residual filter and rejects nearly all generated inputs) | generalization validates with `FILTER_EXHAUSTED_SEED_ONLY`/`LIMITED_TOO_MANY_FILTER_MISSES` diagnostics — pins the filter-degeneracy telemetry the clause-driven spec's phasing consumes |
 
 Growth rule: every future pipeline defect gets a fixture reproducing it before/with its fix (the JadConfig-literal pattern, retroactively encoded by `min-value-seeds`).
@@ -74,12 +74,12 @@ design — model tests already pin them and pipeline fixtures would add runtime 
 
 **Files:** `verification/fixtures/<name>/` + `project-configs/verification/fixture-<name>.conf` per family from the table; golden entries per fixture.
 
-- [ ] **Step 1:** `boxed-returns`, `boolean-in-pc`, `min-value-seeds` (pure-Java families; golden entries pin the license arms and codegen fixes).
-- [ ] **Step 2:** `thrown-oracle` — BOTH arms per the family table: (a) clean-evidence throw → licensed, validated; (b) throw behind a concretized branch → `ORACLE_NOT_WIDENABLE` (pins the corrected license rule 2).
-- [ ] **Step 3:** `string-sound-set` (needs `symbolic.strings` handling — check how string-parameter MUTs are configured in the string-support plan's shipped tasks; scope to the sound set).
-- [ ] **Step 4:** `old-surefire` (pom pins surefire 2.17, `-source 1.7`; golden entry asserts the derived generalized pom + successful collection).
-- [ ] **Step 4b:** `all-refused` (pass-through boolean only) and `filter-degenerate` (unencodable PC clause → residual-filter exhaustion diagnostics) per the family table.
-- [ ] **Step 5:** Full corpus run end-to-end; record total wall time in the task summary (target: single-digit minutes); commit.
+- [x] **Step 1:** `boxed-returns`, `boolean-in-pc`, `min-value-seeds` (pure-Java families; golden entries pin the license arms and codegen fixes).
+- [x] **Step 2:** `thrown-oracle` — BOTH arms per the family table: (a) clean-evidence throw → licensed, validated; (b) throw behind a concretized branch → `ORACLE_NOT_WIDENABLE` (pins the corrected license rule 2).
+- [x] **Step 3:** `string-sound-set` (needs `symbolic.strings` handling — check how string-parameter MUTs are configured in the string-support plan's shipped tasks; scope to the sound set).
+- [x] **Step 4:** `old-surefire` (pom pins surefire 2.17, `-source 1.7`; golden entry asserts the derived generalized pom + successful collection).
+- [x] **Step 4b:** `all-refused` (pass-through boolean only) and `filter-degenerate` (unencodable PC clause → residual-filter exhaustion diagnostics) per the family table.
+- [x] **Step 5:** Full corpus run end-to-end; record total wall time in the task summary (target: single-digit minutes); commit.
 
 ### Task 3: Sentinel subset definition
 
