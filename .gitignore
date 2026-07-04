@@ -363,6 +363,15 @@ gradle-app.setting
 /projects/*
 /logs
 
+# Verification fixture corpus run artifacts
+/verification/fixtures/**/target/
+/verification/fixtures/**/data/
+/verification/fixtures/**/pom.teralizer.xml
+/verification/fixtures/**/pom.teralizer.generalized.xml
+/verification/fixtures/**/_*_Driver_*.java
+/verification/fixtures/**/_*_Instrumented_*.java
+/verification/fixtures/**/_*_Generalized_*.java
+
 !/projects/EqBench
 !/projects/example-gradle-junit4
 !/projects/example-gradle-junit5

@@ -9,6 +9,7 @@ within the same execution paths. Java/Gradle pipeline + PostgreSQL + a Python an
 | Task | Command |
 |---|---|
 | Build (incl. SPF submodules) | `./gradlew build` |
+| Verify pipeline fixture corpus | `scripts/verify-pipeline.sh` |
 | Run one config | `./gradlew run -Dteralizer.config=<config-file>` |
 | Start / stop DB | `./gradlew startPostgres` / `./gradlew stopPostgres` |
 | DB UI | `docker compose up adminer` → http://localhost:18080 (password: `teralizer`) |

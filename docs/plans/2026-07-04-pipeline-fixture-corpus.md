@@ -33,13 +33,21 @@ Each fixture = one Maven project with one small CUT + one JUnit-4 test class who
 |---|---|---|
 | `symbolic-int` | computed int return, `assertEquals(literal, f(x))` | SYMBOLIC spec; licensed; jqwik FULL |
 | `boxed-returns` | `Integer.valueOf` computed return (attr survives) + `Long.valueOf` (attr lost in vendored fork) | one SYMBOLIC + licensed; one NULL_CONCRETE + `ORACLE_NOT_WIDENABLE` — pins the characterization |
-| `thrown-oracle` | MUT throwing on the concrete path, `assertThrows`-style + try/fail shape | EXCEPTION spec; licensed (post-THROWN-fix); exercises the `SpoonUtils.getTypeReference` String-parameter path once that fix lands |
+| `thrown-oracle` | both arms of license rule 2: (a) MUT throwing on the concrete path with clean evidence (no concretization, PC empty or naming the params); (b) MUT whose throw sits behind a concretized branch (e.g. a String input passed through an unmodeled JDK call before the throw) | (a) EXCEPTION spec, licensed, jqwik FULL; (b) EXCEPTION spec, `ORACLE_NOT_WIDENABLE` — pins the corrected rule 2 (antiaction falsification). The String-input variant also pins the `SpoonUtils.getTypeReference` NPE fix |
 | `boolean-in-pc` | computed boolean (`return a == b`) vs pass-through boolean (store/load) | first: NULL_CONCRETE licensed (clauses name params); second: `ORACLE_NOT_WIDENABLE` — pins both license arms |
 | `min-value-seeds` | `Long.MIN_VALUE`/`Integer.MIN_VALUE`/`Short` seeds through supplier rendering | builds + validates; pins the cast-operand and narrow-boxed-bridge fixes |
 | `string-sound-set` | `equals(const)`/`length`/`isEmpty` string MUTs | sound string generalizations; unsupported ops → `UNSUPPORTED_TERM` exclusions (string-support plan's Task 7 Step 3 shape, in miniature) |
 | `old-surefire` | pom pins surefire 2.17 + `-source 1.7` | test-source floor + surefire floor in derived pom; display-name/FQN report matching; validates the whole validation-repair family |
+| `all-refused` | a project whose only test targets a pass-through boolean (every generalization license-refused) | gens recorded, 0 included, `EXECUTE_TESTS_GENERALIZED` SUCCEEDED with zero generalized classes — pins the fail-loud false-positive fix |
+| `filter-degenerate` | a numeric MUT whose PC clause no planner encodes (falls to the residual filter and rejects nearly all generated inputs) | generalization validates with `FILTER_EXHAUSTED_SEED_ONLY`/`LIMITED_TOO_MANY_FILTER_MISSES` diagnostics — pins the filter-degeneracy telemetry the clause-driven spec's phasing consumes |
 
 Growth rule: every future pipeline defect gets a fixture reproducing it before/with its fix (the JadConfig-literal pattern, retroactively encoded by `min-value-seeds`).
+
+Candidate, deliberately deferred: a deterministic mis-pick fixture (T3 ranked guess whose
+property seed-kills, pinning the coherence backstop end-to-end). Valuable, but constructing a
+*stable* wrong pick couples the fixture to resolver internals; revisit once the corpus is
+established. Fragile-assertion shapes, local lifting, and generic receivers stay unit-level by
+design — model tests already pin them and pipeline fixtures would add runtime without evidence.
 
 ## Sentinel subset (Tier 2 — definition only, no code)
 
@@ -55,21 +63,22 @@ Growth rule: every future pipeline defect gets a fixture reproducing it before/w
 - Create: `project-configs/verification.conf` (profile: `IMPROVED_100_TRIES` only, PIT disabled, standard ceilings) + `project-configs/verification/fixture-<name>.conf` per fixture
 - Modify: `.gitignore` (fixture build output)
 
-- [ ] **Step 1:** Write the `symbolic-int` fixture: CUT with `int increment(int x) { if (x > 0) return x + 1; return x - 1; }`-class method; test `assertEquals(3, new Cut().increment(2))`. Pom: minimal, JUnit 4.13.2, source/target 1.8.
-- [ ] **Step 2:** Runner script: creates `postgres_verification` (drop-if-exists; `ALTER DATABASE template1 REFRESH COLLATION VERSION` guard like the jarvis skill documents), runs each fixture config via `./gradlew run -Dteralizer.config=...` with `DB_NAME=postgres_verification`, records exit codes to a ledger, deletes stale `_*_Generalized_*` files under `verification/fixtures/` first.
-- [ ] **Step 3:** Run it; inspect the DB by hand; record the observed outcome for `symbolic-int` as the first golden entry.
-- [ ] **Step 4:** Golden-check script (`scripts/check-verification-corpus.sh` or a small Python module under `analysis/` — follow `analysis/` conventions if Python): per fixture, assert gen count, per-gen `is_included`/`exclusion_info`, assertion `output_spec_class`, and `jqwik_property_execution.diagnostic_kind`. Non-zero exit on any mismatch, with a readable diff.
-- [ ] **Step 5:** Wire a top-level entry point (`scripts/verify-pipeline.sh` = run + check) and document it in `AGENTS.md`'s command table.
-- [ ] **Step 6:** Commit.
+- [x] **Step 1:** Write the `symbolic-int` fixture: CUT with `int increment(int x) { if (x > 0) return x + 1; return x - 1; }`-class method; test `assertEquals(3, new Cut().increment(2))`. Pom: minimal, JUnit 4.13.2, source/target 1.8.
+- [x] **Step 2:** Runner script: creates `postgres_verification` (drop-if-exists; `ALTER DATABASE template1 REFRESH COLLATION VERSION` guard like the jarvis skill documents), runs each fixture config via `./gradlew run -Dteralizer.config=...` with `DB_NAME=postgres_verification`, records exit codes to a ledger, deletes stale `_*_Generalized_*` files under `verification/fixtures/` first.
+- [x] **Step 3:** Run it; inspect the DB by hand; record the observed outcome for `symbolic-int` as the first golden entry.
+- [x] **Step 4:** Golden-check script (`scripts/check-verification-corpus.sh` or a small Python module under `analysis/` — follow `analysis/` conventions if Python): per fixture, assert gen count, per-gen `is_included`/`exclusion_info`, assertion `output_spec_class`, and `jqwik_property_execution.diagnostic_kind`. Non-zero exit on any mismatch, with a readable diff.
+- [x] **Step 5:** Wire a top-level entry point (`scripts/verify-pipeline.sh` = run + check) and document it in `AGENTS.md`'s command table.
+- [x] **Step 6:** Commit.
 
 ### Task 2: Remaining fixture families
 
 **Files:** `verification/fixtures/<name>/` + `project-configs/verification/fixture-<name>.conf` per family from the table; golden entries per fixture.
 
 - [ ] **Step 1:** `boxed-returns`, `boolean-in-pc`, `min-value-seeds` (pure-Java families; golden entries pin the license arms and codegen fixes).
-- [ ] **Step 2:** `thrown-oracle` (after/with the `SpoonUtils` NPE fix — its golden entry pins that fix).
+- [ ] **Step 2:** `thrown-oracle` — BOTH arms per the family table: (a) clean-evidence throw → licensed, validated; (b) throw behind a concretized branch → `ORACLE_NOT_WIDENABLE` (pins the corrected license rule 2).
 - [ ] **Step 3:** `string-sound-set` (needs `symbolic.strings` handling — check how string-parameter MUTs are configured in the string-support plan's shipped tasks; scope to the sound set).
 - [ ] **Step 4:** `old-surefire` (pom pins surefire 2.17, `-source 1.7`; golden entry asserts the derived generalized pom + successful collection).
+- [ ] **Step 4b:** `all-refused` (pass-through boolean only) and `filter-degenerate` (unencodable PC clause → residual-filter exhaustion diagnostics) per the family table.
 - [ ] **Step 5:** Full corpus run end-to-end; record total wall time in the task summary (target: single-digit minutes); commit.
 
 ### Task 3: Sentinel subset definition
