@@ -7,6 +7,8 @@ import org.junit.Assert;
 import teralizer.domain.Constant;
 import teralizer.domain.Invocation;
 import teralizer.domain.Not;
+import teralizer.domain.Operation;
+import teralizer.domain.Operator;
 import teralizer.domain.TypeDomain;
 import teralizer.domain.Variable;
 
@@ -51,6 +53,16 @@ public class ModelToJavaTransformerInvocationTest {
                 null,
                 "toLowerCase",
                 Collections.emptyList())));
+    }
+
+    @Example
+    void rendersLengthInvocationInsidePredicate() {
+        Operation predicate = new Operation(
+            new Invocation(new Variable("value", TypeDomain.STRING), null, "length", Collections.emptyList()),
+            Operator.GE,
+            new Constant((long) 0, TypeDomain.INTEGER));
+
+        Assert.assertEquals("((_p_.value.length()) >= 0)", new ModelToJavaTransformer().transform(predicate));
     }
 
     @Example

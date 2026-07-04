@@ -22,6 +22,11 @@ public class StringSoundSetCutTest {
     }
 
     @Test
+    public void indexOfProducesAnUnsupportedDerivedSymbol() {
+        assertEquals(-1, new StringSoundSetCut().indexOfX("foo"));
+    }
+
+    @Test
     public void unsupportedCompareToIsExcluded() {
         assertEquals(0, new StringSoundSetCut().compareToFoo("foo"));
     }

@@ -3,11 +3,25 @@ package teralizer.transformer;
 import gov.nasa.jpf.symbc.concolic.FunctionExpression;
 import gov.nasa.jpf.symbc.mixednumstrg.SpecialIntegerExpression;
 import gov.nasa.jpf.symbc.mixednumstrg.SpecialRealExpression;
+import gov.nasa.jpf.symbc.numeric.Comparator;
 import gov.nasa.jpf.symbc.numeric.Expression;
+import gov.nasa.jpf.symbc.numeric.IntegerConstant;
+import gov.nasa.jpf.symbc.numeric.LinearIntegerConstraint;
+import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 import gov.nasa.jpf.symbc.string.StringConstant;
+import gov.nasa.jpf.symbc.string.StringSymbolic;
+import gov.nasa.jpf.symbc.string.SymbolicIndexOfCharInteger;
+import gov.nasa.jpf.symbc.string.SymbolicLengthInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import net.jqwik.api.Example;
 import org.junit.Assert;
+import teralizer.domain.Constant;
+import teralizer.domain.Invocation;
+import teralizer.domain.Operation;
+import teralizer.domain.Operator;
+import teralizer.domain.TypeDomain;
+import teralizer.domain.Variable;
 
 /**
  * Unsupported SPF term kinds (the concolic "special" expressions and the function
@@ -21,6 +35,39 @@ public class SpfToModelTransformerUnsupportedTermTest {
 
     private static SpfToModelTransformer transformer() {
         return new SpfToModelTransformer();
+    }
+
+    @Example
+    void symbolicLengthIntegerBecomesReceiverLengthInvocation() {
+        LinearIntegerConstraint constraint = new LinearIntegerConstraint(
+            new SymbolicLengthInteger("Length_0_", 0, 100, new StringSymbolic("value_1_SYMSTRING")),
+            Comparator.GE,
+            new IntegerConstant(0));
+
+        Assert.assertEquals(
+            new Operation(
+                new Invocation(new Variable("value", TypeDomain.STRING), null, "length", Collections.emptyList()),
+                Operator.GE,
+                new Constant((long) 0, TypeDomain.INTEGER)),
+            transformer().transform(constraint));
+    }
+
+    @Example
+    void stringDerivedIntegerOtherThanLengthRaisesTypedException() {
+        SymbolicIndexOfCharInteger expr = new SymbolicIndexOfCharInteger(
+            "IndexOf_0_",
+            -1,
+            100,
+            new StringSymbolic("value_1_SYMSTRING"),
+            new SymbolicInteger("needle_2_SYMINT"));
+        LinearIntegerConstraint constraint = new LinearIntegerConstraint(expr, Comparator.GE, new IntegerConstant(0));
+
+        try {
+            transformer().transform(constraint);
+            Assert.fail("expected UnsupportedSpfTermException");
+        } catch (UnsupportedSpfTermException expected) {
+            Assert.assertTrue(expected.getMessage().contains("SymbolicIndexOfCharInteger"));
+        }
     }
 
     @Example

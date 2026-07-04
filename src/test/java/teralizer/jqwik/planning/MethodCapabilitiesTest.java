@@ -27,8 +27,11 @@ public class MethodCapabilitiesTest {
     @Example
     void stringNumericMethodsHandledBySpfRemainSupportedForFiltering() {
         Assert.assertTrue(MethodCapabilities.isSupported("length"));
+        Assert.assertTrue(MethodCapabilities.isOutputRenderable("length"));
         Assert.assertTrue(MethodCapabilities.isSupported("indexOf"));
-        Assert.assertFalse(MethodCapabilities.isOutputRenderable("length"));
+        Assert.assertTrue(MethodCapabilities.isSupported("lastIndexOf"));
+        Assert.assertFalse(MethodCapabilities.isOutputRenderable("indexOf"));
+        Assert.assertFalse(MethodCapabilities.isOutputRenderable("lastIndexOf"));
     }
 
     @Example
@@ -67,7 +70,7 @@ public class MethodCapabilitiesTest {
         Assert.assertEquals(TypeDomain.STRING, MethodCapabilities.get("valueOf").returnDomain);
         Assert.assertEquals(TypeDomain.REAL, MethodCapabilities.get("sqrt").returnDomain);
         Assert.assertEquals(TypeDomain.INTEGER, MethodCapabilities.get("length").returnDomain);
-        Assert.assertFalse(MethodCapabilities.get("length").outputRenderable);
+        Assert.assertTrue(MethodCapabilities.get("length").outputRenderable);
     }
 
     @Example

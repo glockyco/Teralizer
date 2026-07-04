@@ -325,6 +325,19 @@ public class SpfToModelTransformer {
 
         @Override
         public void postVisit(gov.nasa.jpf.symbc.numeric.SymbolicInteger variable) {
+            if (variable instanceof gov.nasa.jpf.symbc.string.SymbolicLengthInteger) {
+                gov.nasa.jpf.symbc.string.SymbolicLengthInteger length =
+                    (gov.nasa.jpf.symbc.string.SymbolicLengthInteger) variable;
+                this.stack.push(instanceInvocation(
+                    transformOperand(length.getExpression()),
+                    "length",
+                    Collections.emptyList()));
+                return;
+            }
+            if (variable.getClass() != gov.nasa.jpf.symbc.numeric.SymbolicInteger.class) {
+                throw new UnsupportedSpfTermException(
+                    variable.getClass().getSimpleName() + " is not mapped to a Model node.");
+            }
             String name = variable.getName().replaceAll("_\\d+_[A-Z]+$", "");
             this.stack.push(new Variable(name, TypeDomain.INTEGER));
         }

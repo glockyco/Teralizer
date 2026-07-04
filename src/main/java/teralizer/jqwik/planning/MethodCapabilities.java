@@ -41,7 +41,7 @@ public final class MethodCapabilities {
         stringTransform(capabilities, "replace");
         stringTransform(capabilities, "toLowerCase");
         stringTransform(capabilities, "toUpperCase");
-        stringNumeric(capabilities, "length");
+        instance(capabilities, "length", TypeDomain.INTEGER, false, true, MethodCapability.InputConstraintKind.NONE);
         stringNumeric(capabilities, "indexOf");
         stringNumeric(capabilities, "lastIndexOf");
 

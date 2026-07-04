@@ -13,6 +13,10 @@ public class StringSoundSetCut {
         return value.isEmpty();
     }
 
+    public int indexOfX(String value) {
+        return value.indexOf("x");
+    }
+
     public int compareToFoo(String value) {
         return value.compareTo("foo");
     }
