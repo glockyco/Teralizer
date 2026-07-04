@@ -92,20 +92,40 @@ public class JpfInstrumentationTask extends AbstractTask {
         this.updateAssertionRecord();
 
         CtClass<?> instrumentedClass = this.createInstrumentedClass(factory);
-        GeneralizationRecipe.Resolved recipe = GeneralizationRecipe
+        GeneralizationRecipe clonedRecipe = GeneralizationRecipe
             .fromJson(gson, this.assertionRecord.getGeneralizationRecipe())
             .rewriteForClone(
                 this.testRecord.getTestClassQualifiedName(),
                 this.assertionRecord.getInstrumentedClassQualifiedName()
-            )
+            );
+        GeneralizationRecipe.Resolved recipe = clonedRecipe
             .resolveAgainst(instrumentedClass.getMethod(this.testRecord.getTestMethodName()), factory.getModel().getRootPackage());
-        // Recipes handled here are invocation-shaped because replay rewrites the focal call.
-        CtInvocation<?> testedMethodCall = (CtInvocation<?>) recipe.getOracleExpression();
+        CtExpression<?> oracleExpression = recipe.getOracleExpression();
         CtMethod<?> testedMethod = recipe.getOracleMethod();
         List<GeneralizableInput> generalizableInputs = recipe.getInputs();
-        CtMethod<?> instrumentedMethod = this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall, generalizableInputs);
-        CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(factory, instrumentedClass, instrumentedMethod, testedMethod, testedMethodCall, generalizableInputs);
-        testedMethodCall.replace(instrumentedMethodCall);
+        boolean expressionRecipe = generalizableInputs.stream().anyMatch(GeneralizableInput::isExpressionSite);
+        CtInvocation<?> testedMethodCall = expressionRecipe ? null : (CtInvocation<?>) oracleExpression;
+        CtMethod<?> instrumentedMethod = expressionRecipe
+            ? this.createInstrumentedMethod(
+                factory,
+                instrumentedClass,
+                testedMethod,
+                oracleExpression,
+                null,
+                clonedRecipe.getOracleExpressionType(),
+                generalizableInputs
+            )
+            : this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall, generalizableInputs);
+        CtInvocation<?> instrumentedMethodCall = this.createInstrumentedMethodCall(
+            factory,
+            instrumentedClass,
+            instrumentedMethod,
+            testedMethod,
+            testedMethodCall,
+            generalizableInputs,
+            expressionRecipe
+        );
+        oracleExpression.replace(instrumentedMethodCall);
 
         CtMethod<?> testMethod = instrumentedClass.getMethod(this.testRecord.getTestMethodName());
         CtPath targetAssertionPath = new CtPathStringBuilder().fromString(
@@ -294,6 +314,76 @@ public class JpfInstrumentationTask extends AbstractTask {
         );
     }
 
+    private CtMethod<?> createInstrumentedMethod(
+        Factory factory,
+        CtClass<?> instrumentedClass,
+        CtMethod<?> testedMethod,
+        CtExpression<?> oracleExpression,
+        CtInvocation<?> testedMethodCall,
+        String oracleExpressionType,
+        List<GeneralizableInput> generalizableInputs
+    ) {
+        if (generalizableInputs.stream().noneMatch(GeneralizableInput::isExpressionSite)) {
+            return this.createInstrumentedMethod(factory, instrumentedClass, testedMethod, testedMethodCall, generalizableInputs);
+        }
+
+        List<CtParameter<?>> instrumentedParameters = new ArrayList<>();
+        for (GeneralizableInput input : generalizableInputs) {
+            CtTypeReference<?> type = factory.Type().createReference(input.toMethodParameter().getType());
+            type.setSimplyQualified(false);
+            type.setImplicit(false);
+            instrumentedParameters.add(factory.createParameter(null, type, input.toMethodParameter().getName()));
+        }
+
+        CtExpression<?> rewrittenExpression = cloneExpressionWithParameterReads(factory, oracleExpression, generalizableInputs);
+        CtReturn returnStatement = factory.Core().createReturn();
+        returnStatement.setReturnedExpression(rewrittenExpression);
+        CtBlock<?> instrumentedBody = factory.createBlock();
+        instrumentedBody.addStatement(returnStatement);
+
+        CtTypeReference<?> returnType = factory.Type().createReference(oracleExpressionType);
+        returnType.setSimplyQualified(false);
+        returnType.setImplicit(false);
+
+        Set<CtTypeReference<? extends Throwable>> thrownTypes = collectThrownTypes(testedMethod, oracleExpression);
+
+        return factory.createMethod(
+            instrumentedClass,
+            new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
+            returnType,
+            this.assertionRecord.getInstrumentedMethodName(),
+            instrumentedParameters,
+            thrownTypes,
+            instrumentedBody
+        );
+    }
+
+    private static CtExpression<?> cloneExpressionWithParameterReads(
+        Factory factory,
+        CtExpression<?> oracleExpression,
+        List<GeneralizableInput> generalizableInputs
+    ) {
+        CtExpression<?> rewrittenExpression = oracleExpression.clone();
+        for (GeneralizableInput input : generalizableInputs) {
+            if (!input.isExpressionSite()) {
+                continue;
+            }
+            CtPath pathInExpression = input.getSourceExpression().getPath().relativePath(oracleExpression);
+            List<CtElement> matches = pathInExpression.evaluateOn(rewrittenExpression);
+            if (matches.size() != 1 || !(matches.get(0) instanceof CtExpression<?>)) {
+                throw new IllegalStateException(
+                    "Expected one expression site inside cloned oracle expression but found "
+                        + matches.size()
+                        + " for "
+                        + pathInExpression
+                );
+            }
+            CtExpression<?> site = (CtExpression<?>) matches.get(0);
+            site.replace(factory.createCodeSnippetExpression(input.toMethodParameter().getName()));
+        }
+        return rewrittenExpression;
+    }
+
     /**
      * Collects every checked-exception type the instrumented wrapper must declare: the tested
      * method's own {@code throws}, plus the declared {@code throws} of every call and constructor
@@ -303,8 +393,12 @@ public class JpfInstrumentationTask extends AbstractTask {
      * omitting them from the wrapper breaks BUILD_PROJECT_INSTRUMENTED instead.
      */
     static Set<CtTypeReference<? extends Throwable>> collectThrownTypes(CtMethod<?> testedMethod, CtInvocation<?> testedMethodCall) {
+        return collectThrownTypes(testedMethod, (CtElement) testedMethodCall);
+    }
+
+    private static Set<CtTypeReference<? extends Throwable>> collectThrownTypes(CtMethod<?> testedMethod, CtElement wrapperBodyExpression) {
         Set<CtTypeReference<? extends Throwable>> thrownTypes = new HashSet<>(testedMethod.getThrownTypes());
-        for (CtElement element : testedMethodCall.getElements(CtAbstractInvocation.class::isInstance)) {
+        for (CtElement element : wrapperBodyExpression.getElements(CtAbstractInvocation.class::isInstance)) {
             CtExecutableReference<?> executable = ((CtAbstractInvocation<?>) element).getExecutable();
             if (executable == null) {
                 continue;
@@ -537,7 +631,33 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtInvocation<?> testedMethodCall,
         List<GeneralizableInput> generalizableInputs
     ) {
+        return this.createInstrumentedMethodCall(
+            factory,
+            instrumentedClass,
+            instrumentedMethod,
+            testedMethod,
+            testedMethodCall,
+            generalizableInputs,
+            false
+        );
+    }
+
+    private CtInvocation<?> createInstrumentedMethodCall(
+        Factory factory,
+        CtClass<?> instrumentedClass,
+        CtMethod<?> instrumentedMethod,
+        CtMethod<?> testedMethod,
+        CtInvocation<?> testedMethodCall,
+        List<GeneralizableInput> generalizableInputs,
+        boolean expressionRecipe
+    ) {
         CtInvocation<?> instrumentedMethodCall = factory.createInvocation(factory.createThisAccess(instrumentedClass.getReference()), instrumentedMethod.getReference());
+        if (expressionRecipe) {
+            for (GeneralizableInput input : generalizableInputs) {
+                instrumentedMethodCall.addArgument(input.getSourceExpression());
+            }
+            return instrumentedMethodCall;
+        }
         boolean hasReceiverConstructorInputs = generalizableInputs.stream().anyMatch(GeneralizableInput::isReceiverConstructorArgument);
         if (!testedMethod.isStatic() && !hasReceiverConstructorInputs) {
             CtExpression<?> target = testedMethodCall.getTarget();

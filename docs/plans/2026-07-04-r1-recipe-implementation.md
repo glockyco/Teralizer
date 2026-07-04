@@ -131,11 +131,11 @@ public static boolean isSelfContained(CtExpression<?> expression) {
 - Modify: `src/main/java/teralizer/processing/task/JpfInstrumentationTask.java:194-294` (`createInstrumentedMethod`)
 - Test: extend the existing instrumentation test class (find it via `./gradlew test --tests 'teralizer.processing.task.JpfInstrumentation*'` and read its harness before writing)
 
-- [ ] **Step 1: Write failing tests.** For an expression recipe (`intCompare(4,1) > 0`, sites at the two literals): the instrumented method's body is `return (ExpressionSliceCut.intCompare(site0, site1) > 0)` (sites replaced by parameter reads), return type `boolean`, parameters `(int site0, int site1)`.
-- [ ] **Step 2: Run, expect FAIL.**
-- [ ] **Step 3: Implement.** When the recipe is expression-shaped (sites carry the `EXPRESSION_SITE` sentinel): clone the oracle expression, resolve each site's path inside the clone, `CtExpression#replace` it with a snippet reading the parameter name, emit `return <clone>`; wrapper return type from `oracleExpressionType`. Index-keyed logic (lines 234-275) remains the T0/T1 path, untouched.
-- [ ] **Step 4: Run, expect PASS**, plus the full instrumentation test class.
-- [ ] **Step 5: Commit.** `feat(instrumentation): emit expression bodies for slice recipes`
+- [x] **Step 1: Write failing tests.** For an expression recipe (`intCompare(4,1) > 0`, sites at the two literals): the instrumented method's body is `return (ExpressionSliceCut.intCompare(site0, site1) > 0)` (sites replaced by parameter reads), return type `boolean`, parameters `(int site0, int site1)`.
+- [x] **Step 2: Run, expect FAIL.**
+- [x] **Step 3: Implement.** When the recipe is expression-shaped (sites carry the `EXPRESSION_SITE` sentinel): clone the oracle expression, resolve each site's path inside the clone, `CtExpression#replace` it with a snippet reading the parameter name, emit `return <clone>`; wrapper return type from `oracleExpressionType`. Index-keyed logic (lines 234-275) remains the T0/T1 path, untouched.
+- [x] **Step 4: Run, expect PASS**, plus the full instrumentation test class.
+- [x] **Step 5: Commit.** `feat(instrumentation): emit expression bodies for slice recipes`
 
 ---
 
