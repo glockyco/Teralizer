@@ -292,8 +292,10 @@ public class JpfInstrumentationTask extends AbstractTask {
             }
         }
 
+        CtReturn returnStatement = factory.Core().createReturn();
+        returnStatement.setReturnedExpression(instrumentedTestedMethodCall);
         CtBlock<?> instrumentedBody = factory.createBlock();
-        instrumentedBody.addStatement(factory.Code().createCodeSnippetStatement("return " + instrumentedTestedMethodCall));
+        instrumentedBody.addStatement(returnStatement);
         CtTypeReference<?> returnType = this.inferExpectedType(testedMethodCall);
         returnType.setSimplyQualified(false);
         returnType.setImplicit(false);
