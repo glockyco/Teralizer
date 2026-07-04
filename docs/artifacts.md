@@ -1,11 +1,11 @@
 # Generated artifacts — a worked example
 
-Teralizer's output is code that generates code; this file shows one real artifact family so a
+Teralizer's output is code that generates code. This file shows one real artifact family so a
 reader never has to run the pipeline just to see what it produces. Every listing below is a
 verbatim pipeline output for the `expression-slice` verification fixture (assertion
 `assertTrue(ExpressionSliceCut.intCompare(4, 1) > 0)`, generalization id 7), except where a
 `[... trimmed ...]` marker says otherwise. Regenerate the family with
-`scripts/run-verification-corpus.sh --only expression-slice`; the artifacts land under
+`scripts/run-verification-corpus.sh --only expression-slice`. The artifacts land under
 `data/verification/expression-slice/project-id-*/`.
 
 The family covers four stages: the instrumented wrapper SPF analyzes, the driver that runs it,
@@ -15,8 +15,8 @@ the JPF config that binds them, and the generalized jqwik test the pipeline emit
 
 `JpfInstrumentationTask` clones the test class, deletes every other test method, and adds a
 wrapper method whose parameters are the recipe's input sites. For an expression recipe the
-wrapper body IS the asserted expression with sites lifted; the original assertion is rewritten
-to call the wrapper.
+wrapper body IS the asserted expression with sites lifted, and the original assertion is
+rewritten to call the wrapper.
 
 ```java
 public class _ExpressionSliceCutTest_Instrumented_operatorCompositeOverCallsIsAdmitted_7_Test {
@@ -70,7 +70,7 @@ public class _ExpressionSliceCutTest_Driver_intCompare_7 {
 Velocity-generated from `jpf-config.vm`. The load-bearing lines: `symbolic.method` marks the
 WRAPPER's parameters symbolic (`sym`; `_target_`/`_local_*` stay `con`);
 `symbolic.collect_constraints=true` is constraint-collection mode (follow the concrete path,
-record the PC — never explore); the `test_generalization.*` keys parameterize the listener,
+record the PC — never explore). The `test_generalization.*` keys parameterize the listener,
 including `expression_recipe` (wrapper-exit capture) and the four spec-output paths.
 
 ```properties
@@ -109,7 +109,7 @@ public void operatorCompositeOverCallsIsAdmitted(
 
 The asserted expression survives verbatim with sites replaced by `_p_.<site>` reads. The
 supplier encodes the path condition by construction where a planner recipe exists and filters
-the rest (the residual predicate); here SPF captured `site0 >= site1 && site0 > site1`, the
+the rest (the residual predicate). Here SPF captured `site0 >= site1 && site0 > site1`, the
 planner turned the var/var comparison into a dependent bound on `site1`, and the residual
 filter re-checks the full predicate:
 
@@ -132,13 +132,12 @@ public static class TestParametersSupplier implements net.jqwik.api.ArbitrarySup
 ```
 
 Three nested support classes complete the file:
-- `TestParameters` — one public field per generated site; `_p_` in the property.
+- `TestParameters` — one public field per generated site. This is `_p_` in the property.
 - `FirstValueArbitrary` — emits the captured concrete tuple as the first edge case, then
-  dedups random draws (both `generator` overloads — the two-arg one exists because the engine
-  would otherwise re-inject edge cases past the dedup; that leak was found by fixture, not
-  review).
+  dedups random draws. It overrides both `generator` overloads because the engine's two-arg
+  default would re-inject edge cases past the dedup — a leak found by fixture, not review.
 - `JqwikValueRecorder` — the ~200-line telemetry harness (value rows, outcome sidecar,
-  filter-exhaustion remap hook). Inlined into every generated file today; the
+  filter-exhaustion remap hook). It is inlined into every generated file today. The
   harness-support-artifact spec extracts it into a precompiled jar.
 
 ## Reading the family against the DB

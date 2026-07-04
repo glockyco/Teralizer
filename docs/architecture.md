@@ -17,14 +17,14 @@ The system follows a multi-stage pipeline architecture defined in `src/main/java
 ### Package responsibilities
 
 - `processing` / `processing.task`: stage orchestration — DB records, scheduling, file I/O.
-  Tasks orchestrate; they should not own transformation logic (see §Code generation).
+  Tasks orchestrate. They should not own transformation logic (see §Code generation).
 - `processing.filter`: typed per-test/per-assertion gates (`FilterResult`, ACCEPT/REJECT/DEFER).
 - `spoon.analysis`: MUT resolution, recipes, structural screens — reads test ASTs, never writes.
 - `spoon.generalization`: jqwik supplier/parameter codegen + the widening-license policy.
 - `jpf`: the SPF listener, capture records, extraction outcomes — everything that runs inside JPF.
-- `transformer`: total mappings SPF ↔ Model ↔ JSON ↔ Java; unsupported terms throw typed.
+- `transformer`: total mappings SPF ↔ Model ↔ JSON ↔ Java. Unsupported terms throw typed.
 - `jqwik` / `jqwik.planning`: clause interpretation and per-parameter generation plans.
-- `domain`: the Model expression tree and value records; no dependencies on any other package.
+- `domain`: the Model expression tree and value records, with no dependencies on any other package.
 
 ### Key components
 
