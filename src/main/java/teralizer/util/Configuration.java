@@ -108,6 +108,22 @@ public class Configuration {
         return value.matches(regex.toString());
     }
 
+    private static String resolveDatabaseName() {
+        if (!CONFIG.hasPath("teralizer.database.name")) {
+            throw new RuntimeException("teralizer.database.name is not set. Name the target database in the "
+                + "run profile (for example teralizer.database.name = postgres_verification), or pass "
+                + "-Dteralizer.database.name=<db> on the command line.");
+        }
+        String name = CONFIG.getString("teralizer.database.name");
+        boolean allowProtected = CONFIG.hasPath("teralizer.database.allow-protected")
+            && CONFIG.getBoolean("teralizer.database.allow-protected");
+        if (!allowProtected && isProtectedDatabase(name, loadProtectedDatabasePatterns(PROTECTED_DB_PATH))) {
+            throw new RuntimeException("Refusing to target protected database '" + name + "'. Set "
+                + "teralizer.database.allow-protected = true in the profile to run against a real corpus.");
+        }
+        return name;
+    }
+
     public static final String MAVEN_CUSTOM_BUILD_FILE = "pom." + TOOL_NAME_LOWER + ".xml";
     public static final String MAVEN_GENERALIZED_BUILD_FILE = "pom." + TOOL_NAME_LOWER + ".generalized.xml";
     public static final String MAVEN_DEFAULT_BUILD_FILE = "pom.xml";
@@ -119,7 +135,7 @@ public class Configuration {
     public static final Path PROTECTED_DB_PATH = Paths.get("src/main/resources/db/protected-databases.txt");
     public static final String DB_HOST = DOTENV.get("DB_HOST", "localhost");
     public static final String DB_PORT = DOTENV.get("DB_PORT", "5432");
-    public static final String DB_NAME = DOTENV.get("DB_NAME", "postgres");
+    public static final String DB_NAME = resolveDatabaseName();
     public static final String DB_USER = DOTENV.get("DB_USER", "postgres");
     public static final String DB_PASSWORD = DOTENV.get("DB_PASSWORD", "postgres");
 
@@ -128,7 +144,7 @@ public class Configuration {
     public static final String DB_CONNECTION_STRING = String.format("jdbc:postgresql://%s:%s/%s?user=%s&password=%s", DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD);
 
     // ----- Data Directory ----- //
-    public static final Path DATA_DIR = Paths.get(DOTENV.get("DATA_DIR", "data"));
+    public static final Path DATA_DIR = Paths.get(CONFIG.getString("teralizer.data-dir"));
 
     // ----- Dependencies ----- //
     public static final String EVOSUITE_MAIN_CLASS = "org.evosuite.EvoSuite";
