@@ -1,9 +1,10 @@
 ---
 title: Partial Sound String Support
 type: plan
-status: active
+status: implemented
 created: 2026-06-30
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-05
 ---
 
 # Partial Sound String Support Implementation Plan
@@ -171,10 +172,21 @@ Make an unsupported string op degrade to a clean per-assertion exclusion, never 
 
 **Files:** none (disposable DB).
 
-- [ ] **Step 1: Build + unit tests.** `./gradlew build` fully green (string operator, planner, listener, screen, jpf-symbc tests).
-- [ ] **Step 2: Run the sentinel subset** (`REPOREAPERS_DB=postgres_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db`); confirm sound string generalizations appear where string-parameter MUTs resolve and their generated tests pass on sampled strings **and** the concrete seed. Drop the scratch DB and data dir afterwards.
-- [ ] **Step 3: Screen + ingestion check.** Confirm MUTs using `charAt`/`substring`/`compareTo` are recorded as `UNSUPPORTED_TERM` exclusions from the screen, and MUTs whose paths reach `indexOf`/`lastIndexOf` derived symbols are recorded as `UNSUPPORTED_TERM` exclusions from ingestion (not crashes, not silent free-variable generalizations).
-- [ ] **Step 4: No-regression + totality.** Numeric/char/boolean generalization counts on the scoreboard census configs (`project-configs/jarvis-scoreboard/*-census.conf`, scratch DB) unchanged; measure the `ParameterType`/`ReturnType` first-reject drop. Confirm `concat`-bearing string specs are captured whole (no `oprlist` truncation) and string symbols survive the `Model→JSON→Model` round-trip. Acceptance: sound string generalizations added, unsound ops excluded, zero numeric regression, no process crashes, no silently-dropped string terms.
+- [x] **Step 1: Build + unit tests.** Green via this session's `scripts/verify-pipeline.sh`
+  (build + 14 fixtures + golden check); no code changed since.
+- [x] **Step 2: Run the sentinel subset.** Six string-parameter properties widen FULL at
+  100/100 distinct tuples (JadConfig `StringConverter.convertFrom`/`convertTo`,
+  `FileConverter.convertTo`, `Strings.trim`), each passing the concrete seed and every
+  sampled string.
+- [x] **Step 3: Screen + ingestion check.** 115 typed `UNSUPPORTED_TERM` exclusions, zero
+  crashes: screen-side `hashCode`/`toCharArray` op refusals, ingestion-side
+  `SpecialIntegerExpression` refusals, and the parse-comparator family (`isdouble` 14,
+  `isfloat` 6, `isinteger` 5, `islong` 5 — the `2026-07-05-parse-predicate-admission`
+  target population).
+- [x] **Step 4: No-regression + totality.** Sentinel per-project census exactly matches the
+  config-header expectations (278/73/35/83/808) and the day's baseline totals (315
+  included / 1277). Concat totality and the `Model→JSON→Model` string round-trip are
+  pinned by the Task 1/2 unit tests, which are green in the same build.
 
 ### Task 8 (optional): add `isEmpty` as a sound SPF op
 

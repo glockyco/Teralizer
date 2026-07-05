@@ -1,19 +1,20 @@
 ---
-title: Parse-Predicate Admission — ISINTEGER/NOTINTEGER as Sound String Clauses
+title: Parse-Predicate Admission — Parseability Comparators as Sound String Clauses
 type: spec
 status: draft
 created: 2026-07-05
 parent: 2026-06-26-teralizer-overview
 ---
 
-# Parse-Predicate Admission — ISINTEGER/NOTINTEGER as Sound String Clauses
+# Parse-Predicate Admission — Parseability Comparators as Sound String Clauses
 
-**One concern:** SPF's string handler records `Integer.parseInt` on a symbolic string as an
-`ISINTEGER`/`NOTINTEGER` path-condition clause, but Teralizer's ingestion refuses the
-comparator as unsupported, so every parse-guarded string MUT dies typed at ingestion. Admit
-the two comparators to the sound set — rendered as an exact parseability predicate and
-generated as satisfying partitions — so parse-guarded MUTs convert from typed exclusions to
-generalizations.
+**One concern:** SPF's string handler records `Integer.parseInt` (and the `Long`/`Float`/
+`Double` siblings) on a symbolic string as `ISINTEGER`/`NOTINTEGER`-family path-condition
+clauses, but Teralizer's ingestion refuses the comparators as unsupported, so every
+parse-guarded string MUT dies typed at ingestion. Admit the four comparator pairs
+(`ISINTEGER`, `ISLONG`, `ISFLOAT`, `ISDOUBLE` and their negations) to the sound set —
+rendered as exact parseability predicates and generated as satisfying partitions — so
+parse-guarded MUTs convert from typed exclusions to generalizations.
 
 ## Why now
 
@@ -26,46 +27,56 @@ generalizations.
   `SpfToModelTransformer` mapping, `ModelToJavaTransformer` rendering, and a
   `StringDomainPlanner` partition — an addition to an established seam, not new
   infrastructure.
+- Sentinel evidence (five-project subset, 2026-07-05): 30 typed parse-comparator refusals —
+  `isdouble` 14, `isfloat` 6, `isinteger` 5, `islong` 5. The double family outranks the
+  integer family, so the spec admits all four comparator pairs in one pass: the rendering
+  helper and planner partition are identical per type, and each delegates to its own
+  `parseX` for exact semantics (`parseDouble` accepts `NaN`/`Infinity`/hex floats — exactly
+  why delegation beats a regex).
 
 ## Design
 
-1. **Ingestion.** Map `ISINTEGER(s)` / `NOTINTEGER(s)` in `SpfToModelTransformer`'s string
-   comparator switch to a Model predicate over the string variable (an `Invocation` with a
-   dedicated method symbol, negated via `Not` for the NOT side), admitted through
+1. **Ingestion.** Map the four comparator pairs in `SpfToModelTransformer`'s string
+   comparator switch to Model predicates over the string variable (an `Invocation` with a
+   dedicated method symbol per type, negated via `Not` for the NOT side), admitted through
    `MethodCapabilities` like the shipped string predicates.
-2. **Rendering — exact semantics, no approximation.** The predicate renders against an
+2. **Rendering — exact semantics, no approximation.** Each predicate renders against an
    emitted helper in the generated test class (the house pattern for generated support
    code): `try { Integer.parseInt(s); return true; } catch (NumberFormatException e)
-   { return false; }`. Delegating to `parseInt` itself makes sign handling, leading zeros,
-   radix-10 digits, and overflow exact by construction — a regex approximation would get
-   overflow wrong.
-3. **Generation.** `StringDomainPlanner`: an `ISINTEGER` clause yields a satisfying
-   arbitrary of integer-valued strings (`Arbitraries.integers().map(String::valueOf)`,
-   seed-first per the `edgeCases=FIRST` convention); `NOTINTEGER` yields the bounded ASCII
-   default with the rendered predicate left to the residual filter. Generation must satisfy
-   the partition, not cover it — a satisfying subset is sound.
+   { return false; }`, with `Long.parseLong`/`Float.parseFloat`/`Double.parseDouble` for
+   the siblings. Delegating to the real `parseX` makes sign handling, leading zeros,
+   overflow, and the float/double extras (`NaN`, `Infinity`, hex floats, trailing `f`/`d`)
+   exact by construction — a regex approximation would get overflow and the float grammar
+   wrong.
+3. **Generation.** `StringDomainPlanner`: a positive parse clause yields a satisfying
+   arbitrary of numeric strings for that type (`Arbitraries.integers().map(String::valueOf)`
+   and the per-type analogues, seed-first per the `edgeCases=FIRST` convention); the
+   negative side yields the bounded ASCII default with the rendered predicate left to the
+   residual filter. Generation must satisfy the partition, not cover it — a satisfying
+   subset is sound.
 4. **Scope boundary — parseability only.** When the MUT also uses the *parsed value* (the
-   result of `parseInt` flows into later branches), the path condition carries
-   `SpecialIntegerExpression` terms, which `SpfToModelTransformer` already refuses typed.
-   That refusal stands: this spec converts MUTs whose branch-relevant fact is
-   *parseability*; parsed-value dataflow stays a typed exclusion.
+   result of `parseX` flows into later branches), the path condition carries
+   `SpecialIntegerExpression`/`SpecialRealExpression` terms, which `SpfToModelTransformer`
+   already refuses typed. That refusal stands: this spec converts MUTs whose
+   branch-relevant fact is *parseability*; parsed-value dataflow stays a typed exclusion.
 
 ## Acceptance
 
-- Unit tests: transformer maps both comparators to the model predicate; renderer emits the
-  helper-delegating predicate; planner produces a satisfying integer-string arbitrary for
-  `ISINTEGER` and the residual-filtered default for `NOTINTEGER`; a
-  `SpecialIntegerExpression`-carrying constraint still refuses typed.
-- New fixture: a boolean-returning MUT guarded by `Integer.parseInt` parseability (both
-  branches seeded), golden pinning the conversion from typed exclusion to a widened
-  generalization. A second arm using the parsed value pins the preserved typed refusal.
+- Unit tests: transformer maps all four comparator pairs to their model predicates;
+  renderer emits the per-type helper-delegating predicates; planner produces a satisfying
+  numeric-string arbitrary for each positive clause and the residual-filtered default for
+  each negative; a `SpecialIntegerExpression`/`SpecialRealExpression`-carrying constraint
+  still refuses typed.
+- New fixture: a boolean-returning MUT guarded by `Integer.parseInt` parseability and one
+  guarded by `Double.parseDouble` (both branches seeded), golden pinning the conversion
+  from typed exclusion to a widened generalization. A third arm using the parsed value
+  pins the preserved typed refusal.
 - One `scripts/verify-pipeline.sh`, other goldens byte-identical.
 - Corpus-scale conversion (xenqtt `AppContext` family and siblings) batches into the next
   scheduled corpus evaluation event per the measurement policy in AGENTS.md.
 
 ## Non-goals
 
-- `ISFLOAT`/`ISLONG`/`ISDOUBLE` and the radix overload of `parseInt` (same pattern,
-  admitted later if evidence ranks them).
+- The radix overload of `parseInt` (admitted later if evidence ranks it).
 - Modeling the parsed value (`SpecialIntegerExpression`) — a separate, larger concern.
 - Any change to `SymbolicStringHandler`'s collect-mode parse behavior (shipped and pinned).

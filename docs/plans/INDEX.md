@@ -11,7 +11,6 @@
 - **MUT-id Targeting & Mutation-Data Coverage** [audit] `2026-06-28-mut-id-targeting-and-coverage` ← 2026-06-26-teralizer-overview
 - **Pipeline Architecture Review** [audit] `2026-06-28-pipeline-architecture-review` ← 2026-06-26-teralizer-overview
 - **JARVIS Comparison (RQ0)** [spec] `2026-06-30-jarvis-comparison` ← 2026-06-26-teralizer-overview
-- **Partial Sound String Support** [plan] `2026-06-30-partial-sound-string-support` (38/42) ← 2026-06-26-teralizer-overview
 - **Rerun Observability Priorities** [audit] `2026-07-01-rerun-observability-priorities` ← 2026-06-26-teralizer-overview
 - **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
@@ -28,6 +27,6 @@
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
-- **Parse-Predicate Admission — ISINTEGER/NOTINTEGER as Sound String Clauses** [spec] `2026-07-05-parse-predicate-admission` ← 2026-06-26-teralizer-overview
+- **Parse-Predicate Admission — Parseability Comparators as Sound String Clauses** [spec] `2026-07-05-parse-predicate-admission` ← 2026-06-26-teralizer-overview
 
-_53 archived — see `docs/plans/archive/`._
+_54 archived — see `docs/plans/archive/`._
