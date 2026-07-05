@@ -20,12 +20,12 @@ import teralizer.transformer.VariableNameCollector;
  * symbolic evidence and varies with the generated values. When it is {@link OutputSpecClass#CONSTANT},
  * SPF proved that the value is path-constant, so widening within the admitted path keeps the concrete
  * oracle valid. When it is {@link OutputSpecClass#EXCEPTION}, the oracle is reaching the throw
- * itself. That reachability is a control-flow property: if no concretized branch occurred, then every
- * branch on the way to the throw either left a path-condition clause that generated inputs must
- * satisfy or did not depend on symbolic inputs. An empty path condition is an unconditional throw;
- * otherwise every widened parameter must be named by the path condition. Concretized branches break
- * this path-uniqueness argument for throws exactly as they do for booleans, because control flow can
- * diverge inside the concretized region without path-condition evidence.
+ * itself. That reachability is a control-flow property: every branch that decides the throw must
+ * either leave a path-condition clause that generated inputs satisfy or be independent of widened
+ * symbolic inputs. An empty path condition is an unconditional throw; otherwise every widened
+ * parameter must be named by the path condition. Concretization events only preserve this argument
+ * when telemetry rules out both divergence vectors: a concrete application branch after an event
+ * and a native-origin throw whose reachability was decided at the boundary.
  *
  * <p>{@link OutputSpecClass#NULL_CONCRETE} has two siblings that look identical at the persisted
  * output-model boundary. A computed boolean result can be represented only by the path condition:
@@ -60,25 +60,28 @@ public final class WideningLicense {
     /**
      * Evaluate the widening license from the already-classified output shape, the tested method
      * return type, the set of parameter names that will be generated, the set of parameter names
-     * mentioned anywhere in the flattened path-condition clauses, and the persisted concretization
-     * event count. A null event count is an old-row absence and is treated as no events.
+     * mentioned anywhere in the flattened path-condition clauses, the persisted concretization
+     * event count, and the post-event divergence risk flag. A null event count is an old-row absence
+     * and is treated as no events. A null risk flag means the event risk is unknown.
      */
     public static Verdict evaluate(
         OutputSpecClass outputSpecClass,
         String testedMethodReturnType,
         Set<String> widenedParameterNames,
         Set<String> pathConditionParameterNames,
-        Integer concretizationEvents
+        Integer concretizationEvents,
+        Boolean postConcretizationDivergenceRisk
     ) {
         Objects.requireNonNull(outputSpecClass, "outputSpecClass");
         Set<String> widened = widenedParameterNames == null ? Collections.emptySet() : widenedParameterNames;
         Set<String> pathNames = pathConditionParameterNames == null ? Collections.emptySet() : pathConditionParameterNames;
 
+        boolean hasConcretizationEvents = concretizationEvents != null && concretizationEvents > 0;
         if (outputSpecClass == OutputSpecClass.SYMBOLIC || outputSpecClass == OutputSpecClass.CONSTANT) {
             return WIDEN;
         }
         if (outputSpecClass == OutputSpecClass.EXCEPTION) {
-            if (concretizationEvents != null && concretizationEvents > 0) {
+            if (hasConcretizationEvents && !Boolean.FALSE.equals(postConcretizationDivergenceRisk)) {
                 return REFUSE;
             }
             return pathNames.isEmpty() || pathNames.containsAll(widened) ? WIDEN : REFUSE;
@@ -89,7 +92,7 @@ public final class WideningLicense {
         if (!isBooleanReturn(testedMethodReturnType)) {
             return REFUSE;
         }
-        if (concretizationEvents != null && concretizationEvents > 0) {
+        if (hasConcretizationEvents) {
             return REFUSE;
         }
         if (widened.isEmpty() || pathNames.isEmpty()) {

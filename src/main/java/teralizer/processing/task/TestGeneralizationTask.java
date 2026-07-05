@@ -233,7 +233,8 @@ public class TestGeneralizationTask extends AbstractTask {
                 clonedRecipe.getOracleExpressionType(),
                 generalizableParameterNames,
                 pathConditionParameterNames,
-                this.assertionRecord.getConcretizationEvents()
+                this.assertionRecord.getConcretizationEvents(),
+                this.assertionRecord.getPostConcretizationDivergenceRisk()
             );
             if (!wideningLicense.allowsWidening()) {
                 this.generalizationRecord.setIsIncluded(false);
