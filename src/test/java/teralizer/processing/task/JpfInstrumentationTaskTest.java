@@ -1,6 +1,8 @@
 package teralizer.processing.task;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 import spoon.Launcher;
@@ -19,6 +21,31 @@ import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.codegen.InstrumentedClassBuilder;
 
 public class JpfInstrumentationTaskTest {
+
+    @Example
+    void beforeMethodsForWalksSuperclassChain() {
+        CtClass<?> testClass = testClassFromSource(
+            "package smoke;\n"
+                + "import org.junit.Before;\n"
+                + "public class AbstractBase {\n"
+                + "  @Before public void setUpParent() { }\n"
+                + "}\n",
+            "package smoke;\n"
+                + "import org.junit.Before;\n"
+                + "public class SubjectTest extends AbstractBase {\n"
+                + "  @Before public void setUpChild() { }\n"
+                + "}\n",
+            "package smoke;\n"
+                + "public class ExpressionSliceCut { }\n"
+        );
+
+        Set<String> beforeNames = JpfInstrumentationTask.beforeMethodsFor(testClass).stream()
+            .map(method -> method.getSimpleName())
+            .collect(Collectors.toSet());
+
+        Assert.assertTrue(beforeNames.contains("setUpParent"));
+        Assert.assertTrue(beforeNames.contains("setUpChild"));
+    }
 
     @Example
     void compositeRecipeWrapperReturnsRewrittenOracleExpression() throws Exception {
@@ -297,6 +324,16 @@ public class JpfInstrumentationTaskTest {
         );
     }
 
+
+    private static CtClass<?> testClassFromSource(String parentSource, String testSource, String cutSource) {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(parentSource, "AbstractBase.java"));
+        launcher.addInputResource(new VirtualFile(testSource, "SubjectTest.java"));
+        launcher.addInputResource(new VirtualFile(cutSource, "ExpressionSliceCut.java"));
+        launcher.buildModel();
+        CtModel model = launcher.getModel();
+        return model.getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest")).get(0);
+    }
 
     private static CtMethod<?> testMethodFromSource(String testSource, String cutSource) {
         Launcher launcher = new Launcher();

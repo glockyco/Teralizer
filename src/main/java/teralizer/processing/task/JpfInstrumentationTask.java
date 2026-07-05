@@ -28,6 +28,7 @@ import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.repository.SQLiteRepository;
+import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.ExpectedTypeInference;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
@@ -87,9 +88,7 @@ public class JpfInstrumentationTask extends AbstractTask {
 
         GeneralizationRecipe originalRecipe = GeneralizationRecipe
             .fromJson(gson, this.assertionRecord.getGeneralizationRecipe());
-        CtMethod<?> originalTestMethod = factory.Class()
-            .get(this.testRecord.getTestClassQualifiedName())
-            .getMethod(this.testRecord.getTestMethodName());
+        CtMethod<?> originalTestMethod = TestAnalysisTask.resolveTestMethod(factory, this.testRecord);
         GeneralizationRecipe.Resolved recipe = originalRecipe.resolveAgainst(
             originalTestMethod,
             factory.getModel().getRootPackage()
@@ -177,7 +176,7 @@ public class JpfInstrumentationTask extends AbstractTask {
 
     private void createInstrumentedClassFile(Launcher spoonLauncher, CtClass<?> instrumentedClass) throws IOException {
         CtCompilationUnit cu = spoonLauncher.getFactory().CompilationUnit().getOrCreate(this.assertionRecord.getInstrumentedFilePath());
-        cu.setImports(instrumentedClass.getPosition().getCompilationUnit().getImports().stream().map(CtImport::clone).collect(Collectors.toList()));
+        cu.setImports(SpoonUtils.importsForGeneratedClass(instrumentedClass));
         cu.setDeclaredTypes(Collections.singletonList(instrumentedClass));
 
         DefaultJavaPrettyPrinter printer = new DefaultJavaPrettyPrinter(spoonLauncher.getEnvironment());
@@ -241,10 +240,28 @@ public class JpfInstrumentationTask extends AbstractTask {
         CtClass<?> testClass = spoonLauncher.getFactory().Class()
             .get(this.testRecord.getTestClassQualifiedName());
 
-        return BEFORE_ANNOTATIONS.stream()
-            .map(spoonLauncher.getFactory().Annotation()::createReference)
-            .flatMap(annotation -> testClass.getMethodsAnnotatedWith(annotation).stream())
-            .collect(Collectors.toSet());
+        return beforeMethodsFor(testClass);
+    }
+
+    static Set<CtMethod<?>> beforeMethodsFor(CtClass<?> testClass) {
+        List<CtClass<?>> hierarchy = new ArrayList<>();
+        CtType<?> current = testClass;
+        while (current instanceof CtClass<?>) {
+            CtClass<?> currentClass = (CtClass<?>) current;
+            hierarchy.add(0, currentClass);
+            current = currentClass.getSuperclass() != null
+                ? currentClass.getSuperclass().getDeclaration()
+                : null;
+        }
+
+        Set<CtMethod<?>> beforeMethods = new LinkedHashSet<>();
+        for (CtClass<?> currentClass : hierarchy) {
+            for (String annotationName : BEFORE_ANNOTATIONS) {
+                beforeMethods.addAll(currentClass.getMethodsAnnotatedWith(
+                    currentClass.getFactory().Annotation().createReference(annotationName)));
+            }
+        }
+        return beforeMethods;
     }
 
     private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod) throws IOException {

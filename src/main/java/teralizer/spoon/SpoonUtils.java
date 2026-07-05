@@ -2,11 +2,20 @@ package teralizer.spoon;
 
 import static teralizer.util.Configuration.KNOWN_TEST_ANNOTATIONS;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import spoon.reflect.code.*;
+import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtConstructor;
+import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtImport;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.factory.Factory;
@@ -18,6 +27,16 @@ import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.spoon.analysis.TestAnalysis;
 
 public class SpoonUtils {
+    private static final Set<String> LIFECYCLE_ANNOTATIONS = new HashSet<>(Arrays.asList(
+        "Before",
+        "BeforeEach",
+        "After",
+        "AfterEach",
+        "BeforeClass",
+        "BeforeAll",
+        "AfterClass",
+        "AfterAll"
+    ));
 
     /**
      * Creates a type reference for generated declarations from a type name that may denote a
@@ -85,7 +104,9 @@ public class SpoonUtils {
     }
 
     public static boolean hasTestAnnotation(CtMethod<?> testMethod) {
-        return testMethod.getAnnotations().stream().anyMatch(a -> KNOWN_TEST_ANNOTATIONS.contains(a.getType().getSimpleName()));
+        return testMethod.getAnnotations().stream()
+            .anyMatch(annotation -> annotation.getType() != null
+                && KNOWN_TEST_ANNOTATIONS.contains(annotation.getType().getSimpleName()));
     }
 
     public static void deleteOtherAssertionsInMethod(CtMethod<?> method, CtInvocation<?> assertion) {
@@ -119,6 +140,7 @@ public class SpoonUtils {
         CtClass<?> clonedClass = originalClass.clone();
         clonedClass.setSimpleName(newClassName);
         factory.Package().get(newClassPackage).addType(clonedClass);
+        flattenInheritedTestMethods(originalClass, clonedClass);
 
         ReferenceRenamer referenceRenamer = new ReferenceRenamer(
             oldClassQualifiedName,
@@ -130,6 +152,71 @@ public class SpoonUtils {
         clonedClass.accept(referenceRenamer);
 
         return clonedClass;
+    }
+
+    private static void flattenInheritedTestMethods(CtClass<?> originalClass, CtClass<?> clonedClass) {
+        CtTypeReference<?> superclassReference = originalClass.getSuperclass();
+        while (superclassReference != null) {
+            CtClass<?> superclass = superclassReference.getDeclaration() instanceof CtClass<?>
+                ? (CtClass<?>) superclassReference.getDeclaration()
+                : null;
+            if (superclass == null) {
+                return;
+            }
+            for (CtMethod<?> method : superclass.getMethods()) {
+                if (isFlattenableInheritedMethod(originalClass, clonedClass, method)) {
+                    clonedClass.addMethod(method.clone());
+                }
+            }
+            superclassReference = superclass.getSuperclass();
+        }
+    }
+
+    private static boolean isFlattenableInheritedMethod(CtClass<?> originalClass, CtClass<?> clonedClass, CtMethod<?> method) {
+        return (hasTestAnnotation(method) || hasLifecycleAnnotation(method))
+            && clonedClass.getMethodsByName(method.getSimpleName()).isEmpty()
+            && InheritedTestMethodScreens.evaluate(originalClass, method).isFlattenable();
+    }
+
+    private static boolean hasLifecycleAnnotation(CtMethod<?> method) {
+        return method.getAnnotations().stream()
+            .anyMatch(annotation -> annotation.getType() != null
+                && LIFECYCLE_ANNOTATIONS.contains(annotation.getType().getSimpleName()));
+    }
+
+    public static List<CtImport> importsForGeneratedClass(CtClass<?> generatedClass) {
+        CtCompilationUnit classUnit = compilationUnitFor(generatedClass);
+        List<CtImport> imports = new ArrayList<>();
+        Set<String> seen = new LinkedHashSet<>();
+        addImports(imports, seen, classUnit);
+
+        for (CtMethod<?> method : generatedClass.getMethods()) {
+            CtCompilationUnit methodUnit = compilationUnitFor(method);
+            if (methodUnit != null && methodUnit != classUnit) {
+                addImports(imports, seen, methodUnit);
+            }
+        }
+
+        return imports;
+    }
+
+    private static CtCompilationUnit compilationUnitFor(CtElement element) {
+        SourcePosition position = element.getPosition();
+        if (position == null || !position.isValidPosition()) {
+            return null;
+        }
+        return position.getCompilationUnit();
+    }
+
+    private static void addImports(List<CtImport> imports, Set<String> seen, CtCompilationUnit unit) {
+        if (unit == null) {
+            return;
+        }
+        for (CtImport ctImport : unit.getImports()) {
+            if (seen.add(ctImport.toString())) {
+                imports.add(ctImport.clone());
+            }
+        }
     }
 
     public static String getBoxedType(String type) {

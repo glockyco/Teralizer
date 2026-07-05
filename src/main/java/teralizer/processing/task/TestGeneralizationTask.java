@@ -45,6 +45,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.repository.SQLiteRepository;
+import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.codegen.GeneralizedTestBuilder;
 import teralizer.spoon.generalization.*;
@@ -353,7 +354,7 @@ public class TestGeneralizationTask extends AbstractTask {
 
     private void writeGeneralizedClass(Launcher spoonLauncher, CtClass<?> generalizedClassDeclaration) throws IOException {
         CtCompilationUnit cu = spoonLauncher.getFactory().CompilationUnit().getOrCreate(this.generalizationRecord.getFilePath());
-        cu.setImports(generalizedClassDeclaration.getPosition().getCompilationUnit().getImports().stream().map(CtImport::clone).collect(Collectors.toList()));
+        cu.setImports(SpoonUtils.importsForGeneratedClass(generalizedClassDeclaration));
         cu.setDeclaredTypes(Collections.singletonList(generalizedClassDeclaration));
 
         DefaultJavaPrettyPrinter printer = new DefaultJavaPrettyPrinter(spoonLauncher.getEnvironment());
