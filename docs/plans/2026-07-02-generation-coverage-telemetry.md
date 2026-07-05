@@ -36,7 +36,7 @@ parent: 2026-06-26-teralizer-overview
 - Create: `src/main/java/teralizer/domain/ShapeFolder.java`
 - Create: `src/test/java/teralizer/domain/ShapeFolderTest.java`
 
-- [ ] **Step 1: Write failing tests** covering every node kind.
+- [x] **Step 1: Write failing tests** covering every node kind.
 
 ```java
 package teralizer.domain;
@@ -113,10 +113,10 @@ class ShapeFolderTest {
 }
 ```
 
-- [ ] **Step 2: Run tests, expect FAIL** (compilation error — `ShapeFolder` absent).
+- [x] **Step 2: Run tests, expect FAIL** (compilation error — `ShapeFolder` absent).
   Run: `./gradlew test --tests 'teralizer.domain.ShapeFolderTest'`
 
-- [ ] **Step 3: Implement `ShapeFolder`.**
+- [x] **Step 3: Implement `ShapeFolder`.**
 
 ```java
 package teralizer.domain;
@@ -188,10 +188,10 @@ public class ShapeFolder extends ModelFolder<String> {
 }
 ```
 
-- [ ] **Step 4: Run tests, expect PASS.**
+- [x] **Step 4: Run tests, expect PASS.**
   Run: `./gradlew test --tests 'teralizer.domain.ShapeFolderTest'`
 
-- [ ] **Step 5: Commit.** `feat: add ShapeFolder for canonical model shape keys`
+- [x] **Step 5: Commit.** `feat: add ShapeFolder for canonical model shape keys`
 
 ---
 
