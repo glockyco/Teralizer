@@ -44,10 +44,6 @@ expansion, then maintainability. Evidence-gated items never start before their g
    the honest baseline).
 
 **P2 — evidence-ranked fixes (start as their gate resolves)**
-4. **Boxed-capture upstream** (`Long/Boolean.valueOf` attr loss) — the worked candidate for
-   the census's bounded bucket; mechanism already characterized, so it can start as soon as
-   the census confirms its rank (or immediately if review stalls — the mechanism evidence
-   already exists).
 5. **`2026-07-03-symbolic-sibling-throws`** *(spec, draft)* — spike first (three questions
    in the doc), then finalize. Recovers the xenqtt −8 class; the pruning-soundness cliff
    makes this design-gated, not ad-hoc.
