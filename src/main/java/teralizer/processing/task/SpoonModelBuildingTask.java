@@ -6,6 +6,7 @@ import spoon.Launcher;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.spoon.SpoonFactory;
+import teralizer.spoon.analysis.FocalTypeResolver;
 
 public class SpoonModelBuildingTask extends AbstractTask {
 
@@ -22,6 +23,7 @@ public class SpoonModelBuildingTask extends AbstractTask {
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         Launcher spoonLauncher = SpoonFactory.createLauncher(this.projectRecord.getMainSourcePath(), this.projectRecord.getTestSourcePath(), this.projectRecord.getClasspath());
+        context.put(this.projectRecord.getId(), TaskContext.FOCAL_TYPE_RESOLVER, new FocalTypeResolver());
         context.put(this.projectRecord.getId(), TaskContext.SPOON_LAUNCHER, spoonLauncher);
     }
 }

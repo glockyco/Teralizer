@@ -31,6 +31,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
 import teralizer.processing.ProcessingStage;
+import teralizer.spoon.analysis.FocalTypeResolver;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 
@@ -59,7 +60,7 @@ public class TestAnalysisTaskTest {
         );
         RecordingStore store = new RecordingStore();
 
-        task().createAssertionRecords(testMethod, store.dsl(), new Gson());
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
 
         Assert.assertEquals(1, store.assertions.size());
         Assert.assertEquals(1, store.observationCount);
@@ -89,7 +90,7 @@ public class TestAnalysisTaskTest {
         );
         RecordingStore store = new RecordingStore();
 
-        task().createAssertionRecords(testMethod, store.dsl(), new Gson());
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
 
         AssertionRecord record = store.assertions.get(0);
         Assert.assertNotNull(record.getGeneralizationRecipe());
@@ -114,7 +115,7 @@ public class TestAnalysisTaskTest {
         );
         RecordingStore store = new RecordingStore();
 
-        task().createAssertionRecords(testMethod, store.dsl(), new Gson());
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
 
         AssertionRecord record = store.assertions.get(0);
         GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
@@ -139,7 +140,7 @@ public class TestAnalysisTaskTest {
         );
         RecordingStore store = new RecordingStore();
 
-        task().createAssertionRecords(testMethod, store.dsl(), new Gson());
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
 
         AssertionRecord record = store.assertions.get(0);
         GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
@@ -173,7 +174,7 @@ public class TestAnalysisTaskTest {
         RecordingStore store = new RecordingStore();
         store.throwOnFirstAssertionInsert = true;
 
-        task().createAssertionRecords(testMethod, store.dsl(), new Gson());
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
 
         Assert.assertEquals(2, store.assertionInsertAttempts);
         Assert.assertEquals(1, store.assertions.size());

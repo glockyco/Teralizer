@@ -34,6 +34,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.spoon.analysis.ExpressionSliceScreen;
+import teralizer.spoon.analysis.FocalTypeResolver;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.MethodUnderTestResolver;
@@ -95,10 +96,11 @@ public class TestAnalysisTask extends AbstractTask {
         CtPath testMethodPath = pathBuilder.fromString(testMethodRelativePath);
         CtMethod<?> testMethod = (CtMethod<?>) testMethodPath.evaluateOn(testClass).get(0);
 
-        this.createAssertionRecords(testMethod, create, gson);
+        FocalTypeResolver focalTypeResolver = context.get(this.getProjectId(), TaskContext.FOCAL_TYPE_RESOLVER);
+        this.createAssertionRecords(testMethod, create, gson, focalTypeResolver);
     }
 
-    void createAssertionRecords(CtMethod<?> testMethod, DSLContext create, Gson gson) {
+    void createAssertionRecords(CtMethod<?> testMethod, DSLContext create, Gson gson, FocalTypeResolver focalTypeResolver) {
 
         List<CtInvocation<?>> assertionCalls = TestAnalysis.findAllAsserts(testMethod);
 
@@ -125,7 +127,7 @@ public class TestAnalysisTask extends AbstractTask {
                 record.setAssertionAbsolutePath(assertionCall.getPath().toString());
                 record.setAssertionRelativePath(assertionCall.getPath().relativePath(testMethod).toString());
 
-                MutResolution resolution = MethodUnderTestResolver.resolve(testMethod, assertionCall);
+                MutResolution resolution = MethodUnderTestResolver.resolve(testMethod, assertionCall, focalTypeResolver);
                 CtInvocation<?> testedMethodCall = resolution.getPick();
                 if (testedMethodCall != null) {
                     String callAbsolutePath = pathOrNull(testedMethodCall::getPath);

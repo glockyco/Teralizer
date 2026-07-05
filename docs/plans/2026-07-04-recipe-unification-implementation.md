@@ -83,9 +83,9 @@ Ordered steps:
 - Modify: callers wiring the context through (TestAnalysisTask)
 - Test: split `MethodUnderTestResolverTest` accordingly; new `FocalTypeResolverTest`, `InputTopologyClassifierTest`
 
-- [ ] **Step 1:** Extract `InputTopologyClassifier` (pure functions, no state). The classifier gets no access to resolution internals — `resolve` composes `resolveInternal` + classifier output exactly as today. Tests moved, green.
-- [ ] **Step 2:** Extract `FocalTypeResolver` with instance caches owned by `TaskContext` (per-project lifetime; plain maps, no weak refs, no synchronization beyond TaskContext's own). Tests moved, green.
-- [ ] **Step 3:** One `scripts/verify-pipeline.sh` run, goldens unmoved. Commit per extraction: `refactor(resolver): extract the topology classifier`, `refactor(resolver): extract focal-type resolution`
+- [x] **Step 1:** Extract `InputTopologyClassifier` (pure functions, no state). The classifier gets no access to resolution internals — `resolve` composes `resolveInternal` + classifier output exactly as today. Tests moved, green.
+- [x] **Step 2:** Extract `FocalTypeResolver` with instance caches owned by `TaskContext` (per-project lifetime; plain maps, no weak refs, no synchronization beyond TaskContext's own). Tests moved, green.
+- [x] **Step 3:** One `scripts/verify-pipeline.sh` run, goldens unmoved. Commit per extraction: `refactor(resolver): extract the topology classifier`, `refactor(resolver): extract focal-type resolution`
 
 ---
 

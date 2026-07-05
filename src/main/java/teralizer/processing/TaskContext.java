@@ -12,6 +12,7 @@ public class TaskContext {
 
     // Project-level context:
     public static final String SPOON_LAUNCHER = "spoon-launcher";
+    public static final String FOCAL_TYPE_RESOLVER = "focal-type-resolver";
 
     private final Map<String, Object> data = new HashMap<>();
 
