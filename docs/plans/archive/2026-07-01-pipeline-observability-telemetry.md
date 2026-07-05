@@ -1,9 +1,10 @@
 ---
 title: Pipeline Observability Telemetry
 type: spec
-status: draft
+status: implemented
 created: 2026-07-01
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-05
 ---
 
 # Pipeline Observability Telemetry
