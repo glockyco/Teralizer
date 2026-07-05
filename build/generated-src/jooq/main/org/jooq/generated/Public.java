@@ -15,6 +15,8 @@ import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
+import org.jooq.generated.tables.GenerationClause;
+import org.jooq.generated.tables.GenerationParameter;
 import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JqwikExecutionRun;
 import org.jooq.generated.tables.JqwikPropertyExecution;
@@ -65,6 +67,16 @@ public class Public extends SchemaImpl {
      * The table <code>public.generalization</code>.
      */
     public final Generalization GENERALIZATION = Generalization.GENERALIZATION;
+
+    /**
+     * The table <code>public.generation_clause</code>.
+     */
+    public final GenerationClause GENERATION_CLAUSE = GenerationClause.GENERATION_CLAUSE;
+
+    /**
+     * The table <code>public.generation_parameter</code>.
+     */
+    public final GenerationParameter GENERATION_PARAMETER = GenerationParameter.GENERATION_PARAMETER;
 
     /**
      * The table <code>public.jacoco_coverage_report</code>.
@@ -137,6 +149,8 @@ public class Public extends SchemaImpl {
             Sequences.EVOSUITE_RUNTIME_ID_SEQ,
             Sequences.FILTER_RESULT_ID_SEQ,
             Sequences.GENERALIZATION_ID_SEQ,
+            Sequences.GENERATION_CLAUSE_ID_SEQ,
+            Sequences.GENERATION_PARAMETER_ID_SEQ,
             Sequences.JACOCO_COVERAGE_REPORT_ID_SEQ,
             Sequences.JQWIK_EXECUTION_RUN_ID_SEQ,
             Sequences.JQWIK_PROPERTY_EXECUTION_ID_SEQ,
@@ -157,6 +171,8 @@ public class Public extends SchemaImpl {
             EvosuiteRuntime.EVOSUITE_RUNTIME,
             FilterResult.FILTER_RESULT,
             Generalization.GENERALIZATION,
+            GenerationClause.GENERATION_CLAUSE,
+            GenerationParameter.GENERATION_PARAMETER,
             JacocoCoverageReport.JACOCO_COVERAGE_REPORT,
             JqwikExecutionRun.JQWIK_EXECUTION_RUN,
             JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION,

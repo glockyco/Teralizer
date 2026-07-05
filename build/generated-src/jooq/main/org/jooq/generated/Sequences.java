@@ -41,6 +41,16 @@ public class Sequences {
     public static final Sequence<Long> GENERALIZATION_ID_SEQ = Internal.createSequence("generalization_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
 
     /**
+     * The sequence <code>public.generation_clause_id_seq</code>
+     */
+    public static final Sequence<Long> GENERATION_CLAUSE_ID_SEQ = Internal.createSequence("generation_clause_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
+     * The sequence <code>public.generation_parameter_id_seq</code>
+     */
+    public static final Sequence<Long> GENERATION_PARAMETER_ID_SEQ = Internal.createSequence("generation_parameter_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
      * The sequence <code>public.jacoco_coverage_report_id_seq</code>
      */
     public static final Sequence<Long> JACOCO_COVERAGE_REPORT_ID_SEQ = Internal.createSequence("jacoco_coverage_report_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);

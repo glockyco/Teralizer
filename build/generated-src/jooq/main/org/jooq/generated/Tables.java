@@ -9,6 +9,8 @@ import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
+import org.jooq.generated.tables.GenerationClause;
+import org.jooq.generated.tables.GenerationParameter;
 import org.jooq.generated.tables.JacocoCoverageReport;
 import org.jooq.generated.tables.JqwikExecutionRun;
 import org.jooq.generated.tables.JqwikPropertyExecution;
@@ -51,6 +53,16 @@ public class Tables {
      * The table <code>public.generalization</code>.
      */
     public static final Generalization GENERALIZATION = Generalization.GENERALIZATION;
+
+    /**
+     * The table <code>public.generation_clause</code>.
+     */
+    public static final GenerationClause GENERATION_CLAUSE = GenerationClause.GENERATION_CLAUSE;
+
+    /**
+     * The table <code>public.generation_parameter</code>.
+     */
+    public static final GenerationParameter GENERATION_PARAMETER = GenerationParameter.GENERATION_PARAMETER;
 
     /**
      * The table <code>public.jacoco_coverage_report</code>.

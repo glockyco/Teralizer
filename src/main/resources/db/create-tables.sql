@@ -1,5 +1,7 @@
 -- Dialect: PostgreSQL
 
+DROP TABLE IF EXISTS generation_parameter;
+DROP TABLE IF EXISTS generation_clause;
 DROP TABLE IF EXISTS mut_resolution_observation;
 DROP TABLE IF EXISTS jqwik_property_execution;
 DROP TABLE IF EXISTS jqwik_execution_run;
@@ -529,3 +531,33 @@ CREATE TABLE mut_resolution_observation
 CREATE INDEX idx_mut_resolution_observation_project_id ON mut_resolution_observation (project_id);
 CREATE INDEX idx_mut_resolution_observation_assertion_id ON mut_resolution_observation (assertion_id);
 CREATE INDEX idx_mut_resolution_observation_status_tier ON mut_resolution_observation (status, confidence_tier);
+
+CREATE TABLE generation_clause
+(
+    id                 BIGSERIAL PRIMARY KEY,
+    generalization_id  BIGINT  NOT NULL,
+    parameter_name     TEXT    NOT NULL,
+    type_domain        TEXT    NOT NULL,
+    shape              TEXT    NOT NULL,
+    consumed           BOOLEAN NOT NULL,
+
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
+);
+CREATE INDEX idx_generation_clause_generalization_id ON generation_clause (generalization_id);
+CREATE INDEX idx_generation_clause_shape ON generation_clause (shape);
+CREATE INDEX idx_generation_clause_consumed ON generation_clause (consumed);
+
+CREATE TABLE generation_parameter
+(
+    id                      BIGSERIAL PRIMARY KEY,
+    generalization_id       BIGINT  NOT NULL,
+    name                    TEXT    NOT NULL,
+    declared_type           TEXT    NOT NULL,
+    type_domain             TEXT    NOT NULL,
+    symbolic_spec_present   BOOLEAN NOT NULL,
+    representation          TEXT    NOT NULL,
+
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
+);
+CREATE INDEX idx_generation_parameter_generalization_id ON generation_parameter (generalization_id);
+CREATE INDEX idx_generation_parameter_type_domain ON generation_parameter (type_domain);

@@ -200,7 +200,7 @@ public class ShapeFolder extends ModelFolder<String> {
 **Files:**
 - Modify: `src/main/resources/db/create-tables.sql` (append at end)
 
-- [ ] **Step 1: Append the two table definitions.**
+- [x] **Step 1: Append the two table definitions.**
 
 ```sql
 -- Generation-coverage telemetry: per-clause shape + consumed status.
@@ -238,13 +238,13 @@ CREATE INDEX idx_generation_parameter_generalization_id ON generation_parameter 
 CREATE INDEX idx_generation_parameter_type_domain ON generation_parameter (type_domain);
 ```
 
-- [ ] **Step 2: Regenerate jOOQ from the DDL and verify.** `postgres_dev` is PROTECTED — never
+- [x] **Step 2: Regenerate jOOQ from the DDL and verify.** `postgres_dev` is PROTECTED — never
   recreate it for schema work. Run `scripts/regenerate-jooq.sh` (creates a throwaway
   `teralizer_codegen` DB from `create-tables.sql`, regenerates the jOOQ sources, drops the DB;
   read the script header first). Verify `GenerationClause`/`GenerationParameter` records exist
   in the regenerated sources and the build compiles.
 
-- [ ] **Step 3: Commit.** `feat(db): add generation_clause and generation_parameter tables`
+- [x] **Step 3: Commit.** `feat(db): add generation_clause and generation_parameter tables`
   (DDL + regenerated jOOQ sources in one commit).
 
 ---
