@@ -32,7 +32,7 @@ public class AssertionInMethodFilter extends AbstractFilter {
 
             if (executable != null) {
                 if (TestAnalysis.containsAssertion(executable)) {
-                    return new FilterResult(this.getName(), FilterDecision.DEFER, "Test contains assertion fixture");
+                    return new FilterResult(this.getName(), FilterDecision.DEFER, "Test contains assertion fixture", FilterReasonCodes.ASSERTION_IN_METHOD);
                 }
             }
         }

@@ -63,7 +63,8 @@ public class StringOperationFilter extends AbstractFilter {
             if (isUnsupportedStringOperation(invocation)) {
                 return new FilterResult(this.getName(), FilterDecision.REJECT,
                     "The method under test performs an unsound/unsupported symbolic String operation ("
-                        + invocation.getExecutable().getSimpleName() + ").");
+                        + invocation.getExecutable().getSimpleName() + ").",
+                    FilterReasonCodes.UNSUPPORTED_STRING_OPERATION);
             }
         }
         return new FilterResult(this.getName(), FilterDecision.ACCEPT);

@@ -36,7 +36,7 @@ public class TestedMethodInLoopFilter extends AbstractFilter {
         }
 
         return TestAnalysis.isContainedInLoop(testedMethodCall) ?
-            new FilterResult(this.getName(), FilterDecision.DEFER, "Tested method call is inside a loop")
+            new FilterResult(this.getName(), FilterDecision.DEFER, "Tested method call is inside a loop", FilterReasonCodes.TESTED_METHOD_IN_LOOP)
             : new FilterResult(this.getName(), FilterDecision.ACCEPT);
     }
 }

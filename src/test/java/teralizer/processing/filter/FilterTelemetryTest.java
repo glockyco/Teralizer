@@ -7,9 +7,22 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import net.jqwik.api.Example;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record1;
+import org.jooq.Result;
+import org.jooq.SQLDialect;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.TestRecord;
+import org.jooq.impl.DSL;
+import org.jooq.tools.jdbc.MockConnection;
+import org.jooq.tools.jdbc.MockResult;
 import org.junit.Assert;
+import spoon.Launcher;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.visitor.filter.TypeFilter;
+import spoon.support.compiler.VirtualFile;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 
@@ -107,5 +120,158 @@ public class FilterTelemetryTest {
 
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.UNSUPPORTED_ASSERTION_FAIL, result.getReasonCode());
+    }
+
+    @Example
+    void unsupportedTestTypeAnnotationSetsStableCode() {
+        TestRecord record = new TestRecord();
+        record.setTestAnnotationName("org.testng.annotations.Test");
+
+        FilterResult result = new TestTypeFilter(record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.UNSUPPORTED_TEST_TYPE, result.getReasonCode());
+    }
+
+    @Example
+    void unnamedPackageSetsStableCode() {
+        TestRecord record = new TestRecord();
+        // testPackageName is null from the default record constructor
+
+        FilterResult result = new UnnamedPackageFilter(record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.UNNAMED_PACKAGE, result.getReasonCode());
+    }
+
+    @Example
+    void unsupportedStringOperationSetsStableCode() {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(
+            new VirtualFile("class C { public static char f(String s) { return s.charAt(0); } }"));
+        launcher.buildModel();
+        CtType<?> type = launcher.getModel().getAllTypes().iterator().next();
+        AssertionRecord record = new AssertionRecord();
+        record.setTestedMethodAbsolutePath(type.getMethodsByName("f").get(0).getPath().toString());
+
+        FilterResult result = new StringOperationFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.UNSUPPORTED_STRING_OPERATION, result.getReasonCode());
+    }
+
+    @Example
+    void assertionInLoopSetsStableCode() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(
+            "class T { void m() { for (int i = 0; i < 1; i++) { org.junit.Assert.assertEquals(1, 1); } } }"));
+        launcher.buildModel();
+        CtType<?> type = launcher.getModel().getAllTypes().iterator().next();
+        List<CtInvocation<?>> invocations = type.getMethodsByName("m").get(0).getElements(new TypeFilter<>(CtInvocation.class));
+        AssertionRecord record = new AssertionRecord();
+        record.setAssertionAbsolutePath(invocations.get(0).getPath().toString());
+
+        FilterResult result = new AssertionInLoopFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.ASSERTION_IN_LOOP, result.getReasonCode());
+    }
+
+    @Example
+    void assertionInMethodHelperSetsStableCode() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(
+            "class T { void testM() { assertHelper(); } "
+                + "void assertHelper() { org.junit.Assert.assertEquals(1, 1); } }"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+        record.setTestMethodName("testM");
+
+        FilterResult result = new AssertionInMethodFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.ASSERTION_IN_METHOD, result.getReasonCode());
+    }
+
+    @Example
+    void nestedClassSetsStableCode() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile("class T { class Inner {} }"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+
+        FilterResult result = new NestedClassesFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.NESTED_CLASSES, result.getReasonCode());
+    }
+
+    @Example
+    void staticInitializerSetsStableCode() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile("class T { static { int x = 1; } }"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+
+        FilterResult result = new StaticInitializersFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.STATIC_INITIALIZERS_PRESENT, result.getReasonCode());
+    }
+
+    @Example
+    void testedMethodCallInLoopSetsStableCode() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(
+            "class T { void m() { for (int i = 0; i < 1; i++) { helper(); } } void helper() {} }"));
+        launcher.buildModel();
+        CtType<?> type = launcher.getModel().getAllTypes().iterator().next();
+        List<CtInvocation<?>> invocations = type.getMethodsByName("m").get(0).getElements(new TypeFilter<>(CtInvocation.class));
+        AssertionRecord record = new AssertionRecord();
+        record.setTestedMethodCallAbsolutePath(invocations.get(0).getPath().toString());
+
+        FilterResult result = new TestedMethodInLoopFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.TESTED_METHOD_IN_LOOP, result.getReasonCode());
+    }
+
+    @Example
+    void noAssertionsRejectSetsStableCode() {
+        DSLContext dsl = DSL.using(new MockConnection(ctx -> {
+            DSLContext inner = DSL.using(SQLDialect.DEFAULT);
+            Field<Integer> f = DSL.field("count", Integer.class);
+            Result<Record1<Integer>> r = inner.newResult(f);
+            r.add(inner.newRecord(f).values(0));
+            return new MockResult[] {new MockResult(1, r)};
+        }), SQLDialect.POSTGRES);
+        TestRecord record = new TestRecord();
+        record.setTestMethodQualifiedName("pkg.T.test");
+
+        FilterResult result = new NoAssertionsFilter(dsl, record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.NO_ASSERTIONS, result.getReasonCode());
+    }
+
+    @Example
+    void nonPassingTestRejectSetsStableCode() {
+        DSLContext dsl = DSL.using(new MockConnection(ctx -> {
+            DSLContext inner = DSL.using(SQLDialect.DEFAULT);
+            Field<String> f = DSL.field("test_method_name", String.class);
+            Result<Record1<String>> r = inner.newResult(f);
+            r.add(inner.newRecord(f).values("failingTest"));
+            return new MockResult[] {new MockResult(1, r)};
+        }), SQLDialect.POSTGRES);
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("pkg.T");
+
+        FilterResult result = new NonPassingTestFilter(dsl, record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.TEST_NOT_PASSING, result.getReasonCode());
     }
 }

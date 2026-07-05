@@ -40,7 +40,7 @@ public class NonPassingTestFilter extends AbstractFilter {
 
             if (!failingTests.isEmpty()) {
                 String reason = "Failing tests in test class " + this.testRecord.getTestClassQualifiedName() + ": " + String.join(", ", failingTests);
-                return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
+                return new FilterResult(this.getName(), FilterDecision.REJECT, reason, FilterReasonCodes.TEST_NOT_PASSING);
             }
         } else {
             List<String> failingTests = this.create
@@ -55,7 +55,7 @@ public class NonPassingTestFilter extends AbstractFilter {
 
             if (!failingTests.isEmpty()) {
                 String reason = "Failing generalized tests in test class " + this.generalizationRecord.getClassQualifiedName() + ": " + String.join(", ", failingTests);
-                return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
+                return new FilterResult(this.getName(), FilterDecision.REJECT, reason, FilterReasonCodes.TEST_NOT_PASSING);
             }
         }
 

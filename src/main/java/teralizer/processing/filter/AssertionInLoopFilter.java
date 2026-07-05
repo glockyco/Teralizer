@@ -31,7 +31,7 @@ public class AssertionInLoopFilter extends AbstractFilter {
         }
 
         return TestAnalysis.isContainedInLoop(assertionElement) ?
-            new FilterResult(this.getName(), FilterDecision.DEFER, "Assertion is inside a loop")
+            new FilterResult(this.getName(), FilterDecision.DEFER, "Assertion is inside a loop", FilterReasonCodes.ASSERTION_IN_LOOP)
             : new FilterResult(this.getName(), FilterDecision.ACCEPT);
     }
 }

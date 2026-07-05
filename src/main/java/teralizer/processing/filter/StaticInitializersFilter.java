@@ -20,7 +20,7 @@ public class StaticInitializersFilter extends AbstractFilter {
 
         if (!testClass.getAnonymousExecutables().isEmpty()) {
             String reason = "Test class contains (static) initializers: " + this.testRecord.getTestClassQualifiedName();
-            return new FilterResult(this.getName(), FilterDecision.DEFER, reason);
+            return new FilterResult(this.getName(), FilterDecision.DEFER, reason, FilterReasonCodes.STATIC_INITIALIZERS_PRESENT);
         }
 
         return new FilterResult(this.getName(), FilterDecision.ACCEPT);

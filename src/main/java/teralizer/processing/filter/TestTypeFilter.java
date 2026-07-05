@@ -18,6 +18,6 @@ public class TestTypeFilter extends AbstractFilter {
         }
 
         String reason = "Test uses unsupported test annotation: " + this.testRecord.getTestAnnotationName();
-        return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
+        return new FilterResult(this.getName(), FilterDecision.REJECT, reason, FilterReasonCodes.UNSUPPORTED_TEST_TYPE);
     }
 }

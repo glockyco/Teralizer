@@ -24,7 +24,7 @@ public class NoAssertionsFilter extends AbstractFilter {
 
         if (assertionCount == 0) {
             String reason = "No assertions found in test: " + this.testRecord.getTestMethodQualifiedName();
-            return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
+            return new FilterResult(this.getName(), FilterDecision.REJECT, reason, FilterReasonCodes.NO_ASSERTIONS);
         }
 
         return new FilterResult(this.getName(), FilterDecision.ACCEPT);

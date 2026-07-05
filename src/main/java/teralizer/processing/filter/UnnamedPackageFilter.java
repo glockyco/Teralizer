@@ -17,11 +17,11 @@ public class UnnamedPackageFilter extends AbstractFilter {
         // processing for them (without the use of reflection).
 
         if (this.testRecord.getTestPackageName() == null || this.testRecord.getTestPackageName().isEmpty()) {
-            return new FilterResult(this.getName(), FilterDecision.REJECT, "test.test_package_name is empty");
+            return new FilterResult(this.getName(), FilterDecision.REJECT, "test.test_package_name is empty", FilterReasonCodes.UNNAMED_PACKAGE);
         }
 
         if (this.testRecord.getTestPackageName() == null || this.testRecord.getTestPackageName().isEmpty()) {
-            return new FilterResult(this.getName(), FilterDecision.REJECT, "test.tested_package_name is empty");
+            return new FilterResult(this.getName(), FilterDecision.REJECT, "test.tested_package_name is empty", FilterReasonCodes.UNNAMED_PACKAGE);
         }
 
         return new FilterResult(this.getName(), FilterDecision.ACCEPT);

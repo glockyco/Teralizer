@@ -2,6 +2,9 @@ package teralizer.processing.filter;
 
 public final class FilterReasonCodes {
 
+    public static final String ASSERTION_IN_LOOP = "ASSERTION_IN_LOOP";
+    public static final String ASSERTION_IN_METHOD = "ASSERTION_IN_METHOD";
+
     public static final String DEPENDS_ON_EXCLUDED_ASSERTION = "EXCLUDED_ASSERTION";
     public static final String DEPENDS_ON_EXCLUDED_TEST = "EXCLUDED_TEST";
     public static final String DEPENDS_ON_MISSING_MUT = "MISSING_MUT";
@@ -13,14 +16,21 @@ public final class FilterReasonCodes {
     public static final String MISSING_TESTED_FILE = "MISSING_TESTED_FILE";
     public static final String MISSING_TESTED_METHOD = "MISSING_TESTED_METHOD";
     public static final String MISSING_TESTED_PARAMS = "MISSING_TESTED_PARAMS";
+    public static final String NESTED_CLASSES = "NESTED_CLASSES";
     public static final String NO_ASSERTIONS = "NO_ASSERTIONS";
     public static final String NO_GENERALIZABLE_PARAMETERS = "NO_GENERALIZABLE_PARAMETERS";
+    public static final String STATIC_INITIALIZERS_PRESENT = "STATIC_INITIALIZERS_PRESENT";
+    public static final String TEST_NOT_PASSING = "TEST_NOT_PASSING";
+    public static final String TESTED_METHOD_IN_LOOP = "TESTED_METHOD_IN_LOOP";
+    public static final String UNNAMED_PACKAGE = "UNNAMED_PACKAGE";
     public static final String UNSUPPORTED_ASSERTION_ASSERT_NOT_NULL = "UNSUPPORTED_ASSERTION_ASSERT_NOT_NULL";
     public static final String UNSUPPORTED_ASSERTION_ASSERT_THAT = "UNSUPPORTED_ASSERTION_ASSERT_THAT";
     public static final String UNSUPPORTED_ASSERTION_FAIL = "UNSUPPORTED_ASSERTION_FAIL";
     public static final String UNSUPPORTED_ASSERTION_OTHER = "UNSUPPORTED_ASSERTION_OTHER";
     public static final String UNSUPPORTED_PARAMETER_TYPE = "UNSUPPORTED_PARAMETER_TYPE";
     public static final String UNSUPPORTED_RETURN_TYPE = "UNSUPPORTED_RETURN_TYPE";
+    public static final String UNSUPPORTED_STRING_OPERATION = "UNSUPPORTED_STRING_OPERATION";
+    public static final String UNSUPPORTED_TEST_TYPE = "UNSUPPORTED_TEST_TYPE";
 
     private FilterReasonCodes() {
     }
