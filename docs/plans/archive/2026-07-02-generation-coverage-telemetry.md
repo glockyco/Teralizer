@@ -1,9 +1,10 @@
 ---
 title: Generation-Coverage Telemetry
 type: plan
-status: draft
+status: implemented
 created: 2026-07-02
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-05
 ---
 
 # Generation-Coverage Telemetry Implementation Plan
@@ -496,16 +497,20 @@ def main() -> None:
 
 **Files:** none (empirical verification)
 
-- [ ] **Step 1: Run the full test suite.**
-  Run: `./gradlew test`
-  Expected: BUILD SUCCESSFUL.
+- [x] **Step 1: Run the full test suite.** Green: the fixture-corpus gate ran the full
+  build + suite, and `TestGeneralizationTaskTest` (the one test whose mock needed updating
+  for the new inserts) passes on a forced rerun.
 
-- [ ] **Step 2: Run the analysis module** against a DB with real data (e.g. after a JARVIS scoreboard run).
-  Run: `uv run --directory analysis python -m teralizer.generation_coverage`
-  Expected: non-empty tables with real shapes, consumed flags, and parameter representations.
+- [x] **Step 2: Run the analysis module** against real data. Ran against the refreshed
+  fixture corpus DB: 14 consumed / 3 residual clauses with real shapes
+  (`GT(Variable:INTEGER,Constant:INTEGER)` consumed,
+  `GE(length(Variable:STRING),Constant:INTEGER)` and
+  `EQ(MOD(...),Constant:INTEGER)` residual — the length capture visible end to end),
+  parameter representations encoded 14 / residual 4 / none 19.
 
-- [ ] **Step 3: Validate.** `uv run --directory analysis python validate.py --changed`
-  Expected: pass.
+- [x] **Step 3: Validate.** `validate.py --changed` passed against a scratch DB seeded
+  with the current DDL and views; ruff and ty pass. The fixture corpus DB intentionally
+  carries no analysis views, so schema validation targets the seeded scratch DB.
 
 ## Self-review
 
