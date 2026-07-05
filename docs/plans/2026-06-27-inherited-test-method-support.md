@@ -1,7 +1,7 @@
 ---
 title: Inherited Test-Method Support
 type: spec
-status: draft
+status: active
 created: 2026-06-27
 parent: 2026-06-26-teralizer-overview
 ---
