@@ -28,7 +28,7 @@ parent: 2026-07-05-run-target-config
 - **Modify** `src/main/resources/reference.conf` — `teralizer.data-dir = data` default (no database name default).
 - **Modify** `src/test/resources/reference.conf` — `teralizer.database.name` scratch name for class-load under test.
 - **Modify** `build.gradle` — jooq jdbc points at fixed `teralizer_codegen`; drop now-unused `dbName`.
-- **Modify** profiles: `project-configs/verification.conf`, `eqbench.conf`, `timeout-retry.conf`, `reporeapers-rerun.conf`, `example-maven-junit4.conf`, `example-maven-junit5.conf`, `example-gradle-junit4.conf`, `example-gradle-junit5.conf`.
+- **Modify** profiles: `project-configs/verification.conf`, `eqbench.conf`, `reporeapers-rerun.conf`, `example-maven-junit4.conf`, `example-maven-junit5.conf`, `example-gradle-junit4.conf`, `example-gradle-junit5.conf`. (`timeout-retry.conf` is untracked workspace litter — edit on disk for local consistency if present, but it is not part of any commit.)
 - **Modify** scripts: `scripts/run-verification-corpus.sh`, `scripts/check-verification-corpus.sh`, `scripts/run-reporeapers-rerun.sh`, `scripts/lib/jarvis-run.sh`.
 - **Modify** `analysis/validate.py` — drop `DB_NAME` requirement and `override=True`.
 - **Modify** `docker-compose.yml` — `POSTGRES_DB`/`ADMINER_DEFAULT_DB` literals.
@@ -156,7 +156,7 @@ Add these package-private static methods (anywhere in the class body, e.g. after
 - [ ] **Step 5: Run tests to verify they pass**
 
 Run: `./gradlew test --tests 'teralizer.util.ConfigurationTest'`
-Expected: PASS (all, including the four pre-existing precedence tests).
+Expected: PASS (all 8: the 3 new plus the 5 pre-existing tests).
 
 - [ ] **Step 6: Commit**
 
@@ -177,7 +177,7 @@ Flip `DB_NAME`/`DATA_DIR` to read from `CONFIG`, add the startup guard, give the
 - Modify: `src/main/java/teralizer/util/Configuration.java`
 - Modify: `src/main/resources/reference.conf`
 - Modify: `src/test/resources/reference.conf`
-- Modify: the eight profile configs listed in File Structure
+- Modify: the seven tracked profile configs listed in File Structure
 
 - [ ] **Step 1: Add the data-dir default to the main reference (no database-name default)**
 
@@ -262,14 +262,11 @@ Add a `database` block inside `teralizer { ... }` in each profile.
 ```hocon
   database { name = "postgres_dev", allow-protected = true }
 ```
-`project-configs/timeout-retry.conf` (real corpus — opt in):
-```hocon
-  database { name = "postgres_timeout_retry", allow-protected = true }
-```
 `project-configs/reporeapers-rerun.conf` (scratch default; the script overrides per run):
 ```hocon
   database { name = "postgres_reporeapers_scratch" }
 ```
+(`project-configs/timeout-retry.conf` is untracked workspace litter and is not committed; if it exists locally, give it `database { name = "postgres_timeout_retry", allow-protected = true }` for local consistency, but do not stage it.)
 Each of `example-maven-junit4.conf`, `example-maven-junit5.conf`, `example-gradle-junit4.conf`, `example-gradle-junit5.conf`:
 ```hocon
   database { name = "postgres_example" }
@@ -291,7 +288,7 @@ Expected: `no refusal (opt-in honored)` (it then fails later for lack of a proje
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/main/java/teralizer/util/Configuration.java src/main/resources/reference.conf src/test/resources/reference.conf project-configs/verification.conf project-configs/eqbench.conf project-configs/timeout-retry.conf project-configs/reporeapers-rerun.conf project-configs/example-*.conf
+git add src/main/java/teralizer/util/Configuration.java src/main/resources/reference.conf src/test/resources/reference.conf project-configs/verification.conf project-configs/eqbench.conf project-configs/reporeapers-rerun.conf project-configs/example-*.conf
 COMMIT_ACTION=commit COMMIT_SUBJECT="feat(config): source DB target from profile, guard protected corpora" \
   COMMIT_BODY="Read the target database and data directory from the merged HOCON config instead of the ambient .env, so each run names its own target and a missing name fails fast at startup. Targeting a protected corpus now requires an explicit allow-protected opt-in in the profile. Migrate the entry-point profiles to carry their database name." \
   bun ~/.omp/agent/skills/commit/commit-helper.ts
