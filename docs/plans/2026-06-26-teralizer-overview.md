@@ -34,19 +34,29 @@ below them), then the fixes those gates rank, then measurement infrastructure, t
 expansion, then maintainability. Evidence-gated items never start before their gate.
 
 **P1 — decision gates (produce the evidence that ranks P2)**
-1. **`2026-07-04-concretization-census`** *(spec, active — approved, NEXT)* — identity
-   telemetry + ranked census of concretizing methods. Produces the ROI ranking that gates
-   every SPF-gap fix below (ISINTEGER admission, native peers, string-op growth). Its
-   bounded-bucket acceptance item is pre-satisfied by the valueOf fix. The census run
-   doubles as the pending sentinel reading for the valueOf and conformance waves, and it
-   re-pins the sentinel header censuses from observation.
-2. **R2 decision data** — the `actual_shape` + `receiver_provenance` telemetry
+1. **R2 decision data** — the `actual_shape` + `receiver_provenance` telemetry
    (`2026-07-02-input-topology-spike` §Telemetry) on the next rerun sizes the
    zero-arg-inspector sub-family R2 could soundly take, and measures R1's realized share
    beyond the sentinel signal (694 expression attempts, 2 sound wins, all refusals typed —
    the honest baseline).
 
+   *Resolved:* **`2026-07-04-concretization-census`** *(implemented, archived)* — the ranked
+   census landed in `2026-07-05-concretization-census-findings`. Ranking by load-bearing
+   blocked generalizations reframed the result: the `valueOf` family is incidental (its
+   refusals come from a concrete non-boolean oracle, not the event count), the top
+   load-bearing blocker is a widening-license over-refusal, and the genuine bounded
+   peer gaps are small. It promoted three specs, now the head of P2.
+
 **P2 — evidence-ranked fixes (start as their gate resolves)**
+3. **`2026-07-05-exception-message-widening`** *(spec, draft)* — the census's top load-bearing
+   blocker (74 in antiaction alone). Refine the license so concretization after the last
+   reachability-relevant branch (exception-message string building) no longer refuses a
+   throw oracle. Needs a branch-after-concretization soundness signal. Highest ROI found.
+4. **`2026-07-05-boxing-unbox-attr-recovery`** *(spec, draft)* — close the return half of the
+   `valueOf` peers so a boxed-then-unboxed symbolic primitive stays symbolic, upgrading the
+   678-strong `Long.valueOf` NULL_CONCRETE-int class toward SYMBOLIC. Medium SPF change.
+5. **`2026-07-05-sound-char-predicates`** *(spec, draft)* — model `Character.isWhitespace`
+   as a sound boolean op (top genuine bounded peer gap, mirrors shipped `isEmpty`). Small.
 5. **ISINTEGER/NOTINTEGER sound-set admission** — the parse-family crash class is fixed
    (`2026-07-05-collect-mode-conformance`), and parse-reaching string MUTs now die typed at
    ingestion. Admitting the parse comparators to the sound set (rendered as a parse-based
@@ -87,9 +97,11 @@ expansion, then maintainability. Evidence-gated items never start before their g
 
 ## Standing gates (events, not queue slots)
 
-- **JARVIS scoreboard refresh** — stale since the widening license; REQUIRED before any
-  paper claim (`skill://running-the-jarvis-scoreboard`). Every behavior change re-stales
-  it, so run it at a wave boundary (after P2 settles), never mid-wave.
+- **JARVIS scoreboard refresh** — DUE NOW. The concretization census (the wave boundary
+  event) has landed, and the config redesign this session did not change pipeline behavior
+  (fixture goldens byte-identical, sentinel per-project counts unchanged), so it is not
+  re-staled by that work. Refresh before the P2 SPF/license specs land, since each of those
+  will re-stale it. REQUIRED before any paper claim (`skill://running-the-jarvis-scoreboard`).
 - **Full evaluation rerun** — not before string corpus verification (P0) and the P2 wave
   land; regenerates RQ results on the broader dataset.
 
