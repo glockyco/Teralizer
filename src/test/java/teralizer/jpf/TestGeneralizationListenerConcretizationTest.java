@@ -5,6 +5,7 @@ import gov.nasa.jpf.JPF;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 
@@ -22,6 +23,7 @@ public class TestGeneralizationListenerConcretizationTest {
         );
 
         Assert.assertEquals(0, listener.getConcretizationEvents());
+        Assert.assertTrue(listener.getConcretizedMethods().isEmpty());
     }
 
     @Example
@@ -36,6 +38,15 @@ public class TestGeneralizationListenerConcretizationTest {
         Assert.assertTrue(
             "expected a symbolic primitive entering System.arraycopy to cross a native peer",
             listener.getConcretizationEvents() > 0);
+
+        Map<String, Integer> concretizedMethods = listener.getConcretizedMethods();
+        Assert.assertFalse("expected native method identity telemetry", concretizedMethods.isEmpty());
+        Assert.assertTrue(
+            "expected System.arraycopy to be recorded",
+            concretizedMethods.keySet().stream().anyMatch(method -> method.contains("arraycopy")));
+        Assert.assertEquals(
+            listener.getConcretizationEvents(),
+            concretizedMethods.values().stream().mapToInt(Integer::intValue).sum());
     }
 
     private static TestGeneralizationListener run(

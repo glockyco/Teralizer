@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.domain.CapturedException;
@@ -50,6 +52,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private boolean targetEntered;
     private CapturedInvocation invocation;
     private int concretizationEvents;
+    private final Map<String, Integer> concretizedMethods = new TreeMap<>();
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -72,6 +75,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.targetEntered = false;
         this.invocation = null;
         this.concretizationEvents = 0;
+        this.concretizedMethods.clear();
     }
 
     @Override
@@ -123,6 +127,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         StackFrame callerFrame = currentThread.getCallerStackFrame();
         if (callerFrame != null && containsSymbolicExpression(callerFrame.getArgumentAttrs(executedMethod))) {
             this.concretizationEvents++;
+            this.concretizedMethods.merge(executedMethod.getFullName(), 1, Integer::sum);
         }
     }
 
@@ -275,6 +280,11 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     /** Number of native-call boundaries that received at least one symbolic argument attr. */
     public int getConcretizationEvents() {
         return this.concretizationEvents;
+    }
+
+    /** Native methods that received symbolic argument attrs, keyed by qualified method name. */
+    public Map<String, Integer> getConcretizedMethods() {
+        return new TreeMap<>(this.concretizedMethods);
     }
 
     private List<Value> captureConcreteArguments(ThreadInfo currentThread) {

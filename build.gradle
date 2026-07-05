@@ -24,7 +24,8 @@ if (dotEnvFile.exists()) {
 }
 
 static def getEnv(envProps, key, defaultValue = "") {
-    return envProps.getProperty(key, System.getenv(key) ?: defaultValue)
+    // Match the runtime dotenv precedence so an explicit override is never replaced by the .env pin.
+    return System.getenv(key) ?: envProps.getProperty(key, defaultValue)
 }
 
 def dbHost = getEnv(envProps, 'DB_HOST', 'localhost')

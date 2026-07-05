@@ -1,5 +1,6 @@
 package teralizer.processing.task;
 
+import com.google.gson.Gson;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
@@ -7,6 +8,7 @@ import gov.nasa.jpf.JPFListenerException;
 import gov.nasa.jpf.JPFNativePeerException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jooq.DSLContext;
@@ -122,6 +124,10 @@ public class JpfExecutionTask extends AbstractTask {
             Paths.get(this.assertionRecord.getOutputSpecificationPath()));
         this.assertionRecord.setOutputSpecClass(OutputSpecClassifier.classify(invocation).name());
         this.assertionRecord.setConcretizationEvents(listener.getConcretizationEvents());
+        Map<String, Integer> concretizedMethods = listener.getConcretizedMethods();
+        Gson gson = context.get(TaskContext.GSON);
+        this.assertionRecord.setConcretizedMethods(
+            concretizedMethods.isEmpty() ? null : gson.toJson(concretizedMethods));
         this.assertionRecord.store();
     }
 
