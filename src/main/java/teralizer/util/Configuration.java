@@ -5,11 +5,14 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 import io.github.cdimascio.dotenv.Dotenv;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.processing.GeneralizationAlgorithm;
@@ -62,6 +65,49 @@ public class Configuration {
         return overrides.withFallback(customConfig).withFallback(reference).resolve();
     }
 
+    /** Reads the protected-corpus policy file, skipping blank lines and {@code #} comments. */
+    static List<String> loadProtectedDatabasePatterns(Path path) {
+        try {
+            List<String> patterns = new ArrayList<>();
+            for (String line : Files.readAllLines(path)) {
+                String trimmed = line.trim();
+                if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                    continue;
+                }
+                patterns.add(trimmed);
+            }
+            return patterns;
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Cannot read protected-database policy at " + path, e);
+        }
+    }
+
+    /** True when the database name matches any policy pattern. A pattern may use {@code *} as a wildcard. */
+    static boolean isProtectedDatabase(String name, List<String> patterns) {
+        for (String pattern : patterns) {
+            if (globMatches(pattern, name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean globMatches(String pattern, String value) {
+        if (pattern.indexOf('*') < 0) {
+            return pattern.equals(value);
+        }
+        StringBuilder regex = new StringBuilder();
+        for (int i = 0; i < pattern.length(); i++) {
+            char c = pattern.charAt(i);
+            if (c == '*') {
+                regex.append(".*");
+            } else {
+                regex.append(Pattern.quote(String.valueOf(c)));
+            }
+        }
+        return value.matches(regex.toString());
+    }
+
     public static final String MAVEN_CUSTOM_BUILD_FILE = "pom." + TOOL_NAME_LOWER + ".xml";
     public static final String MAVEN_GENERALIZED_BUILD_FILE = "pom." + TOOL_NAME_LOWER + ".generalized.xml";
     public static final String MAVEN_DEFAULT_BUILD_FILE = "pom.xml";
@@ -70,6 +116,7 @@ public class Configuration {
     public static final String GRADLE_DEFAULT_BUILD_FILE = "build.gradle";
 
     // ----- Database ----- //
+    public static final Path PROTECTED_DB_PATH = Paths.get("src/main/resources/db/protected-databases.txt");
     public static final String DB_HOST = DOTENV.get("DB_HOST", "localhost");
     public static final String DB_PORT = DOTENV.get("DB_PORT", "5432");
     public static final String DB_NAME = DOTENV.get("DB_NAME", "postgres");

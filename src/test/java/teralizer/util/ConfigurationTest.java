@@ -3,12 +3,15 @@ package teralizer.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -18,6 +21,29 @@ class ConfigurationTest {
         Path file = dir.resolve(name);
         Files.write(file, content.getBytes());
         return file;
+    }
+
+    @Test
+    void isProtectedMatchesExactAndGlob() {
+        List<String> patterns = Arrays.asList("postgres_dev", "*_replication");
+        assertTrue(Configuration.isProtectedDatabase("postgres_dev", patterns));
+        assertTrue(Configuration.isProtectedDatabase("postgres_dev_replication", patterns));
+        assertFalse(Configuration.isProtectedDatabase("postgres_verification", patterns));
+    }
+
+    @Test
+    void loadsProtectedPatternsSkippingCommentsAndBlanks(@TempDir Path dir) throws IOException {
+        Path file = writeConf(dir, "protected.txt", "# comment\n\npostgres_dev\n*_replication\n");
+        assertEquals(Arrays.asList("postgres_dev", "*_replication"),
+            Configuration.loadProtectedDatabasePatterns(file));
+    }
+
+    @Test
+    void policyFileListsCanonicalProtectedNames() {
+        List<String> patterns = Configuration.loadProtectedDatabasePatterns(Configuration.PROTECTED_DB_PATH);
+        assertTrue(patterns.contains("postgres_dev"));
+        assertTrue(patterns.contains("postgres_reporeapers_rerun"));
+        assertTrue(patterns.contains("postgres_fusion_spike"));
     }
 
     @Test
