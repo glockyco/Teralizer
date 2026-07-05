@@ -1,9 +1,10 @@
 ---
 title: Parse-Predicate Admission — Parseability Comparators as Sound String Clauses
 type: spec
-status: active
+status: implemented
 created: 2026-07-05
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-05
 ---
 
 # Parse-Predicate Admission — Parseability Comparators as Sound String Clauses
