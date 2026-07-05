@@ -48,60 +48,73 @@ expansion, then maintainability. Evidence-gated items never start before their g
    peer gaps are small. It promoted three specs, now the head of P2.
 
 **P2 — evidence-ranked fixes (start as their gate resolves)**
-3. **`2026-07-05-exception-message-widening`** *(spec, draft)* — the census's top load-bearing
-   blocker (74 in antiaction alone). Refine the license so concretization after the last
-   reachability-relevant branch (exception-message string building) no longer refuses a
-   throw oracle. Needs a branch-after-concretization soundness signal. Highest ROI found.
+
+The three census levers run as one batched wave in the order below, so JARVIS refreshes once
+at the wave boundary (see standing gates), not per lever. Each spec carries its own sentinel
+refusal-to-licensed measurement, so per-lever ROI does not need JARVIS.
+
+3. **`2026-07-05-sound-char-predicates`** *(spec, draft)* — model `Character.isWhitespace`
+   as a sound boolean op (top genuine bounded peer gap, mirrors shipped `isEmpty`). Small,
+   lowest risk. Do first: banks a certain win and proves the sound-op flow end to end.
 4. **`2026-07-05-boxing-unbox-attr-recovery`** *(spec, draft)* — close the return half of the
    `valueOf` peers so a boxed-then-unboxed symbolic primitive stays symbolic, upgrading the
-   678-strong `Long.valueOf` NULL_CONCRETE-int class toward SYMBOLIC. Medium SPF change.
-5. **`2026-07-05-sound-char-predicates`** *(spec, draft)* — model `Character.isWhitespace`
-   as a sound boolean op (top genuine bounded peer gap, mirrors shipped `isEmpty`). Small.
-5. **ISINTEGER/NOTINTEGER sound-set admission** — the parse-family crash class is fixed
+   678-strong `Long.valueOf` NULL_CONCRETE-int class toward SYMBOLIC. Medium SPF change,
+   investigation-gated: its first task confirms the unbox site is peer-interceptable before
+   committing scope.
+5. **`2026-07-05-exception-message-widening`** *(spec, draft)* — the census's top load-bearing
+   blocker (74 in antiaction alone) and its most novel result. Refine the license so
+   concretization after the last reachability-relevant branch (exception-message string
+   building) no longer refuses a throw oracle. Highest ROI found, but real design risk: lead
+   with a soundness spike validating the branch-after-concretization argument against
+   adversarial fixtures. If the spike fails, this converts to research-grade; the two levers
+   above and the JARVIS refresh still ship.
+6. **ISINTEGER/NOTINTEGER sound-set admission** — the parse-family crash class is fixed
    (`2026-07-05-collect-mode-conformance`), and parse-reaching string MUTs now die typed at
    ingestion. Admitting the parse comparators to the sound set (rendered as a parse-based
    predicate) converts those exclusions into specs, including the xenqtt `AppContext`
    family. Census-gated with the other string-op growth.
-6. **`2026-06-28-native-peer-model-coverage`** *(spec, draft)* — crash-visible peer/model
+7. **`2026-06-28-native-peer-model-coverage`** *(spec, draft)* — crash-visible peer/model
    gaps, per-method ranked (commons-math `Precision.*` targets already named). Complements
    the census: census = silent concretization, this = hard crashes. Task 1 (ranking query)
    is cheap and independent; fixes are evidence-gated per target.
 
 **P3 — measurement infrastructure (parallelizable with P2)**
-7. **`2026-07-02-generation-coverage-telemetry`** *(plan, draft)* — clause-shape + parameter
+8. **`2026-07-02-generation-coverage-telemetry`** *(plan, draft)* — clause-shape + parameter
    telemetry; ready to execute as written. Gates C-4 (by-construction recipes) and feeds the
    paper's effectiveness story.
-8. **`2026-07-01-pipeline-observability-telemetry`** *(spec, draft)* — reason codes +
+9. **`2026-07-01-pipeline-observability-telemetry`** *(spec, draft)* — reason codes +
    provenance for rerun analysis; `mut_resolution_observation` already landed via fusion.
    Implement before the next large rerun, not before.
 
 **P4 — recall expansion (after soundness/evidence work above)**
-9. **`2026-06-27-ensemble-mut-identification`** *(spec, draft)* — the killed-mutant runtime
-   tier over fusion v1: PIT_ORIGINAL enablement, oracle corroboration/refutation. The
-   designed answer to the coherent-shallow mis-target risk fusion accepted.
-10. **`2026-06-27-inherited-test-method-support`** *(spec, draft)* — ~5,758 tests across 52
+10. **`2026-06-27-ensemble-mut-identification`** *(spec, draft)* — the killed-mutant runtime
+    tier over fusion v1: PIT_ORIGINAL enablement, oracle corroboration/refutation. The
+    designed answer to the coherent-shallow mis-target risk fusion accepted.
+11. **`2026-06-27-inherited-test-method-support`** *(spec, draft)* — ~5,758 tests across 52
     projects; adds tests to projects that already work. Do before the full rerun, after the
     soundness work — it only grows the denominator.
 
 **P5 — maintainability / independent tracks**
-11. **`2026-06-25-replication-package-documentation-improvements`** *(plan, 6/10)* — ACM
+12. **`2026-06-25-replication-package-documentation-improvements`** *(plan, 6/10)* — ACM
     artifact eval; independent of pipeline work, schedule by paper deadline.
-12. **`2026-07-03-harness-support-artifact`** *(spec, draft)* — precompiled telemetry jar;
+13. **`2026-07-03-harness-support-artifact`** *(spec, draft)* — precompiled telemetry jar;
     deletes the generated-file language-level defect class. Worthwhile, no urgency coupling.
-13. **C-1 single-emitter residue check** (`2026-06-28-pipeline-architecture-review`) —
+14. **C-1 single-emitter residue check** (`2026-06-28-pipeline-architecture-review`) —
     after the recipe unification wave (P1a.2), verify what if anything remains of the
     factory-drift concern; expected to shrink to nothing.
-14. **Small items, no docs needed:** typed exclusion taxonomy (crash exclusions still carry
+15. **Small items, no docs needed:** typed exclusion taxonomy (crash exclusions still carry
     raw stack traces); manual read of the 9 T1-widened failures (license residual-risk
     story); deferred mis-pick fixture.
 
 ## Standing gates (events, not queue slots)
 
-- **JARVIS scoreboard refresh** — DUE NOW. The concretization census (the wave boundary
-  event) has landed, and the config redesign this session did not change pipeline behavior
-  (fixture goldens byte-identical, sentinel per-project counts unchanged), so it is not
-  re-staled by that work. Refresh before the P2 SPF/license specs land, since each of those
-  will re-stale it. REQUIRED before any paper claim (`skill://running-the-jarvis-scoreboard`).
+- **JARVIS scoreboard refresh** — gated on the P2 wave boundary. The three census levers
+  (`sound-char-predicates`, `boxing-unbox-attr-recovery`, `exception-message-widening`) run
+  as one batched wave, then JARVIS refreshes once at its end — running it per lever would
+  repeat an hour-plus evaluation for no attribution gain, since each spec already measures
+  its own sentinel conversion. REQUIRED before any paper claim
+  (`skill://running-the-jarvis-scoreboard`). Pair the refresh with the free manual read of
+  the 9 T1-widened failures (no DB contention, feeds the same paper section).
 - **Full evaluation rerun** — not before string corpus verification (P0) and the P2 wave
   land; regenerates RQ results on the broader dataset.
 
