@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -36,7 +35,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
-import teralizer.processing.diagnostics.JqwikDiagnosticOutcome;
+import teralizer.processing.diagnostics.JqwikDiagnosticsImporter;
 import teralizer.repository.PipelineQueries;
 import teralizer.spoon.InheritedTestMethodScreens;
 import teralizer.util.Configuration;
@@ -120,7 +119,9 @@ public class JunitDataCollectionTask extends AbstractTask {
                 } else {
                     List<JunitTestReportRecord> testReportRecords = this.collectGeneralizationReportData(create);
                     create.batchInsert(testReportRecords).execute();
-                    this.importJqwikDiagnostics(create, gson);
+                    JqwikDiagnosticsImporter.importOutcome(create, gson, this.projectRecord,
+                        this.getProjectId(), this.getGeneralizationId(),
+                        this.generalizationRecord.getMethodName(), this.stage, this.variant);
                     GeneralizationLifecycleWriter.recordGeneralizationStageSucceeded(create, this.stage, this.getGeneralizationId());
                 }
                 break;
@@ -247,89 +248,6 @@ public class JunitDataCollectionTask extends AbstractTask {
             .collect(Collectors.toList());
     }
 
-    private void importJqwikDiagnostics(DSLContext create, Gson gson) {
-        JqwikExecutionRunRecord runRecord = create
-            .selectFrom(Tables.JQWIK_EXECUTION_RUN)
-            .where(Tables.JQWIK_EXECUTION_RUN.PROJECT_ID.eq(this.getProjectId()))
-            .and(Tables.JQWIK_EXECUTION_RUN.VARIANT.eq(this.variant))
-            .and(Tables.JQWIK_EXECUTION_RUN.EXECUTION_KIND.eq("JUNIT"))
-            .orderBy(Tables.JQWIK_EXECUTION_RUN.ID.desc())
-            .limit(1)
-            .fetchOne();
-
-        if (runRecord == null) {
-            // No execution run was registered, so there is nothing to key diagnostics against.
-            return;
-        }
-
-        Long junitTestReportId = create
-            .select(Tables.JUNIT_TEST_REPORT.ID)
-            .from(Tables.JUNIT_TEST_REPORT)
-            .where(Tables.JUNIT_TEST_REPORT.GENERALIZATION_ID.eq(this.getGeneralizationId()))
-            .and(Tables.JUNIT_TEST_REPORT.STAGE.eq(this.stage))
-            .and(Tables.JUNIT_TEST_REPORT.VARIANT.eq(this.variant))
-            .orderBy(Tables.JUNIT_TEST_REPORT.ID.desc())
-            .limit(1)
-            .fetchOne(Tables.JUNIT_TEST_REPORT.ID);
-
-        Path outcomePath = this.resolveDiagnosticSidecarPath(runRecord.getExecutionId());
-
-        JqwikPropertyExecutionRecord record = create.newRecord(Tables.JQWIK_PROPERTY_EXECUTION);
-        record.setJqwikExecutionRunId(runRecord.getId());
-        record.setProjectId(this.getProjectId());
-        record.setGeneralizationId(this.getGeneralizationId());
-        record.setJunitTestReportId(junitTestReportId);
-        record.setDiagnosticSidecarPath(outcomePath.toString());
-
-        if (Files.exists(outcomePath)) {
-            try {
-                String json = new String(Files.readAllBytes(outcomePath), StandardCharsets.UTF_8);
-                JqwikDiagnosticOutcome outcome = JqwikDiagnosticOutcome.fromJson(gson, json);
-                record.setTestCaseName(stripNul(outcome.testCaseName != null ? outcome.testCaseName : this.generalizationRecord.getMethodName()));
-                record.setDiagnosticKind(stripNul(outcome.diagnosticKind));
-                record.setRawStatus(stripNul(outcome.rawStatus));
-                record.setFinalStatus(stripNul(outcome.finalStatus));
-                record.setThrowableType(stripNul(outcome.throwableType));
-                record.setThrowableMessage(stripNul(outcome.throwableMessage));
-                record.setTries(outcome.tries);
-                record.setChecks(outcome.checks);
-                record.setDistinctTuples(outcome.distinctTuples);
-                record.setDistinctNewTuples(outcome.distinctNewTuples);
-                record.setSeed(stripNul(outcome.seed));
-                record.setSelectedValueLogPath(outcomePath.resolveSibling(this.getGeneralizationId() + "." + this.getVariant() + ".values.tsv").toString());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            // Absence of a sidecar is recorded explicitly so FULL is never inferred from a missing row.
-            record.setTestCaseName(this.generalizationRecord.getMethodName());
-            record.setDiagnosticKind("DIAGNOSTIC_MISSING");
-            record.setRawStatus("UNKNOWN");
-            record.setFinalStatus("UNKNOWN");
-        }
-
-        record.store();
-    }
-
-    private static String stripNul(String value) {
-        // Postgres TEXT columns reject NUL (0x00); a generated char/string value (e.g. CharUtils
-        // isAscii over char 0) can carry it into a throwable message. Strip it before insert.
-        return value == null ? null : value.replace("\u0000", "");
-    }
-
-    private Path resolveDiagnosticSidecarPath(String executionId) {
-        Path relativePath = this.projectRecord.getDataPath()
-            .resolve("project-id-" + this.getProjectId())
-            .resolve("jqwik-data")
-            .resolve("executions")
-            .resolve(executionId)
-            .resolve(this.getGeneralizationId() + "." + this.getVariant() + ".outcome.json");
-
-        // The recorder runs with the project root as its working directory, so a data path that
-        // is relative resolves against the root there; mirror that here when locating the file.
-        Path rootedPath = this.projectRecord.getRootPath().resolve(relativePath);
-        return Files.exists(rootedPath) ? rootedPath : relativePath;
-    }
 
     private Path identifyTestReportPath(String testClassName, String testClassQualifiedName) {
         // If the file name is short enough, Surefire creates report files at the default location:
