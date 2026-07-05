@@ -12,10 +12,10 @@ public final class TaskDiagnosticWriter {
     private TaskDiagnosticWriter() {
     }
 
-    public static void recordFailure(DSLContext create, TaskRecord taskRecord, Throwable failure) {
+    public static String recordFailure(DSLContext create, TaskRecord taskRecord, Throwable failure) {
         ProcessingStage stage = taskRecord.getStage();
         if (!isDiagnosticStage(stage)) {
-            return;
+            return null;
         }
         TaskDiagnosticClassifier.Diagnostic diagnostic = TaskDiagnosticClassifier.classify(stage, failure);
         TaskDiagnosticRecord record = create.newRecord(Tables.TASK_DIAGNOSTIC);
@@ -30,6 +30,7 @@ public final class TaskDiagnosticWriter {
             record.setDetailJson(JSONB.valueOf(diagnostic.detailJson()));
         }
         record.store();
+        return diagnostic.reasonCode();
     }
 
     private static boolean isDiagnosticStage(ProcessingStage stage) {

@@ -14,6 +14,7 @@ import org.jooq.generated.tables.records.*;
 import spoon.Launcher;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.filter.*;
 import teralizer.repository.SQLiteRepository;
 
@@ -201,6 +202,19 @@ public class TestFilteringTask extends AbstractTask {
         }
 
         create.batchInsert(records).execute();
+
+        if (this.stage == ProcessingStage.FILTER_GENERALIZATIONS && this.generalizationRecord != null) {
+            FilterResultRecord rejection = records.stream()
+                .filter(r -> r.getDecision() == FilterDecision.REJECT)
+                .findFirst()
+                .orElse(null);
+            GeneralizationLifecycleWriter.recordFilterOutcome(
+                create,
+                this.getGeneralizationId(),
+                rejection == null,
+                rejection == null ? null : rejection.getReasonCode()
+            );
+        }
 
         if (records.stream().anyMatch(r -> r.getDecision() == FilterDecision.REJECT)) {
             if (this.generalizationRecord != null) {

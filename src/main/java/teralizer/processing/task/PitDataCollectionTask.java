@@ -29,6 +29,7 @@ import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.dependencies.MavenDependencyManager;
+import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.repository.SQLiteRepository;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
@@ -83,6 +84,10 @@ public class PitDataCollectionTask extends AbstractTask {
             reportInfo.accept("Mutation testing disabled (teralizer.pitest.enabled = false); skipping PIT"
                 + " execution and data collection for " + this.getStage()
                 + (this.getVariant() == null ? "" : " / " + this.getVariant()) + ".");
+            if (this.stage == ProcessingStage.COLLECT_PIT_DATA_GENERALIZED) {
+                DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+                GeneralizationLifecycleWriter.recordProjectStageSucceeded(create, this.stage, this.getProjectId(), this.getVariant());
+            }
             return;
         }
 
@@ -96,6 +101,9 @@ public class PitDataCollectionTask extends AbstractTask {
 
         this.collectCoverageData(create, pitDataDirectory, testIds, generalizationIds);
         this.collectMutationData(create, pitDataDirectory, testIds, generalizationIds);
+        if (this.stage == ProcessingStage.COLLECT_PIT_DATA_GENERALIZED) {
+            GeneralizationLifecycleWriter.recordProjectStageSucceeded(create, this.stage, this.getProjectId(), this.getVariant());
+        }
     }
 
     private Map<String, Long> fetchTestIds(DSLContext create) {

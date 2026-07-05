@@ -11,6 +11,7 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.diagnostics.TaskDiagnosticWriter;
 import teralizer.processing.task.Task;
 
@@ -118,7 +119,8 @@ public class ProcessingPipeline {
             String newInfo = oldInfo == null ? stringWriter.toString() : String.join("\n\n", stringWriter.toString(), oldInfo);
             taskRecord.setInfo(newInfo);
 
-            TaskDiagnosticWriter.recordFailure(this.create, taskRecord, e);
+            String diagnosticReasonCode = TaskDiagnosticWriter.recordFailure(this.create, taskRecord, e);
+            GeneralizationLifecycleWriter.recordStageFailed(this.create, taskRecord, diagnosticReasonCode);
             LOGGER.atError().log(e.getMessage(), e);
 
             this.queuedTasks.removeIf(queuedTask -> {

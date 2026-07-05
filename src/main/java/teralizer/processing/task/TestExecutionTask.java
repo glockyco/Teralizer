@@ -16,6 +16,7 @@ import org.jooq.generated.tables.records.JqwikExecutionRunRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.repository.SQLiteRepository;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
@@ -138,6 +139,7 @@ public class TestExecutionTask extends AbstractTask {
         if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {
             boolean generalizedTestsIncluded = includedGeneralizedTests != null && !includedGeneralizedTests.isEmpty();
             requireGeneralizedReportsPresent(this.projectRecord.getTestReportsPath(), generalizedTestsIncluded);
+            GeneralizationLifecycleWriter.recordProjectStageSucceeded(create, this.stage, this.getProjectId(), this.getVariant());
         }
     }
 

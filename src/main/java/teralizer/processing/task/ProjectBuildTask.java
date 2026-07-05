@@ -11,6 +11,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.diagnostics.BuildEnvironmentObservationWriter;
+import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
@@ -57,6 +58,10 @@ public class ProjectBuildTask extends AbstractTask {
         }
         if ((this.projectRecord.getTestCompiledPath() == null || !Files.exists(this.projectRecord.getTestCompiledPath())) && !this.projectRecord.getUseTestGeneration()) {
             throw new RuntimeException("Cannot setup project " + this.projectRecord.getRootPath() + ". Test compiled path '" + this.projectRecord.getTestCompiledPath() + "' does not exist.");
+        }
+
+        if (this.stage == ProcessingStage.BUILD_PROJECT_GENERALIZED) {
+            GeneralizationLifecycleWriter.recordProjectStageSucceeded(create, this.stage, this.getProjectId(), this.getVariant());
         }
     }
 

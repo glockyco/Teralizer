@@ -34,6 +34,7 @@ import spoon.reflect.factory.Factory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
+import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.diagnostics.JqwikDiagnosticOutcome;
 import teralizer.repository.SQLiteRepository;
 import teralizer.util.Configuration;
@@ -118,6 +119,7 @@ public class JunitDataCollectionTask extends AbstractTask {
                     List<JunitTestReportRecord> testReportRecords = this.collectGeneralizationReportData(create);
                     create.batchInsert(testReportRecords).execute();
                     this.importJqwikDiagnostics(create, gson);
+                    GeneralizationLifecycleWriter.recordGeneralizationStageSucceeded(create, this.stage, this.getGeneralizationId());
                 }
                 break;
             default:

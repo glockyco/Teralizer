@@ -43,6 +43,7 @@ import teralizer.jqwik.planning.ParameterGenerationPlan;
 import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.repository.SQLiteRepository;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.codegen.GeneralizedTestBuilder;
@@ -173,6 +174,7 @@ public class TestGeneralizationTask extends AbstractTask {
             new GeneralizedTestBuilder.Names(this.testRecord.getTestPackageName(), this.generalizationRecord.getPackageName(), this.testRecord.getTestClassName(), this.generalizationRecord.getClassName(), this.testRecord.getTestClassQualifiedName(), this.generalizationRecord.getClassQualifiedName(), this.testRecord.getTestMethodRelativePath(), this.assertionRecord.getAssertionRelativePath(), this.testRecord.getTestMethodQualifiedName(), this.assertionRecord.getInputValuesPath(), this.assertionRecord.getInputSpecificationPath(), this.assertionRecord.getOutputValuePath(), this.assertionRecord.getOutputSpecificationPath()),
             plan);
         this.writeGeneralizedClass(spoonLauncher, generalizedClassDeclaration);
+        GeneralizationLifecycleWriter.recordGeneratedSourceCreated(create, this.generalizationRecord);
     }
 
     private GeneralizedTestBuilder.Plan createBuilderPlan(
