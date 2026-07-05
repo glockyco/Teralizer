@@ -26,11 +26,11 @@ same reason: the test method is not in the child class's declared-method set.
   median of 2 assertions/test, the projected reach is ~11,500 assertions — a rough
   projection, not a measured count.
 
-## Evidence (DB-grounded, `postgres_test`, 2026-06-27)
+## Evidence (DB-grounded, `postgres_test`, 2026-06-27; mechanism re-verified 2026-07-05)
 
 All 52 projects have `EXECUTE_TESTS_ORIGINAL = SUCCEEDED` — tests ran fine; the
 parser is the problem. The crash is in `JunitDataCollectionTask.updateTestRecord`
-(lines 345–351):
+(the `getMethodsByName` guard — locate by symbol, not line):
 
 ```java
 List<CtMethod<?>> matchingMethods =
@@ -43,9 +43,12 @@ if (matchingMethods.isEmpty()) {
 ```
 
 `getMethodsByName` only searches the class's **declared** methods, not inherited
-ones. The failure is test-level (not project-level): the test record is never
-created, so the test is silently dropped. The project continues with its other
-tests.
+ones. The failure is test-level (not project-level): `AbstractTask.execute` catches
+the throw, stores the test row with `is_included = false` and the free-text
+exclusion message, and the pipeline also records a `task_diagnostic` row for the
+failed task. The project continues with its other tests. So the drop is recorded
+but untyped: the exclusion is a raw exception string, not a stable code, and the
+test is unrecoverable even when the inherited method is perfectly resolvable.
 
 ### Downstream breakage chain (if step 9 is fixed naively)
 
@@ -116,8 +119,9 @@ are preserved via the `extends` clause (the clone still extends the parent).
 
 **Step 4 — Verify `JpfInstrumentationTask` works:** this task also clones the
 class (`createInstrumentedClass` calls `SpoonUtils.cloneClass`). The flattening
-in step 3 covers it, but the tested-method resolution at line 91–92
-(`testedMethodPath.evaluateOn(factory.getModel().getRootPackage())`) operates on
+in step 3 covers it, but the tested-method resolution
+(`testedMethodPath.evaluateOn(factory.getModel().getRootPackage())` — locate by
+symbol) operates on
 the full model, not a clone — inherited tested methods (the focal method under
 test, not the test method) already resolve correctly because they live in their
 declaring class in the model.
@@ -125,9 +129,14 @@ declaring class in the model.
 ### Flattening screens (sound subset only)
 
 Copying a parent method body into the clone is only sound when the copied AST compiles and
-behaves identically in the child context. Two screens gate the flatten; a method failing
-either is excluded typed (test-level, reason `INHERITED_METHOD_NOT_FLATTENABLE` with the
-failing screen in the detail), never silently dropped and never flattened broken.
+behaves identically in the child context. Two screens gate the flatten, decided at
+collection time (the screens need only the Spoon model, which
+`JunitDataCollectionTask` already holds). A method failing either screen is excluded
+cleanly instead of crashing: the test row stores `is_included = false` with
+`exclusion_info` carrying the stable label `INHERITED_METHOD_NOT_FLATTENABLE` and the
+failing screen named in the detail — a normal exclusion, not a caught RuntimeException,
+so no `task_diagnostic` failure row and no free-text stack trace. Never silently
+dropped, never flattened broken.
 
 - **Type-variable screen.** The dominant real-world shape is a generic base
   (`class FooTest extends AbstractBaseTest<Foo>`). A parent method whose body or signature
@@ -158,7 +167,7 @@ substantial fraction — and the typed exclusion makes the split a direct query.
   flattening must include setup methods annotated with `@Before`/`@BeforeEach`/
   `@After`/`@AfterEach`/`@BeforeClass`/`@BeforeAll`/`@AfterClass`/`@AfterAll`,
   not just `@Test` methods — otherwise the generalized test compiles but lacks
-  its setup. `JpfInstrumentationTask.getBeforeMethods` (line 414) uses
+  its setup. `JpfInstrumentationTask.getBeforeMethods` (locate by symbol) uses
   `testClass.getMethodsAnnotatedWith` which also only searches declared
   methods.
 
@@ -175,8 +184,11 @@ substantial fraction — and the typed exclusion makes the split a direct query.
 ## Acceptance criteria
 
 - [ ] `JunitDataCollectionTask` resolves inherited `@Test` methods by walking
-  the superclass chain; "No method matches" failures become either collected tests
-  (flattenable) or typed `INHERITED_METHOD_NOT_FLATTENABLE` exclusions — zero silent drops.
+  the superclass chain; "No method matches" RuntimeExceptions for inherited methods
+  disappear — every affected test becomes either a collected test (flattenable) or a
+  clean typed exclusion (`is_included = false`, `exclusion_info` =
+  `INHERITED_METHOD_NOT_FLATTENABLE` + failing screen). The throw remains only for
+  methods genuinely absent from the model.
 - [ ] `test_method_qualified_name` and `test_method_relative_path` reference the
   declaring (parent) class for inherited methods.
 - [ ] `SpoonUtils.cloneClass` flattens inherited `@Test` and lifecycle
@@ -187,8 +199,11 @@ substantial fraction — and the typed exclusion makes the split a direct query.
   `JpfInstrumentationTask` all resolve flattened test methods without
   `IndexOutOfBoundsException` or "No method matches" errors.
 - [ ] New fixture: a test class inheriting `@Test` + `@Before` from a non-generic parent
-  with protected helpers, whose inherited test generalizes; golden pins the conversion. A
-  second arm with a generic parent pins the typed exclusion.
+  with protected helpers, whose inherited test generalizes; golden pins the conversion.
+  A second arm with a generic parent is excluded at collection — it produces no
+  generalization rows, so the golden pins its absence via the fixture's `gen_count`,
+  and the typed exclusion itself is pinned by the screen unit tests plus a DB assertion
+  in the fixture-arm test (query the test row's `exclusion_info`).
 - [ ] Corpus-scale measurement (flattenable share of the 5,758, assertion reach) batches
   into the next scheduled corpus evaluation event per the measurement policy in AGENTS.md.
 
