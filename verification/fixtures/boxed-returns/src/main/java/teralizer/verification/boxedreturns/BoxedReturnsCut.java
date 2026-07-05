@@ -8,4 +8,8 @@ public class BoxedReturnsCut {
     public Long boxedLong(long value) {
         return Long.valueOf(value + 1L);
     }
+
+    public Boolean boxedBoolean(int value) {
+        return Boolean.valueOf(value > 0);
+    }
 }

@@ -26,12 +26,12 @@ class BoxedReturnAttributeCharacterizationTest {
     private static final String TARGET = PKG + "BoxedComputedReturnTarget";
 
     @Example
-    void longValueOfDoesNotExposeThePrimitiveExpression() throws IOException {
+    void longValueOfKeepsExpressionOnBoxValueField() throws IOException {
         Observation observation = observe("longWrapper", "Cut.boxedLongPlusOne");
 
         print("boxed Long.valueOf", observation);
         Assert.assertNull("Long.valueOf return reference attr", observation.returnAttr);
-        Assert.assertNull("Long.valueOf value field attr", observation.valueFieldAttr);
+        Assert.assertNotNull("Long.valueOf value field attr", observation.valueFieldAttr);
     }
 
     @Example
@@ -62,12 +62,12 @@ class BoxedReturnAttributeCharacterizationTest {
     }
 
     @Example
-    void booleanValueOfDoesNotExposeThePrimitiveExpression() throws IOException {
-        Observation observation = observe("booleanWrapper", "Cut.boxedBooleanNot");
+    void booleanValueOfKeepsExpressionOnBoxValueField() throws IOException {
+        Observation observation = observe("booleanWrapper", "Cut.boxedBooleanIdentity");
 
         print("boxed Boolean.valueOf", observation);
         Assert.assertNull("Boolean.valueOf return reference attr", observation.returnAttr);
-        Assert.assertNull("Boolean.valueOf value field attr", observation.valueFieldAttr);
+        Assert.assertNotNull("Boolean.valueOf value field attr", observation.valueFieldAttr);
     }
 
     @Example

@@ -77,6 +77,11 @@ public final class Cut {
         return !value;
     }
 
+    /** Symbolic {@code boolean} in, boxed {@link Boolean} identity out through autoboxing. */
+    public static Boolean boxedBooleanIdentity(boolean value) {
+        return value;
+    }
+
     /** Symbolic {@code long} in, explicitly allocated boxed {@link Long} out. */
     public static Long boxedLongPlusOneAllocated(long value) {
         return new Long(value + 1L);

@@ -68,8 +68,8 @@ Facts that span multiple pipeline stages and are load-bearing for any change:
   analysis): `assertion.output_spec_class` (SYMBOLIC | CONSTANT | NULL_CONCRETE | EXCEPTION)
   and `assertion.concretization_events` (symbolic values entering unmodeled native methods).
   Boxed-primitive returns are captured from the box's `value` field attr. The vendored fork
-  preserves it for `Integer.valueOf` and explicit constructors but loses it on
-  `Long/Boolean.valueOf`, where extraction degrades to NULL_CONCRETE, never to unsoundness.
+  preserves it across the `Integer.valueOf`, `Long.valueOf`, `Boolean.valueOf`, and explicit
+  constructor paths; degradation remains a typed NULL_CONCRETE refusal, never unsoundness.
 - **Ingestion totality** (`SpfToModelTransformer`): every SPF term entering the model maps
   faithfully or is refused with a typed `UnsupportedSpfTermException` (surfacing as an
   `UNSUPPORTED_TERM` exclusion at the JPF task boundary). String-derived integer symbols

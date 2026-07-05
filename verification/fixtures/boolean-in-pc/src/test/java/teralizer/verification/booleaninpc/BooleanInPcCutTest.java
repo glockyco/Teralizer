@@ -17,7 +17,7 @@ public class BooleanInPcCutTest {
     }
 
     @Test
-    public void boxedPassThroughBooleanHasNoOracleWideningLicense() {
+    public void boxedPassThroughBooleanKeepsTheSymbolicOracle() {
         assertEquals(Boolean.TRUE, new BooleanInPcCut().boxedPassThrough(true));
     }
 }

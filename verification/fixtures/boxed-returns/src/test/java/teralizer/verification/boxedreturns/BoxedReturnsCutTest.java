@@ -11,7 +11,12 @@ public class BoxedReturnsCutTest {
     }
 
     @Test
-    public void longValueOfLosesTheComputedReturnAttribute() {
+    public void longValueOfKeepsTheComputedReturnSymbolic() {
         assertEquals(Long.valueOf(131L), new BoxedReturnsCut().boxedLong(130L));
+    }
+
+    @Test
+    public void comparisonBooleanValueOfRecordsTheObservedReturnShape() {
+        assertEquals(Boolean.TRUE, new BoxedReturnsCut().boxedBoolean(1));
     }
 }

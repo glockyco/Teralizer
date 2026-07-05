@@ -1,7 +1,7 @@
 package teralizer.verification.allrefused;
 
 public class AllRefusedCut {
-    public Boolean passThrough(boolean value) {
-        return Boolean.valueOf(value);
+    public int branchSelectedInt(int value) {
+        return value > 0 ? 1 : 0;
     }
 }

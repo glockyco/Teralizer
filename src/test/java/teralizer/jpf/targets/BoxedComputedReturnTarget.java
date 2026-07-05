@@ -39,7 +39,7 @@ public final class BoxedComputedReturnTarget {
     }
 
     public static Boolean booleanWrapper(boolean value) {
-        return Cut.boxedBooleanNot(value);
+        return Cut.boxedBooleanIdentity(value);
     }
 
     public static Boolean allocatedBooleanWrapper(boolean value) {

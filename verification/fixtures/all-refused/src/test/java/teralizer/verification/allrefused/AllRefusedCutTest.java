@@ -7,6 +7,6 @@ import org.junit.Test;
 public class AllRefusedCutTest {
     @Test
     public void everyGeneralizationIsLicenseRefused() {
-        assertEquals(Boolean.TRUE, new AllRefusedCut().passThrough(true));
+        assertEquals(1, new AllRefusedCut().branchSelectedInt(7));
     }
 }
