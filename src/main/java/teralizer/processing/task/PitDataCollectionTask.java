@@ -30,7 +30,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.dependencies.MavenDependencyManager;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
-import teralizer.repository.SQLiteRepository;
+import teralizer.repository.PipelineQueries;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 
@@ -137,13 +137,13 @@ public class PitDataCollectionTask extends AbstractTask {
         List<String> targetClasses;
         switch (this.getStage()) {
             case COLLECT_PIT_DATA_ORIGINAL:
-                targetClasses = SQLiteRepository.fetchCoveredClasses(create, ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL, this.getVariant(), this.getProjectId());
+                targetClasses = PipelineQueries.fetchCoveredClasses(create, ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL, this.getVariant(), this.getProjectId());
                 break;
             case COLLECT_PIT_DATA_INITIAL:
             case COLLECT_PIT_DATA_GENERALIZED:
                 // Use the same targetClasses for initial + generalized PIT data
                 // collection to ensure the results are directly comparable.
-                targetClasses = SQLiteRepository.fetchCoveredClasses(create, ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, null, this.getProjectId());
+                targetClasses = PipelineQueries.fetchCoveredClasses(create, ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, null, this.getProjectId());
                 break;
             default:
                 throw new RuntimeException("Unsupported processing stage " + this.stage + ".");
@@ -161,14 +161,14 @@ public class PitDataCollectionTask extends AbstractTask {
         switch (this.getStage()) {
             case COLLECT_PIT_DATA_ORIGINAL:
             case COLLECT_PIT_DATA_INITIAL:
-                targetTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
+                targetTests = PipelineQueries.fetchIncludedTestClasses(create, this.getProjectId());
                 break;
             case COLLECT_PIT_DATA_GENERALIZED:
-                List<String> targetGeneralizations = SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.getVariant(), this.getProjectId());
+                List<String> targetGeneralizations = PipelineQueries.fetchIncludedGeneralizedClasses(create, this.getVariant(), this.getProjectId());
                 if (targetGeneralizations.isEmpty()) {
                     throw new RuntimeException("Failed mutation testing. All generalized tests of the project are excluded.");
                 }
-                targetTests = SQLiteRepository.fetchIncludedTestClasses(create, this.getProjectId());
+                targetTests = PipelineQueries.fetchIncludedTestClasses(create, this.getProjectId());
                 targetTests.addAll(targetGeneralizations);
                 break;
             default:

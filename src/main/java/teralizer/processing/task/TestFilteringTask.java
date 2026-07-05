@@ -16,7 +16,7 @@ import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.filter.*;
-import teralizer.repository.SQLiteRepository;
+import teralizer.repository.PipelineQueries;
 
 public class TestFilteringTask extends AbstractTask {
 
@@ -85,7 +85,7 @@ public class TestFilteringTask extends AbstractTask {
         switch (this.stage) {
             case FILTER_TESTS_ORIGINAL:
             case FILTER_TESTS: {
-                Result<Record> records = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
+                Result<Record> records = PipelineQueries.fetchIncludedTests(create, this.getProjectId());
                 for (Record record : records) {
                     TestRecord testRecord = record.into(TestRecord.class);
                     scheduleTask.accept(new TestFilteringTask(this.stage, this.projectRecord, testRecord));
@@ -93,7 +93,7 @@ public class TestFilteringTask extends AbstractTask {
                 break;
             }
             case FILTER_ASSERTIONS: {
-                Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+                Result<Record> records = PipelineQueries.fetchIncludedAssertions(create, this.getProjectId());
                 for (Record record : records) {
                     TestRecord testRecord = record.into(TestRecord.class);
                     AssertionRecord assertionRecord = record.into(AssertionRecord.class);
@@ -102,7 +102,7 @@ public class TestFilteringTask extends AbstractTask {
                 break;
             }
             case FILTER_GENERALIZATIONS: {
-                Result<Record> records = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
+                Result<Record> records = PipelineQueries.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
                 for (Record record : records) {
                     TestRecord testRecord = record.into(TestRecord.class);
                     AssertionRecord assertionRecord = record.into(AssertionRecord.class);

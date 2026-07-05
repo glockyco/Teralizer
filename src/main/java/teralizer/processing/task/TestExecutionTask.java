@@ -17,7 +17,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
-import teralizer.repository.SQLiteRepository;
+import teralizer.repository.PipelineQueries;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
@@ -57,11 +57,11 @@ public class TestExecutionTask extends AbstractTask {
                 includedTests = null;
                 break;
             case EXECUTE_TESTS_INITIAL:
-                includedTests = SQLiteRepository.fetchIncludedTestClasses(create, this.projectRecord.getId());
+                includedTests = PipelineQueries.fetchIncludedTestClasses(create, this.projectRecord.getId());
                 break;
             case EXECUTE_TESTS_GENERALIZED:
-                includedTests = SQLiteRepository.fetchIncludedTestClasses(create, this.projectRecord.getId());
-                includedGeneralizedTests = SQLiteRepository.fetchIncludedGeneralizedClasses(create, this.variant, this.projectRecord.getId());
+                includedTests = PipelineQueries.fetchIncludedTestClasses(create, this.projectRecord.getId());
+                includedGeneralizedTests = PipelineQueries.fetchIncludedGeneralizedClasses(create, this.variant, this.projectRecord.getId());
                 includedTests.addAll(includedGeneralizedTests);
                 break;
             default:

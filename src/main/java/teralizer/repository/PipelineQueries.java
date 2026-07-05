@@ -7,7 +7,7 @@ import org.jooq.Result;
 import org.jooq.generated.Tables;
 import teralizer.processing.ProcessingStage;
 
-public class SQLiteRepository {
+public class PipelineQueries {
 
     public static List<String> fetchCoveredClasses(DSLContext create, ProcessingStage stage, String variant, Long projectId) {
         return create.select(Tables.JACOCO_COVERAGE_REPORT.COVERED_PACKAGE.concat(".").concat(Tables.JACOCO_COVERAGE_REPORT.COVERED_CLASS))

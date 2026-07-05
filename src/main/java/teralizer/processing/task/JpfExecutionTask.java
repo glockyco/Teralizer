@@ -25,7 +25,7 @@ import teralizer.jpf.SpecificationExtractor;
 import teralizer.jpf.TestGeneralizationListener;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
-import teralizer.repository.SQLiteRepository;
+import teralizer.repository.PipelineQueries;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 
 public class JpfExecutionTask extends AbstractTask {
@@ -53,7 +53,7 @@ public class JpfExecutionTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
-        Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+        Result<Record> records = PipelineQueries.fetchIncludedAssertions(create, this.getProjectId());
         for (Record record : records) {
             TestRecord testRecord = record.into(TestRecord.class);
             AssertionRecord assertionRecord = record.into(AssertionRecord.class);

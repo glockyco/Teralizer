@@ -27,7 +27,7 @@ import spoon.reflect.factory.Factory;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
-import teralizer.repository.SQLiteRepository;
+import teralizer.repository.PipelineQueries;
 import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.ExpectedTypeInference;
 import teralizer.spoon.analysis.GeneralizableInput;
@@ -70,7 +70,7 @@ public class JpfInstrumentationTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
-        Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+        Result<Record> records = PipelineQueries.fetchIncludedAssertions(create, this.getProjectId());
         for (Record record : records) {
             TestRecord testRecord = record.into(TestRecord.class);
             AssertionRecord assertionRecord = record.into(AssertionRecord.class);

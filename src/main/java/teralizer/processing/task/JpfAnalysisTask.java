@@ -40,7 +40,7 @@ import teralizer.jpf.ModelStatisticsExtractor;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProcessingStatus;
 import teralizer.processing.TaskContext;
-import teralizer.repository.SQLiteRepository;
+import teralizer.repository.PipelineQueries;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 
@@ -72,7 +72,7 @@ public class JpfAnalysisTask extends AbstractTask {
     }
 
     private void scheduleTasks(DSLContext create, Consumer<Task> scheduleTask) {
-        Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+        Result<Record> records = PipelineQueries.fetchIncludedAssertions(create, this.getProjectId());
 
         if (records.isEmpty()) {
             throw new RuntimeException(
@@ -169,7 +169,7 @@ public class JpfAnalysisTask extends AbstractTask {
     }
 
     private void updateEquivalencies(DSLContext create) {
-        Map<EquivalencyKey, List<Long>> groups = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId())
+        Map<EquivalencyKey, List<Long>> groups = PipelineQueries.fetchIncludedAssertions(create, this.getProjectId())
             .map(r -> r.into(AssertionRecord.class)).stream().parallel().collect(Collectors.groupingByConcurrent(
                 record -> new EquivalencyKey(computeFileHash(record), record.getTestedMethodQualifiedName()),
                 Collectors.mapping(AssertionRecord::getId, Collectors.toList())

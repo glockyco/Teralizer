@@ -44,7 +44,7 @@ import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
-import teralizer.repository.SQLiteRepository;
+import teralizer.repository.PipelineQueries;
 import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.codegen.GeneralizedTestBuilder;
@@ -83,7 +83,7 @@ public class TestGeneralizationTask extends AbstractTask {
     private void scheduleTasks(TaskContext context, Consumer<Task> scheduleTask) {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 
-        Result<Record> records = SQLiteRepository.fetchIncludedAssertions(create, this.getProjectId());
+        Result<Record> records = PipelineQueries.fetchIncludedAssertions(create, this.getProjectId());
 
         if (records.isEmpty()) {
             throw new RuntimeException(

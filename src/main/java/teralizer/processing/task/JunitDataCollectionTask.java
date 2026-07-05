@@ -37,7 +37,7 @@ import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.diagnostics.JqwikDiagnosticOutcome;
-import teralizer.repository.SQLiteRepository;
+import teralizer.repository.PipelineQueries;
 import teralizer.spoon.InheritedTestMethodScreens;
 import teralizer.util.Configuration;
 
@@ -133,7 +133,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         switch (this.stage) {
             case COLLECT_JUNIT_REPORTS_ORIGINAL:
             case COLLECT_JUNIT_REPORTS_INITIAL: {
-                Result<Record> records = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
+                Result<Record> records = PipelineQueries.fetchIncludedTests(create, this.getProjectId());
                 for (Record record : records) {
                     TestRecord testRecord = record.into(TestRecord.class);
                     scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.projectRecord, testRecord));
@@ -141,12 +141,12 @@ public class JunitDataCollectionTask extends AbstractTask {
                 break;
             }
             case COLLECT_JUNIT_REPORTS_GENERALIZED: {
-                Result<Record> testRecords = SQLiteRepository.fetchIncludedTests(create, this.getProjectId());
+                Result<Record> testRecords = PipelineQueries.fetchIncludedTests(create, this.getProjectId());
                 for (Record record : testRecords) {
                     TestRecord testRecord = record.into(TestRecord.class);
                     scheduleTask.accept(new JunitDataCollectionTask(this.stage, this.variant, this.projectRecord, testRecord));
                 }
-                Result<Record> generalizationRecords = SQLiteRepository.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
+                Result<Record> generalizationRecords = PipelineQueries.fetchIncludedGeneralizations(create, this.variant, this.getProjectId());
                 for (Record record : generalizationRecords) {
                     TestRecord testRecord = record.into(TestRecord.class);
                     AssertionRecord assertionRecord = record.into(AssertionRecord.class);
