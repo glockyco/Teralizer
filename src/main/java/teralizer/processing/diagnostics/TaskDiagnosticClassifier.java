@@ -27,6 +27,12 @@ public final class TaskDiagnosticClassifier {
         if (stage == ProcessingStage.ANALYZE_JPF && contains(failure, "All assertions were excluded")) {
             return diagnostic(TaskDiagnosticCodes.NO_INPUT_SPEC, messageDetail(failure));
         }
+        if (stage == ProcessingStage.BUILD_PROJECT_INSTRUMENTED || stage == ProcessingStage.BUILD_PROJECT_GENERALIZED) {
+            return classifyBuildFailure(stage, failure);
+        }
+        if (stage == ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL || stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED) {
+            return classifyReportFailure(failure);
+        }
         String message = failure.getMessage() == null ? "" : failure.getMessage();
         if (message.contains(ExtractionOutcome.Kind.UNSUPPORTED_TERM.name())) {
             return unsupportedTerm(afterToken(message, ExtractionOutcome.Kind.UNSUPPORTED_TERM.name()));
@@ -70,6 +76,32 @@ public final class TaskDiagnosticClassifier {
             default:
                 return diagnostic(TaskDiagnosticCodes.LISTENER_BUG, messageDetail(aborted));
         }
+    }
+
+    private static Diagnostic classifyBuildFailure(ProcessingStage stage, Throwable failure) {
+        if (contains(failure, "Source option") || contains(failure, "release version") || contains(failure, "invalid target release")) {
+            String code = stage == ProcessingStage.BUILD_PROJECT_GENERALIZED
+                ? TaskDiagnosticCodes.GENERATED_SOURCE_LEVEL_TOO_NEW
+                : TaskDiagnosticCodes.OTHER_COMPILE_FAILURE;
+            return diagnostic(code, messageDetail(failure));
+        }
+        if (contains(failure, "does not exist") && contains(failure, "compiled path")) {
+            return diagnostic(TaskDiagnosticCodes.TEST_COMPILE_OUTPUT_MISSING, messageDetail(failure));
+        }
+        if (contains(failure, "package ") && contains(failure, " does not exist")) {
+            return diagnostic(TaskDiagnosticCodes.MISSING_DEPENDENCY, messageDetail(failure));
+        }
+        return diagnostic(TaskDiagnosticCodes.OTHER_COMPILE_FAILURE, messageDetail(failure));
+    }
+
+    private static Diagnostic classifyReportFailure(Throwable failure) {
+        if (contains(failure, "Unable to identify test report path")) {
+            return diagnostic(TaskDiagnosticCodes.MISSING_REPORT_FILE, messageDetail(failure));
+        }
+        if (contains(failure, "Failed to identify matching test case report")) {
+            return diagnostic(TaskDiagnosticCodes.FOUND_REPORT_NO_MATCHING_TESTCASE, messageDetail(failure));
+        }
+        return diagnostic(TaskDiagnosticCodes.UNSUPPORTED_REPORT_LAYOUT, messageDetail(failure));
     }
 
     private static Diagnostic unsupportedTerm(String detail) {

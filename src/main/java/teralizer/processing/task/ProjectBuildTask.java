@@ -6,9 +6,11 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import org.jooq.DSLContext;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.processing.diagnostics.BuildEnvironmentObservationWriter;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
@@ -30,6 +32,9 @@ public class ProjectBuildTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        DSLContext create = context.get(TaskContext.DSL_CONTEXT);
+        BuildEnvironmentObservationWriter.record(create, this.projectRecord, this.stage);
+
         switch (this.projectRecord.getType()) {
             case UNKNOWN:
                 throw new RuntimeException("Cannot build project " + this.projectRecord.getRootPath() + ". No pom.xml / build.gradle found.");

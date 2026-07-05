@@ -40,6 +40,33 @@ public class TaskDiagnosticClassifierTest {
         Assert.assertTrue(diagnostic.detailJson().contains("SpecialIntegerExpression"));
     }
 
+    @Example
+    void mapsBuildCompilerFailuresToStableCodes() {
+        RuntimeException sourceLevel = new RuntimeException("Source option 5 is no longer supported. Use 7 or later.");
+        RuntimeException missingDependency = new RuntimeException("package org.example.missing does not exist");
+        RuntimeException missingOutput = new RuntimeException("Test compiled path 'target/test-classes' does not exist.");
+
+        Assert.assertEquals(TaskDiagnosticCodes.GENERATED_SOURCE_LEVEL_TOO_NEW,
+            TaskDiagnosticClassifier.classify(ProcessingStage.BUILD_PROJECT_GENERALIZED, sourceLevel).reasonCode());
+        Assert.assertEquals(TaskDiagnosticCodes.MISSING_DEPENDENCY,
+            TaskDiagnosticClassifier.classify(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, missingDependency).reasonCode());
+        Assert.assertEquals(TaskDiagnosticCodes.TEST_COMPILE_OUTPUT_MISSING,
+            TaskDiagnosticClassifier.classify(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, missingOutput).reasonCode());
+    }
+
+    @Example
+    void mapsReportLookupFailuresToStableCodes() {
+        RuntimeException missingReport = new RuntimeException(
+            "Unable to identify test report path for test class: smoke.SubjectTest. No file at default path a or alternative path b.");
+        RuntimeException noTestcase = new RuntimeException(
+            "Failed to identify matching test case report for smoke.SubjectTest.t in TEST-smoke.SubjectTest.xml.");
+
+        Assert.assertEquals(TaskDiagnosticCodes.MISSING_REPORT_FILE,
+            TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED, missingReport).reasonCode());
+        Assert.assertEquals(TaskDiagnosticCodes.FOUND_REPORT_NO_MATCHING_TESTCASE,
+            TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL, noTestcase).reasonCode());
+    }
+
     private static String classify(Throwable failure) {
         return TaskDiagnosticClassifier.classify(ProcessingStage.EXECUTE_JPF, failure).reasonCode();
     }
