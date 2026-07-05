@@ -1,9 +1,11 @@
 ---
 title: Symbolic-Sibling Throws in SPF Extraction
 type: spec
-status: draft
+status: superseded
 created: 2026-07-03
 parent: 2026-06-26-teralizer-overview
+superseded_by: 2026-07-05-collect-mode-conformance
+archived: 2026-07-05
 ---
 
 # Symbolic-Sibling Throws in SPF Extraction

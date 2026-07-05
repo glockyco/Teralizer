@@ -28,7 +28,6 @@
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
-- **Symbolic-Sibling Throws in SPF Extraction** [spec] `2026-07-03-symbolic-sibling-throws` ← 2026-06-26-teralizer-overview
 - **Concretization Census — Which SPF Gaps Are Worth Closing** [spec] `2026-07-04-concretization-census` ← 2026-06-26-teralizer-overview
 
-_45 archived — see `docs/plans/archive/`._
+_46 archived — see `docs/plans/archive/`._

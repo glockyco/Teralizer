@@ -103,18 +103,34 @@ All 19 `symarrays/*` sites fork unconditionally. Dead under Teralizer
   fixture exercises FCMP* symbolically) and a parse-reaching string MUT covering both the
   parse-success seed and the parse-failure seed (S1).
 
-## Expected impact
+## Outcome (all four fixes landed)
 
-xenqtt's −8 `AppContext` generalizations are the known direct recovery. Any corpus MUT
-whose symbolic string reaches a JDK parse call is currently a crash and becomes either an
-extraction or a typed THROWN spec. Float-compare MUTs under `symbolic.fp` currently extract
-wrong-path constraints silently — S2's fix corrects a soundness bug the validation net may
-have been absorbing as unexplained property failures.
+F1 and F4b landed as jpf-symbc `cf4bfadc` + parent `a18d00cd`. F2, F3, and F4a landed as
+jpf-symbc `d1768d50` + parent `d596f837`. Observed results, RED-first in every case:
 
-## Relationship to `2026-07-03-symbolic-sibling-throws`
+- **S2 confirmed as a live soundness bug.** Before the fix the true-seed float compare
+  captured the INVERTED comparator. After it, both float-compare fixture arms carry the
+  constraint matching their seed's branch (`a > b` / `a < b`), licensed FULL 100/100,
+  pinned in `verification/golden/float-compare.tsv`.
+- **S1's crash class is gone.** Before the fix both parse-reaching harness targets killed
+  the search with the host `RuntimeException` at `handleParseInt`. After it, the parse
+  outcome follows the seed and both fixture arms land as typed `UNSUPPORTED_TERM`
+  exclusions at ingestion, because `isinteger`/`notinteger` comparators are not in the
+  admitted sound set. No gen rows, no crash, sibling assertions unaffected
+  (`verification/golden/string-parse.tsv` pins the header-only shape).
+- **Full recovery to included specs is a separate, census-gated decision:** admitting
+  ISINTEGER/NOTINTEGER to the ingestion sound set (rendering as a parse-based predicate)
+  belongs to the string-op-growth bucket the concretization census ranks. The crash fix
+  stands on its own.
+- The config guards refuse constraint collection combined with
+  `symbolic.optimizechoices` or `symbolic.arrays` at factory init.
+
+## Relationship to `2026-07-03-symbolic-sibling-throws` — retired
 
 That draft's design (typed per-assertion outcome for sibling throws) targeted the symptom.
-With S1 fixed there is no parse-level sibling partition in collect mode, and the predicate
-level is already pinned, so the residual class for that spec may be empty. Decision after
-F1+F4 land: re-run the xenqtt-shaped repro; if no residual sibling-throw source exists,
-retire the spec.
+With S1 fixed there is no parse-level sibling partition in constraint collection, the
+predicate level has been symcrete-pinned since the string-support wave, and every other
+string site is creation-guarded per this survey. The residual sibling-throw class is empty
+under the surveyed fork. The spec is superseded by this audit. The xenqtt `AppContext`
+family now dies typed at ingestion instead of crashing the search, and its full recovery
+rides the ISINTEGER admission decision above.

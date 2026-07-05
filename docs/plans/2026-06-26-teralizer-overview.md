@@ -44,9 +44,11 @@ expansion, then maintainability. Evidence-gated items never start before their g
    the honest baseline).
 
 **P2 — evidence-ranked fixes (start as their gate resolves)**
-5. **`2026-07-03-symbolic-sibling-throws`** *(spec, draft)* — spike first (three questions
-   in the doc), then finalize. Recovers the xenqtt −8 class; the pruning-soundness cliff
-   makes this design-gated, not ad-hoc.
+5. **ISINTEGER/NOTINTEGER sound-set admission** — the parse-family crash class is fixed
+   (`2026-07-05-collect-mode-conformance`), and parse-reaching string MUTs now die typed at
+   ingestion. Admitting the parse comparators to the sound set (rendered as a parse-based
+   predicate) converts those exclusions into specs, including the xenqtt `AppContext`
+   family. Census-gated with the other string-op growth.
 6. **`2026-06-28-native-peer-model-coverage`** *(spec, draft)* — crash-visible peer/model
    gaps, per-method ranked (commons-math `Precision.*` targets already named). Complements
    the census: census = silent concretization, this = hard crashes. Task 1 (ranking query)
