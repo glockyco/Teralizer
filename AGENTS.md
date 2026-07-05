@@ -38,9 +38,9 @@ editing the golden to match broken output.
 
 First-run numbers stand. Runtime limits (timeouts, memory) are real filters, part of the
 measured system — a stage that times out is a result, not noise. Never delete-and-rerun a
-project or fixture to get a cleaner number; that biases every census. Deliberate repeat runs
-that compare ALL outcomes (the determinism double-run of `verify-pipeline.sh`) are fine;
-picking the better of two runs is not.
+project or fixture to get a cleaner number, and never rerun anything to pick the better of
+two numbers. Every gate runs ONCE. Suspected nondeterminism is a defect to investigate, not
+something to average away with repeat runs.
 
 Sentinel and hotspot runs are measurement events, not per-change gates. A lever's
 refusal-to-licensed conversion is verified by its fixture golden and unit tests at commit

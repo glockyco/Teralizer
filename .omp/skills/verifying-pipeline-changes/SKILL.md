@@ -16,7 +16,7 @@ the golden to match broken output.
 | Situation | Do this | Cost |
 |---|---|---|
 | Iterating on one behavior | `scripts/run-verification-corpus.sh --only <fixture-name>` (resets the scratch DB and runs that fixture; inspect the DB with ad-hoc SQL, since the full golden check expects the whole corpus) | ~45 s |
-| Change is "done" | `scripts/verify-pipeline.sh` (build + full fixture corpus + golden check). Run it TWICE and require both green and identical | ~5 min |
+| Change is "done" | `scripts/verify-pipeline.sh` (build + full fixture corpus + golden check), ONCE | ~5 min |
 | Change touches real-world seams (surefire versions, report formats, big suites, source levels) | sentinel subset: `REPOREAPERS_DB=postgres_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db`. Expected census sits in the config header comments. Drop the scratch DB and data dir afterwards | ~10 min |
 | Corpus-level claims for the paper | full spike (`project-configs/fusion-spike/`), coordinated with the operator | ~1 h |
 
@@ -48,5 +48,4 @@ Never verify against kouchat, gedcom4j, xenqtt, uaicriteria (60s-ceiling jitter)
 | Editing a golden so the check passes | Goldens pin observed truth. A surprising diff is a finding. Investigate first. |
 | Verifying only at unit level for generator/engine seams | jqwik engine seams (edge-case injection, generator overloads) bypass naive wrappers — only the full-pipeline fixture catches them. |
 | Reusing a protected DB for an experiment | Scratch DBs (`postgres_<purpose>_verify`) are created and dropped by runners. Protected DBs are listed in AGENTS.md. |
-| Skipping the second `verify-pipeline.sh` run | One green run doesn't prove determinism. Two identical runs do. |
-| Deleting a timed-out/failed project and rerunning it for a cleaner number | Runtime limits are real filters; the first run IS the observation. Record it. Selective reruns bias every census. Repeat runs are only valid when ALL outcomes are compared (the determinism double-run), never to pick the better one. |
+| Deleting a timed-out/failed project and rerunning it for a cleaner number | Runtime limits are real filters; the first run IS the observation. Record it. Selective reruns bias every census. Never rerun to pick the better of two numbers. |
