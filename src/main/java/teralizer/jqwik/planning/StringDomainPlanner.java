@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 import teralizer.domain.Constant;
 import teralizer.domain.Invocation;
+import teralizer.domain.MethodCapabilities;
+import teralizer.domain.MethodCapability;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.TypeDomain;

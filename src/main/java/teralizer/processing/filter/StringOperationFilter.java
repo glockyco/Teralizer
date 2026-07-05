@@ -12,7 +12,7 @@ import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
-import teralizer.jqwik.planning.MethodCapabilities;
+import teralizer.domain.MethodCapabilities;
 
 /**
  * Rejects an assertion whose method under test takes a {@link String} parameter and performs a

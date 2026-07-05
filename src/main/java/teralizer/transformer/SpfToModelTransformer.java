@@ -8,8 +8,8 @@ import java.util.Locale;
 import java.util.Stack;
 import teralizer.domain.*;
 import teralizer.domain.Error;
-import teralizer.jqwik.planning.MethodCapabilities;
-import teralizer.jqwik.planning.MethodCapability;
+import teralizer.domain.MethodCapabilities;
+import teralizer.domain.MethodCapability;
 
 public class SpfToModelTransformer {
 

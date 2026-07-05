@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import teralizer.domain.*;
 import teralizer.domain.Error;
-import teralizer.jqwik.planning.MethodCapabilities;
-import teralizer.jqwik.planning.MethodCapability;
+import teralizer.domain.MethodCapabilities;
+import teralizer.domain.MethodCapability;
 
 /**
  * Renders a {@link Model} tree to a Java expression. Backed by {@link ModelFolder},

@@ -1,8 +1,7 @@
-package teralizer.jqwik.planning;
+package teralizer.domain;
 
 import net.jqwik.api.Example;
 import org.junit.Assert;
-import teralizer.domain.TypeDomain;
 
 public class MethodCapabilitiesTest {
 

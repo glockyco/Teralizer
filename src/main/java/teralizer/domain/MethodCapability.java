@@ -1,6 +1,5 @@
-package teralizer.jqwik.planning;
+package teralizer.domain;
 
-import teralizer.domain.TypeDomain;
 
 public final class MethodCapability {
     public enum InputConstraintKind {

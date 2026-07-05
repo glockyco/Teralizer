@@ -1,9 +1,8 @@
-package teralizer.jqwik.planning;
+package teralizer.domain;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import teralizer.domain.TypeDomain;
 
 public final class MethodCapabilities {
     public static final String PARSE_PREDICATES_QUALIFIER = "ParsePredicates";
