@@ -1,9 +1,10 @@
 ---
 title: Inherited Test-Method Support
 type: spec
-status: active
+status: implemented
 created: 2026-06-27
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-05
 ---
 
 # Inherited Test-Method Support
@@ -195,27 +196,25 @@ substantial fraction — and the typed exclusion makes the split a direct query.
 
 ## Acceptance criteria
 
-- [ ] `JunitDataCollectionTask` resolves inherited `@Test` methods by walking
-  the superclass chain; "No method matches" RuntimeExceptions for inherited methods
-  disappear — every affected test becomes either a collected test (flattenable) or a
-  clean typed exclusion (`is_included = false`, `exclusion_info` =
-  `INHERITED_METHOD_NOT_FLATTENABLE` + failing screen). The throw remains only for
-  methods genuinely absent from the model.
-- [ ] `test_method_qualified_name` and `test_method_relative_path` reference the
-  declaring (parent) class for inherited methods.
-- [ ] `SpoonUtils.cloneClass` flattens inherited `@Test` and lifecycle
-  (`@Before`/`@After`/`@BeforeClass`/`@AfterClass`) methods that pass both screens into
-  the clone; both screens have unit tests (generic base excluded typed, private-helper
-  reference excluded typed, plain protected-helper base flattened).
-- [ ] `TestAnalysisTask`, `TestGeneralizationTask`, and
-  `JpfInstrumentationTask` all resolve flattened test methods without
-  `IndexOutOfBoundsException` or "No method matches" errors.
-- [ ] New fixture: a test class inheriting `@Test` + `@Before` from a non-generic parent
-  with protected helpers, whose inherited test generalizes; golden pins the conversion.
-  A second arm with a generic parent is excluded at collection — it produces no
-  generalization rows, so the golden pins its absence via the fixture's `gen_count`,
-  and the typed exclusion itself is pinned by the screen unit tests plus a DB assertion
-  in the fixture-arm test (query the test row's `exclusion_info`).
+- [x] `JunitDataCollectionTask` resolves inherited `@Test` methods by walking
+  the superclass chain; the fixture's inherited tests are collected (flattenable arm)
+  or excluded cleanly (`is_included = false`, `exclusion_info` =
+  `INHERITED_METHOD_NOT_FLATTENABLE:TYPE_VARIABLE` observed for the generic arm). The
+  throw remains only for methods genuinely absent from the model.
+- [x] `test_method_qualified_name` and `test_method_relative_path` reference the
+  declaring (parent) class for inherited methods; report matching keeps the child
+  class, and the shared `resolveTestMethod` helper serves every downstream consumer.
+- [x] `SpoonUtils.cloneClass` flattens screened-in inherited `@Test` and lifecycle
+  methods; both screens have unit tests (generic base excluded typed, private-helper
+  reference excluded typed, protected-helper base flattened), and the generated-class
+  writers merge the declaring unit's imports so flattened code compiles.
+- [x] `TestAnalysisTask`, `TestGeneralizationTask`, and `JpfInstrumentationTask`
+  resolve flattened test methods, including inherited `@Before` setup invoked by the
+  instrumented driver.
+- [x] Fixture `inherited-tests` (16th): the flattenable arm generalizes and widens —
+  observed golden `SYMBOLIC FULL 100/100 included`; the generic arm produces no
+  generalization rows (gen_count pins the absence) and its typed exclusion is asserted
+  against the DB. The wave gate passed with all 15 pre-existing goldens byte-identical.
 - [ ] Corpus-scale measurement (flattenable share of the 5,758, assertion reach) batches
   into the next scheduled corpus evaluation event per the measurement policy in AGENTS.md.
 

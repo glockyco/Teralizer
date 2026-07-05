@@ -6,7 +6,6 @@
 - **Applicability Barrier Evidence** [audit] `2026-06-26-applicability-barriers` ← 2026-06-26-teralizer-overview
 - **Data Reuse & MSR Paper Potential (secondary outputs)** [note] `2026-06-26-data-reuse-and-msr-potential` ← 2026-06-26-teralizer-overview
 - **Teralizer — Project Overview** [overview] `2026-06-26-teralizer-overview`
-- **Inherited Test-Method Support** [spec] `2026-06-27-inherited-test-method-support` ← 2026-06-26-teralizer-overview
 - **Clause-Driven, Multi-Type Input Generation** [spec] `2026-06-28-clause-driven-input-generation` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [note] `2026-06-28-generation-coverage-telemetry` ← 2026-06-28-clause-driven-input-generation
 - **MUT-id Targeting & Mutation-Data Coverage** [audit] `2026-06-28-mut-id-targeting-and-coverage` ← 2026-06-26-teralizer-overview
@@ -26,4 +25,4 @@
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
 
-_57 archived — see `docs/plans/archive/`._
+_58 archived — see `docs/plans/archive/`._
