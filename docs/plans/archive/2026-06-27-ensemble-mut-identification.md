@@ -1,12 +1,24 @@
 ---
 title: Ensemble MUT Identification
 type: spec
-status: draft
+status: abandoned
 created: 2026-06-27
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-05
 ---
 
 # Ensemble MUT Identification
+
+**Abandoned 2026-07-05 (operator decision): deferred indefinitely, no implementation
+planned.** The AST-only phase shipped as fusion v1 (`2026-07-02-static-mut-id-fusion`,
+archived); what this spec still owned was the runtime tier (PIT_ORIGINAL enablement,
+killed-mutant corroboration/refutation, `oracle_agreement` population). That tier is not
+worth its cost: PIT is 48% of pipeline runtime and PIT_ORIGINAL runs on a broader test set
+than PIT_INITIAL, the paper's claims discipline already restricts headline attribution
+claims to T1/T2 (which need no oracle), and the T1 manual read found zero mis-picks, so the
+refuter has no demonstrated failure class to catch. T3/T4 picks remain the ~43%-precision
+population permanently and are reported as such. The evidence sections below are retained
+as the record of what the oracle could have contributed.
 
 Replace the single-signal LCBA heuristic (last call before assertion) with an
 ensemble focal-method resolver that combines killed-mutant data, name-matching,
