@@ -6,11 +6,14 @@ created: 2026-06-28
 parent: 2026-06-26-teralizer-overview
 ---
 
-DB-grounded evidence for prioritizing the ensemble MUT-identification work
-(`2026-06-27-ensemble-mut-identification`): which RepoReapers projects are the
-best concrete targets, how much mutation-data (the killed-mutant oracle) coverage
-exists and how to grow it, which barriers are realistically improvable, and which
-telemetry to add for prioritization and reporting.
+DB-grounded evidence on MUT-id targeting and mutation-data coverage: which RepoReapers
+projects are the best concrete targets, how much killed-mutant-oracle coverage exists and
+what would grow it, which barriers are realistically improvable, and which telemetry to add
+for prioritization and reporting. The oracle-coverage sections were collected to prioritize
+the killed-mutant runtime tier (`2026-06-27-ensemble-mut-identification`), which is now
+abandoned (deferred indefinitely by operator decision); they remain the record of what that
+tier could have contributed. The targeting, barrier, and telemetry evidence stands on its
+own.
 
 All figures are first-hand read-only queries on `postgres_test` (RepoReapers,
 1161 projects), 2026-06-28, via the replication container. The reusable ranking

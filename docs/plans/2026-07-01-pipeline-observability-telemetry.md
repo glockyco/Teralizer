@@ -54,7 +54,8 @@ what to build.
 - No generic event framework.
 - No attempt to store every log line in the database.
 - No broad matcher implementation in this spec.
-- No PIT/oracle provenance until PIT_ORIGINAL / ensemble MUT-id work starts.
+- No PIT/oracle provenance (the killed-mutant runtime tier is abandoned —
+  `2026-06-27-ensemble-mut-identification`, archived).
 - No change to the current soundness policy; telemetry observes decisions, it does not make unsafe
   decisions acceptable.
 
@@ -88,8 +89,8 @@ this spec depends on:
   `corroborating_signals` (who agreed — the T2 promotion evidence).
 - `focal_type_source` uses the fusion vocabulary (`PATH_AND_NAME`, `NAME_ONLY`, `PATH_ONLY`,
   `NONE`); receiver dominance is dropped.
-- `oracle_agreement` (`AGREED`, `REFUTED`, `ABSENT`; nullable) is reserved so the runtime tier
-  (`2026-06-27-ensemble-mut-identification`) has a home before PIT_ORIGINAL is enabled.
+- `oracle_agreement` (`AGREED`, `REFUTED`, `ABSENT`; nullable) stays reserved and never
+  populated (the killed-mutant runtime tier is abandoned); kept so readers do not break.
 
 Analysis enabled:
 

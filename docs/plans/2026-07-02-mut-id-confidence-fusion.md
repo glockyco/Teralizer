@@ -37,8 +37,9 @@ The residual risk is the **coherent-shallow mis-target** (the pick is an inspect
 value the assertion does check, so the seed-check passes, but the developer-intended method's
 regressions go undetected — He et al., FSE'24, DOI 10.1145/3660785, measure LCBA at 43.38%
 precision against developer intent). Fusion does not eliminate that risk; it makes it **visible
-and quantified** via per-assertion confidence tiers, and reserves the killed-mutant oracle
-(`2026-06-27-ensemble-mut-identification`) as the future refuter for exactly this case.
+and quantified** via per-assertion confidence tiers. The killed-mutant oracle that would refute
+this case (`2026-06-27-ensemble-mut-identification`) is abandoned — deferred indefinitely by
+operator decision — so the risk is carried permanently and reported via the tier slicing below.
 
 Two costs are accepted knowingly:
 
@@ -104,13 +105,13 @@ demoted in ranking and flagged in telemetry, never discarded. Receiver-type domi
 
 ### B — Focal method: evidence tiers (descending strength)
 
-| Tier | Evidence | v1 (AST-only) signals | Runtime signals (post-PIT_ORIGINAL) |
-|---|---|---|---|
-| **T1_PROVEN** | constructed dataflow link or cardinality-forced elimination | single-producer dataflow trace (variable/field/sub-expression resolution, inspector unwrap); unique production call in the pre-assertion slice | — |
-| **T2_CORROBORATED** | a weak pick that ≥2 independent identity indicators agree on, or a single weak pick confirmed by one | weak candidate + name-match + focal-membership | static pick ∩ killed-mutant set = 1 |
-| **T3_SINGLE_WEAK** | exactly one weak identity indicator decides | name-match alone; focal-membership alone; nearest-write heuristic through nested control flow | coverage-in-focal-class |
-| **T4_GUESS** | ranked pick among ≥2 feasible candidates; position/stable-order broke the tie | ranking function below; alternatives recorded | killed-mutant set disambiguates |
-| **T5_NONE** | no candidate exists | — | — |
+| Tier | Evidence | Signals |
+|---|---|---|
+| **T1_PROVEN** | constructed dataflow link or cardinality-forced elimination | single-producer dataflow trace (variable/field/sub-expression resolution, inspector unwrap); unique production call in the pre-assertion slice |
+| **T2_CORROBORATED** | a weak pick that ≥2 independent identity indicators agree on, or a single weak pick confirmed by one | weak candidate + name-match + focal-membership |
+| **T3_SINGLE_WEAK** | exactly one weak identity indicator decides | name-match alone; focal-membership alone; nearest-write heuristic through nested control flow |
+| **T4_GUESS** | ranked pick among ≥2 feasible candidates; position/stable-order broke the tie | ranking function below; alternatives recorded |
+| **T5_NONE** | no candidate exists | — |
 
 **Identity indicators** (the corroborators that promote tiers): name agreement between test method
 and candidate (`testGcd` ↔ `gcd`, Methods2Test name-strip), and focal-class membership. Type
@@ -134,15 +135,11 @@ Tier assignment for a ranked pick: ≥2 identity indicators on the winner → T2
 
 - **Coherence seed-check** (runtime, exists today): refutes incoherent picks; the backstop that
   makes best-effort safe.
-- **Killed-mutant disagreement** (future, PIT_ORIGINAL): the pick kills no mutants but a reachable
-  sibling does → flags a likely coherent-shallow mis-target. The one signal that catches what
-  coherence cannot. The oracle answers "whose faults does this test detect?"; static dataflow
-  answers "whose output does the assertion check?" (what spec extraction needs). They usually
-  coincide; on divergence the static oracle-value method drives generalization and the mutation
-  oracle drives shallow-pick refutation and T4 disambiguation. The oracle is therefore the
-  strongest **corroborator/refuter**, and the top *identifier* only when static is ambiguous —
-  not the unconditional cascade-top (`2026-06-27-ensemble-mut-identification` is recast
-  accordingly).
+- **Killed-mutant disagreement** (abandoned with `2026-06-27-ensemble-mut-identification`):
+  the pick kills no mutants but a reachable sibling does, flagging a likely coherent-shallow
+  mis-target — the one signal that would catch what coherence cannot. Deferred indefinitely
+  by operator decision; the coherent-shallow risk is carried and reported via tier slicing
+  rather than refuted.
 
 ### The shallow-pick flag
 
@@ -184,7 +181,7 @@ characterization-only.
 | `candidate_param_count` | INTEGER nullable | pick's parameter count |
 | `candidate_param_supported` | BOOLEAN nullable | ≥1 param passes `TypeCapability.supportsGeneratedInput` |
 | `candidate_return_supported` | BOOLEAN nullable | return passes `TypeCapability.supportsReturnValue` |
-| `oracle_agreement` | TEXT nullable | reserved: `AGREED`, `REFUTED`, `ABSENT` (populated when PIT_ORIGINAL lands) |
+| `oracle_agreement` | TEXT nullable | reserved `AGREED`/`REFUTED`/`ABSENT`; never populated (the killed-mutant tier is abandoned) — kept so old readers do not break |
 | `candidate_details` | TEXT nullable (JSON) | ranked alternatives incl. the losers of T4 guesses |
 | `actual_shape` | TEXT nullable | AST shape of the asserted actual expression: `LITERAL`, `VARIABLE`, `FIELD_ACCESS`, `SINGLE_CALL`, `CHAINED_CALLS_END0ARG`, `CHAINED_CALLS_ENDNARG`, `CTOR_ONLY`, `CTOR_RECEIVER_CALL`, `OPERATOR_COMPOSITE`, `ARRAY_INDEX`, `LAMBDA_OR_METHODREF`, `NONE` |
 | `receiver_provenance` | TEXT nullable | where the pick's receiver comes from: `INLINE_CTOR`, `LOCAL_CTOR`, `LOCAL_CTOR_MUTATED`, `LOCAL_OTHER`, `FIELD`, `PARAM_OR_STATIC`, `NONE` (static/receiverless) |
@@ -206,9 +203,9 @@ table; SQL casts to jsonb where needed (`create-views.sql` precedent).
    property; verified at `TestGeneralizationTask.java:313,358-373,423-426,480-508`.
 3. **Tier-slicing is mandatory.** Every downstream analysis that aggregates over generalizations
    or resolution outcomes slices by `confidence_tier`. Headline soundness/attribution claims cite
-   T1/T2 only; RQ1 mutation-score comparisons join the tier column. Until the killed-mutant
-   refuter exists, T3/T4 picks are the ~43%-precision population (He et al.) and must never be
-   presented as resolved-with-confidence.
+   T1/T2 only; RQ1 mutation-score comparisons join the tier column. T3/T4 picks are the
+   ~43%-precision population (He et al.) permanently — the killed-mutant refuter is
+   abandoned — and must never be presented as resolved-with-confidence.
 4. **No regression of the working corpus** (unchanged): every pick the current
    `TestAnalysis.findTestedMethodCall` returns, the fusion resolver returns identically (same
    `CtInvocation`); new picks appear only where the current resolver returns empty. The ~250
@@ -253,8 +250,9 @@ table; SQL casts to jsonb where needed (`create-views.sql` precedent).
 
 - **v1 (the companion plan):** AST-only — dataflow tiers, unique-producer elimination, ranked
   guess, path+name focal class, the observation table, tier funnel analysis, spike verification.
-- **Deferred:** killed-mutant oracle tiers and `oracle_agreement` population (gated on enabling
-  `PIT_ORIGINAL`, its own cost decision — PIT is 48% of pipeline runtime); setup-method/`@Before`
+- **Abandoned:** killed-mutant oracle tiers and `oracle_agreement` population
+  (`2026-06-27-ensemble-mut-identification`, archived — deferred indefinitely by operator
+  decision; PIT_ORIGINAL costs ~48% of pipeline runtime). Still deferred: setup-method/`@Before`
   field writes (v1 resolves in-test-method writes only); inherited test hierarchies
   (`2026-06-27-inherited-test-method-support`); the differential-oracle conjunct (retain the
   original asserted relationship as an independent conjunct in emitted tests) — revisit if spike
