@@ -30,8 +30,7 @@ Current representation:
 
 **Remaining:**
 
-- **Task 6b** (string-length clause loss) is the gate for Task 7: the fixture corpus proved `length` clauses are lost end to end (see the task), contradicting the sound-set note below until fixed.
-- **Task 7** (corpus verification) is otherwise unblocked: MUT-id fusion v1 resolves best-effort picks with confidence tiers, so String-parameter MUTs now reach the string seams. Run the empirical checks on the sentinel subset (scratch DB, expected census in the config headers). The same run doubles as the first real-world exposure of the ingestion-totality change: derived string symbols (`indexOf`/`lastIndexOf` family) that previously flattened to free variables now surface as typed `UNSUPPORTED_TERM` exclusions, so the sentinel census may shift in both directions (length-bearing MUTs gained, indexOf-family MUTs excluded). Full-corpus funnel measurement batches into the next scheduled corpus evaluation event; when the observability telemetry lands, use its candidate type-eligibility fields to separate newly resolved String opportunities from receiver/stateful setup blockers.
+- **Task 7** (corpus verification) is unblocked: MUT-id fusion v1 resolves best-effort picks with confidence tiers, so String-parameter MUTs now reach the string seams, and the `SymbolicLengthInteger` ingestion fix (`8303a4fd`) keeps length clauses tied to their receiver (pinned by the `string-sound-set` golden, length row FULL 100/100). Run the empirical checks on the sentinel subset (scratch DB, expected census in the config headers). The same run doubles as the first real-world exposure of the ingestion-totality change: derived string symbols (`indexOf`/`lastIndexOf` family) that previously flattened to free variables now surface as typed `UNSUPPORTED_TERM` exclusions, so the sentinel census may shift in both directions (length-bearing MUTs gained, indexOf-family MUTs excluded). Full-corpus funnel measurement batches into the next scheduled corpus evaluation event; when the observability telemetry lands, use its candidate type-eligibility fields to separate newly resolved String opportunities from receiver/stateful setup blockers.
 
 ## Soundness invariants (non-negotiable)
 
@@ -54,7 +53,7 @@ Current representation:
 ## Sound-set decision (v1)
 
 - **Input-generatable:** `equals`, `isEmpty`, `startsWith`, `endsWith`, `contains` on literal string constraints.
-- **Output-renderable / residual-filter checked:** `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, `isEmpty`, `concat`, `trim`, `replace`, `toLowerCase`, `toUpperCase`, `length`, and `String.valueOf`. `length` is DESIGNED to render from the `SymbolicLengthInteger` parent tie as a `length()` invocation so length clauses stay residual instead of flattening to a free integer — but the fixture corpus shows length clauses are currently lost entirely (Task 6b); the design intent stands, the implementation does not yet deliver it.
+- **Output-renderable / residual-filter checked:** `equals`, `equalsIgnoreCase`, `startsWith`, `endsWith`, `contains`, `isEmpty`, `concat`, `trim`, `replace`, `toLowerCase`, `toUpperCase`, `length`, and `String.valueOf`. `length` renders from the `SymbolicLengthInteger` parent tie as a `length()` invocation, so length clauses stay residual instead of flattening to a free integer (pinned by the `string-sound-set` golden since `8303a4fd`).
 - **Screen-admitted, ingestion-refused (typed):** `indexOf`, `lastIndexOf`. The structural screen lets them reach SPF, but their derived symbols carry no renderable model mapping, so `SpfToModelTransformer` refuses them as `UNSUPPORTED_TERM` rather than flattening to free variables.
 - **Excluded (typed):** `compareTo`, `charAt`, `substring`, regex/region matching, and regex replacement variants whose soundness or generation contract is not modeled.
 
@@ -167,38 +166,6 @@ Make an unsupported string op degrade to a clean per-assertion exclusion, never 
 - [x] **Step 3: Catch at the Teralizer boundary** — in the JPF execution task/listener boundary, catch the typed unsupported signal for the current assertion and record `ExtractionOutcome.Kind.UNSUPPORTED_TERM` (exclude that assertion), leaving the rest of the run intact. Rebuild the submodule (`./gradlew build` builds jpf-symbc).
 - [x] **Step 4: Run, expect PASS** (jpf-symbc test + a Teralizer harness test that an unsupported-op MUT is excluded, not crashed).
 - [x] **Step 5: Commit.** `fix: signal unsupported symbolic string ops instead of crashing` (submodule commit + parent pointer bump).
-
-### Task 6b: String-length clause loss — root-cause and fix
-
-The `string-sound-set` fixture golden pins the defect: a MUT branching on `s.length() > 3`
-yields `total_constraint_count = NULL`, `used_constraint_count = NULL`,
-`concretization_events = 0`, and the generalization is refused `ORACLE_NOT_WIDENABLE`. No
-clause is extracted at all. The spf-eval study confirms SPF specifies length constraints in
-this shape, so the loss is Teralizer-side (config or ingestion), not an SPF gap. Not a
-license naming mismatch (nothing was extracted to mismatch) and not concretization. The
-sound-set note above describes the intended `SymbolicLengthInteger` rendering; this task
-makes the implementation deliver it.
-
-**Files:** to be determined by Step 1 (candidates: `jpf-config.vm` string options,
-`TestGeneralizationListener` string-PC capture, `SpfToModelTransformer`
-`SymbolicLengthInteger` handling); `verification/golden/string-sound-set.tsv`.
-
-- [ ] **Step 1: Root-cause.** Run the `string-sound-set` fixture
-  (`scripts/run-verification-corpus.sh --only string-sound-set`) and trace the length
-  clause from SPF's string path condition through listener capture and
-  `SpfToModelTransformer` to the persisted spec. Identify the exact seam where the clause
-  disappears (in-process listener harness run on a `length()`-branching target is the
-  cheapest probe).
-- [ ] **Step 2: Write the failing listener test** pinning the mechanism found in Step 1: a
-  MUT branching on `s.length() > 3` captures a model input containing the length clause
-  over the string parameter.
-- [ ] **Step 3: Fix at the seam.** No silent drops: if the clause shape is unsupported,
-  refuse typed; the expected outcome is capture, not refusal.
-- [ ] **Step 4: Flip the golden.** The `string-sound-set` golden flips from refused to the
-  observed post-fix outcome in the same commit. One `scripts/verify-pipeline.sh` — other
-  goldens byte-identical.
-- [ ] **Step 5: Commit.** `fix: capture string length clauses end to end` (or submodule +
-  parent pair if the seam is in jpf-symbc).
 
 ### Task 7: Corpus verification (empirical, no new code)
 

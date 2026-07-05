@@ -437,14 +437,13 @@ family from the 2026-07-03/04 sessions; two findings from recording its goldens:
   symbolic attr on the stack slot (SYMBOLIC, licensed, sound — pinned), while the refusal arm
   the license was designed for requires the boxed shape (`Boolean.valueOf`), matching the
   octotron evidence. The license spec's justification holds; the fixture sketch was corrected.
-- String `length()` predicate extraction records NO clauses at all: the fixture's
-  `s.length() > 3` MUT yields `total_constraint_count = NULL`, `used_constraint_count = NULL`,
-  `concretization_events = 0` → `ORACLE_NOT_WIDENABLE` refusal. Not a license naming mismatch
-  (nothing was extracted to mismatch) and not concretization; spf-eval says SPF specifies
-  length constraints, so the loss is somewhere in Teralizer's config/ingestion for
-  string-length clauses. Completeness gap, not unsoundness; pinned by the
-  `string-sound-set` golden, which will flip loudly when fixed. Investigation owner:
-  the string-support plan's sound-set lane.
+- String `length()` predicate extraction is faithful: SPF models `length()` as a
+  `SymbolicLengthInteger` carrying the parent string expression, and ingestion keeps it
+  tied to its receiver as an output-renderable invocation instead of flattening it to a
+  free integer (which had detached the clause and refused sound length predicates as
+  `ORACLE_NOT_WIDENABLE`). Other string-derived integer subclasses (the `indexOf` family)
+  refuse as typed `UNSUPPORTED_TERM` at extraction. Pinned by the `string-sound-set`
+  golden: the length row widens FULL 100/100 (fix `8303a4fd`).
 
 ## Relationship to existing docs
 

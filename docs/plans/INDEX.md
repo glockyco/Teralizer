@@ -11,7 +11,7 @@
 - **MUT-id Targeting & Mutation-Data Coverage** [audit] `2026-06-28-mut-id-targeting-and-coverage` ← 2026-06-26-teralizer-overview
 - **Pipeline Architecture Review** [audit] `2026-06-28-pipeline-architecture-review` ← 2026-06-26-teralizer-overview
 - **JARVIS Comparison (RQ0)** [spec] `2026-06-30-jarvis-comparison` ← 2026-06-26-teralizer-overview
-- **Partial Sound String Support** [plan] `2026-06-30-partial-sound-string-support` (38/47) ← 2026-06-26-teralizer-overview
+- **Partial Sound String Support** [plan] `2026-06-30-partial-sound-string-support` (38/42) ← 2026-06-26-teralizer-overview
 - **Rerun Observability Priorities** [audit] `2026-07-01-rerun-observability-priorities` ← 2026-06-26-teralizer-overview
 - **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
