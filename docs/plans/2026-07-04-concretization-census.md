@@ -1,7 +1,7 @@
 ---
 title: Concretization Census — Which SPF Gaps Are Worth Closing
 type: spec
-status: draft
+status: active
 created: 2026-07-04
 parent: 2026-06-26-teralizer-overview
 ---

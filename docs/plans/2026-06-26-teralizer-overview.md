@@ -34,9 +34,12 @@ below them), then the fixes those gates rank, then measurement infrastructure, t
 expansion, then maintainability. Evidence-gated items never start before their gate.
 
 **P1 — decision gates (produce the evidence that ranks P2)**
-1. **`2026-07-04-concretization-census`** *(spec, draft — awaiting review)* — identity
+1. **`2026-07-04-concretization-census`** *(spec, active — approved, NEXT)* — identity
    telemetry + ranked census of concretizing methods. Produces the ROI ranking that gates
-   every SPF-gap fix below (boxed-capture, native peers, string-op growth).
+   every SPF-gap fix below (ISINTEGER admission, native peers, string-op growth). Its
+   bounded-bucket acceptance item is pre-satisfied by the valueOf fix. The census run
+   doubles as the pending sentinel reading for the valueOf and conformance waves, and it
+   re-pins the sentinel header censuses from observation.
 2. **R2 decision data** — the `actual_shape` + `receiver_provenance` telemetry
    (`2026-07-02-input-topology-spike` §Telemetry) on the next rerun sizes the
    zero-arg-inspector sub-family R2 could soundly take, and measures R1's realized share

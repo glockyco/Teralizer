@@ -17,6 +17,7 @@
 - **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
 - **Architecture & Implementation Review — Post-R1** [audit] `2026-07-04-architecture-implementation-review` ← 2026-06-26-teralizer-overview
+- **Concretization Census — Which SPF Gaps Are Worth Closing** [spec] `2026-07-04-concretization-census` ← 2026-06-26-teralizer-overview
 - **R1 Viability Spike — Expression-Slice Shapes Through SPF** [audit] `2026-07-04-r1-viability-spike` ← 2026-07-02-recipe-seam-review
 - **Collect-Mode Conformance Survey of the Vendored SPF** [audit] `2026-07-05-collect-mode-conformance` ← 2026-06-26-teralizer-overview
 
@@ -28,6 +29,5 @@
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
-- **Concretization Census — Which SPF Gaps Are Worth Closing** [spec] `2026-07-04-concretization-census` ← 2026-06-26-teralizer-overview
 
 _46 archived — see `docs/plans/archive/`._
