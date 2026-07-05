@@ -31,7 +31,7 @@ editing the golden to match broken output.
 | Analysis code (`analysis/`) | `validate.py --changed` |
 | Java unit-level | `./gradlew test --tests '<Class>'` while iterating, one full `./gradlew build` before commit |
 | Pipeline behavior (codegen, SPF, filters, licenses, build files) | `scripts/verify-pipeline.sh` (~5 min, 13 fixtures, deterministic) |
-| SPF submodule (`jpf-symbc/**`) | additionally `cd jpf-symbc && ./gradlew :jpf-symbc:test` (the root build does NOT run this suite; a red suite survives "build green" without it) |
+| SPF submodule (`jpf-symbc/**`) | additionally `cd jpf-symbc && ./gradlew :jpf-symbc:test` (the root build does NOT run this suite, so a red suite survives "build green" without it) |
 | One fixture while iterating | `scripts/run-verification-corpus.sh --only <fixture-name>` (~45 s) |
 | Real-world seams (surefire versions, reports, big suites) | sentinel subset (~10 min, five stable projects, expected census in the config headers) |
 | Full spike / corpus | evaluation events only, never a debugging loop |
@@ -41,6 +41,12 @@ measured system — a stage that times out is a result, not noise. Never delete-
 project or fixture to get a cleaner number; that biases every census. Deliberate repeat runs
 that compare ALL outcomes (the determinism double-run of `verify-pipeline.sh`) are fine;
 picking the better of two runs is not.
+
+Sentinel and hotspot runs are measurement events, not per-change gates. A lever's
+refusal-to-licensed conversion is verified by its fixture golden and unit tests at commit
+time. The corpus-scale measurement BATCHES into the next naturally scheduled run (wave-end
+JARVIS refresh, spike, or rerun) instead of triggering its own. Do not start a sentinel,
+hotspot, or JARVIS run for a single change without explicit operator sign-off.
 
 New pipeline defect ⇒ add a fixture reproducing it under `verification/fixtures/` with the fix
 (golden pins it). kouchat, gedcom4j, xenqtt, uaicriteria, and sparkey are excluded from
