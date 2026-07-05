@@ -19,6 +19,8 @@ import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
+import org.jooq.generated.tables.records.GenerationClauseRecord;
+import org.jooq.generated.tables.records.GenerationParameterRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
@@ -28,12 +30,16 @@ import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
+import teralizer.domain.ShapeFolder;
+import teralizer.domain.TypeDomain;
 import teralizer.domain.Value;
 import teralizer.generalization.WideningLicense;
 import teralizer.jpf.OutputSpecClassifier;
+import teralizer.jqwik.planning.ConstraintClause;
 import teralizer.jqwik.planning.ConstraintClauses;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
+import teralizer.jqwik.planning.ParameterGenerationPlan;
 import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -44,6 +50,7 @@ import teralizer.spoon.generalization.*;
 import teralizer.transformer.JsonToModelTransformer;
 import teralizer.transformer.ModelToJavaTransformer;
 import teralizer.transformer.SpecificationGson;
+import teralizer.transformer.VariableNameCollector;
 import teralizer.util.Configuration;
 import teralizer.util.TypeCapability;
 
@@ -99,7 +106,7 @@ public class TestGeneralizationTask extends AbstractTask {
         VelocityEngine velocityEngine = context.get(TaskContext.VELOCITY_ENGINE);
 
         this.generalizationRecord = this.createGeneralizationRecord(create);
-        this.generalizeTest(gson, spoonLauncher, velocityEngine);
+        this.generalizeTest(create, gson, spoonLauncher, velocityEngine);
     }
 
     private GeneralizationRecord createGeneralizationRecord(DSLContext create) {
@@ -137,7 +144,7 @@ public class TestGeneralizationTask extends AbstractTask {
         return record;
     }
 
-    private void generalizeTest(Gson gson, Launcher spoonLauncher, VelocityEngine velocityEngine) throws IOException {
+    private void generalizeTest(DSLContext create, Gson gson, Launcher spoonLauncher, VelocityEngine velocityEngine) throws IOException {
         Factory factory = spoonLauncher.getFactory();
         GeneralizationRecipe originalRecipe = GeneralizationRecipe
             .fromJson(gson, this.assertionRecord.getGeneralizationRecipe());
@@ -155,7 +162,7 @@ public class TestGeneralizationTask extends AbstractTask {
         List<Value> inputValues = specificationGson.fromJson(inputValuesString, inputValuesType);
         Map<String, Value> testedMethodArguments = GeneralizedTestBuilder.mapTestedMethodArguments(testedMethodParameters, inputValues);
 
-        GeneralizedTestBuilder.Plan plan = this.createBuilderPlan(velocityEngine, clonedRecipe, testedMethodParameters, testedMethodArguments, specificationGson);
+        GeneralizedTestBuilder.Plan plan = this.createBuilderPlan(create, velocityEngine, clonedRecipe, testedMethodParameters, testedMethodArguments, specificationGson);
         if (plan == null) {
             return;
         }
@@ -169,6 +176,7 @@ public class TestGeneralizationTask extends AbstractTask {
     }
 
     private GeneralizedTestBuilder.Plan createBuilderPlan(
+        DSLContext create,
         VelocityEngine velocityEngine,
         GeneralizationRecipe clonedRecipe,
         List<MethodParameter> testedMethodParameters,
@@ -247,6 +255,7 @@ public class TestGeneralizationTask extends AbstractTask {
                 this.generalizationRecord.setTotalConstraintCount(inputGenerationPlan.getTotalConstraintCount());
                 this.generalizationRecord.setUsedConstraintCount(inputGenerationPlan.getUsedConstraintCount());
                 this.generalizationRecord.store();
+                this.writeGenerationCoverageTelemetry(create, inputGenerationPlan, allParameters);
             }
             firstValueArbitraryClass = FirstValueArbitraryFactory.createFirstValueArbitraryClass(velocityEngine);
         }
@@ -263,6 +272,81 @@ public class TestGeneralizationTask extends AbstractTask {
             this.generalizationRecord.getMethodName()
         );
         return new GeneralizedTestBuilder.Plan(algorithm, allParameters, testedMethodArguments, inputJava, inputGenerationPlan, output, outputJava, Configuration.getGeneralizationJqwikTries(this.getVariant()), firstValueArbitraryClass, jqwikValueRecorderClass);
+    }
+
+    private void writeGenerationCoverageTelemetry(DSLContext create, InputGenerationPlan inputGenerationPlan, List<MethodParameter> parameters) {
+        Map<String, String> parameterTypes = parameters.stream()
+            .collect(Collectors.toMap(MethodParameter::getName, MethodParameter::getType, (left, right) -> left, LinkedHashMap::new));
+        Set<Integer> consumedClauseIds = inputGenerationPlan.getConsumedClauseIds();
+        ShapeFolder shapeFolder = new ShapeFolder();
+
+        for (ConstraintClause clause : inputGenerationPlan.getClauses()) {
+            String parameterName = this.primaryParameterName(clause, parameterTypes.keySet());
+            GenerationClauseRecord record = create.newRecord(Tables.GENERATION_CLAUSE);
+            record.setGeneralizationId(this.getGeneralizationId());
+            record.setParameterName(parameterName);
+            record.setTypeDomain(TypeDomain.from(parameterTypes.get(parameterName)).name());
+            record.setShape(clause.getExpression().fold(shapeFolder));
+            record.setConsumed(consumedClauseIds.contains(clause.getId()));
+            record.store();
+        }
+
+        for (ParameterGenerationPlan parameterPlan : inputGenerationPlan.getParameterPlans()) {
+            Set<Integer> parameterClauseIds = this.referencedClauseIds(inputGenerationPlan.getClauses(), parameterPlan.getParameter().getName());
+            boolean symbolicSpecPresent = !parameterClauseIds.isEmpty();
+            boolean encoded = !parameterPlan.getConsumedClauseIds().isEmpty();
+            boolean residual = parameterClauseIds.stream().anyMatch(inputGenerationPlan.getResidualClauseIds()::contains);
+
+            GenerationParameterRecord record = create.newRecord(Tables.GENERATION_PARAMETER);
+            record.setGeneralizationId(this.getGeneralizationId());
+            record.setName(parameterPlan.getParameter().getName());
+            record.setDeclaredType(parameterPlan.getParameter().getType());
+            record.setTypeDomain(parameterPlan.getDomain().name());
+            record.setSymbolicSpecPresent(symbolicSpecPresent);
+            record.setRepresentation(this.parameterRepresentation(symbolicSpecPresent, encoded, residual));
+            record.store();
+        }
+    }
+
+    private String primaryParameterName(ConstraintClause clause, Set<String> parameterNames) {
+        Set<String> referenced = this.referencedVariableNames(clause);
+        for (String parameterName : parameterNames) {
+            if (referenced.contains(parameterName)) {
+                return parameterName;
+            }
+        }
+        return referenced.stream().findFirst().orElse("");
+    }
+
+    private Set<Integer> referencedClauseIds(List<ConstraintClause> clauses, String parameterName) {
+        Set<Integer> clauseIds = new LinkedHashSet<>();
+        for (ConstraintClause clause : clauses) {
+            if (this.referencedVariableNames(clause).contains(parameterName)) {
+                clauseIds.add(clause.getId());
+            }
+        }
+        return clauseIds;
+    }
+
+    private Set<String> referencedVariableNames(ConstraintClause clause) {
+        Set<String> names = new LinkedHashSet<>();
+        if (clause.getExpression() != null) {
+            clause.getExpression().accept(new VariableNameCollector(names));
+        }
+        return names;
+    }
+
+    private String parameterRepresentation(boolean symbolicSpecPresent, boolean encoded, boolean residual) {
+        if (!symbolicSpecPresent) {
+            return "none";
+        }
+        if (encoded) {
+            return "encoded";
+        }
+        if (residual) {
+            return "residual";
+        }
+        return "none";
     }
 
     private void writeGeneralizedClass(Launcher spoonLauncher, CtClass<?> generalizedClassDeclaration) throws IOException {

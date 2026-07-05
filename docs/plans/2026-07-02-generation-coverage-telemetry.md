@@ -257,24 +257,24 @@ CREATE INDEX idx_generation_parameter_type_domain ON generation_parameter (type_
   `setTotalConstraintCount`/`setUsedConstraintCount` block around lines 246–250; re-locate
   by symbol, not line number).
 
-- [ ] **Step 1: Read the current `IMPROVED` branch** to confirm the insertion point — after
+- [x] **Step 1: Read the current `IMPROVED` branch** to confirm the insertion point — after
   `this.generalizationRecord.store()` in the constraint-count block.
 
-- [ ] **Step 2: Write the telemetry population code.** After the constraint counts are stored, iterate `inputGenerationPlan`:
+- [x] **Step 2: Write the telemetry population code.** After the constraint counts are stored, iterate `inputGenerationPlan`:
   - For each `ConstraintClause` in the plan's clause list, compute the shape via `ShapeFolder`, determine `consumed` from `inputGenerationPlan.getConsumedClauseIds()`, and determine the primary `parameter_name` + `type_domain` from the variables referenced in the clause expression (via `VariableNameCollector` — reuse the existing pattern from `ConstraintClauses.from`).
   - For each `ParameterGenerationPlan` in the plan, record `symbolic_spec_present` (true if the plan's `recipe` is non-null and non-default) and `representation` (`encoded` if consumed clauses exist, `residual` if the parameter has residual clauses, `none` if no symbolic spec was present).
 
   Task 2 already regenerated the jOOQ sources, so use the generated `GenerationClauseRecord` /
   `GenerationParameterRecord` directly — no raw-SQL fallback.
 
-- [ ] **Step 3: Run the pipeline** on a small project and verify rows appear. Every run names
+- [x] **Step 3: Run the pipeline** on a small project and verify rows appear. Every run names
   its DB explicitly (run-target redesign):
   `./gradlew run -Dteralizer.config=project-configs/jarvis-scoreboard/commons-lang-3.5.conf -Dteralizer.database.name=postgres_gencov_verify`
   (scratch DB, create before / drop after), then query:
   `docker exec -i postgres-teralizer psql -U postgres -d postgres_gencov_verify -c "SELECT shape, consumed, count(*) FROM generation_clause gc JOIN generalization g ON gc.generalization_id = g.id WHERE g.variant = 'IMPROVED_100_TRIES' GROUP BY shape, consumed ORDER BY count(*) DESC LIMIT 20"`
   Expected: rows with shapes like `EQ(Variable:INTEGER,Constant:INTEGER)` and consumed=true/false.
 
-- [ ] **Step 4: Commit.** `feat(task): populate generation-coverage telemetry at generation time`
+- [x] **Step 4: Commit.** `feat(task): populate generation-coverage telemetry at generation time`
 
 ---
 
