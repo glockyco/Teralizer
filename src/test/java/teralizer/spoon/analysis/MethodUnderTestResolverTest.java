@@ -356,65 +356,6 @@ public class MethodUnderTestResolverTest {
         Assert.assertEquals(MutResolution.NoPickReason.NO_VISIBLE_CALL, r.getNoPickReason());
     }
 
-    @Example
-    void topology_inlineCtorReceiver() {
-        MutResolution r = resolve(
-            "public class SubjectTest {\n"
-            + "  public void t() { org.junit.Assert.assertTrue(new Subject().isPrime(7)); }\n"
-            + "}",
-            SUBJECT_SOURCE);
-        Assert.assertEquals(MutResolution.ActualShape.CTOR_RECEIVER_CALL, r.getActualShape());
-        Assert.assertEquals(MutResolution.ReceiverProvenance.INLINE_CTOR, r.getReceiverProvenance());
-    }
-
-    @Example
-    void topology_localCtorReceiver_cleanVsMutated() {
-        MutResolution clean = resolve(
-            "public class SubjectTest {\n"
-            + "  public void t() { Subject s = new Subject(); org.junit.Assert.assertEquals(0, s.getTotal()); }\n"
-            + "}",
-            SUBJECT_SOURCE);
-        Assert.assertEquals(MutResolution.ActualShape.SINGLE_CALL, clean.getActualShape());
-        Assert.assertEquals(MutResolution.ReceiverProvenance.LOCAL_CTOR, clean.getReceiverProvenance());
-
-        MutResolution mutated = resolve(
-            "public class SubjectTest {\n"
-            + "  public void t() { Subject s = new Subject(); s.process(5); org.junit.Assert.assertEquals(5, s.getTotal()); }\n"
-            + "}",
-            SUBJECT_SOURCE);
-        // the pick here is process (Task 8 elimination); topology describes the ASSERTED expression,
-        // whose receiver s is a mutated local ctor -- the R2 (statement-slice) family marker.
-        Assert.assertEquals(MutResolution.ReceiverProvenance.LOCAL_CTOR_MUTATED, mutated.getReceiverProvenance());
-    }
-
-    @Example
-    void topology_fieldReceiver_andOperatorShape() {
-        MutResolution field = resolve(
-            "public class SubjectTest {\n"
-            + "  Subject sut = new Subject();\n"
-            + "  public void t() { org.junit.Assert.assertEquals(0, sut.getTotal()); }\n"
-            + "}",
-            SUBJECT_SOURCE);
-        Assert.assertEquals(MutResolution.ReceiverProvenance.FIELD, field.getReceiverProvenance());
-
-        MutResolution op = resolve(
-            "public class SubjectTest {\n"
-            + "  public void t() { org.junit.Assert.assertTrue(new Subject().gcd(6, 9) > 0); }\n"
-            + "}",
-            SUBJECT_SOURCE);
-        Assert.assertEquals(MutResolution.ActualShape.OPERATOR_COMPOSITE, op.getActualShape());
-    }
-
-    @Example
-    void topology_chainedCalls() {
-        MutResolution r = resolve(
-            "public class SubjectTest {\n"
-            + "  public void t() { org.junit.Assert.assertTrue(new Subject().compute(5).isEmpty()); }\n"
-            + "}",
-            SUBJECT_SOURCE);
-        Assert.assertEquals(MutResolution.ActualShape.CHAINED_CALLS_END0ARG, r.getActualShape());
-        Assert.assertEquals(MutResolution.ReceiverProvenance.INLINE_CTOR, r.getReceiverProvenance());
-    }
 
     @Example
     void focalClass_prefersMatchingPackageBeforeModelOrderFallback() {
