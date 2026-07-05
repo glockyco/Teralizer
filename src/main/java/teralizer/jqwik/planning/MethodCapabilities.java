@@ -6,6 +6,7 @@ import java.util.Map;
 import teralizer.domain.TypeDomain;
 
 public final class MethodCapabilities {
+    public static final String PARSE_PREDICATES_QUALIFIER = "ParsePredicates";
     private static final Map<String, MethodCapability> CAPABILITIES = capabilities();
 
     private MethodCapabilities() {}
@@ -44,6 +45,10 @@ public final class MethodCapabilities {
         instance(capabilities, "length", TypeDomain.INTEGER, false, true, MethodCapability.InputConstraintKind.NONE);
         stringNumeric(capabilities, "indexOf");
         stringNumeric(capabilities, "lastIndexOf");
+        parsePredicate(capabilities, "isInteger", MethodCapability.InputConstraintKind.PARSE_INTEGER);
+        parsePredicate(capabilities, "isLong", MethodCapability.InputConstraintKind.PARSE_LONG);
+        parsePredicate(capabilities, "isFloat", MethodCapability.InputConstraintKind.PARSE_FLOAT);
+        parsePredicate(capabilities, "isDouble", MethodCapability.InputConstraintKind.PARSE_DOUBLE);
 
         math(capabilities, "sqrt");
         math(capabilities, "pow");
@@ -76,6 +81,21 @@ public final class MethodCapabilities {
         instance(capabilities, method, TypeDomain.INTEGER, false, false, MethodCapability.InputConstraintKind.NONE);
     }
 
+
+    private static void parsePredicate(
+        Map<String, MethodCapability> capabilities,
+        String method,
+        MethodCapability.InputConstraintKind inputConstraintKind
+    ) {
+        staticMethod(
+            capabilities,
+            method,
+            PARSE_PREDICATES_QUALIFIER,
+            TypeDomain.BOOLEAN,
+            true,
+            true,
+            inputConstraintKind);
+    }
     private static void instance(
         Map<String, MethodCapability> capabilities,
         String method,
@@ -103,7 +123,27 @@ public final class MethodCapabilities {
         String staticQualifier,
         TypeDomain returnDomain,
         boolean inputGeneratable,
-        boolean outputRenderable) {
+        boolean outputRenderable
+    ) {
+        staticMethod(
+            capabilities,
+            method,
+            staticQualifier,
+            returnDomain,
+            inputGeneratable,
+            outputRenderable,
+            MethodCapability.InputConstraintKind.NONE);
+    }
+
+    private static void staticMethod(
+        Map<String, MethodCapability> capabilities,
+        String method,
+        String staticQualifier,
+        TypeDomain returnDomain,
+        boolean inputGeneratable,
+        boolean outputRenderable,
+        MethodCapability.InputConstraintKind inputConstraintKind
+    ) {
         capabilities.put(method, new MethodCapability(
             method,
             staticQualifier,
@@ -111,6 +151,6 @@ public final class MethodCapabilities {
             returnDomain,
             inputGeneratable,
             outputRenderable,
-            MethodCapability.InputConstraintKind.NONE));
+            inputConstraintKind));
     }
 }

@@ -221,6 +221,22 @@ public class SpfToModelTransformer {
                     return instanceInvocation(left == null ? right : left, "isEmpty", Collections.emptyList());
                 case NOTEMPTY:
                     return new Not(instanceInvocation(left == null ? right : left, "isEmpty", Collections.emptyList()));
+                case ISINTEGER:
+                    return parsePredicateInvocation(left, right, "isInteger");
+                case NOTINTEGER:
+                    return new Not(parsePredicateInvocation(left, right, "isInteger"));
+                case ISLONG:
+                    return parsePredicateInvocation(left, right, "isLong");
+                case NOTLONG:
+                    return new Not(parsePredicateInvocation(left, right, "isLong"));
+                case ISFLOAT:
+                    return parsePredicateInvocation(left, right, "isFloat");
+                case NOTFLOAT:
+                    return new Not(parsePredicateInvocation(left, right, "isFloat"));
+                case ISDOUBLE:
+                    return parsePredicateInvocation(left, right, "isDouble");
+                case NOTDOUBLE:
+                    return new Not(parsePredicateInvocation(left, right, "isDouble"));
                 default:
                     throw new UnsupportedSpfTermException(
                         "String comparator '" + comparator.name().toLowerCase(Locale.ROOT)
@@ -297,6 +313,14 @@ public class SpfToModelTransformer {
                     "String method '" + method + "' is not admitted by MethodCapabilities.");
             }
             return new Invocation(receiver, null, method, args);
+        }
+
+        private static Invocation parsePredicateInvocation(Expression left, Expression right, String method) {
+            Expression operand = left == null ? right : left;
+            return staticInvocation(
+                MethodCapabilities.PARSE_PREDICATES_QUALIFIER,
+                method,
+                Collections.singletonList(operand));
         }
 
         private static Invocation staticInvocation(String qualifier, String method, List<Expression> args) {

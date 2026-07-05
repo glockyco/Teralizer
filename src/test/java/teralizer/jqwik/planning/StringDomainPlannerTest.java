@@ -29,6 +29,16 @@ public class StringDomainPlannerTest {
         return new Invocation(new Variable("s", TypeDomain.STRING), null, method, Collections.singletonList(new Constant(literal, TypeDomain.STRING)));
     }
 
+    private static Invocation parseCall(String method) {
+        return new Invocation(null, "ParsePredicates", method, Collections.singletonList(new Variable("s", TypeDomain.STRING)));
+    }
+
+    private static ParameterGenerationPlan planWithClause(Model expression, String javaExpression) {
+        List<MethodParameter> parameters = Collections.singletonList(S);
+        PlanningContext context = new PlanningContext(parameters, Collections.singletonList(new ConstraintClause(0, expression, javaExpression)));
+        return new StringDomainPlanner().plan(S, context);
+    }
+
     @Example
     void equalityCollapsesToArbitrariesOf() {
         ParameterGenerationPlan plan = plan(call("equals", "foo"));
@@ -57,6 +67,36 @@ public class StringDomainPlannerTest {
         String emit = plan.getRecipe().emit();
         Assert.assertTrue(emit, emit.contains("_x_ + \"z\""));
         Assert.assertEquals(Collections.singleton(0), plan.getConsumedClauseIds());
+    }
+
+    @Example
+    void positiveParsePredicateClausesUseNumericStringArbitrariesAndConsumeClause() {
+        Assert.assertEquals(
+            "return net.jqwik.api.Arbitraries.integers().map(String::valueOf)",
+            planWithClause(parseCall("isInteger"), "ParsePredicates.isInteger(_p_.s)").getRecipe().emit());
+        Assert.assertEquals(
+            Collections.singleton(0),
+            planWithClause(parseCall("isInteger"), "ParsePredicates.isInteger(_p_.s)").getConsumedClauseIds());
+
+        Assert.assertEquals(
+            "return net.jqwik.api.Arbitraries.longs().map(String::valueOf)",
+            planWithClause(parseCall("isLong"), "ParsePredicates.isLong(_p_.s)").getRecipe().emit());
+        Assert.assertEquals(
+            "return net.jqwik.api.Arbitraries.floats().map(String::valueOf)",
+            planWithClause(parseCall("isFloat"), "ParsePredicates.isFloat(_p_.s)").getRecipe().emit());
+        Assert.assertEquals(
+            "return net.jqwik.api.Arbitraries.doubles().map(String::valueOf)",
+            planWithClause(parseCall("isDouble"), "ParsePredicates.isDouble(_p_.s)").getRecipe().emit());
+    }
+
+    @Example
+    void negativeParsePredicateClausesKeepDefaultAsciiAndRemainResidual() {
+        ParameterGenerationPlan plan = planWithClause(
+            new Not(parseCall("isDouble")),
+            "(!ParsePredicates.isDouble(_p_.s))");
+
+        Assert.assertEquals("return net.jqwik.api.Arbitraries.strings().ascii().ofMaxLength(16)", plan.getRecipe().emit());
+        Assert.assertTrue(plan.getConsumedClauseIds().isEmpty());
     }
 
     @Example

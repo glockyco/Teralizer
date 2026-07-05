@@ -9,7 +9,11 @@ public final class MethodCapability {
         PREFIX,
         SUFFIX,
         CONTAINS,
-        EMPTY
+        EMPTY,
+        PARSE_INTEGER,
+        PARSE_LONG,
+        PARSE_FLOAT,
+        PARSE_DOUBLE
     }
 
     public final String method;

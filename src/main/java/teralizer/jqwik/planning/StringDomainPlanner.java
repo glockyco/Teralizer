@@ -1,6 +1,7 @@
 package teralizer.jqwik.planning;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +67,9 @@ public class StringDomainPlanner implements DomainPlanner {
             // unsatisfiably, and the filter stays correct if one somehow did).
             body = "return net.jqwik.api.Arbitraries.of(" + derived.equality + ")";
             consumed.add(derived.equalityId);
+        } else if (derived.parseArbitrary != null) {
+            body = "return " + derived.parseArbitrary + ".map(String::valueOf)";
+            consumed.add(derived.parseId);
         } else {
             List<String> parts = new ArrayList<>();
             if (derived.prefix != null) {
@@ -104,56 +108,87 @@ public class StringDomainPlanner implements DomainPlanner {
         ModelToJavaTransformer transformer = new ModelToJavaTransformer();
         for (ConstraintClause clause : clauses) {
             Model expression = clause.getExpression();
-            if (expression instanceof Invocation) {
-                Invocation invocation = (Invocation) expression;
-                if (!(invocation.receiver instanceof Variable)
-                    || ((Variable) invocation.receiver).domain != TypeDomain.STRING
-                    || !((Variable) invocation.receiver).name.equals(name)) {
+            if (!(expression instanceof Invocation)) {
+                continue;
+            }
+            Invocation invocation = (Invocation) expression;
+            MethodCapability capability = MethodCapabilities.get(invocation.method);
+            if (capability == null || !capability.inputGeneratable) {
+                continue;
+            }
+            if (isParsePredicate(invocation, capability, name)) {
+                String arbitrary = parseArbitrary(capability.inputConstraintKind);
+                if (arbitrary != null) {
+                    derived.parseArbitrary = arbitrary;
+                    derived.parseId = clause.getId();
+                }
+                continue;
+            }
+            if (!(invocation.receiver instanceof Variable)
+                || ((Variable) invocation.receiver).domain != TypeDomain.STRING
+                || !((Variable) invocation.receiver).name.equals(name)) {
+                continue;
+            }
+            String literal;
+            if (capability.inputConstraintKind == MethodCapability.InputConstraintKind.EMPTY) {
+                if (!invocation.args.isEmpty()) {
                     continue;
                 }
-                MethodCapability capability = MethodCapabilities.get(invocation.method);
-                if (capability == null || !capability.inputGeneratable) {
+                literal = transformer.transform(new Constant("", TypeDomain.STRING));
+            } else {
+                if (invocation.args.size() != 1
+                    || !(invocation.args.get(0) instanceof Constant)
+                    || ((Constant) invocation.args.get(0)).domain != TypeDomain.STRING) {
                     continue;
                 }
-                String literal;
-                if (capability.inputConstraintKind == MethodCapability.InputConstraintKind.EMPTY) {
-                    if (!invocation.args.isEmpty()) {
-                        continue;
-                    }
-                    literal = transformer.transform(new Constant("", TypeDomain.STRING));
-                } else {
-                    if (invocation.args.size() != 1
-                        || !(invocation.args.get(0) instanceof Constant)
-                        || ((Constant) invocation.args.get(0)).domain != TypeDomain.STRING) {
-                        continue;
-                    }
-                    literal = transformer.transform(invocation.args.get(0));
-                }
-                switch (capability.inputConstraintKind) {
-                    case EQUALITY:
-                    case EMPTY:
-                        derived.equality = literal;
-                        derived.equalityId = clause.getId();
-                        break;
-                    case PREFIX:
-                        derived.prefix = literal;
-                        derived.prefixId = clause.getId();
-                        break;
-                    case SUFFIX:
-                        derived.suffix = literal;
-                        derived.suffixId = clause.getId();
-                        break;
-                    case CONTAINS:
-                        derived.contains = literal;
-                        derived.containsId = clause.getId();
-                        break;
-                    case NONE:
-                    default:
-                        break;
-                }
+                literal = transformer.transform(invocation.args.get(0));
+            }
+            switch (capability.inputConstraintKind) {
+                case EQUALITY:
+                case EMPTY:
+                    derived.equality = literal;
+                    derived.equalityId = clause.getId();
+                    break;
+                case PREFIX:
+                    derived.prefix = literal;
+                    derived.prefixId = clause.getId();
+                    break;
+                case SUFFIX:
+                    derived.suffix = literal;
+                    derived.suffixId = clause.getId();
+                    break;
+                case CONTAINS:
+                    derived.contains = literal;
+                    derived.containsId = clause.getId();
+                    break;
+                case NONE:
+                default:
+                    break;
             }
         }
         return derived;
+    }
+
+    private static boolean isParsePredicate(Invocation invocation, MethodCapability capability, String name) {
+        return MethodCapabilities.PARSE_PREDICATES_QUALIFIER.equals(capability.staticQualifier)
+            && invocation.receiver == null
+            && MethodCapabilities.PARSE_PREDICATES_QUALIFIER.equals(invocation.qualifier)
+            && invocation.args.equals(Collections.singletonList(new Variable(name, TypeDomain.STRING)));
+    }
+
+    private static String parseArbitrary(MethodCapability.InputConstraintKind kind) {
+        switch (kind) {
+            case PARSE_INTEGER:
+                return "net.jqwik.api.Arbitraries.integers()";
+            case PARSE_LONG:
+                return "net.jqwik.api.Arbitraries.longs()";
+            case PARSE_FLOAT:
+                return "net.jqwik.api.Arbitraries.floats()";
+            case PARSE_DOUBLE:
+                return "net.jqwik.api.Arbitraries.doubles()";
+            default:
+                return null;
+        }
     }
 
     private static final class DerivedStringConstraints {
@@ -165,5 +200,7 @@ public class StringDomainPlanner implements DomainPlanner {
         private int suffixId;
         private String contains;
         private int containsId;
+        private String parseArbitrary;
+        private int parseId;
     }
 }

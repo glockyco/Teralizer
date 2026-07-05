@@ -104,6 +104,18 @@ public class ModelToJavaTransformerInvocationTest {
     }
 
     @Example
+    void rendersParsePredicateHelpersAsStaticCalls() {
+        Invocation invocation = new Invocation(
+            null,
+            "ParsePredicates",
+            "isDouble",
+            Collections.singletonList(new Variable("s", TypeDomain.STRING)));
+
+        Assert.assertEquals("ParsePredicates.isDouble(_p_.s)", new ModelToJavaTransformer().transform(invocation));
+        Assert.assertEquals("(!ParsePredicates.isDouble(_p_.s))", new ModelToJavaTransformer().transform(new Not(invocation)));
+    }
+
+    @Example
     void rendersNotAroundInvocation() {
         Invocation invocation = new Invocation(
             new Variable("s", TypeDomain.STRING),

@@ -16,16 +16,21 @@ import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.Constant;
+import teralizer.domain.Invocation;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.Operation;
 import teralizer.domain.Operator;
 import teralizer.domain.PrimitiveValue;
+import teralizer.domain.StringValue;
 import teralizer.domain.TypeDomain;
 import teralizer.domain.Value;
 import teralizer.domain.Variable;
+import teralizer.jqwik.planning.ConstraintClause;
 import teralizer.jqwik.planning.InputGenerationPlan;
 import teralizer.jqwik.planning.InputGenerationPlanner;
+import teralizer.jqwik.planning.ParameterGenerationPlan;
+import teralizer.jqwik.planning.RawJavaRecipe;
 import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
@@ -80,6 +85,73 @@ public class GeneralizedTestBuilderTest {
         Assert.assertTrue(generalized.getNestedTypes().stream().anyMatch(type -> type.getSimpleName().equals("JqwikValueRecorder")));
     }
 
+    @Example
+    void parsePredicatePlanInstallsHelperClassAndUsesStaticFilter() {
+        Scenario scenario = scenario(PARSE_SOURCE);
+        MethodParameter parameter = new MethodParameter("java.lang.String", "s");
+        List<MethodParameter> parameters = Collections.singletonList(parameter);
+        Map<String, Value> arguments = Collections.singletonMap("s", new StringValue("42"));
+        InputGenerationPlan generationPlan = new InputGenerationPlan(
+            Collections.singletonList(new ParameterGenerationPlan(
+                parameter,
+                TypeDomain.STRING,
+                new RawJavaRecipe("return net.jqwik.api.Arbitraries.strings().ascii().ofMaxLength(16)"),
+                "(java.lang.String) (\"42\")",
+                Collections.emptySet())),
+            Collections.singletonList(new ConstraintClause(
+                0,
+                new Invocation(null, "ParsePredicates", "isInteger", Collections.singletonList(new Variable("s", TypeDomain.STRING))),
+                "ParsePredicates.isInteger(_p_.s)")),
+            Collections.emptySet());
+
+        CtClass<?> generalized = build(
+            scenario,
+            new GeneralizedTestBuilder.Plan(
+                GeneralizationAlgorithm.IMPROVED,
+                parameters,
+                arguments,
+                "ParsePredicates.isInteger(_p_.s)",
+                generationPlan,
+                CapturedOutput.ofReturnValue(new StringValue("42")),
+                new ModelToJavaTransformer(Collections.singletonMap("s", "java.lang.String")).transform(new Variable("s", TypeDomain.STRING)),
+                100,
+                FirstValueArbitraryFactory.createFirstValueArbitraryClass(velocityEngine()),
+                JqwikValueRecorderFactory.createRecorderClass(
+                    velocityEngine(), Paths.get("jqwik-data"), 7L, 101L, "IMPROVED_100_TRIES", "returnsInput")
+            )
+        );
+
+        CtClass<?> helper = nestedClass(generalized, "ParsePredicates");
+        Assert.assertNotNull("generated tests using parse predicates must include the support helper", helper);
+        assertHelperMethodDelegates(helper, "isInteger", "Integer.parseInt(s)");
+        assertHelperMethodDelegates(helper, "isLong", "Long.parseLong(s)");
+        assertHelperMethodDelegates(helper, "isFloat", "Float.parseFloat(s)");
+        assertHelperMethodDelegates(helper, "isDouble", "Double.parseDouble(s)");
+
+        CtClass<?> supplier = nestedClass(generalized, "TestParametersSupplier");
+        Assert.assertNotNull(supplier);
+        Assert.assertTrue(supplier.toString(), supplier.toString().contains("ParsePredicates.isInteger(_p_.s)"));
+    }
+
+
+    private static CtClass<?> nestedClass(CtClass<?> owner, String simpleName) {
+        return owner.getNestedTypes().stream()
+            .filter(type -> type.getSimpleName().equals(simpleName))
+            .map(type -> (CtClass<?>) type)
+            .findFirst()
+            .orElse(null);
+    }
+
+    private static void assertHelperMethodDelegates(CtClass<?> helper, String method, String parserCall) {
+        CtMethod<?> predicate = helper.getMethodsByName(method).isEmpty()
+            ? null
+            : helper.getMethodsByName(method).get(0);
+        Assert.assertNotNull(method, predicate);
+        String code = predicate.toString();
+        Assert.assertTrue(code, code.contains(parserCall));
+        Assert.assertTrue(code, code.contains("return true"));
+        Assert.assertTrue(code, code.contains("return false"));
+    }
     private static CtClass<?> build(Scenario scenario, GeneralizedTestBuilder.Plan plan) {
         GeneralizationRecipe clonedRecipe = scenario.recipe.rewriteForClone(
             "example.SubjectTest",
@@ -108,9 +180,13 @@ public class GeneralizedTestBuilderTest {
     }
 
     private static Scenario scenario() {
+        return scenario(SOURCE);
+    }
+
+    private static Scenario scenario(String source) {
         Launcher launcher = new Launcher();
         launcher.getEnvironment().setNoClasspath(true);
-        launcher.addInputResource(new VirtualFile(SOURCE, "SubjectTest.java"));
+        launcher.addInputResource(new VirtualFile(source, "SubjectTest.java"));
         launcher.buildModel();
         CtClass<?> testClass = launcher.getModel()
             .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest"))
@@ -150,6 +226,17 @@ public class GeneralizedTestBuilderTest {
         + "}\n"
         + "class Subject {\n"
         + "  int id(int x) { return x; }\n"
+        + "}\n";
+
+    private static final String PARSE_SOURCE = ""
+        + "package example;\n"
+        + "public class SubjectTest {\n"
+        + "  @org.junit.Test public void returnsInput() {\n"
+        + "    org.junit.Assert.assertEquals(\"42\", new Subject().id(\"42\"));\n"
+        + "  }\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  java.lang.String id(java.lang.String s) { return s; }\n"
         + "}\n";
 
     private static final class Scenario {

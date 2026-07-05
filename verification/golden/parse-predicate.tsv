@@ -1,0 +1,5 @@
+fixture	gen_count	gen_index	variant	is_included	exclusion_info	output_spec_class	diagnostic_kind	tries	distinct_tuples
+parse-predicate	4	1	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	100	100
+parse-predicate	4	2	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	100	100
+parse-predicate	4	3	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	100	100
+parse-predicate	4	4	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	100	100

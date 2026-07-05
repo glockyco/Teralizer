@@ -60,6 +60,21 @@ public class MethodCapabilitiesTest {
     }
 
     @Example
+    void parsePredicateHelpersAreStaticBooleanPredicatesForRenderingAndGeneration() {
+        for (String method : new String[] {"isInteger", "isLong", "isFloat", "isDouble"}) {
+            MethodCapability capability = MethodCapabilities.get(method);
+
+            Assert.assertNotNull(method, capability);
+            Assert.assertEquals(method, capability.method);
+            Assert.assertEquals(method, "ParsePredicates", capability.staticQualifier);
+            Assert.assertNull(method, capability.receiverDomain);
+            Assert.assertEquals(method, TypeDomain.BOOLEAN, capability.returnDomain);
+            Assert.assertTrue(method, capability.inputGeneratable);
+            Assert.assertTrue(method, capability.outputRenderable);
+        }
+    }
+
+    @Example
     void capabilitiesDeclareReturnDomains() {
         for (String method : new String[] {"equals", "equalsIgnoreCase", "startsWith", "endsWith", "contains", "isEmpty"}) {
             Assert.assertEquals(method, TypeDomain.BOOLEAN, MethodCapabilities.get(method).returnDomain);

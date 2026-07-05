@@ -25,22 +25,48 @@ class StringParseCaptureTest {
     private static final String TARGET = PKG + "StringParseTarget";
 
     @Example
-    void parsingSeedProducesTypedUnsupportedTermOrExtractedSpec() throws IOException {
-        ParseCaptureOutcome outcome = captureParseThenDouble();
+    void integerParseableSeedCapturesIsIntegerPredicate() throws IOException {
+        JpfListenerHarness.Capture capture = capture("integerParseableSeedWrapper", "isIntegerParseable");
 
-        if (outcome.unsupportedDetail != null) {
+        assertBooleanReturn(capture, true, "integer parseable seed returns the parseable branch");
+        assertParsePredicate(capture, "isInteger", false);
+    }
+
+    @Example
+    void integerUnparseableSeedCapturesNegatedIsIntegerPredicate() throws IOException {
+        JpfListenerHarness.Capture capture = capture("integerUnparseableSeedWrapper", "isIntegerParseable");
+
+        assertBooleanReturn(capture, false, "integer unparseable seed returns the unparseable branch");
+        assertParsePredicate(capture, "isInteger", true);
+    }
+
+    @Example
+    void doubleParseableSeedCapturesIsDoublePredicate() throws IOException {
+        JpfListenerHarness.Capture capture = capture("doubleParseableSeedWrapper", "isDoubleParseable");
+
+        assertBooleanReturn(capture, true, "double parseable seed returns the parseable branch");
+        assertParsePredicate(capture, "isDouble", false);
+    }
+
+    @Example
+    void doubleUnparseableSeedCapturesNegatedIsDoublePredicate() throws IOException {
+        JpfListenerHarness.Capture capture = capture("doubleUnparseableSeedWrapper", "isDoubleParseable");
+
+        assertBooleanReturn(capture, false, "double unparseable seed returns the unparseable branch");
+        assertParsePredicate(capture, "isDouble", true);
+    }
+
+    @Example
+    void parsedIntegerValueUseStillRaisesTypedUnsupportedTerm() throws IOException {
+        try {
+            capture("parsingSeedWrapper", "parseThenDouble");
+            Assert.fail("parsed-value dataflow should remain refused as SpecialIntegerExpression");
+        } catch (JPFListenerException expected) {
+            Assert.assertTrue(expected.getCause() instanceof UnsupportedSpfTermException);
             Assert.assertTrue(
-                "ISINTEGER should be refused as a typed unsupported term, was: " + outcome.unsupportedDetail,
-                outcome.unsupportedDetail.contains("isinteger")
-            );
-            return;
+                "parsed-value dataflow should surface the special integer expression, was: " + expected.getCause().getMessage(),
+                expected.getCause().getMessage().contains("SpecialIntegerExpression"));
         }
-
-        PrimitiveValue value = (PrimitiveValue) outcome.capture.getOutput().getReturnValue();
-        Assert.assertEquals("int", value.getJavaType());
-        Assert.assertEquals("the parsing seed returns the doubled concrete value", 84, value.getValue());
-        Assert.assertNotNull("the parse constraint must be captured if ingestion admits it",
-            outcome.capture.getInputSpecificationJson());
     }
 
     @Example
@@ -50,22 +76,45 @@ class StringParseCaptureTest {
         Assert.assertEquals("the failing seed should be caught by the target", -1, observation.returnValue);
     }
 
-    private static ParseCaptureOutcome captureParseThenDouble() throws IOException {
+    private static JpfListenerHarness.Capture capture(String wrapper, String testedMethod) throws IOException {
         Path workDir = Files.createTempDirectory("string-parse-capture");
-        try {
-            JpfListenerHarness.Capture capture = JpfListenerHarness.run(
-                workDir,
-                TARGET,
-                TARGET + ".parsingSeedWrapper(sym)",
-                TARGET + ".parsingSeedWrapper",
-                TARGET + ".parseThenDouble"
-            );
-            return ParseCaptureOutcome.extracted(capture);
-        } catch (JPFListenerException e) {
-            if (e.getCause() instanceof UnsupportedSpfTermException) {
-                return ParseCaptureOutcome.unsupported(e.getCause().getMessage());
-            }
-            throw e;
+        return JpfListenerHarness.run(
+            workDir,
+            TARGET,
+            TARGET + "." + wrapper + "(sym)",
+            TARGET + "." + wrapper,
+            TARGET + "." + testedMethod
+        );
+    }
+
+    private static void assertBooleanReturn(
+        JpfListenerHarness.Capture capture,
+        boolean expected,
+        String message
+    ) {
+        PrimitiveValue value = (PrimitiveValue) capture.getOutput().getReturnValue();
+        Assert.assertEquals("boolean", value.getJavaType());
+        Assert.assertEquals(message, Boolean.valueOf(expected), value.getValue());
+    }
+
+    private static void assertParsePredicate(
+        JpfListenerHarness.Capture capture,
+        String method,
+        boolean negated
+    ) {
+        String spec = capture.getInputSpecificationJson();
+        Assert.assertNotNull("the parseability constraint must be captured", spec);
+        Assert.assertTrue(
+            "parseability must capture the static helper predicate, was: " + spec,
+            spec.contains("\"_type\": \"Invocation\"")
+                && spec.contains("\"qualifier\": \"ParsePredicates\"")
+                && spec.contains("\"method\": \"" + method + "\""));
+        if (negated) {
+            Assert.assertTrue("unparseable branch must wrap the predicate in Not, was: " + spec,
+                spec.contains("\"_type\": \"Not\""));
+        } else {
+            Assert.assertFalse("parseable branch must not be negated, was: " + spec,
+                spec.contains("\"_type\": \"Not\""));
         }
     }
 
@@ -131,23 +180,6 @@ class StringParseCaptureTest {
         }
     }
 
-    private static final class ParseCaptureOutcome {
-        private final JpfListenerHarness.Capture capture;
-        private final String unsupportedDetail;
-
-        private ParseCaptureOutcome(JpfListenerHarness.Capture capture, String unsupportedDetail) {
-            this.capture = capture;
-            this.unsupportedDetail = unsupportedDetail;
-        }
-
-        private static ParseCaptureOutcome extracted(JpfListenerHarness.Capture capture) {
-            return new ParseCaptureOutcome(capture, null);
-        }
-
-        private static ParseCaptureOutcome unsupported(String detail) {
-            return new ParseCaptureOutcome(null, detail);
-        }
-    }
 
     private static final class ReturnObservation {
         private final int returnValue;

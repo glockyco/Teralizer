@@ -36,6 +36,7 @@ import teralizer.spoon.analysis.TestAnalysis;
 import teralizer.spoon.generalization.BaselineTestParametersSupplierFactory;
 import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
 import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
+import teralizer.spoon.generalization.ParsePredicatesFactory;
 import teralizer.spoon.generalization.TestParametersFactory;
 import teralizer.transformer.VariableDescriptorCollector;
 import teralizer.util.Configuration;
@@ -91,6 +92,9 @@ public final class GeneralizedTestBuilder {
         generalizedClassDeclaration.addNestedType(testParametersClassDeclaration);
         generalizedClassDeclaration.addNestedType(testParametersSupplierClassDeclaration);
         generalizedClassDeclaration.addNestedType(plan.getJqwikValueRecorderClass());
+        if (usesParsePredicates(plan)) {
+            generalizedClassDeclaration.addNestedType(ParsePredicatesFactory.createParsePredicatesClass());
+        }
         addRecorderResetMethod(factory, generalizedClassDeclaration);
 
         List<CtAnnotation<?>> testMethodAnnotations = new ArrayList<>(testMethod.getAnnotations());
@@ -297,6 +301,17 @@ public final class GeneralizedTestBuilder {
         parameter.setSimpleName("_p_");
         parameter.addAnnotation(forAllAnnotation);
         testMethod.addParameter(parameter);
+    }
+
+    private static boolean usesParsePredicates(Plan plan) {
+        return containsParsePredicates(plan.getInputJava())
+            || containsParsePredicates(plan.getOutputJava())
+            || (plan.getInputGenerationPlan() != null
+                && containsParsePredicates(plan.getInputGenerationPlan().getFullPredicate()));
+    }
+
+    private static boolean containsParsePredicates(String javaExpression) {
+        return javaExpression != null && javaExpression.contains("ParsePredicates.");
     }
 
     public static final class Names {
