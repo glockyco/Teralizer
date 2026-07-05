@@ -66,7 +66,11 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
 ## Database
 Dockerized Postgres, container `postgres-teralizer`, `localhost:5432`. Protected DBs (never drop,
 never use for experiments): `postgres_dev` (eqbench + commons-utils), `postgres_test`
-(RepoReapers), `postgres_timeout_retry`, `postgres_reporeapers_rerun` (pre-fusion baseline).
+(RepoReapers), `postgres_timeout_retry`, `postgres_reporeapers_rerun` (pre-fusion baseline),
+`postgres_fusion_spike`. A run names its target database in its profile (`teralizer.database.name`),
+or on the command line with `-Dteralizer.database.name`. Targeting a protected corpus requires
+`teralizer.database.allow-protected = true`. The canonical protected list lives in
+`src/main/resources/db/protected-databases.txt`.
 Experiments use scratch DBs (`postgres_verification`, `postgres_<purpose>_verify`) created and
 dropped by their runner scripts. Direct query:
 `docker exec -i postgres-teralizer psql -U postgres -d <db> -c "..."`.

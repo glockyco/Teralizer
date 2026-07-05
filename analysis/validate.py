@@ -57,9 +57,9 @@ def test_environment():
         print(f"  ✗ Environment file not found at {env_path}")
         return False
 
-    load_dotenv(env_path, override=True)
+    load_dotenv(env_path)
 
-    required_vars = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"]
+    required_vars = ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD"]
     missing_vars = []
 
     for var in required_vars:
