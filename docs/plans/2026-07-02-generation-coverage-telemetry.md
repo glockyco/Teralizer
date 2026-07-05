@@ -238,29 +238,40 @@ CREATE INDEX idx_generation_parameter_generalization_id ON generation_parameter 
 CREATE INDEX idx_generation_parameter_type_domain ON generation_parameter (type_domain);
 ```
 
-- [ ] **Step 2: Recreate the dev DB and verify the tables exist.**
-  Run: `./gradlew stopPostgres && ./gradlew startPostgres && docker exec -i postgres-teralizer psql -U postgres -d postgres_dev -c "\dt generation_*"`
-  Expected: `generation_clause` and `generation_parameter` listed.
+- [ ] **Step 2: Regenerate jOOQ from the DDL and verify.** `postgres_dev` is PROTECTED — never
+  recreate it for schema work. Run `scripts/regenerate-jooq.sh` (creates a throwaway
+  `teralizer_codegen` DB from `create-tables.sql`, regenerates the jOOQ sources, drops the DB;
+  read the script header first). Verify `GenerationClause`/`GenerationParameter` records exist
+  in the regenerated sources and the build compiles.
 
 - [ ] **Step 3: Commit.** `feat(db): add generation_clause and generation_parameter tables`
+  (DDL + regenerated jOOQ sources in one commit).
 
 ---
 
 ## Task 3: Pipeline population — write telemetry rows in `TestGeneralizationTask`
 
 **Files:**
-- Modify: `src/main/java/teralizer/processing/task/TestGeneralizationTask.java:348-354` (the `IMPROVED` branch where `InputGenerationPlan` is available)
+- Modify: `src/main/java/teralizer/processing/task/TestGeneralizationTask.java` — the
+  `IMPROVED` branch where `InputGenerationPlan` is available (currently the
+  `setTotalConstraintCount`/`setUsedConstraintCount` block around lines 246–250; re-locate
+  by symbol, not line number).
 
-- [ ] **Step 1: Read the current `IMPROVED` branch** (lines 348–354) to confirm the insertion point — after `this.generalizationRecord.store()`.
+- [ ] **Step 1: Read the current `IMPROVED` branch** to confirm the insertion point — after
+  `this.generalizationRecord.store()` in the constraint-count block.
 
 - [ ] **Step 2: Write the telemetry population code.** After the constraint counts are stored, iterate `inputGenerationPlan`:
   - For each `ConstraintClause` in the plan's clause list, compute the shape via `ShapeFolder`, determine `consumed` from `inputGenerationPlan.getConsumedClauseIds()`, and determine the primary `parameter_name` + `type_domain` from the variables referenced in the clause expression (via `VariableNameCollector` — reuse the existing pattern from `ConstraintClauses.from`).
   - For each `ParameterGenerationPlan` in the plan, record `symbolic_spec_present` (true if the plan's `recipe` is non-null and non-default) and `representation` (`encoded` if consumed clauses exist, `residual` if the parameter has residual clauses, `none` if no symbolic spec was present).
 
-  The implementation should use direct SQL inserts (via jOOQ `DSL.using(connection).insertInto(...)` or `PreparedStatement`) since jOOQ code generation for the new tables may not be available yet — or regenerate the jOOQ schema first. Check whether `gradlew generateJooq` or similar exists; if so, run it and use the generated `GenerationClauseRecord` / `GenerationParameterRecord`. If not, use raw SQL inserts via `TaskContext`'s connection.
+  Task 2 already regenerated the jOOQ sources, so use the generated `GenerationClauseRecord` /
+  `GenerationParameterRecord` directly — no raw-SQL fallback.
 
-- [ ] **Step 3: Run the pipeline** on a small project (e.g. a JARVIS scoreboard fixture) and verify rows appear.
-  Run: `./gradlew run -Dteralizer.config=project-configs/jarvis-scoreboard/commons-lang-3.5.conf` then query: `docker exec -i postgres-teralizer psql -U postgres -d postgres_jarvis_scoreboard -c "SELECT shape, consumed, count(*) FROM generation_clause gc JOIN generalization g ON gc.generalization_id = g.id WHERE g.variant = 'IMPROVED_100_TRIES' GROUP BY shape, consumed ORDER BY count(*) DESC LIMIT 20"`
+- [ ] **Step 3: Run the pipeline** on a small project and verify rows appear. Every run names
+  its DB explicitly (run-target redesign):
+  `./gradlew run -Dteralizer.config=project-configs/jarvis-scoreboard/commons-lang-3.5.conf -Dteralizer.database.name=postgres_gencov_verify`
+  (scratch DB, create before / drop after), then query:
+  `docker exec -i postgres-teralizer psql -U postgres -d postgres_gencov_verify -c "SELECT shape, consumed, count(*) FROM generation_clause gc JOIN generalization g ON gc.generalization_id = g.id WHERE g.variant = 'IMPROVED_100_TRIES' GROUP BY shape, consumed ORDER BY count(*) DESC LIMIT 20"`
   Expected: rows with shapes like `EQ(Variable:INTEGER,Constant:INTEGER)` and consumed=true/false.
 
 - [ ] **Step 4: Commit.** `feat(task): populate generation-coverage telemetry at generation time`

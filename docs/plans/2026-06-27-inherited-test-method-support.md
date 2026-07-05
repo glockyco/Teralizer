@@ -122,6 +122,28 @@ the full model, not a clone — inherited tested methods (the focal method under
 test, not the test method) already resolve correctly because they live in their
 declaring class in the model.
 
+### Flattening screens (sound subset only)
+
+Copying a parent method body into the clone is only sound when the copied AST compiles and
+behaves identically in the child context. Two screens gate the flatten; a method failing
+either is excluded typed (test-level, reason `INHERITED_METHOD_NOT_FLATTENABLE` with the
+failing screen in the detail), never silently dropped and never flattened broken.
+
+- **Type-variable screen.** The dominant real-world shape is a generic base
+  (`class FooTest extends AbstractBaseTest<Foo>`). A parent method whose body or signature
+  references a type parameter of the declaring class cannot be copied verbatim into a clone
+  that declares no such parameter. v1 flattens only methods with no unresolved
+  `CtTypeParameterReference` after considering the child's `extends` substitution;
+  performing the substitution during the copy is a possible v2, not v1 scope.
+- **Accessibility screen.** A parent method body referencing `private` members of the
+  declaring class will not compile from the child. v1 flattens only methods whose
+  referenced parent members are accessible from the child (`protected`, `public`, or
+  package-visible within the same package).
+
+The consequence is honest and measurable: the 5,758 affected tests will NOT all convert.
+The flattenable share is unknown until measured — generic bases are expected to be a
+substantial fraction — and the typed exclusion makes the split a direct query.
+
 ### Edge cases
 
 - **Overridden methods:** if the child overrides the parent's `@Test` method,
@@ -129,9 +151,9 @@ declaring class in the model.
   The superclass walk must stop at the first match.
 - **Diamond inheritance:** if multiple ancestors declare the same method name,
   the first match (closest ancestor) wins, matching Java's method resolution.
-- **Private/protected methods:** `@Test` methods are public by convention;
-  private inherited test methods are a JUnit edge case that doesn't occur in
-  practice.
+- **Private/protected methods:** handled by the accessibility screen above. `@Test`
+  methods are public by convention; it is their *helper references* that carry the
+  accessibility risk.
 - **`@Before`/`@After` setup methods:** these can also be inherited. The
   flattening must include setup methods annotated with `@Before`/`@BeforeEach`/
   `@After`/`@AfterEach`/`@BeforeClass`/`@BeforeAll`/`@AfterClass`/`@AfterAll`,
@@ -153,19 +175,22 @@ declaring class in the model.
 ## Acceptance criteria
 
 - [ ] `JunitDataCollectionTask` resolves inherited `@Test` methods by walking
-  the superclass chain; the 5,758 "No method matches" failures drop to zero.
+  the superclass chain; "No method matches" failures become either collected tests
+  (flattenable) or typed `INHERITED_METHOD_NOT_FLATTENABLE` exclusions — zero silent drops.
 - [ ] `test_method_qualified_name` and `test_method_relative_path` reference the
   declaring (parent) class for inherited methods.
 - [ ] `SpoonUtils.cloneClass` flattens inherited `@Test` and lifecycle
-  (`@Before`/`@After`/`@BeforeClass`/`@AfterClass`) methods into the clone.
+  (`@Before`/`@After`/`@BeforeClass`/`@AfterClass`) methods that pass both screens into
+  the clone; both screens have unit tests (generic base excluded typed, private-helper
+  reference excluded typed, plain protected-helper base flattened).
 - [ ] `TestAnalysisTask`, `TestGeneralizationTask`, and
-  `JpfInstrumentationTask` all resolve inherited test methods without
+  `JpfInstrumentationTask` all resolve flattened test methods without
   `IndexOutOfBoundsException` or "No method matches" errors.
-- [ ] No regressions on `postgres_dev` (13 controlled projects).
-- [ ] Re-run `applicability_priorities.py` after implementation to confirm the
-  5,758 dropped tests are collected and their assertions reach analysis.
-- [ ] At least one inherited-method test case generalizes and passes PIT on the
-  generalized variant.
+- [ ] New fixture: a test class inheriting `@Test` + `@Before` from a non-generic parent
+  with protected helpers, whose inherited test generalizes; golden pins the conversion. A
+  second arm with a generic parent pins the typed exclusion.
+- [ ] Corpus-scale measurement (flattenable share of the 5,758, assertion reach) batches
+  into the next scheduled corpus evaluation event per the measurement policy in AGENTS.md.
 
 ## Out of scope
 

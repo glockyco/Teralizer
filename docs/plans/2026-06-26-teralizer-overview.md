@@ -45,10 +45,11 @@ expansion, then maintainability. Evidence-gated items never start before their g
    beyond the sentinel signal.
 
 **P2 — evidence-ranked fixes (start as their gate resolves)**
-2. **ISINTEGER/NOTINTEGER sound-set admission** — parse-reaching string MUTs die typed at
-   ingestion (`2026-07-05-collect-mode-conformance`). Admitting the parse comparators to
-   the sound set (rendered as a parse-based predicate) converts those exclusions into
-   specs, including the xenqtt `AppContext` family.
+2. **`2026-07-05-parse-predicate-admission`** *(spec, draft)* — admit ISINTEGER/NOTINTEGER
+   to the string sound set: parse-guarded string MUTs die typed at ingestion
+   (`2026-07-05-collect-mode-conformance`); rendering delegates to `parseInt` for exact
+   semantics, generation satisfies the partition. Converts the xenqtt `AppContext` family
+   and siblings.
 3. **`2026-06-28-native-peer-model-coverage`** *(spec, draft)* — crash-visible peer/model
    gaps, per-method ranked (commons-math `Precision.*` targets already named). Complements
    the concretization census: census = silent concretization, this = hard crashes. Task 1
@@ -56,10 +57,11 @@ expansion, then maintainability. Evidence-gated items never start before their g
 
 **P3 — measurement infrastructure (parallelizable with P2)**
 4. **`2026-07-02-generation-coverage-telemetry`** *(plan, draft)* — clause-shape + parameter
-   telemetry; ready to execute as written. Gates C-4 (by-construction recipes) and feeds the
-   paper's effectiveness story.
+   telemetry. Gates C-4 (by-construction recipes) and feeds the paper's effectiveness
+   story.
 5. **`2026-07-01-pipeline-observability-telemetry`** *(spec, draft)* — reason codes +
-   provenance for rerun analysis. Implement before the next large rerun, not before.
+   provenance for rerun analysis; its `task_diagnostic` reason codes subsume the typed
+   exclusion taxonomy. Implement before the next large rerun, not before.
 
 **P4 — recall expansion (after soundness/evidence work above)**
 6. **`2026-06-27-inherited-test-method-support`** *(spec, draft)* — ~5,758 tests across 52
@@ -74,11 +76,10 @@ expansion, then maintainability. Evidence-gated items never start before their g
 9. **C-1 single-emitter residue check** (`2026-06-28-pipeline-architecture-review`) —
    after the recipe unification wave, verify what if anything remains of the factory-drift
    concern; expected to shrink to nothing.
-10. **Small items, no docs needed:** typed exclusion taxonomy (crash exclusions still carry
-    raw stack traces); deferred mis-pick fixture; assertThrows-lambda expression-site
-    replacement limitation in GeneralizationRecipe; debugger-grade trace of one antiaction
-    widened-tuple NPE to decide whether the recipe must refuse substitution when the
-    widened expression is load-bearing elsewhere in the test body
+10. **Small items, no docs needed:** deferred mis-pick fixture; assertThrows-lambda
+    expression-site replacement limitation in GeneralizationRecipe; debugger-grade trace of
+    one antiaction widened-tuple NPE to decide whether the recipe must refuse substitution
+    when the widened expression is load-bearing elsewhere in the test body
     (`2026-07-05-concretization-census-findings`, Finding 2).
 
 ## Standing gates (events, not queue slots)

@@ -17,6 +17,28 @@ provenance that analysis scripts can query directly.
 Evidence and prioritization live in `2026-07-01-rerun-observability-priorities`; this spec defines
 what to build.
 
+## Already shipped (out of this spec's remaining scope)
+
+Landed pieces an implementer must not redo:
+
+- `mut_resolution_observation` — implemented by fusion v1; schema authority is
+  `2026-07-02-mut-id-confidence-fusion`.
+- `assertion.output_spec_class`, `assertion.concretization_events`,
+  `assertion.concretized_methods` — the output-spec degeneracy columns (retained below as
+  the design record; they are written by `JpfExecutionTask` today).
+- `assertion.post_concretization_divergence_risk` — the widening-license divergence flag
+  beside the event count (nullable boolean; NULL on pre-telemetry rows refuses
+  conservatively).
+- `jqwik_property_execution` diagnostics — `diagnostic_kind`, `raw_status`/`final_status`,
+  `throwable_type`/`throwable_message`, tries/checks/distinct-tuple counts, and the outcome
+  sidecar; covers most of what `generalization_lifecycle` wanted from the execution stage.
+
+Remaining scope: `filter_result` additions (`reason_code`, `depends_on`, `detail_json`),
+`assertion_semantics`, `task_diagnostic`, `jpf_extraction_summary`,
+`build_environment_observation`, and `generalization_lifecycle` (re-baselined against the
+jqwik diagnostics above — build/report/PIT stages are the uncovered part). The
+`task_diagnostic` reason codes subsume the small-items "typed exclusion taxonomy" entry.
+
 ## Relationship to active work
 
 - `2026-07-02-static-mut-id-fusion` implements `mut_resolution_observation` (Task 1/9) and uses
@@ -280,11 +302,11 @@ Analysis enabled:
 - Project-level ranking by missing native peers, model gaps, depth/resource limits, listener bugs.
 - Before/after checks for SPF/model-class improvements.
 
-### Output-spec degeneracy (`assertion.output_spec_class`, `assertion.concretization_events`)
+### Output-spec degeneracy (`assertion.output_spec_class`, `assertion.concretization_events`) — SHIPPED
 
-Two nullable columns on `assertion`, written where the spec files are written
-(`SpecificationExtractor` call in `JpfExecutionTask`, or `JpfAnalysisTask` alongside
-`output_model_statistics`):
+Retained as the design record; both columns exist and are written by `JpfExecutionTask`
+(plus `assertion.concretized_methods` and `assertion.post_concretization_divergence_risk`,
+added by the census and widening-license work):
 
 - `output_spec_class`: `SYMBOLIC` (output model contains ≥1 variable), `CONSTANT` (lone
   constant), `NULL_CONCRETE` (no symbolic return attr — value concretized through unmodeled
