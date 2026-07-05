@@ -264,6 +264,11 @@ public class Assertion extends TableImpl<AssertionRecord> {
     public final TableField<AssertionRecord, Integer> CONCRETIZATION_EVENTS = createField(DSL.name("concretization_events"), SQLDataType.INTEGER, this, "");
 
     /**
+     * The column <code>public.assertion.post_concretization_divergence_risk</code>.
+     */
+    public final TableField<AssertionRecord, Boolean> POST_CONCRETIZATION_DIVERGENCE_RISK = createField(DSL.name("post_concretization_divergence_risk"), SQLDataType.BOOLEAN, this, "");
+
+    /**
      * The column <code>public.assertion.concretized_methods</code>.
      */
     public final TableField<AssertionRecord, String> CONCRETIZED_METHODS = createField(DSL.name("concretized_methods"), SQLDataType.CLOB, this, "");

@@ -124,6 +124,8 @@ public class JpfExecutionTask extends AbstractTask {
             Paths.get(this.assertionRecord.getOutputSpecificationPath()));
         this.assertionRecord.setOutputSpecClass(OutputSpecClassifier.classify(invocation).name());
         this.assertionRecord.setConcretizationEvents(listener.getConcretizationEvents());
+        this.assertionRecord.setPostConcretizationDivergenceRisk(
+            listener.getPostConcretizationDivergenceRisk());
         Map<String, Integer> concretizedMethods = listener.getConcretizedMethods();
         Gson gson = context.get(TaskContext.GSON);
         this.assertionRecord.setConcretizedMethods(

@@ -620,45 +620,59 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     }
 
     /**
+     * Setter for <code>public.assertion.post_concretization_divergence_risk</code>.
+     */
+    public void setPostConcretizationDivergenceRisk(Boolean value) {
+        set(43, value);
+    }
+
+    /**
+     * Getter for <code>public.assertion.post_concretization_divergence_risk</code>.
+     */
+    public Boolean getPostConcretizationDivergenceRisk() {
+        return (Boolean) get(43);
+    }
+
+    /**
      * Setter for <code>public.assertion.concretized_methods</code>.
      */
     public void setConcretizedMethods(String value) {
-        set(43, value);
+        set(44, value);
     }
 
     /**
      * Getter for <code>public.assertion.concretized_methods</code>.
      */
     public String getConcretizedMethods() {
-        return (String) get(43);
+        return (String) get(44);
     }
 
     /**
      * Setter for <code>public.assertion.is_included</code>.
      */
     public void setIsIncluded(Boolean value) {
-        set(44, value);
+        set(45, value);
     }
 
     /**
      * Getter for <code>public.assertion.is_included</code>.
      */
     public Boolean getIsIncluded() {
-        return (Boolean) get(44);
+        return (Boolean) get(45);
     }
 
     /**
      * Setter for <code>public.assertion.exclusion_info</code>.
      */
     public void setExclusionInfo(String value) {
-        set(45, value);
+        set(46, value);
     }
 
     /**
      * Getter for <code>public.assertion.exclusion_info</code>.
      */
     public String getExclusionInfo() {
-        return (String) get(45);
+        return (String) get(46);
     }
 
     // -------------------------------------------------------------------------
@@ -684,7 +698,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
     /**
      * Create a detached, initialised AssertionRecord
      */
-    public AssertionRecord(Long id, Long projectId, Long testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodAbsolutePath, String testedMethodRelativePath, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String generalizationRecipe, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputValuesPath, String outputValuePath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, String inputModelStatistics, String outputModelStatistics, String outputSpecClass, Integer concretizationEvents, String concretizedMethods, Boolean isIncluded, String exclusionInfo) {
+    public AssertionRecord(Long id, Long projectId, Long testId, String assertionName, String assertionArguments, String assertionSourceCode, String assertionAbsolutePath, String assertionRelativePath, String testedFilePath, String testedClassQualifiedName, String testedMethodQualifiedName, String testedPackageName, String testedClassName, String testedMethodName, String testedMethodParameters, String testedMethodReturnType, String testedMethodAbsolutePath, String testedMethodRelativePath, String testedMethodCallArguments, String testedMethodCallSourceCode, String testedMethodCallAbsolutePath, String testedMethodCallRelativePath, String generalizationRecipe, String instrumentedFilePath, String instrumentedClassQualifiedName, String instrumentedMethodQualifiedName, String instrumentedPackageName, String instrumentedClassName, String instrumentedMethodName, String driverFilePath, String driverClassQualifiedName, String driverPackageName, String driverClassName, String jpfConfigPath, String inputValuesPath, String outputValuePath, String inputSpecificationPath, String outputSpecificationPath, String equivalentAssertions, String inputModelStatistics, String outputModelStatistics, String outputSpecClass, Integer concretizationEvents, Boolean postConcretizationDivergenceRisk, String concretizedMethods, Boolean isIncluded, String exclusionInfo) {
         super(Assertion.ASSERTION);
 
         setId(id);
@@ -730,6 +744,7 @@ public class AssertionRecord extends UpdatableRecordImpl<AssertionRecord> {
         setOutputModelStatistics(outputModelStatistics);
         setOutputSpecClass(outputSpecClass);
         setConcretizationEvents(concretizationEvents);
+        setPostConcretizationDivergenceRisk(postConcretizationDivergenceRisk);
         setConcretizedMethods(concretizedMethods);
         setIsIncluded(isIncluded);
         setExclusionInfo(exclusionInfo);

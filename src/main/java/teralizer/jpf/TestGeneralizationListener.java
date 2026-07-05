@@ -48,11 +48,15 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private int targetDepth;
     private boolean isInInstrumentedMethod;
     private CapturedException pendingThrownException;
+    private boolean pendingThrownExceptionFromApplication;
+    private boolean capturedThrowFromApplication;
+    private boolean capturedThrow;
     private List<Value> instrumentedInputArguments;
     private boolean targetEntered;
     private CapturedInvocation invocation;
     private int concretizationEvents;
     private final Map<String, Integer> concretizedMethods = new TreeMap<>();
+    private boolean concreteApplicationBranchAfterConcretization;
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -72,10 +76,14 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.targetDepth = -1;
         this.isInInstrumentedMethod = false;
         this.pendingThrownException = null;
+        this.pendingThrownExceptionFromApplication = false;
+        this.capturedThrowFromApplication = false;
+        this.capturedThrow = false;
         this.targetEntered = false;
         this.invocation = null;
         this.concretizationEvents = 0;
         this.concretizedMethods.clear();
+        this.concreteApplicationBranchAfterConcretization = false;
     }
 
     @Override
@@ -119,7 +127,18 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
     @Override
     public void executeInstruction(VM vm, ThreadInfo currentThread, Instruction insn) {
-        if (!this.isExtractionActive() || !(insn instanceof EXECUTENATIVE)) {
+        if (!this.isExtractionActive()) {
+            return;
+        }
+
+        if (this.concretizationEvents > 0
+            && isConditionalBranch(insn)
+            && isApplicationInstruction(insn)
+            && !hasSymbolicBranchOperand(currentThread, insn)) {
+            this.concreteApplicationBranchAfterConcretization = true;
+        }
+
+        if (!(insn instanceof EXECUTENATIVE)) {
             return;
         }
 
@@ -129,6 +148,54 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             this.concretizationEvents++;
             this.concretizedMethods.merge(executedMethod.getFullName(), 1, Integer::sum);
         }
+    }
+
+    private static boolean isConditionalBranch(Instruction instruction) {
+        return instruction instanceof IfInstruction || instruction instanceof SwitchInstruction;
+    }
+
+    private static boolean hasSymbolicBranchOperand(ThreadInfo currentThread, Instruction instruction) {
+        StackFrame frame = currentThread.getTopFrame();
+        if (frame == null) {
+            return false;
+        }
+        int operandCount = branchOperandCount(instruction);
+        Object[] operandAttrs = new Object[operandCount];
+        for (int i = 0; i < operandCount; i++) {
+            operandAttrs[i] = frame.getOperandAttr(i);
+        }
+        return containsSymbolicExpression(operandAttrs);
+    }
+
+    private static int branchOperandCount(Instruction instruction) {
+        if (instruction instanceof SwitchInstruction) {
+            return 1;
+        }
+        int byteCode = ((IfInstruction) instruction).getByteCode();
+        return byteCode >= 0x9F && byteCode <= 0xA6 ? 2 : 1;
+    }
+
+    private static boolean isApplicationInstruction(Instruction instruction) {
+        MethodInfo methodInfo = instruction.getMethodInfo();
+        if (methodInfo == null) {
+            return false;
+        }
+        return isApplicationClass(methodInfo.getClassInfo());
+    }
+
+    private static boolean isApplicationClass(ClassInfo classInfo) {
+        if (classInfo == null) {
+            return false;
+        }
+        String className = classInfo.getName();
+        // JDK and JPF modeled-library bytecode contains peer bookkeeping branches that do not
+        // represent application reachability decisions.
+        return !className.startsWith("java.")
+            && !className.startsWith("javax.")
+            && !className.startsWith("jdk.")
+            && !className.startsWith("sun.")
+            && !className.startsWith("com.sun.")
+            && !className.startsWith("gov.nasa.jpf.");
     }
 
     /**
@@ -159,6 +226,12 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         }
 
         this.pendingThrownException = this.captureException(currentThread, thrownException);
+        this.pendingThrownExceptionFromApplication = isApplicationThrow(currentThread);
+    }
+
+    private static boolean isApplicationThrow(ThreadInfo currentThread) {
+        Instruction instruction = currentThread.getPC();
+        return instruction instanceof ATHROW && isApplicationInstruction(instruction);
     }
 
     @Override
@@ -218,13 +291,17 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
                 }
             }
             this.pendingThrownException = null;
+            this.pendingThrownExceptionFromApplication = false;
             Expression spfOutput_ = spfOutput; // To use spfOutput in the lambda, it needs to be (effectively) final.
             LOGGER.atTrace().log(() -> "Output: " + (spfOutput_ == null ? null : spfOutput_.toString()));
         } else if (this.pendingThrownException != null) {
             capturedException = this.pendingThrownException;
+            this.capturedThrowFromApplication = this.pendingThrownExceptionFromApplication;
+            this.capturedThrow = true;
             output = CapturedOutput.ofThrow(capturedException);
             LOGGER.atTrace().log("Output: Exception thrown " + capturedException.getName());
             this.pendingThrownException = null;
+            this.pendingThrownExceptionFromApplication = false;
         } else if (exitInstruction instanceof ATHROW) {
             throw new RuntimeException("JPF reported exceptional exit from " + this.testedMethodSpec.getSource() + " without a captured exceptionThrown notification.");
         } else {
@@ -280,6 +357,12 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     /** Number of native-call boundaries that received at least one symbolic argument attr. */
     public int getConcretizationEvents() {
         return this.concretizationEvents;
+    }
+
+    public boolean getPostConcretizationDivergenceRisk() {
+        return this.concretizationEvents > 0
+            && (this.concreteApplicationBranchAfterConcretization
+                || (this.capturedThrow && !this.capturedThrowFromApplication));
     }
 
     /** Native methods that received symbolic argument attrs, keyed by qualified method name. */
