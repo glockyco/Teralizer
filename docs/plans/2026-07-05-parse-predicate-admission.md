@@ -1,7 +1,7 @@
 ---
 title: Parse-Predicate Admission — Parseability Comparators as Sound String Clauses
 type: spec
-status: draft
+status: active
 created: 2026-07-05
 parent: 2026-06-26-teralizer-overview
 ---
@@ -37,17 +37,20 @@ parse-guarded MUTs convert from typed exclusions to generalizations.
 ## Design
 
 1. **Ingestion.** Map the four comparator pairs in `SpfToModelTransformer`'s string
-   comparator switch to Model predicates over the string variable (an `Invocation` with a
-   dedicated method symbol per type, negated via `Not` for the NOT side), admitted through
-   `MethodCapabilities` like the shipped string predicates.
-2. **Rendering — exact semantics, no approximation.** Each predicate renders against an
-   emitted helper in the generated test class (the house pattern for generated support
-   code): `try { Integer.parseInt(s); return true; } catch (NumberFormatException e)
+   comparator switch to Model predicates over the string variable, admitted through
+   `MethodCapabilities` like the shipped string predicates. The node is the
+   STATIC-qualified `Invocation` form (`Invocation(null, <helper class>, "isInteger",
+   [s])`), not the instance form — `String` has no such method, so an instance-shaped
+   node would render invalid Java. The NOT side wraps in `Not`.
+2. **Rendering — exact semantics, no approximation.** The static qualifier is a helper
+   class emitted into the generated test by `GeneralizedTestBuilder`, the house pattern
+   for generated support code (`FirstValueArbitraryFactory`, `JqwikValueRecorder`). Each
+   predicate delegates to the real parser:
+   `try { Integer.parseInt(s); return true; } catch (NumberFormatException e)
    { return false; }`, with `Long.parseLong`/`Float.parseFloat`/`Double.parseDouble` for
-   the siblings. Delegating to the real `parseX` makes sign handling, leading zeros,
-   overflow, and the float/double extras (`NaN`, `Infinity`, hex floats, trailing `f`/`d`)
-   exact by construction — a regex approximation would get overflow and the float grammar
-   wrong.
+   the siblings. Delegation makes sign handling, leading zeros, overflow, and the
+   float/double extras (`NaN`, `Infinity`, hex floats, trailing `f`/`d`) exact by
+   construction — a regex approximation would get overflow and the float grammar wrong.
 3. **Generation.** `StringDomainPlanner`: a positive parse clause yields a satisfying
    arbitrary of numeric strings for that type (`Arbitraries.integers().map(String::valueOf)`
    and the per-type analogues, seed-first per the `edgeCases=FIRST` convention); the
@@ -78,5 +81,7 @@ parse-guarded MUTs convert from typed exclusions to generalizations.
 ## Non-goals
 
 - The radix overload of `parseInt` (admitted later if evidence ranks it).
+- `ISBOOLEAN`/`NOTBOOLEAN` — `Boolean.parseBoolean` never throws, so the comparator
+  carries no partition worth widening, and the sentinel recorded zero refusals for it.
 - Modeling the parsed value (`SpecialIntegerExpression`) — a separate, larger concern.
 - Any change to `SymbolicStringHandler`'s collect-mode parse behavior (shipped and pinned).
