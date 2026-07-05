@@ -109,6 +109,11 @@ while (current != null && matchingMethods.isEmpty()) {
 declares the method (the parent), not the child reported by JUnit. This is needed
 so downstream `CtPath.evaluateOn` resolves against the right class. The
 `test_class_qualified_name` stays as the child (it's the JUnit-reported class).
+Consequence: JUnit report matching must keep using the CHILD class plus method
+name (reports list inherited methods under the child), and every consumer that
+derives a class from `test_method_qualified_name` (`AssertionInMethodFilter`,
+`JpfInstrumentationTask`) must resolve against the declaring class — one shared
+resolution helper, not per-site reimplementations.
 
 **Step 3 — Flatten in `SpoonUtils.cloneClass`:** after cloning, walk the
 superclass chain and copy any `@Test`-annotated methods that are not already
@@ -116,6 +121,13 @@ declared in the clone into the clone as declared methods. This makes
 `evaluateOn(generalizedClass)` and `getMethod(name)` find the inherited method
 in the clone's own AST. Field and helper-method references to the parent class
 are preserved via the `extends` clause (the clone still extends the parent).
+
+**Step 3b — Merge the declaring compilation unit's imports:** a flattened method
+body carries references that its OWN compilation unit imported (`org.junit.Test`,
+`org.junit.Before`, static `assertEquals`); the generated instrumented and
+generalized class writers emit imports from the CHILD's compilation unit only,
+so the flattened code does not compile without merging the declaring class's
+imports (deduplicated) into the generated class. Both writers need it.
 
 **Step 4 — Verify `JpfInstrumentationTask` works:** this task also clones the
 class (`createInstrumentedClass` calls `SpoonUtils.cloneClass`). The flattening
