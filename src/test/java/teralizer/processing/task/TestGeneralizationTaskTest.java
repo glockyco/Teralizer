@@ -485,7 +485,7 @@ public class TestGeneralizationTaskTest {
         @Override
         public MockResult[] execute(MockExecuteContext context) {
             String sql = context.sql().trim().toLowerCase(Locale.ROOT);
-            if (sql.startsWith("insert") && sql.contains("generalization")) {
+            if (sql.startsWith("insert") && targetsTable(sql, "generalization")) {
                 GeneralizationRecord record = this.records.newRecord(Tables.GENERALIZATION);
                 bindInsert(record, Tables.GENERALIZATION, context.sql(), context.bindings());
                 record.setId(this.nextGeneralizationId++);
@@ -495,8 +495,11 @@ public class TestGeneralizationTaskTest {
                 result.add(record);
                 return new MockResult[] {new MockResult(1, result)};
             }
-            if (sql.startsWith("update") && sql.contains("generalization")) {
+            if (sql.startsWith("update") && targetsTable(sql, "generalization")) {
                 bindUpdate(this.generalization, Tables.GENERALIZATION, context.sql(), context.bindings());
+                return new MockResult[] {new MockResult(1, this.records.newResult(Tables.GENERALIZATION))};
+            }
+            if (sql.startsWith("insert") && (targetsTable(sql, "generation_clause") || targetsTable(sql, "generation_parameter"))) {
                 return new MockResult[] {new MockResult(1, this.records.newResult(Tables.GENERALIZATION))};
             }
             return new MockResult[] {new MockResult(0, this.records.newResult(Tables.GENERALIZATION))};
@@ -526,6 +529,10 @@ public class TestGeneralizationTaskTest {
                     record.set(field, bindings[i]);
                 }
             }
+        }
+
+        private static boolean targetsTable(String sql, String tableName) {
+            return sql.contains("\"" + tableName + "\"");
         }
 
         private static String columnName(String sqlName) {

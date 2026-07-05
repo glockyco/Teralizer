@@ -284,7 +284,7 @@ CREATE INDEX idx_generation_parameter_type_domain ON generation_parameter (type_
 - Create: `analysis/src/teralizer/generation_coverage.py`
 - Create: `analysis/tests/test_generation_coverage.py`
 
-- [ ] **Step 1: Write failing tests** using an in-memory SQLite DB with the two new tables.
+- [x] **Step 1: Write failing tests** using an in-memory SQLite DB with the two new tables.
 
 ```python
 """Tests for generation_coverage analysis module."""
@@ -367,10 +367,10 @@ def test_parameter_representations(conn):
     assert row["count"] == 1
 ```
 
-- [ ] **Step 2: Run tests, expect FAIL** (module absent).
+- [x] **Step 2: Run tests, expect FAIL** (module absent).
   Run: `uv run --directory analysis pytest analysis/tests/test_generation_coverage.py -v`
 
-- [ ] **Step 3: Implement `generation_coverage.py`.**
+- [x] **Step 3: Implement `generation_coverage.py`.**
 
 ```python
 """Generation-coverage analysis: which clause shapes fall to the residual filter,
@@ -482,13 +482,13 @@ def main() -> None:
         print(get_spf_gap_ranking(conn).to_string(index=False))
 ```
 
-- [ ] **Step 4: Run tests, expect PASS.**
+- [x] **Step 4: Run tests, expect PASS.**
   Run: `uv run --directory analysis pytest analysis/tests/test_generation_coverage.py -v`
 
-- [ ] **Step 5: Lint + format.**
+- [x] **Step 5: Lint + format.**
   Run: `uv run --directory analysis ruff check --fix analysis/src/teralizer/generation_coverage.py analysis/tests/test_generation_coverage.py && uv run --directory analysis ruff format analysis/src/teralizer/generation_coverage.py analysis/tests/test_generation_coverage.py`
 
-- [ ] **Step 6: Commit.** `feat(analysis): add generation_coverage analysis module`
+- [x] **Step 6: Commit.** `feat(analysis): add generation_coverage analysis module`
 
 ---
 
