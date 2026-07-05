@@ -1,9 +1,10 @@
 ---
 title: Run-Target Config — Implementation Plan
 type: plan
-status: active
+status: implemented
 created: 2026-07-05
 parent: 2026-07-05-run-target-config
+archived: 2026-07-05
 ---
 
 # Run-Target Config Implementation Plan
