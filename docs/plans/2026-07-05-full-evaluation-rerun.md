@@ -93,7 +93,7 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
 
 ### Launch and monitor
 
-- [ ] Launch with the command above (operator sign-off = running this task).
+- [x] Launch with the command above (operator sign-off = running this task).
 - [ ] Monitor cheaply, no per-project attention: `tail data/reporeapers-rerun-2/status.tsv`,
       row counts on `project`/`task`, disk headroom. Interruption is safe; relaunch resumes.
 
