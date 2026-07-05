@@ -20,6 +20,8 @@
 - **Concretization Census — Which SPF Gaps Are Worth Closing** [spec] `2026-07-04-concretization-census` ← 2026-06-26-teralizer-overview
 - **R1 Viability Spike — Expression-Slice Shapes Through SPF** [audit] `2026-07-04-r1-viability-spike` ← 2026-07-02-recipe-seam-review
 - **Collect-Mode Conformance Survey of the Vendored SPF** [audit] `2026-07-05-collect-mode-conformance` ← 2026-06-26-teralizer-overview
+- **Run-Target Config — Explicit DB Targets, Workstation-Only .env** [spec] `2026-07-05-run-target-config` ← 2026-06-26-teralizer-overview
+- **Run-Target Config — Implementation Plan** [plan] `2026-07-05-run-target-config-plan` (—) ← 2026-07-05-run-target-config
 
 ## draft
 
@@ -29,6 +31,5 @@
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
-- **Run-Target Config — Explicit DB Targets, Workstation-Only .env** [spec] `2026-07-05-run-target-config` ← 2026-06-26-teralizer-overview
 
 _46 archived — see `docs/plans/archive/`._

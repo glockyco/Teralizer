@@ -1,7 +1,7 @@
 ---
 title: Run-Target Config — Explicit DB Targets, Workstation-Only .env
 type: spec
-status: draft
+status: active
 created: 2026-07-05
 parent: 2026-06-26-teralizer-overview
 ---
