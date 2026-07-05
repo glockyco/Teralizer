@@ -1,9 +1,10 @@
 ---
 title: Exception-Message Widening — License Precision for Post-Decision Concretization
 type: spec
-status: active
+status: implemented
 created: 2026-07-05
 parent: 2026-07-05-concretization-census-findings
+archived: 2026-07-05
 ---
 
 # Exception-Message Widening — License Precision for Post-Decision Concretization
@@ -85,8 +86,9 @@ Both vectors are observable without taint tracking, at the cost of accepted cons
   events + risk true refuses; null risk refuses.
 - New fixture reproducing the antiaction shape whose THROWN generalization widens, with the
   golden pinning the conversion.
-- Refusal-to-licensed conversion measured on the antiaction hotspot leg (expected on the
-  order of the 74 recorded), reported in the findings audit.
+- Refusal-to-licensed conversion on the antiaction hotspot leg (expected on the order of the
+  74 recorded) batches into the next scheduled corpus evaluation event per the measurement
+  policy in `AGENTS.md`, reported in the findings audit when that event runs.
 
 ## Non-goals
 
