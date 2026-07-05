@@ -18,6 +18,7 @@
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
 - **Architecture & Implementation Review — Post-R1** [audit] `2026-07-04-architecture-implementation-review` ← 2026-06-26-teralizer-overview
 - **R1 Viability Spike — Expression-Slice Shapes Through SPF** [audit] `2026-07-04-r1-viability-spike` ← 2026-07-02-recipe-seam-review
+- **Collect-Mode Conformance Survey of the Vendored SPF** [audit] `2026-07-05-collect-mode-conformance` ← 2026-06-26-teralizer-overview
 
 ## draft
 
