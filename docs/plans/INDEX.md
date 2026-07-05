@@ -30,5 +30,8 @@
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
+- **Boxing Round-Trip Attr Recovery — Keep Symbolic Attrs Across Unbox** [spec] `2026-07-05-boxing-unbox-attr-recovery` ← 2026-07-05-concretization-census-findings
+- **Exception-Message Widening — License Precision for Post-Decision Concretization** [spec] `2026-07-05-exception-message-widening` ← 2026-07-05-concretization-census-findings
+- **Sound Character Predicates — Model isWhitespace and Adjacent char Tests** [spec] `2026-07-05-sound-char-predicates` ← 2026-07-05-concretization-census-findings
 
 _48 archived — see `docs/plans/archive/`._

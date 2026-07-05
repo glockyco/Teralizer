@@ -29,5 +29,7 @@ parent: 2026-06-26-teralizer-overview
 
 - Telemetry: per-assertion concretized-method identities persisted; existing count column and license behavior unchanged; listener test covering a native-concretization target (extend `TestGeneralizationListenerConcretizationTest` / `NativeConcretizationTarget`).
 - Census: a ranked table (method → affected assertions → blocked gens → bucket) recorded in an audit doc, produced from fixture + sentinel + hotspot runs only — no full-corpus run required.
-- At least the top bounded-bucket item fixed with a fixture pinning it, and the refusal→licensed conversion measured on the sentinel subset.
+- The ranked buckets promote the worth-fixing levers to dedicated specs under the evidence gate, rather than an inline tail-fix. The census is the evidence those specs cite.
 - Research-grade items listed with weights and explicitly not scheduled.
+
+The ranking is recorded in `2026-07-05-concretization-census-findings`. Ranking by load-bearing blocked generalizations (not the naive concretization count) reframed the result: the `valueOf` family the spec assumed pre-satisfied is incidental, the top load-bearing blocker is a widening-license over-refusal rather than a native-peer gap, and the genuine bounded peer gaps are small. The three worth-fixing levers are specced as `2026-07-05-exception-message-widening`, `2026-07-05-boxing-unbox-attr-recovery`, and `2026-07-05-sound-char-predicates`; `String.matches` and `String.hashCode` stay research-grade and unscheduled.
