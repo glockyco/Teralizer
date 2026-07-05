@@ -1,9 +1,10 @@
 ---
 title: Sound Character Predicates — ASCII Interval Model for isWhitespace
 type: spec
-status: active
+status: implemented
 created: 2026-07-05
 parent: 2026-07-05-concretization-census-findings
+archived: 2026-07-05
 ---
 
 # Sound Character Predicates — ASCII Interval Model for isWhitespace
