@@ -1,7 +1,7 @@
 ---
 title: Full Evaluation Rerun (RepoReapers, post-runway)
 type: plan
-status: draft
+status: active
 created: 2026-07-05
 parent: 2026-06-26-teralizer-overview
 ---
@@ -77,7 +77,7 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
 
 ### Pre-flight
 
-- [ ] Fix `docs/database.md` (table entries above); commit.
+- [x] Fix `docs/database.md` (table entries above); commit.
 - [ ] Run the fixture corpus once as the pre-measurement smoke:
       `scripts/run-verification-corpus.sh && scripts/check-verification-corpus.sh`.
       Expected: 16/16 fixtures match goldens. This is the wave's single

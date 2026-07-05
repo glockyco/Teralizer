@@ -19,11 +19,11 @@
 - **R1 Viability Spike — Expression-Slice Shapes Through SPF** [audit] `2026-07-04-r1-viability-spike` ← 2026-07-02-recipe-seam-review
 - **Collect-Mode Conformance Survey of the Vendored SPF** [audit] `2026-07-05-collect-mode-conformance` ← 2026-06-26-teralizer-overview
 - **Concretization Census — Load-Bearing Blockers and the License Over-Refusal Finding** [audit] `2026-07-05-concretization-census-findings` ← 2026-07-04-concretization-census
+- **Full Evaluation Rerun (RepoReapers, post-runway)** [plan] `2026-07-05-full-evaluation-rerun` (—) ← 2026-06-26-teralizer-overview
 
 ## draft
 
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
-- **Full Evaluation Rerun (RepoReapers, post-runway)** [plan] `2026-07-05-full-evaluation-rerun` (—) ← 2026-06-26-teralizer-overview
 
 _59 archived — see `docs/plans/archive/`._
