@@ -96,18 +96,22 @@ evaluation event. The JARVIS refresh at this wave boundary now waits on operator
 12. **Small items, no docs needed:** typed exclusion taxonomy (crash exclusions still carry
     raw stack traces); deferred mis-pick fixture; assertThrows-lambda expression-site
     replacement limitation in GeneralizationRecipe (surfaced by the exception-message
-    fixture work). The manual read of the T1-widened failures is done: zero mis-picks,
+    fixture work); debugger-grade trace of one antiaction widened-tuple NPE to decide
+    whether the recipe must refuse substitution when the widened expression is
+    load-bearing elsewhere in the test body (`2026-07-05-concretization-census-findings`,
+    Finding 2). The manual read of the T1-widened failures is done: zero mis-picks,
     recorded in `2026-06-28-mut-id-targeting-and-coverage`.
 
 ## Standing gates (events, not queue slots)
 
-- **JARVIS scoreboard refresh** — the P2 census wave has reached its boundary, so the
-  refresh is due, but it runs only on explicit operator sign-off (measurement events are
-  never started unilaterally — see AGENTS.md). REQUIRED before any paper claim
-  (`skill://running-the-jarvis-scoreboard`). Pair the refresh with the free manual read of
-  the 9 T1-widened failures (no DB contention, feeds the same paper section) and pick up
-  the batched antiaction hotspot conversion number for the findings audit in the same
-  session.
+- **JARVIS scoreboard refresh** — ran 2026-07-05 on operator sign-off at the P2 wave
+  boundary. Fresh Table-2 numbers and the two-absence tally live in
+  `2026-06-30-jarvis-comparison`. The paired reads landed with it: the T1 manual read
+  (zero mis-picks, `2026-06-28-mut-id-targeting-and-coverage`) and the antiaction hotspot
+  number (license converts all 74, zero survive validation on a test-body context
+  divergence — `2026-07-05-concretization-census-findings`, Finding 2). The next refresh
+  is due at the next lever-wave boundary, again on explicit operator sign-off, and stays
+  REQUIRED before any paper claim (`skill://running-the-jarvis-scoreboard`).
 - **Full evaluation rerun** — not before string corpus verification (P0) and the P2 wave
   land; regenerates RQ results on the broader dataset.
 

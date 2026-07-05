@@ -95,20 +95,22 @@ of the evaluation uses. RQ0 earns it.
 
 Source: scoreboard fixture `JARVIS_TABLE2` / `postgres_jarvis_scoreboard` (it hand-targets all
 10 rows; the census does not promote `FastMath`/`Interval`/`Univariate`). `IMPROVED_100_TRIES`
-Teralizer PVC vs JARVIS's published Scala-PBT PVC:
+Teralizer PVC vs JARVIS's published Scala-PBT PVC. In the 2026-07-05 refresh one
+`NAIVE_1000_TRIES` commons-lang `EXECUTE_TESTS_GENERALIZED` task hit the command timeout,
+which does not touch the IMPROVED head-to-head below (first-run numbers stand):
 
 | Table row | params | Teralizer PVC | JARVIS PBT PVC | verdict |
 |---|---|---:|---:|:--|
-| `CharUtilsTest::isAscii` | char | 148 | 59 | win |
+| `CharUtilsTest::isAscii` | char | 198 | 59 | win |
 | `CharUtilsTest::isPrintable` | char | 127 | 45 | win |
-| `FastMathTest::testMinMaxDouble` | double² | 304 | 400 | trail |
-| `FastMathTest::toIntExact` | int | 90 | 65 | win |
-| `IntervalTest` | double² | 88 | 2 | win |
-| `PolynomialFunctionTest::testConstants` | double | 90 | 105 | trail |
-| `PolynomialFunctionTest::testfirstDerivativeComparison` | double | 89 | 264 | trail |
-| `PolynomialFunctionTest::testLinear` | double | 90 | 160 | trail |
+| `FastMathTest::testMinMaxDouble` | double² | 340 | 400 | trail |
+| `FastMathTest::toIntExact` | int | 100 | 65 | win |
+| `IntervalTest` | double² | 114 | 2 | win |
+| `PolynomialFunctionTest::testConstants` | double | — | 105 | absent (license-refused) |
+| `PolynomialFunctionTest::testfirstDerivativeComparison` | double | 100 | 264 | trail |
+| `PolynomialFunctionTest::testLinear` | double | 100 | 160 | trail |
 | `PrecisionTest` (eps) | double³ | — | 102 | absent (sound-excluded) |
-| `UnivariateFunctionTest::testAbs` | double | 94 | 506 | trail |
+| `UnivariateFunctionTest::testAbs` | double | 100 | 506 | trail |
 
 **Capability — 8 of JARVIS's 9 MUTs are soundly generalized** (`CharUtils.isAscii`/
 `isAsciiPrintable`, `FastMath.min`/`max`/`toIntExact`, `Interval.getSize`,
@@ -130,10 +132,15 @@ paper handled 9/10 of these rows only because its static-method/numeric selectio
 them is the headline: `char`, instance-method/object-construction, and FastMath all now enter
 and pass.
 
-**PVC — win 4, trail 5, absent 1.** Wins: both `char` rows, `toIntExact`, `IntervalTest`. The
-5 trails are single-`double` rows: JARVIS pairs multiple ScalaCheck generators per scenario,
-so its per-`double` PVC (264, 506…) exceeds one jqwik arbitrary's ~90 at 100 checks — a
-sampling-strategy difference, not a soundness or capability gap. `isPrintable`/`toIntExact`
+**PVC — win 4, trail 4, absent 2.** Wins: both `char` rows, `toIntExact`, `IntervalTest`. The
+4 trails are single- or double-`double` rows: JARVIS pairs multiple ScalaCheck generators per
+scenario, so its per-`double` PVC (264, 506…) exceeds one jqwik arbitrary's ~100 at 100 checks
+— a sampling-strategy difference, not a soundness or capability gap. The second absence,
+`testConstants`, is the widening license refusing a constant-polynomial oracle: the asserted
+double is loaded from receiver state without symbolic evidence that it is path-constant
+(`NULL_CONCRETE`, non-boolean return), so the license abstains (`ORACLE_NOT_WIDENABLE`)
+rather than claim an unproven universal. It is a sound abstention in the same family as the
+`Precision` row, where JARVIS generalizes by assuming constancy. `isPrintable`/`toIntExact`
 being JARVIS "regressions" vs its own CUT is JARVIS's 100-iteration cap losing to original
 tests that loop over thousands of values (PDF lines 612, 628).
 
