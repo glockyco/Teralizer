@@ -22,6 +22,7 @@ import org.jooq.tools.jdbc.MockConnection;
 import org.jooq.tools.jdbc.MockDataProvider;
 import org.jooq.tools.jdbc.MockExecuteContext;
 import org.jooq.tools.jdbc.MockResult;
+import teralizer.spoon.analysis.TestMethodResolver;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
@@ -74,7 +75,7 @@ public class TestAnalysisTaskTest {
         record.setTestMethodQualifiedName("smoke.AbstractBase.inherited");
         record.setTestMethodRelativePath(inherited.getPath().relativePath(parent).toString());
 
-        CtMethod<?> resolved = TestAnalysisTask.resolveTestMethod(launcher.getFactory(), record);
+        CtMethod<?> resolved = TestMethodResolver.resolve(launcher.getFactory(), record);
 
         Assert.assertEquals(inherited, resolved);
     }

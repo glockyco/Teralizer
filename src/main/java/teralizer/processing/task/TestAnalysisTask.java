@@ -21,14 +21,12 @@ import spoon.Launcher;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.cu.SourcePosition;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathException;
-import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
@@ -42,6 +40,7 @@ import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.MethodUnderTestResolver;
 import teralizer.spoon.analysis.MutResolution;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.analysis.TestMethodResolver;
 
 public class TestAnalysisTask extends AbstractTask {
     static final String UNRESOLVED_TYPE_NAME = "<unresolved>";
@@ -92,33 +91,11 @@ public class TestAnalysisTask extends AbstractTask {
         Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
         Factory  factory = spoonLauncher.getFactory();
 
-        CtMethod<?> testMethod = resolveTestMethod(factory, this.testRecord);
+        CtMethod<?> testMethod = TestMethodResolver.resolve(factory, this.testRecord);
 
         FocalTypeResolver focalTypeResolver = context.get(this.getProjectId(), TaskContext.FOCAL_TYPE_RESOLVER);
         this.createAssertionRecords(testMethod, create, gson, focalTypeResolver);
     }
-
-    public static CtMethod<?> resolveTestMethod(Factory factory, TestRecord testRecord) {
-        CtClass<?> declaringClass = factory.Class().get(declaringClassQualifiedName(testRecord));
-        if (declaringClass == null) {
-            declaringClass = factory.Class().get(testRecord.getTestClassQualifiedName());
-        }
-
-        CtPath testMethodPath = new CtPathStringBuilder().fromString(testRecord.getTestMethodRelativePath());
-        return (CtMethod<?>) testMethodPath.evaluateOn(declaringClass).get(0);
-    }
-
-    private static String declaringClassQualifiedName(TestRecord testRecord) {
-        String testMethodQualifiedName = testRecord.getTestMethodQualifiedName();
-        if (testMethodQualifiedName == null) {
-            return testRecord.getTestClassQualifiedName();
-        }
-        int separator = testMethodQualifiedName.lastIndexOf(".");
-        return separator < 0
-            ? testRecord.getTestClassQualifiedName()
-            : testMethodQualifiedName.substring(0, separator);
-    }
-
     void createAssertionRecords(CtMethod<?> testMethod, DSLContext create, Gson gson, FocalTypeResolver focalTypeResolver) {
 
         List<CtInvocation<?>> assertionCalls = TestAnalysis.findAllAsserts(testMethod);

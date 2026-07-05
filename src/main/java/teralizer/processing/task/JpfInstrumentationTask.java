@@ -33,6 +33,7 @@ import teralizer.spoon.analysis.ExpectedTypeInference;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.SpfSymbolicConfigSelector;
+import teralizer.spoon.analysis.TestMethodResolver;
 import teralizer.spoon.codegen.InstrumentedClassBuilder;
 import teralizer.util.Configuration;
 import teralizer.util.SpfSymbolicConfig;
@@ -88,7 +89,7 @@ public class JpfInstrumentationTask extends AbstractTask {
 
         GeneralizationRecipe originalRecipe = GeneralizationRecipe
             .fromJson(gson, this.assertionRecord.getGeneralizationRecipe());
-        CtMethod<?> originalTestMethod = TestAnalysisTask.resolveTestMethod(factory, this.testRecord);
+        CtMethod<?> originalTestMethod = TestMethodResolver.resolve(factory, this.testRecord);
         GeneralizationRecipe.Resolved recipe = originalRecipe.resolveAgainst(
             originalTestMethod,
             factory.getModel().getRootPackage()

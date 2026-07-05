@@ -7,8 +7,8 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
-import teralizer.processing.task.TestAnalysisTask;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.analysis.TestMethodResolver;
 
 public class AssertionInMethodFilter extends AbstractFilter {
 
@@ -22,7 +22,7 @@ public class AssertionInMethodFilter extends AbstractFilter {
 
     @Override
     public FilterResult check() throws Exception {
-        CtMethod<?> testMethod = TestAnalysisTask.resolveTestMethod(this.launcher.getFactory(), this.testRecord);
+        CtMethod<?> testMethod = TestMethodResolver.resolve(this.launcher.getFactory(), this.testRecord);
 
         List<CtInvocation<?>> methodCalls = testMethod.getElements(ctInvocation -> !TestAnalysis.isAssertion(ctInvocation));
         for (CtInvocation<?> methodCall : methodCalls) {
