@@ -1,9 +1,10 @@
 ---
 title: Recipe Unification Implementation
 type: plan
-status: active
+status: implemented
 created: 2026-07-04
 parent: 2026-07-04-recipe-unification
+archived: 2026-07-05
 ---
 
 # Recipe Unification Implementation Plan

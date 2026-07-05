@@ -1,9 +1,10 @@
 ---
 title: Recipe Unification — One Codegen Path
 type: spec
-status: active
+status: implemented
 created: 2026-07-04
 parent: 2026-07-04-architecture-implementation-review
+archived: 2026-07-05
 ---
 
 # Recipe Unification — One Codegen Path

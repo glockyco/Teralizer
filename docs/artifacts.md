@@ -71,7 +71,7 @@ Velocity-generated from `jpf-config.vm`. The load-bearing lines: `symbolic.metho
 WRAPPER's parameters symbolic (`sym`; `_target_`/`_local_*` stay `con`);
 `symbolic.collect_constraints=true` is constraint-collection mode (follow the concrete path,
 record the PC — never explore). The `test_generalization.*` keys parameterize the listener,
-including `expression_recipe` (wrapper-exit capture) and the four spec-output paths.
+which captures at the wrapper's frame exit, including the four spec-output paths.
 
 ```properties
 target=teralizer.verification.expressionslice._ExpressionSliceCutTest_Driver_intCompare_7
@@ -79,7 +79,6 @@ symbolic.method=teralizer.verification.expressionslice._ExpressionSliceCutTest_I
 symbolic.collect_constraints=true
 symbolic.strings=false
 symbolic.dp=z3
-test_generalization.expression_recipe=true
 test_generalization.tested_method=teralizer.verification.expressionslice.ExpressionSliceCut.intCompare
 test_generalization.instrumented_method=teralizer.verification.expressionslice._ExpressionSliceCutTest_Instrumented_operatorCompositeOverCallsIsAdmitted_7_Test.intCompare_7
 test_generalization.input_specification_path=data/verification/expression-slice/project-id-1/jpf-data/specs/....symbolic.input.json

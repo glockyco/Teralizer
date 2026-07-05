@@ -33,14 +33,6 @@ invalidate later readings), then decision-gates (spikes and censuses that *rank*
 below them), then the fixes those gates rank, then measurement infrastructure, then recall
 expansion, then maintainability. Evidence-gated items never start before their gate.
 
-**P1a — quality wave (before the next feature wave; new work must build on the unified path)**
-1. **Comprehension + hygiene batch** (`2026-07-04-architecture-implementation-review`
-   Tiers B/C) — artifact gallery, codegen rules, snippet fixes, naming/package repairs,
-   resolver micro-fixes. One batch, verification-economical.
-2. **Recipe unification wave** (Tier A: A3 shared `InputKind` → A1 expression-recipe
-   unification → A2 Task/Builder split → A4 resolver extraction) — spec → approval → plan.
-   Subsumes most of the old C-1 single-emitter item.
-
 **P1 — decision gates (produce the evidence that ranks P2)**
 1. **`2026-07-04-concretization-census`** *(spec, draft — awaiting review)* — identity
    telemetry + ranked census of concretizing methods. Produces the ROI ranking that gates
