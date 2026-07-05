@@ -16,7 +16,7 @@ the golden to match broken output.
 | Situation | Do this | Cost |
 |---|---|---|
 | Iterating on one behavior | `scripts/run-verification-corpus.sh --only <fixture-name>` (resets the scratch DB and runs that fixture; inspect the DB with ad-hoc SQL, since the full golden check expects the whole corpus) | ~45 s |
-| Change is "done" | `scripts/verify-pipeline.sh` (build + full fixture corpus + golden check), ONCE | ~5 min |
+| Change is "done" | `scripts/verify-pipeline.sh` (build + full fixture corpus + golden check), ONCE | ~15 min (16 fixtures, ~47 s each) |
 | Change touches real-world seams (surefire versions, report formats, big suites, source levels) | sentinel subset: `REPOREAPERS_DB=postgres_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db`. Expected census sits in the config header comments. Drop the scratch DB and data dir afterwards | ~10 min |
 | Corpus-level claims for the paper | full spike (`project-configs/fusion-spike/`), coordinated with the operator | ~1 h |
 

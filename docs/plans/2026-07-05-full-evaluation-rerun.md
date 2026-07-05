@@ -78,7 +78,7 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
 ### Pre-flight
 
 - [x] Fix `docs/database.md` (table entries above); commit.
-- [ ] Run the fixture corpus once as the pre-measurement smoke:
+- [x] Run the fixture corpus once as the pre-measurement smoke:
       `scripts/run-verification-corpus.sh && scripts/check-verification-corpus.sh`.
       Expected: 16/16 fixtures match goldens. This is the wave's single
       `verify-pipeline` event, not a per-change gate; the refactoring batch shipped on a
