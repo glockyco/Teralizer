@@ -21,6 +21,16 @@ public class Sequences {
     public static final Sequence<Long> ASSERTION_ID_SEQ = Internal.createSequence("assertion_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
 
     /**
+     * The sequence <code>public.assertion_semantics_id_seq</code>
+     */
+    public static final Sequence<Long> ASSERTION_SEMANTICS_ID_SEQ = Internal.createSequence("assertion_semantics_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
+     * The sequence <code>public.build_environment_observation_id_seq</code>
+     */
+    public static final Sequence<Long> BUILD_ENVIRONMENT_OBSERVATION_ID_SEQ = Internal.createSequence("build_environment_observation_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
      * The sequence <code>public.evosuite_report_id_seq</code>
      */
     public static final Sequence<Long> EVOSUITE_REPORT_ID_SEQ = Internal.createSequence("evosuite_report_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
@@ -41,6 +51,11 @@ public class Sequences {
     public static final Sequence<Long> GENERALIZATION_ID_SEQ = Internal.createSequence("generalization_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
 
     /**
+     * The sequence <code>public.generalization_lifecycle_id_seq</code>
+     */
+    public static final Sequence<Long> GENERALIZATION_LIFECYCLE_ID_SEQ = Internal.createSequence("generalization_lifecycle_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
      * The sequence <code>public.generation_clause_id_seq</code>
      */
     public static final Sequence<Long> GENERATION_CLAUSE_ID_SEQ = Internal.createSequence("generation_clause_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
@@ -54,6 +69,11 @@ public class Sequences {
      * The sequence <code>public.jacoco_coverage_report_id_seq</code>
      */
     public static final Sequence<Long> JACOCO_COVERAGE_REPORT_ID_SEQ = Internal.createSequence("jacoco_coverage_report_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
+     * The sequence <code>public.jpf_extraction_summary_id_seq</code>
+     */
+    public static final Sequence<Long> JPF_EXTRACTION_SUMMARY_ID_SEQ = Internal.createSequence("jpf_extraction_summary_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
 
     /**
      * The sequence <code>public.jqwik_execution_run_id_seq</code>
@@ -89,6 +109,11 @@ public class Sequences {
      * The sequence <code>public.project_id_seq</code>
      */
     public static final Sequence<Long> PROJECT_ID_SEQ = Internal.createSequence("project_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
+
+    /**
+     * The sequence <code>public.task_diagnostic_id_seq</code>
+     */
+    public static final Sequence<Long> TASK_DIAGNOSTIC_ID_SEQ = Internal.createSequence("task_diagnostic_id_seq", Public.PUBLIC, SQLDataType.BIGINT.nullable(false), null, null, null, null, false, null);
 
     /**
      * The sequence <code>public.task_id_seq</code>

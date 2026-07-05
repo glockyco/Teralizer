@@ -8,13 +8,17 @@ import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.AssertionSemantics;
+import org.jooq.generated.tables.BuildEnvironmentObservation;
 import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
+import org.jooq.generated.tables.GeneralizationLifecycle;
 import org.jooq.generated.tables.GenerationClause;
 import org.jooq.generated.tables.GenerationParameter;
 import org.jooq.generated.tables.JacocoCoverageReport;
+import org.jooq.generated.tables.JpfExtractionSummary;
 import org.jooq.generated.tables.JqwikExecutionRun;
 import org.jooq.generated.tables.JqwikPropertyExecution;
 import org.jooq.generated.tables.JunitTestReport;
@@ -23,15 +27,20 @@ import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.Task;
+import org.jooq.generated.tables.TaskDiagnostic;
 import org.jooq.generated.tables.Test;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.AssertionSemanticsRecord;
+import org.jooq.generated.tables.records.BuildEnvironmentObservationRecord;
 import org.jooq.generated.tables.records.EvosuiteReportRecord;
 import org.jooq.generated.tables.records.EvosuiteRuntimeRecord;
 import org.jooq.generated.tables.records.FilterResultRecord;
+import org.jooq.generated.tables.records.GeneralizationLifecycleRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.GenerationClauseRecord;
 import org.jooq.generated.tables.records.GenerationParameterRecord;
 import org.jooq.generated.tables.records.JacocoCoverageReportRecord;
+import org.jooq.generated.tables.records.JpfExtractionSummaryRecord;
 import org.jooq.generated.tables.records.JqwikExecutionRunRecord;
 import org.jooq.generated.tables.records.JqwikPropertyExecutionRecord;
 import org.jooq.generated.tables.records.JunitTestReportRecord;
@@ -39,6 +48,7 @@ import org.jooq.generated.tables.records.MutResolutionObservationRecord;
 import org.jooq.generated.tables.records.PitCoverageReportRecord;
 import org.jooq.generated.tables.records.PitMutationReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
+import org.jooq.generated.tables.records.TaskDiagnosticRecord;
 import org.jooq.generated.tables.records.TaskRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
@@ -57,13 +67,19 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<AssertionRecord> ASSERTION_PKEY = Internal.createUniqueKey(Assertion.ASSERTION, DSL.name("assertion_pkey"), new TableField[] { Assertion.ASSERTION.ID }, true);
+    public static final UniqueKey<AssertionSemanticsRecord> ASSERTION_SEMANTICS_ASSERTION_ID_KEY = Internal.createUniqueKey(AssertionSemantics.ASSERTION_SEMANTICS, DSL.name("assertion_semantics_assertion_id_key"), new TableField[] { AssertionSemantics.ASSERTION_SEMANTICS.ASSERTION_ID }, true);
+    public static final UniqueKey<AssertionSemanticsRecord> ASSERTION_SEMANTICS_PKEY = Internal.createUniqueKey(AssertionSemantics.ASSERTION_SEMANTICS, DSL.name("assertion_semantics_pkey"), new TableField[] { AssertionSemantics.ASSERTION_SEMANTICS.ID }, true);
+    public static final UniqueKey<BuildEnvironmentObservationRecord> BUILD_ENVIRONMENT_OBSERVATION_PKEY = Internal.createUniqueKey(BuildEnvironmentObservation.BUILD_ENVIRONMENT_OBSERVATION, DSL.name("build_environment_observation_pkey"), new TableField[] { BuildEnvironmentObservation.BUILD_ENVIRONMENT_OBSERVATION.ID }, true);
     public static final UniqueKey<EvosuiteReportRecord> EVOSUITE_REPORT_PKEY = Internal.createUniqueKey(EvosuiteReport.EVOSUITE_REPORT, DSL.name("evosuite_report_pkey"), new TableField[] { EvosuiteReport.EVOSUITE_REPORT.ID }, true);
     public static final UniqueKey<EvosuiteRuntimeRecord> EVOSUITE_RUNTIME_PKEY = Internal.createUniqueKey(EvosuiteRuntime.EVOSUITE_RUNTIME, DSL.name("evosuite_runtime_pkey"), new TableField[] { EvosuiteRuntime.EVOSUITE_RUNTIME.ID }, true);
     public static final UniqueKey<FilterResultRecord> FILTER_RESULT_PKEY = Internal.createUniqueKey(FilterResult.FILTER_RESULT, DSL.name("filter_result_pkey"), new TableField[] { FilterResult.FILTER_RESULT.ID }, true);
     public static final UniqueKey<GeneralizationRecord> GENERALIZATION_PKEY = Internal.createUniqueKey(Generalization.GENERALIZATION, DSL.name("generalization_pkey"), new TableField[] { Generalization.GENERALIZATION.ID }, true);
+    public static final UniqueKey<GeneralizationLifecycleRecord> GENERALIZATION_LIFECYCLE_GENERALIZATION_ID_KEY = Internal.createUniqueKey(GeneralizationLifecycle.GENERALIZATION_LIFECYCLE, DSL.name("generalization_lifecycle_generalization_id_key"), new TableField[] { GeneralizationLifecycle.GENERALIZATION_LIFECYCLE.GENERALIZATION_ID }, true);
+    public static final UniqueKey<GeneralizationLifecycleRecord> GENERALIZATION_LIFECYCLE_PKEY = Internal.createUniqueKey(GeneralizationLifecycle.GENERALIZATION_LIFECYCLE, DSL.name("generalization_lifecycle_pkey"), new TableField[] { GeneralizationLifecycle.GENERALIZATION_LIFECYCLE.ID }, true);
     public static final UniqueKey<GenerationClauseRecord> GENERATION_CLAUSE_PKEY = Internal.createUniqueKey(GenerationClause.GENERATION_CLAUSE, DSL.name("generation_clause_pkey"), new TableField[] { GenerationClause.GENERATION_CLAUSE.ID }, true);
     public static final UniqueKey<GenerationParameterRecord> GENERATION_PARAMETER_PKEY = Internal.createUniqueKey(GenerationParameter.GENERATION_PARAMETER, DSL.name("generation_parameter_pkey"), new TableField[] { GenerationParameter.GENERATION_PARAMETER.ID }, true);
     public static final UniqueKey<JacocoCoverageReportRecord> JACOCO_COVERAGE_REPORT_PKEY = Internal.createUniqueKey(JacocoCoverageReport.JACOCO_COVERAGE_REPORT, DSL.name("jacoco_coverage_report_pkey"), new TableField[] { JacocoCoverageReport.JACOCO_COVERAGE_REPORT.ID }, true);
+    public static final UniqueKey<JpfExtractionSummaryRecord> JPF_EXTRACTION_SUMMARY_PKEY = Internal.createUniqueKey(JpfExtractionSummary.JPF_EXTRACTION_SUMMARY, DSL.name("jpf_extraction_summary_pkey"), new TableField[] { JpfExtractionSummary.JPF_EXTRACTION_SUMMARY.ID }, true);
     public static final UniqueKey<JqwikExecutionRunRecord> JQWIK_EXECUTION_RUN_EXECUTION_ID_KEY = Internal.createUniqueKey(JqwikExecutionRun.JQWIK_EXECUTION_RUN, DSL.name("jqwik_execution_run_execution_id_key"), new TableField[] { JqwikExecutionRun.JQWIK_EXECUTION_RUN.EXECUTION_ID }, true);
     public static final UniqueKey<JqwikExecutionRunRecord> JQWIK_EXECUTION_RUN_PKEY = Internal.createUniqueKey(JqwikExecutionRun.JQWIK_EXECUTION_RUN, DSL.name("jqwik_execution_run_pkey"), new TableField[] { JqwikExecutionRun.JQWIK_EXECUTION_RUN.ID }, true);
     public static final UniqueKey<JqwikPropertyExecutionRecord> JQWIK_PROPERTY_EXECUTION_JQWIK_EXECUTION_RUN_ID_GENERALIZAT_KEY = Internal.createUniqueKey(JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION, DSL.name("jqwik_property_execution_jqwik_execution_run_id_generalizat_key"), new TableField[] { JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION.JQWIK_EXECUTION_RUN_ID, JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION.GENERALIZATION_ID, JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION.TEST_CASE_NAME }, true);
@@ -74,6 +90,7 @@ public class Keys {
     public static final UniqueKey<PitMutationReportRecord> PIT_MUTATION_REPORT_PKEY = Internal.createUniqueKey(PitMutationReport.PIT_MUTATION_REPORT, DSL.name("pit_mutation_report_pkey"), new TableField[] { PitMutationReport.PIT_MUTATION_REPORT.ID }, true);
     public static final UniqueKey<ProjectRecord> PROJECT_PKEY = Internal.createUniqueKey(Project.PROJECT, DSL.name("project_pkey"), new TableField[] { Project.PROJECT.ID }, true);
     public static final UniqueKey<TaskRecord> TASK_PKEY = Internal.createUniqueKey(Task.TASK, DSL.name("task_pkey"), new TableField[] { Task.TASK.ID }, true);
+    public static final UniqueKey<TaskDiagnosticRecord> TASK_DIAGNOSTIC_PKEY = Internal.createUniqueKey(TaskDiagnostic.TASK_DIAGNOSTIC, DSL.name("task_diagnostic_pkey"), new TableField[] { TaskDiagnostic.TASK_DIAGNOSTIC.ID }, true);
     public static final UniqueKey<TestRecord> TEST_PKEY = Internal.createUniqueKey(Test.TEST, DSL.name("test_pkey"), new TableField[] { Test.TEST.ID }, true);
 
     // -------------------------------------------------------------------------
@@ -82,6 +99,8 @@ public class Keys {
 
     public static final ForeignKey<AssertionRecord, ProjectRecord> ASSERTION__ASSERTION_PROJECT_ID_FKEY = Internal.createForeignKey(Assertion.ASSERTION, DSL.name("assertion_project_id_fkey"), new TableField[] { Assertion.ASSERTION.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<AssertionRecord, TestRecord> ASSERTION__ASSERTION_TEST_ID_FKEY = Internal.createForeignKey(Assertion.ASSERTION, DSL.name("assertion_test_id_fkey"), new TableField[] { Assertion.ASSERTION.TEST_ID }, Keys.TEST_PKEY, new TableField[] { Test.TEST.ID }, true);
+    public static final ForeignKey<AssertionSemanticsRecord, AssertionRecord> ASSERTION_SEMANTICS__ASSERTION_SEMANTICS_ASSERTION_ID_FKEY = Internal.createForeignKey(AssertionSemantics.ASSERTION_SEMANTICS, DSL.name("assertion_semantics_assertion_id_fkey"), new TableField[] { AssertionSemantics.ASSERTION_SEMANTICS.ASSERTION_ID }, Keys.ASSERTION_PKEY, new TableField[] { Assertion.ASSERTION.ID }, true);
+    public static final ForeignKey<BuildEnvironmentObservationRecord, ProjectRecord> BUILD_ENVIRONMENT_OBSERVATION__BUILD_ENVIRONMENT_OBSERVATION_PROJECT_ID_FKEY = Internal.createForeignKey(BuildEnvironmentObservation.BUILD_ENVIRONMENT_OBSERVATION, DSL.name("build_environment_observation_project_id_fkey"), new TableField[] { BuildEnvironmentObservation.BUILD_ENVIRONMENT_OBSERVATION.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<EvosuiteReportRecord, ProjectRecord> EVOSUITE_REPORT__EVOSUITE_REPORT_PROJECT_ID_FKEY = Internal.createForeignKey(EvosuiteReport.EVOSUITE_REPORT, DSL.name("evosuite_report_project_id_fkey"), new TableField[] { EvosuiteReport.EVOSUITE_REPORT.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<EvosuiteRuntimeRecord, ProjectRecord> EVOSUITE_RUNTIME__EVOSUITE_RUNTIME_PROJECT_ID_FKEY = Internal.createForeignKey(EvosuiteRuntime.EVOSUITE_RUNTIME, DSL.name("evosuite_runtime_project_id_fkey"), new TableField[] { EvosuiteRuntime.EVOSUITE_RUNTIME.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<FilterResultRecord, AssertionRecord> FILTER_RESULT__FILTER_RESULT_ASSERTION_ID_FKEY = Internal.createForeignKey(FilterResult.FILTER_RESULT, DSL.name("filter_result_assertion_id_fkey"), new TableField[] { FilterResult.FILTER_RESULT.ASSERTION_ID }, Keys.ASSERTION_PKEY, new TableField[] { Assertion.ASSERTION.ID }, true);
@@ -91,9 +110,12 @@ public class Keys {
     public static final ForeignKey<GeneralizationRecord, AssertionRecord> GENERALIZATION__GENERALIZATION_ASSERTION_ID_FKEY = Internal.createForeignKey(Generalization.GENERALIZATION, DSL.name("generalization_assertion_id_fkey"), new TableField[] { Generalization.GENERALIZATION.ASSERTION_ID }, Keys.ASSERTION_PKEY, new TableField[] { Assertion.ASSERTION.ID }, true);
     public static final ForeignKey<GeneralizationRecord, ProjectRecord> GENERALIZATION__GENERALIZATION_PROJECT_ID_FKEY = Internal.createForeignKey(Generalization.GENERALIZATION, DSL.name("generalization_project_id_fkey"), new TableField[] { Generalization.GENERALIZATION.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<GeneralizationRecord, TestRecord> GENERALIZATION__GENERALIZATION_TEST_ID_FKEY = Internal.createForeignKey(Generalization.GENERALIZATION, DSL.name("generalization_test_id_fkey"), new TableField[] { Generalization.GENERALIZATION.TEST_ID }, Keys.TEST_PKEY, new TableField[] { Test.TEST.ID }, true);
+    public static final ForeignKey<GeneralizationLifecycleRecord, GeneralizationRecord> GENERALIZATION_LIFECYCLE__GENERALIZATION_LIFECYCLE_GENERALIZATION_ID_FKEY = Internal.createForeignKey(GeneralizationLifecycle.GENERALIZATION_LIFECYCLE, DSL.name("generalization_lifecycle_generalization_id_fkey"), new TableField[] { GeneralizationLifecycle.GENERALIZATION_LIFECYCLE.GENERALIZATION_ID }, Keys.GENERALIZATION_PKEY, new TableField[] { Generalization.GENERALIZATION.ID }, true);
     public static final ForeignKey<GenerationClauseRecord, GeneralizationRecord> GENERATION_CLAUSE__GENERATION_CLAUSE_GENERALIZATION_ID_FKEY = Internal.createForeignKey(GenerationClause.GENERATION_CLAUSE, DSL.name("generation_clause_generalization_id_fkey"), new TableField[] { GenerationClause.GENERATION_CLAUSE.GENERALIZATION_ID }, Keys.GENERALIZATION_PKEY, new TableField[] { Generalization.GENERALIZATION.ID }, true);
     public static final ForeignKey<GenerationParameterRecord, GeneralizationRecord> GENERATION_PARAMETER__GENERATION_PARAMETER_GENERALIZATION_ID_FKEY = Internal.createForeignKey(GenerationParameter.GENERATION_PARAMETER, DSL.name("generation_parameter_generalization_id_fkey"), new TableField[] { GenerationParameter.GENERATION_PARAMETER.GENERALIZATION_ID }, Keys.GENERALIZATION_PKEY, new TableField[] { Generalization.GENERALIZATION.ID }, true);
     public static final ForeignKey<JacocoCoverageReportRecord, ProjectRecord> JACOCO_COVERAGE_REPORT__JACOCO_COVERAGE_REPORT_PROJECT_ID_FKEY = Internal.createForeignKey(JacocoCoverageReport.JACOCO_COVERAGE_REPORT, DSL.name("jacoco_coverage_report_project_id_fkey"), new TableField[] { JacocoCoverageReport.JACOCO_COVERAGE_REPORT.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
+    public static final ForeignKey<JpfExtractionSummaryRecord, ProjectRecord> JPF_EXTRACTION_SUMMARY__JPF_EXTRACTION_SUMMARY_PROJECT_ID_FKEY = Internal.createForeignKey(JpfExtractionSummary.JPF_EXTRACTION_SUMMARY, DSL.name("jpf_extraction_summary_project_id_fkey"), new TableField[] { JpfExtractionSummary.JPF_EXTRACTION_SUMMARY.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
+    public static final ForeignKey<JpfExtractionSummaryRecord, TestRecord> JPF_EXTRACTION_SUMMARY__JPF_EXTRACTION_SUMMARY_TEST_ID_FKEY = Internal.createForeignKey(JpfExtractionSummary.JPF_EXTRACTION_SUMMARY, DSL.name("jpf_extraction_summary_test_id_fkey"), new TableField[] { JpfExtractionSummary.JPF_EXTRACTION_SUMMARY.TEST_ID }, Keys.TEST_PKEY, new TableField[] { Test.TEST.ID }, true);
     public static final ForeignKey<JqwikExecutionRunRecord, ProjectRecord> JQWIK_EXECUTION_RUN__JQWIK_EXECUTION_RUN_PROJECT_ID_FKEY = Internal.createForeignKey(JqwikExecutionRun.JQWIK_EXECUTION_RUN, DSL.name("jqwik_execution_run_project_id_fkey"), new TableField[] { JqwikExecutionRun.JQWIK_EXECUTION_RUN.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<JqwikExecutionRunRecord, TaskRecord> JQWIK_EXECUTION_RUN__JQWIK_EXECUTION_RUN_TASK_ID_FKEY = Internal.createForeignKey(JqwikExecutionRun.JQWIK_EXECUTION_RUN, DSL.name("jqwik_execution_run_task_id_fkey"), new TableField[] { JqwikExecutionRun.JQWIK_EXECUTION_RUN.TASK_ID }, Keys.TASK_PKEY, new TableField[] { Task.TASK.ID }, true);
     public static final ForeignKey<JqwikPropertyExecutionRecord, GeneralizationRecord> JQWIK_PROPERTY_EXECUTION__JQWIK_PROPERTY_EXECUTION_GENERALIZATION_ID_FKEY = Internal.createForeignKey(JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION, DSL.name("jqwik_property_execution_generalization_id_fkey"), new TableField[] { JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION.GENERALIZATION_ID }, Keys.GENERALIZATION_PKEY, new TableField[] { Generalization.GENERALIZATION.ID }, true);
@@ -116,5 +138,10 @@ public class Keys {
     public static final ForeignKey<TaskRecord, GeneralizationRecord> TASK__TASK_GENERALIZATION_ID_FKEY = Internal.createForeignKey(Task.TASK, DSL.name("task_generalization_id_fkey"), new TableField[] { Task.TASK.GENERALIZATION_ID }, Keys.GENERALIZATION_PKEY, new TableField[] { Generalization.GENERALIZATION.ID }, true);
     public static final ForeignKey<TaskRecord, ProjectRecord> TASK__TASK_PROJECT_ID_FKEY = Internal.createForeignKey(Task.TASK, DSL.name("task_project_id_fkey"), new TableField[] { Task.TASK.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
     public static final ForeignKey<TaskRecord, TestRecord> TASK__TASK_TEST_ID_FKEY = Internal.createForeignKey(Task.TASK, DSL.name("task_test_id_fkey"), new TableField[] { Task.TASK.TEST_ID }, Keys.TEST_PKEY, new TableField[] { Test.TEST.ID }, true);
+    public static final ForeignKey<TaskDiagnosticRecord, AssertionRecord> TASK_DIAGNOSTIC__TASK_DIAGNOSTIC_ASSERTION_ID_FKEY = Internal.createForeignKey(TaskDiagnostic.TASK_DIAGNOSTIC, DSL.name("task_diagnostic_assertion_id_fkey"), new TableField[] { TaskDiagnostic.TASK_DIAGNOSTIC.ASSERTION_ID }, Keys.ASSERTION_PKEY, new TableField[] { Assertion.ASSERTION.ID }, true);
+    public static final ForeignKey<TaskDiagnosticRecord, GeneralizationRecord> TASK_DIAGNOSTIC__TASK_DIAGNOSTIC_GENERALIZATION_ID_FKEY = Internal.createForeignKey(TaskDiagnostic.TASK_DIAGNOSTIC, DSL.name("task_diagnostic_generalization_id_fkey"), new TableField[] { TaskDiagnostic.TASK_DIAGNOSTIC.GENERALIZATION_ID }, Keys.GENERALIZATION_PKEY, new TableField[] { Generalization.GENERALIZATION.ID }, true);
+    public static final ForeignKey<TaskDiagnosticRecord, ProjectRecord> TASK_DIAGNOSTIC__TASK_DIAGNOSTIC_PROJECT_ID_FKEY = Internal.createForeignKey(TaskDiagnostic.TASK_DIAGNOSTIC, DSL.name("task_diagnostic_project_id_fkey"), new TableField[] { TaskDiagnostic.TASK_DIAGNOSTIC.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
+    public static final ForeignKey<TaskDiagnosticRecord, TaskRecord> TASK_DIAGNOSTIC__TASK_DIAGNOSTIC_TASK_ID_FKEY = Internal.createForeignKey(TaskDiagnostic.TASK_DIAGNOSTIC, DSL.name("task_diagnostic_task_id_fkey"), new TableField[] { TaskDiagnostic.TASK_DIAGNOSTIC.TASK_ID }, Keys.TASK_PKEY, new TableField[] { Task.TASK.ID }, true);
+    public static final ForeignKey<TaskDiagnosticRecord, TestRecord> TASK_DIAGNOSTIC__TASK_DIAGNOSTIC_TEST_ID_FKEY = Internal.createForeignKey(TaskDiagnostic.TASK_DIAGNOSTIC, DSL.name("task_diagnostic_test_id_fkey"), new TableField[] { TaskDiagnostic.TASK_DIAGNOSTIC.TEST_ID }, Keys.TEST_PKEY, new TableField[] { Test.TEST.ID }, true);
     public static final ForeignKey<TestRecord, ProjectRecord> TEST__TEST_PROJECT_ID_FKEY = Internal.createForeignKey(Test.TEST, DSL.name("test_project_id_fkey"), new TableField[] { Test.TEST.PROJECT_ID }, Keys.PROJECT_PKEY, new TableField[] { Project.PROJECT.ID }, true);
 }

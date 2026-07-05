@@ -11,9 +11,10 @@ import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Identity;
 import org.jooq.Index;
+import org.jooq.JSONB;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row8;
+import org.jooq.Row11;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -92,6 +93,21 @@ public class FilterResult extends TableImpl<FilterResultRecord> {
      */
     public final TableField<FilterResultRecord, String> REASON = createField(DSL.name("reason"), SQLDataType.CLOB.nullable(false), this, "");
 
+    /**
+     * The column <code>public.filter_result.reason_code</code>.
+     */
+    public final TableField<FilterResultRecord, String> REASON_CODE = createField(DSL.name("reason_code"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.filter_result.depends_on</code>.
+     */
+    public final TableField<FilterResultRecord, String> DEPENDS_ON = createField(DSL.name("depends_on"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.filter_result.detail_json</code>.
+     */
+    public final TableField<FilterResultRecord, JSONB> DETAIL_JSON = createField(DSL.name("detail_json"), SQLDataType.JSONB, this, "");
+
     private FilterResult(Name alias, Table<FilterResultRecord> aliased) {
         this(alias, aliased, null);
     }
@@ -132,7 +148,7 @@ public class FilterResult extends TableImpl<FilterResultRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.IDX_FILTER_RESULT_ASSERTION_ID, Indexes.IDX_FILTER_RESULT_DECISION, Indexes.IDX_FILTER_RESULT_GENERALIZATION_ID, Indexes.IDX_FILTER_RESULT_PROJECT_ID, Indexes.IDX_FILTER_RESULT_TEST_ID);
+        return Arrays.<Index>asList(Indexes.IDX_FILTER_RESULT_ASSERTION_ID, Indexes.IDX_FILTER_RESULT_DECISION, Indexes.IDX_FILTER_RESULT_DEPENDS_ON, Indexes.IDX_FILTER_RESULT_GENERALIZATION_ID, Indexes.IDX_FILTER_RESULT_PROJECT_ID, Indexes.IDX_FILTER_RESULT_REASON_CODE, Indexes.IDX_FILTER_RESULT_TEST_ID);
     }
 
     @Override
@@ -215,11 +231,11 @@ public class FilterResult extends TableImpl<FilterResultRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row8 type methods
+    // Row11 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row8<Long, Long, Long, Long, Long, String, FilterDecision, String> fieldsRow() {
-        return (Row8) super.fieldsRow();
+    public Row11<Long, Long, Long, Long, Long, String, FilterDecision, String, String, String, JSONB> fieldsRow() {
+        return (Row11) super.fieldsRow();
     }
 }

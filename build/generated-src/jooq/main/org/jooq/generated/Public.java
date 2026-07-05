@@ -11,13 +11,17 @@ import org.jooq.Catalog;
 import org.jooq.Sequence;
 import org.jooq.Table;
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.AssertionSemantics;
+import org.jooq.generated.tables.BuildEnvironmentObservation;
 import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
+import org.jooq.generated.tables.GeneralizationLifecycle;
 import org.jooq.generated.tables.GenerationClause;
 import org.jooq.generated.tables.GenerationParameter;
 import org.jooq.generated.tables.JacocoCoverageReport;
+import org.jooq.generated.tables.JpfExtractionSummary;
 import org.jooq.generated.tables.JqwikExecutionRun;
 import org.jooq.generated.tables.JqwikPropertyExecution;
 import org.jooq.generated.tables.JunitTestReport;
@@ -26,6 +30,7 @@ import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.Task;
+import org.jooq.generated.tables.TaskDiagnostic;
 import org.jooq.generated.tables.Test;
 import org.jooq.impl.SchemaImpl;
 
@@ -49,6 +54,16 @@ public class Public extends SchemaImpl {
     public final Assertion ASSERTION = Assertion.ASSERTION;
 
     /**
+     * The table <code>public.assertion_semantics</code>.
+     */
+    public final AssertionSemantics ASSERTION_SEMANTICS = AssertionSemantics.ASSERTION_SEMANTICS;
+
+    /**
+     * The table <code>public.build_environment_observation</code>.
+     */
+    public final BuildEnvironmentObservation BUILD_ENVIRONMENT_OBSERVATION = BuildEnvironmentObservation.BUILD_ENVIRONMENT_OBSERVATION;
+
+    /**
      * The table <code>public.evosuite_report</code>.
      */
     public final EvosuiteReport EVOSUITE_REPORT = EvosuiteReport.EVOSUITE_REPORT;
@@ -69,6 +84,11 @@ public class Public extends SchemaImpl {
     public final Generalization GENERALIZATION = Generalization.GENERALIZATION;
 
     /**
+     * The table <code>public.generalization_lifecycle</code>.
+     */
+    public final GeneralizationLifecycle GENERALIZATION_LIFECYCLE = GeneralizationLifecycle.GENERALIZATION_LIFECYCLE;
+
+    /**
      * The table <code>public.generation_clause</code>.
      */
     public final GenerationClause GENERATION_CLAUSE = GenerationClause.GENERATION_CLAUSE;
@@ -82,6 +102,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.jacoco_coverage_report</code>.
      */
     public final JacocoCoverageReport JACOCO_COVERAGE_REPORT = JacocoCoverageReport.JACOCO_COVERAGE_REPORT;
+
+    /**
+     * The table <code>public.jpf_extraction_summary</code>.
+     */
+    public final JpfExtractionSummary JPF_EXTRACTION_SUMMARY = JpfExtractionSummary.JPF_EXTRACTION_SUMMARY;
 
     /**
      * The table <code>public.jqwik_execution_run</code>.
@@ -124,6 +149,11 @@ public class Public extends SchemaImpl {
     public final Task TASK = Task.TASK;
 
     /**
+     * The table <code>public.task_diagnostic</code>.
+     */
+    public final TaskDiagnostic TASK_DIAGNOSTIC = TaskDiagnostic.TASK_DIAGNOSTIC;
+
+    /**
      * The table <code>public.test</code>.
      */
     public final Test TEST = Test.TEST;
@@ -145,13 +175,17 @@ public class Public extends SchemaImpl {
     public final List<Sequence<?>> getSequences() {
         return Arrays.<Sequence<?>>asList(
             Sequences.ASSERTION_ID_SEQ,
+            Sequences.ASSERTION_SEMANTICS_ID_SEQ,
+            Sequences.BUILD_ENVIRONMENT_OBSERVATION_ID_SEQ,
             Sequences.EVOSUITE_REPORT_ID_SEQ,
             Sequences.EVOSUITE_RUNTIME_ID_SEQ,
             Sequences.FILTER_RESULT_ID_SEQ,
             Sequences.GENERALIZATION_ID_SEQ,
+            Sequences.GENERALIZATION_LIFECYCLE_ID_SEQ,
             Sequences.GENERATION_CLAUSE_ID_SEQ,
             Sequences.GENERATION_PARAMETER_ID_SEQ,
             Sequences.JACOCO_COVERAGE_REPORT_ID_SEQ,
+            Sequences.JPF_EXTRACTION_SUMMARY_ID_SEQ,
             Sequences.JQWIK_EXECUTION_RUN_ID_SEQ,
             Sequences.JQWIK_PROPERTY_EXECUTION_ID_SEQ,
             Sequences.JUNIT_TEST_REPORT_ID_SEQ,
@@ -159,6 +193,7 @@ public class Public extends SchemaImpl {
             Sequences.PIT_COVERAGE_REPORT_ID_SEQ,
             Sequences.PIT_MUTATION_REPORT_ID_SEQ,
             Sequences.PROJECT_ID_SEQ,
+            Sequences.TASK_DIAGNOSTIC_ID_SEQ,
             Sequences.TASK_ID_SEQ,
             Sequences.TEST_ID_SEQ);
     }
@@ -167,13 +202,17 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.<Table<?>>asList(
             Assertion.ASSERTION,
+            AssertionSemantics.ASSERTION_SEMANTICS,
+            BuildEnvironmentObservation.BUILD_ENVIRONMENT_OBSERVATION,
             EvosuiteReport.EVOSUITE_REPORT,
             EvosuiteRuntime.EVOSUITE_RUNTIME,
             FilterResult.FILTER_RESULT,
             Generalization.GENERALIZATION,
+            GeneralizationLifecycle.GENERALIZATION_LIFECYCLE,
             GenerationClause.GENERATION_CLAUSE,
             GenerationParameter.GENERATION_PARAMETER,
             JacocoCoverageReport.JACOCO_COVERAGE_REPORT,
+            JpfExtractionSummary.JPF_EXTRACTION_SUMMARY,
             JqwikExecutionRun.JQWIK_EXECUTION_RUN,
             JqwikPropertyExecution.JQWIK_PROPERTY_EXECUTION,
             JunitTestReport.JUNIT_TEST_REPORT,
@@ -182,6 +221,7 @@ public class Public extends SchemaImpl {
             PitMutationReport.PIT_MUTATION_REPORT,
             Project.PROJECT,
             Task.TASK,
+            TaskDiagnostic.TASK_DIAGNOSTIC,
             Test.TEST);
     }
 }

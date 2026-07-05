@@ -1,5 +1,10 @@
 -- Dialect: PostgreSQL
 
+DROP TABLE IF EXISTS generalization_lifecycle;
+DROP TABLE IF EXISTS task_diagnostic;
+DROP TABLE IF EXISTS jpf_extraction_summary;
+DROP TABLE IF EXISTS build_environment_observation;
+DROP TABLE IF EXISTS assertion_semantics;
 DROP TABLE IF EXISTS generation_parameter;
 DROP TABLE IF EXISTS generation_clause;
 DROP TABLE IF EXISTS mut_resolution_observation;
@@ -184,6 +189,28 @@ CREATE INDEX idx_generalization_class_qualified_name ON generalization (class_qu
 CREATE INDEX idx_generalization_method_qualified_name ON generalization (method_qualified_name);
 CREATE INDEX idx_generalization_is_included ON generalization (is_included);
 
+CREATE TABLE generalization_lifecycle
+(
+    id                           BIGSERIAL PRIMARY KEY,
+    generalization_id            BIGINT  NOT NULL,
+    generated_source_created     BOOLEAN NOT NULL,
+    generated_project_compiled   BOOLEAN NOT NULL,
+    generated_tests_executed     BOOLEAN NOT NULL,
+    generated_report_collected   BOOLEAN NOT NULL,
+    generated_filter_passed      BOOLEAN NOT NULL,
+    generated_pit_collected      BOOLEAN NOT NULL,
+    final_usable                 BOOLEAN NOT NULL,
+    final_failure_stage          TEXT,
+    final_failure_code           TEXT,
+
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE,
+    UNIQUE (generalization_id)
+);
+
+CREATE INDEX idx_generalization_lifecycle_generalization_id ON generalization_lifecycle (generalization_id);
+CREATE INDEX idx_generalization_lifecycle_final_usable ON generalization_lifecycle (final_usable);
+CREATE INDEX idx_generalization_lifecycle_failure ON generalization_lifecycle (final_failure_stage, final_failure_code);
+
 CREATE TABLE filter_result
 (
     id                BIGSERIAL PRIMARY KEY,
@@ -196,6 +223,9 @@ CREATE TABLE filter_result
     filter_name       TEXT   NOT NULL,
     decision          TEXT   NOT NULL,
     reason            TEXT   NOT NULL,
+    reason_code       TEXT,
+    depends_on        TEXT,
+    detail_json       JSONB,
 
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
@@ -209,6 +239,8 @@ CREATE INDEX idx_filter_result_assertion_id ON filter_result (assertion_id);
 CREATE INDEX idx_filter_result_generalization_id ON filter_result (generalization_id);
 
 CREATE INDEX idx_filter_result_decision ON filter_result (decision);
+CREATE INDEX idx_filter_result_reason_code ON filter_result (reason_code);
+CREATE INDEX idx_filter_result_depends_on ON filter_result (depends_on);
 
 CREATE TABLE evosuite_runtime
 (
@@ -422,6 +454,95 @@ CREATE INDEX idx_task_stage ON task (stage);
 CREATE INDEX idx_task_variant ON task (variant);
 
 CREATE INDEX idx_task_status ON task (status);
+
+CREATE TABLE assertion_semantics
+(
+    id               BIGSERIAL PRIMARY KEY,
+    assertion_id     BIGINT NOT NULL,
+    semantic_kind    TEXT   NOT NULL,
+    argument_shape   TEXT   NOT NULL,
+    fail_context     TEXT,
+    matcher_family   TEXT,
+    matcher_name     TEXT,
+
+    FOREIGN KEY (assertion_id) REFERENCES assertion (id) ON DELETE CASCADE,
+    UNIQUE (assertion_id)
+);
+
+CREATE INDEX idx_assertion_semantics_assertion_id ON assertion_semantics (assertion_id);
+CREATE INDEX idx_assertion_semantics_semantic_kind ON assertion_semantics (semantic_kind);
+CREATE INDEX idx_assertion_semantics_fail_context ON assertion_semantics (fail_context);
+
+CREATE TABLE build_environment_observation
+(
+    id                                BIGSERIAL PRIMARY KEY,
+    project_id                        BIGINT NOT NULL,
+    stage                             TEXT   NOT NULL,
+    build_tool                        TEXT   NOT NULL,
+    compiler_source                   TEXT,
+    compiler_target                   TEXT,
+    compiler_release                  TEXT,
+    generated_source_required_level   TEXT,
+    generated_uses_lambdas            BOOLEAN,
+    generated_uses_method_references  BOOLEAN,
+    generated_uses_diamond            BOOLEAN,
+
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_build_environment_observation_project_id ON build_environment_observation (project_id);
+CREATE INDEX idx_build_environment_observation_stage ON build_environment_observation (stage);
+CREATE INDEX idx_build_environment_observation_build_tool ON build_environment_observation (build_tool);
+
+CREATE TABLE jpf_extraction_summary
+(
+    id                              BIGSERIAL PRIMARY KEY,
+    project_id                      BIGINT  NOT NULL,
+    test_id                         BIGINT,
+    assertions_scheduled            INTEGER NOT NULL,
+    assertions_instrumented         INTEGER NOT NULL,
+    assertions_jpf_succeeded        INTEGER NOT NULL,
+    assertions_jpf_failed           INTEGER NOT NULL,
+    assertions_with_input_spec      INTEGER NOT NULL,
+    assertions_with_output_spec     INTEGER NOT NULL,
+    assertions_with_complete_spec   INTEGER NOT NULL,
+    failure_counts                  JSONB   NOT NULL,
+
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_jpf_extraction_summary_project_id ON jpf_extraction_summary (project_id);
+CREATE INDEX idx_jpf_extraction_summary_test_id ON jpf_extraction_summary (test_id);
+
+CREATE TABLE task_diagnostic
+(
+    id                    BIGSERIAL PRIMARY KEY,
+    task_id               BIGINT NOT NULL,
+    project_id            BIGINT,
+    test_id               BIGINT,
+    assertion_id          BIGINT,
+    generalization_id     BIGINT,
+    stage                 TEXT   NOT NULL,
+    reason_code           TEXT   NOT NULL,
+    detail_json           JSONB,
+    first_error_file      TEXT,
+    first_error_line      INTEGER,
+    first_error_message   TEXT,
+
+    FOREIGN KEY (task_id) REFERENCES task (id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
+    FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
+    FOREIGN KEY (assertion_id) REFERENCES assertion (id) ON DELETE CASCADE,
+    FOREIGN KEY (generalization_id) REFERENCES generalization (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_task_diagnostic_task_id ON task_diagnostic (task_id);
+CREATE INDEX idx_task_diagnostic_project_id ON task_diagnostic (project_id);
+CREATE INDEX idx_task_diagnostic_test_id ON task_diagnostic (test_id);
+CREATE INDEX idx_task_diagnostic_assertion_id ON task_diagnostic (assertion_id);
+CREATE INDEX idx_task_diagnostic_generalization_id ON task_diagnostic (generalization_id);
+CREATE INDEX idx_task_diagnostic_stage_reason ON task_diagnostic (stage, reason_code);
 
 CREATE TABLE jqwik_execution_run
 (

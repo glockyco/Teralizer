@@ -5,13 +5,17 @@ package org.jooq.generated;
 
 
 import org.jooq.generated.tables.Assertion;
+import org.jooq.generated.tables.AssertionSemantics;
+import org.jooq.generated.tables.BuildEnvironmentObservation;
 import org.jooq.generated.tables.EvosuiteReport;
 import org.jooq.generated.tables.EvosuiteRuntime;
 import org.jooq.generated.tables.FilterResult;
 import org.jooq.generated.tables.Generalization;
+import org.jooq.generated.tables.GeneralizationLifecycle;
 import org.jooq.generated.tables.GenerationClause;
 import org.jooq.generated.tables.GenerationParameter;
 import org.jooq.generated.tables.JacocoCoverageReport;
+import org.jooq.generated.tables.JpfExtractionSummary;
 import org.jooq.generated.tables.JqwikExecutionRun;
 import org.jooq.generated.tables.JqwikPropertyExecution;
 import org.jooq.generated.tables.JunitTestReport;
@@ -20,6 +24,7 @@ import org.jooq.generated.tables.PitCoverageReport;
 import org.jooq.generated.tables.PitMutationReport;
 import org.jooq.generated.tables.Project;
 import org.jooq.generated.tables.Task;
+import org.jooq.generated.tables.TaskDiagnostic;
 import org.jooq.generated.tables.Test;
 
 
@@ -33,6 +38,16 @@ public class Tables {
      * The table <code>public.assertion</code>.
      */
     public static final Assertion ASSERTION = Assertion.ASSERTION;
+
+    /**
+     * The table <code>public.assertion_semantics</code>.
+     */
+    public static final AssertionSemantics ASSERTION_SEMANTICS = AssertionSemantics.ASSERTION_SEMANTICS;
+
+    /**
+     * The table <code>public.build_environment_observation</code>.
+     */
+    public static final BuildEnvironmentObservation BUILD_ENVIRONMENT_OBSERVATION = BuildEnvironmentObservation.BUILD_ENVIRONMENT_OBSERVATION;
 
     /**
      * The table <code>public.evosuite_report</code>.
@@ -55,6 +70,11 @@ public class Tables {
     public static final Generalization GENERALIZATION = Generalization.GENERALIZATION;
 
     /**
+     * The table <code>public.generalization_lifecycle</code>.
+     */
+    public static final GeneralizationLifecycle GENERALIZATION_LIFECYCLE = GeneralizationLifecycle.GENERALIZATION_LIFECYCLE;
+
+    /**
      * The table <code>public.generation_clause</code>.
      */
     public static final GenerationClause GENERATION_CLAUSE = GenerationClause.GENERATION_CLAUSE;
@@ -68,6 +88,11 @@ public class Tables {
      * The table <code>public.jacoco_coverage_report</code>.
      */
     public static final JacocoCoverageReport JACOCO_COVERAGE_REPORT = JacocoCoverageReport.JACOCO_COVERAGE_REPORT;
+
+    /**
+     * The table <code>public.jpf_extraction_summary</code>.
+     */
+    public static final JpfExtractionSummary JPF_EXTRACTION_SUMMARY = JpfExtractionSummary.JPF_EXTRACTION_SUMMARY;
 
     /**
      * The table <code>public.jqwik_execution_run</code>.
@@ -108,6 +133,11 @@ public class Tables {
      * The table <code>public.task</code>.
      */
     public static final Task TASK = Task.TASK;
+
+    /**
+     * The table <code>public.task_diagnostic</code>.
+     */
+    public static final TaskDiagnostic TASK_DIAGNOSTIC = TaskDiagnostic.TASK_DIAGNOSTIC;
 
     /**
      * The table <code>public.test</code>.
