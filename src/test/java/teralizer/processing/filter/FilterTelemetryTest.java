@@ -20,6 +20,7 @@ import org.jooq.tools.jdbc.MockResult;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.compiler.VirtualFile;
@@ -184,9 +185,13 @@ public class FilterTelemetryTest {
             "class T { void testM() { assertHelper(); } "
                 + "void assertHelper() { org.junit.Assert.assertEquals(1, 1); } }"));
         launcher.buildModel();
+        CtType<?> type = launcher.getModel().getAllTypes().iterator().next();
+        CtMethod<?> testMethod = type.getMethodsByName("testM").get(0);
         TestRecord record = new TestRecord();
         record.setTestClassQualifiedName("T");
         record.setTestMethodName("testM");
+        record.setTestMethodQualifiedName("T.testM");
+        record.setTestMethodRelativePath(testMethod.getPath().relativePath(type).toString());
 
         FilterResult result = new AssertionInMethodFilter(launcher, record).check();
 
