@@ -30,7 +30,7 @@ editing the golden to match broken output.
 |---|---|
 | Analysis code (`analysis/`) | `validate.py --changed` |
 | Java unit-level | `./gradlew test --tests '<Class>'` while iterating, one full `./gradlew build` before commit |
-| Pipeline behavior (codegen, SPF, filters, licenses, build files) | `scripts/verify-pipeline.sh` (~5 min, 13 fixtures, deterministic) |
+| Pipeline behavior (codegen, SPF, filters, licenses, build files) | `scripts/verify-pipeline.sh` (~5–10 min, full fixture corpus) — ONCE PER WAVE of related changes, at the wave's end or when a golden must flip, NEVER per commit or per small change; iterate with `--only` below |
 | SPF submodule (`jpf-symbc/**`) | additionally `cd jpf-symbc && ./gradlew :jpf-symbc:test` (the root build does NOT run this suite, so a red suite survives "build green" without it) |
 | One fixture while iterating | `scripts/run-verification-corpus.sh --only <fixture-name>` (~45 s) |
 | Real-world seams (surefire versions, reports, big suites) | sentinel subset (~10 min, five stable projects, expected census in the config headers) |
