@@ -51,6 +51,35 @@ public class TestAnalysisTaskTest {
     }
 
     @Example
+    void resolvesInheritedTestMethodRelativePathAgainstDeclaringClass() {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(
+            "package smoke;\n"
+                + "public class AbstractBase {\n"
+                + "  public void inherited() { org.junit.Assert.assertEquals(1, 1); }\n"
+                + "}\n",
+            Paths.get(System.getProperty("user.dir"), "AbstractBase.java").toString()
+        ));
+        launcher.addInputResource(new VirtualFile(
+            "package smoke;\n"
+                + "public class SubjectTest extends AbstractBase {\n"
+                + "}\n",
+            Paths.get(System.getProperty("user.dir"), "SubjectTest.java").toString()
+        ));
+        launcher.buildModel();
+        CtClass<?> parent = launcher.getModel().getElements(new NamedElementFilter<>(CtClass.class, "AbstractBase")).get(0);
+        CtMethod<?> inherited = parent.getMethodsByName("inherited").get(0);
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("smoke.SubjectTest");
+        record.setTestMethodQualifiedName("smoke.AbstractBase.inherited");
+        record.setTestMethodRelativePath(inherited.getPath().relativePath(parent).toString());
+
+        CtMethod<?> resolved = TestAnalysisTask.resolveTestMethod(launcher.getFactory(), record);
+
+        Assert.assertEquals(inherited, resolved);
+    }
+
+    @Example
     void unpathableMethodDeclarationStoresInformationalPickOnly() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"

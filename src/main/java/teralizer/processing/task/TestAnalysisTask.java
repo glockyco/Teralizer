@@ -92,14 +92,31 @@ public class TestAnalysisTask extends AbstractTask {
         Launcher spoonLauncher = context.get(this.getProjectId(), TaskContext.SPOON_LAUNCHER);
         Factory  factory = spoonLauncher.getFactory();
 
-        CtClass<?> testClass = factory.Class().get(this.testRecord.getTestClassQualifiedName());
-
-        CtPathStringBuilder pathBuilder = new CtPathStringBuilder();
-        CtPath testMethodPath = pathBuilder.fromString(testMethodRelativePath);
-        CtMethod<?> testMethod = (CtMethod<?>) testMethodPath.evaluateOn(testClass).get(0);
+        CtMethod<?> testMethod = resolveTestMethod(factory, this.testRecord);
 
         FocalTypeResolver focalTypeResolver = context.get(this.getProjectId(), TaskContext.FOCAL_TYPE_RESOLVER);
         this.createAssertionRecords(testMethod, create, gson, focalTypeResolver);
+    }
+
+    public static CtMethod<?> resolveTestMethod(Factory factory, TestRecord testRecord) {
+        CtClass<?> declaringClass = factory.Class().get(declaringClassQualifiedName(testRecord));
+        if (declaringClass == null) {
+            declaringClass = factory.Class().get(testRecord.getTestClassQualifiedName());
+        }
+
+        CtPath testMethodPath = new CtPathStringBuilder().fromString(testRecord.getTestMethodRelativePath());
+        return (CtMethod<?>) testMethodPath.evaluateOn(declaringClass).get(0);
+    }
+
+    private static String declaringClassQualifiedName(TestRecord testRecord) {
+        String testMethodQualifiedName = testRecord.getTestMethodQualifiedName();
+        if (testMethodQualifiedName == null) {
+            return testRecord.getTestClassQualifiedName();
+        }
+        int separator = testMethodQualifiedName.lastIndexOf(".");
+        return separator < 0
+            ? testRecord.getTestClassQualifiedName()
+            : testMethodQualifiedName.substring(0, separator);
     }
 
     void createAssertionRecords(CtMethod<?> testMethod, DSLContext create, Gson gson, FocalTypeResolver focalTypeResolver) {

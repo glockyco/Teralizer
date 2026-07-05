@@ -4,10 +4,10 @@ import java.util.List;
 import org.jooq.generated.tables.records.TestRecord;
 import spoon.Launcher;
 import spoon.reflect.code.CtInvocation;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
+import teralizer.processing.task.TestAnalysisTask;
 import teralizer.spoon.analysis.TestAnalysis;
 
 public class AssertionInMethodFilter extends AbstractFilter {
@@ -22,8 +22,7 @@ public class AssertionInMethodFilter extends AbstractFilter {
 
     @Override
     public FilterResult check() throws Exception {
-        CtClass<?> testClass = this.launcher.getFactory().Class().get(this.testRecord.getTestClassQualifiedName());
-        CtMethod<?> testMethod = testClass.getMethod(this.testRecord.getTestMethodName());
+        CtMethod<?> testMethod = TestAnalysisTask.resolveTestMethod(this.launcher.getFactory(), this.testRecord);
 
         List<CtInvocation<?>> methodCalls = testMethod.getElements(ctInvocation -> !TestAnalysis.isAssertion(ctInvocation));
         for (CtInvocation<?> methodCall : methodCalls) {

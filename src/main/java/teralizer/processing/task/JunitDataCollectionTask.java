@@ -30,6 +30,7 @@ import spoon.Launcher;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.Factory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -37,6 +38,7 @@ import teralizer.processing.TestResult;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.diagnostics.JqwikDiagnosticOutcome;
 import teralizer.repository.SQLiteRepository;
+import teralizer.spoon.InheritedTestMethodScreens;
 import teralizer.util.Configuration;
 
 public class JunitDataCollectionTask extends AbstractTask {
@@ -229,7 +231,7 @@ public class JunitDataCollectionTask extends AbstractTask {
 
     private List<JunitTestReportRecord> collectTestReportData(DSLContext create) {
         String testClassQualifiedName = this.testRecord.getTestClassQualifiedName();
-        String testMethodQualifiedName = this.testRecord.getTestMethodQualifiedName();
+        String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
         Path testReportPath = this.identifyTestReportPath(this.testRecord.getTestClassName(), testClassQualifiedName);
         return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
             .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
@@ -444,17 +446,9 @@ public class JunitDataCollectionTask extends AbstractTask {
 
     private void updateTestRecord(Factory factory, TestRecord record) throws IOException {
         CtClass<?> testClass = factory.Class().get(this.testRecord.getTestClassQualifiedName());
+        ResolvedTestMethod resolved = this.findTestMethod(testClass);
 
-        List<CtMethod<?>> matchingMethods = testClass.getMethodsByName(this.testRecord.getTestMethodName());
-
-        if (matchingMethods.isEmpty()) {
-            // This can happen if the test method was inherited from some other class.
-            // The JUnit reports list the test as part of the child class then, but
-            // the source code file of the child class does not contain the method.
-            throw new RuntimeException("No method matches for test method (might be inherited): " + this.testRecord.getTestMethodQualifiedName());
-        }
-
-        List<CtMethod<?>> knownTestMethods = matchingMethods.stream()
+        List<CtMethod<?>> knownTestMethods = resolved.matchingMethods.stream()
             .filter(method -> method.getAnnotations().stream()
                 .anyMatch(a -> Configuration.KNOWN_TEST_ANNOTATIONS.contains(a.getType().getSimpleName())))
             .collect(Collectors.toList());
@@ -463,16 +457,22 @@ public class JunitDataCollectionTask extends AbstractTask {
             throw new RuntimeException("Multiple matches for test method (" + knownTestMethods.size() + " total): " + this.testRecord.getTestMethodQualifiedName());
         }
 
-        // At this point, we have 0-1 knownTestMethods and 1+ matchingMethods.
-        // If we do have a known test method, take that one as our test method.
-        // If we don't have any known test methods, just take the first of the
-        // matching ones (which can either be an unknown type of test method or
-        // a non-test method). It will later be excluded anyway, but we want to
-        // keep processing it for now to collect more data about it.
-        CtMethod<?> testMethod = knownTestMethods.stream().findFirst().orElse(matchingMethods.get(0));
+        CtMethod<?> testMethod = knownTestMethods.stream().findFirst().orElse(resolved.matchingMethods.get(0));
+        CtClass<?> declaringClass = (CtClass<?>) testMethod.getParent(CtClass.class);
 
+        record.setTestMethodQualifiedName(declaringClass.getQualifiedName() + "." + testMethod.getSimpleName());
         record.setTestMethodAbsolutePath(testMethod.getPath().toString());
-        record.setTestMethodRelativePath(testMethod.getPath().relativePath(testClass).toString());
+        record.setTestMethodRelativePath(testMethod.getPath().relativePath(declaringClass).toString());
+
+        if (!declaringClass.getQualifiedName().equals(testClass.getQualifiedName())) {
+            InheritedTestMethodScreens.Result screen = InheritedTestMethodScreens.evaluate(testClass, testMethod);
+            if (!screen.isFlattenable()) {
+                record.setIsIncluded(false);
+                record.setExclusionInfo(screen.getExclusionInfo());
+                record.store();
+                return;
+            }
+        }
 
         CtAnnotation<?> testAnnotation = testMethod.getAnnotations().stream()
             .filter(a -> Configuration.KNOWN_TEST_ANNOTATIONS.contains(a.getType().getSimpleName()))
@@ -491,6 +491,29 @@ public class JunitDataCollectionTask extends AbstractTask {
         }
 
         record.store();
+    }
+
+    private ResolvedTestMethod findTestMethod(CtClass<?> testClass) {
+        CtType<?> current = testClass;
+        while (current != null) {
+            if (current instanceof CtClass<?>) {
+                List<CtMethod<?>> matchingMethods = ((CtClass<?>) current).getMethodsByName(this.testRecord.getTestMethodName());
+                if (!matchingMethods.isEmpty()) {
+                    return new ResolvedTestMethod(matchingMethods);
+                }
+            }
+            current = current.getSuperclass() == null ? null : current.getSuperclass().getDeclaration();
+        }
+
+        throw new RuntimeException("No method matches for test method (might be inherited): " + this.testRecord.getTestMethodQualifiedName());
+    }
+
+    private static final class ResolvedTestMethod {
+        private final List<CtMethod<?>> matchingMethods;
+
+        private ResolvedTestMethod(List<CtMethod<?>> matchingMethods) {
+            this.matchingMethods = matchingMethods;
+        }
     }
 
     private JunitTestReportRecord buildTestReportRecord(DSLContext create, Path testReportPath, ReportTestCase testCaseReport) {
