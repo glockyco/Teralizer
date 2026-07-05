@@ -24,6 +24,7 @@ import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
 import teralizer.domain.CapturedOutput;
+import teralizer.domain.MethodCapabilities;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.domain.TypeDomain;
@@ -311,7 +312,8 @@ public final class GeneralizedTestBuilder {
     }
 
     private static boolean containsParsePredicates(String javaExpression) {
-        return javaExpression != null && javaExpression.contains("ParsePredicates.");
+        return javaExpression != null
+            && javaExpression.contains(MethodCapabilities.PARSE_PREDICATES_QUALIFIER + ".");
     }
 
     public static final class Names {
