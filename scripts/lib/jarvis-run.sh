@@ -32,11 +32,8 @@ _jarvis_ensure_db_up() {
 }
 
 jarvis_run() {
-  case "$JARVIS_DB_NAME" in
-    postgres_dev|postgres_test|*_replication)
-      echo "Refusing unsafe JARVIS_DB_NAME=$JARVIS_DB_NAME" >&2
-      exit 1 ;;
-  esac
+  source "$ROOT_DIR/scripts/lib/db-guard.sh"
+  DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$JARVIS_DB_NAME"
 
   local reset_db=false prepare_fixtures=false
   local -a configs=()
@@ -100,8 +97,11 @@ jarvis_run() {
   local gradle_failed=false
   for config in "${configs[@]}"; do
     echo "==> Running $config (DB_NAME=$JARVIS_DB_NAME DATA_DIR=$JARVIS_DATA_DIR)"
-    if ! DB_NAME="$JARVIS_DB_NAME" DATA_DIR="$JARVIS_DATA_DIR" DATASET_VARIANT="jarvis" \
-         "$ROOT_DIR/gradlew" run -Dteralizer.config="$config" --no-daemon; then
+    if ! "$ROOT_DIR/gradlew" run \
+         -Dteralizer.config="$config" \
+         -Dteralizer.database.name="$JARVIS_DB_NAME" \
+         -Dteralizer.data-dir="$JARVIS_DATA_DIR" \
+         --no-daemon; then
       echo "gradle exited non-zero for $config" >&2
       gradle_failed=true
     fi

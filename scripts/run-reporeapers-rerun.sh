@@ -22,7 +22,7 @@
 set -uo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-DB_NAME="${REPOREAPERS_DB:-postgres_reporeapers_rerun}"
+DB_NAME="${REPOREAPERS_DB:-postgres_reporeapers_scratch}"
 DATA_DIR="${REPOREAPERS_DATA_DIR:-data/reporeapers-rerun}"
 PROFILE="project-configs/reporeapers-rerun.conf"
 CONFIG_DIR="${REPOREAPERS_CONFIG_DIR:-project-configs/replication/extended}"
@@ -30,11 +30,8 @@ DONE_DIR="$ROOT_DIR/$DATA_DIR/done"
 LOG_DIR="$ROOT_DIR/$DATA_DIR/run-logs"
 STATUS_TSV="$ROOT_DIR/$DATA_DIR/status.tsv"
 
-# Never touch the core corpora.
-case "$DB_NAME" in
-  postgres_dev|postgres_test|postgres_timeout_retry|*_replication)
-    echo "Refusing unsafe target DB_NAME=$DB_NAME" >&2; exit 1 ;;
-esac
+source "$ROOT_DIR/scripts/lib/db-guard.sh"
+DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
 
 reset_db=false; limit=0; start=1
 while [[ $# -gt 0 ]]; do
@@ -144,8 +141,11 @@ for config_abs in "${configs[@]}"; do
   find "$project_abs/src/test" -name '_*_Generalized_*_Test.java' -delete 2>/dev/null
   active_project_abs="$project_abs"
   active_project_log="$log_abs"
-  DB_NAME="$DB_NAME" DATA_DIR="$DATA_DIR" \
-    "$ROOT_DIR/gradlew" run -Dteralizer.config="$PROFILE,$config" --no-daemon \
+  "$ROOT_DIR/gradlew" run \
+    -Dteralizer.config="$PROFILE,$config" \
+    -Dteralizer.database.name="$DB_NAME" \
+    -Dteralizer.data-dir="$DATA_DIR" \
+    --no-daemon \
     > "$log_abs" 2>&1
   rc=$?
   cleanup_leftover_project_processes "$project_abs" "$log_abs"

@@ -18,13 +18,8 @@ LOG_DIR="$ROOT_DIR/$DATA_DIR/run-logs"
 STATUS_TSV="$ROOT_DIR/$DATA_DIR/status.tsv"
 FIXTURE_ROOT="$ROOT_DIR/verification/fixtures"
 
-case "$DB_NAME" in
-  postgres|postgres_dev|postgres_test|postgres_timeout_retry|postgres_fusion_spike|postgres_reporeapers_rerun|*_replication)
-    echo "Refusing unsafe target DB_NAME=$DB_NAME" >&2; exit 1 ;;
-esac
-if [[ ! "$DB_NAME" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-  echo "Refusing invalid DB_NAME=$DB_NAME" >&2; exit 1
-fi
+source "$ROOT_DIR/scripts/lib/db-guard.sh"
+DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
 
 usage() {
   sed -n '2,12p' "$0"
@@ -132,8 +127,11 @@ for config_abs in "${configs[@]}"; do
   echo "==> [$fixture] $root_path"
   active_project_abs="$project_abs"
   active_project_log="$log_abs"
-  DB_NAME="$DB_NAME" DATA_DIR="$DATA_DIR" \
-    "$ROOT_DIR/gradlew" run -Dteralizer.config="$PROFILE,$config" --no-daemon \
+  "$ROOT_DIR/gradlew" run \
+    -Dteralizer.config="$PROFILE,$config" \
+    -Dteralizer.database.name="$DB_NAME" \
+    -Dteralizer.data-dir="$DATA_DIR" \
+    --no-daemon \
     > "$log_abs" 2>&1
   rc=$?
   cleanup_leftover_project_processes "$project_abs" "$log_abs"

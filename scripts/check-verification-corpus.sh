@@ -10,13 +10,8 @@ DB_NAME="${VERIFICATION_DB:-postgres_verification}"
 GOLDEN_DIR="$ROOT_DIR/verification/golden"
 HEADER=$'fixture\tgen_count\tgen_index\tvariant\tis_included\texclusion_info\toutput_spec_class\tdiagnostic_kind\ttries\tdistinct_tuples'
 
-case "$DB_NAME" in
-  postgres|postgres_dev|postgres_test|postgres_timeout_retry|postgres_fusion_spike|postgres_reporeapers_rerun|*_replication)
-    echo "Refusing unsafe target DB_NAME=$DB_NAME" >&2; exit 1 ;;
-esac
-if [[ ! "$DB_NAME" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-  echo "Refusing invalid DB_NAME=$DB_NAME" >&2; exit 1
-fi
+source "$ROOT_DIR/scripts/lib/db-guard.sh"
+DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
 
 _psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
 
