@@ -1,7 +1,7 @@
 ---
 title: Exception-Message Widening — License Precision for Post-Decision Concretization
 type: spec
-status: draft
+status: active
 created: 2026-07-05
 parent: 2026-07-05-concretization-census-findings
 ---

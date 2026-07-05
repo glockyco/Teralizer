@@ -1,7 +1,7 @@
 ---
 title: Sound Character Predicates — ASCII Interval Model for isWhitespace
 type: spec
-status: draft
+status: active
 created: 2026-07-05
 parent: 2026-07-05-concretization-census-findings
 ---
@@ -33,11 +33,14 @@ Constraint collection follows the concrete path, so the model only has to record
 that is truth-constant for the branch the concrete seed took. That makes intervals sufficient:
 no disjunction support is needed anywhere downstream.
 
-1. **Interception seam.** Intercept `Character.isWhitespace(C)Z` in the symbolic INVOKESTATIC
-   path (`BytecodeUtils.execute`, beside the existing `SymbolicStringHandler` hook) when the
-   argument carries a symbolic expression attr. Interception happens before native-peer
-   dispatch, so `EXECUTENATIVE` never executes and no concretization event fires — the same
-   reason the sound string ops are event-free.
+1. **Interception seam.** Intercept `Character.isWhitespace(C)Z` in the symbolic
+   INVOKESTATIC bytecode (`gov.nasa.jpf.symbc.bytecode.INVOKESTATIC.execute`, before its
+   `BytecodeUtils.execute` delegation) when the argument carries a symbolic expression attr
+   and constraint collection is active (`SymbolicInstructionFactory.collect_constraints`);
+   the existing string-handler hook inside `BytecodeUtils` is gated on `symbolic.strings`
+   and never sees static char calls. Interception happens before native-peer dispatch, so
+   `EXECUTENATIVE` never executes and no concretization event fires — the same reason the
+   sound string ops are event-free. Outside collect mode the call falls through unchanged.
 2. **Interval pinning.** Evaluate the predicate on the concrete argument, then add to the path
    condition the contiguous constant-truth interval containing that argument:
    TRUE → `[9,13]` or `[28,32]`; FALSE → `[0,8]`, `[14,27]`, or `[33,127]`. Two linear

@@ -20,6 +20,8 @@
 - **R1 Viability Spike — Expression-Slice Shapes Through SPF** [audit] `2026-07-04-r1-viability-spike` ← 2026-07-02-recipe-seam-review
 - **Collect-Mode Conformance Survey of the Vendored SPF** [audit] `2026-07-05-collect-mode-conformance` ← 2026-06-26-teralizer-overview
 - **Concretization Census — Load-Bearing Blockers and the License Over-Refusal Finding** [audit] `2026-07-05-concretization-census-findings` ← 2026-07-04-concretization-census
+- **Exception-Message Widening — License Precision for Post-Decision Concretization** [spec] `2026-07-05-exception-message-widening` ← 2026-07-05-concretization-census-findings
+- **Sound Character Predicates — ASCII Interval Model for isWhitespace** [spec] `2026-07-05-sound-char-predicates` ← 2026-07-05-concretization-census-findings
 
 ## draft
 
@@ -29,7 +31,5 @@
 - **Pipeline Observability Telemetry** [spec] `2026-07-01-pipeline-observability-telemetry` ← 2026-06-26-teralizer-overview
 - **Generation-Coverage Telemetry** [plan] `2026-07-02-generation-coverage-telemetry` (—) ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
-- **Exception-Message Widening — License Precision for Post-Decision Concretization** [spec] `2026-07-05-exception-message-widening` ← 2026-07-05-concretization-census-findings
-- **Sound Character Predicates — ASCII Interval Model for isWhitespace** [spec] `2026-07-05-sound-char-predicates` ← 2026-07-05-concretization-census-findings
 
 _50 archived — see `docs/plans/archive/`._
