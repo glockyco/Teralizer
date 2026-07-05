@@ -77,10 +77,34 @@ model-class method falls to an MJI peer.
 
 ## Tasks (evidence-gated)
 
-- [ ] Rank crash-visible gaps by corpus frequency: query `postgres_test` `EXECUTE_JPF`
-  failures, decode `class not found` / `UnsatisfiedLinkError` causes to specific
-  `class::method`, count per method. The applicability-barriers aggregate (534/50/~109)
-  is the headline; this produces the per-method target list.
+- [x] Rank crash-visible gaps by corpus frequency. Decoded from the 368 `EXECUTE_JPF`
+  failures in `postgres_test` (155 attribute to a specific missing method):
+
+  | count | projects | kind | target |
+  |---:|---:|---|---|
+  | 67 | 1 | model method | `java.nio.StringCharBuffer.nextGetIndex` |
+  | 43 | 4 | native peer | `java.lang.reflect.Method.getGenericParameterTypes` |
+  | 26 | 4 | native peer | `java.util.zip.ZipFile.initIDs` |
+  | 6 | 1 | model method | `java.util.Scanner.useLocale` |
+  | 6 | 1 | native peer | `java.util.zip.Inflater.initIDs` |
+  | 4 | 1 | model method | `java.nio.ByteBuffer.arrayOffset` |
+  | 2 | 1 | model method | `sun.misc.Unsafe.getAndAddInt` |
+  | 1 | 1 | model method | `java.nio.ByteBuffer.order` |
+
+  Ranking reading: multi-project targets outrank single-project counts.
+  `Method.getGenericParameterTypes` (4 projects, java.beans introspection chains) and
+  `ZipFile.initIDs` (4 projects) are the top candidates. `StringCharBuffer.nextGetIndex`
+  is one project's charset decoding hot loop. The zip/reflection targets sit near the
+  genuinely-native boundary, so each needs the modelable-versus-bounded call from
+  taxonomy 1 versus 3 before any work starts.
+
+  The non-peer remainder for context: 48 target-level reflection
+  `NoSuchMethodException`, 34 SPF solver debug-option crashes, 24 depth/PC-limit aborts
+  via `searchConstraintHit`, 18 solver div-by-0, 17 unattributed
+  `UnsupportedOperationException`, 13 slf4j `StaticLoggerBinder` initialization, 12
+  symbolic-length `NEWARRAY`, 47 other. These are separate failure classes, not peer
+  gaps. The commons-math `Precision.*` targets from the census corroboration do not
+  appear here because `postgres_test` is the RepoReapers corpus.
 - [ ] For the top **modelable** targets (taxonomy 1): add pure-Java model classes (the
   `Math.abs` pattern) or fix model-classpath reachability. Each addition must be
   behaviorally equivalent (soundness) and justified by its corpus-frequency rank.
