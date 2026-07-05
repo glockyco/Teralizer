@@ -11,6 +11,7 @@ import org.jooq.DSLContext;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.AssertionSemanticsRecord;
 import org.jooq.generated.tables.records.MutResolutionObservationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
@@ -33,6 +34,7 @@ import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.spoon.analysis.AssertionSemanticsClassifier;
 import teralizer.spoon.analysis.ExpressionSliceScreen;
 import teralizer.spoon.analysis.FocalTypeResolver;
 import teralizer.spoon.analysis.GeneralizableInput;
@@ -236,6 +238,16 @@ public class TestAnalysisTask extends AbstractTask {
 
                 record.setIsIncluded(true);
                 record.store();
+
+                AssertionSemanticsClassifier.Result semantics = AssertionSemanticsClassifier.classify(assertionCall);
+                AssertionSemanticsRecord semanticsRecord = create.newRecord(Tables.ASSERTION_SEMANTICS);
+                semanticsRecord.setAssertionId(record.getId());
+                semanticsRecord.setSemanticKind(semantics.semanticKind());
+                semanticsRecord.setArgumentShape(semantics.argumentShape());
+                semanticsRecord.setFailContext(semantics.failContext());
+                semanticsRecord.setMatcherFamily(semantics.matcherFamily());
+                semanticsRecord.setMatcherName(semantics.matcherName());
+                semanticsRecord.store();
 
                 MutResolutionObservationRecord observation = create.newRecord(Tables.MUT_RESOLUTION_OBSERVATION);
                 MutResolutionObservationMapper.map(resolution, this.getProjectId(), this.getTestId(), record.getId(), gson, observation);

@@ -13,6 +13,7 @@ import org.jooq.SQLDialect;
 import org.jooq.Table;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.AssertionSemanticsRecord;
 import org.jooq.generated.tables.records.MutResolutionObservationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
@@ -31,6 +32,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
 import teralizer.processing.ProcessingStage;
+import teralizer.spoon.analysis.AssertionSemanticCodes;
 import teralizer.spoon.analysis.FocalTypeResolver;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
@@ -160,6 +162,26 @@ public class TestAnalysisTaskTest {
     }
 
     @Example
+    void storesSemanticRecordForEachAssertion() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "import static org.junit.Assert.assertNotNull;\n"
+                + "public class SubjectTest {\n"
+                + "  static Object value() { return new Object(); }\n"
+                + "  public void t() { assertNotNull(value()); }\n"
+                + "}\n"
+        );
+        RecordingStore store = new RecordingStore();
+
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
+
+        Assert.assertEquals(1, store.semantics.size());
+        Assert.assertEquals(store.assertions.get(0).getId(), store.semantics.get(0).getAssertionId());
+        Assert.assertEquals(AssertionSemanticCodes.NULLNESS_NOT_NULL, store.semantics.get(0).getSemanticKind());
+        Assert.assertEquals(AssertionSemanticCodes.ARGUMENT_SHAPE_METHOD_CALL, store.semantics.get(0).getArgumentShape());
+    }
+
+    @Example
     void assertionRuntimeFailureDoesNotAbortLaterAssertions() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"
@@ -209,6 +231,7 @@ public class TestAnalysisTaskTest {
     private static final class RecordingStore implements MockDataProvider {
         private final DSLContext records = DSL.using(SQLDialect.POSTGRES);
         private final List<AssertionRecord> assertions = new ArrayList<>();
+        private final List<AssertionSemanticsRecord> semantics = new ArrayList<>();
         private int assertionInsertAttempts;
         private int observationCount;
         private long nextAssertionId = 1L;
@@ -240,6 +263,15 @@ public class TestAnalysisTaskTest {
             if (sql.startsWith("insert") && sql.contains("mut_resolution_observation")) {
                 this.observationCount++;
                 Result<MutResolutionObservationRecord> result = this.records.newResult(Tables.MUT_RESOLUTION_OBSERVATION);
+                return new MockResult[] {new MockResult(1, result)};
+            }
+
+            if (sql.startsWith("insert") && sql.contains("assertion_semantics")) {
+                AssertionSemanticsRecord record = this.records.newRecord(Tables.ASSERTION_SEMANTICS);
+                bindRecord(record, Tables.ASSERTION_SEMANTICS, context.sql(), context.bindings());
+                this.semantics.add(record);
+                Result<AssertionSemanticsRecord> result = this.records.newResult(Tables.ASSERTION_SEMANTICS);
+                result.add(record);
                 return new MockResult[] {new MockResult(1, result)};
             }
 
