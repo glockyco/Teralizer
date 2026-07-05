@@ -17,14 +17,26 @@ The system follows a multi-stage pipeline architecture defined in `src/main/java
 ### Package responsibilities
 
 - `processing` / `processing.task`: stage orchestration — DB records, scheduling, file I/O.
-  Tasks orchestrate. They should not own transformation logic (see §Code generation).
-- `processing.filter`: typed per-test/per-assertion gates (`FilterResult`, ACCEPT/REJECT/DEFER).
-- `spoon.analysis`: MUT resolution, recipes, structural screens — reads test ASTs, never writes.
-- `spoon.generalization`: jqwik supplier/parameter codegen + the widening-license policy.
-- `jpf`: the SPF listener, capture records, extraction outcomes — everything that runs inside JPF.
+  Tasks orchestrate. They should not own transformation logic (see §Code generation) or
+  telemetry persistence (see `processing.diagnostics`).
+- `processing.filter`: typed per-test/per-assertion gates (`FilterResult`, ACCEPT/REJECT/DEFER;
+  every REJECT/DEFER carries a stable `reason_code` from `FilterReasonCodes`).
+- `processing.diagnostics`: telemetry writers and classifiers — task diagnostics, assertion
+  semantics, build-environment observations, generalization lifecycle, generation coverage,
+  jqwik outcome import. Written where the fact is known; stable-code constants live beside
+  each writer.
+- `spoon.analysis`: MUT resolution, recipes, structural screens, test-method resolution —
+  reads test ASTs, never writes.
+- `spoon.generalization` / `spoon.codegen`: jqwik supplier/parameter codegen and generated
+  test assembly (support classes: first-value arbitrary, value recorder, parse predicates).
+- `generalization`: pure widening policy (`WideningLicense`) — no Spoon, no DB.
+- `jpf`: the SPF listener, capture records, extraction outcomes — everything that runs inside
+  JPF, including the concretization and divergence-risk observations.
 - `transformer`: total mappings SPF ↔ Model ↔ JSON ↔ Java. Unsupported terms throw typed.
 - `jqwik` / `jqwik.planning`: clause interpretation and per-parameter generation plans.
-- `domain`: the Model expression tree and value records, with no dependencies on any other package.
+- `domain`: the Model expression tree, value records, and the method-capability vocabulary
+  (`MethodCapabilities`) — no dependencies on any other package.
+- `repository`: the pipeline's shared jOOQ queries (`PipelineQueries`).
 
 ### Key components
 
@@ -58,18 +70,37 @@ Facts that span multiple pipeline stages and are load-bearing for any change:
   JSON in `assertion.generalization_recipe`, and consumed by `JpfInstrumentationTask` and
   `TestGeneralizationTask` through one shared resolver with typed failures. Never re-derive
   recipe facts in a consumer. Extend the recipe instead.
-- **Widening license** (`WideningLicense`, consulted in `TestGeneralizationTask`): an input is
-  widened beyond its concrete seed only as far as extraction evidence licenses. SYMBOLIC and
-  CONSTANT output models widen. EXCEPTION and boolean-in-PC cases widen only with zero
-  concretization events and a path condition that is empty (EXCEPTION) or names every widened
-  parameter. Everything else becomes the typed exclusion `ORACLE_NOT_WIDENABLE`. Design
-  authority: `docs/plans/archive/2026-07-03-widening-license.md`.
+- **Widening license** (`teralizer.generalization.WideningLicense`, consulted in
+  `TestGeneralizationTask`): an input is widened beyond its concrete seed only as far as
+  extraction evidence licenses. SYMBOLIC and CONSTANT output models widen. EXCEPTION widens
+  when no concretization event occurred OR the per-assertion
+  `post_concretization_divergence_risk` flag is false (no concrete application-code branch
+  after the first event and an application-origin throw), in both cases combined with the
+  path-name coverage condition (empty path condition, or every widened parameter named).
+  Boolean-in-PC (NULL_CONCRETE boolean return) widens only with zero events and full
+  path-name coverage. Everything else becomes the typed exclusion `ORACLE_NOT_WIDENABLE`.
+  Design authorities: `docs/plans/archive/2026-07-03-widening-license.md`,
+  `docs/plans/archive/2026-07-05-exception-message-widening.md`.
 - **Extraction telemetry** (written at SPF analysis time, consumed by the license and by
-  analysis): `assertion.output_spec_class` (SYMBOLIC | CONSTANT | NULL_CONCRETE | EXCEPTION)
-  and `assertion.concretization_events` (symbolic values entering unmodeled native methods).
-  Boxed-primitive returns are captured from the box's `value` field attr. The vendored fork
-  preserves it across the `Integer.valueOf`, `Long.valueOf`, `Boolean.valueOf`, and explicit
-  constructor paths; degradation remains a typed NULL_CONCRETE refusal, never unsoundness.
+  analysis): `assertion.output_spec_class` (SYMBOLIC | CONSTANT | NULL_CONCRETE | EXCEPTION),
+  `assertion.concretization_events` (symbolic values entering unmodeled native methods — a
+  boundary marker, not a loss marker: box→unbox round trips preserve attrs),
+  `assertion.concretized_methods` (per-method counts), and
+  `assertion.post_concretization_divergence_risk`. Boxed-primitive returns are captured from
+  the box's `value` field attr; degradation remains a typed NULL_CONCRETE refusal, never
+  unsoundness.
+- **Sound SPF models in the fork** fire no concretization events because interception happens
+  before native-peer dispatch: `String.isEmpty` (string equality), ASCII
+  `Character.isWhitespace` (interval pinning in constraint collection,
+  `CharPredicateHandler`), and the parseability comparators
+  (ISINTEGER/ISLONG/ISFLOAT/ISDOUBLE, ingested as static `ParsePredicates` invocations and
+  rendered against a helper class emitted into the generated test).
+- **Inherited test methods**: collection resolves the declaring class via the superclass
+  chain and stores it in the method columns (the class column keeps the JUnit-reported
+  child). Two screens (type variables, private-member accessibility) gate flattening into
+  generated clones (`SpoonUtils.cloneClass`); the generated-class writers merge the declaring
+  unit's imports; unflattenable methods become the typed test-level exclusion
+  `INHERITED_METHOD_NOT_FLATTENABLE`.
 - **Ingestion totality** (`SpfToModelTransformer`): every SPF term entering the model maps
   faithfully or is refused with a typed `UnsupportedSpfTermException` (surfacing as an
   `UNSUPPORTED_TERM` exclusion at the JPF task boundary). String-derived integer symbols
