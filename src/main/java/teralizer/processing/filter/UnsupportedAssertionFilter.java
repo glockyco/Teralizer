@@ -13,8 +13,11 @@ public class UnsupportedAssertionFilter extends AbstractFilter {
 
     @Override
     public FilterResult check() {
-        return TestAnalysis.isGeneralizable(this.assertionRecord.getAssertionName())
-            ? new FilterResult(this.getName(), FilterDecision.ACCEPT)
-            : new FilterResult(this.getName(), FilterDecision.REJECT, "Unsupported assertion '" + this.assertionRecord.getAssertionName() + "'.");
+        if (TestAnalysis.isGeneralizable(this.assertionRecord.getAssertionName())) {
+            return new FilterResult(this.getName(), FilterDecision.ACCEPT);
+        }
+        String assertionName = this.assertionRecord.getAssertionName();
+        return new FilterResult(this.getName(), FilterDecision.REJECT, "Unsupported assertion '" + assertionName + "'.",
+            FilterReasonCodes.unsupportedAssertion(assertionName), FilterReasonCodes.DEPENDS_ON_UNSUPPORTED_ASSERTION);
     }
 }

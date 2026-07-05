@@ -17,6 +17,7 @@ public class ExcludedTestFilter extends AbstractFilter {
         }
 
         String reason = "Assertion / Generalization is part of an excluded test.";
-        return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
+        return new FilterResult(this.getName(), FilterDecision.REJECT, reason,
+            FilterReasonCodes.EXCLUDED_PARENT_TEST, FilterReasonCodes.DEPENDS_ON_EXCLUDED_TEST);
     }
 }

@@ -23,26 +23,30 @@ public class ParameterTypeFilter extends AbstractFilter {
     public FilterResult check() {
         String testedMethodCallArgumentsString = this.assertionRecord.getTestedMethodCallArguments();
         if (testedMethodCallArgumentsString == null) {
-            return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_call_arguments column is null.");
+            return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_call_arguments column is null.",
+                FilterReasonCodes.MISSING_TESTED_PARAMS, FilterReasonCodes.DEPENDS_ON_MISSING_MUT);
         }
 
         Type argumentsType = new TypeToken<List<MethodArgument>>() {}.getType();
         List<MethodParameter> testedMethodCallArguments = this.gson.fromJson(testedMethodCallArgumentsString, argumentsType);
 
         if (testedMethodCallArguments.isEmpty()) {
-            return new FilterResult(this.getName(), FilterDecision.REJECT, "The tested method has no parameters.");
+            return new FilterResult(this.getName(), FilterDecision.REJECT, "The tested method has no parameters.",
+                FilterReasonCodes.NO_GENERALIZABLE_PARAMETERS);
         }
 
         String testedMethodParametersString = this.assertionRecord.getTestedMethodParameters();
         if (testedMethodParametersString == null) {
-            return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_parameters column is null.");
+            return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_parameters column is null.",
+                FilterReasonCodes.MISSING_TESTED_PARAMS, FilterReasonCodes.DEPENDS_ON_MISSING_MUT);
         }
 
         Type parametersType = new TypeToken<List<MethodParameter>>() {}.getType();
         List<MethodParameter> testedMethodParameters = this.gson.fromJson(testedMethodParametersString, parametersType);
 
         if (testedMethodParameters.stream().noneMatch(a -> TypeCapability.supportsGeneratedInput(a.getType()))) {
-            return new FilterResult(this.getName(), FilterDecision.REJECT, "The tested method has no parameters with generalizable types.");
+            return new FilterResult(this.getName(), FilterDecision.REJECT, "The tested method has no parameters with generalizable types.",
+                FilterReasonCodes.NO_GENERALIZABLE_PARAMETERS);
         }
 
         return new FilterResult(this.getName(), FilterDecision.ACCEPT);

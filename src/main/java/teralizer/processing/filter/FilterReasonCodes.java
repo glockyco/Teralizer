@@ -1,0 +1,40 @@
+package teralizer.processing.filter;
+
+public final class FilterReasonCodes {
+
+    public static final String DEPENDS_ON_EXCLUDED_ASSERTION = "EXCLUDED_ASSERTION";
+    public static final String DEPENDS_ON_EXCLUDED_TEST = "EXCLUDED_TEST";
+    public static final String DEPENDS_ON_MISSING_MUT = "MISSING_MUT";
+    public static final String DEPENDS_ON_UNSUPPORTED_ASSERTION = "UNSUPPORTED_ASSERTION";
+
+    public static final String EXCLUDED_PARENT_ASSERTION = "EXCLUDED_PARENT_ASSERTION";
+    public static final String EXCLUDED_PARENT_TEST = "EXCLUDED_PARENT_TEST";
+    public static final String MISSING_TESTED_CLASS = "MISSING_TESTED_CLASS";
+    public static final String MISSING_TESTED_FILE = "MISSING_TESTED_FILE";
+    public static final String MISSING_TESTED_METHOD = "MISSING_TESTED_METHOD";
+    public static final String MISSING_TESTED_PARAMS = "MISSING_TESTED_PARAMS";
+    public static final String NO_ASSERTIONS = "NO_ASSERTIONS";
+    public static final String NO_GENERALIZABLE_PARAMETERS = "NO_GENERALIZABLE_PARAMETERS";
+    public static final String UNSUPPORTED_ASSERTION_ASSERT_NOT_NULL = "UNSUPPORTED_ASSERTION_ASSERT_NOT_NULL";
+    public static final String UNSUPPORTED_ASSERTION_ASSERT_THAT = "UNSUPPORTED_ASSERTION_ASSERT_THAT";
+    public static final String UNSUPPORTED_ASSERTION_FAIL = "UNSUPPORTED_ASSERTION_FAIL";
+    public static final String UNSUPPORTED_ASSERTION_OTHER = "UNSUPPORTED_ASSERTION_OTHER";
+    public static final String UNSUPPORTED_PARAMETER_TYPE = "UNSUPPORTED_PARAMETER_TYPE";
+    public static final String UNSUPPORTED_RETURN_TYPE = "UNSUPPORTED_RETURN_TYPE";
+
+    private FilterReasonCodes() {
+    }
+
+    public static String unsupportedAssertion(String assertionName) {
+        if ("assertNotNull".equals(assertionName)) {
+            return UNSUPPORTED_ASSERTION_ASSERT_NOT_NULL;
+        }
+        if ("fail".equals(assertionName)) {
+            return UNSUPPORTED_ASSERTION_FAIL;
+        }
+        if ("assertThat".equals(assertionName)) {
+            return UNSUPPORTED_ASSERTION_ASSERT_THAT;
+        }
+        return UNSUPPORTED_ASSERTION_OTHER;
+    }
+}

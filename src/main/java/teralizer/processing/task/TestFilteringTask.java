@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.jooq.DSLContext;
+import org.jooq.JSONB;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
@@ -182,6 +183,11 @@ public class TestFilteringTask extends AbstractTask {
             record.setFilterName(filterResult.getFilter());
             record.setDecision(filterResult.getDecision());
             record.setReason(filterResult.getReason());
+            record.setReasonCode(filterResult.getReasonCode());
+            record.setDependsOn(filterResult.getDependsOn());
+            if (filterResult.getDetailJson() != null) {
+                record.setDetailJson(JSONB.valueOf(filterResult.getDetailJson()));
+            }
 
             if (this.getGeneralizationId() != null) {
                 record.setGeneralizationId(this.getGeneralizationId());

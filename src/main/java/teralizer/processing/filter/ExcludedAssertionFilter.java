@@ -17,6 +17,7 @@ public class ExcludedAssertionFilter extends AbstractFilter {
         }
 
         String reason = "Generalization is part of an excluded assertion.";
-        return new FilterResult(this.getName(), FilterDecision.REJECT, reason);
+        return new FilterResult(this.getName(), FilterDecision.REJECT, reason,
+            FilterReasonCodes.EXCLUDED_PARENT_ASSERTION, FilterReasonCodes.DEPENDS_ON_EXCLUDED_ASSERTION);
     }
 }
