@@ -30,9 +30,9 @@ static def getEnv(envProps, key, defaultValue = "") {
 
 def dbHost = getEnv(envProps, 'DB_HOST', 'localhost')
 def dbPort = getEnv(envProps, 'DB_PORT', '5432')
-def dbName = getEnv(envProps, 'DB_NAME', 'postgres')
 def dbUser = getEnv(envProps, 'DB_USER', 'postgres')
 def dbPassword = getEnv(envProps, 'DB_PASSWORD', 'postgres')
+def codegenDbName = 'teralizer_codegen'
 
 repositories {
     mavenCentral()
@@ -124,7 +124,7 @@ jooq {
             generationTool {
                 jdbc {
                     driver = 'org.postgresql.Driver'
-                    url = "jdbc:postgresql://${dbHost}:${dbPort}/${dbName}"
+                    url = "jdbc:postgresql://${dbHost}:${dbPort}/${codegenDbName}"
                     user = dbUser
                     password = dbPassword
                 }
