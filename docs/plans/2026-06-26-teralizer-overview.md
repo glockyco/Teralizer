@@ -94,9 +94,10 @@ evaluation event. The JARVIS refresh at this wave boundary now waits on operator
     after the recipe unification wave (P1a.2), verify what if anything remains of the
     factory-drift concern; expected to shrink to nothing.
 12. **Small items, no docs needed:** typed exclusion taxonomy (crash exclusions still carry
-    raw stack traces); manual read of the 9 T1-widened failures (license residual-risk
-    story); deferred mis-pick fixture; assertThrows-lambda expression-site replacement
-    limitation in GeneralizationRecipe (surfaced by the exception-message fixture work).
+    raw stack traces); deferred mis-pick fixture; assertThrows-lambda expression-site
+    replacement limitation in GeneralizationRecipe (surfaced by the exception-message
+    fixture work). The manual read of the T1-widened failures is done: zero mis-picks,
+    recorded in `2026-06-28-mut-id-targeting-and-coverage`.
 
 ## Standing gates (events, not queue slots)
 

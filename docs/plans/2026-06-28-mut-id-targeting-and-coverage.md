@@ -392,10 +392,18 @@ R-A `GeneralizationRecipe` extraction as behavior-preserving):
 - License outcomes: 1,376 generalizations; 417 included; 587 `ORACLE_NOT_WIDENABLE`
   (all NULL_CONCRETE — zero SYMBOLIC/CONSTANT/EXCEPTION refusals). 278 NULL_CONCRETE stay
   included (licensed boolean-in-PC cases and non-widening shapes).
-- Widened failures: 156 → 28 SYMBOLIC + 1 NULL_CONCRETE of 510 validated rows. The SYMBOLIC
-  rows are the *informative* class (26 from kouchat's first-ever validation — mis-pick
-  candidates for the mis-targeting story); the single NULL_CONCRETE row is the license's
-  documented residual risk (PC clause from an unrelated branch), as predicted.
+- Widened failures: 156 → 28 SYMBOLIC + 1 NULL_CONCRETE of 510 validated rows. Manual read
+  of the T1_PROVEN widened failures (11 rows: 9 kouchat, 1 htm_java, 1 svdrp4j; the
+  validation net excluded every one): **zero mis-picks**. The kouchat 9 are all
+  `ByteCounter.updateTimeSpent`, whose pick is provably correct (the asserted local IS the
+  method's return); the property fails because `previousTime` is mutable receiver state
+  seeded from `System.currentTimeMillis()` and mutated per call, so the oracle depends on
+  hidden state and wall-clock the input model does not carry. htm_java's
+  `MovingAverage.next` is the same class (sliding-window receiver state mutated per call).
+  svdrp4j's `Timer.hasState` is the license's documented NULL_CONCRETE residual risk (PC
+  clause from an unrelated branch), as predicted. The fusion spec's bar — any T1 miss is a
+  resolver bug — is met. The recurring failure class is hidden-mutable-receiver-state
+  dependence, a widening-model limitation, not an attribution one.
 - Seed-kills 72/510: 61 kouchat + 7 htm_java — first-time validators whose incoherent picks
   (`updateTimeSpent` resolved for inspector assertions) were previously invisible, not a
   regression; 4 CormenImpl as before.
