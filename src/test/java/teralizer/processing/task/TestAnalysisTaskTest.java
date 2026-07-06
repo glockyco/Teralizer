@@ -22,7 +22,6 @@ import org.jooq.tools.jdbc.MockConnection;
 import org.jooq.tools.jdbc.MockDataProvider;
 import org.jooq.tools.jdbc.MockExecuteContext;
 import org.jooq.tools.jdbc.MockResult;
-import teralizer.spoon.analysis.TestMethodResolver;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.CtModel;
@@ -37,6 +36,7 @@ import teralizer.spoon.analysis.AssertionSemanticCodes;
 import teralizer.spoon.analysis.FocalTypeResolver;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
+import teralizer.spoon.analysis.TestMethodResolver;
 
 public class TestAnalysisTaskTest {
     @Example
