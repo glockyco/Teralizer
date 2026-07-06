@@ -78,7 +78,7 @@ proportionally on a sentinel re-run.
 
 ## Lever 2 — yield-gap engineering (+~50% final_usable)
 
-- **Floor property resolution.** `applyTestCompilerFloor` resolves single-level
+- [x] **Floor property resolution.** `applyTestCompilerFloor` resolves single-level
   `${property}` references against the pom's `<properties>` before the level comparison.
   Unresolvable references stay untouched (the build-environment telemetry already labels
   them). Same resolution for the properties-based path.

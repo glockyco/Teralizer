@@ -197,20 +197,20 @@ public class MavenDependencyManager {
      * enough.
      */
     static boolean applyTestCompilerFloor(Document document) {
+        Element properties = childElement(document.getRootElement(), "properties");
         Element compilerConfiguration = findCompilerPluginConfiguration(document);
         if (compilerConfiguration != null) {
             Element testSource = childElement(compilerConfiguration, "testSource");
             if (testSource != null) {
-                return applyTestCompilerFloorToPluginConfiguration(compilerConfiguration, testSource.getTextTrim());
+                return applyTestCompilerFloorToPluginConfiguration(compilerConfiguration, testSource.getTextTrim(), properties);
             }
 
             Element source = childElement(compilerConfiguration, "source");
             if (source != null) {
-                return applyTestCompilerFloorToPluginConfiguration(compilerConfiguration, source.getTextTrim());
+                return applyTestCompilerFloorToPluginConfiguration(compilerConfiguration, source.getTextTrim(), properties);
             }
         }
 
-        Element properties = childElement(document.getRootElement(), "properties");
         if (properties == null) {
             return false;
         }
@@ -230,8 +230,8 @@ public class MavenDependencyManager {
         return false;
     }
 
-    private static boolean applyTestCompilerFloorToPluginConfiguration(Element compilerConfiguration, String languageLevel) {
-        if (!isBelowGeneratedTestLanguageLevel(languageLevel)) {
+    private static boolean applyTestCompilerFloorToPluginConfiguration(Element compilerConfiguration, String languageLevel, Element properties) {
+        if (!isBelowGeneratedTestLanguageLevel(resolvePropertyReference(languageLevel, properties))) {
             return false;
         }
         setChildText(compilerConfiguration, "testSource", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
@@ -240,12 +240,31 @@ public class MavenDependencyManager {
     }
 
     private static boolean applyTestCompilerFloorToProperties(Element properties, String languageLevel) {
-        if (!isBelowGeneratedTestLanguageLevel(languageLevel)) {
+        if (!isBelowGeneratedTestLanguageLevel(resolvePropertyReference(languageLevel, properties))) {
             return false;
         }
         setChildText(properties, "maven.compiler.testSource", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
         setChildText(properties, "maven.compiler.testTarget", Configuration.GENERATED_TEST_LANGUAGE_LEVEL);
         return true;
+    }
+
+    private static String resolvePropertyReference(String languageLevel, Element properties) {
+        if (languageLevel == null || properties == null) {
+            return languageLevel;
+        }
+
+        String trimmed = languageLevel.trim();
+        if (!trimmed.startsWith("${") || !trimmed.endsWith("}") || trimmed.indexOf("${", 2) >= 0) {
+            return languageLevel;
+        }
+
+        String propertyName = trimmed.substring(2, trimmed.length() - 1);
+        if (propertyName.isEmpty()) {
+            return languageLevel;
+        }
+
+        String resolved = childText(properties, propertyName);
+        return resolved == null ? languageLevel : resolved;
     }
 
     /**

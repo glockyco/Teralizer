@@ -22,6 +22,26 @@ public class MavenTestCompilerFloorTest {
     }
 
     @Example
+    void pluginPropertyReferenceBelowFloorGetsTestFloor() throws Exception {
+        Document doc = pluginPom("<source>${java.version}</source><target>${java.version}</target>")
+            .getRootElement()
+            .addElement("properties")
+            .addElement("java.version")
+            .addText("1.5")
+            .getDocument();
+
+        boolean changed = MavenDependencyManager.applyTestCompilerFloor(doc);
+
+        Assert.assertTrue(changed);
+        String xml = doc.asXML();
+        Assert.assertTrue(xml, xml.contains("<testSource>1.8</testSource>"));
+        Assert.assertTrue(xml, xml.contains("<testTarget>1.8</testTarget>"));
+        Assert.assertTrue(xml, xml.contains("<source>${java.version}</source>"));
+        Assert.assertTrue(xml, xml.contains("<java.version>1.5</java.version>"));
+    }
+
+
+    @Example
     void propertyPinBelowFloorGetsTestProperties() throws Exception {
         Document doc = propertiesPom("<maven.compiler.source>1.7</maven.compiler.source>");
 
@@ -33,6 +53,24 @@ public class MavenTestCompilerFloorTest {
         Assert.assertTrue(xml, xml.contains("<maven.compiler.testTarget>1.8</maven.compiler.testTarget>"));
         Assert.assertTrue(xml, xml.contains("<maven.compiler.source>1.7</maven.compiler.source>"));
     }
+
+    @Example
+    void compilerPropertyReferenceBelowFloorGetsTestProperties() throws Exception {
+        Document doc = propertiesPom(
+            "<maven.compiler.source>${java.version}</maven.compiler.source>"
+                + "<java.version>1.5</java.version>"
+        );
+
+        boolean changed = MavenDependencyManager.applyTestCompilerFloor(doc);
+
+        Assert.assertTrue(changed);
+        String xml = doc.asXML();
+        Assert.assertTrue(xml, xml.contains("<maven.compiler.testSource>1.8</maven.compiler.testSource>"));
+        Assert.assertTrue(xml, xml.contains("<maven.compiler.testTarget>1.8</maven.compiler.testTarget>"));
+        Assert.assertTrue(xml, xml.contains("<maven.compiler.source>${java.version}</maven.compiler.source>"));
+        Assert.assertTrue(xml, xml.contains("<java.version>1.5</java.version>"));
+    }
+
 
     @Example
     void existingJava8PinIsUnchanged() throws Exception {
