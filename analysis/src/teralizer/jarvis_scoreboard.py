@@ -474,7 +474,7 @@ def get_mutation_scores(
     return cast(pd.DataFrame, scores[columns].reset_index(drop=True))
 
 
-CENSUS_VARIANTS = ("NAIVE_100_TRIES", "IMPROVED_100_TRIES")
+CENSUS_VARIANTS = ("IMPROVED_100_TRIES",)
 
 _MUTANT_KEY_SQL = (
     "COALESCE(mutated_class, '<null>') || '|' || "
@@ -748,9 +748,6 @@ def summarize_variants(
 
 
 SWEEP_VARIANTS = (
-    "NAIVE_100_TRIES",
-    "NAIVE_200_TRIES",
-    "NAIVE_1000_TRIES",
     "IMPROVED_100_TRIES",
     "IMPROVED_200_TRIES",
     "IMPROVED_1000_TRIES",
@@ -763,7 +760,7 @@ def main() -> None:
     ``uv run --directory analysis python -m teralizer.jarvis_scoreboard`` scores the
     IMPROVED_100_TRIES variant against :data:`JARVIS_TABLE2`. ``--sweep`` instead
     prints the per-variant tries-sweep summary (PVC versus covered mutation score)
-    for the six canonical :data:`SWEEP_VARIANTS`; its ``probes`` column shows the
+    for the IMPROVED tries ladder in :data:`SWEEP_VARIANTS`; its ``probes`` column shows the
     passing probe count, so an excluded probe (13 of 14) stays visible. The working
     directory moves to the repo root so the repo-relative jqwik value-log paths
     resolve.
@@ -830,9 +827,7 @@ def main() -> None:
             )
             table = summary.set_index("variant").reindex(SWEEP_VARIANTS).reset_index()
         else:
-            scoreboard = get_scoreboard(
-                conn, variants=["NAIVE_100_TRIES", "IMPROVED_100_TRIES"]
-            )
+            scoreboard = get_scoreboard(conn, variants=["IMPROVED_100_TRIES"])
             table = compare_to_jarvis(scoreboard, variant="IMPROVED_100_TRIES")
     print(table.to_string(index=False))
 

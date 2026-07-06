@@ -161,9 +161,13 @@ was a Teralizer selection criterion, not an SPF limit.
 
 ## Axis 2 — Budget elasticity (PVC is a knob; kills are not)
 
-Source: `postgres_jarvis_scoreboard`, full 6-variant + PIT sweep, current code. Reproduce:
+Source: `postgres_jarvis_scoreboard`, tries sweep + PIT, current code. Reproduce:
 `run-jarvis-scoreboard.sh --reset-db` then
 `uv run --directory analysis python -m teralizer.jarvis_scoreboard --sweep`.
+Variant policy (2026-07-06): measurement runs cover the IMPROVED tries ladder only
+(IMPROVED_{100,200,1000}); NAIVE variants are dropped from the eval — the table below
+carries the historical 6-variant reading, whose NAIVE rows already showed the elasticity
+argument is generator-independent (identical kills, both generators).
 
 | variant | tests | total PVC | killed | covered | covered score |
 |---|--:|--:|--:|--:|--:|
