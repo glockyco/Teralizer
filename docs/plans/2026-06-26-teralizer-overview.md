@@ -24,12 +24,12 @@ leaves this queue; its evidence goes to the owning audit and its doc to `archive
 
 1. **Keep the JARVIS comparison paper-ready** — preserve the current comparison contract,
    metrics, and guardrails while implementation work continues.
-2. **Unblock corpus applicability** — finish string corpus verification, then close the
-   remaining evidence-ranked extraction and generation gaps.
-3. **Extend data collection** — add the provenance/tagging that makes the corpus reusable.
-4. **Re-run the full evaluation** — regenerate RQ results on the broader dataset.
-
-No full evaluation rerun is planned until string corpus verification lands.
+2. **Consume the rerun evidence** — regenerate the extended report on the full snapshot,
+   record the R2 verdict, re-rank the queue on the honest numbers.
+3. **Implement the ranked funnel levers** — recall and yield improvements the rerun
+   evidence ranks (`2026-07-06-funnel-improvement-levers`).
+4. **Regenerate paper numbers** — JARVIS refresh plus the batched corpus measurements at
+   the next lever-wave boundary.
 
 ## Priority queue
 
@@ -40,25 +40,37 @@ expansion, then maintainability. Evidence-gated items never start before their g
 
 **P1 — decision gates (produce the evidence that ranks later fixes)**
 1. **R2 decision data** — the `actual_shape` + `receiver_provenance` telemetry
-   (`2026-07-02-input-topology-spike` §Telemetry) on the next rerun sizes the
-   zero-arg-inspector sub-family R2 could soundly take, and measures R1's realized share
-   beyond the sentinel signal. The full rerun below resolves this gate.
+   (`2026-07-02-input-topology-spike` §Telemetry) on the executing rerun sizes the
+   zero-arg-inspector sub-family R2 could soundly take. The formal verdict lands with the
+   full-run funnel report.
 
 **P2 — evidence-ranked fixes (start as their gate resolves)**
-2. **`2026-06-28-native-peer-model-coverage`** *(spec, draft)* — crash-visible peer/model
-   gaps, per-method ranked (commons-math `Precision.*` targets already named). Complements
-   the concretization census: census = silent concretization, this = hard crashes. Task 1
-   (ranking query) is cheap and independent; fixes are evidence-gated per target.
+2. **`2026-07-06-funnel-improvement-levers`** *(spec, draft — operator review pending)* —
+   the four levers the rerun telemetry ranks: yield-gap engineering (floor property
+   resolution, scaled generalized-suite timeout), assertion-kind support
+   (equality-isomorphic Hamcrest, try/fail/catch exception oracles), SPF loss
+   reclassification then census, library-accessor unwrap.
+3. **`2026-06-28-native-peer-model-coverage`** *(spec, draft)* — crash-visible peer/model
+   gaps, per-method ranked. GATED: the ranking query is only honest after the levers
+   spec's SPF reclassification lands and the next corpus event picks up the new codes —
+   the generic UNCAUGHT code currently undercounts native peers.
+
+**P3 — measurement infrastructure (invalidates later readings if missing)**
+4. **`2026-07-06-telemetry-attribution-hardening`** *(spec, draft — operator review
+   pending)* — generic-code budgets as integrity invariants, first-cause attribution view,
+   lifecycle cause propagation, intervention outcome records, loud-basis analysis CLIs,
+   exemplar sampling.
 
 **P5 — maintainability / independent tracks**
-3. **`2026-06-25-replication-package-documentation-improvements`** *(plan, 6/10)* — ACM
-   artifact eval; independent of pipeline work, schedule by paper deadline.
-4. **`2026-07-03-harness-support-artifact`** *(spec, draft)* — precompiled telemetry jar;
+5. **`2026-06-25-replication-package-documentation-improvements`** *(plan)* — remaining:
+   the deferred E2E smoke of the supervised replication runner once the corpus run
+   releases gradle.
+6. **`2026-07-03-harness-support-artifact`** *(spec, draft)* — precompiled telemetry jar;
    deletes the generated-file language-level defect class. Worthwhile, no urgency coupling.
-5. **C-1 single-emitter residue check** (`2026-06-28-pipeline-architecture-review`) —
+7. **C-1 single-emitter residue check** (`2026-06-28-pipeline-architecture-review`) —
    after the recipe unification wave, verify what if anything remains of the factory-drift
    concern; expected to shrink to nothing.
-6. **Small items, no docs needed:** deferred mis-pick fixture; assertThrows-lambda
+8. **Small items, no docs needed:** deferred mis-pick fixture; assertThrows-lambda
    expression-site replacement limitation in GeneralizationRecipe; debugger-grade trace of
    one antiaction widened-tuple NPE to decide whether the recipe must refuse substitution
    when the widened expression is load-bearing elsewhere in the test body
@@ -119,7 +131,8 @@ expansion, then maintainability. Evidence-gated items never start before their g
   `2026-07-01-rerun-observability-priorities` (telemetry ROI ranking),
   `2026-07-02-input-topology-spike` (R1/R2 opportunity bounds),
   `2026-07-02-recipe-seam-review` (recipe-seam sequencing + spike definitions),
-  `2026-07-05-concretization-census-findings` (census ranking + lever measurements).
+  `2026-07-05-concretization-census-findings` (census ranking + lever measurements),
+  `2026-07-06-evaluation-setup-audit` (run-script/config/analysis cleanup record).
 
 ## Pointers
 
