@@ -151,9 +151,7 @@ public class TestAnalysisTask extends AbstractTask {
                             testedMethod,
                             oracleExpression,
                             generalizableInputs,
-                            oracleExpression == testedMethodCall
-                                ? typeNameOf(testedMethod.getType())
-                                : typeNameOf(oracleExpression.getType())
+                            oracleExpressionTypeFor(assertionCall, oracleExpression, testedMethodCall, testedMethod)
                         );
                     }
                     if (generalizableInputs == null) {
@@ -288,6 +286,23 @@ public class TestAnalysisTask extends AbstractTask {
             return actualExpression;
         }
         return testedMethodCall;
+    }
+
+    private static String oracleExpressionTypeFor(
+        CtInvocation<?> assertionCall,
+        CtExpression<?> oracleExpression,
+        CtInvocation<?> testedMethodCall,
+        CtMethod<?> testedMethod
+    ) {
+        Optional<TestAnalysis.NormalizedAssertion> assertionView = TestAnalysis.normalizedAssertion(assertionCall);
+        if (assertionView.isPresent()
+            && assertionView.get().getKind() == TestAnalysis.AssertionKind.THROWS
+            && assertionView.get().getExpectedExceptionTypeName() != null) {
+            return assertionView.get().getExpectedExceptionTypeName();
+        }
+        return oracleExpression == testedMethodCall
+            ? typeNameOf(testedMethod.getType())
+            : typeNameOf(oracleExpression.getType());
     }
 
     private static CtExpression<?> actualExpressionFor(CtInvocation<?> assertionCall) {

@@ -220,6 +220,57 @@ public class TestAnalysisTaskTest {
     }
 
     @Example
+    void tryFailCatchStoresExceptionRecipeFromCaughtType() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "public class SubjectTest {\n"
+                + "  static int reject(int value) { throw new IllegalArgumentException(\"bad input\"); }\n"
+                + "  public void t() {\n"
+                + "    try { reject(5); org.junit.Assert.fail(); }\n"
+                + "    catch (IllegalArgumentException e) { }\n"
+                + "  }\n"
+                + "}\n"
+        );
+        RecordingStore store = new RecordingStore();
+
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
+
+        AssertionRecord record = store.assertions.get(0);
+        GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
+        Assert.assertEquals("java.lang.IllegalArgumentException", recipe.getOracleExpressionType());
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage());
+        Assert.assertTrue(resolved.getOracleExpression() instanceof CtInvocation<?>);
+        Assert.assertEquals("reject", ((CtInvocation<?>) resolved.getOracleExpression()).getExecutable().getSimpleName());
+        Assert.assertEquals(1, resolved.getInputs().size());
+        Assert.assertEquals("value", resolved.getInputs().get(0).toMethodParameter().getName());
+        Assert.assertEquals("5", resolved.getInputs().get(0).toMethodArgument().getValue());
+    }
+
+    @Example
+    void tryFailCatchWithMessageAssertionStoresFailRecipe() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "public class SubjectTest {\n"
+                + "  static int reject(int value) { throw new IllegalArgumentException(\"bad input\"); }\n"
+                + "  public void t() {\n"
+                + "    try { reject(5); org.junit.Assert.fail(); }\n"
+                + "    catch (IllegalArgumentException e) { org.junit.Assert.assertEquals(\"bad input\", e.getMessage()); }\n"
+                + "  }\n"
+                + "}\n"
+        );
+        RecordingStore store = new RecordingStore();
+
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
+
+        AssertionRecord record = store.assertions.stream()
+            .filter(assertion -> "fail".equals(assertion.getAssertionName()))
+            .findFirst()
+            .get();
+        GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
+        Assert.assertEquals("java.lang.IllegalArgumentException", recipe.getOracleExpressionType());
+    }
+
+    @Example
     void storesSemanticRecordForEachAssertion() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"

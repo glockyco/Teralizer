@@ -72,6 +72,41 @@ public class MethodUnderTestResolverTest {
     }
 
     @Example
+    void tryFailCatchSingleInvocationBeforeFail_isT1() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() {\n"
+            + "    try { new Subject().gcd(0, 0); org.junit.Assert.fail(); }\n"
+            + "    catch (IllegalArgumentException e) { }\n"
+            + "  }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals(MutResolution.Signal.ASSERT_THROWS_LAMBDA, r.getDecidingSignal());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void tryFailCatchMultipleInvocationsBeforeFail_picksLast_gradedGuess() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() {\n"
+            + "    try { Subject s = new Subject(); s.helper(1); s.gcd(0, 0); org.junit.Assert.fail(); }\n"
+            + "    catch (IllegalArgumentException e) { }\n"
+            + "  }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+        Assert.assertEquals(MutResolution.Signal.ASSERT_THROWS_LAMBDA, r.getDecidingSignal());
+        Assert.assertTrue(r.getTier() == MutResolution.Tier.T4_GUESS
+            || r.getTier() == MutResolution.Tier.T3_SINGLE_WEAK
+            || r.getTier() == MutResolution.Tier.T2_CORROBORATED);
+        Assert.assertEquals(2, r.getCandidateCount());
+        Assert.assertEquals(1, r.getAlternatives().size());
+        Assert.assertEquals("helper", r.getAlternatives().get(0).methodName);
+    }
+
+    @Example
     void unsupportedShape_isNoneT5() {
         // assertNotNull has no actual-parameter index => unsupported shape
         MutResolution r = resolve(

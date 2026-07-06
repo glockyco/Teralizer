@@ -167,7 +167,10 @@ public class TestAnalysis {
                     null,
                     arguments.get(0),
                     assertion,
-                    0));
+                    0,
+                    exceptionTypeNameFromClassLiteral(arguments.get(0)).orElse(null)));
+            case "fail":
+                return normalizedFail(assertion, framework);
             case ASSERT_THAT:
                 return normalizedAssertThat(assertion);
             default:
@@ -283,6 +286,95 @@ public class TestAnalysis {
             site.expression,
             site.owner,
             site.argumentIndex));
+    }
+
+    private static Optional<NormalizedAssertion> normalizedFail(
+        CtInvocation<?> assertion,
+        AssertionFramework framework
+    ) {
+        if (framework == null || !assertion.getArguments().isEmpty()) {
+            return Optional.empty();
+        }
+        AssertionSemanticsClassifier.Result semantics = AssertionSemanticsClassifier.classify(assertion);
+        if (!AssertionSemanticCodes.FAIL_CONTEXT_TRY_BLOCK_EXPECTING_EXCEPTION.equals(semantics.failContext())) {
+            return Optional.empty();
+        }
+        CtTry tryBlock = assertion.getParent(CtTry.class);
+        if (tryBlock == null || tryBlock.getCatchers().size() != 1) {
+            return Optional.empty();
+        }
+        CtCatch catcher = tryBlock.getCatchers().get(0);
+        if (catcher.getParameter() == null
+            || catcher.getParameter().getType() == null
+            || catcher.getParameter().getMultiTypes().size() != 1) {
+            return Optional.empty();
+        }
+        if (!tryBlock.getBody().getStatements().contains(assertion)) {
+            return Optional.empty();
+        }
+        if (!catchBodyIsEmptyOrCaughtMessageAssertions(catcher)) {
+            return Optional.empty();
+        }
+        return Optional.of(new NormalizedAssertion(
+            AssertionKind.THROWS,
+            null,
+            null,
+            null,
+            NO_INDEX,
+            catcher.getParameter().getType().getQualifiedName()));
+    }
+
+    private static boolean catchBodyIsEmptyOrCaughtMessageAssertions(CtCatch catcher) {
+        if (catcher.getBody() == null) {
+            return true;
+        }
+        for (CtStatement statement : catcher.getBody().getStatements()) {
+            if (!(statement instanceof CtInvocation<?>)) {
+                return false;
+            }
+            if (!isCaughtMessageAssertion((CtInvocation<?>) statement, catcher.getParameter().getSimpleName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isCaughtMessageAssertion(CtInvocation<?> assertion, String catchParameterName) {
+        if (!Configuration.ASSERT_EQUALS.equals(assertion.getExecutable().getSimpleName())
+            || !isAssertion(assertion)
+            || assertion.getArguments().size() != 2) {
+            return false;
+        }
+        CtExpression<?> actual = assertion.getArguments().get(1);
+        if (!(actual instanceof CtInvocation<?>)) {
+            return false;
+        }
+        CtInvocation<?> messageCall = (CtInvocation<?>) actual;
+        if (!"getMessage".equals(messageCall.getExecutable().getSimpleName())
+            || !messageCall.getArguments().isEmpty()
+            || !(messageCall.getTarget() instanceof CtVariableRead<?>)) {
+            return false;
+        }
+        CtVariableRead<?> target = (CtVariableRead<?>) messageCall.getTarget();
+        return catchParameterName.equals(target.getVariable().getSimpleName());
+    }
+
+    private static Optional<String> exceptionTypeNameFromClassLiteral(CtExpression<?> expression) {
+        if (expression instanceof CtFieldRead<?>) {
+            CtFieldRead<?> fieldRead = (CtFieldRead<?>) expression;
+            if ("class".equals(fieldRead.getVariable().getSimpleName())
+                && fieldRead.getTarget() != null
+                && fieldRead.getTarget().getType() != null) {
+                return Optional.of(fieldRead.getTarget().getType().getQualifiedName());
+            }
+        }
+        String source = expression.toString();
+        if (source.endsWith(".class")) {
+            return Optional.of(expression.getFactory().Type()
+                .createReference(source.substring(0, source.length() - ".class".length()))
+                .getQualifiedName());
+        }
+        return Optional.empty();
     }
 
     private static Optional<ExpectedExpressionSite> hamcrestEqualityExpected(CtInvocation<?> matcher) {
@@ -419,6 +511,8 @@ public class TestAnalysis {
         private final CtInvocation<?> expectedArgumentOwner;
         private final int expectedArgumentIndex;
 
+        private final String expectedExceptionTypeName;
+
         private NormalizedAssertion(
             AssertionKind kind,
             CtExpression<?> actualExpression,
@@ -426,11 +520,23 @@ public class TestAnalysis {
             CtInvocation<?> expectedArgumentOwner,
             int expectedArgumentIndex
         ) {
+            this(kind, actualExpression, expectedExpression, expectedArgumentOwner, expectedArgumentIndex, null);
+        }
+
+        private NormalizedAssertion(
+            AssertionKind kind,
+            CtExpression<?> actualExpression,
+            CtExpression<?> expectedExpression,
+            CtInvocation<?> expectedArgumentOwner,
+            int expectedArgumentIndex,
+            String expectedExceptionTypeName
+        ) {
             this.kind = kind;
             this.actualExpression = actualExpression;
             this.expectedExpression = expectedExpression;
             this.expectedArgumentOwner = expectedArgumentOwner;
             this.expectedArgumentIndex = expectedArgumentIndex;
+            this.expectedExceptionTypeName = expectedExceptionTypeName;
         }
 
         public AssertionKind getKind() {
@@ -443,6 +549,10 @@ public class TestAnalysis {
 
         public CtExpression<?> getExpectedExpression() {
             return this.expectedExpression;
+        }
+
+        public String getExpectedExceptionTypeName() {
+            return this.expectedExceptionTypeName;
         }
 
         public boolean hasReplaceableExpectedExpression() {

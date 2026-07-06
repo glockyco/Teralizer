@@ -19,6 +19,7 @@ import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtNewClass;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtTry;
 import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableRead;
@@ -113,6 +114,11 @@ public final class MethodUnderTestResolver {
         }
 
         Optional<TestAnalysis.NormalizedAssertion> view = TestAnalysis.normalizedAssertion(assertion);
+        if (view.isPresent()
+            && view.get().getKind() == TestAnalysis.AssertionKind.THROWS
+            && "fail".equals(assertion.getExecutable().getSimpleName())) {
+            return resolveTryFailCatch(testMethod, assertion, focal);
+        }
         if (!view.isPresent() || view.get().getActualExpression() == null) {
             return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
         }
@@ -180,6 +186,54 @@ public final class MethodUnderTestResolver {
             false,
             focal
         );
+    }
+
+    private static MutResolution resolveTryFailCatch(
+        CtMethod<?> testMethod,
+        CtInvocation<?> assertion,
+        FocalTypeResolver.Focal focal
+    ) {
+        CtTry tryBlock = assertion.getParent(CtTry.class);
+        if (tryBlock == null || tryBlock.getBody() == null) {
+            return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
+        }
+        List<CtInvocation<?>> invocations = invocationsBeforeFail(tryBlock, assertion);
+        if (invocations.isEmpty()) {
+            return none(MutResolution.NoPickReason.NO_VISIBLE_CALL, focal);
+        }
+        CtInvocation<?> pick = invocations.get(invocations.size() - 1);
+        if (invocations.size() == 1) {
+            return graded(
+                testMethod,
+                pick,
+                MutResolution.Signal.ASSERT_THROWS_LAMBDA,
+                MutResolution.Tier.T1_PROVEN,
+                alternativesExcluding(invocations, pick),
+                false,
+                false,
+                focal
+            );
+        }
+        return rankedBase(
+            testMethod,
+            pick,
+            MutResolution.Signal.ASSERT_THROWS_LAMBDA,
+            alternativesExcluding(invocations, pick),
+            false,
+            false,
+            focal
+        );
+    }
+
+    private static List<CtInvocation<?>> invocationsBeforeFail(CtTry tryBlock, CtInvocation<?> assertion) {
+        List<CtInvocation<?>> invocations = new ArrayList<>();
+        for (CtStatement statement : tryBlock.getBody().getStatements()) {
+            if (statement == assertion || !statement.getElements(candidate -> candidate == assertion).isEmpty()) {
+                return invocations;
+            }
+            invocations.addAll(statement.getElements(new TypeFilter<>(CtInvocation.class)));
+        }
+        return invocations;
     }
 
     // --- value assertions: producer tracing ---

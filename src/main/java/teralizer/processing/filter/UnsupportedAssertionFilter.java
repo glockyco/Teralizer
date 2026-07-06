@@ -31,7 +31,7 @@ public class UnsupportedAssertionFilter extends AbstractFilter {
 
     private boolean isSupported() {
         String assertionName = this.assertionRecord.getAssertionName();
-        if (!"assertThat".equals(assertionName)) {
+        if (!"assertThat".equals(assertionName) && !"fail".equals(assertionName)) {
             return TestAnalysis.isGeneralizable(assertionName);
         }
         CtInvocation<?> assertion = resolveAssertionInvocation();

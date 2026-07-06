@@ -92,6 +92,23 @@ public class FilterTelemetryTest {
     }
 
     @Example
+    void unsupportedAssertionFilterAcceptsRecognizedTryFailCatch() throws Exception {
+        FilterResult result = unsupportedAssertionResult(
+            "try { new Subject().reject(1); org.junit.Assert.fail(); } catch (IllegalArgumentException e) { }",
+            "fail");
+
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
+    void unsupportedAssertionFilterKeepsFailReasonCodeOutsideTryExceptionIdiom() throws Exception {
+        FilterResult result = unsupportedAssertionResult("org.junit.Assert.fail();", "fail");
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.UNSUPPORTED_ASSERTION_FAIL, result.getReasonCode());
+    }
+
+    @Example
     void unsupportedReturnTypeRecordsReturnTypeDetail() throws Exception {
         AssertionRecord record = new AssertionRecord();
         record.setTestedMethodReturnType("java.lang.Object");
@@ -299,24 +316,28 @@ public class FilterTelemetryTest {
         Assert.assertEquals(FilterReasonCodes.TEST_NOT_PASSING, result.getReasonCode());
     }
     private static FilterResult unsupportedAssertionResult(String assertionSource) throws Exception {
+        return unsupportedAssertionResult(assertionSource, "assertThat");
+    }
+
+    private static FilterResult unsupportedAssertionResult(String assertionSource, String assertionName) throws Exception {
         Launcher launcher = new Launcher();
         launcher.getEnvironment().setNoClasspath(true);
         launcher.addInputResource(new VirtualFile(
             "public class SubjectTest {\n"
                 + "  public void t() { " + assertionSource + " }\n"
                 + "}\n"
-                + "class Subject { int id(int x) { return x; } }\n",
+                + "class Subject { int id(int x) { return x; } void reject(int x) { throw new IllegalArgumentException(); } }\n",
             "SubjectTest.java"));
         launcher.buildModel();
         CtClass<?> testClass = launcher.getModel()
             .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest")).get(0);
         CtMethod<?> testMethod = testClass.getMethodsByName("t").get(0);
         CtInvocation<?> assertion = testMethod.getElements(new TypeFilter<>(CtInvocation.class)).stream()
-            .filter(invocation -> "assertThat".equals(invocation.getExecutable().getSimpleName()))
+            .filter(invocation -> assertionName.equals(invocation.getExecutable().getSimpleName()))
             .findFirst()
             .get();
         AssertionRecord record = new AssertionRecord();
-        record.setAssertionName("assertThat");
+        record.setAssertionName(assertionName);
         record.setAssertionAbsolutePath(assertion.getPath().toString());
         return new UnsupportedAssertionFilter(launcher, record).check();
     }
