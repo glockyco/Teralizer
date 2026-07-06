@@ -81,22 +81,26 @@ here except gradle-touching smokes.
       drivers; the `timeout-retry-*.conf` set stays until the post-run regeneration task
       replaces it) and the 0-byte litter (`tekst.txt`, `data/teralizer.db`).
 - [x] Move packager tooling to `scripts/packaging/` (`prepare-zenodo-package.sh`,
-      `setup-eval-environment.sh`, `collect-disk-metrics.sh`) with a README line each.
+      `setup-eval-environment.sh`, `collect-disk-metrics.sh`) with a nested AGENTS.md.
 - [x] Extract `scripts/lib/db-lifecycle.sh` (terminate/drop/create/collation-refresh) and
       use it from the four duplication sites. Verification: bash -n + shellcheck now, the
       already-queued fixture smoke exercises it at the next gate.
 - [x] Fix the JARVIS skill's dead env-var instructions.
 - [x] Drop the `notebooks/legacy/` exclusion from `analysis/pyproject.toml` and the AGENTS.md
       sentence documenting it.
-- [x] Add `project-configs/README.md` (the config species, composition rules, which driver
-      consumes which directory, and each lane's retirement trigger). Must state the
+- [x] Add `project-configs/AGENTS.md` (the config species, composition rules, which driver
+      consumes which directory, and each lane's retirement trigger). States the
       `extended/` → `replication/extended/` generation chain.
 - [x] Normalize the JARVIS run-target env style inside the db-lifecycle commit: expose
       `JARVIS_DB`/`JARVIS_DATA_DIR` overrides the way `REPOREAPERS_DB`/`VERIFICATION_DB`
       work, defaults unchanged.
-- [ ] Tighten `.gitignore`: `.idea/`, `*.iml`, `project-configs/timeout-retry-*.conf`.
-- [x] Add a data-layout note (`data/` ownership per driver, retention boundaries) to
-      `docs/database.md` or a short `data/README.md`.
+- [x] Tighten `.gitignore`: ignore `project-configs/timeout-retry*.conf`. The `.idea`/`*.iml`
+      part of the original idea was wrong — those are deliberately tracked project
+      configuration (codeStyles, runConfigurations, inspectionProfiles).
+- [x] Consolidate local-state documentation into `docs/local-state.md` — the single
+      authority for gitignored/generated state (pattern → owner → retention rule, no
+      volatile facts). `docs/database.md` and root AGENTS.md point to it; the nested
+      AGENTS.md files keep only behavioral boundaries.
 
 ### Tier 2 — sequencing decided
 
@@ -112,8 +116,10 @@ here except gradle-touching smokes.
 
 ### Tier 3 — operator decisions (resolved)
 
-- `database/db.sqlite` and `data-dev.zip`: KEEP for now (operator call, 2026-07-06).
-- The ~839 loose `data/github_com_*` dirs: KEEP; the data-layout note documents them.
+- `database/db.sqlite` and `data-dev.zip`: KEEP for now (operator call, 2026-07-06). The
+  standing rule lives in `docs/local-state.md`.
+- The ~839 loose `data/github_com_*` dirs: KEEP; the standing rule lives in
+  `docs/local-state.md`.
 
 ## Explicitly recommended against
 

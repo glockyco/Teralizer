@@ -113,3 +113,5 @@ dropped by their runner scripts. Direct query:
   Teralizer work. Exception: deleting Teralizer-generated `_*_Generalized_*_Test.java` litter
   there is fine (runner scripts do it automatically).
 - Never commit build artifacts or generated datasets.
+- Local state (gitignored run outputs, scratch DBs, generated litter — what owns it, what is
+  safe to delete): `docs/local-state.md`.
