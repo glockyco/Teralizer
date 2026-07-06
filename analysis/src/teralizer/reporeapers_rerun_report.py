@@ -464,47 +464,53 @@ def get_task_diagnostics(conn: Connection) -> pd.DataFrame:
     )
 
 
-def get_generated_property_categories(conn: Connection) -> pd.DataFrame:
-    """Generated properties by downstream outcome category."""
+def get_true_yield(conn: Connection) -> pd.DataFrame:
+    """End-to-end yield: included vs final_usable, with the gap explained.
+
+    generalization.is_included is not final success. The lifecycle flags say
+    where each included generalization actually ended, and the jqwik outcome
+    kinds explain execution-stage losses.
+    """
+    if not _table_exists(conn, "generalization_lifecycle"):
+        return pd.DataFrame(
+            [{"note": _SKIP_NOTE.format(table="generalization_lifecycle")}]
+        )
     return _read_sql(
         conn,
         """
-        WITH build_failed_projects AS (
-            SELECT project_id
-            FROM task
-            WHERE stage = 'BUILD_PROJECT_GENERALIZED'
-              AND status = 'FAILED'
-              AND test_id IS NULL
-              AND assertion_id IS NULL
-              AND generalization_id IS NULL
-        ),
-        gen_task_failed AS (
-            SELECT generalization_id, min(stage) AS stage
-            FROM task
-            WHERE generalization_id IS NOT NULL
-              AND status = 'FAILED'
-            GROUP BY generalization_id
-        ),
-        gen_filter_reject AS (
-            SELECT DISTINCT generalization_id
-            FROM filter_result
-            WHERE generalization_id IS NOT NULL
-              AND decision = 'REJECT'
-        )
         SELECT
-            CASE
-                WHEN b.project_id IS NOT NULL THEN 'project build generalized failed before execution'
-                WHEN tf.stage = 'COLLECT_JUNIT_REPORTS_GENERALIZED' THEN 'generalized junit report collection failed'
-                WHEN r.generalization_id IS NOT NULL THEN 'generalized test executed but failed'
-                ELSE 'generalized test passed filters'
-            END AS category,
-            count(*) AS count
-        FROM generalization g
-        LEFT JOIN build_failed_projects b ON b.project_id = g.project_id
-        LEFT JOIN gen_task_failed tf ON tf.generalization_id = g.id
-        LEFT JOIN gen_filter_reject r ON r.generalization_id = g.id
-        GROUP BY category
-        ORDER BY count DESC
+            (SELECT count(*) FROM generalization) AS generalizations,
+            (SELECT count(*) FROM generalization WHERE is_included) AS included,
+            count(*) FILTER (WHERE gl.generated_project_compiled) AS compiled,
+            count(*) FILTER (WHERE gl.generated_tests_executed) AS executed,
+            count(*) FILTER (WHERE gl.generated_report_collected) AS report_collected,
+            count(*) FILTER (WHERE gl.generated_filter_passed) AS filter_passed,
+            count(*) FILTER (WHERE gl.final_usable) AS final_usable
+        FROM generalization_lifecycle gl
+        """,
+    )
+
+
+def get_yield_gap_causes(conn: Connection) -> pd.DataFrame:
+    """Failure stage/code breakdown for non-usable lifecycle rows, plus jqwik outcomes."""
+    if not _table_exists(conn, "generalization_lifecycle"):
+        return pd.DataFrame(
+            [{"note": _SKIP_NOTE.format(table="generalization_lifecycle")}]
+        )
+    return _read_sql(
+        conn,
+        """
+        SELECT
+            coalesce(gl.final_failure_stage, '<none>') AS failure_stage,
+            coalesce(gl.final_failure_code, '<none>') AS failure_code,
+            coalesce(jpe.diagnostic_kind, '<no jqwik outcome>') AS jqwik_outcome,
+            count(*) AS generalizations
+        FROM generalization_lifecycle gl
+        LEFT JOIN jqwik_property_execution jpe
+               ON jpe.generalization_id = gl.generalization_id
+        WHERE NOT gl.final_usable
+        GROUP BY failure_stage, failure_code, jqwik_outcome
+        ORDER BY generalizations DESC
         """,
     )
 
@@ -578,7 +584,8 @@ def generate_report(conn: Connection, top: int) -> dict[str, pd.DataFrame]:
         "spf_extraction_rollup": get_spf_extraction_rollup(conn),
         "spf_failure_causes": get_spf_failure_causes(conn),
         "task_diagnostics": get_task_diagnostics(conn),
-        "generated_property_categories": get_generated_property_categories(conn),
+        "true_yield": get_true_yield(conn),
+        "yield_gap_causes": get_yield_gap_causes(conn),
         "build_failure_causes": get_build_failure_causes(conn),
     }
 
@@ -612,11 +619,8 @@ def print_report(report: dict[str, pd.DataFrame], top: int) -> None:
         ("SPF extraction funnel (per-test rollup)", "spf_extraction_rollup", None),
         ("SPF extraction losses by stable cause", "spf_failure_causes", None),
         ("Failed-task reason codes (all stages)", "task_diagnostics", None),
-        (
-            "Generated property downstream outcomes",
-            "generated_property_categories",
-            None,
-        ),
+        ("True end-to-end yield (lifecycle)", "true_yield", None),
+        ("Yield gap causes (stage, code, jqwik outcome)", "yield_gap_causes", None),
         (
             "Build failure causes (telemetry)",
             "build_failure_causes",

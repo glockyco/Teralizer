@@ -60,7 +60,7 @@ midpoint snapshot (read-only) and eyeball the output for internal consistency; t
       compiler diagnostic) joined with `build_environment_observation` (source/target level,
       generated-source feature flags) for the two build stages. Sizes the Java-8
       generated-source blocker exactly. Replaces the build-log path parser.
-- [ ] **Section 4 — true yield.** `generalization_lifecycle` stage flags ×
+- [x] **Section 4 — true yield.** `generalization_lifecycle` stage flags ×
       `jqwik_property_execution.diagnostic_kind`: included vs final_usable per project and
       corpus-wide, with the failure stage/code breakdown for the gap. Kills `is_included`
       as a yield proxy.
