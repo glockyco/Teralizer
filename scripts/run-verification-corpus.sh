@@ -7,6 +7,10 @@
 # Usage: scripts/run-verification-corpus.sh [--only <fixture-name>]
 #   --only  run a single fixture (fast iteration; the DB then holds only that fixture, so use
 #           ad-hoc SQL against it — the full golden check expects the whole corpus)
+#
+# Each fixture runs under a wall cap (VERIFICATION_FIXTURE_TIMEOUT, default 300 s, against a
+# normal fixture time of ~47 s). A capped fixture is a defect in the fixture or the pipeline,
+# never data. It ledgers exit 124 and fails the gate like any nonzero exit.
 set -uo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
@@ -35,69 +39,21 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-_psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
+FIXTURE_TIMEOUT="${VERIFICATION_FIXTURE_TIMEOUT:-300}"
 
-active_project_abs=""
-active_project_log=""
+source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
+supervisor_install_traps
 
-_log_cleanup() {
-  local log_abs="$1"
-  local message="$2"
-  echo "    cleanup: $message"
-  [[ -n "$log_abs" ]] && printf 'cleanup: %s\n' "$message" >> "$log_abs"
-}
-
-cleanup_leftover_project_processes() {
-  local project_abs="$1"
-  local log_abs="${2:-}"
-  [[ -n "$project_abs" && -d "$project_abs" ]] || return 0
-
-  local pids=()
-  local pid
-  while IFS= read -r pid; do
-    [[ -n "$pid" && "$pid" != "$$" ]] && pids+=("$pid")
-  done < <(pgrep -f "$project_abs" 2>/dev/null || true)
-  [[ ${#pids[@]} -gt 0 ]] || return 0
-
-  _log_cleanup "$log_abs" "terminating ${#pids[@]} leftover process(es) for $project_abs: ${pids[*]}"
-  for pid in "${pids[@]}"; do
-    kill -TERM "$pid" 2>/dev/null || true
-  done
-  sleep 2
-  for pid in "${pids[@]}"; do
-    if kill -0 "$pid" 2>/dev/null; then
-      _log_cleanup "$log_abs" "force-killing leftover process $pid for $project_abs"
-      kill -KILL "$pid" 2>/dev/null || true
-    fi
-  done
-}
-
-cleanup_active_project_processes() {
-  [[ -n "$active_project_abs" ]] || return 0
-  cleanup_leftover_project_processes "$active_project_abs" "$active_project_log"
-}
-
-trap cleanup_active_project_processes EXIT
-trap 'cleanup_active_project_processes; exit 130' INT TERM
-
-if ! _psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
-  echo "==> Starting Postgres"
-  "$ROOT_DIR/gradlew" startPostgres >/dev/null 2>&1 || true
-  for _ in $(seq 1 30); do
-    _psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 && break
-    sleep 1
-  done
-fi
-_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 || { echo "Postgres (postgres-teralizer) not reachable" >&2; exit 1; }
+ensure_postgres_up || exit 1
 
 echo "==> Resetting database $DB_NAME"
-_psql -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
-_psql -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" || { echo "DROP DATABASE failed" >&2; exit 1; }
-if ! _psql -d postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null; then
+teralizer_psql -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
+teralizer_psql -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" || { echo "DROP DATABASE failed" >&2; exit 1; }
+if ! teralizer_psql -d postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null; then
   # A container image or host libc upgrade can leave template1 with a stale collation version.
   # Refresh only the template metadata, then retry the scratch database creation.
-  _psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
-  _psql -d postgres -c "CREATE DATABASE $DB_NAME;" || { echo "CREATE DATABASE failed" >&2; exit 1; }
+  teralizer_psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
+  teralizer_psql -d postgres -c "CREATE DATABASE $DB_NAME;" || { echo "CREATE DATABASE failed" >&2; exit 1; }
 fi
 
 mkdir -p "$LOG_DIR"
@@ -125,20 +81,21 @@ for config_abs in "${configs[@]}"; do
   project_abs="$ROOT_DIR/$root_path"
   attempted=$((attempted + 1))
   echo "==> [$fixture] $root_path"
-  active_project_abs="$project_abs"
-  active_project_log="$log_abs"
-  "$ROOT_DIR/gradlew" run \
+  SUPERVISOR_ACTIVE_PATH="$project_abs"
+  supervised_run "$log_abs" "$FIXTURE_TIMEOUT" \
+    "$ROOT_DIR/gradlew" run \
     -Dteralizer.config="$PROFILE,$config" \
     -Dteralizer.database.name="$DB_NAME" \
     -Dteralizer.data-dir="$DATA_DIR" \
-    --no-daemon \
-    > "$log_abs" 2>&1
-  rc=$?
+    --no-daemon
+  rc=$SUPERVISED_RC
   cleanup_leftover_project_processes "$project_abs" "$log_abs"
-  active_project_abs=""
-  active_project_log=""
+  SUPERVISOR_ACTIVE_PATH=""
   printf '%s\t%s\t%s\t%s\n' "$fixture" "$root_path" "$rc" "$log" >> "$STATUS_TSV"
-  if [[ "$rc" -ne 0 ]]; then
+  if [[ "$rc" -eq 124 ]]; then
+    nonzero=$((nonzero + 1))
+    echo "    capped at ${FIXTURE_TIMEOUT}s -- a fixture this slow is a defect, not data (see $log)"
+  elif [[ "$rc" -ne 0 ]]; then
     nonzero=$((nonzero + 1))
     echo "    gradle exited $rc (see $log)"
   fi
