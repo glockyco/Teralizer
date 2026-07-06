@@ -64,3 +64,17 @@ Materialized views defined in `src/main/resources/db/create-views.sql` provide a
 ./gradlew stopPostgres     # Stop PostgreSQL container
 docker compose up adminer  # Database interface at http://localhost:18080 (password: teralizer)
 ```
+
+## Data directory layout
+
+`data/` is gitignored and owned per run driver. Every run root carries its own attempt ledger
+(`status.tsv`), per-project logs (`run-logs/`), and resume markers (`done/`).
+
+| Root | Owner | Retention |
+|---|---|---|
+| `data/reporeapers-rerun/` | July baseline run of `scripts/run-reporeapers-rerun.sh` | Keep: the baseline's build logs and ledger feed the rerun report |
+| `data/reporeapers-rerun-2/` | Current corpus rerun (snapshot DB `postgres_reporeapers_rerun2`) | Keep with its DB |
+| `data/verification/` | Fixture-corpus driver | Regenerated every gate run, safe to delete |
+| `data/jarvis-scoreboard/`, `data/jarvis-census/` | JARVIS runners (fixtures + `PROVENANCE.md` + outputs) | Fixtures regenerable via `--prepare-fixtures`; keep `PROVENANCE.md` with measurement outputs |
+| `data/fusion-spike/` | Fusion-spike lane | Keep while `postgres_fusion_spike` evidence is referenced |
+| Loose `data/github_com_*/` dirs (~839) | Historical pipeline outputs from pre-profile runs against `postgres_test` | Keep until the paper ships (provenance for old snapshots), then decide |

@@ -95,7 +95,7 @@ here except gradle-touching smokes.
       `JARVIS_DB`/`JARVIS_DATA_DIR` overrides the way `REPOREAPERS_DB`/`VERIFICATION_DB`
       work, defaults unchanged.
 - [ ] Tighten `.gitignore`: `.idea/`, `*.iml`, `project-configs/timeout-retry-*.conf`.
-- [ ] Add a data-layout note (`data/` ownership per driver, retention boundaries) to
+- [x] Add a data-layout note (`data/` ownership per driver, retention boundaries) to
       `docs/database.md` or a short `data/README.md`.
 
 ### Tier 2 — sequencing decided
