@@ -56,7 +56,7 @@ midpoint snapshot (read-only) and eyeball the output for internal consistency; t
       scheduled → instrumented → succeeded → specs written, plus `failure_counts` JSONB
       unpacked into a ranked stable-cause table. Replaces the `task.info` free-text
       classifier. This table is the direct input for the P2 native-peer ranking.
-- [ ] **Section 3 — build failure causes.** `task_diagnostic` (stage, reason_code, first
+- [x] **Section 3 — build failure causes.** `task_diagnostic` (stage, reason_code, first
       compiler diagnostic) joined with `build_environment_observation` (source/target level,
       generated-source feature flags) for the two build stages. Sizes the Java-8
       generated-source blocker exactly. Replaces the build-log path parser.

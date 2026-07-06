@@ -15,8 +15,6 @@ skip with an explicit note against snapshots that predate the tables.
 from __future__ import annotations
 
 import argparse
-import re
-from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -46,8 +44,6 @@ _FILTER_ALIASES = {
     "UnnamedPackageFilter": "UnnamedPackage",
     "UnsupportedAssertionFilter": "UnsupportedAssertion",
 }
-
-_OUTPUT_PATH = re.compile(r"Output:\s*(?P<path>[^\s]+)")
 
 
 def _short_filter(fq_name: str) -> str:
@@ -513,68 +509,45 @@ def get_generated_property_categories(conn: Connection) -> pd.DataFrame:
     )
 
 
-def classify_build_log(log: str) -> str:
-    """Coarse build-log bucket for generalized build failures."""
-    if not log:
-        return "missing build log"
-    if "not supported in -source 1." in log and (
-        "lambda expressions" in log or "method references" in log
-    ):
-        return "generated Java 8 syntax under pre-Java-8 source level"
-    if "COMPILATION ERROR" in log or "Compilation failure" in log:
-        return "compilation failure"
-    if "Command execution timeout exceeded" in log:
-        return "command timeout"
-    return "other build failure"
+def get_build_failure_causes(conn: Connection) -> pd.DataFrame:
+    """Build-stage failures joined with the build-environment telemetry.
 
-
-def _extract_output_path(info: str | None) -> Path | None:
-    """Extract the command-output path from a task info message."""
-    if not info:
-        return None
-    match = _OUTPUT_PATH.search(info)
-    if not match:
-        return None
-    return Path(match.group("path"))
-
-
-def get_generalized_build_failure_causes(
-    conn: Connection, log_root: Path
-) -> pd.DataFrame:
-    """Classify generalized build failures using command output logs when present."""
-    failures = _read_sql(
+    The level-mismatch column derives the Java-8 generated-source blocker
+    directly: a failed generalized build whose project compiles below the
+    level the generated source requires.
+    """
+    if not _table_exists(conn, "build_environment_observation"):
+        return pd.DataFrame(
+            [{"note": _SKIP_NOTE.format(table="build_environment_observation")}]
+        )
+    return _read_sql(
         conn,
         """
-        SELECT p.root_path, t.info
-        FROM task t
-        JOIN project p ON p.id = t.project_id
-        WHERE t.stage = 'BUILD_PROJECT_GENERALIZED'
-          AND t.status = 'FAILED'
-          AND t.test_id IS NULL
-          AND t.assertion_id IS NULL
-          AND t.generalization_id IS NULL
-        ORDER BY p.root_path
+        SELECT
+            td.stage,
+            td.reason_code,
+            coalesce(beo.compiler_source, '<unknown>') AS compiler_source,
+            coalesce(beo.generated_source_required_level, '-') AS generated_level,
+            CASE
+                WHEN beo.generated_source_required_level IS NOT NULL
+                     AND beo.compiler_source ~ '^[0-9.]+$'
+                     AND string_to_array(beo.compiler_source, '.')::int[]
+                         < string_to_array(beo.generated_source_required_level, '.')::int[]
+                    THEN 'generated level above project source'
+                WHEN beo.generated_source_required_level IS NOT NULL
+                     AND beo.compiler_source !~ '^[0-9.]+$'
+                    THEN 'source level unresolved (build property)'
+                ELSE '-'
+            END AS level_mismatch,
+            count(DISTINCT td.project_id) AS projects
+        FROM task_diagnostic td
+        LEFT JOIN build_environment_observation beo
+               ON beo.project_id = td.project_id AND beo.stage = td.stage
+        WHERE td.stage LIKE 'BUILD_%'
+        GROUP BY td.stage, td.reason_code, compiler_source, generated_level,
+                 level_mismatch
+        ORDER BY projects DESC
         """,
-    )
-    if failures.empty:
-        return pd.DataFrame(columns=["cause", "projects"])
-
-    causes: list[str] = []
-    for _, row in failures.iterrows():
-        output_path = _extract_output_path(row["info"])
-        log_text = ""
-        if output_path is not None:
-            path = output_path if output_path.is_absolute() else log_root / output_path
-            if path.exists():
-                log_text = path.read_text(errors="replace")
-        causes.append(classify_build_log(log_text))
-
-    cause_counts = Counter(causes)
-    rows = [
-        {"cause": cause, "projects": count} for cause, count in cause_counts.items()
-    ]
-    return pd.DataFrame(rows).sort_values(
-        "projects", ascending=False, ignore_index=True
     )
 
 
@@ -583,9 +556,7 @@ def get_generalized_build_failure_causes(
 # ---------------------------------------------------------------------------
 
 
-def generate_report(
-    conn: Connection, top: int, log_root: Path
-) -> dict[str, pd.DataFrame]:
+def generate_report(conn: Connection, top: int) -> dict[str, pd.DataFrame]:
     """Run all snapshot queries."""
     progress = get_run_progress(conn)
     return {
@@ -608,9 +579,7 @@ def generate_report(
         "spf_failure_causes": get_spf_failure_causes(conn),
         "task_diagnostics": get_task_diagnostics(conn),
         "generated_property_categories": get_generated_property_categories(conn),
-        "generalized_build_failure_causes": get_generalized_build_failure_causes(
-            conn, log_root
-        ),
+        "build_failure_causes": get_build_failure_causes(conn),
     }
 
 
@@ -649,8 +618,8 @@ def print_report(report: dict[str, pd.DataFrame], top: int) -> None:
             None,
         ),
         (
-            "Generalized build failure log causes",
-            "generalized_build_failure_causes",
+            "Build failure causes (telemetry)",
+            "build_failure_causes",
             None,
         ),
     ]
@@ -684,12 +653,6 @@ def parse_args() -> argparse.Namespace:
         help="number of rows for top-N detail tables",
     )
     parser.add_argument(
-        "--log-root",
-        type=Path,
-        default=Path("."),
-        help="repository root used to resolve command-data paths in task.info",
-    )
-    parser.add_argument(
         "--csv-prefix",
         help="optional prefix for saving every report table under analysis/output/<variant>/data",
     )
@@ -699,7 +662,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     with db_config.get_engine(args.db, validate=False).connect() as conn:
-        report = generate_report(conn, args.top, args.log_root.resolve())
+        report = generate_report(conn, args.top)
     print_report(report, args.top)
     if args.csv_prefix:
         paths = export_report(report, args.csv_prefix)
