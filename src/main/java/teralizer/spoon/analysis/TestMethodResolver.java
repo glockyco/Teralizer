@@ -1,18 +1,19 @@
 package teralizer.spoon.analysis;
 
+import java.util.List;
 import org.jooq.generated.tables.records.TestRecord;
-import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 
 /**
- * Resolves a test record's method against the Spoon model. Inherited test methods store the
- * declaring (parent) class in {@code test_method_qualified_name} while
- * {@code test_class_qualified_name} keeps the JUnit-reported child, so resolution evaluates
- * the method-relative CtPath against the declaring class and falls back to the child when no
- * declaring class is derivable.
+ * Resolves a test record's method against the Spoon model. The stored absolute CtPath points
+ * at the method's declaration site, so inherited test methods (declared in an abstract parent,
+ * run through a concrete subclass) resolve without deriving the declaring class from any name:
+ * {@code test_method_qualified_name} carries the concrete run identity that JUnit, PIT, and
+ * jqwik report, never the declaring class.
  */
 public final class TestMethodResolver {
 
@@ -20,23 +21,13 @@ public final class TestMethodResolver {
     }
 
     public static CtMethod<?> resolve(Factory factory, TestRecord testRecord) {
-        CtClass<?> declaringClass = factory.Class().get(declaringClassQualifiedName(testRecord));
-        if (declaringClass == null) {
-            declaringClass = factory.Class().get(testRecord.getTestClassQualifiedName());
+        CtPath testMethodPath = new CtPathStringBuilder().fromString(testRecord.getTestMethodAbsolutePath());
+        List<CtElement> resolved = testMethodPath.evaluateOn(factory.getModel().getRootPackage());
+        if (resolved.isEmpty()) {
+            throw new RuntimeException("Cannot resolve test method at path '"
+                + testRecord.getTestMethodAbsolutePath() + "' for test "
+                + testRecord.getTestMethodQualifiedName() + ".");
         }
-
-        CtPath testMethodPath = new CtPathStringBuilder().fromString(testRecord.getTestMethodRelativePath());
-        return (CtMethod<?>) testMethodPath.evaluateOn(declaringClass).get(0);
-    }
-
-    private static String declaringClassQualifiedName(TestRecord testRecord) {
-        String testMethodQualifiedName = testRecord.getTestMethodQualifiedName();
-        if (testMethodQualifiedName == null) {
-            return testRecord.getTestClassQualifiedName();
-        }
-        int separator = testMethodQualifiedName.lastIndexOf(".");
-        return separator < 0
-            ? testRecord.getTestClassQualifiedName()
-            : testMethodQualifiedName.substring(0, separator);
+        return (CtMethod<?>) resolved.get(0);
     }
 }

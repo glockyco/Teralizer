@@ -378,7 +378,9 @@ public class JunitDataCollectionTask extends AbstractTask {
         CtMethod<?> testMethod = knownTestMethods.stream().findFirst().orElse(resolved.matchingMethods.get(0));
         CtClass<?> declaringClass = (CtClass<?>) testMethod.getParent(CtClass.class);
 
-        record.setTestMethodQualifiedName(declaringClass.getQualifiedName() + "." + testMethod.getSimpleName());
+        // test_method_qualified_name keeps the CONCRETE run identity from the surefire report
+        // (JUnit, PIT, and jqwik all report the executing subclass). The declaring class of an
+        // inherited method is reachable through the stored absolute CtPath.
         record.setTestMethodAbsolutePath(testMethod.getPath().toString());
         record.setTestMethodRelativePath(testMethod.getPath().relativePath(declaringClass).toString());
 
