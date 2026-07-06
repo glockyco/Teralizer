@@ -112,6 +112,7 @@ public class SpoonUtils {
     public static void deleteOtherAssertionsInMethod(CtMethod<?> method, CtInvocation<?> assertion) {
         List<CtInvocation> otherAssertions = method.getElements(new TypeFilter<>(CtInvocation.class)).stream()
             .filter(i -> i != assertion && (TestAnalysis.isJUnit4Assertion(i) || TestAnalysis.isJUnit5Assertion(i)))
+            .filter(i -> !isCatchAssertionForRecognizedTryFail(assertion, i))
             .collect(Collectors.toList());
 
         otherAssertions.forEach(a -> {
@@ -125,6 +126,16 @@ public class SpoonUtils {
                 a.delete();
             }
         });
+    }
+
+    private static boolean isCatchAssertionForRecognizedTryFail(CtInvocation<?> keptAssertion, CtInvocation<?> candidate) {
+        if (!"fail".equals(keptAssertion.getExecutable().getSimpleName())
+            || !TestAnalysis.normalizedAssertion(keptAssertion).isPresent()) {
+            return false;
+        }
+        CtTry expectedTry = keptAssertion.getParent(CtTry.class);
+        CtCatch candidateCatch = candidate.getParent(CtCatch.class);
+        return expectedTry != null && candidateCatch != null && candidateCatch.getParent(CtTry.class) == expectedTry;
     }
 
     public static CtClass<?> cloneClass(

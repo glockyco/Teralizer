@@ -14,7 +14,9 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.filter.NamedElementFilter;
+import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.compiler.VirtualFile;
+import teralizer.domain.CapturedException;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.Constant;
 import teralizer.domain.Invocation;
@@ -119,6 +121,39 @@ public class GeneralizedTestBuilderTest {
         String generated = generalized.getMethodsByName("returnsInput").get(0).toString();
         Assert.assertTrue(generated, generated.contains(
             "org.junit.Assert.assertThat(new example.Subject().id(_p_.x), org.hamcrest.CoreMatchers.is((int) (_p_.x)))"));
+    }
+
+    @Example
+    void thrownTryFailCatchPlanKeepsCatchMessageAssertion() {
+        Scenario scenario = tryFailCatchScenario();
+        Model inputModel = new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant(0L, TypeDomain.INTEGER));
+        MethodParameter parameter = new MethodParameter("int", "x");
+        List<MethodParameter> parameters = Collections.singletonList(parameter);
+        Map<String, Value> arguments = Collections.singletonMap("x", new PrimitiveValue("int", 2));
+        ModelToJavaTransformer transformer = new ModelToJavaTransformer(Collections.singletonMap("x", "int"));
+        String inputJava = transformer.transformPredicate(inputModel, Collections.singleton("x"));
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, arguments, inputModel);
+
+        CtClass<?> generalized = build(
+            scenario,
+            new GeneralizedTestBuilder.Plan(
+                GeneralizationAlgorithm.IMPROVED,
+                parameters,
+                arguments,
+                inputJava,
+                plan,
+                CapturedOutput.ofThrow(new CapturedException("java.lang.IllegalArgumentException", "bad input")),
+                null,
+                100,
+                FirstValueArbitraryFactory.createFirstValueArbitraryClass(velocityEngine()),
+                JqwikValueRecorderFactory.createRecorderClass(
+                    velocityEngine(), Paths.get("jqwik-data"), 7L, 101L, "IMPROVED_100_TRIES", "returnsInput")
+            )
+        );
+
+        String generated = generalized.getMethodsByName("returnsInput").get(0).toString();
+        Assert.assertTrue(generated, generated.contains("org.junit.Assert.fail()"));
+        Assert.assertTrue(generated, generated.contains("org.junit.Assert.assertEquals(\"bad input\", e.getMessage())"));
     }
 
     @Example
@@ -268,6 +303,36 @@ public class GeneralizedTestBuilderTest {
         return new Scenario(launcher, testClass, testMethod, assertion, recipe);
     }
 
+    private static Scenario tryFailCatchScenario() {
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(TRY_FAIL_CATCH_SOURCE, "SubjectTest.java"));
+        launcher.buildModel();
+        CtClass<?> testClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest"))
+            .get(0);
+        CtClass<?> subjectClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "Subject"))
+            .get(0);
+        CtMethod<?> testMethod = testClass.getMethodsByName("returnsInput").get(0);
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).stream()
+            .filter(candidate -> "fail".equals(candidate.getExecutable().getSimpleName()))
+            .findFirst()
+            .get();
+        CtInvocation<?> testedCall = testMethod.getElements(new TypeFilter<>(CtInvocation.class)).stream()
+            .filter(candidate -> "reject".equals(candidate.getExecutable().getSimpleName()))
+            .findFirst()
+            .get();
+        CtMethod<?> testedMethod = subjectClass.getMethodsByName("reject").get(0);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(
+            testedMethod,
+            testedCall,
+            GeneralizableInput.derive(testedMethod, testedCall),
+            "java.lang.IllegalArgumentException"
+        );
+        return new Scenario(launcher, testClass, testMethod, assertion, recipe);
+    }
+
     private static VelocityEngine velocityEngine() {
         Properties properties = new Properties();
         properties.setProperty("resource.loader", "file");
@@ -298,6 +363,18 @@ public class GeneralizedTestBuilderTest {
         + "}\n"
         + "class Subject {\n"
         + "  int id(int x) { return x; }\n"
+        + "}\n";
+
+    private static final String TRY_FAIL_CATCH_SOURCE = ""
+        + "package example;\n"
+        + "public class SubjectTest {\n"
+        + "  @org.junit.Test public void returnsInput() {\n"
+        + "    try { new Subject().reject(2); org.junit.Assert.fail(); }\n"
+        + "    catch (IllegalArgumentException e) { org.junit.Assert.assertEquals(\"bad input\", e.getMessage()); }\n"
+        + "  }\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  int reject(int x) { if (x > 0) throw new IllegalArgumentException(\"bad input\"); return x; }\n"
         + "}\n";
 
     private static final String PARSE_SOURCE = ""
