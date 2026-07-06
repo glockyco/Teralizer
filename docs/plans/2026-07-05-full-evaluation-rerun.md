@@ -71,19 +71,19 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
 
 ## Stale tooling to fix
 
-- [ ] `docs/database.md` misses seven telemetry tables (`assertion_semantics`,
+- [x] `docs/database.md` missed seven telemetry tables (`assertion_semantics`,
       `build_environment_observation`, `jpf_extraction_summary`, `task_diagnostic`,
       `generalization_lifecycle`, `generation_clause`, `generation_parameter`). One-paragraph
-      entries each, same style as the existing `jqwik_*` entries. Pre-run, zero risk.
+      entries each, same style as the existing `jqwik_*` entries.
 - [ ] `analysis/src/teralizer/reporeapers_rerun_report.py` predates the telemetry tables: it
       parses build logs and free-text where `task_diagnostic`/`jpf_extraction_summary` now hold
-      stable codes, and has no funnel sections for lifecycle/jqwik/generation tables. Extend
-      post-run against real data (the existing sections still work meanwhile). Add an R2
-      decision query (`actual_shape` × `receiver_provenance`) and baseline-vs-snapshot delta
-      queries.
-- [ ] `project-configs/timeout-retry-*.conf` (110 files, untracked) are one-offs bound to July
-      baseline project ids. Leave untouched until the new timeout list exists, then regenerate
-      the retry lane from it and delete the stale set.
+      stable codes, and has no funnel sections for lifecycle/jqwik/generation tables.
+      Extension is planned and sequenced in `2026-07-06-rerun-report-extension`: development
+      NOW against the midpoint snapshot, final numbers regenerated post-run. The R2 decision
+      query stays with `mut_resolution_funnel.py`.
+- [ ] `project-configs/timeout-retry-*.conf` (untracked, now gitignored) are one-offs bound to
+      July baseline project ids. Leave untouched until the new timeout list exists, then
+      regenerate the retry lane from it and delete the stale set.
 
 ## Tasks
 
@@ -113,10 +113,12 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
 
 - [ ] Add `postgres_reporeapers_rerun2` to `src/main/resources/db/protected-databases.txt`.
       Commit.
-- [ ] Extend `reporeapers_rerun_report.py` (see stale tooling) and generate the snapshot
-      report + baseline deltas.
-- [ ] Run the R2 decision query. Record the verdict in
-      `2026-07-02-input-topology-spike` (gate: >5k sub-family) and update the overview's P1.
+- [ ] Regenerate the extended report against the completed snapshot and export
+      (`2026-07-06-rerun-report-extension`, final task).
+- [ ] Run the R2 decision query (`python -m teralizer.mut_resolution_funnel` against the full
+      snapshot). Record the verdict in `2026-07-02-input-topology-spike` (gate: >5k
+      local-ctor-rooted sub-family) and update the overview's P1. Midpoint preview points
+      roughly twentyfold short of the gate.
 - [ ] Extract the fresh timeout list. Decide the retry-lane design (separate DB as before, or
       fold into snapshot) with the count in hand, regenerate retry configs, and delete the
       stale `timeout-retry-*.conf` set.

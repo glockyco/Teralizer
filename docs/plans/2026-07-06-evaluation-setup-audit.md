@@ -108,9 +108,12 @@ here except gradle-touching smokes.
   kill semantics, root-doc labeling, estimate corrections): pull forward to NOW. Edit-only
   against the frozen-elsewhere artifact, no gradle contention. The local-mode smoke waits
   for the corpus run to finish, so implementation lands now and its E2E check runs tonight.
-- Report extension + telemetry consumers + classifier-regex reconciliation: stays post-run.
-  The queries only mean something against the fresh snapshot, and the three regex
-  classifiers collapse into telemetry queries in the same pass.
+- Report extension: development NOW against the midpoint snapshot, measurement post-run —
+  planned in `2026-07-06-rerun-report-extension`. Query development needs representative
+  data, not complete data, and the midpoint integrity sweep confirmed every telemetry
+  writer is total. The paper notebooks' regex classifiers stay untouched: they serve the
+  frozen primary corpora where no telemetry exists, and reconciliation is a separate
+  decision after the paper numbers settle.
 - `input_topology.py` retirement: stays gated on the R2 verdict, which consumes its
   successor telemetry from the running rerun.
 

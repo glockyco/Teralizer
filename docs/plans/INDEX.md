@@ -26,5 +26,6 @@
 
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
+- **Rerun Report Extension** [plan] `2026-07-06-rerun-report-extension` (0/8) ← 2026-06-26-teralizer-overview
 
 _59 archived — see `docs/plans/archive/`._

@@ -71,12 +71,12 @@ expansion, then maintainability. Evidence-gated items never start before their g
   REQUIRED before any paper claim (`skill://running-the-jarvis-scoreboard`). Batch the
   pending corpus-scale measurements into the same session. Current numbers:
   `2026-06-30-jarvis-comparison`.
-- **Full evaluation rerun — GATE OPEN.** String corpus verification, the rerun-facing
-  telemetry, and inherited-test support have all landed, so the rerun is ready to run on
-  operator sign-off as the next scheduled corpus evaluation event. One pass collects:
-  refreshed RQ results on the broader dataset, the R2 decision data (resolving P1), the
-  corpus-scale conversions batched by the census levers and the parse predicates, the
-  inherited-tests flattenable share, and the typed exclusion funnel.
+- **Full evaluation rerun — EXECUTING** (`2026-07-05-full-evaluation-rerun`). One pass
+  collects: refreshed RQ results on the broader dataset, the R2 decision data (resolving
+  P1), the corpus-scale conversions batched by the census levers and the parse predicates,
+  the inherited-tests flattenable share, and the typed exclusion funnel. The report that
+  turns the snapshot into those answers is `2026-07-06-rerun-report-extension` (developed
+  against the midpoint, regenerated at run end).
 
 ## Parked (not scheduled — recorded for the paper's honesty)
 
