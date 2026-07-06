@@ -243,17 +243,15 @@ if [[ "$DATASET" == "primary" ]]; then
         configs+=("$conf")
     done
 else
-    # Extended dataset
-    # Use replication configs (local paths) for Docker mode, original configs for local mode
-    if [[ "$USE_DOCKER" == "yes" ]]; then
-        CONFIG_DIR="$REPO_ROOT/project-configs/replication/extended"
-        if [[ ! -d "$CONFIG_DIR" ]]; then
-            echo -e "${RED}Error: Replication configs not found at $CONFIG_DIR${NC}"
-            echo "Run: ./scripts/generate-replication-configs.sh"
-            exit 1
-        fi
-    else
-        CONFIG_DIR="$REPO_ROOT/project-configs/extended"
+    # Extended dataset. Both modes run against the projects checked out under
+    # projects/, so both read the replication configs that carry local paths.
+    # The project-configs/extended set holds remote URLs and is the source that
+    # generate-replication-configs.sh transforms, never a runnable config.
+    CONFIG_DIR="$REPO_ROOT/project-configs/replication/extended"
+    if [[ ! -d "$CONFIG_DIR" ]]; then
+        echo -e "${RED}Error: Replication configs not found at $CONFIG_DIR${NC}"
+        echo "Run: ./scripts/generate-replication-configs.sh"
+        exit 1
     fi
 
     # Helper: check if project directory exists
