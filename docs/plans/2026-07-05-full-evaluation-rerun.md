@@ -39,6 +39,18 @@ caffeinate -is scripts/run-reporeapers-rerun.sh
   the same command. Schema applies itself on first pipeline start (runner creates the bare DB;
   `TestGeneralizationRunner` applies `create-tables.sql` when `project` is missing — verified to
   contain all nine telemetry tables including `actual_shape`/`receiver_provenance`).
+- Pause and stop: `touch data/reporeapers-rerun-2/STOP` finishes the in-flight project and
+  exits at the boundary (zero loss); INT/TERM kills the in-flight project's process group
+  immediately (no done-marker, re-runs on resume). Never sleep the machine mid-run without
+  stopping first: wall-clock stage timers fire spuriously after wake and the poisoned project
+  completes under a done-marker.
+- Per-project wall cap: 30 min (`REPOREAPERS_PROJECT_TIMEOUT`), recorded as exit 124 in
+  `status.tsv` and done-marked. Grounded in the July distribution (median 20 s, p99 4.6 min):
+  the three projects above 30 min consumed 12.7 h — over half the wall clock — and produced
+  zero generalizations, while the deepest data-bearing project finished in 23 min. Capped
+  projects have truncated funnels vs. their full July rows, so baseline delta queries exclude
+  them pairwise via the exit code. Applied from project 533 onward (the first 532 ran
+  uncapped; every July >30-min project would have been capped to zero data loss anyway).
 
 ## What we collect (deliverable → source)
 
