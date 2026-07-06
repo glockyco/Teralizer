@@ -24,6 +24,7 @@ from sqlalchemy import Connection, text
 
 from teralizer.config import db_config
 from teralizer.exports import save_csv_data
+from teralizer.report_basis import open_report_connection, print_basis_header
 
 _ASSERTION_SCOPE = "assertion"
 _TEST_SCOPE = "test"
@@ -1228,9 +1229,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    with db_config.get_engine(args.db, validate=False).connect() as conn:
+    with open_report_connection(args.db) as conn:
+        print_basis_header(conn, args.db, ledger=args.ledger)
         report = generate_report(conn, args.top, args.baseline_db, args.ledger)
-    print_report(report, args.top)
+        print_report(report, args.top)
     if args.csv_prefix:
         paths = export_report(report, args.csv_prefix)
         print()

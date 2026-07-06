@@ -14,13 +14,27 @@ Run:  uv run --directory analysis python -m teralizer.mut_resolution_funnel
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
+import json
 
 import pandas as pd
 from sqlalchemy import Connection, text
 
-from teralizer.config import db_config
+from teralizer.report_basis import open_report_connection, print_basis_header
 
 _MISSING_VALUE = "teralizer.processing.filter.MissingValueFilter"
+
+_DEFAULT_DB = "postgres_test"
+_LOCAL_PRODUCER_PROVENANCE = {"LOCAL_OTHER"}
+
+
+@dataclass(frozen=True)
+class LibraryAccessorEstimate:
+    """One no-pick row classified for Lever-4 sizing."""
+
+    accessor: str
+    estimated_recoverable: bool
+    evidence: str
 
 
 def get_tier_funnel(conn: Connection) -> pd.DataFrame:
@@ -83,19 +97,157 @@ def get_topology_cross_tab(conn: Connection) -> pd.DataFrame:
     return pd.read_sql(sql, conn)
 
 
+def get_library_declaration_observations(conn: Connection) -> pd.DataFrame:
+    """Rows whose selected call was library-declared rather than source-declared."""
+    sql = text(
+        """
+        SELECT resolved_call_source, resolved_method_name, resolved_declaring_type,
+               receiver_provenance, candidate_details
+        FROM mut_resolution_observation
+        WHERE no_pick_reason = 'LIBRARY_DECLARATION'
+        """
+    )
+    return pd.read_sql(sql, conn)
+
+
+def _accessor_family(method_name: str | None, declaring_type: str | None) -> str:
+    method = method_name or ""
+    declaring = declaring_type or ""
+    if method == "get":
+        if declaring == "java.util.Optional":
+            return "Optional.get"
+        if declaring.endswith("Map") or declaring in {
+            "java.util.HashMap",
+            "java.util.LinkedHashMap",
+            "java.util.TreeMap",
+            "java.util.Hashtable",
+            "java.util.Properties",
+            "java.util.concurrent.ConcurrentHashMap",
+        }:
+            return "Map.get"
+        if declaring.endswith("List") or declaring in {
+            "java.util.ArrayList",
+            "java.util.LinkedList",
+            "java.util.Vector",
+        }:
+            return "List.get"
+    if method == "next" and declaring.endswith("Iterator"):
+        return "Iterator.next"
+    return "other"
+
+
+def _selected_receiver(source: str | None, method_name: str | None) -> str | None:
+    if not source or not method_name:
+        return None
+    needle = f".{method_name}("
+    start = source.rfind(needle)
+    if start < 0:
+        return None
+    return source[:start].strip()
+
+
+def _receiver_contains_call(receiver: str | None) -> bool:
+    if not receiver:
+        return False
+    return "(" in receiver and ")" in receiver
+
+
+def _candidate_call_sources(candidate_details: object) -> set[str]:
+    if candidate_details is None or pd.isna(candidate_details):
+        return set()
+    if isinstance(candidate_details, str):
+        if not candidate_details.strip():
+            return set()
+        try:
+            parsed = json.loads(candidate_details)
+        except json.JSONDecodeError:
+            return set()
+    else:
+        parsed = candidate_details
+    if not isinstance(parsed, list):
+        return set()
+    sources = set()
+    for item in parsed:
+        if isinstance(item, dict) and isinstance(item.get("callSource"), str):
+            sources.add(item["callSource"].strip())
+    return sources
+
+
+def estimate_library_accessor_unwrap(
+    *,
+    resolved_method_name: str | None,
+    resolved_declaring_type: str | None,
+    resolved_call_source: str | None,
+    receiver_provenance: str | None,
+    candidate_details: object,
+) -> LibraryAccessorEstimate:
+    """Estimate whether a library-accessor pick has a same-method producer.
+
+    Operationalization: only the fixed JDK accessor allowlist counts. A row is
+    recoverable when the accessor receiver is an inline call, the topology says
+    the root receiver is a non-constructor local, or the recorded candidate
+    details contain the receiver as a same-method candidate source.
+    """
+    accessor = _accessor_family(resolved_method_name, resolved_declaring_type)
+    if accessor == "other":
+        return LibraryAccessorEstimate(accessor, False, "not_allowlisted")
+
+    receiver = _selected_receiver(resolved_call_source, resolved_method_name)
+    if _receiver_contains_call(receiver):
+        return LibraryAccessorEstimate(accessor, True, "inline_receiver_call")
+    if receiver_provenance in _LOCAL_PRODUCER_PROVENANCE:
+        return LibraryAccessorEstimate(accessor, True, "local_receiver")
+    if receiver is not None and receiver in _candidate_call_sources(candidate_details):
+        return LibraryAccessorEstimate(accessor, True, "candidate_details_receiver")
+    return LibraryAccessorEstimate(accessor, False, "no_same_method_producer_evidence")
+
+
+def summarize_library_accessor_unwrap(observations: pd.DataFrame) -> pd.DataFrame:
+    """Return Lever-4 totals and estimated recoverable rows by accessor family."""
+    estimates = [
+        estimate_library_accessor_unwrap(
+            resolved_method_name=row.get("resolved_method_name"),
+            resolved_declaring_type=row.get("resolved_declaring_type"),
+            resolved_call_source=row.get("resolved_call_source"),
+            receiver_provenance=row.get("receiver_provenance"),
+            candidate_details=row.get("candidate_details"),
+        )
+        for _, row in observations.iterrows()
+    ]
+    rows = []
+    for accessor in ("List.get", "Map.get", "Iterator.next", "Optional.get", "other"):
+        subset = [estimate for estimate in estimates if estimate.accessor == accessor]
+        rows.append(
+            {
+                "accessor": accessor,
+                "total": len(subset),
+                "estimated_recoverable": sum(
+                    1 for estimate in subset if estimate.estimated_recoverable
+                ),
+            }
+        )
+    rows.append(
+        {
+            "accessor": "TOTAL",
+            "total": len(estimates),
+            "estimated_recoverable": sum(
+                1 for estimate in estimates if estimate.estimated_recoverable
+            ),
+        }
+    )
+    return pd.DataFrame(rows)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--db",
-        help="database to inspect (default: the postgres_test engine)",
+        default=_DEFAULT_DB,
+        help=f"database to inspect (default: {_DEFAULT_DB})",
     )
     args = parser.parse_args()
-    engine = (
-        db_config.get_engine(args.db, validate=False)
-        if args.db
-        else db_config.get_test_engine(validate=False)
-    )
-    with engine.connect() as conn:
+    with open_report_connection(args.db) as conn:
+        print_basis_header(conn, args.db)
         funnel = get_tier_funnel(conn)
         print("== Tier funnel ==")
         print(funnel.to_string(index=False))
@@ -116,6 +268,13 @@ def main() -> None:
 
         print("\n== Input topology (shape x provenance) ==")
         print(get_topology_cross_tab(conn).to_string(index=False))
+
+        print("\n== Lever 4 library-accessor unwrap sizing ==")
+        print(
+            summarize_library_accessor_unwrap(
+                get_library_declaration_observations(conn)
+            ).to_string(index=False)
+        )
 
 
 if __name__ == "__main__":

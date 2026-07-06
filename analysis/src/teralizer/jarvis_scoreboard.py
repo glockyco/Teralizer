@@ -771,7 +771,8 @@ def main() -> None:
     import argparse
     import os
 
-    from teralizer.config import db_config, find_project_root
+    from teralizer.config import find_project_root
+    from teralizer.report_basis import open_report_connection, print_basis_header
 
     parser = argparse.ArgumentParser(description="JARVIS scratch-scorecard tables.")
     parser.add_argument(
@@ -784,13 +785,21 @@ def main() -> None:
         action="store_true",
         help="print the beyond-JARVIS census from postgres_jarvis_census",
     )
+    parser.add_argument(
+        "--db",
+        help=(
+            "database override (defaults: postgres_jarvis_scoreboard, or "
+            "postgres_jarvis_census with --census)"
+        ),
+    )
     args = parser.parse_args()
 
     os.chdir(Path(find_project_root()).parent)
 
     if args.census:
-        engine = db_config.get_engine("postgres_jarvis_census", validate=False)
-        with engine.connect() as conn:
+        db_name = args.db or "postgres_jarvis_census"
+        with open_report_connection(db_name) as conn:
+            print_basis_header(conn, db_name)
             census = get_census(conn, variants=CENSUS_VARIANTS)
             gain = get_mutation_gain(conn, variants=CENSUS_VARIANTS)
             scores = get_mutation_scores(conn, variants=CENSUS_VARIANTS)
@@ -811,8 +820,9 @@ def main() -> None:
         print(tally.to_string(index=False))
         return
 
-    engine = db_config.get_engine("postgres_jarvis_scoreboard", validate=False)
-    with engine.connect() as conn:
+    db_name = args.db or "postgres_jarvis_scoreboard"
+    with open_report_connection(db_name) as conn:
+        print_basis_header(conn, db_name)
         if args.sweep:
             summary = summarize_variants(
                 get_scoreboard(conn, variants=SWEEP_VARIANTS),

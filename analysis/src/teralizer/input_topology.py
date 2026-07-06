@@ -15,6 +15,7 @@ Run:  uv run --directory analysis python -m teralizer.input_topology
 """
 
 from __future__ import annotations
+import argparse
 
 import json
 import re
@@ -22,7 +23,9 @@ import re
 import pandas as pd
 from sqlalchemy import Connection, text
 
-from teralizer.config import db_config
+from teralizer.report_basis import open_report_connection, print_basis_header
+
+_DEFAULT_DB = "postgres_test"
 
 _DOUBLEISH = {
     "double",
@@ -226,8 +229,15 @@ def shape_cross_tab(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
-    engine = db_config.get_test_engine(validate=False)
-    with engine.connect() as conn:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--db",
+        default=_DEFAULT_DB,
+        help=f"database to inspect (default: {_DEFAULT_DB})",
+    )
+    args = parser.parse_args()
+    with open_report_connection(args.db) as conn:
+        print_basis_header(conn, args.db)
         df = load_supported_assertions(conn)
     ct = shape_cross_tab(df)
     print(f"== Actual-expression shapes x first reject ({len(df)} assertions) ==")

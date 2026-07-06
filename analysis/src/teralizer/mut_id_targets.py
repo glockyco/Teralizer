@@ -25,13 +25,17 @@ Run:  uv run --directory analysis python -m teralizer.mut_id_targets
 """
 
 from __future__ import annotations
+import argparse
+
 
 import pandas as pd
 from sqlalchemy import Connection, text
 
-from teralizer.config import db_config
+from teralizer.report_basis import open_report_connection, print_basis_header
 
 _MISSING_VALUE = "teralizer.processing.filter.MissingValueFilter"
+_DEFAULT_DB = "postgres_test"
+
 
 # Stage a project must reach for PIT_ORIGINAL (pipeline step 12) to collect
 # oracle data: original-test filtering. Reaching it implies the project built
@@ -51,16 +55,20 @@ def get_project_potential(conn: Connection) -> pd.DataFrame:
     """
     sql = text(
         """
-        WITH sole AS (
-            SELECT DISTINCT mv.assertion_id, mv.project_id
-            FROM filter_result mv
-            WHERE mv.filter_name = :mv AND mv.decision = 'REJECT'
-              AND NOT EXISTS (
-                  SELECT 1 FROM filter_result other
-                  WHERE other.assertion_id = mv.assertion_id
-                    AND other.decision = 'REJECT'
-                    AND other.filter_name <> mv.filter_name
-              )
+        WITH reject_counts AS (
+            SELECT
+                assertion_id,
+                max(project_id) AS project_id,
+                count(DISTINCT filter_name) AS reject_filter_count,
+                sum(CASE WHEN filter_name = :mv THEN 1 ELSE 0 END) AS mv_rejects
+            FROM filter_result
+            WHERE decision = 'REJECT' AND assertion_id IS NOT NULL
+            GROUP BY assertion_id
+        ),
+        sole AS (
+            SELECT assertion_id, project_id
+            FROM reject_counts
+            WHERE mv_rejects > 0 AND reject_filter_count = 1
         ),
         upside AS (
             SELECT project_id, count(*) AS mut_id_blocked
@@ -144,7 +152,15 @@ def print_targets(ranked: pd.DataFrame, top: int = 15) -> None:
 
 
 def main() -> None:
-    with db_config.get_test_engine(validate=False).connect() as conn:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--db",
+        default=_DEFAULT_DB,
+        help=f"database to inspect (default: {_DEFAULT_DB})",
+    )
+    args = parser.parse_args()
+    with open_report_connection(args.db) as conn:
+        print_basis_header(conn, args.db)
         ranked = rank_targets(get_project_potential(conn))
     print_targets(ranked)
 

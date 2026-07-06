@@ -129,9 +129,16 @@ CUT call in the same method, retarget to the producer (the existing receiver-pro
 machinery — same mechanism, one more admission rule). The observation row records the
 unwrap in the existing `inspector_unwrapped`/provenance columns.
 
-Sized ~8.5k abstentions at midpoint, of which the locally-produced subset is the
-recoverable share — measure it with a query before implementing (the topology table's
-`resolved` column on `SINGLE_CALL × LOCAL_OTHER` suggests the order of magnitude).
+Sizing query: [x] implemented in `teralizer.mut_resolution_funnel` as the
+`Lever 4 library-accessor unwrap sizing` section. Operationalization: count
+`LIBRARY_DECLARATION` rows, bucket the picked call by the fixed allowlist
+(`List.get`, `Map.get`, `Iterator.next`, `Optional.get`, `other`), and estimate a
+row as recoverable when the accessor receiver is an inline call, a `LOCAL_OTHER`
+receiver, or appears as a same-method candidate in `candidate_details`. On the
+live `postgres_reporeapers_rerun2` snapshot this reports 9,206 total
+abstentions and 4,221 estimated recoverable rows: `List.get` 4,047 total / 3,794
+recoverable, `Map.get` 568 / 427, `Iterator.next` 0 / 0, `Optional.get` 0 / 0,
+and `other` 4,591 / 0.
 
 Acceptance: resolver unit tests for the allowlist, `LIBRARY_DECLARATION` abstentions drop
 on a sentinel re-run, no new T4 guesses (the unwrap must stay tier-preserving).

@@ -107,7 +107,7 @@ story on a count.
       (implementation shared with levers spec Lever 2's timeout work).
 - [ ] M4 floor/surefire outcome columns + writer changes + jOOQ regen.
 - [x] M2 first-cause attribution view in the report.
-- [ ] M5 basis-header helper + adoption in the DB-reading analysis modules.
+- [x] M5 basis-header helper + adoption in the DB-reading analysis modules.
 - [x] M6 exemplar sampling on the top reason-code tables.
 
 ## Non-goals

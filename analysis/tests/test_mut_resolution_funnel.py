@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 
 
-def test_main_uses_repo_reapers_engine_without_schema_validation(monkeypatch, capsys):
+def test_main_uses_default_db_without_schema_validation(monkeypatch, capsys):
     from teralizer import mut_resolution_funnel
 
     calls: list[tuple[str, object]] = []
@@ -15,22 +15,27 @@ def test_main_uses_repo_reapers_engine_without_schema_validation(monkeypatch, ca
 
     class FakeConnectionContext:
         def __enter__(self) -> FakeConnection:
+            calls.append(("connect", "postgres_test"))
             return FakeConnection()
 
         def __exit__(self, exc_type, exc, tb) -> None:
             return None
 
-    class FakeEngine:
-        def connect(self) -> FakeConnectionContext:
-            calls.append(("connect", None))
-            return FakeConnectionContext()
+    def fake_open_report_connection(db_name: str) -> FakeConnectionContext:
+        calls.append(("open_report_connection", db_name))
+        return FakeConnectionContext()
 
-    class FakeDbConfig:
-        def get_test_engine(self, *, validate: bool = True) -> FakeEngine:
-            calls.append(("get_test_engine", validate))
-            return FakeEngine()
+    def fake_print_basis_header(conn: FakeConnection, db_name: str) -> None:
+        calls.append(("print_basis_header", db_name))
+        print("# Analysis basis")
 
-    monkeypatch.setattr(mut_resolution_funnel, "db_config", FakeDbConfig())
+    monkeypatch.setattr(
+        mut_resolution_funnel, "open_report_connection", fake_open_report_connection
+    )
+    monkeypatch.setattr(
+        mut_resolution_funnel, "print_basis_header", fake_print_basis_header
+    )
+    monkeypatch.setattr("sys.argv", ["mut_resolution_funnel"])
     monkeypatch.setattr(
         mut_resolution_funnel,
         "get_tier_funnel",
@@ -93,13 +98,100 @@ def test_main_uses_repo_reapers_engine_without_schema_validation(monkeypatch, ca
             ]
         ),
     )
+    monkeypatch.setattr(
+        mut_resolution_funnel,
+        "get_library_declaration_observations",
+        lambda conn: pd.DataFrame(
+            [
+                {
+                    "resolved_method_name": "get",
+                    "resolved_declaring_type": "java.util.List",
+                    "resolved_call_source": "producer().get(0)",
+                    "receiver_provenance": "NONE",
+                    "candidate_details": "[]",
+                }
+            ]
+        ),
+    )
 
     mut_resolution_funnel.main()
 
-    assert calls == [("get_test_engine", False), ("connect", None)]
+    assert calls == [
+        ("open_report_connection", "postgres_test"),
+        ("connect", "postgres_test"),
+        ("print_basis_header", "postgres_test"),
+    ]
     output = capsys.readouterr().out
     assert "== Tier funnel ==" in output
     assert "T1_PROVEN: 2 (100.0%)" in output
     assert "== MissingValue cross-tab ==" in output
     assert "== T4 guesses: 1 ==" in output
     assert "== Input topology (shape x provenance) ==" in output
+    assert "== Lever 4 library-accessor unwrap sizing ==" in output
+
+
+def test_library_accessor_sizing_marks_inline_and_local_receiver_producers():
+    from teralizer.mut_resolution_funnel import summarize_library_accessor_unwrap
+
+    observations = pd.DataFrame(
+        [
+            {
+                "resolved_method_name": "get",
+                "resolved_declaring_type": "java.util.List",
+                "resolved_call_source": "encoder.topDownCompute(output).get(0)",
+                "receiver_provenance": "NONE",
+                "candidate_details": "[]",
+            },
+            {
+                "resolved_method_name": "get",
+                "resolved_declaring_type": "java.util.ArrayList",
+                "resolved_call_source": "bucketInfoList.get(0)",
+                "receiver_provenance": "LOCAL_OTHER",
+                "candidate_details": None,
+            },
+            {
+                "resolved_method_name": "get",
+                "resolved_declaring_type": "java.util.Optional",
+                "resolved_call_source": "maybe.get()",
+                "receiver_provenance": "PARAM_OR_STATIC",
+                "candidate_details": "[]",
+            },
+            {
+                "resolved_method_name": "equals",
+                "resolved_declaring_type": "java.lang.String",
+                "resolved_call_source": '"yes".equals(actual)',
+                "receiver_provenance": "NONE",
+                "candidate_details": "[]",
+            },
+        ]
+    )
+
+    summary = summarize_library_accessor_unwrap(observations)
+
+    by_accessor = summary.set_index("accessor")
+    assert by_accessor.loc["List.get", "total"] == 2
+    assert by_accessor.loc["List.get", "estimated_recoverable"] == 2
+    assert by_accessor.loc["Optional.get", "total"] == 1
+    assert by_accessor.loc["Optional.get", "estimated_recoverable"] == 0
+    assert by_accessor.loc["other", "total"] == 1
+    assert by_accessor.loc["TOTAL", "total"] == 4
+    assert by_accessor.loc["TOTAL", "estimated_recoverable"] == 2
+
+
+def test_library_accessor_sizing_uses_candidate_details_for_receiver_producer():
+    from teralizer.mut_resolution_funnel import estimate_library_accessor_unwrap
+
+    result = estimate_library_accessor_unwrap(
+        resolved_method_name="get",
+        resolved_declaring_type="java.util.Map",
+        resolved_call_source='byKey.get("name")',
+        receiver_provenance="NONE",
+        candidate_details=(
+            '[{"methodName":"findByName","declaringType":"com.acme.Cut",'
+            '"callSource":"byKey"}]'
+        ),
+    )
+
+    assert result.accessor == "Map.get"
+    assert result.estimated_recoverable
+    assert result.evidence == "candidate_details_receiver"

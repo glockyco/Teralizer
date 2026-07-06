@@ -1,9 +1,14 @@
 """Generation-coverage analysis for clause and parameter telemetry."""
 
 from __future__ import annotations
+import argparse
+
 
 import pandas as pd
 from sqlalchemy import Connection, text
+from teralizer.report_basis import open_report_connection, print_basis_header
+
+_DEFAULT_DB = "postgres_dev"
 
 
 def get_top_residual_shapes(conn: Connection) -> pd.DataFrame:
@@ -118,9 +123,15 @@ def print_report(report: dict[str, pd.DataFrame]) -> None:
 
 def main() -> None:
     """Print a generation-coverage summary from the dev analysis database."""
-    from teralizer.config import db_config
-
-    with db_config.get_dev_engine(validate=False).connect() as conn:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--db",
+        default=_DEFAULT_DB,
+        help=f"database to inspect (default: {_DEFAULT_DB})",
+    )
+    args = parser.parse_args()
+    with open_report_connection(args.db) as conn:
+        print_basis_header(conn, args.db)
         print_report(generate_report(conn))
 
 

@@ -8,6 +8,7 @@ import pytest
 from sqlalchemy import create_engine, text
 
 from teralizer.report_basis import collect_basis, format_basis_header
+from teralizer import report_basis
 
 
 def _create_basis_schema(conn) -> None:
@@ -67,6 +68,32 @@ def test_basis_header_omits_progress_without_ledger():
         engine.dispose()
 
     assert "run progress" not in format_basis_header(basis)
+
+
+def test_basis_header_resolves_relative_ledger_from_project_root(
+    monkeypatch, tmp_path: Path
+):
+    root = tmp_path / "repo"
+    analysis_dir = root / "analysis"
+    ledger = root / "data" / "status.tsv"
+    analysis_dir.mkdir(parents=True)
+    ledger.parent.mkdir()
+    (root / ".env").write_text("")
+    ledger.write_text("n\troot_path\texit_code\tlog\n1\tprojects/a\t0\ta.log\n")
+
+    monkeypatch.chdir(analysis_dir)
+    monkeypatch.setattr(report_basis, "find_project_root", lambda: root / ".env")
+
+    engine = create_engine("sqlite:///:memory:")
+    try:
+        with engine.begin() as conn:
+            _create_basis_schema(conn)
+            basis = collect_basis(conn, "postgres_test", ledger=Path("data/status.tsv"))
+    finally:
+        engine.dispose()
+
+    assert basis.progress is not None
+    assert basis.progress.done == 1
 
 
 def test_basis_header_fails_loudly_when_ledger_is_missing(tmp_path: Path):

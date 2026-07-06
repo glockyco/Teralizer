@@ -10,7 +10,7 @@ from typing import Iterator
 
 from sqlalchemy import Connection, text
 
-from teralizer.config import db_config
+from teralizer.config import db_config, find_project_root
 
 
 @dataclass(frozen=True)
@@ -48,8 +48,17 @@ def _scalar_int(conn: Connection, sql: str) -> int:
     return int(value or 0)
 
 
+def _resolve_ledger_path(ledger: Path) -> Path:
+    expanded = ledger.expanduser()
+    if expanded.is_absolute() or expanded.exists():
+        return expanded
+    project_env = Path(find_project_root()).expanduser()
+    project_root = project_env.parent if project_env.name == ".env" else Path.cwd()
+    return project_root / expanded
+
+
 def _read_ledger_progress(ledger: Path) -> LedgerProgress:
-    resolved = ledger.expanduser()
+    resolved = _resolve_ledger_path(ledger)
     if not resolved.exists():
         raise FileNotFoundError(
             f"attempt ledger not found: {resolved} (pass --ledger explicitly)"

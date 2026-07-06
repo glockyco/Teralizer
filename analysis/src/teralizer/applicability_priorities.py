@@ -6,11 +6,11 @@ where it is the *first* reject and later filters also pass). Produces a ranked
 prioritization of generalizable fixes and the projects closest to completing
 the generalization pipeline.
 
-All queries are read-only. Use ``db_config.get_test_engine()`` (repo-reapers /
-real-world dataset) or ``get_dev_engine()`` (controlled dataset).
+All queries are read-only. Pass ``--db`` to pick the snapshot explicitly.
 """
 
 from __future__ import annotations
+import argparse
 
 import re
 from collections import Counter
@@ -19,6 +19,11 @@ from typing import Any, cast
 
 import pandas as pd
 from sqlalchemy import Connection, text
+
+from teralizer.report_basis import open_report_connection, print_basis_header
+
+_DEFAULT_DB = "postgres_test"
+
 
 # Filter names are stored fully-qualified in filter_result.filter_name.
 # Short aliases for readable output.
@@ -123,20 +128,22 @@ def get_missingvalue_assertions(conn: Connection) -> pd.DataFrame:
     """
     sql = text(
         """
-        WITH first_rejects AS (
+        WITH first_reject_ids AS (
+            SELECT assertion_id, min(id) AS first_reject_id
+            FROM filter_result
+            WHERE decision = 'REJECT' AND assertion_id IS NOT NULL
+            GROUP BY assertion_id
+        ),
+        first_rejects AS (
             SELECT
                 fr.assertion_id,
                 a.assertion_source_code,
                 a.tested_method_call_source_code
-            FROM filter_result fr
+            FROM first_reject_ids first
+            JOIN filter_result fr ON fr.id = first.first_reject_id
             JOIN assertion a ON a.id = fr.assertion_id
-            WHERE fr.decision = 'REJECT'
-              AND fr.filter_name LIKE '%MissingValueFilter'
+            WHERE fr.filter_name LIKE '%MissingValueFilter'
               AND fr.reason LIKE '%tested_class_path column is null%'
-              AND fr.id = (
-                  SELECT min(fr2.id) FROM filter_result fr2
-                  WHERE fr2.assertion_id = a.id AND fr2.decision = 'REJECT'
-              )
         )
         SELECT assertion_id, assertion_source_code, tested_method_call_source_code
         FROM first_rejects
@@ -442,3 +449,21 @@ def get_stage_failure_causes(conn: Connection, stage: str) -> pd.DataFrame:
         """
     )
     return pd.read_sql(sql, conn, params={"stage": stage})
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--db",
+        default=_DEFAULT_DB,
+        help=f"database to inspect (default: {_DEFAULT_DB})",
+    )
+    args = parser.parse_args()
+    with open_report_connection(args.db) as conn:
+        print_basis_header(conn, args.db)
+        report = generate_report(conn)
+    print_report(report)
+
+
+if __name__ == "__main__":
+    main()
