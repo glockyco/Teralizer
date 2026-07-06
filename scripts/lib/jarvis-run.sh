@@ -12,28 +12,19 @@
 # The DB/data targets are fixed by the wrapper (not read from the ambient environment), because
 # .env may pin DB_NAME to another corpus (e.g. postgres_timeout_retry) for unrelated work.
 
-_jarvis_psql() { docker exec postgres-teralizer psql -U postgres "$@"; }
+# Measurement configs legitimately run for an hour or more with PIT enabled, so there is no
+# default wall cap. JARVIS_PROJECT_TIMEOUT (seconds) opts in once a measured distribution
+# justifies a guard. The supervisor still provides group-kill traps, so interrupting a run
+# never leaves an orphaned pipeline JVM behind.
+JARVIS_PROJECT_TIMEOUT="${JARVIS_PROJECT_TIMEOUT:-0}"
 
-_jarvis_ensure_db_up() {
-  if _jarvis_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
-    return 0
-  fi
-  echo "==> Postgres (postgres-teralizer) not ready; starting it"
-  "$ROOT_DIR/gradlew" startPostgres >/dev/null 2>&1 || true
-  for _ in $(seq 1 30); do
-    if _jarvis_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
-      return 0
-    fi
-    sleep 1
-  done
-  echo "Postgres (postgres-teralizer) is not reachable. Is another container holding port 5432?" >&2
-  echo "Start it with ./gradlew startPostgres and retry." >&2
-  exit 1
-}
+_jarvis_psql() { docker exec postgres-teralizer psql -U postgres "$@"; }
 
 jarvis_run() {
   source "$ROOT_DIR/scripts/lib/db-guard.sh"
   DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$JARVIS_DB_NAME"
+  source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
+  supervisor_install_traps
 
   local reset_db=false prepare_fixtures=false
   local -a configs=()
@@ -63,7 +54,7 @@ jarvis_run() {
     fi
   done
 
-  _jarvis_ensure_db_up
+  ensure_postgres_up || exit 1
 
   if [[ "$prepare_fixtures" == true ]]; then
     echo "==> Materializing $JARVIS_LABEL fixtures"
@@ -97,11 +88,16 @@ jarvis_run() {
   local gradle_failed=false
   for config in "${configs[@]}"; do
     echo "==> Running $config (DB_NAME=$JARVIS_DB_NAME DATA_DIR=$JARVIS_DATA_DIR)"
-    if ! "$ROOT_DIR/gradlew" run \
-         -Dteralizer.config="$config" \
-         -Dteralizer.database.name="$JARVIS_DB_NAME" \
-         -Dteralizer.data-dir="$JARVIS_DATA_DIR" \
-         --no-daemon; then
+    supervised_run - "$JARVIS_PROJECT_TIMEOUT" \
+      "$ROOT_DIR/gradlew" run \
+      -Dteralizer.config="$config" \
+      -Dteralizer.database.name="$JARVIS_DB_NAME" \
+      -Dteralizer.data-dir="$JARVIS_DATA_DIR" \
+      --no-daemon
+    if [[ "$SUPERVISED_RC" -eq 124 ]]; then
+      echo "run capped at ${JARVIS_PROJECT_TIMEOUT}s for $config" >&2
+      gradle_failed=true
+    elif [[ "$SUPERVISED_RC" -ne 0 ]]; then
       echo "gradle exited non-zero for $config" >&2
       gradle_failed=true
     fi
