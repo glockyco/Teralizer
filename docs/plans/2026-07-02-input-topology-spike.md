@@ -142,6 +142,15 @@ mutator-free* receiver — the only sub-family a sound v1 slice could take. If t
 sub-family is large (>5k), design R2 properly; if small, T3 stays out of scope and the
 paper names it as the stateful-setup wall alongside T4/T5.
 
+**Verdict (full rerun, 1,161 projects): OUT OF SCOPE.** The sound sub-family —
+zero-arg inspectors with a `LOCAL_CTOR` (ctor-rooted, mutator-free) receiver — is
+3,621 assertions (3,554 in the zero-arg-inspector shapes), well under the 5k gate.
+The only receiver family that clears the gate is `LOCAL_CTOR_MUTATED` at 8,207
+(7,956 zero-arg), which is precisely the mutator-then-inspect replay that is not
+side-effect-safe without the research-grade slicing this section defers. T3 stays
+out of scope, and the paper names statement-slice setup as the stateful-setup wall
+alongside T4/T5.
+
 ### Out of scope (name it in the paper, don't build it)
 - **T4 fixture/cross-method state** — requires environment capture; conflicts with the
   per-assertion pipeline unit.
