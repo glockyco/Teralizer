@@ -4,6 +4,19 @@
 # Supports both the primary dataset (EqBench + Commons Utils) and extended
 # dataset (RepoReapers) with flexible selection options.
 #
+# Runs are resumable. State lives in REPLICATION_RUN_STATE_DIR when set, or in
+# replication/run-state/<dataset> for extended runs and
+# replication/run-state/primary-<phase> for primary runs. Each attempted config
+# writes a done-marker and a status.tsv row. The ledger records "-" for log path
+# because the runner leaves Gradle output visible in the terminal rather than
+# capturing it to a per-config file.
+#
+# Graceful pause: touch <state-dir>/STOP. The in-flight config finishes, the file
+# is consumed, and relaunching resumes from the next missing done-marker.
+#
+# Per-project wall cap: REPLICATION_PROJECT_TIMEOUT seconds (default 1800).
+# Set it to 0 to disable the cap. A capped config is ledgered as exit 124.
+#
 # DATASETS & EXPECTED RUNTIMES:
 #
 #   Primary Dataset (EqBench + Commons Utils):
@@ -14,7 +27,6 @@
 #   Extended Dataset (RepoReapers):
 #     - 1161 projects, ~1 minute average per project
 #     - Total: ~15 hours
-#
 # USAGE:
 #   ./run.sh --dataset <primary|extended> [options]
 #
@@ -57,6 +69,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+
+ROOT_DIR="$REPO_ROOT"
+# shellcheck source=scripts/lib/run-supervisor.sh
+source "$REPO_ROOT/scripts/lib/run-supervisor.sh"
+supervisor_install_traps
 # Default configuration
 DATASET=""
 PHASE=""
@@ -66,6 +83,7 @@ START=1
 COUNT=""
 USE_DOCKER="auto"
 DRY_RUN=false
+PROJECT_TIMEOUT="${REPLICATION_PROJECT_TIMEOUT:-1800}"
 
 # Colors
 RED='\033[0;31m'
@@ -75,7 +93,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 usage() {
-    head -50 "$0" | tail -48
+    sed -n '2,/^set -euo pipefail$/p' "$0" | sed '$d'
     exit 0
 }
 
@@ -153,6 +171,11 @@ if [[ -n "$PHASE" && "$PHASE" != "generation" && "$PHASE" != "generalization" ]]
     exit 1
 fi
 
+if ! [[ "$PROJECT_TIMEOUT" =~ ^[0-9]+$ ]]; then
+    echo -e "${RED}Error: REPLICATION_PROJECT_TIMEOUT must be a non-negative integer${NC}"
+    exit 1
+fi
+
 # Determine Docker usage
 if [[ "$USE_DOCKER" == "auto" ]]; then
     if [[ -f "$SCRIPT_DIR/../docker-compose.yml" ]]; then
@@ -162,9 +185,31 @@ if [[ "$USE_DOCKER" == "auto" ]]; then
     fi
 fi
 
+# Runner state and helpers
+state_scope="$DATASET"
+if [[ "$DATASET" == "primary" ]]; then
+    state_scope="primary-$PHASE"
+fi
+RUN_STATE_DIR="${REPLICATION_RUN_STATE_DIR:-$REPO_ROOT/replication/run-state/$state_scope}"
+DONE_DIR="$RUN_STATE_DIR/done"
+STATUS_TSV="$RUN_STATE_DIR/status.tsv"
+STOP_FILE="$RUN_STATE_DIR/STOP"
+
+get_project_path() {
+    local conf="$1"
+    sed -n 's/[[:space:]]*root-path[[:space:]]*=[[:space:]]*"\(projects\/[^"]*\)".*/\1/p' "$conf" | head -1
+}
+
+project_abs_for_config() {
+    local conf="$1"
+    local project_path
+    project_path=$(get_project_path "$conf")
+    [[ -n "$project_path" ]] || return 0
+    printf '%s/%s\n' "$REPO_ROOT" "$project_path"
+}
+
 # Build list of configs
 configs=()
-
 if [[ "$DATASET" == "primary" ]]; then
     CONFIG_DIR="$REPO_ROOT/project-configs/primary/$PHASE"
 
@@ -208,14 +253,6 @@ else
     else
         CONFIG_DIR="$REPO_ROOT/project-configs/extended"
     fi
-
-    PROJECTS_DIR="$REPO_ROOT/projects"
-
-    # Helper: extract project path from config file
-    get_project_path() {
-        local conf="$1"
-        grep 'root-path' "$conf" | sed 's/.*"\(projects\/[^"]*\)".*/\1/' | head -1
-    }
 
     # Helper: check if project directory exists
     project_exists() {
@@ -309,6 +346,12 @@ echo -e "Dataset:    ${CYAN}$DATASET${NC}"
 echo -e "Configs:    ${CYAN}${#configs[@]}${NC}"
 echo -e "Est. time:  ${CYAN}$(estimate_runtime)${NC}"
 echo -e "Mode:       ${CYAN}$([ "$USE_DOCKER" == "yes" ] && echo "Docker" || echo "Local")${NC}"
+echo -e "State dir:  ${CYAN}$RUN_STATE_DIR${NC}"
+if [[ "$PROJECT_TIMEOUT" -eq 0 ]]; then
+    echo -e "Wall cap:   ${CYAN}disabled${NC}"
+else
+    echo -e "Wall cap:   ${CYAN}${PROJECT_TIMEOUT}s per config${NC}"
+fi
 echo ""
 
 if [[ "$DRY_RUN" == true ]]; then
@@ -334,7 +377,6 @@ fi
 # Run the pipeline
 run_config() {
     local conf="$1"
-    local name=$(basename "$conf")
 
     if [[ "$USE_DOCKER" == "yes" ]]; then
         # Translate host path to container path
@@ -343,10 +385,13 @@ run_config() {
         docker compose -f "$SCRIPT_DIR/../docker-compose.yml" run --rm teralizer \
             ./gradlew run -Dteralizer.config="$container_conf" --no-daemon
     else
-        cd "$REPO_ROOT"
-        ./gradlew run -Dteralizer.config="$conf" --no-daemon
+        supervised_run "-" "$PROJECT_TIMEOUT" \
+            ./gradlew run -Dteralizer.config="$conf" --no-daemon
+        return "$SUPERVISED_RC"
     fi
 }
+
+cd "$REPO_ROOT"
 
 # Ensure PostgreSQL is running for Docker mode
 if [[ "$USE_DOCKER" == "yes" ]]; then
@@ -356,25 +401,63 @@ if [[ "$USE_DOCKER" == "yes" ]]; then
 fi
 
 # Process configs
+mkdir -p "$DONE_DIR"
+[[ -f "$STATUS_TSV" ]] || printf 'config-name\texit_code\tlog\n' > "$STATUS_TSV"
+rm -f "$STOP_FILE"
+
 succeeded=0
 failed=0
+skipped=0
+capped=0
+stopped=false
 
 for ((i=0; i<${#configs[@]}; i++)); do
+    if supervisor_stop_requested "$STOP_FILE"; then
+        stopped=true
+        break
+    fi
+
     conf="${configs[$i]}"
-    name=$(basename "$conf")
+    name=$(basename "$conf" .conf)
+    done_marker="$DONE_DIR/$name"
     progress="[$((i+1))/${#configs[@]}]"
+
+    if [[ -f "$done_marker" ]]; then
+        echo -e "${YELLOW}$progress Skipping${NC} $name (already done)"
+        skipped=$((skipped + 1))
+        continue
+    fi
 
     echo -e "${YELLOW}$progress Processing${NC} $name"
 
-    if run_config "$conf"; then
-        echo -e "${GREEN}$progress ✓${NC} $name"
-        ((succeeded++)) || true
+    project_abs=$(project_abs_for_config "$conf")
+    SUPERVISOR_ACTIVE_PATH="$project_abs"
+    if run_config "$conf" "$name"; then
+        rc=0
     else
-        echo -e "${RED}$progress ✗${NC} $name"
-        ((failed++)) || true
+        rc=$?
+    fi
+    cleanup_leftover_project_processes "$project_abs" "-"
+    SUPERVISOR_ACTIVE_PATH=""
+
+    printf '%s\t%s\t%s\n' "$name" "$rc" "-" >> "$STATUS_TSV"
+    touch "$done_marker"
+
+    if [[ "$rc" -eq 0 ]]; then
+        echo -e "${GREEN}$progress complete${NC} $name"
+        succeeded=$((succeeded + 1))
+    elif [[ "$rc" -eq 124 ]]; then
+        echo -e "${RED}$progress capped${NC} $name (exit 124 in $STATUS_TSV)"
+        capped=$((capped + 1))
+        failed=$((failed + 1))
+    else
+        echo -e "${RED}$progress failed${NC} $name (exit $rc in $STATUS_TSV)"
+        failed=$((failed + 1))
     fi
     echo ""
 done
+
+[[ "$stopped" == true ]] && echo "STOP file honored at a config boundary. Relaunch resumes from $RUN_STATE_DIR."
 
 # Summary
 echo "=========================================="
@@ -382,4 +465,7 @@ echo -e "${GREEN}Complete${NC}"
 echo "=========================================="
 echo "Succeeded: $succeeded"
 echo "Failed:    $failed"
+echo "Capped:    $capped"
+echo "Skipped:   $skipped"
 echo "Total:     ${#configs[@]}"
+echo "Ledger:    $STATUS_TSV"

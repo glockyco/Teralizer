@@ -2,7 +2,7 @@
 
 ## active
 
-- **Replication Package Documentation Improvements** [plan] `2026-06-25-replication-package-documentation-improvements` (6/10) ← 2026-06-26-teralizer-overview
+- **Replication Package Documentation Improvements** [plan] `2026-06-25-replication-package-documentation-improvements` (7/10) ← 2026-06-26-teralizer-overview
 - **Applicability Barrier Evidence** [audit] `2026-06-26-applicability-barriers` ← 2026-06-26-teralizer-overview
 - **Data Reuse & MSR Paper Potential (secondary outputs)** [note] `2026-06-26-data-reuse-and-msr-potential` ← 2026-06-26-teralizer-overview
 - **Teralizer — Project Overview** [overview] `2026-06-26-teralizer-overview`
@@ -21,7 +21,7 @@
 - **Concretization Census — Load-Bearing Blockers and the License Over-Refusal Finding** [audit] `2026-07-05-concretization-census-findings` ← 2026-07-04-concretization-census
 - **Full Evaluation Rerun (RepoReapers, post-runway)** [plan] `2026-07-05-full-evaluation-rerun` (—) ← 2026-06-26-teralizer-overview
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
-- **Rerun Report Extension** [plan] `2026-07-06-rerun-report-extension` (1/8) ← 2026-06-26-teralizer-overview
+- **Rerun Report Extension** [plan] `2026-07-06-rerun-report-extension` (2/8) ← 2026-06-26-teralizer-overview
 
 ## draft
 

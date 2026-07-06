@@ -28,11 +28,12 @@ into the root file in commit `fbb24921`).
 - [x] Fix `verify-outputs.sh` exit codes — exit 1 when `original` vs `verify`
   differs (should be identical), exit 0 for `original` vs `replicate`
   (differences expected). *(`verify-outputs.sh` L189–194.)*
-- [ ] Adopt `scripts/lib/run-supervisor.sh` in `replication/scripts/run.sh`
-  (local mode): group-kill traps, per-project wall cap (30 min default, env
-  knob to disable), STOP-file pause, done-markers, and a `status.tsv` ledger.
-  Straight lift from `scripts/run-reporeapers-rerun.sh`. An unattended
-  replicator crash at project 900 of 1161 must resume, not restart.
+- [x] Adopt `scripts/lib/run-supervisor.sh` in `replication/scripts/run.sh`
+  (local mode): group-kill traps, per-project wall cap (30 min default,
+  `REPLICATION_PROJECT_TIMEOUT=0` disables it), STOP-file pause under the
+  run-state dir, done-markers, and a `status.tsv` ledger with config name,
+  exit code, and terminal-only log marker. An unattended replicator crash at
+  project 900 of 1161 must resume, not restart.
 - [ ] Give Docker mode the same semantics with the container as the kill
   unit: named container per config, cap enforced by watchdog + `docker stop`,
   traps stop the container instead of a process group.
@@ -45,6 +46,9 @@ into the root file in commit `fbb24921`).
 - [ ] State the capped methodology in §Complete Reproduction: the paper's
   extended numbers come from capped runs, and the artifact reproduces with
   the same rule.
+
+Static shell verification is the acceptance gate while the live corpus run owns
+the machine. The E2E smoke stays deferred until that run finishes.
 
 ## Not in scope
 
