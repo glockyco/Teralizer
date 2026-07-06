@@ -106,7 +106,7 @@ story on a count.
 - [ ] M3 lifecycle failure-code propagation + `SUITE_TIMEOUT` code + invariant
       (implementation shared with levers spec Lever 2's timeout work).
 - [ ] M4 floor/surefire outcome columns + writer changes + jOOQ regen.
-- [ ] M2 first-cause attribution view in the report.
+- [x] M2 first-cause attribution view in the report.
 - [ ] M5 basis-header helper + adoption in the DB-reading analysis modules.
 - [x] M6 exemplar sampling on the top reason-code tables.
 

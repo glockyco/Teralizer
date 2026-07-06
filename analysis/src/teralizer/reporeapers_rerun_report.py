@@ -562,6 +562,149 @@ def get_assertion_exclusion_sources(conn: Connection) -> pd.DataFrame:
     )
 
 
+def get_first_cause_attribution(conn: Connection) -> pd.DataFrame:
+    """Attribute every excluded assertion to its upstream-most known cause."""
+    required_tables = [
+        "assertion",
+        "assertion_semantics",
+        "mut_resolution_observation",
+        "filter_result",
+        "task_diagnostic",
+        "generalization",
+        "generalization_lifecycle",
+    ]
+    for table in required_tables:
+        if not _table_exists(conn, table):
+            return pd.DataFrame([{"first_cause": _SKIP_NOTE.format(table=table)}])
+    if not _column_exists(conn, "filter_result", "reason_code"):
+        return pd.DataFrame(
+            [{"first_cause": _SKIP_NOTE.format(table="filter_result.reason_code")}]
+        )
+    if not _column_exists(conn, "generalization_lifecycle", "final_failure_code"):
+        return pd.DataFrame(
+            [
+                {
+                    "first_cause": _SKIP_NOTE.format(
+                        table="generalization_lifecycle.final_failure_code"
+                    )
+                }
+            ]
+        )
+
+    df = _read_sql(
+        conn,
+        """
+        WITH excluded AS (
+            SELECT id
+            FROM assertion
+            WHERE NOT is_included
+        ),
+        unsupported AS (
+            SELECT DISTINCT e.id AS assertion_id
+            FROM excluded e
+            LEFT JOIN assertion_semantics s ON s.assertion_id = e.id
+            LEFT JOIN mut_resolution_observation m ON m.assertion_id = e.id
+            WHERE s.semantic_kind NOT IN (
+                'BOOLEAN_FALSE', 'BOOLEAN_TRUE', 'EQUALITY', 'VALUE_EQUALITY'
+            )
+               OR m.no_pick_reason = 'UNSUPPORTED_ASSERTION_SHAPE'
+        ),
+        mut_abstention AS (
+            SELECT e.id AS assertion_id, min(m.no_pick_reason) AS no_pick_reason
+            FROM excluded e
+            JOIN mut_resolution_observation m ON m.assertion_id = e.id
+            WHERE m.no_pick_reason IS NOT NULL
+              AND m.no_pick_reason <> 'UNSUPPORTED_ASSERTION_SHAPE'
+            GROUP BY e.id
+        ),
+        first_filter AS (
+            SELECT assertion_id, reason_code
+            FROM (
+                SELECT fr.assertion_id,
+                       coalesce(fr.reason_code, '<none>') AS reason_code,
+                       row_number() OVER (
+                           PARTITION BY fr.assertion_id ORDER BY fr.id
+                       ) AS rank
+                FROM filter_result fr
+                WHERE fr.assertion_id IS NOT NULL
+                  AND fr.generalization_id IS NULL
+                  AND fr.decision = 'REJECT'
+            ) ranked
+            WHERE rank = 1
+        ),
+        spf_loss AS (
+            SELECT assertion_id, min(reason_code) AS reason_code
+            FROM task_diagnostic
+            WHERE assertion_id IS NOT NULL
+              AND reason_code IS NOT NULL
+            GROUP BY assertion_id
+        ),
+        license_refusal AS (
+            SELECT DISTINCT assertion_id
+            FROM generalization
+            WHERE exclusion_info IS NOT NULL
+              AND upper(exclusion_info) LIKE '%%LICENSE%%'
+        ),
+        lifecycle_failure AS (
+            SELECT g.assertion_id, min(gl.final_failure_code) AS final_failure_code
+            FROM generalization g
+            JOIN generalization_lifecycle gl ON gl.generalization_id = g.id
+            WHERE gl.final_failure_code IS NOT NULL
+              AND gl.final_failure_code <> '<none>'
+            GROUP BY g.assertion_id
+        ),
+        attributed AS (
+            SELECT
+                e.id,
+                CASE
+                    WHEN u.assertion_id IS NOT NULL THEN 'assertion-kind-unsupported'
+                    WHEN ma.no_pick_reason IS NOT NULL THEN 'MUT-resolution abstention: ' || ma.no_pick_reason
+                    WHEN ff.reason_code IS NOT NULL THEN 'filter: ' || ff.reason_code
+                    WHEN spf.reason_code IS NOT NULL THEN 'SPF loss: ' || spf.reason_code
+                    WHEN lr.assertion_id IS NOT NULL THEN 'license refusal'
+                    WHEN lf.final_failure_code IS NOT NULL THEN 'lifecycle failure: ' || lf.final_failure_code
+                    ELSE 'unattributed'
+                END AS first_cause
+            FROM excluded e
+            LEFT JOIN unsupported u ON u.assertion_id = e.id
+            LEFT JOIN mut_abstention ma ON ma.assertion_id = e.id
+            LEFT JOIN first_filter ff ON ff.assertion_id = e.id
+            LEFT JOIN spf_loss spf ON spf.assertion_id = e.id
+            LEFT JOIN license_refusal lr ON lr.assertion_id = e.id
+            LEFT JOIN lifecycle_failure lf ON lf.assertion_id = e.id
+        ),
+        totals AS (
+            SELECT count(*) AS excluded_assertions
+            FROM excluded
+        ),
+        counts AS (
+            SELECT first_cause, count(*) AS count
+            FROM attributed
+            GROUP BY first_cause
+        )
+        SELECT
+            first_cause,
+            count,
+            CASE
+                WHEN totals.excluded_assertions = 0 THEN 0.0
+                ELSE count * 1.0 / totals.excluded_assertions
+            END AS share
+        FROM counts, totals
+        UNION ALL
+        SELECT
+            'invariant: attributed excluded assertions',
+            (SELECT count(*) FROM attributed),
+            CASE
+                WHEN excluded_assertions = 0 THEN 1.0
+                ELSE (SELECT count(*) FROM attributed) * 1.0 / excluded_assertions
+            END
+        FROM totals
+        ORDER BY first_cause
+        """,
+    )
+    return df
+
+
 def get_parameter_signature_counts(conn: Connection, top: int) -> pd.DataFrame:
     """Parameter metadata among ParameterType rejects."""
     return _read_sql(
@@ -976,6 +1119,7 @@ def generate_report(
         "assertion_filters": get_filter_summary(conn, _ASSERTION_SCOPE),
         "assertion_blocker_combos": get_assertion_blocker_combos(conn, top),
         "assertion_exclusion_sources": get_assertion_exclusion_sources(conn),
+        "first_cause_attribution": get_first_cause_attribution(conn),
         "parameter_signatures": get_parameter_signature_counts(conn, top),
         "return_types": get_return_type_counts(conn, top),
         "unsupported_assertions": get_unsupported_assertion_counts(conn, top),
@@ -1015,6 +1159,7 @@ def print_report(report: dict[str, pd.DataFrame], top: int) -> None:
         ("Assertion-level filter decisions", "assertion_filters", None),
         ("Top assertion blocker combinations", "assertion_blocker_combos", top),
         ("Excluded assertion sources", "assertion_exclusion_sources", None),
+        ("First-cause attribution", "first_cause_attribution", None),
         ("ParameterType reject parameter metadata", "parameter_signatures", top),
         ("ReturnType reject return types", "return_types", top),
         ("Unsupported assertion names", "unsupported_assertions", top),

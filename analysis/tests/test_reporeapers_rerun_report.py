@@ -1,6 +1,8 @@
 """Tests for RepoReapers rerun report integrity invariants."""
 
+from pathlib import Path
 import pytest
+import pandas as pd
 from sqlalchemy import create_engine, text
 
 
@@ -479,3 +481,319 @@ def test_spf_failure_causes_samples_task_diagnostic_messages_by_cause(
         allowed_values=_SPF_UNCAUGHT_MESSAGES,
         expected_snippets=2,
     )
+
+
+_FIRST_CAUSE_EXPECTED = {
+    "assertion-kind-unsupported": 2,
+    "MUT-resolution abstention: NO_CANDIDATES": 1,
+    "filter: MISSING_TESTED_PARAMS": 1,
+    "SPF loss: NO_INPUT_SPEC": 1,
+    "license refusal": 1,
+    "lifecycle failure: GENERATED_TEST_COMPILE_FAILED": 1,
+}
+
+
+def _create_first_cause_schema(conn) -> None:
+    statements = [
+        "CREATE TABLE assertion (id INTEGER PRIMARY KEY, is_included BOOLEAN NOT NULL, exclusion_info TEXT)",
+        "CREATE TABLE assertion_semantics (id INTEGER PRIMARY KEY, assertion_id INTEGER NOT NULL, semantic_kind TEXT NOT NULL, argument_shape TEXT NOT NULL)",
+        "CREATE TABLE mut_resolution_observation (id INTEGER PRIMARY KEY, assertion_id INTEGER NOT NULL, no_pick_reason TEXT)",
+        "CREATE TABLE filter_result (id INTEGER PRIMARY KEY, test_id INTEGER, assertion_id INTEGER, generalization_id INTEGER, filter_name TEXT NOT NULL, decision TEXT NOT NULL, reason_code TEXT)",
+        "CREATE TABLE task_diagnostic (id INTEGER PRIMARY KEY, assertion_id INTEGER, stage TEXT NOT NULL, reason_code TEXT NOT NULL)",
+        "CREATE TABLE generalization (id INTEGER PRIMARY KEY, assertion_id INTEGER NOT NULL, is_included BOOLEAN NOT NULL, exclusion_info TEXT)",
+        "CREATE TABLE generalization_lifecycle (id INTEGER PRIMARY KEY, generalization_id INTEGER NOT NULL, final_usable BOOLEAN NOT NULL, final_failure_code TEXT)",
+    ]
+    for statement in statements:
+        conn.execute(text(statement))
+
+
+def _insert_first_cause_fixture(conn) -> None:
+    conn.execute(
+        text(
+            "INSERT INTO assertion (id, is_included, exclusion_info) VALUES "
+            "(1, 0, NULL), "
+            "(2, 0, NULL), "
+            "(3, 0, NULL), "
+            "(4, 0, NULL), "
+            "(5, 0, NULL), "
+            "(6, 0, NULL), "
+            "(7, 0, NULL), "
+            "(8, 1, NULL)"
+        )
+    )
+    conn.execute(
+        text(
+            "INSERT INTO assertion_semantics (id, assertion_id, semantic_kind, argument_shape) VALUES "
+            "(1, 1, 'UNKNOWN', 'scalar'), "
+            "(2, 2, 'VALUE_EQUALITY', 'scalar'), "
+            "(3, 3, 'VALUE_EQUALITY', 'scalar'), "
+            "(4, 4, 'VALUE_EQUALITY', 'scalar'), "
+            "(5, 5, 'VALUE_EQUALITY', 'scalar'), "
+            "(6, 6, 'VALUE_EQUALITY', 'scalar'), "
+            "(7, 7, 'VALUE_EQUALITY', 'scalar'), "
+            "(8, 8, 'UNKNOWN', 'scalar')"
+        )
+    )
+    conn.execute(
+        text(
+            "INSERT INTO mut_resolution_observation (id, assertion_id, no_pick_reason) VALUES "
+            "(1, 1, NULL), "
+            "(2, 2, 'UNSUPPORTED_ASSERTION_SHAPE'), "
+            "(3, 3, 'NO_CANDIDATES'), "
+            "(4, 4, NULL), "
+            "(5, 5, NULL), "
+            "(6, 6, NULL), "
+            "(7, 7, NULL), "
+            "(8, 8, 'UNSUPPORTED_ASSERTION_SHAPE')"
+        )
+    )
+    conn.execute(
+        text(
+            "INSERT INTO filter_result "
+            "(id, test_id, assertion_id, generalization_id, filter_name, decision, reason_code) VALUES "
+            "(1, NULL, 1, NULL, 'teralizer.processing.filter.MissingValueFilter', 'REJECT', 'MISSING_TESTED_FILE'), "
+            "(2, NULL, 2, NULL, 'teralizer.processing.filter.MissingValueFilter', 'REJECT', 'MISSING_TESTED_FILE'), "
+            "(3, NULL, 3, NULL, 'teralizer.processing.filter.ReturnTypeFilter', 'REJECT', 'UNSUPPORTED_RETURN_TYPE'), "
+            "(4, NULL, 4, NULL, 'teralizer.processing.filter.MissingValueFilter', 'ACCEPT', NULL), "
+            "(5, NULL, 4, NULL, 'teralizer.processing.filter.ParameterTypeFilter', 'REJECT', 'MISSING_TESTED_PARAMS'), "
+            "(6, NULL, 4, NULL, 'teralizer.processing.filter.ReturnTypeFilter', 'REJECT', 'UNSUPPORTED_RETURN_TYPE')"
+        )
+    )
+    conn.execute(
+        text(
+            "INSERT INTO task_diagnostic (id, assertion_id, stage, reason_code) VALUES "
+            "(1, 5, 'ANALYZE_JPF', 'NO_INPUT_SPEC')"
+        )
+    )
+    conn.execute(
+        text(
+            "INSERT INTO generalization (id, assertion_id, is_included, exclusion_info) VALUES "
+            "(1, 6, 0, 'WIDENING_LICENSE_REFUSED: collection output not licensed'), "
+            "(2, 7, 1, NULL), "
+            "(3, 8, 1, NULL)"
+        )
+    )
+    conn.execute(
+        text(
+            "INSERT INTO generalization_lifecycle "
+            "(id, generalization_id, final_usable, final_failure_code) VALUES "
+            "(1, 2, 0, 'GENERATED_TEST_COMPILE_FAILED'), "
+            "(2, 3, 1, NULL)"
+        )
+    )
+
+
+def _patch_first_cause_snapshot_catalog(
+    monkeypatch, report, *, missing_tables: set[str] | None = None
+) -> None:
+    tables = {
+        "assertion",
+        "assertion_semantics",
+        "mut_resolution_observation",
+        "filter_result",
+        "task_diagnostic",
+        "generalization",
+        "generalization_lifecycle",
+    }
+    columns = {
+        "assertion": {"id", "is_included", "exclusion_info"},
+        "assertion_semantics": {
+            "id",
+            "assertion_id",
+            "semantic_kind",
+            "argument_shape",
+        },
+        "mut_resolution_observation": {"id", "assertion_id", "no_pick_reason"},
+        "filter_result": {
+            "id",
+            "test_id",
+            "assertion_id",
+            "generalization_id",
+            "filter_name",
+            "decision",
+            "reason_code",
+        },
+        "task_diagnostic": {"id", "assertion_id", "stage", "reason_code"},
+        "generalization": {"id", "assertion_id", "is_included", "exclusion_info"},
+        "generalization_lifecycle": {
+            "id",
+            "generalization_id",
+            "final_usable",
+            "final_failure_code",
+        },
+    }
+    missing = missing_tables or set()
+
+    def table_exists(_conn, table: str) -> bool:
+        return table in tables and table not in missing
+
+    def column_exists(_conn, table: str, column: str) -> bool:
+        return column in columns.get(table, set())
+
+    monkeypatch.setattr(report, "_table_exists", table_exists)
+    monkeypatch.setattr(report, "_column_exists", column_exists)
+
+
+@pytest.fixture
+def first_cause_conn():
+    """In-memory sqlite snapshot covering first-cause precedence layers."""
+    engine = create_engine("sqlite:///:memory:")
+    with engine.connect() as connection:
+        _create_first_cause_schema(connection)
+        _insert_first_cause_fixture(connection)
+        connection.commit()
+        yield connection
+    engine.dispose()
+
+
+def test_first_cause_attribution_applies_precedence_and_balances_exclusions(
+    monkeypatch, first_cause_conn
+):
+    from teralizer import reporeapers_rerun_report as report
+
+    _patch_first_cause_snapshot_catalog(monkeypatch, report)
+
+    result = report.get_first_cause_attribution(first_cause_conn)
+
+    assert list(result.columns) == ["first_cause", "count", "share"]
+    cause_rows = result[
+        result["first_cause"] != "invariant: attributed excluded assertions"
+    ]
+    assert set(cause_rows["first_cause"]) == set(_FIRST_CAUSE_EXPECTED)
+    assert len(cause_rows) == len(_FIRST_CAUSE_EXPECTED)
+
+    excluded_total = sum(_FIRST_CAUSE_EXPECTED.values())
+    for first_cause, expected_count in _FIRST_CAUSE_EXPECTED.items():
+        rows = cause_rows[cause_rows["first_cause"] == first_cause]
+        assert len(rows) == 1
+        row = rows.iloc[0]
+        assert row["count"] == expected_count
+        assert row["share"] == pytest.approx(expected_count / excluded_total)
+
+    invariant_rows = result[
+        result["first_cause"] == "invariant: attributed excluded assertions"
+    ]
+    assert len(invariant_rows) == 1
+    invariant = invariant_rows.iloc[0]
+    assert invariant["count"] == excluded_total
+    assert invariant["share"] == pytest.approx(1.0)
+    assert int(cause_rows["count"].sum()) == invariant["count"]
+
+
+def test_first_cause_attribution_skips_when_required_snapshot_table_is_missing(
+    monkeypatch, first_cause_conn
+):
+    from teralizer import reporeapers_rerun_report as report
+
+    _patch_first_cause_snapshot_catalog(
+        monkeypatch, report, missing_tables={"assertion_semantics"}
+    )
+
+    result = report.get_first_cause_attribution(first_cause_conn)
+
+    assert result.to_dict("records") == [
+        {"first_cause": report._SKIP_NOTE.format(table="assertion_semantics")}
+    ]
+
+
+def test_generate_report_includes_first_cause_attribution(monkeypatch, conn):
+    from teralizer import reporeapers_rerun_report as report
+
+    first_cause = pd.DataFrame(
+        [
+            {
+                "first_cause": "invariant: attributed excluded assertions",
+                "count": 0,
+                "share": 1.0,
+            }
+        ]
+    )
+    progress = {
+        "projects": pd.DataFrame(),
+        "active_tasks": pd.DataFrame(),
+        "tool_versions": pd.DataFrame(),
+    }
+
+    monkeypatch.setattr(report, "get_run_progress", lambda _conn: progress)
+    monkeypatch.setattr(
+        report,
+        "get_baseline_deltas",
+        lambda *_args: {"delta_scope": pd.DataFrame(), "delta_summary": pd.DataFrame()},
+    )
+    for name in (
+        "get_telemetry_integrity",
+        "get_entity_counts",
+        "get_project_stage_summary",
+        "get_filter_summary",
+        "get_test_blocker_combos",
+        "get_assertion_blocker_combos",
+        "get_assertion_exclusion_sources",
+        "get_parameter_signature_counts",
+        "get_return_type_counts",
+        "get_unsupported_assertion_counts",
+        "get_missing_value_shapes",
+        "get_spf_extraction_rollup",
+        "get_spf_failure_causes",
+        "get_task_diagnostics",
+        "get_true_yield",
+        "get_yield_gap_causes",
+        "get_assertion_semantics_profile",
+        "get_fail_and_matcher_breakdown",
+        "get_build_failure_causes",
+    ):
+        monkeypatch.setattr(report, name, lambda *_args: pd.DataFrame())
+    monkeypatch.setattr(
+        report, "get_first_cause_attribution", lambda _conn: first_cause, raising=False
+    )
+
+    result = report.generate_report(conn, top=3, baseline_db="", ledger=Path("unused"))
+
+    assert result["first_cause_attribution"].equals(first_cause)
+
+
+def test_print_report_includes_first_cause_attribution_section(capsys):
+    from teralizer import reporeapers_rerun_report as report
+
+    frame = pd.DataFrame()
+    rendered_report = {
+        "telemetry_integrity": frame,
+        "run_projects": frame,
+        "active_tasks": frame,
+        "tool_versions": frame,
+        "entity_counts": frame,
+        "project_stages": frame,
+        "test_filters": frame,
+        "test_blocker_combos": frame,
+        "assertion_filters": frame,
+        "assertion_blocker_combos": frame,
+        "assertion_exclusion_sources": frame,
+        "parameter_signatures": frame,
+        "return_types": frame,
+        "unsupported_assertions": frame,
+        "missing_value_shapes": frame,
+        "spf_extraction_rollup": frame,
+        "spf_failure_causes": frame,
+        "task_diagnostics": frame,
+        "true_yield": frame,
+        "yield_gap_causes": frame,
+        "assertion_semantics_profile": frame,
+        "fail_matcher_breakdown": frame,
+        "build_failure_causes": frame,
+        "first_cause_attribution": pd.DataFrame(
+            [
+                {
+                    "first_cause": "invariant: attributed excluded assertions",
+                    "count": 0,
+                    "share": 1.0,
+                }
+            ]
+        ),
+        "delta_scope": frame,
+        "delta_summary": frame,
+    }
+
+    report.print_report(rendered_report, top=3)
+
+    output = capsys.readouterr().out
+    assert "## First-cause attribution" in output
+    assert "invariant: attributed excluded assertions" in output
