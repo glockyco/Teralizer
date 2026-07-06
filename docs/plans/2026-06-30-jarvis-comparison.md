@@ -226,24 +226,38 @@ what is rejected, with stable reason codes, are both census outputs. Honesty bou
 successes). JARVIS structurally needs ≥2 repetitive traces per scenario and
 numeric/char-primitive templates; Teralizer generalizes from a single test via symbolic paths.
 
-**Batch A (current event): commons-lang `LANG_3_5` + commons-math `MATH_3_5`, full suites**
-(141 / 507 test classes, ~2,871 / ~4,268 `@Test` methods). The fixture carries the complete
-upstream `src/test` (sources and resources) plus the test-scope dependency closure mirrored
-from each project's upstream POM; every materialized fixture must pass the
-`mvn test-compile` gate in `prepare-jarvis-scoreboard-fixtures.sh --census` before a run.
+**Population: all 12 Table-1 projects, one census event.** Version rule: latest stable
+release as of 2016-10-13 (the `LANG_3_5` release date, the later of the two anchors JARVIS's
+Table 2 fixes); known exception: commons-text's first stable release is 1.0 (2017-03), the
+nearest release. Each fixture carries the complete upstream `src/test` (sources and
+resources) plus the dependency closure extracted verbatim from its pinned POM
+(`scripts/lib/extract-pom-deps.py`); javacc-generated parsers (configuration, jexl) are
+materialized via the upstream POM; JMH benchmarks under `src/test` are pruned (not JUnit
+tests; upstream compiles them only under a benchmark profile). Every materialized fixture
+must pass the `mvn test-compile` gate in `prepare-jarvis-scoreboard-fixtures.sh --census`
+before a run — all 12 pass. No manual harnessing anywhere in the census lane.
+
+| project | pin | date | test files |
+|---|---|---|--:|
+| commons-math | `MATH_3_5` | 2015-04-14 | 571 |
+| commons-lang | `LANG_3_5` | 2016-10-13 | 162 |
+| commons-cli | `cli-1.3.1` | 2015-06-17 | 25 |
+| commons-codec | `1.10` | 2014-11-10 | 55 |
+| commons-collections | `collections-4.1` | 2015-11-27 | 206 |
+| commons-configuration | `CONFIGURATION_2_1` | 2016-08-20 | 196 |
+| commons-csv | `rel/commons-csv-1.4` | 2016-05-29 | 16 |
+| commons-email | `EMAIL_1_4` | 2015-05-23 | 25 |
+| commons-io | `commons-io-2.5` | 2016-04-22 | 112 |
+| commons-jexl | `COMMONS_JEXL_3_0` | 2015-12-27 | 51 |
+| commons-pool | `POOL_2_4_2` | 2015-08-01 | 34 |
+| commons-text | `commons-text-1.0` | 2017-03-04 | 39 |
+
+Commit SHAs live in the prep script's pin table and `data/jarvis-census/PROVENANCE.md`.
 PIT stays **on** (the fault-detection axis is part of the PVC critique that motivates the
 mutation-score metric), 4 threads, INITIAL/GENERALIZED stages only — the ORIGINAL-stage PIT
 run is off by default pipeline-wide: it mutates the full-suite coverage scope and nothing
-consumes it.
-
-**Batch B (queued): the other 10 Table-1 projects** (CLI, Codec, Collections, Configuration,
-CSV, Email, IO, JEXL, Pool, Text). Version rule: latest stable release as of 2016-10-13 (the
-`LANG_3_5` release date, the later of the two anchors JARVIS's Table 2 fixes); known
-exception: commons-text's first stable release is 1.0 (2017-03), the nearest release.
-Per-project onboarding is mechanical (pin URL/tag/SHA, mirror the upstream test-dep closure,
-census config, compile gate, provenance entry) — no manual harnessing anywhere in the census
-lane. Expectation, stated up front: lang/math-style numeric/char/string MUTs are the sweet
-spot, collection/IO/mock-heavy suites will mostly land in the rejection ledger — both
+consumes it. Expectation, stated up front: lang/math-style numeric/char/string MUTs are the
+sweet spot, collection/IO/mock-heavy suites will mostly land in the rejection ledger — both
 outcomes are reportable applicability evidence.
 
 **Timeout policy — tripwires, not bounds.** A fired timeout on a project-level task drops the
@@ -283,12 +297,13 @@ soundness. This is the qualitative axis; the exclusion ledger (Axis 3 rejection 
   harness; we compare to its *published* numbers, not a re-run. Scoreboard/census numbers are
   point-in-time (jqwik sampling varies run to run); the qualitative results are robust.
 - **External:** the head-to-head is 10 cases across 2 projects (JARVIS's own reported set); the
-  breadth census is the same 2 projects.
+  breadth census covers the full suites of all 12 Table-1 projects.
 
 ## Provenance & reproduction
 
 - Fixtures pinned: commons-math `MATH_3_5` = `b3c5dae8f253fcb4484e5cd3cc5662587803efc2`,
-  commons-lang `LANG_3_5` = `36f98d87b24c2f542b02abbf6ec1ee742f1b158b`; jpf-symbc
+  commons-lang `LANG_3_5` = `36f98d87b24c2f542b02abbf6ec1ee742f1b158b`; the 10 further census
+  pins in the Axis 3 table (SHAs in the prep script + census `PROVENANCE.md`); jpf-symbc
   `gradle-build` + jpf-core `java-8` (submodule SHAs in the main repo), JDK 8, Z3 4.11.2.
 - Scoreboard (Table-2 + elasticity): `postgres_jarvis_scoreboard`, `data/jarvis-scoreboard/`;
   `bash scripts/run-jarvis-scoreboard.sh --reset-db`, then

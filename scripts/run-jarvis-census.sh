@@ -14,6 +14,16 @@ JARVIS_PREPARE_FLAG=--census
 JARVIS_DEFAULT_CONFIGS=(
   project-configs/jarvis-scoreboard/commons-lang-3.5-census.conf
   project-configs/jarvis-scoreboard/commons-math-3.5-census.conf
+  project-configs/jarvis-scoreboard/commons-cli-1.3.1-census.conf
+  project-configs/jarvis-scoreboard/commons-codec-1.10-census.conf
+  project-configs/jarvis-scoreboard/commons-collections-4.1-census.conf
+  project-configs/jarvis-scoreboard/commons-configuration-2.1-census.conf
+  project-configs/jarvis-scoreboard/commons-csv-1.4-census.conf
+  project-configs/jarvis-scoreboard/commons-email-1.4-census.conf
+  project-configs/jarvis-scoreboard/commons-io-2.5-census.conf
+  project-configs/jarvis-scoreboard/commons-jexl-3.0-census.conf
+  project-configs/jarvis-scoreboard/commons-pool-2.4.2-census.conf
+  project-configs/jarvis-scoreboard/commons-text-1.0-census.conf
 )
 
 source "$ROOT_DIR/scripts/lib/jarvis-run.sh"
