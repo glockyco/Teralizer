@@ -112,13 +112,12 @@ public final class MethodUnderTestResolver {
             return resolveAssertThrows(testMethod, assertion, focal);
         }
 
-        Optional<Integer> index = TestAnalysis.getActualParameterIndex(assertion);
-        if (!index.isPresent()) {
+        Optional<TestAnalysis.NormalizedAssertion> view = TestAnalysis.normalizedAssertion(assertion);
+        if (!view.isPresent() || view.get().getActualExpression() == null) {
             return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
         }
 
-        CtExpression<?> actual = assertion.getArguments().get(index.get());
-        return resolveValueAssertion(testMethod, assertion, actual, focal);
+        return resolveValueAssertion(testMethod, assertion, view.get().getActualExpression(), focal);
     }
 
     /**
@@ -131,11 +130,8 @@ public final class MethodUnderTestResolver {
                 || assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
             return null;
         }
-        Optional<Integer> index = TestAnalysis.getActualParameterIndex(assertion);
-        if (!index.isPresent() || index.get() >= assertion.getArguments().size()) {
-            return null;
-        }
-        return assertion.getArguments().get(index.get());
+        Optional<TestAnalysis.NormalizedAssertion> view = TestAnalysis.normalizedAssertion(assertion);
+        return view.map(TestAnalysis.NormalizedAssertion::getActualExpression).orElse(null);
     }
 
 

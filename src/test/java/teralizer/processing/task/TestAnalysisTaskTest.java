@@ -192,6 +192,34 @@ public class TestAnalysisTaskTest {
     }
 
     @Example
+    void hamcrestAssertThatStoresRecipeFromActualArgument() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\n"
+                + "public class SubjectTest {\n"
+                + "  static int add(int left, int right) { return left + right; }\n"
+                + "  public void t() {\n"
+                + "    org.junit.Assert.assertThat(add(3, 4), org.hamcrest.CoreMatchers.is(7));\n"
+                + "  }\n"
+                + "}\n"
+        );
+        RecordingStore store = new RecordingStore();
+
+        task().createAssertionRecords(testMethod, store.dsl(), new Gson(), new FocalTypeResolver());
+
+        AssertionRecord record = store.assertions.get(0);
+        GeneralizationRecipe recipe = GeneralizationRecipe.fromJson(new Gson(), record.getGeneralizationRecipe());
+        Assert.assertEquals("int", recipe.getOracleExpressionType());
+        GeneralizationRecipe.Resolved resolved = recipe.resolveAgainst(testMethod, testMethod.getFactory().getModel().getRootPackage());
+        Assert.assertTrue(resolved.getOracleExpression() instanceof CtInvocation<?>);
+        Assert.assertEquals("add", ((CtInvocation<?>) resolved.getOracleExpression()).getExecutable().getSimpleName());
+        Assert.assertEquals(2, resolved.getInputs().size());
+        Assert.assertEquals("left", resolved.getInputs().get(0).toMethodParameter().getName());
+        Assert.assertEquals("3", resolved.getInputs().get(0).toMethodArgument().getValue());
+        Assert.assertEquals("right", resolved.getInputs().get(1).toMethodParameter().getName());
+        Assert.assertEquals("4", resolved.getInputs().get(1).toMethodArgument().getValue());
+    }
+
+    @Example
     void storesSemanticRecordForEachAssertion() {
         CtMethod<?> testMethod = testMethodFromSource(
             "package smoke;\n"

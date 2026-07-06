@@ -9,6 +9,7 @@ import net.jqwik.api.Example;
 import org.apache.velocity.app.VelocityEngine;
 import org.junit.Assert;
 import spoon.Launcher;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
@@ -83,6 +84,41 @@ public class GeneralizedTestBuilderTest {
         Assert.assertTrue(generalized.getNestedTypes().stream().anyMatch(type -> type.getSimpleName().equals("TestParametersSupplier")));
         Assert.assertTrue(generalized.getNestedTypes().stream().anyMatch(type -> type.getSimpleName().equals("FirstValueArbitrary")));
         Assert.assertTrue(generalized.getNestedTypes().stream().anyMatch(type -> type.getSimpleName().equals("JqwikValueRecorder")));
+    }
+
+    @Example
+    void symbolicPlanRewritesHamcrestMatcherExpectedExpression() {
+        Scenario scenario = hamcrestScenario();
+        Model inputModel = new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant(0L, TypeDomain.INTEGER));
+        Model outputModel = new Variable("x", TypeDomain.INTEGER);
+        MethodParameter parameter = new MethodParameter("int", "x");
+        List<MethodParameter> parameters = Collections.singletonList(parameter);
+        Map<String, Value> arguments = Collections.singletonMap("x", new PrimitiveValue("int", 2));
+        ModelToJavaTransformer transformer = new ModelToJavaTransformer(Collections.singletonMap("x", "int"));
+        String inputJava = transformer.transformPredicate(inputModel, Collections.singleton("x"));
+        String outputJava = transformer.transform(outputModel);
+        InputGenerationPlan plan = new InputGenerationPlanner().plan(parameters, arguments, inputModel);
+
+        CtClass<?> generalized = build(
+            scenario,
+            new GeneralizedTestBuilder.Plan(
+                GeneralizationAlgorithm.IMPROVED,
+                parameters,
+                arguments,
+                inputJava,
+                plan,
+                CapturedOutput.ofReturnValue(new PrimitiveValue("int", 2)),
+                outputJava,
+                100,
+                FirstValueArbitraryFactory.createFirstValueArbitraryClass(velocityEngine()),
+                JqwikValueRecorderFactory.createRecorderClass(
+                    velocityEngine(), Paths.get("jqwik-data"), 7L, 101L, "IMPROVED_100_TRIES", "returnsInput")
+            )
+        );
+
+        String generated = generalized.getMethodsByName("returnsInput").get(0).toString();
+        Assert.assertTrue(generated, generated.contains(
+            "org.junit.Assert.assertThat(new example.Subject().id(_p_.x), org.hamcrest.CoreMatchers.is((int) (_p_.x)))"));
     }
 
     @Example
@@ -207,6 +243,31 @@ public class GeneralizedTestBuilderTest {
         return new Scenario(launcher, testClass, testMethod, assertion, recipe);
     }
 
+    private static Scenario hamcrestScenario() {
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(HAMCREST_SOURCE, "SubjectTest.java"));
+        launcher.buildModel();
+        CtClass<?> testClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest"))
+            .get(0);
+        CtClass<?> subjectClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "Subject"))
+            .get(0);
+        CtMethod<?> testMethod = testClass.getMethodsByName("returnsInput").get(0);
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtExpression<?> actual = TestAnalysis.normalizedAssertion(assertion).get().getActualExpression();
+        CtInvocation<?> testedCall = (CtInvocation<?>) actual;
+        CtMethod<?> testedMethod = subjectClass.getMethodsByName("id").get(0);
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(
+            testedMethod,
+            testedCall,
+            GeneralizableInput.derive(testedMethod, testedCall),
+            testedMethod.getType().getQualifiedName()
+        );
+        return new Scenario(launcher, testClass, testMethod, assertion, recipe);
+    }
+
     private static VelocityEngine velocityEngine() {
         Properties properties = new Properties();
         properties.setProperty("resource.loader", "file");
@@ -222,6 +283,17 @@ public class GeneralizedTestBuilderTest {
         + "public class SubjectTest {\n"
         + "  @org.junit.Test public void returnsInput() {\n"
         + "    org.junit.Assert.assertEquals(2, new Subject().id(2));\n"
+        + "  }\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  int id(int x) { return x; }\n"
+        + "}\n";
+
+    private static final String HAMCREST_SOURCE = ""
+        + "package example;\n"
+        + "public class SubjectTest {\n"
+        + "  @org.junit.Test public void returnsInput() {\n"
+        + "    org.junit.Assert.assertThat(new Subject().id(2), org.hamcrest.CoreMatchers.is(2));\n"
         + "  }\n"
         + "}\n"
         + "class Subject {\n"

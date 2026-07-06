@@ -9,6 +9,7 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.reflect.factory.Factory;
 import teralizer.util.Configuration;
 
 public class TestAnalysis {
@@ -17,7 +18,9 @@ public class TestAnalysis {
         createAssertEqualsIndexTable();
     private static final Map<AssertionIndexKey, AssertionIndexes> CONDITION_INDEXES =
         createConditionIndexTable();
-
+    private static final String ASSERT_THAT = "assertThat";
+    private static final String HAMCREST_MATCHER_ASSERT = "org.hamcrest.MatcherAssert";
+    private static final String HAMCREST_PACKAGE = "org.hamcrest.";
 
     // JUnit 4:
     //
@@ -108,7 +111,68 @@ public class TestAnalysis {
     }
 
     public static boolean isGeneralizable(CtInvocation<?> assertionInvocation) {
-        return isGeneralizable(assertionInvocation.getExecutable().getSimpleName());
+        return normalizedAssertion(assertionInvocation).isPresent();
+    }
+
+    public static Optional<NormalizedAssertion> normalizedAssertion(CtInvocation<?> assertion) {
+        if (assertion == null || !isAssertion(assertion)) {
+            return Optional.empty();
+        }
+        List<CtExpression<?>> arguments = assertion.getArguments();
+        AssertionFramework framework = assertionFrameworkOrNull(assertion);
+
+        switch (assertion.getExecutable().getSimpleName()) {
+            case Configuration.ASSERT_EQUALS: {
+                if (framework == null) {
+                    return Optional.empty();
+                }
+                AssertionIndexes indexes = assertEqualsIndexes(assertion, framework, arguments.size());
+                return Optional.of(new NormalizedAssertion(
+                    AssertionKind.EQUALITY,
+                    arguments.get(indexes.actualIndex().get()),
+                    arguments.get(indexes.expectedIndex().get()),
+                    assertion,
+                    indexes.expectedIndex().get()));
+            }
+            case Configuration.ASSERT_TRUE: {
+                if (framework == null) {
+                    return Optional.empty();
+                }
+                AssertionIndexes indexes = conditionIndexes(assertion, framework, arguments.size());
+                return Optional.of(new NormalizedAssertion(
+                    AssertionKind.BOOLEAN_TRUE,
+                    arguments.get(indexes.actualIndex().get()),
+                    null,
+                    null,
+                    NO_INDEX));
+            }
+            case Configuration.ASSERT_FALSE: {
+                if (framework == null) {
+                    return Optional.empty();
+                }
+                AssertionIndexes indexes = conditionIndexes(assertion, framework, arguments.size());
+                return Optional.of(new NormalizedAssertion(
+                    AssertionKind.BOOLEAN_FALSE,
+                    arguments.get(indexes.actualIndex().get()),
+                    null,
+                    null,
+                    NO_INDEX));
+            }
+            case Configuration.ASSERT_THROWS:
+                if (framework != AssertionFramework.JUNIT5 || arguments.isEmpty()) {
+                    return Optional.empty();
+                }
+                return Optional.of(new NormalizedAssertion(
+                    AssertionKind.THROWS,
+                    null,
+                    arguments.get(0),
+                    assertion,
+                    0));
+            case ASSERT_THAT:
+                return normalizedAssertThat(assertion);
+            default:
+                return Optional.empty();
+        }
     }
 
     public static boolean isAssertion(CtInvocation<?> invocation) {
@@ -120,36 +184,41 @@ public class TestAnalysis {
         }
 
         String qualifiedName = declaringType.getQualifiedName();
-        return qualifiedName.equals(Configuration.JUNIT4_ASSERTION_PACKAGE) || qualifiedName.equals(Configuration.JUNIT5_ASSERTION_PACKAGE);
+        return qualifiedName.equals(Configuration.JUNIT4_ASSERTION_PACKAGE)
+            || qualifiedName.equals(Configuration.JUNIT5_ASSERTION_PACKAGE)
+            || qualifiedName.equals(HAMCREST_MATCHER_ASSERT);
     }
 
     public static Optional<Integer> getActualParameterIndex(CtInvocation<?> assertion) {
+        String assertionName = assertion.getExecutable().getSimpleName();
+        if (ASSERT_THAT.equals(assertionName)) {
+            return Optional.empty();
+        }
         AssertionFramework framework = assertionFramework(assertion);
         int argumentCount = assertion.getArguments().size();
 
-        switch (assertion.getExecutable().getSimpleName()) {
+        switch (assertionName) {
             case Configuration.ASSERT_EQUALS:
                 return assertEqualsIndexes(assertion, framework, argumentCount).actualIndex();
             case Configuration.ASSERT_TRUE:
             case Configuration.ASSERT_FALSE:
-                AssertionIndexes conditionIndexes = CONDITION_INDEXES.get(
-                    new AssertionIndexKey(framework, argumentCount, false));
-                if (conditionIndexes == null) {
-                    throw unexpectedParameterCount(assertion);
-                }
-                return conditionIndexes.actualIndex();
+                return conditionIndexes(assertion, framework, argumentCount).actualIndex();
             default:
                 return Optional.empty();
         }
     }
 
     public static Optional<Integer> getExpectedParameterIndex(CtInvocation<?> assertion) {
+        String assertionName = assertion.getExecutable().getSimpleName();
+        if (ASSERT_THAT.equals(assertionName)) {
+            return Optional.empty();
+        }
         AssertionFramework framework = assertionFramework(assertion);
         int argumentCount = assertion.getArguments().size();
 
-        if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_EQUALS)) {
+        if (assertionName.equals(Configuration.ASSERT_EQUALS)) {
             return assertEqualsIndexes(assertion, framework, argumentCount).expectedIndex();
-        } else if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
+        } else if (assertionName.equals(Configuration.ASSERT_THROWS)) {
             if (framework == AssertionFramework.JUNIT4) {
                 throw new RuntimeException("Unexpected JUnit 4 assertion:\n" + assertion);
             } else {
@@ -172,6 +241,91 @@ public class TestAnalysis {
         return indexes;
     }
 
+    private static AssertionIndexes conditionIndexes(
+        CtInvocation<?> assertion,
+        AssertionFramework framework,
+        int argumentCount
+    ) {
+        AssertionIndexes indexes = CONDITION_INDEXES.get(
+            new AssertionIndexKey(framework, argumentCount, false));
+        if (indexes == null) {
+            throw unexpectedParameterCount(assertion);
+        }
+        return indexes;
+    }
+
+    private static Optional<NormalizedAssertion> normalizedAssertThat(CtInvocation<?> assertion) {
+        List<CtExpression<?>> arguments = assertion.getArguments();
+        int actualIndex;
+        int matcherIndex;
+        if (arguments.size() == 2) {
+            actualIndex = 0;
+            matcherIndex = 1;
+        } else if (arguments.size() == 3) {
+            actualIndex = 1;
+            matcherIndex = 2;
+        } else {
+            return Optional.empty();
+        }
+
+        CtExpression<?> matcherExpression = arguments.get(matcherIndex);
+        if (!(matcherExpression instanceof CtInvocation<?>)) {
+            return Optional.empty();
+        }
+        Optional<ExpectedExpressionSite> expected = hamcrestEqualityExpected((CtInvocation<?>) matcherExpression);
+        if (!expected.isPresent()) {
+            return Optional.empty();
+        }
+        ExpectedExpressionSite site = expected.get();
+        return Optional.of(new NormalizedAssertion(
+            AssertionKind.EQUALITY,
+            arguments.get(actualIndex),
+            site.expression,
+            site.owner,
+            site.argumentIndex));
+    }
+
+    private static Optional<ExpectedExpressionSite> hamcrestEqualityExpected(CtInvocation<?> matcher) {
+        if (!isHamcrestMatcherFactory(matcher)) {
+            return Optional.empty();
+        }
+        List<CtExpression<?>> arguments = matcher.getArguments();
+        if (arguments.size() != 1) {
+            return Optional.empty();
+        }
+
+        String name = matcher.getExecutable().getSimpleName();
+        CtExpression<?> onlyArgument = arguments.get(0);
+        if ("equalTo".equals(name)) {
+            return Optional.of(new ExpectedExpressionSite(onlyArgument, matcher, 0));
+        }
+        if (!"is".equals(name)) {
+            return Optional.empty();
+        }
+        if (onlyArgument instanceof CtInvocation<?>) {
+            CtInvocation<?> nested = (CtInvocation<?>) onlyArgument;
+            if (isHamcrestMatcherFactory(nested)) {
+                return "equalTo".equals(nested.getExecutable().getSimpleName())
+                    ? hamcrestEqualityExpected(nested)
+                    : Optional.empty();
+            }
+        }
+        return Optional.of(new ExpectedExpressionSite(onlyArgument, matcher, 0));
+    }
+
+    private static boolean isHamcrestMatcherFactory(CtInvocation<?> invocation) {
+        CtExecutableReference<?> executable = invocation.getExecutable();
+        if (executable == null) {
+            return false;
+        }
+        String name = executable.getSimpleName();
+        if (!"is".equals(name) && !"equalTo".equals(name)) {
+            return false;
+        }
+        CtTypeReference<?> declaringType = executable.getDeclaringType();
+        return declaringType != null && declaringType.getQualifiedName().startsWith(HAMCREST_PACKAGE);
+    }
+
     private static AssertionFramework assertionFramework(CtInvocation<?> assertion) {
         if (isJUnit4Assertion(assertion)) {
             return AssertionFramework.JUNIT4;
@@ -180,6 +334,16 @@ public class TestAnalysis {
             return AssertionFramework.JUNIT5;
         }
         throw new RuntimeException("Not a JUnit 4 or 5 assertion:\n" + assertion);
+    }
+
+    private static AssertionFramework assertionFrameworkOrNull(CtInvocation<?> assertion) {
+        if (isJUnit4Assertion(assertion)) {
+            return AssertionFramework.JUNIT4;
+        }
+        if (isJUnit5Assertion(assertion)) {
+            return AssertionFramework.JUNIT5;
+        }
+        return null;
     }
 
     private static boolean isDoubleDelta(CtInvocation<?> assertion) {
@@ -241,6 +405,71 @@ public class TestAnalysis {
             new AssertionIndexes(NO_INDEX, actualIndex));
     }
 
+    public enum AssertionKind {
+        EQUALITY,
+        BOOLEAN_TRUE,
+        BOOLEAN_FALSE,
+        THROWS
+    }
+
+    public static final class NormalizedAssertion {
+        private final AssertionKind kind;
+        private final CtExpression<?> actualExpression;
+        private final CtExpression<?> expectedExpression;
+        private final CtInvocation<?> expectedArgumentOwner;
+        private final int expectedArgumentIndex;
+
+        private NormalizedAssertion(
+            AssertionKind kind,
+            CtExpression<?> actualExpression,
+            CtExpression<?> expectedExpression,
+            CtInvocation<?> expectedArgumentOwner,
+            int expectedArgumentIndex
+        ) {
+            this.kind = kind;
+            this.actualExpression = actualExpression;
+            this.expectedExpression = expectedExpression;
+            this.expectedArgumentOwner = expectedArgumentOwner;
+            this.expectedArgumentIndex = expectedArgumentIndex;
+        }
+
+        public AssertionKind getKind() {
+            return this.kind;
+        }
+
+        public CtExpression<?> getActualExpression() {
+            return this.actualExpression;
+        }
+
+        public CtExpression<?> getExpectedExpression() {
+            return this.expectedExpression;
+        }
+
+        public boolean hasReplaceableExpectedExpression() {
+            return this.expectedArgumentOwner != null && this.expectedArgumentIndex >= 0;
+        }
+
+        public void replaceExpectedExpression(Factory factory, String expression) {
+            if (!hasReplaceableExpectedExpression()) {
+                return;
+            }
+            this.expectedArgumentOwner.getArguments()
+                .set(this.expectedArgumentIndex, factory.Code().createCodeSnippetExpression(expression));
+        }
+    }
+
+    private static final class ExpectedExpressionSite {
+        private final CtExpression<?> expression;
+        private final CtInvocation<?> owner;
+        private final int argumentIndex;
+
+        private ExpectedExpressionSite(CtExpression<?> expression, CtInvocation<?> owner, int argumentIndex) {
+            this.expression = expression;
+            this.owner = owner;
+            this.argumentIndex = argumentIndex;
+        }
+    }
+
     private enum AssertionFramework {
         JUNIT4,
         JUNIT5
@@ -296,11 +525,18 @@ public class TestAnalysis {
     }
 
     public static boolean isJUnit4Assertion(CtInvocation<?> assertion) {
-        return assertion.getExecutable().getDeclaringType().getQualifiedName().equals(Configuration.JUNIT4_ASSERTION_PACKAGE);
+        return Configuration.JUNIT4_ASSERTION_PACKAGE.equals(declaringTypeName(assertion));
     }
 
     public static boolean isJUnit5Assertion(CtInvocation<?> assertion) {
-        return assertion.getExecutable().getDeclaringType().getQualifiedName().equals(Configuration.JUNIT5_ASSERTION_PACKAGE);
+        return Configuration.JUNIT5_ASSERTION_PACKAGE.equals(declaringTypeName(assertion));
+    }
+
+    private static String declaringTypeName(CtInvocation<?> assertion) {
+        if (assertion == null || assertion.getExecutable() == null || assertion.getExecutable().getDeclaringType() == null) {
+            return null;
+        }
+        return assertion.getExecutable().getDeclaringType().getQualifiedName();
     }
 
     public static boolean isContainedInLoop(CtElement element) {

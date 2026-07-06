@@ -86,6 +86,19 @@ public class MethodUnderTestResolverTest {
     }
 
     @Example
+    void hamcrestAssertThatResolvesProducerFromActualArgument() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertThat(new Subject().gcd(6, 9), org.hamcrest.CoreMatchers.is(3)); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Status.RESOLVED, r.getStatus());
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals(MutResolution.Signal.DIRECT_ACTUAL_CALL, r.getDecidingSignal());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
     void libraryPick_isCharacterizationOnly() {
         MutResolution r = resolve(
             "public class SubjectTest {\n"

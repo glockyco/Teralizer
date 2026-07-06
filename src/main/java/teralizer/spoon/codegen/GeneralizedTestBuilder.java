@@ -231,10 +231,9 @@ public final class GeneralizedTestBuilder {
             ? "((" + plan.getOutputJava() + ") != 0)"
             : "(" + outputType + ") (" + plan.getOutputJava() + ")";
 
-        Optional<Integer> expectedParameterIndex = TestAnalysis.getExpectedParameterIndex(assertion);
-        if (expectedParameterIndex.isPresent()) {
-            List<CtExpression<?>> assertArguments = assertion.getArguments();
-            assertArguments.set(expectedParameterIndex.get(), factory.Code().createCodeSnippetExpression(expectedExpression));
+        Optional<TestAnalysis.NormalizedAssertion> assertionView = TestAnalysis.normalizedAssertion(assertion);
+        if (assertionView.isPresent() && assertionView.get().hasReplaceableExpectedExpression()) {
+            assertionView.get().replaceExpectedExpression(factory, expectedExpression);
         }
     }
 
@@ -244,11 +243,12 @@ public final class GeneralizedTestBuilder {
         }
         String outputType = plan.getOutput().getReturnValue().getJavaType();
         boolean isBooleanOutput = outputType.equals("boolean") || outputType.equals("java.lang.Boolean");
-        if (!isBooleanOutput || TestAnalysis.getExpectedParameterIndex(assertion).isPresent()) {
+        Optional<TestAnalysis.NormalizedAssertion> assertionView = TestAnalysis.normalizedAssertion(assertion);
+        if (!isBooleanOutput || (assertionView.isPresent() && assertionView.get().hasReplaceableExpectedExpression())) {
             return;
         }
         Optional<Integer> actualParameterIndex = TestAnalysis.getActualParameterIndex(assertion);
-        if (!actualParameterIndex.isPresent()) {
+        if (!actualParameterIndex.isPresent() || !assertionView.isPresent() || assertionView.get().getActualExpression() == null) {
             return;
         }
         String expectedExpression = "((" + plan.getOutputJava() + ") != 0)";

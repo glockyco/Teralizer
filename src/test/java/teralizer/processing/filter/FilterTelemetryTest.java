@@ -20,8 +20,10 @@ import org.jooq.tools.jdbc.MockResult;
 import org.junit.Assert;
 import spoon.Launcher;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
+import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.compiler.VirtualFile;
 import teralizer.domain.MethodArgument;
@@ -66,10 +68,27 @@ public class FilterTelemetryTest {
         AssertionRecord record = new AssertionRecord();
         record.setAssertionName("assertNotNull");
 
-        FilterResult result = new UnsupportedAssertionFilter(record).check();
+        FilterResult result = new UnsupportedAssertionFilter(null, record).check();
 
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.UNSUPPORTED_ASSERTION_ASSERT_NOT_NULL, result.getReasonCode());
+    }
+
+    @Example
+    void unsupportedAssertionFilterAcceptsEqualityIsomorphicAssertThat() throws Exception {
+        FilterResult result = unsupportedAssertionResult(
+            "org.junit.Assert.assertThat(new Subject().id(1), org.hamcrest.CoreMatchers.is(1));");
+
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
+    void unsupportedAssertionFilterKeepsAssertThatReasonCodeForOtherMatchers() throws Exception {
+        FilterResult result = unsupportedAssertionResult(
+            "org.junit.Assert.assertThat(new Subject().id(1), org.hamcrest.CoreMatchers.notNullValue());");
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.UNSUPPORTED_ASSERTION_ASSERT_THAT, result.getReasonCode());
     }
 
     @Example
@@ -117,7 +136,7 @@ public class FilterTelemetryTest {
         AssertionRecord record = new AssertionRecord();
         record.setAssertionName("fail");
 
-        FilterResult result = new UnsupportedAssertionFilter(record).check();
+        FilterResult result = new UnsupportedAssertionFilter(null, record).check();
 
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.UNSUPPORTED_ASSERTION_FAIL, result.getReasonCode());
@@ -279,4 +298,27 @@ public class FilterTelemetryTest {
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.TEST_NOT_PASSING, result.getReasonCode());
     }
+    private static FilterResult unsupportedAssertionResult(String assertionSource) throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(
+            "public class SubjectTest {\n"
+                + "  public void t() { " + assertionSource + " }\n"
+                + "}\n"
+                + "class Subject { int id(int x) { return x; } }\n",
+            "SubjectTest.java"));
+        launcher.buildModel();
+        CtClass<?> testClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest")).get(0);
+        CtMethod<?> testMethod = testClass.getMethodsByName("t").get(0);
+        CtInvocation<?> assertion = testMethod.getElements(new TypeFilter<>(CtInvocation.class)).stream()
+            .filter(invocation -> "assertThat".equals(invocation.getExecutable().getSimpleName()))
+            .findFirst()
+            .get();
+        AssertionRecord record = new AssertionRecord();
+        record.setAssertionName("assertThat");
+        record.setAssertionAbsolutePath(assertion.getPath().toString());
+        return new UnsupportedAssertionFilter(launcher, record).check();
+    }
+
 }

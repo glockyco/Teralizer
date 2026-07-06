@@ -291,11 +291,9 @@ public class TestAnalysisTask extends AbstractTask {
     }
 
     private static CtExpression<?> actualExpressionFor(CtInvocation<?> assertionCall) {
-        Optional<Integer> actualIndex = TestAnalysis.getActualParameterIndex(assertionCall);
-        if (!actualIndex.isPresent() || actualIndex.get() < 0 || actualIndex.get() >= assertionCall.getArguments().size()) {
-            return null;
-        }
-        return assertionCall.getArguments().get(actualIndex.get());
+        return TestAnalysis.normalizedAssertion(assertionCall)
+            .map(TestAnalysis.NormalizedAssertion::getActualExpression)
+            .orElse(null);
     }
 
     private static boolean containsElement(CtExpression<?> expression, CtInvocation<?> element) {
