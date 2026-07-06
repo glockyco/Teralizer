@@ -17,9 +17,6 @@ here except gradle-touching smokes.
 
 ### Dead weight (zero references, evidence checked)
 
-- `project-configs/extended/` — 1,161 TRACKED configs pointing at remote GitHub URLs. The
-  predecessor of `project-configs/replication/extended/` (local roots), which every script
-  uses. Nothing references the old set.
 - `project-configs/examples/` (4 files), `test.conf`, `commons-utils-pit-defaults.conf` —
   all untracked, zero references. The top-level `example-*.conf` set supersedes `examples/`.
 - `project-configs/evaluation/` — empty directory, zero references.
@@ -61,10 +58,12 @@ here except gradle-touching smokes.
 
 - `project-configs/` mixes four species with no signpost: composable profiles
   (`reporeapers-rerun.conf`, `verification.conf`), self-contained lane configs
-  (`jarvis-scoreboard/`), per-project corpora (`replication/extended/`, `sentinel/`,
-  `verification/`, `hotspot/`, `fusion-spike/`), and historical sets (`primary/`,
-  `spikes/`). A physical restructure would break paths in archived plans, scripts, and
-  operator muscle memory. A manifest README fixes discoverability at zero risk.
+  (`jarvis-scoreboard/`), per-project corpora, and a generation chain that is easy to
+  misread as dead: `extended/` (remote GitHub URLs) is the SOURCE corpus that
+  `replication/scripts/generate-replication-configs.sh` transforms into
+  `replication/extended/` (local roots), and `replication/scripts/run.sh` falls back to it.
+  A physical restructure would break paths in archived plans, scripts, and operator muscle
+  memory. A manifest README fixes discoverability at zero risk.
 - `data/` mixes live run roots, old run roots, fixture caches, and ~839 loose
   `github_com_*` output dirs from pre-profile eras. Deletion is a provenance decision
   (old snapshots may reference them), so: document now, decide deletion after the paper.
@@ -76,7 +75,6 @@ here except gradle-touching smokes.
 
 ### Tier 1 — do now, no gradle contention with the live run
 
-- [ ] Delete `project-configs/extended/` (tracked, 1,161 files).
 - [ ] Delete untracked config litter: `examples/`, `test.conf`,
       `commons-utils-pit-defaults.conf`, `evaluation/`.
 - [ ] Delete `run_timeout_retry.sh` + `generate_timeout_configs.sh` (superseded by guarded
@@ -90,34 +88,41 @@ here except gradle-touching smokes.
 - [ ] Fix the JARVIS skill's dead env-var instructions.
 - [ ] Drop the `notebooks/legacy/` exclusion from `analysis/pyproject.toml` and the AGENTS.md
       sentence documenting it.
-- [ ] Add `project-configs/README.md` (the four config species, composition rules, which
-      driver consumes which directory).
+- [ ] Add `project-configs/README.md` (the config species, composition rules, which driver
+      consumes which directory, and each lane's retirement trigger). Must state the
+      `extended/` → `replication/extended/` generation chain.
+- [ ] Normalize the JARVIS run-target env style inside the db-lifecycle commit: expose
+      `JARVIS_DB`/`JARVIS_DATA_DIR` overrides the way `REPOREAPERS_DB`/`VERIFICATION_DB`
+      work, defaults unchanged.
 - [ ] Tighten `.gitignore`: `.idea/`, `*.iml`, `project-configs/timeout-retry-*.conf`.
 - [ ] Add a data-layout note (`data/` ownership per driver, retention boundaries) to
       `docs/database.md` or a short `data/README.md`.
 
-### Tier 2 — already queued elsewhere, sequencing confirmed
+### Tier 2 — sequencing decided
 
-- Report extension + telemetry consumers + classifier-regex reconciliation: post-run task in
-  the rerun plan (the three regex classifiers collapse into telemetry queries there).
-- `input_topology.py` retirement: after the R2 verdict consumes its successor telemetry.
-- Replication `run.sh` supervisor adoption + root-doc labeling + estimate corrections:
-  replication plan.
+- Replication-package work (supervisor adoption in `replication/scripts/run.sh`, Docker-mode
+  kill semantics, root-doc labeling, estimate corrections): pull forward to NOW. Edit-only
+  against the frozen-elsewhere artifact, no gradle contention. The local-mode smoke waits
+  for the corpus run to finish, so implementation lands now and its E2E check runs tonight.
+- Report extension + telemetry consumers + classifier-regex reconciliation: stays post-run.
+  The queries only mean something against the fresh snapshot, and the three regex
+  classifiers collapse into telemetry queries in the same pass.
+- `input_topology.py` retirement: stays gated on the R2 verdict, which consumes its
+  successor telemetry from the running rerun.
 
-### Tier 3 — operator decisions
+### Tier 3 — operator decisions (resolved)
 
-- [ ] Delete `database/db.sqlite` (613 MB) and `data-dev.zip` (231 MB)? Frees ~0.85 GB on a
-      95%-full disk. Unrecoverable.
-- [ ] The ~839 loose `data/github_com_*` dirs: keep-and-document (recommended until the
-      paper ships) vs archive vs delete.
-- [ ] Env-var style normalization (expose `JARVIS_DB` like `REPOREAPERS_DB`, or document the
-      pinning as intentional): cosmetic, cheapest done inside the db-lifecycle commit or
-      skipped.
+- `database/db.sqlite` and `data-dev.zip`: KEEP for now (operator call, 2026-07-06).
+- The ~839 loose `data/github_com_*` dirs: KEEP; the data-layout note documents them.
 
 ## Explicitly recommended against
 
 - Physically restructuring `project-configs/` into `profiles/`/`lanes/`/`corpora/`. Breaks
   archived-plan references, driver defaults, and documented commands for a discoverability
   win the manifest README already provides.
-- Deleting `fusion-spike/`, `spikes/`, `primary/`, `hotspot/` config sets. They are evidence
-  or reproduction lanes referenced by plans. The manifest marks them historical instead.
+- Deleting `extended/`, `fusion-spike/`, `spikes/`, `primary/`, `hotspot/`. None are dead:
+  `extended/` is the replication corpus generation source and `run.sh` fallback. `primary/`
+  is consumed by `replication/scripts/run.sh --dataset primary`. `fusion-spike/` is the
+  verification skill's corpus-claims tier. `hotspot/` backs the queued antiaction NPE trace.
+  `spikes/` retires with the pending R1/R2 verdict. The manifest states each role and
+  retirement trigger.
