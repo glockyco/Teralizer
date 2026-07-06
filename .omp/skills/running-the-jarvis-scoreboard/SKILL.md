@@ -45,45 +45,24 @@ against `postgres_dev` / `postgres_test` / `_replication` (read-only; never muta
    for user "postgres"`. Switch to `postgres-teralizer` (ask before stopping another
    project's container).
 
-2. **Materialize fixtures** (gitignored, not cached — re-clone is fast):
+2. **Run** (long: SPF + PIT + JaCoCo on both fixtures — minutes; run in the background).
+   The runner materializes fixtures, resets the scratch DB (including the template1
+   collation-mismatch fallback), and sweeps stale generated tests itself:
    ```bash
-   bash scripts/prepare-jarvis-scoreboard-fixtures.sh
+   bash scripts/run-jarvis-scoreboard.sh --prepare-fixtures --reset-db
    ```
+   DB and data-dir are pinned internally (`postgres_jarvis_scoreboard`,
+   `data/jarvis-scoreboard`); `JARVIS_DB`/`JARVIS_DATA_DIR` override them for scratch
+   experiments. Interruption is safe: the runner kills the whole gradle process group.
 
-3. **Reset the scratch DB** (clean run = clean DB; never append onto a prior run):
-   ```bash
-   docker exec postgres-teralizer psql -U postgres -d postgres \
-     -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='postgres_jarvis_scoreboard' AND pid<>pg_backend_pid();"
-   docker exec postgres-teralizer psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS postgres_jarvis_scoreboard;"
-   docker exec postgres-teralizer psql -U postgres -d postgres -c "CREATE DATABASE postgres_jarvis_scoreboard;"
-   ```
-   If CREATE fails with `template database "template1" has a collation version
-   mismatch` (after a glibc upgrade), refresh once then retry CREATE:
-   ```bash
-   docker exec postgres-teralizer psql -U postgres -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;"
-   ```
-   **If the previous run failed**, also delete stale generated tests — a failed
-   `BUILD_PROJECT_GENERALIZED` drops the cleanup task, leaving broken files that break
-   the rebuild:
-   ```bash
-   rm -f data/jarvis-scoreboard/fixtures/*/src/test/java/org/apache/commons/*/jarvis/_*Generalized*_Test.java
-   ```
-
-4. **Run** (long: SPF + PIT + JaCoCo on both fixtures — minutes; run in the background).
-   The script defaults the three env vars; pass them explicitly to be safe:
-   ```bash
-   DB_NAME=postgres_jarvis_scoreboard DATA_DIR=data/jarvis-scoreboard DATASET_VARIANT=jarvis \
-     bash scripts/run-jarvis-scoreboard.sh
-   ```
-
-5. **Verify the run actually succeeded** (not just the gradle exit — see Core trap):
+3. **Verify the run actually succeeded** (not just the gradle exit — see Core trap):
    ```bash
    grep -E "ERROR t.processing.ProcessingPipeline|terminated with exit code|BUILD FAILURE" <run-log>
    ```
    On a pipeline build failure, read the per-project Maven logs:
    `data/jarvis-scoreboard/<fixture>/project-id-N/command-data/<step>.<variant>.*.{output,error}.txt`.
 
-6. **Aggregate and compare.** Run the scorer from the repo root (it chdirs so the relative
+4. **Aggregate and compare.** Run the scorer from the repo root (it chdirs so the relative
    value-log paths resolve): `uv run --directory analysis python -m teralizer.jarvis_scoreboard`
    for the Table-2 head-to-head, `--sweep` for the tries sweep, `--census` for breadth. Interpret
    the output against `docs/plans/2026-06-30-jarvis-comparison.md`; the raw-bits `Precision` row
