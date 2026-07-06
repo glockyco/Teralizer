@@ -123,6 +123,18 @@ public class FilterTelemetryTest {
     }
 
     @Example
+    void returnTypeFilterAcceptsExceptionRecipeOracleForTryFailCatch() throws Exception {
+        AssertionRecord record = new AssertionRecord();
+        record.setAssertionName("fail");
+        record.setTestedMethodReturnType("int");
+        record.setGeneralizationRecipe(exceptionRecipeJson("java.lang.IllegalArgumentException"));
+
+        FilterResult result = new ReturnTypeFilter(record).check();
+
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
     void excludedParentTestRecordsDependency() {
         TestRecord test = new TestRecord();
         test.setIsIncluded(false);
@@ -315,6 +327,18 @@ public class FilterTelemetryTest {
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.TEST_NOT_PASSING, result.getReasonCode());
     }
+    private static String exceptionRecipeJson(String oracleExpressionType) {
+        return "{"
+            + "\"version\":3,"
+            + "\"schema\":\"teralizer.generalization.recipe\","
+            + "\"oracleExpressionPath\":\"#body#statement[index=0]\","
+            + "\"oracleMethodPath\":\"#type[name=Subject]#method[signature=reject(int)]\","
+            + "\"oracleType\":\"int\","
+            + "\"oracleExpressionType\":\"" + oracleExpressionType + "\","
+            + "\"inputSites\":[]"
+            + "}";
+    }
+
     private static FilterResult unsupportedAssertionResult(String assertionSource) throws Exception {
         return unsupportedAssertionResult(assertionSource, "assertThat");
     }

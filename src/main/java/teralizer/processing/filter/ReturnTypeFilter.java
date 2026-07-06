@@ -39,6 +39,10 @@ public class ReturnTypeFilter extends AbstractFilter {
                 null, detail(returnType));
         }
 
+        if (recipePresent && isExceptionOracleAssertion()) {
+            return new FilterResult(this.getName(), FilterDecision.ACCEPT);
+        }
+
         if (!TypeCapability.supportsReturnValue(returnType)) {
             String reason = "Tested method has unsupported return type: " + this.assertionRecord.getTestedMethodQualifiedName();
             return new FilterResult(this.getName(), FilterDecision.REJECT, reason, FilterReasonCodes.UNSUPPORTED_RETURN_TYPE,
@@ -46,6 +50,11 @@ public class ReturnTypeFilter extends AbstractFilter {
         }
 
         return new FilterResult(this.getName(), FilterDecision.ACCEPT);
+    }
+
+    private boolean isExceptionOracleAssertion() {
+        String assertionName = this.assertionRecord.getAssertionName();
+        return "fail".equals(assertionName) || "assertThrows".equals(assertionName);
     }
 
     private static String detail(String returnType) {
