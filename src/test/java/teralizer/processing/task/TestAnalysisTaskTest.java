@@ -52,7 +52,7 @@ public class TestAnalysisTaskTest {
     }
 
     @Example
-    void resolvesInheritedTestMethodRelativePathAgainstDeclaringClass() {
+    void resolvesInheritedTestMethodThroughItsAbsolutePath() {
         Launcher launcher = new Launcher();
         launcher.addInputResource(new VirtualFile(
             "package smoke;\n"
@@ -72,7 +72,9 @@ public class TestAnalysisTaskTest {
         CtMethod<?> inherited = parent.getMethodsByName("inherited").get(0);
         TestRecord record = new TestRecord();
         record.setTestClassQualifiedName("smoke.SubjectTest");
-        record.setTestMethodQualifiedName("smoke.AbstractBase.inherited");
+        // The concrete run identity: the declaring class is reachable only through the path.
+        record.setTestMethodQualifiedName("smoke.SubjectTest.inherited");
+        record.setTestMethodAbsolutePath(inherited.getPath().toString());
         record.setTestMethodRelativePath(inherited.getPath().relativePath(parent).toString());
 
         CtMethod<?> resolved = TestMethodResolver.resolve(launcher.getFactory(), record);

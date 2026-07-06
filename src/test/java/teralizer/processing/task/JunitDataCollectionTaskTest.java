@@ -27,7 +27,7 @@ import teralizer.spoon.InheritedTestMethodScreens;
 
 public class JunitDataCollectionTaskTest {
     @Example
-    void inheritedTestMethodStoresDeclaringParentColumns() throws Exception {
+    void inheritedTestMethodKeepsConcreteIdentityAndDeclaringPaths() throws Exception {
         Scenario scenario = scenario(
             "package smoke;\n"
                 + "import org.junit.Test;\n"
@@ -44,7 +44,10 @@ public class JunitDataCollectionTaskTest {
 
         CtMethod<?> method = scenario.parent.getMethodsByName("inherited").get(0);
         Assert.assertEquals("smoke.SubjectTest", record.getTestClassQualifiedName());
-        Assert.assertEquals("smoke.AbstractBase.inherited", record.getTestMethodQualifiedName());
+        // The run identity stays the concrete subclass; the declaring class is reachable
+        // through the stored paths.
+        Assert.assertEquals("smoke.SubjectTest.inherited", record.getTestMethodQualifiedName());
+        Assert.assertEquals(method.getPath().toString(), record.getTestMethodAbsolutePath());
         Assert.assertEquals(method.getPath().relativePath(scenario.parent).toString(), record.getTestMethodRelativePath());
         Assert.assertTrue(record.getIsIncluded());
         Assert.assertNull(record.getExclusionInfo());
@@ -97,7 +100,7 @@ public class JunitDataCollectionTaskTest {
         update(scenario.factory, record);
 
         CtClass<?> middle = scenario.model.getElements(new NamedElementFilter<>(CtClass.class, "MiddleBase")).get(0);
-        Assert.assertEquals("smoke.MiddleBase.inherited", record.getTestMethodQualifiedName());
+        Assert.assertEquals("smoke.SubjectTest.inherited", record.getTestMethodQualifiedName());
         Assert.assertEquals(
             middle.getMethodsByName("inherited").get(0).getPath().relativePath(middle).toString(),
             record.getTestMethodRelativePath()

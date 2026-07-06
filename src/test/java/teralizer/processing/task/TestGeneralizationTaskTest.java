@@ -37,6 +37,7 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
+import teralizer.domain.CapturedInput;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.Constant;
 import teralizer.domain.Invocation;
@@ -61,14 +62,15 @@ import teralizer.transformer.SpecificationGson;
 
 public class TestGeneralizationTaskTest {
     @Example
-    void skipsConcreteReceiverWhenMappingInstanceMethodArguments() {
+    void mapsTestedMethodArgumentsByNameSkippingWrapperExtras() {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("double", "x"));
-        // SPF stores the instance receiver as the first input value. It is an opaque, unrenderable
-        // ReferenceValue that must be offset-skipped so the declared parameter maps to the real
-        // argument, never to the receiver.
-        List<Value> values = Arrays.asList(
-            new ReferenceValue("org.example.Subject"),
-            new PrimitiveValue("double", 2.0)
+        // The wrapper signature is [_target_?][inputs][lifted locals][scope-bound constructions].
+        // Only the generalizable inputs carry tested-parameter names, so mapping resolves by
+        // name and never by position.
+        List<CapturedInput> values = Arrays.asList(
+            new CapturedInput("_target_", new ReferenceValue("org.example.Subject")),
+            new CapturedInput("x", new PrimitiveValue("double", 2.0)),
+            new CapturedInput("_local_new_Marker_1", new ReferenceValue("java.lang.Object"))
         );
 
         Map<String, Value> mapped = GeneralizedTestBuilder.mapTestedMethodArguments(parameters, values);
@@ -76,6 +78,17 @@ public class TestGeneralizationTaskTest {
         Assert.assertEquals(1, mapped.size());
         Assert.assertEquals("double", mapped.get("x").getJavaType());
         Assert.assertEquals(Double.valueOf(2.0), ((PrimitiveValue) mapped.get("x")).getValue());
+    }
+
+    @Example
+    void missingCapturedNameFailsLoud() {
+        List<MethodParameter> parameters = Arrays.asList(new MethodParameter("int", "y"));
+        List<CapturedInput> values = Arrays.asList(
+            new CapturedInput("x", new PrimitiveValue("int", 1))
+        );
+
+        Assert.assertThrows(IllegalArgumentException.class,
+            () -> GeneralizedTestBuilder.mapTestedMethodArguments(parameters, values));
     }
 
     @Example
@@ -251,7 +264,7 @@ public class TestGeneralizationTaskTest {
         Path outputSpecification = root.resolve("output-specification.json");
         Files.write(
             inputValues,
-            specificationGson.toJson(Collections.singletonList(new PrimitiveValue("int", 2)), inputValuesType()).getBytes(StandardCharsets.UTF_8)
+            specificationGson.toJson(Collections.singletonList(new CapturedInput("x", new PrimitiveValue("int", 2))), inputValuesType()).getBytes(StandardCharsets.UTF_8)
         );
         ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
         Files.write(inputSpecification, modelToJsonTransformer.transform(inputModel).getBytes(StandardCharsets.UTF_8));
@@ -352,7 +365,10 @@ public class TestGeneralizationTaskTest {
         Path outputSpecification = root.resolve("output-specification.json");
         Files.write(
             inputValues,
-            specificationGson.toJson(Arrays.asList(new PrimitiveValue("int", 4), new PrimitiveValue("int", 1)), inputValuesType()).getBytes(StandardCharsets.UTF_8)
+            specificationGson.toJson(Arrays.asList(
+                new CapturedInput(inputs.get(0).toMethodParameter().getName(), new PrimitiveValue("int", 4)),
+                new CapturedInput(inputs.get(1).toMethodParameter().getName(), new PrimitiveValue("int", 1))
+            ), inputValuesType()).getBytes(StandardCharsets.UTF_8)
         );
         ModelToJsonTransformer modelToJsonTransformer = new ModelToJsonTransformer();
         Files.write(inputSpecification, modelToJsonTransformer.transform(inputModel).getBytes(StandardCharsets.UTF_8));
@@ -407,7 +423,7 @@ public class TestGeneralizationTaskTest {
     }
 
     private static Type inputValuesType() {
-        return new com.google.gson.reflect.TypeToken<List<Value>>() {}.getType();
+        return new com.google.gson.reflect.TypeToken<List<CapturedInput>>() {}.getType();
     }
 
 
