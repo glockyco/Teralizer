@@ -52,7 +52,7 @@ midpoint snapshot (read-only) and eyeball the output for internal consistency; t
 - [x] **Section 1 — funnel by reason code.** Replace the filter-name alias table with
       `filter_result.reason_code` counts (assertion- and test-scope), keeping the filter
       class as a secondary column.
-- [ ] **Section 2 — SPF loss rollup.** `jpf_extraction_summary` aggregated corpus-wide:
+- [x] **Section 2 — SPF loss rollup.** `jpf_extraction_summary` aggregated corpus-wide:
       scheduled → instrumented → succeeded → specs written, plus `failure_counts` JSONB
       unpacked into a ranked stable-cause table. Replaces the `task.info` free-text
       classifier. This table is the direct input for the P2 native-peer ranking.

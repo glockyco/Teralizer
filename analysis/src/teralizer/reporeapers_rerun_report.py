@@ -414,67 +414,57 @@ def get_missing_value_shapes(conn: Connection) -> pd.DataFrame:
     )
 
 
-def classify_assertion_failure_info(stage: str, info: str | None) -> str:
-    """Coarse root-cause bucket for assertion-level failed tasks."""
-    text_value = info or ""
-    if stage == "ADD_JPF_INSTRUMENTATION":
-        if "Failed to identify valid type for parameter _target_" in text_value:
-            return "unsupported receiver/_target_ type"
-        if "TestAnalysis.isJUnit4Assertion" in text_value:
-            return "instrumentation NPE in assertion cleanup"
-        return "other instrumentation failure"
-
-    if "Class.getProtectionDomain" in text_value:
-        return "missing JPF model: Class.getProtectionDomain"
-    if "Failed JPF execution due to exception in native peers" in text_value:
-        return "native peer exception"
-    if "UnsatisfiedLinkError" in text_value:
-        return "missing native peer / native method"
-    if "Unexpected initialization failure" in text_value:
-        return "library static init failure"
-    if (
-        "ClassNotFoundException: class not found: java.lang.NoSuchMethodException"
-        in text_value
-    ):
-        return "missing JPF model: NoSuchMethodException class"
-    if "NoSuchMethodError" in text_value:
-        return "JPF runtime method gap"
-    if "SEARCH_DEPTH_LIMIT" in text_value:
-        return "search depth limit"
-    if "ArithmeticException" in text_value:
-        return "uncaught arithmetic exception path"
-    if "NullPointerException" in text_value:
-        return "NPE during JPF/extraction"
-    return "other"
-
-
-def get_assertion_failure_causes(conn: Connection) -> pd.DataFrame:
-    """Categorize assertion-level failed instrumentation/SPF tasks."""
-    failures = _read_sql(
+def get_spf_extraction_rollup(conn: Connection) -> pd.DataFrame:
+    """Corpus-wide SPF extraction funnel from the per-test rollup telemetry."""
+    if not _table_exists(conn, "jpf_extraction_summary"):
+        return pd.DataFrame(
+            [{"note": _SKIP_NOTE.format(table="jpf_extraction_summary")}]
+        )
+    return _read_sql(
         conn,
         """
-        SELECT stage, info
-        FROM task
-        WHERE assertion_id IS NOT NULL
-          AND generalization_id IS NULL
-          AND status = 'FAILED'
+        SELECT
+            sum(assertions_scheduled) AS scheduled,
+            sum(assertions_instrumented) AS instrumented,
+            sum(assertions_jpf_succeeded) AS jpf_succeeded,
+            sum(assertions_jpf_failed) AS jpf_failed,
+            sum(assertions_with_input_spec) AS with_input_spec,
+            sum(assertions_with_output_spec) AS with_output_spec,
+            sum(assertions_with_complete_spec) AS with_complete_spec
+        FROM jpf_extraction_summary
         """,
     )
-    if failures.empty:
-        return pd.DataFrame(columns=["stage", "cause", "count"])
 
-    failures["cause"] = failures.apply(
-        lambda row: classify_assertion_failure_info(row["stage"], row["info"]), axis=1
+
+def get_spf_failure_causes(conn: Connection) -> pd.DataFrame:
+    """Ranked stable-cause table for SPF extraction losses."""
+    if not _table_exists(conn, "jpf_extraction_summary"):
+        return pd.DataFrame(
+            [{"note": _SKIP_NOTE.format(table="jpf_extraction_summary")}]
+        )
+    return _read_sql(
+        conn,
+        """
+        SELECT key AS cause, sum(value::int) AS assertions
+        FROM jpf_extraction_summary, jsonb_each_text(failure_counts)
+        GROUP BY key
+        ORDER BY assertions DESC
+        """,
     )
-    counts = Counter(
-        (str(row["stage"]), str(row["cause"])) for _, row in failures.iterrows()
-    )
-    rows = [
-        {"stage": stage, "cause": cause, "count": count}
-        for (stage, cause), count in counts.items()
-    ]
-    return pd.DataFrame(rows).sort_values(
-        ["stage", "count"], ascending=[True, False], ignore_index=True
+
+
+def get_task_diagnostics(conn: Connection) -> pd.DataFrame:
+    """Stable reason codes for failed tasks, all stages."""
+    if not _table_exists(conn, "task_diagnostic"):
+        return pd.DataFrame([{"note": _SKIP_NOTE.format(table="task_diagnostic")}])
+    return _read_sql(
+        conn,
+        """
+        SELECT stage, reason_code, count(*) AS tasks
+        FROM task_diagnostic
+        GROUP BY stage, reason_code
+        ORDER BY tasks DESC
+        """,
     )
 
 
@@ -614,7 +604,9 @@ def generate_report(
         "return_types": get_return_type_counts(conn, top),
         "unsupported_assertions": get_unsupported_assertion_counts(conn, top),
         "missing_value_shapes": get_missing_value_shapes(conn),
-        "assertion_failure_causes": get_assertion_failure_causes(conn),
+        "spf_extraction_rollup": get_spf_extraction_rollup(conn),
+        "spf_failure_causes": get_spf_failure_causes(conn),
+        "task_diagnostics": get_task_diagnostics(conn),
         "generated_property_categories": get_generated_property_categories(conn),
         "generalized_build_failure_causes": get_generalized_build_failure_causes(
             conn, log_root
@@ -648,11 +640,9 @@ def print_report(report: dict[str, pd.DataFrame], top: int) -> None:
         ("ReturnType reject return types", "return_types", top),
         ("Unsupported assertion names", "unsupported_assertions", top),
         ("MissingValue reject metadata shapes", "missing_value_shapes", None),
-        (
-            "Assertion-level SPF/instrumentation failure causes",
-            "assertion_failure_causes",
-            None,
-        ),
+        ("SPF extraction funnel (per-test rollup)", "spf_extraction_rollup", None),
+        ("SPF extraction losses by stable cause", "spf_failure_causes", None),
+        ("Failed-task reason codes (all stages)", "task_diagnostics", None),
         (
             "Generated property downstream outcomes",
             "generated_property_categories",
