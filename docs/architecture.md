@@ -23,7 +23,7 @@ The system follows a multi-stage pipeline architecture defined in `src/main/java
   every REJECT/DEFER carries a stable `reason_code` from `FilterReasonCodes`).
 - `processing.diagnostics`: telemetry writers and classifiers — task diagnostics, assertion
   semantics, build-environment observations, generalization lifecycle, generation coverage,
-  jqwik outcome import. Written where the fact is known; stable-code constants live beside
+  jqwik outcome import. Written where the fact is known, with stable-code constants beside
   each writer.
 - `spoon.analysis`: MUT resolution, recipes, structural screens, test-method resolution —
   reads test ASTs, never writes.
@@ -87,7 +87,7 @@ Facts that span multiple pipeline stages and are load-bearing for any change:
   boundary marker, not a loss marker: box→unbox round trips preserve attrs),
   `assertion.concretized_methods` (per-method counts), and
   `assertion.post_concretization_divergence_risk`. Boxed-primitive returns are captured from
-  the box's `value` field attr; degradation remains a typed NULL_CONCRETE refusal, never
+  the box's `value` field attr. Degradation remains a typed NULL_CONCRETE refusal, never
   unsoundness.
 - **Sound SPF models in the fork** fire no concretization events because interception happens
   before native-peer dispatch: `String.isEmpty` (string equality), ASCII
@@ -98,8 +98,8 @@ Facts that span multiple pipeline stages and are load-bearing for any change:
 - **Inherited test methods**: collection resolves the declaring class via the superclass
   chain and stores it in the method columns (the class column keeps the JUnit-reported
   child). Two screens (type variables, private-member accessibility) gate flattening into
-  generated clones (`SpoonUtils.cloneClass`); the generated-class writers merge the declaring
-  unit's imports; unflattenable methods become the typed test-level exclusion
+  generated clones (`SpoonUtils.cloneClass`), the generated-class writers merge the declaring
+  unit's imports, and unflattenable methods become the typed test-level exclusion
   `INHERITED_METHOD_NOT_FLATTENABLE`.
 - **Ingestion totality** (`SpfToModelTransformer`): every SPF term entering the model maps
   faithfully or is refused with a typed `UnsupportedSpfTermException` (surfacing as an

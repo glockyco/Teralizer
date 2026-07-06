@@ -20,7 +20,7 @@ PostgreSQL database with schema defined in `src/main/resources/db/create-tables.
   `exclusion_info` carry typed exclusion labels (e.g. `ORACLE_NOT_WIDENABLE`)
 - `generalization_lifecycle` - per-generalization end-to-end stage flags
   (source created → compiled → executed → report collected → filter passed) with
-  `final_usable` and the failure stage/code; the yield authority, not `is_included`
+  `final_usable` and the failure stage/code. The yield authority, not `is_included`
 - `generation_clause` / `generation_parameter` - generation-coverage telemetry written at
   generation time: per-clause canonical shape and consumed status, per-parameter
   symbolic-spec presence and representation (encoded | residual | none)
