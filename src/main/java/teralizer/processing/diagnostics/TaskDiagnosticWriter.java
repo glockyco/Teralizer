@@ -40,6 +40,7 @@ public final class TaskDiagnosticWriter {
             || stage == ProcessingStage.BUILD_PROJECT_INSTRUMENTED
             || stage == ProcessingStage.BUILD_PROJECT_GENERALIZED
             || stage == ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL
-            || stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED;
+            || stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED
+            || stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED;
     }
 }

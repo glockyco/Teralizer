@@ -103,7 +103,7 @@ story on a count.
 ## Tasks
 
 - [x] M1 generic-code budget invariants in the report integrity section.
-- [ ] M3 lifecycle failure-code propagation + `SUITE_TIMEOUT` code + invariant
+- [x] M3 lifecycle failure-code propagation + `SUITE_TIMEOUT` code + invariant
       (implementation shared with levers spec Lever 2's timeout work).
 - [ ] M4 floor/surefire outcome columns + writer changes + jOOQ regen.
 - [x] M2 first-cause attribution view in the report.

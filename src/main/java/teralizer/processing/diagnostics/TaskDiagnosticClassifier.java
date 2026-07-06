@@ -33,6 +33,9 @@ public final class TaskDiagnosticClassifier {
         if (stage == ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL || stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED) {
             return classifyReportFailure(failure);
         }
+        if (stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED && contains(failure, "Command execution timeout exceeded")) {
+            return diagnostic(TaskDiagnosticCodes.SUITE_TIMEOUT, messageDetail(failure));
+        }
         String message = failure.getMessage() == null ? "" : failure.getMessage();
         if (message.contains(ExtractionOutcome.Kind.UNSUPPORTED_TERM.name())) {
             return unsupportedTerm(afterToken(message, ExtractionOutcome.Kind.UNSUPPORTED_TERM.name()));

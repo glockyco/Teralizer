@@ -16,6 +16,7 @@ public final class TaskDiagnosticCodes {
     public static final String OTHER_COMPILE_FAILURE = "OTHER_COMPILE_FAILURE";
     public static final String PC_SIZE_LIMIT = "PC_SIZE_LIMIT";
     public static final String SEARCH_DEPTH_LIMIT = "SEARCH_DEPTH_LIMIT";
+    public static final String SUITE_TIMEOUT = "SUITE_TIMEOUT";
     public static final String UNCAUGHT_EXCEPTION_PATH = "UNCAUGHT_EXCEPTION_PATH";
     public static final String TEST_COMPILE_OUTPUT_MISSING = "TEST_COMPILE_OUTPUT_MISSING";
     public static final String UNSUPPORTED_BYTECODE = "UNSUPPORTED_BYTECODE";

@@ -67,6 +67,14 @@ public class TaskDiagnosticClassifierTest {
             TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL, noTestcase).reasonCode());
     }
 
+    @Example
+    void mapsGeneralizedSuiteTimeoutToDistinctStableCode() {
+        RuntimeException timeout = new RuntimeException("Command execution timeout exceeded.");
+
+        Assert.assertEquals(TaskDiagnosticCodes.SUITE_TIMEOUT,
+            TaskDiagnosticClassifier.classify(ProcessingStage.EXECUTE_TESTS_GENERALIZED, timeout).reasonCode());
+    }
+
     private static String classify(Throwable failure) {
         return TaskDiagnosticClassifier.classify(ProcessingStage.EXECUTE_JPF, failure).reasonCode();
     }
