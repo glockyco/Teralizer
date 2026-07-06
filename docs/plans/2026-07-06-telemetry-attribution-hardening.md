@@ -108,7 +108,7 @@ story on a count.
 - [ ] M4 floor/surefire outcome columns + writer changes + jOOQ regen.
 - [ ] M2 first-cause attribution view in the report.
 - [ ] M5 basis-header helper + adoption in the DB-reading analysis modules.
-- [ ] M6 exemplar sampling on the top reason-code tables.
+- [x] M6 exemplar sampling on the top reason-code tables.
 
 ## Non-goals
 

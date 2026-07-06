@@ -267,6 +267,78 @@ def get_telemetry_integrity(conn: Connection) -> pd.DataFrame:
     return df
 
 
+def _strings(values: pd.Series) -> list[str]:
+    """Return a pandas series as a plain string list for type-checking."""
+    return [str(value) for value in values]
+
+
+def _join_samples(snippets: list[str]) -> str:
+    """Join sampled snippets in the compact report format."""
+    return " | ".join(
+        " ".join(snippet.replace("\\n", " ").split()) for snippet in snippets
+    )
+
+
+def _sample_assertion_sources(
+    conn: Connection, bucket_column: str, bucket_values: list[str], where_sql: str
+) -> dict[str, str]:
+    """Sample short assertion-source snippets for each report bucket."""
+    samples: dict[str, str] = {}
+    if not bucket_values or not _column_exists(
+        conn, "assertion", "assertion_source_code"
+    ):
+        return samples
+    for bucket in bucket_values:
+        rows = _read_sql(
+            conn,
+            f"""
+            SELECT substr(a.assertion_source_code, 1, 60) AS snippet
+            FROM filter_result fr
+            JOIN assertion a ON a.id = fr.assertion_id
+            WHERE {where_sql}
+              AND {bucket_column} = :bucket
+              AND a.assertion_source_code IS NOT NULL
+            ORDER BY random()
+            LIMIT 3
+            """,
+            bucket=bucket,
+        )
+        samples[bucket] = _join_samples(_strings(rows["snippet"]))
+    return samples
+
+
+def _sample_task_messages(conn: Connection, causes: list[str]) -> dict[str, str]:
+    """Sample short task-diagnostic messages for each stable SPF cause."""
+    samples: dict[str, str] = {}
+    if not causes or not _table_exists(conn, "task_diagnostic"):
+        return samples
+    message_expr = (
+        "first_error_message"
+        if _column_exists(conn, "task_diagnostic", "first_error_message")
+        else "NULL"
+    )
+    if _column_exists(conn, "task_diagnostic", "detail_json"):
+        message_expr = (
+            f"coalesce({message_expr}, detail_json ->> 'message', "
+            "detail_json ->> 'detail', detail_json::text)"
+        )
+    for cause in causes:
+        rows = _read_sql(
+            conn,
+            f"""
+            SELECT substr({message_expr}, 1, 60) AS snippet
+            FROM task_diagnostic
+            WHERE reason_code = :cause
+              AND {message_expr} IS NOT NULL
+            ORDER BY random()
+            LIMIT 3
+            """,
+            cause=cause,
+        )
+        samples[cause] = _join_samples(_strings(rows["snippet"]))
+    return samples
+
+
 # ---------------------------------------------------------------------------
 # Query helpers
 # ---------------------------------------------------------------------------
@@ -364,9 +436,10 @@ def get_filter_summary(conn: Connection, scope: str) -> pd.DataFrame:
     else:
         raise ValueError(f"Unknown filter scope: {scope}")
 
+    has_reason_code = _column_exists(conn, "filter_result", "reason_code")
     reason_expr = (
         "coalesce(reason_code, '<none>')"
-        if _column_exists(conn, "filter_result", "reason_code")
+        if has_reason_code
         else "'<predates reason codes>'"
     )
     df = _read_sql(
@@ -387,6 +460,16 @@ def get_filter_summary(conn: Connection, scope: str) -> pd.DataFrame:
     )
     if not df.empty:
         df["filter_name"] = df["filter_name"].map(_short_filter)
+        if scope == _ASSERTION_SCOPE and has_reason_code:
+            samples = _sample_assertion_sources(
+                conn,
+                "coalesce(reason_code, '<none>')",
+                _strings(df["reason_code"]),
+                f"{where} AND fr.decision <> 'ACCEPT'",
+            )
+            df["sample"] = df["reason_code"].map(samples).fillna("")
+        elif scope == _ASSERTION_SCOPE:
+            df["sample"] = ""
     return df
 
 
@@ -521,7 +604,7 @@ def get_return_type_counts(conn: Connection, top: int) -> pd.DataFrame:
 
 def get_unsupported_assertion_counts(conn: Connection, top: int) -> pd.DataFrame:
     """Assertion names among UnsupportedAssertion rejects."""
-    return _read_sql(
+    df = _read_sql(
         conn,
         """
         SELECT a.assertion_name, count(*) AS count
@@ -537,6 +620,18 @@ def get_unsupported_assertion_counts(conn: Connection, top: int) -> pd.DataFrame
         """,
         top=top,
     )
+    if not df.empty:
+        samples = _sample_assertion_sources(
+            conn,
+            "a.assertion_name",
+            _strings(df["assertion_name"]),
+            "fr.assertion_id IS NOT NULL "
+            "AND fr.generalization_id IS NULL "
+            "AND fr.filter_name LIKE '%UnsupportedAssertionFilter' "
+            "AND fr.decision = 'REJECT'",
+        )
+        df["sample"] = df["assertion_name"].map(samples).fillna("")
+    return df
 
 
 def get_missing_value_shapes(conn: Connection) -> pd.DataFrame:
@@ -587,7 +682,7 @@ def get_spf_failure_causes(conn: Connection) -> pd.DataFrame:
         return pd.DataFrame(
             [{"note": _SKIP_NOTE.format(table="jpf_extraction_summary")}]
         )
-    return _read_sql(
+    df = _read_sql(
         conn,
         """
         SELECT key AS cause, sum(value::int) AS assertions
@@ -596,6 +691,10 @@ def get_spf_failure_causes(conn: Connection) -> pd.DataFrame:
         ORDER BY assertions DESC
         """,
     )
+    if not df.empty:
+        samples = _sample_task_messages(conn, _strings(df["cause"]))
+        df["sample"] = df["cause"].map(samples).fillna("")
+    return df
 
 
 def get_task_diagnostics(conn: Connection) -> pd.DataFrame:
