@@ -15,6 +15,7 @@ skip with an explicit note against snapshots that predate the tables.
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 from typing import Any
 
@@ -91,6 +92,129 @@ def _column_exists(conn: Connection, table: str, column: str) -> bool:
 _SKIP_NOTE = "(section skipped: snapshot predates table '{table}')"
 
 
+_GENERIC_BUDGET = 0.30
+
+
+def _budget_row(
+    invariant: str, actual: float, expected: float = _GENERIC_BUDGET
+) -> dict[str, Any]:
+    """Build one generic-code budget invariant row."""
+    return {
+        "invariant": invariant,
+        "actual": actual,
+        "expected": expected,
+        "holds": actual <= expected,
+    }
+
+
+def _skip_row(table: str) -> dict[str, Any]:
+    """Build one predates-snapshot note row for the integrity section."""
+    return {"invariant": _SKIP_NOTE.format(table=table)}
+
+
+def _generic_budget_rows(conn: Connection) -> list[dict[str, Any]]:
+    """Return generic-code share invariants for lossy telemetry buckets."""
+    rows: list[dict[str, Any]] = []
+
+    if _table_exists(conn, "task_diagnostic"):
+        task = _read_sql(
+            conn,
+            """
+            SELECT
+                count(*) AS total,
+                sum(CASE WHEN reason_code = 'OTHER_COMPILE_FAILURE' THEN 1 ELSE 0 END) AS generic
+            FROM task_diagnostic
+            WHERE stage LIKE 'BUILD_%'
+            """,
+        )
+        total = int(task.iloc[0]["total"] or 0)
+        generic = int(task.iloc[0]["generic"] or 0)
+        rows.append(
+            _budget_row(
+                "generic budget: task_diagnostic BUILD_% OTHER_COMPILE_FAILURE share",
+                generic / total if total else 0.0,
+            )
+        )
+    else:
+        rows.append(_skip_row("task_diagnostic"))
+
+    if _table_exists(conn, "jpf_extraction_summary"):
+        failure_counts = _read_sql(
+            conn,
+            "SELECT failure_counts FROM jpf_extraction_summary",
+        )
+        total = 0
+        generic = 0
+        for raw_counts in failure_counts["failure_counts"]:
+            counts = raw_counts
+            if isinstance(raw_counts, str):
+                counts = json.loads(raw_counts)
+            if not isinstance(counts, dict):
+                continue
+            for cause, count in counts.items():
+                failures = int(count or 0)
+                total += failures
+                if cause == "UNCAUGHT_EXCEPTION_PATH":
+                    generic += failures
+        rows.append(
+            _budget_row(
+                "generic budget: jpf_extraction_summary UNCAUGHT_EXCEPTION_PATH failure_counts share",
+                generic / total if total else 0.0,
+            )
+        )
+    else:
+        rows.append(_skip_row("jpf_extraction_summary"))
+
+    if _table_exists(conn, "assertion_semantics"):
+        semantics = _read_sql(
+            conn,
+            """
+            SELECT
+                count(*) AS total,
+                sum(CASE WHEN semantic_kind = 'UNKNOWN' THEN 1 ELSE 0 END) AS generic
+            FROM assertion_semantics
+            """,
+        )
+        total = int(semantics.iloc[0]["total"] or 0)
+        generic = int(semantics.iloc[0]["generic"] or 0)
+        rows.append(
+            _budget_row(
+                "generic budget: assertion_semantics UNKNOWN semantic_kind share",
+                generic / total if total else 0.0,
+            )
+        )
+    else:
+        rows.append(_skip_row("assertion_semantics"))
+
+    if _table_exists(conn, "filter_result") and _column_exists(
+        conn, "filter_result", "reason_code"
+    ):
+        filters = _read_sql(
+            conn,
+            """
+            SELECT
+                count(*) AS total,
+                sum(CASE WHEN reason_code IS NULL OR reason_code = '<none>' THEN 1 ELSE 0 END) AS generic
+            FROM filter_result
+            WHERE decision = 'REJECT'
+            """,
+        )
+        total = int(filters.iloc[0]["total"] or 0)
+        generic = int(filters.iloc[0]["generic"] or 0)
+        rows.append(
+            _budget_row(
+                "generic budget: filter_result REJECT NULL/<none> reason_code share",
+                generic / total if total else 0.0,
+            )
+        )
+    elif _table_exists(conn, "filter_result"):
+        rows.append(_skip_row("filter_result.reason_code"))
+    else:
+        rows.append(_skip_row("filter_result"))
+
+    return rows
+
+
 def get_telemetry_integrity(conn: Connection) -> pd.DataFrame:
     """Totality invariants over the telemetry writers.
 
@@ -137,6 +261,9 @@ def get_telemetry_integrity(conn: Connection) -> pd.DataFrame:
         FROM counts
         """,
     )
+    budget = pd.DataFrame(_generic_budget_rows(conn))
+    if not budget.empty:
+        df = pd.concat([df, budget], ignore_index=True, sort=False)
     return df
 
 
