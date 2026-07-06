@@ -239,6 +239,7 @@ public class FilterTelemetryTest {
         record.setTestClassQualifiedName("T");
         record.setTestMethodName("testM");
         record.setTestMethodQualifiedName("T.testM");
+        record.setTestMethodAbsolutePath(testMethod.getPath().toString());
         record.setTestMethodRelativePath(testMethod.getPath().relativePath(type).toString());
 
         FilterResult result = new AssertionInMethodFilter(launcher, record).check();

@@ -304,6 +304,7 @@ public final class JpfListenerHarness {
         // read by the listener; the remaining identity keys are populated for template completeness
         // (jpf-config.vm uses runtime.references.strict).
         context.put("instrumentedMethodQualifiedName", instrumentedMethodQN);
+        context.put("instrumentedParameterNames", parameterNamesFor(symbolicMethod));
         context.put("testedMethodQualifiedName", testedMethodQN);
         context.put("instrumentedClassQualifiedName", classOf(instrumentedMethodQN));
         context.put("testedClassQualifiedName", classOf(testedMethodQN));
@@ -371,6 +372,23 @@ public final class JpfListenerHarness {
 
     private static String classOf(String methodQualifiedName) {
         return methodQualifiedName.substring(0, methodQualifiedName.lastIndexOf('.'));
+    }
+
+    /*
+     * The wrapper's parameter names are not asserted by the listener tests (they read captured
+     * values, not names), but the listener now cross-checks the name count against the captured
+     * argument count. symbolic.method carries one #-separated marker per parameter, so a
+     * count-matched synthetic name list keeps the harness faithful without a real signature.
+     */
+    private static String parameterNamesFor(String symbolicMethod) {
+        String markers = symbolicMethod.substring(symbolicMethod.indexOf('(') + 1, symbolicMethod.lastIndexOf(')'));
+        if (markers.isEmpty()) {
+            return "";
+        }
+        int count = markers.split("#").length;
+        return java.util.stream.IntStream.range(0, count)
+            .mapToObj(i -> "p" + i)
+            .collect(Collectors.joining(","));
     }
 
     /**
