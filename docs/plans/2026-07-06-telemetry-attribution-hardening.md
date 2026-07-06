@@ -55,11 +55,15 @@ already carries every edge.
 ### M3 — knowable causes propagate to lifecycle rows
 
 `generalization_lifecycle.final_failure_code` must never be `<none>` when the failing
-stage's task diagnostic knows the cause. The lifecycle writer copies the task-diagnostic
-reason code of the failing stage (`SUITE_TIMEOUT`, `OTHER_COMPILE_FAILURE`, ...) instead
-of leaving the code empty. New stable code `SUITE_TIMEOUT` for the command-timeout shape
-(today it is only free text in `task.info`). Integrity invariant: non-usable lifecycle
-rows with empty failure_code = 0.
+stage's task diagnostic knows the cause. The propagation plumbing already exists:
+`ProcessingPipeline` hands `TaskDiagnosticWriter.recordFailure`'s reason code straight to
+`GeneralizationLifecycleWriter.recordStageFailed`. The defect is upstream:
+`TaskDiagnosticWriter.isDiagnosticStage` excludes `EXECUTE_TESTS_GENERALIZED`, so
+`recordFailure` returns null before classifying anything. Fix: admit the stage, and add a
+classifier rule mapping the `ConsoleCommandException` timeout shape ("Command execution
+timeout exceeded") to a new stable code `SUITE_TIMEOUT` (distinct from `EXECUTION_TIMEOUT`,
+which is the per-assertion SPF abort). Integrity invariant: non-usable lifecycle rows with
+empty failure_code = 0.
 
 ### M4 — interventions record outcomes
 
@@ -98,7 +102,7 @@ story on a count.
 
 ## Tasks
 
-- [ ] M1 generic-code budget invariants in the report integrity section.
+- [x] M1 generic-code budget invariants in the report integrity section.
 - [ ] M3 lifecycle failure-code propagation + `SUITE_TIMEOUT` code + invariant
       (implementation shared with levers spec Lever 2's timeout work).
 - [ ] M4 floor/surefire outcome columns + writer changes + jOOQ regen.

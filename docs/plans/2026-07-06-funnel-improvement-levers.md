@@ -48,7 +48,11 @@ the original suite got. No isolation machinery is needed — the timeout budget 
 
 ## Lever 1 — assertion-kind support (recall, ~2× funnel entry)
 
-Two sub-families, both riding existing machinery:
+Two sub-families, both riding existing machinery. The admission gate is
+`Configuration.GENERALIZABLE_ASSERTS` consumed through `TestAnalysis.isGeneralizable`,
+which both `UnsupportedAssertionFilter` and `findGeneralizableAsserts` share — a supported
+kind must pass BOTH the gate and recipe derivation, or it enters the funnel and dies
+later with a worse diagnostic. Gate and recipe change together, per sub-family:
 
 - **Equality-isomorphic Hamcrest.** `assertThat(x, is(y))` and `assertThat(x, equalTo(y))`
   (3.8k of 5.3k assertThat uses) desugar to the assertEquals recipe: actual = `x`,
@@ -79,10 +83,15 @@ proportionally on a sentinel re-run.
   Unresolvable references stay untouched (the build-environment telemetry already labels
   them). Same resolution for the properties-based path.
 - **Scale the generalized execution budget.** `EXECUTE_TESTS_GENERALIZED` gets its own
-  timeout derived from the generated-property count (for example
+  timeout derived from the generated-property count. Mechanism constraint from the code:
+  `TestExecutionTask` builds its `ConsoleCommand` with the flat
+  `junit.max-execution-time` in the CONSTRUCTOR, before the included-property count is
+  fetched in `run()`. The timeout determination must move to run time (or the command
+  must accept a late timeout). Formula shape
   `junit.max-execution-time × max(1, properties × tries / baseline-tries-budget)`, exact
-  formula decided at implementation with the fixture corpus as evidence). The original-suite
-  stages keep the flat 60 s. Config stays in `reference.conf` beside the existing knob.
+  constants decided at implementation with the fixture corpus as evidence. The
+  original-suite stages keep the flat 60 s. Config stays in `reference.conf` beside the
+  existing knob.
 
 Acceptance: the l10n-maven-plugin pom shape floors correctly (unit test on the manager),
 a fixture with a property-resolved source level passes the generalized build, and the
@@ -91,11 +100,17 @@ expected (fixtures are small and fast).
 
 ## Lever 3 — SPF loss reclassification, then census (decision gate)
 
-- **Reclassify before deciding.** The `UNCAUGHT_EXCEPTION_PATH` writer inspects the
-  underlying exception type: `UnsatisfiedLinkError` → `MISSING_NATIVE_PEER`,
-  `ClassNotFoundException`/`NoSuchMethodError` → `MISSING_JPF_MODEL`, JUnit
-  `AssertionError`/`ComparisonFailure` → new `JPF_DIVERGENT_ASSERTION`, rest stays
-  `UNCAUGHT_EXCEPTION_PATH` (true application exceptions on the concrete path).
+- **Reclassify before deciding.** Single choke point, verified:
+  `TaskDiagnosticClassifier.classify` routes every "Identified N error(s) during JPF
+  execution" failure to `UNCAUGHT_EXCEPTION_PATH`; the underlying exception type is the
+  first line after `NoUncaughtExceptionsProperty` in the message detail. New routing on
+  that type: `UnsatisfiedLinkError` → `MISSING_NATIVE_PEER`, `ClassNotFoundException` →
+  `MISSING_JPF_MODEL_CLASS` (code exists, unused), `NoSuchMethodError` →
+  `MISSING_JPF_MODEL_METHOD` (same), JUnit `AssertionError`/`ComparisonFailure` → new
+  `JPF_DIVERGENT_ASSERTION`, rest stays `UNCAUGHT_EXCEPTION_PATH`.
+  `jpf_extraction_summary.failure_counts` aggregates task_diagnostic reason codes
+  (`JpfAnalysisTask`), so the rollup inherits the reclassification with no second
+  classifier to keep in sync.
 - **Then the census.** With honest codes, the ranked stable-cause table (already in the
   report) IS the census. The decision — invest in native peers/models vs accept the
   ceiling — goes to the operator with true counts. `JPF_DIVERGENT_ASSERTION` cases get a
