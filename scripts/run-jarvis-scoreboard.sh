@@ -7,8 +7,8 @@ set -euo pipefail
 # scripts/lib/jarvis-run.sh.
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-JARVIS_DB_NAME=postgres_jarvis_scoreboard
-JARVIS_DATA_DIR=data/jarvis-scoreboard
+JARVIS_DB_NAME="${JARVIS_DB:-postgres_jarvis_scoreboard}"
+JARVIS_DATA_DIR="${JARVIS_DATA_DIR:-data/jarvis-scoreboard}"
 JARVIS_LABEL=scoreboard
 JARVIS_PREPARE_FLAG=
 JARVIS_DEFAULT_CONFIGS=(

@@ -24,6 +24,7 @@ jarvis_run() {
   source "$ROOT_DIR/scripts/lib/db-guard.sh"
   DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$JARVIS_DB_NAME"
   source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
+  source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
   supervisor_install_traps
 
   local reset_db=false prepare_fixtures=false
@@ -67,14 +68,7 @@ jarvis_run() {
 
   if [[ "$reset_db" == true ]]; then
     echo "==> Resetting database $JARVIS_DB_NAME"
-    _jarvis_psql -d postgres -c \
-      "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$JARVIS_DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
-    _jarvis_psql -d postgres -c "DROP DATABASE IF EXISTS $JARVIS_DB_NAME;"
-    if ! _jarvis_psql -d postgres -c "CREATE DATABASE $JARVIS_DB_NAME;" 2>/dev/null; then
-      # A glibc upgrade under the container leaves template1 with a stale collation version.
-      _jarvis_psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
-      _jarvis_psql -d postgres -c "CREATE DATABASE $JARVIS_DB_NAME;"
-    fi
+    recreate_scratch_db "$JARVIS_DB_NAME" || exit 1
   fi
 
   # High-water task id so the post-run check sees only this invocation's tasks (keeps incremental

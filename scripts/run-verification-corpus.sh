@@ -42,19 +42,13 @@ done
 FIXTURE_TIMEOUT="${VERIFICATION_FIXTURE_TIMEOUT:-300}"
 
 source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
+source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
 supervisor_install_traps
 
 ensure_postgres_up || exit 1
 
 echo "==> Resetting database $DB_NAME"
-teralizer_psql -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
-teralizer_psql -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" || { echo "DROP DATABASE failed" >&2; exit 1; }
-if ! teralizer_psql -d postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null; then
-  # A container image or host libc upgrade can leave template1 with a stale collation version.
-  # Refresh only the template metadata, then retry the scratch database creation.
-  teralizer_psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
-  teralizer_psql -d postgres -c "CREATE DATABASE $DB_NAME;" || { echo "CREATE DATABASE failed" >&2; exit 1; }
-fi
+recreate_scratch_db "$DB_NAME" || exit 1
 
 mkdir -p "$LOG_DIR"
 printf 'fixture\troot_path\texit_code\tlog\n' > "$STATUS_TSV"

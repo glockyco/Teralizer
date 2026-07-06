@@ -7,24 +7,21 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 CODEGEN_DB=teralizer_codegen
 DDL="$ROOT_DIR/src/main/resources/db/create-tables.sql"
 
-_psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
+source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
+source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
 
-_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 || { echo "Postgres (postgres-teralizer) not reachable" >&2; exit 1; }
+teralizer_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 || { echo "Postgres (postgres-teralizer) not reachable" >&2; exit 1; }
 
 cleanup() {
-  _psql -d postgres -c "DROP DATABASE IF EXISTS $CODEGEN_DB;" >/dev/null 2>&1 || true
+  drop_scratch_db "$CODEGEN_DB"
 }
 trap cleanup EXIT
 
 echo "==> Creating $CODEGEN_DB"
-_psql -d postgres -c "DROP DATABASE IF EXISTS $CODEGEN_DB;" >/dev/null
-if ! _psql -d postgres -c "CREATE DATABASE $CODEGEN_DB;" 2>/dev/null; then
-  _psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
-  _psql -d postgres -c "CREATE DATABASE $CODEGEN_DB;" || { echo "CREATE DATABASE failed" >&2; exit 1; }
-fi
+recreate_scratch_db "$CODEGEN_DB" || exit 1
 
 echo "==> Applying DDL"
-_psql -d "$CODEGEN_DB" < "$DDL" >/dev/null
+teralizer_psql -d "$CODEGEN_DB" < "$DDL" >/dev/null
 
 echo "==> Generating jOOQ sources"
 "$ROOT_DIR/gradlew" generateJooq --no-daemon || exit $?
