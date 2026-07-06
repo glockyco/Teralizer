@@ -486,6 +486,8 @@ CREATE TABLE build_environment_observation
     generated_uses_lambdas            BOOLEAN,
     generated_uses_method_references  BOOLEAN,
     generated_uses_diamond            BOOLEAN,
+    test_source_floor                 TEXT,
+    surefire_floor                    TEXT,
 
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE
 );

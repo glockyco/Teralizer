@@ -105,7 +105,7 @@ story on a count.
 - [x] M1 generic-code budget invariants in the report integrity section.
 - [x] M3 lifecycle failure-code propagation + `SUITE_TIMEOUT` code + invariant
       (implementation shared with levers spec Lever 2's timeout work).
-- [ ] M4 floor/surefire outcome columns + writer changes + jOOQ regen.
+- [x] M4 floor/surefire outcome columns + writer changes + jOOQ regen.
 - [x] M2 first-cause attribution view in the report.
 - [x] M5 basis-header helper + adoption in the DB-reading analysis modules.
 - [x] M6 exemplar sampling on the top reason-code tables.

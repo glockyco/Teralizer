@@ -14,6 +14,10 @@ import teralizer.processing.TestFramework;
 import teralizer.util.Configuration;
 
 public class MavenDependencyManager {
+    public static final String FLOOR_APPLIED = "APPLIED";
+    public static final String FLOOR_NOT_NEEDED = "NOT_NEEDED";
+    public static final String FLOOR_SKIPPED_UNRESOLVABLE = "SKIPPED_UNRESOLVABLE";
+
 
     private final ProjectRecord projectRecord;
     private final Consumer<String> reportInfo;
@@ -267,6 +271,65 @@ public class MavenDependencyManager {
         return resolved == null ? languageLevel : resolved;
     }
 
+    private static boolean isPropertyReference(String languageLevel) {
+        if (languageLevel == null) {
+            return false;
+        }
+        String trimmed = languageLevel.trim();
+        return trimmed.startsWith("${") && trimmed.endsWith("}") && trimmed.indexOf("${", 2) < 0;
+    }
+
+    public static String testSourceFloorOutcome(Document document) {
+        Element properties = childElement(document.getRootElement(), "properties");
+        Element compilerConfiguration = findCompilerPluginConfiguration(document);
+        if (compilerConfiguration != null) {
+            if (hasGeneratedCompilerFloor(
+                childElement(compilerConfiguration, "testSource"),
+                childElement(compilerConfiguration, "testTarget")
+            )) {
+                return FLOOR_APPLIED;
+            }
+
+            Element testSource = childElement(compilerConfiguration, "testSource");
+            Element source = testSource == null ? childElement(compilerConfiguration, "source") : testSource;
+            return source == null ? FLOOR_NOT_NEEDED : languageFloorOutcome(source.getTextTrim(), properties);
+        }
+
+        if (properties == null) {
+            return FLOOR_NOT_NEEDED;
+        }
+
+        if (hasGeneratedCompilerFloor(
+            childElement(properties, "maven.compiler.testSource"),
+            childElement(properties, "maven.compiler.testTarget")
+        )) {
+            return FLOOR_APPLIED;
+        }
+
+        Element testSource = childElement(properties, "maven.compiler.testSource");
+        Element source = testSource == null ? childElement(properties, "maven.compiler.source") : testSource;
+        return source == null ? FLOOR_NOT_NEEDED : languageFloorOutcome(source.getTextTrim(), properties);
+    }
+
+    private static boolean hasGeneratedCompilerFloor(Element source, Element target) {
+        return hasGeneratedCompilerFloor(source) && hasGeneratedCompilerFloor(target);
+    }
+
+    private static boolean hasGeneratedCompilerFloor(Element element) {
+        return element != null && Configuration.GENERATED_TEST_LANGUAGE_LEVEL.equals(element.getTextTrim());
+    }
+
+    private static String languageFloorOutcome(String languageLevel, Element properties) {
+        String resolved = resolvePropertyReference(languageLevel, properties);
+        if (isBelowGeneratedTestLanguageLevel(resolved)) {
+            return FLOOR_APPLIED;
+        }
+        return isPropertyReference(languageLevel) && resolved.equals(languageLevel)
+            ? FLOOR_SKIPPED_UNRESOLVABLE
+            : FLOOR_NOT_NEEDED;
+    }
+
+
     /**
      * Surefire only gains a JUnit-platform provider at 2.22.2; older explicit pins report a green
      * Maven build while never discovering jqwik property classes. Existing plugin declarations are
@@ -306,6 +369,58 @@ public class MavenDependencyManager {
         }
         return changed;
     }
+
+    public static String surefireFloorOutcome(Document sharedDocument, Document generalizedDocument) {
+        List<String> sharedVersions = surefireVersions(sharedDocument);
+        if (sharedVersions.isEmpty()) {
+            return FLOOR_NOT_NEEDED;
+        }
+
+        List<String> generalizedVersions = surefireVersions(generalizedDocument);
+        boolean skippedUnresolvable = false;
+        for (String sharedVersion : sharedVersions) {
+            if (isVersionBelow(sharedVersion, Configuration.SUREFIRE_MIN_VERSION)) {
+                return generalizedVersions.contains(Configuration.SUREFIRE_MIN_VERSION)
+                    ? FLOOR_APPLIED
+                    : FLOOR_SKIPPED_UNRESOLVABLE;
+            }
+            if (parseNumericVersion(sharedVersion) == null) {
+                skippedUnresolvable = true;
+            }
+        }
+        return skippedUnresolvable ? FLOOR_SKIPPED_UNRESOLVABLE : FLOOR_NOT_NEEDED;
+    }
+
+    private static List<String> surefireVersions(Document document) {
+        List<String> versions = new ArrayList<>();
+        Element build = childElement(document.getRootElement(), "build");
+        if (build == null) {
+            return versions;
+        }
+
+        collectSurefireVersions(versions, childElement(build, "plugins"));
+        Element pluginManagement = childElement(build, "pluginManagement");
+        if (pluginManagement != null) {
+            collectSurefireVersions(versions, childElement(pluginManagement, "plugins"));
+        }
+        return versions;
+    }
+
+    private static void collectSurefireVersions(List<String> versions, Element plugins) {
+        if (plugins == null) {
+            return;
+        }
+        for (Iterator<Element> it = plugins.elementIterator(); it.hasNext(); ) {
+            Element plugin = it.next();
+            if (isSurefirePlugin(plugin)) {
+                String version = childText(plugin, "version");
+                if (version != null) {
+                    versions.add(version);
+                }
+            }
+        }
+    }
+
 
     private static boolean isSurefirePlugin(Element plugin) {
         String groupId = childText(plugin, "groupId");

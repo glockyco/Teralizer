@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row11;
+import org.jooq.Row13;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -103,6 +103,16 @@ public class BuildEnvironmentObservation extends TableImpl<BuildEnvironmentObser
      * The column <code>public.build_environment_observation.generated_uses_diamond</code>.
      */
     public final TableField<BuildEnvironmentObservationRecord, Boolean> GENERATED_USES_DIAMOND = createField(DSL.name("generated_uses_diamond"), SQLDataType.BOOLEAN, this, "");
+
+    /**
+     * The column <code>public.build_environment_observation.test_source_floor</code>.
+     */
+    public final TableField<BuildEnvironmentObservationRecord, String> TEST_SOURCE_FLOOR = createField(DSL.name("test_source_floor"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.build_environment_observation.surefire_floor</code>.
+     */
+    public final TableField<BuildEnvironmentObservationRecord, String> SUREFIRE_FLOOR = createField(DSL.name("surefire_floor"), SQLDataType.CLOB, this, "");
 
     private BuildEnvironmentObservation(Name alias, Table<BuildEnvironmentObservationRecord> aliased) {
         this(alias, aliased, null);
@@ -203,11 +213,11 @@ public class BuildEnvironmentObservation extends TableImpl<BuildEnvironmentObser
     }
 
     // -------------------------------------------------------------------------
-    // Row11 type methods
+    // Row13 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row11<Long, Long, String, String, String, String, String, String, Boolean, Boolean, Boolean> fieldsRow() {
-        return (Row11) super.fieldsRow();
+    public Row13<Long, Long, String, String, String, String, String, String, Boolean, Boolean, Boolean, String, String> fieldsRow() {
+        return (Row13) super.fieldsRow();
     }
 }

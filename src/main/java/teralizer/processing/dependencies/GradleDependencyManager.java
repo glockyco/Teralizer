@@ -21,6 +21,9 @@ public class GradleDependencyManager {
 
     private static final String TOOL_COMMENT_START = String.format("// Added by %s - START.", Configuration.TOOL_NAME);
     private static final String TOOL_COMMENT_END = String.format("// Added by %s - END.", Configuration.TOOL_NAME);
+    public static final String FLOOR_APPLIED = MavenDependencyManager.FLOOR_APPLIED;
+    public static final String FLOOR_NOT_NEEDED = MavenDependencyManager.FLOOR_NOT_NEEDED;
+
 
     private final ProjectRecord projectRecord;
     private final Consumer<String> reportInfo;
@@ -181,6 +184,15 @@ public class GradleDependencyManager {
         ));
         this.reportInfo.accept("Added config: compileTestJava source compatibility");
         return true;
+    }
+
+    public static String testSourceFloorOutcome(String buildFile) {
+        String text = buildFile == null ? "" : buildFile;
+        return text.contains(TOOL_COMMENT_START)
+            && text.contains("compileTestJava")
+            && text.contains("JavaVersion.VERSION_1_8")
+            ? FLOOR_APPLIED
+            : FLOOR_NOT_NEEDED;
     }
 
     private boolean hasCompileTestJavaCompatibilityConfig() {

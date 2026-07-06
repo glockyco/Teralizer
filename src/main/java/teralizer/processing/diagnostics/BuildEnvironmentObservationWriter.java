@@ -5,12 +5,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.BuildEnvironmentObservationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProjectType;
+import teralizer.processing.dependencies.GradleDependencyManager;
+import teralizer.processing.dependencies.MavenDependencyManager;
 import teralizer.util.Configuration;
 
 public final class BuildEnvironmentObservationWriter {
@@ -34,6 +39,8 @@ public final class BuildEnvironmentObservationWriter {
         record.setCompilerSource(firstMatch(buildFile, projectRecord.getType() == ProjectType.GRADLE ? GRADLE_SOURCE : XML_SOURCE));
         record.setCompilerTarget(firstMatch(buildFile, projectRecord.getType() == ProjectType.GRADLE ? GRADLE_TARGET : XML_TARGET));
         record.setCompilerRelease(projectRecord.getType() == ProjectType.GRADLE ? null : firstMatch(buildFile, XML_RELEASE));
+        record.setTestSourceFloor(testSourceFloorOutcome(projectRecord, buildFile));
+        record.setSurefireFloor(surefireFloorOutcome(projectRecord));
 
         GeneratedSourceFeatures generated = generatedSourceFeatures(projectRecord);
         record.setGeneratedSourceRequiredLevel(generated.requiredLevel);
@@ -72,6 +79,69 @@ public final class BuildEnvironmentObservationWriter {
             return Files.exists(path) ? new String(Files.readAllBytes(path)) : "";
         } catch (IOException e) {
             return "";
+        }
+    }
+
+    private static String readBuildFilePath(ProjectRecord projectRecord, String buildFileName) {
+        try {
+            Path path = projectRecord.getRootPath().resolve(buildFileName);
+            return Files.exists(path) ? new String(Files.readAllBytes(path)) : "";
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    private static String testSourceFloorOutcome(ProjectRecord projectRecord, String buildFile) {
+        switch (projectRecord.getType()) {
+            case MAVEN:
+                return mavenTestSourceFloorOutcome(buildFile);
+            case GRADLE:
+                return gradleTestSourceFloorOutcome(buildFile);
+            default:
+                return null;
+        }
+    }
+
+    private static String surefireFloorOutcome(ProjectRecord projectRecord) {
+        switch (projectRecord.getType()) {
+            case MAVEN:
+                return mavenSurefireFloorOutcome(
+                    readBuildFilePath(projectRecord, Configuration.MAVEN_CUSTOM_BUILD_FILE),
+                    readBuildFilePath(projectRecord, Configuration.MAVEN_GENERALIZED_BUILD_FILE)
+                );
+            case GRADLE:
+                return MavenDependencyManager.FLOOR_NOT_NEEDED;
+            default:
+                return null;
+        }
+    }
+
+    static String mavenTestSourceFloorOutcome(String buildFile) {
+        Document document = parsePom(buildFile);
+        return document == null ? null : MavenDependencyManager.testSourceFloorOutcome(document);
+    }
+
+    static String gradleTestSourceFloorOutcome(String buildFile) {
+        return GradleDependencyManager.testSourceFloorOutcome(buildFile);
+    }
+
+    static String mavenSurefireFloorOutcome(String sharedBuildFile, String generalizedBuildFile) {
+        Document sharedDocument = parsePom(sharedBuildFile);
+        Document generalizedDocument = parsePom(generalizedBuildFile);
+        if (sharedDocument == null || generalizedDocument == null) {
+            return null;
+        }
+        return MavenDependencyManager.surefireFloorOutcome(sharedDocument, generalizedDocument);
+    }
+
+    private static Document parsePom(String buildFile) {
+        if (buildFile == null || buildFile.isEmpty()) {
+            return null;
+        }
+        try {
+            return DocumentHelper.parseText(buildFile);
+        } catch (DocumentException e) {
+            return null;
         }
     }
 
