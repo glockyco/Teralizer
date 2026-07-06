@@ -515,6 +515,41 @@ def get_yield_gap_causes(conn: Connection) -> pd.DataFrame:
     )
 
 
+def get_assertion_semantics_profile(conn: Connection) -> pd.DataFrame:
+    """Semantic kind by argument shape, corpus-wide."""
+    if not _table_exists(conn, "assertion_semantics"):
+        return pd.DataFrame([{"note": _SKIP_NOTE.format(table="assertion_semantics")}])
+    return _read_sql(
+        conn,
+        """
+        SELECT semantic_kind, argument_shape, count(*) AS assertions
+        FROM assertion_semantics
+        GROUP BY semantic_kind, argument_shape
+        ORDER BY assertions DESC
+        """,
+    )
+
+
+def get_fail_and_matcher_breakdown(conn: Connection) -> pd.DataFrame:
+    """fail() contexts and matcher families for the support-work sizing."""
+    if not _table_exists(conn, "assertion_semantics"):
+        return pd.DataFrame([{"note": _SKIP_NOTE.format(table="assertion_semantics")}])
+    return _read_sql(
+        conn,
+        """
+        SELECT
+            coalesce(fail_context, '-') AS fail_context,
+            coalesce(matcher_family, '-') AS matcher_family,
+            coalesce(matcher_name, '-') AS matcher_name,
+            count(*) AS assertions
+        FROM assertion_semantics
+        WHERE fail_context IS NOT NULL OR matcher_family IS NOT NULL
+        GROUP BY fail_context, matcher_family, matcher_name
+        ORDER BY assertions DESC
+        """,
+    )
+
+
 def get_build_failure_causes(conn: Connection) -> pd.DataFrame:
     """Build-stage failures joined with the build-environment telemetry.
 
@@ -586,6 +621,8 @@ def generate_report(conn: Connection, top: int) -> dict[str, pd.DataFrame]:
         "task_diagnostics": get_task_diagnostics(conn),
         "true_yield": get_true_yield(conn),
         "yield_gap_causes": get_yield_gap_causes(conn),
+        "assertion_semantics_profile": get_assertion_semantics_profile(conn),
+        "fail_matcher_breakdown": get_fail_and_matcher_breakdown(conn),
         "build_failure_causes": get_build_failure_causes(conn),
     }
 
@@ -621,6 +658,8 @@ def print_report(report: dict[str, pd.DataFrame], top: int) -> None:
         ("Failed-task reason codes (all stages)", "task_diagnostics", None),
         ("True end-to-end yield (lifecycle)", "true_yield", None),
         ("Yield gap causes (stage, code, jqwik outcome)", "yield_gap_causes", None),
+        ("Assertion semantics (kind by shape)", "assertion_semantics_profile", None),
+        ("fail() contexts and matcher families", "fail_matcher_breakdown", top),
         (
             "Build failure causes (telemetry)",
             "build_failure_causes",

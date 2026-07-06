@@ -64,7 +64,7 @@ midpoint snapshot (read-only) and eyeball the output for internal consistency; t
       `jqwik_property_execution.diagnostic_kind`: included vs final_usable per project and
       corpus-wide, with the failure stage/code breakdown for the gap. Kills `is_included`
       as a yield proxy.
-- [ ] **Section 5 — assertion semantics profile.** `assertion_semantics` kind × argument
+- [x] **Section 5 — assertion semantics profile.** `assertion_semantics` kind × argument
       shape counts, `fail_context` breakdown, matcher families. Sizes assertNotNull/fail
       support work (observability plan Tier C).
 - [ ] **Section 6 — baseline deltas.** Dual-DB machinery: same funnel/yield aggregates
