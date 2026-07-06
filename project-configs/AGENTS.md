@@ -16,7 +16,7 @@ driver's system properties) must supply them.
 | `primary/{generation,generalization}/` | Primary-dataset lane (EqBench + commons-utils) | `replication/scripts/run.sh --dataset primary` |
 | `verification/` (16) | Fixture corpus configs | verification driver |
 | `sentinel/` (5) | Tier-2 real-project verification subset | reporeapers driver via `REPOREAPERS_CONFIG_DIR` |
-| `jarvis-scoreboard/` (6) | JARVIS scorecard + census lane | `scripts/run-jarvis-scoreboard.sh`, `scripts/run-jarvis-census.sh` |
+| `jarvis-scoreboard/` (26) | JARVIS scorecard + 12-project census lane (PIT-on defaults, `-no-pit` overlays for fast validation) | `scripts/run-jarvis-scoreboard.sh`, `scripts/run-jarvis-census.sh` |
 | `fusion-spike/` (23) | Corpus-claims verification tier (~1 h) | verifying-pipeline-changes skill, top tier |
 | `hotspot/` (1) | Concretization-census hotspot | manual; retires when the queued antiaction NPE trace lands |
 | `spikes/` (1) | R1-viability spike | retires with the R1/R2 verdict |
