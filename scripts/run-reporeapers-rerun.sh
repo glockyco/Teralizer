@@ -17,6 +17,15 @@
 #   --limit N    process at most N not-yet-done projects (spike)
 #   --start N    skip project configs numbered below N
 #
+# Graceful pause: `touch <DATA_DIR>/STOP` finishes the in-flight project, then exits cleanly
+# (the file is consumed; relaunching resumes). Signals (INT/TERM) kill the in-flight project's
+# whole process group immediately; it has no done-marker and re-runs on resume.
+#
+# Per-project wall cap: REPOREAPERS_PROJECT_TIMEOUT seconds (default 1800). A capped project is
+# recorded with exit code 124 in status.tsv and done-marked (attempted, not retried); its partial
+# funnel rows stay. The July baseline shows the cap only fires on zero-yield outliers, but capped
+# projects are identifiable by exit code for pairwise exclusion in baseline deltas.
+#
 # The target DB/data dir are dedicated (env overrides: REPOREAPERS_DB, REPOREAPERS_DATA_DIR).
 # The ambient DB_NAME/.env pin is deliberately NOT used, so this can never hit dev/test/timeout_retry.
 set -uo pipefail
@@ -29,6 +38,8 @@ CONFIG_DIR="${REPOREAPERS_CONFIG_DIR:-project-configs/replication/extended}"
 DONE_DIR="$ROOT_DIR/$DATA_DIR/done"
 LOG_DIR="$ROOT_DIR/$DATA_DIR/run-logs"
 STATUS_TSV="$ROOT_DIR/$DATA_DIR/status.tsv"
+STOP_FILE="$ROOT_DIR/$DATA_DIR/STOP"
+PROJECT_TIMEOUT="${REPOREAPERS_PROJECT_TIMEOUT:-1800}"
 
 source "$ROOT_DIR/scripts/lib/db-guard.sh"
 DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
@@ -48,6 +59,22 @@ _psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
 
 active_project_abs=""
 active_project_log=""
+active_project_pgid=""
+
+# Kill the in-flight project's whole process group (job control gives each gradle invocation
+# its own group, so this reaches the wrapper JVM and the pipeline JVM it re-parents). TERM first,
+# grace period, then KILL for survivors.
+kill_active_project_group() {
+  [[ -n "$active_project_pgid" ]] || return 0
+  kill -TERM -- "-$active_project_pgid" 2>/dev/null || true
+  for _ in $(seq 1 10); do
+    kill -0 -- "-$active_project_pgid" 2>/dev/null || { active_project_pgid=""; return 0; }
+    sleep 1
+  done
+  _log_cleanup "$active_project_log" "force-killing process group $active_project_pgid"
+  kill -KILL -- "-$active_project_pgid" 2>/dev/null || true
+  active_project_pgid=""
+}
 
 _log_cleanup() {
   local log_abs="$1"
@@ -82,6 +109,7 @@ cleanup_leftover_project_processes() {
 }
 
 cleanup_active_project_processes() {
+  kill_active_project_group
   [[ -n "$active_project_abs" ]] || return 0
   cleanup_leftover_project_processes "$active_project_abs" "$active_project_log"
 }
@@ -123,8 +151,14 @@ mkdir -p "$DONE_DIR" "$LOG_DIR"
 mapfile -t configs < <(find "$ROOT_DIR/$CONFIG_DIR" -maxdepth 1 -name 'project-*.conf' | sort -V)
 [[ ${#configs[@]} -gt 0 ]] || { echo "No project configs under $CONFIG_DIR" >&2; exit 1; }
 
-attempted=0; skipped=0; nonzero=0
+rm -f "$STOP_FILE"
+attempted=0; skipped=0; nonzero=0; capped=0; stopped=false
 for config_abs in "${configs[@]}"; do
+  if [[ -f "$STOP_FILE" ]]; then
+    rm -f "$STOP_FILE"
+    stopped=true
+    break
+  fi
   n=$(basename "$config_abs" .conf); n="${n#project-}"
   [[ "$n" -lt "$start" ]] && continue
   [[ "$limit" -gt 0 && "$attempted" -ge "$limit" ]] && break
@@ -141,23 +175,53 @@ for config_abs in "${configs[@]}"; do
   find "$project_abs/src/test" -name '_*_Generalized_*_Test.java' -delete 2>/dev/null
   active_project_abs="$project_abs"
   active_project_log="$log_abs"
+  # Job control (set -m) puts the background gradle and every JVM it spawns in a fresh
+  # process group, so the watchdog and the signal traps can kill the whole tree with one
+  # group signal. macOS has no setsid; this is the portable equivalent.
+  set -m
   "$ROOT_DIR/gradlew" run \
     -Dteralizer.config="$PROFILE,$config" \
     -Dteralizer.database.name="$DB_NAME" \
     -Dteralizer.data-dir="$DATA_DIR" \
     --no-daemon \
-    > "$log_abs" 2>&1
-  rc=$?
+    < /dev/null > "$log_abs" 2>&1 &
+  gradle_pid=$!
+  set +m
+  active_project_pgid="$gradle_pid"
+  # Watchdog: background gradle keeps this shell interruptible (traps fire immediately
+  # instead of waiting for gradle to return), and enforces the per-project wall cap.
+  started=$SECONDS
+  rc=""
+  while :; do
+    if ! kill -0 "$gradle_pid" 2>/dev/null; then
+      wait "$gradle_pid"
+      rc=$?
+      break
+    fi
+    if (( SECONDS - started >= PROJECT_TIMEOUT )); then
+      _log_cleanup "$log_abs" "project exceeded ${PROJECT_TIMEOUT}s wall cap, killing process group"
+      kill_active_project_group
+      wait "$gradle_pid" 2>/dev/null
+      rc=124
+      break
+    fi
+    sleep 15
+  done
+  active_project_pgid=""
   cleanup_leftover_project_processes "$project_abs" "$log_abs"
   active_project_abs=""
   active_project_log=""
   printf '%s\t%s\t%s\t%s\n' "$n" "$root_path" "$rc" "$log" >> "$STATUS_TSV"
-  if [[ "$rc" -ne 0 ]]; then
+  if [[ "$rc" -eq 124 ]]; then
+    capped=$((capped + 1))
+    echo "    capped at ${PROJECT_TIMEOUT}s (exit 124 in the ledger; partial funnel rows recorded)"
+  elif [[ "$rc" -ne 0 ]]; then
     nonzero=$((nonzero + 1))
     echo "    gradle exited $rc (funnel data still recorded where reached; see $log)"
   fi
   touch "$DONE_DIR/project-$n"
 done
 
-echo "reporeapers-rerun: attempted=$attempted skipped(already done)=$skipped gradle-nonzero=$nonzero"
+[[ "$stopped" == true ]] && echo "reporeapers-rerun: STOP file honored, exiting at a project boundary (relaunch resumes)."
+echo "reporeapers-rerun: attempted=$attempted skipped(already done)=$skipped gradle-nonzero=$nonzero capped=$capped"
 echo "Attempt ledger: $DATA_DIR/status.tsv   Funnel DB: '$DB_NAME' (project, test, assertion, filter_result, task, generalization)."
