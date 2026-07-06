@@ -20,6 +20,7 @@
 - **Collect-Mode Conformance Survey of the Vendored SPF** [audit] `2026-07-05-collect-mode-conformance` ← 2026-06-26-teralizer-overview
 - **Concretization Census — Load-Bearing Blockers and the License Over-Refusal Finding** [audit] `2026-07-05-concretization-census-findings` ← 2026-07-04-concretization-census
 - **Full Evaluation Rerun (RepoReapers, post-runway)** [plan] `2026-07-05-full-evaluation-rerun` (—) ← 2026-06-26-teralizer-overview
+- **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
 
 ## draft
 
