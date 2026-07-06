@@ -81,9 +81,9 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
       Extension is planned and sequenced in `2026-07-06-rerun-report-extension`: development
       NOW against the midpoint snapshot, final numbers regenerated post-run. The R2 decision
       query stays with `mut_resolution_funnel.py`.
-- [ ] `project-configs/timeout-retry-*.conf` (untracked, now gitignored) are one-offs bound to
-      July baseline project ids. Leave untouched until the new timeout list exists, then
-      regenerate the retry lane from it and delete the stale set.
+- [x] `project-configs/timeout-retry-*.conf` (untracked, now gitignored) were one-offs bound to
+      July baseline project ids. Deleted after the rerun produced an empty fresh timeout list
+      (see the post-run task below). No retry lane regenerated.
 
 ## Tasks
 
@@ -106,22 +106,26 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
 ### Launch and monitor
 
 - [x] Launch with the command above (operator sign-off = running this task).
-- [ ] Monitor cheaply, no per-project attention: `tail data/reporeapers-rerun-2/status.tsv`,
+- [x] Monitor cheaply, no per-project attention: `tail data/reporeapers-rerun-2/status.tsv`,
       row counts on `project`/`task`, disk headroom. Interruption is safe, relaunch resumes.
 
 ### Post-run
 
 - [ ] Add `postgres_reporeapers_rerun2` to `src/main/resources/db/protected-databases.txt`.
       Commit.
-- [ ] Regenerate the extended report against the completed snapshot and export
-      (`2026-07-06-rerun-report-extension`, final task).
-- [ ] Run the R2 decision query (`python -m teralizer.mut_resolution_funnel` against the full
-      snapshot). Record the verdict in `2026-07-02-input-topology-spike` (gate: >5k
-      local-ctor-rooted sub-family) and update the overview's P1. Midpoint preview points
-      roughly twentyfold short of the gate.
-- [ ] Extract the fresh timeout list. Decide the retry-lane design (separate DB as before, or
-      fold into snapshot) with the count in hand, regenerate retry configs, and delete the
-      stale `timeout-retry-*.conf` set.
+- [x] Regenerated the extended report against the completed snapshot
+      (`python -m teralizer.reporeapers_rerun_report --db postgres_reporeapers_rerun2`): 1,161
+      projects, 105,897 assertions, 753 included / 514 final_usable. One integrity fix landed
+      first — the harness-killed first HdrHistogram attempt left a duplicate project row and a
+      stale `EXECUTE_JPF IN_PROGRESS` task, both reconciled.
+- [x] Ran the R2 decision query against the full snapshot. Verdict: OUT OF SCOPE. The sound
+      `LOCAL_CTOR` sub-family is 3,621 assertions, below the 5k gate. Recorded in
+      `2026-07-02-input-topology-spike`.
+- [x] Extracted the fresh timeout list: empty. No task carried a timeout reason code, the
+      slowest project ran 7.6 min against the 30 min cap, and the sole capped project is a JPF
+      model-method gap that more wall time cannot resolve. The retry-lane design question is
+      moot at count zero, so the stale `timeout-retry-*.conf` set was deleted with no
+      replacement.
 - [ ] Update the overview: rerun gate consumed, queue re-ranked by the new evidence
       (P2 native-peer ranking gets its corpus numbers, JARVIS refresh scheduling per standing
       gate).
