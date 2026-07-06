@@ -73,6 +73,13 @@ public class TestExecutionTask extends AbstractTask {
         }
 
         if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {
+            this.consoleCommand.setTimeout(
+                generalizedExecutionTimeoutSeconds(includedGeneralizedTests.size()),
+                TimeUnit.SECONDS
+            );
+        }
+
+        if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {
             // One persisted diagnostics execution per generalized JUnit run. The generated
             // recorder writes execution-scoped sidecars keyed by this id; collection finds
             // the run and imports them. Forked Surefire/Gradle test JVMs inherit the process
@@ -165,6 +172,24 @@ public class TestExecutionTask extends AbstractTask {
                 "refusing to record a false pass."
             );
         }
+    }
+
+    private long generalizedExecutionTimeoutSeconds(int propertyCount) {
+        return scaledGeneralizedTimeoutSeconds(
+            propertyCount,
+            Configuration.getGeneralizationJqwikTries(this.variant),
+            Configuration.getJunitMaxExecutionTime(),
+            Configuration.getJunitBaselineTriesBudget()
+        );
+    }
+
+    static long scaledGeneralizedTimeoutSeconds(int propertyCount, int tries, int flatTimeoutSeconds, int baselineTriesBudget) {
+        if (baselineTriesBudget <= 0) {
+            throw new IllegalArgumentException("baselineTriesBudget must be positive.");
+        }
+        long propertyTries = (long) Math.max(0, propertyCount) * Math.max(0, tries);
+        long multiplier = Math.max(1L, (propertyTries + baselineTriesBudget - 1L) / baselineTriesBudget);
+        return (long) flatTimeoutSeconds * multiplier;
     }
 
     private List<String> buildGradleCommand(List<String> includedTests) {

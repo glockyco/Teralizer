@@ -303,6 +303,10 @@ public class Configuration {
         return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.max-execution-time");
     }
 
+    public static int getJunitBaselineTriesBudget() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.baseline-tries-budget");
+    }
+
     // ----- Pitest ----- //
     public static String getPitestMutators() {
         return CONFIG.getString(TOOL_NAME_LOWER + ".pitest.mutators");

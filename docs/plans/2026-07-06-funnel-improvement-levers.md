@@ -82,7 +82,7 @@ proportionally on a sentinel re-run.
   `${property}` references against the pom's `<properties>` before the level comparison.
   Unresolvable references stay untouched (the build-environment telemetry already labels
   them). Same resolution for the properties-based path.
-- **Scale the generalized execution budget.** `EXECUTE_TESTS_GENERALIZED` gets its own
+- [x] **Scale the generalized execution budget.** `EXECUTE_TESTS_GENERALIZED` gets its own
   timeout derived from the generated-property count. Mechanism constraint from the code:
   `TestExecutionTask` builds its `ConsoleCommand` with the flat
   `junit.max-execution-time` in the CONSTRUCTOR, before the included-property count is

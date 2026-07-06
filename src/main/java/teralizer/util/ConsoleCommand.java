@@ -19,8 +19,8 @@ public class ConsoleCommand {
     private final ProcessingStage stage;
     private final String variant;
     private final Path commandDataPath;
-    private final long timeout;
-    private final TimeUnit timeoutUnit;
+    private long timeout;
+    private TimeUnit timeoutUnit;
 
     private final Map<String, String> environmentVariables = new HashMap<>();
 
@@ -40,6 +40,11 @@ public class ConsoleCommand {
 
     public void addEnvironmentVariable(String name, String value) {
         this.environmentVariables.put(name, value);
+    }
+
+    public void setTimeout(long timeout, TimeUnit timeoutUnit) {
+        this.timeout = timeout;
+        this.timeoutUnit = timeoutUnit;
     }
 
     public ConsoleCommandResult execute(List<String> command) throws IOException, InterruptedException, ConsoleCommandException {
