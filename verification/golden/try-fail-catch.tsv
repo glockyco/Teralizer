@@ -1,0 +1,3 @@
+fixture	gen_count	gen_index	variant	is_included	exclusion_info	output_spec_class	diagnostic_kind	tries	distinct_tuples
+try-fail-catch	2	1	IMPROVED_100_TRIES	true		EXCEPTION	FULL	100	100
+try-fail-catch	2	2	IMPROVED_100_TRIES	true		EXCEPTION	FULL	100	100

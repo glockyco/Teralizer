@@ -62,7 +62,7 @@ later with a worse diagnostic. Gate and recipe change together, per sub-family:
   assertEquals would. Everything downstream (filters, SPF, generation) is unchanged.
   Non-goal: every other matcher family (`contains`, `hasSize`, `not`...) — sized small,
   each needs its own oracle semantics.
-- **try/fail/catch exception tests.** `fail()` with `fail_context = TRY_BLOCK_EXPECTING_EXCEPTION`
+- [x] **try/fail/catch exception tests.** `fail()` with `fail_context = TRY_BLOCK_EXPECTING_EXCEPTION`
   (1.5k of 2.7k fail uses) is the pre-assertThrows idiom for an exception oracle. The
   EXCEPTION oracle machinery (thrown-oracle capture, widening license, risk-gated message
   widening) already exists for assertThrows. The recipe front-end gains the idiom: MUT = the
