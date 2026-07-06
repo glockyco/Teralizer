@@ -9,6 +9,8 @@
         </outputFormats>
         <exportLineCoverage>true</exportLineCoverage>
         <verbose>true</verbose>
+        <!-- Safe parallelism: each mutant runs in its own minion JVM. -->
+        <threads>4</threads>
         <jvmArgs>
             <jvmArg>-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY</jvmArg>
         </jvmArgs>
