@@ -13,6 +13,8 @@ Run:  uv run --directory analysis python -m teralizer.mut_resolution_funnel
 
 from __future__ import annotations
 
+import argparse
+
 import pandas as pd
 from sqlalchemy import Connection, text
 
@@ -82,7 +84,17 @@ def get_topology_cross_tab(conn: Connection) -> pd.DataFrame:
 
 
 def main() -> None:
-    engine = db_config.get_test_engine(validate=False)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--db",
+        help="database to inspect (default: the postgres_test engine)",
+    )
+    args = parser.parse_args()
+    engine = (
+        db_config.get_engine(args.db, validate=False)
+        if args.db
+        else db_config.get_test_engine(validate=False)
+    )
     with engine.connect() as conn:
         funnel = get_tier_funnel(conn)
         print("== Tier funnel ==")
