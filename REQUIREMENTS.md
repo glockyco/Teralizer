@@ -48,7 +48,7 @@ Docker Compose V2 is included with Docker Desktop and recent Docker Engine insta
 
 ### Disk Space Breakdown
 
-**Archive sizes** (run `./scripts/collect-disk-metrics.sh` to regenerate):
+**Archive sizes** (run `./scripts/packaging/collect-disk-metrics.sh` to regenerate):
 
 | Archive | Compressed | Unpacked |
 |---------|------------|----------|

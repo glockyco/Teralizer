@@ -75,12 +75,12 @@ here except gradle-touching smokes.
 
 ### Tier 1 — do now, no gradle contention with the live run
 
-- [ ] Delete untracked config litter: `examples/`, `test.conf`,
+- [x] Delete untracked config litter: `examples/`, `test.conf`,
       `commons-utils-pit-defaults.conf`, `evaluation/`.
-- [ ] Delete `run_timeout_retry.sh` + `generate_timeout_configs.sh` (superseded by guarded
+- [x] Delete `run_timeout_retry.sh` + `generate_timeout_configs.sh` (superseded by guarded
       drivers; the `timeout-retry-*.conf` set stays until the post-run regeneration task
       replaces it) and the 0-byte litter (`tekst.txt`, `data/teralizer.db`).
-- [ ] Move packager tooling to `scripts/packaging/` (`prepare-zenodo-package.sh`,
+- [x] Move packager tooling to `scripts/packaging/` (`prepare-zenodo-package.sh`,
       `setup-eval-environment.sh`, `collect-disk-metrics.sh`) with a README line each.
 - [ ] Extract `scripts/lib/db-lifecycle.sh` (terminate/drop/create/collation-refresh) and
       use it from the four duplication sites. Verification: bash -n + shellcheck now, the

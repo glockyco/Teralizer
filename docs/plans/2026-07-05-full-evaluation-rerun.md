@@ -97,7 +97,7 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
       build-only gate, and a 24 h event warrants one fixture pass in front of it.
 - [x] Disk check: ≥50 GiB free required (July run's net growth was ~2–3 GiB — data dir 911 MB,
       DB 701 MB, build artifacts mostly pre-existing in `projects/`). Currently 52 GiB. Run
-      `scripts/collect-disk-metrics.sh` for the before-snapshot.
+      `scripts/packaging/collect-disk-metrics.sh` for the before-snapshot.
 - [x] Confirm no concurrent pipeline users: no JARVIS/sentinel/hotspot runs during the event
       (shared `projects/` clones and the port-5432 container).
 - [x] Postgres container healthy (`docker compose ps`). The runner handles startup and the
