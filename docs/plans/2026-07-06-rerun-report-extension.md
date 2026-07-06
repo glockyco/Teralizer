@@ -67,7 +67,7 @@ midpoint snapshot (read-only) and eyeball the output for internal consistency; t
 - [x] **Section 5 — assertion semantics profile.** `assertion_semantics` kind × argument
       shape counts, `fail_context` breakdown, matcher families. Sizes assertNotNull/fail
       support work (observability plan Tier C).
-- [ ] **Section 6 — baseline deltas.** Dual-DB machinery: same funnel/yield aggregates
+- [x] **Section 6 — baseline deltas.** Dual-DB machinery: same funnel/yield aggregates
       computed on baseline and snapshot, joined on `root_path`, capped projects excluded
       pairwise via the ledger. Sketch of the exclusion, the one load-bearing correctness
       risk:
