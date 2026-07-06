@@ -7,9 +7,9 @@ import java.util.Optional;
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.reflect.factory.Factory;
 import teralizer.util.Configuration;
 
 public class TestAnalysis {
