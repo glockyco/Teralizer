@@ -46,6 +46,8 @@ into the root file in commit `fbb24921`).
 - [x] State the capped methodology in §Complete Reproduction: the paper's
   extended numbers come from capped runs, and the artifact reproduces with
   the same rule.
+- [x] Label the root README as the frozen Zenodo artifact documentation and
+  point live development readers to `AGENTS.md` and `docs/`.
 
 Static shell verification is the acceptance gate while the live corpus run owns
 the machine. The E2E smoke stays deferred until that run finishes.

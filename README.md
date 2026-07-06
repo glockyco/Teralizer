@@ -1,5 +1,9 @@
 # Teralizer - Replication Package
 
+> This README documents the frozen Zenodo artifact package.
+> For live development guidance, use [AGENTS.md](AGENTS.md) and the planning docs in [docs/](docs/).
+> Artifact commands below stay compatible with the archived package layout.
+
 This (https://doi.org/10.5281/zenodo.17950380) is a replication package for the paper:
 
 **Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests**
