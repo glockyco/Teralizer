@@ -54,7 +54,7 @@ which both `UnsupportedAssertionFilter` and `findGeneralizableAsserts` share —
 kind must pass BOTH the gate and recipe derivation, or it enters the funnel and dies
 later with a worse diagnostic. Gate and recipe change together, per sub-family:
 
-- **Equality-isomorphic Hamcrest.** `assertThat(x, is(y))` and `assertThat(x, equalTo(y))`
+- [x] **Equality-isomorphic Hamcrest.** `assertThat(x, is(y))` and `assertThat(x, equalTo(y))`
   (3.8k of 5.3k assertThat uses) desugar to the assertEquals recipe: actual = `x`,
   expected = `y`. Implementation is recipe-derivation-side (`TestAnalysisTask` /
   GeneralizationRecipe): recognize the two matcher forms structurally (matcher factory
