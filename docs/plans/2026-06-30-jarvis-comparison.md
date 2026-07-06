@@ -53,6 +53,9 @@ with `diagnostic_kind = 'FULL'`).
 | reported Table-2 cases | 10 | (n/a) | JARVIS-native (scenario-depth) |
 | sound assertion-properties | (n/a) | 250 (census) | Teralizer-native (throughput only) |
 
+Census cells (6 classes / 26 MUTs / 250 properties) are the superseded 2026-06-30 allowlist
+numbers (see Axis 3, Historical) and refresh with the full-suite run.
+
 **The comparable unit is the distinct method-under-test (MUT)** — the production method whose
 tested behaviour each tool turns into a property; the only unit both tools express, and a
 property of the production code, not of test-suite structure. The row count is a valid
@@ -213,45 +216,53 @@ property of path-exact generalization and oracle strength, not a defect.
 
 ## Axis 3 — Breadth beyond JARVIS (the census)
 
-Beyond the 10 Table-2 cases, run Commons-Lang/Math's **own** numeric/char test classes through
-the pipeline and let the filters + SPF decide feasibility. Source: `postgres_jarvis_census`,
-IMPROVED_100, current code; `uv run --directory analysis python -m teralizer.jarvis_scoreboard
---census`. Honesty bound: claim "beyond JARVIS's *reported* set," never "JARVIS failed on test
-X" (the paper publishes only successes). JARVIS structurally needs ≥2 repetitive traces per
-scenario and numeric/char-primitive templates; Teralizer generalizes from a single test via
-symbolic paths.
+Beyond the 10 Table-2 cases, run the **full pinned upstream test suites** through the pipeline
+and let the filters + SPF decide feasibility. This mirrors JARVIS's own setup: it analyzed the
+whole JUnit suites of 12 Apache Commons projects (Table 1) and reported the cases that
+generalized (Table 2 — all from commons-lang and commons-math). The population is the whole
+suite, so the funnel's by-reason ledger is the other half of the result: what generalizes and
+what is rejected, with stable reason codes, are both census outputs. Honesty bound: claim
+"beyond JARVIS's *reported* set," never "JARVIS failed on test X" (the paper publishes only
+successes). JARVIS structurally needs ≥2 repetitive traces per scenario and
+numeric/char-primitive templates; Teralizer generalizes from a single test via symbolic paths.
 
-**26 distinct MUTs soundly generalized across 6 real upstream classes** (250 sound
-assertion-properties):
+**Batch A (current event): commons-lang `LANG_3_5` + commons-math `MATH_3_5`, full suites**
+(141 / 507 test classes, ~2,871 / ~4,268 `@Test` methods). The fixture carries the complete
+upstream `src/test` (sources and resources) plus the test-scope dependency closure mirrored
+from each project's upstream POM; every materialized fixture must pass the
+`mvn test-compile` gate in `prepare-jarvis-scoreboard-fixtures.sh --census` before a run.
+PIT stays **on** (the fault-detection axis is part of the PVC critique that motivates the
+mutation-score metric), 4 threads, INITIAL/GENERALIZED stages only — the ORIGINAL-stage PIT
+run is off by default pipeline-wide: it mutates the full-suite coverage scope and nothing
+consumes it.
 
-| class | distinct MUTs | sound properties |
-|---|--:|--:|
-| `CharUtilsTest` | 10 | 82 |
-| `ArithmeticUtilsTest` | 6 | 44 |
-| `BooleanUtilsTest` | 4 | 18 |
-| `MathArraysTest` | 3 | 36 |
-| `NumberUtilsTest` | 2 | 41 |
-| `PolynomialFunctionTest` | 1 | 29 |
-| `PrecisionTest` | 0 | 0 (raw-bits sound-excluded) |
+**Batch B (queued): the other 10 Table-1 projects** (CLI, Codec, Collections, Configuration,
+CSV, Email, IO, JEXL, Pool, Text). Version rule: latest stable release as of 2016-10-13 (the
+`LANG_3_5` release date, the later of the two anchors JARVIS's Table 2 fixes); known
+exception: commons-text's first stable release is 1.0 (2017-03), the nearest release.
+Per-project onboarding is mechanical (pin URL/tag/SHA, mirror the upstream test-dep closure,
+census config, compile gate, provenance entry) — no manual harnessing anywhere in the census
+lane. Expectation, stated up front: lang/math-style numeric/char/string MUTs are the sweet
+spot, collection/IO/mock-heavy suites will mostly land in the rejection ledger — both
+outcomes are reportable applicability evidence.
 
-Two head-to-head reads: **within** a JARVIS class Teralizer covers a superset (`CharUtils`
-2 → 10 MUTs, including both of JARVIS's plus `isAsciiControl/Alpha/Alphanumeric/Numeric/
-AlphaUpper/AlphaLower`, `toIntValue`, `toChar`); and it adds whole classes JARVIS never
-reported (`ArithmeticUtils`, `MathArrays`, `BooleanUtils`, `NumberUtils`). vs JARVIS's ~8
-Math + 2 Lang reported cases, this is a large applicability gain.
+**Timeout policy — tripwires, not bounds.** A fired timeout on a project-level task drops the
+whole fixture downstream (`ProcessingPipeline` removes the project's queued tasks), so budgets
+are sized to never fire on real work and any that fire are reported as losses: full original
+suite under JaCoCo 1200 s; generalized suites scale with property count (reference.conf slope,
+calibrated on rerun2 telemetry) clamped at 3600 s; PIT 3600 s per stage at 4 threads. The
+`jpf.max-execution-time = 30` s per-assertion budget is deliberately **not** raised: it is a
+property of the tool under evaluation (JARVIS has no analogous knob to un-bound), and SPF
+timeouts are recorded exclusions, i.e. results.
 
-**Fault-detection gain** (killed-mutant-key set difference, GENERALIZED \ INITIAL, same covered
-classes): **+1 (commons-lang), +7 (commons-math)** over the seed tests — augmented GENERALIZED
-score 634/771 (lang), 910/1409 (math). High input diversity, modest extra kills — the same
-PVC-vs-kills disconnect as Axis 2.
-
-**By-reason rejection tally** (the other half of the result; `REJECT` excludes, `DEFER` is
-informational). Dominant rejects: `MissingValueFilter` (393 lang / 314 math),
-`ParameterTypeFilter` — the type ceiling (317 lang / 42 math), `ExcludedTestFilter` (280 math),
-`NonPassingTestFilter` (59 lang / 188 math), `ReturnTypeFilter` (112 lang / 24 math),
-`UnsupportedAssertionFilter` (22 lang / 81 math), `NoAssertionsFilter` (68 lang / 10 math).
-Loop/structure cases are `DEFER` (`AssertionInLoopFilter`, `TestedMethodInLoopFilter`, …) —
-JARVIS's target, Teralizer's non-target; the funnel records both directions.
+**Historical (superseded 2026-07-06):** the first census (2026-06-30) ran a hand-curated
+numeric/char allowlist (10 test classes) on the pre-fusion, pre-string, pre-R1 binary:
+26 distinct MUTs / 250 sound assertion-properties across 6 classes, fault-detection gain
++1 lang / +7 math, dominant rejects `MissingValueFilter` (393/314),
+`ParameterTypeFilter` (317/42), `UnsupportedAssertionFilter` (22/81). Superseded on both axes
+at once — population (allowlist → full suite) and binary (the capability waves since) — so it
+is not comparable to the full-suite numbers and is kept only as the record that motivated the
+re-scope.
 
 ## Axis 4 — Soundness / automation tradeoff
 
@@ -283,7 +294,9 @@ soundness. This is the qualitative axis; the exclusion ledger (Axis 3 rejection 
   `bash scripts/run-jarvis-scoreboard.sh --reset-db`, then
   `uv run --directory analysis python -m teralizer.jarvis_scoreboard [--sweep]`.
 - Census (breadth): `postgres_jarvis_census`, `data/jarvis-census/`;
-  `bash scripts/run-jarvis-census.sh --reset-db`, then `… jarvis_scoreboard --census`.
+  `bash scripts/run-jarvis-census.sh --prepare-fixtures --reset-db` (prep materializes the
+  full-suite fixtures and runs the `mvn test-compile` gate), then `… jarvis_scoreboard
+  --census`. The `-census-no-pit` overlays remain the fast validation lane.
 - Corpus rationale (why pinned fixtures, not the main dataset): JARVIS ran on the **2018
   monolithic** Apache Commons (`commons-math3`, `commons-lang3`); our main `commons-utils`
   dataset is the **modern modular** line (commons-numbers, math4, lang3 at HEAD ~Feb 2025),
