@@ -74,6 +74,7 @@ POM
 write_census_pom() {
   local artifact_id="$1"
   local dst="$2"
+  local extra_deps="$3"
   cat > "$dst/pom.xml" <<POM
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -92,42 +93,60 @@ write_census_pom() {
       <version>4.12</version>
       <scope>test</scope>
     </dependency>
+$extra_deps
   </dependencies>
 </project>
 POM
 }
 
-# Curated allowlist of upstream numeric/char test classes promoted into the census fixture.
-# Prioritizes JARVIS's own Table-2 source classes; refined by the mvn test-compile gate.
-MATH_CENSUS_TESTS="src/test/java/org/apache/commons/math3/util/FastMathTest.java \
-src/test/java/org/apache/commons/math3/util/PrecisionTest.java \
-src/test/java/org/apache/commons/math3/util/ArithmeticUtilsTest.java \
-src/test/java/org/apache/commons/math3/util/MathArraysTest.java \
-src/test/java/org/apache/commons/math3/geometry/euclidean/oned/IntervalTest.java \
-src/test/java/org/apache/commons/math3/analysis/polynomials/PolynomialFunctionTest.java \
-src/test/java/org/apache/commons/math3/TestUtils.java"
-LANG_CENSUS_TESTS="src/test/java/org/apache/commons/lang3/CharUtilsTest.java \
-src/test/java/org/apache/commons/lang3/BooleanUtilsTest.java \
-src/test/java/org/apache/commons/lang3/math/NumberUtilsTest.java"
+# Test-scope dependencies mirrored from each pinned project's upstream POM (the census POM
+# is synthetic). junit comes from the base POM.
+MATH_TEST_DEPS=""
+LANG_TEST_DEPS='    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.4</version>
+      <scope>test</scope>
+    </dependency>'
 
+# The census fixture carries the full upstream test suite. The pipeline's filter funnel,
+# not fixture curation, decides what generalizes.
 prepare_census_fixture() {
   local repo_dir="$1"
   local dst="$2"
   local artifact="$3"
-  shift 3
+  local extra_deps="$4"
   rm -rf "$dst"
   mkdir -p "$dst/src"
-  write_census_pom "$artifact" "$dst"
+  write_census_pom "$artifact" "$dst" "$extra_deps"
   cp -R "$repo_dir/src/main" "$dst/src/"
+  cp -R "$repo_dir/src/test" "$dst/src/"
+  local test_files
+  test_files=$(find "$dst/src/test" -name '*.java' | wc -l | tr -d ' ')
   echo "### $artifact"
-  for t in "$@"; do
-    if [[ -f "$repo_dir/$t" ]]; then
-      copy_path "$repo_dir" "$t" "$dst"
-      echo "- KEEP $t"
-    else
-      echo "- DROP(missing) $t"
-    fi
-  done
+  echo "- full upstream src/test (sources and resources): $test_files java files"
+}
+
+# A missing test-scope dependency only surfaces at compile time. Gate every fixture.
+census_compile_gate() {
+  local dst="$1"
+  echo "==> mvn test-compile gate: $dst"
+  if ! (cd "$dst" && mvn -q test-compile); then
+    echo "Census fixture failed the test-compile gate: $dst" >&2
+    exit 1
+  fi
 }
 
 write_math_scorecard_tests() {
@@ -269,11 +288,14 @@ if [[ "${1:-}" == "--census" ]]; then
     echo "# Census fixture provenance"
     echo
     echo "Pinned: commons-math $MATH_SHA ($MATH_TAG), commons-lang $LANG_SHA ($LANG_TAG)."
+    echo "Each fixture carries the full upstream src/test of its pinned project."
     echo
-    prepare_census_fixture "$CACHE_DIR/commons-math" "$CENSUS_FIXTURE_DIR/commons-math-3.5-census" "commons-math-3.5-census" $MATH_CENSUS_TESTS
-    prepare_census_fixture "$CACHE_DIR/commons-lang" "$CENSUS_FIXTURE_DIR/commons-lang-3.5-census" "commons-lang-3.5-census" $LANG_CENSUS_TESTS
+    prepare_census_fixture "$CACHE_DIR/commons-math" "$CENSUS_FIXTURE_DIR/commons-math-3.5-census" "commons-math-3.5-census" "$MATH_TEST_DEPS"
+    prepare_census_fixture "$CACHE_DIR/commons-lang" "$CENSUS_FIXTURE_DIR/commons-lang-3.5-census" "commons-lang-3.5-census" "$LANG_TEST_DEPS"
   } | tee "$PROV"
-  echo "Prepared census fixtures under $CENSUS_FIXTURE_DIR; provenance at $PROV"
+  census_compile_gate "$CENSUS_FIXTURE_DIR/commons-math-3.5-census"
+  census_compile_gate "$CENSUS_FIXTURE_DIR/commons-lang-3.5-census"
+  echo "Prepared census fixtures under $CENSUS_FIXTURE_DIR. Provenance at $PROV."
   exit 0
 fi
 prepare_math_fixture
