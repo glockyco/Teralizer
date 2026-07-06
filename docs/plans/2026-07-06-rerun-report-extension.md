@@ -49,7 +49,7 @@ midpoint snapshot (read-only) and eyeball the output for internal consistency; t
       lifecycle rows ≤ generalizations, jqwik outcome rows ≥ lifecycle final_usable... any
       violated invariant prints loudly. This is the section that catches a broken writer
       before a 24 h run wastes itself.
-- [ ] **Section 1 — funnel by reason code.** Replace the filter-name alias table with
+- [x] **Section 1 — funnel by reason code.** Replace the filter-name alias table with
       `filter_result.reason_code` counts (assertion- and test-scope), keeping the filter
       class as a secondary column.
 - [ ] **Section 2 — SPF loss rollup.** `jpf_extraction_summary` aggregated corpus-wide:

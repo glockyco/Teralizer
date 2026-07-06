@@ -227,11 +227,17 @@ def get_filter_summary(conn: Connection, scope: str) -> pd.DataFrame:
     df = _read_sql(
         conn,
         f"""
-        SELECT filter_name, decision, count(*) AS rows, count(DISTINCT {distinct_id}) AS {label}
+        SELECT
+            coalesce(reason_code, '<none>') AS reason_code,
+            filter_name,
+            decision,
+            count(*) AS rows,
+            count(DISTINCT {distinct_id}) AS {label}
         FROM filter_result
         WHERE {where}
-        GROUP BY filter_name, decision
-        ORDER BY decision DESC, {label} DESC, filter_name
+          AND decision <> 'ACCEPT'
+        GROUP BY reason_code, filter_name, decision
+        ORDER BY decision DESC, {label} DESC, reason_code
         """,
     )
     if not df.empty:
