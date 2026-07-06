@@ -10,3 +10,4 @@ analysis/notebooks/*.ipynb filter=nbstripout diff=nbstripout merge=nbstripout -t
 # Shell scripts must have LF line endings
 *.sh text eol=lf
 gradlew text eol=lf
+verification/golden/*.tsv text eol=lf
