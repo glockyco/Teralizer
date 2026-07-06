@@ -307,6 +307,12 @@ public class Configuration {
         return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.baseline-tries-budget");
     }
 
+    /** Ceiling (seconds) on the workload-scaled generalized-suite timeout. Never trims below
+     * {@code junit.max-execution-time}. */
+    public static int getJunitMaxGeneralizedExecutionTime() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.max-generalized-execution-time");
+    }
+
     // ----- Pitest ----- //
     public static String getPitestMutators() {
         return CONFIG.getString(TOOL_NAME_LOWER + ".pitest.mutators");
@@ -321,6 +327,12 @@ public class Configuration {
     public static boolean isPitestEnabled() {
         String path = TOOL_NAME_LOWER + ".pitest.enabled";
         return !CONFIG.hasPath(path) || CONFIG.getBoolean(path);
+    }
+
+    /** Whether the ORIGINAL-stage PIT run executes. Off by default: it mutates the full-suite
+     * coverage scope and only the INITIAL/GENERALIZED comparison is consumed. */
+    public static boolean isPitestOriginalEnabled() {
+        return CONFIG.getBoolean(TOOL_NAME_LOWER + ".pitest.original.enabled");
     }
 
     // ----- Generalizations ----- //

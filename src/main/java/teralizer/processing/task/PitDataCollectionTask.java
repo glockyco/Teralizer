@@ -91,6 +91,13 @@ public class PitDataCollectionTask extends AbstractTask {
             return;
         }
 
+        if (this.stage == ProcessingStage.COLLECT_PIT_DATA_ORIGINAL && !Configuration.isPitestOriginalEnabled()) {
+            reportInfo.accept("ORIGINAL-stage mutation testing disabled"
+                + " (teralizer.pitest.original.enabled = false); skipping PIT execution and data"
+                + " collection for " + this.getStage() + ".");
+            return;
+        }
+
         Path pitDataDirectory = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/pit-data");
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
 

@@ -179,17 +179,20 @@ public class TestExecutionTask extends AbstractTask {
             propertyCount,
             Configuration.getGeneralizationJqwikTries(this.variant),
             Configuration.getJunitMaxExecutionTime(),
-            Configuration.getJunitBaselineTriesBudget()
+            Configuration.getJunitBaselineTriesBudget(),
+            Configuration.getJunitMaxGeneralizedExecutionTime()
         );
     }
 
-    static long scaledGeneralizedTimeoutSeconds(int propertyCount, int tries, int flatTimeoutSeconds, int baselineTriesBudget) {
+    static long scaledGeneralizedTimeoutSeconds(int propertyCount, int tries, int flatTimeoutSeconds, int baselineTriesBudget, int maxTimeoutSeconds) {
         if (baselineTriesBudget <= 0) {
             throw new IllegalArgumentException("baselineTriesBudget must be positive.");
         }
         long propertyTries = (long) Math.max(0, propertyCount) * Math.max(0, tries);
         long multiplier = Math.max(1L, (propertyTries + baselineTriesBudget - 1L) / baselineTriesBudget);
-        return (long) flatTimeoutSeconds * multiplier;
+        long scaled = (long) flatTimeoutSeconds * multiplier;
+        // Clamp to the ceiling, but never below the flat budget.
+        return Math.min(scaled, Math.max(flatTimeoutSeconds, maxTimeoutSeconds));
     }
 
     private List<String> buildGradleCommand(List<String> includedTests) {
