@@ -89,11 +89,11 @@ Docker Compose V2 is included with Docker Desktop and recent Docker Engine insta
 | Initial setup (download + quick-start) | ~10 minutes |
 | Workflow 1: Inspect results | ~5 minutes |
 | Workflow 2: Verify analysis | ~10 minutes |
-| Workflow 3: Verify pipeline (5 projects) | ~15 minutes |
-| Full reproduction of data collection for the extended dataset (1161 projects) | ~15 hours |
+| Workflow 3: Verify pipeline (5 projects) | ~5 minutes, project-dependent |
+| Full reproduction of data collection for the extended dataset (1161 projects) | ~12 hours with the 30-minute cap and 23.6 hours uncapped on an M2 |
 | Full reproduction of data collection for the primary dataset (all variants) | ~100 hours |
 
-Time estimates are based on evaluation hardware. Actual times may vary based on machine specifications and resources allocated to Docker.
+Time estimates are based on evaluation hardware. Actual times may vary based on machine specifications and resources allocated to Docker. Capped extended projects are recorded as exit 124 in the run ledger. A small number of capped projects is expected behavior, not a hang.
 
 ### Versions Provided by Docker Containers
 

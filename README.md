@@ -128,9 +128,11 @@ Confirm the analysis code produces identical results on the same data.
 
 **Expected**: All outputs match exactly. The analysis is deterministic.
 
-### Workflow 3: Verify Pipeline (~15 min)
+### Workflow 3: Verify Pipeline (~5 min, project-dependent)
 
-Confirm the data collection pipeline executes successfully.
+Confirm the data collection pipeline executes successfully. RepoReapers projects
+take about 44 seconds at the median, but dependency downloads and outliers can
+make small samples vary.
 
 1. Run pipeline on a subset of projects:
    ```bash
@@ -170,13 +172,18 @@ Full reproduction requires significant compute time and may produce non-identica
 - Evaluated projects with unavailable dependencies (artifacts removed from repositories)
 - Evaluated projects with unpinned dependency versions (breaking changes in newer versions)
 
-### Extended Dataset (~15 hours)
+### Extended Dataset (~12 hours capped)
 
 ```bash
 ./scripts/run.sh --dataset extended
 ```
 
-Processes all 1161 RepoReapers projects. Runtime is relatively short because most projects fail to complete the full processing pipeline.
+Processes all 1161 RepoReapers projects with the same 30-minute per-project cap
+used for the paper's extended results. The capped run is expected to take about
+12 hours on an M2. The same dataset measured 23.6 hours uncapped. A handful of
+projects legitimately run to the cap and are recorded as exit 124 in
+`replication/run-state/extended/status.tsv`. That is expected behavior, not a
+hang. The median project takes about 44 seconds.
 
 ### Primary Dataset (~100+ hours)
 

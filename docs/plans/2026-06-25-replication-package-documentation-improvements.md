@@ -37,13 +37,13 @@ into the root file in commit `fbb24921`).
 - [x] Give Docker mode the same semantics with the container as the kill
   unit: named container per config, cap enforced by watchdog + `docker stop`,
   and active traps that stop the container before cleaning up compose-run.
-- [ ] Correct the runtime estimates in the README and the `run.sh` header.
-  Measured on an M2: 23.6 h uncapped for the extended dataset (not "~15
-  hours"), ~12 h with the 30-min cap. Document that a handful of projects
-  legitimately run to the cap and are ledgered as exit 124 — expected
-  behavior, not a hang. Consistency pass over INSTALL.md and
-  REQUIREMENTS.md for the same numbers.
-- [ ] State the capped methodology in §Complete Reproduction: the paper's
+- [x] Correct the runtime estimates in the README and the `run.sh` header.
+  Measured on an M2: 23.6 h uncapped for the extended dataset, ~12 h with the
+  30-min cap, and ~44 s median per project. A handful of projects legitimately
+  run to the cap and are ledgered as exit 124, which is expected behavior, not
+  a hang. INSTALL.md does not carry runtime estimates. REQUIREMENTS.md carries
+  the same capped and uncapped numbers.
+- [x] State the capped methodology in §Complete Reproduction: the paper's
   extended numbers come from capped runs, and the artifact reproduces with
   the same rule.
 
