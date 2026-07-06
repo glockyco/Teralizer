@@ -64,7 +64,7 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
 - Architecture / DB references: `docs/architecture.md`, `docs/database.md`.
 - Planning & roadmap: read `docs/plans/INDEX.md` first; the north-star, strategy sequence, and current focus live in `docs/plans/2026-06-26-teralizer-overview.md`.
 - Config: Typesafe Config (HOCON); examples in `project-configs/example-*.conf`.
-- Analysis in `analysis/`; legacy notebooks under `notebooks/legacy/` are excluded via `pyproject.toml`.
+- Analysis lives in `analysis/`.
 - Exports: `save_latex_table`, `save_csv_data`, `save_figure` from `teralizer.exports` →
   `analysis/output/{tables,data,figures}`.
 - Paper sync (on-demand only): `uv run --directory analysis python sync.py`; `PAPER_REPO_PATH` in
@@ -105,7 +105,7 @@ dropped by their runner scripts. Direct query:
 ## Style & commits
 - Explicit over implicit; minimal comments (explain *why*, not *what*); fail fast.
 - No marketing/temporal language in code or comments ("modern", "new", "enhanced").
-- Never reference paper section numbers (e.g. "Section 4.1") or legacy notebooks in code/notebooks.
+- Never reference paper section numbers (e.g. "Section 4.1") in code or notebooks.
 - Commits: follow `skill://commit`.
 
 ## Boundaries

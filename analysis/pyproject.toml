@@ -33,7 +33,6 @@ teralizer-analysis = { workspace = true }
 
 [tool.ruff]
 target-version = "py311"
-exclude = ["notebooks/legacy/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
