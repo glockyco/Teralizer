@@ -100,7 +100,7 @@ expected (fixtures are small and fast).
 
 ## Lever 3 — SPF loss reclassification, then census (decision gate)
 
-- **Reclassify before deciding.** Single choke point, verified:
+- [x] **Reclassify before deciding.** Single choke point, verified:
   `TaskDiagnosticClassifier.classify` routes every "Identified N error(s) during JPF
   execution" failure to `UNCAUGHT_EXCEPTION_PATH`; the underlying exception type is the
   first line after `NoUncaughtExceptionsProperty` in the message detail. New routing on

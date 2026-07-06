@@ -5,6 +5,7 @@ public final class TaskDiagnosticCodes {
     public static final String EXECUTION_TIMEOUT = "EXECUTION_TIMEOUT";
     public static final String FOUND_REPORT_NO_MATCHING_TESTCASE = "FOUND_REPORT_NO_MATCHING_TESTCASE";
     public static final String GENERATED_SOURCE_LEVEL_TOO_NEW = "GENERATED_SOURCE_LEVEL_TOO_NEW";
+    public static final String JPF_DIVERGENT_ASSERTION = "JPF_DIVERGENT_ASSERTION";
     public static final String LISTENER_BUG = "LISTENER_BUG";
     public static final String MISSING_JPF_MODEL_CLASS = "MISSING_JPF_MODEL_CLASS";
     public static final String MISSING_JPF_MODEL_METHOD = "MISSING_JPF_MODEL_METHOD";

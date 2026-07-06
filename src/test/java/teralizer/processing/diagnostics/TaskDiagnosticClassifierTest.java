@@ -41,6 +41,42 @@ public class TaskDiagnosticClassifierTest {
     }
 
     @Example
+    void mapsJpfUncaughtUnsatisfiedLinkErrorToMissingNativePeer() {
+        String message = jpfUncaughtMessage(
+            "java.lang.UnsatisfiedLinkError: cannot find native java.lang.reflect.Method.getGenericParameterTypes"
+                + "\n\tat java.lang.reflect.Method.getGenericParameterTypes(...)");
+
+        Assert.assertEquals(TaskDiagnosticCodes.MISSING_NATIVE_PEER, classify(new RuntimeException(message)));
+    }
+
+    @Example
+    void keepsOtherJpfUncaughtExceptionTypesOnUncaughtExceptionPath() {
+        String message = jpfUncaughtMessage("org.jsoup.helper.ValidationException: String must not be empty");
+
+        Assert.assertEquals(TaskDiagnosticCodes.UNCAUGHT_EXCEPTION_PATH, classify(new RuntimeException(message)));
+    }
+
+    @Example
+    void mapsJpfUncaughtAssertionFailuresToDivergentAssertion() {
+        String assertionMessage = jpfUncaughtMessage("java.lang.AssertionError: expected:<3> but was:<4>");
+        String comparisonMessage = jpfUncaughtMessage("org.junit.ComparisonFailure: expected:<left> but was:<right>");
+
+        Assert.assertEquals(TaskDiagnosticCodes.JPF_DIVERGENT_ASSERTION, classify(new RuntimeException(assertionMessage)));
+        Assert.assertEquals(TaskDiagnosticCodes.JPF_DIVERGENT_ASSERTION, classify(new RuntimeException(comparisonMessage)));
+    }
+
+    @Example
+    void mapsJpfModelExceptionTypesToModelGapCodes() {
+        String classMessage = jpfUncaughtMessage(
+            "java.lang.ClassNotFoundException: class not found: javax.xml.bind.DatatypeConverter");
+        String methodMessage = jpfUncaughtMessage(
+            "java.lang.NoSuchMethodError: javax.xml.bind.DatatypeConverter.parseBase64Binary(Ljava/lang/String;)[B");
+
+        Assert.assertEquals(TaskDiagnosticCodes.MISSING_JPF_MODEL_CLASS, classify(new RuntimeException(classMessage)));
+        Assert.assertEquals(TaskDiagnosticCodes.MISSING_JPF_MODEL_METHOD, classify(new RuntimeException(methodMessage)));
+    }
+
+    @Example
     void mapsBuildCompilerFailuresToStableCodes() {
         RuntimeException sourceLevel = new RuntimeException("Source option 5 is no longer supported. Use 7 or later.");
         RuntimeException missingDependency = new RuntimeException("package org.example.missing does not exist");
@@ -73,6 +109,12 @@ public class TaskDiagnosticClassifierTest {
 
         Assert.assertEquals(TaskDiagnosticCodes.SUITE_TIMEOUT,
             TaskDiagnosticClassifier.classify(ProcessingStage.EXECUTE_TESTS_GENERALIZED, timeout).reasonCode());
+    }
+
+    private static String jpfUncaughtMessage(String exceptionBlock) {
+        return "Identified 1 error(s) during JPF execution.\n\n--\n\n"
+            + "gov.nasa.jpf.vm.NoUncaughtExceptionsProperty\n\n"
+            + exceptionBlock;
     }
 
     private static String classify(Throwable failure) {

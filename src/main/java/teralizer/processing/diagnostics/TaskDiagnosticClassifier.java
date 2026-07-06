@@ -9,6 +9,8 @@ import teralizer.processing.ProcessingStage;
 import teralizer.transformer.UnsupportedSpfTermException;
 
 public final class TaskDiagnosticClassifier {
+    private static final String NO_UNCAUGHT_EXCEPTIONS_PROPERTY =
+        "gov.nasa.jpf.vm.NoUncaughtExceptionsProperty";
 
     private TaskDiagnosticClassifier() {
     }
@@ -47,7 +49,7 @@ public final class TaskDiagnosticClassifier {
             return fromOutcome(ExtractionOutcome.fromState(true, false, true));
         }
         if (contains(failure, "Identified") && contains(failure, "error(s) during JPF execution")) {
-            return diagnostic(TaskDiagnosticCodes.UNCAUGHT_EXCEPTION_PATH, messageDetail(failure));
+            return classifyJpfUncaughtFailure(failure);
         }
         return diagnostic(TaskDiagnosticCodes.LISTENER_BUG, messageDetail(failure));
     }
@@ -105,6 +107,69 @@ public final class TaskDiagnosticClassifier {
             return diagnostic(TaskDiagnosticCodes.FOUND_REPORT_NO_MATCHING_TESTCASE, messageDetail(failure));
         }
         return diagnostic(TaskDiagnosticCodes.UNSUPPORTED_REPORT_LAYOUT, messageDetail(failure));
+    }
+
+    private static Diagnostic classifyJpfUncaughtFailure(Throwable failure) {
+        String exceptionType = jpfUncaughtExceptionType(failure);
+        if ("java.lang.UnsatisfiedLinkError".equals(exceptionType)) {
+            return diagnostic(TaskDiagnosticCodes.MISSING_NATIVE_PEER, messageDetail(failure));
+        }
+        if ("java.lang.ClassNotFoundException".equals(exceptionType)) {
+            return diagnostic(TaskDiagnosticCodes.MISSING_JPF_MODEL_CLASS, messageDetail(failure));
+        }
+        if ("java.lang.NoSuchMethodError".equals(exceptionType)) {
+            return diagnostic(TaskDiagnosticCodes.MISSING_JPF_MODEL_METHOD, messageDetail(failure));
+        }
+        if ("java.lang.AssertionError".equals(exceptionType)
+            || "org.junit.ComparisonFailure".equals(exceptionType)) {
+            return diagnostic(TaskDiagnosticCodes.JPF_DIVERGENT_ASSERTION, messageDetail(failure));
+        }
+        return diagnostic(TaskDiagnosticCodes.UNCAUGHT_EXCEPTION_PATH, messageDetail(failure));
+    }
+
+    private static String jpfUncaughtExceptionType(Throwable failure) {
+        for (Throwable current = failure; current != null; current = current.getCause()) {
+            String exceptionType = jpfUncaughtExceptionType(current.getMessage());
+            if (!exceptionType.isEmpty()) {
+                return exceptionType;
+            }
+        }
+        return "";
+    }
+
+    private static String jpfUncaughtExceptionType(String message) {
+        if (message == null) {
+            return "";
+        }
+        int markerIndex = message.indexOf(NO_UNCAUGHT_EXCEPTIONS_PROPERTY);
+        if (markerIndex < 0) {
+            return "";
+        }
+        int lineStart = markerIndex + NO_UNCAUGHT_EXCEPTIONS_PROPERTY.length();
+        while (lineStart < message.length()) {
+            int lineEnd = message.indexOf('\n', lineStart);
+            if (lineEnd < 0) {
+                lineEnd = message.length();
+            }
+            String line = message.substring(lineStart, lineEnd).trim();
+            if (!line.isEmpty() && !"--".equals(line)) {
+                return exceptionTypeFromLine(line);
+            }
+            lineStart = lineEnd + 1;
+        }
+        return "";
+    }
+
+    private static String exceptionTypeFromLine(String line) {
+        int end = line.length();
+        for (int i = 0; i < line.length(); i++) {
+            char value = line.charAt(i);
+            if (value == ':' || Character.isWhitespace(value)) {
+                end = i;
+                break;
+            }
+        }
+        return end == 0 ? "" : line.substring(0, end);
     }
 
     private static Diagnostic unsupportedTerm(String detail) {
