@@ -397,3 +397,6 @@ analysis/output/replicate/
 
 # Stale per-project retry one-offs, regenerated from each run's timeout list
 project-configs/timeout-retry*.conf
+
+# Agent worktrees for isolated implementation work
+/.worktrees/
