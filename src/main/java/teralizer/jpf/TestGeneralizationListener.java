@@ -13,12 +13,15 @@ import gov.nasa.jpf.vm.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.domain.CapturedException;
+import teralizer.domain.CapturedInput;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.NullValue;
 import teralizer.domain.PrimitiveValue;
@@ -51,7 +54,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private boolean pendingThrownExceptionFromApplication;
     private boolean capturedThrowFromApplication;
     private boolean capturedThrow;
-    private List<Value> instrumentedInputArguments;
+    private final List<String> instrumentedParameterNames;
+    private List<CapturedInput> instrumentedInputArguments;
     private boolean targetEntered;
     private CapturedInvocation invocation;
     private int concretizationEvents;
@@ -62,6 +66,10 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
         this.instrumentedMethodSpec = MethodSpec.createMethodSpec(this.instrumentedMethodQualifiedName);
         this.testedMethodSpec = MethodSpec.createMethodSpec(config.getString("test_generalization.tested_method"));
+        String parameterNames = config.getString("test_generalization.instrumented_parameters", "");
+        this.instrumentedParameterNames = parameterNames.isEmpty()
+            ? Collections.emptyList()
+            : Arrays.asList(parameterNames.split(","));
         this.inputValuesPath = Paths.get(config.getString("test_generalization.input_values_path"));
         this.outputValuePath = Paths.get(config.getString("test_generalization.output_value_path"));
         this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
@@ -256,7 +264,7 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
 
         LOGGER.atDebug().log("Returning from: " + this.testedMethodSpec.getSource());
 
-        List<Value> concreteInputs = this.instrumentedInputArguments == null
+        List<CapturedInput> concreteInputs = this.instrumentedInputArguments == null
             ? this.captureConcreteArguments(currentThread)
             : this.instrumentedInputArguments;
 
@@ -370,12 +378,20 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         return new TreeMap<>(this.concretizedMethods);
     }
 
-    private List<Value> captureConcreteArguments(ThreadInfo currentThread) {
-        List<Value> concreteArguments = new ArrayList<>();
+    private List<CapturedInput> captureConcreteArguments(ThreadInfo currentThread) {
+        List<CapturedInput> concreteArguments = new ArrayList<>();
         String[] concreteTypes = currentThread.getTopFrameMethodInfo().getArgumentTypeNames();
         Object[] concreteValues = currentThread.getTopFrame().getArgumentValues(currentThread);
+        if (this.instrumentedParameterNames.size() != concreteValues.length) {
+            throw new RuntimeException("Wrapper parameter-name list ("
+                + this.instrumentedParameterNames.size() + " names) does not match the captured argument"
+                + " count (" + concreteValues.length + ") for " + this.instrumentedMethodQualifiedName + ".");
+        }
         for (int i = 0; i < concreteValues.length; i++) {
-            concreteArguments.add(captureValue(concreteTypes[i], concreteValues[i]));
+            concreteArguments.add(new CapturedInput(
+                this.instrumentedParameterNames.get(i),
+                captureValue(concreteTypes[i], concreteValues[i])
+            ));
         }
         return concreteArguments;
     }

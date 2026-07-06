@@ -292,6 +292,8 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("testedMethodQualifiedName", this.assertionRecord.getTestedMethodQualifiedName());
         context.put("instrumentedClassQualifiedName", this.assertionRecord.getInstrumentedClassQualifiedName());
         context.put("instrumentedMethodQualifiedName", this.assertionRecord.getInstrumentedMethodQualifiedName());
+        context.put("instrumentedParameterNames", instrumentedMethod.getParameters().stream()
+            .map(CtParameter::getSimpleName).collect(Collectors.joining(",")));
 
         context.put("inputValuesPath", this.assertionRecord.getInputValuesPath());
         context.put("outputValuePath", this.assertionRecord.getOutputValuePath());

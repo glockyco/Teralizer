@@ -1,13 +1,13 @@
 package teralizer.jpf;
 
 import java.util.List;
+import teralizer.domain.CapturedInput;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.Expression;
-import teralizer.domain.Value;
 
 /**
- * The raw result of one tested-method invocation, captured during the run: the concrete input
- * {@link Value}s and the {@link CapturedOutput} (a returned value, a void return, or a thrown
+ * The raw result of one tested-method invocation, captured during the run: the named concrete
+ * input {@link CapturedInput}s and the {@link CapturedOutput} (a returned value, a void return, or a thrown
  * exception), plus the symbolic input/output already transformed to the {@link Expression} Model at
  * capture, where the SPF objects are still valid. It holds only Model POJOs and typed value records,
  * so downstream serialization runs after the search terminates without depending on any SPF object
@@ -15,13 +15,13 @@ import teralizer.domain.Value;
  */
 public final class CapturedInvocation {
 
-    private final List<Value> concreteInputs;
+    private final List<CapturedInput> concreteInputs;
     private final CapturedOutput output;
     private final Expression modelInput;
     private final Expression modelOutput;
 
     public CapturedInvocation(
-        List<Value> concreteInputs,
+        List<CapturedInput> concreteInputs,
         CapturedOutput output,
         Expression modelInput,
         Expression modelOutput
@@ -38,7 +38,7 @@ public final class CapturedInvocation {
         this.modelOutput = modelOutput;
     }
 
-    public List<Value> getConcreteInputs() {
+    public List<CapturedInput> getConcreteInputs() {
         return this.concreteInputs;
     }
 

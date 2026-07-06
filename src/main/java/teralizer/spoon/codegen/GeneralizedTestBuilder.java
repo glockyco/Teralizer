@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtAnnotation;
@@ -23,6 +22,7 @@ import spoon.reflect.factory.Factory;
 import spoon.reflect.path.CtPath;
 import spoon.reflect.path.CtPathStringBuilder;
 import spoon.reflect.reference.CtTypeReference;
+import teralizer.domain.CapturedInput;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.MethodCapabilities;
 import teralizer.domain.MethodParameter;
@@ -136,24 +136,30 @@ public final class GeneralizedTestBuilder {
             "org.junit.jupiter.api.AfterAll"
         )));
     }
+    /*
+     * Wrapper arguments map onto tested-method parameters BY NAME: the wrapper signature is
+     * [_target_?][generalizable inputs][lifted locals][scope-bound constructions], the inputs
+     * carry the tested parameters' names, and the extras carry reserved names (_target_,
+     * _local_*). Positional mapping is unsound the moment any extra exists.
+     */
     public static Map<String, Value> mapTestedMethodArguments(
         List<MethodParameter> testedMethodParameters,
-        List<Value> inputValues
+        List<CapturedInput> inputValues
     ) {
-        int offset = inputValues.size() == testedMethodParameters.size() + 1 ? 1 : 0;
-        if (inputValues.size() - offset != testedMethodParameters.size()) {
-            throw new IllegalArgumentException(
-                "Cannot map " + inputValues.size() + " concrete values to " + testedMethodParameters.size() + " tested method parameters."
-            );
+        Map<String, Value> byName = new LinkedHashMap<>();
+        for (CapturedInput input : inputValues) {
+            byName.put(input.getName(), input.getValue());
         }
-
-        return IntStream
-            .range(0, testedMethodParameters.size())
-            .boxed()
-            .collect(Collectors.toMap(
-                i -> testedMethodParameters.get(i).getName(),
-                i -> inputValues.get(i + offset)
-            ));
+        Map<String, Value> arguments = new LinkedHashMap<>();
+        for (MethodParameter parameter : testedMethodParameters) {
+            Value value = byName.get(parameter.getName());
+            if (value == null) {
+                throw new IllegalArgumentException("No captured wrapper argument named '"
+                    + parameter.getName() + "'. Captured names: " + byName.keySet() + ".");
+            }
+            arguments.put(parameter.getName(), value);
+        }
+        return arguments;
     }
 
     public static List<MethodParameter> collectTemporaryParameters(

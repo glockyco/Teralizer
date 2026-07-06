@@ -2,6 +2,7 @@ package teralizer.transformer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import teralizer.domain.CapturedInput;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.Value;
 
@@ -19,6 +20,7 @@ public final class SpecificationGson {
     public static Gson create() {
         return new GsonBuilder()
             .registerTypeHierarchyAdapter(Value.class, new ValueJsonAdapter())
+            .registerTypeAdapter(CapturedInput.class, new CapturedInputJsonAdapter())
             .registerTypeAdapter(CapturedOutput.class, new CapturedOutputJsonAdapter())
             .create();
     }

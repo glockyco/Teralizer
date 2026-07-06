@@ -25,6 +25,7 @@ import spoon.Launcher;
 import spoon.reflect.declaration.*;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import teralizer.domain.CapturedInput;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
@@ -154,8 +155,8 @@ public class TestGeneralizationTask extends AbstractTask {
 
         String inputValuesString = new String(Files.readAllBytes(Paths.get(this.assertionRecord.getInputValuesPath())));
         Gson specificationGson = SpecificationGson.create();
-        Type inputValuesType = new TypeToken<List<Value>>() {}.getType();
-        List<Value> inputValues = specificationGson.fromJson(inputValuesString, inputValuesType);
+        Type inputValuesType = new TypeToken<List<CapturedInput>>() {}.getType();
+        List<CapturedInput> inputValues = specificationGson.fromJson(inputValuesString, inputValuesType);
         Map<String, Value> testedMethodArguments = GeneralizedTestBuilder.mapTestedMethodArguments(testedMethodParameters, inputValues);
 
         GeneralizedTestBuilder.Plan plan = this.createBuilderPlan(create, velocityEngine, clonedRecipe, testedMethodParameters, testedMethodArguments, specificationGson);
