@@ -394,3 +394,6 @@ analysis/output/replicate/
 .tabnine/
 .tabnine_root
 .tabnineignore
+
+# Stale per-project retry one-offs, regenerated from each run's timeout list
+project-configs/timeout-retry*.conf

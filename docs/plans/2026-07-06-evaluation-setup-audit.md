@@ -82,16 +82,16 @@ here except gradle-touching smokes.
       replaces it) and the 0-byte litter (`tekst.txt`, `data/teralizer.db`).
 - [x] Move packager tooling to `scripts/packaging/` (`prepare-zenodo-package.sh`,
       `setup-eval-environment.sh`, `collect-disk-metrics.sh`) with a README line each.
-- [ ] Extract `scripts/lib/db-lifecycle.sh` (terminate/drop/create/collation-refresh) and
+- [x] Extract `scripts/lib/db-lifecycle.sh` (terminate/drop/create/collation-refresh) and
       use it from the four duplication sites. Verification: bash -n + shellcheck now, the
       already-queued fixture smoke exercises it at the next gate.
-- [ ] Fix the JARVIS skill's dead env-var instructions.
-- [ ] Drop the `notebooks/legacy/` exclusion from `analysis/pyproject.toml` and the AGENTS.md
+- [x] Fix the JARVIS skill's dead env-var instructions.
+- [x] Drop the `notebooks/legacy/` exclusion from `analysis/pyproject.toml` and the AGENTS.md
       sentence documenting it.
-- [ ] Add `project-configs/README.md` (the config species, composition rules, which driver
+- [x] Add `project-configs/README.md` (the config species, composition rules, which driver
       consumes which directory, and each lane's retirement trigger). Must state the
       `extended/` → `replication/extended/` generation chain.
-- [ ] Normalize the JARVIS run-target env style inside the db-lifecycle commit: expose
+- [x] Normalize the JARVIS run-target env style inside the db-lifecycle commit: expose
       `JARVIS_DB`/`JARVIS_DATA_DIR` overrides the way `REPOREAPERS_DB`/`VERIFICATION_DB`
       work, defaults unchanged.
 - [ ] Tighten `.gitignore`: `.idea/`, `*.iml`, `project-configs/timeout-retry-*.conf`.
