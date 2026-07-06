@@ -11,10 +11,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtReturn;
+import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.declaration.CtClass;
@@ -22,6 +24,8 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.path.CtPath;
@@ -32,6 +36,7 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.spoon.SpoonUtils;
+import teralizer.spoon.analysis.ExpectedTypeInference;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.util.TypeCapability;
@@ -99,6 +104,9 @@ public final class InstrumentedClassBuilder {
         CtExpression<?> oracleExpression = recipe.getOracleExpression();
         List<GeneralizableInput> generalizableInputs = recipe.getInputs();
         CtExpression<?> rewrittenExpression = oracleExpression.clone();
+        // Pin the clone's constructor-call nodes while the clone is still structurally 1:1
+        // with the original: later rewrites (input sites, the _target_ swap) detach subtrees.
+        List<CtConstructorCall<?>> rewrittenCalls = constructorCallsInOrder(rewrittenExpression);
         recipe.replaceInputSitesWithParameterReads(
             rewrittenExpression,
             factory,
@@ -136,10 +144,27 @@ public final class InstrumentedClassBuilder {
         }
         liftLocalReads(rewrittenExpression, liftedNames, factory);
 
-        CtReturn returnStatement = factory.Core().createReturn();
-        returnStatement.setReturnedExpression(rewrittenExpression);
+        List<Integer> scopeBoundIndexes = scopeBoundConstructionIndexes(oracleExpression, generalizableInputs);
+        List<CtConstructorCall<?>> originalCalls = constructorCallsInOrder(oracleExpression);
+        int scopeBoundOrdinal = 0;
+        for (int index : scopeBoundIndexes) {
+            CtConstructorCall<?> originalCall = originalCalls.get(index);
+            CtTypeReference<?> parameterType = denotableTypeAt(factory, originalCall);
+            String name = scopeBoundParameterName(originalCall, ++scopeBoundOrdinal);
+            instrumentedParameters.add(factory.createParameter(null, parameterType, name));
+            rewrittenCalls.get(index).replace(factory.createCodeSnippetExpression(name));
+        }
+
         CtBlock<?> instrumentedBody = factory.createBlock();
-        instrumentedBody.addStatement(returnStatement);
+        if ("void".equals(oracleExpressionType)) {
+            // A THROWS oracle over a void MUT: the wrapper has nothing to return, and the
+            // listener captures the exception (or a void exit) at the wrapper boundary.
+            instrumentedBody.addStatement((CtStatement) rewrittenExpression);
+        } else {
+            CtReturn returnStatement = factory.Core().createReturn();
+            returnStatement.setReturnedExpression(rewrittenExpression);
+            instrumentedBody.addStatement(returnStatement);
+        }
 
         CtTypeReference<?> returnType = factory.Type().createReference(oracleExpressionType);
         returnType.setSimplyQualified(false);
@@ -194,6 +219,10 @@ public final class InstrumentedClassBuilder {
             collectLiftableLocals(rewrittenExpression, oracleExpression, generalizableInputs);
         for (CtVariableReference<?> reference : liftedLocals.keySet()) {
             instrumentedMethodCall.addArgument(factory.createCodeSnippetExpression(reference.getSimpleName()));
+        }
+        List<CtConstructorCall<?>> originalCalls = constructorCallsInOrder(oracleExpression);
+        for (int index : scopeBoundConstructionIndexes(oracleExpression, generalizableInputs)) {
+            instrumentedMethodCall.addArgument(originalCalls.get(index).clone());
         }
         return instrumentedMethodCall;
     }
@@ -319,6 +348,76 @@ public final class InstrumentedClassBuilder {
                 read.replace(factory.createCodeSnippetExpression(liftedName));
             }
         }
+    }
+
+    /*
+     * A constructor call of a method-local class cannot travel into the wrapper: the type only
+     * exists inside the test-method body. The construction stays at the call site (where the
+     * type is in scope) and the constructed value crosses the wrapper boundary as a concrete
+     * parameter, exactly like _target_ and lifted locals. Anonymous classes need none of this:
+     * their declaration is the expression itself and travels with the clone.
+     */
+    static List<Integer> scopeBoundConstructionIndexes(
+        CtExpression<?> oracleExpression,
+        List<GeneralizableInput> generalizableInputs
+    ) {
+        List<CtConstructorCall<?>> calls = constructorCallsInOrder(oracleExpression);
+        List<Integer> indexes = new ArrayList<>();
+        for (int i = 0; i < calls.size(); i++) {
+            CtConstructorCall<?> call = calls.get(i);
+            CtTypeReference<?> type = call.getType();
+            CtType<?> declaration = type == null ? null : type.getTypeDeclaration();
+            if (declaration == null || !declaration.isLocalType() || declaration.isAnonymous()) {
+                continue;
+            }
+            for (GeneralizableInput input : generalizableInputs) {
+                CtExpression<?> source = input.getSourceExpression();
+                if (source != null && (source == call || source.hasParent(call))) {
+                    throw new RuntimeException("Generalizable input '" + input.toMethodParameter().getName()
+                        + "' lies inside the scope-bound construction '" + call
+                        + "', which crosses the wrapper boundary as one concrete value.");
+                }
+            }
+            indexes.add(i);
+        }
+        return indexes;
+    }
+
+    private static List<CtConstructorCall<?>> constructorCallsInOrder(CtExpression<?> expression) {
+        List<CtConstructorCall<?>> calls = new ArrayList<>();
+        for (CtConstructorCall<?> call : expression.getElements(new TypeFilter<>(CtConstructorCall.class))) {
+            calls.add(call);
+        }
+        return calls;
+    }
+
+    /*
+     * The wrapper parameter for a scope-bound construction must have a denotable type. The
+     * local class name is not one, so the parameter is typed by the position the construction
+     * occupies: the formal parameter type when it is a call argument, the declared type when it
+     * initializes a variable, java.lang.Object otherwise.
+     */
+    private static CtTypeReference<?> denotableTypeAt(Factory factory, CtConstructorCall<?> call) {
+        CtElement parent = call.getParent();
+        if (parent instanceof CtAbstractInvocation) {
+            CtAbstractInvocation<?> invocation = (CtAbstractInvocation<?>) parent;
+            int argIndex = invocation.getArguments().indexOf(call);
+            List<CtTypeReference<?>> parameterTypes = invocation.getExecutable() == null
+                ? Collections.emptyList()
+                : invocation.getExecutable().getParameters();
+            if (argIndex >= 0 && argIndex < parameterTypes.size()) {
+                return ExpectedTypeInference.eraseGenerics(parameterTypes.get(argIndex), factory).clone();
+            }
+        }
+        if (parent instanceof CtVariable) {
+            return ExpectedTypeInference.eraseGenerics(((CtVariable<?>) parent).getType(), factory).clone();
+        }
+        return factory.Type().OBJECT.clone();
+    }
+
+    private static String scopeBoundParameterName(CtConstructorCall<?> call, int ordinal) {
+        String simpleName = call.getType() == null ? "obj" : call.getType().getSimpleName();
+        return "_local_new_" + simpleName + "_" + ordinal;
     }
 
     private static boolean isPlainCallRecipe(GeneralizationRecipe.Resolved recipe) {

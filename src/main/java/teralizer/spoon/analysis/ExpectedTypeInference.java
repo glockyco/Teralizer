@@ -60,7 +60,7 @@ public final class ExpectedTypeInference {
         return eraseGenerics(call.getType(), factory);
     }
 
-    static CtTypeReference<?> eraseGenerics(CtTypeReference<?> type, Factory factory) {
+    public static CtTypeReference<?> eraseGenerics(CtTypeReference<?> type, Factory factory) {
         if (type == null || type.isGenerics() || type instanceof CtTypeParameterReference) {
             return factory.Type().OBJECT;
         }
