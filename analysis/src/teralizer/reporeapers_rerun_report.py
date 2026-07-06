@@ -3,11 +3,13 @@
 Run from the repository root, for example:
 
     uv run --directory analysis python -m teralizer.reporeapers_rerun_report \
-        --db postgres_reporeapers_rerun --log-root .
+        --db postgres_reporeapers_rerun2
 
-The report is intentionally read-only. It summarizes the same intermediate
-pipeline evidence that we use for planning: filter exclusions, SPF/spec
-extraction losses, generated-property outcomes, and coarse build-log causes.
+The report is intentionally read-only. It summarizes the pipeline evidence we
+use for planning: telemetry integrity, the filter funnel by stable reason
+code, SPF/spec extraction losses, build failure causes, true end-to-end
+yield, assertion semantics, and baseline deltas. Telemetry-backed sections
+skip with an explicit note against snapshots that predate the tables.
 """
 
 from __future__ import annotations
@@ -57,6 +59,72 @@ def _short_filter(fq_name: str) -> str:
 def _read_sql(conn: Connection, sql: str, **params: Any) -> pd.DataFrame:
     """Run one read-only SQL query into a DataFrame."""
     return pd.read_sql(text(sql), conn, params=params)
+
+
+def _table_exists(conn: Connection, table: str) -> bool:
+    """True when the snapshot carries the given telemetry table."""
+    df = _read_sql(
+        conn,
+        """
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = :table
+        """,
+        table=table,
+    )
+    return not df.empty
+
+
+_SKIP_NOTE = "(section skipped: snapshot predates table '{table}')"
+
+
+def get_telemetry_integrity(conn: Connection) -> pd.DataFrame:
+    """Totality invariants over the telemetry writers.
+
+    A violated invariant means a writer silently broke and every downstream
+    section is suspect, so this table prints first.
+    """
+    if not _table_exists(conn, "mut_resolution_observation"):
+        return pd.DataFrame(
+            [{"invariant": _SKIP_NOTE.format(table="mut_resolution_observation")}]
+        )
+    df = _read_sql(
+        conn,
+        """
+        WITH counts AS (
+            SELECT
+                (SELECT count(*) FROM assertion) AS assertions,
+                (SELECT count(*) FROM mut_resolution_observation) AS mut_obs,
+                (SELECT count(*) FROM assertion_semantics) AS semantics,
+                (SELECT count(*) FROM generalization) AS generalizations,
+                (SELECT count(*) FROM generalization_lifecycle) AS lifecycle,
+                (SELECT count(*) FROM generalization_lifecycle WHERE NOT generated_source_created) AS lifecycle_unsourced,
+                (SELECT count(*) FROM generalization_lifecycle WHERE final_usable) AS final_usable,
+                (SELECT count(*) FROM jqwik_property_execution) AS jqwik_outcomes
+        )
+        SELECT
+            'mut_resolution_observation total (== assertions)' AS invariant,
+            mut_obs AS actual, assertions AS expected, mut_obs = assertions AS holds
+        FROM counts
+        UNION ALL
+        SELECT 'assertion_semantics total (== assertions)',
+               semantics, assertions, semantics = assertions
+        FROM counts
+        UNION ALL
+        SELECT 'lifecycle rows only for generated sources (0 unsourced)',
+               lifecycle_unsourced, 0, lifecycle_unsourced = 0
+        FROM counts
+        UNION ALL
+        SELECT 'lifecycle rows within generalizations (<=)',
+               lifecycle, generalizations, lifecycle <= generalizations
+        FROM counts
+        UNION ALL
+        SELECT 'jqwik outcome rows cover final_usable (>=)',
+               jqwik_outcomes, final_usable, jqwik_outcomes >= final_usable
+        FROM counts
+        """,
+    )
+    return df
 
 
 # ---------------------------------------------------------------------------
@@ -525,6 +593,7 @@ def generate_report(
     """Run all snapshot queries."""
     progress = get_run_progress(conn)
     return {
+        "telemetry_integrity": get_telemetry_integrity(conn),
         "run_projects": progress["projects"],
         "active_tasks": progress["active_tasks"],
         "tool_versions": progress["tool_versions"],
@@ -558,6 +627,7 @@ def _format_frame(df: pd.DataFrame, *, limit: int | None = None) -> str:
 def print_report(report: dict[str, pd.DataFrame], top: int) -> None:
     """Print a human-readable rerun snapshot report."""
     sections = [
+        ("Telemetry integrity invariants", "telemetry_integrity", None),
         ("Run progress", "run_projects", None),
         ("Active tasks", "active_tasks", None),
         ("Tool git versions", "tool_versions", None),

@@ -1,7 +1,7 @@
 ---
 title: Rerun Report Extension
 type: plan
-status: draft
+status: active
 created: 2026-07-06
 parent: 2026-06-26-teralizer-overview
 ---
@@ -43,7 +43,7 @@ Each section is one commit. Verification per section: run the report against the
 midpoint snapshot (read-only) and eyeball the output for internal consistency; the
 `validate.py --changed` gate before each commit.
 
-- [ ] **Section 0 — telemetry integrity.** Totality invariants printed first:
+- [x] **Section 0 — telemetry integrity.** Totality invariants printed first:
       `assertion == mut_resolution_observation == assertion_semantics` (exact),
       `generalization_lifecycle.generated_source_created` all true,
       lifecycle rows ≤ generalizations, jqwik outcome rows ≥ lifecycle final_usable... any
