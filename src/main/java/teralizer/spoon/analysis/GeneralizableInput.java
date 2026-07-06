@@ -124,7 +124,7 @@ public class GeneralizableInput {
     }
 
     private static void addExpressionSite(CtLiteral<?> literal, List<GeneralizableInput> inputs) {
-        CtTypeReference<?> type = literal.getType();
+        CtTypeReference<?> type = effectiveLiteralType(literal);
         if (type == null || !TypeCapability.supportsGeneratedInput(type.getQualifiedName())) {
             return;
         }
@@ -136,6 +136,17 @@ public class GeneralizableInput {
             new MethodArgument(typeName, literal.toString()),
             literal
         ));
+    }
+
+    /*
+     * A cast literal such as (byte) 5 has base type int, but the cast IS the value's static
+     * type at its position: Java requires it at narrow formal positions, so dropping it
+     * produces a wrapper parameter the call site cannot legally fill. The outermost cast
+     * (index 0 of getTypeCasts) wins.
+     */
+    private static CtTypeReference<?> effectiveLiteralType(CtLiteral<?> literal) {
+        List<CtTypeReference<?>> casts = literal.getTypeCasts();
+        return casts.isEmpty() ? literal.getType() : casts.get(0);
     }
 
     private static List<GeneralizableInput> deriveConstructorInputs(
