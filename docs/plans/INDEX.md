@@ -2,7 +2,7 @@
 
 ## active
 
-- **Replication Package Documentation Improvements** [plan] `2026-06-25-replication-package-documentation-improvements` (11/11) ← 2026-06-26-teralizer-overview
+- **Replication Package Documentation Improvements** [plan] `2026-06-25-replication-package-documentation-improvements` (10/10) ← 2026-06-26-teralizer-overview
 - **Applicability Barrier Evidence** [audit] `2026-06-26-applicability-barriers` ← 2026-06-26-teralizer-overview
 - **Data Reuse & MSR Paper Potential (secondary outputs)** [note] `2026-06-26-data-reuse-and-msr-potential` ← 2026-06-26-teralizer-overview
 - **Teralizer — Project Overview** [overview] `2026-06-26-teralizer-overview`

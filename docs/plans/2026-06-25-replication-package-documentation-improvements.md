@@ -37,17 +37,14 @@ into the root file in commit `fbb24921`).
 - [x] Give Docker mode the same semantics with the container as the kill
   unit: named container per config, cap enforced by watchdog + `docker stop`,
   and active traps that stop the container before cleaning up compose-run.
-- [x] Correct the runtime estimates in the README and the `run.sh` header.
-  Measured on an M2: 23.6 h uncapped for the extended dataset, ~12 h with the
-  30-min cap, and ~44 s median per project. A handful of projects legitimately
-  run to the cap and are ledgered as exit 124, which is expected behavior, not
-  a hang. INSTALL.md does not carry runtime estimates. REQUIREMENTS.md carries
-  the same capped and uncapped numbers.
+- [x] Correct the runtime estimates in the README, REQUIREMENTS.md, and the
+  `run.sh` header. Evaluator docs state the capped default plainly (~12 h for
+  the extended dataset, cap outliers expected and ledgered). Exit-code
+  mechanics stay in the runner header. INSTALL.md carries no runtime
+  estimates.
 - [x] State the capped methodology in §Complete Reproduction: the paper's
   extended numbers come from capped runs, and the artifact reproduces with
   the same rule.
-- [x] Label the root README as the frozen Zenodo artifact documentation and
-  point live development readers to `AGENTS.md` and `docs/`.
 
 Static shell verification is the acceptance gate while the live corpus run owns
 the machine. The E2E smoke stays deferred until that run finishes.
