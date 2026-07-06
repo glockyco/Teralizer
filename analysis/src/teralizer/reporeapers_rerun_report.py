@@ -71,6 +71,23 @@ def _table_exists(conn: Connection, table: str) -> bool:
     return not df.empty
 
 
+def _column_exists(conn: Connection, table: str, column: str) -> bool:
+    """True when the snapshot's table carries the given column."""
+    df = _read_sql(
+        conn,
+        """
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = :table
+          AND column_name = :column
+        """,
+        table=table,
+        column=column,
+    )
+    return not df.empty
+
+
 _SKIP_NOTE = "(section skipped: snapshot predates table '{table}')"
 
 
@@ -220,11 +237,16 @@ def get_filter_summary(conn: Connection, scope: str) -> pd.DataFrame:
     else:
         raise ValueError(f"Unknown filter scope: {scope}")
 
+    reason_expr = (
+        "coalesce(reason_code, '<none>')"
+        if _column_exists(conn, "filter_result", "reason_code")
+        else "'<predates reason codes>'"
+    )
     df = _read_sql(
         conn,
         f"""
         SELECT
-            coalesce(reason_code, '<none>') AS reason_code,
+            {reason_expr} AS reason_code,
             filter_name,
             decision,
             count(*) AS rows,
