@@ -57,22 +57,19 @@ done
 
 # shellcheck source=scripts/lib/run-supervisor.sh
 source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
+# shellcheck source=scripts/lib/db-lifecycle.sh
+source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
 supervisor_install_traps
 
 ensure_postgres_up || exit 1
 
 if [[ "$reset_db" == true ]]; then
   echo "==> Resetting database $DB_NAME"
-  teralizer_psql -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
-  teralizer_psql -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" || { echo "DROP DATABASE failed" >&2; exit 1; }
+  drop_scratch_db "$DB_NAME"
 fi
 if [[ "$(teralizer_psql -tA -d postgres -c "SELECT 1 FROM pg_database WHERE datname='$DB_NAME';" 2>/dev/null)" != "1" ]]; then
   echo "==> Creating database $DB_NAME"
-  if ! teralizer_psql -d postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null; then
-    # A glibc upgrade under the container leaves template1 with a stale collation version.
-    teralizer_psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
-    teralizer_psql -d postgres -c "CREATE DATABASE $DB_NAME;" || { echo "CREATE DATABASE failed" >&2; exit 1; }
-  fi
+  recreate_scratch_db "$DB_NAME" || exit 1
   # Fresh DB has no recorded projects -> leftover markers/status are stale.
   rm -rf "$DONE_DIR" "$STATUS_TSV"
 fi
