@@ -27,10 +27,7 @@
 #     - Total for all configs: ~100+ hours
 #
 #   Extended Dataset (RepoReapers):
-#     - 1161 projects, ~44 seconds median per project
-#     - Default capped run: ~12 hours with the 30-minute per-project cap
-#     - Uncapped run measured on an M2: 23.6 hours
-#     - A handful of outliers legitimately hit the cap and ledger as exit 124
+#     - 1161 projects, ~12 hours with the default per-project cap
 #
 # USAGE:
 #   ./run.sh --dataset <primary|extended> [options]
@@ -308,8 +305,7 @@ estimate_runtime() {
     local total_minutes=0
 
     if [[ "$DATASET" == "extended" ]]; then
-        # Full capped extended run is ~12h for 1161 projects. The median project
-        # takes ~44s, so small subsets remain project-dependent.
+        # Scale the ~12 h full capped run linearly by config count.
         total_minutes=$(((${#configs[@]} * 720 + 1160) / 1161))
     else
         # Primary dataset times (approximate)

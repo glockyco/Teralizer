@@ -1,9 +1,5 @@
 # Teralizer - Replication Package
 
-> This README documents the frozen Zenodo artifact package.
-> For live development guidance, use [AGENTS.md](AGENTS.md) and the planning docs in [docs/](docs/).
-> Artifact commands below stay compatible with the archived package layout.
-
 This (https://doi.org/10.5281/zenodo.17950380) is a replication package for the paper:
 
 **Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests**
@@ -132,11 +128,9 @@ Confirm the analysis code produces identical results on the same data.
 
 **Expected**: All outputs match exactly. The analysis is deterministic.
 
-### Workflow 3: Verify Pipeline (~5 min, project-dependent)
+### Workflow 3: Verify Pipeline (~15 min)
 
-Confirm the data collection pipeline executes successfully. RepoReapers projects
-take about 44 seconds at the median, but dependency downloads and outliers can
-make small samples vary.
+Confirm the data collection pipeline executes successfully.
 
 1. Run pipeline on a subset of projects:
    ```bash
@@ -176,18 +170,16 @@ Full reproduction requires significant compute time and may produce non-identica
 - Evaluated projects with unavailable dependencies (artifacts removed from repositories)
 - Evaluated projects with unpinned dependency versions (breaking changes in newer versions)
 
-### Extended Dataset (~12 hours capped)
+### Extended Dataset (~12 hours)
 
 ```bash
 ./scripts/run.sh --dataset extended
 ```
 
 Processes all 1161 RepoReapers projects with the same 30-minute per-project cap
-used for the paper's extended results. The capped run is expected to take about
-12 hours on an M2. The same dataset measured 23.6 hours uncapped. A handful of
-projects legitimately run to the cap and are recorded as exit 124 in
-`replication/run-state/extended/status.tsv`. That is expected behavior, not a
-hang. The median project takes about 44 seconds.
+used for the paper's extended results. Most projects fail the pipeline early, and
+a few long-running ones are stopped at the cap. Both outcomes are recorded in the
+run ledger and are expected behavior.
 
 ### Primary Dataset (~100+ hours)
 
