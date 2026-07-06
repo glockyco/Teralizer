@@ -1,9 +1,10 @@
 ---
 title: Full Evaluation Rerun (RepoReapers, post-runway)
 type: plan
-status: active
+status: implemented
 created: 2026-07-05
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-06
 ---
 
 # Full Evaluation Rerun (RepoReapers, post-runway)

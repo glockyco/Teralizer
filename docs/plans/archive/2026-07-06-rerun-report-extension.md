@@ -1,9 +1,10 @@
 ---
 title: Rerun Report Extension
 type: plan
-status: active
+status: implemented
 created: 2026-07-06
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-06
 ---
 
 # Rerun Report Extension
