@@ -75,12 +75,10 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
       `build_environment_observation`, `jpf_extraction_summary`, `task_diagnostic`,
       `generalization_lifecycle`, `generation_clause`, `generation_parameter`). One-paragraph
       entries each, same style as the existing `jqwik_*` entries.
-- [ ] `analysis/src/teralizer/reporeapers_rerun_report.py` predates the telemetry tables: it
-      parses build logs and free-text where `task_diagnostic`/`jpf_extraction_summary` now hold
-      stable codes, and has no funnel sections for lifecycle/jqwik/generation tables.
-      Extension is planned and sequenced in `2026-07-06-rerun-report-extension`: development
-      NOW against the midpoint snapshot, final numbers regenerated post-run. The R2 decision
-      query stays with `mut_resolution_funnel.py`.
+- [x] `analysis/src/teralizer/reporeapers_rerun_report.py` was extended to read the telemetry
+      tables directly instead of parsing build logs and free-text, with funnel sections for the
+      lifecycle, jqwik, and generation tables. Delivered under `2026-07-06-rerun-report-extension`.
+      The R2 decision query stays with `mut_resolution_funnel.py`.
 - [x] `project-configs/timeout-retry-*.conf` (untracked, now gitignored) were one-offs bound to
       July baseline project ids. Deleted after the rerun produced an empty fresh timeout list
       (see the post-run task below). No retry lane regenerated.
@@ -111,8 +109,7 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
 
 ### Post-run
 
-- [ ] Add `postgres_reporeapers_rerun2` to `src/main/resources/db/protected-databases.txt`.
-      Commit.
+- [x] Added `postgres_reporeapers_rerun2` to `src/main/resources/db/protected-databases.txt`.
 - [x] Regenerated the extended report against the completed snapshot
       (`python -m teralizer.reporeapers_rerun_report --db postgres_reporeapers_rerun2`): 1,161
       projects, 105,897 assertions, 753 included / 514 final_usable. One integrity fix landed
@@ -126,6 +123,6 @@ measurement event), primary-corpora RQ numbers (`postgres_dev`).
       model-method gap that more wall time cannot resolve. The retry-lane design question is
       moot at count zero, so the stale `timeout-retry-*.conf` set was deleted with no
       replacement.
-- [ ] Update the overview: rerun gate consumed, queue re-ranked by the new evidence
-      (P2 native-peer ranking gets its corpus numbers, JARVIS refresh scheduling per standing
-      gate).
+- [x] Updated the overview: rerun gate consumed, R2 gate resolved and dropped, the levers
+      lead the queue pending merge, and the native-peer ranking stays gated on the levers'
+      SPF reclassification reaching a corpus run.
