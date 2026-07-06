@@ -16,6 +16,8 @@
 #
 # Per-project wall cap: REPLICATION_PROJECT_TIMEOUT seconds (default 1800).
 # Set it to 0 to disable the cap. A capped config is ledgered as exit 124.
+# Docker mode uses a deterministic container name per config, so the watchdog
+# and signal traps can stop the container instead of only the compose-run client.
 #
 # DATASETS & EXPECTED RUNTIMES:
 #
@@ -377,13 +379,19 @@ fi
 # Run the pipeline
 run_config() {
     local conf="$1"
+    local name="$2"
 
     if [[ "$USE_DOCKER" == "yes" ]]; then
         # Translate host path to container path
         # Host: /path/to/repo/project-configs/... -> Container: /app/project-configs/...
         local container_conf="${conf/$REPO_ROOT\/project-configs//app/project-configs}"
-        docker compose -f "$SCRIPT_DIR/../docker-compose.yml" run --rm teralizer \
+        local container_name="teralizer-replication-${DATASET}-${name}"
+        container_name="${container_name//[^a-zA-Z0-9_.-]/-}"
+        supervised_container_run "$container_name" "$PROJECT_TIMEOUT" \
+            docker compose -f "$SCRIPT_DIR/../docker-compose.yml" run --rm \
+            --name "$container_name" teralizer \
             ./gradlew run -Dteralizer.config="$container_conf" --no-daemon
+        return "$SUPERVISED_RC"
     else
         supervised_run "-" "$PROJECT_TIMEOUT" \
             ./gradlew run -Dteralizer.config="$conf" --no-daemon

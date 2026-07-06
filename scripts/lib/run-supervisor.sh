@@ -12,6 +12,13 @@
 #       and the wall cap fired (the whole group is TERMed, then KILLed). "<log>" of "-"
 #       leaves stdout/stderr on the terminal. Always returns 0 so set -e callers can
 #       inspect SUPERVISED_RC.
+#   supervised_container_run <container_name> <timeout_secs> <cmd>...
+#       Launches a container-producing command such as `docker compose run --name`
+#       in the background and watches both the compose-run process and the named
+#       container. Sets SUPERVISED_RC to the command's exit code, or 124 when the
+#       wall cap fired. The cap and signal traps stop the container with
+#       `docker stop`, then clean up the compose-run process group. Always
+#       returns 0 so set -e callers can inspect SUPERVISED_RC.
 #   supervisor_install_traps
 #       EXIT/INT/TERM kill the in-flight group immediately and sweep leftovers. Bash holds
 #       traps while a foreground command runs, and the background-job launch in
@@ -150,5 +157,49 @@ supervised_run() {
     sleep 15
   done
   SUPERVISOR_ACTIVE_PGID=""
+  return 0
+}
+
+supervised_container_run() {
+  local container_name="$1"
+  local timeout_secs="$2"
+  shift 2
+
+  SUPERVISOR_ACTIVE_LOG="-"
+  docker rm -f "$container_name" >/dev/null 2>&1 || true
+
+  # While this function is active, signals must stop the named container rather
+  # than only the compose-run process. Restore the standard sourced-driver traps
+  # before returning.
+  trap 'docker stop "$container_name" >/dev/null 2>&1 || true; supervisor_kill_active_group; cleanup_active_project_processes' EXIT
+  trap 'docker stop "$container_name" >/dev/null 2>&1 || true; supervisor_kill_active_group; exit 130' INT TERM
+
+  set -m
+  "$@" < /dev/null &
+  local pid=$!
+  set +m
+  SUPERVISOR_ACTIVE_PGID="$pid"
+
+  local started=$SECONDS
+  SUPERVISED_RC=""
+  while :; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      wait "$pid"
+      SUPERVISED_RC=$?
+      break
+    fi
+    if [[ "$timeout_secs" -gt 0 ]] && (( SECONDS - started >= timeout_secs )); then
+      _log_cleanup "-" "container $container_name exceeded ${timeout_secs}s wall cap, stopping container"
+      docker stop "$container_name" >/dev/null 2>&1 || true
+      supervisor_kill_active_group
+      wait "$pid" 2>/dev/null || true
+      SUPERVISED_RC=124
+      break
+    fi
+    sleep 15
+  done
+
+  SUPERVISOR_ACTIVE_PGID=""
+  supervisor_install_traps
   return 0
 }

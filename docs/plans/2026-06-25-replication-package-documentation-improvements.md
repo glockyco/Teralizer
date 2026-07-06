@@ -34,9 +34,9 @@ into the root file in commit `fbb24921`).
   run-state dir, done-markers, and a `status.tsv` ledger with config name,
   exit code, and terminal-only log marker. An unattended replicator crash at
   project 900 of 1161 must resume, not restart.
-- [ ] Give Docker mode the same semantics with the container as the kill
+- [x] Give Docker mode the same semantics with the container as the kill
   unit: named container per config, cap enforced by watchdog + `docker stop`,
-  traps stop the container instead of a process group.
+  and active traps that stop the container before cleaning up compose-run.
 - [ ] Correct the runtime estimates in the README and the `run.sh` header.
   Measured on an M2: 23.6 h uncapped for the extended dataset (not "~15
   hours"), ~12 h with the 30-min cap. Document that a handful of projects
