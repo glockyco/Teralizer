@@ -40,6 +40,23 @@ into the root file in commit `fbb24921`).
   the Verification Workflows section.
 - [ ] Improve `run-notebooks.sh` failure messages — when a notebook fails,
   print the debug command to re-run it in isolation.
+- [ ] Adopt `scripts/lib/run-supervisor.sh` in `replication/scripts/run.sh`
+  (local mode): group-kill traps, per-project wall cap (30 min default, env
+  knob to disable), STOP-file pause, done-markers, and a `status.tsv` ledger.
+  Straight lift from `scripts/run-reporeapers-rerun.sh`. An unattended
+  replicator crash at project 900 of 1161 must resume, not restart.
+- [ ] Give Docker mode the same semantics with the container as the kill
+  unit: named container per config, cap enforced by watchdog + `docker stop`,
+  traps stop the container instead of a process group.
+- [ ] Correct the runtime estimates in the README and the `run.sh` header.
+  Measured on an M2: 23.6 h uncapped for the extended dataset (not "~15
+  hours"), ~12 h with the 30-min cap. Document that a handful of projects
+  legitimately run to the cap and are ledgered as exit 124 — expected
+  behavior, not a hang. Consistency pass over INSTALL.md and
+  REQUIREMENTS.md for the same numbers.
+- [ ] State the capped methodology in §Complete Reproduction: the paper's
+  extended numbers come from capped runs, and the artifact reproduces with
+  the same rule.
 
 ## Not in scope
 
