@@ -13,16 +13,16 @@
 # status ledger are reset whenever the DB is created fresh (--reset-db or a missing DB).
 #
 # Usage: scripts/run-reporeapers-rerun.sh [--reset-db] [--limit N] [--start N]
-#   --reset-db   drop + recreate the scratch DB (clears markers + status) first; else resume/append
+#   --reset-db   drop + recreate the scratch DB (clears markers + status) first, else resume/append
 #   --limit N    process at most N not-yet-done projects (spike)
 #   --start N    skip project configs numbered below N
 #
-# Graceful pause: `touch <DATA_DIR>/STOP` finishes the in-flight project, then exits cleanly
-# (the file is consumed; relaunching resumes). Signals (INT/TERM) kill the in-flight project's
-# whole process group immediately; it has no done-marker and re-runs on resume.
+# Graceful pause: `touch <DATA_DIR>/STOP` finishes the in-flight project, then exits cleanly.
+# The file is consumed and relaunching resumes. Signals (INT/TERM) kill the in-flight project's
+# whole process group immediately. It has no done-marker and re-runs on resume.
 #
 # Per-project wall cap: REPOREAPERS_PROJECT_TIMEOUT seconds (default 1800). A capped project is
-# recorded with exit code 124 in status.tsv and done-marked (attempted, not retried); its partial
+# recorded with exit code 124 in status.tsv and done-marked (attempted, not retried). Its partial
 # funnel rows stay. The July baseline shows the cap only fires on zero-yield outliers, but capped
 # projects are identifiable by exit code for pairwise exclusion in baseline deltas.
 #
@@ -55,91 +55,23 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-_psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
+# shellcheck source=scripts/lib/run-supervisor.sh
+source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
+supervisor_install_traps
 
-active_project_abs=""
-active_project_log=""
-active_project_pgid=""
-
-# Kill the in-flight project's whole process group (job control gives each gradle invocation
-# its own group, so this reaches the wrapper JVM and the pipeline JVM it re-parents). TERM first,
-# grace period, then KILL for survivors.
-kill_active_project_group() {
-  [[ -n "$active_project_pgid" ]] || return 0
-  kill -TERM -- "-$active_project_pgid" 2>/dev/null || true
-  for _ in $(seq 1 10); do
-    kill -0 -- "-$active_project_pgid" 2>/dev/null || { active_project_pgid=""; return 0; }
-    sleep 1
-  done
-  _log_cleanup "$active_project_log" "force-killing process group $active_project_pgid"
-  kill -KILL -- "-$active_project_pgid" 2>/dev/null || true
-  active_project_pgid=""
-}
-
-_log_cleanup() {
-  local log_abs="$1"
-  local message="$2"
-  echo "    cleanup: $message"
-  [[ -n "$log_abs" ]] && printf 'cleanup: %s\n' "$message" >> "$log_abs"
-}
-
-cleanup_leftover_project_processes() {
-  local project_abs="$1"
-  local log_abs="${2:-}"
-  [[ -n "$project_abs" && -d "$project_abs" ]] || return 0
-
-  local pids=()
-  local pid
-  while IFS= read -r pid; do
-    [[ -n "$pid" && "$pid" != "$$" ]] && pids+=("$pid")
-  done < <(pgrep -f "$project_abs" 2>/dev/null || true)
-  [[ ${#pids[@]} -gt 0 ]] || return 0
-
-  _log_cleanup "$log_abs" "terminating ${#pids[@]} leftover process(es) for $project_abs: ${pids[*]}"
-  for pid in "${pids[@]}"; do
-    kill -TERM "$pid" 2>/dev/null || true
-  done
-  sleep 2
-  for pid in "${pids[@]}"; do
-    if kill -0 "$pid" 2>/dev/null; then
-      _log_cleanup "$log_abs" "force-killing leftover process $pid for $project_abs"
-      kill -KILL "$pid" 2>/dev/null || true
-    fi
-  done
-}
-
-cleanup_active_project_processes() {
-  kill_active_project_group
-  [[ -n "$active_project_abs" ]] || return 0
-  cleanup_leftover_project_processes "$active_project_abs" "$active_project_log"
-}
-
-trap cleanup_active_project_processes EXIT
-trap 'cleanup_active_project_processes; exit 130' INT TERM
-
-# Bring Postgres up only if it isn't already reachable (starting it restarts the container),
-# then wait for readiness.
-if ! _psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
-  echo "==> Starting Postgres"
-  "$ROOT_DIR/gradlew" startPostgres >/dev/null 2>&1 || true
-  for _ in $(seq 1 30); do
-    _psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 && break
-    sleep 1
-  done
-fi
-_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 || { echo "Postgres (postgres-teralizer) not reachable" >&2; exit 1; }
+ensure_postgres_up || exit 1
 
 if [[ "$reset_db" == true ]]; then
   echo "==> Resetting database $DB_NAME"
-  _psql -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
-  _psql -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" || { echo "DROP DATABASE failed" >&2; exit 1; }
+  teralizer_psql -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
+  teralizer_psql -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" || { echo "DROP DATABASE failed" >&2; exit 1; }
 fi
-if [[ "$(_psql -tA -d postgres -c "SELECT 1 FROM pg_database WHERE datname='$DB_NAME';" 2>/dev/null)" != "1" ]]; then
+if [[ "$(teralizer_psql -tA -d postgres -c "SELECT 1 FROM pg_database WHERE datname='$DB_NAME';" 2>/dev/null)" != "1" ]]; then
   echo "==> Creating database $DB_NAME"
-  if ! _psql -d postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null; then
+  if ! teralizer_psql -d postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null; then
     # A glibc upgrade under the container leaves template1 with a stale collation version.
-    _psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
-    _psql -d postgres -c "CREATE DATABASE $DB_NAME;" || { echo "CREATE DATABASE failed" >&2; exit 1; }
+    teralizer_psql -d postgres -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" || true
+    teralizer_psql -d postgres -c "CREATE DATABASE $DB_NAME;" || { echo "CREATE DATABASE failed" >&2; exit 1; }
   fi
   # Fresh DB has no recorded projects -> leftover markers/status are stale.
   rm -rf "$DONE_DIR" "$STATUS_TSV"
@@ -154,8 +86,7 @@ mapfile -t configs < <(find "$ROOT_DIR/$CONFIG_DIR" -maxdepth 1 -name 'project-*
 rm -f "$STOP_FILE"
 attempted=0; skipped=0; nonzero=0; capped=0; stopped=false
 for config_abs in "${configs[@]}"; do
-  if [[ -f "$STOP_FILE" ]]; then
-    rm -f "$STOP_FILE"
+  if supervisor_stop_requested "$STOP_FILE"; then
     stopped=true
     break
   fi
@@ -171,53 +102,25 @@ for config_abs in "${configs[@]}"; do
   attempted=$((attempted + 1))
   echo "==> [$n] $root_path"
   # A prior run whose BUILD_PROJECT_GENERALIZED failed can drop the cleanup task and leave
-  # generated tests behind; they break the next BUILD_PROJECT_ORIGINAL, so sweep them first.
+  # generated tests behind that break the next BUILD_PROJECT_ORIGINAL, so sweep them first.
   find "$project_abs/src/test" -name '_*_Generalized_*_Test.java' -delete 2>/dev/null
-  active_project_abs="$project_abs"
-  active_project_log="$log_abs"
-  # Job control (set -m) puts the background gradle and every JVM it spawns in a fresh
-  # process group, so the watchdog and the signal traps can kill the whole tree with one
-  # group signal. macOS has no setsid; this is the portable equivalent.
-  set -m
-  "$ROOT_DIR/gradlew" run \
+  SUPERVISOR_ACTIVE_PATH="$project_abs"
+  supervised_run "$log_abs" "$PROJECT_TIMEOUT" \
+    "$ROOT_DIR/gradlew" run \
     -Dteralizer.config="$PROFILE,$config" \
     -Dteralizer.database.name="$DB_NAME" \
     -Dteralizer.data-dir="$DATA_DIR" \
-    --no-daemon \
-    < /dev/null > "$log_abs" 2>&1 &
-  gradle_pid=$!
-  set +m
-  active_project_pgid="$gradle_pid"
-  # Watchdog: background gradle keeps this shell interruptible (traps fire immediately
-  # instead of waiting for gradle to return), and enforces the per-project wall cap.
-  started=$SECONDS
-  rc=""
-  while :; do
-    if ! kill -0 "$gradle_pid" 2>/dev/null; then
-      wait "$gradle_pid"
-      rc=$?
-      break
-    fi
-    if (( SECONDS - started >= PROJECT_TIMEOUT )); then
-      _log_cleanup "$log_abs" "project exceeded ${PROJECT_TIMEOUT}s wall cap, killing process group"
-      kill_active_project_group
-      wait "$gradle_pid" 2>/dev/null
-      rc=124
-      break
-    fi
-    sleep 15
-  done
-  active_project_pgid=""
+    --no-daemon
+  rc=$SUPERVISED_RC
   cleanup_leftover_project_processes "$project_abs" "$log_abs"
-  active_project_abs=""
-  active_project_log=""
+  SUPERVISOR_ACTIVE_PATH=""
   printf '%s\t%s\t%s\t%s\n' "$n" "$root_path" "$rc" "$log" >> "$STATUS_TSV"
   if [[ "$rc" -eq 124 ]]; then
     capped=$((capped + 1))
-    echo "    capped at ${PROJECT_TIMEOUT}s (exit 124 in the ledger; partial funnel rows recorded)"
+    echo "    capped at ${PROJECT_TIMEOUT}s (exit 124 in the ledger, partial funnel rows recorded)"
   elif [[ "$rc" -ne 0 ]]; then
     nonzero=$((nonzero + 1))
-    echo "    gradle exited $rc (funnel data still recorded where reached; see $log)"
+    echo "    gradle exited $rc (funnel data still recorded where reached, see $log)"
   fi
   touch "$DONE_DIR/project-$n"
 done
