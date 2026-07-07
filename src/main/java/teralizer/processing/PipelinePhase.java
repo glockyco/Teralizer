@@ -13,7 +13,24 @@ import java.util.function.Consumer;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
+import teralizer.processing.task.CleanupTask;
+import teralizer.processing.task.EvoSuiteGenerationTask;
+import teralizer.processing.task.EvoSuitePostprocessingTask;
+import teralizer.processing.task.GeneralizedSourceRestoreTask;
+import teralizer.processing.task.JacocoDataCollectionTask;
+import teralizer.processing.task.JpfAnalysisTask;
+import teralizer.processing.task.JpfExecutionTask;
+import teralizer.processing.task.JpfInstrumentationTask;
+import teralizer.processing.task.JunitDataCollectionTask;
+import teralizer.processing.task.PitDataCollectionTask;
+import teralizer.processing.task.ProjectBuildTask;
+import teralizer.processing.task.SpoonModelBuildingTask;
 import teralizer.processing.task.Task;
+import teralizer.processing.task.TestAnalysisTask;
+import teralizer.processing.task.TestExecutionTask;
+import teralizer.processing.task.TestFilteringTask;
+import teralizer.processing.task.TestGeneralizationTask;
+import teralizer.util.Configuration;
 
 public enum PipelinePhase implements Phase {
     GENERATION {
@@ -33,7 +50,8 @@ public enum PipelinePhase implements Phase {
 
         @Override
         public void schedule(ProjectRecord project, Consumer<Task> schedule) {
-            throw new UnsupportedOperationException("wired in Task 8");
+            schedule.accept(new EvoSuiteGenerationTask(ProcessingStage.GENERATE_EVOSUITE_TESTS, project));
+            schedule.accept(new EvoSuitePostprocessingTask(ProcessingStage.POSTPROCESS_EVOSUITE_TESTS, project));
         }
 
         @Override
@@ -71,7 +89,35 @@ public enum PipelinePhase implements Phase {
 
         @Override
         public void schedule(ProjectRecord project, Consumer<Task> schedule) {
-            throw new UnsupportedOperationException("wired in Task 8");
+            schedule.accept(new SpoonModelBuildingTask(ProcessingStage.BUILD_SPOON_MODEL, project));
+
+            schedule.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_ORIGINAL, project));
+            schedule.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL, project));
+            schedule.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL, project));
+            schedule.accept(new TestFilteringTask(ProcessingStage.FILTER_TESTS_ORIGINAL, project));
+
+            schedule.accept(new TestAnalysisTask(ProcessingStage.ANALYZE_TESTS, project));
+            schedule.accept(new TestFilteringTask(ProcessingStage.FILTER_TESTS, project));
+            schedule.accept(new TestFilteringTask(ProcessingStage.FILTER_ASSERTIONS, project));
+
+            schedule.accept(new JpfInstrumentationTask(ProcessingStage.ADD_JPF_INSTRUMENTATION, project));
+            schedule.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INSTRUMENTED, project));
+            schedule.accept(new JpfExecutionTask(ProcessingStage.EXECUTE_JPF, project));
+            schedule.accept(new JpfAnalysisTask(ProcessingStage.ANALYZE_JPF, project));
+            schedule.accept(new CleanupTask(ProcessingStage.CLEANUP_JPF_INSTRUMENTATION, project));
+
+            schedule.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_INITIAL, project));
+            schedule.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_INITIAL, project));
+            schedule.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_INITIAL, project));
+
+            for (String variant : Configuration.getGeneralizationVariants()) {
+                schedule.accept(new CleanupTask(ProcessingStage.CLEANUP_GENERALIZATION, variant, project));
+                schedule.accept(new TestGeneralizationTask(ProcessingStage.GENERALIZE_TESTS, variant, project));
+                schedule.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_GENERALIZED, variant, project));
+                schedule.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_GENERALIZED, variant, project));
+                schedule.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED, variant, project));
+                schedule.accept(new TestFilteringTask(ProcessingStage.FILTER_GENERALIZATIONS, variant, project));
+            }
         }
 
         @Override
@@ -104,14 +150,20 @@ public enum PipelinePhase implements Phase {
 
         @Override
         public void checkPreconditions(ProjectRecord project) {
-            if (!hasFile(project, PipelinePhase::isGeneralizedTestSourceFile)) {
-                throw new PhasePreconditionException("no generalized test sources under " + resolvedTestSourcePath(project));
-            }
+            requireGeneralizedSourceArchives(project);
         }
 
         @Override
         public void schedule(ProjectRecord project, Consumer<Task> schedule) {
-            throw new UnsupportedOperationException("wired in Task 8");
+            schedule.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_ORIGINAL, project));
+            schedule.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, project));
+            schedule.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_INITIAL, project));
+
+            for (String variant : Configuration.getGeneralizationVariants()) {
+                schedule.accept(new GeneralizedSourceRestoreTask(variant, project));
+                schedule.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED, variant, project));
+                schedule.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_GENERALIZED, variant, project));
+            }
         }
 
         @Override
@@ -167,6 +219,7 @@ public enum PipelinePhase implements Phase {
         ProcessingStage.COLLECT_PIT_DATA_ORIGINAL,
         ProcessingStage.COLLECT_JACOCO_DATA_INITIAL,
         ProcessingStage.COLLECT_PIT_DATA_INITIAL,
+        ProcessingStage.RESTORE_GENERALIZED_BUILD,
         ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED,
         ProcessingStage.COLLECT_PIT_DATA_GENERALIZED
     ));
@@ -198,6 +251,43 @@ public enum PipelinePhase implements Phase {
             names.add(stage.name());
         }
         return names;
+    }
+
+    private static void requireGeneralizedSourceArchives(ProjectRecord project) {
+        for (String variant : Configuration.getGeneralizationVariants()) {
+            Path archive = generalizedSourceArchivePath(project, variant);
+            if (!hasAnyFile(archive)) {
+                throw new PhasePreconditionException(
+                    "no generalized source archive for variant " + variant + " under " + archive
+                );
+            }
+        }
+    }
+
+    private static Path generalizedSourceArchivePath(ProjectRecord project, String variant) {
+        Path dataPath = project.getDataPath();
+        Long projectId = project.getId();
+        if (dataPath == null || projectId == null) {
+            throw new PhasePreconditionException("no generalized source archive because project data path or id is missing");
+        }
+        return dataPath.resolve("project-id-" + projectId)
+            .resolve("generalized-sources")
+            .resolve(variant);
+    }
+
+    private static boolean hasAnyFile(Path root) {
+        if (root == null || !Files.exists(root)) {
+            return false;
+        }
+        FindingVisitor visitor = new FindingVisitor(file -> true);
+        try {
+            Files.walkFileTree(root, visitor);
+        } catch (StopWalk stop) {
+            return true;
+        } catch (IOException e) {
+            throw new PhasePreconditionException("failed to inspect generalized source archive under " + root, e);
+        }
+        return false;
     }
 
     private static boolean hasFile(ProjectRecord project, PathPredicate predicate) {
