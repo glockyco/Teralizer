@@ -27,4 +27,17 @@ public final class ProjectIdentity {
         }
         return existing;
     }
+
+    public static void applyRunScopedConfiguration(
+        ProjectRecord project,
+        boolean useTestGeneration,
+        boolean useTestGeneralization,
+        boolean useTestReduction,
+        String configuration
+    ) {
+        project.setUseTestGeneration(useTestGeneration);
+        project.setUseTestGeneralization(useTestGeneralization);
+        project.setUseTestReduction(useTestReduction);
+        project.setConfiguration(configuration);
+    }
 }

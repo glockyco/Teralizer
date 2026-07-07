@@ -47,6 +47,19 @@ public class ProjectIdentityTest {
     }
 
     @Example
+    void runScopedConfigurationRefreshesPhaseTogglesOnAttachedRecord() {
+        ProjectRecord record = project(4L, Paths.get("/tmp/teralizer/resume"), fullConfig(60, false, true, false));
+        String currentConfig = fullConfig(60, false, false, true);
+
+        ProjectIdentity.applyRunScopedConfiguration(record, false, false, true, currentConfig);
+
+        Assert.assertFalse(record.getUseTestGeneration());
+        Assert.assertFalse(record.getUseTestGeneralization());
+        Assert.assertTrue(record.getUseTestReduction());
+        Assert.assertEquals(currentConfig, record.getConfiguration());
+    }
+
+    @Example
     void mismatchedConfigOnSamePathFailsLoud() {
         Path rootPath = Paths.get("/tmp/teralizer/mismatch");
         ProjectStore store = new ProjectStore();

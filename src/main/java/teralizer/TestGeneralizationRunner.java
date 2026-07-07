@@ -64,12 +64,15 @@ public class TestGeneralizationRunner {
             projectRecord.setTestReportsPath(Configuration.getProjectTestReportsPath());
             projectRecord.setCoverageReportsPath(Configuration.getProjectCoverageReportsPath());
             projectRecord.setMutationReportsPath(Configuration.getProjectMutationReportsPath());
-            projectRecord.setUseTestGeneration(Configuration.getProjectUseTestGeneration());
-            projectRecord.setUseTestGeneralization(Configuration.getProjectUseTestGeneralization());
-            projectRecord.setUseTestReduction(Configuration.getProjectUseTestReduction());
-            projectRecord.setConfiguration(Configuration.render());
-            projectRecord.store();
         }
+        ProjectIdentity.applyRunScopedConfiguration(
+            projectRecord,
+            Configuration.getProjectUseTestGeneration(),
+            Configuration.getProjectUseTestGeneralization(),
+            Configuration.getProjectUseTestReduction(),
+            Configuration.render()
+        );
+        projectRecord.store();
 
         pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord, freshStart));
         pipeline.executeAll();
