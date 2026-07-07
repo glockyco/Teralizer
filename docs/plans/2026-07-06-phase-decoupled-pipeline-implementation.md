@@ -755,7 +755,7 @@ per variant during reduction, preserving one-variant-at-a-time isolation.
     `feat(pipeline): archive generalized sources per variant for isolated restore`
     Body: explains the interleave-isolation problem and the archive+restore fix.
 
-- [ ] **Commit B — move scheduling into the phase bodies.**
+- [x] **Commit B — move scheduling into the phase bodies.**
   - `GENERATION.schedule`: the `if (getUseTestGeneration())` block (old
     `ProjectSetupTask` lines 79-82), same task order.
   - `GENERALIZATION.schedule`: SPOON_MODEL through `FILTER_GENERALIZATIONS`,
