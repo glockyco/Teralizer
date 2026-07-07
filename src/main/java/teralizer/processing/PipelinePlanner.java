@@ -28,8 +28,8 @@ public class PipelinePlanner {
                 continue;
             }
             phase.clear(this.create, project);
-            phase.checkPreconditions(project);
-            phase.schedule(project, this.pipeline::addTask);
+            phase.checkPreconditions(this.create, project);
+            phase.schedule(this.create, project, this.pipeline::addTask);
             this.pipeline.executeAll();
         }
     }

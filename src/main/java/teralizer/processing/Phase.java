@@ -11,9 +11,9 @@ interface Phase {
 
     boolean isRequested(ProjectRecord project);
 
-    void checkPreconditions(ProjectRecord project);
+    void checkPreconditions(DSLContext create, ProjectRecord project);
 
-    void schedule(ProjectRecord project, Consumer<Task> schedule);
+    void schedule(DSLContext create, ProjectRecord project, Consumer<Task> schedule);
 
     void clear(DSLContext create, ProjectRecord project);
 }

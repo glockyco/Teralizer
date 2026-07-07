@@ -30,6 +30,7 @@ import teralizer.processing.task.TestAnalysisTask;
 import teralizer.processing.task.TestExecutionTask;
 import teralizer.processing.task.TestFilteringTask;
 import teralizer.processing.task.TestGeneralizationTask;
+import teralizer.repository.PipelineQueries;
 import teralizer.util.Configuration;
 
 public enum PipelinePhase implements Phase {
@@ -45,11 +46,11 @@ public enum PipelinePhase implements Phase {
         }
 
         @Override
-        public void checkPreconditions(ProjectRecord project) {
+        public void checkPreconditions(DSLContext create, ProjectRecord project) {
         }
 
         @Override
-        public void schedule(ProjectRecord project, Consumer<Task> schedule) {
+        public void schedule(DSLContext create, ProjectRecord project, Consumer<Task> schedule) {
             schedule.accept(new EvoSuiteGenerationTask(ProcessingStage.GENERATE_EVOSUITE_TESTS, project));
             schedule.accept(new EvoSuitePostprocessingTask(ProcessingStage.POSTPROCESS_EVOSUITE_TESTS, project));
         }
@@ -81,14 +82,14 @@ public enum PipelinePhase implements Phase {
         }
 
         @Override
-        public void checkPreconditions(ProjectRecord project) {
+        public void checkPreconditions(DSLContext create, ProjectRecord project) {
             if (!hasFile(project, PipelinePhase::isJavaSourceFile)) {
                 throw new PhasePreconditionException("no project test sources under " + resolvedTestSourcePath(project));
             }
         }
 
         @Override
-        public void schedule(ProjectRecord project, Consumer<Task> schedule) {
+        public void schedule(DSLContext create, ProjectRecord project, Consumer<Task> schedule) {
             schedule.accept(new SpoonModelBuildingTask(ProcessingStage.BUILD_SPOON_MODEL, project));
 
             schedule.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_ORIGINAL, project));
@@ -149,17 +150,18 @@ public enum PipelinePhase implements Phase {
         }
 
         @Override
-        public void checkPreconditions(ProjectRecord project) {
-            requireGeneralizedSourceArchives(project);
+        public void checkPreconditions(DSLContext create, ProjectRecord project) {
+            requireGeneralizationHasRun(create, project);
+            requireGeneralizedSourceArchivesForIncludedVariants(create, project);
         }
 
         @Override
-        public void schedule(ProjectRecord project, Consumer<Task> schedule) {
+        public void schedule(DSLContext create, ProjectRecord project, Consumer<Task> schedule) {
             schedule.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_ORIGINAL, project));
             schedule.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, project));
             schedule.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_INITIAL, project));
 
-            for (String variant : Configuration.getGeneralizationVariants()) {
+            for (String variant : variantsWithIncludedGeneralizations(create, project)) {
                 schedule.accept(new GeneralizedSourceRestoreTask(variant, project));
                 schedule.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED, variant, project));
                 schedule.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_GENERALIZED, variant, project));
@@ -228,9 +230,9 @@ public enum PipelinePhase implements Phase {
 
     public abstract boolean isRequested(ProjectRecord project);
 
-    public abstract void checkPreconditions(ProjectRecord project);
+    public abstract void checkPreconditions(DSLContext create, ProjectRecord project);
 
-    public abstract void schedule(ProjectRecord project, Consumer<Task> schedule);
+    public abstract void schedule(DSLContext create, ProjectRecord project, Consumer<Task> schedule);
 
     public abstract void clear(DSLContext create, ProjectRecord project);
 
@@ -253,8 +255,21 @@ public enum PipelinePhase implements Phase {
         return names;
     }
 
-    private static void requireGeneralizedSourceArchives(ProjectRecord project) {
-        for (String variant : Configuration.getGeneralizationVariants()) {
+    private static void requireGeneralizationHasRun(DSLContext create, ProjectRecord project) {
+        Integer filterTaskCount = create.selectCount()
+            .from(Tables.TASK)
+            .where(Tables.TASK.PROJECT_ID.eq(project.getId()))
+            .and(Tables.TASK.STAGE.eq(ProcessingStage.FILTER_GENERALIZATIONS))
+            .fetchOne(0, Integer.class);
+        if (filterTaskCount == null || filterTaskCount == 0) {
+            throw new PhasePreconditionException(
+                "generalization has not run for project " + project.getId() + "; run generalization before reduction"
+            );
+        }
+    }
+
+    private static void requireGeneralizedSourceArchivesForIncludedVariants(DSLContext create, ProjectRecord project) {
+        for (String variant : variantsWithIncludedGeneralizations(create, project)) {
             Path archive = generalizedSourceArchivePath(project, variant);
             if (!hasAnyFile(archive)) {
                 throw new PhasePreconditionException(
@@ -262,6 +277,16 @@ public enum PipelinePhase implements Phase {
                 );
             }
         }
+    }
+
+    private static java.util.List<String> variantsWithIncludedGeneralizations(DSLContext create, ProjectRecord project) {
+        java.util.List<String> variants = new java.util.ArrayList<>();
+        for (String variant : Configuration.getGeneralizationVariants()) {
+            if (!PipelineQueries.fetchIncludedGeneralizedClasses(create, variant, project.getId()).isEmpty()) {
+                variants.add(variant);
+            }
+        }
+        return variants;
     }
 
     private static Path generalizedSourceArchivePath(ProjectRecord project, String variant) {

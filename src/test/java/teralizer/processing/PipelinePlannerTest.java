@@ -163,7 +163,7 @@ public class PipelinePlannerTest {
         }
 
         @Override
-        public void checkPreconditions(ProjectRecord project) {
+        public void checkPreconditions(DSLContext create, ProjectRecord project) {
             this.events.add(this.name + ":check");
             if (this.preconditionFailure != null) {
                 throw this.preconditionFailure;
@@ -171,7 +171,7 @@ public class PipelinePlannerTest {
         }
 
         @Override
-        public void schedule(ProjectRecord project, Consumer<Task> schedule) {
+        public void schedule(DSLContext create, ProjectRecord project, Consumer<Task> schedule) {
             this.events.add(this.name + ":schedule");
         }
 

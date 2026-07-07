@@ -7,7 +7,12 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import net.jqwik.api.Example;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record1;
+import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
@@ -47,28 +52,40 @@ public class PipelinePhaseTest {
     }
 
     @Example
-    void reductionPreconditionRequiresGeneralizedSourceArchiveEvenWhenWorkspaceHasSources() throws Exception {
+    void reductionPreconditionRequiresGeneralizationToHaveRun() throws Exception {
         Path testSourceRoot = Files.createTempDirectory("teralizer-pipeline-phase-test");
-        Path packageRoot = testSourceRoot.resolve("com/example");
-        Files.createDirectories(packageRoot);
-        Files.write(
-            packageRoot.resolve("_Calculator_Generalized_IMPROVED_100_TRIES_Test.java"),
-            Arrays.asList("class _Calculator_Generalized_IMPROVED_100_TRIES_Test {}")
-        );
         ProjectRecord project = project(testSourceRoot);
+        ReductionStore store = new ReductionStore(false);
 
         PhasePreconditionException thrown = Assert.assertThrows(
             PhasePreconditionException.class,
-            () -> PipelinePhase.REDUCTION.checkPreconditions(project)
+            () -> PipelinePhase.REDUCTION.checkPreconditions(store.dsl(), project)
         );
 
+        Assert.assertEquals(
+            "generalization has not run for project 7; run generalization before reduction",
+            thrown.getMessage()
+        );
+    }
+
+    @Example
+    void reductionPreconditionRequiresArchivesOnlyForVariantsWithIncludedGeneralizations() throws Exception {
+        Path testSourceRoot = Files.createTempDirectory("teralizer-pipeline-phase-test");
+        ProjectRecord project = project(testSourceRoot);
+        PipelinePhase.REDUCTION.checkPreconditions(new ReductionStore(true).dsl(), project);
+
+        String includedVariant = Configuration.getGeneralizationVariants()[0];
+        ReductionStore partialStore = new ReductionStore(true, includedVariant);
+        PhasePreconditionException thrown = Assert.assertThrows(
+            PhasePreconditionException.class,
+            () -> PipelinePhase.REDUCTION.checkPreconditions(partialStore.dsl(), project)
+        );
+
+        Assert.assertTrue(thrown.getMessage(), thrown.getMessage().contains("variant " + includedVariant));
         Assert.assertTrue(thrown.getMessage(), thrown.getMessage().contains("generalized source archive"));
 
-        for (String variant : Configuration.getGeneralizationVariants()) {
-            seedArchive(project, variant);
-        }
-
-        PipelinePhase.REDUCTION.checkPreconditions(project);
+        seedArchive(project, includedVariant);
+        PipelinePhase.REDUCTION.checkPreconditions(partialStore.dsl(), project);
     }
 
     @Example
@@ -76,7 +93,7 @@ public class PipelinePhaseTest {
         ProjectRecord project = project(Files.createTempDirectory("teralizer-pipeline-phase-schedule"));
 
         List<Task> tasks = new ArrayList<>();
-        PipelinePhase.GENERATION.schedule(project, tasks::add);
+        PipelinePhase.GENERATION.schedule(new ReductionStore(true).dsl(), project, tasks::add);
         Assert.assertEquals(
             Arrays.asList(
                 "EvoSuiteGenerationTask:GENERATE_EVOSUITE_TESTS:null",
@@ -86,7 +103,7 @@ public class PipelinePhaseTest {
         );
 
         tasks.clear();
-        PipelinePhase.GENERALIZATION.schedule(project, tasks::add);
+        PipelinePhase.GENERALIZATION.schedule(new ReductionStore(true).dsl(), project, tasks::add);
         List<String> expectedGeneralization = new ArrayList<>(Arrays.asList(
             "SpoonModelBuildingTask:BUILD_SPOON_MODEL:null",
             "TestExecutionTask:EXECUTE_TESTS_ORIGINAL:null",
@@ -116,7 +133,11 @@ public class PipelinePhaseTest {
         Assert.assertEquals(expectedGeneralization, taskSignatures(tasks));
 
         tasks.clear();
-        PipelinePhase.REDUCTION.schedule(project, tasks::add);
+        PipelinePhase.REDUCTION.schedule(
+            new ReductionStore(true, Configuration.getGeneralizationVariants()).dsl(),
+            project,
+            tasks::add
+        );
         List<String> expectedReduction = new ArrayList<>(Arrays.asList(
             "PitDataCollectionTask:COLLECT_PIT_DATA_ORIGINAL:null",
             "JacocoDataCollectionTask:COLLECT_JACOCO_DATA_INITIAL:null",
@@ -176,6 +197,51 @@ public class PipelinePhaseTest {
             archive.resolve("_Calculator_Generalized_" + variant + "_Test.java"),
             Arrays.asList("class _Calculator_Generalized_" + variant + "_Test {}")
         );
+    }
+
+    private static final class ReductionStore implements MockDataProvider {
+        private final DSLContext records = DSL.using(SQLDialect.POSTGRES);
+        private final boolean hasFilterTasks;
+        private final Set<String> includedVariants;
+
+        private ReductionStore(boolean hasFilterTasks, String... includedVariants) {
+            this.hasFilterTasks = hasFilterTasks;
+            this.includedVariants = new java.util.LinkedHashSet<>(Arrays.asList(includedVariants));
+        }
+
+        private DSLContext dsl() {
+            return DSL.using(new MockConnection(this), SQLDialect.POSTGRES);
+        }
+
+        @Override
+        public MockResult[] execute(MockExecuteContext context) {
+            String sql = context.sql().trim().toLowerCase(Locale.ROOT);
+            if (sql.startsWith("select") && sql.contains("count") && sql.contains("task")) {
+                Field<Integer> count = DSL.field("count", Integer.class);
+                Result<Record1<Integer>> result = this.records.newResult(count);
+                result.add(this.records.newRecord(count).values(this.hasFilterTasks ? 1 : 0));
+                return new MockResult[] {new MockResult(1, result)};
+            }
+            if (sql.startsWith("select") && sql.contains("class_qualified_name") && sql.contains("generalization")) {
+                Field<String> field = DSL.field("class_qualified_name", String.class);
+                Result<Record1<String>> result = this.records.newResult(field);
+                String variant = variantFrom(context.bindings());
+                if (this.includedVariants.contains(variant)) {
+                    result.add(this.records.newRecord(field).values("_Calculator_Generalized_" + variant + "_Test"));
+                }
+                return new MockResult[] {new MockResult(result.size(), result)};
+            }
+            return new MockResult[] {new MockResult(0, this.records.newResult())};
+        }
+
+        private static String variantFrom(Object[] bindings) {
+            for (Object binding : bindings) {
+                if (binding instanceof String) {
+                    return binding.toString();
+                }
+            }
+            return null;
+        }
     }
 
     private static final class RecordingDeletes implements MockDataProvider {
