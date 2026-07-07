@@ -708,55 +708,77 @@ generalization results.
 
 ## Phase 3 — Cutover (behavior change, atomic commits, fixture-gated)
 
-### Task 8: Move scheduling out of `ProjectSetupTask` into the phases
+### Task 8: Move scheduling into phases, with per-variant source archive and isolated restore
 
-Behavior-preserving refactor. `ProjectSetupTask` keeps setup (paths, build file,
-classpath, framework detection) and the bootstrap cascade (cleanup, add-deps,
-build-original). The per-phase stage scheduling (lines 79-123) moves into the
-`PipelinePhase.schedule` bodies stubbed in Task 5.
+Moves the per-phase stage scheduling out of `ProjectSetupTask` into the
+`PipelinePhase.schedule` bodies, and adds the per-variant generalized-source
+archive (writer) plus a reduction-owned `RESTORE_GENERALIZED_BUILD` stage
+(reader) so reduction rebuilds each variant in isolation. Behavior-preserving for
+a full single-variant run; the archive addition makes multi-variant reduction
+correct. Landed as three ordered commits so the build stays green at each.
+
+**Why the archive:** the per-variant `CLEANUP_GENERALIZATION` deletes every
+`_*_Generalized_*` source at the start of each variant, so only one variant's
+sources ever sit in the workspace, and `mvn pitest:mutationCoverage` mutates
+whatever is already compiled in `target/`. Deferring all generalized PIT to a
+later phase would run every variant against the last variant's classes. The fix
+archives each variant's sources during generalization and restores + rebuilds
+per variant during reduction, preserving one-variant-at-a-time isolation.
 
 **Files:**
-- Modify: `src/main/java/teralizer/processing/task/ProjectSetupTask.java:78-123`
-- Modify: `src/main/java/teralizer/processing/PipelinePhase.java`
+- Modify: `src/main/java/teralizer/processing/ProcessingStage.java` (add `RESTORE_GENERALIZED_BUILD` in the reduction band; Task 9 does the coherent renumber)
+- Create: `src/main/java/teralizer/processing/task/GeneralizedSourceRestoreTask.java`
+- Modify: `src/main/java/teralizer/processing/task/TestExecutionTask.java` (archive writer at `EXECUTE_TESTS_GENERALIZED`)
+- Modify: `src/main/java/teralizer/processing/PipelinePhase.java` (fill `schedule` bodies; adjust `REDUCTION.checkPreconditions` to check the archive)
+- Modify: `src/main/java/teralizer/processing/task/ProjectSetupTask.java` (remove the per-phase scheduling block; add the temporary driver)
+- Test: `src/test/java/teralizer/processing/task/GeneralizedSourceRestoreTaskTest.java`
 
-- [ ] **Step 1: Move the generation block.** Cut the `if (getUseTestGeneration())`
-  scheduling (lines 79-82) into `PipelinePhase.GENERATION.schedule`. Keep the
-  exact task order and constructors.
+- [ ] **Commit A — archive writer + restore stage + restore task (infra, nothing scheduled yet).**
+  - Add a `RESTORE_GENERALIZED_BUILD` constant to `ProcessingStage` (temporary
+    step number in the reduction band, e.g. just below `COLLECT_JACOCO_DATA_GENERALIZED`;
+    Task 9 renumbers the whole band coherently). No jOOQ regen: `task.stage` uses a
+    runtime `EnumConverter` keyed on the class, so a new constant is picked up
+    automatically (verified).
+  - In `TestExecutionTask`, at `EXECUTE_TESTS_GENERALIZED` (after the existing
+    `.exec` copy from Task 3), copy this variant's `_*_Generalized_*` sources
+    from the test source tree to `data/project-id-N/generalized-sources/<variant>/`,
+    mirroring the tree structure so restore is a straight copy back. Reuse the
+    `_*_Generalized_*` predicate convention (`startsWith("_") && contains("_Generalized_")`).
+  - Create `GeneralizedSourceRestoreTask` (stage `RESTORE_GENERALIZED_BUILD`,
+    variant-scoped): delete any `_*_Generalized_*` from the workspace test tree,
+    restore this variant's archived sources into it, then rebuild via the same
+    `ProjectBuildTask` build helper used for `BUILD_PROJECT_GENERALIZED` (custom
+    `pom.teralizer.xml`). It is NOT scheduled anywhere in this commit.
+  - Unit test the restore task's path derivation (archive dir per variant, source
+    round-trips) with a temp-dir fixture. Do not run the full gate.
+  - Compile green. Commit. Suggested subject:
+    `feat(pipeline): archive generalized sources per variant for isolated restore`
+    Body: explains the interleave-isolation problem and the archive+restore fix.
 
-- [ ] **Step 2: Move the generalization block.** Cut lines 84-109 (SPOON_MODEL
-  through the INITIAL PIT collector that is NOT reduction — see Step 4 for the
-  boundary) into `GENERALIZATION.schedule`. The INITIAL build and test execution
-  stay in generalization; only the Stage-5 collectors move to reduction.
-
-- [ ] **Step 3: Move the reduction collectors.** The five Stage-5 stages
-  (`COLLECT_PIT_DATA_ORIGINAL`, `COLLECT_JACOCO_DATA_INITIAL`,
-  `COLLECT_PIT_DATA_INITIAL`, and the per-variant
-  `COLLECT_JACOCO_DATA_GENERALIZED` / `COLLECT_PIT_DATA_GENERALIZED`) move into
-  `REDUCTION.schedule`. Reduction re-establishes its build precondition first by
-  scheduling a generalized rebuild of the persisted sources
-  (`pom.teralizer.xml`), since PIT builds against the custom POM.
-
-- [ ] **Step 4: Keep the boundary explicit.** In generalization's per-variant
-  loop, the build, execute, junit-collect, and filter stages stay; the jacoco and
-  pit collectors move to reduction. Preserve `CleanupTask`, `TestGeneralizationTask`,
-  `ProjectBuildTask`, `TestExecutionTask`, `JunitDataCollectionTask`,
-  `TestFilteringTask` in generalization exactly as ordered today.
-
-- [ ] **Step 5: Temporary driver to stay green.** Until Task 11 flips the runner,
-  have `ProjectSetupTask` call the three phases' `schedule` in order when their
-  toggles are set, reproducing today's single-pass behavior. This keeps the build
-  green and the fixture goldens unmoved at this commit.
-
-- [ ] **Step 6: Fixture gate.**
-  Run: `bash scripts/verify-pipeline.sh`
-  Expected: goldens unmoved, all fixtures attempted. Any golden movement is a
-  defect in the move, not something to accept.
-
-- [ ] **Step 7: Commit.** Stage both files. Suggested subject:
-  `refactor(pipeline): move stage scheduling into the phases`
-  Body must explain: scheduling logic moves out of `ProjectSetupTask` into the
-  phase objects with no behavior change (the setup task temporarily drives the
-  phases in the old order). Fixture goldens are byte-identical.
+- [ ] **Commit B — move scheduling into the phase bodies.**
+  - `GENERATION.schedule`: the `if (getUseTestGeneration())` block (old
+    `ProjectSetupTask` lines 79-82), same task order.
+  - `GENERALIZATION.schedule`: SPOON_MODEL through `FILTER_GENERALIZATIONS`,
+    including the INITIAL build+execute and the per-variant interleaved
+    `CLEANUP_GENERALIZATION → GENERALIZE → BUILD → EXECUTE → JUNIT → FILTER`
+    exactly as ordered today (the archive copy already happens inside EXECUTE).
+  - `REDUCTION.schedule`: `COLLECT_PIT_DATA_ORIGINAL`, `COLLECT_JACOCO_DATA_INITIAL`,
+    `COLLECT_PIT_DATA_INITIAL` (variant-null, against the original build), then
+    per variant `RESTORE_GENERALIZED_BUILD → COLLECT_JACOCO_DATA_GENERALIZED →
+    COLLECT_PIT_DATA_GENERALIZED`.
+  - Adjust `REDUCTION.checkPreconditions` to require the per-variant
+    generalized-source ARCHIVE under the data dir (not the live workspace, which
+    holds only the last variant after generalization). Update the committed
+    `PipelinePhaseTest` precondition case accordingly.
+  - Temporary driver: until Task 11 flips the runner, `ProjectSetupTask` calls the
+    three phases' `schedule` in order when their toggles are set, reproducing the
+    single-pass behavior. Remove the old inline scheduling block.
+  - Spike ONE small fixture end to end (not the 21-fixture gate): confirm it
+    reaches reduction, produces generalizations and PIT rows, goldens for that
+    fixture unmoved. Commit. Suggested subject:
+    `refactor(pipeline): move stage scheduling into the phases`
+    Body: scheduling moves into the phase objects; reduction restores and rebuilds
+    each variant before its collectors; single-variant behavior preserved.
 
 ---
 
@@ -769,18 +791,24 @@ precedes generalization. Mirror the change in `stage_order()`.
 **Files:**
 - Modify: `src/main/java/teralizer/processing/ProcessingStage.java`
 - Modify: `src/main/resources/db/create-views.sql` (the `stage_order()` function)
+- Modify: `analysis/src/teralizer/stages.py` (add the new stage to the Stage-5 set + the SQL CASE)
 
-- [ ] **Step 1: Renumber.** Give `COLLECT_JACOCO_DATA_INITIAL`,
-  `COLLECT_PIT_DATA_INITIAL`, and `COLLECT_PIT_DATA_ORIGINAL` step values greater
-  than `FILTER_GENERALIZATIONS` and the per-variant generalized build/execute
-  stages, so all reduction stages sort after all generalization stages. Keep the
-  generalized jacoco/pit stages last as today. Assign a contiguous top band, e.g.
-  reduction stages occupy the highest step numbers, generalization ends just
-  below. Preserve relative order within each phase.
+- [ ] **Step 1: Renumber.** Give the reduction band contiguous step values ABOVE
+  the whole generalization loop, in this within-phase order:
+  `COLLECT_PIT_DATA_ORIGINAL`, `COLLECT_JACOCO_DATA_INITIAL`, `COLLECT_PIT_DATA_INITIAL`,
+  then per variant `RESTORE_GENERALIZED_BUILD`, `COLLECT_JACOCO_DATA_GENERALIZED`,
+  `COLLECT_PIT_DATA_GENERALIZED`. All must sort after `FILTER_GENERALIZATIONS` and
+  the per-variant generalized build/execute stages. `RESTORE_GENERALIZED_BUILD`
+  (added in Task 8 with a temporary number) gets its final number here, just
+  before the generalized collectors it precedes. Preserve relative order within
+  each phase.
 
-- [ ] **Step 2: Mirror `stage_order()`.** Update the SQL `stage_order()` CASE in
-  `create-views.sql` (lines ~160-197) so every stage's number matches the enum.
-  These two must stay in lockstep; a mismatch corrupts failure-stage reporting.
+- [ ] **Step 2: Mirror `stage_order()` and `stages.py`.** Update the SQL
+  `stage_order()` CASE in `create-views.sql` (lines ~160-197) so every stage's
+  number matches the enum, and add `RESTORE_GENERALIZED_BUILD` to the Stage-5 set
+  and the `get_stage_group_sql_case()` Stage-5 branch in
+  `analysis/src/teralizer/stages.py`. Enum, SQL, and stages.py must stay in
+  lockstep; a mismatch corrupts failure-stage and paper-stage reporting.
 
 - [ ] **Step 3: Verify the views build.** Re-run the scratch-DB view check from
   Task 4 Step 2.
@@ -924,6 +952,16 @@ reduction in a separate invocation against the persisted workspace.
 Read `scripts/verify-pipeline.sh` and the corpus driver to match the existing
 golden mechanism before adding this. Keep the assertion data-driven off the DB,
 consistent with existing golden checks.
+- [ ] **Step 2b: Add a multi-variant reduction isolation check.** Single-variant
+  fixtures cannot catch a sweep regression. Add a check (a fixture config with two
+  variants, e.g. `IMPROVED_100_TRIES` + `IMPROVED_200_TRIES`, run through
+  generalization then reduction) asserting each variant produces its OWN PIT and
+  JaCoCo rows keyed to its own generalized classes, and that the per-variant
+  source archives exist under `data/.../generalized-sources/<variant>/`. The
+  assertion that proves isolation: each variant's `pit_mutation_report` /
+  `jacoco_coverage_report` rows reference that variant's generalization classes,
+  never a sibling's. Keep it small (a fixture with one generalizable MUT per
+  variant suffices).
 
 - [ ] **Step 3: Run the fixture.**
   Run: `bash scripts/verify-pipeline.sh` (or the fixture-scoped invocation the

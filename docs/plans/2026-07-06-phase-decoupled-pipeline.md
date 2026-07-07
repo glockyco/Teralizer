@@ -74,10 +74,12 @@ layer plus a targeted correctness fix to the cascade-drop predicate.
 |---|---|---|---|
 | generation | `use-test-generation` | `GENERATE_EVOSUITE_TESTS`, `POSTPROCESS_EVOSUITE_TESTS` | pre-stage |
 | generalization | `use-test-generalization` | `BUILD_SPOON_MODEL` through `FILTER_GENERALIZATIONS`, including per-variant `GENERALIZE_TESTS`, `BUILD_PROJECT_GENERALIZED`, `EXECUTE_TESTS_GENERALIZED`, `COLLECT_JUNIT_REPORTS_GENERALIZED`, and the `INITIAL` build and test execution | 1 through 4 |
-| reduction | `use-test-reduction` (new) | `COLLECT_PIT_DATA_ORIGINAL`, `COLLECT_JACOCO_DATA_INITIAL`, `COLLECT_PIT_DATA_INITIAL`, `COLLECT_JACOCO_DATA_GENERALIZED`, `COLLECT_PIT_DATA_GENERALIZED` | 5 |
+| reduction | `use-test-reduction` (new) | `COLLECT_PIT_DATA_ORIGINAL`, `COLLECT_JACOCO_DATA_INITIAL`, `COLLECT_PIT_DATA_INITIAL`, then per variant `RESTORE_GENERALIZED_BUILD`, `COLLECT_JACOCO_DATA_GENERALIZED`, `COLLECT_PIT_DATA_GENERALIZED` | 5 |
 
-The reduction set is exactly the `stage_5` set already defined in
-`analysis/src/teralizer/stages.py`, so the paper-stage taxonomy is unchanged.
+The reduction measurement collectors are exactly the `stage_5` set defined in
+`analysis/src/teralizer/stages.py`, so the paper-stage taxonomy is unchanged; the
+new `RESTORE_GENERALIZED_BUILD` stage is a reduction-owned build step that carries
+no measurement rows and is also classified Stage 5.
 `COLLECT_JACOCO_DATA_ORIGINAL` stays in generalization: its only consumer is the
 analysis-layer no-coverage exclusion, a Stage-1+2 membership concern, and
 `filterTestOriginal` reads no coverage.
@@ -99,7 +101,8 @@ phase's own DB rows.
 - `REDUCTION.clear()` removes `pit_mutation_report`, `pit_coverage_report`, and
   `jacoco_coverage_report` rows for the ORIGINAL, INITIAL, and GENERALIZED
   stages, plus the phase's task rows. It does not touch the preserved `.exec`
-  files, which are generalization-phase outputs it consumes as inputs.
+  files or the per-variant generalized-source archives, which are
+  generalization-phase outputs it consumes as inputs.
 
 A non-requested phase is not scheduled. Its artifacts must already exist on disk
 and in the DB, which the downstream requested phase's precondition verifies.
@@ -112,9 +115,11 @@ Preconditions are artifact-based, so they hold identically whether the
 prerequisite ran in this invocation or a prior one.
 
 - generalization requires the project's tests present on disk.
-- reduction requires the generalized test sources on disk and the INITIAL build
-  artifacts present. Reduction requested with no generalized tests raises a hard
-  error naming the missing artifact rather than silently producing nothing.
+- reduction requires the per-variant generalized-source archives present under
+  the data directory (the canonical reduction input, since the workspace holds
+  only the last variant after generalization) and the original build artifacts.
+  Reduction requested with no archived generalized sources raises a hard error
+  naming the missing artifact rather than silently producing nothing.
 
 This extends the existing fail-loud convention. `PitDataCollectionTask` already
 throws on empty target classes, empty generalized tests, empty target tests, and
@@ -134,6 +139,34 @@ variant-scoped path under the project data directory. The deferred
 data file pointed at the preserved path, or the Gradle `executionData`
 equivalent). This keeps INITIAL and GENERALIZED coverage distinct and free of the
 accumulation the shared default file would otherwise cause.
+
+### Per-variant generalized-source preservation and isolated restore
+
+Generalized test sources are variant-specific (each carries a unique
+`generalizationId` in its class name), but the per-variant `CLEANUP_GENERALIZATION`
+deletes every `_*_Generalized_*` source at the start of each variant iteration, so
+the workspace holds exactly one variant at a time. That interleaving is
+load-bearing: `BUILD_PROJECT_GENERALIZED` compiles and `EXECUTE_TESTS_GENERALIZED`
+runs one variant in isolation, and `mvn pitest:mutationCoverage` mutates whatever
+sits in `target/test-classes` with no lifecycle recompile. Deferring all
+generalized measurement to a reduction phase would therefore run every variant's
+mutation against the last variant's compiled classes.
+
+The fix preserves per-variant isolation rather than letting variants coexist.
+During generalization, `EXECUTE_TESTS_GENERALIZED` copies the variant's
+`_*_Generalized_*` sources to a per-variant archive under the data directory
+(`generalized-sources/<variant>/`), the same per-variant `data/` convention the
+`.exec` preservation uses. The existing per-variant `CLEANUP_GENERALIZATION` is
+unchanged, so generalization behaviour and single-variant fixtures are unaffected.
+
+Reduction owns a new `RESTORE_GENERALIZED_BUILD` stage that, per variant, restores
+that variant's archived sources into the workspace and rebuilds so `target/` holds
+only that variant, before its `COLLECT_JACOCO_DATA_GENERALIZED` and
+`COLLECT_PIT_DATA_GENERALIZED` run. The comparator already orders variant before
+step, so each variant's restore-build-measure sequence completes before the next
+variant begins, and the variant-null ORIGINAL/INITIAL collectors sort first and
+run against the original build. Isolation holds at both source and `target/`, one
+variant resident at any moment, never shared.
 
 ### Variant-aware cascade-drop
 
@@ -178,10 +211,12 @@ existing consumers.
 - Requesting a phase clears its prior DB rows and artifacts, then re-executes it.
 - A reduction-only invocation against a project whose generalization artifacts
   exist on disk runs Stage 5 without re-running generalization.
-- Reduction requested with no generalized tests fails loud, naming the missing
-  artifact.
+- Reduction requested with no archived generalized sources fails loud, naming the
+  missing artifact.
 - A reduction-phase task failure leaves all generalization results intact, and a
   variant-scoped failure drops only that variant.
+- Multi-variant reduction is isolated: each variant's PIT and JaCoCo run against
+  that variant's own restored sources and rebuilt classes, never a sibling's.
 - Preserved per-stage `.exec` files yield distinct, non-accumulated INITIAL and
   GENERALIZED coverage.
 - `v_projects_generalized` and `v_projects_reduced` exist. `v_projects_successes`
@@ -207,4 +242,5 @@ existing consumers.
   precondition fail-loud, and sequential draining, authored via the Tester agent.
 - Unit tests for the variant-aware cascade-drop.
 - The fixture batch gate as the integration oracle, plus a reduction-resume
-  fixture exercising the two-invocation flow.
+  fixture exercising the two-invocation flow and a multi-variant reduction check
+  proving per-variant source-and-target isolation.
