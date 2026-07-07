@@ -124,17 +124,10 @@ public class ProcessingPipeline {
             LOGGER.atError().log(e.getMessage(), e);
 
             this.queuedTasks.removeIf(queuedTask -> {
-                // When a task fails, any scheduled tasks that depend on it should be removed from the queue.
-                boolean hasMatchingProjectId = currentTask.getProjectId() == null || currentTask.getProjectId().equals(queuedTask.getProjectId());
-                boolean hasMatchingTestId = currentTask.getTestId() == null || currentTask.getTestId().equals(queuedTask.getTestId());
-                boolean hasMatchingAssertionId = currentTask.getAssertionId() == null || currentTask.getAssertionId().equals(queuedTask.getAssertionId());
-                boolean hasMatchingGeneralizationId = currentTask.getGeneralizationId() == null || currentTask.getGeneralizationId().equals(queuedTask.getGeneralizationId());
-
-                if (hasMatchingProjectId && hasMatchingTestId && hasMatchingAssertionId && hasMatchingGeneralizationId) {
+                if (ProcessingPipeline.shouldDrop(currentTask, queuedTask)) {
                     LOGGER.atDebug().log("Task {} dropped from queue.", queuedTask);
                     return true;
                 }
-
                 return false;
             });
 
@@ -155,5 +148,16 @@ public class ProcessingPipeline {
         if (unrecoverableError != null) {
             throw unrecoverableError;
         }
+    }
+
+    static boolean shouldDrop(Task failed, Task queued) {
+        boolean sameProject = failed.getProjectId() == null || failed.getProjectId().equals(queued.getProjectId());
+        boolean sameTest = failed.getTestId() == null || failed.getTestId().equals(queued.getTestId());
+        boolean sameAssertion = failed.getAssertionId() == null || failed.getAssertionId().equals(queued.getAssertionId());
+        boolean sameGeneralization = failed.getGeneralizationId() == null || failed.getGeneralizationId().equals(queued.getGeneralizationId());
+        // A shared (variant-null) failure cascades to every variant, since per-variant work
+        // depends on shared stages. A variant-scoped failure drops only that same variant.
+        boolean sameVariant = failed.getVariant() == null || failed.getVariant().equals(queued.getVariant());
+        return sameProject && sameTest && sameAssertion && sameGeneralization && sameVariant;
     }
 }
