@@ -35,7 +35,7 @@ public class GeneralizedSourceRestoreTask extends AbstractTask {
             .buildProject(context, reportInfo);
     }
 
-    static Path generalizedSourceArchivePath(ProjectRecord projectRecord, long projectId, String variant) {
+    public static Path generalizedSourceArchivePath(ProjectRecord projectRecord, long projectId, String variant) {
         return projectRecord.getDataPath()
             .resolve("project-id-" + projectId)
             .resolve("generalized-sources")

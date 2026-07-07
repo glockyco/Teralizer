@@ -134,6 +134,10 @@ public enum PipelinePhase implements Phase {
             create.deleteFrom(Tables.GENERALIZATION)
                 .where(Tables.GENERALIZATION.PROJECT_ID.eq(projectId))
                 .execute();
+            create.deleteFrom(Tables.TEST)
+                .where(Tables.TEST.PROJECT_ID.eq(projectId))
+                .execute();
+            deleteGeneralizedSourceArchives(project);
             deleteFiles(project, PipelinePhase::isGeneralizedTestSourceFile);
             deletePhaseTasks(create, project, this.stages());
         }
@@ -295,9 +299,7 @@ public enum PipelinePhase implements Phase {
         if (dataPath == null || projectId == null) {
             throw new PhasePreconditionException("no generalized source archive because project data path or id is missing");
         }
-        return dataPath.resolve("project-id-" + projectId)
-            .resolve("generalized-sources")
-            .resolve(variant);
+        return GeneralizedSourceRestoreTask.generalizedSourceArchivePath(project, projectId, variant);
     }
 
     private static boolean hasAnyFile(Path root) {
@@ -329,6 +331,47 @@ public enum PipelinePhase implements Phase {
             throw new PhasePreconditionException("failed to inspect test sources under " + root, e);
         }
         return false;
+    }
+
+    private static void deleteGeneralizedSourceArchives(ProjectRecord project) {
+        Path root = generalizedSourceArchiveRoot(project);
+        if (root == null || !Files.exists(root)) {
+            return;
+        }
+        try {
+            deleteDirectory(root);
+        } catch (IOException e) {
+            throw new PhasePreconditionException("failed to delete generalized source archives under " + root, e);
+        }
+    }
+
+    private static Path generalizedSourceArchiveRoot(ProjectRecord project) {
+        Path dataPath = project.getDataPath();
+        Long projectId = project.getId();
+        if (dataPath == null || projectId == null) {
+            return null;
+        }
+        return GeneralizedSourceRestoreTask.generalizedSourceArchivePath(project, projectId, "archive-root")
+            .getParent();
+    }
+
+    private static void deleteDirectory(Path root) throws IOException {
+        Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                if (exc != null) {
+                    throw exc;
+                }
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     private static void deleteFiles(ProjectRecord project, PathPredicate predicate) {

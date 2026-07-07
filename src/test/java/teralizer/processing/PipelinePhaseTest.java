@@ -166,6 +166,22 @@ public class PipelinePhaseTest {
         Assert.assertTrue(deletes.containsDelete("task"));
     }
 
+    @Example
+    void generalizationClearDeletesTestsAndGeneralizedSourceArchives() throws Exception {
+        RecordingDeletes deletes = new RecordingDeletes();
+        ProjectRecord project = project(Files.createTempDirectory("teralizer-pipeline-phase-generalization-clear"));
+        seedArchive(project, "variant-a");
+        Path archiveRoot = project.getDataPath()
+            .resolve("project-id-" + project.getId())
+            .resolve("generalized-sources");
+
+        PipelinePhase.GENERALIZATION.clear(deletes.dsl(), project);
+        PipelinePhase.GENERALIZATION.clear(deletes.dsl(), project);
+
+        Assert.assertTrue(deletes.containsDelete("test"));
+        Assert.assertFalse(Files.exists(archiveRoot));
+    }
+
     private static ProjectRecord project(Path testSourceRoot) {
         ProjectRecord project = new ProjectRecord();
         project.setId(7L);
