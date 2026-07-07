@@ -10,19 +10,20 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.FilterResultRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 import teralizer.processing.diagnostics.BuildEnvironmentObservationWriter;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
+import teralizer.processing.filter.FilterDecision;
 import teralizer.processing.filter.FilterReasonCodes;
 import teralizer.repository.PipelineQueries;
 import teralizer.spoon.codegen.GeneratedTestValidator;
@@ -132,9 +133,10 @@ public class ProjectBuildTask extends AbstractTask {
                 byWrapper.put(wrapper, assertion);
             }
         }
-        Set<Path> uncompilable = GeneratedTestValidator.uncompilableFiles(
+        Map<Path, String> errors = GeneratedTestValidator.compilationErrors(
             wrappers, this.projectRecord.getClasspath(), this.sourceRoots());
-        for (Path wrapper : uncompilable) {
+        for (Map.Entry<Path, String> entry : errors.entrySet()) {
+            Path wrapper = entry.getKey();
             AssertionRecord assertion = byWrapper.get(wrapper);
             deleteQuietly(wrapper);
             if (assertion.getDriverFilePath() != null) {
@@ -145,9 +147,11 @@ public class ProjectBuildTask extends AbstractTask {
                 .set(Tables.ASSERTION.EXCLUSION_INFO, FilterReasonCodes.UNCOMPILABLE_INSTRUMENTED_WRAPPER)
                 .where(Tables.ASSERTION.ID.eq(assertion.getId()))
                 .execute();
+            this.recordQuarantineExclusion(create, assertion.getId(), null,
+                FilterReasonCodes.UNCOMPILABLE_INSTRUMENTED_WRAPPER, entry.getValue());
         }
-        if (!uncompilable.isEmpty()) {
-            reportInfo.accept("Quarantined " + uncompilable.size() + " uncompilable instrumented wrapper(s) of "
+        if (!errors.isEmpty()) {
+            reportInfo.accept("Quarantined " + errors.size() + " uncompilable instrumented wrapper(s) of "
                 + wrappers.size() + " (" + FilterReasonCodes.UNCOMPILABLE_INSTRUMENTED_WRAPPER + ").");
         }
     }
@@ -168,9 +172,10 @@ public class ProjectBuildTask extends AbstractTask {
                 byTest.put(test, generalization);
             }
         }
-        Set<Path> uncompilable = GeneratedTestValidator.uncompilableFiles(
+        Map<Path, String> errors = GeneratedTestValidator.compilationErrors(
             tests, this.projectRecord.getClasspath(), this.sourceRoots());
-        for (Path test : uncompilable) {
+        for (Map.Entry<Path, String> entry : errors.entrySet()) {
+            Path test = entry.getKey();
             GeneralizationRecord generalization = byTest.get(test);
             deleteQuietly(test);
             create.update(Tables.GENERALIZATION)
@@ -178,11 +183,31 @@ public class ProjectBuildTask extends AbstractTask {
                 .set(Tables.GENERALIZATION.EXCLUSION_INFO, FilterReasonCodes.UNCOMPILABLE_GENERALIZED_TEST)
                 .where(Tables.GENERALIZATION.ID.eq(generalization.getId()))
                 .execute();
+            this.recordQuarantineExclusion(create, null, generalization.getId(),
+                FilterReasonCodes.UNCOMPILABLE_GENERALIZED_TEST, entry.getValue());
         }
-        if (!uncompilable.isEmpty()) {
-            reportInfo.accept("Quarantined " + uncompilable.size() + " uncompilable generalized test(s) of "
+        if (!errors.isEmpty()) {
+            reportInfo.accept("Quarantined " + errors.size() + " uncompilable generalized test(s) of "
                 + tests.size() + " (" + FilterReasonCodes.UNCOMPILABLE_GENERALIZED_TEST + ").");
         }
+    }
+
+    /*
+     * A compile-based quarantine is an exclusion like any filter reject, so it leaves a filter_result
+     * row with a typed reason code. Without it these losses are invisible to the funnel analyses,
+     * which aggregate exclusions from filter_result.reason_code rather than the row's exclusion_info.
+     */
+    void recordQuarantineExclusion(DSLContext create, Long assertionId, Long generalizationId,
+        String reasonCode, String reason) {
+        FilterResultRecord record = create.newRecord(Tables.FILTER_RESULT);
+        record.setProjectId(this.getProjectId());
+        record.setAssertionId(assertionId);
+        record.setGeneralizationId(generalizationId);
+        record.setFilterName("GeneratedTestValidator");
+        record.setDecision(FilterDecision.REJECT);
+        record.setReason(reason);
+        record.setReasonCode(reasonCode);
+        record.store();
     }
 
     private List<Path> sourceRoots() {

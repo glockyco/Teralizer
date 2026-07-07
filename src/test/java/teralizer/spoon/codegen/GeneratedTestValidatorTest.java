@@ -4,7 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Set;
+import java.util.Map;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 
@@ -16,10 +16,11 @@ class GeneratedTestValidatorTest {
         Path good = write(root, "Good.java", "public class Good { int v() { return 1; } }");
         Path bad = write(root, "Bad.java", "public class Bad { int v() { return Nonexistent.MISSING; } }");
 
-        Set<Path> uncompilable = GeneratedTestValidator.uncompilableFiles(
+        Map<Path, String> errors = GeneratedTestValidator.compilationErrors(
             Arrays.asList(good, bad), "", Collections.singletonList(root));
 
-        Assert.assertEquals(Collections.singleton(bad), uncompilable);
+        Assert.assertEquals(Collections.singleton(bad), errors.keySet());
+        assertCapturedJavacError(errors.get(bad), "Nonexistent");
     }
 
     @Example
@@ -30,18 +31,18 @@ class GeneratedTestValidatorTest {
         write(root, "Dep.java", "public class Dep { static int seed() { return 5; } }");
         Path user = write(root, "User.java", "public class User { int v() { return Dep.seed(); } }");
 
-        Set<Path> uncompilable = GeneratedTestValidator.uncompilableFiles(
+        Map<Path, String> errors = GeneratedTestValidator.compilationErrors(
             Collections.singletonList(user), "", Collections.singletonList(root));
 
-        Assert.assertTrue("User resolves Dep through the sourcepath", uncompilable.isEmpty());
+        Assert.assertTrue("User resolves Dep through the sourcepath", errors.isEmpty());
     }
 
     @Example
     void emptyInputYieldsNoFailures() {
-        Set<Path> uncompilable = GeneratedTestValidator.uncompilableFiles(
+        Map<Path, String> errors = GeneratedTestValidator.compilationErrors(
             Collections.emptyList(), "", Collections.emptyList());
 
-        Assert.assertTrue(uncompilable.isEmpty());
+        Assert.assertTrue(errors.isEmpty());
     }
 
     @Example
@@ -54,10 +55,19 @@ class GeneratedTestValidatorTest {
         Path relativeBad = cwd.relativize(root.resolve("Bad.java"));
         Path relativeRoot = cwd.relativize(root);
 
-        Set<Path> uncompilable = GeneratedTestValidator.uncompilableFiles(
+        Map<Path, String> errors = GeneratedTestValidator.compilationErrors(
             Collections.singletonList(relativeBad), "", Collections.singletonList(relativeRoot));
 
-        Assert.assertEquals(Collections.singleton(relativeBad), uncompilable);
+        Assert.assertEquals(Collections.singleton(relativeBad), errors.keySet());
+        assertCapturedJavacError(errors.get(relativeBad), "Nonexistent");
+    }
+
+    private static void assertCapturedJavacError(String errorText, String expectedFragment) {
+        Assert.assertNotNull(errorText);
+        Assert.assertFalse(errorText.trim().isEmpty());
+        Assert.assertTrue(errorText, errorText.startsWith("line "));
+        Assert.assertTrue(errorText,
+            errorText.contains(expectedFragment) || errorText.contains("cannot find symbol"));
     }
 
     private static Path write(Path root, String name, String source) throws Exception {

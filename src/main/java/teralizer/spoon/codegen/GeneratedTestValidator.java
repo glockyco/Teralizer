@@ -7,10 +7,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -42,11 +41,12 @@ public final class GeneratedTestValidator {
      * @param generatedFiles the generated files to validate (existing paths only)
      * @param classpath      the project dependency classpath (path-separator joined)
      * @param sourceRoots    the source roots that resolve referenced originals (main, test)
-     * @return the subset of {@code generatedFiles} with at least one compilation error
+     * @return a map from each generated file with at least one compilation error to its javac
+     *         error text (one {@code line N: message} per error, newline-joined); empty if all compile
      */
-    public static Set<Path> uncompilableFiles(List<Path> generatedFiles, String classpath, List<Path> sourceRoots) {
+    public static Map<Path, String> compilationErrors(List<Path> generatedFiles, String classpath, List<Path> sourceRoots) {
         if (generatedFiles.isEmpty()) {
-            return Collections.emptySet();
+            return Collections.emptyMap();
         }
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null) {
@@ -83,23 +83,31 @@ public final class GeneratedTestValidator {
 
             // javac reports diagnostics with absolute source URIs, while the callers pass
             // repo-root-relative paths. Key on the normalized-absolute form, map back to the
-            // caller's original Path so the returned set matches what the caller holds.
+            // caller's original Path so the returned keys match what the caller holds.
             Map<Path, Path> byAbsolute = new HashMap<>();
             for (Path file : generatedFiles) {
                 byAbsolute.put(file.toAbsolutePath().normalize(), file);
             }
-            Set<Path> uncompilable = new HashSet<>();
+            // Group every error diagnostic under its originating file, preserving encounter order so
+            // the stored reason reads like javac's own output.
+            Map<Path, List<String>> messagesByFile = new LinkedHashMap<>();
             for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
                 if (diagnostic.getKind() != Diagnostic.Kind.ERROR || diagnostic.getSource() == null) {
                     continue;
                 }
                 Path source = java.nio.file.Paths.get(diagnostic.getSource().toUri()).toAbsolutePath().normalize();
                 Path original = byAbsolute.get(source);
-                if (original != null) {
-                    uncompilable.add(original);
+                if (original == null) {
+                    continue;
                 }
+                messagesByFile.computeIfAbsent(original, key -> new ArrayList<>())
+                    .add("line " + diagnostic.getLineNumber() + ": " + diagnostic.getMessage(null));
             }
-            return uncompilable;
+            Map<Path, String> errors = new LinkedHashMap<>();
+            for (Map.Entry<Path, List<String>> entry : messagesByFile.entrySet()) {
+                errors.put(entry.getKey(), String.join("\n", entry.getValue()));
+            }
+            return errors;
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to validate generated tests.", e);
         } finally {
