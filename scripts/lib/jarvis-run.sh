@@ -27,17 +27,20 @@ jarvis_run() {
   source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
   supervisor_install_traps
 
-  local reset_db=false prepare_fixtures=false
+  local reset_db=false prepare_fixtures=false no_reduction=false
   local -a configs=()
   local arg config
   for arg in "$@"; do
     case "$arg" in
       --reset-db) reset_db=true ;;
       --prepare-fixtures) prepare_fixtures=true ;;
+      --no-reduction) no_reduction=true ;;
       -h|--help)
-        echo "Usage: $(basename "$0") [--reset-db] [--prepare-fixtures] [config ...]"
+        echo "Usage: $(basename "$0") [--reset-db] [--prepare-fixtures] [--no-reduction] [config ...]"
         echo "  --reset-db           drop and recreate $JARVIS_DB_NAME before running"
         echo "  --prepare-fixtures   (re)materialize the $JARVIS_LABEL fixtures first"
+        echo "  --no-reduction       skip the reduction phase (Stage 5: mutation + coverage);"
+        echo "                       run generalization only, e.g. a fast Stage-4 applicability pass"
         echo "  config ...           HOCON configs to run (default: the $JARVIS_LABEL configs)"
         exit 0 ;;
       --*) echo "Unknown flag: $arg" >&2; exit 1 ;;
@@ -82,12 +85,19 @@ jarvis_run() {
   local gradle_failed=false
   for config in "${configs[@]}"; do
     echo "==> Running $config (DB_NAME=$JARVIS_DB_NAME DATA_DIR=$JARVIS_DATA_DIR)"
-    supervised_run - "$JARVIS_PROJECT_TIMEOUT" \
-      "$ROOT_DIR/gradlew" run \
-      -Dteralizer.config="$config" \
-      -Dteralizer.database.name="$JARVIS_DB_NAME" \
-      -Dteralizer.data-dir="$JARVIS_DATA_DIR" \
-      --no-daemon
+    # Build the run command as an array so an empty flag set never trips set -u on bash 3.2.
+    local -a run_cmd=(
+      "$ROOT_DIR/gradlew" run
+      -Dteralizer.config="$config"
+      -Dteralizer.database.name="$JARVIS_DB_NAME"
+      -Dteralizer.data-dir="$JARVIS_DATA_DIR"
+    )
+    if [[ "$no_reduction" == true ]]; then
+      # Generalization-only pass: reduction is a separate later run over the same workspace.
+      run_cmd+=(-Dteralizer.project.use-test-reduction=false)
+    fi
+    run_cmd+=(--no-daemon)
+    supervised_run - "$JARVIS_PROJECT_TIMEOUT" "${run_cmd[@]}"
     if [[ "$SUPERVISED_RC" -eq 124 ]]; then
       echo "run capped at ${JARVIS_PROJECT_TIMEOUT}s for $config" >&2
       gradle_failed=true

@@ -68,6 +68,29 @@ against `postgres_dev` / `postgres_test` / `_replication` (read-only; never muta
    the output against `docs/plans/2026-06-30-jarvis-comparison.md`; the raw-bits `Precision` row
    is expected absent (a soundness exclusion), not a run failure.
 
+## Long detached runs (census, rerun) and the `--no-reduction` pass
+
+These runs outlive a session, so launch them through the detached manager rather than
+hand-rolling `nohup` (macOS has no `setsid`) or, worse, `kill -9` on the runner — a hard
+kill bypasses the runner's cleanup traps and orphans the gradle-forked application JVM and
+its PIT minions.
+
+- **Generalization-only pass** — add `--no-reduction` to skip Stage 5 (mutation + coverage).
+  Reduction is a separate later run over the same persisted workspace, so a fast Stage-4
+  applicability pass never pays the PIT cost:
+  ```bash
+  scripts/detached-run.sh launch census --sweep-path data/jarvis-census -- \
+    bash scripts/run-jarvis-census.sh --prepare-fixtures --reset-db --no-reduction
+  ```
+- **Check / stop / recover:**
+  ```bash
+  scripts/detached-run.sh status census   # liveness + last log lines
+  scripts/detached-run.sh stop census     # TERM the runner (its traps tear down the gradle group), then a path-sweep backstop
+  scripts/detached-run.sh sweep data/jarvis-census   # clear orphans left by a PRIOR hard-killed run
+  ```
+  `--sweep-path` records the run's data root so `stop` can backstop-sweep any fixture JVM
+  that escaped the group teardown. State lives under `data/detached/<name>.{pid,meta,log}`.
+
 ## Gotchas
 
 | Symptom | Cause | Fix |
@@ -78,6 +101,7 @@ against `postgres_dev` / `postgres_test` / `_replication` (read-only; never muta
 | Rebuild fails on `_*Generalized*_Test.java` from a prior run | Failed `BUILD_PROJECT_GENERALIZED` dropped the cleanup task | Delete stale generated tests before re-running (step 3) |
 | `BUILD SUCCESSFUL` but no scorecard data | A pipeline task failed and dropped downstream tasks; gradle still exits 0 | Grep the pipeline log for `ERROR`; never trust the gradle exit code |
 | `precisionEqualsMaxUlps` excluded | It is a raw-bits probe, **outside** Table-2 (documented concession) | Expected, not a regression. Raw-bits MUTs fail loud / exclude rather than silently concretize — see the soundness axis of `docs/plans/2026-06-30-jarvis-comparison.md` |
+| Orphaned `java`/`MutationTestMinion` processes (PPID 1, 0% CPU) from a killed run | The runner was `kill -9`'d, bypassing its cleanup traps, so the gradle-forked JVMs never got torn down | `scripts/detached-run.sh sweep <data-dir>` (path-based tree kill); in future, stop via `scripts/detached-run.sh stop <name>`, never `kill -9` the runner |
 
 ## Data boundaries
 
