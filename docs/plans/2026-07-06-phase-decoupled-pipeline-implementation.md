@@ -793,7 +793,7 @@ precedes generalization. Mirror the change in `stage_order()`.
 - Modify: `src/main/resources/db/create-views.sql` (the `stage_order()` function)
 - Modify: `analysis/src/teralizer/stages.py` (add the new stage to the Stage-5 set + the SQL CASE)
 
-- [ ] **Step 1: Renumber.** Give the reduction band contiguous step values ABOVE
+- [x] **Step 1: Renumber.** Give the reduction band contiguous step values ABOVE
   the whole generalization loop, in this within-phase order:
   `COLLECT_PIT_DATA_ORIGINAL`, `COLLECT_JACOCO_DATA_INITIAL`, `COLLECT_PIT_DATA_INITIAL`,
   then per variant `RESTORE_GENERALIZED_BUILD`, `COLLECT_JACOCO_DATA_GENERALIZED`,
@@ -803,23 +803,23 @@ precedes generalization. Mirror the change in `stage_order()`.
   before the generalized collectors it precedes. Preserve relative order within
   each phase.
 
-- [ ] **Step 2: Mirror `stage_order()` and `stages.py`.** Update the SQL
+- [x] **Step 2: Mirror `stage_order()` and `stages.py`.** Update the SQL
   `stage_order()` CASE in `create-views.sql` (lines ~160-197) so every stage's
   number matches the enum, and add `RESTORE_GENERALIZED_BUILD` to the Stage-5 set
   and the `get_stage_group_sql_case()` Stage-5 branch in
   `analysis/src/teralizer/stages.py`. Enum, SQL, and stages.py must stay in
   lockstep; a mismatch corrupts failure-stage and paper-stage reporting.
 
-- [ ] **Step 3: Verify the views build.** Re-run the scratch-DB view check from
+- [x] **Step 3: Verify the views build.** Re-run the scratch-DB view check from
   Task 4 Step 2.
   Expected: no ERROR.
 
-- [ ] **Step 4: Fixture gate.**
+- [x] **Step 4: Fixture gate.**
   Run: `bash scripts/verify-pipeline.sh`
   Expected: goldens unmoved (reordering measurement after generalization does not
   change per-stage outputs, only their execution order within a full run).
 
-- [ ] **Step 5: Commit.** Stage `ProcessingStage.java` and `create-views.sql`.
+- [x] **Step 5: Commit.** Stage `ProcessingStage.java` and `create-views.sql`.
   Suggested subject: `refactor(pipeline): order reduction stages after generalization`
   Body must explain: reduction stages carried lower step numbers and, being
   variant-null, sorted ahead of per-variant generalization in the shared queue.
