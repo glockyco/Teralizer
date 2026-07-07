@@ -15,7 +15,6 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.processing.BuildClasspathResolver;
-import teralizer.processing.PipelinePhase;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProjectType;
 import teralizer.processing.TaskContext;
@@ -26,9 +25,12 @@ public class ProjectSetupTask extends AbstractTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProjectSetupTask.class);
 
-    public ProjectSetupTask(ProcessingStage stage, ProjectRecord projectRecord) {
+    private final boolean freshStart;
+
+    public ProjectSetupTask(ProcessingStage stage, ProjectRecord projectRecord, boolean freshStart) {
         this.stage = stage;
         this.projectRecord = projectRecord;
+        this.freshStart = freshStart;
     }
 
     @Override
@@ -73,19 +75,15 @@ public class ProjectSetupTask extends AbstractTask {
             throw new RuntimeException("Cannot setup project" + this.projectRecord.getRootPath() + ". No supported test framework identified.");
         }
 
-        scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
+        this.scheduleBootstrapTasks(scheduleTask);
+    }
+
+    void scheduleBootstrapTasks(Consumer<Task> scheduleTask) {
+        if (this.freshStart) {
+            scheduleTask.accept(new CleanupTask(ProcessingStage.CLEANUP_PROJECT, this.projectRecord));
+        }
         scheduleTask.accept(new AddDependenciesTask(ProcessingStage.ADD_DEPENDENCIES, this.projectRecord));
         scheduleTask.accept(new ProjectBuildTask(ProcessingStage.BUILD_PROJECT_ORIGINAL, this.projectRecord));
-
-        if (this.projectRecord.getUseTestGeneration()) {
-            PipelinePhase.GENERATION.schedule(this.projectRecord, scheduleTask);
-        }
-        if (this.projectRecord.getUseTestGeneralization()) {
-            PipelinePhase.GENERALIZATION.schedule(this.projectRecord, scheduleTask);
-        }
-        if (this.projectRecord.getUseTestReduction()) {
-            PipelinePhase.REDUCTION.schedule(this.projectRecord, scheduleTask);
-        }
     }
 
     private ProjectType identifyProjectType(Path projectRootPath) {

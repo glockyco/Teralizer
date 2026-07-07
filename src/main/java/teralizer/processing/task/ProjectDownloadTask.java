@@ -18,9 +18,12 @@ public class ProjectDownloadTask extends AbstractTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProjectDownloadTask.class);
 
-    public ProjectDownloadTask(ProcessingStage stage, ProjectRecord projectRecord) {
+    private final boolean freshStart;
+
+    public ProjectDownloadTask(ProcessingStage stage, ProjectRecord projectRecord, boolean freshStart) {
         this.stage = stage;
         this.projectRecord = projectRecord;
+        this.freshStart = freshStart;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class ProjectDownloadTask extends AbstractTask {
     }
 
     public void scheduleNextTask(Consumer<Task> scheduleTask) {
-        scheduleTask.accept(new ProjectSetupTask(ProcessingStage.SETUP_PROJECT, this.projectRecord));
+        scheduleTask.accept(new ProjectSetupTask(ProcessingStage.SETUP_PROJECT, this.projectRecord, this.freshStart));
     }
 
     private String sanitizeRepositoryUrl(String url) {

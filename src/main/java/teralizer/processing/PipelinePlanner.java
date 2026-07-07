@@ -13,7 +13,7 @@ public class PipelinePlanner {
         this(create, new ProcessingPipeline(create));
     }
 
-    PipelinePlanner(DSLContext create, ProcessingPipeline pipeline) {
+    public PipelinePlanner(DSLContext create, ProcessingPipeline pipeline) {
         this.create = create;
         this.pipeline = pipeline;
     }

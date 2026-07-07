@@ -11,8 +11,11 @@ import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
+import teralizer.processing.ConfigIdentity;
+import teralizer.processing.PipelinePlanner;
 import teralizer.processing.ProcessingPipeline;
 import teralizer.processing.ProcessingStage;
+import teralizer.processing.ProjectIdentity;
 import teralizer.processing.ProjectType;
 import teralizer.processing.TaskContext;
 import teralizer.processing.task.ProjectDownloadTask;
@@ -46,25 +49,31 @@ public class TestGeneralizationRunner {
 
         long startTime = System.currentTimeMillis();
 
-        ProjectRecord projectRecord = create.newRecord(Tables.PROJECT);
-        projectRecord.setType(ProjectType.UNKNOWN);
-        projectRecord.setRootPath(Configuration.getProjectRootPath());
-        projectRecord.setDataPath(Configuration.getProjectDataPath());
-        projectRecord.setMainSourcePath(Configuration.getProjectMainSourcePath());
-        projectRecord.setTestSourcePath(Configuration.getProjectTestSourcePath());
-        projectRecord.setMainCompiledPath(Configuration.getProjectMainCompiledPath());
-        projectRecord.setTestCompiledPath(Configuration.getProjectTestCompiledPath());
-        projectRecord.setTestReportsPath(Configuration.getProjectTestReportsPath());
-        projectRecord.setCoverageReportsPath(Configuration.getProjectCoverageReportsPath());
-        projectRecord.setMutationReportsPath(Configuration.getProjectMutationReportsPath());
-        projectRecord.setUseTestGeneration(Configuration.getProjectUseTestGeneration());
-        projectRecord.setUseTestGeneralization(Configuration.getProjectUseTestGeneralization());
-        projectRecord.setUseTestReduction(Configuration.getProjectUseTestReduction());
-        projectRecord.setConfiguration(Configuration.render());
-        projectRecord.store();
+        String identityHash = ConfigIdentity.hash(Configuration.renderIdentity());
+        ProjectRecord projectRecord = ProjectIdentity.resolveOrCreate(create, Configuration.getProjectRootPath(), identityHash);
+        boolean freshStart = projectRecord == null;
+        if (freshStart) {
+            projectRecord = create.newRecord(Tables.PROJECT);
+            projectRecord.setType(ProjectType.UNKNOWN);
+            projectRecord.setRootPath(Configuration.getProjectRootPath());
+            projectRecord.setDataPath(Configuration.getProjectDataPath());
+            projectRecord.setMainSourcePath(Configuration.getProjectMainSourcePath());
+            projectRecord.setTestSourcePath(Configuration.getProjectTestSourcePath());
+            projectRecord.setMainCompiledPath(Configuration.getProjectMainCompiledPath());
+            projectRecord.setTestCompiledPath(Configuration.getProjectTestCompiledPath());
+            projectRecord.setTestReportsPath(Configuration.getProjectTestReportsPath());
+            projectRecord.setCoverageReportsPath(Configuration.getProjectCoverageReportsPath());
+            projectRecord.setMutationReportsPath(Configuration.getProjectMutationReportsPath());
+            projectRecord.setUseTestGeneration(Configuration.getProjectUseTestGeneration());
+            projectRecord.setUseTestGeneralization(Configuration.getProjectUseTestGeneralization());
+            projectRecord.setUseTestReduction(Configuration.getProjectUseTestReduction());
+            projectRecord.setConfiguration(Configuration.render());
+            projectRecord.store();
+        }
 
-        pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord));
+        pipeline.addTask(new ProjectDownloadTask(ProcessingStage.DOWNLOAD_PROJECT, projectRecord, freshStart));
         pipeline.executeAll();
+        new PipelinePlanner(create, pipeline).run(projectRecord);
 
         long endTime = System.currentTimeMillis();
 
