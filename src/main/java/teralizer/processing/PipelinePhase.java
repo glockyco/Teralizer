@@ -15,7 +15,7 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.task.Task;
 
-public enum PipelinePhase {
+public enum PipelinePhase implements Phase {
     GENERATION {
         @Override
         public Set<ProcessingStage> stages() {
