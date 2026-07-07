@@ -29,6 +29,7 @@ import teralizer.domain.CapturedInput;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
+import teralizer.domain.SeedSpecConsistency;
 import teralizer.domain.Value;
 import teralizer.generalization.WideningLicense;
 import teralizer.jpf.OutputSpecClassifier;
@@ -198,6 +199,19 @@ public class TestGeneralizationTask extends AbstractTask {
 
             JsonToModelTransformer jsonToModelTransformer = new JsonToModelTransformer();
             Model inputModel = jsonToModelTransformer.transform(inputSpecification);
+            SeedSpecConsistency.Verdict seedSpecConsistency = SeedSpecConsistency.evaluate(
+                inputModel,
+                testedMethodArguments,
+                testedMethodParameters
+            );
+            // A path condition collected on a concrete path must hold for that input.
+            // A proven violation means the extracted spec is unsound.
+            if (seedSpecConsistency == SeedSpecConsistency.Verdict.VIOLATED) {
+                this.generalizationRecord.setIsIncluded(false);
+                this.generalizationRecord.setExclusionInfo(SeedSpecConsistency.INPUT_SPEC_NOT_SATISFIED_BY_SEED);
+                this.generalizationRecord.store();
+                return null;
+            }
             Model outputModel = jsonToModelTransformer.transform(outputSpecification);
 
             Map<String, String> testedMethodParameterTypes = testedMethodParameters.stream().collect(Collectors.toMap(MethodParameter::getName, MethodParameter::getType));
