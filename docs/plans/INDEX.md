@@ -25,5 +25,6 @@
 
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
+- **Phase-Decoupled Pipeline (Generation / Generalization / Reduction)** [spec] `2026-07-06-phase-decoupled-pipeline` ← 2026-06-26-teralizer-overview
 
 _63 archived — see `docs/plans/archive/`._
