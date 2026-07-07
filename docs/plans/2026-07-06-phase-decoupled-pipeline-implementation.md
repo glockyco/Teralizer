@@ -974,19 +974,19 @@ consistent with existing golden checks.
 
 ### Task 13: Final review and plan completion
 
-- [ ] **Step 1: Full targeted test sweep.** Run the unit tests this plan added
+- [x] **Step 1: Full targeted test sweep.** Run the unit tests this plan added
   plus the fixture gate:
   `./gradlew test --tests 'teralizer.processing.*' --tests 'teralizer.util.ConfigurationTest'`
   then `bash scripts/verify-pipeline.sh`.
   Expected: all green, goldens unmoved.
 
-- [ ] **Step 2: Dispatch a final code reviewer** over the whole change set
+- [x] **Step 2: Dispatch a final code reviewer** over the whole change set
   (all commits from Task 1 onward) via `skill://requesting-code-review`.
 
-- [ ] **Step 3: Address any review findings** with a focused follow-up commit
+- [x] **Step 3: Address any review findings** with a focused follow-up commit
   each (no big bang).
 
-- [ ] **Step 4: Complete the plan.** Run `omp-plans complete
+- [x] **Step 4: Complete the plan.** Run `omp-plans complete
   2026-07-06-phase-decoupled-pipeline-implementation`, and set the spec
   `2026-07-06-phase-decoupled-pipeline` to `implemented` (or complete it too if
   fully realized). Regenerate INDEX and run `omp-plans check`.

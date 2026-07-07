@@ -21,7 +21,7 @@
 - **Concretization Census — Load-Bearing Blockers and the License Over-Refusal Finding** [audit] `2026-07-05-concretization-census-findings` ← 2026-07-04-concretization-census
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
 - **Phase-Decoupled Pipeline (Generation / Generalization / Reduction)** [spec] `2026-07-06-phase-decoupled-pipeline` ← 2026-06-26-teralizer-overview
-- **Phase-Decoupled Pipeline — Implementation Plan** [plan] `2026-07-06-phase-decoupled-pipeline-implementation` (57/61) ← 2026-07-06-phase-decoupled-pipeline
+- **Phase-Decoupled Pipeline — Implementation Plan** [plan] `2026-07-06-phase-decoupled-pipeline-implementation` (61/61) ← 2026-07-06-phase-decoupled-pipeline
 
 ## draft
 
