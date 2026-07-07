@@ -1,4 +1,4 @@
-package teralizer.processing.task;
+package teralizer.processing;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 
-public class ProjectSetupClasspathTest {
+public class BuildClasspathResolverTest {
     @Example
     void dependencies_are_relativized_after_compiled_paths_in_order() {
         Path workingDir = Paths.get("/workspace/repo");
@@ -15,7 +15,7 @@ public class ProjectSetupClasspathTest {
         String firstDependency = workingDir.resolve(".m2/repository/org/example/first.jar").toString();
         String secondDependency = workingDir.resolve(".m2/repository/org/example/second.jar").toString();
 
-        String classpath = ProjectSetupTask.assembleClasspath(
+        String classpath = BuildClasspathResolver.assembleClasspath(
             firstDependency + File.pathSeparator + secondDependency,
             mainCompiled,
             testCompiled,
@@ -37,7 +37,7 @@ public class ProjectSetupClasspathTest {
         Path mainCompiled = workingDir.resolve("project/target/classes");
         Path testCompiled = workingDir.resolve("project/target/test-classes");
 
-        String classpath = ProjectSetupTask.assembleClasspath("", mainCompiled, testCompiled, workingDir);
+        String classpath = BuildClasspathResolver.assembleClasspath("", mainCompiled, testCompiled, workingDir);
 
         Assert.assertEquals(mainCompiled + File.pathSeparator + testCompiled, classpath);
     }
@@ -48,7 +48,7 @@ public class ProjectSetupClasspathTest {
         Path mainCompiled = workingDir.resolve("project/target/classes");
         Path testCompiled = workingDir.resolve("project/target/test-classes");
 
-        String classpath = ProjectSetupTask.assembleClasspath("  \n", mainCompiled, testCompiled, workingDir);
+        String classpath = BuildClasspathResolver.assembleClasspath("  \n", mainCompiled, testCompiled, workingDir);
 
         Assert.assertEquals(mainCompiled + File.pathSeparator + testCompiled, classpath);
     }

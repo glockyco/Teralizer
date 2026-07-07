@@ -1,29 +1,20 @@
 package teralizer.processing.task;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ModelBuilder;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.model.eclipse.EclipseProject;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.processing.BuildClasspathResolver;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProjectType;
 import teralizer.processing.TaskContext;
@@ -235,27 +226,11 @@ public class ProjectSetupTask extends AbstractTask {
     }
 
     private void setupGradleProjectClasspath(ProjectRecord projectRecord) {
-        File projectDirectoryFile = projectRecord.getRootPath().toFile();
-
-        if (!projectDirectoryFile.exists() || !projectDirectoryFile.isDirectory()) {
-            throw new IllegalArgumentException("Invalid project directory: " + projectRecord.getRootPath());
-        }
-
-        GradleConnector connector = GradleConnector.newConnector();
-        connector.forProjectDirectory(projectDirectoryFile);
-
-        List<String> classpathElements = new ArrayList<>();
-
-        classpathElements.add(projectRecord.getMainCompiledPath().toString());
-        classpathElements.add(projectRecord.getRootPath().resolve("build/classes/java/test").toString());
-
-        try (ProjectConnection connection = connector.connect()) {
-            ModelBuilder<EclipseProject> modelBuilder = connection.model(EclipseProject.class);
-            EclipseProject project = modelBuilder.get();
-            project.getClasspath().forEach(d -> classpathElements.add(d.getFile().toString()));
-        }
-
-        projectRecord.setClasspath(String.join(File.pathSeparator, classpathElements));
+        projectRecord.setClasspath(BuildClasspathResolver.resolveGradle(
+            projectRecord.getRootPath(),
+            Configuration.GRADLE_DEFAULT_BUILD_FILE,
+            projectRecord.getMainCompiledPath(),
+            projectRecord.getTestCompiledPath()));
     }
 
     private void setupMavenProjectPaths(ProjectRecord projectRecord) throws IOException, InterruptedException {
@@ -284,76 +259,15 @@ public class ProjectSetupTask extends AbstractTask {
     }
 
     /**
-     * Maven's dependency plugin can write the computed classpath directly to a file, avoiding a
-     * full-console log scrape for a fragile "Dependencies classpath:" marker line. `-q` also asks
-     * Maven to skip console work we do not consume.
-     * With quiet output, healthy builds can still route warnings to stderr; Maven's exit code is the
-     * success contract, so stderr on exit 0 is logged instead of failing the project setup.
+     * Resolve the original project's classpath at setup. After {@code AddDependenciesTask} adds the
+     * tool's dependencies, {@code AddDependenciesTask} refreshes this from the custom build file, so
+     * downstream consumers see jqwik/pitest/junit-platform.
      */
     private void setupMavenProjectClasspath(ProjectRecord projectRecord) throws IOException, InterruptedException {
-        StringBuilder output = new StringBuilder();
-        StringBuilder error = new StringBuilder();
-        Path classpathOutputFile = Files.createTempFile("teralizer-classpath", ".txt").toAbsolutePath();
-
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                "mvn",
-                "-q",
-                "dependency:build-classpath",
-                "-Dmdep.outputFile=" + classpathOutputFile);
-            processBuilder.directory(projectRecord.getRootPath().toFile());
-            Process process = processBuilder.start();
-
-            try (
-                InputStreamReader outputStream = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8);
-                BufferedReader outputReader = new BufferedReader(outputStream);
-                InputStreamReader errorStream = new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8);
-                BufferedReader errorReader = new BufferedReader(errorStream)
-            ) {
-                String line;
-                while ((line = outputReader.readLine()) != null) {
-                    output.append(line).append("\n");
-                }
-                while ((line = errorReader.readLine()) != null) {
-                    error.append(line).append("\n");
-                }
-            }
-
-            int exitCode = process.waitFor();
-
-            if (exitCode != 0) {
-                String errorMessage = "Output:\n\n" + output + (error.toString().isEmpty() ? "" : "\n\nError:\n\n" + error);
-                throw new RuntimeException(errorMessage);
-            }
-
-            LOGGER.atDebug().log(output.toString());
-            if (!error.toString().isEmpty()) {
-                LOGGER.atDebug().log(error.toString());
-            }
-
-            String classpath = new String(Files.readAllBytes(classpathOutputFile), StandardCharsets.UTF_8).trim();
-            projectRecord.setClasspath(assembleClasspath(
-                classpath,
-                projectRecord.getMainCompiledPath(),
-                projectRecord.getTestCompiledPath(),
-                Paths.get(System.getProperty("user.dir"))));
-        } finally {
-            Files.deleteIfExists(classpathOutputFile);
-        }
-    }
-
-    static String assembleClasspath(String rawClasspath, Path mainCompiled, Path testCompiled, Path workingDir) {
-        List<String> classpathElements = new ArrayList<>();
-
-        classpathElements.add(mainCompiled.toString());
-        classpathElements.add(testCompiled.toString());
-
-        if (rawClasspath != null && !rawClasspath.trim().isEmpty()) {
-            Arrays.stream(rawClasspath.trim().split(File.pathSeparator))
-                .map(path -> workingDir.relativize(Paths.get(path)).toString())
-                .forEach(classpathElements::add);
-        }
-
-        return String.join(File.pathSeparator, classpathElements);
+        projectRecord.setClasspath(BuildClasspathResolver.resolveMaven(
+            projectRecord.getRootPath(),
+            Configuration.MAVEN_DEFAULT_BUILD_FILE,
+            projectRecord.getMainCompiledPath(),
+            projectRecord.getTestCompiledPath()));
     }
 }
