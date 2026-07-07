@@ -5,6 +5,7 @@ import java.util.List;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.ProjectRecord;
+import teralizer.processing.diagnostics.TaskDiagnosticCodes;
 
 public class PipelinePlanner {
     private final DSLContext create;
@@ -45,6 +46,14 @@ public class PipelinePlanner {
             .and(Tables.TASK.TEST_ID.isNull())
             .and(Tables.TASK.ASSERTION_ID.isNull())
             .and(Tables.TASK.GENERALIZATION_ID.isNull())
+            // A SUITE_TIMEOUT is a measured outcome (a stage that times out is a result, not
+            // breakage), so it is attrition rather than a structural failure that halts the run.
+            // Genuine project-level failures (build breakage, missing outputs) carry no such
+            // diagnostic and still halt.
+            .andNotExists(this.create.selectOne()
+                .from(Tables.TASK_DIAGNOSTIC)
+                .where(Tables.TASK_DIAGNOSTIC.TASK_ID.eq(Tables.TASK.ID))
+                .and(Tables.TASK_DIAGNOSTIC.REASON_CODE.eq(TaskDiagnosticCodes.SUITE_TIMEOUT)))
             .fetchInto(ProcessingStage.class);
         if (failedStages.isEmpty()) {
             return;
