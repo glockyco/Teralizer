@@ -18,6 +18,15 @@ private static class FirstValueArbitrary<T> implements net.jqwik.api.Arbitrary<T
 
     private static final java.util.Set<String> emittedRows = new java.util.LinkedHashSet<String>();
 
+    /**
+     * Consecutive-miss ceiling for the dedup retry. When this many draws in a row all repeat an
+     * already-emitted tuple, the reachable input domain is effectively exhausted (its unseen mass
+     * is negligible), so stop retrying and allow the repeat instead of spinning. This bounds the
+     * cost on low-cardinality domains, where insisting on a fresh tuple every draw would burn a
+     * huge retry budget on generation attempts that can never find an unseen value.
+     */
+    private static final int MAX_CONSECUTIVE_DEDUP_MISSES = 256;
+
     public FirstValueArbitrary(T firstValue, net.jqwik.api.Arbitrary<T> delegate) {
         this.firstValue = firstValue;
         this.delegate = delegate;
@@ -26,13 +35,12 @@ private static class FirstValueArbitrary<T> implements net.jqwik.api.Arbitrary<T
 
     public net.jqwik.api.RandomGenerator<T> generator(int genSize) {
         final net.jqwik.api.RandomGenerator<T> delegateGenerator = delegate.generator(genSize);
-        final int retryLimit = retryLimit(genSize);
         return new net.jqwik.api.RandomGenerator<T>() {
             public net.jqwik.api.Shrinkable<T> next(java.util.Random random) {
                 net.jqwik.api.Shrinkable<T> candidate = delegateGenerator.next(random);
                 String candidateIdentity = valueIdentity(candidate.value());
                 int retries = 0;
-                while (emittedRows.contains(candidateIdentity) && retries < retryLimit) {
+                while (emittedRows.contains(candidateIdentity) && retries < MAX_CONSECUTIVE_DEDUP_MISSES) {
                     retries++;
                     candidate = delegateGenerator.next(random);
                     candidateIdentity = valueIdentity(candidate.value());
@@ -52,12 +60,6 @@ private static class FirstValueArbitrary<T> implements net.jqwik.api.Arbitrary<T
      */
     public net.jqwik.api.RandomGenerator<T> generator(int genSize, boolean withEdgeCases) {
         return generator(genSize);
-    }
-
-    private int retryLimit(int genSize) {
-        long normalizedSize = Math.max(1L, (long) genSize);
-        long limit = Math.max(10000L, normalizedSize * 100L);
-        return limit > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) limit;
     }
 
     private String valueIdentity(T value) {
