@@ -218,6 +218,14 @@ WHERE
     AND t.test_id IS NULL
     AND t.assertion_id IS NULL
     AND t.generalization_id IS NULL
+    AND t.stage NOT IN (
+        'COLLECT_PIT_DATA_ORIGINAL',
+        'COLLECT_JACOCO_DATA_INITIAL',
+        'COLLECT_PIT_DATA_INITIAL',
+        'RESTORE_GENERALIZED_BUILD',
+        'COLLECT_JACOCO_DATA_GENERALIZED',
+        'COLLECT_PIT_DATA_GENERALIZED'
+    )
 GROUP BY
     t.project_id
 HAVING
