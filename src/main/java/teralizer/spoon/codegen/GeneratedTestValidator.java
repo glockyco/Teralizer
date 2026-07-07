@@ -6,8 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
@@ -68,20 +70,33 @@ public final class GeneratedTestValidator {
             options.add(outputDir.toString());
             // Skip annotation processing; the generated tests need none and it avoids classpath scans.
             options.add("-proc:none");
+            // Uncap diagnostics: the default 100-error limit stops emission mid-batch, leaving later
+            // uncompilable files unflagged and the real build failing on them.
+            options.add("-Xmaxerrs");
+            options.add("100000");
+            options.add("-Xmaxwarns");
+            options.add("100000");
 
             List<java.io.File> files = generatedFiles.stream().map(Path::toFile).collect(Collectors.toList());
             Iterable<? extends JavaFileObject> units = fileManager.getJavaFileObjectsFromFiles(files);
             compiler.getTask(null, fileManager, diagnostics, options, null, units).call();
 
-            Set<Path> generatedSet = new HashSet<>(generatedFiles);
+            // javac reports diagnostics with absolute source URIs, while the callers pass
+            // repo-root-relative paths. Key on the normalized-absolute form, map back to the
+            // caller's original Path so the returned set matches what the caller holds.
+            Map<Path, Path> byAbsolute = new HashMap<>();
+            for (Path file : generatedFiles) {
+                byAbsolute.put(file.toAbsolutePath().normalize(), file);
+            }
             Set<Path> uncompilable = new HashSet<>();
             for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
                 if (diagnostic.getKind() != Diagnostic.Kind.ERROR || diagnostic.getSource() == null) {
                     continue;
                 }
-                Path source = java.nio.file.Paths.get(diagnostic.getSource().toUri());
-                if (generatedSet.contains(source)) {
-                    uncompilable.add(source);
+                Path source = java.nio.file.Paths.get(diagnostic.getSource().toUri()).toAbsolutePath().normalize();
+                Path original = byAbsolute.get(source);
+                if (original != null) {
+                    uncompilable.add(original);
                 }
             }
             return uncompilable;

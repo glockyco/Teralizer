@@ -44,6 +44,22 @@ class GeneratedTestValidatorTest {
         Assert.assertTrue(uncompilable.isEmpty());
     }
 
+    @Example
+    void flagsUncompilableFileGivenRelativePaths() throws Exception {
+        // The pipeline passes repo-root-relative generated paths, while javac reports absolute
+        // source URIs. The returned set must still match the caller's original (relative) Path.
+        Path root = Files.createTempDirectory("validator-relative").toAbsolutePath();
+        write(root, "Bad.java", "public class Bad { int v() { return Nonexistent.MISSING; } }");
+        Path cwd = java.nio.file.Paths.get("").toAbsolutePath();
+        Path relativeBad = cwd.relativize(root.resolve("Bad.java"));
+        Path relativeRoot = cwd.relativize(root);
+
+        Set<Path> uncompilable = GeneratedTestValidator.uncompilableFiles(
+            Collections.singletonList(relativeBad), "", Collections.singletonList(relativeRoot));
+
+        Assert.assertEquals(Collections.singleton(relativeBad), uncompilable);
+    }
+
     private static Path write(Path root, String name, String source) throws Exception {
         Path file = root.resolve(name);
         Files.write(file, source.getBytes(java.nio.charset.StandardCharsets.UTF_8));
