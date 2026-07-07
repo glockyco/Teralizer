@@ -932,11 +932,11 @@ reduction in a separate invocation against the persisted workspace.
   driver needs an entry
 - Test: the fixture's golden entry
 
-- [ ] **Step 1: Pick the smallest viable fixture.** Reuse an existing small MUT
+- [x] **Step 1: Pick the smallest viable fixture.** Reuse an existing small MUT
   fixture shape. The fixture must reach `FILTER_GENERALIZATIONS` with at least one
   included generalization so reduction has something to mutate.
 
-- [ ] **Step 2: Add a two-invocation check.** Extend the corpus driver (or add a
+- [x] **Step 2: Add a two-invocation check.** Extend the corpus driver (or add a
   dedicated script step) to run the fixture twice: first with
   `use-test-reduction = false` (generalization only), asserting generalized
   sources on disk and a `v_projects_generalized` row but no PIT rows; then with
@@ -946,7 +946,7 @@ reduction in a separate invocation against the persisted workspace.
 Read `scripts/verify-pipeline.sh` and the corpus driver to match the existing
 golden mechanism before adding this. Keep the assertion data-driven off the DB,
 consistent with existing golden checks.
-- [ ] **Step 2b: Add a multi-variant reduction isolation check.** Single-variant
+- [x] **Step 2b: Add a multi-variant reduction isolation check.** Single-variant
   fixtures cannot catch a sweep regression. Add a check (a fixture config with two
   variants, e.g. `IMPROVED_100_TRIES` + `IMPROVED_200_TRIES`, run through
   generalization then reduction) asserting each variant produces its OWN PIT and
@@ -957,13 +957,13 @@ consistent with existing golden checks.
   never a sibling's. Keep it small (a fixture with one generalizable MUT per
   variant suffices).
 
-- [ ] **Step 3: Run the fixture.**
+- [x] **Step 3: Run the fixture.**
   Run: `bash scripts/verify-pipeline.sh` (or the fixture-scoped invocation the
   driver exposes)
   Expected: the new fixture passes both invocations; all existing goldens
   unmoved.
 
-- [ ] **Step 4: Commit.** Stage the fixture, config, and golden.
+- [x] **Step 4: Commit.** Stage the fixture, config, and golden.
   Suggested subject: `test(pipeline): add reduction-resume fixture`
   Body must explain: the fixture proves generalization then reduction run in
   separate invocations against the persisted workspace, that reduction-only adds
