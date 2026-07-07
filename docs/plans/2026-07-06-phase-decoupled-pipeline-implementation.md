@@ -104,7 +104,7 @@ unchanged and the build stays green.
 - Modify: tracked `build/generated-src/jooq/main/org/jooq/generated/tables/Project.java` and `.../records/ProjectRecord.java`
 - Test: `src/test/java/teralizer/util/ConfigurationTest.java`
 
-- [ ] **Step 1: Add the DDL column.** In `create-tables.sql`, the `project`
+- [x] **Step 1: Add the DDL column.** In `create-tables.sql`, the `project`
   table has `use_test_generalization BOOLEAN NOT NULL` (around line 45). Add
   directly after it:
 
@@ -112,7 +112,7 @@ unchanged and the build stays green.
     use_test_reduction      BOOLEAN NOT NULL,
 ```
 
-- [ ] **Step 2: Add the reference defaults.** In `src/main/resources/reference.conf`,
+- [x] **Step 2: Add the reference defaults.** In `src/main/resources/reference.conf`,
   the `project { }` block (lines 4-7) currently reads:
 
 ```hocon
@@ -135,7 +135,7 @@ Add the reduction default (on, to preserve today's end-to-end behavior):
 Apply the identical `use-test-reduction = true` addition to the `project { }`
 block in `src/test/resources/reference.conf`.
 
-- [ ] **Step 3: Add the Configuration accessor.** In `Configuration.java`, after
+- [x] **Step 3: Add the Configuration accessor.** In `Configuration.java`, after
   `getProjectUseTestGeneralization()` (lines 254-256), add:
 
 ```java
@@ -144,7 +144,7 @@ block in `src/test/resources/reference.conf`.
     }
 ```
 
-- [ ] **Step 4: Write the failing Configuration test.** In `ConfigurationTest.java`,
+- [x] **Step 4: Write the failing Configuration test.** In `ConfigurationTest.java`,
   add a test asserting the reduction default resolves true from the reference
   config. Mirror the existing pattern used for the other project toggles in that
   file (read one first to match the harness). Assertion:
@@ -153,11 +153,11 @@ block in `src/test/resources/reference.conf`.
     assertThat(Configuration.getProjectUseTestReduction()).isTrue();
 ```
 
-- [ ] **Step 5: Run it to confirm it fails to compile then passes.**
+- [x] **Step 5: Run it to confirm it fails to compile then passes.**
   Run: `./gradlew test --tests 'teralizer.util.ConfigurationTest'`
   Expected: compiles once Step 3 is in, passes once Step 2 is in.
 
-- [ ] **Step 6: Regenerate jOOQ.** Read the header of
+- [x] **Step 6: Regenerate jOOQ.** Read the header of
   `scripts/regenerate-jooq.sh` first, then run it. It builds a throwaway
   `teralizer_codegen` from `create-tables.sql`, runs `generateJooq`, and drops
   the DB.
@@ -166,7 +166,7 @@ block in `src/test/resources/reference.conf`.
   `getUseTestReduction` / `setUseTestReduction`. If any unrelated generated
   table changes semantically, stop — the codegen DB did not match the DDL.
 
-- [ ] **Step 7: Set the toggle at project creation.** In
+- [x] **Step 7: Set the toggle at project creation.** In
   `TestGeneralizationRunner.run()`, after
   `projectRecord.setUseTestGeneralization(...)` (line 61), add:
 
@@ -178,11 +178,11 @@ Note: `use_test_reduction` is `NOT NULL`, so this set is required for the insert
 to succeed. This keeps the full run working end to end (all three phases on by
 default) even before the planner lands.
 
-- [ ] **Step 8: Build to confirm green.**
+- [x] **Step 8: Build to confirm green.**
   Run: `./gradlew compileJava compileTestJava test --tests 'teralizer.util.ConfigurationTest'`
   Expected: BUILD SUCCESSFUL.
 
-- [ ] **Step 9: Commit.** Stage `create-tables.sql`, both `reference.conf`,
+- [x] **Step 9: Commit.** Stage `create-tables.sql`, both `reference.conf`,
   `Configuration.java`, `ConfigurationTest.java`, `TestGeneralizationRunner.java`,
   and the two regenerated jOOQ files. Commit via the commit skill.
   Suggested subject: `feat(config): add use-test-reduction project toggle`
@@ -203,7 +203,7 @@ draining relies on it.
 - Modify: `src/main/java/teralizer/processing/ProcessingPipeline.java:126-139`
 - Test: `src/test/java/teralizer/processing/ProcessingPipelineCascadeTest.java` (create)
 
-- [ ] **Step 1: Write the failing test.** Create `ProcessingPipelineCascadeTest.java`.
+- [x] **Step 1: Write the failing test.** Create `ProcessingPipelineCascadeTest.java`.
   Extract the drop predicate into a testable static helper first (Step 2 defines
   it), then assert:
   - a failed task with `variant = "A"` drops a queued task with `variant = "A"`
@@ -230,11 +230,11 @@ Build minimal `Task` doubles or reuse an existing test double in the package
 (check `TaskPriorityComparator` tests for an existing pattern before inventing
 one).
 
-- [ ] **Step 2: Run it to verify it fails.**
+- [x] **Step 2: Run it to verify it fails.**
   Run: `./gradlew test --tests 'teralizer.processing.ProcessingPipelineCascadeTest'`
   Expected: FAIL (method `shouldDrop` does not exist).
 
-- [ ] **Step 3: Extract and extend the predicate.** In `ProcessingPipeline`,
+- [x] **Step 3: Extract and extend the predicate.** In `ProcessingPipeline`,
   replace the inline `removeIf` lambda body (lines 126-139) with a call to a new
   package-visible static method, and add the variant rule:
 
@@ -263,11 +263,11 @@ Then the `removeIf` becomes:
             });
 ```
 
-- [ ] **Step 4: Run the test to verify it passes.**
+- [x] **Step 4: Run the test to verify it passes.**
   Run: `./gradlew test --tests 'teralizer.processing.ProcessingPipelineCascadeTest'`
   Expected: PASS.
 
-- [ ] **Step 5: Commit.** Stage `ProcessingPipeline.java` and the new test.
+- [x] **Step 5: Commit.** Stage `ProcessingPipeline.java` and the new test.
   Suggested subject: `fix(pipeline): scope cascade-drop to the failing variant`
   Body must explain: a variant-scoped failure previously dropped sibling
   variants because the drop predicate ignored variant. Shared (variant-null)
@@ -288,7 +288,7 @@ deferral requires.
 - Modify: `src/main/java/teralizer/processing/task/TestExecutionTask.java`
 - Modify: `src/main/java/teralizer/processing/task/JacocoDataCollectionTask.java`
 
-- [ ] **Step 1: Add a preserved-exec path helper.** Decide one canonical
+- [x] **Step 1: Add a preserved-exec path helper.** Decide one canonical
   location. Use the existing data directory convention seen in
   `JacocoDataCollectionTask.collectCoverageData`
   (`data/.../project-id-<id>/jacoco-data`). Add a static helper (place it in
@@ -304,7 +304,7 @@ deferral requires.
     }
 ```
 
-- [ ] **Step 2: Copy `target/jacoco.exec` after each test execution.** In
+- [x] **Step 2: Copy `target/jacoco.exec` after each test execution.** In
   `TestExecutionTask.executeInternal`, after the test command runs (after the
   try/catch that ends near line 144, before the generalized-only block), copy
   the produced exec to the preserved path. The default JaCoCo dest is
@@ -338,7 +338,7 @@ The writer (Step 2) passes `jacocoStageFor(this.stage)`; the reader (Step 3)
 passes `this.stage`, which is already a collector stage. `preservedExecPath`
 itself does no mapping, so both ends resolve the identical path.
 
-- [ ] **Step 3: Report from the preserved exec.** In
+- [x] **Step 3: Report from the preserved exec.** In
   `JacocoDataCollectionTask.buildMavenCommand` / `buildGradleCommand`, point the
   report at the preserved file. Maven `jacoco:report` accepts
   `-Djacoco.dataFile=<path>`; Gradle's `jacocoTestReport` reads
@@ -359,13 +359,13 @@ add `executionData` wiring in `jacoco-config-gradle.txt`. Read
 to accept a `-PjacocoExec=<path>` property, defaulting to the existing behavior
 when unset. Keep the default path working so nothing regresses.
 
-- [ ] **Step 4: Verify on the fixture batch gate.** This is a behavior-preserving
+- [x] **Step 4: Verify on the fixture batch gate.** This is a behavior-preserving
   change, so goldens must not move.
   Run: `bash scripts/verify-pipeline.sh`
   Expected: `Verification golden check passed`, all fixtures attempted, zero
   gradle-nonzero.
 
-- [ ] **Step 5: Commit.** Stage the two task files and any jacoco config template
+- [x] **Step 5: Commit.** Stage the two task files and any jacoco config template
   touched. Suggested subject: `feat(pipeline): preserve per-stage jacoco exec`
   Body must explain: the generalized build's `mvn clean` deletes the shared
   `target/jacoco.exec`, so deferring coverage reporting to the reduction phase
@@ -384,7 +384,7 @@ eighteen downstream consumers. Analysis-only and jOOQ-independent.
 - Modify: `src/main/resources/db/create-views.sql`
 - Test: a psql assertion (manual, in-step) plus analysis smoke
 
-- [ ] **Step 1: Add the two views and keep the alias.** In `create-views.sql`,
+- [x] **Step 1: Add the two views and keep the alias.** In `create-views.sql`,
   the current definition (lines 207-222) ends with the reduction-requiring
   predicate. Replace the single `v_projects_successes` with:
 
@@ -420,7 +420,7 @@ SELECT * FROM v_projects_reduced;
 Update the drop block at the top of the file (lines 38-40) to drop the two new
 views before their dependents, matching existing reverse-dependency order.
 
-- [ ] **Step 2: Verify the views build on a scratch DB.**
+- [x] **Step 2: Verify the views build on a scratch DB.**
   Run:
 ```bash
 docker exec -i postgres-teralizer psql -U postgres -c "DROP DATABASE IF EXISTS views_scratch;"
@@ -431,14 +431,14 @@ docker exec -i postgres-teralizer psql -U postgres -c "DROP DATABASE views_scrat
 ```
   Expected: no ERROR; all three views created.
 
-- [ ] **Step 3: Confirm consumers are unaffected.** Grep confirms all analysis
+- [x] **Step 3: Confirm consumers are unaffected.** Grep confirms all analysis
   usages read `v_projects_successes`, which is now an alias of
   `v_projects_reduced` (identical predicate to before). No analysis edit is
   required for parity. If an applicability reader wants the Stage-4 milestone,
   it reads `v_projects_generalized` — note this in the spec's acceptance, but add
   no speculative consumer now (YAGNI).
 
-- [ ] **Step 4: Commit.** Stage `create-views.sql`.
+- [x] **Step 4: Commit.** Stage `create-views.sql`.
   Suggested subject: `feat(db): split success views into generalized and reduced`
   Body must explain: `v_projects_successes` hard-required a
   `COLLECT_PIT_DATA_GENERALIZED` row, which breaks once reduction is optional.
@@ -460,7 +460,7 @@ predicate. Nothing calls it yet, so the build stays green.
 - Create: `src/main/java/teralizer/processing/PipelinePhase.java`
 - Test: `src/test/java/teralizer/processing/PipelinePhaseTest.java`
 
-- [ ] **Step 1: Write the failing test.** Assert phase membership and precondition
+- [x] **Step 1: Write the failing test.** Assert phase membership and precondition
   behavior against a small in-memory or fixture project. Minimum assertions:
   - `PipelinePhase.GENERATION.stages()` contains `GENERATE_EVOSUITE_TESTS`,
     `POSTPROCESS_EVOSUITE_TESTS` and nothing else.
@@ -481,11 +481,11 @@ predicate. Nothing calls it yet, so the build stays green.
     }
 ```
 
-- [ ] **Step 2: Run it to verify it fails.**
+- [x] **Step 2: Run it to verify it fails.**
   Run: `./gradlew test --tests 'teralizer.processing.PipelinePhaseTest'`
   Expected: FAIL (type does not exist).
 
-- [ ] **Step 3: Implement `PipelinePhase`.** Define the enum with the three
+- [x] **Step 3: Implement `PipelinePhase`.** Define the enum with the three
   constants and the contract. Sketch:
 
 ```java
@@ -537,11 +537,11 @@ plan, and no production path calls `schedule` until Task 11. Preconditions,
 `stages()`, `isRequested`, and `clear()` are fully implemented now and unit
 tested.
 
-- [ ] **Step 4: Run the test to verify it passes.**
+- [x] **Step 4: Run the test to verify it passes.**
   Run: `./gradlew test --tests 'teralizer.processing.PipelinePhaseTest'`
   Expected: PASS.
 
-- [ ] **Step 5: Commit.** Stage `PipelinePhase.java`, `PhasePreconditionException.java`,
+- [x] **Step 5: Commit.** Stage `PipelinePhase.java`, `PhasePreconditionException.java`,
   and the test. Suggested subject: `feat(pipeline): add first-class pipeline phases`
   Body must explain: the three phases become objects owning their stages,
   preconditions, teardown, and success predicate. Preconditions fail loud with
@@ -561,7 +561,7 @@ attaching.
 - Modify: `src/main/java/teralizer/util/Configuration.java` (identity-hash render)
 - Test: `src/test/java/teralizer/processing/ProjectIdentityTest.java`
 
-- [ ] **Step 1: Add an identity-config render to Configuration.** The hash must
+- [x] **Step 1: Add an identity-config render to Configuration.** The hash must
   exclude the three run-scoped phase toggles. Add:
 
 ```java
@@ -576,7 +576,7 @@ attaching.
     }
 ```
 
-- [ ] **Step 2: Write the failing test.** Assert:
+- [x] **Step 2: Write the failing test.** Assert:
   - resolving when no record exists at the path creates one;
   - resolving when a record exists with a matching identity hash returns that
     record (same id);
@@ -596,11 +596,11 @@ Use an in-memory or test Postgres DSLContext consistent with existing repository
 tests (check how other `teralizer.repository` or task tests obtain a DSLContext;
 reuse that harness).
 
-- [ ] **Step 3: Run it to verify it fails.**
+- [x] **Step 3: Run it to verify it fails.**
   Run: `./gradlew test --tests 'teralizer.processing.ProjectIdentityTest'`
   Expected: FAIL.
 
-- [ ] **Step 4: Implement `ProjectIdentity`.**
+- [x] **Step 4: Implement `ProjectIdentity`.**
 
 ```java
 public final class ProjectIdentity {
@@ -629,11 +629,11 @@ render; hash the same identity-excluded projection on both sides. Keep the
 projection logic in one place so stored and current hashes are computed
 identically.
 
-- [ ] **Step 5: Run the test to verify it passes.**
+- [x] **Step 5: Run the test to verify it passes.**
   Run: `./gradlew test --tests 'teralizer.processing.ProjectIdentityTest'`
   Expected: PASS.
 
-- [ ] **Step 6: Commit.** Stage `ProjectIdentity.java`, `ConfigIdentity.java`,
+- [x] **Step 6: Commit.** Stage `ProjectIdentity.java`, `ConfigIdentity.java`,
   `Configuration.java`, and the test. Suggested subject:
   `feat(pipeline): resolve project identity with a config-hash guard`
   Body must explain: a resume attaches to the existing project at a root path;
@@ -652,7 +652,7 @@ clear then check preconditions then schedule then drain, then advance.
 - Create: `src/main/java/teralizer/processing/PipelinePlanner.java`
 - Test: `src/test/java/teralizer/processing/PipelinePlannerTest.java`
 
-- [ ] **Step 1: Write the failing test.** With phase doubles or a controllable
+- [x] **Step 1: Write the failing test.** With phase doubles or a controllable
   `PipelinePhase` seam, assert:
   - only requested phases run;
   - phases run in canonical order generation, generalization, reduction;
@@ -661,11 +661,11 @@ clear then check preconditions then schedule then drain, then advance.
     before the next phase schedules) — assert by recording call order;
   - a precondition failure aborts before scheduling that phase's stages.
 
-- [ ] **Step 2: Run it to verify it fails.**
+- [x] **Step 2: Run it to verify it fails.**
   Run: `./gradlew test --tests 'teralizer.processing.PipelinePlannerTest'`
   Expected: FAIL.
 
-- [ ] **Step 3: Implement `PipelinePlanner`.**
+- [x] **Step 3: Implement `PipelinePlanner`.**
 
 ```java
 public class PipelinePlanner {
@@ -693,11 +693,11 @@ generalization, reduction), so iteration order is the phase order. The
 drain-between-phases loop is what isolates a reduction failure from
 generalization results.
 
-- [ ] **Step 4: Run the test to verify it passes.**
+- [x] **Step 4: Run the test to verify it passes.**
   Run: `./gradlew test --tests 'teralizer.processing.PipelinePlannerTest'`
   Expected: PASS.
 
-- [ ] **Step 5: Commit.** Stage `PipelinePlanner.java` and the test.
+- [x] **Step 5: Commit.** Stage `PipelinePlanner.java` and the test.
   Suggested subject: `feat(pipeline): add sequential phase planner`
   Body must explain: the planner runs each requested phase to completion before
   the next begins, draining the queue between phases. That draining is what makes
@@ -733,7 +733,7 @@ per variant during reduction, preserving one-variant-at-a-time isolation.
 - Modify: `src/main/java/teralizer/processing/task/ProjectSetupTask.java` (remove the per-phase scheduling block; add the temporary driver)
 - Test: `src/test/java/teralizer/processing/task/GeneralizedSourceRestoreTaskTest.java`
 
-- [ ] **Commit A — archive writer + restore stage + restore task (infra, nothing scheduled yet).**
+- [x] **Commit A — archive writer + restore stage + restore task (infra, nothing scheduled yet).**
   - Add a `RESTORE_GENERALIZED_BUILD` constant to `ProcessingStage` (temporary
     step number in the reduction band, e.g. just below `COLLECT_JACOCO_DATA_GENERALIZED`;
     Task 9 renumbers the whole band coherently). No jOOQ regen: `task.stage` uses a
