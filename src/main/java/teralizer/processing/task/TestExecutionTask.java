@@ -160,6 +160,10 @@ public class TestExecutionTask extends AbstractTask {
         }
 
         if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {
+            GeneralizedSourceRestoreTask.archiveGeneralizedSources(this.projectRecord, this.getProjectId(), this.getVariant());
+        }
+
+        if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {
             boolean generalizedTestsIncluded = includedGeneralizedTests != null && !includedGeneralizedTests.isEmpty();
             requireGeneralizedReportsPresent(this.projectRecord.getTestReportsPath(), generalizedTestsIncluded);
             GeneralizationLifecycleWriter.recordProjectStageSucceeded(create, this.stage, this.getProjectId(), this.getVariant());

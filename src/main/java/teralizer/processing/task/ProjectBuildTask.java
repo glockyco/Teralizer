@@ -47,6 +47,10 @@ public class ProjectBuildTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        this.buildProject(context, reportInfo);
+    }
+
+    void buildProject(TaskContext context, Consumer<String> reportInfo) throws Exception {
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         BuildEnvironmentObservationWriter.record(create, this.projectRecord, this.stage);
 
