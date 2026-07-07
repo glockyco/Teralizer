@@ -29,9 +29,9 @@ under `build/generated-src/jooq/`), Typesafe Config (HOCON), PostgreSQL DDL in
 ## Execution protocol (operator constraints)
 
 - **Sequential subagents, no parallelism.** The coordinator dispatches exactly
-  one implementer subagent per task, waits for it, runs the two-stage review
-  (spec compliance then code quality), then dispatches the next. Never two
-  implementers at once.
+  one implementer subagent per task, waits for it, reviews inline (reads the
+  diff, runs the task's named check), then dispatches the next. No reviewer
+  subagents and no mandatory re-review loops. Never two implementers at once.
 - **No worktrees.** All work happens inline in this workspace on the current
   branch.
 - **Atomic commits, no big bang.** Every task ends by committing its own change
@@ -41,9 +41,12 @@ under `build/generated-src/jooq/`), Typesafe Config (HOCON), PostgreSQL DDL in
   why, not a bare subject. Implementers choose the exact wording; suggested
   subjects are given per task.
 - **No prose semicolons** in commit bodies, comments, or docs (house style).
-- **Per-task hygiene:** run only the tests a task adds or touches, plus the
-  fixture batch gate when a task says so. Do not run project-wide formatters or
-  the full suite unless a step requires it.
+- **Per-task hygiene:** run only the tests a task adds or touches. Prefer small,
+  fast spikes over heavyweight verification. Do NOT run the full 21-fixture
+  `scripts/verify-pipeline.sh` after every change. For a behavior-preserving
+  change, spike ONE small fixture (or a focused unit check) to confirm the seam
+  works; reserve the full corpus gate for the final verification task. Do not
+  run project-wide formatters or the full suite unless a step requires it.
 - **Green at every commit.** Each commit compiles and passes the tests the task
   names.
 
