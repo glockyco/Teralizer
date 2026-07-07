@@ -829,54 +829,24 @@ precedes generalization. Mirror the change in `stage_order()`.
 
 ---
 
-### Task 10: Gate destructive `CLEANUP_PROJECT` to fresh start
+### Task 10: Wire the planner into the runner with fresh-start-gated cleanup
 
-`CLEANUP_PROJECT` deletes tool-generated sources at every run start. Under
-persist-on-disk resume that would wipe the generalized tests a reduction-only run
-needs. Gate the destructive deletion to fresh-start only.
-
-**Files:**
-- Modify: `src/main/java/teralizer/processing/task/CleanupTask.java`
-- Test: extend an existing CleanupTask test or add one
-
-- [ ] **Step 1: Write the failing test.** Assert that a `CLEANUP_PROJECT` cleanup
-  invoked in attach mode does not delete `_*_Generalized_*` sources, while a
-  fresh-start cleanup still does. Model the fresh-vs-attach signal explicitly
-  (Step 2).
-
-- [ ] **Step 2: Add the fresh-start signal.** The planner knows whether the
-  project was just created (`ProjectIdentity` returned null then a fresh record
-  was stored) or attached. Thread a boolean `freshStart` to the cleanup decision.
-  Simplest: only schedule the destructive `CLEANUP_PROJECT` on fresh start;
-  on attach, skip it. Prefer skipping the schedule over branching deep in the
-  visitor, so the task stays single-purpose. Implement by having the planner
-  schedule the cleanup only when `freshStart`.
-
-- [ ] **Step 3: Run tests.**
-  Run: `./gradlew test --tests 'teralizer.processing.task.CleanupTaskTest'`
-  Expected: PASS (adjust the test class name to the actual one; create if none).
-
-- [ ] **Step 4: Commit.** Stage `CleanupTask.java` (and/or planner) and the test.
-  Suggested subject: `fix(pipeline): only wipe generated sources on a fresh start`
-  Body must explain: destructive `CLEANUP_PROJECT` deletion ran at every start,
-  which would erase the generalized sources a reduction-only resume mutates. It
-  is now gated to fresh-start; an attach preserves the workspace. DB and data-dir
-  preservation are unchanged.
-
----
-
-### Task 11: Wire the planner into the runner (the cutover)
-
-Flip `TestGeneralizationRunner` to drive `PipelinePlanner`, remove the temporary
-driver from `ProjectSetupTask`, and route project creation through
-`ProjectIdentity`.
+The cutover. Route project creation through `ProjectIdentity` (attach or fresh),
+drive the phases through `PipelinePlanner`, gate the destructive `CLEANUP_PROJECT`
+to fresh-start only, and remove the Task-8 temporary driver. This merges the
+former Task 10 (cleanup gating) and Task 11 (planner wiring): the `freshStart`
+signal is born from `ProjectIdentity.resolveOrCreate`, the gate is best applied at
+scheduling time, and the scheduler moves into the runner here, so the two are one
+cohesive change.
 
 **Files:**
 - Modify: `src/main/java/teralizer/TestGeneralizationRunner.java`
 - Modify: `src/main/java/teralizer/processing/task/ProjectSetupTask.java`
+- Modify: `src/main/java/teralizer/processing/PipelinePlanner.java` (accept an existing pipeline, if not already)
+- Test: `src/test/java/teralizer/processing/task/CleanupTaskTest.java` (or extend an existing test) for the fresh-vs-attach gate
 
-- [ ] **Step 1: Route identity.** In `TestGeneralizationRunner.run()`, before
-  scheduling download, resolve identity:
+- [ ] **Step 1: Route identity in the runner.** In `TestGeneralizationRunner.run()`,
+  before scheduling anything, resolve identity:
 
 ```java
         String identityHash = ConfigIdentity.hash(Configuration.renderIdentity());
@@ -884,43 +854,67 @@ driver from `ProjectSetupTask`, and route project creation through
         boolean freshStart = projectRecord == null;
         if (freshStart) {
             projectRecord = create.newRecord(Tables.PROJECT);
-            // ... existing field sets (type, paths, toggles incl. setUseTestReduction, configuration) ...
+            // existing field sets: type, paths, test-reports/coverage/mutation paths,
+            // use-test-generation, use-test-generalization, use-test-reduction, configuration
             projectRecord.store();
         }
 ```
 
-- [ ] **Step 2: Run bootstrap then the planner.** Keep the download and setup
-  cascade for the bootstrap stages (download, setup, add-deps, build-original),
-  then hand off to the planner for the phases. Bootstrap tasks are idempotent
-  (download skips when present, add-deps checks for existing plugins, build runs
-  clean). Drive them, then:
+  On attach (`freshStart == false`) the existing record already carries its paths
+  and toggles; do not overwrite them.
 
-```java
-        PipelinePlanner planner = new PipelinePlanner(pipeline, create);
-        planner.run(projectRecord);
-```
+- [ ] **Step 2: Thread freshStart to bootstrap; gate CLEANUP_PROJECT.** The
+  bootstrap tasks are download, setup, add-deps, build-original. On attach all four
+  still run and are safe: download skips when on disk, setup re-resolves the same
+  paths, add-deps checks for existing plugins, build-original rebuilds (its
+  `mvn clean` wipes only `target/`, and INITIAL PIT needs the original test
+  classes). Only the destructive `CLEANUP_PROJECT` (which deletes `_*_Generalized_*`
+  sources AND the custom build files) must be skipped on attach. Gate it at
+  SCHEDULING time: schedule `CLEANUP_PROJECT` only when `freshStart`. Thread
+  `freshStart` from the runner to wherever bootstrap is scheduled (see Step 3).
 
-The cleanest structure: bootstrap is scheduled and drained first (or folded into
-the planner as a pre-phase), then `planner.run` iterates the three phases. Choose
-one and keep it explicit; document it in the runner.
+- [ ] **Step 3: Bootstrap then planner; remove the temp driver.** Choose the
+  explicit structure: the runner schedules the download cascade (which chains into
+  `ProjectSetupTask`), then calls `planner.run(projectRecord)`. `ProjectSetupTask`
+  keeps ONLY the setup work (paths, build file, framework detection) plus
+  scheduling add-deps and build-original; it schedules `CLEANUP_PROJECT` only when
+  `freshStart` (pass the flag into `ProjectSetupTask`/`ProjectDownloadTask`, or move
+  the cleanup schedule into the runner). DELETE the Task-8 temporary
+  phase-driving block (the three `if (getUseTest*) PipelinePhase.X.schedule(...)`
+  calls). The planner now owns phase scheduling, running clear -> checkPreconditions
+  -> schedule -> drain per requested phase. Wire `PipelinePlanner` to the runner's
+  existing `ProcessingPipeline` instance (add/confirm a constructor taking the
+  pipeline, matching the package-private one from Task 7).
 
-- [ ] **Step 3: Remove the temporary driver.** Delete the Task-8 temporary
-  phase-driving from `ProjectSetupTask`. Setup now schedules only the bootstrap
-  continuation it owns (cleanup on fresh start, add-deps, build-original), never
-  the phase stages.
+- [ ] **Step 4: Write the fresh-vs-attach cleanup test.** Assert that bootstrap
+  scheduling on `freshStart == true` includes a `CLEANUP_PROJECT` cleanup and on
+  `freshStart == false` does not. Model the signal explicitly at the scheduling
+  boundary (do not require a live pipeline). Keep `CleanupTask`'s own behavior
+  unchanged; the gate is at scheduling.
 
-- [ ] **Step 4: Full fixture gate.**
-  Run: `bash scripts/verify-pipeline.sh`
-  Expected: goldens unmoved. A full run (all three toggles on) reproduces today's
-  end-to-end behavior through the planner.
+- [ ] **Step 5: Verify (small spike, not the full gate).** `./gradlew compileJava
+  compileTestJava` green; the new cleanup test plus `PipelinePhaseTest`,
+  `PipelinePlannerTest`, `ProjectIdentityTest` green. Then spike ONE small fixture
+  end to end (all three toggles on) on a scratch DB and confirm it reaches
+  reduction with generalization + PIT/JaCoCo rows and that fixture's golden is
+  unmoved. This proves the planner-driven full run reproduces today's behavior.
 
-- [ ] **Step 5: Commit.** Stage both files. Suggested subject:
+- [ ] **Step 6: Commit.** Suggested subject:
   `feat(pipeline): drive phases through the sequential planner`
-  Body must explain: the runner resolves project identity, runs bootstrap, then
-  the planner executes the requested phases in order. The temporary driver in the
-  setup task is removed. A full run is behavior-identical, verified by fixture
-  goldens; reduction failures can no longer drop generalization because phases
-  drain sequentially.
+  Body must explain: the runner resolves project identity (attach or fresh), runs
+  bootstrap with `CLEANUP_PROJECT` gated to fresh-start, then the planner executes
+  the requested phases in order draining between them. The temporary driver is
+  removed. A full run is behavior-identical; a reduction failure can no longer drop
+  generalization because phases drain sequentially, and an attach preserves the
+  on-disk workspace.
+
+---
+
+### Task 11: (folded into Task 10)
+
+The planner wiring and the fresh-start cleanup gate are one cohesive cutover, so
+they land together in Task 10. This entry is retained only to keep the task
+numbering stable.
 
 ---
 
