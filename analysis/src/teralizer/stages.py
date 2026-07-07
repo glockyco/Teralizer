@@ -71,6 +71,7 @@ def map_internal_stage_to_paper_stage(internal_stage: str) -> Optional[str]:
         "COLLECT_PIT_DATA_ORIGINAL",
         "COLLECT_JACOCO_DATA_INITIAL",
         "COLLECT_PIT_DATA_INITIAL",
+        "RESTORE_GENERALIZED_BUILD",
         "COLLECT_JACOCO_DATA_GENERALIZED",
         "COLLECT_PIT_DATA_GENERALIZED",
     }
@@ -132,6 +133,7 @@ def get_stage_group_sql_case() -> str:
             'COLLECT_PIT_DATA_ORIGINAL',
             'COLLECT_JACOCO_DATA_INITIAL',
             'COLLECT_PIT_DATA_INITIAL',
+            'RESTORE_GENERALIZED_BUILD',
             'COLLECT_JACOCO_DATA_GENERALIZED',
             'COLLECT_PIT_DATA_GENERALIZED'
         ) THEN 'Stage 5'
