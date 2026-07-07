@@ -10,6 +10,9 @@ public final class FilterReasonCodes {
     public static final String DEPENDS_ON_MISSING_MUT = "MISSING_MUT";
     public static final String DEPENDS_ON_UNSUPPORTED_ASSERTION = "UNSUPPORTED_ASSERTION";
 
+    public static final String UNCOMPILABLE_INSTRUMENTED_WRAPPER = "UNCOMPILABLE_INSTRUMENTED_WRAPPER";
+    public static final String UNCOMPILABLE_GENERALIZED_TEST = "UNCOMPILABLE_GENERALIZED_TEST";
+
     public static final String EXCLUDED_PARENT_ASSERTION = "EXCLUDED_PARENT_ASSERTION";
     public static final String EXCLUDED_PARENT_TEST = "EXCLUDED_PARENT_TEST";
     public static final String MISSING_TESTED_CLASS = "MISSING_TESTED_CLASS";
