@@ -178,4 +178,11 @@ public final class Cut {
         }
         return 0;
     }
+
+    public static int lengthZeroBranch(String s) {
+        if (s.length() == 0) {
+            return 1;
+        }
+        return 0;
+    }
 }
