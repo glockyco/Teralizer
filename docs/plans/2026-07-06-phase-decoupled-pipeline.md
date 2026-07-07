@@ -1,7 +1,7 @@
 ---
 title: Phase-Decoupled Pipeline (Generation / Generalization / Reduction)
 type: spec
-status: draft
+status: active
 created: 2026-07-06
 parent: 2026-06-26-teralizer-overview
 ---

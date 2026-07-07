@@ -20,11 +20,12 @@
 - **Collect-Mode Conformance Survey of the Vendored SPF** [audit] `2026-07-05-collect-mode-conformance` ← 2026-06-26-teralizer-overview
 - **Concretization Census — Load-Bearing Blockers and the License Over-Refusal Finding** [audit] `2026-07-05-concretization-census-findings` ← 2026-07-04-concretization-census
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
+- **Phase-Decoupled Pipeline (Generation / Generalization / Reduction)** [spec] `2026-07-06-phase-decoupled-pipeline` ← 2026-06-26-teralizer-overview
+- **Phase-Decoupled Pipeline — Implementation Plan** [plan] `2026-07-06-phase-decoupled-pipeline-implementation` (0/68) ← 2026-07-06-phase-decoupled-pipeline
 
 ## draft
 
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
-- **Phase-Decoupled Pipeline (Generation / Generalization / Reduction)** [spec] `2026-07-06-phase-decoupled-pipeline` ← 2026-06-26-teralizer-overview
 
 _63 archived — see `docs/plans/archive/`._
