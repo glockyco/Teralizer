@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import teralizer.processing.ConfigIdentity;
 import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.processing.dependencies.Dependency;
 
@@ -204,6 +205,10 @@ public class Configuration {
         return CONFIG.getConfig(TOOL_NAME_LOWER).root().render(
             ConfigRenderOptions.defaults().setFormatted(true).setOriginComments(false)
         );
+    }
+
+    public static String renderIdentity() {
+        return ConfigIdentity.renderIdentity(CONFIG.getConfig(TOOL_NAME_LOWER));
     }
 
     // ----- Project ----- //
