@@ -1,9 +1,10 @@
 ---
 title: Phase-Decoupled Pipeline — Implementation Plan
 type: plan
-status: active
+status: implemented
 created: 2026-07-06
 parent: 2026-07-06-phase-decoupled-pipeline
+archived: 2026-07-07
 ---
 
 # Phase-Decoupled Pipeline Implementation Plan
