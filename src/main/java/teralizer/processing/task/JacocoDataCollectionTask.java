@@ -119,12 +119,51 @@ public class JacocoDataCollectionTask extends AbstractTask {
         return coverageReportRecords;
     }
 
-    private static List<String> buildGradleCommand() {
-        return new ArrayList<>(Arrays.asList("./gradlew", "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE, "--info", "-Djacoco.skip=false", "jacocoTestReport"));
+    private List<String> buildGradleCommand() {
+        Path preserved = preservedExecPath(this.projectRecord, this.getProjectId(), this.stage, this.getVariant());
+        return new ArrayList<>(Arrays.asList(
+            "./gradlew",
+            "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE,
+            "--info",
+            "-Djacoco.skip=false",
+            "-PjacocoExec=" + preserved.toAbsolutePath(),
+            "jacocoTestReport"
+        ));
     }
 
-    private static List<String> buildMavenCommand() {
-        return new ArrayList<>(Arrays.asList("mvn", "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE, "-Djacoco.skip=false", "jacoco:report"));
+    private List<String> buildMavenCommand() {
+        Path preserved = preservedExecPath(this.projectRecord, this.getProjectId(), this.stage, this.getVariant());
+        return new ArrayList<>(Arrays.asList(
+            "mvn",
+            "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
+            "-Djacoco.skip=false",
+            "-Djacoco.dataFile=" + preserved.toAbsolutePath(),
+            "jacoco:report"
+        ));
+    }
+
+    static Path preservedExecPath(ProjectRecord projectRecord, long projectId, ProcessingStage stage, String variant) {
+        String variantPart = variant == null ? "" : ("." + variant);
+        return projectRecord.getDataPath()
+            .resolve("project-id-" + projectId)
+            .resolve("jacoco-data")
+            .resolve(stage.name() + variantPart + ".exec");
+    }
+
+    static ProcessingStage jacocoStageFor(ProcessingStage stage) {
+        switch (stage) {
+            case EXECUTE_TESTS_ORIGINAL:
+            case COLLECT_JACOCO_DATA_ORIGINAL:
+                return ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL;
+            case EXECUTE_TESTS_INITIAL:
+            case COLLECT_JACOCO_DATA_INITIAL:
+                return ProcessingStage.COLLECT_JACOCO_DATA_INITIAL;
+            case EXECUTE_TESTS_GENERALIZED:
+            case COLLECT_JACOCO_DATA_GENERALIZED:
+                return ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED;
+            default:
+                throw new IllegalArgumentException("Cannot map stage to JaCoCo data collection stage: " + stage);
+        }
     }
 
     private static Path getCoverageReportPath(ProjectRecord projectRecord) {

@@ -3,6 +3,7 @@ package teralizer.processing.task;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.JqwikExecutionRunRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import teralizer.processing.ProcessingStage;
+import teralizer.processing.ProjectType;
 import teralizer.processing.TaskContext;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.repository.PipelineQueries;
@@ -141,6 +143,20 @@ public class TestExecutionTask extends AbstractTask {
                     throw e;
                 }
             }
+        }
+
+        Path producedExec = this.projectRecord.getType() == ProjectType.GRADLE
+            ? this.projectRecord.getRootPath().resolve("build/jacoco/test.exec")
+            : this.projectRecord.getRootPath().resolve("target/jacoco.exec");
+        if (Files.exists(producedExec)) {
+            Path preserved = JacocoDataCollectionTask.preservedExecPath(
+                this.projectRecord,
+                this.getProjectId(),
+                JacocoDataCollectionTask.jacocoStageFor(this.stage),
+                this.getVariant()
+            );
+            Files.createDirectories(preserved.getParent());
+            Files.copy(producedExec, preserved, StandardCopyOption.REPLACE_EXISTING);
         }
 
         if (this.stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED) {

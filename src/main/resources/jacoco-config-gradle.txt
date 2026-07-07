@@ -1,4 +1,8 @@
 jacocoTestReport {
+    def jacocoExecFile = project.hasProperty('jacocoExec')
+        ? project.file(project.property('jacocoExec'))
+        : project.file("${buildDir}/jacoco/test.exec")
+    executionData.setFrom(jacocoExecFile)
     reports {
         csv.required = true
         xml.required = true
