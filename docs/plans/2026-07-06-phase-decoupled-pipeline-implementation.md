@@ -845,7 +845,7 @@ cohesive change.
 - Modify: `src/main/java/teralizer/processing/PipelinePlanner.java` (accept an existing pipeline, if not already)
 - Test: `src/test/java/teralizer/processing/task/CleanupTaskTest.java` (or extend an existing test) for the fresh-vs-attach gate
 
-- [ ] **Step 1: Route identity in the runner.** In `TestGeneralizationRunner.run()`,
+- [x] **Step 1: Route identity in the runner.** In `TestGeneralizationRunner.run()`,
   before scheduling anything, resolve identity:
 
 ```java
@@ -863,7 +863,7 @@ cohesive change.
   On attach (`freshStart == false`) the existing record already carries its paths
   and toggles; do not overwrite them.
 
-- [ ] **Step 2: Thread freshStart to bootstrap; gate CLEANUP_PROJECT.** The
+- [x] **Step 2: Thread freshStart to bootstrap; gate CLEANUP_PROJECT.** The
   bootstrap tasks are download, setup, add-deps, build-original. On attach all four
   still run and are safe: download skips when on disk, setup re-resolves the same
   paths, add-deps checks for existing plugins, build-original rebuilds (its
@@ -873,7 +873,7 @@ cohesive change.
   SCHEDULING time: schedule `CLEANUP_PROJECT` only when `freshStart`. Thread
   `freshStart` from the runner to wherever bootstrap is scheduled (see Step 3).
 
-- [ ] **Step 3: Bootstrap then planner; remove the temp driver.** Choose the
+- [x] **Step 3: Bootstrap then planner; remove the temp driver.** Choose the
   explicit structure: the runner schedules the download cascade (which chains into
   `ProjectSetupTask`), then calls `planner.run(projectRecord)`. `ProjectSetupTask`
   keeps ONLY the setup work (paths, build file, framework detection) plus
@@ -886,20 +886,20 @@ cohesive change.
   existing `ProcessingPipeline` instance (add/confirm a constructor taking the
   pipeline, matching the package-private one from Task 7).
 
-- [ ] **Step 4: Write the fresh-vs-attach cleanup test.** Assert that bootstrap
+- [x] **Step 4: Write the fresh-vs-attach cleanup test.** Assert that bootstrap
   scheduling on `freshStart == true` includes a `CLEANUP_PROJECT` cleanup and on
   `freshStart == false` does not. Model the signal explicitly at the scheduling
   boundary (do not require a live pipeline). Keep `CleanupTask`'s own behavior
   unchanged; the gate is at scheduling.
 
-- [ ] **Step 5: Verify (small spike, not the full gate).** `./gradlew compileJava
+- [x] **Step 5: Verify (small spike, not the full gate).** `./gradlew compileJava
   compileTestJava` green; the new cleanup test plus `PipelinePhaseTest`,
   `PipelinePlannerTest`, `ProjectIdentityTest` green. Then spike ONE small fixture
   end to end (all three toggles on) on a scratch DB and confirm it reaches
   reduction with generalization + PIT/JaCoCo rows and that fixture's golden is
   unmoved. This proves the planner-driven full run reproduces today's behavior.
 
-- [ ] **Step 6: Commit.** Suggested subject:
+- [x] **Step 6: Commit.** Suggested subject:
   `feat(pipeline): drive phases through the sequential planner`
   Body must explain: the runner resolves project identity (attach or fresh), runs
   bootstrap with `CLEANUP_PROJECT` gated to fresh-start, then the planner executes
