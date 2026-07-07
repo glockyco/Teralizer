@@ -394,8 +394,8 @@ WITH stage_grouped AS (
                             'COLLECT_JUNIT_REPORTS_INITIAL', 'COLLECT_JACOCO_DATA_INITIAL',
                             'COLLECT_PIT_DATA_INITIAL', 'BUILD_PROJECT_GENERALIZED',
                             'EXECUTE_TESTS_GENERALIZED', 'COLLECT_JUNIT_REPORTS_GENERALIZED',
-                            'FILTER_GENERALIZATIONS', 'COLLECT_JACOCO_DATA_GENERALIZED',
-                            'COLLECT_PIT_DATA_GENERALIZED')
+                            'FILTER_GENERALIZATIONS', 'RESTORE_GENERALIZED_BUILD',
+                            'COLLECT_JACOCO_DATA_GENERALIZED', 'COLLECT_PIT_DATA_GENERALIZED')
             THEN 'Stage 5'
         END AS stage_group,
         COALESCE(t.variant, 'SHARED') AS variant,
