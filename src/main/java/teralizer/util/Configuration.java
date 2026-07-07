@@ -255,6 +255,10 @@ public class Configuration {
         return CONFIG.getBoolean(TOOL_NAME_LOWER + ".project.use-test-generalization");
     }
 
+    public static boolean getProjectUseTestReduction() {
+        return CONFIG.getBoolean(TOOL_NAME_LOWER + ".project.use-test-reduction");
+    }
+
     // ----- EvoSuite ----- //
     public static String getEvosuiteStoppingCondition() {
         return CONFIG.getString(TOOL_NAME_LOWER + ".evosuite.stopping-condition");

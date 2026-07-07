@@ -59,6 +59,7 @@ public class TestGeneralizationRunner {
         projectRecord.setMutationReportsPath(Configuration.getProjectMutationReportsPath());
         projectRecord.setUseTestGeneration(Configuration.getProjectUseTestGeneration());
         projectRecord.setUseTestGeneralization(Configuration.getProjectUseTestGeneralization());
+        projectRecord.setUseTestReduction(Configuration.getProjectUseTestReduction());
         projectRecord.setConfiguration(Configuration.render());
         projectRecord.store();
 

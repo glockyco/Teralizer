@@ -83,6 +83,11 @@ class ConfigurationTest {
     }
 
     @Test
+    void projectUseTestReductionDefaultsToTrue() {
+        assertTrue(Configuration.getProjectUseTestReduction());
+    }
+
+    @Test
     void emptyPathsYieldsOverridesOverReference() {
         Config reference = ConfigFactory.parseString("teralizer { a = 1, b = 1 }");
         Config overrides = ConfigFactory.parseString("teralizer { b = 2 }");

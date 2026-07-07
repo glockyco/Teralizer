@@ -43,6 +43,7 @@ CREATE TABLE project
     tool_git_version        TEXT, -- can be null because it does not matter if it is missing
     use_test_generation     BOOLEAN NOT NULL,
     use_test_generalization BOOLEAN NOT NULL,
+    use_test_reduction      BOOLEAN NOT NULL,
     configuration           TEXT    NOT NULL,
     runtime                 REAL  -- can be null until the project is fully processed
 );
