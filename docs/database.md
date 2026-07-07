@@ -5,7 +5,9 @@
 PostgreSQL database with schema defined in `src/main/resources/db/create-tables.sql`:
 
 ### Core Tables
-- `project` - Project metadata, configuration, and runtime statistics
+- `project` - Project metadata, configuration, runtime statistics, and the three phase
+  toggles (`use_test_generation`, `use_test_generalization`, `use_test_reduction`) that gate
+  which pipeline phases run
 - `test` - Individual test method information and metadata
 - `assertion` - Test assertions, resolved MUT columns (`tested_*`), and extraction telemetry:
   `output_spec_class` (SYMBOLIC | CONSTANT | NULL_CONCRETE | EXCEPTION),
@@ -45,7 +47,11 @@ PostgreSQL database with schema defined in `src/main/resources/db/create-tables.
 
 ### Analysis Views
 
-Materialized views defined in `src/main/resources/db/create-views.sql` provide aggregated analysis data for evaluation.
+Materialized views in `src/main/resources/db/create-views.sql` provide aggregated analysis
+data. Project success is split into two milestones: `v_projects_generalized` (completed
+through `FILTER_GENERALIZATIONS` — Stage 4) and `v_projects_reduced` (has generalized PIT
+rows — Stage 5); `v_projects_successes` aliases `v_projects_reduced` so existing consumers
+are unaffected.
 
 ## Database Configuration
 

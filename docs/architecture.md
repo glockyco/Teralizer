@@ -2,17 +2,21 @@
 
 ## Processing Pipeline
 
-The system follows a multi-stage pipeline architecture defined in `src/main/java/teralizer/processing/ProcessingStage.java`:
+The pipeline is defined in `src/main/java/teralizer/processing/ProcessingStage.java` and
+driven by `PipelinePlanner`, which runs three **independently-toggled phases** in canonical
+order — generation, generalization, reduction (`project.use_test_generation` /
+`use_test_generalization` / `use_test_reduction`). Each phase clears its own prior state,
+checks artifact-based preconditions (fail loud on a missing input), schedules its stages, and
+drains the queue before the next phase begins. Draining between phases is load-bearing: a
+reduction (Stage 5) failure can never drop generalization results, and reduction can run in a
+separate later invocation over the persisted on-disk workspace (attach by `root_path`, guarded
+by a config hash).
 
-### Core Processing Stages (ordered sequence):
-1. **Project Setup** (stages 0-2): Download, cleanup, and setup target project
-2. **Build & Dependencies** (stages 3-4): Add required dependencies and build original project
-3. **Test Generation** (stages 5-6): Optional EvoSuite test generation and postprocessing
-4. **Analysis Preparation** (stages 7-12): Build Spoon model, execute original tests, collect reports (JUnit, JaCoCo, PIT), filter tests
-5. **Test Analysis** (stages 13-15): Analyze and filter tests and assertions for generalization suitability
-6. **Constraint Collection** (stages 16-20): SPF instrumentation, build instrumented project, execute SPF constraint collection, analyze results, cleanup
-7. **Initial Testing** (stages 21-25): Build and test project before generalization, collect baseline metrics
-8. **Test Generalization** (stages 26-33): Generate property-based tests, build generalized project, execute and collect final metrics
+### Stages by phase (current `ProcessingStage` order)
+1. **Bootstrap** (0–4): cleanup, download, setup, add dependencies, build original project. Runs once per invocation; `CLEANUP_PROJECT` fires only on a fresh start, never on attach.
+2. **Generation** (5–6, optional): EvoSuite generation + postprocessing.
+3. **Generalization** (7–28): Spoon model; original execute / JUnit / JaCoCo / filter; test and assertion analysis and filtering; SPF instrumentation → build → execute → analyze → cleanup; initial build / execute / JUnit; then per variant cleanup → generalize → build → execute → JUnit → filter. `EXECUTE_TESTS_GENERALIZED` archives each variant's generated sources under the data dir.
+4. **Reduction** (29–34, Stage 5 measurement): PIT-original, INITIAL JaCoCo + PIT, then per variant `RESTORE_GENERALIZED_BUILD` → generalized JaCoCo + PIT. Deferred behind the whole generalization loop; the restore step rebuilds each variant from its archived sources so its mutation run is isolated from siblings.
 
 ### Package responsibilities
 
@@ -40,7 +44,9 @@ The system follows a multi-stage pipeline architecture defined in `src/main/java
 
 ### Key components
 
-- **ProcessingPipeline**: Orchestrates task execution in dependency order
+- **PipelinePlanner** (`processing`): runs the requested phases in canonical order — per phase, clear prior state, check preconditions, schedule, drain. Resolves attach-or-fresh project identity via **ProjectIdentity** (root-path + config-hash guard).
+- **PipelinePhase** (`processing`): the three phases (`GENERATION`, `GENERALIZATION`, `REDUCTION`), each owning its stage set, artifact preconditions, teardown, and success predicate.
+- **ProcessingPipeline**: executes queued tasks in priority order; a task failure drops only same-variant queued work (shared/variant-null failures cascade to the project).
 - **TaskContext**: Shared state containing database connections, configuration, and utilities
 - **MethodUnderTestResolver**: confidence-ranked MUT identification (tiers T1–T5, deciding
   signals, ranked alternatives). It is a total function: every assertion gets a graded

@@ -35,3 +35,4 @@ resume markers (`done/`).
 | Fixture residue under `verification/fixtures/` (`target/`, generated tests, `pom.teralizer*.xml`, `.jqwik-database`) | Pipeline runs against the fixtures | Swept by the verification driver at the next run. Delete freely. |
 | Root transient junk (`hs_err_pid*.log`, `.jqwik-database`) | JVM crashes, jqwik | Delete freely. |
 | Scratch databases (`postgres_verification`, `postgres_<purpose>_verify`, `teralizer_codegen`, per-run snapshot DBs) | Runner scripts via `scripts/lib/db-lifecycle.sh` | Created and dropped by their runners. Snapshot DBs of measurement runs join `src/main/resources/db/protected-databases.txt` and are never scratch targets. |
+| `data/detached/<name>.{pid,meta,log}` | `scripts/detached-run.sh` (launch/status/stop/sweep for long detached runs) | Delete freely once the run is stopped; `stop`/`sweep` reap the processes, these files are just the tracking record. |
