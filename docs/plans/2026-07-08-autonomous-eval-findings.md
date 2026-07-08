@@ -70,8 +70,8 @@ The census configs set `pitest.max-execution-time = 3600` and call it a
 math is an expected drop, not breakage. The intent is genuinely ambiguous:
 either a PIT/JaCoCo timeout should be attrition (consistent with the
 test-execution timeout fix and the tripwire wording), or the drop is meant to
-be structural. Deciding it one way lets the census PIT report cleanly. Left for
-the operator; not changed mid-run without sign-off.
+be structural. Deciding it one way lets the census PIT report cleanly and is
+best settled deliberately rather than flipped in the middle of a run.
 
 ### rerun3 PIT is blocked and out of scope for this run
 
@@ -85,7 +85,7 @@ needed for RQ6:
   part of the project-identity hash, so raising it would drift the identity and
   the attach guard would refuse to resume. Unlike `pitest.enabled`, the budget
   also shapes the measured outcome, so excluding it from identity is a
-  measurement-semantics decision for the operator, not an autonomous change.
+  measurement-semantics decision to make deliberately, not an autonomous change.
 - The rerun runner skips any project carrying a per-project done-marker, and the
   generation pass marked all 1161, so a reduction pass would also need a separate
   marker namespace plus its own log and ledger paths to stay independently
@@ -116,6 +116,11 @@ settle the budget-versus-identity question first.
   matched neither, halting the run. They now keep such records unlinked, matching
   the existing handling of names the parser cannot read, and the shared resolution
   is extracted into one tested seam.
+- **Chunked PIT report inserts** — a full-suite coverage report has one row per
+  covered block and test, millions of rows for a large project, and jOOQ rendered
+  the whole batch into a single insert statement that exhausted the heap on
+  commons-configuration. The coverage and mutation inserts now run in bounded
+  chunks so memory stays flat across project sizes.
 
 (These are in addition to the spec-soundness fixes from the interactive phase:
 the SPF `String.length` collect-mode fix, the seed-vs-spec guard, the dedup
@@ -156,6 +161,11 @@ threw when such a record matched neither a known test nor a generalization. Fixe
 by keeping those records unlinked, matching how the mapper already tolerates names
 it cannot parse, and relaunched once more. csv and collections then produced
 mutation data.
+
+The run then reached configuration and halted a third time, out of heap while
+inserting coverage data because the batch insert built one statement for
+millions of rows. Fixed by chunking the inserts, then relaunched from
+configuration onward with csv and collections already complete.
 
 Reduction-only runs over the nine projects with included generalizations,
 smallest first (csv 2, collections 5, configuration 21, codec 30, io 32, text
