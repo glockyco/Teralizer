@@ -46,6 +46,41 @@ public class StringDomainPlannerTest {
         Assert.assertEquals(Collections.singleton(0), plan.getConsumedClauseIds());
     }
 
+
+    @Example
+    void variableEqualityBindsHigherIndexedStringToLowerIndexedStringOnly() {
+        Model equality = new Invocation(
+            new Variable("str1", TypeDomain.STRING),
+            null,
+            "equals",
+            Collections.singletonList(new Variable("str2", TypeDomain.STRING)));
+        List<MethodParameter> parameters = java.util.Arrays.asList(
+            new MethodParameter("java.lang.String", "str1"),
+            new MethodParameter("java.lang.String", "str2"));
+        java.util.Map<String, String> types = new java.util.HashMap<>();
+        types.put("str1", "java.lang.String");
+        types.put("str2", "java.lang.String");
+        PlanningContext context = new PlanningContext(parameters, ConstraintClauses.from(equality, types));
+
+        ParameterGenerationPlan higherIndexedPlan = new StringDomainPlanner().plan(parameters.get(1), context);
+        Assert.assertEquals("return net.jqwik.api.Arbitraries.just(str1)", higherIndexedPlan.getRecipe().emit());
+        Assert.assertEquals(Collections.singleton(0), higherIndexedPlan.getConsumedClauseIds());
+
+        ParameterGenerationPlan lowerIndexedPlan = new StringDomainPlanner().plan(parameters.get(0), context);
+        Assert.assertEquals("return net.jqwik.api.Arbitraries.strings().ascii().ofMaxLength(16)", lowerIndexedPlan.getRecipe().emit());
+        Assert.assertTrue(lowerIndexedPlan.getConsumedClauseIds().isEmpty());
+        Assert.assertFalse(lowerIndexedPlan.getRecipe().emit().contains("Arbitraries.just(str2)"));
+
+        Model literalEquality = new Invocation(
+            new Variable("str1", TypeDomain.STRING),
+            null,
+            "equals",
+            Collections.singletonList(new Constant("x", TypeDomain.STRING)));
+        PlanningContext literalContext = new PlanningContext(parameters, ConstraintClauses.from(literalEquality, types));
+        ParameterGenerationPlan literalPlan = new StringDomainPlanner().plan(parameters.get(0), literalContext);
+        Assert.assertEquals("return net.jqwik.api.Arbitraries.of(\"x\")", literalPlan.getRecipe().emit());
+        Assert.assertEquals(Collections.singleton(0), literalPlan.getConsumedClauseIds());
+    }
     @Example
     void isEmptyCollapsesToEmptyStringAndConsumesClause() {
         ParameterGenerationPlan plan = plan(new Invocation(new Variable("s", TypeDomain.STRING), null, "isEmpty", Collections.emptyList()));
