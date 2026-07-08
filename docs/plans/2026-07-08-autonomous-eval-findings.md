@@ -73,6 +73,30 @@ test-execution timeout fix and the tripwire wording), or the drop is meant to
 be structural. Deciding it one way lets the census PIT report cleanly. Left for
 the operator; not changed mid-run without sign-off.
 
+### rerun3 PIT is blocked and out of scope for this run
+
+Running the reduction (PIT) phase over the rerun3 workspace is blocked, and not
+needed for RQ6:
+
+- The rerun profile disables PIT and never sets a mutation budget, so the stored
+  rerun3 configuration carries the reference default `pitest.max-execution-time`
+  of 60 seconds. A useful budget (the census uses 3600) cannot be supplied by a
+  system property on the reduction pass, because `pitest.max-execution-time` is
+  part of the project-identity hash, so raising it would drift the identity and
+  the attach guard would refuse to resume. Unlike `pitest.enabled`, the budget
+  also shapes the measured outcome, so excluding it from identity is a
+  measurement-semantics decision for the operator, not an autonomous change.
+- The rerun runner skips any project carrying a per-project done-marker, and the
+  generation pass marked all 1161, so a reduction pass would also need a separate
+  marker namespace plus its own log and ledger paths to stay independently
+  resumable.
+
+RQ6 is the real-world failure funnel, which the rerun3 generation pass already
+delivered, and the rerun profile states outright that mutation scores are not
+relevant to it. Census PIT covers the curated projects where mutation scores
+matter for RQ0. Recommendation: treat rerun3 PIT as optional and, if wanted,
+settle the budget-versus-identity question first.
+
 ## Fixes applied during this run (committed)
 
 - **Test-execution timeout is attrition, not a halt** — a slow original, initial,
