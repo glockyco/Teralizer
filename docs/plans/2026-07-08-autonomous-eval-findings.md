@@ -110,6 +110,12 @@ settle the budget-versus-identity question first.
   drifted the config-identity hash so the attach guard refused to resume the
   generated workspace. It now shares the phase toggles' exclusion from the
   identity projection.
+- **PIT report mapping tolerates unattributable records** — generalized test
+  classes run inherited or auxiliary methods that are neither the generalization
+  nor an original test, and the coverage and mutation mappers threw when a record
+  matched neither, halting the run. They now keep such records unlinked, matching
+  the existing handling of names the parser cannot read, and the shared resolution
+  is extracted into one tested seam.
 
 (These are in addition to the spec-soundness fixes from the interactive phase:
 the SPF `String.length` collect-mode fix, the seed-vs-spec guard, the dedup
@@ -142,6 +148,14 @@ default, so the rendered config drifted and the `ProjectIdentity` attach guard
 refused to resume the stored workspace. Fixed at the root by treating
 `pitest.enabled` as run-scoped and excluding it from the identity projection
 (alongside the phase toggles), then relaunched.
+
+The relaunch resumed cleanly but halted again on collections: PIT attributes
+coverage and kills to inherited or auxiliary methods that generalized test classes
+run (a JUnit-4 helper inherited from the original class), and the report mapper
+threw when such a record matched neither a known test nor a generalization. Fixed
+by keeping those records unlinked, matching how the mapper already tolerates names
+it cannot parse, and relaunched once more. csv and collections then produced
+mutation data.
 
 Reduction-only runs over the nine projects with included generalizations,
 smallest first (csv 2, collections 5, configuration 21, codec 30, io 32, text
