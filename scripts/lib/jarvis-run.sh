@@ -27,7 +27,7 @@ jarvis_run() {
   source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
   supervisor_install_traps
 
-  local reset_db=false prepare_fixtures=false no_reduction=false
+  local reset_db=false prepare_fixtures=false no_reduction=false reduction_only=false
   local -a configs=()
   local arg config
   for arg in "$@"; do
@@ -35,18 +35,26 @@ jarvis_run() {
       --reset-db) reset_db=true ;;
       --prepare-fixtures) prepare_fixtures=true ;;
       --no-reduction) no_reduction=true ;;
+      --reduction-only) reduction_only=true ;;
       -h|--help)
-        echo "Usage: $(basename "$0") [--reset-db] [--prepare-fixtures] [--no-reduction] [config ...]"
+        echo "Usage: $(basename "$0") [--reset-db] [--prepare-fixtures] [--no-reduction] [--reduction-only] [config ...]"
         echo "  --reset-db           drop and recreate $JARVIS_DB_NAME before running"
         echo "  --prepare-fixtures   (re)materialize the $JARVIS_LABEL fixtures first"
         echo "  --no-reduction       skip the reduction phase (Stage 5: mutation + coverage);"
         echo "                       run generalization only, e.g. a fast Stage-4 applicability pass"
+        echo "  --reduction-only     resume the reduction phase (Stage 5) with PIT enabled over the"
+        echo "                       persisted generalized workspace; skips generation/generalization"
         echo "  config ...           HOCON configs to run (default: the $JARVIS_LABEL configs)"
         exit 0 ;;
       --*) echo "Unknown flag: $arg" >&2; exit 1 ;;
       *) configs+=("$arg") ;;
     esac
   done
+
+  if [[ "$no_reduction" == true && "$reduction_only" == true ]]; then
+    echo "--no-reduction and --reduction-only are mutually exclusive" >&2
+    exit 1
+  fi
 
   if [[ ${#configs[@]} -eq 0 ]]; then
     configs=("${JARVIS_DEFAULT_CONFIGS[@]}")
@@ -95,6 +103,16 @@ jarvis_run() {
     if [[ "$no_reduction" == true ]]; then
       # Generalization-only pass: reduction is a separate later run over the same workspace.
       run_cmd+=(-Dteralizer.project.use-test-reduction=false)
+    fi
+    if [[ "$reduction_only" == true ]]; then
+      # Reduction-only resume: reuse the persisted generalized workspace, skip generation and
+      # generalization, run the reduction phase (Stage 5 mutation plus coverage) with PIT enabled.
+      run_cmd+=(
+        -Dteralizer.project.use-test-generation=false
+        -Dteralizer.project.use-test-generalization=false
+        -Dteralizer.project.use-test-reduction=true
+        -Dteralizer.pitest.enabled=true
+      )
     fi
     run_cmd+=(--no-daemon)
     supervised_run - "$JARVIS_PROJECT_TIMEOUT" "${run_cmd[@]}"
