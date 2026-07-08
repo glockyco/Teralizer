@@ -47,14 +47,15 @@ public class PipelinePlanner {
             .and(Tables.TASK.ASSERTION_ID.isNull())
             .and(Tables.TASK.GENERALIZATION_ID.isNull())
             // These reason codes are measured outcomes, not breakage, so they are attrition rather
-            // than structural failures that halt the run. SUITE_TIMEOUT is a stage that timed out.
-            // NO_INPUT_SPEC is a project whose assertions are all non-generalizable, so there is
+            // than structural failures that halt the run. SUITE_TIMEOUT and EXECUTION_TIMEOUT are a
+            // generalized or an original test suite that timed out. NO_INPUT_SPEC is a project whose
+            // assertions are all non-generalizable, so there is
             // nothing to extract. Genuine project-level failures (build breakage, missing outputs)
             // carry no such diagnostic and still halt.
             .andNotExists(this.create.selectOne()
                 .from(Tables.TASK_DIAGNOSTIC)
                 .where(Tables.TASK_DIAGNOSTIC.TASK_ID.eq(Tables.TASK.ID))
-                .and(Tables.TASK_DIAGNOSTIC.REASON_CODE.in(TaskDiagnosticCodes.SUITE_TIMEOUT, TaskDiagnosticCodes.NO_INPUT_SPEC)))
+                .and(Tables.TASK_DIAGNOSTIC.REASON_CODE.in(TaskDiagnosticCodes.SUITE_TIMEOUT, TaskDiagnosticCodes.EXECUTION_TIMEOUT, TaskDiagnosticCodes.NO_INPUT_SPEC)))
             .fetchInto(ProcessingStage.class);
         if (failedStages.isEmpty()) {
             return;

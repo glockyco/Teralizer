@@ -35,8 +35,19 @@ public final class TaskDiagnosticClassifier {
         if (stage == ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL || stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED) {
             return classifyReportFailure(failure);
         }
-        if (stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED && contains(failure, "Command execution timeout exceeded")) {
-            return diagnostic(TaskDiagnosticCodes.SUITE_TIMEOUT, messageDetail(failure));
+        if (contains(failure, "Command execution timeout exceeded")
+            && (stage == ProcessingStage.EXECUTE_TESTS_ORIGINAL
+                || stage == ProcessingStage.EXECUTE_TESTS_INITIAL
+                || stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED)) {
+            // A test-execution command timeout is a measured limitation (the suite is too slow for
+            // the budget), not breakage. Keep SUITE_TIMEOUT for the generalized suite so existing
+            // analysis keys still match, and record an original or initial suite timeout as the
+            // general EXECUTION_TIMEOUT. Both are treated as attrition by the planner.
+            return diagnostic(
+                stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED
+                    ? TaskDiagnosticCodes.SUITE_TIMEOUT
+                    : TaskDiagnosticCodes.EXECUTION_TIMEOUT,
+                messageDetail(failure));
         }
         String message = failure.getMessage() == null ? "" : failure.getMessage();
         if (message.contains(ExtractionOutcome.Kind.UNSUPPORTED_TERM.name())) {
