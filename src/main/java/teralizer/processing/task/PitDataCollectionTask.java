@@ -25,6 +25,8 @@ import org.jooq.generated.tables.records.PitMutationReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
 import org.jooq.tools.json.JSONArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -35,6 +37,7 @@ import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 
 public class PitDataCollectionTask extends AbstractTask {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PitDataCollectionTask.class);
 
     private final ConsoleCommand consoleCommand;
 
@@ -287,23 +290,10 @@ public class PitDataCollectionTask extends AbstractTask {
             for (Element testElement : testsElement.elements("test")) {
                 String name = testElement.attributeValue("name");
 
-                TestNameInfo testNameInfo = this.processTestName(name);
-
-                Long testId;
-                Long generalizationId;
-                if (testNameInfo.getMethodQualifiedName() == null) {
-                    testId = null;
-                    generalizationId = null;
-                } else {
-                    testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-                    generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-                    if (testId == null && generalizationId == null) {
-                        throw new RuntimeException("Failed to map coverage record to a test / generalization." +
-                            "\nPIT name: " + name +
-                            "\nQualified method name: " + testNameInfo.getMethodQualifiedName()
-                        );
-                    }
-                }
+                ResolvedTestName resolved = resolveTestName(name, testIds, generalizationIds);
+                TestNameInfo testNameInfo = resolved.info();
+                Long testId = resolved.testId();
+                Long generalizationId = resolved.generalizationId();
 
                 PitCoverageReportRecord record = create.newRecord(Tables.PIT_COVERAGE_REPORT);
 
@@ -400,23 +390,10 @@ public class PitDataCollectionTask extends AbstractTask {
                 String killingTestName = killingTestElement.getText();
 
                 if (killingTestName != null && !killingTestName.isEmpty()) {
-                    TestNameInfo testNameInfo = this.processTestName(killingTestName);
-
-                    Long testId;
-                    Long generalizationId;
-                    if (testNameInfo.getMethodQualifiedName() == null) {
-                        testId = null;
-                        generalizationId = null;
-                    } else {
-                        testId = testIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-                        generalizationId = generalizationIds.getOrDefault(testNameInfo.getMethodQualifiedName(), null);
-                        if (testId == null && generalizationId == null) {
-                            throw new RuntimeException("Failed to map mutation record to a test / generalization." +
-                                "\nPIT name: " + killingTestName +
-                                "\nQualified method name: " + testNameInfo.getMethodQualifiedName()
-                            );
-                        }
-                    }
+                    ResolvedTestName resolved = resolveTestName(killingTestName, testIds, generalizationIds);
+                    TestNameInfo testNameInfo = resolved.info();
+                    Long testId = resolved.testId();
+                    Long generalizationId = resolved.generalizationId();
 
                     record.setKillingTestId(testId);
                     record.setKillingGeneralizationId(generalizationId);
@@ -433,7 +410,7 @@ public class PitDataCollectionTask extends AbstractTask {
         create.batchInsert(records).execute();
     }
 
-    private TestNameInfo processTestName(String testName) {
+    private static TestNameInfo processTestName(String testName) {
         Matcher matcher = TEST_NAME_PATTERN.matcher(testName);
 
         if (matcher.matches()) {
@@ -458,6 +435,47 @@ public class PitDataCollectionTask extends AbstractTask {
             );
         } else {
             throw new RuntimeException("Unexpected test name format: " + testName);
+        }
+    }
+
+    // Resolve a PIT test name to the original test or generalization it names. Generalized test
+    // classes also run inherited or auxiliary methods that are neither, and PIT emits names it
+    // cannot parse, so an unresolved name yields null ids and the caller keeps the record unlinked
+    // rather than halting the run. Package-private and static for direct testing.
+    static ResolvedTestName resolveTestName(String pitName, Map<String, Long> testIds,
+                                            Map<String, Long> generalizationIds) {
+        TestNameInfo info = processTestName(pitName);
+        String qualified = info.getMethodQualifiedName();
+        Long testId = qualified == null ? null : testIds.getOrDefault(qualified, null);
+        Long generalizationId = qualified == null ? null : generalizationIds.getOrDefault(qualified, null);
+        if (qualified != null && testId == null && generalizationId == null) {
+            LOGGER.atDebug().log("Unattributed PIT record kept unlinked. PIT name: " + pitName
+                + ", method: " + qualified);
+        }
+        return new ResolvedTestName(info, testId, generalizationId);
+    }
+
+    static final class ResolvedTestName {
+        private final TestNameInfo info;
+        private final Long testId;
+        private final Long generalizationId;
+
+        ResolvedTestName(TestNameInfo info, Long testId, Long generalizationId) {
+            this.info = info;
+            this.testId = testId;
+            this.generalizationId = generalizationId;
+        }
+
+        TestNameInfo info() {
+            return this.info;
+        }
+
+        Long testId() {
+            return this.testId;
+        }
+
+        Long generalizationId() {
+            return this.generalizationId;
         }
     }
 
