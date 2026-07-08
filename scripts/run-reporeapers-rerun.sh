@@ -12,10 +12,13 @@
 # RETURNS, so a project interrupted mid-run has no marker and is re-run next time. Markers and the
 # status ledger are reset whenever the DB is created fresh (--reset-db or a missing DB).
 #
-# Usage: scripts/run-reporeapers-rerun.sh [--reset-db] [--limit N] [--start N]
+# Usage: scripts/run-reporeapers-rerun.sh [--reset-db] [--limit N] [--start N] [--no-reduction]
 #   --reset-db   drop + recreate the scratch DB (clears markers + status) first, else resume/append
 #   --limit N    process at most N not-yet-done projects (spike)
 #   --start N    skip project configs numbered below N
+#   --no-reduction  skip the reduction phase (Stage 5 reduction plus PIT), generalization only. The
+#                   profile also disables PIT, but the phase toggle defaults on, so this is needed
+#                   to keep a funnel rerun from running the reduction phase under the phase model.
 #
 # Graceful pause: `touch <DATA_DIR>/STOP` finishes the in-flight project, then exits cleanly.
 # The file is consumed and relaunching resumes. Signals (INT/TERM) kill the in-flight project's
@@ -44,13 +47,14 @@ PROJECT_TIMEOUT="${REPOREAPERS_PROJECT_TIMEOUT:-1800}"
 source "$ROOT_DIR/scripts/lib/db-guard.sh"
 DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
 
-reset_db=false; limit=0; start=1
+reset_db=false; limit=0; start=1; no_reduction=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --reset-db) reset_db=true; shift ;;
     --limit) limit="${2:?--limit needs a number}"; shift 2 ;;
     --start) start="${2:?--start needs a number}"; shift 2 ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    --no-reduction) no_reduction=true; shift ;;
+    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
@@ -102,12 +106,15 @@ for config_abs in "${configs[@]}"; do
   # generated tests behind that break the next BUILD_PROJECT_ORIGINAL, so sweep them first.
   find "$project_abs/src/test" -name '_*_Generalized_*_Test.java' -delete 2>/dev/null
   SUPERVISOR_ACTIVE_PATH="$project_abs"
-  supervised_run "$log_abs" "$PROJECT_TIMEOUT" \
-    "$ROOT_DIR/gradlew" run \
-    -Dteralizer.config="$PROFILE,$config" \
-    -Dteralizer.database.name="$DB_NAME" \
-    -Dteralizer.data-dir="$DATA_DIR" \
-    --no-daemon
+  run_cmd=(
+    "$ROOT_DIR/gradlew" run
+    -Dteralizer.config="$PROFILE,$config"
+    -Dteralizer.database.name="$DB_NAME"
+    -Dteralizer.data-dir="$DATA_DIR"
+  )
+  [[ "$no_reduction" == true ]] && run_cmd+=(-Dteralizer.project.use-test-reduction=false)
+  run_cmd+=(--no-daemon)
+  supervised_run "$log_abs" "$PROJECT_TIMEOUT" "${run_cmd[@]}"
   rc=$SUPERVISED_RC
   cleanup_leftover_project_processes "$project_abs" "$log_abs"
   SUPERVISOR_ACTIVE_PATH=""
