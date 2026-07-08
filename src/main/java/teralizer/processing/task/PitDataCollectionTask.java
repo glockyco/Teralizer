@@ -19,6 +19,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.jooq.DSLContext;
 import org.jooq.Record2;
+import org.jooq.TableRecord;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.PitCoverageReportRecord;
 import org.jooq.generated.tables.records.PitMutationReportRecord;
@@ -38,6 +39,7 @@ import teralizer.util.ConsoleCommand;
 
 public class PitDataCollectionTask extends AbstractTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(PitDataCollectionTask.class);
+    private static final int INSERT_BATCH_SIZE = 1000;
 
     private final ConsoleCommand consoleCommand;
 
@@ -318,7 +320,7 @@ public class PitDataCollectionTask extends AbstractTask {
                 records.add(record);
             }
         }
-        create.batchInsert(records).execute();
+        insertInBatches(create, records);
     }
 
     private void collectMutationData(
@@ -407,7 +409,17 @@ public class PitDataCollectionTask extends AbstractTask {
             records.add(record);
         }
 
-        create.batchInsert(records).execute();
+        insertInBatches(create, records);
+    }
+
+    // jOOQ renders one statement for an entire batch, so a full-suite coverage report with
+    // millions of rows exhausts the heap while building the SQL. Insert in bounded chunks so the
+    // rendered statement stays small no matter how large the project's report is.
+    private static void insertInBatches(DSLContext create, List<? extends TableRecord<?>> records) {
+        for (int start = 0; start < records.size(); start += INSERT_BATCH_SIZE) {
+            int end = Math.min(start + INSERT_BATCH_SIZE, records.size());
+            create.batchInsert(records.subList(start, end)).execute();
+        }
     }
 
     private static TestNameInfo processTestName(String testName) {
