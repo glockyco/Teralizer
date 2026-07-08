@@ -87,6 +87,21 @@ public class ProjectIdentityTest {
     }
 
     @Example
+    void identityProjectionExcludesPitestEnabled() {
+        String base = "{data-dir=\"data\",pitest={max-execution-time=3600,original={enabled=false}}}";
+        String withEnabled = "{data-dir=\"data\",pitest={enabled=true,max-execution-time=3600,original={enabled=false}}}";
+        String differentTimeout = "{data-dir=\"data\",pitest={max-execution-time=120,original={enabled=false}}}";
+
+        String baseProjection = ConfigIdentity.renderIdentity(base);
+        String withEnabledProjection = ConfigIdentity.renderIdentity(withEnabled);
+
+        Assert.assertEquals(baseProjection, withEnabledProjection);
+        Assert.assertEquals(ConfigIdentity.hash(base), ConfigIdentity.hash(withEnabled));
+        Assert.assertTrue(withEnabledProjection, withEnabledProjection.contains("original"));
+        Assert.assertNotEquals(baseProjection, ConfigIdentity.renderIdentity(differentTimeout));
+    }
+
+    @Example
     void configurationRenderIdentityOmitsPhaseToggles() {
         String rendered = Configuration.renderIdentity();
 

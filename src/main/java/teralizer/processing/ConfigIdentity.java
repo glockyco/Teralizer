@@ -22,11 +22,15 @@ public final class ConfigIdentity {
     }
 
     public static String renderIdentity(Config config) {
-        // Stored full renders and current renders share this projection before hashing.
+        // Stored full renders and current renders share this projection before hashing. The
+        // phase toggles and pitest.enabled are run-scoped: a workspace is generated with the
+        // reduction phase and PIT off, then resumed reduction-only with PIT forced on, so
+        // neither may change the project identity.
         return config
             .withoutPath("project.use-test-generation")
             .withoutPath("project.use-test-generalization")
             .withoutPath("project.use-test-reduction")
+            .withoutPath("pitest.enabled")
             .root()
             .render(ConfigRenderOptions.concise());
     }
