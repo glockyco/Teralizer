@@ -21,6 +21,7 @@
 - **Concretization Census — Load-Bearing Blockers and the License Over-Refusal Finding** [audit] `2026-07-05-concretization-census-findings` ← 2026-07-04-concretization-census
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
 - **Evaluation Run Map (RQ0 + RQ6)** [audit] `2026-07-07-evaluation-run-map` ← 2026-06-26-teralizer-overview
+- **Autonomous Evaluation Run Findings** [audit] `2026-07-08-autonomous-eval-findings` ← 2026-06-26-teralizer-overview
 
 ## draft
 
