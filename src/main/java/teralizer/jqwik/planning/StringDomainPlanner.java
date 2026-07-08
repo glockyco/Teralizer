@@ -59,7 +59,7 @@ public class StringDomainPlanner implements DomainPlanner {
             ? Optional.of(context.getArguments().get(name))
             : Optional.empty();
 
-        DerivedStringConstraints derived = deriveConstraints(context.getClauses(), name);
+        DerivedStringConstraints derived = deriveConstraints(context.getClauses(), name, context);
 
         String body;
         Set<Integer> consumed = new LinkedHashSet<>();
@@ -69,6 +69,13 @@ public class StringDomainPlanner implements DomainPlanner {
             // unsatisfiably, and the filter stays correct if one somehow did).
             body = "return net.jqwik.api.Arbitraries.of(" + derived.equality + ")";
             consumed.add(derived.equalityId);
+        } else if (derived.boundToParameter != null) {
+            // A var/var equality between two generated parameters is satisfied by construction by
+            // binding the higher-indexed parameter to the already-generated lower-indexed one, so
+            // the equality holds for every draw instead of being left to a near-unsatisfiable
+            // residual filter. Mirrors the numeric bound-the-higher-indexed-variable rule.
+            body = "return net.jqwik.api.Arbitraries.just(" + derived.boundToParameter + ")";
+            consumed.add(derived.boundToParameterId);
         } else if (derived.parseArbitrary != null) {
             body = "return " + derived.parseArbitrary + ".map(String::valueOf)";
             consumed.add(derived.parseId);
@@ -105,7 +112,7 @@ public class StringDomainPlanner implements DomainPlanner {
      * left, string literal on the right — the SPF capture order) is construction-satisfiable; the
      * literal is rendered through the shared transformer so escaping matches everywhere else.
      */
-    private static DerivedStringConstraints deriveConstraints(List<ConstraintClause> clauses, String name) {
+    private static DerivedStringConstraints deriveConstraints(List<ConstraintClause> clauses, String name, PlanningContext context) {
         DerivedStringConstraints derived = new DerivedStringConstraints();
         ModelToJavaTransformer transformer = new ModelToJavaTransformer();
         for (ConstraintClause clause : clauses) {
@@ -117,6 +124,14 @@ public class StringDomainPlanner implements DomainPlanner {
             MethodCapability capability = MethodCapabilities.get(invocation.method);
             if (capability == null || !capability.inputGeneratable) {
                 continue;
+            }
+            if (capability.inputConstraintKind == MethodCapability.InputConstraintKind.EQUALITY) {
+                String lowerIndexedParameter = boundLowerIndexedStringParameter(invocation, name, context);
+                if (lowerIndexedParameter != null) {
+                    derived.boundToParameter = lowerIndexedParameter;
+                    derived.boundToParameterId = clause.getId();
+                    continue;
+                }
             }
             if (isParsePredicate(invocation, capability, name)) {
                 String arbitrary = parseArbitrary(capability.inputConstraintKind);
@@ -178,6 +193,43 @@ public class StringDomainPlanner implements DomainPlanner {
             && invocation.args.equals(Collections.singletonList(new Variable(name, TypeDomain.STRING)));
     }
 
+    /**
+     * When {@code name} appears in a var/var equality against another String parameter with a lower
+     * index, returns that lower-indexed parameter name so the higher-indexed one can be bound to it
+     * by construction. Returns null for a self comparison, a non-variable or non-String operand, or
+     * when the other operand is not strictly lower-indexed.
+     */
+    private static String boundLowerIndexedStringParameter(Invocation invocation, String name, PlanningContext context) {
+        if (invocation.args.size() != 1
+            || !(invocation.receiver instanceof Variable)
+            || !(invocation.args.get(0) instanceof Variable)) {
+            return null;
+        }
+        Variable receiver = (Variable) invocation.receiver;
+        Variable arg = (Variable) invocation.args.get(0);
+        if (receiver.domain != TypeDomain.STRING || arg.domain != TypeDomain.STRING) {
+            return null;
+        }
+        String other;
+        if (receiver.name.equals(name)) {
+            other = arg.name;
+        } else if (arg.name.equals(name)) {
+            other = receiver.name;
+        } else {
+            return null;
+        }
+        if (other.equals(name)) {
+            return null;
+        }
+        Integer nameIndex = context.getParameterIndexes().get(name);
+        Integer otherIndex = context.getParameterIndexes().get(other);
+        if (nameIndex == null || otherIndex == null || otherIndex >= nameIndex) {
+            return null;
+        }
+        String otherType = context.getParameterTypes().get(other);
+        return otherType != null && TypeDomain.from(otherType) == TypeDomain.STRING ? other : null;
+    }
+
     private static String parseArbitrary(MethodCapability.InputConstraintKind kind) {
         switch (kind) {
             case PARSE_INTEGER:
@@ -204,5 +256,7 @@ public class StringDomainPlanner implements DomainPlanner {
         private int containsId;
         private String parseArbitrary;
         private int parseId;
+        private String boundToParameter;
+        private int boundToParameterId;
     }
 }
