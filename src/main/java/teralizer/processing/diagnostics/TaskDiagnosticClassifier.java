@@ -3,6 +3,8 @@ package teralizer.processing.diagnostics;
 import com.google.gson.JsonObject;
 import gov.nasa.jpf.JPFListenerException;
 import gov.nasa.jpf.JPFNativePeerException;
+import java.util.EnumSet;
+import java.util.Set;
 import teralizer.jpf.ExtractionAborted;
 import teralizer.jpf.ExtractionOutcome;
 import teralizer.processing.ProcessingStage;
@@ -11,6 +13,19 @@ import teralizer.transformer.UnsupportedSpfTermException;
 public final class TaskDiagnosticClassifier {
     private static final String NO_UNCAUGHT_EXCEPTIONS_PROPERTY =
         "gov.nasa.jpf.vm.NoUncaughtExceptionsProperty";
+
+    // A command timeout in any of these stages is a measured limitation (the work is too slow for
+    // the budget), not breakage, so the planner treats it as attrition and the run continues.
+    private static final Set<ProcessingStage> COMMAND_TIMEOUT_ATTRITION_STAGES = EnumSet.of(
+        ProcessingStage.EXECUTE_TESTS_ORIGINAL,
+        ProcessingStage.EXECUTE_TESTS_INITIAL,
+        ProcessingStage.EXECUTE_TESTS_GENERALIZED,
+        ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL,
+        ProcessingStage.COLLECT_JACOCO_DATA_INITIAL,
+        ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED,
+        ProcessingStage.COLLECT_PIT_DATA_ORIGINAL,
+        ProcessingStage.COLLECT_PIT_DATA_INITIAL,
+        ProcessingStage.COLLECT_PIT_DATA_GENERALIZED);
 
     private TaskDiagnosticClassifier() {
     }
@@ -36,13 +51,12 @@ public final class TaskDiagnosticClassifier {
             return classifyReportFailure(failure);
         }
         if (contains(failure, "Command execution timeout exceeded")
-            && (stage == ProcessingStage.EXECUTE_TESTS_ORIGINAL
-                || stage == ProcessingStage.EXECUTE_TESTS_INITIAL
-                || stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED)) {
-            // A test-execution command timeout is a measured limitation (the suite is too slow for
-            // the budget), not breakage. Keep SUITE_TIMEOUT for the generalized suite so existing
-            // analysis keys still match, and record an original or initial suite timeout as the
-            // general EXECUTION_TIMEOUT. Both are treated as attrition by the planner.
+            && COMMAND_TIMEOUT_ATTRITION_STAGES.contains(stage)) {
+            // A command timeout during test execution, coverage collection, or mutation testing is
+            // a measured limitation (the work is too slow for the budget), not breakage. Keep
+            // SUITE_TIMEOUT for the generalized suite so existing analysis keys still match, and
+            // record every other timeout as the general EXECUTION_TIMEOUT. Both are attrition, so a
+            // slow project drops its downstream data instead of halting the whole run.
             return diagnostic(
                 stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED
                     ? TaskDiagnosticCodes.SUITE_TIMEOUT

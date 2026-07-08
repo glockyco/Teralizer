@@ -41,6 +41,14 @@ public final class TaskDiagnosticWriter {
             || stage == ProcessingStage.BUILD_PROJECT_GENERALIZED
             || stage == ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL
             || stage == ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED
-            || stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED;
+            || stage == ProcessingStage.EXECUTE_TESTS_ORIGINAL
+            || stage == ProcessingStage.EXECUTE_TESTS_INITIAL
+            || stage == ProcessingStage.EXECUTE_TESTS_GENERALIZED
+            || stage == ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL
+            || stage == ProcessingStage.COLLECT_JACOCO_DATA_INITIAL
+            || stage == ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED
+            || stage == ProcessingStage.COLLECT_PIT_DATA_ORIGINAL
+            || stage == ProcessingStage.COLLECT_PIT_DATA_INITIAL
+            || stage == ProcessingStage.COLLECT_PIT_DATA_GENERALIZED;
     }
 }

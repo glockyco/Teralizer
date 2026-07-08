@@ -111,6 +111,28 @@ public class TaskDiagnosticClassifierTest {
             TaskDiagnosticClassifier.classify(ProcessingStage.EXECUTE_TESTS_GENERALIZED, timeout).reasonCode());
     }
 
+    @Example
+    void mapsMutationAndCoverageCollectionTimeoutsToExecutionTimeout() {
+        RuntimeException timeout = new RuntimeException("Command execution timeout exceeded.");
+
+        Assert.assertEquals(TaskDiagnosticCodes.EXECUTION_TIMEOUT,
+            TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_PIT_DATA_INITIAL, timeout).reasonCode());
+        Assert.assertEquals(TaskDiagnosticCodes.EXECUTION_TIMEOUT,
+            TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_PIT_DATA_GENERALIZED, timeout).reasonCode());
+        Assert.assertEquals(TaskDiagnosticCodes.EXECUTION_TIMEOUT,
+            TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_JACOCO_DATA_GENERALIZED, timeout).reasonCode());
+    }
+
+    @Example
+    void keepsPitCollectionNonTimeoutFailuresOnNonTimeoutPath() {
+        RuntimeException failure = new RuntimeException("boom");
+
+        String reasonCode = TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_PIT_DATA_INITIAL, failure).reasonCode();
+
+        Assert.assertNotEquals(TaskDiagnosticCodes.EXECUTION_TIMEOUT, reasonCode);
+        Assert.assertNotEquals(TaskDiagnosticCodes.SUITE_TIMEOUT, reasonCode);
+    }
+
     private static String jpfUncaughtMessage(String exceptionBlock) {
         return "Identified 1 error(s) during JPF execution.\n\n--\n\n"
             + "gov.nasa.jpf.vm.NoUncaughtExceptionsProperty\n\n"
