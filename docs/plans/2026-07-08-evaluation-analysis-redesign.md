@@ -209,9 +209,11 @@ tables, figures, and metrics.
 
 ### Data access (`data.py`)
 
-`connect(db, *, validate_schema)`:
-- Old-schema RQ1-5 -> `postgres_dev`, `validate_schema=True` (reuses
-  `config.py`'s schema-object check).
+`connect(db, *, validate_schema, require)`:
+- Old-schema RQ1-5 -> `postgres_dev`, `validate_schema=True` with per-report
+  required objects (`require`): each declared table or view must exist and carry
+  every column the report reads (checked via `pg_catalog`). This replaces the
+  retired working-tree DDL parse, which failed against the paper-tagged schema.
 - New-schema RQ0/RQ6 -> `postgres_reporeapers` /
   `postgres_jarvis_*`, `validate_schema=False` (the `report_basis`
   open-connection path).
