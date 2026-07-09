@@ -16,14 +16,14 @@ within the same execution paths. Java/Gradle pipeline + PostgreSQL + a Python an
 | DB UI | `docker compose up adminer` → http://localhost:18080 (password: `teralizer`) |
 | Analysis deps | `uv sync --directory analysis` |
 | Notebooks | `uv run --directory analysis jupyter lab` |
-| Validate (pre-commit gate) | `uv run --directory analysis python validate.py --changed` |
+| Validate notebooks (legacy) | `uv run --directory analysis python validate.py --changed` |
 | Lint / format / types / tests | `uv run --directory analysis ruff check --fix .` · `ruff format .` · `ty check .` · `pytest` |
 
-Run everything from the project root. Before committing changes under `analysis/`,
-validate them (`validate.py --changed`, or `--notebook <NAME.ipynb>` for one
-notebook; no flag = full run). A commit that changes nothing under `analysis/`
-(docs, Java, non-`analysis/` config) does not need it -- the pre-commit ruff and
-ty hooks skip cleanly on it.
+Run everything from the project root. New analysis code -- `teralizer.eval` and
+its tests -- is gated by `pytest` plus the ruff and ty pre-commit hooks, which
+run on every commit. `validate.py --changed` remains the gate for the legacy
+Jupyter notebooks and the notebook-era Python they import (e.g. `rq*_*.py`,
+`exports.py`), until the redesign ports them.
 
 ## Verification tiers
 Match the gate to the change. Goldens are observed truth: on a mismatch, investigate instead of
@@ -31,7 +31,8 @@ editing the golden to match broken output.
 
 | Change | Gate |
 |---|---|
-| Analysis code (`analysis/`) | `validate.py --changed` |
+| New analysis (`teralizer.eval`, its tests) | `pytest` + the ruff/ty pre-commit hooks |
+| Legacy notebooks + the Python they import (`rq*_*.py`, `exports.py`, ...) | `validate.py --changed` until ported |
 | Java unit-level | `./gradlew test --tests '<Class>'` while iterating, one full `./gradlew build` before commit |
 | Pipeline behavior (codegen, SPF, filters, licenses, build files) | `scripts/verify-pipeline.sh` (~5–10 min, full fixture corpus) — ONCE PER WAVE of related changes, at the wave's end or when a golden must flip, NEVER per commit or per small change; iterate with `--only` below |
 | SPF submodule (`jpf-symbc/**`) | additionally `cd jpf-symbc && ./gradlew :jpf-symbc:test` (the root build does NOT run this suite, so a red suite survives "build green" without it) |

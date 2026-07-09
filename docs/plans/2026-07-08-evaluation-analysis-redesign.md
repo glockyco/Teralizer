@@ -330,9 +330,10 @@ the human affordance.
   rendered strings. Follow the existing DB-fixture pattern used by
   `test_reporeapers_rerun_report.py`, `test_jarvis_scoreboard.py`, etc.
 - **Renderers** -- golden tests: a fixture `RQReport` -> expected `.md` / `.tex`.
-- **Gate** -- `validate.py` drops notebook execution; it runs the report builds
-  (smoke) + renderer goldens + `ruff` + `ty`. Match tier to change per
-  `AGENTS.md`.
+- **Gate** -- `pytest` (compute tests + renderer goldens + the report-build
+  smoke) plus the ruff and ty pre-commit hooks. `validate.py` is the legacy
+  notebook gate, retired with the last notebook (item 5 below), and is not the
+  eval engine's gate. Match tier to change per `AGENTS.md`.
 
 ## Migration plan
 
@@ -346,7 +347,10 @@ Build order, each item after the first being its own plan:
    plus RQ6's project-level funnel. RQ6 ports the orphaned `rq4_limitations.py`
    funnel logic (`categorize_failure_type`,
    `compute_processing_failures_by_stage_and_cause`, and friends) from free-text
-   regex to structured reason codes.
+   regex to structured reason codes. RQ5 is the first old-schema report, so this
+   plan implements `data.py`'s `connect(validate_schema=True)` against the
+   paper-tagged (`10.5281/zenodo.18242626`) `postgres_dev` schema, not the
+   current one.
 3. RQ0 (JARVIS): `postgres_jarvis_scoreboard` + `postgres_jarvis_census`, the
    four axes from `2026-06-30-jarvis-comparison`.
 4. RQ1-RQ4 + dataset-characteristics: `postgres_dev` (old schema).

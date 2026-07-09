@@ -35,7 +35,7 @@ Committed (Phase 1, 5 commits `8b1c7b2b`..`10c23691`), 19 tests green:
 - [x] **`format.py`** -- `render_value(value, fmt)` with `str`/`int`/`count`/`pct1`/`pct2`/`float2`/`runtime`.
 - [x] **`macros.py`** -- `macro_name(key)` mapping a semantic `Metric.key` to a `\newcommand`-legal, `Tz`-prefixed CamelCase name (digits spelled out).
 - [x] **`provenance.py`** -- `Provenance` (module, qualname, lineno, query, commit), `capture(fn, query=)`, `git_commit()` (with `-dirty`), `Provenance.source_url(repo_url)`. Reads no environment or DSN (secret hygiene).
-- [x] **`data.py`** -- `connect(db, *, validate_schema)` (new-schema `open_report_connection` path implemented; old-schema validated path raises `NotImplementedError`, added by the first old-schema report plan) and `read_sql(conn, sql, params)`.
+- [x] **`data.py`** -- `connect(db, *, validate_schema)` (new-schema `open_report_connection` path implemented; old-schema validated path raises `NotImplementedError`, implemented by the RQ5 + RQ6 plan as the first old-schema report -- it must validate `postgres_dev` against the paper-tagged `10.5281/zenodo.18242626` schema, not the current one) and `read_sql(conn, sql, params)`.
 
 Remaining work below builds the renderers and the CLI/registry/paper-export plumbing on this core.
 
@@ -599,48 +599,25 @@ Note: `cli.main` reads `PAPER_REPO_PATH` only to choose an OUTPUT directory for 
 
 ---
 
-## Task 6: validate.py hook and committed reports layout
+## Task 6: committed reports layout and report-build smoke
 
 **Files:**
-- Modify: `analysis/validate.py`, `analysis/.gitignore`
-- Test: covered by the existing eval suite
+- Modify: `analysis/.gitignore`
+- Create: `analysis/tests/eval/test_smoke.py`
 
-- [ ] **Step 1: gitignore the build dir, keep reports committed**
-
-Ensure `analysis/build/` is gitignored and `analysis/reports/**` is not. Verify: create `analysis/build/x` and `analysis/reports/x`, `git status --short analysis` shows only `reports/x`.
-
-- [ ] **Step 2: Hook the engine into `validate.py`** (Tester agent authors any new test)
-
-Read `analysis/validate.py` to see how checks are registered, then add this self-contained check and call it alongside the existing lint/type/test steps. It exercises every registered report against its default DB (skipping when the DB is unreachable). With no reports registered yet it is a no-op that still imports the engine.
-
-```python
-def _check_eval_reports() -> None:
-    import tempfile
-    from pathlib import Path
-
-    from sqlalchemy.exc import OperationalError
-
-    from teralizer.eval import registry
-    from teralizer.eval.data import connect
-    from teralizer.eval.render import markdown as md
-
-    with tempfile.TemporaryDirectory() as tmp:
-        for _rq, spec in registry.REPORTS.items():
-            try:
-                with connect(spec.default_db, validate_schema=(spec.schema == "old")) as conn:
-                    report = spec.build(conn)
-            except OperationalError:
-                continue
-            md.render(report, Path(tmp), repo_url="https://github.com/glockyco/Teralizer")
-```
-
-Do NOT remove notebook execution from `validate.py` here -- that is the final migration plan, when the last notebook is ported.
-
-- [ ] **Step 3: Run the gate** -- `uv run --directory analysis python validate.py --changed` -> PASS.
-- [ ] **Step 4: Commit** -- subject `feat(eval): wire report engine into validate`.
+- [x] **Step 1: gitignore the build dir, keep reports committed.** `analysis/build/`
+  (regenerable LaTeX, CSV, and macros export) is gitignored; `analysis/reports/**`
+  (committed markdown, rasters, and manifest) is not.
+- [x] **Step 2: report-build smoke as a pytest.** `analysis/tests/eval/test_smoke.py`
+  iterates `registry.REPORTS`, builds each report against its default DB, and
+  skips on `OperationalError`. Vacuous until reports register, gaining live
+  coverage per report. This is a normal test, NOT a `validate.py` hook: the eval
+  engine's gate is `pytest tests/eval` plus the ruff and ty pre-commit hooks, and
+  `validate.py` stays the legacy notebook gate until the final migration retires
+  it.
 
 ---
 
 ## Acceptance
 
-The engine is done when `uv run --directory analysis pytest tests/eval -q` is fully green with golden coverage of all three renderers and the manifest, the CLI integration test proves compute-once-then-fan-out to `md`/`figures`/`latex` (+ paper export) on a fixture report, `validate.py --changed` is green, and `analysis/reports/` is committed while `analysis/build/` is gitignored. No research-question report is built here; each RQ is its own plan on top of this engine, per the sequence above.
+The engine is done when `uv run --directory analysis pytest tests/eval -q` is fully green (golden coverage of all three renderers and the manifest, the CLI integration test proving compute-once-then-fan-out to `md`/`figures`/`latex` plus paper export on a fixture report, and the report-build smoke), the ruff and ty pre-commit hooks pass, and `analysis/reports/` is committed while `analysis/build/` is gitignored. `validate.py` is not the engine's gate. No research-question report is built here; each RQ is its own plan on top of this engine, per the sequence above.
