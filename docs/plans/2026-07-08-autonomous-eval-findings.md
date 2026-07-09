@@ -53,26 +53,6 @@ commons-lang 3043). Expected for full suites, which exercise library and
 non-project methods with no resolvable source file, but if RQ0/RQ6 breadth looks
 low this filter is the first place to audit.
 
-### PIT and JaCoCo command-timeout classification gap
-
-`TaskDiagnosticClassifier` maps a "Command execution timeout exceeded" to
-attrition (`SUITE_TIMEOUT` / `EXECUTION_TIMEOUT`) only for the three
-`EXECUTE_TESTS_*` stages. A command timeout in `COLLECT_PIT_DATA_*` or
-`COLLECT_JACOCO_DATA_*` falls through to a generic breakage code, so
-`throwOnStructuralFailures` counts it as breakage and the runner's post-run
-check reports the run as failed. Under the phase-decoupled model the runner
-loop does not break on a failed config, so the census PIT still collects data
-for every fitting project -- only the final pass/fail label and the
-breakage-vs-attrition funnel bucket are affected, not the collected PVC.
-
-The census configs set `pitest.max-execution-time = 3600` and call it a
-"tripwire ... drops the whole fixture downstream", so a PIT timeout on lang or
-math is an expected drop, not breakage. The intent is genuinely ambiguous:
-either a PIT/JaCoCo timeout should be attrition (consistent with the
-test-execution timeout fix and the tripwire wording), or the drop is meant to
-be structural. Deciding it one way lets the census PIT report cleanly and is
-best settled deliberately rather than flipped in the middle of a run.
-
 ### rerun3 PIT is blocked and out of scope for this run
 
 Running the reduction (PIT) phase over the rerun3 workspace is blocked, and not
@@ -121,6 +101,14 @@ settle the budget-versus-identity question first.
   the whole batch into a single insert statement that exhausted the heap on
   commons-configuration. The coverage and mutation inserts now run in bounded
   chunks so memory stays flat across project sizes.
+- **PIT and JaCoCo command timeouts are attrition** — a mutation or coverage
+  command timeout was generic breakage, so io's original-suite PIT exceeding the
+  3600-second tripwire halted the run. The classifier now records such timeouts
+  as EXECUTION_TIMEOUT and the diagnostic writer's stage gate covers those
+  stages, so a slow project drops its downstream data while the run continues.
+- **Post-run breakage check excludes attrition** — the shell check counted
+  timed-out tasks as breakage and reported the run failed. It now excludes the
+  same attrition diagnostics the planner does.
 
 (These are in addition to the spec-soundness fixes from the interactive phase:
 the SPF `String.length` collect-mode fix, the seed-vs-spec guard, the dedup
@@ -167,8 +155,15 @@ inserting coverage data because the batch insert built one statement for
 millions of rows. Fixed by chunking the inserts, then relaunched from
 configuration onward with csv and collections already complete.
 
-Reduction-only runs over the nine projects with included generalizations,
-smallest first (csv 2, collections 5, configuration 21, codec 30, io 32, text
-54, cli 201, math 273, lang 856); email/pool/jexl have zero included
-generalizations and are skipped. math and lang are expected to trip the 3600s
-PIT tripwire (see the classification-gap item above).
+It then halted a fourth time on io: a mutation or coverage command timeout was
+generic breakage, and io's original-suite PIT exceeds the 3600-second tripwire.
+The classifier and the diagnostic writer's stage gate now record such timeouts
+as attrition, matching the planner and the tripwire intent, so a timed-out
+project drops rather than halting the run.
+
+Final result: seven of the nine projects with included generalizations produced
+generalized mutation scores -- lang, configuration, collections, codec, text,
+cli, and csv. io and math time out during original-suite PIT (their full suites
+exceed the 3600-second budget) and are recorded as attrition. email, pool, and
+jexl have no included generalizations. The run completes with no structural
+halt.
