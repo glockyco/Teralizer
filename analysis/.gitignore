@@ -368,5 +368,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,visualstudiocode,pycharm+all,python,jupyternotebooks
 
 # Generated files
+/build/
 notebooks/*.pdf
 notebooks/*.sql
