@@ -230,12 +230,24 @@ def build_funnel(conn: Connection) -> FunnelResult:
     table_df = _cause_table_df(causes)
     stage_exclusions = _stage_exclusions(table_df)
     stages = _stage_bands(eligible, stage_exclusions)
+    band_parts = [f"Eligible projects: {eligible}."]
+    for band in stages:
+        rate = band.passing / band.entering if band.entering else 0.0
+        band_parts.append(
+            f"Stage {band.stage}: {band.entering} entering, "
+            f"{band.passing} included ({rate:.1%})."
+        )
+    overall = success_count / eligible if eligible else 0.0
+    band_parts.append(
+        f"Overall: {success_count} of {eligible} included ({overall:.1%})."
+    )
+    note = " ".join(band_parts)
 
     return FunnelResult(
         eligible=eligible,
         success_count=success_count,
         stages=stages,
-        table=_build_table(table_df),
+        table=_build_table(table_df, note),
         uncoded_projects=uncoded_projects,
         eligibility_audit_unexpected=eligibility_audit_unexpected,
     )
@@ -355,7 +367,7 @@ def _stage_bands(eligible: int, exclusions: dict[str, int]) -> list[StageBand]:
     return bands
 
 
-def _build_table(df: pd.DataFrame) -> Table:
+def _build_table(df: pd.DataFrame, note: str) -> Table:
     return Table(
         key="tab:processing-failures",
         df=df,
@@ -368,5 +380,6 @@ def _build_table(df: pd.DataFrame) -> Table:
         caption="Project-level processing failures by funnel stage and cause.",
         label="tab:processing-failures",
         group_by="stage",
+        note=note,
         provenance=capture(build_funnel, query=_FIRST_FAILURE_SQL),
     )

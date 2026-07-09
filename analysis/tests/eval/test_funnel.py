@@ -43,3 +43,12 @@ def test_every_cause_row_has_a_known_type():
     result = _funnel_result()
     assert set(result.table.df["type"]) <= {"Internal", "External", "Mixed"}
     assert (result.table.df["count"] > 0).all()
+
+
+def test_funnel_table_has_band_summary_note():
+    result = _funnel_result()
+    note = result.table.note
+    assert note is not None and note.strip()
+    assert str(result.eligible) in note
+    for band in result.stages:
+        assert band.stage in note
