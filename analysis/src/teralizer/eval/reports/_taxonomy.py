@@ -140,13 +140,15 @@ def classify(a: Attribution) -> Cause:
         )
 
     if (
-        a.internal_stage
-        in {
-            "FILTER_GENERALIZATIONS",
-            "BUILD_PROJECT_GENERALIZED",
-            "EXECUTE_TESTS_GENERALIZED",
-        }
-        and a.included_generalizations == 0
+        a.internal_stage in {"FILTER_GENERALIZATIONS", "GENERALIZE_TESTS"}
+        or (
+            a.internal_stage == "BUILD_PROJECT_GENERALIZED"
+            and a.reason_code == "OTHER_COMPILE_FAILURE"
+        )
+        or (
+            a.internal_stage == "EXECUTE_TESTS_GENERALIZED"
+            and a.reason_code == "LISTENER_BUG"
+        )
     ):
         return Cause(
             "4",

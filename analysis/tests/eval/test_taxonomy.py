@@ -95,3 +95,57 @@ def test_no_input_spec_stage3_new_failures():
     assert c.stage == "3"
     assert "new failures" in c.cause
     assert c.type == "Mixed"
+
+
+def test_stage4_terminal_failures_map_to_single_cause():
+    cases = [
+        Attribution(
+            "BUILD_PROJECT_GENERALIZED",
+            "OTHER_COMPILE_FAILURE",
+            at_ceiling=False,
+            included_tests=213,
+            included_assertions=5,
+            included_generalizations=4,
+        ),
+        Attribution(
+            "EXECUTE_TESTS_GENERALIZED",
+            "LISTENER_BUG",
+            at_ceiling=False,
+            included_tests=70,
+            included_assertions=11,
+            included_generalizations=1,
+        ),
+        Attribution(
+            "GENERALIZE_TESTS",
+            None,
+            at_ceiling=False,
+            included_tests=0,
+            included_assertions=0,
+            included_generalizations=0,
+        ),
+        Attribution(
+            "FILTER_GENERALIZATIONS",
+            None,
+            at_ceiling=False,
+            included_tests=5,
+            included_assertions=5,
+            included_generalizations=0,
+        ),
+    ]
+    for a in cases:
+        c = classify(a)
+        assert c.stage == "4", a
+        assert c.type == "Internal", a
+        assert "all generalizations excluded" in c.cause, a
+
+
+def test_unenumerated_stage4_signal_is_uncoded():
+    a = Attribution(
+        "BUILD_PROJECT_GENERALIZED",
+        "SOME_NEW_CODE",
+        at_ceiling=False,
+        included_tests=5,
+        included_assertions=5,
+        included_generalizations=1,
+    )
+    assert classify(a) is UNCODED
