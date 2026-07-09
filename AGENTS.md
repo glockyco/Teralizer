@@ -19,8 +19,11 @@ within the same execution paths. Java/Gradle pipeline + PostgreSQL + a Python an
 | Validate (pre-commit gate) | `uv run --directory analysis python validate.py --changed` |
 | Lint / format / types / tests | `uv run --directory analysis ruff check --fix .` · `ruff format .` · `ty check .` · `pytest` |
 
-Run everything from the project root. Validate before committing (`validate.py --changed`, or
-`--notebook <NAME.ipynb>` for one notebook; no flag = full run).
+Run everything from the project root. Before committing changes under `analysis/`,
+validate them (`validate.py --changed`, or `--notebook <NAME.ipynb>` for one
+notebook; no flag = full run). A commit that changes nothing under `analysis/`
+(docs, Java, non-`analysis/` config) does not need it -- the pre-commit ruff and
+ty hooks skip cleanly on it.
 
 ## Verification tiers
 Match the gate to the change. Goldens are observed truth: on a mismatch, investigate instead of
