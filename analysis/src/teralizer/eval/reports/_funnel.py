@@ -332,8 +332,7 @@ def _cause_table_df(causes: list[Cause]) -> pd.DataFrame:
     )
     return (
         df.groupby(["stage", "type", "cause"], as_index=False)
-        .size()
-        .rename(columns={"size": "count"})
+        .agg(count=("cause", "size"))
         .sort_values(
             by=["stage", "type", "cause"],
             key=lambda column: column.map(STAGE_ORDER).fillna(99)
