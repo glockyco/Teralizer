@@ -242,15 +242,43 @@ presentation is shared. Both compute an eligibility-filtered denominator.
 
 ## Numbers macros and provenance
 
-The LaTeX track emits `macros.tex` (`\newcommand` per `Metric`); the paper cites
-macros so numbers never drift. This also opens **provenance**: linking each
-paper number back to the code (module, function, query) that produced it.
+The LaTeX track emits `macros.tex`, one `\newcommand` per `Metric`. The paper
+cites macros (e.g. `\RQsixEligiblePct`) instead of hand-typed numbers, so every
+figure in the prose is computed by code and recompiling picks up new results.
+This is the reproducible-research staple and the foundation for provenance.
 
-**Provenance approach: to be researched and filled in.** Candidate directions to
-evaluate: a machine-readable provenance manifest (JSON) mapping each macro to
-`module:function` + the SQL/source location, emitted alongside `macros.tex`;
-source-location comments in the macros file; and any established
-reproducible-research / literate-provenance conventions. See Open items.
+Provenance links every generated artifact back to the exact code that produced
+it. This is the `showyourwork` model, where a paper figure carries a clickable
+link to its generating script at a pinned git commit. Architecture A gives it to
+us without a separate build framework, because every artifact is constructed in
+a known function. The design:
+
+- A **`Provenance` field on every `Metric`, `Table`, and `Figure`**, captured at
+  build time and never hand-maintained. It records the producing function
+  (`module:qualname` and source line via `inspect`), the SQL query text or a
+  stable query id, and the analysis-repo git commit. The commit gets a `-dirty`
+  suffix when the working tree has uncommitted changes, so a number is never
+  falsely pinned to a clean commit.
+- A **`provenance.json` manifest** emitted next to `macros.tex`, mapping
+  `artifact_id` to its value or caption, producing function, source URL, query,
+  and commit. It is a machine-readable audit trail, so every number stays
+  traceable even where the paper renders no visible link.
+- **In-document links at table and figure granularity**, the `showyourwork`
+  style. The markdown report renders a "source: `module.function` at `<commit>`"
+  GitHub permalink under each table and figure. The LaTeX track offers an opt-in
+  `\provenance{id}` caption footnote. Inline prose numbers stay clean (macro
+  only) and trace through the manifest, since a visible link on every inline
+  number would clutter.
+
+Provenance falls out of the result model as a field set where each artifact is
+built, rather than being bolted on afterward. The manifest doubles as a
+reproducibility check: an artifact with no captured source is a build error.
+
+References considered: generated-macro and `\reproduce{}` provenance macros
+(arXiv 1608.06897), the code-to-figure provenance chain (arXiv 2604.25944), and
+`showyourwork` (Luger) for figure-to-script-to-commit linking. Literate
+programming (knitr, PythonTeX, Quarto) was rejected because our analysis feeds
+the paper rather than living inside the `.tex`.
 
 ## Testing
 
@@ -274,8 +302,6 @@ notebook/html output dirs from `exports.py` at the end. Keep and adapt
 
 ## Open items
 
-- **Provenance best practices** -- research and specify the number->code linking
-  mechanism for the macros (manifest vs comments vs conventions).
 - **Paper-side macro migration** -- one-time edit replacing hand-typed prose
   numbers with `\newcommand` macros across `sections/04-evaluation-*.tex`.
 - **Committed figure raster format** -- PNG (default, universal) vs WebP
