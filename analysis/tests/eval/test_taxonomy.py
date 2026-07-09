@@ -169,13 +169,27 @@ def test_collect_jacoco_original_not_found_vs_error():
         artifact_present=True,
     )
     nf = classify(not_found)
-    assert nf.stage == "1 + 2"
+    assert nf.stage == "5"
     assert nf.type == "Internal"
     assert "JaCoCo" in nf.cause and "not found" in nf.cause
     e = classify(err)
-    assert e.stage == "1 + 2"
+    assert e.stage == "5"
     assert e.type == "External"
     assert "JaCoCo" in e.cause
+
+
+def test_restore_original_build_is_stage5_internal():
+    a = Attribution(
+        "RESTORE_ORIGINAL_BUILD",
+        None,
+        at_ceiling=False,
+        included_tests=1,
+        included_assertions=1,
+    )
+    c = classify(a)
+    assert c.stage == "5"
+    assert c.type == "Internal"
+    assert "build" in c.cause.lower()
 
 
 def test_build_project_instrumented_is_stage3_spoon():

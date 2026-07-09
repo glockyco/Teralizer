@@ -17,7 +17,6 @@ _STAGE_1_2 = {
     "BUILD_SPOON_MODEL",
     "EXECUTE_TESTS_ORIGINAL",
     "COLLECT_JUNIT_REPORTS_ORIGINAL",
-    "COLLECT_JACOCO_DATA_ORIGINAL",
     "FILTER_TESTS_ORIGINAL",
     "ANALYZE_TESTS",
     "FILTER_TESTS",
@@ -43,6 +42,8 @@ _STAGE_4 = {
 }
 _STAGE_5 = {
     "COLLECT_PIT_DATA_ORIGINAL",
+    "COLLECT_JACOCO_DATA_ORIGINAL",
+    "RESTORE_ORIGINAL_BUILD",
     "COLLECT_JACOCO_DATA_INITIAL",
     "COLLECT_PIT_DATA_INITIAL",
     "RESTORE_GENERALIZED_BUILD",
@@ -127,11 +128,11 @@ def classify(a: Attribution) -> Cause:
     if a.internal_stage == "COLLECT_JACOCO_DATA_ORIGINAL":
         if a.artifact_present:
             return Cause(
-                "1 + 2",
+                "5",
                 "JaCoCo execution error during coverage collection",
                 "External",
             )
-        return Cause("1 + 2", "JaCoCo outputs not found", "Internal")
+        return Cause("5", "JaCoCo outputs not found", "Internal")
 
     if a.internal_stage in {"ADD_JPF_INSTRUMENTATION", "BUILD_PROJECT_INSTRUMENTED"}:
         return Cause(
@@ -158,6 +159,9 @@ def classify(a: Attribution) -> Cause:
             "all generalizations excluded due to filter rejections and failures",
             "Internal",
         )
+
+    if a.internal_stage == "RESTORE_ORIGINAL_BUILD":
+        return Cause("5", "original build restore failed", "Internal")
 
     if a.internal_stage in {
         "COLLECT_JACOCO_DATA_INITIAL",

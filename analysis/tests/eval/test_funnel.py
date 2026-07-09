@@ -58,11 +58,12 @@ def test_funnel_table_has_band_summary_note():
 
 
 def test_funnel_includes_pre_coverage_failure_causes():
-    # Projects that fail before coverage collection (test timeouts, Spoon model
-    # failures, baseline JaCoCo failures) are eligible Stage 1+2 exclusions. If the
-    # eligibility rule over-drops no-coverage projects, these causes vanish. Guard it.
+    # Baseline JaCoCo moved to the reduction phase (Stage 5), so a
+    # generation-only funnel has no baseline-JaCoCo cause. Test timeouts and
+    # Spoon model failures remain eligible Stage 1+2 exclusions; if the
+    # eligibility rule over-drops no-coverage projects, these causes vanish.
+    # Guard that pre-coverage failures are not dropped by the eligibility rule.
     result = _funnel_result()
     causes = list(result.table.df["cause"])
     assert any("timeout" in c.lower() for c in causes), causes
     assert any("spoon" in c.lower() for c in causes), causes
-    assert any("jacoco" in c.lower() for c in causes), causes
