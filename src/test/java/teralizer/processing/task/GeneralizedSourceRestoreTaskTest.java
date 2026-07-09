@@ -61,6 +61,29 @@ class GeneralizedSourceRestoreTaskTest {
         assertFalse(Files.exists(staleGeneralized));
     }
 
+    @Test
+    void deletesAllGeneralizedSourcesFromProjectTestTree(@TempDir Path workDir) throws Exception {
+        Path projectRoot = workDir.resolve("project");
+        Path testSourceRoot = projectRoot.resolve("src/test/java");
+        ProjectRecord project = project(projectRoot, testSourceRoot, workDir.resolve("data"));
+        Path packageDir = testSourceRoot.resolve("com/example");
+        Path generalized = packageDir.resolve("_Calculator_Generalized_variant_a_Test.java");
+        Path nestedGeneralized = packageDir.resolve("nested/_Parser_Generalized_variant_b_Test.java");
+        Path ordinaryTest = packageDir.resolve("CalculatorTest.java");
+        Path notCleanupGeneralized = packageDir.resolve("Calculator_Generalized_variant_a_Test.java");
+        write(generalized, "package com.example; class _Calculator_Generalized_variant_a_Test {}\n");
+        write(nestedGeneralized, "package com.example.nested; class _Parser_Generalized_variant_b_Test {}\n");
+        write(ordinaryTest, "package com.example; class CalculatorTest {}\n");
+        write(notCleanupGeneralized, "package com.example; class Calculator_Generalized_variant_a_Test {}\n");
+
+        GeneralizedSourceRestoreTask.deleteAllGeneralizedSources(project);
+
+        assertFalse(Files.exists(generalized));
+        assertFalse(Files.exists(nestedGeneralized));
+        assertTrue(Files.exists(ordinaryTest));
+        assertTrue(Files.exists(notCleanupGeneralized));
+    }
+
     private static ProjectRecord project(Path projectRoot, Path testSourceRoot, Path dataRoot) {
         ProjectRecord project = new ProjectRecord();
         project.setId(7L);

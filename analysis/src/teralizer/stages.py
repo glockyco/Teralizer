@@ -37,7 +37,6 @@ def map_internal_stage_to_paper_stage(internal_stage: str) -> Optional[str]:
         "BUILD_SPOON_MODEL",
         "EXECUTE_TESTS_ORIGINAL",
         "COLLECT_JUNIT_REPORTS_ORIGINAL",
-        "COLLECT_JACOCO_DATA_ORIGINAL",
         "FILTER_TESTS_ORIGINAL",
         "ANALYZE_TESTS",
         "FILTER_TESTS",
@@ -51,26 +50,28 @@ def map_internal_stage_to_paper_stage(internal_stage: str) -> Optional[str]:
         "EXECUTE_JPF",
         "ANALYZE_JPF",
         "CLEANUP_JPF_INSTRUMENTATION",
-        "BUILD_PROJECT_INITIAL",
-        "EXECUTE_TESTS_INITIAL",
-        "COLLECT_JUNIT_REPORTS_INITIAL",
     }
 
     # Stage 4: Generalized Test Creation + Validation
     stage_4 = {
         "CLEANUP_GENERALIZATION",
         "GENERALIZE_TESTS",
-        "BUILD_PROJECT_GENERALIZED",
-        "EXECUTE_TESTS_GENERALIZED",
-        "COLLECT_JUNIT_REPORTS_GENERALIZED",
-        "FILTER_GENERALIZATIONS",
     }
 
     # Stage 5: Test Suite Reduction (Mutation Testing + Coverage)
     stage_5 = {
+        "RESTORE_ORIGINAL_BUILD",
+        "COLLECT_JACOCO_DATA_ORIGINAL",
         "COLLECT_PIT_DATA_ORIGINAL",
+        "BUILD_PROJECT_INITIAL",
+        "EXECUTE_TESTS_INITIAL",
+        "COLLECT_JUNIT_REPORTS_INITIAL",
         "COLLECT_JACOCO_DATA_INITIAL",
         "COLLECT_PIT_DATA_INITIAL",
+        "BUILD_PROJECT_GENERALIZED",
+        "EXECUTE_TESTS_GENERALIZED",
+        "COLLECT_JUNIT_REPORTS_GENERALIZED",
+        "FILTER_GENERALIZATIONS",
         "RESTORE_GENERALIZED_BUILD",
         "COLLECT_JACOCO_DATA_GENERALIZED",
         "COLLECT_PIT_DATA_GENERALIZED",
@@ -105,7 +106,6 @@ def get_stage_group_sql_case() -> str:
             'BUILD_SPOON_MODEL',
             'EXECUTE_TESTS_ORIGINAL',
             'COLLECT_JUNIT_REPORTS_ORIGINAL',
-            'COLLECT_JACOCO_DATA_ORIGINAL',
             'FILTER_TESTS_ORIGINAL',
             'ANALYZE_TESTS',
             'FILTER_TESTS',
@@ -116,23 +116,25 @@ def get_stage_group_sql_case() -> str:
             'BUILD_PROJECT_INSTRUMENTED',
             'EXECUTE_JPF',
             'ANALYZE_JPF',
-            'CLEANUP_JPF_INSTRUMENTATION',
-            'BUILD_PROJECT_INITIAL',
-            'EXECUTE_TESTS_INITIAL',
-            'COLLECT_JUNIT_REPORTS_INITIAL'
+            'CLEANUP_JPF_INSTRUMENTATION'
         ) THEN 'Stage 3'
         WHEN stage IN (
             'CLEANUP_GENERALIZATION',
-            'GENERALIZE_TESTS',
+            'GENERALIZE_TESTS'
+        ) THEN 'Stage 4'
+        WHEN stage IN (
+            'RESTORE_ORIGINAL_BUILD',
+            'COLLECT_JACOCO_DATA_ORIGINAL',
+            'COLLECT_PIT_DATA_ORIGINAL',
+            'BUILD_PROJECT_INITIAL',
+            'EXECUTE_TESTS_INITIAL',
+            'COLLECT_JUNIT_REPORTS_INITIAL',
+            'COLLECT_JACOCO_DATA_INITIAL',
+            'COLLECT_PIT_DATA_INITIAL',
             'BUILD_PROJECT_GENERALIZED',
             'EXECUTE_TESTS_GENERALIZED',
             'COLLECT_JUNIT_REPORTS_GENERALIZED',
-            'FILTER_GENERALIZATIONS'
-        ) THEN 'Stage 4'
-        WHEN stage IN (
-            'COLLECT_PIT_DATA_ORIGINAL',
-            'COLLECT_JACOCO_DATA_INITIAL',
-            'COLLECT_PIT_DATA_INITIAL',
+            'FILTER_GENERALIZATIONS',
             'RESTORE_GENERALIZED_BUILD',
             'COLLECT_JACOCO_DATA_GENERALIZED',
             'COLLECT_PIT_DATA_GENERALIZED'

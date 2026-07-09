@@ -85,6 +85,10 @@ public class GeneralizedSourceRestoreTask extends AbstractTask {
         });
     }
 
+    static void deleteAllGeneralizedSources(ProjectRecord projectRecord) throws IOException {
+        deleteGeneralizedSources(testSourceRoot(projectRecord));
+    }
+
     static void deleteGeneralizedSources(Path testSourceRoot) throws IOException {
         if (!Files.exists(testSourceRoot)) {
             return;

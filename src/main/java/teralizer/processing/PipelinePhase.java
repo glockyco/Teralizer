@@ -24,6 +24,7 @@ import teralizer.processing.task.JpfInstrumentationTask;
 import teralizer.processing.task.JunitDataCollectionTask;
 import teralizer.processing.task.PitDataCollectionTask;
 import teralizer.processing.task.ProjectBuildTask;
+import teralizer.processing.task.RestoreOriginalBuildTask;
 import teralizer.processing.task.SpoonModelBuildingTask;
 import teralizer.processing.task.Task;
 import teralizer.processing.task.TestAnalysisTask;
@@ -94,7 +95,6 @@ public enum PipelinePhase implements Phase {
 
             schedule.accept(new TestExecutionTask(ProcessingStage.EXECUTE_TESTS_ORIGINAL, project));
             schedule.accept(new JunitDataCollectionTask(ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL, project));
-            schedule.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL, project));
             schedule.accept(new TestFilteringTask(ProcessingStage.FILTER_TESTS_ORIGINAL, project));
 
             schedule.accept(new TestAnalysisTask(ProcessingStage.ANALYZE_TESTS, project));
@@ -161,6 +161,8 @@ public enum PipelinePhase implements Phase {
 
         @Override
         public void schedule(DSLContext create, ProjectRecord project, Consumer<Task> schedule) {
+            schedule.accept(new RestoreOriginalBuildTask(project));
+            schedule.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL, project));
             schedule.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_ORIGINAL, project));
             schedule.accept(new JacocoDataCollectionTask(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, project));
             schedule.accept(new PitDataCollectionTask(ProcessingStage.COLLECT_PIT_DATA_INITIAL, project));
@@ -200,7 +202,6 @@ public enum PipelinePhase implements Phase {
         ProcessingStage.BUILD_SPOON_MODEL,
         ProcessingStage.EXECUTE_TESTS_ORIGINAL,
         ProcessingStage.COLLECT_JUNIT_REPORTS_ORIGINAL,
-        ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL,
         ProcessingStage.FILTER_TESTS_ORIGINAL,
         ProcessingStage.ANALYZE_TESTS,
         ProcessingStage.FILTER_TESTS,
@@ -222,6 +223,8 @@ public enum PipelinePhase implements Phase {
     ));
 
     private static final Set<ProcessingStage> REDUCTION_STAGES = Collections.unmodifiableSet(EnumSet.of(
+        ProcessingStage.RESTORE_ORIGINAL_BUILD,
+        ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL,
         ProcessingStage.COLLECT_PIT_DATA_ORIGINAL,
         ProcessingStage.COLLECT_JACOCO_DATA_INITIAL,
         ProcessingStage.COLLECT_PIT_DATA_INITIAL,

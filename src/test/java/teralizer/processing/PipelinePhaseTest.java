@@ -40,6 +40,8 @@ public class PipelinePhaseTest {
     void reductionStagesIncludeStageFiveCollectorsAndRestore() {
         Assert.assertEquals(
             EnumSet.of(
+                ProcessingStage.RESTORE_ORIGINAL_BUILD,
+                ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL,
                 ProcessingStage.COLLECT_PIT_DATA_ORIGINAL,
                 ProcessingStage.COLLECT_JACOCO_DATA_INITIAL,
                 ProcessingStage.COLLECT_PIT_DATA_INITIAL,
@@ -49,6 +51,14 @@ public class PipelinePhaseTest {
             ),
             PipelinePhase.REDUCTION.stages()
         );
+    }
+
+    @Example
+    void processingStagesHaveDensePipelineOrder() {
+        ProcessingStage[] stages = ProcessingStage.values();
+        for (int i = 0; i < stages.length; i++) {
+            Assert.assertEquals(stages[i].name(), i, stages[i].getStep().intValue());
+        }
     }
 
     @Example
@@ -108,7 +118,6 @@ public class PipelinePhaseTest {
             "SpoonModelBuildingTask:BUILD_SPOON_MODEL:null",
             "TestExecutionTask:EXECUTE_TESTS_ORIGINAL:null",
             "JunitDataCollectionTask:COLLECT_JUNIT_REPORTS_ORIGINAL:null",
-            "JacocoDataCollectionTask:COLLECT_JACOCO_DATA_ORIGINAL:null",
             "TestFilteringTask:FILTER_TESTS_ORIGINAL:null",
             "TestAnalysisTask:ANALYZE_TESTS:null",
             "TestFilteringTask:FILTER_TESTS:null",
@@ -139,6 +148,8 @@ public class PipelinePhaseTest {
             tasks::add
         );
         List<String> expectedReduction = new ArrayList<>(Arrays.asList(
+            "RestoreOriginalBuildTask:RESTORE_ORIGINAL_BUILD:null",
+            "JacocoDataCollectionTask:COLLECT_JACOCO_DATA_ORIGINAL:null",
             "PitDataCollectionTask:COLLECT_PIT_DATA_ORIGINAL:null",
             "JacocoDataCollectionTask:COLLECT_JACOCO_DATA_INITIAL:null",
             "PitDataCollectionTask:COLLECT_PIT_DATA_INITIAL:null"
