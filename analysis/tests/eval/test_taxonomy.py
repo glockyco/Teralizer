@@ -149,3 +149,58 @@ def test_unenumerated_stage4_signal_is_uncoded():
         included_generalizations=1,
     )
     assert classify(a) is UNCODED
+
+
+def test_collect_jacoco_original_not_found_vs_error():
+    not_found = Attribution(
+        "COLLECT_JACOCO_DATA_ORIGINAL",
+        None,
+        at_ceiling=False,
+        included_tests=1,
+        included_assertions=1,
+        artifact_present=False,
+    )
+    err = Attribution(
+        "COLLECT_JACOCO_DATA_ORIGINAL",
+        None,
+        at_ceiling=False,
+        included_tests=1,
+        included_assertions=1,
+        artifact_present=True,
+    )
+    nf = classify(not_found)
+    assert nf.stage == "1 + 2"
+    assert nf.type == "Internal"
+    assert "JaCoCo" in nf.cause and "not found" in nf.cause
+    e = classify(err)
+    assert e.stage == "1 + 2"
+    assert e.type == "External"
+    assert "JaCoCo" in e.cause
+
+
+def test_build_project_instrumented_is_stage3_spoon():
+    a = Attribution(
+        "BUILD_PROJECT_INSTRUMENTED",
+        "OTHER_COMPILE_FAILURE",
+        at_ceiling=False,
+        included_tests=1,
+        included_assertions=1,
+    )
+    c = classify(a)
+    assert c.stage == "3"
+    assert c.type == "External"
+    assert "Spoon" in c.cause and "instrumentation" in c.cause
+
+
+def test_collect_junit_reports_folds_to_single_cause():
+    for rc in ("MISSING_REPORT_FILE", "UNSUPPORTED_REPORT_LAYOUT", None):
+        a = Attribution(
+            "COLLECT_JUNIT_REPORTS_ORIGINAL",
+            rc,
+            at_ceiling=False,
+            included_tests=1,
+            included_assertions=1,
+        )
+        c = classify(a)
+        assert c.stage == "1 + 2" and c.type == "Internal"
+        assert "JUnit reports not found" in c.cause

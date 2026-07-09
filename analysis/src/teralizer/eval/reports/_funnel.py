@@ -210,7 +210,9 @@ def build_funnel(conn: Connection) -> FunnelResult:
     data = signals.merge(first_failures, on="project_id", how="left")
     data["has_first_failure"] = data["task_id"].notna()
     data["ineligible_by_stage"] = data["internal_stage"].isin(INELIGIBLE_STAGES)
-    data["ineligible"] = data["ineligible_by_stage"] | ~data["has_actual_coverage"]
+    data["ineligible"] = data["ineligible_by_stage"] | (
+        data["has_jacoco_artifact"] & ~data["has_actual_coverage"]
+    )
     eligible_data = data[~data["ineligible"]].copy()
 
     eligible = int(len(eligible_data))

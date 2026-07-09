@@ -55,3 +55,14 @@ def test_funnel_table_has_band_summary_note():
     assert "excluded" in note
     for band in result.stages:
         assert str(band.exclusions) in note
+
+
+def test_funnel_includes_pre_coverage_failure_causes():
+    # Projects that fail before coverage collection (test timeouts, Spoon model
+    # failures, baseline JaCoCo failures) are eligible Stage 1+2 exclusions. If the
+    # eligibility rule over-drops no-coverage projects, these causes vanish. Guard it.
+    result = _funnel_result()
+    causes = list(result.table.df["cause"])
+    assert any("timeout" in c.lower() for c in causes), causes
+    assert any("spoon" in c.lower() for c in causes), causes
+    assert any("jacoco" in c.lower() for c in causes), causes

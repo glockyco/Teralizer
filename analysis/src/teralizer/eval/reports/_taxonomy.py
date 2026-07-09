@@ -124,13 +124,16 @@ def classify(a: Attribution) -> Cause:
         return Cause("1 + 2", "Spoon execution error during test analysis", "External")
     if a.internal_stage == "COLLECT_JUNIT_REPORTS_ORIGINAL":
         return Cause("1 + 2", "JUnit reports not found", "Internal")
-    if a.internal_stage == "BUILD_PROJECT_INSTRUMENTED" and a.reason_code in {
-        "OTHER_COMPILE_FAILURE",
-        "TEST_COMPILE_OUTPUT_MISSING",
-    }:
-        return Cause("1 + 2", "compilation outputs not found", "Internal")
+    if a.internal_stage == "COLLECT_JACOCO_DATA_ORIGINAL":
+        if a.artifact_present:
+            return Cause(
+                "1 + 2",
+                "JaCoCo execution error during coverage collection",
+                "External",
+            )
+        return Cause("1 + 2", "JaCoCo outputs not found", "Internal")
 
-    if a.internal_stage in {"ADD_JPF_INSTRUMENTATION"}:
+    if a.internal_stage in {"ADD_JPF_INSTRUMENTATION", "BUILD_PROJECT_INSTRUMENTED"}:
         return Cause(
             "3", "Spoon execution error during test instrumentation", "External"
         )
