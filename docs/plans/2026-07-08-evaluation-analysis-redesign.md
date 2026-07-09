@@ -246,12 +246,20 @@ LaTeX/PDF/CSV/macros export into the paper repo.
 
 ### RQ5 <-> RQ6 consolidation
 
-`_causes_common.py` owns the shared "causes of unsuccessful generalization"
-presentation: the funnel and exclusion `Table` builders, the
-internal/external/mixed categorization, and the eligibility filter. RQ5
-(`postgres_dev`, old schema) and RQ6 (`postgres_reporeapers`, new schema) each supply a thin
-`get_*` data layer; the **schema difference is isolated to the queries**, the
-presentation is shared. Both compute an eligibility-filtered denominator.
+`_causes_common.py` owns the presentation shared by both RQs: the test,
+assertion, and generalization exclusion breakdown `Table` builders (filtering
+versus failures) and the filter-rejection cause tables. RQ5 (`postgres_dev`, old
+schema) and RQ6 (`postgres_reporeapers`, new schema) each supply a thin `get_*`
+data layer, so the **schema difference is isolated to the queries** while the
+presentation is shared.
+
+RQ6 additionally owns the project-level exclusion funnel (`tab-processing-failures`,
+the "Project-level exclusions by stage and cause" table): the eligible
+denominator (projects that pass initial setup, dropping dependency-resolution,
+missing-sources, and original-build failures), the per-stage inclusion and
+exclusion counts, and the per-cause internal/external/mixed categorization. RQ5
+has no funnel: by design RQ1-RQ5 cover only projects that complete the pipeline,
+so there are no project-level exclusions.
 
 ## Numbers macros and provenance
 
@@ -328,14 +336,27 @@ the human affordance.
 
 ## Migration plan
 
-Port order: **RQ6 + RQ0 first** (the active refresh, new schema, exercises the
-whole stack end to end), then RQ1-5 (old schema). For each ported RQ: build its
-markdown + paper exports, verify, then delete the old `rqN_*.py` module and its
-notebook. Migrate still-correct old-schema query logic into the new report's
-data layer. Retire the notebook machinery from `validate.py` and the
-notebook/html output dirs from `exports.py` at the end. Keep and adapt
-`plotting.py`, `report_basis.py`, and the macro maps. Decompose `formatting.py`
-into `format.py`, `macros.py`, and `render/latex.py` as described above.
+Build order, each item after the first being its own plan:
+
+1. The `teralizer.eval` engine (this redesign's foundation plan): the result
+   model plus all renderers, provenance, manifest, registry, CLI, and paper
+   export, proven by golden and CLI integration tests. No RQ report is built
+   here.
+2. RQ5 + RQ6 (causes): the shared exclusion breakdowns in `_causes_common.py`
+   plus RQ6's project-level funnel. RQ6 ports the orphaned `rq4_limitations.py`
+   funnel logic (`categorize_failure_type`,
+   `compute_processing_failures_by_stage_and_cause`, and friends) from free-text
+   regex to structured reason codes.
+3. RQ0 (JARVIS): `postgres_jarvis_scoreboard` + `postgres_jarvis_census`, the
+   four axes from `2026-06-30-jarvis-comparison`.
+4. RQ1-RQ4 + dataset-characteristics: `postgres_dev` (old schema).
+5. Retire the notebook machinery from `validate.py` and the notebook/html output
+   dirs from `exports.py`, deleting each old `rqN_*.py` and notebook as its
+   report lands, and update the reviewer-facing docs.
+
+Keep and adapt `plotting.py`, `report_basis.py`, and the macro maps. Decompose
+`formatting.py` into `format.py`, `macros.py`, and `render/latex.py` as described
+above.
 
 ## Documentation and artifact-review impact
 
