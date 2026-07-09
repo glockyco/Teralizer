@@ -24,7 +24,10 @@ def _build_and_render(
     rq: str, db: str | None, targets: set[str], paper_out: Path | None
 ) -> None:
     spec = registry.get(rq)
-    with connect(db or spec.default_db, validate_schema=(spec.schema == "old")) as conn:
+    validate = spec.schema == "old"
+    with connect(
+        db or spec.default_db, validate_schema=validate, require=spec.requires
+    ) as conn:
         report = spec.build(conn)
     if "figures" in targets:
         figures_renderer.materialize(report, REPORTS_DIR / "figures" / rq)

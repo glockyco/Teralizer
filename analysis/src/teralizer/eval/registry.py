@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.engine import Connection
 
+from teralizer.eval.data import Required
 from teralizer.eval.model import RQReport
 
 
@@ -15,6 +16,7 @@ class ReportSpec:
     build: Callable[[Connection], RQReport]
     default_db: str
     schema: str  # "new" | "old"
+    requires: tuple[Required, ...] = ()
 
 
 REPORTS: dict[str, ReportSpec] = {}
