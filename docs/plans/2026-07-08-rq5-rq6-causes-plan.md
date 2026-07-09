@@ -1,7 +1,7 @@
 ---
 title: RQ5 + RQ6 Causes Reports
 type: plan
-status: draft
+status: active
 created: 2026-07-08
 parent: 2026-07-08-evaluation-analysis-redesign
 ---

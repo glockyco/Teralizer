@@ -22,12 +22,12 @@
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
 - **Evaluation Run Map (RQ0 + RQ6)** [audit] `2026-07-07-evaluation-run-map` ← 2026-06-26-teralizer-overview
 - **Autonomous Evaluation Run Findings** [audit] `2026-07-08-autonomous-eval-findings` ← 2026-06-26-teralizer-overview
+- **RQ5 + RQ6 Causes Reports** [plan] `2026-07-08-rq5-rq6-causes-plan` (0/42) ← 2026-07-08-evaluation-analysis-redesign
 
 ## draft
 
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
 - **Evaluation Analysis and Reporting Redesign** [spec] `2026-07-08-evaluation-analysis-redesign` ← 2026-06-26-teralizer-overview
-- **RQ5 + RQ6 Causes Reports** [plan] `2026-07-08-rq5-rq6-causes-plan` (0/42) ← 2026-07-08-evaluation-analysis-redesign
 
 _66 archived — see `docs/plans/archive/`._
