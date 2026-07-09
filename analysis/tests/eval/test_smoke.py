@@ -19,7 +19,9 @@ def test_registered_reports_build():
         spec = registry.get(rq)
         try:
             with connect(
-                spec.default_db, validate_schema=(spec.schema == "old")
+                spec.default_db,
+                validate_schema=(spec.schema == "old"),
+                require=spec.requires,
             ) as conn:
                 report = spec.build(conn)
         except OperationalError:

@@ -30,7 +30,7 @@ def test_cli_fans_out_to_targets(monkeypatch, tmp_path):
     import contextlib
 
     @contextlib.contextmanager
-    def fake_connect(db, *, validate_schema=False):
+    def fake_connect(db, *, validate_schema=False, require=None):
         yield None
 
     monkeypatch.setitem(
