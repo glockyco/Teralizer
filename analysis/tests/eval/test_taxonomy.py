@@ -80,3 +80,18 @@ def test_unknown_signal_is_uncoded():
         included_assertions=1,
     )
     assert classify(a) is UNCODED
+
+
+def test_no_input_spec_stage3_new_failures():
+    a = Attribution(
+        "ANALYZE_JPF",
+        "NO_INPUT_SPEC",
+        at_ceiling=False,
+        included_tests=4,
+        included_assertions=0,
+        assertion_exclusions_all_filtered=False,
+    )
+    c = classify(a)
+    assert c.stage == "3"
+    assert "new failures" in c.cause
+    assert c.type == "Mixed"

@@ -101,9 +101,14 @@ def classify(a: Attribution) -> Cause:
                 "Mixed",
             )
         if a.included_assertions == 0:
-            up_stage = "1 + 2" if a.assertion_exclusions_all_filtered else "3"
+            if a.assertion_exclusions_all_filtered:
+                return Cause(
+                    "1 + 2", "all assertions excluded due to filter rejections", "Mixed"
+                )
             return Cause(
-                up_stage, "all assertions excluded due to filter rejections", "Mixed"
+                "3",
+                "all assertions excluded due to earlier filter rejections and new failures",
+                "Mixed",
             )
         return UNCODED
 
