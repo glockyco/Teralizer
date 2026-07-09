@@ -122,8 +122,8 @@ teralizer/eval/
                   #   new-schema open connection); read_sql helper
   format.py       # column/number formatters (pct, count, float, runtime) --
                   #   single source, used by every renderer
-  macros.py       # dataset/variant/tool -> LaTeX macro map (migrated from
-                  #   exports.py) + plain names for markdown
+  macros.py       # dataset/variant/tool LaTeX macro map + name replacement
+                  #   (from exports.py + formatting.py) + plain markdown names
   plots.py        # reusable plot builders over the shared style (wraps
                   #   plotting.py)
   registry.py     # rq id -> (build_report callable, default DB, schema kind)
@@ -147,9 +147,13 @@ teralizer/eval/
 
 Each `reports/rqN.py` holds `get_*(conn)` (one SQL query each), `compute_*(df)`
 (logic/classification), plot builders, and `build_report(conn, cfg) -> RQReport`
-that assembles them. `plotting.py`, `formatting.py`, and `report_basis.py` are
-kept and adapted. The old `rqN_*.py`, `exclusions.py`, `stages.py`, and all
-notebooks are deleted as each RQ is ported.
+that assembles them. `plotting.py` (ACM plot style) and `report_basis.py`
+(connection base) are kept and adapted. `formatting.py` is decomposed and
+retired: its number formatters move to `format.py`, its project and variant
+macro replacement to `macros.py`, and its LaTeX table building to
+`render/latex.py`. Its variant-ordering helpers are dropped with the variant
+machinery. The old `rqN_*.py`, `exclusions.py`, `stages.py`, and all notebooks
+are deleted as each RQ is ported.
 
 RQ-to-module mapping (resolves the naming trap; paper numbering is
 authoritative):
@@ -298,7 +302,8 @@ markdown + paper exports, verify, then delete the old `rqN_*.py` module and its
 notebook. Migrate still-correct old-schema query logic into the new report's
 data layer. Retire the notebook machinery from `validate.py` and the
 notebook/html output dirs from `exports.py` at the end. Keep and adapt
-`plotting.py`, `formatting.py`, `report_basis.py`, and the macro maps.
+`plotting.py`, `report_basis.py`, and the macro maps. Decompose `formatting.py`
+into `format.py`, `macros.py`, and `render/latex.py` as described above.
 
 ## Open items
 
