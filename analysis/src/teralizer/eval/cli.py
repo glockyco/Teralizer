@@ -7,6 +7,7 @@ import os
 import shutil
 from pathlib import Path
 
+import teralizer.eval.reports  # noqa: F401
 from teralizer.eval import registry
 from teralizer.eval.data import connect
 from teralizer.eval.render import figures as figures_renderer
