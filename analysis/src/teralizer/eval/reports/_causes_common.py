@@ -31,9 +31,14 @@ def build_filtering_table(
 
 
 def build_breakdown_table(
-    df: pd.DataFrame, *, key: str, label: str, caption: str
+    df: pd.DataFrame,
+    *,
+    key: str,
+    label: str,
+    caption: str,
+    include_strategy: bool = False,
 ) -> Table:
-    """df columns: level, total, included, filtering, failures (integer counts)."""
+    """df columns: level, total, included, filtering, failures (and optional strategy)."""
     out = df.copy()
     for part in ("included", "filtering", "failures"):
         out[f"{part}_pct"] = out[part] / out["total"]
@@ -47,4 +52,15 @@ def build_breakdown_table(
         ColumnSpec("Failures", "failures", fmt="count", align="r"),
         ColumnSpec("Fail. %", "failures_pct", fmt="pct1", align="r"),
     ]
-    return Table(key=key, df=out, columns=columns, caption=caption, label=label)
+    group_by = None
+    if include_strategy:
+        columns = [ColumnSpec("Strategy", "strategy"), *columns]
+        group_by = "level"
+    return Table(
+        key=key,
+        df=out,
+        columns=columns,
+        caption=caption,
+        label=label,
+        group_by=group_by,
+    )

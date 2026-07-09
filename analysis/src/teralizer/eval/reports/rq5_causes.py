@@ -93,6 +93,7 @@ SELECT
     reject
 FROM pivoted
 WHERE reject > 0
+  AND level IN ('Test', 'Assertion')
 ORDER BY
     CASE level
         WHEN 'Test' THEN 1
@@ -106,6 +107,7 @@ BREAKDOWN_SQL = """
 WITH
     test_counts AS (
         SELECT
+            'All' AS strategy,
             'Test' AS level,
             CASE
                 WHEN t.is_included THEN 'included'
@@ -126,6 +128,7 @@ WITH
     ),
     assertion_counts AS (
         SELECT
+            'All' AS strategy,
             'Assertion' AS level,
             CASE
                 WHEN a.is_included THEN 'included'
@@ -147,42 +150,55 @@ WITH
     ),
     generalization_counts AS (
         SELECT
+            g.variant AS strategy,
             'Generalization' AS level,
             CASE
-                WHEN excluded_by IS NULL THEN 'included'
-                WHEN excluded_by = 'TestFilteringTask' THEN 'filtering'
+                WHEN g.is_included THEN 'included'
+                WHEN g.exclusion_info LIKE '%%TestFilteringTask%%' THEN 'filtering'
                 ELSE 'failures'
             END AS bucket,
-            sum(count) AS item_count
-        FROM mv_exclusions_all
-        WHERE level = '3-GENERALIZATION'
-        GROUP BY bucket
+            count(*) AS item_count
+        FROM generalization g
+        JOIN project p ON g.project_id = p.id
+        WHERE p.use_test_generalization
+        GROUP BY g.variant, bucket
     ),
     combined AS (
-        SELECT level, bucket, item_count FROM test_counts
+        SELECT strategy, level, bucket, item_count FROM test_counts
         UNION ALL
-        SELECT level, bucket, item_count FROM assertion_counts
+        SELECT strategy, level, bucket, item_count FROM assertion_counts
         UNION ALL
-        SELECT level, bucket, item_count FROM generalization_counts
+        SELECT strategy, level, bucket, item_count FROM generalization_counts
     ),
-    levels(level) AS (
-        VALUES ('Test'), ('Assertion'), ('Generalization')
+    report_rows AS (
+        SELECT 'All' AS strategy, 'Test' AS level
+        UNION ALL
+        SELECT 'All' AS strategy, 'Assertion' AS level
+        UNION ALL
+        SELECT DISTINCT g.variant AS strategy, 'Generalization' AS level
+        FROM generalization g
+        JOIN project p ON g.project_id = p.id
+        WHERE p.use_test_generalization
     )
 SELECT
-    levels.level,
+    report_rows.strategy,
+    report_rows.level,
     coalesce(sum(item_count), 0)::bigint AS total,
     coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,
     coalesce(sum(item_count) FILTER (WHERE bucket = 'filtering'), 0)::bigint AS filtering,
     coalesce(sum(item_count) FILTER (WHERE bucket = 'failures'), 0)::bigint AS failures
-FROM levels
-LEFT JOIN combined ON combined.level = levels.level
-GROUP BY levels.level
+FROM report_rows
+LEFT JOIN combined
+    ON combined.strategy = report_rows.strategy
+   AND combined.level = report_rows.level
+GROUP BY report_rows.strategy, report_rows.level
 ORDER BY
-    CASE levels.level
+    CASE report_rows.level
         WHEN 'Test' THEN 1
         WHEN 'Assertion' THEN 2
         WHEN 'Generalization' THEN 3
-    END
+    END,
+    report_rows.strategy
 """
 
 
@@ -197,12 +213,12 @@ def _fetch_filtering(conn: Connection) -> pd.DataFrame:
 
 
 def _fetch_breakdown(conn: Connection) -> pd.DataFrame:
-    """Return inclusion, filtering, and failure counts by exclusion level."""
+    """Return inclusion, filtering, and failure counts by level and strategy."""
     df = read_sql(conn, BREAKDOWN_SQL)
     for column in ("total", "included", "filtering", "failures"):
         df[column] = df[column].astype(int)
     return pd.DataFrame(
-        df, columns=["level", "total", "included", "filtering", "failures"]
+        df, columns=["strategy", "level", "total", "included", "filtering", "failures"]
     )
 
 
@@ -225,6 +241,7 @@ def build(conn: Connection) -> RQReport:
             "Test, assertion, and generalization exclusions by filtering versus "
             "failures for the controlled dataset."
         ),
+        include_strategy=True,
     )
     breakdown = replace(
         breakdown, provenance=capture(_fetch_breakdown, query=BREAKDOWN_SQL)

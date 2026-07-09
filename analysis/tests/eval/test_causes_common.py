@@ -58,3 +58,24 @@ def test_breakdown_table_percentages_over_total():
         "failures",
         "failures_pct",
     ]
+
+
+def test_breakdown_table_with_strategy_column():
+    df = pd.DataFrame(
+        {
+            "strategy": ["All", "All", "Baseline", "ImprovedC"],
+            "level": ["Test", "Assertion", "Generalization", "Generalization"],
+            "total": [100, 200, 50, 50],
+            "included": [90, 150, 48, 40],
+            "filtering": [8, 40, 2, 9],
+            "failures": [2, 10, 0, 1],
+        }
+    )
+    table = build_breakdown_table(
+        df, key="b", label="tab:z", caption="C", include_strategy=True
+    )
+    assert table.columns[0].source == "strategy"
+    assert table.columns[1].source == "level"
+    assert table.group_by == "level"
+    # two generalization rows survive (per strategy), not collapsed
+    assert (table.df["level"] == "Generalization").sum() == 2
