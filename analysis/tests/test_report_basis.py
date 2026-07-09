@@ -44,13 +44,13 @@ def test_basis_header_formats_counts_and_ledger_progress(tmp_path: Path):
     try:
         with engine.begin() as conn:
             _create_basis_schema(conn)
-            basis = collect_basis(conn, "postgres_reporeapers_rerun2", ledger=ledger)
+            basis = collect_basis(conn, "postgres_reporeapers", ledger=ledger)
     finally:
         engine.dispose()
 
     assert format_basis_header(basis) == (
         "# Analysis basis\n"
-        "db: postgres_reporeapers_rerun2\n"
+        "db: postgres_reporeapers\n"
         "projects: 2\n"
         "tests: 3\n"
         "assertions: 4 (included: 2)\n"

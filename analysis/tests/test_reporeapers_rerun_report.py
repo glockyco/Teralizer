@@ -1,6 +1,5 @@
 """Tests for RepoReapers rerun report integrity invariants."""
 
-from pathlib import Path
 import pytest
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -715,11 +714,6 @@ def test_generate_report_includes_first_cause_attribution(monkeypatch, conn):
     }
 
     monkeypatch.setattr(report, "get_run_progress", lambda _conn: progress)
-    monkeypatch.setattr(
-        report,
-        "get_baseline_deltas",
-        lambda *_args: {"delta_scope": pd.DataFrame(), "delta_summary": pd.DataFrame()},
-    )
     for name in (
         "get_telemetry_integrity",
         "get_entity_counts",
@@ -746,7 +740,7 @@ def test_generate_report_includes_first_cause_attribution(monkeypatch, conn):
         report, "get_first_cause_attribution", lambda _conn: first_cause, raising=False
     )
 
-    result = report.generate_report(conn, top=3, baseline_db="", ledger=Path("unused"))
+    result = report.generate_report(conn, top=3)
 
     assert result["first_cause_attribution"].equals(first_cause)
 
@@ -788,8 +782,6 @@ def test_print_report_includes_first_cause_attribution_section(capsys):
                 }
             ]
         ),
-        "delta_scope": frame,
-        "delta_summary": frame,
     }
 
     report.print_report(rendered_report, top=3)

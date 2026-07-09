@@ -3,12 +3,12 @@
 Run from the repository root, for example:
 
     uv run --directory analysis python -m teralizer.reporeapers_rerun_report \
-        --db postgres_reporeapers_rerun2
+        --db postgres_reporeapers
 
 The report is intentionally read-only. It summarizes the pipeline evidence we
 use for planning: telemetry integrity, the filter funnel by stable reason
 code, SPF/spec extraction losses, build failure causes, true end-to-end
-yield, assertion semantics, and baseline deltas. Telemetry-backed sections
+yield, and assertion semantics. Telemetry-backed sections
 skip with an explicit note against snapshots that predate the tables.
 """
 
@@ -22,7 +22,6 @@ from typing import Any
 import pandas as pd
 from sqlalchemy import Connection, text
 
-from teralizer.config import db_config
 from teralizer.exports import save_csv_data
 from teralizer.report_basis import open_report_connection, print_basis_header
 
@@ -985,129 +984,13 @@ def get_build_failure_causes(conn: Connection) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Baseline deltas
-# ---------------------------------------------------------------------------
-
-
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-
-
-def read_capped_root_paths(ledger: Path) -> set[str]:
-    """Root paths whose run was wall-capped (exit 124 in the attempt ledger).
-
-    The database carries no exit codes, so the ledger is the only source. A
-    capped project has a truncated funnel and must be excluded PAIRWISE from
-    every baseline comparison. A missing ledger raises: silently comparing
-    truncated funnels against full baseline rows corrupts every delta.
-    """
-    resolved = ledger if ledger.is_absolute() else _REPO_ROOT / ledger
-    if not resolved.exists():
-        raise FileNotFoundError(
-            f"attempt ledger not found: {resolved} (pass --ledger explicitly)"
-        )
-    frame = pd.read_csv(resolved, sep="\t")
-    return set(frame.loc[frame["exit_code"] == 124, "root_path"])
-
-
-def _per_project_aggregates(conn: Connection) -> pd.DataFrame:
-    """Funnel aggregates per project root, identical shape on any snapshot.
-
-    Retried projects leave duplicate root_path rows. The highest project id
-    is the latest attempt and the one the comparison keeps.
-    """
-    df = _read_sql(
-        conn,
-        """
-        SELECT
-            p.id,
-            p.root_path,
-            (SELECT count(*) FROM test t WHERE t.project_id = p.id) AS tests,
-            (SELECT count(*) FROM assertion a WHERE a.project_id = p.id) AS assertions,
-            (SELECT count(*) FROM assertion a
-              WHERE a.project_id = p.id AND a.is_included) AS assertions_included,
-            (SELECT count(*) FROM generalization g
-              WHERE g.project_id = p.id) AS generalizations,
-            (SELECT count(*) FROM generalization g
-              WHERE g.project_id = p.id AND g.is_included) AS gens_included
-        FROM project p
-        ORDER BY p.id
-        """,
-    )
-    return df.drop_duplicates(subset="root_path", keep="last").drop(columns="id")
-
-
-def get_baseline_deltas(
-    conn: Connection, baseline_db: str, ledger: Path
-) -> dict[str, pd.DataFrame]:
-    """Baseline-vs-snapshot funnel deltas, joined on root_path.
-
-    Comparisons cover only projects present in BOTH snapshots and never
-    wall-capped. Joins are on root_path, never id.
-    """
-    try:
-        baseline_engine = db_config.get_engine(baseline_db, validate=False)
-        with baseline_engine.connect() as baseline_conn:
-            base = _per_project_aggregates(baseline_conn)
-    except Exception as error:  # noqa: BLE001 - report, never crash the snapshot report
-        note = pd.DataFrame(
-            [{"note": f"baseline '{baseline_db}' unavailable: {error}"}]
-        )
-        return {"delta_scope": note, "delta_summary": note}
-
-    current = _per_project_aggregates(conn)
-    capped = read_capped_root_paths(ledger)
-
-    merged = base.merge(
-        current, on="root_path", how="inner", suffixes=("_base", "_new")
-    )
-    comparable = merged[~merged["root_path"].isin(capped)]
-
-    scope = pd.DataFrame(
-        [
-            {
-                "baseline_projects": len(base),
-                "snapshot_projects": len(current),
-                "common": len(merged),
-                "capped_excluded": len(merged) - len(comparable),
-                "compared": len(comparable),
-            }
-        ]
-    )
-
-    metrics = [
-        "tests",
-        "assertions",
-        "assertions_included",
-        "generalizations",
-        "gens_included",
-    ]
-    rows = []
-    for metric in metrics:
-        base_total = int(comparable[f"{metric}_base"].sum())
-        new_total = int(comparable[f"{metric}_new"].sum())
-        rows.append(
-            {
-                "metric": metric,
-                "baseline": base_total,
-                "snapshot": new_total,
-                "delta": new_total - base_total,
-            }
-        )
-    summary = pd.DataFrame(rows)
-    return {"delta_scope": scope, "delta_summary": summary}
-
-
-# ---------------------------------------------------------------------------
 # Reporting
 # ---------------------------------------------------------------------------
 
 
-def generate_report(
-    conn: Connection, top: int, baseline_db: str, ledger: Path
-) -> dict[str, pd.DataFrame]:
+def generate_report(conn: Connection, top: int) -> dict[str, pd.DataFrame]:
     """Run all snapshot queries."""
     progress = get_run_progress(conn)
-    deltas = get_baseline_deltas(conn, baseline_db, ledger)
     return {
         "telemetry_integrity": get_telemetry_integrity(conn),
         "run_projects": progress["projects"],
@@ -1133,8 +1016,6 @@ def generate_report(
         "assertion_semantics_profile": get_assertion_semantics_profile(conn),
         "fail_matcher_breakdown": get_fail_and_matcher_breakdown(conn),
         "build_failure_causes": get_build_failure_causes(conn),
-        "delta_scope": deltas["delta_scope"],
-        "delta_summary": deltas["delta_summary"],
     }
 
 
@@ -1177,8 +1058,6 @@ def print_report(report: dict[str, pd.DataFrame], top: int) -> None:
             "build_failure_causes",
             None,
         ),
-        ("Baseline delta scope (pairwise capped exclusion)", "delta_scope", None),
-        ("Baseline deltas (compared projects only)", "delta_summary", None),
     ]
 
     print("# RepoReapers rerun barrier snapshot")
@@ -1200,19 +1079,14 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--db",
-        default="postgres_reporeapers_rerun2",
-        help="database to inspect (default: postgres_reporeapers_rerun2)",
-    )
-    parser.add_argument(
-        "--baseline-db",
-        default="postgres_reporeapers_rerun",
-        help="baseline database for the delta section (default: postgres_reporeapers_rerun)",
+        default="postgres_reporeapers",
+        help="database to inspect (default: postgres_reporeapers)",
     )
     parser.add_argument(
         "--ledger",
         type=Path,
-        default=Path("data/reporeapers-rerun-2/status.tsv"),
-        help="attempt ledger whose exit-124 rows are excluded pairwise from deltas",
+        default=None,
+        help="optional attempt ledger for the basis header done-marker progress",
     )
     parser.add_argument(
         "--top",
@@ -1231,7 +1105,7 @@ def main() -> None:
     args = parse_args()
     with open_report_connection(args.db) as conn:
         print_basis_header(conn, args.db, ledger=args.ledger)
-        report = generate_report(conn, args.top, args.baseline_db, args.ledger)
+        report = generate_report(conn, args.top)
         print_report(report, args.top)
     if args.csv_prefix:
         paths = export_report(report, args.csv_prefix)
