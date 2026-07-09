@@ -4,6 +4,7 @@ from teralizer.eval.model import Table
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
     build_filtering_table,
+    variant_sort_key,
 )
 
 
@@ -79,3 +80,55 @@ def test_breakdown_table_with_strategy_column():
     assert table.group_by == "level"
     # two generalization rows survive (per strategy), not collapsed
     assert (table.df["level"] == "Generalization").sum() == 2
+
+
+def test_variant_sort_key_orders_baseline_naive_improved():
+    order = [
+        "BASELINE",
+        "NAIVE_10_TRIES",
+        "NAIVE_50_TRIES",
+        "NAIVE_200_TRIES",
+        "IMPROVED_10_TRIES",
+        "IMPROVED_50_TRIES",
+        "IMPROVED_200_TRIES",
+    ]
+    keys = [variant_sort_key(v) for v in order]
+    assert keys == sorted(keys)
+    assert len(set(keys)) == len(keys)
+
+
+def test_breakdown_strategy_rows_ordered():
+    df = pd.DataFrame(
+        {
+            "strategy": [
+                "All",
+                "All",
+                "IMPROVED_200_TRIES",
+                "NAIVE_50_TRIES",
+                "BASELINE",
+                "IMPROVED_10_TRIES",
+                "NAIVE_200_TRIES",
+                "IMPROVED_50_TRIES",
+                "NAIVE_10_TRIES",
+            ],
+            "level": ["Test", "Assertion"] + ["Generalization"] * 7,
+            "total": [10, 10, 1, 1, 1, 1, 1, 1, 1],
+            "included": [9, 9, 1, 1, 1, 1, 1, 1, 1],
+            "filtering": [1, 1, 0, 0, 0, 0, 0, 0, 0],
+            "failures": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        }
+    )
+    table = build_breakdown_table(
+        df, key="b", label="tab:z", caption="C", include_strategy=True
+    )
+    assert list(table.df["level"])[:2] == ["Test", "Assertion"]
+    gen = table.df[table.df["level"] == "Generalization"]
+    assert list(gen["strategy"]) == [
+        "BASELINE",
+        "NAIVE_10_TRIES",
+        "NAIVE_50_TRIES",
+        "NAIVE_200_TRIES",
+        "IMPROVED_10_TRIES",
+        "IMPROVED_50_TRIES",
+        "IMPROVED_200_TRIES",
+    ]

@@ -4,9 +4,25 @@ layer; the Table shape, columns, and percentage formatting live here once."""
 
 from __future__ import annotations
 
+import re
+
 import pandas as pd
 
 from teralizer.eval.model import ColumnSpec, Table
+
+_VARIANT_HEAD = {"ORIGINAL": 0, "INITIAL": 1, "SHARED": 2, "BASELINE": 3}
+_VARIANT_GROUP = {"NAIVE": 4, "IMPROVED": 5}
+_LEVEL_ORDER = {"Test": 0, "Assertion": 1, "Generalization": 2}
+
+
+def variant_sort_key(variant: str) -> int:
+    """Canonical rank: baseline first, then naive then improved, each ascending by tries."""
+    if variant in _VARIANT_HEAD:
+        return _VARIANT_HEAD[variant] * 1000
+    m = re.match(r"^(NAIVE|IMPROVED)_(\d+)_TRIES$", variant)
+    if m:
+        return _VARIANT_GROUP[m.group(1)] * 1000 + int(m.group(2))
+    return 99000
 
 
 def build_filtering_table(
@@ -56,6 +72,16 @@ def build_breakdown_table(
     if include_strategy:
         columns = [ColumnSpec("Strategy", "strategy"), *columns]
         group_by = "level"
+    if include_strategy:
+        out = out.assign(
+            _lvl=out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99)),
+            _var=out["strategy"].map(variant_sort_key),
+        )
+        out = (
+            out.sort_values(["_lvl", "_var"])
+            .drop(columns=["_lvl", "_var"])
+            .reset_index(drop=True)
+        )
     return Table(
         key=key,
         df=out,

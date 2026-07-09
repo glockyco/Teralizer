@@ -23,7 +23,7 @@ REQUIRES: tuple[Required, ...] = (
     Required(
         "generalization",
         "table",
-        ("id", "variant", "is_included", "exclusion_info"),
+        ("id", "variant", "is_included", "exclusion_info", "project_id"),
     ),
     Required(
         "filter_result",

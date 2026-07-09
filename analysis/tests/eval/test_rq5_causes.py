@@ -98,3 +98,18 @@ def test_rq5_filtering_is_test_and_assertion_only():
     report = _report()
     filtering = next(t for t in report.tables() if "filtering" in t.label)
     assert set(filtering.df["level"]) == {"Test", "Assertion"}
+
+
+def test_rq5_generalization_strategy_order():
+    report = _report()
+    breakdown = next(t for t in report.tables() if "breakdown" in t.label)
+    gen = breakdown.df[breakdown.df["level"] == "Generalization"]
+    assert list(gen["strategy"]) == [
+        "BASELINE",
+        "NAIVE_10_TRIES",
+        "NAIVE_50_TRIES",
+        "NAIVE_200_TRIES",
+        "IMPROVED_10_TRIES",
+        "IMPROVED_50_TRIES",
+        "IMPROVED_200_TRIES",
+    ]
