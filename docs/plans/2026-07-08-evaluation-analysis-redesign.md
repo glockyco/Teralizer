@@ -267,22 +267,45 @@ a known function. The design:
   `artifact_id` to its value or caption, producing function, source URL, query,
   and commit. It is a machine-readable audit trail, so every number stays
   traceable even where the paper renders no visible link.
-- **In-document links at table and figure granularity**, the `showyourwork`
-  style. The markdown report renders a "source: `module.function` at `<commit>`"
-  GitHub permalink under each table and figure. The LaTeX track offers an opt-in
-  `\provenance{id}` caption footnote. Inline prose numbers stay clean (macro
-  only) and trace through the manifest, since a visible link on every inline
-  number would clutter.
+- **In-document provenance at table and figure granularity**, per renderer.
+  `showyourwork` patches the LaTeX `figure` environment to inject clickable
+  **margin icons** whose links resolve to `<repo>/blob/<sha>/<script>` at the
+  build commit (its `\GitHubURL` / `\GitHubSHA` macros supply the pin), plus a
+  second icon to the dataset. We take the idea and split it by medium:
+  - **LaTeX** -- an opt-in `\provenance{id}` in the caption renders a small
+    GitHub-linked icon to the producing source at the pinned commit, and we emit
+    `\GitHubURL` / `\GitHubSHA`-style macros so the paper builds the permalink.
+  - **Markdown** -- no margins, so a short caption text-link
+    ("source: `module.function`") to the same permalink. It is greppable and
+    unambiguous on GitHub, where a bare icon is not.
+  Inline prose numbers stay clean (macro only) and trace through the manifest.
+  `showyourwork` likewise annotates figures and tables, not inline numbers.
+- **A generated reproducibility appendix** -- one short paragraph naming the
+  analysis repo, the build commit, and the rebuild command, following
+  `showyourwork`'s reproducibility-paragraph convention. Cheap and journal-facing.
+- **Optionally, embed the build commit in each figure's raster metadata**
+  (matplotlib `savefig(metadata=...)`), the FAIR code-to-figure trick, so
+  provenance travels inside the `.png` / `.pdf` even apart from the manifest.
 
 Provenance falls out of the result model as a field set where each artifact is
 built, rather than being bolted on afterward. The manifest doubles as a
 reproducibility check: an artifact with no captured source is a build error.
 
-References considered: generated-macro and `\reproduce{}` provenance macros
-(arXiv 1608.06897), the code-to-figure provenance chain (arXiv 2604.25944), and
-`showyourwork` (Luger) for figure-to-script-to-commit linking. Literate
-programming (knitr, PythonTeX, Quarto) was rejected because our analysis feeds
-the paper rather than living inside the `.tex`.
+References and alternatives considered, coarse to fine:
+
+- ACM / NISO artifact badges -- page-level trust signals, not links.
+- Compute capsules (Code Ocean, Whole Tale) -- DOI-cited, re-run wholesale.
+- An explicit "reproduce" mapping doc -- figure or table to script.
+- `showyourwork` (Luger et al. 2021) -- in-document figure-to-script-to-commit
+  icons, the model we adapt.
+- The FAIR code-to-figure chain (arXiv 2604.25944) -- commit id embedded in
+  figure metadata.
+- The `\reproduce{}` provenance macro (arXiv 1608.06897).
+
+Literate programming (knitr, PythonTeX, Quarto) was rejected because our
+analysis feeds the paper rather than living inside the `.tex`. We take the
+manifest as the machine-readable spine and `showyourwork`-style visible links as
+the human affordance.
 
 ## Testing
 
