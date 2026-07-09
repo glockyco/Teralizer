@@ -55,10 +55,10 @@ are unaffected.
 
 ## Database Configuration
 
-- **postgres_dev**: Contains eqbench and commons-utils projects
-- **postgres_test**: Contains repo-reapers projects
-- **postgres_reporeapers_rerun**: pre-fusion baseline corpus, protected (comparisons join on
-  `root_path`, never `id`)
+- **postgres_dev**: eqbench and commons-utils projects (published-paper corpus, protected)
+- **postgres_test**: RepoReapers projects (published-paper corpus, protected)
+- **postgres_reporeapers**: RepoReapers corpus on the current pipeline (in-flight for the next
+  paper version, unprotected). Cross-DB comparisons join on `root_path`, never `id`
 - Scratch databases (`postgres_verification`, `postgres_<purpose>_verify`) are created and
   dropped by runner scripts. Never experiment on the databases above
 - Centralized config in `analysis/src/teralizer/config.py` provides `db_config.get_dev_engine()` and `db_config.get_test_engine()`

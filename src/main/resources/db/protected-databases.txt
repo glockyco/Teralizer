@@ -5,8 +5,4 @@
 postgres
 postgres_dev
 postgres_test
-postgres_timeout_retry
-postgres_reporeapers_rerun
-postgres_reporeapers_rerun2
-postgres_fusion_spike
 *_replication

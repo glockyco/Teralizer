@@ -42,8 +42,9 @@ class ConfigurationTest {
     void policyFileListsCanonicalProtectedNames() {
         List<String> patterns = Configuration.loadProtectedDatabasePatterns(Configuration.PROTECTED_DB_PATH);
         assertTrue(patterns.contains("postgres_dev"));
-        assertTrue(patterns.contains("postgres_reporeapers_rerun"));
-        assertTrue(patterns.contains("postgres_fusion_spike"));
+        assertTrue(patterns.contains("postgres_test"));
+        assertTrue(patterns.contains("*_replication"));
+        assertFalse(patterns.contains("postgres_reporeapers_rerun"));
     }
 
     @Test

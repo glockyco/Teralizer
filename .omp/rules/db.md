@@ -7,9 +7,9 @@ globs:
 
 # Database conventions
 
-- Container `postgres-teralizer`, `localhost:5432`. Protected DBs (never drop, never use for
-  experiments): `postgres_dev`, `postgres_test`, `postgres_timeout_retry`,
-  `postgres_reporeapers_rerun`. Experiments use scratch DBs (`postgres_<purpose>_verify`,
+- Container `postgres-teralizer`, `localhost:5432`. Protected DBs are the published-paper corpora
+  (never drop, never use for experiments): `postgres_dev`, `postgres_test`. In-flight corpora for
+  the next version stay unprotected. Experiments use scratch DBs (`postgres_<purpose>_verify`,
   `postgres_verification`) created/dropped by runner scripts. Schema reference:
   `docs/database.md`. Source of truth: `src/main/resources/db/create-tables.sql`.
 - Cross-DB comparisons join on `root_path`, never on `id`.

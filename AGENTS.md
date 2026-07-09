@@ -71,10 +71,10 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
   `.env`. Never sync automatically.
 
 ## Database
-Dockerized Postgres, container `postgres-teralizer`, `localhost:5432`. Protected DBs (never drop,
-never use for experiments): `postgres_dev` (eqbench + commons-utils), `postgres_test`
-(RepoReapers), `postgres_timeout_retry`, `postgres_reporeapers_rerun` (pre-fusion baseline),
-`postgres_fusion_spike`. A run names its target database in its profile (`teralizer.database.name`),
+Dockerized Postgres, container `postgres-teralizer`, `localhost:5432`. Protected DBs are the
+corpora the published paper depends on (never drop, never use for experiments): `postgres_dev`
+(eqbench + commons-utils) and `postgres_test` (RepoReapers). Corpora still being iterated for the
+next paper version stay deliberately unprotected. A run names its target database in its profile (`teralizer.database.name`),
 or on the command line with `-Dteralizer.database.name`. Targeting a protected corpus requires
 `teralizer.database.allow-protected = true`. The canonical protected list lives in
 `src/main/resources/db/protected-databases.txt`.
