@@ -1,9 +1,10 @@
 ---
 title: Eval Framework Foundation
 type: plan
-status: active
+status: implemented
 created: 2026-07-08
 parent: 2026-07-08-evaluation-analysis-redesign
+archived: 2026-07-09
 ---
 
 # Eval Framework Foundation Implementation Plan

@@ -22,7 +22,6 @@
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
 - **Evaluation Run Map (RQ0 + RQ6)** [audit] `2026-07-07-evaluation-run-map` ← 2026-06-26-teralizer-overview
 - **Autonomous Evaluation Run Findings** [audit] `2026-07-08-autonomous-eval-findings` ← 2026-06-26-teralizer-overview
-- **Eval Framework Foundation** [plan] `2026-07-08-eval-framework-plan` (—) ← 2026-07-08-evaluation-analysis-redesign
 
 ## draft
 
@@ -30,4 +29,4 @@
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
 - **Evaluation Analysis and Reporting Redesign** [spec] `2026-07-08-evaluation-analysis-redesign` ← 2026-06-26-teralizer-overview
 
-_65 archived — see `docs/plans/archive/`._
+_66 archived — see `docs/plans/archive/`._
