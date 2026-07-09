@@ -101,9 +101,15 @@ plus a presentation layer neither has cleanly.
     repo (`--paper-out` / `PAPER_REPO_PATH`), committed there so the paper is
     self-contained.
 - **Numbers macros.** The LaTeX track emits a `macros.tex` with one
-  `\newcommand` per `Metric`; the paper prose cites macros
-  (e.g. `\RQsixEligiblePct`) instead of hand-typed numbers that drift when the
-  pipeline changes. Enables provenance (see below).
+  `\newcommand` per `Metric`. The paper prose cites macros instead of
+  hand-typed numbers that drift when the pipeline changes, which also enables
+  provenance (see below). Macros are named by **meaning, never by RQ number**:
+  a metric carries a stable semantic key (`realworld.eligible_projects_pct`)
+  that maps to a `\newcommand`-legal, prefixed CamelCase name
+  (`\TzRealworldEligiblePct`). RQ indices are section ordering, the least stable
+  attribute, so they stay out of the identity and renumbering never rewrites a
+  macro. (LaTeX command names are letters-only, so a literal `\RQ6...` is not
+  even definable without `\csname`.)
 - **RQ6 eligibility filter.** Re-derive the "exclude projects that fail on their
   own build / dependency / compile issues rather than our pipeline" filter from
   rerun3's structured diagnostics (the 632-vs-1161 reconciliation: 632 was the
@@ -173,9 +179,10 @@ authoritative):
 
 Render-agnostic dataclasses:
 
-- **`Metric`** -- a named scalar plus formatter (`eligible_projects=1161`,
-  `stage12_excl_pct=0.794`). Every number the report cites is a `Metric`;
-  markdown substitutes it inline, LaTeX emits it as a macro.
+- **`Metric`** -- a semantic key, a scalar value, and a formatter
+  (`realworld.eligible_projects_pct = 0.794`). Every number the report cites is
+  a `Metric`. Markdown substitutes its formatted value inline. LaTeX emits it as
+  a `\newcommand` whose name derives from the key (see Numbers macros).
 - **`ColumnSpec`** -- header text, source DataFrame column, formatter (from
   `format.py`), alignment. Formatting is defined **once** here, killing the
   current duplication between `generate_*_table` and `generate_*_csv`.
@@ -327,6 +334,43 @@ data layer. Retire the notebook machinery from `validate.py` and the
 notebook/html output dirs from `exports.py` at the end. Keep and adapt
 `plotting.py`, `report_basis.py`, and the macro maps. Decompose `formatting.py`
 into `format.py`, `macros.py`, and `render/latex.py` as described above.
+
+## Documentation and artifact-review impact
+
+Retiring the notebooks invalidates the notebook-centric parts of the artifact's
+reviewer-facing docs. The redesign is a net win for artifact review -- committed
+markdown reports make the "inspect" tier zero-setup, one CLI command replaces
+"run the notebooks in order," and the provenance manifest traces any number to
+its code and commit -- but the following must be updated in lockstep:
+
+- **Reviewer-facing:** `README.md` (bundle contents, workflow table, the
+  Analysis Notebooks section and its mapping, Jupyter access, DB line, directory
+  tree), `INSTALL.md` (Jupyter checkpoints), `REQUIREMENTS.md` (the JupyterLab
+  row), `STATUS.md` (notebook and variant claims throughout).
+- **Dev-facing:** `AGENTS.md` / `GEMINI.md` / `CLAUDE.md` (commands table, the
+  `analysis/output` export layout), `.omp/rules/python.md`, and the analysis
+  `pyproject.toml` / `.pre-commit-config.yaml` / `.gitignore` notebook entries.
+- **Automation:** the packaged `replication/` scripts (`run-notebooks.sh`,
+  `verify-outputs.sh`, `quick-start.sh`), `Dockerfile.analysis`, and the
+  `scripts/packaging/` assembly.
+- **Unaffected:** `docs/artifacts.md` (pipeline output, not analysis) and
+  `docs/architecture.md` / `docs/database.md`.
+
+Three reviewer-facing corrections the redesign forces:
+
+- **Figure determinism.** The "all outputs match exactly" claim holds for `.tex`
+  and `.csv` but not for rasters (matplotlib output is not byte-identical across
+  versions or platforms). Output verification diffs figure **data**, not pixels.
+- **Database inventory.** The package ships `postgres_dev` and `postgres_test`.
+  The redesign reads `postgres_dev` (RQ1-5), `postgres_reporeapers_rerun3` (RQ6),
+  and `postgres_jarvis_{scoreboard,census}` (RQ0). The `teralizer-core` bundle
+  must carry the rerun3 and jarvis dumps, and `postgres_test` is dropped.
+- **RQ0 mapping.** RQ0 (JARVIS) is new and absent from the current notebook map.
+
+Treat the doc and packaging updates as a first-class migration deliverable, not
+an afterthought, and fold the analysis-workflow description (today duplicated
+across README, the agent files, and `python.md`) into the CLI as the single
+documented entrypoint.
 
 ## Open items
 
