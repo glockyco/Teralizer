@@ -52,3 +52,6 @@ def test_funnel_table_has_band_summary_note():
     assert str(result.eligible) in note
     for band in result.stages:
         assert band.stage in note
+    assert "excluded" in note
+    for band in result.stages:
+        assert str(band.exclusions) in note

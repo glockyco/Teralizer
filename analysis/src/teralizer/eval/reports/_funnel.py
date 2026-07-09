@@ -235,7 +235,7 @@ def build_funnel(conn: Connection) -> FunnelResult:
         rate = band.passing / band.entering if band.entering else 0.0
         band_parts.append(
             f"Stage {band.stage}: {band.entering} entering, "
-            f"{band.passing} included ({rate:.1%})."
+            f"{band.passing} included, {band.exclusions} excluded ({rate:.1%})."
         )
     overall = success_count / eligible if eligible else 0.0
     band_parts.append(
