@@ -113,3 +113,19 @@ def test_rq5_generalization_strategy_order():
         "IMPROVED_50_TRIES",
         "IMPROVED_200_TRIES",
     ]
+
+
+def test_rq5_filtering_row_order():
+    report = _report()
+    filtering = next(t for t in report.tables() if "filtering" in t.label)
+    order = list(zip(filtering.df["level"], filtering.df["filter"]))
+    assert order == [
+        ("Test", "NonPassingTest"),
+        ("Test", "TestType"),
+        ("Test", "NoAssertions"),
+        ("Assertion", "AssertionType"),
+        ("Assertion", "ExcludedTest"),
+        ("Assertion", "MissingValue"),
+        ("Assertion", "ParameterType"),
+        ("Assertion", "VoidReturnType"),
+    ]

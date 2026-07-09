@@ -132,3 +132,46 @@ def test_breakdown_strategy_rows_ordered():
         "IMPROVED_50_TRIES",
         "IMPROVED_200_TRIES",
     ]
+
+
+def test_filtering_table_orders_level_then_filter():
+    df = pd.DataFrame(
+        {
+            "level": [
+                "Assertion",
+                "Test",
+                "Assertion",
+                "Test",
+                "Assertion",
+                "Test",
+                "Assertion",
+                "Assertion",
+            ],
+            "filter": [
+                "ParameterType",
+                "NoAssertions",
+                "AssertionType",
+                "NonPassingTest",
+                "MissingValue",
+                "TestType",
+                "VoidReturnType",
+                "ExcludedTest",
+            ],
+            "total": [1] * 8,
+            "accept": [1] * 8,
+            "defer": [0] * 8,
+            "reject": [1] * 8,
+        }
+    )
+    table = build_filtering_table(df, key="f", label="tab:z", caption="C")
+    order = list(zip(table.df["level"], table.df["filter"]))
+    assert order == [
+        ("Test", "NonPassingTest"),
+        ("Test", "TestType"),
+        ("Test", "NoAssertions"),
+        ("Assertion", "AssertionType"),
+        ("Assertion", "ExcludedTest"),
+        ("Assertion", "MissingValue"),
+        ("Assertion", "ParameterType"),
+        ("Assertion", "VoidReturnType"),
+    ]

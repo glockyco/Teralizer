@@ -13,6 +13,23 @@ from teralizer.eval.model import ColumnSpec, Table
 _VARIANT_HEAD = {"ORIGINAL": 0, "INITIAL": 1, "SHARED": 2, "BASELINE": 3}
 _VARIANT_GROUP = {"NAIVE": 4, "IMPROVED": 5}
 _LEVEL_ORDER = {"Test": 0, "Assertion": 1, "Generalization": 2}
+# Paper/table display order for filters. This is the hand-curated order used in
+# the published tables, deliberately NOT the pipeline application order.
+_FILTER_ORDER = {
+    "NonPassingTest": 0,
+    "TestType": 1,
+    "NoAssertions": 2,
+    "AssertionType": 0,
+    "ExcludedTest": 1,
+    "MissingValue": 2,
+    "ParameterType": 3,
+    "ReturnType": 4,
+    "VoidReturnType": 4,
+}
+
+
+def filter_sort_key(filter_name: str) -> int:
+    return _FILTER_ORDER.get(filter_name, 99)
 
 
 def variant_sort_key(variant: str) -> int:
@@ -32,7 +49,15 @@ def build_filtering_table(
     out = df.copy()
     for decision in ("accept", "defer", "reject"):
         out[f"{decision}_pct"] = out[decision] / out["total"]
-    out = out.sort_values(["level", "filter"]).reset_index(drop=True)
+    out = out.assign(
+        _lvl=out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99)),
+        _fil=out["filter"].map(filter_sort_key),
+    )
+    out = (
+        out.sort_values(["_lvl", "_fil", "filter"])
+        .drop(columns=["_lvl", "_fil"])
+        .reset_index(drop=True)
+    )
     columns = [
         ColumnSpec("Level", "level"),
         ColumnSpec("Filter Name", "filter"),
