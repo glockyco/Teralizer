@@ -47,7 +47,7 @@ Discovered while auditing the gen-only RQ6 output:
 | Census (commons, big, IMPROVED_100, 3600 s cap) | 285 / 1116 / 1467 | 90 / 886 / 1375 |
 | Controlled (`postgres_dev`, few huge projects) | 3396 / 9738 / 23847 | 817 / 3452 / 3455 |
 
-## Phase 0: JaCoCo-reduction spike (in progress)
+## Phase 0: JaCoCo-reduction spike (complete)
 
 Reproduce the reduction-phase JaCoCo failures on the *current* restored-build pipeline; separate
 fixable pipeline causes from genuinely un-instrumentable projects.
@@ -65,6 +65,31 @@ fixable pipeline causes from genuinely un-instrumentable projects.
 - Read per project: do ORIGINAL/INITIAL/GENERALIZED JaCoCo succeed now? For fails, diagnose why
   `jacoco.csv` is absent (empty `.exec`, plugin/goal error, Android). Fix fixable pipeline causes;
   flag genuinely un-instrumentable projects as legitimate Stage-5 exclusions.
+
+**Findings (spike + manual fix spike, validated):**
+- Control JadConfig: ORIGINAL/INITIAL/GENERALIZED JaCoCo all SUCCEEDED. Three targets (astina,
+  geophile, webbit) FAILED at `COLLECT_JACOCO_DATA_ORIGINAL` on current code; four never reached
+  reduction. Root cause (built-in grep): each failing POM hardcodes a surefire `<argLine>` (astina
+  `-Dfile.encoding`, geophile `-ea -Xmx...`, webbit `-Xmx1024m`) that overrides JaCoCo's `argLine`
+  property, so `-javaagent:jacocoagent` never attaches -> no `.exec` -> `jacoco:report` finds no
+  CSV. Control JadConfig has no surefire `argLine`. So a large share of the paper's 40 "JaCoCo
+  outputs not found" exclusions are fixable pipeline issues, not genuine un-instrumentability.
+- Manual fix spike on astina (scratch POM in the checkout, removed after): surefire floored
+  2.15 -> 2.22.2 and `<argLine>@{argLine} -Dfile.encoding=...</argLine>` -> agent attached,
+  `jacoco.exec` (40 KB) and `jacoco.csv` (4.3 KB) produced (both previously absent). `@{argLine}`
+  resolved on 2.22.2.
+- Semantic shift confirmed + bounded: flooring flips 1/15 astina tests to failing under 2.22.2.
+  `TestExecutionTask:122-145` tolerates "There are test failures." (logs, does not fail the stage)
+  and the `.exec` is produced regardless, so the project is recovered rather than excluded earlier;
+  INITIAL and GENERALIZED stay floored-vs-floored consistent.
+
+**Validated fix design (built at ADD_DEPENDENCIES):** native `pom.teralizer.xml` serves ORIGINAL
+only; the floored `pom.teralizer.generalized.xml` (surefire >= 2.22.2 + JaCoCo agent merged via
+`@{argLine}`, preserving the project's own argLine flags) serves INITIAL + GENERALIZED.
+`JacocoDataCollectionTask` / `PitDataCollectionTask` / `TestExecutionTask` select the POM by
+variant (ORIGINAL -> native, INITIAL/GENERALIZED -> floored). `COLLECT_JACOCO_DATA_ORIGINAL` is
+skipped when ORIGINAL PIT is off (its only consumer, and it runs first in reduction). Still to be
+proven by a `MavenDependencyManager` unit test (argLine merge cases) plus a full-pipeline spike re-run.
 
 ## Phase 1: PIT timeout calibration (uncensored smoke)
 
