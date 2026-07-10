@@ -36,7 +36,7 @@ set -uo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 DB_NAME="${REPOREAPERS_DB:-postgres_reporeapers_scratch}"
 DATA_DIR="${REPOREAPERS_DATA_DIR:-data/reporeapers-rerun}"
-PROFILE="project-configs/reporeapers-rerun.conf"
+PROFILE="${REPOREAPERS_PROFILE:-project-configs/reporeapers-rerun.conf}"
 CONFIG_DIR="${REPOREAPERS_CONFIG_DIR:-project-configs/replication/extended}"
 DONE_DIR="$ROOT_DIR/$DATA_DIR/done"
 LOG_DIR="$ROOT_DIR/$DATA_DIR/run-logs"
