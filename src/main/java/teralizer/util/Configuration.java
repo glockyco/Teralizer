@@ -290,8 +290,8 @@ public class Configuration {
      */
     public static final String JPF_SYMBC_MODEL_CLASSPATH = "${jpf-symbc}/build/classes";
 
-    public static double getJpfMaxExecutionTime() {
-        return CONFIG.getDouble(TOOL_NAME_LOWER + ".jpf.max-execution-time");
+    public static double getJpfTimeoutPerAssertion() {
+        return CONFIG.getDouble(TOOL_NAME_LOWER + ".jpf.timeout.per-assertion");
     }
 
     public static long getJpfMaxPathConditionSize() {
@@ -308,18 +308,12 @@ public class Configuration {
     }
 
     // ----- JUnit ----- //
-    public static int getJunitMaxExecutionTime() {
-        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.max-execution-time");
+    public static int getJunitTimeoutOriginalInitial() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.timeout.original-initial");
     }
 
-    public static int getJunitBaselineTriesBudget() {
-        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.baseline-tries-budget");
-    }
-
-    /** Ceiling (seconds) on the workload-scaled generalized-suite timeout. Never trims below
-     * {@code junit.max-execution-time}. */
-    public static int getJunitMaxGeneralizedExecutionTime() {
-        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.max-generalized-execution-time");
+    public static int getJunitTimeoutGeneralized() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.timeout.generalized");
     }
 
     // ----- Pitest ----- //
@@ -327,8 +321,12 @@ public class Configuration {
         return CONFIG.getString(TOOL_NAME_LOWER + ".pitest.mutators");
     }
 
-    public static int getPitestMaxExecutionTime() {
-        return CONFIG.getInt(TOOL_NAME_LOWER + ".pitest.max-execution-time");
+    public static int getPitestTimeoutOriginalInitial() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".pitest.timeout.original-initial");
+    }
+
+    public static int getPitestTimeoutGeneralized() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".pitest.timeout.generalized");
     }
 
     /** Whether mutation testing runs. Defaults to true; set {@code teralizer.pitest.enabled = false}

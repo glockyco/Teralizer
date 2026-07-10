@@ -78,7 +78,7 @@ public class PitDataCollectionTask extends AbstractTask {
             variant,
             projectRecord.getId(),
             projectRecord.getDataPath(),
-            Configuration.getPitestMaxExecutionTime(),
+            TimeoutBudget.forStage(stage),
             TimeUnit.SECONDS
         );
     }
