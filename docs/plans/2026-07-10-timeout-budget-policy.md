@@ -8,9 +8,9 @@ parent: 2026-06-26-teralizer-overview
 
 # Unified Timeout Budget Policy
 
-One timeout policy across every timed pipeline stage: a fixed budget for original and initial
-(non-generalized) work, and a budget that scales with the number of included generalizations for
-generalized work. Replaces three inconsistent per-stage timeout shapes with a single shared
+One timeout policy across every timed pipeline stage: a fixed budget keyed on the processing stage,
+read from a uniform config schema, with data-driven defaults that cover every corpus so no profile
+config needs a timeout override. Replaces three inconsistent per-stage timeout shapes with one
 mechanism.
 
 ## Problem
@@ -19,144 +19,163 @@ Timed stages currently derive their wall budget three different ways:
 
 - **JPF / SPF** (`EXECUTE_JPF`): `jpf.max-execution-time` = 10s, enforced per assertion inside
   `TestGeneralizationListener` (fresh listener per `JpfExecutionTask`, one task per `AssertionRecord`).
-  Already a per-entity fixed budget.
 - **Test execution** (`TestExecutionTask`): ORIGINAL and INITIAL use a flat `junit.max-execution-time`
   = 60s `ConsoleCommand` wall; GENERALIZED overrides it with `scaledGeneralizedTimeoutSeconds`, a
-  bespoke `60 × ⌈gens × tries / 1600⌉` capped at `junit.max-generalized-execution-time` = 3600s.
+  bespoke `60 x ceil(gens x tries / 1600)` capped at `junit.max-generalized-execution-time` = 3600s.
 - **PIT** (`PitDataCollectionTask`): all variants use a flat `pitest.max-execution-time` wall.
 
-The flat PIT wall is the wrong shape. A project's PIT cost scales with its size (more generalized
-tests, more mutants), so a flat cap clips big projects for being big. In the paper's data
-(`postgres_test`, IMPROVED_200, 300s cap) 40 of 114 reduction-reaching projects (~35%) hit the cap at
-`COLLECT_PIT_DATA_INITIAL`. Uncensored calibration on current code confirms the tail is real:
-CormenImpl's INITIAL PIT runs 747s, 2.5x the paper's 300s.
+On top of the shapes, profile configs (the JARVIS census set, per-corpus benchmarks) carry their own
+timeout overrides (`jpf` 30, `junit` 1200, `pitest` 3600) that predate any measurement.
 
-Three shapes for one idea (fixed-vs-scaled budget) is also a maintenance hazard: the scaling policy
-lives as a private static in one task, PIT has no scaling at all, and each stage reads its own config
-keys.
+Two problems with the shapes. First, the PIT cap was set far too low: at 300s the wall excludes
+large-but-healthy projects, because PIT cost scales with the mutation surface. The paper's 300s cap
+hit 40 of 114 reduction-reaching projects (~35%) at `COLLECT_PIT_DATA_INITIAL`. A flat cap is right;
+it just has to be sized to the real runtime tail rather than to a number copied from the paper.
+Second, the one scaled budget scales by the wrong thing: it multiplies by `tries`, which massively
+over-budgets (byteseek's 143 generalizations x 200 tries gave a ~1080s wall for a run that finished in
+53s), and it lets a higher-tries variant buy its way out of the timeout pressure the cross-variant
+comparison exists to measure.
+
+### What the runtimes actually show
+
+RepoReapers calibration (`pit-calibrate`: PIT on, ORIGINAL off, 3600s cap, IMPROVED_200):
+
+| Project | included gens | `EXECUTE_TESTS` INITIAL -> GENERALIZED | `COLLECT_PIT` INITIAL -> GENERALIZED |
+|---|---|---|---|
+| JadConfig | 79 | 21.3s -> 22.5s (+6%) | 74s -> 64s (-14%) |
+| byteseek | 143 | 48.8s -> 52.7s (+8%) | 1021s -> 1044s (+2%) |
+
+(CormenImpl and webbit produced 0 included generalizations, so they are INITIAL-only points; webbit
+exited non-zero.)
+
+JARVIS census (`postgres_jarvis_census`, the demanding corpus), over all tasks per stage:
+
+| Stage | succeeded max | failed (timeouts) |
+|---|---|---|
+| `EXECUTE_JPF` (per assertion) | 0.5s | none (non-timeout failures <= 1.3s) |
+| `EXECUTE_TESTS_INITIAL` | 54.5s | none |
+| `EXECUTE_TESTS_GENERALIZED` | 1531s | none |
+| `COLLECT_PIT_DATA_INITIAL` | 1375s | 2, at the 3600s cap |
+| `COLLECT_PIT_DATA_GENERALIZED` | 1467s | none |
+
+Findings:
+
+- **PIT is mutation-surface-bound.** GENERALIZED PIT approximately equals INITIAL PIT (byteseek +2%,
+  JadConfig -14%); the surface is shared and generalizations only add cheap covering tests. Neither
+  scales with the generalization count.
+- **Test execution barely grows on RepoReapers (+6-8%) but genuinely grows on big-commons projects**
+  (census generalized execution reaches 1531s), because those projects generalize far more tests. This
+  is the paper's NAIVE_200-style increase in absolute terms.
+- **The census overrides are mostly not data-justified.** JPF (max 0.5s) and INITIAL execution (max
+  54.5s) sit under the 10s / 60s baselines; census PIT that completed finished by 1467s. Only two
+  INITIAL-PIT tasks exceed 1800s, and they exceed 3600s too, so they are excluded at either cap.
+  Nothing that completed lands in the 1467-3600s band.
 
 ## Principle
 
-Every timed stage's budget is either **fixed** (original / initial / baseline work) or **scaled by
-the count of included generalizations** (generalized work). Two things are deliberately *not* inputs:
+Every timed stage has a fixed budget keyed on its processing stage, with one default set that covers
+every corpus, so no profile config overrides it. Original and initial (baseline) work gets the
+reference budget; the generalized variant gets its own, larger, fixed budget. No budget scales with
+the generalization count, `tries`, or mutant count:
 
-- **Number of tries.** The execution timeout is part of the tradeoff the analysis measures. If the
-  budget grew with tries, a higher-tries variant would buy its way out of the very timeout pressure
-  the cross-variant comparison exists to expose. Budget depends only on `#generalizations`, a
-  structural property of the generated suite, so the same pressure applies to every variant.
-- **Mutant count / covered surface.** Mutant load is the thing the budget bounds, not a scaling
-  input. A generalization whose mutant load blows its budget is an honest exclusion, the same stance
-  as an over-ceiling test-execution timeout. Folding mutant count into the budget would make it
-  impossible to ever time out for being too expensive.
-
-Original and initial stages stay fixed (confirmed): they are the baseline the generalized budget is a
-multiple of, so pinning them is the anchor, not an exception. A fixed INITIAL PIT wall set well above
-the calibrated tail solves the clipping without scaling, since anything past it is a pathological
-mutant load, not a big-but-healthy project.
+- **Generalization count** does not drive PIT runtime (surface-bound) and drives execution only
+  weakly; a fixed budget sized to the demanding corpus covers realistic projects, and one that blows
+  it is an honest exclusion.
+- **`tries`** is the tradeoff the analysis measures; a budget that grew with `tries` would let a
+  higher-tries variant escape the timeout pressure the comparison exposes.
+- **Mutant count / covered surface** is what the fixed PIT budget bounds, not a scaling input.
 
 ## Mechanism
 
-A pure util `TimeoutBudget` (lifting today's `scaledGeneralizedTimeoutSeconds` out of
-`TestExecutionTask` into a shared home) exposes two functions, in seconds:
+A pure util `TimeoutBudget.forStage(ProcessingStage)` returns the fixed budget in seconds, a switch
+mapping each timed stage to its configured value (mirroring the existing `mavenBuildFileFor(stage)`
+resolver, throwing for an unmapped stage). `TestExecutionTask` and `PitDataCollectionTask` set their
+`ConsoleCommand` wall from it; SPF's per-assertion budget stays enforced in `TestGeneralizationListener`.
+`Configuration` remains the raw-config reader; `TimeoutBudget` owns the stage-to-budget mapping and is
+unit-tested in isolation. No arithmetic, no per-run inputs.
 
-- `fixed(base)` -> `base`
-- `scaled(generalizationCount, factor, baseline, ceiling)` ->
-  `min(baseline + factor * generalizationCount, ceiling)`
+| Tier | Stage | Fixed budget | Basis (succeeded max) |
+|---|---|---|---|
+| Fast | `EXECUTE_JPF` (SPF) | 10s / assertion | census 0.5s, RepoReapers headroom |
+| Fast | `EXECUTE_TESTS` ORIGINAL / INITIAL | 60s | census 54.5s, RepoReapers 49s |
+| Heavy | `EXECUTE_TESTS` GENERALIZED | 1800s | census 1531s, RepoReapers 53s |
+| Heavy | `COLLECT_PIT_DATA` ORIGINAL / INITIAL / GENERALIZED | 1800s | census <= 1467s, RepoReapers 1021s; outliers > 3600s excluded |
+| — | `COLLECT_JACOCO_DATA` / build | unbounded (project cap only) | cheap report / naturally bounded |
 
-`factor` is seconds per included generalization; `baseline` is a flat offset (fixed overhead plus, for
-PIT, the original-suite mutation cost); `ceiling` bounds pathological `generalizationCount`. No `tries`
-term. `Configuration` stays the raw-config reader; `TimeoutBudget` owns the arithmetic and is
-unit-tested in isolation.
+## Project timeout
 
-| Stage | Budget | Scaling entity |
-|---|---|---|
-| `EXECUTE_JPF` (SPF) | `fixed(jpf base)` per assertion | assertion (fixed per run) |
-| `EXECUTE_TESTS` ORIGINAL / INITIAL | `fixed(junit base)` | — |
-| `EXECUTE_TESTS` GENERALIZED | `scaled(#included gens, junit factor, junit baseline, junit ceiling)` | generalization |
-| `COLLECT_PIT_DATA` ORIGINAL / INITIAL | `fixed(pit base)`, base set large from calibration | — |
-| `COLLECT_PIT_DATA` GENERALIZED | `scaled(#included gens, pit factor, pit baseline, pit ceiling)` | generalization |
-| `COLLECT_JACOCO_DATA` / build | unbounded (project cap only) | — |
-
-`#included generalizations` is the same count `TestExecutionTask` already fetches
-(`fetchIncludedGeneralizedClasses`); `PitDataCollectionTask` derives it from the same included set it
-uses to build `targetTests` / `targetClasses`.
-
-The generalized PIT `factor` and `baseline` are higher than test execution's, reflecting that PIT
-reruns the covering suite per mutant. The PIT `baseline` is set to approximately the fixed INITIAL-PIT
-value, because generalized PIT re-mutates the original suite too, so `factor * #gens` adds only the
-incremental generalized cost on top.
-
-Orthogonal fine bound: PIT's native per-mutant timeout (`timeoutConstant` / `timeoutFactor`, currently
-unset so PIT defaults apply) is set explicitly in `pitest-config-maven.txt`, sized for jqwik-property
-baselines. The per-project wall catches total runaway; the per-mutant timeout catches a single
-pathological mutation.
+With both PIT stages at 1800s, a single project can legitimately spend ~3600s in PIT plus build, JPF
+(per assertion), JaCoCo, and generalized execution. `REPOREAPERS_PROJECT_TIMEOUT` must exceed the sum
+of a project's stage budgets, or it silently becomes the real cap and turns healthy long projects into
+timeouts. Phase 2 sets it to 14400s, comfortably above the summed per-stage budgets, so the per-stage
+budgets remain the binding bounds.
 
 ## Config schema
 
 The corpus is re-run for every measurement, so config keys are not a compatibility surface. The
-`junit`, `pitest`, and `jpf` blocks are restructured onto one consistent shape rather than preserving
-legacy keys. Each stage exposes a `timeout` block: fixed stages carry a single `fixed` value; scaled
-stages additionally carry `generalized { factor, baseline, ceiling }`.
+`junit`, `pitest`, and `jpf` blocks are restructured onto one consistent shape; no legacy keys are
+preserved. Each stage exposes a `timeout` block: `jpf` a single per-assertion value; `junit` and
+`pitest` an `original-initial` and a `generalized` value.
 
 ```hocon
 teralizer {
   jpf {
-    timeout { fixed = 10 }                 # per assertion
+    timeout { per-assertion = 10 }
   }
   junit {
-    timeout {
-      fixed = 60                           # ORIGINAL / INITIAL
-      generalized { factor = <s/gen>, baseline = <s>, ceiling = 3600 }
-    }
+    timeout { original-initial = 60, generalized = 1800 }
   }
   pitest {
-    timeout {
-      fixed = <large, from calibration>    # ORIGINAL / INITIAL
-      generalized { factor = <s/gen, > junit>, baseline = <~= pitest fixed>, ceiling = <s> }
-    }
-    per-mutant { timeout-constant-ms = <ms>, timeout-factor = <x> }
+    timeout { original-initial = 1800, generalized = 1800 }
   }
 }
 ```
 
-## Constants from calibration
+**No per-config timeout overrides.** Because the defaults are sized to the demanding corpus, the
+JARVIS census and per-corpus benchmark configs drop their `jpf` / `junit` / `pitest` timeout keys and
+inherit the reference defaults. This is a strip, not a value translation.
 
-`pit-calibrate` (profile `reporeapers-pit-calibrate.conf`: PIT on, ORIGINAL off, generous 3600s cap,
-IMPROVED_200, four reduction-reaching projects spanning fast controls and paper-slow-tail members)
-supplies the numbers:
+**Exception - experiment-methodology caps.** The plain `commons-lang-3.5.conf` / `commons-math-3.5.conf`
+(the RQ5 head-to-head and tries sweep) set `junit` 120 / `pitest` 300 as a deliberate replication of
+the paper's caps, not a runtime fit. They migrate to the new key names preserving those values, and
+whether they later adopt the unified defaults is an RQ5 decision, not folded in silently here.
 
-- **`pitest.timeout.fixed`** — from the uncensored INITIAL PIT distribution, set comfortably above the
-  observed tail (CormenImpl already 747s) so only pathological mutant loads clip.
-- **`pitest.timeout.generalized.factor`** — regress GENERALIZED PIT `runtime` against
-  `#included generalizations` across the calibration projects; the slope is the per-generalization
-  factor.
-- **`pitest.timeout.generalized.baseline`** — approximately `pitest.timeout.fixed` (generalized PIT
-  includes original-suite mutation).
-- **`pitest.timeout.generalized.ceiling`** — a headroom multiple of the observed max, bounding
-  pathological `#gens`.
-- **`junit.timeout.*`** — `fixed` (60) and `ceiling` (3600) carry over unchanged. `factor` (seconds
-  per generalization) and `baseline` are set fresh from observed generalized test-execution `runtime`
-  vs `#included generalizations` (calibration plus existing rerun2 telemetry): dropping `tries` means
-  the old `⌈gens x tries / 1600⌉` step form no longer defines them, so they are chosen to preserve the
-  intended per-generalization tradeoff without a tries term.
+## Constants and evidence
+
+Two tiers, both from measured runtimes across the RepoReapers calibration and the JARVIS census:
+
+- **Fast tier.** `jpf.timeout.per-assertion` = 10s (census max 0.5s). `junit.timeout.original-initial`
+  = 60s (census 54.5s, RepoReapers 49s; unchanged paper value).
+- **Heavy tier = 1800s.** `junit.timeout.generalized` (census generalized execution max 1531s; the
+  300s a RepoReapers-only view suggested would clip the census). `pitest.timeout.original-initial` /
+  `generalized` (census completed <= 1467s, RepoReapers 1021s).
+
+The PIT cap sits in a clean gap: every PIT task that completed finished by 1467s, and the only
+timeouts were two census INITIAL-PIT tasks at the old 3600s cap (true duration unknown, over an hour of
+baseline mutation). 1800s accommodates everything that completed and excludes those two exactly as
+3600s did. The only residual uncertainty is small-N: with nine census projects, a larger rerun could
+surface an INITIAL-PIT project in the 1800-3600s band. A scoped ~20-project uncensored spike would
+settle that, and is optional.
 
 ## Out of scope
 
+- Scaling any budget by generalization count, `tries`, or mutant count.
 - Backward-compatible config keys (corpus re-runs; no compatibility surface).
-- Scaling any budget by `tries` or by mutant count.
-- Scaling ORIGINAL / INITIAL stages.
-- Per-invocation timeouts for `COLLECT_JACOCO_DATA` or build stages (cheap report / naturally bounded).
+- Per-invocation timeouts for `COLLECT_JACOCO_DATA` or build stages.
+- The RQ5 methodology caps (`commons-lang` / `commons-math` plain configs), whose values are decided
+  with the RQ5 work.
 
 ## Acceptance criteria
 
-- `TimeoutBudget` is a standalone pure util with unit tests covering `fixed`, `scaled`, the ceiling
-  clamp, and the zero / one generalization edges.
-- `TestExecutionTask` and `PitDataCollectionTask` both derive their `ConsoleCommand` wall from
-  `TimeoutBudget`; no stage computes a timeout inline, and no stage's budget depends on `tries` or
-  mutant count.
+- `TimeoutBudget.forStage(ProcessingStage)` is a standalone pure util, unit-tested per stage including
+  the unmapped-stage error.
+- `TestExecutionTask` and `PitDataCollectionTask` derive their `ConsoleCommand` wall from
+  `TimeoutBudget`; no stage computes a timeout inline, and no timeout depends on generalization count,
+  `tries`, or mutant count.
 - `reference.conf` carries the unified `timeout` schema for `jpf`, `junit`, and `pitest`; every reader
-  and profile config is updated; no legacy timeout keys remain.
-- Generalized PIT wall scales with `#included generalizations`; INITIAL PIT wall is fixed and set above
-  the calibrated tail.
-- PIT per-mutant timeout is set explicitly in `pitest-config-maven.txt`.
+  is updated; no legacy timeout keys remain anywhere.
+- No profile config sets a `jpf` / `junit` / `pitest` timeout override, except the RQ5 methodology
+  configs, which migrate to the new key names preserving their paper caps.
+- Heavy-tier stages (generalized execution, both PIT variants) use 1800s; fast-tier stages use 10s / 60s.
+- The Phase 2 profile sets `REPOREAPERS_PROJECT_TIMEOUT` = 14400s.
 - `./gradlew build` green and one `scripts/verify-pipeline.sh` golden pass.
