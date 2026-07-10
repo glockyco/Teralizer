@@ -308,8 +308,12 @@ public class Configuration {
     }
 
     // ----- JUnit ----- //
-    public static int getJunitTimeoutOriginalInitial() {
-        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.timeout.original-initial");
+    public static int getJunitTimeoutOriginal() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.timeout.original");
+    }
+
+    public static int getJunitTimeoutInitial() {
+        return CONFIG.getInt(TOOL_NAME_LOWER + ".junit.timeout.initial");
     }
 
     public static int getJunitTimeoutGeneralized() {

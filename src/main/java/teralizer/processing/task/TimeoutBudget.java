@@ -4,8 +4,8 @@ import teralizer.processing.ProcessingStage;
 import teralizer.util.Configuration;
 
 /**
- * Fixed per-stage timeout budget (seconds) for the ConsoleCommand-driven stages. Original and
- * initial work gets the reference budget; the generalized variant gets its own larger budget. The
+ * Fixed per-stage timeout budget (seconds) for the ConsoleCommand-driven stages. Original (full
+ * suite), initial (filtered subset), and generalized each get their own fixed budget. The
  * value is a config read, not an arithmetic of run inputs (no generalization count, tries, or mutant
  * count), so a stage that blows its fixed budget is an honest exclusion. JPF keeps its own
  * per-assertion budget in TestGeneralizationListener and does not route through here.
@@ -18,8 +18,9 @@ public final class TimeoutBudget {
     static int forStage(ProcessingStage stage) {
         switch (stage) {
             case EXECUTE_TESTS_ORIGINAL:
+                return Configuration.getJunitTimeoutOriginal();
             case EXECUTE_TESTS_INITIAL:
-                return Configuration.getJunitTimeoutOriginalInitial();
+                return Configuration.getJunitTimeoutInitial();
             case EXECUTE_TESTS_GENERALIZED:
                 return Configuration.getJunitTimeoutGeneralized();
             case COLLECT_PIT_DATA_ORIGINAL:
