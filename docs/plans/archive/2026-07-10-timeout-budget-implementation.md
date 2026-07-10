@@ -1,9 +1,10 @@
 ---
 title: Timeout Budget Policy Implementation
 type: plan
-status: draft
+status: implemented
 created: 2026-07-10
 parent: 2026-07-10-timeout-budget-policy
+archived: 2026-07-10
 ---
 
 # Timeout Budget Policy Implementation

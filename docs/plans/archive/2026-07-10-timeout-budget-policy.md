@@ -1,9 +1,10 @@
 ---
 title: Unified Timeout Budget Policy
 type: spec
-status: draft
+status: implemented
 created: 2026-07-10
 parent: 2026-06-26-teralizer-overview
+archived: 2026-07-10
 ---
 
 # Unified Timeout Budget Policy
