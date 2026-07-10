@@ -8,14 +8,14 @@ public class TimeoutBudgetTest {
 
     @Example
     void junitStagesUseOriginalInitialOrGeneralizedBudget() {
-        assertBudget(120, ProcessingStage.EXECUTE_TESTS_ORIGINAL);
-        assertBudget(120, ProcessingStage.EXECUTE_TESTS_INITIAL);
+        assertBudget(300, ProcessingStage.EXECUTE_TESTS_ORIGINAL);
+        assertBudget(300, ProcessingStage.EXECUTE_TESTS_INITIAL);
         assertBudget(1800, ProcessingStage.EXECUTE_TESTS_GENERALIZED);
     }
 
     @Example
     void pitestStagesUsePitestBudget() {
-        assertBudget(1800,
+        assertBudget(3600,
             ProcessingStage.COLLECT_PIT_DATA_ORIGINAL,
             ProcessingStage.COLLECT_PIT_DATA_INITIAL,
             ProcessingStage.COLLECT_PIT_DATA_GENERALIZED);
