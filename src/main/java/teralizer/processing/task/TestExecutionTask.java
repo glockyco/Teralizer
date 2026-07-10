@@ -187,12 +187,20 @@ public class TestExecutionTask extends AbstractTask {
         }
     }
 
+    static boolean jacocoSkipped(ProcessingStage stage, boolean pitestOriginalEnabled) {
+        // ORIGINAL coverage is consumed only by ORIGINAL PIT. With ORIGINAL PIT off,
+        // COLLECT_JACOCO_DATA_ORIGINAL is skipped, so instrumenting the original suite is pure
+        // overhead that can push a large suite past its execution budget. INITIAL and GENERALIZED
+        // coverage is always collected, so those always instrument.
+        return stage == ProcessingStage.EXECUTE_TESTS_ORIGINAL && !pitestOriginalEnabled;
+    }
+
     private List<String> buildGradleCommand(List<String> includedTests) {
         List<String> command = new ArrayList<>(Arrays.asList(
             "./gradlew",
             "--build-file", Configuration.GRADLE_CUSTOM_BUILD_FILE,
             "--info",
-            "-Djacoco.skip=false",
+            "-Djacoco.skip=" + jacocoSkipped(this.stage, Configuration.isPitestOriginalEnabled()),
             "test"
         ));
 
@@ -208,13 +216,14 @@ public class TestExecutionTask extends AbstractTask {
     }
 
     private List<String> buildMavenCommand(List<String> includedTests) throws IOException {
-        // ORIGINAL keeps the project's native runner; INITIAL and GENERALIZED use the floored POM
-        // so the JaCoCo agent attaches and jqwik property tests are discovered.
+        // ORIGINAL keeps the project's native runner and, when ORIGINAL PIT is off, skips the JaCoCo
+        // agent since nothing consumes its coverage; INITIAL and GENERALIZED use the floored POM so
+        // the agent attaches and jqwik property tests are discovered.
         String mavenBuildFile = mavenBuildFileFor(this.stage);
         List<String> command = new ArrayList<>(Arrays.asList(
             "mvn",
             "--file", mavenBuildFile,
-            "-Djacoco.skip=false",
+            "-Djacoco.skip=" + jacocoSkipped(this.stage, Configuration.isPitestOriginalEnabled()),
             "test"
         ));
 
