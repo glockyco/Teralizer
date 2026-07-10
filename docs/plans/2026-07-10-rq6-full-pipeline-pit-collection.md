@@ -103,28 +103,36 @@ separate reason: its instrumented INITIAL suite exceeds the 60 s `junit.max-exec
 Per the execution-ceiling policy that is a legitimate exclusion, not a fix defect — the agent stays
 attached and the slow suite is excluded like any other over-ceiling suite.
 
-## Phase 1: PIT timeout calibration (uncensored smoke)
+## Phase 1: PIT timeout calibration (resolved by the unified timeout policy)
 
-- Run one or two reduction-reaching projects (e.g. JadConfig) through the current pipeline with
-  PIT **on** and a deliberately generous cap (e.g. 3600 s) so the measurement is uncensored.
-- Read actual INITIAL/GENERALIZED PIT `runtime`; set `pitest.max-execution-time` to a percentile
-  that keeps timeouts a genuine minority (not ~35%), and set `REPOREAPERS_PROJECT_TIMEOUT` to
-  comfortably exceed `2 x cap` + JaCoCo + the generalization pass.
+Superseded by the unified timeout-budget work (`92704acf` and the timeout-policy commits). That
+refactor removed the per-stage `*.max-execution-time` keys and replaced them with a single
+stage-keyed budget schema (`junit.timeout.{original,initial,generalized}`,
+`pitest.timeout.{original-initial,generalized}`) whose defaults were calibrated data-driven from
+the JARVIS census plus a four-project PIT calibration run. The PIT cap landed at **3600 s** for
+both INITIAL and GENERALIZED.
+
+That 3600 s cap is generous for RepoReapers rather than clipping: this plan's own duration table
+puts RepoReapers PIT at p90 ~145 s / max ~291 s (censored at the paper's 300 s), an order of
+magnitude below the cap, so it cannot repeat the paper's ~35% clip. A separate RepoReapers PIT
+smoke was considered and declined — 3600 s is >20x the observed tail. `REPOREAPERS_PROJECT_TIMEOUT`
+is set at launch to ~14400 s, comfortably exceeding `2 x 3600` PIT + JaCoCo + the generalization
+pass.
 
 ## Phase 2: Full-pipeline PIT collection
 
-New profile `project-configs/reporeapers-rq6.conf` (composed per-project like the rerun):
+New profile `project-configs/reporeapers-rq6.conf` (composed per-project like the rerun). It is
+minimal because the unified timeout policy already carries the calibrated budgets and
+`pitest.original.enabled = false` in `reference.conf`; the profile only turns global PIT on and
+declares the single variant:
 
 ```hocon
 teralizer {
+  database { name = "postgres_reporeapers_scratch" }
   pitest {
-    enabled = true              # global PIT on: the GENERALIZED PIT stage runs and its
-                                # failures surface as Stage-5 exclusions. With PIT off the
-                                # stage is skipped + recorded succeeded (no Stage-5 PIT signal).
-    max-execution-time = <from Phase 1>
-    original.enabled = false    # only INITIAL + GENERALIZED mutation consumed. ORIGINAL JaCoCo is
-                                # skipped too (its only consumer is ORIGINAL PIT and it runs first
-                                # in reduction), so Stage-5 diagnostics come from INITIAL/GENERALIZED.
+    enabled = true              # global PIT on: the GENERALIZED PIT stage runs and its failures
+                                # surface as Stage-5 exclusions. With PIT off the stage is skipped
+                                # + recorded succeeded (no Stage-5 PIT signal).
   }
   generalizations {
     IMPROVED_200_TRIES { algorithm = "IMPROVED", jqwik { tries = 200 } }
@@ -132,9 +140,10 @@ teralizer {
 }
 ```
 
-Kept from `reference.conf` (paper-aligned): `junit.max-execution-time = 60` (paper #3/#10);
-generalized-suite scaled budget (calibrated, current improvement). `reference.conf` predefines no
-variants, so `IMPROVED_200_TRIES` is the only one (no HOCON-merge accumulation).
+Inherited from `reference.conf`: the stage-keyed budgets (`junit.timeout` 300/300/1800,
+`pitest.timeout` 3600/3600) and `pitest.original.enabled = false` -- so ORIGINAL PIT and its
+leading JaCoCo step stay off and Stage-5 diagnostics come from INITIAL + GENERALIZED. `reference.conf`
+predefines no variants, so `IMPROVED_200_TRIES` is the only one (no HOCON-merge accumulation).
 
 - Reduction on (no `--no-reduction`).
 - Fresh scratch DB `postgres_reporeapers_rq6`; prior DBs preserved.
@@ -182,8 +191,10 @@ set is empty), all five stages:
    as covering JaCoCo too, but `JacocoDataCollectionTask` has no per-invocation cap. Recommend
    leaving JaCoCo bounded by the project cap (the timeout cause is mutation-driven); add
    `jacoco.max-execution-time` only if exact fidelity is wanted.
-2. **`pitest.max-execution-time`** — set from Phase 1, not the paper's 300 s (which clips ~35%).
-3. **`REPOREAPERS_PROJECT_TIMEOUT`** — from Phase 1 wall-time observation.
+2. **PIT cap** — resolved: the unified `pitest.timeout` (3600 s, both stages) replaces the removed
+   `pitest.max-execution-time`. Generous for RepoReapers (>20x the observed tail), so it avoids the
+   paper's 300 s ~35% clip.
+3. **`REPOREAPERS_PROJECT_TIMEOUT`** — ~14400 s at launch (exceeds `2 x 3600` PIT + JaCoCo + gen).
 4. **Canonical DB naming / promotion** — collect into `postgres_reporeapers_rq6`, decide final
    name after validation.
 
@@ -194,14 +205,15 @@ set is empty), all five stages:
 - [x] Write `reporeapers-jacoco-spike.conf` (reduction on, PIT off, IMPROVED_200).
 - [x] Launch spike on 7 old-failing + 1 control into `postgres_jacoco_spike`.
 - [x] Read per-project JaCoCo outcomes; diagnose fails; implement + prove the argLine fix; classify genuine.
-- [ ] Drop the spike DB.
+- [x] Drop the spike DB.
 
 ### Phase 1: PIT timeout calibration
-- [ ] PIT smoke (PIT on, generous cap) on a reduction-reaching project; record real PIT runtimes.
-- [ ] Set `pitest.max-execution-time` and `REPOREAPERS_PROJECT_TIMEOUT`.
+- [x] Resolved by the unified timeout policy: `pitest.timeout` = 3600 s (both stages), calibrated
+      from the census + PIT calibration run; generous for RepoReapers, no separate smoke needed.
+- [x] `REPOREAPERS_PROJECT_TIMEOUT` ~14400 s at launch.
 
 ### Phase 2: Full collection (sign-off gate)
-- [ ] Write `reporeapers-rq6.conf` (PIT on, original off, calibrated cap, IMPROVED_200).
+- [x] Write `reporeapers-rq6.conf` (PIT on, original off inherited, unified 3600 cap, IMPROVED_200).
 - [ ] `./gradlew build` green.
 - [ ] Launch full run detached into `postgres_reporeapers_rq6`; monitor to completion.
 
