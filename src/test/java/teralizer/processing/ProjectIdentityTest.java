@@ -80,7 +80,7 @@ public class ProjectIdentityTest {
 
         Assert.assertEquals(projectedA, projectedB);
         Assert.assertNotEquals(projectedA, projectedDifferent);
-        Assert.assertTrue(projectedA, projectedA.contains("max-execution-time"));
+        Assert.assertTrue(projectedA, projectedA.contains("original-initial"));
         Assert.assertFalse(projectedA, projectedA.contains("use-test-generation"));
         Assert.assertFalse(projectedA, projectedA.contains("use-test-generalization"));
         Assert.assertFalse(projectedA, projectedA.contains("use-test-reduction"));
@@ -88,9 +88,9 @@ public class ProjectIdentityTest {
 
     @Example
     void identityProjectionExcludesPitestEnabled() {
-        String base = "{data-dir=\"data\",pitest={max-execution-time=3600,original={enabled=false}}}";
-        String withEnabled = "{data-dir=\"data\",pitest={enabled=true,max-execution-time=3600,original={enabled=false}}}";
-        String differentTimeout = "{data-dir=\"data\",pitest={max-execution-time=120,original={enabled=false}}}";
+        String base = "{data-dir=\"data\",pitest={timeout={original-initial=3600},original={enabled=false}}}";
+        String withEnabled = "{data-dir=\"data\",pitest={enabled=true,timeout={original-initial=3600},original={enabled=false}}}";
+        String differentTimeout = "{data-dir=\"data\",pitest={timeout={original-initial=120},original={enabled=false}}}";
 
         String baseProjection = ConfigIdentity.renderIdentity(base);
         String withEnabledProjection = ConfigIdentity.renderIdentity(withEnabled);
@@ -119,7 +119,7 @@ public class ProjectIdentityTest {
         return record;
     }
 
-    private static String fullConfig(int pitestMaxExecutionTime, boolean useGeneration,
+    private static String fullConfig(int pitestTimeoutSeconds, boolean useGeneration,
                                      boolean useGeneralization, boolean useReduction) {
         return "{"
             + "data-dir=\"data\","
@@ -127,7 +127,7 @@ public class ProjectIdentityTest {
             + "use-test-generation=" + useGeneration + ","
             + "use-test-generalization=" + useGeneralization + ","
             + "use-test-reduction=" + useReduction + "},"
-            + "pitest={max-execution-time=" + pitestMaxExecutionTime + "}"
+            + "pitest={timeout={original-initial=" + pitestTimeoutSeconds + "}}"
             + "}";
     }
 

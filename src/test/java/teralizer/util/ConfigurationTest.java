@@ -75,11 +75,11 @@ class ConfigurationTest {
     @Test
     void referenceIsTheFallback(@TempDir Path dir) throws IOException {
         Path project = writeConf(dir, "project.conf", "teralizer { project { root-path = \"p\" } }");
-        Config reference = ConfigFactory.parseString("teralizer { jpf { max-execution-time = 10 } }");
+        Config reference = ConfigFactory.parseString("teralizer { jpf { timeout { per-assertion = 10 } } }");
 
         Config config = Configuration.buildConfig(project.toString(), ConfigFactory.empty(), reference);
 
-        assertEquals(10, config.getInt("teralizer.jpf.max-execution-time"), "unset keys fall back to reference");
+        assertEquals(10, config.getInt("teralizer.jpf.timeout.per-assertion"), "unset keys fall back to reference");
         assertEquals("p", config.getString("teralizer.project.root-path"));
     }
 
