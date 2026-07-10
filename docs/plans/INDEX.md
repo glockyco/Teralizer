@@ -22,6 +22,7 @@
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
 - **Evaluation Run Map (RQ0 + RQ6)** [audit] `2026-07-07-evaluation-run-map` ← 2026-06-26-teralizer-overview
 - **Autonomous Evaluation Run Findings** [audit] `2026-07-08-autonomous-eval-findings` ← 2026-06-26-teralizer-overview
+- **RQ6 Stage-5 Collection and Funnel Rebuild** [plan] `2026-07-10-rq6-full-pipeline-pit-collection` (—) ← 2026-07-08-evaluation-analysis-redesign
 
 ## draft
 
