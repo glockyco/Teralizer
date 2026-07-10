@@ -1,9 +1,10 @@
 ---
 title: RQ5 + RQ6 Causes Reports
 type: plan
-status: active
+status: implemented
 created: 2026-07-08
 parent: 2026-07-08-evaluation-analysis-redesign
+archived: 2026-07-10
 ---
 
 # RQ5 + RQ6 Causes Reports Implementation Plan

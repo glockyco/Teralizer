@@ -1,9 +1,10 @@
 ---
 title: Baseline JaCoCo Stage Reassignment
 type: spec
-status: draft
+status: implemented
 created: 2026-07-08
 parent: 2026-07-08-evaluation-analysis-redesign
+archived: 2026-07-10
 ---
 
 # Baseline JaCoCo Stage Reassignment
@@ -103,24 +104,28 @@ reduction is requested and is attributed to Stage 5.
 2. `scripts/verify-pipeline.sh` (full fixture corpus, exercises reduction) — the gate proving
    the moved render and PIT target selection still produce the golden coverage/mutation output.
    A regression here means the build-state needs the cleanup step above.
-3. Add a fixture reproducing the defect if one does not exist: a generation-only project must
-   record no `COLLECT_JACOCO_DATA_ORIGINAL` task at all (the stage is reduction-only).
+3. Pin the defect at the phase-scheduling level rather than with a fixture: `PipelinePhaseTest`
+   asserts `GENERALIZATION.schedule` excludes `COLLECT_JACOCO_DATA_ORIGINAL` and that
+   `REDUCTION.schedule` runs it after `RESTORE_ORIGINAL_BUILD`, and a one-project generation-only
+   canary (JadConfig, `--no-reduction`) confirmed end to end that the runner path records no
+   baseline-JaCoCo task. A verification fixture was deliberately not added: the corpus golden is
+   generalization-centric with no `task.stage` dimension and runs the full pipeline, so it cannot
+   observe a generation-only phase-scheduling defect that the unit assertion already pins exactly.
 
 ## Re-collection
 
-The current `postgres_reporeapers` data is invalid for RQ6 and must be re-collected after the
-fix. Per the operator directive, collect into FRESH databases so the eval scripts keep working
-against the existing data while collection runs:
+The `postgres_reporeapers` data collected before the fix was invalid for RQ6 and was re-collected.
+Per the directive to keep the eval scripts iterating during collection, the fresh corpus was
+collected into `postgres_reporeapers_v2` via the RepoReapers rerun runner (`--no-reduction`,
+generation-only), leaving the old data intact for the duration of the run. On completion the
+databases were promoted: the old data was preserved as `postgres_reporeapers_invalid_jacoco` (the
+audit baseline for the 44-project delta) and `postgres_reporeapers_v2` was renamed to the canonical
+`postgres_reporeapers`. Because `rq6_causes` reads the canonical name, no code repoint was needed.
+`analysis/reports/rq6.md` was regenerated and confirmed free of baseline-JaCoCo Stage-1+2
+exclusions (funnel 611 -> 239 -> 146 -> 133, 21.8% overall inclusion). The JARVIS census and
+scoreboard databases were not re-collected as part of this fix.
 
-- New real-world database (e.g. `postgres_reporeapers_v2`) via the RepoReapers rerun runner,
-  leaving `postgres_reporeapers` intact for eval-script iteration.
-- Re-collect the JARVIS census/scoreboard databases only if the stage move changes their
-  coverage-dependent numbers (RQ0); otherwise leave them.
-- When collection completes, point RQ6 (`rq6_causes` default db) at the new database, regenerate
-  `analysis/reports/rq6.md`, and confirm the funnel no longer contains baseline-JaCoCo Stage-1+2
-  exclusions.
-
-Re-collection is a measurement event: it runs once, into new databases, and its first-run
+Re-collection was a measurement event: it ran once, into a fresh database, and its first-run
 numbers stand.
 
 ## Acceptance
