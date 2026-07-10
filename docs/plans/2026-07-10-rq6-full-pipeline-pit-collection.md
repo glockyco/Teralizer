@@ -83,13 +83,25 @@ fixable pipeline causes from genuinely un-instrumentable projects.
   and the `.exec` is produced regardless, so the project is recovered rather than excluded earlier;
   INITIAL and GENERALIZED stay floored-vs-floored consistent.
 
-**Validated fix design (built at ADD_DEPENDENCIES):** native `pom.teralizer.xml` serves ORIGINAL
-only; the floored `pom.teralizer.generalized.xml` (surefire >= 2.22.2 + JaCoCo agent merged via
+**Implemented fix (built at ADD_DEPENDENCIES):** native `pom.teralizer.xml` serves ORIGINAL only;
+the floored `pom.teralizer.generalized.xml` (surefire >= 2.22.2 + JaCoCo agent merged via
 `@{argLine}`, preserving the project's own argLine flags) serves INITIAL + GENERALIZED.
-`JacocoDataCollectionTask` / `PitDataCollectionTask` / `TestExecutionTask` select the POM by
-variant (ORIGINAL -> native, INITIAL/GENERALIZED -> floored). `COLLECT_JACOCO_DATA_ORIGINAL` is
-skipped when ORIGINAL PIT is off (its only consumer, and it runs first in reduction). Still to be
-proven by a `MavenDependencyManager` unit test (argLine merge cases) plus a full-pipeline spike re-run.
+`AbstractTask.mavenBuildFileFor` selects the POM by stage (ORIGINAL stages -> native,
+INITIAL/GENERALIZED stages -> floored), keyed on stage because ORIGINAL and INITIAL both carry a
+null variant; `JacocoDataCollectionTask` / `PitDataCollectionTask` / `TestExecutionTask` route
+through it. `COLLECT_JACOCO_DATA_ORIGINAL` is skipped when ORIGINAL PIT is off (its only consumer,
+and it runs first in reduction). The argLine merge is unconditional. The spike and unit tests
+(`MavenSurefireFloorTest` argLine cases, `AbstractTaskBuildFileTest` routing) validate explicit
+surefire pins. Versionless or property pins are not tested and rely on the effective POM resolving
+to a surefire that supports `@{argLine}` (Maven 3.9.11 defaults to 3.x), an accepted assumption.
+
+**Recovery spike (`postgres_jacoco_spike`, reduction on, PIT off, IMPROVED_200):** astina and
+webbit, which produced zero coverage before, now emit INITIAL + GENERALIZED coverage (98 and 111
+`jacoco_coverage_report` rows); control JadConfig steady at 202. geophile does not recover for a
+separate reason: its instrumented INITIAL suite exceeds the 60 s `junit.max-execution-time` ceiling
+(it passed natively without the agent in the first spike), so `EXECUTE_TESTS_INITIAL` times out.
+Per the execution-ceiling policy that is a legitimate exclusion, not a fix defect — the agent stays
+attached and the slow suite is excluded like any other over-ceiling suite.
 
 ## Phase 1: PIT timeout calibration (uncensored smoke)
 
@@ -110,9 +122,9 @@ teralizer {
                                 # failures surface as Stage-5 exclusions. With PIT off the
                                 # stage is skipped + recorded succeeded (no Stage-5 PIT signal).
     max-execution-time = <from Phase 1>
-    original.enabled = false    # only INITIAL + GENERALIZED mutation consumed. ORIGINAL JaCoCo
-                                # still runs (JacocoDataCollectionTask has no PIT gate) as the
-                                # Stage-5 diagnostic (#12/#17).
+    original.enabled = false    # only INITIAL + GENERALIZED mutation consumed. ORIGINAL JaCoCo is
+                                # skipped too (its only consumer is ORIGINAL PIT and it runs first
+                                # in reduction), so Stage-5 diagnostics come from INITIAL/GENERALIZED.
   }
   generalizations {
     IMPROVED_200_TRIES { algorithm = "IMPROVED", jqwik { tries = 200 } }
@@ -181,7 +193,7 @@ set is empty), all five stages:
 - [x] Add `REPOREAPERS_PROFILE` override to `run-reporeapers-rerun.sh`.
 - [x] Write `reporeapers-jacoco-spike.conf` (reduction on, PIT off, IMPROVED_200).
 - [x] Launch spike on 7 old-failing + 1 control into `postgres_jacoco_spike`.
-- [ ] Read per-project JaCoCo outcomes; diagnose fails; fix fixable pipeline causes; classify genuine.
+- [x] Read per-project JaCoCo outcomes; diagnose fails; implement + prove the argLine fix; classify genuine.
 - [ ] Drop the spike DB.
 
 ### Phase 1: PIT timeout calibration

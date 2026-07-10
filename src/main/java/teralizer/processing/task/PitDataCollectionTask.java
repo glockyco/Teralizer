@@ -229,7 +229,7 @@ public class PitDataCollectionTask extends AbstractTask {
         // We are setting the targetClasses / targetTests via the POM file
         // (rather than -DtargetClasses=... / -DtargetTests=...)
         // to avoid "Argument list too long" errors.
-        Path pomFilePath = this.projectRecord.getRootPath().resolve(Configuration.MAVEN_CUSTOM_BUILD_FILE);
+        Path pomFilePath = this.projectRecord.getRootPath().resolve(mavenBuildFileFor(this.stage));
         MavenDependencyManager.updatePitestTargets(pomFilePath, targetClasses, targetTests);
 
         Path commandDataPath = this.projectRecord.getDataPath().resolve("project-id-" + this.getProjectId() + "/command-data");
@@ -245,7 +245,7 @@ public class PitDataCollectionTask extends AbstractTask {
 
         return new ArrayList<>(Arrays.asList(
             "mvn",
-            "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
+            "--file", mavenBuildFileFor(this.stage),
             "pitest:mutationCoverage",
             "-Dmutators=" + Configuration.getPitestMutators()
         ));

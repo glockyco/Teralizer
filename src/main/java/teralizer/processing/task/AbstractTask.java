@@ -10,6 +10,7 @@ import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.util.Configuration;
 
 public abstract class AbstractTask implements Task {
 
@@ -22,6 +23,31 @@ public abstract class AbstractTask implements Task {
     protected TestRecord testRecord;
     protected AssertionRecord assertionRecord;
     protected GeneralizationRecord generalizationRecord;
+
+    /**
+     * The Maven build file a reduction or test-execution stage runs under. The ORIGINAL variant
+     * keeps the project's native, unfloored runner (its surefire config is left as declared).
+     * INITIAL and GENERALIZED use the floored POM so the JaCoCo agent attaches (its late-bound
+     * argLine survives a project-declared argLine) and jqwik property tests are discovered. Keyed
+     * on the stage, not the variant, because ORIGINAL and INITIAL both carry a null variant.
+     */
+    static String mavenBuildFileFor(ProcessingStage stage) {
+        switch (stage) {
+            case EXECUTE_TESTS_ORIGINAL:
+            case COLLECT_JACOCO_DATA_ORIGINAL:
+            case COLLECT_PIT_DATA_ORIGINAL:
+                return Configuration.MAVEN_CUSTOM_BUILD_FILE;
+            case EXECUTE_TESTS_INITIAL:
+            case COLLECT_JACOCO_DATA_INITIAL:
+            case COLLECT_PIT_DATA_INITIAL:
+            case EXECUTE_TESTS_GENERALIZED:
+            case COLLECT_JACOCO_DATA_GENERALIZED:
+            case COLLECT_PIT_DATA_GENERALIZED:
+                return Configuration.MAVEN_GENERALIZED_BUILD_FILE;
+            default:
+                throw new IllegalArgumentException("No Maven build-file mapping for stage: " + stage);
+        }
+    }
 
     @Override
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {

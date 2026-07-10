@@ -67,13 +67,14 @@ public class MavenDependencyManager {
     }
 
     /**
-     * Generalized tests need a JUnit-platform-capable surefire runner, while original and
-     * initial suites must keep the project's declared runner behavior. Flooring the shared
-     * Teralizer POM would make native-suite stages execute under a different surefire than the
-     * project pins, which can alter discovery and execution enough to hang or exceed the
-     * uniform execution ceiling. The derived POM is written unconditionally so generalized
-     * execution can depend on its existence without changing the build file used by native
-     * suites.
+     * INITIAL and GENERALIZED suites need a JUnit-platform-capable surefire that also carries the
+     * JaCoCo agent (its late-bound argLine survives a project-declared argLine); the ORIGINAL suite
+     * keeps the project's declared runner. The floor therefore lives only in this derived POM,
+     * leaving the shared Teralizer POM under the project's own surefire pin. AbstractTask's
+     * mavenBuildFileFor routes ORIGINAL to the shared POM and INITIAL / GENERALIZED to this derived
+     * one. Instrumented INITIAL execution can run longer than the native suite and may exceed the
+     * execution ceiling; that timeout is an accepted exclusion. The derived POM is written
+     * unconditionally so those stages can depend on it.
      */
     static void deriveGeneralizedBuildFile(Path sharedPomPath, Path generalizedPomPath) throws DocumentException, IOException {
         Document generalizedDocument = new SAXReader().read(sharedPomPath.toFile());
@@ -366,8 +367,35 @@ public class MavenDependencyManager {
                 version.setText(Configuration.SUREFIRE_MIN_VERSION);
                 changed = true;
             }
+            changed |= mergeJacocoArgLine(plugin);
         }
         return changed;
+    }
+
+    /**
+     * Merge JaCoCo's late-bound argLine into a static surefire {@code <argLine>} so the injected
+     * agent survives a project-declared argLine. A static argLine overrides the {@code argLine}
+     * property {@code jacoco:prepare-agent} sets, dropping {@code -javaagent:jacocoagent}; prefixing
+     * {@code @{argLine}} restores it via Maven late property replacement (available on the floored
+     * surefire >= 2.22.2). No-op when there is no static argLine (the property applies implicitly)
+     * or one already references it. Independent of the version floor: the clobber does not depend on
+     * the surefire version.
+     */
+    private static boolean mergeJacocoArgLine(Element plugin) {
+        Element configuration = childElement(plugin, "configuration");
+        if (configuration == null) {
+            return false;
+        }
+        Element argLine = childElement(configuration, "argLine");
+        if (argLine == null) {
+            return false;
+        }
+        String current = argLine.getTextTrim();
+        if (current.contains("@{argLine}") || current.contains("${argLine}")) {
+            return false;
+        }
+        argLine.setText("@{argLine} " + current);
+        return true;
     }
 
     public static String surefireFloorOutcome(Document sharedDocument, Document generalizedDocument) {

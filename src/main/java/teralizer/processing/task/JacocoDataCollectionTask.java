@@ -36,6 +36,11 @@ public class JacocoDataCollectionTask extends AbstractTask {
 
     @Override
     protected void executeInternal(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
+        if (this.stage == ProcessingStage.COLLECT_JACOCO_DATA_ORIGINAL && !Configuration.isPitestOriginalEnabled()) {
+            reportInfo.accept("ORIGINAL-stage JaCoCo skipped: its only consumer is ORIGINAL PIT,"
+                + " which is disabled (teralizer.pitest.original.enabled = false).");
+            return;
+        }
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
         List<JacocoCoverageReportRecord> coverageReportsRecords = this.createCoverageReportRecords(create, this.consoleCommand);
         create.batchStore(coverageReportsRecords).execute();
@@ -135,7 +140,7 @@ public class JacocoDataCollectionTask extends AbstractTask {
         Path preserved = preservedExecPath(this.projectRecord, this.getProjectId(), this.stage, this.getVariant());
         return new ArrayList<>(Arrays.asList(
             "mvn",
-            "--file", Configuration.MAVEN_CUSTOM_BUILD_FILE,
+            "--file", mavenBuildFileFor(this.stage),
             "-Djacoco.skip=false",
             "-Djacoco.dataFile=" + preserved.toAbsolutePath(),
             "jacoco:report"
