@@ -11,3 +11,4 @@ analysis/notebooks/*.ipynb filter=nbstripout diff=nbstripout merge=nbstripout -t
 *.sh text eol=lf
 gradlew text eol=lf
 verification/golden/*.tsv text eol=lf
+analysis/data/jarvis-cut-values/*.tsv text eol=lf

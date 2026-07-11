@@ -372,6 +372,10 @@ gradle-app.setting
 /verification/fixtures/**/_*_Instrumented_*.java
 /verification/fixtures/**/_*_Generalized_*.java
 
+# Standalone tool build artifacts
+tools/**/target/
+tools/**/dependency-reduced-pom.xml
+
 !/projects/EqBench
 !/projects/example-gradle-junit4
 !/projects/example-gradle-junit5
