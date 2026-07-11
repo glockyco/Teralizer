@@ -294,6 +294,34 @@ def build(conn: Connection) -> RQReport:
             "count",
             _build_breadth_table,
         ),
+        _metric(
+            "rq0.breadth.jarvis_total_pbt_pvc",
+            int(breadth.iloc[-1].jarvis_successful_pbt_pvc),
+            "count",
+            _build_breadth_table,
+        ),
+        _metric(
+            "rq0.breadth.jarvis_total_muts",
+            int(breadth.iloc[-1].jarvis_successful_muts),
+            "count",
+            _build_breadth_table,
+        ),
+        _metric(
+            "rq0.breadth.teralizer_total_pvc",
+            "unavailable"
+            if pd.isna(breadth.iloc[-1].aggregate_pvc)
+            else int(breadth.iloc[-1].aggregate_pvc),
+            "str",
+            _build_breadth_table,
+        ),
+        _metric(
+            "rq0.breadth.teralizer_total_sound_muts",
+            "unavailable"
+            if pd.isna(breadth.iloc[-1].sound_muts)
+            else int(breadth.iloc[-1].sound_muts),
+            "str",
+            _build_breadth_table,
+        ),
         _metric("rq0.census.database", CENSUS_DB, "str", _census_status_ledger),
         _metric(
             "rq0.census.pvc_basis",
