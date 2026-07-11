@@ -283,6 +283,7 @@ def get_generated_test_runs(
     query = """
     SELECT
         p.id AS project_id,
+        p.root_path AS root_path,
         g.id AS generalization_id,
         g.variant AS variant,
         g.class_name AS generated_class_name,
@@ -291,6 +292,7 @@ def get_generated_test_runs(
         a.assertion_name AS assertion_name,
         a.tested_class_qualified_name AS tested_class_qualified_name,
         a.tested_method_name AS tested_method_name,
+        a.tested_method_parameters AS tested_method_parameters,
         a.tested_method_call_arguments AS tested_method_call_arguments,
         jtr.result AS test_result,
         jtr.failure_type AS failure_type,
@@ -587,6 +589,204 @@ def get_census(
     return cast(pd.DataFrame, census[columns].reset_index(drop=True))
 
 
+def _method_signature(parameters_json: object) -> tuple[str, bool]:
+    """Return an ordered parameter-type signature and whether it is complete."""
+    if parameters_json is None or (
+        isinstance(parameters_json, float) and pd.isna(parameters_json)
+    ):
+        return "?", False
+    try:
+        parsed = json.loads(str(parameters_json))
+    except (TypeError, ValueError):
+        return "?", False
+    if not isinstance(parsed, list):
+        return "?", False
+    types: list[str] = []
+    known = True
+    for parameter in parsed:
+        if isinstance(parameter, dict) and parameter.get("type"):
+            types.append(str(parameter["type"]))
+        else:
+            types.append("?")
+            known = False
+    return ",".join(types), known
+
+
+def _mut_identity(
+    tested_class: object, tested_method: object, parameters_json: object
+) -> tuple[str | None, bool]:
+    """Build a stable MUT identity without merging unresolved overloads."""
+    if tested_class is None or tested_method is None:
+        return None, False
+    if isinstance(tested_class, float) and pd.isna(tested_class):
+        return None, False
+    if isinstance(tested_method, float) and pd.isna(tested_method):
+        return None, False
+    signature, signature_known = _method_signature(parameters_json)
+    return f"{tested_class}::{tested_method}({signature})", signature_known
+
+
+def get_census_by_mut(
+    conn,
+    *,
+    variants: Iterable[str] | None = None,
+) -> pd.DataFrame:
+    """Aggregate census property executions by production MUT identity.
+
+    ``diagnostic_kind = 'FULL'`` is an internal soundness marker. Unresolved MUTs
+    remain as rows with ``signature_known = False`` so callers can report them as
+    diagnostics without counting them as supported MUTs.
+    """
+    query = """
+    SELECT
+        p.root_path AS root_path,
+        g.variant AS variant,
+        a.tested_class_qualified_name AS tested_class,
+        a.tested_method_name AS tested_method,
+        a.tested_method_parameters AS tested_method_parameters,
+        t.test_class_name AS test_class,
+        jpe.diagnostic_kind AS diagnostic_kind
+    FROM jqwik_property_execution jpe
+    JOIN generalization g ON g.id = jpe.generalization_id
+    JOIN assertion a ON a.id = g.assertion_id
+    JOIN test t ON t.id = a.test_id
+    JOIN project p ON p.id = jpe.project_id
+    WHERE g.is_included = TRUE
+    ORDER BY p.root_path, g.variant, a.id, jpe.id
+    """
+    raw = pd.read_sql_query(query, conn)
+    columns = [
+        "project",
+        "variant",
+        "mut_key",
+        "signature_known",
+        "sound_properties",
+        "all_property_executions",
+        "source_test_classes",
+    ]
+    if raw.empty:
+        return pd.DataFrame(columns=columns)
+    if variants is not None:
+        raw = raw[raw["variant"].isin(list(variants))]
+    if raw.empty:
+        return pd.DataFrame(columns=columns)
+    identities = raw.apply(
+        lambda row: _mut_identity(
+            row["tested_class"],
+            row["tested_method"],
+            row["tested_method_parameters"],
+        ),
+        axis=1,
+    )
+    raw = raw.copy()
+    raw["mut_key"] = [identity[0] for identity in identities]
+    raw["signature_known"] = [identity[1] for identity in identities]
+    raw["project"] = raw["root_path"].map(_project_label)
+    grouped = (
+        raw.groupby(
+            ["project", "variant", "mut_key", "signature_known"],
+            dropna=False,
+            sort=True,
+        )
+        .agg(
+            sound_properties=(
+                "diagnostic_kind",
+                lambda values: int((values == "FULL").sum()),
+            ),
+            all_property_executions=("diagnostic_kind", "size"),
+            source_test_classes=("test_class", "nunique"),
+        )
+        .reset_index()
+    )
+    for column in (
+        "sound_properties",
+        "all_property_executions",
+        "source_test_classes",
+    ):
+        grouped[column] = grouped[column].astype(int)
+    return cast(pd.DataFrame, grouped[columns].reset_index(drop=True))
+
+
+def get_census_project_pvc(
+    conn,
+    *,
+    variants: Iterable[str] | None = None,
+) -> pd.DataFrame:
+    """Union sound jqwik values by project, variant, MUT, and parameter.
+
+    A value emitted by multiple assertions targeting one MUT contributes once. The
+    result therefore differs intentionally from ``get_pvc_scores``, which sums
+    per-property PVC for the scoreboard's row-level diagnostic.
+    """
+    runs = get_generated_test_runs(conn, variants=variants)
+    columns = [
+        "project",
+        "variant",
+        "aggregate_pvc",
+        "sound_properties",
+        "sound_muts",
+        "unresolved_sound_properties",
+    ]
+    if runs.empty:
+        return pd.DataFrame(columns=columns)
+
+    values_by_key: dict[tuple[str, str, str], dict[str, set[str]]] = {}
+    sound_properties: dict[tuple[str, str], int] = {}
+    sound_muts: dict[tuple[str, str], set[str]] = {}
+    unresolved: dict[tuple[str, str], int] = {}
+    for run in runs.to_dict("records"):
+        if run.get("diagnostic_kind") != "FULL":
+            continue
+        project = _project_label(run.get("root_path", ""))
+        variant = str(run["variant"])
+        project_variant = (project, variant)
+        sound_properties[project_variant] = sound_properties.get(project_variant, 0) + 1
+        mut_key, _ = _mut_identity(
+            run.get("tested_class_qualified_name"),
+            run.get("tested_method_name"),
+            run.get("tested_method_parameters"),
+        )
+        if mut_key is None:
+            unresolved[project_variant] = unresolved.get(project_variant, 0) + 1
+            continue
+        sound_muts.setdefault(project_variant, set()).add(mut_key)
+        path = run.get("jqwik_value_log_path")
+        if path is None or (isinstance(path, float) and pd.isna(path)):
+            continue
+        values = parse_jqwik_value_log(path)
+        key = (project, variant, mut_key)
+        per_parameter = values_by_key.setdefault(key, {})
+        for value in values.to_dict("records"):
+            per_parameter.setdefault(str(value["parameter_name"]), set()).add(
+                str(value["value"])
+            )
+
+    rows: list[dict[str, object]] = []
+    project_variants = set(sound_properties) | {
+        (key[0], key[1]) for key in values_by_key
+    }
+    for project, variant in sorted(project_variants):
+        aggregate = sum(
+            len(values)
+            for key, parameters in values_by_key.items()
+            if key[0] == project and key[1] == variant
+            for values in parameters.values()
+        )
+        rows.append(
+            {
+                "project": project,
+                "variant": variant,
+                "aggregate_pvc": int(aggregate),
+                "sound_properties": int(sound_properties.get((project, variant), 0)),
+                "sound_muts": int(len(sound_muts.get((project, variant), set()))),
+                "unresolved_sound_properties": int(
+                    unresolved.get((project, variant), 0)
+                ),
+            }
+        )
+    return pd.DataFrame(rows, columns=columns)
+
+
 def get_census_filter_tally(conn) -> pd.DataFrame:
     """Per (project, filter, decision): filter-result counts.
 
@@ -631,24 +831,19 @@ def get_scoreboard(
 def compare_to_jarvis(
     scoreboard: pd.DataFrame, *, variant: str = "IMPROVED_100_TRIES"
 ) -> pd.DataFrame:
-    """Aggregate Teralizer probes into JARVIS Table-2 rows and score PVC head-to-head.
+    """Aggregate Teralizer probes into the published JARVIS Table-2 rows.
 
-    Folds the per-assertion probes of ``variant`` into their Table-2 row, summing PVC
-    (the eps precedent), joins JARVIS's published Scala-PBT PVC, and flags each row
-    ``win``/``trail``/``absent``. Probes are keyed by fixture method name because the
-    three ``PolynomialFunction`` rows share one MUT (``value``) with an identical
-    single-double argument signature, so the MUT alone cannot separate them; when the
-    scoreboard carries ``tested_class_qualified_name``/``tested_method_name`` the
-    matched MUT is validated against the reference and a mismatch raises. Non-Table-2
-    probes (e.g. the raw-bits ``precisionEqualsMaxUlps``) have no spec and are dropped.
-    IC is not compared per row: Teralizer IC is project-level until one-project-per-probe
-    fixtures land, so only JARVIS's reference IC is carried for context.
+    The returned ``pvc_delta`` is Teralizer generated PVC minus JARVIS published
+    PBT PVC. JARVIS CUT PVC is carried as a reference only: this database does not
+    contain the original Teralizer suite's complete CUT value set. A row with no
+    matching fixture probe has ``probe_count = 0`` and ``None`` PVC/delta values so
+    callers cannot mistake an unavailable result for observed numeric zero.
     """
     selected = scoreboard[scoreboard["variant"] == variant]
     has_mut = {"tested_class_qualified_name", "tested_method_name"}.issubset(
         selected.columns
     )
-    result = []
+    result: list[dict[str, object]] = []
     for row in JARVIS_TABLE2:
         teralizer_pvc = 0
         probe_count = 0
@@ -670,22 +865,19 @@ def compare_to_jarvis(
                     )
             teralizer_pvc += int(matched["parameter_value_coverage"].sum())
             probe_count += int(matched.shape[0])
-        if probe_count == 0:
-            verdict = "absent"
-        elif teralizer_pvc >= row.pbt_pvc:
-            verdict = "win"
-        else:
-            verdict = "trail"
+        observed_pvc: int | None = teralizer_pvc if probe_count else None
         result.append(
             {
                 "table_row": row.table_row,
                 "parameter_space": row.parameter_space,
                 "probe_count": probe_count,
-                "teralizer_pvc": teralizer_pvc,
+                "teralizer_pvc": observed_pvc,
                 "jarvis_cut_pvc": row.cut_pvc,
                 "jarvis_pbt_pvc": row.pbt_pvc,
-                "pvc_delta": teralizer_pvc - row.pbt_pvc,
-                "verdict": verdict,
+                "pvc_delta": (
+                    observed_pvc - row.pbt_pvc if observed_pvc is not None else None
+                ),
+                "jarvis_pbt_cut_multiplier": round(row.pbt_pvc / row.cut_pvc, 4),
             }
         )
     return pd.DataFrame(result)

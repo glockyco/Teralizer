@@ -4,6 +4,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import math
+
+
+def _optional_int(value: object) -> str:
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return "—"
+    return f"{int(value):,}"
 
 
 def _runtime(value: float) -> str:
@@ -23,6 +30,7 @@ _FORMATTERS: dict[str, Callable[[object], str]] = {
     "str": lambda v: str(v),
     "int": lambda v: str(int(v)),
     "count": lambda v: f"{int(v):,}",
+    "pvc": _optional_int,
     "pct1": lambda v: f"{float(v) * 100:.1f}%",
     "pct2": lambda v: f"{float(v) * 100:.2f}%",
     "float2": lambda v: f"{float(v):.2f}",

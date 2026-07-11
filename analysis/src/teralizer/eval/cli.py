@@ -14,6 +14,7 @@ from teralizer.eval.render import figures as figures_renderer
 from teralizer.eval.render import latex as latex_renderer
 from teralizer.eval.render import manifest as manifest_renderer
 from teralizer.eval.render import markdown as markdown_renderer
+from teralizer.eval.render import csv as csv_renderer
 
 REPO_URL = "https://github.com/glockyco/Teralizer"
 _ANALYSIS = Path(__file__).resolve().parents[3]
@@ -41,6 +42,13 @@ def _build_and_render(
             paper_out.mkdir(parents=True, exist_ok=True)
             for path in written:
                 shutil.copy2(path, paper_out / path.name)
+    if "csv" in targets:
+        csv_paths = csv_renderer.render(report, BUILD_DIR / rq)
+        if paper_out is not None:
+            data_dir = paper_out.parent / "data"
+            data_dir.mkdir(parents=True, exist_ok=True)
+            for path in csv_paths:
+                shutil.copy2(path, data_dir / path.name)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -50,6 +58,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--targets", default="md,figures,latex")
     parser.add_argument("--paper-out", default=os.environ.get("PAPER_REPO_PATH"))
     args = parser.parse_args(argv)
+    os.chdir(_ANALYSIS.parent)
     targets = {t.strip() for t in args.targets.split(",") if t.strip()}
     paper_out = Path(args.paper_out) / "tables" if args.paper_out else None
     rqs = sorted(registry.REPORTS) if args.rq == "all" else [args.rq]

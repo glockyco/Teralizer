@@ -10,6 +10,7 @@ from teralizer.eval.format import render_value
         (11547, "int", "11547"),
         (3598, "count", "3,598"),
         (1.5, "float2", "1.50"),
+        (None, "pvc", "—"),
         (3661.0, "runtime", "1h 1m 1s"),
         ("FULL", "str", "FULL"),
     ],

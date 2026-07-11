@@ -306,6 +306,7 @@ def create_scoreboard_schema(conn: sqlite3.Connection) -> None:
             project_id INTEGER NOT NULL,
             assertion_name TEXT NOT NULL,
             tested_method_call_arguments TEXT,
+            tested_method_parameters TEXT,
             tested_class_qualified_name TEXT,
             tested_method_name TEXT
         );
@@ -464,7 +465,7 @@ def test_jarvis_table2_reference_is_complete_and_corrects_polynomial_pvc():
     assert len(probe_names) == len(set(probe_names))
 
 
-def test_compare_to_jarvis_aggregates_probes_and_flags_verdict():
+def test_compare_to_jarvis_aggregates_probes_and_exposes_pvc_delta():
     scoreboard = _scoreboard_df(
         [
             ("IMPROVED", "isAscii", "assertTrue", 60),
@@ -480,12 +481,13 @@ def test_compare_to_jarvis_aggregates_probes_and_flags_verdict():
     # Probes fold into their Table-2 row (sum PVC, the eps precedent).
     assert by_row.loc["CharUtilsTest::isAscii", "teralizer_pvc"] == 148
     assert by_row.loc["CharUtilsTest::isAscii", "probe_count"] == 2
-    assert by_row.loc["CharUtilsTest::isAscii", "verdict"] == "win"
+    assert by_row.loc["CharUtilsTest::isAscii", "pvc_delta"] == 89
+    assert by_row.loc["CharUtilsTest::isAscii", "jarvis_cut_pvc"] == 6
     assert by_row.loc["FastMathTest::testMinMaxDouble", "teralizer_pvc"] == 304
-    assert by_row.loc["FastMathTest::testMinMaxDouble", "verdict"] == "trail"
+    assert by_row.loc["FastMathTest::testMinMaxDouble", "pvc_delta"] == -96
     assert by_row.loc["PrecisionTest", "teralizer_pvc"] == 206
-    assert by_row.loc["PrecisionTest", "verdict"] == "win"
-    assert by_row.loc["UnivariateFunctionTest::testAbs", "verdict"] == "trail"
+    assert by_row.loc["PrecisionTest", "pvc_delta"] == 104
+    assert by_row.loc["UnivariateFunctionTest::testAbs", "pvc_delta"] == -412
 
 
 def test_compare_to_jarvis_excludes_non_table2_and_other_variants():
@@ -499,7 +501,8 @@ def test_compare_to_jarvis_excludes_non_table2_and_other_variants():
     by_row = compare_to_jarvis(scoreboard, variant="IMPROVED").set_index("table_row")
     # maxUlps is a non-Table-2 raw-bits probe; it must not fold into PrecisionTest.
     assert by_row.loc["PrecisionTest", "probe_count"] == 0
-    assert by_row.loc["PrecisionTest", "verdict"] == "absent"
+    assert pd.isna(by_row.loc["PrecisionTest", "teralizer_pvc"])
+    assert pd.isna(by_row.loc["PrecisionTest", "pvc_delta"])
     # Only the IMPROVED variant's probe counts toward the comparison.
     assert by_row.loc["UnivariateFunctionTest::testAbs", "teralizer_pvc"] == 94
 
