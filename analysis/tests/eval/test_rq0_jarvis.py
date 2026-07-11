@@ -158,6 +158,7 @@ def test_census_status_ledger_keeps_failed_and_unreached_projects(
             by_project.loc[TABLE1_PROJECTS[1], "first_failed_stage"]
             == "EXECUTE_TESTS_ORIGINAL"
         )
+        assert by_project.loc[TABLE1_PROJECTS[1], "failed_task_count"] == 1
     finally:
         conn.close()
 
@@ -228,11 +229,13 @@ def test_breadth_keeps_available_pvc_when_task_status_failed():
             "variant": ["IMPROVED_100_TRIES", "IMPROVED_100_TRIES"],
             "aggregate_pvc": [42, 84],
             "sound_muts": [3, 5],
+            "sound_properties": [4, 6],
         }
     )
     breadth = _build_breadth_table(ledger, project_pvc).set_index("project")
     assert breadth.loc["commons-lang-3.5-census", "aggregate_pvc"] == 84
     assert breadth.loc["commons-lang-3.5-census", "sound_muts"] == 5
+    assert breadth.loc["commons-lang-3.5-census", "sound_properties"] == 6
     assert pd.isna(breadth.loc["commons-cli-1.3.1-census", "aggregate_pvc"])
 
 

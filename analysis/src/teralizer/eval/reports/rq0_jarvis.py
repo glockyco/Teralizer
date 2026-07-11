@@ -179,13 +179,17 @@ def _build_breadth_table(
     rows["jarvis_successful_muts"] = rows["project"].map(
         lambda project: JARVIS_PROJECT_MUTS.get(project, 0)
     )
+    project_rows = project_pvc[project_pvc["variant"].eq(CENSUS_VARIANT)]
+    pvc_columns = ["project", "aggregate_pvc", "sound_muts"]
+    if "sound_properties" in project_rows.columns:
+        pvc_columns.append("sound_properties")
     rows = rows.merge(
-        project_pvc[project_pvc["variant"].eq(CENSUS_VARIANT)][
-            ["project", "aggregate_pvc", "sound_muts"]
-        ],
+        project_rows[pvc_columns],
         on="project",
         how="left",
     )
+    if "sound_properties" not in rows.columns:
+        rows["sound_properties"] = pd.NA
     rows = rows.merge(
         ledger[["project", "generalization_status"]], on="project", how="left"
     )
@@ -207,6 +211,11 @@ def _build_breadth_table(
                 "sound_muts": (
                     int(rows["sound_muts"].dropna().sum())
                     if rows["sound_muts"].notna().any()
+                    else None
+                ),
+                "sound_properties": (
+                    int(rows["sound_properties"].dropna().sum())
+                    if rows["sound_properties"].notna().any()
                     else None
                 ),
                 "generalization_status": "diagnostic",
@@ -279,7 +288,19 @@ def build(conn: Connection) -> RQReport:
         ),
         _metric("rq0.table2.sound_table2_rows", sound_rows, "count", compare_to_jarvis),
         _metric("rq0.table2.sound_jarvis_muts", sound_muts, "count", compare_to_jarvis),
+        _metric(
+            "rq0.breadth.published_projects",
+            len(JARVIS_PROJECT_PBT_PVC),
+            "count",
+            _build_breadth_table,
+        ),
         _metric("rq0.census.database", CENSUS_DB, "str", _census_status_ledger),
+        _metric(
+            "rq0.census.pvc_basis",
+            "deduplicated_jqwik_value_logs_no_pit_reduction",
+            "str",
+            get_census_project_pvc,
+        ),
         _metric("rq0.table2.variant", TABLE2_VARIANT, "str", compare_to_jarvis),
         _metric("rq0.census.variant", CENSUS_VARIANT, "str", get_census_project_pvc),
         _metric(
@@ -312,6 +333,12 @@ def build(conn: Connection) -> RQReport:
             "count",
             _census_status_ledger,
         ),
+        _metric(
+            "rq0.census.failed_task_count",
+            int(ledger["failed_task_count"].sum()),
+            "count",
+            _census_status_ledger,
+        ),
         _metric("rq0.census.status", census_status, "str", _census_status_ledger),
         _metric(
             "rq0.census.completion_marker",
@@ -334,6 +361,7 @@ def build(conn: Connection) -> RQReport:
     ]
     for row in breadth.iloc[:-1].itertuples(index=False):
         slug = str(row.project).replace("-", "_")
+        ledger_row = ledger.loc[ledger["project"].eq(row.project)].iloc[0]
         metrics.extend(
             [
                 _metric(
@@ -357,6 +385,15 @@ def build(conn: Connection) -> RQReport:
                     _build_breadth_table,
                 ),
                 _metric(
+                    f"rq0.census.project.{slug}.teralizer_sound_properties",
+                    "unavailable"
+                    if "sound_properties" not in breadth.columns
+                    or pd.isna(getattr(row, "sound_properties", None))
+                    else int(row.sound_properties),
+                    "str",
+                    get_census_project_pvc,
+                ),
+                _metric(
                     f"rq0.census.project.{slug}.sound_muts",
                     "unavailable" if pd.isna(row.sound_muts) else int(row.sound_muts),
                     "str",
@@ -364,8 +401,20 @@ def build(conn: Connection) -> RQReport:
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.status",
-                    str(row.generalization_status),
+                    str(ledger_row.generalization_status),
                     "str",
+                    _census_status_ledger,
+                ),
+                _metric(
+                    f"rq0.census.project.{slug}.first_failed_stage",
+                    str(ledger_row.first_failed_stage),
+                    "str",
+                    _census_status_ledger,
+                ),
+                _metric(
+                    f"rq0.census.project.{slug}.failed_task_count",
+                    int(ledger_row.failed_task_count),
+                    "count",
                     _census_status_ledger,
                 ),
             ]
@@ -458,7 +507,15 @@ def build(conn: Connection) -> RQReport:
         provenance=capture(summarize_variants),
     )
     status_summary = "; ".join(
-        f"{row.project}: {row.generalization_status}"
+        (
+            f"{row.project}: {row.generalization_status}"
+            + (
+                f" (first failed stage {row.first_failed_stage}; "
+                f"failed tasks {row.failed_task_count})"
+                if row.first_failed_stage
+                else ""
+            )
+        )
         for row in ledger.itertuples(index=False)
     )
     sections = [
