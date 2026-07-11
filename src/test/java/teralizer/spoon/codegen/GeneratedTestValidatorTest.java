@@ -49,9 +49,11 @@ class GeneratedTestValidatorTest {
     void flagsUncompilableFileGivenRelativePaths() throws Exception {
         // The pipeline passes repo-root-relative generated paths, while javac reports absolute
         // source URIs. The returned set must still match the caller's original (relative) Path.
-        Path root = Files.createTempDirectory("validator-relative").toAbsolutePath();
-        write(root, "Bad.java", "public class Bad { int v() { return Nonexistent.MISSING; } }");
+        // Create the temporary fixture below the working directory so this remains valid on
+        // Windows, where the system temp directory may be on a different drive.
         Path cwd = java.nio.file.Paths.get("").toAbsolutePath();
+        Path root = Files.createTempDirectory(cwd, "validator-relative");
+        write(root, "Bad.java", "public class Bad { int v() { return Nonexistent.MISSING; } }");
         Path relativeBad = cwd.relativize(root.resolve("Bad.java"));
         Path relativeRoot = cwd.relativize(root);
 
