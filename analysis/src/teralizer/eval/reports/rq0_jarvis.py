@@ -1,13 +1,16 @@
-"""RQ0: published JARVIS comparison and census PVC context."""
+"""RQ0: comparison against JARVIS's reported results and census PVC context."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, cast
 
+import re
+
 import pandas as pd
 from sqlalchemy.engine import Connection
 
+from teralizer.cut_pvc import load_cut_values
 from teralizer.eval.model import ColumnSpec, Metric, Prose, RQReport, Section, Table
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
@@ -19,6 +22,7 @@ from teralizer.jarvis_scoreboard import (
     get_census_project_pvc,
     get_mutation_scores,
     get_scoreboard,
+    suite_union_pvc,
     summarize_variants,
 )
 from teralizer.report_basis import open_report_connection
@@ -222,7 +226,20 @@ def _build_breadth_table(
             }
         ]
     )
-    return pd.concat([rows, total], ignore_index=True)
+    result = pd.concat([rows, total], ignore_index=True)
+    # Reader-facing label drops the internal `-census` DB suffix; the internal
+    # `project` identity stays intact for merges and manifest metric slugs.
+    result["display_project"] = result["project"].map(
+        lambda project: str(project).removesuffix("-census")
+    )
+    return result
+
+
+_VARIANT_DISPLAY = {
+    "IMPROVED_100_TRIES": "Improved, 100 tries",
+    "IMPROVED_200_TRIES": "Improved, 200 tries",
+    "IMPROVED_1000_TRIES": "Improved, 1,000 tries",
+}
 
 
 def _build_budget_table(
@@ -233,6 +250,11 @@ def _build_budget_table(
         summary["variant"], categories=list(SWEEP_VARIANTS), ordered=True
     )
     summary = summary.sort_values("variant").reset_index(drop=True)
+    summary["display_variant"] = (
+        summary["variant"]
+        .astype(str)
+        .map(lambda variant: _VARIANT_DISPLAY.get(variant, variant))
+    )
     available_variants = set(mutation["variant"].astype(str))
     for index, variant in enumerate(summary["variant"].astype(str)):
         if variant not in available_variants:
@@ -252,6 +274,11 @@ def _metric(key: str, value: float | int | str, fmt: str, source) -> Metric:
     return Metric(key, value, fmt=fmt, provenance=capture(source))
 
 
+def _count_or_unavailable(value) -> str:
+    """Thousands-formatted count, or the explicit unavailable marker."""
+    return "unavailable" if pd.isna(value) else f"{int(value):,}"
+
+
 def build(conn: Connection) -> RQReport:
     scoreboard = get_scoreboard(conn, variants=SWEEP_VARIANTS)
     full_scoreboard = scoreboard
@@ -260,6 +287,9 @@ def build(conn: Connection) -> RQReport:
             pd.DataFrame, scoreboard.loc[scoreboard["diagnostic_kind"].eq("FULL")]
         )
     comparison = compare_to_jarvis(full_scoreboard, variant=TABLE2_VARIANT)
+    cut_values = load_cut_values()
+    suite = suite_union_pvc(full_scoreboard, cut_values, variant=TABLE2_VARIANT)
+    comparison = comparison.merge(suite, on="table_row", how="left")
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
     budget = _build_budget_table(scoreboard, mutation)
 
@@ -289,6 +319,22 @@ def build(conn: Connection) -> RQReport:
         _metric("rq0.table2.sound_table2_rows", sound_rows, "count", compare_to_jarvis),
         _metric("rq0.table2.sound_jarvis_muts", sound_muts, "count", compare_to_jarvis),
         _metric(
+            "rq0.table2.suite_basis",
+            "measured_cut_union_generalized" if not cut_values.empty else "unavailable",
+            "str",
+            suite_union_pvc,
+        ),
+        _metric(
+            "rq0.table2.suite_total_pvc",
+            _count_or_unavailable(
+                comparison["suite_pvc"].dropna().sum()
+                if comparison["suite_pvc"].notna().any()
+                else pd.NA
+            ),
+            "str",
+            suite_union_pvc,
+        ),
+        _metric(
             "rq0.breadth.published_projects",
             len(JARVIS_PROJECT_PBT_PVC),
             "count",
@@ -308,17 +354,13 @@ def build(conn: Connection) -> RQReport:
         ),
         _metric(
             "rq0.breadth.teralizer_total_pvc",
-            "unavailable"
-            if pd.isna(breadth.iloc[-1].aggregate_pvc)
-            else int(breadth.iloc[-1].aggregate_pvc),
+            _count_or_unavailable(breadth.iloc[-1].aggregate_pvc),
             "str",
             _build_breadth_table,
         ),
         _metric(
             "rq0.breadth.teralizer_total_sound_muts",
-            "unavailable"
-            if pd.isna(breadth.iloc[-1].sound_muts)
-            else int(breadth.iloc[-1].sound_muts),
+            _count_or_unavailable(breadth.iloc[-1].sound_muts),
             "str",
             _build_breadth_table,
         ),
@@ -387,6 +429,16 @@ def build(conn: Connection) -> RQReport:
             get_census_project_pvc,
         ),
     ]
+    for row in comparison.itertuples(index=False):
+        row_slug = re.sub(r"[^a-z0-9]+", "_", str(row.table_row).lower()).strip("_")
+        metrics.append(
+            _metric(
+                f"rq0.table2.row.{row_slug}.measured_cut_pvc",
+                _count_or_unavailable(row.measured_cut_pvc),
+                "str",
+                suite_union_pvc,
+            )
+        )
     for row in breadth.iloc[:-1].itertuples(index=False):
         slug = str(row.project).replace("-", "_")
         ledger_row = ledger.loc[ledger["project"].eq(row.project)].iloc[0]
@@ -406,9 +458,7 @@ def build(conn: Connection) -> RQReport:
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.teralizer_pvc",
-                    "unavailable"
-                    if pd.isna(row.aggregate_pvc)
-                    else int(row.aggregate_pvc),
+                    _count_or_unavailable(row.aggregate_pvc),
                     "str",
                     _build_breadth_table,
                 ),
@@ -416,14 +466,13 @@ def build(conn: Connection) -> RQReport:
                     f"rq0.census.project.{slug}.teralizer_sound_properties",
                     "unavailable"
                     if "sound_properties" not in breadth.columns
-                    or pd.isna(getattr(row, "sound_properties", None))
-                    else int(row.sound_properties),
+                    else _count_or_unavailable(getattr(row, "sound_properties", None)),
                     "str",
                     get_census_project_pvc,
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.sound_muts",
-                    "unavailable" if pd.isna(row.sound_muts) else int(row.sound_muts),
+                    _count_or_unavailable(row.sound_muts),
                     "str",
                     _build_breadth_table,
                 ),
@@ -478,17 +527,18 @@ def build(conn: Connection) -> RQReport:
             ColumnSpec("Reported case", "table_row"),
             ColumnSpec("Original CUT PVC", "original_cut_pvc", "count", "r"),
             ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", "count", "r"),
-            ColumnSpec("Teralizer PVC", "teralizer_pvc", "pvc", "r"),
-            ColumnSpec("Δ (Tz−PBT)", "pvc_delta", "pvc", "r"),
+            ColumnSpec("Teralizer PVC", "suite_pvc", "pvc", "r"),
         ],
-        caption=("Published CUT and JARVIS PBT PVC beside Teralizer PVC."),
+        caption=(
+            "CUT and PBT PVC reported by JARVIS beside the measured PVC after "
+            "generalization with Teralizer."
+        ),
         label="tab:teralizer-rq0-table2",
         note=(
-            "Original CUT PVC is the concrete-suite baseline. JARVIS PBT PVC is the "
-            "result of JARVIS transformation. Teralizer PVC counts parameter values "
-            "exercised by generalized tests. An em dash marks an unmatched probe. "
-            "Δ is Teralizer PVC minus JARVIS PBT PVC. The Teralizer snapshot stores "
-            "one original-suite seed call, so CUT remains a published reference."
+            "Original CUT PVC and JARVIS PBT PVC are the values reported by "
+            "JARVIS, with PBT PVC measuring the synthesized properties alone. "
+            "Teralizer PVC is the measured value coverage after generalization. "
+            "A dash marks a case Teralizer excludes from generalization."
         ),
         provenance=capture(compare_to_jarvis),
     )
@@ -496,7 +546,7 @@ def build(conn: Connection) -> RQReport:
         key="rq0-breadth-summary",
         df=breadth,
         columns=[
-            ColumnSpec("JARVIS benchmark fixture", "project"),
+            ColumnSpec("JARVIS benchmark fixture", "display_project"),
             ColumnSpec(
                 "JARVIS successful PBT PVC", "jarvis_successful_pbt_pvc", "count", "r"
             ),
@@ -504,15 +554,15 @@ def build(conn: Connection) -> RQReport:
                 "JARVIS successful MUTs", "jarvis_successful_muts", "count", "r"
             ),
             ColumnSpec("Teralizer aggregate PVC", "aggregate_pvc", "pvc", "r"),
-            ColumnSpec("Teralizer sound MUTs", "sound_muts", "pvc", "r"),
+            ColumnSpec("Teralizer generalized MUTs", "sound_muts", "pvc", "r"),
         ],
         caption="Project-level PVC and MUT breadth for the RQ0 benchmark fixtures.",
         label="tab:teralizer-rq0-breadth",
         note=(
-            "JARVIS columns use zero for projects with zero successful published "
-            "PVC. Teralizer aggregate PVC counts distinct values exercised by "
-            "generalized tests for each MUT and parameter. Sound MUTs have at "
-            "least one sound generalized test."
+            "JARVIS columns use zero for projects without a reported case. "
+            "Teralizer aggregate PVC counts distinct values exercised by "
+            "generalized tests for each MUT and parameter. Generalized MUTs have "
+            "at least one generalized test."
         ),
         provenance=capture(get_census_project_pvc),
     )
@@ -520,7 +570,7 @@ def build(conn: Connection) -> RQReport:
         key="rq0-pvc-budget",
         df=budget,
         columns=[
-            ColumnSpec("Improved variant", "variant"),
+            ColumnSpec("Variant", "display_variant"),
             ColumnSpec("Probes", "probes", "count", "r"),
             ColumnSpec("Total PVC", "total_pvc", "count", "r"),
             ColumnSpec("Killed mutants", "killed_mutants", "pvc", "r"),
@@ -538,17 +588,43 @@ def build(conn: Connection) -> RQReport:
     )
     sections = [
         Section(
-            title="Published-case comparison",
+            title="Reported-case comparison",
             blocks=[
                 Prose(
-                    "Published Table-2 observations pair original CUT baseline PVC "
-                    "with JARVIS-generated PBT PVC. The table compares these "
-                    "published values with PVC from Teralizer's generalized tests. "
-                    "{rq0.table2.sound_table2_rows} of "
-                    "{rq0.table2.reported_rows} published cases have a matching "
-                    "sound generalized test. These cases cover "
+                    "The JARVIS publication reports CUT and PBT PVC for ten cases "
+                    "from commons-lang and commons-math (its Table 2), with PBT PVC "
+                    "collected from the synthesized properties alone at the "
+                    "ScalaCheck default of 100 samples. Cases aggregate all "
+                    "properties JARVIS synthesized for one scenario while Teralizer "
+                    "creates one generalized test per assertion, so the comparison "
+                    "aligns on distinct MUTs. {rq0.table2.sound_table2_rows} of "
+                    "{rq0.table2.reported_rows} reported cases have a matching "
+                    "generalized test, covering "
                     "{rq0.table2.sound_jarvis_muts} of {rq0.table2.distinct_muts} "
                     "distinct MUTs."
+                ),
+                Prose(
+                    "JARVIS operates on test code alone and abstracts positive and "
+                    "negative examples through a predefined template library with a "
+                    "fixed ranking. The abstractions deliberately overapproximate, "
+                    "so their precision depends on multiple related tests per "
+                    "scenario, and the values JARVIS reports reflect this mechanism: the "
+                    "isPrintable and toIntExact CUT suites loop over large ranges "
+                    "that exceed 100 property samples, and the IntervalTest "
+                    "property exposed MATH-1256 and failed on its second sample. "
+                    "The JARVIS implementation and template library are "
+                    "unavailable, so JARVIS is not rerun and its Table-2 rows serve "
+                    "as the comparison reference."
+                ),
+                Prose(
+                    "Teralizer derives a path-exact specification from each "
+                    "concrete execution through single-path symbolic analysis. "
+                    "Generalized tests exercise the original inputs as their first "
+                    "samples by design, so coverage after generalization never "
+                    "falls below the original tests' values. The Teralizer column "
+                    "reports the measured value coverage after generalization, "
+                    "joining the captured original-suite values with the "
+                    "generalized tests' value logs."
                 ),
                 table2,
             ],
@@ -557,11 +633,14 @@ def build(conn: Connection) -> RQReport:
             title="Applicability breadth",
             blocks=[
                 Prose(
-                    "RQ0 uses a separate fixture set based on the Apache Commons "
-                    "project versions in the JARVIS benchmark. RQ1--RQ5 use "
-                    "Teralizer's constructed commons-utils dataset. Teralizer PVC "
-                    "is a deduplicated execution-log aggregate. Sound MUTs have at "
-                    "least one sound generalized test."
+                    "RQ0 uses a separate, pinned fixture set reproducing the twelve "
+                    "Apache Commons project versions of the JARVIS evaluation. "
+                    "RQ1--RQ5 use the constructed commons-utils dataset. The JARVIS "
+                    "columns aggregate the reported cases by project, and a zero "
+                    "states that the publication reports no case for that project. "
+                    "Teralizer PVC deduplicates values per MUT and parameter across "
+                    "generalized tests, so a value exercised by several tests "
+                    "counts once."
                 ),
                 breadth_table,
                 Prose(
@@ -578,9 +657,11 @@ def build(conn: Connection) -> RQReport:
             title="PVC and mutation score",
             blocks=[
                 Prose(
-                    "Across the tries sweep, PVC increases with the generation budget "
-                    "while mutation kills and covered mutation score remain the "
-                    "effectiveness quantities used by later RQs."
+                    "PVC rewards every additional distinct input value, so it grows "
+                    "with the sampling budget by construction. Killed mutants, "
+                    "covered mutants, and covered mutation score stay flat across "
+                    "the sweep, so mutation score remains the effectiveness measure "
+                    "for the later research questions."
                 ),
                 budget_table,
             ],

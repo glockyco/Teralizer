@@ -15,6 +15,7 @@ from teralizer.jarvis_scoreboard import (
     compare_to_jarvis,
     get_census_by_mut,
     get_census_project_pvc,
+    suite_union_pvc,
 )
 
 
@@ -260,6 +261,77 @@ def test_budget_marks_missing_pit_variants_unavailable():
     assert pd.isna(budget.loc["IMPROVED_200_TRIES", "covered_mutation_score"])
 
 
+def test_suite_union_joins_captured_and_generated_values(tmp_path):
+    lang_log = tmp_path / "isascii.tsv"
+    lang_log.write_text("ch=a\nch=b\n", encoding="utf-8")
+    abs_log = tmp_path / "abs.tsv"
+    abs_log.write_text("x=1.0\nx=2.0\n", encoding="utf-8")
+    scoreboard = pd.DataFrame(
+        {
+            "variant": ["IMPROVED_100_TRIES", "IMPROVED_100_TRIES"],
+            "generated_method_name": ["isAscii", "absValue"],
+            "tested_method_parameters": [
+                '[{"type":"char","name":"ch"}]',
+                '[{"type":"double","name":"x"}]',
+            ],
+            "jqwik_value_log_path": [str(lang_log), str(abs_log)],
+        }
+    )
+    cut_values = pd.DataFrame(
+        {
+            "table_row": [
+                "CharUtilsTest::isAscii",
+                "CharUtilsTest::isAscii",
+                "PrecisionTest",
+            ],
+            "mut_class": [
+                "org.apache.commons.lang3.CharUtils",
+                "org.apache.commons.lang3.CharUtils",
+                "org.apache.commons.math3.util.Precision",
+            ],
+            "mut_method": ["isAscii", "isAscii", "equals"],
+            "parameter": ["p0", "p0", "p0"],
+            "value": ["a", "z", "1.0"],
+        }
+    )
+    suite = suite_union_pvc(
+        scoreboard, cut_values, variant="IMPROVED_100_TRIES"
+    ).set_index("table_row")
+    # Captured {a, z} unions with generated {a, b}: the seed overlap counts once.
+    assert suite.loc["CharUtilsTest::isAscii", "suite_pvc"] == 3
+    assert suite.loc["CharUtilsTest::isAscii", "measured_cut_pvc"] == 2
+    # Captured values without a generalized test stay a dash, never a number.
+    assert suite.loc["PrecisionTest", "measured_cut_pvc"] == 1
+    assert pd.isna(suite.loc["PrecisionTest", "suite_pvc"])
+    # A generalized test without captured original values keeps its log values
+    # (the log already contains the seed via FirstValueArbitrary).
+    assert suite.loc["UnivariateFunctionTest::testAbs", "suite_pvc"] == 2
+    assert pd.isna(suite.loc["UnivariateFunctionTest::testAbs", "measured_cut_pvc"])
+    # Invariant: coverage after generalization never falls below the captured
+    # original coverage.
+    both = suite.dropna(subset=["suite_pvc", "measured_cut_pvc"])
+    assert (both["suite_pvc"] >= both["measured_cut_pvc"]).all()
+
+
+def test_suite_union_without_capture_dataset_keeps_generated_rows(tmp_path):
+    log = tmp_path / "isascii.tsv"
+    log.write_text("ch=a\n", encoding="utf-8")
+    scoreboard = pd.DataFrame(
+        {
+            "variant": ["IMPROVED_100_TRIES"],
+            "generated_method_name": ["isAscii"],
+            "tested_method_parameters": ['[{"type":"char","name":"ch"}]'],
+            "jqwik_value_log_path": [str(log)],
+        }
+    )
+    empty = pd.DataFrame(
+        columns=["table_row", "mut_class", "mut_method", "parameter", "value"]
+    )
+    suite = suite_union_pvc(scoreboard, empty).set_index("table_row")
+    assert suite.loc["CharUtilsTest::isAscii", "suite_pvc"] == 1
+    assert pd.isna(suite.loc["PrecisionTest", "suite_pvc"])
+
+
 def test_csv_headers_follow_table_source_order(tmp_path):
     table = Table(
         key="rq0-table2-comparison",
@@ -268,21 +340,19 @@ def test_csv_headers_follow_table_source_order(tmp_path):
                 "table_row": ["case"],
                 "original_cut_pvc": [6],
                 "jarvis_pbt_pvc": [59],
-                "teralizer_pvc": [198],
-                "pvc_delta": [139],
+                "suite_pvc": [227],
             }
         ),
         columns=[
             ColumnSpec("Reported case", "table_row"),
             ColumnSpec("Original CUT PVC", "original_cut_pvc", "count"),
             ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", "count"),
-            ColumnSpec("Teralizer PVC", "teralizer_pvc", "pvc"),
-            ColumnSpec("Delta", "pvc_delta", "pvc"),
+            ColumnSpec("Teralizer PVC", "suite_pvc", "pvc"),
         ],
         caption="caption",
         label="tab:label",
     )
     path = render_table(table, tmp_path)
     assert path.read_text(encoding="utf-8").splitlines()[0] == (
-        "table_row,original_cut_pvc,jarvis_pbt_pvc,teralizer_pvc,pvc_delta"
+        "table_row,original_cut_pvc,jarvis_pbt_pvc,suite_pvc"
     )

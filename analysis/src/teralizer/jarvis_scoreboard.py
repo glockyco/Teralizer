@@ -884,6 +884,96 @@ def compare_to_jarvis(
     return pd.DataFrame(result)
 
 
+def suite_union_pvc(
+    scoreboard: pd.DataFrame,
+    cut_values: pd.DataFrame,
+    *,
+    variant: str = "IMPROVED_100_TRIES",
+) -> pd.DataFrame:
+    """Measured PVC of the suite after generalization, per JARVIS Table-2 row.
+
+    Union of the captured original-suite values (``teralizer.cut_pvc``) and
+    the values in the generalized tests' jqwik logs, per MUT and parameter
+    position, summed with the same per-parameter construct as
+    ``get_pvc_scores``. Generalized tests always exercise the original inputs
+    as their first samples (FirstValueArbitrary), so the logs already contain
+    the seed values. Rows without a generalized test yield ``None`` (a dash,
+    never zero).
+    """
+    if scoreboard.empty:
+        selected = scoreboard
+    else:
+        selected = scoreboard[scoreboard["variant"] == variant]
+    rows: list[dict[str, object]] = []
+    for row in JARVIS_TABLE2:
+        if cut_values.empty:
+            cut_rows = cut_values
+        else:
+            cut_rows = cut_values[cut_values["table_row"] == row.table_row]
+        union: dict[tuple[str, str, int], set[str]] = {}
+        for cut in cut_rows.itertuples(index=False):
+            parameter = str(cut.parameter)
+            if not parameter.startswith("p") or not parameter[1:].isdigit():
+                raise ValueError(f"Unexpected capture parameter name: {parameter!r}")
+            key = (str(cut.mut_class), str(cut.mut_method), int(parameter[1:]))
+            union.setdefault(key, set()).add(str(cut.value))
+        measured_cut = (
+            sum(len(values) for values in union.values())
+            if not cut_rows.empty
+            else None
+        )
+        matched_runs: list[dict[str, object]] = []
+        for spec in row.probes:
+            if selected.empty:
+                continue
+            matched = cast(
+                pd.DataFrame,
+                selected[
+                    selected["generated_method_name"] == spec.generated_method_name
+                ],
+            )
+            for run in matched.to_dict("records"):
+                matched_runs.append({"spec": spec, "run": run})
+        if not matched_runs:
+            rows.append(
+                {
+                    "table_row": row.table_row,
+                    "measured_cut_pvc": measured_cut,
+                    "suite_pvc": None,
+                }
+            )
+            continue
+        for entry in matched_runs:
+            spec = entry["spec"]
+            run = entry["run"]
+            parameters = json.loads(str(run["tested_method_parameters"]))
+            names = [str(parameter["name"]) for parameter in parameters]
+            index_of = {name: index for index, name in enumerate(names)}
+            values = parse_jqwik_value_log(run["jqwik_value_log_path"])
+            unknown = set(values["parameter_name"].astype(str)).difference(names)
+            if unknown:
+                raise ValueError(
+                    f"Value log parameters {sorted(unknown)} not in "
+                    f"tested_method_parameters of probe "
+                    f"{spec.generated_method_name!r}"
+                )
+            for record in values.to_dict("records"):
+                key = (
+                    spec.tested_class,
+                    spec.tested_method,
+                    index_of[str(record["parameter_name"])],
+                )
+                union.setdefault(key, set()).add(str(record["value"]))
+        rows.append(
+            {
+                "table_row": row.table_row,
+                "measured_cut_pvc": measured_cut,
+                "suite_pvc": sum(len(values) for values in union.values()),
+            }
+        )
+    return pd.DataFrame(rows, columns=["table_row", "measured_cut_pvc", "suite_pvc"])
+
+
 def _count_original_argument_values(arguments_json: object) -> int:
     if arguments_json is None or pd.isna(arguments_json):
         return 0
