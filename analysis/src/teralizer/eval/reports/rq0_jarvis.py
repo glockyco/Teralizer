@@ -47,7 +47,7 @@ TABLE1_PROJECTS = (
 
 # Only these two Table-1 projects have successful PVC values in the published
 # Table-2 subset. The remaining values are explicitly zero successful reported
-# cases, not a count of attempted or failed JARVIS cases.
+# cases. The zero values encode the published successful-case subset.
 JARVIS_PROJECT_PBT_PVC = {
     "commons-lang-3.5-census": 104,
     "commons-math-3.5-census": 1604,
@@ -476,18 +476,19 @@ def build(conn: Connection) -> RQReport:
         df=comparison,
         columns=[
             ColumnSpec("Reported case", "table_row"),
-            ColumnSpec("JARVIS CUT PVC", "jarvis_cut_pvc", "count", "r"),
+            ColumnSpec("Original CUT PVC", "original_cut_pvc", "count", "r"),
             ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", "count", "r"),
             ColumnSpec("Teralizer PVC", "teralizer_pvc", "pvc", "r"),
             ColumnSpec("Δ (Tz−PBT)", "pvc_delta", "pvc", "r"),
         ],
-        caption="Published JARVIS Table-2 PVC references and Teralizer generated PVC.",
+        caption=("Published CUT and JARVIS PBT PVC beside Teralizer PVC."),
         label="tab:teralizer-rq0-table2",
         note=(
-            "Teralizer PVC is generated-property PVC; JARVIS CUT/PBT values are "
-            "published references. An em dash means no matching Teralizer probe. "
-            "Δ is Teralizer PVC minus JARVIS PBT PVC; no Teralizer CUT denominator "
-            "is available."
+            "Original CUT PVC is the concrete-suite baseline. JARVIS PBT PVC is the "
+            "result of JARVIS transformation. Teralizer PVC counts parameter values "
+            "exercised by generalized tests. An em dash marks an unmatched probe. "
+            "Δ is Teralizer PVC minus JARVIS PBT PVC. The Teralizer snapshot stores "
+            "one original-suite seed call, so CUT remains a published reference."
         ),
         provenance=capture(compare_to_jarvis),
     )
@@ -495,7 +496,7 @@ def build(conn: Connection) -> RQReport:
         key="rq0-breadth-summary",
         df=breadth,
         columns=[
-            ColumnSpec("Table-1 project", "project"),
+            ColumnSpec("JARVIS benchmark fixture", "project"),
             ColumnSpec(
                 "JARVIS successful PBT PVC", "jarvis_successful_pbt_pvc", "count", "r"
             ),
@@ -505,13 +506,13 @@ def build(conn: Connection) -> RQReport:
             ColumnSpec("Teralizer aggregate PVC", "aggregate_pvc", "pvc", "r"),
             ColumnSpec("Teralizer sound MUTs", "sound_muts", "pvc", "r"),
         ],
-        caption="Project-level PVC and distinct MUT breadth across the JARVIS Table-1 population.",
+        caption="Project-level PVC and MUT breadth for the RQ0 benchmark fixtures.",
         label="tab:teralizer-rq0-breadth",
         note=(
-            "JARVIS zero means no successful Table-2 PVC result was reported for "
-            "that Table-1 project; it is not an attempted-case failure count. "
-            "Teralizer aggregate PVC unions duplicate generated values by MUT and "
-            "parameter. Sound MUTs have at least one sound generalization."
+            "JARVIS columns use zero for projects with zero successful published "
+            "PVC. Teralizer aggregate PVC counts distinct values exercised by "
+            "generalized tests for each MUT and parameter. Sound MUTs have at "
+            "least one sound generalized test."
         ),
         provenance=capture(get_census_project_pvc),
     )
@@ -529,66 +530,52 @@ def build(conn: Connection) -> RQReport:
         caption="PVC rises with the tries budget while covered mutation score stays flat.",
         label="tab:teralizer-rq0-pvc",
         note=(
-            "PVC is a generation-volume diagnostic. Missing PIT rows render as "
-            "unavailable rather than zero kills or gain."
+            "PVC is a generation-volume diagnostic. Rows with persisted PIT "
+            "results carry kills and mutation scores. Missing PIT results appear "
+            "as unavailable cells."
         ),
         provenance=capture(summarize_variants),
-    )
-    status_summary = "; ".join(
-        (
-            f"{row.project}: {row.generalization_status}"
-            + (
-                f" (first failed stage {row.first_failed_stage}; "
-                f"failed tasks {row.failed_task_count})"
-                if row.first_failed_stage
-                else ""
-            )
-        )
-        for row in ledger.itertuples(index=False)
     )
     sections = [
         Section(
             title="Published-case comparison",
             blocks=[
                 Prose(
-                    "JARVIS is represented by published Table-2 CUT/PBT values; it is "
-                    "not rerun. The Table-2 table preserves the historical CUT→PBT→"
-                    "Teralizer order. {rq0.table2.sound_table2_rows} of {rq0.table2.reported_rows} "
-                    "reported rows have a sound Teralizer generated result, covering "
-                    "{rq0.table2.sound_jarvis_muts} of {rq0.table2.distinct_muts} distinct "
-                    "JARVIS MUTs."
+                    "Published Table-2 observations pair original CUT baseline PVC "
+                    "with JARVIS-generated PBT PVC. The table compares these "
+                    "published values with PVC from Teralizer's generalized tests. "
+                    "{rq0.table2.sound_table2_rows} of "
+                    "{rq0.table2.reported_rows} published cases have a matching "
+                    "sound generalized test. These cases cover "
+                    "{rq0.table2.sound_jarvis_muts} of {rq0.table2.distinct_muts} "
+                    "distinct MUTs."
                 ),
                 table2,
             ],
         ),
         Section(
-            title="Table-1 population breadth",
+            title="Applicability breadth",
             blocks=[
                 Prose(
-                    "The breadth table keeps the 12-project Table-1 population separate "
-                    "from the 10-row successful Table-2 subset. JARVIS zero means no "
-                    "successful Table-2 PVC result was reported for that project; it "
-                    "does not establish how many cases JARVIS attempted. Teralizer "
-                    "PVC is a deduplicated execution-log aggregate, and sound MUTs "
-                    "count distinct production methods with at least one sound "
-                    "generalization."
+                    "RQ0 uses a separate fixture set based on the Apache Commons "
+                    "project versions in the JARVIS benchmark. RQ1--RQ5 use "
+                    "Teralizer's constructed commons-utils dataset. Teralizer PVC "
+                    "is a deduplicated execution-log aggregate. Sound MUTs have at "
+                    "least one sound generalized test."
                 ),
                 breadth_table,
                 Prose(
-                    "Census diagnostics: status {rq0.census.status}; intended projects "
-                    "{rq0.census.intended_projects}, projects with persisted PVC rows "
-                    "{rq0.census.populated_projects}, completed projects "
+                    "Census status {rq0.census.status}. Intended projects "
+                    "{rq0.census.intended_projects}, persisted PVC rows "
+                    "{rq0.census.populated_projects}, complete projects "
                     "{rq0.census.completed_projects}, failed projects "
-                    "{rq0.census.failed_projects}; completion marker "
-                    "{rq0.census.completion_marker}. Project statuses: "
-                    + status_summary
-                    + ". PIT/reduction is not required for PVC and remains provenance "
-                    "diagnostic context."
+                    "{rq0.census.failed_projects}. Completion marker "
+                    "{rq0.census.completion_marker}."
                 ),
             ],
         ),
         Section(
-            title="Why PVC is not the effectiveness metric",
+            title="PVC and mutation score",
             blocks=[
                 Prose(
                     "Across the tries sweep, PVC increases with the generation budget "
@@ -601,7 +588,7 @@ def build(conn: Connection) -> RQReport:
     ]
     return RQReport(
         rq="rq0",
-        title="RQ0 - Published JARVIS Comparison and PVC Context",
+        title="RQ0 - JARVIS Comparison",
         db=SCOREBOARD_DB,
         sections=sections,
         metrics=metrics,

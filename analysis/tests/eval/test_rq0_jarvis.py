@@ -32,10 +32,10 @@ def test_table2_schema_keeps_historical_references_and_unavailable_rows():
         "parameter_space",
         "probe_count",
         "teralizer_pvc",
-        "jarvis_cut_pvc",
+        "original_cut_pvc",
         "jarvis_pbt_pvc",
         "pvc_delta",
-        "jarvis_pbt_cut_multiplier",
+        "pbt_cut_multiplier",
     ]
     row = comparison.set_index("table_row")
     assert row.loc["CharUtilsTest::isAscii", "teralizer_pvc"] == 198
@@ -266,7 +266,7 @@ def test_csv_headers_follow_table_source_order(tmp_path):
         df=pd.DataFrame(
             {
                 "table_row": ["case"],
-                "jarvis_cut_pvc": [6],
+                "original_cut_pvc": [6],
                 "jarvis_pbt_pvc": [59],
                 "teralizer_pvc": [198],
                 "pvc_delta": [139],
@@ -274,7 +274,7 @@ def test_csv_headers_follow_table_source_order(tmp_path):
         ),
         columns=[
             ColumnSpec("Reported case", "table_row"),
-            ColumnSpec("JARVIS CUT PVC", "jarvis_cut_pvc", "count"),
+            ColumnSpec("Original CUT PVC", "original_cut_pvc", "count"),
             ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", "count"),
             ColumnSpec("Teralizer PVC", "teralizer_pvc", "pvc"),
             ColumnSpec("Delta", "pvc_delta", "pvc"),
@@ -284,5 +284,5 @@ def test_csv_headers_follow_table_source_order(tmp_path):
     )
     path = render_table(table, tmp_path)
     assert path.read_text(encoding="utf-8").splitlines()[0] == (
-        "table_row,jarvis_cut_pvc,jarvis_pbt_pvc,teralizer_pvc,pvc_delta"
+        "table_row,original_cut_pvc,jarvis_pbt_pvc,teralizer_pvc,pvc_delta"
     )

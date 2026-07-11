@@ -482,7 +482,7 @@ def test_compare_to_jarvis_aggregates_probes_and_exposes_pvc_delta():
     assert by_row.loc["CharUtilsTest::isAscii", "teralizer_pvc"] == 148
     assert by_row.loc["CharUtilsTest::isAscii", "probe_count"] == 2
     assert by_row.loc["CharUtilsTest::isAscii", "pvc_delta"] == 89
-    assert by_row.loc["CharUtilsTest::isAscii", "jarvis_cut_pvc"] == 6
+    assert by_row.loc["CharUtilsTest::isAscii", "original_cut_pvc"] == 6
     assert by_row.loc["FastMathTest::testMinMaxDouble", "teralizer_pvc"] == 304
     assert by_row.loc["FastMathTest::testMinMaxDouble", "pvc_delta"] == -96
     assert by_row.loc["PrecisionTest", "teralizer_pvc"] == 206

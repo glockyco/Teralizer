@@ -279,7 +279,7 @@ def get_generated_test_runs(
     variants: Iterable[str] | None = None,
     outcomes: Iterable[str] | None = ("passed",),
 ) -> pd.DataFrame:
-    """Return generated tests with execution outcome and jqwik value-log path."""
+    """Return generalized tests with execution outcome and jqwik value-log path."""
     query = """
     SELECT
         p.id AS project_id,
@@ -502,9 +502,9 @@ def get_mutation_gain(
     """Per (project, variant): the net fault-detection gain of generalization.
 
     INITIAL (the seed suite) runs once per project (``variant IS NULL``); GENERALIZED
-    (seed + generated properties) runs per variant over the same mutated classes. The
+    (seed + generalized tests) runs per variant over the same mutated classes. The
     gain is the killed mutant-key set difference ``GENERALIZED \\ INITIAL`` -- the
-    mutants the added properties kill that the single-value seed tests miss.
+    mutants the added generalized tests kill that the single-value seed tests miss.
     """
     initial = pd.read_sql_query(
         f"SELECT project_id, {_MUTANT_KEY_SQL} AS k FROM pit_mutation_report "
@@ -558,7 +558,7 @@ def get_census(
 ) -> pd.DataFrame:
     """Per (project, variant, upstream test class): the sound-generalization funnel.
 
-    ``full_sound`` counts generated properties whose diagnostic is FULL; ``executions``
+    ``full_sound`` counts generalized tests whose diagnostic is FULL; ``executions``
     is all property executions. Grouped by the upstream test class (e.g. ``FastMathTest``)
     the generalized assertions came from.
     """
@@ -833,9 +833,10 @@ def compare_to_jarvis(
 ) -> pd.DataFrame:
     """Aggregate Teralizer probes into the published JARVIS Table-2 rows.
 
-    The returned ``pvc_delta`` is Teralizer generated PVC minus JARVIS published
-    PBT PVC. JARVIS CUT PVC is carried as a reference only: this database does not
-    contain the original Teralizer suite's complete CUT value set. A row with no
+    The returned ``pvc_delta`` is PVC of Teralizer's generalized tests minus JARVIS
+    published PBT PVC. Original CUT PVC is carried as a published reference. The database
+    snapshot stores only a single assertion's seed-call values for the original
+    suite, so a complete Teralizer CUT value set is unavailable. A row with no
     matching fixture probe has ``probe_count = 0`` and ``None`` PVC/delta values so
     callers cannot mistake an unavailable result for observed numeric zero.
     """
@@ -872,12 +873,12 @@ def compare_to_jarvis(
                 "parameter_space": row.parameter_space,
                 "probe_count": probe_count,
                 "teralizer_pvc": observed_pvc,
-                "jarvis_cut_pvc": row.cut_pvc,
+                "original_cut_pvc": row.cut_pvc,
                 "jarvis_pbt_pvc": row.pbt_pvc,
                 "pvc_delta": (
                     observed_pvc - row.pbt_pvc if observed_pvc is not None else None
                 ),
-                "jarvis_pbt_cut_multiplier": round(row.pbt_pvc / row.cut_pvc, 4),
+                "pbt_cut_multiplier": round(row.pbt_pvc / row.cut_pvc, 4),
             }
         )
     return pd.DataFrame(result)
