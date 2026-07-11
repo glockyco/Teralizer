@@ -20,7 +20,7 @@ def _entry(value, prov, repo_url: str) -> dict:
 
 
 def build_manifest(report: RQReport, *, repo_url: str) -> dict:
-    return {
+    manifest = {
         "db": report.db,
         "metrics": {
             m.key: _entry(m.value, m.provenance, repo_url)
@@ -38,6 +38,37 @@ def build_manifest(report: RQReport, *, repo_url: str) -> dict:
             if f.provenance
         },
     }
+    if report.rq == "rq0":
+        metrics = report.metric_map()
+
+        def metric_value(key: str):
+            return metrics[key].value
+
+        manifest["report_basis"] = {
+            "databases": {
+                "scoreboard": report.db,
+                "census": metric_value("rq0.census.database"),
+            },
+            "variants": {
+                "table2": metric_value("rq0.table2.variant"),
+                "census": metric_value("rq0.census.variant"),
+            },
+            "table_keys": [table.key for table in report.tables()],
+            "census_status": metric_value("rq0.census.status"),
+            "census_scope": "partial applicability snapshot",
+            "census_pvc_basis": metric_value("rq0.census.pvc_basis"),
+            "census_pit_reduction_required_for_pvc": False,
+            "census_is_mutation_result": False,
+            "census_diagnostics": {
+                "intended_projects": metric_value("rq0.census.intended_projects"),
+                "populated_projects": metric_value("rq0.census.populated_projects"),
+                "completed_projects": metric_value("rq0.census.completed_projects"),
+                "failed_projects": metric_value("rq0.census.failed_projects"),
+                "failed_task_count": metric_value("rq0.census.failed_task_count"),
+                "completion_marker": metric_value("rq0.census.completion_marker"),
+            },
+        }
+    return manifest
 
 
 def write_manifest(report: RQReport, reports_dir: Path, *, repo_url: str) -> Path:
