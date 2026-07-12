@@ -101,6 +101,178 @@ def test_survivorship_band_overrides_upstream_taxonomy_stage():
     assert "all assertions excluded" in cause.cause
 
 
+def test_funnel_survivors_match_independent_sql():
+    result = _funnel_result()
+    with _connect() as conn:
+        variant = _funnel.resolve_variant(conn)
+        counts = conn.execute(
+            text(
+                """
+                WITH eligible AS (
+                    SELECT p.id
+                    FROM project p
+                    WHERE p.use_test_generalization
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM task t
+                          WHERE t.project_id = p.id
+                            AND t.test_id IS NULL
+                            AND t.assertion_id IS NULL
+                            AND t.generalization_id IS NULL
+                            AND t.status <> 'SUCCEEDED'
+                            AND t.stage IN (
+                                'SETUP_PROJECT',
+                                'ADD_DEPENDENCIES',
+                                'BUILD_PROJECT_ORIGINAL'
+                            )
+                      )
+                ),
+                stage12 AS (
+                    SELECT e.id
+                    FROM eligible e
+                    WHERE EXISTS (
+                        SELECT 1 FROM test t
+                        WHERE t.project_id = e.id AND t.is_included
+                    )
+                      AND EXISTS (
+                        SELECT 1 FROM assertion a
+                        WHERE a.project_id = e.id AND a.is_included
+                    )
+                ),
+                stage3 AS (
+                    SELECT s.id
+                    FROM stage12 s
+                    WHERE EXISTS (
+                        SELECT 1 FROM assertion a
+                        WHERE a.project_id = s.id
+                          AND a.is_included
+                          AND a.output_spec_class IS NOT NULL
+                    )
+                ),
+                stage4 AS (
+                    SELECT s.id
+                    FROM stage3 s
+                    WHERE EXISTS (
+                        SELECT 1
+                        FROM generalization g
+                        JOIN generalization_lifecycle l
+                          ON l.generalization_id = g.id
+                        WHERE g.project_id = s.id
+                          AND g.variant = :variant
+                          AND l.generated_filter_passed
+                    )
+                ),
+                stage5 AS (
+                    SELECT s.id
+                    FROM stage4 s
+                    WHERE EXISTS (
+                        SELECT 1
+                        FROM generalization g
+                        JOIN generalization_lifecycle l
+                          ON l.generalization_id = g.id
+                        WHERE g.project_id = s.id
+                          AND g.variant = :variant
+                          AND l.final_usable
+                    )
+                )
+                SELECT
+                    (SELECT count(*) FROM eligible),
+                    (SELECT count(*) FROM stage12),
+                    (SELECT count(*) FROM stage3),
+                    (SELECT count(*) FROM stage4),
+                    (SELECT count(*) FROM stage5)
+                """
+            ),
+            {"variant": variant},
+        ).one()
+    assert tuple(stage.entering for stage in result.stages) == (
+        counts[0],
+        counts[1],
+        counts[2],
+        counts[3],
+    )
+    assert tuple(stage.passing for stage in result.stages) == (
+        counts[1],
+        counts[2],
+        counts[3],
+        counts[4],
+    )
+
+
+def test_funnel_stage3_and_stage5_ids_match_direct_oracles():
+    result = _funnel_result()
+    with _connect() as conn:
+        variant = _funnel.resolve_variant(conn)
+        stage3_ids = {
+            row[0]
+            for row in conn.execute(
+                text(
+                    """
+                    SELECT DISTINCT a.project_id
+                    FROM assertion a
+                    JOIN project p ON p.id = a.project_id
+                    WHERE p.use_test_generalization
+                      AND a.is_included
+                      AND a.output_spec_class IS NOT NULL
+                      AND EXISTS (
+                          SELECT 1
+                          FROM test it
+                          WHERE it.project_id = p.id AND it.is_included
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM task ft
+                          WHERE ft.project_id = p.id
+                            AND ft.test_id IS NULL
+                            AND ft.assertion_id IS NULL
+                            AND ft.generalization_id IS NULL
+                            AND ft.status <> 'SUCCEEDED'
+                            AND ft.stage IN (
+                                'SETUP_PROJECT',
+                                'ADD_DEPENDENCIES',
+                                'BUILD_PROJECT_ORIGINAL'
+                            )
+                      )
+                    """
+                )
+            )
+        }
+        stage5_ids = {
+            row[0]
+            for row in conn.execute(
+                text(
+                    """
+                    SELECT DISTINCT g.project_id
+                    FROM generalization g
+                    JOIN generalization_lifecycle l
+                      ON l.generalization_id = g.id
+                    JOIN project p ON p.id = g.project_id
+                    WHERE p.use_test_generalization
+                      AND g.variant = :variant
+                      AND l.final_usable
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM task ft
+                          WHERE ft.project_id = p.id
+                            AND ft.test_id IS NULL
+                            AND ft.assertion_id IS NULL
+                            AND ft.generalization_id IS NULL
+                            AND ft.status <> 'SUCCEEDED'
+                            AND ft.stage IN (
+                                'SETUP_PROJECT',
+                                'ADD_DEPENDENCIES',
+                                'BUILD_PROJECT_ORIGINAL'
+                            )
+                      )
+                    """
+                ),
+                {"variant": variant},
+            )
+        }
+    assert result.survivor_project_ids[2] == frozenset(stage3_ids)
+    assert result.survivor_project_ids[4] == frozenset(stage5_ids)
+
+
 def test_funnel_success_matches_final_usable_projects():
     result = _funnel_result()
     with _connect() as conn:

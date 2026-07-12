@@ -19,41 +19,63 @@ from teralizer.eval.reports._causes_common import (
 
 DEFAULT_DB = "postgres_reporeapers_rq6"
 
-FILTERING_SQL = r"""
-WITH
-    base_data AS (
-        SELECT
-            CASE
-                WHEN fr.test_id IS NOT NULL THEN 'Test'
-                WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'
-                WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'
-            END AS level,
-            substring(fr.filter_name from 'filter\.(\w+)Filter$') AS filter_name,
-            fr.decision,
-            count(*) AS count
-        FROM filter_result fr
-        JOIN project p ON fr.project_id = p.id
-        WHERE p.use_test_generalization
-        GROUP BY
-            fr.filter_name,
-            CASE
-                WHEN fr.test_id IS NOT NULL THEN 'Test'
-                WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'
-                WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'
-            END,
-            fr.decision
-    ),
-    pivoted AS (
-        SELECT
-            level,
-            filter_name,
-            sum(count)::bigint AS total,
-            sum(CASE WHEN decision = 'ACCEPT' THEN count ELSE 0 END)::bigint AS accept,
-            sum(CASE WHEN decision = 'DEFER' THEN count ELSE 0 END)::bigint AS defer,
-            sum(CASE WHEN decision = 'REJECT' THEN count ELSE 0 END)::bigint AS reject
-        FROM base_data
-        GROUP BY level, filter_name
-    )
+_ELIGIBILITY_CTE = """
+WITH eligible_projects AS (
+    SELECT p.id
+    FROM project p
+    WHERE p.use_test_generalization
+      AND NOT EXISTS (
+          SELECT 1
+          FROM task t
+          WHERE t.project_id = p.id
+            AND t.test_id IS NULL
+            AND t.assertion_id IS NULL
+            AND t.generalization_id IS NULL
+            AND t.status <> 'SUCCEEDED'
+            AND t.stage = ANY(:ineligible_stages)
+      )
+)
+"""
+
+
+def _query_params(variant: str) -> dict[str, object]:
+    return {
+        "variant": variant,
+        "ineligible_stages": list(_funnel.INELIGIBLE_STAGES),
+    }
+
+
+FILTERING_SQL = rf"""
+{_ELIGIBILITY_CTE},
+base_data AS (
+    SELECT
+        CASE
+            WHEN fr.test_id IS NOT NULL THEN 'Test'
+            WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'
+            WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'
+        END AS level,
+        substring(fr.filter_name from 'filter\.(\w+)Filter$') AS filter_name,
+        fr.decision,
+        coalesce(fr.test_id, fr.assertion_id, fr.generalization_id) AS entity_id
+    FROM filter_result fr
+    JOIN eligible_projects ep ON ep.id = fr.project_id
+    LEFT JOIN generalization g ON g.id = fr.generalization_id
+    WHERE fr.test_id IS NOT NULL
+       OR fr.assertion_id IS NOT NULL
+       OR (fr.generalization_id IS NOT NULL AND g.variant = :variant)
+),
+pivoted AS (
+    SELECT
+        level,
+        filter_name,
+        count(DISTINCT entity_id)::bigint AS total,
+        count(DISTINCT entity_id) FILTER (WHERE decision = 'ACCEPT')::bigint AS accept,
+        count(DISTINCT entity_id) FILTER (WHERE decision = 'DEFER')::bigint AS defer,
+        count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT')::bigint AS reject
+    FROM base_data
+    WHERE filter_name IS NOT NULL
+    GROUP BY level, filter_name
+)
 SELECT
     level,
     CASE
@@ -66,8 +88,6 @@ SELECT
     reject
 FROM pivoted
 WHERE reject > 0
-  AND level IN ('Test', 'Assertion')
-  AND filter_name IS NOT NULL
 ORDER BY
     CASE level
         WHEN 'Test' THEN 1
@@ -77,92 +97,102 @@ ORDER BY
     filter
 """
 
-BREAKDOWN_SQL = """
-WITH
-    test_counts AS (
-        SELECT
-            'All' AS strategy,
-            'Test' AS level,
-            CASE
-                WHEN t.is_included THEN 'included'
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM filter_result fr
-                    WHERE fr.test_id = t.id
-                      AND fr.decision = 'REJECT'
-                ) OR starts_with(
-                    coalesce(t.exclusion_info, ''),
-                    'Excluded by TestFilteringTask{'
-                ) THEN 'filtering'
-                ELSE 'failures'
-            END AS bucket,
-            count(*) AS item_count
-        FROM test t
-        JOIN project p ON t.project_id = p.id
-        WHERE p.use_test_generalization
-        GROUP BY bucket
-    ),
-    assertion_counts AS (
-        SELECT
-            'All' AS strategy,
-            'Assertion' AS level,
-            CASE
-                WHEN a.is_included THEN 'included'
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM filter_result fr
-                    WHERE fr.assertion_id = a.id
-                      AND fr.decision = 'REJECT'
-                ) OR starts_with(
-                    coalesce(a.exclusion_info, ''),
-                    'Excluded by TestFilteringTask{'
-                ) THEN 'filtering'
-                ELSE 'failures'
-            END AS bucket,
-            count(*) AS item_count
-        FROM assertion a
-        JOIN project p ON a.project_id = p.id
-        WHERE p.use_test_generalization
-        GROUP BY bucket
-    ),
-    generalization_counts AS (
-        SELECT
-            g.variant AS strategy,
-            'Generalization' AS level,
-            CASE
-                WHEN g.is_included THEN 'included'
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM filter_result fr
-                    WHERE fr.generalization_id = g.id
-                      AND fr.decision = 'REJECT'
-                ) OR starts_with(
-                    coalesce(g.exclusion_info, ''),
-                    'Excluded by TestFilteringTask{'
-                ) THEN 'filtering'
-                ELSE 'failures'
-            END AS bucket,
-            count(*) AS item_count
-        FROM generalization g
-        JOIN project p ON g.project_id = p.id
-        WHERE p.use_test_generalization
-          AND g.variant = :variant
-        GROUP BY g.variant, bucket
-    ),
-    combined AS (
-        SELECT strategy, level, bucket, item_count FROM test_counts
-        UNION ALL
-        SELECT strategy, level, bucket, item_count FROM assertion_counts
-        UNION ALL
-        SELECT strategy, level, bucket, item_count FROM generalization_counts
-    ),
-    report_rows AS (
-        SELECT 'All' AS strategy, 'Test' AS level
-        UNION ALL
-        SELECT 'All' AS strategy, 'Assertion' AS level
-        UNION ALL
-        SELECT :variant AS strategy, 'Generalization' AS level
-    )
+BREAKDOWN_SQL = f"""
+{_ELIGIBILITY_CTE},
+test_counts AS (
+    SELECT
+        'All' AS strategy,
+        'Test' AS level,
+        CASE
+            WHEN t.is_included
+             AND NOT EXISTS (
+                 SELECT 1
+                 FROM task ft
+                 WHERE ft.test_id = t.id
+                   AND ft.assertion_id IS NULL
+                   AND ft.generalization_id IS NULL
+                   AND ft.status <> 'SUCCEEDED'
+             ) THEN 'included'
+            WHEN EXISTS (
+                SELECT 1
+                FROM filter_result fr
+                WHERE fr.test_id = t.id
+                  AND fr.decision = 'REJECT'
+            ) THEN 'filtering'
+            ELSE 'failures'
+        END AS bucket,
+        count(*) AS item_count
+    FROM test t
+    JOIN eligible_projects ep ON ep.id = t.project_id
+    GROUP BY bucket
+),
+assertion_counts AS (
+    SELECT
+        'All' AS strategy,
+        'Assertion' AS level,
+        CASE
+            WHEN a.is_included
+             AND NOT EXISTS (
+                 SELECT 1
+                 FROM task fa
+                 WHERE fa.assertion_id = a.id
+                   AND fa.status <> 'SUCCEEDED'
+             ) THEN 'included'
+            WHEN EXISTS (
+                SELECT 1
+                FROM filter_result fr
+                WHERE fr.assertion_id = a.id
+                  AND fr.decision = 'REJECT'
+            ) THEN 'filtering'
+            ELSE 'failures'
+        END AS bucket,
+        count(*) AS item_count
+    FROM assertion a
+    JOIN eligible_projects ep ON ep.id = a.project_id
+    GROUP BY bucket
+),
+generalization_counts AS (
+    SELECT
+        g.variant AS strategy,
+        'Generalization' AS level,
+        CASE
+            WHEN l.final_usable THEN 'included'
+            WHEN NOT g.is_included
+             AND (
+                 g.exclusion_info IN (
+                     'ORACLE_NOT_WIDENABLE',
+                     'INPUT_SPEC_NOT_SATISFIED_BY_SEED'
+                 )
+                 OR EXISTS (
+                     SELECT 1
+                     FROM filter_result fr
+                     WHERE fr.generalization_id = g.id
+                       AND fr.decision = 'REJECT'
+                 )
+             ) THEN 'filtering'
+            ELSE 'failures'
+        END AS bucket,
+        count(*) AS item_count
+    FROM generalization g
+    JOIN eligible_projects ep ON ep.id = g.project_id
+    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id
+    WHERE g.variant = :variant
+    GROUP BY g.variant, bucket
+),
+combined AS (
+    SELECT strategy, level, bucket, item_count FROM test_counts
+    UNION ALL
+    SELECT strategy, level, bucket, item_count FROM assertion_counts
+    UNION ALL
+    SELECT strategy, level, bucket, item_count FROM generalization_counts
+),
+report_rows AS (
+    SELECT 'All' AS strategy, 'Test' AS level
+    UNION ALL
+    SELECT 'All' AS strategy, 'Assertion' AS level
+    UNION ALL
+    SELECT :variant AS strategy, 'Generalization' AS level
+)
 SELECT
     report_rows.strategy,
     report_rows.level,
@@ -185,9 +215,9 @@ ORDER BY
 """
 
 
-def _fetch_filtering(conn: Connection) -> pd.DataFrame:
-    """Return real-world filter rejection counts for the shared table builder."""
-    df = read_sql(conn, FILTERING_SQL)
+def _fetch_filtering(conn: Connection, variant: str) -> pd.DataFrame:
+    """Return distinct-entity filter decision counts for the eligible corpus."""
+    df = read_sql(conn, FILTERING_SQL, _query_params(variant))
     for column in ("total", "accept", "defer", "reject"):
         df[column] = df[column].astype(int)
     return pd.DataFrame(
@@ -196,8 +226,8 @@ def _fetch_filtering(conn: Connection) -> pd.DataFrame:
 
 
 def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
-    """Return real-world inclusion, filtering, and failure counts by level."""
-    df = read_sql(conn, BREAKDOWN_SQL, {"variant": variant})
+    """Return eligible-entity outcomes split by filtering and failures."""
+    df = read_sql(conn, BREAKDOWN_SQL, _query_params(variant))
     for column in ("total", "included", "filtering", "failures"):
         df[column] = df[column].astype(int)
     return pd.DataFrame(
@@ -215,8 +245,8 @@ def build(conn: Connection) -> RQReport:
         key="rq6_breakdown",
         label="tab:exclusions-breakdown-extended",
         caption=(
-            "Test, assertion, and generalization exclusions by filtering versus "
-            "failures for the real-world dataset."
+            "Eligible test, assertion, and generalization outcomes by filtering "
+            "versus failures for the real-world dataset."
         ),
         include_strategy=False,
     )
@@ -224,11 +254,15 @@ def build(conn: Connection) -> RQReport:
         breakdown, provenance=capture(_fetch_breakdown, query=BREAKDOWN_SQL)
     )
 
+    filtering_data = _fetch_filtering(conn, variant)
     filtering = build_filtering_table(
-        _fetch_filtering(conn),
+        filtering_data,
         key="rq6_filtering",
         label="tab:exclusions-filtering-extended",
-        caption="Filter rejection rates by level and filter for the real-world dataset.",
+        caption=(
+            "Distinct eligible entities receiving each filter decision, by level "
+            "and filter."
+        ),
     )
     filtering = replace(
         filtering, provenance=capture(_fetch_filtering, query=FILTERING_SQL)

@@ -88,8 +88,9 @@ WITH
         SELECT project_id, count(*) AS spec_surviving_assertions
         FROM assertion
         WHERE is_included
-          AND nullif(trim(input_specification_path), '') IS NOT NULL
-          AND nullif(trim(output_specification_path), '') IS NOT NULL
+          -- Instrumentation fills spec paths before JPF; output_spec_class is
+          -- written only after an extracted invocation produces specifications.
+          AND output_spec_class IS NOT NULL
         GROUP BY project_id
     ),
     generated_filter_passed AS (
@@ -241,6 +242,7 @@ class FunnelResult:
     table: Table
     uncoded_projects: list[int]
     eligibility_audit_unexpected: list[int]
+    survivor_project_ids: tuple[frozenset[int], ...]
 
 
 def resolve_variant(conn: Connection) -> str:
@@ -280,6 +282,7 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
     lifecycle_by_project = _group_lifecycle_failures(lifecycle_failures)
 
     survivor_sets = _survivor_sets(eligible_data)
+    eligibility_audit_unexpected = _audit_eligibility(eligible_ids, failures_by_project)
     causes: list[Cause] = []
     uncoded_projects: list[int] = []
     stage_names = ("1 + 2", "3", "4", "5")
@@ -320,8 +323,24 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
         stages=stages,
         table=_build_table(table_df, note),
         uncoded_projects=uncoded_projects,
-        eligibility_audit_unexpected=[],
+        eligibility_audit_unexpected=eligibility_audit_unexpected,
+        survivor_project_ids=tuple(frozenset(ids) for ids in survivor_sets),
     )
+
+
+def _audit_eligibility(
+    eligible_ids: set[int],
+    failures_by_project: dict[int, tuple[ProjectFailure, ...]],
+) -> list[int]:
+    unexpected = {
+        project_id
+        for project_id in eligible_ids
+        if any(
+            failure.internal_stage in INELIGIBLE_STAGES
+            for failure in failures_by_project.get(project_id, ())
+        )
+    }
+    return sorted(unexpected)
 
 
 def _fetch_project_failures(conn: Connection) -> pd.DataFrame:
