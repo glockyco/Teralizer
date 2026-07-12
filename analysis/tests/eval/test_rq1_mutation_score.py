@@ -19,8 +19,10 @@ def test_rq1_coverage_table_calculates_inclusion_percentages():
         )
     )
     row = table.df.iloc[0]
-    assert row["test_inclusion_pct"] == 50
-    assert row["class_inclusion_pct"] == 50
+    assert row["included_tests_display"] == "4 (50.0%)"
+    assert row["included_classes_display"] == "3 (50.0%)"
+    assert row["covered_display"] == "7 (70.0%)"
+    assert row["uncovered_display"] == "3 (30.0%)"
     assert table.label == "tab:mutants-per-project"
 
 

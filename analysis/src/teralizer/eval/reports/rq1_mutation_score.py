@@ -65,21 +65,45 @@ def _coverage_table(df: pd.DataFrame) -> Table:
     result["class_inclusion_pct"] = (
         result["included_classes"] / result["total_classes"].replace(0, pd.NA) * 100
     ).fillna(0)
+    result["covered_pct"] = (
+        result["covered"] / result["total"].replace(0, pd.NA) * 100
+    ).fillna(0)
+    result["uncovered_pct"] = (
+        result["uncovered"] / result["total"].replace(0, pd.NA) * 100
+    ).fillna(0)
+    result["display_project"] = (
+        result["project"]
+        .astype(str)
+        .str.replace("-default", "", regex=False)
+        .replace({"commons-utils": "commons-utils-dev"})
+    )
+    result["included_tests_display"] = result.apply(
+        lambda row: f"{int(row['included_tests']):,} ({row['test_inclusion_pct']:.1f}%)",
+        axis=1,
+    )
+    result["included_classes_display"] = result.apply(
+        lambda row: f"{int(row['included_classes']):,} ({row['class_inclusion_pct']:.1f}%)",
+        axis=1,
+    )
+    result["covered_display"] = result.apply(
+        lambda row: f"{int(row['covered']):,} ({row['covered_pct']:.1f}%)", axis=1
+    )
+    result["uncovered_display"] = result.apply(
+        lambda row: f"{int(row['uncovered']):,} ({row['uncovered_pct']:.1f}%)", axis=1
+    )
     columns = [
-        ColumnSpec("Project", "project", "str"),
-        ColumnSpec("Tests", "included_tests", "count"),
-        ColumnSpec("Test inclusion", "test_inclusion_pct", "float2"),
-        ColumnSpec("Classes", "included_classes", "count"),
-        ColumnSpec("Class inclusion", "class_inclusion_pct", "float2"),
+        ColumnSpec("Project", "display_project"),
+        ColumnSpec("Included test methods", "included_tests_display"),
+        ColumnSpec("Included implementation classes", "included_classes_display"),
         ColumnSpec("Total mutants", "total", "count"),
-        ColumnSpec("Covered", "covered", "count"),
-        ColumnSpec("Uncovered", "uncovered", "count"),
+        ColumnSpec("Covered mutants", "covered_display"),
+        ColumnSpec("Uncovered mutants", "uncovered_display"),
     ]
     return Table(
         "mutants_per_project",
         result,
         columns,
-        "Included tests, implementation classes, and mutants per project.",
+        "Number of total, covered, and uncovered mutants in included classes per project.",
         "tab:mutants-per-project",
         provenance=capture(compute_project_mutation_coverage),
     )
@@ -93,6 +117,21 @@ def _mutator_table(df: pd.DataFrame) -> Table:
         .str.replace("Mutator", "", regex=False)
         .str.strip()
     )
+    result["mutator"] = result["mutator"].replace(
+        {
+            "RemoveConditional_ORDER_ELSE": "RemoveConditionalOrderElse",
+            "RemoveConditional_EQUAL_ELSE": "RemoveConditionalEqualElse",
+        }
+    )
+    for column in ("detected_diff_naive_200_tries", "detected_diff_improved_200_tries"):
+        if column not in result:
+            result[column] = 0
+    result["naive_delta_display"] = result["detected_diff_naive_200_tries"].map(
+        lambda value: "--" if abs(float(value)) < 1e-12 else f"({float(value):+.2f})"
+    )
+    result["improved_delta_display"] = result["detected_diff_improved_200_tries"].map(
+        lambda value: "--" if abs(float(value)) < 1e-12 else f"({float(value):+.2f})"
+    )
     wanted = [
         "mutator",
         "total_mutants",
@@ -104,6 +143,8 @@ def _mutator_table(df: pd.DataFrame) -> Table:
         "detected_diff_naive_200_tries",
         "IMPROVED_200_TRIES",
         "detected_diff_improved_200_tries",
+        "naive_delta_display",
+        "improved_delta_display",
     ]
     for column in wanted:
         if column not in result:
@@ -117,9 +158,9 @@ def _mutator_table(df: pd.DataFrame) -> Table:
         ColumnSpec("Max %", "max_percent", "float2"),
         ColumnSpec("Initial", "INITIAL", "float2"),
         ColumnSpec("Naive 200", "NAIVE_200_TRIES", "float2"),
-        ColumnSpec("Naive Δ", "detected_diff_naive_200_tries", "float2"),
+        ColumnSpec("Naive Δ", "naive_delta_display"),
         ColumnSpec("Improved 200", "IMPROVED_200_TRIES", "float2"),
-        ColumnSpec("Improved Δ", "detected_diff_improved_200_tries", "float2"),
+        ColumnSpec("Improved Δ", "improved_delta_display"),
     ]
     return Table(
         "detections_per_mutator",
