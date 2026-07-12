@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import re
+from typing import cast
+
+import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required
@@ -17,6 +22,17 @@ from teralizer.eval.model import (
 )
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
+from teralizer.exports import (
+    get_project_within_type_order,
+    get_table_group_order,
+    standardize_project_name,
+)
+from teralizer.plotting import (
+    FIGURE_CONFIG,
+    calculate_label_offset,
+    get_font_size,
+    get_variant_color,
+)
 from teralizer.rq1_mutation_detection import (
     compute_detection_improvements,
     compute_mutator_statistics,
@@ -177,22 +193,129 @@ def _figure(data: pd.DataFrame) -> Figure:
         if data.empty:
             ax.set_title("Mutation detection comparison")
             return
-        pivot = data.pivot_table(
-            index="project_name",
-            columns="variant",
-            values="detected_of_covered_pct",
-            aggfunc="first",
+        frame = data.copy()
+        frame["base_project"] = frame["project_name"].map(
+            lambda name: re.sub(r"-\d+s$", "", str(name))
         )
-        pivot.plot(kind="bar", ax=ax, legend=True)
-        ax.set_ylabel("Detected (%)")
-        ax.set_xlabel("Project")
-        ax.tick_params(axis="x", rotation=45)
-        ax.set_title("Mutation detection by project and variant")
+        within_order = get_project_within_type_order()
+        projects = sorted(
+            frame["project_name"].unique(),
+            key=lambda project: (
+                get_table_group_order(project, "INITIAL"),
+                within_order.get(project, 99),
+            ),
+        )
+        base_projects = sorted(
+            frame["base_project"].unique(),
+            key=lambda project: (
+                get_table_group_order(project, "INITIAL"),
+                within_order.get(project, 99),
+            ),
+        )
+        improvement_range: dict[str, tuple[float, float]] = {}
+        for base in base_projects:
+            subset = frame[frame["base_project"].eq(base)]
+            non_initial = subset[subset["variant"].ne("INITIAL")]
+            maximum = (
+                float(non_initial["absolute_improvement"].max())
+                if not non_initial.empty
+                else 0.0
+            )
+            improvement_range[base] = (0.0, maximum + 0.45 * abs(maximum))
+
+        fig = ax.figure
+        fig.clear()
+        fig.set_size_inches(
+            FIGURE_CONFIG["width_multibar"], FIGURE_CONFIG["max_height"]
+        )
+        axes = fig.subplots(len(projects), 2, squeeze=False)
+        for index, project in enumerate(projects):
+            project_data = frame[frame["project_name"].eq(project)].copy()
+            variants = project_data["variant"].tolist()
+            x_positions = np.arange(len(variants))
+            ax_left = cast(Axes, axes[index, 0])
+            ax_right = cast(Axes, axes[index, 1])
+            left_bars = ax_left.bar(
+                x_positions,
+                project_data["detected_of_covered_pct"],
+                color=[get_variant_color(variant) for variant in variants],
+            )
+            ax_left.set_title(standardize_project_name(project))
+            ax_left.set_ylabel("Detected (%)")
+            y_max = 100 * FIGURE_CONFIG["y_padding_multiplier"]
+            ax_left.set_ylim(0, y_max)
+            offset = calculate_label_offset(0, y_max, FIGURE_CONFIG["label_offset_pct"])
+            for bar in left_bars:
+                height = bar.get_height()
+                ax_left.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    height + offset,
+                    f"{height:.2f}",
+                    ha="center",
+                    va="bottom",
+                    fontsize=get_font_size("small"),
+                )
+            improved = project_data[project_data["variant"].ne("INITIAL")]
+            initial = project_data[project_data["variant"].eq("INITIAL")]
+            right_bars = ax_right.bar(
+                np.arange(len(improved)),
+                improved["absolute_improvement"],
+                color=[get_variant_color(variant) for variant in improved["variant"]],
+            )
+            ax_right.axhline(0, color="gray", linewidth=0.8)
+            ax_right.set_title(standardize_project_name(project))
+            ax_right.set_ylabel("Improvement (%)")
+            lower, upper = improvement_range[project_data["base_project"].iloc[0]]
+            ax_right.set_ylim(lower, upper * FIGURE_CONFIG["y_padding_multiplier"])
+            right_offset = calculate_label_offset(
+                lower,
+                upper * FIGURE_CONFIG["y_padding_multiplier"],
+                FIGURE_CONFIG["label_offset_pct"],
+            )
+            for position, bar in enumerate(right_bars):
+                height = bar.get_height()
+                relative = (
+                    improved.iloc[position]["relative_improvement"]
+                    if not initial.empty
+                    else 0.0
+                )
+                ax_right.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    height + (right_offset if height >= 0 else -right_offset),
+                    f"{height:.2f}\n({relative:+.2f}%)",
+                    ha="center",
+                    va="bottom" if height >= 0 else "top",
+                    fontsize=get_font_size("small"),
+                )
+            if index == len(projects) - 1:
+
+                def format_label(value: str) -> str:
+                    match = re.match(r"([A-Z]+)_([0-9]+)_TRIES", value)
+                    return (
+                        f"{match.group(1)}$_{{{match.group(2)}}}$" if match else value
+                    )
+
+                ax_left.set_xticks(x_positions)
+                ax_left.set_xticklabels(
+                    [format_label(value) for value in variants], rotation=45, ha="right"
+                )
+                ax_right.set_xticks(np.arange(len(improved)))
+                ax_right.set_xticklabels(
+                    [format_label(value) for value in improved["variant"]],
+                    rotation=45,
+                    ha="right",
+                )
+            else:
+                ax_left.set_xticks([])
+                ax_right.set_xticks([])
+            ax_left.set_yticks([])
+            ax_right.set_yticks([])
+        fig.tight_layout()
 
     return Figure(
         "mutation_detection_comparison",
         build,
-        "Mutation detection rates across projects and variants.",
+        "Mutation detection rates and improvements across projects and variants.",
         "fig:mutation-detection-comparison",
         data=data,
         provenance=capture(compute_detection_improvements),
