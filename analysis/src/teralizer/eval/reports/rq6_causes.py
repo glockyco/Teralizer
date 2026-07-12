@@ -17,7 +17,7 @@ from teralizer.eval.reports._causes_common import (
     build_filtering_table,
 )
 
-VARIANT = "IMPROVED_100_TRIES"
+DEFAULT_DB = "postgres_reporeapers_rq6"
 
 FILTERING_SQL = r"""
 WITH
@@ -146,7 +146,7 @@ WITH
         FROM generalization g
         JOIN project p ON g.project_id = p.id
         WHERE p.use_test_generalization
-          AND g.variant = 'IMPROVED_100_TRIES'
+          AND g.variant = :variant
         GROUP BY g.variant, bucket
     ),
     combined AS (
@@ -161,7 +161,7 @@ WITH
         UNION ALL
         SELECT 'All' AS strategy, 'Assertion' AS level
         UNION ALL
-        SELECT 'IMPROVED_100_TRIES' AS strategy, 'Generalization' AS level
+        SELECT :variant AS strategy, 'Generalization' AS level
     )
 SELECT
     report_rows.strategy,
@@ -195,9 +195,9 @@ def _fetch_filtering(conn: Connection) -> pd.DataFrame:
     )
 
 
-def _fetch_breakdown(conn: Connection) -> pd.DataFrame:
+def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
     """Return real-world inclusion, filtering, and failure counts by level."""
-    df = read_sql(conn, BREAKDOWN_SQL)
+    df = read_sql(conn, BREAKDOWN_SQL, {"variant": variant})
     for column in ("total", "included", "filtering", "failures"):
         df[column] = df[column].astype(int)
     return pd.DataFrame(
@@ -206,10 +206,12 @@ def _fetch_breakdown(conn: Connection) -> pd.DataFrame:
 
 
 def build(conn: Connection) -> RQReport:
-    funnel = _funnel.build_funnel(conn)
+    variant = _funnel.resolve_variant(conn)
+    funnel = _funnel.build_funnel(conn, variant=variant)
+    breakdown_data = _fetch_breakdown(conn, variant)
 
     breakdown = build_breakdown_table(
-        _fetch_breakdown(conn),
+        breakdown_data,
         key="rq6_breakdown",
         label="tab:exclusions-breakdown-extended",
         caption=(
@@ -261,10 +263,10 @@ def build(conn: Connection) -> RQReport:
     return RQReport(
         rq="rq6",
         title="RQ6 - Causes of Unsuccessful Generalization (Real-World)",
-        db="postgres_reporeapers",
+        db=str(conn.engine.url.database),
         sections=[section],
         metrics=metrics,
     )
 
 
-register("rq6", ReportSpec(build, "postgres_reporeapers", "new"))
+register("rq6", ReportSpec(build, DEFAULT_DB, "new"))

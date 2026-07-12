@@ -36,6 +36,36 @@ def test_execute_tests_original_timeout_vs_error():
     assert "JUnit" in classify(err).cause
 
 
+def test_timeout_label_uses_observed_budget():
+    original = Attribution(
+        "EXECUTE_TESTS_ORIGINAL",
+        "EXECUTION_TIMEOUT",
+        at_ceiling=True,
+        timeout_seconds=300.0,
+        included_tests=5,
+        included_assertions=5,
+    )
+    generalized = Attribution(
+        "EXECUTE_TESTS_GENERALIZED",
+        "SUITE_TIMEOUT",
+        at_ceiling=True,
+        timeout_seconds=1800.0,
+        included_tests=5,
+        included_assertions=5,
+    )
+    pit = Attribution(
+        "COLLECT_PIT_DATA_INITIAL",
+        "EXECUTION_TIMEOUT",
+        at_ceiling=True,
+        timeout_seconds=3600.0,
+        included_tests=5,
+        included_assertions=5,
+    )
+    assert "300 seconds" in classify(original).cause
+    assert "1800 seconds" in classify(generalized).cause
+    assert "3600 seconds" in classify(pit).cause
+
+
 def test_no_input_spec_reattributes_upstream():
     all_tests = Attribution(
         "ANALYZE_JPF",
@@ -176,6 +206,21 @@ def test_collect_jacoco_original_not_found_vs_error():
     assert e.stage == "5"
     assert e.type == "External"
     assert "JaCoCo" in e.cause
+
+
+def test_pit_listener_failure_is_execution_error():
+    cause = classify(
+        Attribution(
+            "COLLECT_PIT_DATA_GENERALIZED",
+            "LISTENER_BUG",
+            at_ceiling=False,
+            included_tests=1,
+            included_assertions=1,
+            artifact_present=False,
+        )
+    )
+    assert cause.type == "External"
+    assert "PIT execution error" in cause.cause
 
 
 def test_restore_original_build_is_stage5_internal():

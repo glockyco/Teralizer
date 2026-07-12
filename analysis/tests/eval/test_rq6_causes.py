@@ -20,7 +20,7 @@ def _report() -> RQReport:
 def test_rq6_has_funnel_and_shared_tables():
     report = _report()
     assert report.rq == "rq6"
-    assert report.db == "postgres_reporeapers"
+    assert report.db == get("rq6").default_db
     labels = {t.label for t in report.tables()}
     assert any("processing-failures" in lbl for lbl in labels)
     assert any("exclusions-breakdown" in lbl for lbl in labels)

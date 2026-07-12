@@ -16,7 +16,7 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
     report = RQReport(
         "rq6",
         "T",
-        "postgres_reporeapers",
+        "postgres_reporeapers_rq6",
         [Section("S", [])],
         metrics=[Metric("realworld.eligible_projects", 632, "int", provenance=prov)],
     )

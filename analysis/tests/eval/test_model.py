@@ -15,7 +15,7 @@ def test_rqreport_collects_metrics_by_key():
     report = RQReport(
         rq="rq6",
         title="RQ6",
-        db="postgres_reporeapers",
+        db="postgres_reporeapers_rq6",
         sections=[
             Section(
                 title="Overview",

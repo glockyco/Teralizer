@@ -77,6 +77,7 @@ class Attribution:
     included_generalizations: int = 0
     assertion_exclusions_all_filtered: bool = False
     artifact_present: bool = True
+    timeout_seconds: float | None = None
 
 
 @dataclass(frozen=True)
@@ -87,6 +88,14 @@ class Cause:
 
 
 UNCODED = Cause(stage="?", cause="UNCODED", type="?")
+
+
+def _timeout_cause(seconds: float | None, subject: str) -> str:
+    if seconds is None:
+        return f"timeout exceeded ({subject})"
+    numeric = float(seconds)
+    rendered = str(int(numeric)) if numeric.is_integer() else f"{numeric:g}"
+    return f"timeout exceeded ({rendered} seconds {subject})"
 
 
 def classify(a: Attribution) -> Cause:
@@ -117,7 +126,7 @@ def classify(a: Attribution) -> Cause:
         if a.at_ceiling:
             return Cause(
                 "1 + 2",
-                "timeout exceeded (60 seconds per original test suite)",
+                _timeout_cause(a.timeout_seconds, "per original test suite"),
                 "Internal",
             )
         return Cause("1 + 2", "JUnit execution error during test execution", "External")
@@ -138,13 +147,33 @@ def classify(a: Attribution) -> Cause:
         return Cause(
             "3", "Spoon execution error during test instrumentation", "External"
         )
-    if a.internal_stage == "EXECUTE_TESTS_INITIAL" and a.at_ceiling:
+    if a.internal_stage == "EXECUTE_TESTS_INITIAL":
+        if a.at_ceiling:
+            return Cause(
+                "3",
+                _timeout_cause(a.timeout_seconds, "per initial test suite"),
+                "Internal",
+            )
         return Cause(
-            "3", "timeout exceeded (60 seconds per initial test suite)", "Internal"
+            "3", "JUnit execution error during initial test execution", "External"
+        )
+    if a.internal_stage == "COLLECT_JUNIT_REPORTS_INITIAL":
+        return Cause("3", "JUnit reports not found", "Internal")
+
+    if a.internal_stage == "EXECUTE_TESTS_GENERALIZED" and a.at_ceiling:
+        return Cause(
+            "4",
+            _timeout_cause(a.timeout_seconds, "per generalized test suite"),
+            "Internal",
         )
 
     if (
-        a.internal_stage in {"FILTER_GENERALIZATIONS", "GENERALIZE_TESTS"}
+        a.internal_stage
+        in {
+            "FILTER_GENERALIZATIONS",
+            "GENERALIZE_TESTS",
+            "COLLECT_JUNIT_REPORTS_GENERALIZED",
+        }
         or (
             a.internal_stage == "BUILD_PROJECT_GENERALIZED"
             and a.reason_code == "OTHER_COMPILE_FAILURE"
@@ -160,29 +189,40 @@ def classify(a: Attribution) -> Cause:
             "Internal",
         )
 
-    if a.internal_stage == "RESTORE_ORIGINAL_BUILD":
-        return Cause("5", "original build restore failed", "Internal")
+    if a.internal_stage in {"RESTORE_ORIGINAL_BUILD", "RESTORE_GENERALIZED_BUILD"}:
+        return Cause("5", "build restore failed", "Internal")
 
     if a.internal_stage in {
+        "COLLECT_JACOCO_DATA_ORIGINAL",
         "COLLECT_JACOCO_DATA_INITIAL",
         "COLLECT_JACOCO_DATA_GENERALIZED",
     }:
         if a.at_ceiling:
             return Cause(
-                "5", "timeout exceeded (300 seconds per test suite variant)", "Internal"
+                "5",
+                _timeout_cause(a.timeout_seconds, "during JaCoCo coverage collection"),
+                "Internal",
             )
         if not a.artifact_present:
             return Cause("5", "JaCoCo outputs not found", "Internal")
         return Cause(
             "5", "JaCoCo execution error during coverage collection", "External"
         )
-    if a.internal_stage in {"COLLECT_PIT_DATA_INITIAL", "COLLECT_PIT_DATA_GENERALIZED"}:
+    if a.internal_stage in {
+        "COLLECT_PIT_DATA_ORIGINAL",
+        "COLLECT_PIT_DATA_INITIAL",
+        "COLLECT_PIT_DATA_GENERALIZED",
+    }:
         if a.at_ceiling:
             return Cause(
-                "5", "timeout exceeded (300 seconds per test suite variant)", "Internal"
+                "5",
+                _timeout_cause(a.timeout_seconds, "during PIT mutation testing"),
+                "Internal",
             )
         if a.reason_code in {"PIT_MAPPING_FAILURE"}:
             return Cause("5", "failed to process PIT reports", "Internal")
+        if a.reason_code == "LISTENER_BUG":
+            return Cause("5", "PIT execution error during mutation testing", "External")
         if not a.artifact_present:
             return Cause("5", "PIT reports not found", "Internal")
         return Cause("5", "PIT execution error during mutation testing", "External")

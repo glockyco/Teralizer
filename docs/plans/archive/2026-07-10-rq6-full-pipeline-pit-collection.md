@@ -1,9 +1,10 @@
 ---
 title: RQ6 Stage-5 Collection and Funnel Rebuild
 type: plan
-status: active
+status: implemented
 created: 2026-07-10
 parent: 2026-07-08-evaluation-analysis-redesign
+archived: 2026-07-12
 ---
 
 # RQ6 Stage-5 Collection and Funnel Rebuild
@@ -176,14 +177,14 @@ set is empty), all five stages:
 
 ## Databases
 
-- `postgres_reporeapers` — gen-only, Stages 1-4 applicability (current canonical, will be
-  superseded for RQ6 by the full-PIT DB).
+- `postgres_reporeapers` — preserved gen-only, Stages 1-4 applicability baseline.
+- `postgres_reporeapers_rq6` — canonical full-pipeline RQ6 corpus, `IMPROVED_200_TRIES`,
+  including Stage 5 PIT reduction.
 - `postgres_reporeapers_invalid_jacoco` — pre-fix gen-only data, audit baseline for the
   44-project delta.
 - `postgres_test` — paper v1 RepoReapers, `IMPROVED_200`, full PIT. Reference only (stale code),
   read-only.
 - `postgres_jacoco_spike` — Phase 0 scratch (throwaway).
-- `postgres_reporeapers_rq6` — Phase 2 target (to be created).
 
 ## Open decisions
 
@@ -195,8 +196,8 @@ set is empty), all five stages:
    `pitest.max-execution-time`. Generous for RepoReapers (>20x the observed tail), so it avoids the
    paper's 300 s ~35% clip.
 3. **`REPOREAPERS_PROJECT_TIMEOUT`** — ~14400 s at launch (exceeds `2 x 3600` PIT + JaCoCo + gen).
-4. **Canonical DB naming / promotion** — collect into `postgres_reporeapers_rq6`, decide final
-   name after validation.
+4. **Canonical DB naming / promotion** — resolved: `postgres_reporeapers_rq6` is the
+   canonical full-pipeline RQ6 corpus; `postgres_reporeapers` remains the Stages 1-4 baseline.
 
 ## Tasks
 
@@ -214,13 +215,13 @@ set is empty), all five stages:
 
 ### Phase 2: Full collection (sign-off gate)
 - [x] Write `reporeapers-rq6.conf` (PIT on, original off inherited, unified 3600 cap, IMPROVED_200).
-- [ ] `./gradlew build` green.
-- [ ] Launch full run detached into `postgres_reporeapers_rq6`; monitor to completion.
+- [x] `./gradlew build` green.
+- [x] Launch full run detached into `postgres_reporeapers_rq6`; monitor to completion.
 
 ### Phase 3: Funnel rebuild
-- [ ] Rebuild `_funnel.py` on survivorship (five stages, `final_usable` success); regression test.
-- [ ] Regenerate `rq6.md`; confirm five stages; `pytest tests/eval` green.
-- [ ] Decide canonical DB naming/promotion.
+- [x] Rebuild `_funnel.py` on survivorship (five stages, `final_usable` success); regression test.
+- [x] Regenerate `rq6.md`; confirm five stages; `pytest tests/eval` green.
+- [x] Decide canonical DB naming/promotion.
 
 ## Acceptance criteria
 
