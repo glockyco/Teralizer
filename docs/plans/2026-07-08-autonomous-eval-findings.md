@@ -120,32 +120,29 @@ the SPF `String.length` collect-mode fix, the seed-vs-spec guard, the dedup
 bound, the generalized-suite-timeout attrition, the `NO_INPUT_SPEC` attrition,
 and the var/var string-equality by-construction binding.)
 
-## RepoReapers rerun3 result (RQ6)
+## RepoReapers RQ6 result
 
-Gen-only funnel over the full 1161-project corpus (PIT disabled;
-`postgres_reporeapers_invalid_jacoco`). 75 projects
-have at least one included generalization; 1043 included and 2697 excluded
-generalizations; 1252 structural failures clustered at the early stages
-(`SETUP_PROJECT` 355, `BUILD_SPOON_MODEL` 342, `EXECUTE_TESTS_ORIGINAL` 236,
-`BUILD_PROJECT_ORIGINAL` 188) -- expected build/setup attrition for an
-uncurated corpus (329 of 355 setup failures are "Failed to resolve classpath
-from pom.xml"). Top funnel reject reasons: `MISSING_TESTED_FILE` 45606,
-`NO_GENERALIZABLE_PARAMETERS` 44202, `UNSUPPORTED_RETURN_TYPE` 36609,
-`NO_ASSERTIONS` 21508, `EXCLUDED_PARENT_TEST` 18965, `TEST_NOT_PASSING` 7794.
+Two valid RepoReapers databases hold the RQ6 evidence over the full
+1161-project corpus:
 
-Not a regression. An early comparison to a "514 usable" rerun2 figure was a
-metric mismatch: 514 was rerun2's broad `final_usable` count, while the strict
-"at least one included generalization" metric gives rerun2 = 59 and rerun3 =
-75. On the same metric rerun3 slightly beats rerun2, consistent with the
-spec-soundness fixes.
+- `postgres_reporeapers` — the gen-only Stages 1-4 applicability baseline: 84
+  projects have at least one included generalization; 944 generalizations
+  included and 2915 excluded. Structural attrition concentrates at the early
+  build/setup stages (`SETUP_PROJECT` 355, `BUILD_SPOON_MODEL` 342,
+  `EXECUTE_TESTS_ORIGINAL` 237, `BUILD_PROJECT_ORIGINAL` 188 -- expected for an
+  uncurated corpus, e.g. unresolvable `pom.xml` classpaths). The dominant funnel
+  reject categories are unsupported return types, methods with no generalizable
+  parameters, unresolved tested-file metadata, and assertion-free or non-passing
+  tests.
+- `postgres_reporeapers_rq6` — the canonical full-pipeline RQ6 corpus
+  (`IMPROVED_200`, with Stage-5 reduction): 42 of 611 eligible projects complete
+  the pipeline (6.9%), per the generated `analysis/reports/rq6.md`.
 
 Consumption decision: the thesis keeps the earlier 632-project / 11-complete
-(1.7%) RepoReapers results. The paper's RQ6 refresh draws from the canonical,
-newest `postgres_reporeapers_rq6` dataset — 42 of 611 eligible projects complete
-the pipeline (6.9%), per the generated `analysis/reports/rq6.md` — not from the
-gen-only `invalid_jacoco` funnel figures recorded above. The older thesis
-exclusion/filtering/processing tables and RQ6 prose are intentional, not defects
-to fix.
+(1.7%) RepoReapers results. The paper's RQ6 refresh draws from
+`postgres_reporeapers_rq6` (42 of 611, above), not from the thesis figures; the
+older thesis exclusion/filtering/processing tables and RQ6 prose are intentional,
+not defects to fix.
 
 ## Census PIT status
 
