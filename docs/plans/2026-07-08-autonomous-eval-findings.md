@@ -14,27 +14,30 @@ RQ6, then PIT reduction). Captured for discussion. Fixes marked committed are on
 
 ## Open items for discussion
 
-### Census understates io, jexl, and pool
+### RQ0 census breadth: three projects yield no generalizations
 
-The census run that produced the current `postgres_jarvis_census` predates two
-fixes that were committed while it ran, so three projects are understated and a
-clean re-run would change their numbers:
+Verified against `postgres_jarvis_census` (per-task stage/status/info), the RQ0
+breadth dashes are genuine limits at specification extraction and test execution,
+not a since-fixed generation bug:
 
-- **io, jexl** — a correct but near-unsatisfiable equality filter
-  (`str1.equals(str2)` with the two parameters drawn independently) spun in
-  jqwik's filtered generator and timed out into attrition. The equality-binding
-  fix now generates such a pair by construction, but these two projects had
-  already timed out in this run.
-- **pool** — its original test suite (slow concurrency/eviction tests) timed out
-  during `EXECUTE_TESTS_ORIGINAL`. In this run that surfaced as a structural
-  failure and halted the census at 11/12; the timeout-as-attrition fix landed
-  afterward. text (project 12) was then run separately to complete the set.
+- **jexl** — every JPF symbolic execution of its assertions fails (`EXECUTE_JPF`:
+  uncaught `IllegalArgumentException` / `NoClassDefFoundError` under JPF, 9 tasks),
+  and `ANALYZE_JPF` then excludes all assertions, so no specification is extracted
+  and no generalization is produced.
+- **email** — `ANALYZE_JPF` excludes all assertions during specification extraction
+  (no specifications), so no generalization is produced.
+- **pool** — its slow original suite exceeds the runtime ceiling at
+  `EXECUTE_TESTS_ORIGINAL` (genuine timeout); the run never reaches extraction.
+- **io** — is NOT dashed (774 PVC / 7 MUTs). It generalizes successfully
+  (`GENERALIZE_TESTS`, `FILTER_GENERALIZATIONS`, and `EXECUTE_TESTS_GENERALIZED`
+  all succeed); 767 of its per-assertion `EXECUTE_JPF` tasks fail (generic JPF
+  execution errors and `SEARCH_DEPTH_LIMIT` aborts) but the survivors yield 7 MUTs.
 
-Decision (declined): no rerun. Per the first-run-numbers-stand principle, the
-census breadth is final as measured and the io/jexl/pool dashes are accepted
-outcomes (pool's slow original suite times out; io/jexl trace to the
-since-fixed jqwik equality-filter inefficiency; email extracts no
-specifications). The thesis RQ0 tables match this census exactly and are final.
+Decision (declined): no rerun. These causes are genuine SPF/JPF extraction limits
+(io/jexl/email) and a runtime timeout (pool); none is the equality-filter
+generation issue fixed later, so a rerun would not materially change them. Per the
+first-run-numbers-stand principle the breadth is final as measured, and the thesis
+RQ0 tables match this census exactly.
 
 ### jqwik memoization-equality amplifier (jqwik-internal, open)
 
