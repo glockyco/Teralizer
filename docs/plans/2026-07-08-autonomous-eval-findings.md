@@ -30,9 +30,11 @@ clean re-run would change their numbers:
   failure and halted the census at 11/12; the timeout-as-attrition fix landed
   afterward. text (project 12) was then run separately to complete the set.
 
-Recommendation: a clean full census re-run with every fix in place gives the
-definitive RQ0 breadth for io/jexl/pool. Deferred here to prioritize the
-RepoReapers rerun per the run sequence.
+Decision (declined): no rerun. Per the first-run-numbers-stand principle, the
+census breadth is final as measured and the io/jexl/pool dashes are accepted
+outcomes (pool's slow original suite times out; io/jexl trace to the
+since-fixed jqwik equality-filter inefficiency; email extracts no
+specifications). The thesis RQ0 tables match this census exactly and are final.
 
 ### jqwik memoization-equality amplifier (jqwik-internal, open)
 
@@ -132,6 +134,12 @@ metric mismatch: 514 was rerun2's broad `final_usable` count, while the strict
 "at least one included generalization" metric gives rerun2 = 59 and rerun3 =
 75. On the same metric rerun3 slightly beats rerun2, consistent with the
 spec-soundness fixes.
+
+Consumption decision: the thesis keeps the earlier 632-project / 11-complete
+(1.7%) RepoReapers results; the rerun3 (1161-corpus) numbers are propagated only
+into the paper at resubmit, not back-ported to the thesis. The stale thesis
+exclusion/filtering/processing tables and RQ6 prose are therefore intentional,
+not defects to fix.
 
 ## Census PIT status
 
