@@ -122,7 +122,8 @@ and the var/var string-equality by-construction binding.)
 
 ## RepoReapers rerun3 result (RQ6)
 
-Gen-only funnel over the full 1161-project corpus (PIT disabled). 75 projects
+Gen-only funnel over the full 1161-project corpus (PIT disabled;
+`postgres_reporeapers_invalid_jacoco`). 75 projects
 have at least one included generalization; 1043 included and 2697 excluded
 generalizations; 1252 structural failures clustered at the early stages
 (`SETUP_PROJECT` 355, `BUILD_SPOON_MODEL` 342, `EXECUTE_TESTS_ORIGINAL` 236,
@@ -139,10 +140,12 @@ metric mismatch: 514 was rerun2's broad `final_usable` count, while the strict
 spec-soundness fixes.
 
 Consumption decision: the thesis keeps the earlier 632-project / 11-complete
-(1.7%) RepoReapers results; the rerun3 (1161-corpus) numbers are propagated only
-into the paper at resubmit, not back-ported to the thesis. The stale thesis
-exclusion/filtering/processing tables and RQ6 prose are therefore intentional,
-not defects to fix.
+(1.7%) RepoReapers results. The paper's RQ6 refresh draws from the canonical,
+newest `postgres_reporeapers_rq6` dataset — 42 of 611 eligible projects complete
+the pipeline (6.9%), per the generated `analysis/reports/rq6.md` — not from the
+gen-only `invalid_jacoco` funnel figures recorded above. The older thesis
+exclusion/filtering/processing tables and RQ6 prose are intentional, not defects
+to fix.
 
 ## Census PIT status
 

@@ -58,7 +58,7 @@ RepoReapers (RQ6).
 |---|---|---|---|---|---|
 | JARVIS scoreboard | full old Commons: `MATH_3_5` + `LANG_3_5`, the JARVIS Table-2 cases (the ones JARVIS succeeded on) | IMPROVED 100 / 200 / 1000 | all (reduction on) | RQ0 Axis 1 (head-to-head @100: PVC + IC) and Axis 2 (budget elasticity: PVC inflates ~10x with tries, covered mutation score flat) | `postgres_jarvis_scoreboard` |
 | Census | full old Commons: all ~12 JARVIS projects, full pinned suites (the breadth JARVIS did not report) | IMPROVED 100 | generalization first; reduction a later sized pass | RQ0 Axis 3 (breadth beyond JARVIS) | `postgres_jarvis_census` |
-| RepoReapers rerun3 | RepoReapers (baseline `postgres_reporeapers_rerun2`, 514 final_usable) | IMPROVED 100 | generalization first; reduction later | RQ6 refresh (real-world unsuccessful-generalization causes on the current pipeline) | `postgres_reporeapers_rerun3` |
+| RepoReapers RQ6 refresh | full RepoReapers corpus (1161 projects) | IMPROVED 100 | generalization only (no reduction) | RQ6 refresh (real-world unsuccessful-generalization causes on the current pipeline) | `postgres_reporeapers_rq6` (newest, canonical; earlier attempts also live in `postgres_reporeapers` and `postgres_reporeapers_invalid_jacoco`) |
 
 RQ1--RQ5 are **not** re-run here; they stand from the prior evaluation on
 `postgres_dev`. The prior eval used the nine-variant scheme (BASELINE + NAIVE and
