@@ -1,11 +1,11 @@
 ---
 title: JUnit 3 Support Spike
 type: plan
-status: active
+status: implemented
 created: 2026-08-04
 parent: 2026-06-26-teralizer-overview
 superseded_by:
-archived:
+archived: 2026-08-04
 ---
 
 # JUnit 3 Support Spike
@@ -45,9 +45,36 @@ So JUnit 3 tests are now first-class through the test and assertion levels, and 
 depends on the same downstream gates as every other test. Yield on the two projects sampled is
 still zero generalizations, for reasons that are no longer JUnit-3-specific.
 
-**Remaining question, not answered by two projects:** how many of the 58 direct-assertion,
-currently-inapplicable projects produce generalizations once their assertions are extracted.
-That needs a handful more single-project runs before the scope decision is priced.
+**Run 4, a six-project sample** drawn across the size range of the 58 direct-assertion,
+currently-inapplicable projects. Every project now admits its JUnit 3 tests and extracts
+assertions in volume, and none produces a usable generalization:
+
+| Project | JUnit 3 tests | Included tests | Assertions | Included assertions | Validated generalizations |
+|---|---|---|---|---|---|
+| `jeremypepper_snakeyaml` | 813 | 777 | 2,512 | 0 | 0 |
+| `killme2008_gecko` | 7 | 151 | 1,004 | 1 | 0 |
+| `mwanji_migrate4j-maven` | 80 | 80 | 431 | 0 | 0 |
+| `laforge49_JID` | 56 | 35 | 243 | 0 | 0 |
+| `const3_doctor` | 20 | 26 | 165 | 0 | 0 |
+| `weswilliams_GivWenZen` | 4 | 9 | 24 | 0 | 0 |
+
+4,379 assertions extracted, 1 included, 1 generalization created, **0 validated**. `MissingValue`
+rejects 3,825 of 4,379, that is 87.3%, against 38.7% corpus-wide: the asserted value in a JUnit 3
+suite is usually not traceable to a single resolvable method call. These suites are
+integration-style, and recognition was never the barrier.
+
+Cost also counts against it. `gecko` alone ran about 55 minutes, because admitting its JUnit 3
+tests raised included tests from 85 to 151 and produced 1,004 assertions, each requiring symbolic
+analysis. Extrapolated across 94 projects that is a material addition to a 29.5-hour collection.
+
+**Verdict: JUnit 3 support does not move applicability.** Measured yield across 7 projects is zero
+validated generalizations, at higher runtime, and keeping it would move 9,617 tests from
+`TestType` rejections into the assertion-level gates, changing the funnel's attribution.
+
+Recommended disposition: revert test-type detection and the `setUp` fixture, and keep the
+assertion-recognition fix, which is a correctness fix independent of JUnit 3 admission. The
+negative result is worth keeping in the thesis's future-work discussion: JUnit 3 suites are not
+blocked by framework support but by tested-method identification.
 
 ## What motivated it
 
@@ -101,11 +128,9 @@ JUnit 3 tests, real `setUp` chain), `github_com_alibaba_tamper` (7),
   Result: the JUnit-3-specific blockers are detection, fixture handling, and assertion
   recognition. All three are now implemented. What remains is ordinary downstream attrition.
 
-- [ ] Sample 4 to 6 more projects from the 58 direct-assertion, currently-inapplicable set, and
-      record how far each gets, so the applicability yield is measured rather than extrapolated.
-  Verification: single-project runs into `postgres_junit3_spike`, one per project
-  Expected: a count of projects that reach at least one validated generalization, which is the
-  number the scope decision needs.
+- [x] Sample 6 more projects across the size range and record how far each gets.
+  Result: 0 of 6 reach a validated generalization; 4,379 assertions extracted, 87.3% rejected for
+  a missing tested method.
 
 - [x] Note the consequence of keeping the implementation. It recovers nothing today, but it does
       move 9,617 tests from `TestType` rejections to whatever rejects them next, which changes
