@@ -1,16 +1,16 @@
 package teralizer.processing.diagnostics;
 
 import com.google.gson.JsonObject;
+import gov.nasa.jpf.JPFListenerException;
+import gov.nasa.jpf.JPFNativePeerException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Stream;
-import gov.nasa.jpf.JPFListenerException;
-import gov.nasa.jpf.JPFNativePeerException;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.stream.Stream;
 import teralizer.jpf.ExtractionAborted;
 import teralizer.jpf.ExtractionOutcome;
 import teralizer.processing.ProcessingStage;
