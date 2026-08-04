@@ -37,21 +37,19 @@ tuned to improve outcomes.
 
 ## Preconditions
 
-- [ ] `2026-08-04-reduction-path-fixes` is implemented and its gate passes.
-- [ ] `2026-08-04-pre-rerun-investigations` is closed, and any fix it surfaced is either
-      implemented or explicitly deferred with a reason.
-- [ ] `./gradlew build` green on the commit that will be launched, and the commit recorded
-      here by hash once known.
+- [x] `2026-08-04-reduction-path-fixes` is implemented and its gate passes.
+- [x] `2026-08-04-pre-rerun-investigations` is closed; its remaining question was answered by
+      the live coverage check, which confirmed the plugin floors recover the family.
+- [x] `./gradlew build` green on the launched commit, `62f1c4e3`.
 
 ## Tasks
 
 ### Task 1: Launch
 
-- [ ] Launch detached into a fresh database, preserving `postgres_reporeapers_rq6` as the
-      previous measurement until the new one is signed off.
-  Run: `REPOREAPERS_PROFILE=project-configs/reporeapers-rq6.conf REPOREAPERS_DB=postgres_reporeapers_rq6_v2 REPOREAPERS_PROJECT_TIMEOUT=14400 bash scripts/detached-run.sh start reporeapers-rq6-v2 -- caffeinate -i bash scripts/run-reporeapers-rerun.sh --reset-db`
-  Expected: `data/detached/reporeapers-rq6-v2.meta` records the start; the log opens with the
-  database reset.
+- [x] Launch detached into a fresh database, preserving `postgres_reporeapers_rq6` as the
+      previous measurement until the new one is signed off. Launched on commit `62f1c4e3` into
+      `postgres_reporeapers_rq6_v2`, data under `data/reporeapers-rerun-v2`, project ceiling
+      14400 s, process name `reporeapers-rq6-v2`.
 
 - [ ] Monitor to completion, reading the log rather than polling the database.
   Verification: the final log line reports `attempted=1161`.
