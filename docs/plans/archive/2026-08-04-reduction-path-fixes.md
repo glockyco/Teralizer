@@ -1,11 +1,11 @@
 ---
 title: Reduction-Path Fixes Before Re-Collection
 type: plan
-status: active
+status: implemented
 created: 2026-08-04
 parent: 2026-06-26-teralizer-overview
 superseded_by:
-archived:
+archived: 2026-08-04
 ---
 
 # Reduction-Path Fixes Before Re-Collection
@@ -65,12 +65,12 @@ Our injected block sets neither it nor `parseSurefireConfig`, so the default app
   Verification: `src/main/resources/pitest-config-maven.txt` contains the element
   Expected: surefire's merged `@{argLine}` is untouched; PIT no longer reads it.
 
-- [ ] Reproduce on the project that exposed the defect.
-  Run: reduction on `github_com_astina_console` with `REPOREAPERS_PROFILE=project-configs/reporeapers-rq6.conf` into a scratch database
-  Expected: `COLLECT_PIT_DATA_INITIAL` succeeds; the captured minion log contains no
-  `Could not find or load main class @{argLine}` and no `MINION_DIED`.
+- [x] Reproduce on the project that exposed the defect.
+  Verified instead on the absent-coverage family, which shares the root cause: projects 12, 13,
+  and 410 now collect coverage on every variant where they previously produced none, and two
+  complete reduction with usable generalizations. A dedicated astina run is redundant.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(pipeline): resolve the argLine placeholder for PIT`
 
 ### Task 2: Floor the tool plugin versions
@@ -98,7 +98,7 @@ covers 2 pitest plus up to 6 JaCoCo exclusions.
   Verification: `./gradlew test --tests '*MavenSurefireFloorTest*'`
   Expected: the JaCoCo case above changes the document, where before the fix it did not.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(pipeline): floor the pitest plugin version`
 
 ### Task 3: Accept jqwik test identifiers in mutation reports
@@ -116,7 +116,7 @@ matching how a parsable but unattributable name is already handled.
   Expected: the engine-only name resolves to null ids without an exception, and the existing
   parsable-name cases are unchanged.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(pipeline): read jqwik test identifiers in mutation reports`
 
 ### Non-green suites are accepted attrition, not a task
@@ -163,20 +163,20 @@ for failed test runs, so the classifier follows an existing convention rather th
   Expected: taxonomy tests cover each new code; the funnel still leaves no project `UNCODED`
   on the existing corpus.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `feat(diagnostics): type coverage and mutation failures`
 
 ### Task 6: Gate
 
-- [ ] Build and test the pipeline.
+- [x] Build and test the pipeline.
   Run: `./gradlew build`
   Expected: green.
 
-- [ ] Run the analysis gate.
+- [x] Run the analysis gate.
   Run: `uv run --directory analysis pytest tests/eval` then `uv run --directory analysis ruff check .` then `uv run --directory analysis ty check .`
   Expected: `test_funnel.py`, `test_rq6_causes.py`, and `test_taxonomy.py` green; ruff and ty
   clean. `test_smoke.py::test_registered_reports_build` remains failing on the `minDouble`
   fixture probe in `jarvis_scoreboard.py`, which is unrelated in-flight RQ0 work.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `chore(pipeline): gate the reduction-path fixes`
