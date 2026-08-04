@@ -143,14 +143,20 @@ unmutated run, which is a separate question from this filter.
 - Test: `src/test/java/teralizer/processing/diagnostics/TaskDiagnosticWriterTest.java`
 - Test: `analysis/tests/eval/test_taxonomy.py`
 
-- [ ] Add `MINION_DIED`, `SUITE_NOT_GREEN`, `NO_TESTS_FOUND`, `PLUGIN_UNUSABLE`, and
-      `REPORT_ABSENT`, classify coverage and mutation failures into them from the command
-      output, and stop returning `LISTENER_BUG` for anything that is not a JPF listener fault.
-  Verification: `./gradlew test --tests '*TaskDiagnosticWriterTest*'`
-  Expected: each code round-trips; a minion-death log yields `MINION_DIED`, an unmutated-run
-  failure yields `SUITE_NOT_GREEN`, an absent report yields `REPORT_ABSENT`.
+A failed Maven command carries only an exit code and the paths of its captured stdout and
+stderr, so the discriminating text is read back from disk. `TestExecutionTask` already does this
+for failed test runs, so the classifier follows an existing convention rather than inventing one.
 
-- [ ] Map the new codes to reduction cause rows and delete the `_fallback_cause` guess of
+- [x] Add `MINION_DIED`, `SUITE_NOT_GREEN`, `NO_TESTS_FOUND`, `PLUGIN_UNUSABLE`, and
+      `REPORT_ABSENT`, and classify coverage and mutation command failures into them by reading
+      the captured output. Unrecognized output keeps the existing fallback, so the change adds
+      resolution without hiding anything.
+  Verification: `./gradlew test --tests '*TaskDiagnosticWriterTest*' --tests '*TaskDiagnosticClassifierCommandTest*'`
+  Expected: each code round-trips through the writer; a dead minion yields `MINION_DIED`, an
+  unusable plugin `PLUGIN_UNUSABLE`, a failing unmutated suite `SUITE_NOT_GREEN`, invisible tests
+  `NO_TESTS_FOUND`, and unclassified output still `LISTENER_BUG`.
+
+- [x] Map the new codes to reduction cause rows and delete the `_fallback_cause` guess of
       "PIT reports not found", so an unmapped reduction failure surfaces as `UNCODED` instead
       of being silently mislabeled.
   Verification: `uv run --directory analysis pytest tests/eval/test_taxonomy.py tests/eval/test_funnel.py`

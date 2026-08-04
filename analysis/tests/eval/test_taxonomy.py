@@ -1,3 +1,4 @@
+from teralizer.eval.reports import _taxonomy
 from teralizer.eval.reports._taxonomy import (
     UNCODED,
     Attribution,
@@ -263,3 +264,26 @@ def test_collect_junit_reports_folds_to_single_cause():
         c = classify(a)
         assert c.stage == "1 + 2" and c.type == "Internal"
         assert "JUnit reports not found" in c.cause
+
+
+def test_typed_reduction_command_failures_get_named_causes():
+    cases = {
+        "MINION_DIED": "PIT coverage minion exited abnormally",
+        "PLUGIN_UNUSABLE": "PIT plugin version cannot run",
+        "SUITE_NOT_GREEN": "unmutated test suite has failing tests",
+        "NO_TESTS_FOUND": "PIT found no tests to mutate",
+    }
+    for reason_code, expected in cases.items():
+        cause = _taxonomy.classify(
+            _taxonomy.Attribution(
+                internal_stage="COLLECT_PIT_DATA_GENERALIZED",
+                reason_code=reason_code,
+                at_ceiling=False,
+                included_tests=5,
+                included_assertions=5,
+                included_generalizations=1,
+            )
+        )
+        assert cause.stage == "5"
+        assert cause.cause == expected
+        assert cause.type in {"Internal", "External", "Mixed"}

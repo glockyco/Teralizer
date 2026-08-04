@@ -25,7 +25,7 @@
 - **Oracle-Refusal Taxonomy on the RQ6 Corpus** [audit] `2026-08-04-oracle-refusal-taxonomy` ← 2026-06-26-teralizer-overview
 - **Open Questions to Close Before Re-Collection** [plan] `2026-08-04-pre-rerun-investigations` (8/9) ← 2026-06-26-teralizer-overview
 - **Reduction-Stage Failure Anatomy and Run Cost** [audit] `2026-08-04-reduction-failure-anatomy` ← 2026-06-26-teralizer-overview
-- **Reduction-Path Fixes Before Re-Collection** [plan] `2026-08-04-reduction-path-fixes` (4/14) ← 2026-06-26-teralizer-overview
+- **Reduction-Path Fixes Before Re-Collection** [plan] `2026-08-04-reduction-path-fixes` (6/14) ← 2026-06-26-teralizer-overview
 - **RepoReapers Dataset Row for the Eligible Corpus** [plan] `2026-08-04-reporeapers-dataset-row` (0/6) ← 2026-07-08-evaluation-analysis-redesign
 - **RQ6 Evidence Tables for Oracle Refusal and Extraction Limits** [plan] `2026-08-04-rq6-evidence-tables` (0/20) ← 2026-07-08-evaluation-analysis-redesign
 - **RQ6 Re-Collection After the Reduction Fixes** [plan] `2026-08-04-rq6-recollection` (0/10) ← 2026-06-26-teralizer-overview

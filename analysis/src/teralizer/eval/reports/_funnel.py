@@ -499,7 +499,9 @@ def _fallback_cause(stage: str, project_row: pd.Series) -> Cause:
             "all generalizations excluded due to filter rejections and failures",
             "Internal",
         )
-    return Cause("5", "PIT reports not found", "Internal")
+    # No guess for reduction. A reduction exclusion the taxonomy cannot type is a defect to
+    # investigate, so it surfaces as UNCODED rather than being labelled plausibly.
+    return UNCODED
 
 
 def _assertions_all_filtered(project_row: pd.Series) -> bool:

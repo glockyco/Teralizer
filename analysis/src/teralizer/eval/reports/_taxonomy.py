@@ -221,6 +221,16 @@ def classify(a: Attribution) -> Cause:
             )
         if a.reason_code in {"PIT_MAPPING_FAILURE"}:
             return Cause("5", "failed to process PIT reports", "Internal")
+        # Typed command failures, written by the classifier from the captured Maven output.
+        # Each names what actually went wrong instead of the former catch-all.
+        if a.reason_code == "MINION_DIED":
+            return Cause("5", "PIT coverage minion exited abnormally", "External")
+        if a.reason_code == "PLUGIN_UNUSABLE":
+            return Cause("5", "PIT plugin version cannot run", "Mixed")
+        if a.reason_code == "SUITE_NOT_GREEN":
+            return Cause("5", "unmutated test suite has failing tests", "Mixed")
+        if a.reason_code == "NO_TESTS_FOUND":
+            return Cause("5", "PIT found no tests to mutate", "External")
         if a.reason_code == "LISTENER_BUG":
             return Cause("5", "PIT execution error during mutation testing", "External")
         if not a.artifact_present:
