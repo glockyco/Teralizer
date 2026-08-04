@@ -1,11 +1,11 @@
 ---
 title: JUnit 3 Support Spike
 type: plan
-status: implemented
+status: active
 created: 2026-08-04
 parent: 2026-06-26-teralizer-overview
 superseded_by:
-archived: 2026-08-04
+archived:
 ---
 
 # JUnit 3 Support Spike
@@ -13,35 +13,41 @@ archived: 2026-08-04
 Decide whether generalizing JUnit 3 tests works end to end, on one project, before the scope
 question is settled and before `2026-08-04-rq6-recollection` launches.
 
-## Verdict: detection is necessary and not sufficient
+## Verdict: three blockers, two of them now removed
 
-Run on `github_com_jfgiraud_temmental` (project 792, 6 JUnit 3 tests) into
-`postgres_junit3_spike`. Detection works: the 6 tests are recorded under the `TestCase`
-marker and `TestType` accepts all 234 tests in the project. They are then **rejected at
-`FILTER_TESTS` with zero assertions extracted**.
+Detection alone yields nothing, but the reason is not what the first run suggested.
 
-The cause is mechanical and visible in the source. `TestI18n.test_en` reads
+**Run 1, `github_com_jfgiraud_temmental` (6 tests).** All 6 recognized, `TestType` accepts,
+then `NoAssertions` rejects all 6 with zero assertions extracted. Its assertions sit in private
+helpers of the same class, so intraprocedural detection sees none.
 
-```java
-public void test_en() throws IOException, TemplateException {
-    assertFoundAndEquals("hello fr_FR", locale_en, "test");
-    assertNotFound(locale_en, "test2");
-```
+**Population check.** That project is not representative. Parsing the method bodies of all
+12,090 rejected JUnit 3 tests: 8,268 (68.4%, 63 projects) contain a direct JUnit assertion,
+708 (5.9%) are helper-only like temmental, 157 have no calls, and 2,957 could not be parsed,
+mostly because the method is inherited from a base class in another file. Of the 9,133 parsed,
+90.5% assert directly. 58 of the 63 direct-assertion projects hold no validated generalization
+today.
 
-where `assertFoundAndEquals` and `assertNotFound` are private helpers declared in the same
-class that hold the real assertions. Intraprocedural assertion detection sees none, so
-`NoAssertions` rejects the test. This is the false-positive family RQ5 measured at 86.3% on
-developer-written tests.
+**Run 2, `github_com_tomgibara_bits` (296 tests, 29 parsed as direct-assertion).** All 296
+recognized and accepted by `TestType`, then 295 rejected by `NoAssertions` — despite bodies
+containing `assertEquals(d, c)` and `fail()`. Cause: `TestAnalysis.isAssertion` accepted only
+`org.junit.Assert`, `org.junit.jupiter.api.Assertions`, and `org.hamcrest.MatcherAssert`. A
+JUnit 3 test calls the assertions it *inherits* from `TestCase`, whose declaring type is
+`junit.framework.Assert`, so no JUnit 3 assertion was ever recognized as an assertion.
 
-So JUnit 3 support cannot be valued independently: **interprocedural assertion detection is
-the prerequisite, not JUnit 3 recognition**, and the standalone yield on this project is zero.
+**Run 3, same project, after adding the JUnit 3 declaring types.** 287 of 296 tests included,
+9 still rejected by `NoAssertions`, and **1,953 assertions extracted where 19 were before**.
+All 1,953 are then rejected by `MissingValue`: no tested method could be identified for any of
+them, which is the ordinary gate that rejects 38.7% of real-world assertions corpus-wide. This
+project's assertions compare `BitVector` objects rather than method results.
 
-Two measurement errors in the estimate that motivated this spike are corrected here. The
-claim that 32 projects have a wholly JUnit 3 suite was wrong: the criterion used was zero
-*included* tests, and project 792 shows that is compatible with 228 annotated tests excluded
-for other reasons. And no JUnit 3 test in the corpus carries a `NoAssertions` decision at all,
-because filters stop at the first rejection, so the survival rate past `TestType` was never
-derivable from the existing data.
+So JUnit 3 tests are now first-class through the test and assertion levels, and their yield
+depends on the same downstream gates as every other test. Yield on the two projects sampled is
+still zero generalizations, for reasons that are no longer JUnit-3-specific.
+
+**Remaining question, not answered by two projects:** how many of the 58 direct-assertion,
+currently-inapplicable projects produce generalizations once their assertions are extracted.
+That needs a handful more single-project runs before the scope decision is priced.
 
 ## What motivated it
 
@@ -92,8 +98,14 @@ JUnit 3 tests, real `setUp` chain), `github_com_alibaba_tamper` (7),
   suite compile; does it execute with JUnit 3 tests and jqwik properties in one surefire run.
 
 - [x] Record the verdict and the blocking stage, then decide scope.
-  Result: blocked at `NoAssertions`. Production JUnit 3 support is not worth planning until
-  interprocedural assertion detection exists, and the two must then be valued together.
+  Result: the JUnit-3-specific blockers are detection, fixture handling, and assertion
+  recognition. All three are now implemented. What remains is ordinary downstream attrition.
+
+- [ ] Sample 4 to 6 more projects from the 58 direct-assertion, currently-inapplicable set, and
+      record how far each gets, so the applicability yield is measured rather than extrapolated.
+  Verification: single-project runs into `postgres_junit3_spike`, one per project
+  Expected: a count of projects that reach at least one validated generalization, which is the
+  number the scope decision needs.
 
 - [x] Note the consequence of keeping the implementation. It recovers nothing today, but it does
       move 9,617 tests from `TestType` rejections to whatever rejects them next, which changes

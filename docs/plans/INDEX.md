@@ -22,6 +22,7 @@
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
 - **Evaluation Run Map (RQ0 + RQ6)** [audit] `2026-07-07-evaluation-run-map` ← 2026-06-26-teralizer-overview
 - **Autonomous Evaluation Run Findings** [audit] `2026-07-08-autonomous-eval-findings` ← 2026-06-26-teralizer-overview
+- **JUnit 3 Support Spike** [plan] `2026-08-04-junit3-support-spike` (5/6) ← 2026-06-26-teralizer-overview
 - **Oracle-Refusal Taxonomy on the RQ6 Corpus** [audit] `2026-08-04-oracle-refusal-taxonomy` ← 2026-06-26-teralizer-overview
 - **Open Questions to Close Before Re-Collection** [plan] `2026-08-04-pre-rerun-investigations` (8/9) ← 2026-06-26-teralizer-overview
 - **Reduction-Stage Failure Anatomy and Run Cost** [audit] `2026-08-04-reduction-failure-anatomy` ← 2026-06-26-teralizer-overview
@@ -36,4 +37,4 @@
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
 - **Evaluation Analysis and Reporting Redesign** [spec] `2026-07-08-evaluation-analysis-redesign` ← 2026-06-26-teralizer-overview
 
-_73 archived — see `docs/plans/archive/`._
+_72 archived — see `docs/plans/archive/`._
