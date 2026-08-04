@@ -31,7 +31,8 @@ RQ0 and refreshes RQ6**. Design authority for the paper's RQ text is
 - **Apache Commons utility methods ("commons-utils")** — 247 *extracted public-static
   numeric/boolean methods* from 17 Commons projects (+ transitive deps, ~19.7k LOC);
   EvoSuite tests at three budgets **plus** a developer-test variant (725 original tests).
-- **RepoReapers** — 632 real-world GitHub Java projects.
+- **RepoReapers** — 1,161 real-world GitHub Java projects, of which 611 are checked
+  out, resolved, and built, and therefore carry results.
 
 **Naming trap:** "Apache Commons" means two different corpora. RQ1--RQ5 use the
 *extracted utility methods* above. **RQ0 uses the full original Commons projects that

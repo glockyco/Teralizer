@@ -25,7 +25,7 @@
 - **Oracle-Refusal Taxonomy on the RQ6 Corpus** [audit] `2026-08-04-oracle-refusal-taxonomy` ← 2026-06-26-teralizer-overview
 - **RepoReapers Dataset Row for the Eligible Corpus** [plan] `2026-08-04-reporeapers-dataset-row` (0/6) ← 2026-07-08-evaluation-analysis-redesign
 - **RQ6 Evidence Tables for Oracle Refusal and Extraction Limits** [plan] `2026-08-04-rq6-evidence-tables` (0/20) ← 2026-07-08-evaluation-analysis-redesign
-- **RQ6 Stage-4 Applicability Funnel** [plan] `2026-08-04-rq6-stage4-applicability-funnel` (10/16) ← 2026-07-08-evaluation-analysis-redesign
+- **RQ6 Stage-4 Applicability Funnel** [plan] `2026-08-04-rq6-stage4-applicability-funnel` (16/16) ← 2026-07-08-evaluation-analysis-redesign
 
 ## draft
 
