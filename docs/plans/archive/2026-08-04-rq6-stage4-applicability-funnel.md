@@ -1,11 +1,11 @@
 ---
 title: RQ6 Stage-4 Applicability Funnel
 type: plan
-status: active
+status: implemented
 created: 2026-08-04
 parent: 2026-07-08-evaluation-analysis-redesign
 superseded_by:
-archived:
+archived: 2026-08-04
 ---
 
 # RQ6 Stage-4 Applicability Funnel
