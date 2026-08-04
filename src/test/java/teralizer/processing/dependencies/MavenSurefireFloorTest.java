@@ -174,6 +174,45 @@ public class MavenSurefireFloorTest {
         Assert.assertFalse(generalizedPom.contains("<version>" + Configuration.SUREFIRE_MIN_VERSION + "</version>"));
     }
 
+    @Example
+    void jacocoPinBelowFloorGetsFloored() throws Exception {
+        Document doc = toolPluginPom("org.jacoco", "jacoco-maven-plugin", "0.7.2.201409121644");
+
+        boolean changed = MavenDependencyManager.applySurefireFloor(doc);
+
+        Assert.assertTrue(changed);
+        Assert.assertTrue(doc.asXML(), doc.asXML().contains("<version>" + Configuration.JACOCO_MIN_VERSION + "</version>"));
+    }
+
+    @Example
+    void pitestPinBelowFloorGetsFloored() throws Exception {
+        Document doc = toolPluginPom("org.pitest", "pitest-maven", "0.30");
+
+        boolean changed = MavenDependencyManager.applySurefireFloor(doc);
+
+        Assert.assertTrue(changed);
+        Assert.assertTrue(doc.asXML(), doc.asXML().contains("<version>" + Configuration.PITEST_MIN_VERSION + "</version>"));
+    }
+
+    @Example
+    void newerToolPinsAreKept() throws Exception {
+        Document doc = toolPluginPom("org.pitest", "pitest-maven", "1.19.5");
+
+        boolean changed = MavenDependencyManager.applySurefireFloor(doc);
+
+        Assert.assertFalse(changed);
+        Assert.assertTrue(doc.asXML(), doc.asXML().contains("<version>1.19.5</version>"));
+    }
+
+    private static Document toolPluginPom(String groupId, String artifactId, String version) throws Exception {
+        String xml = "<project><build><plugins><plugin>"
+            + "<groupId>" + groupId + "</groupId>"
+            + "<artifactId>" + artifactId + "</artifactId>"
+            + "<version>" + version + "</version>"
+            + "</plugin></plugins></build></project>";
+        return DocumentHelper.parseText(xml);
+    }
+
     private static Document pluginPom(String pluginsOpen, String pluginsClose, String version, boolean includeGroupId) throws Exception {
         return DocumentHelper.parseText(pluginPomXml(pluginsOpen, pluginsClose, version, includeGroupId));
     }

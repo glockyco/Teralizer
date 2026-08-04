@@ -344,13 +344,20 @@ public class MavenDependencyManager {
             return false;
         }
 
-        boolean changed = applySurefireFloorToPlugins(childElement(build, "plugins"));
+        boolean changed = applyPluginFloorsToPlugins(childElement(build, "plugins"));
         Element pluginManagement = childElement(build, "pluginManagement");
-        changed |= pluginManagement != null && applySurefireFloorToPlugins(childElement(pluginManagement, "plugins"));
+        changed |= pluginManagement != null && applyPluginFloorsToPlugins(childElement(pluginManagement, "plugins"));
         return changed;
     }
 
-    private static boolean applySurefireFloorToPlugins(Element plugins) {
+    /**
+     * Floors the tool plugins the pipeline depends on. A project that declares one of them itself
+     * keeps its own declaration -- {@code addJacocoPlugin} and {@code addPitestPlugin} skip
+     * injection in that case -- so without a floor an unusable pin decides whether coverage and
+     * mutation data can be collected at all. Only numeric versions below the floor are rewritten,
+     * so a newer pin is preserved.
+     */
+    private static boolean applyPluginFloorsToPlugins(Element plugins) {
         if (plugins == null) {
             return false;
         }
@@ -358,18 +365,30 @@ public class MavenDependencyManager {
         boolean changed = false;
         for (Iterator<Element> it = plugins.elementIterator(); it.hasNext(); ) {
             Element plugin = it.next();
-            if (!isSurefirePlugin(plugin)) {
-                continue;
+            if (isSurefirePlugin(plugin)) {
+                changed |= floorPluginVersion(plugin, Configuration.SUREFIRE_MIN_VERSION);
+                changed |= mergeJacocoArgLine(plugin);
+            } else if (isPlugin(plugin, "org.jacoco", "jacoco-maven-plugin")) {
+                changed |= floorPluginVersion(plugin, Configuration.JACOCO_MIN_VERSION);
+            } else if (isPlugin(plugin, "org.pitest", "pitest-maven")) {
+                changed |= floorPluginVersion(plugin, Configuration.PITEST_MIN_VERSION);
             }
-
-            Element version = childElement(plugin, "version");
-            if (version != null && isVersionBelow(version.getTextTrim(), Configuration.SUREFIRE_MIN_VERSION)) {
-                version.setText(Configuration.SUREFIRE_MIN_VERSION);
-                changed = true;
-            }
-            changed |= mergeJacocoArgLine(plugin);
         }
         return changed;
+    }
+
+    private static boolean floorPluginVersion(Element plugin, String minimumVersion) {
+        Element version = childElement(plugin, "version");
+        if (version == null || !isVersionBelow(version.getTextTrim(), minimumVersion)) {
+            return false;
+        }
+        version.setText(minimumVersion);
+        return true;
+    }
+
+    private static boolean isPlugin(Element plugin, String groupId, String artifactId) {
+        return artifactId.equals(childText(plugin, "artifactId"))
+            && groupId.equals(childText(plugin, "groupId"));
     }
 
     /**
@@ -477,12 +496,15 @@ public class MavenDependencyManager {
         }
 
         String[] parts = version.trim().split("\\.", -1);
-        if (parts.length == 0 || parts.length > 3) {
+        if (parts.length == 0) {
             return null;
         }
 
+        // Compare major.minor.patch and ignore any further component. JaCoCo appends a build
+        // timestamp as a fourth component (0.7.2.201409121644), which is ordering-irrelevant here.
+        int significant = Math.min(parts.length, 3);
         int[] parsed = new int[]{0, 0, 0};
-        for (int i = 0; i < parts.length; i++) {
+        for (int i = 0; i < significant; i++) {
             if (parts[i].isEmpty()) {
                 return null;
             }

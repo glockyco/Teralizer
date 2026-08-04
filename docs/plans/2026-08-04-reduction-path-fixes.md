@@ -55,15 +55,15 @@ PIT >> INFO : MINION : Error: Could not find or load main class @{argLine}
 Inlining a resolved JaCoCo agent path instead of the token is not available: the agent path
 is set at runtime by `jacoco:prepare-agent` and is not knowable when the POM is written.
 
-- [ ] Stop PIT from consuming surefire's `argLine`. Prefer disabling surefire-config parsing in
-      the pitest plugin block if that plugin exposes such a parameter; verify the parameter name
-      against pitest 1.17.0 before relying on it, since this checkout vendors no PIT source. If
-      it does not exist, generate a separate PIT-specific POM without the `@{argLine}` token and
-      point `AbstractTask.mavenBuildFileFor` at it for the two PIT stages, leaving the floored
-      POM untouched for surefire runs.
-  Verification: `./gradlew test --tests '*MavenSurefireFloorTest*'`
-  Expected: surefire's argLine still begins with `@{argLine}`, and the POM PIT reads carries no
-  `@{` token.
+pitest-maven 1.17.0 exposes the parameter for exactly this: its `mutationCoverage` mojo
+descriptor declares `parseSurefireArgLine`, described as *"When set will try and set the argLine
+based on surefire configuration. This may not give the desired result in some circumstances"*.
+Our injected block sets neither it nor `parseSurefireConfig`, so the default applies.
+
+- [x] Set `<parseSurefireArgLine>false</parseSurefireArgLine>` in the injected pitest block, so
+      surefire keeps the JaCoCo token and PIT stops ingesting it. No second POM is needed.
+  Verification: `src/main/resources/pitest-config-maven.txt` contains the element
+  Expected: surefire's merged `@{argLine}` is untouched; PIT no longer reads it.
 
 - [ ] Reproduce on the project that exposed the defect.
   Run: reduction on `github_com_astina_console` with `REPOREAPERS_PROFILE=project-configs/reporeapers-rq6.conf` into a scratch database
@@ -73,17 +73,30 @@ is set at runtime by `jacoco:prepare-agent` and is not knowable when the POM is 
 - [ ] Commit.
   Message: `fix(pipeline): resolve the argLine placeholder for PIT`
 
-### Task 2: Floor the pitest plugin version
+### Task 2: Floor the tool plugin versions
 
 **Files:**
 - Modify: `src/main/java/teralizer/processing/dependencies/MavenDependencyManager.java`
+- Modify: `src/main/java/teralizer/util/Configuration.java`
 - Test: `src/test/java/teralizer/processing/dependencies/MavenSurefireFloorTest.java`
 
-- [ ] Floor `pitest-maven` in the derived POM the way surefire is floored, so a project pinning
-      an unusable version does not decide the mutation run. Leave a project's newer pin alone.
+`addJacocoPlugin` and `addPitestPlugin` both skip injection when the project declares the
+plugin itself, and only surefire had a floor. All 6 projects whose `INITIAL` coverage report is
+absent declare `jacoco-maven-plugin` themselves at 0.7.1 to 0.7.6, from 2014 to 2016, while
+their tests and report collection succeed. So this is the same family as the argLine defect and
+covers 2 pitest plus up to 6 JaCoCo exclusions.
+
+- [x] Generalize the surefire floor to `jacoco-maven-plugin` and `pitest-maven`, flooring each to
+      the version the pipeline itself injects, and leave newer pins alone.
   Verification: `./gradlew test --tests '*MavenSurefireFloorTest*'`
-  Expected: a POM pinning `pitest-maven` 0.24 yields the floor version; a POM pinning 1.17.0
-  is unchanged.
+  Expected: a JaCoCo pin of 0.7.2.201409121644 and a pitest pin of 0.30 are floored; a pitest pin
+  of 1.19.5 is untouched.
+
+- [x] Compare `major.minor.patch` and ignore further components in `parseNumericVersion`, which
+      previously refused any version with more than three components and therefore never
+      compared a JaCoCo pin at all.
+  Verification: `./gradlew test --tests '*MavenSurefireFloorTest*'`
+  Expected: the JaCoCo case above changes the document, where before the fix it did not.
 
 - [ ] Commit.
   Message: `fix(pipeline): floor the pitest plugin version`

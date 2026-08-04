@@ -170,6 +170,10 @@ public class Configuration {
      * green — the worst failure mode, a false pass.
      */
     public static final String SUREFIRE_MIN_VERSION = "2.22.2";
+    // Match the versions the pipeline injects when a project declares neither plugin, so a
+    // project's own pin cannot leave coverage or mutation collection on an unusable release.
+    public static final String JACOCO_MIN_VERSION = "0.8.12";
+    public static final String PITEST_MIN_VERSION = "1.17.0";
 
     public static final Path MAVEN_JACOCO_CONFIG_PATH = Paths.get("src/main/resources/jacoco-config-maven.txt");
     public static final Path MAVEN_PITEST_CONFIG_PATH = Paths.get("src/main/resources/pitest-config-maven.txt");
