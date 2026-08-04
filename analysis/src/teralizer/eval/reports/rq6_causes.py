@@ -156,7 +156,7 @@ generalization_counts AS (
         g.variant AS strategy,
         'Generalization' AS level,
         CASE
-            WHEN l.final_usable THEN 'included'
+            WHEN l.generated_filter_passed THEN 'included'
             WHEN NOT g.is_included
              AND (
                  g.exclusion_info IN (

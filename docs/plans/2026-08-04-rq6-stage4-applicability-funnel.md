@@ -73,7 +73,7 @@ presentation helpers, and every RQ0–RQ4 report.
 - Modify: `analysis/src/teralizer/eval/reports/rq6_causes.py`
 - Test: `analysis/tests/eval/test_rq6_causes.py`
 
-- [ ] In `BREAKDOWN_SQL`, change the `generalization_counts` bucket so `included` is
+- [x] In `BREAKDOWN_SQL`, change the `generalization_counts` bucket so `included` is
       `l.generated_filter_passed` instead of `l.final_usable`. Keep the `filtering` bucket
       as `ORACLE_NOT_WIDENABLE`, `INPUT_SPEC_NOT_SATISFIED_BY_SEED`, or a `REJECT`
       `filter_result`; everything else stays `failures`.
@@ -81,13 +81,13 @@ presentation helpers, and every RQ0–RQ4 report.
   Expected: generalization row totals 4,121 with 1,061 included (25.7%), 3,019 filtering,
   41 failures, and the three buckets sum to the total.
 
-- [ ] Add a test asserting the generalization row's failure count is bounded by the
+- [x] Add a test asserting the generalization row's failure count is bounded by the
       generalized build and execution failures, so a future switch back to a
       reduction-dependent signal fails loudly.
   Verification: `uv run --directory analysis pytest tests/eval/test_rq6_causes.py -k generalization_failures`
   Expected: fails before the SQL change (failures 592), passes after (41).
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(eval): count validated generalizations in the RQ6 breakdown`
 
 ### Task 3: Emit the applicability metrics

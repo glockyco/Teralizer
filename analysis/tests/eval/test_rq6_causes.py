@@ -89,24 +89,49 @@ def test_rq6_breakdown_matches_eligible_entity_denominators():
     assert observed["Generalization"] == counts[2]
 
 
-def test_rq6_generalization_inclusion_uses_final_usable():
+def test_rq6_generalization_inclusion_uses_validated_signal():
     report = _report()
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
     row = breakdown.df[breakdown.df["level"].eq("Generalization")].iloc[0]
     with connect(get("rq6").default_db) as conn:
         variant = _funnel.resolve_variant(conn)
-        final_usable = conn.execute(
+        validated = conn.execute(
             text(
                 """
                 SELECT count(*)
                 FROM generalization g
                 JOIN generalization_lifecycle l ON l.generalization_id = g.id
-                WHERE g.variant = :variant AND l.final_usable
+                WHERE g.variant = :variant AND l.generated_filter_passed
                 """
             ),
             {"variant": variant},
         ).scalar_one()
-    assert row["included"] == final_usable
+    assert row["included"] == validated
+
+
+def test_rq6_generalization_failures_exclude_reduction_attrition():
+    # A reduction-dependent inclusion signal would push PIT collection losses into
+    # the failures column, so bound failures by the generalized build and execution
+    # losses that genuinely belong to generalized test creation.
+    report = _report()
+    breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
+    row = breakdown.df[breakdown.df["level"].eq("Generalization")].iloc[0]
+    with connect(get("rq6").default_db) as conn:
+        variant = _funnel.resolve_variant(conn)
+        creation_failures = conn.execute(
+            text(
+                """
+                SELECT count(*)
+                FROM generalization g
+                JOIN generalization_lifecycle l ON l.generalization_id = g.id
+                WHERE g.variant = :variant
+                  AND g.is_included
+                  AND NOT l.generated_filter_passed
+                """
+            ),
+            {"variant": variant},
+        ).scalar_one()
+    assert row["failures"] == creation_failures
 
 
 def test_rq6_filtering_table_is_entity_conservative():
