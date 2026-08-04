@@ -282,13 +282,13 @@ def build(conn: Connection) -> RQReport:
         ),
         Metric(
             "realworld.applicability_projects",
-            funnel.success_count,
+            funnel.applicability_count,
             fmt="int",
             provenance=funnel_provenance,
         ),
         Metric(
             "realworld.applicability_pct",
-            funnel.success_count / funnel.eligible,
+            funnel.applicability_count / funnel.eligible,
             fmt="pct1",
             provenance=funnel_provenance,
         ),
@@ -345,6 +345,14 @@ def build(conn: Connection) -> RQReport:
         Metric(
             "realworld.reduction_excluded_baseline_side",
             funnel.reduction_excluded_baseline_side,
+            fmt="int",
+            provenance=funnel_provenance,
+        ),
+        # The funnel table's overall row. Present so the prose can reconcile it with the
+        # applicability figure instead of hard-coding a digit; never the headline.
+        Metric(
+            "realworld.reduction_completing_projects",
+            funnel.success_count,
             fmt="int",
             provenance=funnel_provenance,
         ),

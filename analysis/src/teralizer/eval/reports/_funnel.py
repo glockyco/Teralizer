@@ -23,12 +23,12 @@ from teralizer.eval.reports._taxonomy import (
 INELIGIBLE_STAGES = frozenset(
     {"SETUP_PROJECT", "ADD_DEPENDENCIES", "BUILD_PROJECT_ORIGINAL"}
 )
-# Applicability is the point at which a project holds a validated generalized test, so
-# the reported funnel ends at Stage 4. Reduction is still attributed and measured, but
-# its exclusions describe mutation testing of the original suite, not generalization.
+# The funnel reports all five stages, but applicability is the point at which a project
+# holds a validated generalized test, so success is measured after Stage 4. Reduction
+# exclusions are reported beside it and describe mutation testing of the original suite.
 _PIPELINE_STAGES = ("1 + 2", "3", "4", "5")
-_REPORTED_STAGES = ("1 + 2", "3", "4")
 _REDUCTION_STAGE = "5"
+_APPLICABILITY_INDEX = _PIPELINE_STAGES.index(_REDUCTION_STAGE)
 _BASELINE_REDUCTION_STAGES = frozenset(
     {"COLLECT_PIT_DATA_INITIAL", "COLLECT_JACOCO_DATA_INITIAL"}
 )
@@ -246,7 +246,11 @@ class ProjectFailure:
 @dataclass(frozen=True)
 class FunnelResult:
     eligible: int
+    # Projects through all five stages, which the funnel table reports as its overall
+    # row, and projects holding a validated generalized test, which is the
+    # applicability figure the chapter cites.
     success_count: int
+    applicability_count: int
     stages: list[StageBand]
     table: Table
     uncoded_projects: list[int]
@@ -310,15 +314,15 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
             )
             if cause == UNCODED:
                 uncoded_projects.append(project_id)
-            elif stage != _REDUCTION_STAGE:
+            else:
                 causes.append(cause)
 
     table_df = _cause_table_df(causes)
-    all_bands = _stage_bands(survivor_sets)
-    stages = [band for band in all_bands if band.stage != _REDUCTION_STAGE]
-    reduction = next(band for band in all_bands if band.stage == _REDUCTION_STAGE)
+    stages = _stage_bands(survivor_sets)
+    reduction = next(band for band in stages if band.stage == _REDUCTION_STAGE)
     eligible = len(eligible_ids)
-    success_count = len(survivor_sets[len(_REPORTED_STAGES)])
+    success_count = len(survivor_sets[-1])
+    applicability_count = len(survivor_sets[_APPLICABILITY_INDEX])
     band_parts = [f"Eligible projects: {eligible}."]
     for band in stages:
         rate = band.passing / band.entering if band.entering else 0.0
@@ -328,14 +332,14 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
         )
     overall = success_count / eligible if eligible else 0.0
     band_parts.append(
-        f"{success_count} of {eligible} projects produce at least one validated "
-        f"generalized test ({overall:.1%})."
+        f"Overall: {success_count} of {eligible} included ({overall:.1%})."
     )
     note = " ".join(band_parts)
 
     return FunnelResult(
         eligible=eligible,
         success_count=success_count,
+        applicability_count=applicability_count,
         stages=stages,
         table=_build_table(table_df, note),
         uncoded_projects=uncoded_projects,

@@ -41,7 +41,7 @@ def test_eligibility_audit_only_ineligible_causes_at_setup_stages():
 def test_funnel_arithmetic_is_consistent():
     result = _funnel_result()
     stages = result.stages
-    assert [stage.stage for stage in stages] == ["1 + 2", "3", "4"]
+    assert [stage.stage for stage in stages] == ["1 + 2", "3", "4", "5"]
     assert stages[0].entering == result.eligible
     for prev, cur in zip(stages, stages[1:]):
         assert cur.entering == prev.passing
@@ -52,6 +52,10 @@ def test_funnel_arithmetic_is_consistent():
         sum(stage.exclusions for stage in stages) + result.success_count
         == result.eligible
     )
+    # Applicability is measured after Stage 4, so it is the reduction band's input and
+    # strictly larger than the count that completes every stage.
+    assert result.applicability_count == stages[-1].entering
+    assert result.applicability_count > result.success_count
 
 
 def test_every_cause_row_has_a_known_type():
@@ -189,16 +193,15 @@ def test_funnel_survivors_match_independent_sql():
         counts[0],
         counts[1],
         counts[2],
+        counts[3],
     )
     assert tuple(stage.passing for stage in result.stages) == (
         counts[1],
         counts[2],
         counts[3],
-    )
-    assert (result.reduction.entering, result.reduction.passing) == (
-        counts[3],
         counts[4],
     )
+    assert result.applicability_count == counts[3]
 
 
 def test_funnel_stage3_and_stage5_ids_match_direct_oracles():
@@ -275,7 +278,7 @@ def test_funnel_stage3_and_stage5_ids_match_direct_oracles():
     assert result.survivor_project_ids[4] == frozenset(stage5_ids)
 
 
-def test_funnel_success_matches_validated_generalization_projects():
+def test_funnel_applicability_matches_validated_generalization_projects():
     result = _funnel_result()
     with _connect() as conn:
         variant = _funnel.resolve_variant(conn)
@@ -308,20 +311,24 @@ def test_funnel_success_matches_validated_generalization_projects():
             ),
             {"variant": variant},
         ).scalar_one()
-    assert result.success_count == expected
+    assert result.applicability_count == expected
 
 
-def test_reduction_attrition_is_measured_but_not_tabulated():
-    # Applicability ends at Stage 4, so reduction contributes no cause row. Its
-    # attrition is still attributed, because the chapter cites it to justify the cut.
+def test_reduction_causes_are_tabulated_but_do_not_define_success():
+    # The table documents all five stages; applicability is still measured after
+    # Stage 4, and the reduction attrition is quantified for the chapter's argument.
     result = _funnel_result()
     rows = result.table.df
-    assert not any(rows["stage"].eq("5")), rows
+    assert any(rows["stage"].eq("5")), rows
+    assert any(
+        rows["cause"].str.contains("PIT|JaCoCo|timeout", case=False, regex=True)
+    ), rows
     assert (rows["count"] > 0).all()
 
     reduction = result.reduction
     assert reduction.stage == "5"
-    assert reduction.entering == result.success_count
+    assert reduction.entering == result.applicability_count
+    assert reduction.passing == result.success_count
     assert reduction.passing == len(result.survivor_project_ids[4])
     assert reduction.exclusions == reduction.entering - reduction.passing
     assert 0 < result.reduction_excluded_baseline_side <= reduction.exclusions

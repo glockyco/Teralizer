@@ -43,26 +43,25 @@ presentation helpers, and every RQ0–RQ4 report.
 - Modify: `analysis/src/teralizer/eval/reports/_taxonomy.py`
 - Test: `analysis/tests/eval/test_funnel.py`
 
-- [x] Set `success_count` to the number of Stage-4 survivors rather than
-      `len(survivor_sets[-1])`, and restrict the reported bands to `("1 + 2", "3", "4")` so
-      the funnel table carries no Stage-5 rows. Keep `_survivor_sets` computing the
-      `final_usable` set, keep the `_STAGE_5` taxonomy mapping, and keep classifying
-      reduction exclusions — Task 3 reports them as metrics.
+- [x] Add `applicability_count` to `FunnelResult`, holding the projects that survive Stage 4,
+      and expose the reduction band alongside it. `success_count` keeps its meaning — projects
+      through all five stages — so the table's five bands and its overall row are unchanged.
   Verification: `uv run --directory analysis pytest tests/eval/test_funnel.py`
-  Expected: band arithmetic tests pass; `success_count == 73`, `eligible == 611`, and three
-  bands are reported.
+  Expected: `eligible == 611`, `applicability_count == 73`, `success_count == 42`, and the
+  applicability count equals the reduction band's input.
 
-- [x] Add a test asserting the funnel table's stage column contains no `5` and that every
-      Stage-4-excluded project still resolves to a coded cause.
-  Verification: `uv run --directory analysis pytest tests/eval/test_funnel.py -k "stage_bands or uncoded"`
-  Expected: no `5` in the table; no project left `UNCODED`. A Stage-4 exclusion whose earliest
-  failure is a reduction stage is a finding to escalate with the project id, not a reason to
-  widen a catch-all.
+- [x] Add `reduction_excluded_baseline_side`, counting reduction exclusions whose earliest
+      reduction failure is at `COLLECT_PIT_DATA_INITIAL` or `COLLECT_JACOCO_DATA_INITIAL`,
+      which is the evidence that those exclusions measure the original suite.
+  Verification: `uv run --directory analysis pytest tests/eval/test_funnel.py -k reduction_causes`
+  Expected: Stage-5 cause rows remain in the table, and
+  `0 < reduction_excluded_baseline_side <= reduction.exclusions` (28 of 31).
 
-- [x] Update the band note built in `build_funnel` so the closing sentence reads as
-      applicability rather than pipeline completion, and assert the wording in the test.
-  Verification: `uv run --directory analysis pytest tests/eval/test_funnel.py`
-  Expected: note ends with `73 of 611 projects produce at least one validated generalized test (11.9%).`
+- [x] Keep the conservation invariant over all five bands and add the applicability
+      relations, so a future change that conflates the two counts fails loudly.
+  Verification: `uv run --directory analysis pytest tests/eval/test_funnel.py -k arithmetic`
+  Expected: exclusions plus `success_count` equal `eligible`, and
+  `applicability_count > success_count`.
 
 - [x] Commit.
   Message: `refactor(eval): end the RQ6 funnel at Stage 4`
@@ -108,8 +107,9 @@ presentation helpers, and every RQ0–RQ4 report.
       `realworld.reduction_excluded_projects` (31), and
       `realworld.reduction_excluded_baseline_side` (28), the last counting projects whose
       earliest reduction failure is at `COLLECT_PIT_DATA_INITIAL` or
-      `COLLECT_JACOCO_DATA_INITIAL`. These are metrics only; they must not enter the funnel
-      table.
+      `COLLECT_JACOCO_DATA_INITIAL`. Add `realworld.reduction_completing_projects` (42) so the
+      prose can reconcile the funnel table's overall row with the applicability figure without
+      hard-coding a digit.
   Verification: `uv run --directory analysis pytest tests/eval/test_rq6_causes.py -k reduction_attrition`
   Expected: the three metrics resolve to 73, 31, and 28, and
   `realworld.reduction_excluded_baseline_side` is strictly less than
