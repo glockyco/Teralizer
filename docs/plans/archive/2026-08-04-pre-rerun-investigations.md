@@ -1,11 +1,11 @@
 ---
 title: Open Questions to Close Before Re-Collection
 type: plan
-status: active
+status: implemented
 created: 2026-08-04
 parent: 2026-06-26-teralizer-overview
 superseded_by:
-archived:
+archived: 2026-08-04
 ---
 
 # Open Questions to Close Before Re-Collection
@@ -50,10 +50,13 @@ cause decides if one more mechanical fix is available before re-collection.
   Result: 6 of 8 show Maven success with no execution data file, the same signature as the
   argLine defect; projects 819 and 1098 retain no command log.
 
-- [ ] Re-run coverage collection for one of the six on a live checkout after the argLine fix
-      lands, to decide whether the family is recovered by it or needs its own fix.
-  Verification: coverage collection on one of projects 12, 13, 410, 693, 1105, 1115 into a scratch database
-  Expected: either `jacoco.csv` appears, closing the family, or a distinct cause is named.
+- [x] Re-run coverage collection for three of the six on live checkouts after the plugin floors
+      landed, to decide whether the family is recovered.
+  Result: recovered. Projects 12, 13, and 410 previously failed at `COLLECT_JACOCO_DATA_INITIAL`
+  with an absent report and produced nothing. All three now collect coverage on every variant
+  (204, 253, and 220 coverage rows), and two of the three complete reduction with usable
+  generalizations (11 and 1). Project 13 still loses its `INITIAL` mutation run to an absent PIT
+  report, now typed `REPORT_ABSENT` rather than reported as a listener fault.
 
 - [x] Commit.
   Message: `docs(plans): classify residual absent coverage reports`

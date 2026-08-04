@@ -90,6 +90,11 @@ public final class TaskDiagnosticClassifier {
         if (commandFailure != null) {
             return commandFailure;
         }
+        // The collection tasks raise this themselves when a tool ran but wrote no report where we
+        // expected one, which is a different fact from the tool failing.
+        if (contains(failure, "Report file") && contains(failure, "does not exist")) {
+            return diagnostic(TaskDiagnosticCodes.REPORT_ABSENT, messageDetail(failure));
+        }
         return diagnostic(TaskDiagnosticCodes.LISTENER_BUG, messageDetail(failure));
     }
 

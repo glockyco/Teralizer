@@ -47,6 +47,19 @@ public class TaskDiagnosticClassifierCommandTest {
             classify("[ERROR] something nobody has classified yet\n"));
     }
 
+    @Example
+    void absentReportIsTypedAsReportAbsent() {
+        RuntimeException failure = new RuntimeException(
+            "Failed to collect coverage data. Report file "
+                + "'projects/example/target/site/jacoco/jacoco.csv' does not exist.");
+
+        Assert.assertEquals(
+            TaskDiagnosticCodes.REPORT_ABSENT,
+            TaskDiagnosticClassifier
+                .classify(ProcessingStage.COLLECT_JACOCO_DATA_INITIAL, failure)
+                .reasonCode());
+    }
+
     private static String classify(String capturedOutput) throws Exception {
         Path dir = Files.createTempDirectory("classifier-command-test");
         Path out = Files.write(dir.resolve("out.txt"), capturedOutput.getBytes(StandardCharsets.UTF_8));
