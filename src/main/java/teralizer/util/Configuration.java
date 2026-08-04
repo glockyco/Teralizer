@@ -204,6 +204,9 @@ public class Configuration {
 
     public static final String JUNIT4_ASSERTION_PACKAGE = "org.junit.Assert";
     public static final String JUNIT5_ASSERTION_PACKAGE = "org.junit.jupiter.api.Assertions";
+    // JUnit 3 tests call the assertions they inherit from TestCase, so an unqualified call
+    // resolves to junit.framework.Assert or to TestCase itself depending on the declaration site.
+    public static final String JUNIT3_ASSERTION_PACKAGE = "junit.framework.Assert";
 
     public static final String ASSERT_EQUALS = "assertEquals";
     public static final String ASSERT_TRUE = "assertTrue";

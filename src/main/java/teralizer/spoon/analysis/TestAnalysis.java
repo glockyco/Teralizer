@@ -189,6 +189,8 @@ public class TestAnalysis {
         String qualifiedName = declaringType.getQualifiedName();
         return qualifiedName.equals(Configuration.JUNIT4_ASSERTION_PACKAGE)
             || qualifiedName.equals(Configuration.JUNIT5_ASSERTION_PACKAGE)
+            || qualifiedName.equals(Configuration.JUNIT3_ASSERTION_PACKAGE)
+            || qualifiedName.equals(Configuration.JUNIT3_TEST_CASE_CLASS)
             || qualifiedName.equals(HAMCREST_MATCHER_ASSERT);
     }
 
