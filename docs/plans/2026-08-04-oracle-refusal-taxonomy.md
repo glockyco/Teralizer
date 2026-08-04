@@ -108,6 +108,22 @@ concretized and no symbolic output survives to capture. Recovering them needs sy
 models or native peers for wrapper factory and comparison methods — the same family as
 `2026-06-28-native-peer-model-coverage`, not an output-plumbing change.
 
+The bucket is also narrower than its count suggests, which is why it is deprioritized:
+
+| Wrapper | Refusals | Projects |
+|---|---|---|
+| `Long.valueOf(J)` | 679 | 2 |
+| `Integer.valueOf(I)` | 76 | 12 |
+| `Character.valueOf(C)` | 10 | 2 |
+| `Boolean.valueOf(Z)` | 2 | 1 |
+
+678 of the 679 `Long.valueOf` refusals belong to `github_com_joschi_JadConfig`, which
+already holds 79 validated generalizations and is therefore already applicable. Recovering
+them would add oracle coverage inside a project that succeeds, and would require modeling
+`Long.compareTo` as well as `valueOf`, since the seeds are comparison chains such as
+`Size.gigabytes(1).compareTo(Size.terabytes(0))`. Across the six projects the bucket could
+actually unblock, it accounts for roughly 20 to 40 refusals.
+
 The state-derived bucket is where a property is often plausibly true yet unprovable
 from the extracted evidence. Those are candidates for human review rather than
 automated recovery.

@@ -21,6 +21,11 @@ resolved by `_funnel.resolve_variant`. RQ5 is frozen: `rq5_causes.py`, its SQL, 
 
 Depends on `2026-08-04-rq6-stage4-applicability-funnel` for the Stage-4 success signal.
 
+The counts quoted in the verification steps come from the corpus as it stands before
+`2026-08-04-rq6-recollection`. They are shape checks: they prove a query selects the right
+population, and a task is satisfied when its structural relations hold. Re-derive the values
+against the promoted corpus before any of them reaches the thesis.
+
 ## File map
 
 - Create `analysis/src/teralizer/eval/reports/_refusal.py`: owns refusal bucketing SQL, the pattern table, and the blocked-project leverage table.
