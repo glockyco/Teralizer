@@ -23,6 +23,15 @@ from teralizer.eval.reports._taxonomy import (
 INELIGIBLE_STAGES = frozenset(
     {"SETUP_PROJECT", "ADD_DEPENDENCIES", "BUILD_PROJECT_ORIGINAL"}
 )
+# Applicability is the point at which a project holds a validated generalized test, so
+# the reported funnel ends at Stage 4. Reduction is still attributed and measured, but
+# its exclusions describe mutation testing of the original suite, not generalization.
+_PIPELINE_STAGES = ("1 + 2", "3", "4", "5")
+_REPORTED_STAGES = ("1 + 2", "3", "4")
+_REDUCTION_STAGE = "5"
+_BASELINE_REDUCTION_STAGES = frozenset(
+    {"COLLECT_PIT_DATA_INITIAL", "COLLECT_JACOCO_DATA_INITIAL"}
+)
 _ASSERTION_FAILURE_STAGES = frozenset(
     {"ADD_JPF_INSTRUMENTATION", "EXECUTE_JPF", "ANALYZE_JPF"}
 )
@@ -243,6 +252,8 @@ class FunnelResult:
     uncoded_projects: list[int]
     eligibility_audit_unexpected: list[int]
     survivor_project_ids: tuple[frozenset[int], ...]
+    reduction: StageBand
+    reduction_excluded_baseline_side: int
 
 
 def resolve_variant(conn: Connection) -> str:
@@ -285,9 +296,11 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
     eligibility_audit_unexpected = _audit_eligibility(eligible_ids, failures_by_project)
     causes: list[Cause] = []
     uncoded_projects: list[int] = []
-    stage_names = ("1 + 2", "3", "4", "5")
-    for index, stage in enumerate(stage_names):
+    reduction_excluded: set[int] = set()
+    for index, stage in enumerate(_PIPELINE_STAGES):
         excluded = survivor_sets[index] - survivor_sets[index + 1]
+        if stage == _REDUCTION_STAGE:
+            reduction_excluded = excluded
         for project_id in sorted(excluded):
             cause = _cause_for_exclusion(
                 stage,
@@ -297,13 +310,15 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
             )
             if cause == UNCODED:
                 uncoded_projects.append(project_id)
-            else:
+            elif stage != _REDUCTION_STAGE:
                 causes.append(cause)
 
     table_df = _cause_table_df(causes)
-    stages = _stage_bands(survivor_sets)
+    all_bands = _stage_bands(survivor_sets)
+    stages = [band for band in all_bands if band.stage != _REDUCTION_STAGE]
+    reduction = next(band for band in all_bands if band.stage == _REDUCTION_STAGE)
     eligible = len(eligible_ids)
-    success_count = len(survivor_sets[-1])
+    success_count = len(survivor_sets[len(_REPORTED_STAGES)])
     band_parts = [f"Eligible projects: {eligible}."]
     for band in stages:
         rate = band.passing / band.entering if band.entering else 0.0
@@ -313,7 +328,8 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
         )
     overall = success_count / eligible if eligible else 0.0
     band_parts.append(
-        f"Overall: {success_count} of {eligible} included ({overall:.1%})."
+        f"{success_count} of {eligible} projects produce at least one validated "
+        f"generalized test ({overall:.1%})."
     )
     note = " ".join(band_parts)
 
@@ -325,7 +341,31 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
         uncoded_projects=uncoded_projects,
         eligibility_audit_unexpected=eligibility_audit_unexpected,
         survivor_project_ids=tuple(frozenset(ids) for ids in survivor_sets),
+        reduction=reduction,
+        reduction_excluded_baseline_side=_count_baseline_side(
+            reduction_excluded, failures_by_project
+        ),
     )
+
+
+def _count_baseline_side(
+    reduction_excluded: set[int],
+    failures_by_project: dict[int, tuple[ProjectFailure, ...]],
+) -> int:
+    """Reduction exclusions whose earliest reduction failure measures the original suite."""
+    count = 0
+    for project_id in reduction_excluded:
+        failure = next(
+            (
+                failure
+                for failure in failures_by_project.get(project_id, ())
+                if paper_stage(failure.internal_stage) == _REDUCTION_STAGE
+            ),
+            None,
+        )
+        if failure is not None and failure.internal_stage in _BASELINE_REDUCTION_STAGES:
+            count += 1
+    return count
 
 
 def _audit_eligibility(
@@ -525,9 +565,8 @@ def _cause_table_df(causes: list[Cause]) -> pd.DataFrame:
 
 
 def _stage_bands(survivor_sets: list[set[int]]) -> list[StageBand]:
-    stages = ("1 + 2", "3", "4", "5")
     bands: list[StageBand] = []
-    for index, stage in enumerate(stages):
+    for index, stage in enumerate(_PIPELINE_STAGES):
         entering = len(survivor_sets[index])
         passing = len(survivor_sets[index + 1])
         bands.append(

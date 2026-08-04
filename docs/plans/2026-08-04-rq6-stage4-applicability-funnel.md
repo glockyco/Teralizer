@@ -43,7 +43,7 @@ presentation helpers, and every RQ0–RQ4 report.
 - Modify: `analysis/src/teralizer/eval/reports/_taxonomy.py`
 - Test: `analysis/tests/eval/test_funnel.py`
 
-- [ ] Set `success_count` to the number of Stage-4 survivors rather than
+- [x] Set `success_count` to the number of Stage-4 survivors rather than
       `len(survivor_sets[-1])`, and restrict the reported bands to `("1 + 2", "3", "4")` so
       the funnel table carries no Stage-5 rows. Keep `_survivor_sets` computing the
       `final_usable` set, keep the `_STAGE_5` taxonomy mapping, and keep classifying
@@ -52,19 +52,19 @@ presentation helpers, and every RQ0–RQ4 report.
   Expected: band arithmetic tests pass; `success_count == 73`, `eligible == 611`, and three
   bands are reported.
 
-- [ ] Add a test asserting the funnel table's stage column contains no `5` and that every
+- [x] Add a test asserting the funnel table's stage column contains no `5` and that every
       Stage-4-excluded project still resolves to a coded cause.
   Verification: `uv run --directory analysis pytest tests/eval/test_funnel.py -k "stage_bands or uncoded"`
   Expected: no `5` in the table; no project left `UNCODED`. A Stage-4 exclusion whose earliest
   failure is a reduction stage is a finding to escalate with the project id, not a reason to
   widen a catch-all.
 
-- [ ] Update the band note built in `build_funnel` so the closing sentence reads as
+- [x] Update the band note built in `build_funnel` so the closing sentence reads as
       applicability rather than pipeline completion, and assert the wording in the test.
   Verification: `uv run --directory analysis pytest tests/eval/test_funnel.py`
   Expected: note ends with `73 of 611 projects produce at least one validated generalized test (11.9%).`
 
-- [ ] Commit.
+- [x] Commit.
   Message: `refactor(eval): end the RQ6 funnel at Stage 4`
 
 ### Task 2: Report the generalization level on the validated signal

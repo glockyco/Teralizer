@@ -41,7 +41,7 @@ def test_eligibility_audit_only_ineligible_causes_at_setup_stages():
 def test_funnel_arithmetic_is_consistent():
     result = _funnel_result()
     stages = result.stages
-    assert [stage.stage for stage in stages] == ["1 + 2", "3", "4", "5"]
+    assert [stage.stage for stage in stages] == ["1 + 2", "3", "4"]
     assert stages[0].entering == result.eligible
     for prev, cur in zip(stages, stages[1:]):
         assert cur.entering == prev.passing
@@ -189,11 +189,13 @@ def test_funnel_survivors_match_independent_sql():
         counts[0],
         counts[1],
         counts[2],
-        counts[3],
     )
     assert tuple(stage.passing for stage in result.stages) == (
         counts[1],
         counts[2],
+        counts[3],
+    )
+    assert (result.reduction.entering, result.reduction.passing) == (
         counts[3],
         counts[4],
     )
@@ -273,7 +275,7 @@ def test_funnel_stage3_and_stage5_ids_match_direct_oracles():
     assert result.survivor_project_ids[4] == frozenset(stage5_ids)
 
 
-def test_funnel_success_matches_final_usable_projects():
+def test_funnel_success_matches_validated_generalization_projects():
     result = _funnel_result()
     with _connect() as conn:
         variant = _funnel.resolve_variant(conn)
@@ -286,7 +288,7 @@ def test_funnel_success_matches_final_usable_projects():
                   ON l.generalization_id = g.id
                 JOIN project p ON p.id = g.project_id
                 WHERE g.variant = :variant
-                  AND l.final_usable
+                  AND l.generated_filter_passed
                   AND p.use_test_generalization
                   AND NOT EXISTS (
                       SELECT 1
@@ -309,11 +311,17 @@ def test_funnel_success_matches_final_usable_projects():
     assert result.success_count == expected
 
 
-def test_funnel_includes_reduction_failure_causes():
+def test_reduction_attrition_is_measured_but_not_tabulated():
+    # Applicability ends at Stage 4, so reduction contributes no cause row. Its
+    # attrition is still attributed, because the chapter cites it to justify the cut.
     result = _funnel_result()
     rows = result.table.df
-    assert any(rows["stage"].eq("5")), rows
-    assert any(
-        rows["cause"].str.contains("PIT|JaCoCo|timeout", case=False, regex=True)
-    ), rows
+    assert not any(rows["stage"].eq("5")), rows
     assert (rows["count"] > 0).all()
+
+    reduction = result.reduction
+    assert reduction.stage == "5"
+    assert reduction.entering == result.success_count
+    assert reduction.passing == len(result.survivor_project_ids[4])
+    assert reduction.exclusions == reduction.entering - reduction.passing
+    assert 0 < result.reduction_excluded_baseline_side <= reduction.exclusions
