@@ -9,6 +9,10 @@
         </outputFormats>
         <exportLineCoverage>true</exportLineCoverage>
         <verbose>true</verbose>
+        <!-- PIT substitutes properties in surefire's argLine itself and does not implement
+             Maven's @{...} late replacement, so the JaCoCo token we merge for surefire would
+             reach the coverage minion literally and kill it. Our jvmArgs below are unaffected. -->
+        <parseSurefireArgLine>false</parseSurefireArgLine>
         <!-- Safe parallelism: each mutant runs in its own minion JVM. -->
         <threads>4</threads>
         <jvmArgs>
