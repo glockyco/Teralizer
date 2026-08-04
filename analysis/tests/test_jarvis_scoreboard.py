@@ -516,7 +516,7 @@ def test_compare_to_jarvis_validates_mut_when_columns_present():
                 "assertion_name": "assertEquals",
                 "parameter_value_coverage": 94,
                 "tested_class_qualified_name": (
-                    "org.apache.commons.math3.analysis.function.Abs"
+                    "org.apache.commons.math4.analysis.function.Abs"
                 ),
                 "tested_method_name": "value",
             }
@@ -526,7 +526,7 @@ def test_compare_to_jarvis_validates_mut_when_columns_present():
     assert by_row.loc["UnivariateFunctionTest::testAbs", "teralizer_pvc"] == 94
 
     wrong = correct.assign(
-        tested_class_qualified_name="org.apache.commons.math3.analysis.function.Sin"
+        tested_class_qualified_name="org.apache.commons.math4.analysis.function.Sin"
     )
     with pytest.raises(ValueError, match="unexpected MUT"):
         compare_to_jarvis(wrong, variant="IMPROVED")

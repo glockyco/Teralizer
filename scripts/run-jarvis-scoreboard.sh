@@ -12,8 +12,8 @@ JARVIS_DATA_DIR="${JARVIS_DATA_DIR:-data/jarvis-scoreboard}"
 JARVIS_LABEL=scoreboard
 JARVIS_PREPARE_FLAG=
 JARVIS_DEFAULT_CONFIGS=(
-  project-configs/jarvis-scoreboard/commons-lang-3.5.conf
-  project-configs/jarvis-scoreboard/commons-math-3.5.conf
+  project-configs/jarvis-scoreboard/commons-lang-2017-02-01.conf
+  project-configs/jarvis-scoreboard/commons-math-2017-02-01.conf
 )
 
 source "$ROOT_DIR/scripts/lib/jarvis-run.sh"

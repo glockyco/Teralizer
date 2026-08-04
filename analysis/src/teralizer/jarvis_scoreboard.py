@@ -53,11 +53,11 @@ class JarvisRow:
 
 
 _CHARUTILS = "org.apache.commons.lang3.CharUtils"
-_FASTMATH = "org.apache.commons.math3.util.FastMath"
-_INTERVAL = "org.apache.commons.math3.geometry.euclidean.oned.Interval"
-_POLYNOMIAL = "org.apache.commons.math3.analysis.polynomials.PolynomialFunction"
-_PRECISION = "org.apache.commons.math3.util.Precision"
-_ABS = "org.apache.commons.math3.analysis.function.Abs"
+_FASTMATH = "org.apache.commons.math4.util.FastMath"
+_INTERVAL = "org.apache.commons.math4.geometry.euclidean.oned.Interval"
+_POLYNOMIAL = "org.apache.commons.math4.analysis.polynomials.PolynomialFunction"
+_PRECISION = "org.apache.commons.math4.util.Precision"
+_ABS = "org.apache.commons.math4.analysis.function.Abs"
 
 # JARVIS paper (VMCAI 2018) Table 2, verbatim. cut_* = the original Java unit test;
 # pbt_* = the JARVIS-generated Scala property test. probes = the pinned
@@ -547,7 +547,7 @@ def get_mutation_gain(
 
 
 def _project_label(root_path: object) -> str:
-    """Trailing path component of a project root_path (e.g. ``commons-math-3.5-census``)."""
+    """Trailing path component of a project root_path (e.g. ``commons-math-2017-02-01-census``)."""
     return str(root_path).rstrip("/").rsplit("/", 1)[-1]
 
 

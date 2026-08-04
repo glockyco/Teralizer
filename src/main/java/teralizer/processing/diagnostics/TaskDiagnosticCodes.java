@@ -12,6 +12,13 @@ public final class TaskDiagnosticCodes {
     public static final String MISSING_DEPENDENCY = "MISSING_DEPENDENCY";
     public static final String MISSING_REPORT_FILE = "MISSING_REPORT_FILE";
     public static final String MISSING_NATIVE_PEER = "MISSING_NATIVE_PEER";
+    // Coverage and mutation command failures. Without these every one of them landed in
+    // LISTENER_BUG, which is named for a JPF fault and made reduction attrition unreadable.
+    public static final String MINION_DIED = "MINION_DIED";
+    public static final String NO_TESTS_FOUND = "NO_TESTS_FOUND";
+    public static final String PLUGIN_UNUSABLE = "PLUGIN_UNUSABLE";
+    public static final String REPORT_ABSENT = "REPORT_ABSENT";
+    public static final String SUITE_NOT_GREEN = "SUITE_NOT_GREEN";
     public static final String NO_INPUT_SPEC = "NO_INPUT_SPEC";
     public static final String NO_OUTPUT_SPEC = "NO_OUTPUT_SPEC";
     public static final String OTHER_COMPILE_FAILURE = "OTHER_COMPILE_FAILURE";

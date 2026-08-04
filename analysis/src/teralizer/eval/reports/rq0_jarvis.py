@@ -35,30 +35,30 @@ CENSUS_VARIANT = "IMPROVED_100_TRIES"
 CENSUS_COMPLETION_MARKER = Path("data/detached/census-gen.complete")
 
 TABLE1_PROJECTS = (
-    "commons-math-3.5-census",
-    "commons-lang-3.5-census",
-    "commons-cli-1.3.1-census",
-    "commons-codec-1.10-census",
-    "commons-collections-4.1-census",
-    "commons-configuration-2.1-census",
-    "commons-csv-1.4-census",
-    "commons-email-1.4-census",
-    "commons-io-2.5-census",
-    "commons-jexl-3.0-census",
-    "commons-pool-2.4.2-census",
-    "commons-text-1.0-census",
+    "commons-math-2017-02-01-census",
+    "commons-lang-2017-02-01-census",
+    "commons-cli-2017-02-01-census",
+    "commons-codec-2017-02-01-census",
+    "commons-collections-2017-02-01-census",
+    "commons-configuration-2017-02-01-census",
+    "commons-csv-2017-02-01-census",
+    "commons-email-2017-02-01-census",
+    "commons-io-2017-02-01-census",
+    "commons-jexl-2017-02-01-census",
+    "commons-pool-2017-02-01-census",
+    "commons-text-2017-02-01-census",
 )
 
 # Only these two Table-1 projects have successful PVC values in the published
 # Table-2 subset. The remaining values are explicitly zero successful reported
 # cases. The zero values encode the published successful-case subset.
 JARVIS_PROJECT_PBT_PVC = {
-    "commons-lang-3.5-census": 104,
-    "commons-math-3.5-census": 1604,
+    "commons-lang-2017-02-01-census": 104,
+    "commons-math-2017-02-01-census": 1604,
 }
 JARVIS_PROJECT_MUTS = {
-    "commons-lang-3.5-census": 2,
-    "commons-math-3.5-census": 7,
+    "commons-lang-2017-02-01-census": 2,
+    "commons-math-2017-02-01-census": 7,
 }
 
 _REQUIRED_STAGES = (
@@ -525,20 +525,23 @@ def build(conn: Connection) -> RQReport:
         df=comparison,
         columns=[
             ColumnSpec("Reported case", "table_row"),
-            ColumnSpec("Original CUT PVC", "original_cut_pvc", "count", "r"),
+            ColumnSpec("JARVIS CUT PVC", "original_cut_pvc", "count", "r"),
             ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", "count", "r"),
-            ColumnSpec("Teralizer PVC", "suite_pvc", "pvc", "r"),
+            ColumnSpec("Measured CUT PVC", "measured_cut_pvc", "pvc", "r"),
+            ColumnSpec("Teralizer suite PVC", "suite_pvc", "pvc", "r"),
         ],
         caption=(
-            "CUT and PBT PVC reported by JARVIS beside the measured PVC after "
-            "generalization with Teralizer."
+            "CUT and PBT PVC reported by JARVIS beside measured CUT and "
+            "post-generalization suite PVC on the reconstructed fixtures."
         ),
         label="tab:teralizer-rq0-table2",
+        latex_resize_to_width=True,
         note=(
-            "Original CUT PVC and JARVIS PBT PVC are the values reported by "
-            "JARVIS, with PBT PVC measuring the synthesized properties alone. "
-            "Teralizer PVC is the measured value coverage after generalization. "
-            "A dash marks a case Teralizer excludes from generalization."
+            "JARVIS CUT and PBT PVC are the published values, with PBT PVC "
+            "measuring the synthesized properties alone. Measured CUT PVC comes "
+            "from the reconstructed original tests. Teralizer suite PVC unions "
+            "those values with the generalized tests' values. A dash marks a "
+            "case Teralizer excludes from generalization."
         ),
         provenance=capture(compare_to_jarvis),
     )
@@ -558,6 +561,7 @@ def build(conn: Connection) -> RQReport:
         ],
         caption="Project-level PVC and MUT breadth for the RQ0 benchmark fixtures.",
         label="tab:teralizer-rq0-breadth",
+        latex_resize_to_width=True,
         note=(
             "JARVIS columns use zero for projects without a reported case. "
             "Teralizer aggregate PVC counts distinct values exercised by "
@@ -579,6 +583,7 @@ def build(conn: Connection) -> RQReport:
         ],
         caption="PVC rises with the tries budget while covered mutation score stays flat.",
         label="tab:teralizer-rq0-pvc",
+        latex_resize_to_width=True,
         note=(
             "PVC is a generation-volume diagnostic. Rows with persisted PIT "
             "results carry kills and mutation scores. Missing PIT results appear "

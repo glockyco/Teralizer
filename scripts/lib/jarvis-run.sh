@@ -136,10 +136,11 @@ jarvis_run() {
     "SELECT count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id} AND stage IN ('ANALYZE_JPF','EXECUTE_JPF');" 2>/dev/null | tr -d '[:space:]'); then
     jpf_excluded=${_q:-0}
   fi
-  # A timed-out or no-input-spec task carries an attrition diagnostic and is a measured limitation,
-  # not breakage, so exclude those the same way the planner excludes them from structural failures.
+  # Timed-out, no-input-spec, and proactively rejected oversized-generation tasks are measured
+  # attrition, not breakage. The latter predates task diagnostics and is identified by its stable
+  # exception message until the pipeline records a dedicated reason code.
   if _q=$(_jarvis_psql -tA -d "$JARVIS_DB_NAME" -c \
-    "SELECT count(*) FROM task t WHERE t.status='FAILED' AND t.id > ${baseline_task_id} AND t.stage NOT IN ('ANALYZE_JPF','EXECUTE_JPF') AND NOT EXISTS (SELECT 1 FROM task_diagnostic td WHERE td.task_id = t.id AND td.reason_code IN ('SUITE_TIMEOUT','EXECUTION_TIMEOUT','NO_INPUT_SPEC'));" 2>/dev/null | tr -d '[:space:]'); then
+    "SELECT count(*) FROM task t WHERE t.status='FAILED' AND t.id > ${baseline_task_id} AND t.stage NOT IN ('ANALYZE_JPF','EXECUTE_JPF') AND t.info NOT LIKE '%Failing generalization to avoid potential ''code too large'' compilation errors%' AND NOT EXISTS (SELECT 1 FROM task_diagnostic td WHERE td.task_id = t.id AND td.reason_code IN ('SUITE_TIMEOUT','EXECUTION_TIMEOUT','NO_INPUT_SPEC'));" 2>/dev/null | tr -d '[:space:]'); then
     breakage=${_q:-0}
   fi
   echo "  per-assertion JPF exclusions (non-fatal coverage gaps): ${jpf_excluded}"
@@ -151,7 +152,7 @@ jarvis_run() {
     echo "" >&2
     echo "${breakage} pipeline task(s) FAILED outside JPF analysis this run:" >&2
     _jarvis_psql -d "$JARVIS_DB_NAME" -c \
-      "SELECT p.root_path, t.stage, t.variant, left(t.info, 200) AS info_head FROM task t JOIN project p ON p.id = t.project_id WHERE t.status='FAILED' AND t.id > ${baseline_task_id} AND t.stage NOT IN ('ANALYZE_JPF','EXECUTE_JPF') AND NOT EXISTS (SELECT 1 FROM task_diagnostic td WHERE td.task_id = t.id AND td.reason_code IN ('SUITE_TIMEOUT','EXECUTION_TIMEOUT','NO_INPUT_SPEC')) ORDER BY t.id;" >&2 || true
+      "SELECT p.root_path, t.stage, t.variant, left(t.info, 200) AS info_head FROM task t JOIN project p ON p.id = t.project_id WHERE t.status='FAILED' AND t.id > ${baseline_task_id} AND t.stage NOT IN ('ANALYZE_JPF','EXECUTE_JPF') AND t.info NOT LIKE '%Failing generalization to avoid potential ''code too large'' compilation errors%' AND NOT EXISTS (SELECT 1 FROM task_diagnostic td WHERE td.task_id = t.id AND td.reason_code IN ('SUITE_TIMEOUT','EXECUTION_TIMEOUT','NO_INPUT_SPEC')) ORDER BY t.id;" >&2 || true
     exit 1
   fi
   if [[ "$gradle_failed" == true ]]; then

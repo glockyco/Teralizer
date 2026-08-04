@@ -6,34 +6,36 @@ BASE_DIR="$ROOT_DIR/data/jarvis-scoreboard"
 CACHE_DIR="$BASE_DIR/source-cache"
 FIXTURE_DIR="$BASE_DIR/fixtures"
 
+CUTOFF="2017-02-01T12:02:01Z"
 MATH_REPO="https://github.com/apache/commons-math.git"
-MATH_TAG="MATH_3_5"
-MATH_SHA="b3c5dae8f253fcb4484e5cd3cc5662587803efc2"
+MATH_REF="origin/master before $CUTOFF"
+MATH_SHA="657b1b49da5ea1593dd7f950eae99a88a8ada87a"
 LANG_REPO="https://github.com/apache/commons-lang.git"
-LANG_TAG="LANG_3_5"
-LANG_SHA="36f98d87b24c2f542b02abbf6ec1ee742f1b158b"
+LANG_REF="PR #230 base before the JARVIS-discovered fix"
+LANG_SHA="857e0de49293083aae6d3e6c6b76ec0755b1d0fa"
 
-# Census population: the 12 Apache Commons projects of JARVIS's Table 1. Version rule:
-# latest stable release as of 2016-10-13 (the LANG_3_5 release date). Exception: commons-text's
-# first stable release is 1.0 (2017-03), the nearest release.
-# Rows: <cache-name>|<repo-url>|<tag>|<commit-sha>|<fixture-artifact>
+# Census population: the 12 Apache Commons projects of JARVIS's Table 1. The paper does
+# not publish its checkout revisions. The Commons Lang fix submitted from the JARVIS
+# evaluation on 2017-02-01 provides the reconstruction cutoff. Each row pins the last
+# default-branch commit before that instant, except commons-lang, which pins the PR base.
+# Rows: <cache-name>|<repo-url>|<selection-basis>|<commit-sha>|<fixture-artifact>
 CENSUS_PROJECTS="\
-commons-math|$MATH_REPO|$MATH_TAG|$MATH_SHA|commons-math-3.5-census
-commons-lang|$LANG_REPO|$LANG_TAG|$LANG_SHA|commons-lang-3.5-census
-commons-cli|https://github.com/apache/commons-cli.git|cli-1.3.1|41d3dbf00f3e2041f5e407b9b96d8f048ab388d9|commons-cli-1.3.1-census
-commons-codec|https://github.com/apache/commons-codec.git|1.10|e9da3d16ae67f2940a0bbdf982ecec19a0481981|commons-codec-1.10-census
-commons-collections|https://github.com/apache/commons-collections.git|collections-4.1|cb157163d7543f942a1391f3ef752ebea1e1b349|commons-collections-4.1-census
-commons-configuration|https://github.com/apache/commons-configuration.git|CONFIGURATION_2_1|e814fe00bb51256386dd78f3f926aa30d8de6a7c|commons-configuration-2.1-census
-commons-csv|https://github.com/apache/commons-csv.git|rel/commons-csv-1.4|640b2f52dca971a977f146a32568ee00d33b45be|commons-csv-1.4-census
-commons-email|https://github.com/apache/commons-email.git|EMAIL_1_4|20ab7303a775342dc6ccfc8b0b7eb98b40738ec8|commons-email-1.4-census
-commons-io|https://github.com/apache/commons-io.git|commons-io-2.5|4077158829de92987367d3149e4ba71356bb5390|commons-io-2.5-census
-commons-jexl|https://github.com/apache/commons-jexl.git|COMMONS_JEXL_3_0|de6c4f3b00af4430f535fcb7833c480d9093fd35|commons-jexl-3.0-census
-commons-pool|https://github.com/apache/commons-pool.git|POOL_2_4_2|a187fd494b1d7f486edccb3356a70dd7846445a0|commons-pool-2.4.2-census
-commons-text|https://github.com/apache/commons-text.git|commons-text-1.0|e38039a3da2244741f5d33ab1b05bdee51c53c3e|commons-text-1.0-census"
+commons-math|$MATH_REPO|$MATH_REF|$MATH_SHA|commons-math-2017-02-01-census
+commons-lang|$LANG_REPO|$LANG_REF|$LANG_SHA|commons-lang-2017-02-01-census
+commons-cli|https://github.com/apache/commons-cli.git|origin/master before $CUTOFF|b486fbd33d9350b5faf27662f18841ae89128910|commons-cli-2017-02-01-census
+commons-codec|https://github.com/apache/commons-codec.git|origin/master before $CUTOFF|1a4d9cc2572d220664f1b7c377cd318cd253052e|commons-codec-2017-02-01-census
+commons-collections|https://github.com/apache/commons-collections.git|origin/master before $CUTOFF|3c1867e231093319b1bbbe5b0362d4063517cf24|commons-collections-2017-02-01-census
+commons-configuration|https://github.com/apache/commons-configuration.git|origin/master before $CUTOFF|98ae727a34e9460ef625bc072cbbd7f2b0471127|commons-configuration-2017-02-01-census
+commons-csv|https://github.com/apache/commons-csv.git|origin/master before $CUTOFF|b1e5d93a2f5309102bf09d4e2b8b9eb15ef3fc8b|commons-csv-2017-02-01-census
+commons-email|https://github.com/apache/commons-email.git|origin/master before $CUTOFF|edcd565ab2e77f0ac8c95fa7200ff1a1be7f8e0c|commons-email-2017-02-01-census
+commons-io|https://github.com/apache/commons-io.git|origin/master before $CUTOFF|54631643211e2dc29beaecc30e4eedf2928738d7|commons-io-2017-02-01-census
+commons-jexl|https://github.com/apache/commons-jexl.git|origin/master before $CUTOFF|b212a407b74687c1f861dd0cb5cff90b9da32082|commons-jexl-2017-02-01-census
+commons-pool|https://github.com/apache/commons-pool.git|origin/master before $CUTOFF|6a088d1b8a4aa343362cdf4e749b7c5fca38971b|commons-pool-2017-02-01-census
+commons-text|https://github.com/apache/commons-text.git|origin/master before $CUTOFF|d24d8b257135e06fe89d6569a897c44e4466281a|commons-text-2017-02-01-census"
 
 require_git_pin() {
   local repo_dir="$1"
-  local tag="$2"
+  local ref="$2"
   local sha="$3"
   local url="$4"
 
@@ -42,12 +44,12 @@ require_git_pin() {
     git clone --no-checkout "$url" "$repo_dir"
   fi
 
-  git -C "$repo_dir" fetch --tags --force origin "$tag"
-  git -C "$repo_dir" checkout --force "$tag"
+  git -C "$repo_dir" fetch --tags --force origin
+  git -C "$repo_dir" checkout --force --detach "$sha"
   local actual
   actual=$(git -C "$repo_dir" rev-parse HEAD)
   if [[ "$actual" != "$sha" ]]; then
-    echo "Pin mismatch for $repo_dir: expected $sha, got $actual" >&2
+    echo "Pin mismatch for $repo_dir ($ref): expected $sha, got $actual" >&2
     exit 1
   fi
 }
@@ -126,6 +128,14 @@ prepare_census_fixture() {
   write_census_pom "$artifact" "$dst" "$deps"
   cp -R "$repo_dir/src/main" "$dst/src/"
   cp -R "$repo_dir/src/test" "$dst/src/"
+  if [[ "$artifact" == "commons-math-2017-02-01-census" ]]; then
+    # Teralizer expands testQuinticFunction's large coefficient table into one
+    # generated method that exceeds the JVM's 64 KiB bytecode limit. Exclude the
+    # containing source class at fixture construction so the remaining generated
+    # suite can be compiled and executed; record the exclusion in PROVENANCE.md.
+    rm "$dst/src/test/java/org/apache/commons/math4/analysis/integration/SimpsonIntegratorTest.java"
+    echo "- excluded SimpsonIntegratorTest: generated testQuinticFunction exceeds the JVM method-size limit"
+  fi
   materialize_generated_sources "$repo_dir" "$dst"
   prune_benchmarks "$dst"
   local test_files
@@ -180,17 +190,17 @@ census_compile_gate() {
 }
 
 write_math_scorecard_tests() {
-  local dst="$1/src/test/java/org/apache/commons/math3/jarvis"
+  local dst="$1/src/test/java/org/apache/commons/math4/jarvis"
   mkdir -p "$dst"
 
   cat > "$dst/JarvisMathScorecardTest.java" <<'JAVA'
-package org.apache.commons.math3.jarvis;
+package org.apache.commons.math4.jarvis;
 
-import org.apache.commons.math3.analysis.function.Abs;
-import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
-import org.apache.commons.math3.geometry.euclidean.oned.Interval;
-import org.apache.commons.math3.util.FastMath;
-import org.apache.commons.math3.util.Precision;
+import org.apache.commons.math4.analysis.function.Abs;
+import org.apache.commons.math4.analysis.polynomials.PolynomialFunction;
+import org.apache.commons.math4.geometry.euclidean.oned.Interval;
+import org.apache.commons.math4.util.FastMath;
+import org.apache.commons.math4.util.Precision;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -288,27 +298,31 @@ JAVA
 
 prepare_math_fixture() {
   local repo_dir="$CACHE_DIR/commons-math"
-  local dst="$FIXTURE_DIR/commons-math-3.5"
+  local dst="$FIXTURE_DIR/commons-math-2017-02-01"
+  local deps
+  deps=$(python3 "$ROOT_DIR/scripts/lib/extract-pom-deps.py" "$repo_dir/pom.xml")
   rm -rf "$dst"
   mkdir -p "$dst/src"
-  write_pom "commons-math-3.5-scoreboard" "$dst"
+  write_census_pom "commons-math-2017-02-01-scoreboard" "$dst" "$deps"
   cp -R "$repo_dir/src/main" "$dst/src/"
   write_math_scorecard_tests "$dst"
 }
 
 prepare_lang_fixture() {
   local repo_dir="$CACHE_DIR/commons-lang"
-  local dst="$FIXTURE_DIR/commons-lang-3.5"
+  local dst="$FIXTURE_DIR/commons-lang-2017-02-01"
+  local deps
+  deps=$(python3 "$ROOT_DIR/scripts/lib/extract-pom-deps.py" "$repo_dir/pom.xml")
   rm -rf "$dst"
   mkdir -p "$dst/src"
-  write_pom "commons-lang-3.5-scoreboard" "$dst"
+  write_census_pom "commons-lang-2017-02-01-scoreboard" "$dst" "$deps"
   cp -R "$repo_dir/src/main" "$dst/src/"
   write_lang_scorecard_tests "$dst"
 }
 
 mkdir -p "$CACHE_DIR" "$FIXTURE_DIR"
-require_git_pin "$CACHE_DIR/commons-math" "$MATH_TAG" "$MATH_SHA" "$MATH_REPO"
-require_git_pin "$CACHE_DIR/commons-lang" "$LANG_TAG" "$LANG_SHA" "$LANG_REPO"
+require_git_pin "$CACHE_DIR/commons-math" "$MATH_REF" "$MATH_SHA" "$MATH_REPO"
+require_git_pin "$CACHE_DIR/commons-lang" "$LANG_REF" "$LANG_SHA" "$LANG_REPO"
 
 if [[ "${1:-}" == "--census" ]]; then
   CENSUS_FIXTURE_DIR="$ROOT_DIR/data/jarvis-census/fixtures"
@@ -317,10 +331,11 @@ if [[ "${1:-}" == "--census" ]]; then
   {
     echo "# Census fixture provenance"
     echo
-    echo "Population: the 12 Apache Commons projects of JARVIS's Table 1, pinned to the"
-    echo "latest stable release as of 2016-10-13 (LANG_3_5's release date); commons-text has"
-    echo "no release in the window, so it pins the first stable 1.0 (2017-03). Each fixture"
-    echo "carries the full upstream src/test and the dependency closure of its pinned POM."
+    echo "Population: the 12 Apache Commons projects of JARVIS's Table 1. The paper does"
+    echo "not identify checkout revisions. These fixtures use the last default-branch commit"
+    echo "before $CUTOFF; commons-lang instead uses PR #230's base immediately before the"
+    echo "JARVIS-discovered test fix. Each fixture carries the full upstream src/test and"
+    echo "the dependency closure of its pinned POM."
     echo
     while IFS='|' read -r name url tag sha artifact; do
       require_git_pin "$CACHE_DIR/$name" "$tag" "$sha" "$url" >/dev/null
@@ -345,8 +360,8 @@ Generated by scripts/prepare-jarvis-scoreboard-fixtures.sh.
 
 ## Execution inputs
 
-- commons-math: $MATH_REPO, tag $MATH_TAG, commit $MATH_SHA, Apache-2.0. Fixture root: data/jarvis-scoreboard/fixtures/commons-math-3.5.
-- commons-lang: $LANG_REPO, tag $LANG_TAG, commit $LANG_SHA, Apache-2.0. Fixture root: data/jarvis-scoreboard/fixtures/commons-lang-3.5.
+- commons-math: $MATH_REPO, $MATH_REF, commit $MATH_SHA, Apache-2.0. Fixture root: data/jarvis-scoreboard/fixtures/commons-math-2017-02-01.
+- commons-lang: $LANG_REPO, $LANG_REF, commit $LANG_SHA, Apache-2.0. Fixture root: data/jarvis-scoreboard/fixtures/commons-lang-2017-02-01.
 
 ## Reference-only sources
 

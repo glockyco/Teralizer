@@ -22,6 +22,10 @@ def render_table(table: Table) -> str:
         f"  \\caption{{{table.caption}}}",
         f"  \\label{{{table.label}}}",
         "  \\centering",
+    ]
+    if table.latex_resize_to_width:
+        lines.append("  \\resizebox{\\textwidth}{!}{%")
+    lines += [
         f"  \\begin{{tabular}}{{{cols}}}",
         "  \\toprule",
         "  " + " & ".join(c.header for c in table.columns) + " \\\\",
@@ -39,7 +43,10 @@ def render_table(table: Table) -> str:
             + " & ".join(_cell(row[c.source], c.fmt) for c in table.columns)
             + " \\\\"
         )
-    lines += ["  \\bottomrule", "  \\end{tabular}", "\\end{table}", ""]
+    lines += ["  \\bottomrule", "  \\end{tabular}"]
+    if table.latex_resize_to_width:
+        lines.append("  }")
+    lines += ["\\end{table}", ""]
     return "\n".join(lines)
 
 

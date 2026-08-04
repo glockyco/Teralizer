@@ -22,6 +22,20 @@ def test_render_table_is_booktabs_with_formatted_cells():
     assert "\\label{tab:funnel}" in tex
 
 
+def test_render_table_can_fit_text_width():
+    table = Table(
+        key="wide",
+        df=pd.DataFrame({"value": [1]}),
+        columns=[ColumnSpec("Value", "value", "count", align="r")],
+        caption="Wide",
+        label="tab:wide",
+        latex_resize_to_width=True,
+    )
+    tex = render_table(table)
+    assert "\\resizebox{\\textwidth}{!}{%" in tex
+    assert "  \\end{tabular}\n  }\n\\end{table}" in tex
+
+
 def test_render_macros_one_newcommand_per_metric():
     report = RQReport(
         "rq6",

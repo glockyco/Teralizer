@@ -2,8 +2,8 @@
 # One-off CUT-PVC capture for the RQ0 JARVIS comparison.
 #
 # Runs the JARVIS Table-2 test cases from the ORIGINAL Commons suites on the
-# pinned source checkouts (data/jarvis-scoreboard/source-cache, tags LANG_3_5 /
-# MATH_3_5) with the cut-pvc-capture javaagent attached, recording the
+# pinned source checkouts (data/jarvis-scoreboard/source-cache, reconstructed at
+# the 2017-02-01 cutoff) with the cut-pvc-capture javaagent attached, recording the
 # parameter values each case passes to its methods under test. The capture is
 # standalone by design: it never touches the Teralizer processing pipeline.
 #

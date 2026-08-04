@@ -1,6 +1,12 @@
 package teralizer.processing.diagnostics;
 
 import com.google.gson.JsonObject;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 import gov.nasa.jpf.JPFListenerException;
 import gov.nasa.jpf.JPFNativePeerException;
 import java.util.EnumSet;
@@ -9,8 +15,12 @@ import teralizer.jpf.ExtractionAborted;
 import teralizer.jpf.ExtractionOutcome;
 import teralizer.processing.ProcessingStage;
 import teralizer.transformer.UnsupportedSpfTermException;
+import teralizer.util.ConsoleCommandException;
 
 public final class TaskDiagnosticClassifier {
+
+    private static final org.slf4j.Logger LOGGER =
+        org.slf4j.LoggerFactory.getLogger(TaskDiagnosticClassifier.class);
     private static final String NO_UNCAUGHT_EXCEPTIONS_PROPERTY =
         "gov.nasa.jpf.vm.NoUncaughtExceptionsProperty";
 
@@ -76,7 +86,79 @@ public final class TaskDiagnosticClassifier {
         if (contains(failure, "Identified") && contains(failure, "error(s) during JPF execution")) {
             return classifyJpfUncaughtFailure(failure);
         }
+        Diagnostic commandFailure = classifyCommandFailure(failure);
+        if (commandFailure != null) {
+            return commandFailure;
+        }
         return diagnostic(TaskDiagnosticCodes.LISTENER_BUG, messageDetail(failure));
+    }
+
+    /**
+     * Types a failed Maven command from its captured output. A coverage or mutation command reports
+     * only an exit code and the paths of its stdout and stderr files, so the discriminating text has
+     * to be read back from disk. That is the same approach {@code TestExecutionTask} already takes
+     * when it inspects a failed test run. Returns null when the failure is not a command failure or
+     * its output is unreadable, leaving the caller's fallback in place.
+     */
+    private static Diagnostic classifyCommandFailure(Throwable failure) {
+        ConsoleCommandException command = commandException(failure);
+        if (command == null) {
+            return null;
+        }
+        String output = readCommandOutput(command);
+        if (output.isEmpty()) {
+            return null;
+        }
+        // Ordered: a dead minion and an unusable plugin both also print a Maven build failure, so
+        // the specific markers have to be tested before any general one.
+        if (output.contains("MINION_DIED") || output.contains("Could not find or load main class")) {
+            return diagnostic(TaskDiagnosticCodes.MINION_DIED, commandDetail(command, "minion exited abnormally"));
+        }
+        if (output.contains("does not have a no-args constructor") || output.contains("mutationCoverage failed: null")) {
+            return diagnostic(TaskDiagnosticCodes.PLUGIN_UNUSABLE, commandDetail(command, "plugin version cannot run"));
+        }
+        if (output.contains("did not pass without mutation")) {
+            return diagnostic(TaskDiagnosticCodes.SUITE_NOT_GREEN, commandDetail(command, "unmutated suite has failing tests"));
+        }
+        if (output.contains("No tests found")) {
+            return diagnostic(TaskDiagnosticCodes.NO_TESTS_FOUND, commandDetail(command, "no tests visible to the tool"));
+        }
+        return null;
+    }
+
+    private static ConsoleCommandException commandException(Throwable failure) {
+        for (Throwable current = failure; current != null; current = current.getCause()) {
+            if (current instanceof ConsoleCommandException) {
+                return (ConsoleCommandException) current;
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+        }
+        return null;
+    }
+
+    private static String readCommandOutput(ConsoleCommandException command) {
+        StringBuilder text = new StringBuilder();
+        for (Path path : new Path[]{command.getErrorPath(), command.getOutputPath()}) {
+            if (path == null || !Files.exists(path)) {
+                continue;
+            }
+            try (Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8)) {
+                lines.forEach(line -> text.append(line).append('\n'));
+            } catch (IOException | UncheckedIOException e) {
+                LOGGER.atDebug().log("Could not read captured command output: " + path);
+            }
+        }
+        return text.toString();
+    }
+
+    private static String commandDetail(ConsoleCommandException command, String summary) {
+        JsonObject json = new JsonObject();
+        json.addProperty("throwable_type", command.getClass().getName());
+        json.addProperty("message", command.getMessage());
+        json.addProperty("summary", summary);
+        return json.toString();
     }
 
     public static Diagnostic fromOutcome(ExtractionOutcome outcome) {

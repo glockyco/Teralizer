@@ -28,7 +28,7 @@ CUT_VALUES_PATH = (
 )
 
 _LANG = "org.apache.commons.lang3"
-_MATH = "org.apache.commons.math3"
+_MATH = "org.apache.commons.math4"
 
 
 class CaptureTarget(TypedDict):
@@ -206,14 +206,11 @@ CAPTURE_PLAN: tuple[CaptureCase, ...] = (
         ),
     },
     {
-        # MATH_3_5 contains no UnivariateFunctionTest and no direct Abs.value
-        # test, so the reported case has no counterpart in the pinned original
-        # suite. The row's measured CUT PVC stays unavailable.
         "slug": "testabs",
         "table_row": "UnivariateFunctionTest::testAbs",
         "project": "commons-math",
-        "caller": "",
-        "tests": (),
+        "caller": f"{_MATH}.analysis.function.UnivariateFunctionTest",
+        "tests": ("UnivariateFunctionTest#testAbs",),
         "targets": (
             {
                 "agent": f"{_MATH}.analysis.function.Abs#value(double)",

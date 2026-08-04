@@ -170,7 +170,7 @@ def test_census_project_pvc_unions_duplicate_inputs_by_mut(tmp_path):
         _create_census_schema(conn)
         conn.execute(
             "INSERT INTO project VALUES (1, ?)",
-            ("data/fixtures/commons-lang-3.5-census",),
+            ("data/fixtures/commons-lang-2017-02-01-census",),
         )
         conn.executemany(
             "INSERT INTO test VALUES (?, 1, ?)",
@@ -207,8 +207,8 @@ def test_census_project_pvc_unions_duplicate_inputs_by_mut(tmp_path):
         assert by_mut.loc[0, "sound_properties"] == 2
         assert by_mut.loc[0, "all_property_executions"] == 2
         assert by_mut.loc[0, "source_test_classes"] == 2
-        assert project_pvc.loc["commons-lang-3.5-census", "aggregate_pvc"] == 3
-        assert project_pvc.loc["commons-lang-3.5-census", "sound_muts"] == 1
+        assert project_pvc.loc["commons-lang-2017-02-01-census", "aggregate_pvc"] == 3
+        assert project_pvc.loc["commons-lang-2017-02-01-census", "sound_muts"] == 1
     finally:
         conn.close()
 
@@ -226,7 +226,10 @@ def test_breadth_keeps_available_pvc_when_task_status_failed():
     )
     project_pvc = pd.DataFrame(
         {
-            "project": ["commons-math-3.5-census", "commons-lang-3.5-census"],
+            "project": [
+                "commons-math-2017-02-01-census",
+                "commons-lang-2017-02-01-census",
+            ],
             "variant": ["IMPROVED_100_TRIES", "IMPROVED_100_TRIES"],
             "aggregate_pvc": [42, 84],
             "sound_muts": [3, 5],
@@ -234,10 +237,10 @@ def test_breadth_keeps_available_pvc_when_task_status_failed():
         }
     )
     breadth = _build_breadth_table(ledger, project_pvc).set_index("project")
-    assert breadth.loc["commons-lang-3.5-census", "aggregate_pvc"] == 84
-    assert breadth.loc["commons-lang-3.5-census", "sound_muts"] == 5
-    assert breadth.loc["commons-lang-3.5-census", "sound_properties"] == 6
-    assert pd.isna(breadth.loc["commons-cli-1.3.1-census", "aggregate_pvc"])
+    assert breadth.loc["commons-lang-2017-02-01-census", "aggregate_pvc"] == 84
+    assert breadth.loc["commons-lang-2017-02-01-census", "sound_muts"] == 5
+    assert breadth.loc["commons-lang-2017-02-01-census", "sound_properties"] == 6
+    assert pd.isna(breadth.loc["commons-cli-2017-02-01-census", "aggregate_pvc"])
 
 
 def test_budget_marks_missing_pit_variants_unavailable():
@@ -287,7 +290,7 @@ def test_suite_union_joins_captured_and_generated_values(tmp_path):
             "mut_class": [
                 "org.apache.commons.lang3.CharUtils",
                 "org.apache.commons.lang3.CharUtils",
-                "org.apache.commons.math3.util.Precision",
+                "org.apache.commons.math4.util.Precision",
             ],
             "mut_method": ["isAscii", "isAscii", "equals"],
             "parameter": ["p0", "p0", "p0"],
