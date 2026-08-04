@@ -29,6 +29,7 @@ import spoon.Launcher;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.Factory;
 import teralizer.processing.ProcessingStage;
@@ -321,6 +322,30 @@ public class JunitDataCollectionTask extends AbstractTask {
             || expectedQualifiedName.endsWith("." + normalizedReportName);
     }
 
+    /**
+     * A JUnit 3 test: no annotation, the conventional {@code test} name prefix, no parameters, and
+     * a {@code junit.framework.TestCase} ancestor. The ancestor is checked through superclass
+     * references rather than declarations, because TestCase itself is not part of the Spoon model.
+     */
+    static boolean isJunit3TestMethod(CtMethod<?> testMethod, CtClass<?> declaringClass) {
+        if (!testMethod.getSimpleName().startsWith(Configuration.JUNIT3_METHOD_PREFIX)
+            || !testMethod.getParameters().isEmpty()) {
+            return false;
+        }
+        return extendsTestCase(declaringClass);
+    }
+
+    private static boolean extendsTestCase(CtClass<?> declaringClass) {
+        CtTypeReference<?> superclass = declaringClass == null ? null : declaringClass.getSuperclass();
+        while (superclass != null) {
+            if (Configuration.JUNIT3_TEST_CASE_CLASS.equals(superclass.getQualifiedName())) {
+                return true;
+            }
+            superclass = superclass.getSuperclass();
+        }
+        return false;
+    }
+
     private static String replaceSpaces(String text) {
         if (text == null) {
             return null;
@@ -401,6 +426,8 @@ public class JunitDataCollectionTask extends AbstractTask {
         if (testAnnotation != null) {
             String annotationName = testAnnotation.getType().getSimpleName();
             record.setTestAnnotationName(annotationName);
+        } else if (isJunit3TestMethod(testMethod, declaringClass)) {
+            record.setTestAnnotationName(Configuration.TEST_MARKER_JUNIT3);
         }
 
         record.setTestAnnotationsSourceCode(testMethod.getAnnotations().stream()

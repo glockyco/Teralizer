@@ -325,6 +325,47 @@ public class JpfInstrumentationTaskTest {
     }
 
 
+    @Example
+    void beforeMethodsForIncludesJunit3SetUpParentFirst() {
+        CtClass<?> testClass = testClassFromSource(
+            "package smoke;\n"
+                + "public class BaseCase extends junit.framework.TestCase {\n"
+                + "  protected int parentCalls;\n"
+                + "  protected void setUp() throws Exception { parentCalls++; }\n"
+                + "}\n",
+            "package smoke;\n"
+                + "public class SubjectTest extends BaseCase {\n"
+                + "  protected void setUp() throws Exception { super.setUp(); }\n"
+                + "  public void testThing() { }\n"
+                + "}\n",
+            "package smoke;\n"
+                + "public class ExpressionSliceCut { }\n"
+        );
+
+        List<String> declaring = JpfInstrumentationTask.beforeMethodsFor(testClass).stream()
+            .map(method -> ((CtClass<?>) method.getParent(CtClass.class)).getSimpleName())
+            .collect(Collectors.toList());
+
+        Assert.assertEquals(java.util.Arrays.asList("BaseCase", "SubjectTest"), declaring);
+    }
+
+    @Example
+    void beforeMethodsForIgnoresSetUpOutsideJunit3() {
+        CtClass<?> testClass = testClassFromSource(
+            "package smoke;\n"
+                + "public class AbstractBase { }\n",
+            "package smoke;\n"
+                + "public class SubjectTest {\n"
+                + "  public void setUp() { }\n"
+                + "  public void testThing() { }\n"
+                + "}\n",
+            "package smoke;\n"
+                + "public class ExpressionSliceCut { }\n"
+        );
+
+        Assert.assertTrue(JpfInstrumentationTask.beforeMethodsFor(testClass).isEmpty());
+    }
+
     private static CtClass<?> testClassFromSource(String parentSource, String testSource, String cutSource) {
         Launcher launcher = new Launcher();
         launcher.addInputResource(new VirtualFile(parentSource, "AbstractBase.java"));

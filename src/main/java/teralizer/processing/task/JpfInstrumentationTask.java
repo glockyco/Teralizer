@@ -24,6 +24,7 @@ import spoon.Launcher;
 import spoon.reflect.code.*;
 import spoon.reflect.declaration.*;
 import spoon.reflect.factory.Factory;
+import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -255,14 +256,35 @@ public class JpfInstrumentationTask extends AbstractTask {
                 : null;
         }
 
+        boolean junit3 = extendsTestCase(testClass);
         Set<CtMethod<?>> beforeMethods = new LinkedHashSet<>();
         for (CtClass<?> currentClass : hierarchy) {
             for (String annotationName : BEFORE_ANNOTATIONS) {
                 beforeMethods.addAll(currentClass.getMethodsAnnotatedWith(
                     currentClass.getFactory().Annotation().createReference(annotationName)));
             }
+            // JUnit 3 declares its fixture by overriding setUp rather than by annotation. The
+            // hierarchy is walked parent first, so an inherited fixture still runs before its
+            // override, matching the framework's own order.
+            if (junit3) {
+                CtMethod<?> setUp = currentClass.getMethod(Configuration.JUNIT3_FIXTURE_METHOD);
+                if (setUp != null) {
+                    beforeMethods.add(setUp);
+                }
+            }
         }
         return beforeMethods;
+    }
+
+    private static boolean extendsTestCase(CtClass<?> testClass) {
+        CtTypeReference<?> superclass = testClass == null ? null : testClass.getSuperclass();
+        while (superclass != null) {
+            if (Configuration.JUNIT3_TEST_CASE_CLASS.equals(superclass.getQualifiedName())) {
+                return true;
+            }
+            superclass = superclass.getSuperclass();
+        }
+        return false;
     }
 
     private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod) throws IOException {

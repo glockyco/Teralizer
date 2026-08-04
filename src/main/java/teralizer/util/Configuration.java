@@ -190,7 +190,13 @@ public class Configuration {
     public static final String TEST_ANNOTATION_REPEATED = "RepeatedTest";
     public static final String TEST_ANNOTATION_PARAMETERIZED = "ParameterizedTest";
     public static final String TEST_ANNOTATION_PROPERTY = "Property";
-    public static final List<String> SUPPORTED_TEST_ANNOTATIONS = Collections.singletonList(TEST_ANNOTATION_TEST);
+    // JUnit 3 tests carry no annotation. They are recorded under this synthetic marker so the
+    // rest of the pipeline can treat "how a test declares itself" uniformly.
+    public static final String TEST_MARKER_JUNIT3 = "TestCase";
+    public static final String JUNIT3_TEST_CASE_CLASS = "junit.framework.TestCase";
+    public static final String JUNIT3_METHOD_PREFIX = "test";
+    public static final String JUNIT3_FIXTURE_METHOD = "setUp";
+    public static final List<String> SUPPORTED_TEST_ANNOTATIONS = Arrays.asList(TEST_ANNOTATION_TEST, TEST_MARKER_JUNIT3);
     public static final List<String> KNOWN_TEST_ANNOTATIONS = Arrays.asList(TEST_ANNOTATION_TEST, TEST_ANNOTATION_REPEATED, TEST_ANNOTATION_PARAMETERIZED, TEST_ANNOTATION_PROPERTY);
 
     public static final String TEST_PARAMETERS_CLASS_NAME = "TestParameters";
