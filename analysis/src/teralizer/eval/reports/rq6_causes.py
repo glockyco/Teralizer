@@ -268,18 +268,85 @@ def build(conn: Connection) -> RQReport:
         filtering, provenance=capture(_fetch_filtering, query=FILTERING_SQL)
     )
 
+    funnel_provenance = capture(_funnel.build_funnel)
+    breakdown_provenance = capture(_fetch_breakdown, query=BREAKDOWN_SQL)
+    levels = breakdown_data.set_index("level")
+    assertions = levels.loc["Assertion"]
+    generalizations = levels.loc["Generalization"]
     metrics = [
         Metric(
             "realworld.eligible_projects",
             funnel.eligible,
             fmt="int",
-            provenance=capture(_funnel.build_funnel),
+            provenance=funnel_provenance,
         ),
         Metric(
-            "realworld.overall_inclusion_pct",
+            "realworld.applicability_projects",
+            funnel.success_count,
+            fmt="int",
+            provenance=funnel_provenance,
+        ),
+        Metric(
+            "realworld.applicability_pct",
             funnel.success_count / funnel.eligible,
             fmt="pct1",
-            provenance=capture(_funnel.build_funnel),
+            provenance=funnel_provenance,
+        ),
+        Metric(
+            "realworld.assertions_total",
+            int(assertions["total"]),
+            fmt="count",
+            provenance=breakdown_provenance,
+        ),
+        Metric(
+            "realworld.assertions_included",
+            int(assertions["included"]),
+            fmt="count",
+            provenance=breakdown_provenance,
+        ),
+        Metric(
+            "realworld.assertions_included_pct",
+            int(assertions["included"]) / int(assertions["total"]),
+            fmt="pct1",
+            provenance=breakdown_provenance,
+        ),
+        Metric(
+            "realworld.generalization_attempts",
+            int(generalizations["total"]),
+            fmt="count",
+            provenance=breakdown_provenance,
+        ),
+        Metric(
+            "realworld.generalizations_validated",
+            int(generalizations["included"]),
+            fmt="count",
+            provenance=breakdown_provenance,
+        ),
+        Metric(
+            "realworld.generalization_validated_pct",
+            int(generalizations["included"]) / int(generalizations["total"]),
+            fmt="pct1",
+            provenance=breakdown_provenance,
+        ),
+        # Reduction attrition justifies ending the funnel at Stage 4. Reported as
+        # exclusions and their side, never as a rival inclusion denominator.
+        Metric(
+            "realworld.reduction_entering_projects",
+            funnel.reduction.entering,
+            fmt="int",
+            provenance=funnel_provenance,
+        ),
+        Metric(
+            "realworld.reduction_excluded_projects",
+            funnel.reduction.exclusions,
+            fmt="int",
+            provenance=funnel_provenance,
+        ),
+        Metric(
+            "realworld.reduction_excluded_baseline_side",
+            funnel.reduction_excluded_baseline_side,
+            fmt="int",
+            provenance=funnel_provenance,
         ),
     ]
     section = Section(

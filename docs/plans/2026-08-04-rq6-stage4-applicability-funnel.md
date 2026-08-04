@@ -96,14 +96,14 @@ presentation helpers, and every RQ0–RQ4 report.
 - Modify: `analysis/src/teralizer/eval/reports/rq6_causes.py`
 - Test: `analysis/tests/eval/test_rq6_causes.py`
 
-- [ ] Replace the `realworld.overall_inclusion_pct` metric with
+- [x] Replace the `realworld.overall_inclusion_pct` metric with
       `realworld.applicability_projects` (73) and `realworld.applicability_pct` (0.119),
-      and add `realworld.assertions_total` (135,628), `realworld.assertions_included` (4,530),
+      and add `realworld.assertions_total` (135,628), `realworld.assertions_included` (4,528),
       `realworld.assertions_included_pct` (0.033), `realworld.generalization_attempts` (4,121),
       `realworld.generalizations_validated` (1,061), and
       `realworld.generalization_validated_pct` (0.257). Keep `realworld.eligible_projects`.
 
-- [ ] Add the reduction-attrition metrics the chapter cites to justify ending the funnel at
+- [x] Add the reduction-attrition metrics the chapter cites to justify ending the funnel at
       Stage 4: `realworld.reduction_entering_projects` (73),
       `realworld.reduction_excluded_projects` (31), and
       `realworld.reduction_excluded_baseline_side` (28), the last counting projects whose
@@ -118,7 +118,7 @@ presentation helpers, and every RQ0–RQ4 report.
   Expected: every listed key resolves, percentages are fractions in `[0, 1]`, and
   `realworld.overall_inclusion_pct` is absent.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `feat(eval): expose RQ6 applicability metrics`
 
 ### Task 4: Regenerate the report and the macro file

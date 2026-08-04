@@ -142,10 +142,43 @@ def test_rq6_filtering_table_is_entity_conservative():
     assert (reconstructed == filtering.df["total"]).all()
 
 
-def test_rq6_overall_inclusion_metric_is_a_fraction():
+def test_rq6_metrics_cover_applicability_and_are_well_formed():
     report = _report()
-    pct = report.metric("realworld.overall_inclusion_pct")
-    assert pct.fmt == "pct1"
-    assert 0.0 <= float(pct.value) <= 1.0
-    eligible = report.metric("realworld.eligible_projects")
-    assert int(eligible.value) > 0
+    eligible = int(report.metric("realworld.eligible_projects").value)
+    assert eligible > 0
+
+    for key in (
+        "realworld.applicability_pct",
+        "realworld.assertions_included_pct",
+        "realworld.generalization_validated_pct",
+    ):
+        metric = report.metric(key)
+        assert metric.fmt == "pct1"
+        assert 0.0 <= float(metric.value) <= 1.0
+
+    applicable = int(report.metric("realworld.applicability_projects").value)
+    assert 0 < applicable <= eligible
+
+    included = int(report.metric("realworld.assertions_included").value)
+    assert included < int(report.metric("realworld.assertions_total").value)
+    validated = int(report.metric("realworld.generalizations_validated").value)
+    assert validated < int(report.metric("realworld.generalization_attempts").value)
+
+    with pytest.raises(KeyError):
+        report.metric("realworld.overall_inclusion_pct")
+
+
+def test_rq6_reduction_attrition_metrics_are_not_a_denominator():
+    report = _report()
+    entering = int(report.metric("realworld.reduction_entering_projects").value)
+    excluded = int(report.metric("realworld.reduction_excluded_projects").value)
+    baseline_side = int(
+        report.metric("realworld.reduction_excluded_baseline_side").value
+    )
+    assert entering == int(report.metric("realworld.applicability_projects").value)
+    assert 0 < excluded < entering
+    assert 0 < baseline_side <= excluded
+    assert not any(
+        key.endswith("reduction_included") or key.endswith("reduction_inclusion_pct")
+        for key in (metric.key for metric in report.metrics)
+    )

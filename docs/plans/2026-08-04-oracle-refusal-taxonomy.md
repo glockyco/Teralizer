@@ -20,7 +20,7 @@ recovery directions carry real leverage. Measured 2026-08-04 over
 | Level | Total | Included | Filtering | Failures |
 |---|---|---|---|---|
 | Test | 85,372 | 36,118 (42.3%) | 42,965 | 6,289 |
-| Assertion | 135,628 | 4,530 (3.3%) | 125,187 | 5,913 |
+| Assertion | 135,628 | 4,528 (3.3%) | 125,187 | 5,913 |
 | Generalization | 4,121 | 1,061 filter-passed (25.7%) | 3,019 | 41 |
 
 Generalization lifecycle, per attempt: 1,412 source created, 1,386 compiled,
