@@ -110,3 +110,50 @@ Successful PIT work is only 4.2 h of the 12.6 h: `INITIAL` p50 43 s, p90 326 s, 
 five budget-exceeded projects consume 5 h between them, more than all successful PIT
 work combined. That cost is accepted: resource limits are part of the measurement, not
 a defect to tune away.
+
+## Extraction failures are test-setup failures, not exceptional paths
+
+`UNCAUGHT_EXCEPTION_PATH` is the residual bucket of `classifyJpfUncaughtFailure` after
+native-peer, model-class, and model-method gaps are recognized
+(`TaskDiagnosticClassifier.java:137-153`). Its 1,783 assertions decompose by thrown type:
+
+| Exception | Assertions | Projects |
+|---|---|---|
+| `NullPointerException` | 619 | 45 |
+| `UnsupportedOperationException` | 403 | 42 |
+| `java.lang.Error` | 213 | 8 |
+| `IllegalStateException` | 153 | 11 |
+| `IllegalArgumentException` | 143 | 12 |
+| `NoClassDefFoundError` | 98 | 4 |
+| remainder (`RuntimeException`, `ArrayIndexOutOfBounds`, `FileNotFoundException`, …) | 154 | — |
+
+Reading the stack traces shows these are overwhelmingly environment and model gaps reached
+during test setup rather than exceptional behavior of a tested method:
+
+- every sampled `UnsupportedOperationException` originates at
+  `java.lang.Class.getProtectionDomain` inside `org.mockito.cglib.core.ReflectUtils.<clinit>`,
+  so a project using Mockito cannot initialize under JPF at all;
+- `java.lang.Error: java.lang.NoSuchFieldException: tid` arises in
+  `ReentrantReadWriteLock.<clinit>` via log4j's `StatusLogger`, a JPF thread-model gap;
+- sampled `NullPointerException`s are null resource streams — `Properties.load`,
+  `InputStreamReader.read` under commons-io — and null dependency-injected fields, alongside
+  a minority of genuine application errors such as `Error: You have to run first the check method`.
+
+Consequence: this class is not cheaply recoverable, and the code name misleads. A reader of
+`UNCAUGHT_EXCEPTION_PATH` would conclude the tested method threw, when the common case is that
+the test fixture cannot run under JPF.
+
+## Absent coverage reports share one shape
+
+The 8 projects whose `INITIAL` JaCoCo report is missing are 12, 13, 410, 693, 819, 1098, 1105,
+1115. For the 6 with a retained command log, Maven reported success and no execution data file
+appeared, which is the same signature as the argLine defect rather than a build failure.
+Projects 819 and 1098 retain no command log. Deciding whether these are recoverable needs one
+live check per project, not further log reading.
+
+## Unsupported test types are JUnit 3 methods
+
+All 9,617 tests rejected by `TestType` carry no test annotation at all, and 9,534 of them
+(99.1%) use the JUnit 3 naming convention, across 72 projects. The claim published on the
+retired corpus therefore holds on this one, and JUnit 3 support is the largest mechanical
+test-level recovery available.

@@ -41,12 +41,29 @@ remains the `INITIAL` suite.
 - Modify: `src/main/java/teralizer/processing/dependencies/MavenDependencyManager.java`
 - Test: `src/test/java/teralizer/processing/dependencies/MavenSurefireFloorTest.java`
 
-- [ ] Give the pitest plugin an explicit argument list in the derived POM that carries the
-      project's own static argLine flags and the JaCoCo agent, without the `@{argLine}` token,
-      so surefire keeps late replacement while PIT receives resolved arguments.
+Our pitest plugin block is already in effect on the failing projects, `<jvmArgs>` included
+(`src/main/resources/pitest-config-maven.txt:1-18`), so giving PIT its own arguments is not
+the fix. PIT parses surefire's configuration *in addition* and performs its own property
+substitution, which does not implement Maven's `@{…}` late replacement. Its log on
+`github_com_astina_console` shows the attempt and the survival of the literal token:
+
+```
+[INFO] Replacing properties in argLine @{argLine} -Dfile.encoding=UTF-8
+PIT >> INFO : MINION : Error: Could not find or load main class @{argLine}
+```
+
+Inlining a resolved JaCoCo agent path instead of the token is not available: the agent path
+is set at runtime by `jacoco:prepare-agent` and is not knowable when the POM is written.
+
+- [ ] Stop PIT from consuming surefire's `argLine`. Prefer disabling surefire-config parsing in
+      the pitest plugin block if that plugin exposes such a parameter; verify the parameter name
+      against pitest 1.17.0 before relying on it, since this checkout vendors no PIT source. If
+      it does not exist, generate a separate PIT-specific POM without the `@{argLine}` token and
+      point `AbstractTask.mavenBuildFileFor` at it for the two PIT stages, leaving the floored
+      POM untouched for surefire runs.
   Verification: `./gradlew test --tests '*MavenSurefireFloorTest*'`
-  Expected: for a POM with `<argLine>-Dfile.encoding=UTF-8</argLine>`, surefire's argLine
-  still begins with `@{argLine}` and the pitest configuration contains no `@{` token.
+  Expected: surefire's argLine still begins with `@{argLine}`, and the POM PIT reads carries no
+  `@{` token.
 
 - [ ] Reproduce on the project that exposed the defect.
   Run: reduction on `github_com_astina_console` with `REPOREAPERS_PROFILE=project-configs/reporeapers-rq6.conf` into a scratch database
@@ -88,27 +105,19 @@ remains the `INITIAL` suite.
 - [ ] Commit.
   Message: `fix(pipeline): read jqwik test identifiers in mutation reports`
 
-### Task 4: Decide pass/fail on the suite PIT executes
+### Non-green suites are accepted attrition, not a task
 
-**Files:**
-- Modify: `src/main/java/teralizer/processing/filter/NonPassingTestFilter.java`
-- Modify: `src/main/java/teralizer/processing/task/TestExecutionTask.java`
-- Test: `src/test/java/teralizer/processing/filter/NonPassingTestFilterTest.java`
+`NonPassingTestFilter` is one of the stage-1 filters that *constitutes* the `INITIAL` suite,
+so its input cannot be derived from `INITIAL` without circularity. The only non-circular
+options are to execute `ORIGINAL` a second time against the floored POM, which doubles the
+most expensive stage and changes what `ORIGINAL` measures, or to add a gate after
+`COLLECT_JUNIT_REPORTS_INITIAL` that excludes newly failing classes from the mutation run
+only — which introduces a suite subset the evaluation would then have to name.
 
-- [ ] Derive the filter's pass/fail input from the `INITIAL` suite executed against the floored
-      POM, which is the suite and environment PIT mutates, instead of the `ORIGINAL` suite
-      executed against the native POM. Keep the class-level granularity that PIT requires.
-  Verification: `./gradlew test --tests '*NonPassingTestFilterTest*'`
-  Expected: a test that passes natively and fails under the floored POM is rejected; the
-  class-level rejection behavior is unchanged.
-
-- [ ] Reproduce on two projects that PIT rejected as non-green while our filter saw nothing.
-  Run: reduction on `github_com_dicebot` and `github_com_sshclient` into a scratch database
-  Expected: either `COLLECT_PIT_DATA_INITIAL` succeeds, or the failing tests are rejected by
-  the filter beforehand and the stage proceeds on the remainder.
-
-- [ ] Commit.
-  Message: `fix(pipeline): filter non-passing tests on the mutated suite`
+Neither is worth 6 projects. PIT requires a green suite; some real-world suites are not green
+in the environment PIT mutates. That is reported as a limit, in the same way resource limits
+are. Two of the six are generalized-side anyway, where our own generalized tests fail PIT's
+unmutated run, which is a separate question from this filter.
 
 ### Task 5: Type reduction failures in stored diagnostics
 
