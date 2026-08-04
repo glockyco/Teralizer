@@ -23,6 +23,13 @@ would be cheaper but would produce a corpus measured with two code versions, whi
 the one-run-one-measurement-event discipline and cannot be recorded honestly in the
 provenance manifest.
 
+JUnit 3 support is included in the re-collected pipeline
+(`archive/2026-08-04-junit3-support-spike`). Two consequences to expect and to check rather than
+be surprised by: 9,617 tests move out of `TestType` rejections and into the assertion-level
+gates, mostly a missing tested method, so the filter attribution shifts without applicability
+changing; and admitting those tests raises per-project analysis cost, so the run will exceed the
+previous 29.5 hours. One sampled project alone took about 55 minutes.
+
 Configuration is unchanged: `project-configs/reporeapers-rq6.conf`, the inherited budgets
 (original-suite tests 300 s, mutation 3600 s), `pitest.original.enabled = false`, and the
 single `IMPROVED_200_TRIES` variant. Resource limits are accepted attrition and are not
@@ -58,6 +65,13 @@ tuned to improve outcomes.
   Expected: no `MINION_DIED` caused by an argLine token, no `PLUGIN_UNUSABLE` for projects
   pinning old pitest versions, no failure from unparsed jqwik identifiers, and fewer
   `SUITE_NOT_GREEN` than the 6 recorded previously.
+
+- [ ] Confirm the JUnit 3 attribution shift and that applicability did not fall: `TestType`
+      rejections drop by roughly 9,617, `MissingValue` rejections rise correspondingly, and
+      Stage 1+2 admits at least as many projects as before.
+  Verification: compare filter tables between the previous and new database
+  Expected: the shift appears at the assertion level, and no project that was applicable becomes
+  inapplicable.
 
 - [ ] Compare the funnel against the previous measurement and account for every band that
       moved.

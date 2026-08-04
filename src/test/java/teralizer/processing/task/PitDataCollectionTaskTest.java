@@ -56,4 +56,16 @@ public class PitDataCollectionTaskTest {
         Assert.assertNull(resolved.testId());
         Assert.assertNull(resolved.generalizationId());
     }
+
+    @Example
+    void leavesEngineOnlyNameUnlinkedInsteadOfThrowing() {
+        PitDataCollectionTask.ResolvedTestName resolved = PitDataCollectionTask.resolveTestName(
+            "net.byteseek.compiler.matcher.SequenceMatcherCompilerTest.[engine:jqwik]",
+            new HashMap<>(),
+            new HashMap<>()
+        );
+
+        Assert.assertNull(resolved.testId());
+        Assert.assertNull(resolved.generalizationId());
+    }
 }

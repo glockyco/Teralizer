@@ -107,13 +107,14 @@ covers 2 pitest plus up to 6 JaCoCo exclusions.
 - Modify: `src/main/java/teralizer/processing/task/PitDataCollectionTask.java`
 - Test: `src/test/java/teralizer/processing/task/PitDataCollectionTaskTest.java`
 
-- [ ] Parse `<class>.[engine:jqwik]` style identifiers, and keep a record unlinked rather than
-      throwing when a name cannot be read, matching how the coverage mapper already tolerates
-      inherited and auxiliary methods.
+An engine-only identifier such as `com.example.FooTest.[engine:jqwik]` carries no method, so it
+cannot be linked to a generalization even once parsed. Tolerance is therefore the sound behavior,
+matching how a parsable but unattributable name is already handled.
+
+- [x] Keep a record unlinked rather than throwing when a PIT name cannot be decomposed.
   Verification: `./gradlew test --tests '*PitDataCollectionTaskTest*'`
-  Expected: a report row named
-  `net.byteseek.compiler.matcher.SequenceMatcherCompilerTest.[engine:jqwik]` is ingested and
-  linked to its generalization; an unreadable name is stored unlinked without an exception.
+  Expected: the engine-only name resolves to null ids without an exception, and the existing
+  parsable-name cases are unchanged.
 
 - [ ] Commit.
   Message: `fix(pipeline): read jqwik test identifiers in mutation reports`

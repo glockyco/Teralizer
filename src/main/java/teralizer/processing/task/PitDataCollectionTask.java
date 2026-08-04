@@ -445,9 +445,14 @@ public class PitDataCollectionTask extends AbstractTask {
                 testClassName,
                 testMethodName
             );
-        } else {
-            throw new RuntimeException("Unexpected test name format: " + testName);
         }
+
+        // PIT emits identifiers we cannot decompose, for instance a jqwik entry carrying only the
+        // engine segment (`com.example.FooTest.[engine:jqwik]`). Such a name has no method to link
+        // against, so the record is kept unlinked exactly as an unattributable but parsable name
+        // is, rather than halting collection for the whole project.
+        LOGGER.atDebug().log("Unparsable PIT test name kept unlinked: " + testName);
+        return new TestNameInfo(null, null, null, null, null);
     }
 
     // Resolve a PIT test name to the original test or generalization it names. Generalized test

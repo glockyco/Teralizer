@@ -71,9 +71,13 @@ analysis. Extrapolated across 94 projects that is a material addition to a 29.5-
 validated generalizations, at higher runtime, and keeping it would move 9,617 tests from
 `TestType` rejections into the assertion-level gates, changing the funnel's attribution.
 
-Recommended disposition: revert test-type detection and the `setUp` fixture, and keep the
-assertion-recognition fix, which is a correctness fix independent of JUnit 3 admission. The
-negative result is worth keeping in the thesis's future-work discussion: JUnit 3 suites are not
+Disposition: **kept**, all three changes. The measured yield is zero today, but the change is
+small, it removes a genuine capability gap rather than working around one, and the funnel then
+attributes those 9,617 tests to the gate that actually stops them. Consequences are carried by
+`2026-08-04-rq6-recollection` and, on the thesis side, by
+`2026-08-04-approach-implementation-alignment`.
+
+The negative result stands on its own for the future-work discussion: JUnit 3 suites are not
 blocked by framework support but by tested-method identification.
 
 ## What motivated it
