@@ -50,6 +50,16 @@ public class TaskDiagnosticClassifierTest {
     }
 
     @Example
+    void mapsMockingFrameworkFailuresToUnsupportedMocking() {
+        String message = jpfUncaughtMessage(
+            "java.lang.UnsupportedOperationException\n"
+                + "\tat java.lang.Class.getProtectionDomain(Class.java:341)\n"
+                + "\tat org.mockito.cglib.core.ReflectUtils.<clinit>(ReflectUtils.java:41)");
+
+        Assert.assertEquals(TaskDiagnosticCodes.UNSUPPORTED_MOCKING, classify(new RuntimeException(message)));
+    }
+
+    @Example
     void keepsOtherJpfUncaughtExceptionTypesOnUncaughtExceptionPath() {
         String message = jpfUncaughtMessage("org.jsoup.helper.ValidationException: String must not be empty");
 

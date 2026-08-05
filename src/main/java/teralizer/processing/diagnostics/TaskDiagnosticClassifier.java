@@ -222,6 +222,9 @@ public final class TaskDiagnosticClassifier {
     }
 
     private static Diagnostic classifyJpfUncaughtFailure(Throwable failure) {
+        if (containsMockingFramework(failure)) {
+            return diagnostic(TaskDiagnosticCodes.UNSUPPORTED_MOCKING, messageDetail(failure));
+        }
         String exceptionType = jpfUncaughtExceptionType(failure);
         if ("java.lang.UnsatisfiedLinkError".equals(exceptionType)) {
             return diagnostic(TaskDiagnosticCodes.MISSING_NATIVE_PEER, messageDetail(failure));
@@ -237,6 +240,11 @@ public final class TaskDiagnosticClassifier {
             return diagnostic(TaskDiagnosticCodes.JPF_DIVERGENT_ASSERTION, messageDetail(failure));
         }
         return diagnostic(TaskDiagnosticCodes.UNCAUGHT_EXCEPTION_PATH, messageDetail(failure));
+    }
+
+    private static boolean containsMockingFramework(Throwable failure) {
+        return Stream.of("org.mockito.", "org.powermock.", "org.easymock.", "org.jmock.", "mockit.")
+            .anyMatch(prefix -> contains(failure, prefix));
     }
 
     private static String jpfUncaughtExceptionType(Throwable failure) {

@@ -28,6 +28,7 @@ public final class TaskDiagnosticCodes {
     public static final String UNCAUGHT_EXCEPTION_PATH = "UNCAUGHT_EXCEPTION_PATH";
     public static final String TEST_COMPILE_OUTPUT_MISSING = "TEST_COMPILE_OUTPUT_MISSING";
     public static final String UNSUPPORTED_BYTECODE = "UNSUPPORTED_BYTECODE";
+    public static final String UNSUPPORTED_MOCKING = "UNSUPPORTED_MOCKING";
     public static final String UNSUPPORTED_REPORT_LAYOUT = "UNSUPPORTED_REPORT_LAYOUT";
 
     private TaskDiagnosticCodes() {

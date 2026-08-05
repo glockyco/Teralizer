@@ -128,10 +128,10 @@ against the promoted corpus before any of them reaches the thesis.
       `task_diagnostic.reason_code`, plus metrics `realworld.assertions_reaching_spf` (10,040)
       and `realworld.spf_failure_pct` (0.586).
   Verification: `uv run --directory analysis pytest tests/eval/test_rq6_causes.py -k spf_failures`
-  Expected: `UNCAUGHT_EXCEPTION_PATH` 1,783; `MISSING_NATIVE_PEER` 1,404;
-  `UNSUPPORTED_BYTECODE` 899; `LISTENER_BUG` 393; `NO_INPUT_SPEC` 333;
-  `SEARCH_DEPTH_LIMIT` 331; `JPF_DIVERGENT_ASSERTION` 289; `MISSING_JPF_MODEL_CLASS` 270;
-  `MISSING_JPF_MODEL_METHOD` 178.
+  Expected: the rows reconcile with the extraction summary; `UNSUPPORTED_MOCKING` is nonzero and
+  separates observed Mockito, PowerMock, EasyMock, JMock, and JMockit execution failures from
+  `UNCAUGHT_EXCEPTION_PATH`. The pre-recollection corpus contains 545 JPF failures whose stack
+  names one of those frameworks, so the promoted count should be of the same order.
 
 - [ ] Commit.
   Message: `feat(eval): report RQ6 specification-extraction failures`

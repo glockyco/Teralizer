@@ -46,7 +46,7 @@ tuned to improve outcomes.
 - [x] Property-managed JaCoCo, PIT, and Surefire pins resolve before the version floors are
       applied.
 - [x] Generalized jqwik classes do not retain JUnit 4 runner annotations from their source class.
-- [ ] JPF failures caused by executing a mocking framework receive a distinct diagnostic code.
+- [x] JPF failures caused by executing a mocking framework receive a distinct diagnostic code.
 
 ## Tasks
 

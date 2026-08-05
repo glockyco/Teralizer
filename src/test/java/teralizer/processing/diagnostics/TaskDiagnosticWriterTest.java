@@ -121,6 +121,7 @@ public class TaskDiagnosticWriterTest {
             TaskDiagnosticCodes.UNCAUGHT_EXCEPTION_PATH,
             TaskDiagnosticCodes.TEST_COMPILE_OUTPUT_MISSING,
             TaskDiagnosticCodes.UNSUPPORTED_BYTECODE,
+            TaskDiagnosticCodes.UNSUPPORTED_MOCKING,
             TaskDiagnosticCodes.UNSUPPORTED_REPORT_LAYOUT
         );
         private final List<String> reasonCodes = new ArrayList<>();
