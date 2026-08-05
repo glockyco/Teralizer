@@ -1,10 +1,28 @@
 package teralizer.processing.task;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import net.jqwik.api.Example;
 import org.junit.Assert;
 
 public class PitDataCollectionTaskTest {
+
+    @Example
+    void mavenCommandOverridesProjectPitTelemetryConfiguration() {
+        Assert.assertEquals(
+            Arrays.asList(
+                "mvn",
+                "--file", "pom.teralizer.generalized.xml",
+                "pitest:mutationCoverage",
+                "-Dmutators=DEFAULTS",
+                "-DoutputFormats=XML",
+                "-DexportLineCoverage=true",
+                "-Dverbose=false",
+                "-DextraFeatures=-macos_focus"
+            ),
+            PitDataCollectionTask.mavenPitestCommand("pom.teralizer.generalized.xml", "DEFAULTS")
+        );
+    }
 
     @Example
     void resolvesOriginalTestIdFromJupiterName() {

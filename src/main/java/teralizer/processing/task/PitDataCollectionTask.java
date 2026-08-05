@@ -243,11 +243,19 @@ public class PitDataCollectionTask extends AbstractTask {
         Path pomDataFilePath = commandDataPath.resolve(baseName + ".pom.xml");
         Files.copy(pomFilePath, pomDataFilePath);
 
+        return mavenPitestCommand(mavenBuildFileFor(this.stage), Configuration.getPitestMutators());
+    }
+
+    static List<String> mavenPitestCommand(String buildFile, String mutators) {
         return new ArrayList<>(Arrays.asList(
             "mvn",
-            "--file", mavenBuildFileFor(this.stage),
+            "--file", buildFile,
             "pitest:mutationCoverage",
-            "-Dmutators=" + Configuration.getPitestMutators()
+            "-Dmutators=" + mutators,
+            "-DoutputFormats=XML",
+            "-DexportLineCoverage=true",
+            "-Dverbose=false",
+            "-DextraFeatures=-macos_focus"
         ));
     }
 

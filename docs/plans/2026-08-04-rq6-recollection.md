@@ -40,16 +40,22 @@ tuned to improve outcomes.
 - [x] `2026-08-04-reduction-path-fixes` is implemented and its gate passes.
 - [x] `2026-08-04-pre-rerun-investigations` is closed; its remaining question was answered by
       the live coverage check, which confirmed the plugin floors recover the family.
-- [x] `./gradlew build` green on the launched commit, `62f1c4e3`.
+- [x] `./gradlew build` green before the first launch.
+- [x] PIT collection overrides project-owned output, line-coverage, verbosity, and macOS focus
+      settings so every compatible plugin produces bounded XML telemetry.
+- [ ] Property-managed JaCoCo, PIT, and Surefire pins resolve before the version floors are
+      applied.
+- [ ] Generalized jqwik classes do not retain JUnit 4 runner annotations from their source class.
+- [ ] JPF failures caused by executing a mocking framework receive a distinct diagnostic code.
 
 ## Tasks
 
 ### Task 1: Launch
 
-- [x] Launch detached into a fresh database, preserving `postgres_reporeapers_rq6` as the
-      previous measurement until the new one is signed off. Launched on commit `62f1c4e3` into
-      `postgres_reporeapers_rq6_v2`, data under `data/reporeapers-rerun-v2`, project ceiling
-      14400 s, process name `reporeapers-rq6-v2`.
+- [ ] Launch the fixed code into a fresh `postgres_reporeapers_rq6_v2` database, preserving
+      `postgres_reporeapers_rq6` as the previous measurement until the new one is signed off.
+      Store data under `data/reporeapers-rerun-v2`, keep the 14400 s project ceiling, and use the
+      process name `reporeapers-rq6-v2`. Do not resume the partial pre-fix corpus.
 
 - [ ] Monitor to completion, reading the log rather than polling the database.
   Verification: the final log line reports `attempted=1161`.
