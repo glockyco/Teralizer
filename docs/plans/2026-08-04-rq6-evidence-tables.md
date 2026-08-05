@@ -133,6 +133,14 @@ against the promoted corpus before any of them reaches the thesis.
   `UNCAUGHT_EXCEPTION_PATH`. The pre-recollection corpus contains 545 JPF failures whose stack
   names one of those frameworks, so the promoted count should be of the same order.
 
+- [ ] Add separate metrics for test-level `MockingFrameworkFilter` rejections and residual
+      assertion-level `UNSUPPORTED_MOCKING` JPF failures. Do not sum them because their units differ.
+      Expose both as generated thesis macros.
+  Verification: the filter metric equals the count of rejected test-level filter rows and the
+  runtime metric equals failed `EXECUTE_JPF` tasks with that reason code.
+  Expected: both are nonnegative; the test-level count is nonzero and the runtime count captures
+  helper-mediated dependencies the conservative method-scoped filter cannot prove statically.
+
 - [ ] Commit.
   Message: `feat(eval): report RQ6 specification-extraction failures`
 

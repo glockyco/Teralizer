@@ -47,6 +47,20 @@ tuned to improve outcomes.
       applied.
 - [x] Generalized jqwik classes do not retain JUnit 4 runner annotations from their source class.
 - [x] JPF failures caused by executing a mocking framework receive a distinct diagnostic code.
+- [x] Test methods with a direct mocking-framework dependency are rejected before JPF. The
+      method-scoped filter accepts an unused framework import and unrelated methods in the same
+      class rather than excluding the entire class.
+
+The filter scope follows the previous corpus rather than an import-only guess. Mocking-framework
+imports occur in 1,653 of 12,810 test files (12.9\%) across 217 projects and cover 13,039 of
+86,067 tests (15.1\%). A source-scope estimate identifies direct framework use in 7,812 methods
+(9.1\%) across 206 projects. Those methods produced six Stage-4-filter-passing generalizations but
+zero final-usable generalizations. By contrast, excluding every method in a mock-importing class
+would remove 17 final-usable generalizations across three projects. The implemented gate therefore
+uses Spoon references in each test method and in fields that method accesses. Hidden helper use
+remains a runtime `UNSUPPORTED_MOCKING` diagnostic. A smoke run on
+`github_com_born2snipe_gamejolt-api` rejected 101 methods before JPF while leaving 56 methods to the
+remaining filters; only 17 JPF executions were then scheduled.
 
 ## Tasks
 

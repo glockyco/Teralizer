@@ -135,6 +135,7 @@ public class TestFilteringTask extends AbstractTask {
             new UnnamedPackageFilter(this.testRecord),
             new NestedClassesFilter(spoonLauncher, this.testRecord),
             new StaticInitializersFilter(spoonLauncher, this.testRecord),
+            new MockingFrameworkFilter(spoonLauncher, this.testRecord),
             new AssertionInMethodFilter(spoonLauncher, this.testRecord),
             new NoAssertionsFilter(create, this.testRecord)
         );
