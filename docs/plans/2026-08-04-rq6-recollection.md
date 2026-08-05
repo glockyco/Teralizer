@@ -35,6 +35,10 @@ Configuration is unchanged: `project-configs/reporeapers-rq6.conf`, the inherite
 single `IMPROVED_200_TRIES` variant. Resource limits are accepted attrition and are not
 tuned to improve outcomes.
 
+Measurement basis: commit `2cdabc03` (`fix(filtering): reject direct mocking dependencies`), which
+includes the reduction fixes, telemetry corrections, project-owned plugin configuration merge,
+runner-annotation removal, runtime mocking diagnostics, and the method-scoped mocking filter.
+
 ## Preconditions
 
 - [x] `2026-08-04-reduction-path-fixes` is implemented and its gate passes.
