@@ -47,6 +47,7 @@ public final class GeneralizedTestBuilder {
         createJqwikLifecycleAnnotationMap();
     private static final Set<String> STATIC_LIFECYCLE_ANNOTATIONS =
         createStaticLifecycleAnnotationSet();
+    private static final String JUNIT_RUN_WITH = "org.junit.runner.RunWith";
 
     public CtClass<?> build(Factory factory, GeneralizationRecipe clonedRecipe, Names names, Plan plan) {
         CtClass<?> generalizedClassDeclaration = SpoonUtils.cloneClass(
@@ -73,6 +74,7 @@ public final class GeneralizedTestBuilder {
                 names.getGeneralizedClassQualifiedName()));
         CtMethod<?> testMethod = (CtMethod<?>) testMethodPath.evaluateOn(generalizedClassDeclaration).get(0);
         SpoonUtils.deleteOtherTestMethodsInClass(generalizedClassDeclaration, testMethod);
+        removeJUnitRunnerAnnotation(generalizedClassDeclaration);
         rewriteLifecycleAnnotations(factory, generalizedClassDeclaration);
 
         CtPath assertionPath = new CtPathStringBuilder().fromString(
@@ -189,6 +191,12 @@ public final class GeneralizedTestBuilder {
         }
     }
 
+
+    private static void removeJUnitRunnerAnnotation(CtClass<?> generalizedClassDeclaration) {
+        new ArrayList<>(generalizedClassDeclaration.getAnnotations()).stream()
+            .filter(annotation -> JUNIT_RUN_WITH.equals(annotation.getAnnotationType().getQualifiedName()))
+            .forEach(generalizedClassDeclaration::removeAnnotation);
+    }
 
     private static void rewriteLifecycleAnnotations(Factory factory, CtClass<?> generalizedClassDeclaration) {
         for (CtMethod<?> method : generalizedClassDeclaration.getMethods()) {

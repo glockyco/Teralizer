@@ -45,7 +45,7 @@ tuned to improve outcomes.
       settings so every compatible plugin produces bounded XML telemetry.
 - [x] Property-managed JaCoCo, PIT, and Surefire pins resolve before the version floors are
       applied.
-- [ ] Generalized jqwik classes do not retain JUnit 4 runner annotations from their source class.
+- [x] Generalized jqwik classes do not retain JUnit 4 runner annotations from their source class.
 - [ ] JPF failures caused by executing a mocking framework receive a distinct diagnostic code.
 
 ## Tasks

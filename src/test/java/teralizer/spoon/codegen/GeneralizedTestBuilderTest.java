@@ -89,6 +89,14 @@ public class GeneralizedTestBuilderTest {
     }
 
     @Example
+    void generalizedClassDropsJUnitRunnerAnnotation() {
+        CtClass<?> generalized = build(scenario(RUN_WITH_SOURCE), identityPlan());
+
+        Assert.assertFalse(generalized.getAnnotations().stream().anyMatch(annotation ->
+            "org.junit.runner.RunWith".equals(annotation.getAnnotationType().getQualifiedName())));
+    }
+
+    @Example
     void symbolicPlanRewritesHamcrestMatcherExpectedExpression() {
         Scenario scenario = hamcrestScenario();
         Model inputModel = new Operation(new Variable("x", TypeDomain.INTEGER), Operator.GT, new Constant(0L, TypeDomain.INTEGER));
@@ -223,6 +231,33 @@ public class GeneralizedTestBuilderTest {
         Assert.assertTrue(code, code.contains("return true"));
         Assert.assertTrue(code, code.contains("return false"));
     }
+    private static GeneralizedTestBuilder.Plan identityPlan() {
+        Model inputModel = new Operation(
+            new Variable("x", TypeDomain.INTEGER),
+            Operator.GT,
+            new Constant(0L, TypeDomain.INTEGER));
+        Model outputModel = new Variable("x", TypeDomain.INTEGER);
+        MethodParameter parameter = new MethodParameter("int", "x");
+        List<MethodParameter> parameters = Collections.singletonList(parameter);
+        Map<String, Value> arguments = Collections.singletonMap("x", new PrimitiveValue("int", 2));
+        ModelToJavaTransformer transformer = new ModelToJavaTransformer(Collections.singletonMap("x", "int"));
+        String inputJava = transformer.transformPredicate(inputModel, Collections.singleton("x"));
+        String outputJava = transformer.transform(outputModel);
+        return new GeneralizedTestBuilder.Plan(
+            GeneralizationAlgorithm.IMPROVED,
+            parameters,
+            arguments,
+            inputJava,
+            new InputGenerationPlanner().plan(parameters, arguments, inputModel),
+            CapturedOutput.ofReturnValue(new PrimitiveValue("int", 2)),
+            outputJava,
+            100,
+            FirstValueArbitraryFactory.createFirstValueArbitraryClass(velocityEngine()),
+            JqwikValueRecorderFactory.createRecorderClass(
+                velocityEngine(), Paths.get("jqwik-data"), 7L, 101L, "IMPROVED_100_TRIES", "returnsInput")
+        );
+    }
+
     private static CtClass<?> build(Scenario scenario, GeneralizedTestBuilder.Plan plan) {
         GeneralizationRecipe clonedRecipe = scenario.recipe.rewriteForClone(
             "example.SubjectTest",
@@ -345,6 +380,18 @@ public class GeneralizedTestBuilderTest {
 
     private static final String SOURCE = ""
         + "package example;\n"
+        + "public class SubjectTest {\n"
+        + "  @org.junit.Test public void returnsInput() {\n"
+        + "    org.junit.Assert.assertEquals(2, new Subject().id(2));\n"
+        + "  }\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  int id(int x) { return x; }\n"
+        + "}\n";
+
+    private static final String RUN_WITH_SOURCE = ""
+        + "package example;\n"
+        + "@org.junit.runner.RunWith(org.mockito.runners.MockitoJUnitRunner.class)\n"
         + "public class SubjectTest {\n"
         + "  @org.junit.Test public void returnsInput() {\n"
         + "    org.junit.Assert.assertEquals(2, new Subject().id(2));\n"
