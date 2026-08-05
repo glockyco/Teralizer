@@ -195,6 +195,44 @@ public class MavenSurefireFloorTest {
     }
 
     @Example
+    void projectPitestConfigurationGetsRequiredCollectionSettings() throws Exception {
+        Document doc = DocumentHelper.parseText("<project><build><plugins><plugin>"
+            + "<groupId>org.pitest</groupId><artifactId>pitest-maven</artifactId><version>1.17.0</version>"
+            + "<configuration><outputFormats><outputFormat>HTML</outputFormat></outputFormats>"
+            + "<exportLineCoverage>false</exportLineCoverage><verbose>true</verbose>"
+            + "<extraFeatures><extraFeature>+project_feature</extraFeature></extraFeatures>"
+            + "<parseSurefireArgLine>true</parseSurefireArgLine>"
+            + "<jvmArgs><jvmArg>-Xmx1g</jvmArg></jvmArgs></configuration>"
+            + "</plugin></plugins></build></project>");
+
+        Assert.assertTrue(MavenDependencyManager.applySurefireFloor(doc));
+        String xml = doc.asXML();
+        Assert.assertTrue(xml, xml.contains("<outputFormat>HTML</outputFormat>"));
+        Assert.assertTrue(xml, xml.contains("<outputFormat>XML</outputFormat>"));
+        Assert.assertTrue(xml, xml.contains("<exportLineCoverage>true</exportLineCoverage>"));
+        Assert.assertTrue(xml, xml.contains("<verbose>false</verbose>"));
+        Assert.assertTrue(xml, xml.contains("<extraFeature>+project_feature</extraFeature>"));
+        Assert.assertTrue(xml, xml.contains("<extraFeature>-macos_focus</extraFeature>"));
+        Assert.assertTrue(xml, xml.contains("<parseSurefireArgLine>false</parseSurefireArgLine>"));
+        Assert.assertTrue(xml, xml.contains("<jvmArg>-Xmx1g</jvmArg>"));
+        Assert.assertTrue(xml, xml.contains(
+            "<jvmArg>-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY</jvmArg>"));
+        Assert.assertFalse(MavenDependencyManager.applySurefireFloor(doc));
+    }
+
+    @Example
+    void scalarPitestOutputFormatsKeepXmlWithoutDuplication() throws Exception {
+        Document doc = DocumentHelper.parseText("<project><build><plugins><plugin>"
+            + "<groupId>org.pitest</groupId><artifactId>pitest-maven</artifactId><version>1.17.0</version>"
+            + "<configuration><outputFormats>HTML,XML</outputFormats></configuration>"
+            + "</plugin></plugins></build></project>");
+
+        Assert.assertTrue(MavenDependencyManager.applySurefireFloor(doc));
+        Assert.assertTrue(doc.asXML(), doc.asXML().contains("<outputFormats>HTML,XML</outputFormats>"));
+        Assert.assertFalse(MavenDependencyManager.applySurefireFloor(doc));
+    }
+
+    @Example
     void propertyManagedToolPinsBelowFloorGetFloored() throws Exception {
         Document jacoco = propertyManagedToolPluginPom(
             "jacoco.version", "0.7.5.201505241946", "org.jacoco", "jacoco-maven-plugin");
@@ -231,13 +269,15 @@ public class MavenSurefireFloorTest {
     }
 
     @Example
-    void newerToolPinsAreKept() throws Exception {
+    void newerPitestPinIsKeptWhileCollectionConfigurationIsMerged() throws Exception {
         Document doc = toolPluginPom("org.pitest", "pitest-maven", "1.19.5");
 
         boolean changed = MavenDependencyManager.applySurefireFloor(doc);
 
-        Assert.assertFalse(changed);
+        Assert.assertTrue(changed);
         Assert.assertTrue(doc.asXML(), doc.asXML().contains("<version>1.19.5</version>"));
+        Assert.assertTrue(doc.asXML(), doc.asXML().contains("<outputFormat>XML</outputFormat>"));
+        Assert.assertFalse(MavenDependencyManager.applySurefireFloor(doc));
     }
 
     private static Document toolPluginPom(String groupId, String artifactId, String version) throws Exception {

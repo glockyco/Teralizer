@@ -375,6 +375,7 @@ public class MavenDependencyManager {
                 changed |= floorPluginVersion(plugin, Configuration.JACOCO_MIN_VERSION, properties);
             } else if (isPlugin(plugin, "org.pitest", "pitest-maven")) {
                 changed |= floorPluginVersion(plugin, Configuration.PITEST_MIN_VERSION, properties);
+                changed |= ensurePitestConfiguration(plugin);
             }
         }
         return changed;
@@ -390,6 +391,66 @@ public class MavenDependencyManager {
             return false;
         }
         version.setText(minimumVersion);
+        return true;
+    }
+
+    private static boolean ensurePitestConfiguration(Element plugin) {
+        Element configuration = childElement(plugin, "configuration");
+        boolean changed = false;
+        if (configuration == null) {
+            configuration = plugin.addElement("configuration");
+            changed = true;
+        }
+        changed |= ensureListValue(configuration, "outputFormats", "outputFormat", "XML");
+        changed |= ensureChildText(configuration, "exportLineCoverage", "true");
+        changed |= ensureChildText(configuration, "verbose", "false");
+        changed |= ensureListValue(configuration, "extraFeatures", "extraFeature", "-macos_focus");
+        changed |= ensureChildText(configuration, "parseSurefireArgLine", "false");
+        changed |= ensureListValue(
+            configuration,
+            "jvmArgs",
+            "jvmArg",
+            "-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY"
+        );
+        return changed;
+    }
+
+    private static boolean ensureChildText(Element parent, String childName, String value) {
+        Element child = childElement(parent, childName);
+        if (child != null && value.equals(child.getTextTrim())) {
+            return false;
+        }
+        setChildText(parent, childName, value);
+        return true;
+    }
+
+    private static boolean ensureListValue(
+        Element parent,
+        String containerName,
+        String elementName,
+        String value
+    ) {
+        Element container = childElement(parent, containerName);
+        if (container == null) {
+            container = parent.addElement(containerName);
+            container.addElement(elementName).addText(value);
+            return true;
+        }
+        List<Element> entries = container.elements();
+        if (!entries.isEmpty()) {
+            if (entries.stream().anyMatch(entry -> value.equalsIgnoreCase(entry.getTextTrim()))) {
+                return false;
+            }
+            container.addElement(elementName).addText(value);
+            return true;
+        }
+        String current = container.getTextTrim();
+        if (Arrays.stream(current.split(","))
+            .map(String::trim)
+            .anyMatch(entry -> value.equalsIgnoreCase(entry))) {
+            return false;
+        }
+        container.setText(current.isEmpty() ? value : current + "," + value);
         return true;
     }
 
