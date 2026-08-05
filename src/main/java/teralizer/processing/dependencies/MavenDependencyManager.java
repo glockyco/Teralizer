@@ -335,18 +335,21 @@ public class MavenDependencyManager {
      * Surefire only gains a JUnit-platform provider at 2.22.2; older explicit pins report a green
      * Maven build while never discovering jqwik property classes. Existing plugin declarations are
      * floored in place because adding a second surefire declaration would leave Maven plugin
-     * selection ambiguous. Unparseable versions are left untouched so property-managed or qualified
-     * project policies stay under the project's control.
+     * selection ambiguous. A direct property reference is resolved from the copied POM before
+     * comparison. Unresolved and qualified versions stay under the project's control.
      */
     static boolean applySurefireFloor(Document document) {
-        Element build = childElement(document.getRootElement(), "build");
+        Element root = document.getRootElement();
+        Element build = childElement(root, "build");
         if (build == null) {
             return false;
         }
 
-        boolean changed = applyPluginFloorsToPlugins(childElement(build, "plugins"));
+        Element properties = childElement(root, "properties");
+        boolean changed = applyPluginFloorsToPlugins(childElement(build, "plugins"), properties);
         Element pluginManagement = childElement(build, "pluginManagement");
-        changed |= pluginManagement != null && applyPluginFloorsToPlugins(childElement(pluginManagement, "plugins"));
+        changed |= pluginManagement != null
+            && applyPluginFloorsToPlugins(childElement(pluginManagement, "plugins"), properties);
         return changed;
     }
 
@@ -357,7 +360,7 @@ public class MavenDependencyManager {
      * mutation data can be collected at all. Only numeric versions below the floor are rewritten,
      * so a newer pin is preserved.
      */
-    private static boolean applyPluginFloorsToPlugins(Element plugins) {
+    private static boolean applyPluginFloorsToPlugins(Element plugins, Element properties) {
         if (plugins == null) {
             return false;
         }
@@ -366,20 +369,24 @@ public class MavenDependencyManager {
         for (Iterator<Element> it = plugins.elementIterator(); it.hasNext(); ) {
             Element plugin = it.next();
             if (isSurefirePlugin(plugin)) {
-                changed |= floorPluginVersion(plugin, Configuration.SUREFIRE_MIN_VERSION);
+                changed |= floorPluginVersion(plugin, Configuration.SUREFIRE_MIN_VERSION, properties);
                 changed |= mergeJacocoArgLine(plugin);
             } else if (isPlugin(plugin, "org.jacoco", "jacoco-maven-plugin")) {
-                changed |= floorPluginVersion(plugin, Configuration.JACOCO_MIN_VERSION);
+                changed |= floorPluginVersion(plugin, Configuration.JACOCO_MIN_VERSION, properties);
             } else if (isPlugin(plugin, "org.pitest", "pitest-maven")) {
-                changed |= floorPluginVersion(plugin, Configuration.PITEST_MIN_VERSION);
+                changed |= floorPluginVersion(plugin, Configuration.PITEST_MIN_VERSION, properties);
             }
         }
         return changed;
     }
 
-    private static boolean floorPluginVersion(Element plugin, String minimumVersion) {
+    private static boolean floorPluginVersion(Element plugin, String minimumVersion, Element properties) {
         Element version = childElement(plugin, "version");
-        if (version == null || !isVersionBelow(version.getTextTrim(), minimumVersion)) {
+        if (version == null) {
+            return false;
+        }
+        String resolvedVersion = resolvePropertyReference(version.getTextTrim(), properties);
+        if (!isVersionBelow(resolvedVersion, minimumVersion)) {
             return false;
         }
         version.setText(minimumVersion);
@@ -445,15 +452,16 @@ public class MavenDependencyManager {
             return versions;
         }
 
-        collectSurefireVersions(versions, childElement(build, "plugins"));
+        Element properties = childElement(document.getRootElement(), "properties");
+        collectSurefireVersions(versions, childElement(build, "plugins"), properties);
         Element pluginManagement = childElement(build, "pluginManagement");
         if (pluginManagement != null) {
-            collectSurefireVersions(versions, childElement(pluginManagement, "plugins"));
+            collectSurefireVersions(versions, childElement(pluginManagement, "plugins"), properties);
         }
         return versions;
     }
 
-    private static void collectSurefireVersions(List<String> versions, Element plugins) {
+    private static void collectSurefireVersions(List<String> versions, Element plugins, Element properties) {
         if (plugins == null) {
             return;
         }
@@ -462,7 +470,7 @@ public class MavenDependencyManager {
             if (isSurefirePlugin(plugin)) {
                 String version = childText(plugin, "version");
                 if (version != null) {
-                    versions.add(version);
+                    versions.add(resolvePropertyReference(version, properties));
                 }
             }
         }

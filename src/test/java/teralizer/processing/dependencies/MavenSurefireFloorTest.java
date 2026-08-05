@@ -195,6 +195,42 @@ public class MavenSurefireFloorTest {
     }
 
     @Example
+    void propertyManagedToolPinsBelowFloorGetFloored() throws Exception {
+        Document jacoco = propertyManagedToolPluginPom(
+            "jacoco.version", "0.7.5.201505241946", "org.jacoco", "jacoco-maven-plugin");
+        Document pitest = propertyManagedToolPluginPom(
+            "pitest.version", "0.30", "org.pitest", "pitest-maven");
+
+        Assert.assertTrue(MavenDependencyManager.applySurefireFloor(jacoco));
+        Assert.assertTrue(MavenDependencyManager.applySurefireFloor(pitest));
+        Assert.assertTrue(jacoco.asXML(), jacoco.asXML().contains(
+            "<version>" + Configuration.JACOCO_MIN_VERSION + "</version>"));
+        Assert.assertTrue(pitest.asXML(), pitest.asXML().contains(
+            "<version>" + Configuration.PITEST_MIN_VERSION + "</version>"));
+    }
+
+    @Example
+    void propertyManagedSurefirePinBelowFloorGetsFloored() throws Exception {
+        Document doc = propertyManagedToolPluginPom(
+            "surefire.version", "2.17", "org.apache.maven.plugins", "maven-surefire-plugin");
+
+        Assert.assertTrue(MavenDependencyManager.applySurefireFloor(doc));
+        Assert.assertTrue(doc.asXML(), doc.asXML().contains(
+            "<version>" + Configuration.SUREFIRE_MIN_VERSION + "</version>"));
+    }
+
+    @Example
+    void unresolvedPluginVersionPropertyIsKept() throws Exception {
+        Document doc = DocumentHelper.parseText("<project><build><plugins><plugin>"
+            + "<groupId>org.jacoco</groupId><artifactId>jacoco-maven-plugin</artifactId>"
+            + "<version>${missing.version}</version></plugin></plugins></build></project>");
+        String before = doc.asXML();
+
+        Assert.assertFalse(MavenDependencyManager.applySurefireFloor(doc));
+        Assert.assertEquals(before, doc.asXML());
+    }
+
+    @Example
     void newerToolPinsAreKept() throws Exception {
         Document doc = toolPluginPom("org.pitest", "pitest-maven", "1.19.5");
 
@@ -209,6 +245,21 @@ public class MavenSurefireFloorTest {
             + "<groupId>" + groupId + "</groupId>"
             + "<artifactId>" + artifactId + "</artifactId>"
             + "<version>" + version + "</version>"
+            + "</plugin></plugins></build></project>";
+        return DocumentHelper.parseText(xml);
+    }
+
+    private static Document propertyManagedToolPluginPom(
+        String propertyName,
+        String propertyValue,
+        String groupId,
+        String artifactId
+    ) throws Exception {
+        String xml = "<project><properties><" + propertyName + ">" + propertyValue
+            + "</" + propertyName + "></properties><build><plugins><plugin>"
+            + "<groupId>" + groupId + "</groupId>"
+            + "<artifactId>" + artifactId + "</artifactId>"
+            + "<version>${" + propertyName + "}</version>"
             + "</plugin></plugins></build></project>";
         return DocumentHelper.parseText(xml);
     }

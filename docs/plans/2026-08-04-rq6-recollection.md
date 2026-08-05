@@ -43,7 +43,7 @@ tuned to improve outcomes.
 - [x] `./gradlew build` green before the first launch.
 - [x] PIT collection overrides project-owned output, line-coverage, verbosity, and macOS focus
       settings so every compatible plugin produces bounded XML telemetry.
-- [ ] Property-managed JaCoCo, PIT, and Surefire pins resolve before the version floors are
+- [x] Property-managed JaCoCo, PIT, and Surefire pins resolve before the version floors are
       applied.
 - [ ] Generalized jqwik classes do not retain JUnit 4 runner annotations from their source class.
 - [ ] JPF failures caused by executing a mocking framework receive a distinct diagnostic code.
