@@ -70,7 +70,7 @@ remaining filters; only 17 JPF executions were then scheduled.
 
 ### Task 1: Launch
 
-- [ ] Launch the fixed code into a fresh `postgres_reporeapers_rq6_v2` database, preserving
+- [x] Launch the fixed code into a fresh `postgres_reporeapers_rq6_v2` database, preserving
       `postgres_reporeapers_rq6` as the previous measurement until the new one is signed off.
       Store data under `data/reporeapers-rerun-v2`, keep the 14400 s project ceiling, and use the
       process name `reporeapers-rq6-v2`. Do not resume the partial pre-fix corpus.
