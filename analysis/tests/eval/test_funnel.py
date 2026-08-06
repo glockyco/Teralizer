@@ -52,10 +52,11 @@ def test_funnel_arithmetic_is_consistent():
         sum(stage.exclusions for stage in stages) + result.success_count
         == result.eligible
     )
-    # Applicability is measured after Stage 4, so it is the reduction band's input and
-    # strictly larger than the count that completes every stage.
-    assert result.applicability_count == stages[-1].entering
-    assert result.applicability_count > result.success_count
+    # Applicability is the count through all five stages. The Stage-4 figure the
+    # chapter reports beside it is the reduction band's input, which is larger
+    # whenever reduction excludes anything.
+    assert result.reduction.entering == stages[-1].entering
+    assert result.reduction.entering > result.success_count
 
 
 def test_every_cause_row_has_a_known_type():
@@ -201,7 +202,7 @@ def test_funnel_survivors_match_independent_sql():
         counts[3],
         counts[4],
     )
-    assert result.applicability_count == counts[3]
+    assert result.reduction.entering == counts[3]
 
 
 def test_funnel_stage3_and_stage5_ids_match_direct_oracles():
@@ -278,7 +279,7 @@ def test_funnel_stage3_and_stage5_ids_match_direct_oracles():
     assert result.survivor_project_ids[4] == frozenset(stage5_ids)
 
 
-def test_funnel_applicability_matches_validated_generalization_projects():
+def test_funnel_stage4_matches_validated_generalization_projects():
     result = _funnel_result()
     with _connect() as conn:
         variant = _funnel.resolve_variant(conn)
@@ -311,12 +312,12 @@ def test_funnel_applicability_matches_validated_generalization_projects():
             ),
             {"variant": variant},
         ).scalar_one()
-    assert result.applicability_count == expected
+    assert result.reduction.entering == expected
 
 
-def test_reduction_causes_are_tabulated_but_do_not_define_success():
-    # The table documents all five stages; applicability is still measured after
-    # Stage 4, and the reduction attrition is quantified for the chapter's argument.
+def test_reduction_causes_are_tabulated_and_define_final_success():
+    # The table documents all five stages, success is measured after reduction, and
+    # the reduction attrition is quantified so the chapter can state what it costs.
     result = _funnel_result()
     rows = result.table.df
     assert any(rows["stage"].eq("5")), rows
@@ -327,7 +328,6 @@ def test_reduction_causes_are_tabulated_but_do_not_define_success():
 
     reduction = result.reduction
     assert reduction.stage == "5"
-    assert reduction.entering == result.applicability_count
     assert reduction.passing == result.success_count
     assert reduction.passing == len(result.survivor_project_ids[4])
     assert reduction.exclusions == reduction.entering - reduction.passing

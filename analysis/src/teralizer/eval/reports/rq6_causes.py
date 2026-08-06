@@ -17,7 +17,7 @@ from teralizer.eval.reports._causes_common import (
     build_filtering_table,
 )
 
-DEFAULT_DB = "postgres_reporeapers_rq6"
+DEFAULT_DB = "postgres_reporeapers_rq6_v2"
 
 _ELIGIBILITY_CTE = """
 WITH eligible_projects AS (
@@ -282,13 +282,13 @@ def build(conn: Connection) -> RQReport:
         ),
         Metric(
             "realworld.applicability_projects",
-            funnel.applicability_count,
+            funnel.success_count,
             fmt="int",
             provenance=funnel_provenance,
         ),
         Metric(
             "realworld.applicability_pct",
-            funnel.applicability_count / funnel.eligible,
+            funnel.success_count / funnel.eligible,
             fmt="pct1",
             provenance=funnel_provenance,
         ),
@@ -328,10 +328,10 @@ def build(conn: Connection) -> RQReport:
             fmt="pct1",
             provenance=breakdown_provenance,
         ),
-        # Reduction attrition justifies ending the funnel at Stage 4. Reported as
-        # exclusions and their side, never as a rival inclusion denominator.
+        # Projects holding a validated generalized test before reduction. Reported
+        # beside the headline so the prose can state what reduction itself costs.
         Metric(
-            "realworld.reduction_entering_projects",
+            "realworld.stage4_projects",
             funnel.reduction.entering,
             fmt="int",
             provenance=funnel_provenance,
@@ -345,14 +345,6 @@ def build(conn: Connection) -> RQReport:
         Metric(
             "realworld.reduction_excluded_baseline_side",
             funnel.reduction_excluded_baseline_side,
-            fmt="int",
-            provenance=funnel_provenance,
-        ),
-        # The funnel table's overall row. Present so the prose can reconcile it with the
-        # applicability figure instead of hard-coding a digit; never the headline.
-        Metric(
-            "realworld.reduction_completing_projects",
-            funnel.success_count,
             fmt="int",
             provenance=funnel_provenance,
         ),

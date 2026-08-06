@@ -23,12 +23,13 @@ from teralizer.eval.reports._taxonomy import (
 INELIGIBLE_STAGES = frozenset(
     {"SETUP_PROJECT", "ADD_DEPENDENCIES", "BUILD_PROJECT_ORIGINAL"}
 )
-# The funnel reports all five stages, but applicability is the point at which a project
-# holds a validated generalized test, so success is measured after Stage 4. Reduction
-# exclusions are reported beside it and describe mutation testing of the original suite.
+# The funnel reports all five stages and measures applicability after Stage 5, so the
+# headline figure counts projects that complete the whole pipeline, including test suite
+# reduction. The Stage-4 figure -- projects holding a validated generalized test before
+# reduction -- is reported beside it, because reduction earns its place by removing
+# generalized tests that do not improve fault detection (see the RQ3 and RQ4 results).
 _PIPELINE_STAGES = ("1 + 2", "3", "4", "5")
 _REDUCTION_STAGE = "5"
-_APPLICABILITY_INDEX = _PIPELINE_STAGES.index(_REDUCTION_STAGE)
 _BASELINE_REDUCTION_STAGES = frozenset(
     {"COLLECT_PIT_DATA_INITIAL", "COLLECT_JACOCO_DATA_INITIAL"}
 )
@@ -247,10 +248,9 @@ class ProjectFailure:
 class FunnelResult:
     eligible: int
     # Projects through all five stages, which the funnel table reports as its overall
-    # row, and projects holding a validated generalized test, which is the
-    # applicability figure the chapter cites.
+    # row and the chapter cites as its applicability figure. The count holding a
+    # validated generalized test before reduction is the reduction band's input.
     success_count: int
-    applicability_count: int
     stages: list[StageBand]
     table: Table
     uncoded_projects: list[int]
@@ -322,7 +322,6 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
     reduction = next(band for band in stages if band.stage == _REDUCTION_STAGE)
     eligible = len(eligible_ids)
     success_count = len(survivor_sets[-1])
-    applicability_count = len(survivor_sets[_APPLICABILITY_INDEX])
     band_parts = [f"Eligible projects: {eligible}."]
     for band in stages:
         rate = band.passing / band.entering if band.entering else 0.0
@@ -339,7 +338,6 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
     return FunnelResult(
         eligible=eligible,
         success_count=success_count,
-        applicability_count=applicability_count,
         stages=stages,
         table=_build_table(table_df, note),
         uncoded_projects=uncoded_projects,

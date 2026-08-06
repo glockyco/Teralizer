@@ -164,19 +164,26 @@ def test_rq6_metrics_cover_applicability_and_are_well_formed():
     validated = int(report.metric("realworld.generalizations_validated").value)
     assert validated < int(report.metric("realworld.generalization_attempts").value)
 
-    with pytest.raises(KeyError):
-        report.metric("realworld.overall_inclusion_pct")
+    # The headline rate is the share of eligible projects completing every stage.
+    eligible_projects = int(report.metric("realworld.eligible_projects").value)
+    assert applicable == int(report.metric("realworld.applicability_projects").value)
+    assert float(report.metric("realworld.applicability_pct").value) == pytest.approx(
+        applicable / eligible_projects
+    )
 
 
-def test_rq6_reduction_attrition_metrics_are_not_a_denominator():
+def test_rq6_applicability_is_measured_after_reduction():
     report = _report()
-    entering = int(report.metric("realworld.reduction_entering_projects").value)
+    stage4 = int(report.metric("realworld.stage4_projects").value)
     excluded = int(report.metric("realworld.reduction_excluded_projects").value)
     baseline_side = int(
         report.metric("realworld.reduction_excluded_baseline_side").value
     )
-    assert entering == int(report.metric("realworld.applicability_projects").value)
-    assert 0 < excluded < entering
+    applicability = int(report.metric("realworld.applicability_projects").value)
+    # The headline counts projects through all five stages; the Stage-4 figure sits
+    # beside it, and the two differ by exactly what reduction excluded.
+    assert applicability == stage4 - excluded
+    assert 0 < excluded < stage4
     assert 0 < baseline_side <= excluded
     assert not any(
         key.endswith("reduction_included") or key.endswith("reduction_inclusion_pct")
