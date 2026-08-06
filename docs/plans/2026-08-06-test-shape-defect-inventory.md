@@ -62,9 +62,23 @@ generalized class stops being a JUnit 3 test entirely, or the vintage report and
 sentinel must be interpreted rather than trusted.
 
 `jason` (`postgres_rq6_junit3_smoke`) escaped the crash only because it declares no
-surefire plugin, so the pipeline injects 3.2.5, which merges both engines into one
-FQN-keyed file. Both surefire generations occur across the corpus, so both shapes must be
-correct.
+surefire plugin, so the pipeline injects 3.2.5. Re-running the same two variants against a
+3.2.5-pinned copy of the derived POM isolates the version as the deciding factor:
+
+| Surefire | leftovers present | leftovers deleted |
+|---|---|---|
+| 2.22.2 (floor for a project-declared plugin) | **two** files; vintage FQN file shadows the jqwik file; property unreachable | two files; vintage file carries a failing `warning`; `BUILD FAILURE` |
+| 3.2.5 (injected when none declared) | **one** merged FQN file containing `testHas0`, `testHasStringChar`, and `testHasChar`; property reachable | one file; sentinel present as an empty-named testcase; `BUILD FAILURE` |
+
+Two conclusions follow. The report *split* is a surefire <3.0.2 behavior, so a content-directed
+lookup is what makes ingestion correct on both generations. The vintage *sentinel* is not
+version-dependent: deleting the leftover methods fails the build under 3.2.5 as well, so the
+leftovers cannot be removed while the class remains a `TestCase`.
+
+Engine selection is not an escape route. Surefire 3.x can exclude the vintage engine, which
+would stop the leftovers running, but `EXECUTE_TESTS_GENERALIZED` also produces the
+generalized suite's `jacoco.exec` and legitimately includes the project's original test
+classes; excluding vintage would drop those originals from the measurement.
 
 ## Findings
 
@@ -76,7 +90,7 @@ not misreported; **telemetry** = diagnostic fields wrong.
 | # | Site | Defect | Consequence | Severity |
 |---|---|---|---|---|
 | A1 | `JunitDataCollectionTask:253-269` | report path is chosen by first existing filename, not by content | property result unreachable; generalization lost as a failure | attrition |
-| A2 | `SpoonUtils:101-104` | `deleteOtherTestMethodsInClass` is annotation-only | leftover JUnit 3 `test*` run inside the generalized class: their coverage and mutation kills are attributed to the generalized suite, and any failure among them rejects the generalization class-level via `NonPassingTestFilter` | soundness |
+| A2 | `SpoonUtils:101-104` | `deleteOtherTestMethodsInClass` is annotation-only | leftover JUnit 3 `test*` run inside the generalized class. Bounded, not a wrong number: the generalized suite already includes the original test classes (235 entries in the run's own includes file), so these are *duplicate* executions of tests already present, and coverage (a union) and mutation detection (a disjunction) are unchanged. What remains is that a failure among them rejects the generalization class-level via `NonPassingTestFilter`, and runtime inflates. Per-generalization kill credit would also be wrong, but `killing_generalization_id` has no consumer in `analysis/src` | attrition |
 | A3 | `SpoonUtils:112-117` | `deleteOtherAssertionsInMethod` filters JUnit 4/5 only | sibling JUnit 3 assertions remain in the property, so it can fail for reasons unrelated to the generalized assertion | soundness |
 | A4 | `GeneralizedTestBuilder:201-218` | lifecycle rewrite is annotation-only | JUnit 3 `setUp` never runs for the property although `JpfInstrumentationTask:265-275` runs it during extraction: the property is validated against different state than was analyzed | soundness |
 | A5 | `SpoonUtils:186-190` | `isFlattenableInheritedMethod` is annotation-only | inherited JUnit 3 test and fixture methods are misjudged when cloning | attrition |

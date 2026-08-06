@@ -36,35 +36,34 @@ of them, and the duplicated predicates are deleted rather than left beside it:
 
 Call sites consult the owner. No call site keeps its own set.
 
-### A generalized class is a pure jqwik container
+### JUnit 3 stays JUnit 3
 
-This is forced by measurement, not preference. A cloned JUnit 3 class keeps `extends TestCase`
-and its sibling `test*` methods, so two engines claim it and — on surefire < 3.0.2 — each
-writes its own report. The inventory records the experiment: leftovers present yields two
-report files and the vintage one shadows the jqwik one; leftovers deleted makes vintage emit
-its "no tests found" sentinel as a *failing* testcase and `mvn test` exits `BUILD FAILURE`,
-which would lose every generalization in the project.
+The generalized class keeps `extends TestCase`. Nothing rewrites a project's inherited
+assertions, and no generalization is refused for its source framework's shape. The earlier
+idea of detaching `TestCase` is rejected: the inventory's measurements show it is not
+required, and it would mean rewriting user code to buy a correction the metrics do not need.
 
-So the only shape that is correct under both surefire generations is a class the vintage
-engine will not claim at all:
+What the class *does* need is that the pipeline reads it correctly and executes the property
+under the same fixture the specification was extracted under. Three changes, none of which
+touch the class's framework identity:
 
-1. leftover JUnit 3 `test*` methods deleted, as annotated siblings already are;
-2. leftover JUnit 3 sibling assertions deleted from the property;
-3. `setUp` / `tearDown` converted to `@BeforeProperty` / `@AfterProperty`;
-4. `extends TestCase` removed, and the inherited assertion calls the property still needs
-   qualified to `junit.framework.Assert.assertX(...)` — always valid, since it is a public
-   static class;
-5. constructors reduced to what jqwik can instantiate.
-
-**Drop or refuse.** Step 4 is safe only when everything the retained code references from
-above the cloned class is an assertion (qualifiable) or a fixture (converted). When an
-intermediate base contributes anything else — a helper, a field — the class cannot be
-detached, and keeping it as a `TestCase` would reintroduce either the shadowed report or the
-build failure. In that case the generalization is **refused** with a countable diagnostic
-rather than emitted with contaminated attribution. This follows the widening license's
-existing discipline: the tool declines a claim it cannot support. The refusal rate is
-measured in the gate below, and if it is material the fallback gets revisited before the
-relaunch rather than after.
+1. **Fixtures reach the property.** JUnit 3 declares its fixture by overriding `setUp` /
+   `tearDown`, so the existing lifecycle rewrite never sees them. Annotating those same
+   methods with `@BeforeProperty` / `@AfterProperty` makes jqwik run them, while vintage
+   continues to run them for the leftover methods — correct for both. This closes the
+   soundness gap where `JpfInstrumentationTask` ran `setUp` during extraction but the
+   property ran without it.
+2. **Sibling assertions leave the property.** `deleteOtherAssertionsInMethod` already strips
+   JUnit 4/5 siblings; extending it to JUnit 3 stops the property failing for an assertion
+   that is not the one being generalized. This is independent of the vintage engine.
+3. **Leftover sibling methods stay.** They cannot be deleted: the inventory shows vintage
+   then emits its "no tests found" sentinel as a failing testcase and the build fails, under
+   2.22.2 *and* 3.2.5. Their only real consequence is that `NonPassingTestFilter` is
+   class-scoped, so a failing leftover rejects the generalization. That is fixed where the
+   defect actually is — in the filter's attribution, not in the emitted source: judge the
+   generalization by the property's own test case. A leftover failure is a duplicate of an
+   original test already in the suite, so it is a project condition, and a non-green
+   assembled suite is already reported separately as `SUITE_NOT_GREEN`.
 
 ### Report ingestion is content-directed
 
@@ -72,6 +71,13 @@ A class may legitimately have several report files. Selection stops guessing fro
 collect every candidate, choose the one that actually contains the expected test case, and
 throw only when no candidate does — naming every candidate inspected. Duplicate records
 across engines are resolved deterministically instead of by `Files.walk` order.
+
+This is what makes ingestion correct on both surefire generations the corpus exercises, and
+it is why the surefire floor is **not** raised here. Pinning INITIAL and GENERALIZED to 3.x
+would also merge the reports and would give the corpus one uniform report shape, but it
+changes the build for every project that declares a surefire plugin, and 3.x drops legacy
+configuration that some of the 1,161 projects rely on. Correctness does not need it, so that
+trade is evaluated on its own rather than smuggled into a correctness fix.
 
 ## Tasks
 
@@ -93,18 +99,23 @@ across engines are resolved deterministically instead of by `Files.walk` order.
 - [ ] Commit.
   Message: `refactor(shape): give test shape a single owner`
 
-### Task 2: Generalized classes become pure jqwik containers
+### Task 2: The property runs under its own fixture and its own assertion
 
-- [ ] Delete leftover JUnit 3 test methods and sibling assertions, convert JUnit 3 fixtures
-      to jqwik lifecycle annotations, detach `extends TestCase` with inherited assertions
-      qualified, and adapt constructors (inventory A2, A3, A4, A5, B4).
-- [ ] Refuse with a countable diagnostic when the class cannot be detached safely, rather
-      than emitting a contaminated class.
-  Verification: unit tests asserting the emitted class for a JUnit 3 source has no `TestCase` ancestor, exactly one test-shaped method, no sibling assertions, and jqwik lifecycle hooks; plus a fixture whose base contributes a helper, which must refuse
-  Expected: both outcomes hold; the refusal carries its reason code.
+- [ ] Annotate JUnit 3 `setUp` / `tearDown` on the generalized class with
+      `@BeforeProperty` / `@AfterProperty` so jqwik runs the fixture the specification was
+      extracted under, and extend `deleteOtherAssertionsInMethod` to JUnit 3 so only the
+      generalized assertion remains in the property (inventory A4, A3, A5).
+  Verification: unit tests asserting the emitted class for a JUnit 3 source carries jqwik lifecycle hooks on the inherited-or-declared fixture methods, retains its `TestCase` ancestor, and holds exactly one assertion in the property
+  Expected: all three hold; the leftover sibling *methods* are deliberately still present.
+
+- [ ] Scope `NonPassingTestFilter` to the generalization's own test case rather than every
+      test case in its class, so a leftover original's failure no longer rejects it
+      (inventory A2). A non-green assembled suite stays reported by `SUITE_NOT_GREEN`.
+  Verification: unit test with a report containing a passing property and a failing sibling
+  Expected: accepted, with the sibling failure recorded but not decisive.
 
 - [ ] Commit.
-  Message: `fix(generalization): emit generalized tests as pure jqwik containers`
+  Message: `fix(generalization): run properties under their source fixture`
 
 ### Task 3: Content-directed report ingestion
 
@@ -158,11 +169,13 @@ across engines are resolved deterministically instead of by `Files.walk` order.
 
 - [ ] Run the two pinned JUnit 3-heavy projects into a scratch database and confirm the shape
       contract end to end.
-  Verification: for every generalized class, exactly one surefire report file exists; no
-  report contains a `warning` sentinel or a leftover original test; zero
-  `Failed to identify matching test case report`; `realworld.assertions_without_resolution`
-  is zero; the Stage-4 refusal breakdown separates oracle refusals from shape refusals.
-  Expected: all hold, and the shape-refusal rate is recorded here before the relaunch decision.
+  Verification: zero `Failed to identify matching test case report` on a project whose
+  surefire is floored to 2.22.2 (the split-report case) and on one running the injected 3.2.5;
+  every generalized property has a `junit_test_report` row; no generalization is rejected on a
+  leftover sibling's failure; `realworld.assertions_without_resolution` is zero; JUnit 3
+  fixtures appear in the emitted properties.
+  Expected: all hold on both surefire generations, which is the point of the content-directed
+  lookup.
 
 - [ ] Full gates: `./gradlew test`, `uv run --directory analysis pytest tests/eval -q`.
   Expected: green, except the corpus-dependent telemetry test until v4 exists.
@@ -173,14 +186,18 @@ across engines are resolved deterministically instead of by `Files.walk` order.
 
 ## Assumptions & contingencies
 
-- **The refusal fallback is rare.** If Task 2's gate shows a material shape-refusal rate, the
-  fallback is the wrong trade: revisit before relaunching, because refusing a large share of
-  JUnit 3 generalizations would understate applicability as badly as contaminating it would
-  overstate it.
 - **Both surefire generations stay in scope.** The pipeline floors a project-declared surefire
   to 2.22.2 and injects 3.2.5 when none is declared, so every report-shape fix must be
   verified against both. Do not "fix" this by forcing one version: the floor exists so the
-  project's own ORIGINAL runner is preserved.
+  project's own ORIGINAL runner is preserved, and raising it changes builds corpus-wide.
+- **Raising the surefire floor to 3.x is a separate decision.** It would merge the reports and
+  make report shapes uniform across the corpus, which is attractive for the replication
+  package. It is not needed for correctness once ingestion is content-directed, and it risks
+  breaking projects whose configuration 3.x no longer accepts. If it is ever taken, it needs
+  its own measurement of how many projects' generalized builds change.
+- **Leftover sibling methods are deliberately retained.** Deleting them fails the build under
+  both surefire generations. If a future change makes the generalized class stop being a
+  `TestCase` for unrelated reasons, revisit, because the deletion becomes safe at that point.
 - **B4/B5/B6 are unverified.** Constructor instantiability, `suite()` factories, and the
   `public void` predicate are structurally present but unproven. Task 2 and Task 4 add loud,
   countable diagnostics for them; if the gate shows hits, they graduate to their own tasks
