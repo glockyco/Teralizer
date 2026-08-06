@@ -8,6 +8,7 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.filter.NamedElementFilter;
+import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.compiler.VirtualFile;
 
 public class TestAnalysisTest {
@@ -163,6 +164,66 @@ public class TestAnalysisTest {
                 + "    } catch (IllegalArgumentException e) {\n"
                 + "    }")));
         Assert.assertFalse(TestAnalysis.isGeneralizable("fail"));
+    }
+
+    @Example
+    void junit3AssertEqualsUsesMessageFirstIndexes() {
+        CtInvocation<?> plain = assertion("junit.framework.Assert.assertEquals(1, new Subject().id(1));");
+
+        Assert.assertEquals(Optional.of(1), TestAnalysis.getActualParameterIndex(plain));
+        Assert.assertEquals(Optional.of(0), TestAnalysis.getExpectedParameterIndex(plain));
+        Optional<TestAnalysis.NormalizedAssertion> view = TestAnalysis.normalizedAssertion(plain);
+        Assert.assertTrue(view.isPresent());
+        Assert.assertEquals(TestAnalysis.AssertionKind.EQUALITY, view.get().getKind());
+
+        CtInvocation<?> withMessage = assertion("junit.framework.Assert.assertEquals(\"msg\", 1, new Subject().id(1));");
+
+        Assert.assertEquals(Optional.of(2), TestAnalysis.getActualParameterIndex(withMessage));
+        Assert.assertEquals(Optional.of(1), TestAnalysis.getExpectedParameterIndex(withMessage));
+    }
+
+    @Example
+    void junit3InheritedAssertEqualsResolvesViaTestCase() {
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(
+            "public class SubjectTest extends junit.framework.TestCase {\n"
+                + "  public void t() { assertEquals(1, new Subject().id(1)); }\n"
+                + "}\n"
+                + "class Subject { int id(int x) { return x; } }\n",
+            "SubjectTest.java"));
+        launcher.buildModel();
+        CtClass<?> testClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest"))
+            .get(0);
+        CtMethod<?> testMethod = testClass.getMethodsByName("t").get(0);
+        CtInvocation<?> inherited = TestAnalysis.findAllAsserts(testMethod).get(0);
+
+        Assert.assertTrue(TestAnalysis.isJUnit3Assertion(inherited));
+        Assert.assertEquals(Optional.of(1), TestAnalysis.getActualParameterIndex(inherited));
+        Assert.assertEquals(Optional.of(0), TestAnalysis.getExpectedParameterIndex(inherited));
+    }
+
+    @Example
+    void unknownAssertionFrameworkDegradesInsteadOfThrowing() {
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(
+            sourceForMethodBody("com.example.MyAssert.assertEquals(1, new Subject().id(1));"),
+            "SubjectTest.java"));
+        launcher.buildModel();
+        CtClass<?> testClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest"))
+            .get(0);
+        CtInvocation<?> foreign = testClass.getMethodsByName("t").get(0)
+            .getElements(new TypeFilter<>(CtInvocation.class))
+            .stream()
+            .filter(invocation -> "assertEquals".equals(invocation.getExecutable().getSimpleName()))
+            .findFirst()
+            .get();
+
+        Assert.assertEquals(Optional.empty(), TestAnalysis.getActualParameterIndex(foreign));
+        Assert.assertEquals(Optional.empty(), TestAnalysis.getExpectedParameterIndex(foreign));
     }
 
     private static TestAnalysis.NormalizedAssertion normalizedAssertion(String assertionSource) {

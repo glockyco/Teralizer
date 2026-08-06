@@ -1,5 +1,6 @@
 package teralizer.spoon.analysis;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,9 @@ import teralizer.util.Configuration;
 
 public class TestAnalysis {
     private static final int NO_INDEX = -1;
+    // junit.framework.Assert and org.junit.Assert share the message-first argument order.
+    private static final List<AssertionFramework> MESSAGE_FIRST_FRAMEWORKS =
+        Arrays.asList(AssertionFramework.JUNIT3, AssertionFramework.JUNIT4);
     private static final Map<AssertionIndexKey, AssertionIndexes> ASSERT_EQUALS_INDEXES =
         createAssertEqualsIndexTable();
     private static final Map<AssertionIndexKey, AssertionIndexes> CONDITION_INDEXES =
@@ -199,7 +203,10 @@ public class TestAnalysis {
         if (ASSERT_THAT.equals(assertionName)) {
             return Optional.empty();
         }
-        AssertionFramework framework = assertionFramework(assertion);
+        AssertionFramework framework = assertionFrameworkOrNull(assertion);
+        if (framework == null) {
+            return Optional.empty();
+        }
         int argumentCount = assertion.getArguments().size();
 
         switch (assertionName) {
@@ -218,16 +225,19 @@ public class TestAnalysis {
         if (ASSERT_THAT.equals(assertionName)) {
             return Optional.empty();
         }
-        AssertionFramework framework = assertionFramework(assertion);
+        AssertionFramework framework = assertionFrameworkOrNull(assertion);
+        if (framework == null) {
+            return Optional.empty();
+        }
         int argumentCount = assertion.getArguments().size();
 
         if (assertionName.equals(Configuration.ASSERT_EQUALS)) {
             return assertEqualsIndexes(assertion, framework, argumentCount).expectedIndex();
         } else if (assertionName.equals(Configuration.ASSERT_THROWS)) {
-            if (framework == AssertionFramework.JUNIT4) {
-                throw new RuntimeException("Unexpected JUnit 4 assertion:\n" + assertion);
-            } else {
+            if (framework == AssertionFramework.JUNIT5) {
                 return Optional.of(0);
+            } else {
+                throw new RuntimeException("Unexpected JUnit 4 assertion:\n" + assertion);
             }
         }
         return Optional.empty();
@@ -420,17 +430,10 @@ public class TestAnalysis {
         return declaringType != null && declaringType.getQualifiedName().startsWith(HAMCREST_PACKAGE);
     }
 
-    private static AssertionFramework assertionFramework(CtInvocation<?> assertion) {
-        if (isJUnit4Assertion(assertion)) {
-            return AssertionFramework.JUNIT4;
-        }
-        if (isJUnit5Assertion(assertion)) {
-            return AssertionFramework.JUNIT5;
-        }
-        throw new RuntimeException("Not a JUnit 4 or 5 assertion:\n" + assertion);
-    }
-
     private static AssertionFramework assertionFrameworkOrNull(CtInvocation<?> assertion) {
+        if (isJUnit3Assertion(assertion)) {
+            return AssertionFramework.JUNIT3;
+        }
         if (isJUnit4Assertion(assertion)) {
             return AssertionFramework.JUNIT4;
         }
@@ -451,12 +454,14 @@ public class TestAnalysis {
 
     private static Map<AssertionIndexKey, AssertionIndexes> createAssertEqualsIndexTable() {
         Map<AssertionIndexKey, AssertionIndexes> table = new HashMap<>();
-        putAssertEquals(table, AssertionFramework.JUNIT4, 2, false, 0, 1);
-        putAssertEquals(table, AssertionFramework.JUNIT4, 2, true, 0, 1);
-        putAssertEquals(table, AssertionFramework.JUNIT4, 3, false, 1, 2);
-        putAssertEquals(table, AssertionFramework.JUNIT4, 3, true, 0, 1);
-        putAssertEquals(table, AssertionFramework.JUNIT4, 4, false, 1, 2);
-        putAssertEquals(table, AssertionFramework.JUNIT4, 4, true, 1, 2);
+        for (AssertionFramework framework : MESSAGE_FIRST_FRAMEWORKS) {
+            putAssertEquals(table, framework, 2, false, 0, 1);
+            putAssertEquals(table, framework, 2, true, 0, 1);
+            putAssertEquals(table, framework, 3, false, 1, 2);
+            putAssertEquals(table, framework, 3, true, 0, 1);
+            putAssertEquals(table, framework, 4, false, 1, 2);
+            putAssertEquals(table, framework, 4, true, 1, 2);
+        }
         putAssertEquals(table, AssertionFramework.JUNIT5, 2, false, 0, 1);
         putAssertEquals(table, AssertionFramework.JUNIT5, 2, true, 0, 1);
         putAssertEquals(table, AssertionFramework.JUNIT5, 3, false, 0, 1);
@@ -468,8 +473,10 @@ public class TestAnalysis {
 
     private static Map<AssertionIndexKey, AssertionIndexes> createConditionIndexTable() {
         Map<AssertionIndexKey, AssertionIndexes> table = new HashMap<>();
-        putCondition(table, AssertionFramework.JUNIT4, 1, 0);
-        putCondition(table, AssertionFramework.JUNIT4, 2, 1);
+        for (AssertionFramework framework : MESSAGE_FIRST_FRAMEWORKS) {
+            putCondition(table, framework, 1, 0);
+            putCondition(table, framework, 2, 1);
+        }
         putCondition(table, AssertionFramework.JUNIT5, 1, 0);
         putCondition(table, AssertionFramework.JUNIT5, 2, 0);
         return table;
@@ -583,6 +590,7 @@ public class TestAnalysis {
     }
 
     private enum AssertionFramework {
+        JUNIT3,
         JUNIT4,
         JUNIT5
     }
@@ -634,6 +642,12 @@ public class TestAnalysis {
         private Optional<Integer> actualIndex() {
             return this.actualIndex == NO_INDEX ? Optional.empty() : Optional.of(this.actualIndex);
         }
+    }
+
+    public static boolean isJUnit3Assertion(CtInvocation<?> assertion) {
+        String declaringType = declaringTypeName(assertion);
+        return Configuration.JUNIT3_ASSERTION_PACKAGE.equals(declaringType)
+            || Configuration.JUNIT3_TEST_CASE_CLASS.equals(declaringType);
     }
 
     public static boolean isJUnit4Assertion(CtInvocation<?> assertion) {

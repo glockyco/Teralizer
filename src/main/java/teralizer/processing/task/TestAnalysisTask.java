@@ -105,6 +105,7 @@ public class TestAnalysisTask extends AbstractTask {
         }
 
         for (CtInvocation<?> assertionCall : assertionCalls) {
+            AssertionRecord record = null;
             try {
                 List<MethodArgument> assertionArguments = new ArrayList<>();
                 for (CtExpression<?> argument : assertionCall.getArguments()) {
@@ -113,7 +114,7 @@ public class TestAnalysisTask extends AbstractTask {
                     assertionArguments.add(new MethodArgument(argType, argValue));
                 }
 
-                AssertionRecord record = create.newRecord(Tables.ASSERTION);
+                record = create.newRecord(Tables.ASSERTION);
                 record.setProjectId(this.getProjectId());
                 record.setTestId(this.getTestId());
 
@@ -231,25 +232,39 @@ public class TestAnalysisTask extends AbstractTask {
                 record.setIsIncluded(true);
                 record.store();
 
-                AssertionSemanticsClassifier.Result semantics = AssertionSemanticsClassifier.classify(assertionCall);
-                AssertionSemanticsRecord semanticsRecord = create.newRecord(Tables.ASSERTION_SEMANTICS);
-                semanticsRecord.setAssertionId(record.getId());
-                semanticsRecord.setSemanticKind(semantics.semanticKind());
-                semanticsRecord.setArgumentShape(semantics.argumentShape());
-                semanticsRecord.setFailContext(semantics.failContext());
-                semanticsRecord.setMatcherFamily(semantics.matcherFamily());
-                semanticsRecord.setMatcherName(semantics.matcherName());
-                semanticsRecord.store();
-
+                // Persist resolver telemetry immediately after the assertion row so a
+                // later failure cannot cost the observation.
                 MutResolutionObservationRecord observation = create.newRecord(Tables.MUT_RESOLUTION_OBSERVATION);
                 MutResolutionObservationMapper.map(resolution, this.getProjectId(), this.getTestId(), record.getId(), gson, observation);
                 observation.store();
+
+                try {
+                    AssertionSemanticsClassifier.Result semantics = AssertionSemanticsClassifier.classify(assertionCall);
+                    AssertionSemanticsRecord semanticsRecord = create.newRecord(Tables.ASSERTION_SEMANTICS);
+                    semanticsRecord.setAssertionId(record.getId());
+                    semanticsRecord.setSemanticKind(semantics.semanticKind());
+                    semanticsRecord.setArgumentShape(semantics.argumentShape());
+                    semanticsRecord.setFailContext(semantics.failContext());
+                    semanticsRecord.setMatcherFamily(semantics.matcherFamily());
+                    semanticsRecord.setMatcherName(semantics.matcherName());
+                    semanticsRecord.store();
+                } catch (RuntimeException e) {
+                    // A semantics failure costs only the semantics row.
+                    LOGGER.atWarn()
+                        .setCause(e)
+                        .log("Skipping assertion semantics after unexpected failure for assertion: {}", sourceSnippet(assertionCall));
+                }
             } catch (RuntimeException e) {
                 /*
                  * Last-resort guard only: the known crash classes above are handled at
                  * their sources. This bounds any still-unknown assertion shape to one
                  * skipped assertion instead of losing the rest of the test or project.
                  */
+                if (record != null && record.getId() != null) {
+                    record.setIsIncluded(false);
+                    record.setExclusionInfo("ASSERTION_ANALYSIS_FAILED: " + e.getClass().getName());
+                    record.store();
+                }
                 LOGGER.atWarn()
                     .setCause(e)
                     .log("Skipping assertion analysis after unexpected failure for assertion: {}", sourceSnippet(assertionCall));
