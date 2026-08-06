@@ -23,11 +23,13 @@
 - **Oracle-Refusal Taxonomy on the RQ6 Corpus** [audit] `2026-08-04-oracle-refusal-taxonomy` ← 2026-06-26-teralizer-overview
 - **RepoReapers Dataset Row for the Eligible Corpus** [plan] `2026-08-04-reporeapers-dataset-row` (0/6) ← 2026-07-08-evaluation-analysis-redesign
 - **RQ6 Re-Collection After the Reduction Fixes** [plan] `2026-08-04-rq6-recollection` (1/11) ← 2026-06-26-teralizer-overview
+- **Test-Shape Handling Defect Inventory** [audit] `2026-08-06-test-shape-defect-inventory` ← 2026-06-26-teralizer-overview
 
 ## draft
 
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
 - **Evaluation Analysis and Reporting Redesign** [spec] `2026-07-08-evaluation-analysis-redesign` ← 2026-06-26-teralizer-overview
+- **Test-Shape Handling Fixes** [plan] `2026-08-06-test-shape-handling-fixes` (0/19) ← 2026-06-26-teralizer-overview
 
 _79 archived — see `docs/plans/archive/`._
