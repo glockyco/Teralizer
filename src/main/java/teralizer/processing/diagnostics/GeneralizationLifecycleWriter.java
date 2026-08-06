@@ -1,5 +1,6 @@
 package teralizer.processing.diagnostics;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 import org.jooq.DSLContext;
 import org.jooq.Result;
@@ -171,9 +172,33 @@ public final class GeneralizationLifecycleWriter {
             truth(record.getGeneratedPitCollected()),
             failureCode
         );
+        String retainedCode = retainedFailureCode(record, rollup);
         record.setFinalUsable(rollup.isFinalUsable());
         record.setFinalFailureStage(rollup.getFinalFailureStage());
-        record.setFinalFailureCode(rollup.getFinalFailureCode());
+        record.setFinalFailureCode(retainedCode);
+    }
+
+    /**
+     * The failure stage is derived from the stage flags, so every later event recomputes it. An
+     * event that carries no code of its own -- a success at an unrelated stage, or a failure the
+     * classifier could not name -- must not erase the code an earlier event recorded for the same
+     * stage. Without this, attribution depends on event order: rejections whose reports were
+     * collected again lost their reason code while the authoritative {@code filter_result} row kept
+     * it.
+     */
+    private static String retainedFailureCode(GeneralizationLifecycleRecord record, Rollup rollup) {
+        return retainedFailureCode(record.getFinalFailureStage(), record.getFinalFailureCode(), rollup);
+    }
+
+    static String retainedFailureCode(String storedStage, String storedCode, Rollup rollup) {
+        String derived = rollup.getFinalFailureCode();
+        if (derived != null) {
+            return derived;
+        }
+        if (storedCode == null) {
+            return null;
+        }
+        return Objects.equals(storedStage, rollup.getFinalFailureStage()) ? storedCode : null;
     }
 
     private static boolean successCanAffect(GeneralizationLifecycleRecord record, ProcessingStage stage) {

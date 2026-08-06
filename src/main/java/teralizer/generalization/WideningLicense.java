@@ -45,8 +45,18 @@ import teralizer.transformer.VariableNameCollector;
  * <p>The accepted residual risk is a boolean method whose path condition names a widened parameter
  * for some branch unrelated to the returned value while the return itself is pass-through. That is
  * still guarded by the later validation net, but it is not solved here: this gate is intentionally a
- * small generation-time policy that rejects claims without oracle evidence and leaves completeness
- * recovery to boxed output capture rather than weakening the license.
+ * small generation-time policy that rejects claims without oracle evidence rather than weakening
+ * the license.
+ *
+ * <p>What the refusals cost, and what would recover them, is measured rather than assumed; see
+ * {@code docs/plans/2026-08-04-oracle-refusal-taxonomy.md}. Refusals are overwhelmingly
+ * {@code NULL_CONCRETE}, and they decompose into values derived from receiver, array, or collection
+ * state, String composition concretized through {@code StringBuilder} and {@code String} calls,
+ * wrapper {@code valueOf} boxing, and a small tail of other unmodeled calls. Boxed output capture is
+ * already implemented and does not recover them: those wrapper calls are unmodeled calls hit
+ * mid-path, so their operands are concretized and no symbolic output survives to capture. Recovery
+ * needs symbolic models or native peers for the concretized methods. Do not read the paragraphs
+ * above as a cause distribution; they describe when the license is granted, not why it is refused.
  */
 public final class WideningLicense {
     public static final String ORACLE_NOT_WIDENABLE = "ORACLE_NOT_WIDENABLE";
