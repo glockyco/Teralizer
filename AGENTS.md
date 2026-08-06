@@ -74,6 +74,20 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
 - Paper sync (on-demand only): `uv run --directory analysis python sync.py`; `PAPER_REPO_PATH` in
   `.env`. Never sync automatically.
 
+## Evaluation analysis
+Search `docs/plans/` first: its audits record measured findings and prevent repeating completed
+investigations before starting new analysis.
+
+**Evidence rule:** implementation docstrings describe intent and mechanism, never empirical
+distributions or outcomes. A claim about what the corpus contains must come from a query or report,
+not from comments such as `WideningLicense`'s explanation of refusal handling or boxed output capture.
+Treat boxed output capture as an implemented mechanism, not as evidence that refusals are recoverable.
+
+**Metric rule:** RQ6 definitions live in `analysis/src/teralizer/eval/reports/_funnel.py` and the
+report builders. Quote every figure with its measure and denominator. Before comparing figures from
+two databases, confirm that both were computed through the same code path and therefore have the same
+definition; in particular, current Stage-4 success requires `generated_filter_passed`.
+
 ## Database
 Dockerized Postgres, container `postgres-teralizer`, `localhost:5432`. Protected DBs are the
 corpora the published paper depends on (never drop, never use for experiments): `postgres_dev`
