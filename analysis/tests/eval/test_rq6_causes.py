@@ -142,6 +142,14 @@ def test_rq6_filtering_table_is_entity_conservative():
     assert (reconstructed == filtering.df["total"]).all()
 
 
+def test_rq6_every_assertion_carries_resolver_telemetry():
+    # MethodUnderTestResolver.resolve runs unconditionally before the assertion
+    # row is stored and MutResolution is total, so a missing observation row is
+    # a persistence defect, never a category.
+    report = _report()
+    assert int(report.metric("realworld.assertions_without_resolution").value) == 0
+
+
 def test_rq6_metrics_cover_applicability_and_are_well_formed():
     report = _report()
     eligible = int(report.metric("realworld.eligible_projects").value)

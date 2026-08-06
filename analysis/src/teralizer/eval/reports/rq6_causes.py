@@ -17,7 +17,7 @@ from teralizer.eval.reports._causes_common import (
     build_filtering_table,
 )
 
-DEFAULT_DB = "postgres_reporeapers_rq6_v2"
+DEFAULT_DB = "postgres_reporeapers_rq6_v3"
 
 _ELIGIBILITY_CTE = """
 WITH eligible_projects AS (
@@ -215,6 +215,25 @@ ORDER BY
 """
 
 
+UNRESOLVED_TELEMETRY_SQL = f"""
+{_ELIGIBILITY_CTE}
+SELECT count(*) AS assertions_without_resolution
+FROM assertion a
+JOIN eligible_projects ep ON ep.id = a.project_id
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM mut_resolution_observation o
+    WHERE o.assertion_id = a.id
+)
+"""
+
+
+def _fetch_assertions_without_resolution(conn: Connection, variant: str) -> int:
+    """Assertions whose resolver telemetry was never persisted. Must be zero."""
+    df = read_sql(conn, UNRESOLVED_TELEMETRY_SQL, _query_params(variant))
+    return int(df["assertions_without_resolution"].iloc[0])
+
+
 def _fetch_filtering(conn: Connection, variant: str) -> pd.DataFrame:
     """Return distinct-entity filter decision counts for the eligible corpus."""
     df = read_sql(conn, FILTERING_SQL, _query_params(variant))
@@ -297,6 +316,16 @@ def build(conn: Connection) -> RQReport:
             int(assertions["total"]),
             fmt="count",
             provenance=breakdown_provenance,
+        ),
+        # Telemetry invariant: every stored assertion carries a resolver
+        # observation. Non-zero is a persistence defect, never a category.
+        Metric(
+            "realworld.assertions_without_resolution",
+            _fetch_assertions_without_resolution(conn, variant),
+            fmt="count",
+            provenance=capture(
+                _fetch_assertions_without_resolution, query=UNRESOLVED_TELEMETRY_SQL
+            ),
         ),
         Metric(
             "realworld.assertions_included",
