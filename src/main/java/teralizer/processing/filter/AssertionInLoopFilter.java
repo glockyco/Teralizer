@@ -20,10 +20,13 @@ public class AssertionInLoopFilter extends AbstractFilter {
 
     @Override
     public FilterResult check() throws Exception {
+        // This filter only reports on loops. When it cannot locate the assertion it has no evidence
+        // about one, so it accepts: an assertion that genuinely cannot be generalized is caught
+        // downstream by the generalized test failing, which costs nothing, whereas excluding it
+        // here would remove a generalizable assertion on no evidence.
         String absolutePath = this.assertionRecord.getAssertionAbsolutePath();
         if (absolutePath == null || absolutePath.isEmpty()) {
-            return new FilterResult(this.getName(), FilterDecision.DEFER,
-                "Assertion path is missing", FilterReasonCodes.MISSING_ASSERTION_PATH);
+            return new FilterResult(this.getName(), FilterDecision.ACCEPT);
         }
         CtElement assertionElement;
         try {
@@ -31,8 +34,7 @@ public class AssertionInLoopFilter extends AbstractFilter {
             CtModel model = this.spoonLauncher.getModel();
             assertionElement = path.evaluateOn(model.getRootPackage()).get(0);
         } catch (RuntimeException e) {
-            return new FilterResult(this.getName(), FilterDecision.DEFER,
-                "Assertion path is missing", FilterReasonCodes.MISSING_ASSERTION_PATH);
+            return new FilterResult(this.getName(), FilterDecision.ACCEPT);
         }
 
         return TestAnalysis.isContainedInLoop(assertionElement) ?

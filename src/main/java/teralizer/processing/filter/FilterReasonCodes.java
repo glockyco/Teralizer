@@ -19,8 +19,6 @@ public final class FilterReasonCodes {
     public static final String MISSING_TESTED_FILE = "MISSING_TESTED_FILE";
     public static final String MISSING_TESTED_METHOD = "MISSING_TESTED_METHOD";
     public static final String MISSING_TESTED_PARAMS = "MISSING_TESTED_PARAMS";
-    public static final String MISSING_ASSERTION_PATH = "MISSING_ASSERTION_PATH";
-    public static final String MISSING_TESTED_METHOD_CALL_PATH = "MISSING_TESTED_METHOD_CALL_PATH";
     // Literals match mut_resolution_observation.no_pick_reason so the analysis can
     // group filter reasons and resolver observations without a translation table.
     public static final String MUT_LIBRARY_DECLARATION = "LIBRARY_DECLARATION";

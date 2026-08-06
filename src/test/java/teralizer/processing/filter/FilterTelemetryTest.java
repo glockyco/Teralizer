@@ -261,13 +261,27 @@ public class FilterTelemetryTest {
     }
 
     @Example
-    void assertionInLoopMissingPathDefersWithStableCode() throws Exception {
+    void loopFiltersAcceptAnUnevaluablePathRatherThanExcluding() throws Exception {
+        AssertionRecord record = new AssertionRecord();
+        record.setAssertionAbsolutePath("#subPackage[name=absent]#containedType[name=Gone]#method[signature=x()]#body#statement[index=0]");
+        record.setTestedMethodCallAbsolutePath("#subPackage[name=absent]#containedType[name=Gone]#method[signature=x()]#body#statement[index=0]");
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile("class T {}"));
+        launcher.buildModel();
+
+        Assert.assertEquals(FilterDecision.ACCEPT,
+            new AssertionInLoopFilter(launcher, record).check().getDecision());
+        Assert.assertEquals(FilterDecision.ACCEPT,
+            new TestedMethodInLoopFilter(launcher, record).check().getDecision());
+    }
+
+    @Example
+    void assertionInLoopWithoutAPathAcceptsRatherThanExcluding() throws Exception {
         AssertionRecord record = new AssertionRecord();
 
         FilterResult result = new AssertionInLoopFilter(new Launcher(), record).check();
 
-        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
-        Assert.assertEquals(FilterReasonCodes.MISSING_ASSERTION_PATH, result.getReasonCode());
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
     }
 
     @Example
@@ -338,6 +352,20 @@ public class FilterTelemetryTest {
     }
 
     @Example
+    void reportingFiltersAcceptAClassAbsentFromTheModel() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile("class Other {}"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("does.not.Exist");
+
+        Assert.assertEquals(FilterDecision.ACCEPT,
+            new NestedClassesFilter(launcher, record).check().getDecision());
+        Assert.assertEquals(FilterDecision.ACCEPT,
+            new StaticInitializersFilter(launcher, record).check().getDecision());
+    }
+
+    @Example
     void nestedClassSetsStableCode() throws Exception {
         Launcher launcher = new Launcher();
         launcher.addInputResource(new VirtualFile("class T { class Inner {} }"));
@@ -383,13 +411,12 @@ public class FilterTelemetryTest {
     }
 
     @Example
-    void testedMethodInLoopMissingPathDefersWithStableCode() throws Exception {
+    void testedMethodInLoopWithoutAPathAcceptsRatherThanExcluding() throws Exception {
         AssertionRecord record = new AssertionRecord();
 
         FilterResult result = new TestedMethodInLoopFilter(new Launcher(), record).check();
 
-        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
-        Assert.assertEquals(FilterReasonCodes.MISSING_TESTED_METHOD_CALL_PATH, result.getReasonCode());
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
     }
 
     @Example

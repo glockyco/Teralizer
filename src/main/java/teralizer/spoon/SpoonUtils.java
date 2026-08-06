@@ -103,6 +103,16 @@ public class SpoonUtils {
         return TestShape.hasTestAnnotation(testMethod);
     }
 
+    /**
+     * Keeps only the given assertion in the method, so a generalized property is judged by the
+     * assertion being generalized rather than by its siblings.
+     *
+     * <p>Deleting a void assertion statement also drops any side effect in its arguments, so the
+     * retained assertion can see different state than it did in the source test. That stays sound
+     * because the instrumented wrapper and the generated test delete the same siblings: the
+     * specification is extracted from exactly the code the generalized test runs, and a divergence
+     * that changes behavior surfaces as the generalized test failing its validation.
+     */
     public static void deleteOtherAssertionsInMethod(CtMethod<?> method, CtInvocation<?> assertion) {
         List<CtInvocation> otherAssertions = method.getElements(new TypeFilter<>(CtInvocation.class)).stream()
             .filter(i -> i != assertion && TestAnalysis.isSupportedFrameworkAssertion(i))

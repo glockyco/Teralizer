@@ -22,9 +22,12 @@ public class TestedMethodInLoopFilter extends AbstractFilter {
     public FilterResult check() throws Exception {
         String testMethodCallPath = this.assertionRecord.getTestedMethodCallAbsolutePath();
 
+        // This filter only reports on loops. When it cannot locate the tested call it has no
+        // evidence about one, so it accepts: an assertion that genuinely cannot be generalized is
+        // caught downstream by the generalized test failing, which costs nothing, whereas
+        // excluding it here would remove a generalizable assertion on no evidence.
         if (testMethodCallPath == null || testMethodCallPath.isEmpty()) {
-            return new FilterResult(this.getName(), FilterDecision.DEFER,
-                "Tested method call path is missing", FilterReasonCodes.MISSING_TESTED_METHOD_CALL_PATH);
+            return new FilterResult(this.getName(), FilterDecision.ACCEPT);
         }
 
         CtElement testedMethodCall;
@@ -33,8 +36,7 @@ public class TestedMethodInLoopFilter extends AbstractFilter {
             CtModel model = this.launcher.getModel();
             testedMethodCall = path.evaluateOn(model.getRootPackage()).get(0);
         } catch (RuntimeException e) {
-            return new FilterResult(this.getName(), FilterDecision.DEFER,
-                "Tested method call path is missing", FilterReasonCodes.MISSING_TESTED_METHOD_CALL_PATH);
+            return new FilterResult(this.getName(), FilterDecision.ACCEPT);
         }
 
         return TestAnalysis.isContainedInLoop(testedMethodCall) ?
