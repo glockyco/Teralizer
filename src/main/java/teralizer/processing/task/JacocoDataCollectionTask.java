@@ -1,22 +1,20 @@
 package teralizer.processing.task;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.JacocoCoverageReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
-import teralizer.processing.reports.CsvReportParser;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.processing.reports.CsvReportParser;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 

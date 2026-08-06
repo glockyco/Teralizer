@@ -27,7 +27,6 @@ import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.*;
 import org.xml.sax.SAXException;
 import spoon.Launcher;
-import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
@@ -39,9 +38,9 @@ import teralizer.processing.TestResult;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.diagnostics.JqwikDiagnosticsImporter;
 import teralizer.processing.reports.SurefireReportNames;
-import teralizer.spoon.analysis.TestShape;
 import teralizer.repository.PipelineQueries;
 import teralizer.spoon.InheritedTestMethodScreens;
+import teralizer.spoon.analysis.TestShape;
 import teralizer.util.Configuration;
 
 public class JunitDataCollectionTask extends AbstractTask {
