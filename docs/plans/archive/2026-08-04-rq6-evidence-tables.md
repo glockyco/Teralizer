@@ -1,14 +1,18 @@
 ---
 title: RQ6 Evidence Tables for Oracle Refusal and Extraction Limits
 type: plan
-status: active
+status: abandoned
 created: 2026-08-04
 parent: 2026-07-08-evaluation-analysis-redesign
 superseded_by:
-archived:
+archived: 2026-08-05
 ---
 
 # RQ6 Evidence Tables for Oracle Refusal and Extraction Limits
+
+## Why this is archived
+
+The table scope was reduced to the three tables the chapter already has, and the verification numbers came from a corpus that no longer exists. The superseding decision is recorded in the thesis repository at `phd-thesis/docs/plans/2026-08-04-rq6-results-framing.md` and `phd-thesis/docs/plans/2026-08-05-rq6-exclusion-mechanisms.md`.
 
 Generate the evidence the thesis chapter cites for why assertions are excluded and
 why licensed oracles are refused, so no number in the chapter comes from an ad-hoc

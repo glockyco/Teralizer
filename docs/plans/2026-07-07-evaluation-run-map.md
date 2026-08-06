@@ -50,8 +50,9 @@ bundle questions. Verified against the paper's `\input{tables/...}`:
 | `rq3-runtime-requirements` | RQ4 | `tab-pareto-eqbench`, `tab-pareto-commons` | eqbench + commons-utils (`conn_dev`) |
 | `rq4-limitations` | RQ5 + RQ6 | RQ5 controlled tables (`conn_dev`); `-extended` + `tab-processing-failures` (RQ6, `conn_test`) | both: `conn_dev` and `conn_test` (RepoReapers) |
 
-Databases: `postgres_dev` = eqbench + commons-utils (RQ1--RQ5); `postgres_test` =
-RepoReapers (RQ6).
+Databases: `postgres_dev` = eqbench + commons-utils (RQ1--RQ5);
+`postgres_reporeapers_rq6_v2` = the corrected full-pipeline RepoReapers corpus
+(RQ6).
 
 ## This evaluation: RQ0 + RQ6
 
@@ -59,7 +60,7 @@ RepoReapers (RQ6).
 |---|---|---|---|---|---|
 | JARVIS scoreboard | full old Commons: `MATH_3_5` + `LANG_3_5`, the JARVIS Table-2 cases (the ones JARVIS succeeded on) | IMPROVED 100 / 200 / 1000 | all (reduction on) | RQ0 Axis 1 (head-to-head @100: PVC + IC) and Axis 2 (budget elasticity: PVC inflates ~10x with tries, covered mutation score flat) | `postgres_jarvis_scoreboard` |
 | Census | full old Commons: all ~12 JARVIS projects, full pinned suites (the breadth JARVIS did not report) | IMPROVED 100 | generalization first; reduction a later sized pass | RQ0 Axis 3 (breadth beyond JARVIS) | `postgres_jarvis_census` |
-| RepoReapers RQ6 | full RepoReapers corpus (1161 projects) | IMPROVED 200 | full pipeline (incl. Stage-5 reduction) | RQ6 refresh (real-world unsuccessful-generalization causes on the current pipeline) | `postgres_reporeapers_rq6` (newest, canonical; `postgres_reporeapers` holds the gen-only Stages 1-4 baseline) |
+| RepoReapers RQ6 | full RepoReapers corpus (1161 projects) | IMPROVED 200 | full pipeline (incl. Stage-5 reduction) | RQ6 refresh (real-world unsuccessful-generalization causes on the current pipeline) | `postgres_reporeapers_rq6_v2` (corrected full-pipeline corpus) |
 
 RQ1--RQ5 are **not** re-run here; they stand from the prior evaluation on
 `postgres_dev`. The prior eval used the nine-variant scheme (BASELINE + NAIVE and
@@ -67,13 +68,16 @@ IMPROVED at 10/50/200 tries); RQ0 uses IMPROVED at 100/200/1000 (NAIVE dropped f
 the RQ0 lane per the 2026-07-06 variant policy in `2026-06-30-jarvis-comparison`).
 
 Scoreboard runs all phases because its PVC/mutation-score numbers are the point and
-its scope is narrow (cheap). Census and rerun3 run generalization first to prove
-Stage-4 applicability before any mutation spend; a reduction pass follows, sized per
-project (math alone needs hours — `2026-07-05-concretization-census-findings`).
+its scope is narrow (cheap). Census and rerun3 run generalization first to obtain the
+pre-reduction Stage-4 count before any mutation spend; a reduction pass follows,
+sized per project (math alone needs hours — `2026-07-05-concretization-census-findings`).
+RQ6 applicability is measured after Stage 5, with that pre-reduction Stage-4 count
+reported beside it.
 
 ## Shared data primitives
 
 - `generalization` + `jqwik_property_execution.diagnostic_kind = 'FULL'` — sound generalizations (applicability numerator).
 - `filter_result.reason_code` — the funnel: why each test / assertion / generalization drops. Compile-based quarantine now writes a row here with the javac error as `reason` (previously invisible). This is the core RQ6 dataset.
 - `jacoco_coverage_report` — IC. `pit_coverage_report` / `pit_mutation_report` — covered mutation score / kills (PVC and RQ0 Axis 2 come from here).
-- `v_projects_generalized` vs `v_projects_reduced` — Stage-4 applicability reported independently of whether Stage-5 mutation ran.
+- `v_projects_reduced` — post-reduction RQ6 applicability; `v_projects_generalized`
+  supplies the pre-reduction Stage-4 count reported beside it.

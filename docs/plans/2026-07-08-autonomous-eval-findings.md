@@ -138,12 +138,15 @@ Two valid RepoReapers databases hold the RQ6 evidence over the full
   (`IMPROVED_200`, with Stage-5 reduction): 42 of 611 eligible projects complete
   the pipeline (6.9%), per the generated `analysis/reports/rq6.md`.
 
-Consumption decision: both the paper and the thesis draw RQ6 from
-`postgres_reporeapers_rq6`. The thesis reports applicability as the 73 of 611
-projects that hold a validated generalized test, while its funnel table keeps all
-five stages and an overall row of 42 of 611. RQ1--RQ5 stay on `postgres_dev` and
-are not re-run, so their tables and prose are unchanged. Chapter work is tracked
-in the thesis repository under `2026-08-04-teralizer-chapter-refresh`.
+Consumption decision (reversed 2026-08-05): both the paper and the thesis draw
+RQ6 from the corrected `postgres_reporeapers_rq6_v2` corpus. Applicability is
+measured after Stage 5 of the full pipeline, including test-suite reduction, and
+the pre-reduction Stage-4 count is reported beside it. This reverses the earlier
+decision to keep the 632-project RepoReapers results because the corpus was
+re-collected on corrected code and the draft's figures cannot be reproduced from
+any surviving database. RQ1--RQ5 stay on `postgres_dev` and are not re-run, so
+their tables and prose are unchanged. Chapter work is tracked in the thesis
+repository under `2026-08-04-teralizer-chapter-refresh`.
 
 ## Census PIT status
 

@@ -15,6 +15,8 @@ recovery directions carry real leverage. Measured 2026-08-04 over
 `generalization.variant = 'IMPROVED_200_TRIES'` on the eligible corpus
 (611 projects; eligibility per `_funnel.INELIGIBLE_STAGES`).
 
+> **Re-measurement note (2026-08-05).** While the `postgres_reporeapers_rq6_v2` run was in progress, the four refusal buckets were re-measured on that corrected corpus. Their shares reproduce: state-derived 866 of 2,445 refusals, string composition 713, boxing-only 772, and other unmodeled 94. No `SYMBOLIC` or `CONSTANT` oracle is refused there either. The counts in the body below remain measurements from the earlier corpus and must not be cited for the thesis.
+
 ## Where the corpus stands
 
 | Level | Total | Included | Filtering | Failures |

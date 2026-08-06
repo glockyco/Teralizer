@@ -25,8 +25,7 @@
 - **Oracle-Refusal Taxonomy on the RQ6 Corpus** [audit] `2026-08-04-oracle-refusal-taxonomy` ← 2026-06-26-teralizer-overview
 - **Reduction-Stage Failure Anatomy and Run Cost** [audit] `2026-08-04-reduction-failure-anatomy` ← 2026-06-26-teralizer-overview
 - **RepoReapers Dataset Row for the Eligible Corpus** [plan] `2026-08-04-reporeapers-dataset-row` (0/6) ← 2026-07-08-evaluation-analysis-redesign
-- **RQ6 Evidence Tables for Oracle Refusal and Extraction Limits** [plan] `2026-08-04-rq6-evidence-tables` (0/21) ← 2026-07-08-evaluation-analysis-redesign
-- **RQ6 Re-Collection After the Reduction Fixes** [plan] `2026-08-04-rq6-recollection` (0/10) ← 2026-06-26-teralizer-overview
+- **RQ6 Re-Collection After the Reduction Fixes** [plan] `2026-08-04-rq6-recollection` (1/10) ← 2026-06-26-teralizer-overview
 
 ## draft
 
@@ -34,4 +33,4 @@
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
 - **Evaluation Analysis and Reporting Redesign** [spec] `2026-07-08-evaluation-analysis-redesign` ← 2026-06-26-teralizer-overview
 
-_75 archived — see `docs/plans/archive/`._
+_76 archived — see `docs/plans/archive/`._
