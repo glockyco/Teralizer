@@ -644,6 +644,16 @@ public class TestAnalysis {
         }
     }
 
+    /**
+     * An assertion declared by any JUnit generation this pipeline analyzes. Call sites that act
+     * on "an assertion we understand" use this instead of enumerating frameworks themselves.
+     */
+    public static boolean isSupportedFrameworkAssertion(CtInvocation<?> assertion) {
+        return isJUnit3Assertion(assertion)
+            || isJUnit4Assertion(assertion)
+            || isJUnit5Assertion(assertion);
+    }
+
     public static boolean isJUnit3Assertion(CtInvocation<?> assertion) {
         String declaringType = declaringTypeName(assertion);
         return Configuration.JUNIT3_ASSERTION_PACKAGE.equals(declaringType)

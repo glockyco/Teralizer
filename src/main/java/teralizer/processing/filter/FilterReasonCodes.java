@@ -42,6 +42,8 @@ public final class FilterReasonCodes {
     public static final String UNSUPPORTED_RETURN_TYPE = "UNSUPPORTED_RETURN_TYPE";
     public static final String UNSUPPORTED_STRING_OPERATION = "UNSUPPORTED_STRING_OPERATION";
     public static final String UNSUPPORTED_TEST_TYPE = "UNSUPPORTED_TEST_TYPE";
+    public static final String UNSUPPORTED_FOREIGN_FRAMEWORK = "UNSUPPORTED_FOREIGN_FRAMEWORK";
+    public static final String DISABLED_TEST = "DISABLED_TEST";
 
     private FilterReasonCodes() {
     }

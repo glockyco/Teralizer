@@ -17,7 +17,14 @@ public class TestTypeFilter extends AbstractFilter {
             return new FilterResult(this.getName(), FilterDecision.ACCEPT);
         }
 
-        String reason = "Test uses unsupported test annotation: " + this.testRecord.getTestAnnotationName();
+        String marker = this.testRecord.getTestAnnotationName();
+        if (Configuration.TEST_MARKER_TESTNG.equals(marker)) {
+            return new FilterResult(this.getName(), FilterDecision.REJECT,
+                "Test is declared with TestNG, which this pipeline does not analyze.",
+                FilterReasonCodes.UNSUPPORTED_FOREIGN_FRAMEWORK);
+        }
+
+        String reason = "Test uses unsupported test annotation: " + marker;
         return new FilterResult(this.getName(), FilterDecision.REJECT, reason, FilterReasonCodes.UNSUPPORTED_TEST_TYPE);
     }
 }

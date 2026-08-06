@@ -192,10 +192,16 @@ public class Configuration {
     // JUnit 3 tests carry no annotation. They are recorded under this synthetic marker so the
     // rest of the pipeline can treat "how a test declares itself" uniformly.
     public static final String TEST_MARKER_JUNIT3 = "TestCase";
+    // TestNG's @Test shares JUnit's simple name, so it is recorded under its own marker and
+    // rejected as a foreign framework.
+    public static final String TEST_MARKER_TESTNG = "TestNG";
     public static final String JUNIT3_TEST_CASE_CLASS = "junit.framework.TestCase";
     public static final String JUNIT3_METHOD_PREFIX = "test";
-    public static final String JUNIT3_FIXTURE_METHOD = "setUp";
+    public static final String JUNIT3_SET_UP_METHOD = "setUp";
+    public static final String JUNIT3_TEAR_DOWN_METHOD = "tearDown";
     public static final List<String> SUPPORTED_TEST_ANNOTATIONS = Arrays.asList(TEST_ANNOTATION_TEST, TEST_MARKER_JUNIT3);
+    // Recognized test declarations live in TestShape, keyed by qualified name. This list stays
+    // only as the vocabulary of markers persisted to test.test_annotation_name.
     public static final List<String> KNOWN_TEST_ANNOTATIONS = Arrays.asList(TEST_ANNOTATION_TEST, TEST_ANNOTATION_REPEATED, TEST_ANNOTATION_PARAMETERIZED, TEST_ANNOTATION_PROPERTY);
 
     public static final String TEST_PARAMETERS_CLASS_NAME = "TestParameters";

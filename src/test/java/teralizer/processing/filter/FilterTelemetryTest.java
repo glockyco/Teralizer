@@ -28,6 +28,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.compiler.VirtualFile;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
+import teralizer.util.Configuration;
 
 public class FilterTelemetryTest {
 
@@ -278,6 +279,51 @@ public class FilterTelemetryTest {
 
         Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.ASSERTION_IN_METHOD, result.getReasonCode());
+    }
+
+    @Example
+    void testngIsRejectedAsAForeignFrameworkRatherThanAcceptedAsJUnit() {
+        TestRecord record = new TestRecord();
+        record.setTestAnnotationName(Configuration.TEST_MARKER_TESTNG);
+
+        FilterResult result = new TestTypeFilter(record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.UNSUPPORTED_FOREIGN_FRAMEWORK, result.getReasonCode());
+    }
+
+    @Example
+    void disabledTestSetsStableCode() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(
+            "public class T { @org.junit.Test @org.junit.Ignore public void t() {} }", "T.java"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+        record.setTestMethodName("t");
+        record.setTestMethodQualifiedName("T.t");
+
+        FilterResult result = new DisabledTestFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.DISABLED_TEST, result.getReasonCode());
+    }
+
+    @Example
+    void liveTestPassesTheDisabledFilter() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(
+            "public class T { @org.junit.Test public void t() {} }", "T.java"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+        record.setTestMethodName("t");
+
+        FilterResult result = new DisabledTestFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
     }
 
     @Example

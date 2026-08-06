@@ -1,7 +1,5 @@
 package teralizer.spoon;
 
-import static teralizer.util.Configuration.KNOWN_TEST_ANNOTATIONS;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -25,18 +23,9 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.filter.TypeFilter;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.analysis.TestShape;
 
 public class SpoonUtils {
-    private static final Set<String> LIFECYCLE_ANNOTATIONS = new HashSet<>(Arrays.asList(
-        "Before",
-        "BeforeEach",
-        "After",
-        "AfterEach",
-        "BeforeClass",
-        "BeforeAll",
-        "AfterClass",
-        "AfterAll"
-    ));
 
     /**
      * Creates a type reference for generated declarations from a type name that may denote a
@@ -98,20 +87,27 @@ public class SpoonUtils {
         }
     }
 
+    /**
+     * Removes the annotated sibling test methods from a cloned class.
+     *
+     * <p>JUnit 3's convention-named siblings stay. A {@code TestCase} subclass with no runnable
+     * {@code test*} method makes JUnit 3 report a "no tests found" sentinel as a failing test,
+     * which fails the generalized build. Keeping them is safe: they duplicate original tests
+     * already in the assembled suite, so they alter neither coverage nor mutation detection, and
+     * {@code NonPassingTestFilter} judges the property alone.
+     */
     public static void deleteOtherTestMethodsInClass(CtClass<?> testClass, CtMethod<?> testMethod) {
         List<CtMethod<?>> otherTestMethods = testClass.getMethods().stream().filter(m -> m != testMethod && hasTestAnnotation(m)).collect(Collectors.toList());
         otherTestMethods.forEach(testClass::removeMethod);
     }
 
     public static boolean hasTestAnnotation(CtMethod<?> testMethod) {
-        return testMethod.getAnnotations().stream()
-            .anyMatch(annotation -> annotation.getType() != null
-                && KNOWN_TEST_ANNOTATIONS.contains(annotation.getType().getSimpleName()));
+        return TestShape.hasTestAnnotation(testMethod);
     }
 
     public static void deleteOtherAssertionsInMethod(CtMethod<?> method, CtInvocation<?> assertion) {
         List<CtInvocation> otherAssertions = method.getElements(new TypeFilter<>(CtInvocation.class)).stream()
-            .filter(i -> i != assertion && (TestAnalysis.isJUnit4Assertion(i) || TestAnalysis.isJUnit5Assertion(i)))
+            .filter(i -> i != assertion && TestAnalysis.isSupportedFrameworkAssertion(i))
             .filter(i -> !isCatchAssertionForRecognizedTryFail(assertion, i))
             .collect(Collectors.toList());
 
@@ -184,15 +180,12 @@ public class SpoonUtils {
     }
 
     private static boolean isFlattenableInheritedMethod(CtClass<?> originalClass, CtClass<?> clonedClass, CtMethod<?> method) {
-        return (hasTestAnnotation(method) || hasLifecycleAnnotation(method))
+        CtClass<?> declaringClass = method.getParent(CtClass.class);
+        return (hasTestAnnotation(method)
+                || TestShape.isFixture(method, declaringClass)
+                || TestShape.isJUnit3TestMethod(method, declaringClass))
             && clonedClass.getMethodsByName(method.getSimpleName()).isEmpty()
             && InheritedTestMethodScreens.evaluate(originalClass, method).isFlattenable();
-    }
-
-    private static boolean hasLifecycleAnnotation(CtMethod<?> method) {
-        return method.getAnnotations().stream()
-            .anyMatch(annotation -> annotation.getType() != null
-                && LIFECYCLE_ANNOTATIONS.contains(annotation.getType().getSimpleName()));
     }
 
     public static List<CtImport> importsForGeneratedClass(CtClass<?> generatedClass) {

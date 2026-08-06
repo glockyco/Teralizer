@@ -37,6 +37,7 @@ import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.diagnostics.JqwikDiagnosticsImporter;
+import teralizer.spoon.analysis.TestShape;
 import teralizer.repository.PipelineQueries;
 import teralizer.spoon.InheritedTestMethodScreens;
 import teralizer.util.Configuration;
@@ -392,8 +393,7 @@ public class JunitDataCollectionTask extends AbstractTask {
         ResolvedTestMethod resolved = this.findTestMethod(testClass);
 
         List<CtMethod<?>> knownTestMethods = resolved.matchingMethods.stream()
-            .filter(method -> method.getAnnotations().stream()
-                .anyMatch(a -> Configuration.KNOWN_TEST_ANNOTATIONS.contains(a.getType().getSimpleName())))
+            .filter(TestShape::hasTestAnnotation)
             .collect(Collectors.toList());
 
         if (knownTestMethods.size() > 1) {
@@ -419,15 +419,9 @@ public class JunitDataCollectionTask extends AbstractTask {
             }
         }
 
-        CtAnnotation<?> testAnnotation = testMethod.getAnnotations().stream()
-            .filter(a -> Configuration.KNOWN_TEST_ANNOTATIONS.contains(a.getType().getSimpleName()))
-            .findFirst().orElse(null);
-
-        if (testAnnotation != null) {
-            String annotationName = testAnnotation.getType().getSimpleName();
-            record.setTestAnnotationName(annotationName);
-        } else if (isJunit3TestMethod(testMethod, declaringClass)) {
-            record.setTestAnnotationName(Configuration.TEST_MARKER_JUNIT3);
+        String marker = TestShape.markerOf(testMethod, declaringClass);
+        if (marker != null) {
+            record.setTestAnnotationName(marker);
         }
 
         record.setTestAnnotationsSourceCode(testMethod.getAnnotations().stream()

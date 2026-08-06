@@ -35,19 +35,13 @@ import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.SpfSymbolicConfigSelector;
 import teralizer.spoon.analysis.TestMethodResolver;
+import teralizer.spoon.analysis.TestShape;
 import teralizer.spoon.codegen.InstrumentedClassBuilder;
 import teralizer.util.Configuration;
 import teralizer.util.SpfSymbolicConfig;
 
 
 public class JpfInstrumentationTask extends AbstractTask {
-
-    private static final List<String> BEFORE_ANNOTATIONS = Arrays.asList(
-        "org.junit.Before",
-        "org.junit.BeforeClass",
-        "org.junit.jupiter.api.BeforeAll",
-        "org.junit.jupiter.api.BeforeEach"
-    );
 
     public JpfInstrumentationTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null, null);
@@ -246,6 +240,37 @@ public class JpfInstrumentationTask extends AbstractTask {
     }
 
     static Set<CtMethod<?>> beforeMethodsFor(CtClass<?> testClass) {
+        return fixtureMethodsFor(hierarchyOf(testClass), testClass, true);
+    }
+
+    static Set<CtMethod<?>> afterMethodsFor(CtClass<?> testClass) {
+        return fixtureMethodsFor(hierarchyOf(testClass), testClass, false);
+    }
+
+    /**
+     * Fixtures of the requested direction, ordered so the symbolic driver reproduces the
+     * framework's own order. The hierarchy is walked parent first, so an inherited fixture runs
+     * before its override; teardown reverses that, running the override before its parent.
+     */
+    private static Set<CtMethod<?>> fixtureMethodsFor(List<CtClass<?>> hierarchy, CtClass<?> testClass, boolean before) {
+        Set<CtMethod<?>> fixtures = new LinkedHashSet<>();
+        for (CtClass<?> currentClass : hierarchy) {
+            for (CtMethod<?> method : currentClass.getMethods()) {
+                TestShape.LifecyclePhase phase = TestShape.lifecyclePhaseOf(method, currentClass);
+                if (phase != null && phase.isBefore() == before) {
+                    fixtures.add(method);
+                }
+            }
+        }
+        if (!before) {
+            List<CtMethod<?>> reversed = new ArrayList<>(fixtures);
+            Collections.reverse(reversed);
+            return new LinkedHashSet<>(reversed);
+        }
+        return fixtures;
+    }
+
+    private static List<CtClass<?>> hierarchyOf(CtClass<?> testClass) {
         List<CtClass<?>> hierarchy = new ArrayList<>();
         CtType<?> current = testClass;
         while (current instanceof CtClass<?>) {
@@ -255,36 +280,7 @@ public class JpfInstrumentationTask extends AbstractTask {
                 ? currentClass.getSuperclass().getDeclaration()
                 : null;
         }
-
-        boolean junit3 = extendsTestCase(testClass);
-        Set<CtMethod<?>> beforeMethods = new LinkedHashSet<>();
-        for (CtClass<?> currentClass : hierarchy) {
-            for (String annotationName : BEFORE_ANNOTATIONS) {
-                beforeMethods.addAll(currentClass.getMethodsAnnotatedWith(
-                    currentClass.getFactory().Annotation().createReference(annotationName)));
-            }
-            // JUnit 3 declares its fixture by overriding setUp rather than by annotation. The
-            // hierarchy is walked parent first, so an inherited fixture still runs before its
-            // override, matching the framework's own order.
-            if (junit3) {
-                CtMethod<?> setUp = currentClass.getMethod(Configuration.JUNIT3_FIXTURE_METHOD);
-                if (setUp != null) {
-                    beforeMethods.add(setUp);
-                }
-            }
-        }
-        return beforeMethods;
-    }
-
-    private static boolean extendsTestCase(CtClass<?> testClass) {
-        CtTypeReference<?> superclass = testClass == null ? null : testClass.getSuperclass();
-        while (superclass != null) {
-            if (Configuration.JUNIT3_TEST_CASE_CLASS.equals(superclass.getQualifiedName())) {
-                return true;
-            }
-            superclass = superclass.getSuperclass();
-        }
-        return false;
+        return hierarchy;
     }
 
     private void createJpfConfigFile(VelocityEngine velocityEngine, CtMethod<?> instrumentedMethod, CtMethod<?> testedMethod) throws IOException {
