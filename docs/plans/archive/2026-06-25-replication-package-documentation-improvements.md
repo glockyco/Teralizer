@@ -1,9 +1,10 @@
 ---
 title: "Replication Package Documentation Improvements"
 type: plan
-status: active
+status: implemented
 created: 2026-06-25
 parent: 2026-06-26-teralizer-overview
+archived: 2026-08-06
 ---
 
 Verifiable replication-package documentation for ACM artifact eval: three

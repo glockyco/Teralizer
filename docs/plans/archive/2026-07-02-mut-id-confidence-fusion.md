@@ -1,9 +1,10 @@
 ---
 title: MUT-id Confidence Fusion
 type: spec
-status: active
+status: implemented
 created: 2026-07-02
 parent: 2026-06-26-teralizer-overview
+archived: 2026-08-06
 ---
 
 # MUT-id Confidence Fusion

@@ -2,7 +2,6 @@
 
 ## active
 
-- **Replication Package Documentation Improvements** [plan] `2026-06-25-replication-package-documentation-improvements` (10/10) ← 2026-06-26-teralizer-overview
 - **Applicability Barrier Evidence** [audit] `2026-06-26-applicability-barriers` ← 2026-06-26-teralizer-overview
 - **Data Reuse & MSR Paper Potential (secondary outputs)** [note] `2026-06-26-data-reuse-and-msr-potential` ← 2026-06-26-teralizer-overview
 - **Teralizer — Project Overview** [overview] `2026-06-26-teralizer-overview`
@@ -13,7 +12,6 @@
 - **JARVIS Comparison (RQ0)** [spec] `2026-06-30-jarvis-comparison` ← 2026-06-26-teralizer-overview
 - **Rerun Observability Priorities** [audit] `2026-07-01-rerun-observability-priorities` ← 2026-06-26-teralizer-overview
 - **Input Topology Spike** [audit] `2026-07-02-input-topology-spike` ← 2026-07-02-mut-id-confidence-fusion
-- **MUT-id Confidence Fusion** [spec] `2026-07-02-mut-id-confidence-fusion` ← 2026-06-26-teralizer-overview
 - **Recipe Seam & Downstream Effects of MUT-id Fusion** [audit] `2026-07-02-recipe-seam-review` ← 2026-06-26-teralizer-overview
 - **Architecture & Implementation Review — Post-R1** [audit] `2026-07-04-architecture-implementation-review` ← 2026-06-26-teralizer-overview
 - **R1 Viability Spike — Expression-Slice Shapes Through SPF** [audit] `2026-07-04-r1-viability-spike` ← 2026-07-02-recipe-seam-review
@@ -23,7 +21,6 @@
 - **Evaluation Run Map (RQ0 + RQ6)** [audit] `2026-07-07-evaluation-run-map` ← 2026-06-26-teralizer-overview
 - **Autonomous Evaluation Run Findings** [audit] `2026-07-08-autonomous-eval-findings` ← 2026-06-26-teralizer-overview
 - **Oracle-Refusal Taxonomy on the RQ6 Corpus** [audit] `2026-08-04-oracle-refusal-taxonomy` ← 2026-06-26-teralizer-overview
-- **Reduction-Stage Failure Anatomy and Run Cost** [audit] `2026-08-04-reduction-failure-anatomy` ← 2026-06-26-teralizer-overview
 - **RepoReapers Dataset Row for the Eligible Corpus** [plan] `2026-08-04-reporeapers-dataset-row` (0/6) ← 2026-07-08-evaluation-analysis-redesign
 - **RQ6 Re-Collection After the Reduction Fixes** [plan] `2026-08-04-rq6-recollection` (1/11) ← 2026-06-26-teralizer-overview
 
@@ -33,4 +30,4 @@
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
 - **Evaluation Analysis and Reporting Redesign** [spec] `2026-07-08-evaluation-analysis-redesign` ← 2026-06-26-teralizer-overview
 
-_76 archived — see `docs/plans/archive/`._
+_79 archived — see `docs/plans/archive/`._

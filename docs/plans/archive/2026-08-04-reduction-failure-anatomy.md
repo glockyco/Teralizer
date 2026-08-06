@@ -1,11 +1,11 @@
 ---
 title: Reduction-Stage Failure Anatomy and Run Cost
 type: audit
-status: active
+status: superseded
 created: 2026-08-04
 parent: 2026-06-26-teralizer-overview
-superseded_by:
-archived:
+superseded_by: 2026-08-04-rq6-recollection
+archived: 2026-08-06
 ---
 
 # Reduction-Stage Failure Anatomy and Run Cost
