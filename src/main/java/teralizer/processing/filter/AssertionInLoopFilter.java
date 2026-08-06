@@ -21,13 +21,18 @@ public class AssertionInLoopFilter extends AbstractFilter {
     @Override
     public FilterResult check() throws Exception {
         String absolutePath = this.assertionRecord.getAssertionAbsolutePath();
-        CtPath path = new CtPathStringBuilder().fromString(absolutePath);
-        CtModel model = this.spoonLauncher.getModel();
+        if (absolutePath == null || absolutePath.isEmpty()) {
+            return new FilterResult(this.getName(), FilterDecision.DEFER,
+                "Assertion path is missing", FilterReasonCodes.MISSING_ASSERTION_PATH);
+        }
         CtElement assertionElement;
         try {
+            CtPath path = new CtPathStringBuilder().fromString(absolutePath);
+            CtModel model = this.spoonLauncher.getModel();
             assertionElement = path.evaluateOn(model.getRootPackage()).get(0);
-        } catch (IndexOutOfBoundsException e) {
-            throw new IllegalStateException("Could not locate assertion at " + absolutePath);
+        } catch (RuntimeException e) {
+            return new FilterResult(this.getName(), FilterDecision.DEFER,
+                "Assertion path is missing", FilterReasonCodes.MISSING_ASSERTION_PATH);
         }
 
         return TestAnalysis.isContainedInLoop(assertionElement) ?

@@ -106,7 +106,11 @@ public class TaskDiagnosticClassifierTest {
             "Unable to identify test report path for test class: smoke.SubjectTest. No file at default path a or alternative path b.");
         RuntimeException noTestcase = new RuntimeException(
             "Failed to identify matching test case report for smoke.SubjectTest.t in TEST-smoke.SubjectTest.xml.");
+        RuntimeException missingDirectory = new RuntimeException(
+            "Failed to collect test data. Report directory 'target/surefire-reports' does not exist.");
 
+        Assert.assertEquals(TaskDiagnosticCodes.MISSING_REPORT_FILE,
+            TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED, missingDirectory).reasonCode());
         Assert.assertEquals(TaskDiagnosticCodes.MISSING_REPORT_FILE,
             TaskDiagnosticClassifier.classify(ProcessingStage.COLLECT_JUNIT_REPORTS_GENERALIZED, missingReport).reasonCode());
         Assert.assertEquals(TaskDiagnosticCodes.FOUND_REPORT_NO_MATCHING_TESTCASE,

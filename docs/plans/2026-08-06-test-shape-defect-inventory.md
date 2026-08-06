@@ -122,8 +122,15 @@ mode that cost 21% of assertions their telemetry before `647c1b1e`.
 
 | # | Site | Trigger |
 |---|---|---|
-| C5 | `MethodUnderTestResolver:112-113,154-155` | dispatches `assertThrows` on name alone, then reads argument index 1 unchecked: an admitted non-JUnit-5 or malformed `assertThrows` throws `IndexOutOfBoundsException` |
+| C5 | `MethodUnderTestResolver:112-113,154-155` | dispatches `assertThrows` on name alone, then reads argument index 1 unchecked: an admitted `assertThrows` the resolver cannot extract a lambda body from throws `IndexOutOfBoundsException` |
 | C6 | `TestAnalysis:239-240` | `getExpectedParameterIndex` throws for any non-JUnit-5 `assertThrows` instead of returning `Optional.empty()` |
+
+The reachable receiver for both is **JUnit 4**, not JUnit 3. `org.junit.Assert.assertThrows` exists
+from JUnit 4.13 and `isAssertion` admits it, so it reaches the index lookup and the resolver.
+A JUnit 3 `assertThrows` is unreachable: neither `junit.framework.Assert` nor
+`junit.framework.TestCase` declares the method, so Spoon binds no executable and leaves the
+declaring type null, which `isAssertion` rejects before any of this code runs. Verified by building
+each shape through Spoon and reading the resolved declaring type.
 | C7 | `AssertionInLoopFilter:29-30`, `TestedMethodInLoopFilter:34-35` | missing Spoon path throws `IllegalStateException` out of the filter instead of producing a filter result |
 
 ### Report ingestion
@@ -131,6 +138,14 @@ mode that cost 21% of assertions their telemetry before `647c1b1e`.
 | # | Site | Defect | Consequence | Severity |
 |---|---|---|---|---|
 | D1 | `PitDataCollectionTask:51-62,418-443` | test-name regex recognizes only constrained class/engine/method forms; unresolved names are kept with null ids and logged at debug | mutation kills unattributed. Measured on `postgres_rq6_junit3_smoke`: **3.6%** of detected generalized mutations and **1.4%** of initial have neither `killing_test_id` nor `killing_generalization_id` | soundness |
+
+PIT's own identities confirm the leftover execution described under A2. A kill inside a generalized
+class can be credited to a leftover sibling rather than to the property, for example
+`_VersionExclusionStrategyTest_Generalized_testClassAndFieldAreAtSameVersion_8_Test` reporting
+`[engine:junit-vintage] ... [test:testClassAndFieldAreAheadInVersion(...)]`. No claim depends on this
+today, because `killing_generalization_id` has no consumer in `analysis/src`. Any future
+per-generalization mutation claim must therefore match the property's own method name rather than
+its class.
 | D2 | `JunitDataCollectionTask:163-225` | discovery flattens all XML then `Collectors.toMap` keeps the first record per method key | when two engines report the same method, which record survives depends on `Files.walk` order, so result and failure attribution is nondeterministic | soundness |
 | D3 | `JunitDataCollectionTask:169-170` | one unparseable XML propagates out of the stream | a single malformed report loses all test discovery for the project | attrition |
 | D4 | `JunitDataCollectionTask:74-78` vs `TaskDiagnosticClassifier:208-219` | missing report *directory* message is not mapped, falling through to `UNSUPPORTED_REPORT_LAYOUT` | missing report conflated with unsupported shape | telemetry |

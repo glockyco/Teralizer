@@ -50,7 +50,8 @@ public class GradleDependencyManager {
 
     public void addRequiredDependencies() throws IOException {
         boolean hasModifiedDocument = false;
-        if (this.projectRecord.getTestFramework() == TestFramework.JUNIT_4) {
+        if (this.projectRecord.getTestFramework() == TestFramework.JUNIT_3
+            || this.projectRecord.getTestFramework() == TestFramework.JUNIT_4) {
             // Deliberately using non-short-circuiting OR here. If multiple
             // dependencies are missing, we want to add all of them.
             hasModifiedDocument |= this.addUseJunitPlatform();
@@ -106,9 +107,8 @@ public class GradleDependencyManager {
 
     private boolean addJUnitIfOutdated() {
         String testFrameworkVersion = this.projectRecord.getTestFrameworkVersion();
-        // Check whether a recent enough version of JUnit 4 is used (JUnit
-        // Vintage requires at least JUnit 4.12). Not a very clean solution,
-        // but good enough for our purposes.
+        // JUnit Vintage requires at least JUnit 4.12. The detected JUnit 3
+        // version therefore needs a separate JUnit 4 dependency on the test classpath.
         for (int i = 12; i < 20; i++) {
             if (testFrameworkVersion.startsWith("4." + i)) {
                 return false;

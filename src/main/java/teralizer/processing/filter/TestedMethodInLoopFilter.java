@@ -23,16 +23,18 @@ public class TestedMethodInLoopFilter extends AbstractFilter {
         String testMethodCallPath = this.assertionRecord.getTestedMethodCallAbsolutePath();
 
         if (testMethodCallPath == null || testMethodCallPath.isEmpty()) {
-            return new FilterResult(this.getName(), FilterDecision.ACCEPT);
+            return new FilterResult(this.getName(), FilterDecision.DEFER,
+                "Tested method call path is missing", FilterReasonCodes.MISSING_TESTED_METHOD_CALL_PATH);
         }
 
-        CtPath path = new CtPathStringBuilder().fromString(testMethodCallPath);
-        CtModel model = this.launcher.getModel();
         CtElement testedMethodCall;
         try {
+            CtPath path = new CtPathStringBuilder().fromString(testMethodCallPath);
+            CtModel model = this.launcher.getModel();
             testedMethodCall = path.evaluateOn(model.getRootPackage()).get(0);
-        } catch (IndexOutOfBoundsException e) {
-            throw new IllegalStateException("Could not locate tested method call at " + testMethodCallPath);
+        } catch (RuntimeException e) {
+            return new FilterResult(this.getName(), FilterDecision.DEFER,
+                "Tested method call path is missing", FilterReasonCodes.MISSING_TESTED_METHOD_CALL_PATH);
         }
 
         return TestAnalysis.isContainedInLoop(testedMethodCall) ?

@@ -20,6 +20,7 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
@@ -54,6 +55,7 @@ public final class InstrumentedClassBuilder {
             names.getSourceTestClassQualifiedName(),
             names.getInstrumentedClassQualifiedName()
         );
+        ensureNoArgConstructor(factory, instrumentedClass);
 
         CtPath testMethodPath = new CtPathStringBuilder().fromString(
             GeneralizationRecipe.rewriteCtPathForClone(
@@ -90,6 +92,33 @@ public final class InstrumentedClassBuilder {
         SpoonUtils.deleteOtherAssertionsInMethod(testMethod, targetAssertion);
 
         return instrumentedClass;
+    }
+
+    /**
+     * The symbolic driver constructs wrappers without a test name. A JUnit 3 wrapper keeps the
+     * source class's String constructor as the single initialization path, so its constructor
+     * initialization runs before the generated no-argument entry point returns.
+     */
+    private static void ensureNoArgConstructor(Factory factory, CtClass<?> instrumentedClass) {
+        if (instrumentedClass.getConstructors().stream().anyMatch(constructor -> constructor.getParameters().isEmpty())) {
+            return;
+        }
+
+        boolean hasStringConstructor = instrumentedClass.getConstructors().stream()
+            .anyMatch(constructor -> constructor.getParameters().size() == 1
+                && "java.lang.String".equals(constructor.getParameters().get(0).getType().getQualifiedName()));
+        if (!hasStringConstructor) {
+            return;
+        }
+
+        CtConstructor<?> constructor = factory.Constructor().create(
+            instrumentedClass,
+            new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
+            Collections.emptyList(),
+            Collections.emptySet(),
+            factory.Core().createBlock()
+        );
+        constructor.getBody().addStatement(factory.Code().createCodeSnippetStatement("this(\"\")"));
     }
 
     public CtMethod<?> createInstrumentedMethod(

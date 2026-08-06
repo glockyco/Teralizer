@@ -8,9 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,12 +38,16 @@ import teralizer.processing.TaskContext;
 import teralizer.processing.TestResult;
 import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.processing.diagnostics.JqwikDiagnosticsImporter;
+import teralizer.processing.reports.SurefireReportNames;
 import teralizer.spoon.analysis.TestShape;
 import teralizer.repository.PipelineQueries;
 import teralizer.spoon.InheritedTestMethodScreens;
 import teralizer.util.Configuration;
 
 public class JunitDataCollectionTask extends AbstractTask {
+
+    private static final org.slf4j.Logger LOGGER =
+        org.slf4j.LoggerFactory.getLogger(JunitDataCollectionTask.class);
 
     public JunitDataCollectionTask(ProcessingStage stage, ProjectRecord projectRecord) {
         this(stage, projectRecord, null);
@@ -164,111 +169,202 @@ public class JunitDataCollectionTask extends AbstractTask {
     }
 
     private List<TestRecord> collectTests(DSLContext create, Consumer<String> reportInfo) throws IOException {
+        List<Path> reportPaths;
         try (Stream<Path> paths = Files.walk(this.projectRecord.getTestReportsPath())) {
-            return paths
+            reportPaths = paths
                 .filter(Files::isRegularFile)
                 .filter(path -> path.toString().endsWith(".xml"))
-                .flatMap(testReportPath -> this.parseTestCaseReports(testReportPath, null, null).stream())
-                .filter(testCaseReport -> {
-                    String className = testCaseReport.getFullClassName();
-                    String methodName = testCaseReport.getName();
-
-                    Predicate<String> isValidIdentifierName = name -> {
-                        if (name == null || name.isEmpty()) {
-                            return false;
-                        }
-                        if (!Character.isJavaIdentifierStart(name.charAt(0))) {
-                            return false;
-                        }
-                        for (int i = 1; i < name.length(); i++) {
-                            if (!Character.isJavaIdentifierPart(name.charAt(i))) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    };
-
-                    Predicate<String> isValidClassName = name -> {
-                        if (name == null || name.isEmpty()) {
-                            return false;
-                        }
-                        String[] parts = name.split("\\.");
-                        for (String part : parts) {
-                            if (!isValidIdentifierName.test(part)) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    };
-
-                    if (className.contains("$")) {
-                        reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it references an anonymous inner class.");
-                        return false;
-                    }
-                    if (!isValidClassName.test(className) || !isValidIdentifierName.test(methodName)) {
-                        reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it does not reference a valid class / method name.");
-                        return false;
-                    }
-                    if (testCaseReport.hasFailure()) {
-                        String failureMessage = testCaseReport.getFailureMessage();
-                        if (failureMessage != null && failureMessage.startsWith("No tests found")) {
-                            reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it does not reference any tests.");
-                            return false;
-                        }
-                    }
-                    return true;
-                })
-                .map(testCaseReport -> this.buildTestRecord(create, testCaseReport))
-                // Keep only the first record for each test method name to
-                // avoid duplicates caused by repeated or parameterized tests.
-                .collect(Collectors.collectingAndThen(
-                    Collectors.toMap(
-                        TestRecord::getTestMethodQualifiedName,
-                        Function.identity(),
-                        (existing, replacement) -> existing
-                    ),
-                    map -> new ArrayList<>(map.values())
-                ));
+                .sorted()
+                .collect(Collectors.toList());
         }
+
+        List<ReportTestCase> testCaseReports = new ArrayList<>();
+        int parsedReportCount = 0;
+        for (Path reportPath : reportPaths) {
+            try {
+                testCaseReports.addAll(this.parseTestCaseReports(reportPath, null, null));
+                parsedReportCount++;
+            } catch (RuntimeException e) {
+                LOGGER.atWarn()
+                    .setCause(e)
+                    .log("Skipping unparseable test report: {}", reportPath);
+            }
+        }
+        if (!reportPaths.isEmpty() && parsedReportCount == 0) {
+            throw new RuntimeException("Unable to parse any test report files: " + reportPaths + ".");
+        }
+
+        Predicate<String> isValidIdentifierName = name -> {
+            if (name == null || name.isEmpty()) {
+                return false;
+            }
+            if (!Character.isJavaIdentifierStart(name.charAt(0))) {
+                return false;
+            }
+            for (int i = 1; i < name.length(); i++) {
+                if (!Character.isJavaIdentifierPart(name.charAt(i))) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        Predicate<String> isValidClassName = name -> {
+            if (name == null || name.isEmpty()) {
+                return false;
+            }
+            String[] parts = name.split("\\.");
+            for (String part : parts) {
+                if (!isValidIdentifierName.test(part)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        Map<String, ReportTestCase> reportsByMethod = testCaseReports.stream()
+            .filter(testCaseReport -> {
+                String className = SurefireReportNames.normalize(testCaseReport.getFullClassName());
+                String methodName = testCaseReport.getName();
+                if (className != null && className.contains("$")) {
+                    reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it references an anonymous inner class.");
+                    return false;
+                }
+                if (!isValidClassName.test(className) || !isValidIdentifierName.test(methodName)) {
+                    reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it does not reference a valid class / method name.");
+                    return false;
+                }
+                if (testCaseReport.hasFailure()) {
+                    String failureMessage = testCaseReport.getFailureMessage();
+                    if (failureMessage != null && failureMessage.startsWith("No tests found")) {
+                        reportInfo.accept("Skipping report " + testCaseReport.getFullName() + " because it does not reference any tests.");
+                        return false;
+                    }
+                }
+                return true;
+            })
+            // Lexical report ordering makes equal keys reproducible. A duplicate with a recorded
+            // failure, error, or skip is retained over a record with no recorded outcome.
+            .collect(Collectors.toMap(
+                report -> SurefireReportNames.normalize(SurefireReportNames.withoutArguments(report.getFullName())),
+                java.util.function.Function.identity(),
+                JunitDataCollectionTask::preferReport,
+                LinkedHashMap::new));
+
+        return reportsByMethod.values().stream()
+            .map(testCaseReport -> this.buildTestRecord(create, testCaseReport))
+            .collect(Collectors.toList());
+    }
+
+    private static ReportTestCase preferReport(ReportTestCase existing, ReportTestCase replacement) {
+        boolean existingHasOutcome = hasRecordedOutcome(existing);
+        boolean replacementHasOutcome = hasRecordedOutcome(replacement);
+        if (existingHasOutcome != replacementHasOutcome) {
+            return existingHasOutcome ? existing : replacement;
+        }
+        if (existing.hasFailure() != replacement.hasFailure()) {
+            return existing.hasFailure() ? existing : replacement;
+        }
+        return existing;
+    }
+
+    private static boolean hasRecordedOutcome(ReportTestCase report) {
+        return report.hasFailure() || report.hasError() || report.hasSkipped();
     }
 
     private List<JunitTestReportRecord> collectTestReportData(DSLContext create) {
         String testClassQualifiedName = this.testRecord.getTestClassQualifiedName();
         String testMethodQualifiedName = testClassQualifiedName + "." + this.testRecord.getTestMethodName();
-        Path testReportPath = this.identifyTestReportPath(this.testRecord.getTestClassName(), testClassQualifiedName);
-        return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
-            .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
+        TestReportSelection selection = this.identifyTestReportPath(
+            this.testRecord.getTestClassName(), testClassQualifiedName, testMethodQualifiedName);
+        return selection.testCaseReports.stream()
+            .map(testCaseReport -> this.buildTestReportRecord(create, selection.path, testCaseReport))
             .collect(Collectors.toList());
     }
 
     private List<JunitTestReportRecord> collectGeneralizationReportData(DSLContext create) {
         String testClassQualifiedName = this.generalizationRecord.getClassQualifiedName();
         String testMethodQualifiedName = this.generalizationRecord.getMethodQualifiedName();
-        Path testReportPath = this.identifyTestReportPath(this.generalizationRecord.getClassName(), testClassQualifiedName);
-        return this.parseTestCaseReports(testReportPath, testClassQualifiedName, testMethodQualifiedName).stream()
-            .map(testCaseReport -> this.buildTestReportRecord(create, testReportPath, testCaseReport))
+        TestReportSelection selection = this.identifyTestReportPath(
+            this.generalizationRecord.getClassName(), testClassQualifiedName, testMethodQualifiedName);
+        return selection.testCaseReports.stream()
+            .map(testCaseReport -> this.buildTestReportRecord(create, selection.path, testCaseReport))
             .collect(Collectors.toList());
     }
 
 
-    private Path identifyTestReportPath(String testClassName, String testClassQualifiedName) {
-        // If the file name is short enough, Surefire creates report files at the default location:
-        Path defaultTestReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassQualifiedName + ".xml");
-        if (Files.exists(defaultTestReportPath)) {
-            return defaultTestReportPath;
+    private TestReportSelection identifyTestReportPath(
+        String testClassName,
+        String testClassQualifiedName,
+        String testMethodQualifiedName
+    ) {
+        return identifyTestReportPath(
+            this.projectRecord.getTestReportsPath(), testClassName, testClassQualifiedName, testMethodQualifiedName);
+    }
+
+    static TestReportSelection identifyTestReportPath(
+        Path reportsDirectory,
+        String testClassName,
+        String testClassQualifiedName,
+        String testMethodQualifiedName
+    ) {
+        Path defaultTestReportPath = reportsDirectory.resolve("TEST-" + testClassQualifiedName + ".xml");
+        Path alternativeTestReportPath = reportsDirectory.resolve("TEST-" + testClassName.replace("_", " ") + ".xml");
+
+        List<Path> candidatePaths = new ArrayList<>();
+        for (Path preferred : new Path[]{defaultTestReportPath, alternativeTestReportPath}) {
+            if (Files.isRegularFile(preferred) && !candidatePaths.contains(preferred)) {
+                candidatePaths.add(preferred);
+            }
+        }
+        try (Stream<Path> paths = Files.walk(reportsDirectory, 1)) {
+            paths
+                .filter(Files::isRegularFile)
+                .filter(path -> path.toString().endsWith(".xml"))
+                .sorted()
+                .forEach(path -> {
+                    if (!candidatePaths.contains(path)) {
+                        candidatePaths.add(path);
+                    }
+                });
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to inspect test report directory " + reportsDirectory + ".", e);
         }
 
-        // If the file name is too long, Surefire instead creates reports at the alternative location:
-        Path alternativeTestReportPath = this.projectRecord.getTestReportsPath().resolve("TEST-" + testClassName.replace("_", " ") + ".xml");
-        if (Files.exists(alternativeTestReportPath)) {
-            return alternativeTestReportPath;
+        List<Path> inspectedPaths = new ArrayList<>();
+        for (Path candidatePath : candidatePaths) {
+            inspectedPaths.add(candidatePath);
+            try {
+                List<ReportTestCase> reports = parseTestCaseReports(
+                    candidatePath, testClassQualifiedName, testMethodQualifiedName);
+                return new TestReportSelection(candidatePath, reports);
+            } catch (RuntimeException e) {
+                // A candidate can be valid XML for another class, or malformed. The complete
+                // candidate list in the final error keeps both cases diagnosable.
+                LOGGER.atDebug().setCause(e).log("Report candidate did not contain the expected testcase: {}", candidatePath);
+            }
         }
 
-        // @TODO: Handle cases where the alternative file name is still too long.
+        if (inspectedPaths.isEmpty()) {
+            throw new RuntimeException(
+                "Unable to identify test report path for test class: " + testClassQualifiedName + ". " +
+                    "No report candidates exist. Candidates inspected: []."
+            );
+        }
         throw new RuntimeException(
-            "Unable to identify test report path for test class: " + testClassQualifiedName + ". " +
-            "No file at default path " + defaultTestReportPath + " or alternative path " + alternativeTestReportPath + "."
+            "Failed to identify matching test case report for " + testMethodQualifiedName + ". " +
+                "Candidates inspected: " + inspectedPaths + "."
         );
+    }
+
+    static final class TestReportSelection {
+        final Path path;
+        final List<ReportTestCase> testCaseReports;
+
+        private TestReportSelection(Path path, List<ReportTestCase> testCaseReports) {
+            this.path = path;
+            this.testCaseReports = testCaseReports;
+        }
     }
 
     static List<ReportTestCase> parseTestCaseReports(Path testReportPath, String testClassQualifiedName, String testMethodQualifiedName) {
@@ -284,17 +380,11 @@ public class JunitDataCollectionTask extends AbstractTask {
             }
 
             List<ReportTestCase> filteredTestCaseReports = testCaseReports.stream()
-                .peek(testCaseReport -> {
-                    testCaseReport.setName(replaceSpaces(testCaseReport.getName()));
-                    testCaseReport.setFullName(replaceSpaces(testCaseReport.getFullName()));
-                })
                 .filter(testCaseReport -> {
                     if (testMethodQualifiedName != null) {
-                        String reportMethodQualifiedName = testCaseReport.getFullName().replaceAll("\\(.*", "");
-                        return matchesQualifiedName(testMethodQualifiedName, reportMethodQualifiedName);
+                        return SurefireReportNames.matches(testMethodQualifiedName, testCaseReport.getFullName());
                     } else if (testClassQualifiedName != null) {
-                        String reportClassQualifiedName = replaceSpaces(testCaseReport.getFullClassName());
-                        return matchesQualifiedName(testClassQualifiedName, reportClassQualifiedName);
+                        return SurefireReportNames.matches(testClassQualifiedName, testCaseReport.getFullClassName());
                     }
                     return true;
                 })
@@ -308,19 +398,6 @@ public class JunitDataCollectionTask extends AbstractTask {
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * A surefire report identifies a testcase either by fully-qualified name (surefire < 3.0.2,
-     * and all vintage-engine tests) or — for JUnit-platform tests since surefire 3.0.2 — by the
-     * engine's display name, which jqwik beautifies by replacing underscores with spaces and
-     * dropping the package. After space→underscore normalization the display-name shape is the
-     * package-less suffix of the expected qualified name; the '.' boundary keeps simple-name
-     * collisions from matching.
-     */
-    static boolean matchesQualifiedName(String expectedQualifiedName, String normalizedReportName) {
-        return expectedQualifiedName.equals(normalizedReportName)
-            || expectedQualifiedName.endsWith("." + normalizedReportName);
     }
 
     /**
@@ -347,31 +424,17 @@ public class JunitDataCollectionTask extends AbstractTask {
         return false;
     }
 
-    private static String replaceSpaces(String text) {
-        if (text == null) {
-            return null;
-        }
-
-        int firstParenIndex = text.indexOf('(');
-        if (firstParenIndex > 0) {
-            String beforeParen = text.substring(0, firstParenIndex).replace(" ", "_");
-            String afterParen = text.substring(firstParenIndex);
-            return beforeParen + afterParen;
-        } else {
-            return text.replace(" ", "_");
-        }
-    }
-
     private TestRecord buildTestRecord(DSLContext create, ReportTestCase testCaseReport) {
-        String testMethodQualifiedName = testCaseReport.getFullName().replaceAll("\\(.*", "");
-        String testMethodName = testCaseReport.getName().replaceAll("\\(.*", "");
-        String testClassName = testCaseReport.getClassName();
-        String testPackageName = testCaseReport.getFullClassName().replaceAll("\\.[^.]*$", "");
+        String testClassQualifiedName = SurefireReportNames.normalize(testCaseReport.getFullClassName());
+        String testMethodName = SurefireReportNames.withoutArguments(testCaseReport.getName());
+        String testMethodQualifiedName = testClassQualifiedName + "." + testMethodName;
+        String testClassName = SurefireReportNames.normalize(testCaseReport.getClassName());
+        String testPackageName = testClassQualifiedName.replaceAll("\\.[^.]*$", "");
 
         TestRecord record = create.newRecord(Tables.TEST);
         record.setProjectId(this.getProjectId());
 
-        Path testFilePath = this.projectRecord.getTestSourcePath().resolve(testCaseReport.getFullClassName().replace(".", "/") + ".java");
+        Path testFilePath = this.projectRecord.getTestSourcePath().resolve(testClassQualifiedName.replace(".", "/") + ".java");
 
         if (!testFilePath.toFile().exists()) {
             throw new RuntimeException("Test file " + testFilePath + " does not exist.");

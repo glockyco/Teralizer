@@ -144,16 +144,17 @@ public class ProjectSetupTask extends AbstractTask {
         Files.copy(destinationPath, buildDataPath, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    private void setupTestFramework(ProjectRecord projectRecord) {
-        Pattern junit4Pattern = Pattern.compile("junit-([0-9.]+)\\.jar");
-        Matcher junit4Matcher = junit4Pattern.matcher(projectRecord.getClasspath());
+    void setupTestFramework(ProjectRecord projectRecord) {
+        Pattern junitPattern = Pattern.compile("junit-([0-9.]+)\\.jar");
+        Matcher junitMatcher = junitPattern.matcher(projectRecord.getClasspath());
 
         Pattern junit5Pattern = Pattern.compile("junit-jupiter-api-([0-9.]+)\\.jar");
         Matcher junit5Matcher = junit5Pattern.matcher(projectRecord.getClasspath());
 
-        if (junit4Matcher.find()) {
-            projectRecord.setTestFramework(TestFramework.JUNIT_4);
-            projectRecord.setTestFrameworkVersion(junit4Matcher.group(1));
+        if (junitMatcher.find()) {
+            String version = junitMatcher.group(1);
+            projectRecord.setTestFramework(version.startsWith("3.") ? TestFramework.JUNIT_3 : TestFramework.JUNIT_4);
+            projectRecord.setTestFrameworkVersion(version);
         } else if (junit5Matcher.find()) {
             projectRecord.setTestFramework(TestFramework.JUNIT_5);
             projectRecord.setTestFrameworkVersion(junit5Matcher.group(1));

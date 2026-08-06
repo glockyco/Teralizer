@@ -4,6 +4,7 @@
 ## @vtlvariable name="instrumentedClassName" type="java.lang.String"
 ## @vtlvariable name="testMethodName" type="java.lang.String"
 ## @vtlvariable name="beforeMethods" type="java.util.Set<spoon.reflect.declaration.CtMethod>"
+## @vtlvariable name="afterMethods" type="java.util.Set<spoon.reflect.declaration.CtMethod>"
 #if(${driverPackageName})
 package ${driverPackageName};
 
@@ -21,5 +22,13 @@ public class ${driverClassName} {
             #end
         #end
         instance.${testMethodName}();
+        ## Teardown exceptions propagate through main so extraction records a failed fixture run.
+        #foreach($method in ${afterMethods})
+            #if($method.static)
+                ${instrumentedClassName}.${method.simpleName}();
+            #else
+                instance.${method.simpleName}();
+            #end
+        #end
     }
 }

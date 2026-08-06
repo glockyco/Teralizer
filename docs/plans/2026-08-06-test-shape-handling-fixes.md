@@ -1,7 +1,7 @@
 ---
 title: Test-Shape Handling Fixes
 type: plan
-status: draft
+status: active
 created: 2026-08-06
 parent: 2026-06-26-teralizer-overview
 superseded_by:
@@ -83,20 +83,20 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
 
 ### Task 1: Test-shape owner
 
-- [ ] Add the shape owner and route every call site through it, deleting the duplicated
+- [x] Add the shape owner and route every call site through it, deleting the duplicated
       `extendsTestCase` in `JpfInstrumentationTask` and `JunitDataCollectionTask`, the three
       re-derived annotation-membership checks, and the three split lifecycle sets. Add
       `tearDown` to the JUnit 3 fixture concept. Classification is by qualified name.
   Verification: `grep -rn 'extendsTestCase\|KNOWN_TEST_ANNOTATIONS\|LIFECYCLE_ANNOTATIONS' src/main/java` shows the owner as the only definition site; `./gradlew test`
   Expected: no duplicate predicate remains; existing tests pass.
 
-- [ ] Reject foreign and disabled shapes explicitly: TestNG `@Test` and any `@Ignore` /
+- [x] Reject foreign and disabled shapes explicitly: TestNG `@Test` and any `@Ignore` /
       `@Disabled` test get their own filter reason codes instead of being accepted as JUnit
       (inventory C1, C2).
   Verification: unit tests over Spoon fixtures for a TestNG `@Test`, a `@Test @Ignore`, and a `@Test @Disabled`
   Expected: each rejected with its own code, none reaching generalization.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `refactor(shape): give test shape a single owner`
 
 ### Task 2: The property runs under its own fixture and its own assertion

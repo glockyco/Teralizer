@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.processing.TestFramework;
 import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 import teralizer.util.ConsoleCommandException;
@@ -141,20 +142,26 @@ public class EvoSuiteGenerationTask extends AbstractTask {
             "-Duse_separate_classloader=false"
         ));
 
-        switch (this.projectRecord.getTestFramework()) {
-            case JUNIT_4:
-                command.add("-Dtest_format=JUNIT4");
-                break;
-            case JUNIT_5:
-                command.add("-Dtest_format=JUNIT5");
-                break;
-            default:
-                throw new RuntimeException("Unsupported test framework " + this.projectRecord.getTestFramework() + ".");
-        }
+        command.add("-Dtest_format=" + testFormatFor(this.projectRecord.getTestFramework()));
 
         ConsoleCommandResult result = this.consoleCommand.execute(command);
         List<EvosuiteRuntimeRecord> records = this.extractRuntimes(create, result.getOutputPath(), targetClass);
         create.batchInsert(records).execute();
+    }
+
+    static String testFormatFor(TestFramework testFramework) {
+        switch (testFramework) {
+            case JUNIT_3:
+            case JUNIT_4:
+                // EvoSuite emits JUnit 4 tests for JUnit 3 projects; the project's original
+                // JUnit 3 dependency remains available for the ORIGINAL suite.
+                return "JUNIT4";
+            case JUNIT_5:
+                return "JUNIT5";
+            case UNKNOWN:
+            default:
+                throw new RuntimeException("Unsupported test framework " + testFramework + ".");
+        }
     }
 
     private List<EvosuiteRuntimeRecord> extractRuntimes(DSLContext create, Path outputFilePath, String targetClass) throws IOException {

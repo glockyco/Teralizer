@@ -213,6 +213,14 @@ public class JpfInstrumentationTask extends AbstractTask {
             }
         }
 
+        Set<CtMethod<?>> afterMethods = this.getAfterMethods(spoonLauncher);
+        context.put("afterMethods", afterMethods);
+        for (CtMethod<?> method : afterMethods) {
+            if (!method.getParameters().isEmpty()) {
+                throw new RuntimeException("Teardown method " + method.getSimpleName() + " has parameters.");
+            }
+        }
+
         File driverClassFile = new File(this.assertionRecord.getDriverFilePath());
         driverClassFile.getParentFile().mkdirs();
 
@@ -237,6 +245,13 @@ public class JpfInstrumentationTask extends AbstractTask {
             .get(this.testRecord.getTestClassQualifiedName());
 
         return beforeMethodsFor(testClass);
+    }
+
+    private Set<CtMethod<?>> getAfterMethods(Launcher spoonLauncher) {
+        CtClass<?> testClass = spoonLauncher.getFactory().Class()
+            .get(this.testRecord.getTestClassQualifiedName());
+
+        return afterMethodsFor(testClass);
     }
 
     static Set<CtMethod<?>> beforeMethodsFor(CtClass<?> testClass) {

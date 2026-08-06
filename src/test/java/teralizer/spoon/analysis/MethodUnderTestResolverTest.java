@@ -53,6 +53,40 @@ public class MethodUnderTestResolverTest {
     }
 
     @Example
+    void junit4AssertThrowsDegradesToNoPick() {
+        // JUnit 4.13 declares assertThrows but the resolver only extracts a JUnit 5 lambda body,
+        // so this shape must reach the no-pick outcome rather than an unchecked argument read.
+        Launcher launcher = new Launcher();
+        launcher.getEnvironment().setNoClasspath(true);
+        launcher.addInputResource(new VirtualFile(
+            "public class SubjectTest {\n"
+                + "  public void t() { org.junit.Assert.assertThrows(RuntimeException.class, new Object()); }\n"
+                + "}\n",
+            "SubjectTest.java"));
+        launcher.buildModel();
+        CtClass<?> testClass = launcher.getModel()
+            .getElements(new NamedElementFilter<>(CtClass.class, "SubjectTest")).get(0);
+        CtMethod<?> testMethod = testClass.getMethodsByName("t").get(0);
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+
+        MutResolution resolution = MethodUnderTestResolver.resolve(testMethod, assertion, new FocalTypeResolver());
+
+        Assert.assertEquals(MutResolution.Status.NONE, resolution.getStatus());
+        Assert.assertEquals(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, resolution.getNoPickReason());
+    }
+
+    @Example
+    void malformedAssertThrowsDegradesToNoPick() {
+        MutResolution resolution = resolve(
+            "public class SubjectTest {\n"
+                + "  public void t() { org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class); }\n"
+                + "}");
+
+        Assert.assertEquals(MutResolution.Status.NONE, resolution.getStatus());
+        Assert.assertEquals(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, resolution.getNoPickReason());
+    }
+
+    @Example
     void assertThrowsMultipleInvocations_picksLast_gradedGuess() {
         MutResolution r = resolve(
             "public class SubjectTest {\n"

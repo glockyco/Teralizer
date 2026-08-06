@@ -73,8 +73,15 @@ public final class AssertionSemanticsClassifier {
         if (AssertionSemanticCodes.FAIL_SENTINEL.equals(semanticKind)) {
             return null;
         }
-        if (AssertionSemanticCodes.HAMCREST_MATCHER.equals(semanticKind) || AssertionSemanticCodes.ASSERTJ_MATCHER.equals(semanticKind)) {
-            return args.get(0);
+        if (AssertionSemanticCodes.HAMCREST_MATCHER.equals(semanticKind)
+            || AssertionSemanticCodes.ASSERTJ_MATCHER.equals(semanticKind)) {
+            if (args.size() == 2) {
+                return args.get(0);
+            }
+            if (args.size() == 3) {
+                return args.get(1);
+            }
+            return null;
         }
         return TestAnalysis.getActualParameterIndex(assertion)
             .map(args::get)
@@ -127,8 +134,9 @@ public final class AssertionSemanticsClassifier {
             : AssertionSemanticCodes.MATCHER_FAMILY_ASSERTJ;
         String name = null;
         List<CtExpression<?>> args = assertion.getArguments();
-        if (args.size() > 1 && args.get(1) instanceof CtInvocation<?>) {
-            CtExecutableReference<?> matcherExecutable = ((CtInvocation<?>) args.get(1)).getExecutable();
+        int matcherIndex = args.size() == 2 ? 1 : args.size() == 3 ? 2 : -1;
+        if (matcherIndex >= 0 && args.get(matcherIndex) instanceof CtInvocation<?>) {
+            CtExecutableReference<?> matcherExecutable = ((CtInvocation<?>) args.get(matcherIndex)).getExecutable();
             name = matcherExecutable.getSimpleName();
         }
         return new Matcher(family, name);

@@ -62,6 +62,23 @@ public class AssertionSemanticsClassifierTest {
     }
 
     @Example
+    void recordsThreeArgumentMatcherFocusAndName() {
+        CtMethod<?> method = testMethodFromSource(
+            "package smoke;\n"
+                + "public class SubjectTest {\n"
+                + "  public void t(Object value) {\n"
+                + "    org.junit.Assert.assertThat(\"reason\", new Subject().id(1), org.hamcrest.CoreMatchers.is(1));\n"
+                + "  }\n"
+                + "}\n"
+        );
+
+        AssertionSemanticsClassifier.Result result = semantics(method, 0);
+
+        Assert.assertEquals(AssertionSemanticCodes.ARGUMENT_SHAPE_METHOD_CALL, result.argumentShape());
+        Assert.assertEquals("is", result.matcherName());
+    }
+
+    @Example
     void recordsMatcherFamilyAndName() {
         CtMethod<?> method = testMethodFromSource(
             "package smoke;\n"

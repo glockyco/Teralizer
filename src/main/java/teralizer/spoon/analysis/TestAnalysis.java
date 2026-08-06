@@ -236,9 +236,8 @@ public class TestAnalysis {
         } else if (assertionName.equals(Configuration.ASSERT_THROWS)) {
             if (framework == AssertionFramework.JUNIT5) {
                 return Optional.of(0);
-            } else {
-                throw new RuntimeException("Unexpected JUnit 4 assertion:\n" + assertion);
             }
+            return Optional.empty();
         }
         return Optional.empty();
     }

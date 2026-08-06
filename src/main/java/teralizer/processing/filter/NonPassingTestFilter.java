@@ -1,11 +1,13 @@
 package teralizer.processing.filter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.processing.TestResult;
+import teralizer.processing.reports.SurefireReportNames;
 
 public class NonPassingTestFilter extends AbstractFilter {
 
@@ -25,10 +27,9 @@ public class NonPassingTestFilter extends AbstractFilter {
 
     @Override
     public FilterResult check() {
-        // We have to exclude all tests that are in the same file as a failing
-        // test. This is because (i) PIT requires all processed tests to pass,
-        // and (ii) PIT offers only class-level inclusion/exclusion settings.
         if (this.generalizationRecord == null) {
+            // PIT requires all processed tests to pass and offers only class-level inclusion and
+            // exclusion settings, so the test-level decision covers the complete test class.
             List<String> failingTests = this.create
                 .select(Tables.JUNIT_TEST_REPORT.TEST_METHOD_NAME)
                 .from(Tables.JUNIT_TEST_REPORT)
@@ -44,14 +45,17 @@ public class NonPassingTestFilter extends AbstractFilter {
             }
         } else {
             List<String> failingTests = this.create
-                .select(Tables.JUNIT_TEST_REPORT.TEST_METHOD_NAME)
+                .select(Tables.JUNIT_TEST_REPORT.TEST_CASE_NAME)
                 .from(Tables.JUNIT_TEST_REPORT)
                 .where(Tables.JUNIT_TEST_REPORT.PROJECT_ID.eq(this.generalizationRecord.getProjectId()))
                 .and(Tables.JUNIT_TEST_REPORT.TEST_PACKAGE_NAME.eq(this.generalizationRecord.getPackageName()))
                 .and(Tables.JUNIT_TEST_REPORT.TEST_CLASS_NAME.eq(this.generalizationRecord.getClassName()))
                 .and(Tables.JUNIT_TEST_REPORT.VARIANT.eq(this.generalizationRecord.getVariant()))
                 .and(Tables.JUNIT_TEST_REPORT.RESULT.ne(TestResult.PASSED))
-                .fetchInto(String.class);
+                .fetchInto(String.class).stream()
+                .filter(testCaseName -> SurefireReportNames.matches(
+                    this.generalizationRecord.getMethodQualifiedName(), testCaseName))
+                .collect(Collectors.toList());
 
             if (!failingTests.isEmpty()) {
                 String reason = "Failing generalized tests in test class " + this.generalizationRecord.getClassQualifiedName() + ": " + String.join(", ", failingTests);

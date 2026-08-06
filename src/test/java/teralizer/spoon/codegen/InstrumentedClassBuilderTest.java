@@ -10,6 +10,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.support.compiler.VirtualFile;
@@ -200,6 +201,68 @@ public class InstrumentedClassBuilderTest {
         Assert.assertEquals("right", wrapper.getParameters().get(1).getSimpleName());
         String statement = wrapper.getBody().getStatement(0).toString();
         Assert.assertTrue(statement, statement.contains("add(left, right)"));
+    }
+
+    @Example
+    void stringOnlyTestCaseGetsDelegatingNoArgConstructor() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\\n"
+                + "public class SubjectTest extends junit.framework.TestCase {\\n"
+                + "  public SubjectTest(String name) { super(name); }\\n"
+                + "  public void t() { assertEquals(1, ExpressionSliceCut.value()); }\\n"
+                + "}\\n",
+            "package smoke;\\n"
+                + "public class ExpressionSliceCut {\\n"
+                + "  public static int value() { return 1; }\\n"
+                + "}\\n"
+        );
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtInvocation<?> testedCall = (CtInvocation<?>) assertion.getArguments().get(1);
+        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(
+            testedMethod,
+            testedCall,
+            GeneralizableInput.derive(testedMethod, testedCall),
+            "int"
+        );
+
+        CtClass<?> instrumented = build(testMethod, recipe, "call_wrapper", "int");
+
+        Assert.assertEquals(2, instrumented.getConstructors().size());
+        CtConstructor<?> noArgConstructor = instrumented.getConstructors().stream()
+            .filter(constructor -> constructor.getParameters().isEmpty())
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+        Assert.assertTrue(noArgConstructor.toString().contains("this(\"\")"));
+    }
+
+    @Example
+    void existingNoArgConstructorIsKeptWithoutAnAdditionalWrapperConstructor() {
+        CtMethod<?> testMethod = testMethodFromSource(
+            "package smoke;\\n"
+                + "public class SubjectTest {\\n"
+                + "  public SubjectTest() { }\\n"
+                + "  public void t() { org.junit.Assert.assertEquals(1, ExpressionSliceCut.value()); }\\n"
+                + "}\\n",
+            "package smoke;\\n"
+                + "public class ExpressionSliceCut {\\n"
+                + "  public static int value() { return 1; }\\n"
+                + "}\\n"
+        );
+        CtInvocation<?> assertion = TestAnalysis.findAllAsserts(testMethod).get(0);
+        CtInvocation<?> testedCall = (CtInvocation<?>) assertion.getArguments().get(1);
+        CtMethod<?> testedMethod = (CtMethod<?>) testedCall.getExecutable().getDeclaration();
+        GeneralizationRecipe recipe = GeneralizationRecipe.from(
+            testedMethod,
+            testedCall,
+            GeneralizableInput.derive(testedMethod, testedCall),
+            "int"
+        );
+
+        CtClass<?> instrumented = build(testMethod, recipe, "call_wrapper", "int");
+
+        Assert.assertEquals(1, instrumented.getConstructors().size());
+        Assert.assertTrue(instrumented.getConstructors().iterator().next().getParameters().isEmpty());
     }
 
     private static GeneralizationRecipe compositeOracleRecipe(CtMethod<?> testMethod) {

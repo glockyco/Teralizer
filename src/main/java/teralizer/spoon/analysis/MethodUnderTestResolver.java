@@ -110,6 +110,9 @@ public final class MethodUnderTestResolver {
         }
 
         if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
+            if (!TestAnalysis.isJUnit5Assertion(assertion) || assertion.getArguments().size() < 2) {
+                return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
+            }
             return resolveAssertThrows(testMethod, assertion, focal);
         }
 

@@ -13,6 +13,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.compiler.VirtualFile;
@@ -231,6 +232,38 @@ public class GeneralizedTestBuilderTest {
         Assert.assertTrue(code, code.contains("return true"));
         Assert.assertTrue(code, code.contains("return false"));
     }
+    @Example
+    void junit3LifecycleIsRewrittenAndVintageShapeRetained() {
+        CtClass<?> generalized = build(scenario(JUNIT3_SOURCE), identityPlan());
+
+        CtMethod<?> setUp = generalized.getMethodsByName("setUp").get(0);
+        CtMethod<?> tearDown = generalized.getMethodsByName("tearDown").get(0);
+        Assert.assertTrue(setUp.getAnnotations().stream().anyMatch(annotation ->
+            "net.jqwik.api.lifecycle.BeforeProperty".equals(annotation.getAnnotationType().getQualifiedName())));
+        Assert.assertTrue(tearDown.getAnnotations().stream().anyMatch(annotation ->
+            "net.jqwik.api.lifecycle.AfterProperty".equals(annotation.getAnnotationType().getQualifiedName())));
+        Assert.assertEquals("junit.framework.TestCase", generalized.getSuperclass().getQualifiedName());
+        Assert.assertFalse(generalized.getMethodsByName("testSibling").isEmpty());
+    }
+
+    @Example
+    void junit4LifecycleRewriteKeepsContainerHooksStatic() {
+        CtClass<?> generalized = build(scenario(JUNIT4_LIFECYCLE_SOURCE), identityPlan());
+
+        Assert.assertTrue(generalized.getMethodsByName("setUp").get(0).getAnnotations().stream().anyMatch(annotation ->
+            "net.jqwik.api.lifecycle.BeforeProperty".equals(annotation.getAnnotationType().getQualifiedName())));
+        Assert.assertTrue(generalized.getMethodsByName("after").get(0).getAnnotations().stream().anyMatch(annotation ->
+            "net.jqwik.api.lifecycle.AfterProperty".equals(annotation.getAnnotationType().getQualifiedName())));
+        Assert.assertTrue(generalized.getMethodsByName("beforeClass").get(0).getAnnotations().stream().anyMatch(annotation ->
+            "net.jqwik.api.lifecycle.BeforeContainer".equals(annotation.getAnnotationType().getQualifiedName())));
+        Assert.assertTrue(generalized.getMethodsByName("afterClass").get(0).getAnnotations().stream().anyMatch(annotation ->
+            "net.jqwik.api.lifecycle.AfterContainer".equals(annotation.getAnnotationType().getQualifiedName())));
+        Assert.assertTrue(generalized.getMethodsByName("beforeClass").get(0).hasModifier(ModifierKind.STATIC));
+        Assert.assertTrue(generalized.getMethodsByName("afterClass").get(0).hasModifier(ModifierKind.STATIC));
+        Assert.assertFalse(generalized.getMethodsByName("setUp").get(0).hasModifier(ModifierKind.STATIC));
+        Assert.assertFalse(generalized.getMethodsByName("after").get(0).hasModifier(ModifierKind.STATIC));
+    }
+
     private static GeneralizedTestBuilder.Plan identityPlan() {
         Model inputModel = new Operation(
             new Variable("x", TypeDomain.INTEGER),
@@ -377,6 +410,35 @@ public class GeneralizedTestBuilderTest {
         velocityEngine.init();
         return velocityEngine;
     }
+
+    private static final String JUNIT3_SOURCE = ""
+        + "package example;\n"
+        + "public class SubjectTest extends junit.framework.TestCase {\n"
+        + "  protected void setUp() {}\n"
+        + "  protected void tearDown() {}\n"
+        + "  public void returnsInput() {\n"
+        + "    org.junit.Assert.assertEquals(2, new Subject().id(2));\n"
+        + "  }\n"
+        + "  public void testSibling() {}\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  int id(int x) { return x; }\n"
+        + "}\n";
+
+    private static final String JUNIT4_LIFECYCLE_SOURCE = ""
+        + "package example;\n"
+        + "public class SubjectTest {\n"
+        + "  @org.junit.Before public void setUp() {}\n"
+        + "  @org.junit.jupiter.api.AfterEach public void after() {}\n"
+        + "  @org.junit.BeforeClass public void beforeClass() {}\n"
+        + "  @org.junit.AfterClass public void afterClass() {}\n"
+        + "  @org.junit.Test public void returnsInput() {\n"
+        + "    org.junit.Assert.assertEquals(2, new Subject().id(2));\n"
+        + "  }\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  int id(int x) { return x; }\n"
+        + "}\n";
 
     private static final String SOURCE = ""
         + "package example;\n"

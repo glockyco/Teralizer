@@ -2,7 +2,6 @@ package teralizer.processing.task;
 
 import static teralizer.util.Configuration.EVOSUITE_JAR_PATH;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -55,7 +54,7 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
             return;
         }
 
-        Path evoSuiteReportDir = Paths.get("evosuite-report");
+        Path evoSuiteReportDir = this.projectRecord.getRootPath().resolve("evosuite-report");
         Path statisticsFilePath = evoSuiteReportDir.resolve("statistics.csv");
 
         DSLContext create = context.get(TaskContext.DSL_CONTEXT);
@@ -67,7 +66,7 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
             throw new RuntimeException("EvoSuite statistics file not found at: " + statisticsFilePath);
         }
 
-        Files.move(evoSuiteReportDir, evoSuiteDataDir.resolve(evoSuiteReportDir));
+        Files.move(evoSuiteReportDir, evoSuiteDataDir.resolve(evoSuiteReportDir.getFileName()));
 
         Path evoSuiteTestsDir = evoSuiteDataDir.resolve("evosuite-tests");
         Path evoSuiteProcessedTestsDir = evoSuiteDataDir.resolve("evosuite-tests-processed");
@@ -84,56 +83,48 @@ public class EvoSuitePostprocessingTask extends AbstractTask {
 
     private List<EvosuiteReportRecord> parseEvoSuiteStatistics(DSLContext create, Path statisticsFilePath) throws IOException {
         List<EvosuiteReportRecord> records = new ArrayList<>();
-        try (BufferedReader reader = Files.newBufferedReader(statisticsFilePath)) {
-            String header = reader.readLine();
-            if (header == null) {
-                throw new RuntimeException("Empty EvoSuite statistics file: " + statisticsFilePath);
-            }
+        CsvReportParser.CsvReport report = CsvReportParser.parse(statisticsFilePath);
+        List<String> columns = report.header();
+        Set<String> columnSet = new HashSet<>(columns);
 
-            String[] columns = header.split(",");
-            Set<String> columnSet = new HashSet<>(Arrays.asList(columns));
+        if (!columnSet.containsAll(EXPECTED_STATISTICS_COLUMNS)) {
+            Set<String> missingColumns = new HashSet<>(EXPECTED_STATISTICS_COLUMNS);
+            missingColumns.removeAll(columnSet);
+            throw new RuntimeException(
+                "Statistics file is missing expected columns: " + missingColumns + ". " +
+                    "Found columns: " + columnSet + "."
+            );
+        }
 
-            if (!columnSet.containsAll(EXPECTED_STATISTICS_COLUMNS)) {
-                Set<String> missingColumns = new HashSet<>(EXPECTED_STATISTICS_COLUMNS);
-                missingColumns.removeAll(columnSet);
-                throw new RuntimeException(
-                    "Statistics file is missing expected columns: " + missingColumns + ". " +
-                        "Found columns: " + columnSet + "."
-                );
-            }
+        int classNameIndex = this.getIndexOfColumn(columns, "TARGET_CLASS");
+        int criterionIndex = this.getIndexOfColumn(columns, "criterion");
+        int coverageIndex = this.getIndexOfColumn(columns, "Coverage");
+        int totalGoalsIndex = this.getIndexOfColumn(columns, "Total_Goals");
+        int coveredGoalsIndex = this.getIndexOfColumn(columns, "Covered_Goals");
 
-            int classNameIndex = this.getIndexOfColumn(columns, "TARGET_CLASS");
-            int criterionIndex = this.getIndexOfColumn(columns, "criterion");
-            int coverageIndex = this.getIndexOfColumn(columns, "Coverage");
-            int totalGoalsIndex = this.getIndexOfColumn(columns, "Total_Goals");
-            int coveredGoalsIndex = this.getIndexOfColumn(columns, "Covered_Goals");
+        for (List<String> parts : report.rows()) {
+            String className = parts.get(classNameIndex).trim();
+            String criterion = parts.get(criterionIndex).trim();
+            float coverage = Float.parseFloat(parts.get(coverageIndex).trim());
+            int totalGoals = Integer.parseInt(parts.get(totalGoalsIndex).trim());
+            int coveredGoals = Integer.parseInt(parts.get(coveredGoalsIndex).trim());
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                String className = parts[classNameIndex].trim();
-                String criterion = parts[criterionIndex].trim();
-                float coverage = Float.parseFloat(parts[coverageIndex].trim());
-                int totalGoals = Integer.parseInt(parts[totalGoalsIndex].trim());
-                int coveredGoals = Integer.parseInt(parts[coveredGoalsIndex].trim());
+            EvosuiteReportRecord record = create.newRecord(Tables.EVOSUITE_REPORT);
+            record.setProjectId(this.projectRecord.getId());
+            record.setClassName(className);
+            record.setCriterion(criterion);
+            record.setCoverage(coverage);
+            record.setTotalGoals(totalGoals);
+            record.setCoveredGoals(coveredGoals);
 
-                EvosuiteReportRecord record = create.newRecord(Tables.EVOSUITE_REPORT);
-                record.setProjectId(this.projectRecord.getId());
-                record.setClassName(className);
-                record.setCriterion(criterion);
-                record.setCoverage(coverage);
-                record.setTotalGoals(totalGoals);
-                record.setCoveredGoals(coveredGoals);
-
-                records.add(record);
-            }
+            records.add(record);
         }
         return records;
     }
 
-    private int getIndexOfColumn(String[] array, String value) {
-        for (int i = 0; i < array.length; i++) {
-            if (array[i].equals(value)) {
+    private int getIndexOfColumn(List<String> columns, String value) {
+        for (int i = 0; i < columns.size(); i++) {
+            if (columns.get(i).equals(value)) {
                 return i;
             }
         }

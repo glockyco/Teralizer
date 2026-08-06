@@ -212,7 +212,8 @@ public final class TaskDiagnosticClassifier {
     }
 
     private static Diagnostic classifyReportFailure(Throwable failure) {
-        if (contains(failure, "Unable to identify test report path")) {
+        if (contains(failure, "Unable to identify test report path")
+            || (contains(failure, "Report directory") && contains(failure, "does not exist"))) {
             return diagnostic(TaskDiagnosticCodes.MISSING_REPORT_FILE, messageDetail(failure));
         }
         if (contains(failure, "Failed to identify matching test case report")) {

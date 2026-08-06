@@ -205,6 +205,23 @@ public class TestAnalysisTest {
     }
 
     @Example
+    void junit4AssertThrowsExpectedIndexDegradesInsteadOfThrowing() {
+        // JUnit 4.13 declares assertThrows, so this shape reaches the index lookup.
+        CtInvocation<?> assertion = assertion(
+            "org.junit.Assert.assertThrows(RuntimeException.class, new Object());");
+
+        Assert.assertEquals(Optional.empty(), TestAnalysis.getExpectedParameterIndex(assertion));
+    }
+
+    @Example
+    void junit5AssertThrowsExposesTheExpectedExceptionArgument() {
+        CtInvocation<?> assertion = assertion(
+            "org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class, new Object());");
+
+        Assert.assertEquals(Optional.of(0), TestAnalysis.getExpectedParameterIndex(assertion));
+    }
+
+    @Example
     void unknownAssertionFrameworkDegradesInsteadOfThrowing() {
         Launcher launcher = new Launcher();
         launcher.getEnvironment().setNoClasspath(true);

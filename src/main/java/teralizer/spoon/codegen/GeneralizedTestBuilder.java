@@ -2,7 +2,6 @@ package teralizer.spoon.codegen;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -34,6 +33,7 @@ import teralizer.processing.GeneralizationAlgorithm;
 import teralizer.spoon.SpoonUtils;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
+import teralizer.spoon.analysis.TestShape;
 import teralizer.spoon.generalization.BaselineTestParametersSupplierFactory;
 import teralizer.spoon.generalization.ImprovedTestParametersSupplierFactory;
 import teralizer.spoon.generalization.NaiveTestParametersSupplierFactory;
@@ -43,10 +43,6 @@ import teralizer.transformer.VariableDescriptorCollector;
 import teralizer.util.Configuration;
 
 public final class GeneralizedTestBuilder {
-    private static final Map<String, String> JQWIK_LIFECYCLE_ANNOTATIONS =
-        createJqwikLifecycleAnnotationMap();
-    private static final Set<String> STATIC_LIFECYCLE_ANNOTATIONS =
-        createStaticLifecycleAnnotationSet();
     private static final String JUNIT_RUN_WITH = "org.junit.runner.RunWith";
 
     public CtClass<?> build(Factory factory, GeneralizationRecipe clonedRecipe, Names names, Plan plan) {
@@ -117,27 +113,6 @@ public final class GeneralizedTestBuilder {
         return generalizedClassDeclaration;
     }
 
-    private static Map<String, String> createJqwikLifecycleAnnotationMap() {
-        Map<String, String> annotations = new LinkedHashMap<>();
-        annotations.put("org.junit.Before", "net.jqwik.api.lifecycle.BeforeProperty");
-        annotations.put("org.junit.jupiter.api.BeforeEach", "net.jqwik.api.lifecycle.BeforeProperty");
-        annotations.put("org.junit.After", "net.jqwik.api.lifecycle.AfterProperty");
-        annotations.put("org.junit.jupiter.api.AfterEach", "net.jqwik.api.lifecycle.AfterProperty");
-        annotations.put("org.junit.BeforeClass", "net.jqwik.api.lifecycle.BeforeContainer");
-        annotations.put("org.junit.jupiter.api.BeforeAll", "net.jqwik.api.lifecycle.BeforeContainer");
-        annotations.put("org.junit.AfterClass", "net.jqwik.api.lifecycle.AfterContainer");
-        annotations.put("org.junit.jupiter.api.AfterAll", "net.jqwik.api.lifecycle.AfterContainer");
-        return Collections.unmodifiableMap(annotations);
-    }
-
-    private static Set<String> createStaticLifecycleAnnotationSet() {
-        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            "org.junit.BeforeClass",
-            "org.junit.jupiter.api.BeforeAll",
-            "org.junit.AfterClass",
-            "org.junit.jupiter.api.AfterAll"
-        )));
-    }
     /*
      * Wrapper arguments map onto tested-method parameters BY NAME: the wrapper signature is
      * [_target_?][generalizable inputs][lifted locals][scope-bound constructions], the inputs
@@ -200,21 +175,21 @@ public final class GeneralizedTestBuilder {
 
     private static void rewriteLifecycleAnnotations(Factory factory, CtClass<?> generalizedClassDeclaration) {
         for (CtMethod<?> method : generalizedClassDeclaration.getMethods()) {
-            List<CtAnnotation<? extends Annotation>> annotations = new ArrayList<>(method.getAnnotations());
-            for (CtAnnotation<? extends Annotation> annotation : annotations) {
-                String annotationType = annotation.getAnnotationType().getQualifiedName();
-                String jqwikAnnotationType = JQWIK_LIFECYCLE_ANNOTATIONS.get(annotationType);
-                if (jqwikAnnotationType == null) {
-                    continue;
-                }
+            TestShape.LifecyclePhase phase = TestShape.lifecyclePhaseOf(method, generalizedClassDeclaration);
+            if (phase == null) {
+                continue;
+            }
 
-                method.removeAnnotation(annotation);
-                CtAnnotation<Annotation> jqwikAnnotation = factory.Core().createAnnotation();
-                jqwikAnnotation.setAnnotationType(factory.Type().createReference(jqwikAnnotationType));
-                method.addAnnotation(jqwikAnnotation);
-                if (STATIC_LIFECYCLE_ANNOTATIONS.contains(annotationType)) {
-                    method.addModifier(ModifierKind.STATIC);
-                }
+            new ArrayList<>(method.getAnnotations()).stream()
+                .filter(annotation -> TestShape.phaseForLifecycleAnnotation(
+                    annotation.getAnnotationType().getQualifiedName()) != null)
+                .forEach(method::removeAnnotation);
+
+            CtAnnotation<Annotation> jqwikAnnotation = factory.Core().createAnnotation();
+            jqwikAnnotation.setAnnotationType(factory.Type().createReference(phase.jqwikAnnotation()));
+            method.addAnnotation(jqwikAnnotation);
+            if (phase.requiresStatic()) {
+                method.addModifier(ModifierKind.STATIC);
             }
         }
     }

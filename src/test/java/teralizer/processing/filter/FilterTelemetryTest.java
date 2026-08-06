@@ -13,6 +13,7 @@ import org.jooq.Record1;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.MockConnection;
@@ -260,6 +261,16 @@ public class FilterTelemetryTest {
     }
 
     @Example
+    void assertionInLoopMissingPathDefersWithStableCode() throws Exception {
+        AssertionRecord record = new AssertionRecord();
+
+        FilterResult result = new AssertionInLoopFilter(new Launcher(), record).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.MISSING_ASSERTION_PATH, result.getReasonCode());
+    }
+
+    @Example
     void assertionInMethodHelperSetsStableCode() throws Exception {
         Launcher launcher = new Launcher();
         launcher.addInputResource(new VirtualFile(
@@ -372,6 +383,16 @@ public class FilterTelemetryTest {
     }
 
     @Example
+    void testedMethodInLoopMissingPathDefersWithStableCode() throws Exception {
+        AssertionRecord record = new AssertionRecord();
+
+        FilterResult result = new TestedMethodInLoopFilter(new Launcher(), record).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.MISSING_TESTED_METHOD_CALL_PATH, result.getReasonCode());
+    }
+
+    @Example
     void noAssertionsRejectSetsStableCode() {
         DSLContext dsl = DSL.using(new MockConnection(ctx -> {
             DSLContext inner = DSL.using(SQLDialect.DEFAULT);
@@ -406,6 +427,28 @@ public class FilterTelemetryTest {
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.TEST_NOT_PASSING, result.getReasonCode());
     }
+    @Example
+    void nonPassingGeneralizationIgnoresFailingSiblingTestCase() {
+        DSLContext dsl = DSL.using(new MockConnection(ctx -> {
+            DSLContext inner = DSL.using(SQLDialect.DEFAULT);
+            Field<String> f = DSL.field("test_case_name", String.class);
+            Result<Record1<String>> r = inner.newResult(f);
+            r.add(inner.newRecord(f).values("pkg.Generated.sibling"));
+            return new MockResult[] {new MockResult(1, r)};
+        }), SQLDialect.POSTGRES);
+        GeneralizationRecord generalization = new GeneralizationRecord();
+        generalization.setProjectId(1L);
+        generalization.setPackageName("pkg");
+        generalization.setClassName("Generated");
+        generalization.setClassQualifiedName("pkg.Generated");
+        generalization.setMethodQualifiedName("pkg.Generated.property");
+        generalization.setVariant("IMPROVED");
+
+        FilterResult result = new NonPassingTestFilter(dsl, new TestRecord(), generalization).check();
+
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
     private static String exceptionRecipeJson(String oracleExpressionType) {
         return "{"
             + "\"version\":3,"

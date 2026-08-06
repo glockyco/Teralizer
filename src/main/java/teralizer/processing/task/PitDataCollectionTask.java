@@ -26,8 +26,6 @@ import org.jooq.generated.tables.records.PitMutationReportRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
 import org.jooq.impl.DSL;
 import org.jooq.tools.json.JSONArray;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import teralizer.processing.MutationStatus;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
@@ -38,7 +36,6 @@ import teralizer.util.Configuration;
 import teralizer.util.ConsoleCommand;
 
 public class PitDataCollectionTask extends AbstractTask {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PitDataCollectionTask.class);
     private static final int INSERT_BATCH_SIZE = 1000;
 
     private final ConsoleCommand consoleCommand;
@@ -60,6 +57,15 @@ public class PitDataCollectionTask extends AbstractTask {
         // Optional: Section identifier followed by simple method name and parameter types:
         "(?:/\\[(?:method|property|test|test-template):([\\w$]+)\\(.*?\\)\\])?" +
         // Optional: Section identifier followed by invocation count (for repeated / parameterized tests only):
+        "(?:/\\[test-template-invocation:.*\\])?",
+        Pattern.UNICODE_CHARACTER_CLASS
+    );
+
+    private static final Pattern DISPLAY_NAME_TEST_NAME_PATTERN = Pattern.compile(
+        // jqwik can prefix the engine path with a leading-space display name rather than a qualified name.
+        "(\\s[\\w$]+(?:[ _][\\w$]+)*\\.[^/]+)/" +
+        "\\[class:([\\w$.]+)\\]" +
+        "(?:/\\[property:([\\w$]+)\\(.*?\\)\\])?" +
         "(?:/\\[test-template-invocation:.*\\])?",
         Pattern.UNICODE_CHARACTER_CLASS
     );
@@ -112,7 +118,7 @@ public class PitDataCollectionTask extends AbstractTask {
         Map<String, Long> generalizationIds = this.fetchGeneralizationIds(create);
 
         this.collectCoverageData(create, pitDataDirectory, testIds, generalizationIds);
-        this.collectMutationData(create, pitDataDirectory, testIds, generalizationIds);
+        this.collectMutationData(create, pitDataDirectory, testIds, generalizationIds, reportInfo);
         if (this.stage == ProcessingStage.COLLECT_PIT_DATA_GENERALIZED) {
             GeneralizationLifecycleWriter.recordProjectStageSucceeded(create, this.stage, this.getProjectId(), this.getVariant());
         }
@@ -335,7 +341,8 @@ public class PitDataCollectionTask extends AbstractTask {
         DSLContext create,
         Path dataDirectory,
         Map<String, Long> testIds,
-        Map<String, Long> generalizationIds
+        Map<String, Long> generalizationIds,
+        Consumer<String> reportInfo
     ) throws DocumentException, IOException {
         Path reportPath = this.projectRecord.getMutationReportsPath().resolve("mutations.xml");
 
@@ -355,6 +362,7 @@ public class PitDataCollectionTask extends AbstractTask {
         Element mutationsElement = document.getRootElement();
 
         List<PitMutationReportRecord> records = new ArrayList<>();
+        int unattributedDetectedMutations = 0;
         for (Element mutationElement : mutationsElement.elements("mutation")) {
             String mutatedClassQualifiedName = mutationElement.element("mutatedClass").getText();
             int mutatedClassLastDotIndex = mutatedClassQualifiedName.lastIndexOf('.');
@@ -414,9 +422,14 @@ public class PitDataCollectionTask extends AbstractTask {
                 }
             }
 
+            if (record.getIsDetected() && record.getKillingTestId() == null
+                && record.getKillingGeneralizationId() == null) {
+                unattributedDetectedMutations++;
+            }
             records.add(record);
         }
 
+        reportInfo.accept("PIT detected mutations without test attribution: " + unattributedDetectedMutations);
         insertInBatches(create, records);
     }
 
@@ -432,6 +445,9 @@ public class PitDataCollectionTask extends AbstractTask {
 
     private static TestNameInfo processTestName(String testName) {
         Matcher matcher = TEST_NAME_PATTERN.matcher(testName);
+        if (!matcher.matches()) {
+            matcher = DISPLAY_NAME_TEST_NAME_PATTERN.matcher(testName);
+        }
 
         if (matcher.matches()) {
             // Extract the qualified class name and (optionally) method name
@@ -455,11 +471,6 @@ public class PitDataCollectionTask extends AbstractTask {
             );
         }
 
-        // PIT emits identifiers we cannot decompose, for instance a jqwik entry carrying only the
-        // engine segment (`com.example.FooTest.[engine:jqwik]`). Such a name has no method to link
-        // against, so the record is kept unlinked exactly as an unattributable but parsable name
-        // is, rather than halting collection for the whole project.
-        LOGGER.atDebug().log("Unparsable PIT test name kept unlinked: " + testName);
         return new TestNameInfo(null, null, null, null, null);
     }
 
@@ -473,10 +484,6 @@ public class PitDataCollectionTask extends AbstractTask {
         String qualified = info.getMethodQualifiedName();
         Long testId = qualified == null ? null : testIds.getOrDefault(qualified, null);
         Long generalizationId = qualified == null ? null : generalizationIds.getOrDefault(qualified, null);
-        if (qualified != null && testId == null && generalizationId == null) {
-            LOGGER.atDebug().log("Unattributed PIT record kept unlinked. PIT name: " + pitName
-                + ", method: " + qualified);
-        }
         return new ResolvedTestName(info, testId, generalizationId);
     }
 
@@ -501,6 +508,10 @@ public class PitDataCollectionTask extends AbstractTask {
 
         Long generalizationId() {
             return this.generalizationId;
+        }
+
+        boolean isUnattributed() {
+            return this.testId == null && this.generalizationId == null;
         }
     }
 
