@@ -24,6 +24,7 @@ import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.reflect.visitor.filter.TypeFilter;
+import teralizer.processing.reports.CsvReportParser;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
 

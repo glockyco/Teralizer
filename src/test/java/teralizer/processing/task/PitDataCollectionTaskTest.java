@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import net.jqwik.api.Example;
 import org.junit.Assert;
+import teralizer.processing.reports.CsvReportParser;
 
 public class PitDataCollectionTaskTest {
 
