@@ -42,13 +42,45 @@ public class FilterTelemetryTest {
         record.setTestedMethodQualifiedName(null);
         record.setTestedMethodParameters(null);
 
-        FilterResult result = new MissingValueFilter(record).check();
+        FilterResult result = new MissingValueFilter(null, record).check();
 
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.MISSING_TESTED_FILE, result.getReasonCode());
         JsonObject detail = GSON.fromJson(result.getDetailJson(), JsonObject.class);
         Assert.assertEquals("MISSING_TESTED_METHOD", detail.getAsJsonArray("all_reason_codes").get(1).getAsString());
         Assert.assertEquals("MISSING_TESTED_PARAMS", detail.getAsJsonArray("all_reason_codes").get(2).getAsString());
+    }
+
+    @Example
+    void missingValueReportsResolverReasonWhileKeepingColumnLevelDetail() {
+        AssertionRecord record = new AssertionRecord();
+        record.setTestedClassName("Cut");
+        record.setTestedMethodQualifiedName(null);
+        record.setTestedMethodParameters(null);
+
+        FilterResult result = new MissingValueFilter(FilterReasonCodes.MUT_LIBRARY_DECLARATION, record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.MUT_LIBRARY_DECLARATION, result.getReasonCode());
+        JsonObject detail = GSON.fromJson(result.getDetailJson(), JsonObject.class);
+        Assert.assertEquals("MISSING_TESTED_FILE", detail.getAsJsonArray("all_reason_codes").get(0).getAsString());
+        Assert.assertEquals("MISSING_TESTED_METHOD", detail.getAsJsonArray("all_reason_codes").get(1).getAsString());
+        Assert.assertEquals("MISSING_TESTED_PARAMS", detail.getAsJsonArray("all_reason_codes").get(2).getAsString());
+    }
+
+    @Example
+    void missingValueSurfacesMissingResolverTelemetryAsItsOwnCode() {
+        AssertionRecord record = new AssertionRecord();
+        record.setTestedClassName("Cut");
+        record.setTestedMethodQualifiedName(null);
+        record.setTestedMethodParameters(null);
+
+        FilterResult result = new MissingValueFilter(FilterReasonCodes.MUT_RESOLUTION_NOT_RECORDED, record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.MUT_RESOLUTION_NOT_RECORDED, result.getReasonCode());
+        JsonObject detail = GSON.fromJson(result.getDetailJson(), JsonObject.class);
+        Assert.assertEquals("MISSING_TESTED_FILE", detail.getAsJsonArray("all_reason_codes").get(0).getAsString());
     }
 
     @Example

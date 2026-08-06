@@ -8,9 +8,11 @@ import org.jooq.generated.tables.records.AssertionRecord;
 
 public class MissingValueFilter extends AbstractFilter {
 
+    private final String resolverReasonCode;
     private final AssertionRecord assertionRecord;
 
-    public MissingValueFilter(AssertionRecord assertionRecord) {
+    public MissingValueFilter(String resolverReasonCode, AssertionRecord assertionRecord) {
+        this.resolverReasonCode = resolverReasonCode;
         this.assertionRecord = assertionRecord;
     }
 
@@ -44,7 +46,8 @@ public class MissingValueFilter extends AbstractFilter {
         }
 
         return new FilterResult(this.getName(), FilterDecision.REJECT, String.join(" ", rejectionReasons),
-            reasonCodes.get(0), FilterReasonCodes.DEPENDS_ON_MISSING_MUT, details(reasonCodes));
+            this.resolverReasonCode != null ? this.resolverReasonCode : reasonCodes.get(0),
+            FilterReasonCodes.DEPENDS_ON_MISSING_MUT, details(reasonCodes));
     }
 
     private static String details(List<String> reasonCodes) {

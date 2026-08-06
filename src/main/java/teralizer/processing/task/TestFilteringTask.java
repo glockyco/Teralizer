@@ -148,9 +148,11 @@ public class TestFilteringTask extends AbstractTask {
         Gson gson = context.get(TaskContext.GSON);
         Launcher spoonLauncher = context.get(this.assertionRecord.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
+        String resolverReasonCode = resolverReasonCode(create);
+
         List<Filter> filters = Arrays.asList(
             new ExcludedTestFilter(this.testRecord),
-            new MissingValueFilter(this.assertionRecord),
+            new MissingValueFilter(resolverReasonCode, this.assertionRecord),
             new ReturnTypeFilter(this.assertionRecord),
             new UnsupportedAssertionFilter(spoonLauncher, this.assertionRecord),
             new ParameterTypeFilter(gson, this.assertionRecord),
@@ -172,6 +174,24 @@ public class TestFilteringTask extends AbstractTask {
         );
 
         this.checkFilters(create, filters);
+    }
+
+    /**
+     * The reason code MissingValueFilter reports when the tested_* columns are
+     * incomplete. Non-null no_pick_reason: the resolver's own cause. Null
+     * no_pick_reason: the resolver picked a call, so the column-level code is the
+     * honest answer (see the all-or-nothing invariant in TestAnalysisTask). No
+     * observation row at all: a persistence defect, surfaced as its own code.
+     */
+    private String resolverReasonCode(DSLContext create) {
+        MutResolutionObservationRecord observation = create
+            .selectFrom(Tables.MUT_RESOLUTION_OBSERVATION)
+            .where(Tables.MUT_RESOLUTION_OBSERVATION.ASSERTION_ID.eq(this.assertionRecord.getId()))
+            .fetchAny();
+        if (observation == null) {
+            return FilterReasonCodes.MUT_RESOLUTION_NOT_RECORDED;
+        }
+        return observation.getNoPickReason();
     }
 
     private void checkFilters(DSLContext create, List<Filter> filters) throws Exception {

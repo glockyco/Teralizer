@@ -19,6 +19,13 @@ public final class FilterReasonCodes {
     public static final String MISSING_TESTED_FILE = "MISSING_TESTED_FILE";
     public static final String MISSING_TESTED_METHOD = "MISSING_TESTED_METHOD";
     public static final String MISSING_TESTED_PARAMS = "MISSING_TESTED_PARAMS";
+    // Literals match mut_resolution_observation.no_pick_reason so the analysis can
+    // group filter reasons and resolver observations without a translation table.
+    public static final String MUT_LIBRARY_DECLARATION = "LIBRARY_DECLARATION";
+    public static final String MUT_UNRESOLVED_SOURCE_DECLARATION = "UNRESOLVED_SOURCE_DECLARATION";
+    public static final String MUT_NO_VISIBLE_CALL = "NO_VISIBLE_CALL";
+    public static final String MUT_UNSUPPORTED_ASSERTION_SHAPE = "UNSUPPORTED_ASSERTION_SHAPE";
+    public static final String MUT_RESOLUTION_NOT_RECORDED = "RESOLUTION_NOT_RECORDED";
     public static final String NESTED_CLASSES = "NESTED_CLASSES";
     public static final String NO_ASSERTIONS = "NO_ASSERTIONS";
     public static final String NO_GENERALIZABLE_PARAMETERS = "NO_GENERALIZABLE_PARAMETERS";
