@@ -134,19 +134,19 @@ Two valid RepoReapers databases hold the RQ6 evidence over the full
   reject categories are unsupported return types, methods with no generalizable
   parameters, unresolved tested-file metadata, and assertion-free or non-passing
   tests.
-- `postgres_reporeapers_rq6` — the canonical full-pipeline RQ6 corpus
-  (`IMPROVED_200`, with Stage-5 reduction): 42 of 611 eligible projects complete
-  the pipeline (6.9%), per the generated `analysis/reports/rq6.md`.
+- `postgres_reporeapers_rq6` — a superseded full-pipeline RQ6 corpus
+  (`IMPROVED_200`, with Stage-5 reduction), collected before the reduction-path
+  and JUnit 3 assertion-analysis fixes. Kept for archaeology, not citable.
 
-Consumption decision (reversed 2026-08-05): both the paper and the thesis draw
-RQ6 from the corrected `postgres_reporeapers_rq6_v2` corpus. Applicability is
-measured after Stage 5 of the full pipeline, including test-suite reduction, and
-the pre-reduction Stage-4 count is reported beside it. This reverses the earlier
-decision to keep the 632-project RepoReapers results because the corpus was
-re-collected on corrected code and the draft's figures cannot be reproduced from
-any surviving database. RQ1--RQ5 stay on `postgres_dev` and are not re-run, so
-their tables and prose are unchanged. Chapter work is tracked in the thesis
-repository under `2026-08-04-teralizer-chapter-refresh`.
+Consumption decision: both the paper and the thesis draw RQ6 from the
+`postgres_reporeapers_rq6_v3` corpus, collected with JUnit 3 assertion analysis,
+guaranteed resolver telemetry, and resolver-attributed `MissingValue` rejects.
+Applicability is measured after Stage 5 of the full pipeline, including
+test-suite reduction, and the pre-reduction Stage-4 count is reported beside it.
+Pre-recollection figures cannot be reproduced from any surviving database and
+are not presented. RQ1--RQ5 stay on `postgres_dev` and are not re-run, so their
+tables and prose are unchanged. Chapter work is tracked in the thesis repository
+under `2026-08-04-teralizer-chapter-refresh`.
 
 ## Census PIT status
 

@@ -10,12 +10,19 @@ archived:
 
 # Oracle-Refusal Taxonomy on the RQ6 Corpus
 
-What the widening license refuses on `postgres_reporeapers_rq6`, why, and which
-recovery directions carry real leverage. Measured 2026-08-04 over
-`generalization.variant = 'IMPROVED_200_TRIES'` on the eligible corpus
-(611 projects; eligibility per `_funnel.INELIGIBLE_STAGES`).
+What the widening license refuses, why, and which recovery directions carry
+real leverage. The bucket structure is the durable finding; every count below
+is a measurement from the superseded pre-fix corpora (`postgres_reporeapers_rq6`,
+measured 2026-08-04 over `generalization.variant = 'IMPROVED_200_TRIES'`, 611
+eligible projects; the bucket shares reproduced on the also-superseded v2
+corpus: state-derived 866 of 2,445 refusals, string composition 713, boxing-only
+772, other unmodeled 94, with no `SYMBOLIC` or `CONSTANT` oracle refused).
 
-> **Re-measurement note (2026-08-05).** While the `postgres_reporeapers_rq6_v2` run was in progress, the four refusal buckets were re-measured on that corrected corpus. Their shares reproduce: state-derived 866 of 2,445 refusals, string composition 713, boxing-only 772, and other unmodeled 94. No `SYMBOLIC` or `CONSTANT` oracle is refused there either. The counts in the body below remain measurements from the earlier corpus and must not be cited for the thesis.
+None of these counts may be cited for the thesis. The citable numbers come from
+re-running the bucket queries on `postgres_reporeapers_rq6_v3` once its
+collection finishes: the JUnit 3 assertion-analysis fix enlarges the analyzed
+assertion population by roughly a fifth, so the refusal population and shares
+must be re-derived, not assumed stable.
 
 ## Where the corpus stands
 
