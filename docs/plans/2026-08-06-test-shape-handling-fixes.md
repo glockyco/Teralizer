@@ -101,68 +101,68 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
 
 ### Task 2: The property runs under its own fixture and its own assertion
 
-- [ ] Annotate JUnit 3 `setUp` / `tearDown` on the generalized class with
+- [x] Annotate JUnit 3 `setUp` / `tearDown` on the generalized class with
       `@BeforeProperty` / `@AfterProperty` so jqwik runs the fixture the specification was
       extracted under, and extend `deleteOtherAssertionsInMethod` to JUnit 3 so only the
       generalized assertion remains in the property (inventory A4, A3, A5).
   Verification: unit tests asserting the emitted class for a JUnit 3 source carries jqwik lifecycle hooks on the inherited-or-declared fixture methods, retains its `TestCase` ancestor, and holds exactly one assertion in the property
   Expected: all three hold; the leftover sibling *methods* are deliberately still present.
 
-- [ ] Scope `NonPassingTestFilter` to the generalization's own test case rather than every
+- [x] Scope `NonPassingTestFilter` to the generalization's own test case rather than every
       test case in its class, so a leftover original's failure no longer rejects it
       (inventory A2). A non-green assembled suite stays reported by `SUITE_NOT_GREEN`.
   Verification: unit test with a report containing a passing property and a failing sibling
   Expected: accepted, with the sibling failure recorded but not decisive.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(generalization): run properties under their source fixture`
 
 ### Task 3: Content-directed report ingestion
 
-- [ ] Select the report file by content across all candidates; resolve cross-engine duplicate
+- [x] Select the report file by content across all candidates; resolve cross-engine duplicate
       records deterministically; map missing-report-directory to its own diagnostic; handle a
       malformed report without losing the project's discovery (inventory A1, D2, D3, D4).
   Verification: unit tests over fixture report sets — FQN-only, display-name-only, both present with the case in only one, both present with duplicates, and one malformed file among good ones
   Expected: the correct case is found in every arrangement; the malformed file does not abort discovery.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(reports): select surefire reports by content`
 
 ### Task 4: Upstream JUnit 3 correctness
 
-- [ ] Add a JUnit 3 member to `TestFramework`, detect a JUnit 3-only classpath, and give the
+- [x] Add a JUnit 3 member to `TestFramework`, detect a JUnit 3-only classpath, and give the
       Maven and Gradle dependency managers a correct branch for it (inventory B1).
-- [ ] Make the symbolic driver construct the wrapper for classes without a no-argument
+- [x] Make the symbolic driver construct the wrapper for classes without a no-argument
       constructor, and invoke `tearDown` after the test (inventory B2, B3).
   Verification: run the two pinned JUnit 3 projects through extraction; `grep -c 'No tests found\|cannot be applied' ` on the build output
   Expected: instrumented build succeeds where it previously failed; teardown appears in the generated driver.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(junit3): detect the framework and drive its fixtures`
 
 ### Task 5: Degrade instead of throwing
 
-- [ ] Make the resolver's `assertThrows` dispatch framework- and arity-checked, return
+- [x] Make the resolver's `assertThrows` dispatch framework- and arity-checked, return
       `Optional.empty()` for a non-JUnit-5 `assertThrows` expected index, and turn the two
       loop filters' missing-path `IllegalStateException` into filter results
       (inventory C5, C6, C7).
   Verification: unit tests for a JUnit 3-declared `assertThrows`, a 1-argument `assertThrows`, and an assertion with no Spoon path
   Expected: each degrades to a recorded outcome; none propagates out of the task.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(analysis): degrade unsupported assertion shapes`
 
 ### Task 6: Attribution and telemetry accuracy
 
-- [ ] Recognize display-name-shaped PIT test identities so generalized mutation kills are
+- [x] Recognize display-name-shaped PIT test identities so generalized mutation kills are
       attributed, and fix the 3-argument Hamcrest focus and matcher indices
       (inventory D1, C4).
-- [ ] Parse JaCoCo and EvoSuite CSV with quoting and row-width validation, and distinguish an
+- [x] Parse JaCoCo and EvoSuite CSV with quoting and row-width validation, and distinguish an
       empty report from a malformed one (inventory D5).
   Verification: re-run PIT collection on a pinned project and query the unattributed share; unit tests for a quoted-comma CSV row and a 3-argument `assertThat`
   Expected: unattributed detected mutations reach zero for resolvable identities; CSV fields survive quoting.
 
-- [ ] Commit.
+- [x] Commit.
   Message: `fix(collection): attribute mutations and parse reports faithfully`
 
 ### Task 7: Gate, then relaunch
@@ -180,7 +180,7 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
 - [ ] Full gates: `./gradlew test`, `uv run --directory analysis pytest tests/eval -q`.
   Expected: green, except the corpus-dependent telemetry test until v4 exists.
 
-- [ ] Relaunch the corpus into a fresh database, superseding `postgres_reporeapers_rq6_v3`.
+- [ ] Relaunch the corpus into a fresh database, superseding `postgres_reporeapers_rq6_v3`, into `postgres_reporeapers_rq6_v4`.
       Update `2026-08-04-rq6-recollection` and the run map to the new measurement basis in the
       same commit.
 

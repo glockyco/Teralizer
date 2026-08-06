@@ -89,7 +89,7 @@ plus a presentation layer neither has cleanly.
   logic and inline-number prose into a stringly-typed template DSL.
 - **Databases** (per-RQ default, `--db` override for debugging):
   - RQ1-RQ5 -> `postgres_dev` (old schema, eqbench + commons-utils, validated).
-  - RQ6 -> `postgres_reporeapers_rq6_v3` (canonical full-pipeline corpus, new schema).
+  - RQ6 -> `postgres_reporeapers_rq6_v4` (canonical full-pipeline corpus, new schema).
   - RQ0 -> `postgres_jarvis_scoreboard` + `postgres_jarvis_census` (new schema).
   - `postgres_test` (the published v1 RepoReapers corpus) is no longer an
     analysis input, superseded for RQ6 by `postgres_reporeapers`. The corpus
@@ -114,7 +114,7 @@ plus a presentation layer neither has cleanly.
   even definable without `\csname`.)
 - **RQ6 applicability denominator.** Measure applicability after Stage 5 of the
   full pipeline, including test-suite reduction, and report the pre-reduction
-  Stage-4 count beside it. Use the canonical `postgres_reporeapers_rq6_v3`
+  Stage-4 count beside it. Use the canonical `postgres_reporeapers_rq6_v4`
   corpus and its structured diagnostics for the funnel. Preserve all rows in the
   DB, but do not present unreproducible pre-recollection figures in the thesis.
 
