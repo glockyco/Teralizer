@@ -36,34 +36,49 @@ of them, and the duplicated predicates are deleted rather than left beside it:
 
 Call sites consult the owner. No call site keeps its own set.
 
-### JUnit 3 stays JUnit 3
+### One engine owns a generalized class
 
-The generalized class keeps `extends TestCase`. Nothing rewrites a project's inherited
-assertions, and no generalization is refused for its source framework's shape. The earlier
-idea of detaching `TestCase` is rejected: the inventory's measurements show it is not
-required, and it would mean rewriting user code to buy a correction the metrics do not need.
+A generalized class runs under jqwik alone, whatever framework its source test used.
 
-What the class *does* need is that the pipeline reads it correctly and executes the property
-under the same fixture the specification was extracted under. Three changes, none of which
-touch the class's framework identity:
+The vintage engine runs any class that extends `junit.framework.TestCase`. jqwik runs any class
+with a `@Property` method. A generalized class that extends `TestCase` matches both rules, so
+both engines run its property. The second run fails, because the arbitrary has already recorded
+its values and rejects every new one: `exhausted after [200] tries and [200] rejections`.
+Surefire writes each run to a different file, so the class reports the property as passed in one
+file and as failed in the other, and whichever file the pipeline reads decides the outcome.
+Mutation analysis requires a suite that passes, so it refuses the project. On `tomgibara_bits`
+this admitted 267 generalizations whose property had failed, then cost the project all 270.
+
+Two rules keep one engine per class:
+
+- **Delete every sibling test method, whatever the framework.** A method counts as a test if it
+  carries a test annotation or follows JUnit 3's `test*` naming convention. The pipeline reads one
+  surefire report per generalized class, and a sibling that fails there looks like the property
+  failing.
+- **Delete the `TestCase` ancestry once the siblings are gone.** `TestCaseDetachment` rewrites
+  inherited assertions to name `junit.framework.Assert` and deletes `super.setUp()` and
+  `super.tearDown()` calls. When a test calls anything else it inherited, the rewrite cannot help,
+  and `InheritedTestCaseFilter` rejects it. Cloning copies inherited test methods and fixtures but
+  not helpers, so a test extending an intermediate base class is rejected as well.
+
+`skipFailingTests` is not used. It stops PIT aborting, but it also drops the failing tests from
+coverage attribution: the run then reports kills from the original tests alone, so a project whose
+generalized properties all fail reports a plausible number instead of failing. A suite that does
+not pass stays a countable exclusion.
+
+Three further changes, which the shape rules do not subsume:
 
 1. **Fixtures reach the property.** JUnit 3 declares its fixture by overriding `setUp` /
-   `tearDown`, so the existing lifecycle rewrite never sees them. Annotating those same
-   methods with `@BeforeProperty` / `@AfterProperty` makes jqwik run them, while vintage
-   continues to run them for the leftover methods — correct for both. This closes the
-   soundness gap where `JpfInstrumentationTask` ran `setUp` during extraction but the
-   property ran without it.
-2. **Sibling assertions leave the property.** `deleteOtherAssertionsInMethod` already strips
-   JUnit 4/5 siblings; extending it to JUnit 3 stops the property failing for an assertion
-   that is not the one being generalized. This is independent of the vintage engine.
-3. **Leftover sibling methods stay.** They cannot be deleted: the inventory shows vintage
-   then emits its "no tests found" sentinel as a failing testcase and the build fails, under
-   2.22.2 *and* 3.2.5. Their only real consequence is that `NonPassingTestFilter` is
-   class-scoped, so a failing leftover rejects the generalization. That is fixed where the
-   defect actually is — in the filter's attribution, not in the emitted source: judge the
-   generalization by the property's own test case. A leftover failure is a duplicate of an
-   original test already in the suite, so it is a project condition, and a non-green
-   assembled suite is already reported separately as `SUITE_NOT_GREEN`.
+   `tearDown`, so annotation-driven lifecycle rewriting never sees them. Those methods carry
+   `@BeforeProperty` / `@AfterProperty`, which closes the soundness gap where
+   `JpfInstrumentationTask` runs `setUp` during extraction but the property would run without it.
+2. **Sibling assertions leave the property.** `deleteOtherAssertionsInMethod` applies to JUnit 3
+   assertions as it does to JUnit 4 and 5, so the property does not fail for an assertion that is
+   not the one being generalized.
+3. **Non-passing filtering is scoped to the property.** `NonPassingTestFilter` judges the
+   generalization by its own test case rather than by every case in the report's class, so an
+   unrelated failure in the assembled suite is a project condition. A non-green assembled suite
+   is reported separately as `SUITE_NOT_GREEN`.
 
 ### Report ingestion is content-directed
 
@@ -105,8 +120,8 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
       `@BeforeProperty` / `@AfterProperty` so jqwik runs the fixture the specification was
       extracted under, and extend `deleteOtherAssertionsInMethod` to JUnit 3 so only the
       generalized assertion remains in the property (inventory A4, A3, A5).
-  Verification: unit tests asserting the emitted class for a JUnit 3 source carries jqwik lifecycle hooks on the inherited-or-declared fixture methods, retains its `TestCase` ancestor, and holds exactly one assertion in the property
-  Expected: all three hold; the leftover sibling *methods* are deliberately still present.
+  Verification: unit tests asserting the emitted class for a JUnit 3 source carries jqwik lifecycle hooks on its fixture methods and holds exactly one assertion in the property
+  Expected: both hold.
 
 - [x] Scope `NonPassingTestFilter` to the generalization's own test case rather than every
       test case in its class, so a leftover original's failure no longer rejects it
@@ -173,7 +188,8 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
   surefire is floored to 2.22.2 (the split-report case) and on one running the injected 3.2.5;
   every generalized property has a `junit_test_report` row; no generalization is rejected on a
   leftover sibling's failure; `realworld.assertions_without_resolution` is zero; JUnit 3
-  fixtures appear in the emitted properties.
+  fixtures appear in the emitted properties; every emitted generalized class has exactly one
+  surefire report and no `TestCase` ancestor, and mutation collection completes on both.
   Expected: all hold on both surefire generations, which is the point of the content-directed
   lookup.
 
@@ -195,9 +211,9 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
   package. It is not needed for correctness once ingestion is content-directed, and it risks
   breaking projects whose configuration 3.x no longer accepts. If it is ever taken, it needs
   its own measurement of how many projects' generalized builds change.
-- **Leftover sibling methods are deliberately retained.** Deleting them fails the build under
-  both surefire generations. If a future change makes the generalized class stop being a
-  `TestCase` for unrelated reasons, revisit, because the deletion becomes safe at that point.
+- **Sibling removal and detachment go together.** Removing the convention-named siblings without
+  dropping the `TestCase` ancestry makes vintage emit its "no tests found" sentinel as a failing
+  test case and fails the build, under both surefire generations. Neither half is separable.
 - **B4/B5/B6 are unverified.** Constructor instantiability, `suite()` factories, and the
   `public void` predicate are structurally present but unproven. Task 2 and Task 4 add loud,
   countable diagnostics for them; if the gate shows hits, they graduate to their own tasks

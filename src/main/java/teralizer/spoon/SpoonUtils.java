@@ -86,16 +86,22 @@ public class SpoonUtils {
     }
 
     /**
-     * Removes the annotated sibling test methods from a cloned class.
+     * Deletes every test method in the cloned class except the one being generalized.
      *
-     * <p>JUnit 3's convention-named siblings stay. A {@code TestCase} subclass with no runnable
-     * {@code test*} method makes JUnit 3 report a "no tests found" sentinel as a failing test,
-     * which fails the generalized build. Keeping them is safe: they duplicate original tests
-     * already in the assembled suite, so they alter neither coverage nor mutation detection, and
-     * {@code NonPassingTestFilter} judges the property alone.
+     * <p>A method counts as a test if it carries a test annotation, or if it follows JUnit 3's
+     * {@code test*} naming convention. Both kinds go, whatever framework the source used. The
+     * pipeline reads one surefire report for the generalized class, and a sibling that fails there
+     * looks exactly like the property failing.
+     *
+     * <p>Deleting the convention-named siblings also stops the vintage engine from finding a test to
+     * run in the class. {@code TestCaseDetachment} then deletes the {@code TestCase} ancestry that
+     * the engine matches on.
      */
     public static void deleteOtherTestMethodsInClass(CtClass<?> testClass, CtMethod<?> testMethod) {
-        List<CtMethod<?>> otherTestMethods = testClass.getMethods().stream().filter(m -> m != testMethod && hasTestAnnotation(m)).collect(Collectors.toList());
+        List<CtMethod<?>> otherTestMethods = testClass.getMethods().stream()
+            .filter(m -> m != testMethod)
+            .filter(m -> hasTestAnnotation(m) || TestShape.isJUnit3TestMethod(m, testClass))
+            .collect(Collectors.toList());
         otherTestMethods.forEach(testClass::removeMethod);
     }
 
@@ -104,14 +110,13 @@ public class SpoonUtils {
     }
 
     /**
-     * Keeps only the given assertion in the method, so a generalized property is judged by the
-     * assertion being generalized rather than by its siblings.
+     * Deletes every assertion in the method except the one being generalized.
      *
-     * <p>Deleting a void assertion statement also drops any side effect in its arguments, so the
-     * retained assertion can see different state than it did in the source test. That stays sound
-     * because the instrumented wrapper and the generated test delete the same siblings: the
-     * specification is extracted from exactly the code the generalized test runs, and a divergence
-     * that changes behavior surfaces as the generalized test failing its validation.
+     * <p>Deleting a void assertion also deletes any call inside its arguments, so the assertion that
+     * remains can run against a different state than it did in the source test. The instrumented
+     * wrapper deletes the same assertions as the generated test, so the specification describes the
+     * code the generalized test actually runs. If the deletion changes behavior, the generalized test
+     * fails validation and the pipeline drops it.
      */
     public static void deleteOtherAssertionsInMethod(CtMethod<?> method, CtInvocation<?> assertion) {
         List<CtInvocation> otherAssertions = method.getElements(new TypeFilter<>(CtInvocation.class)).stream()

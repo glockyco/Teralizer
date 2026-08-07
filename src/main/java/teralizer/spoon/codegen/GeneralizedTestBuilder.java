@@ -72,6 +72,10 @@ public final class GeneralizedTestBuilder {
         SpoonUtils.deleteOtherTestMethodsInClass(generalizedClassDeclaration, testMethod);
         removeJUnitRunnerAnnotation(generalizedClassDeclaration);
         rewriteLifecycleAnnotations(factory, generalizedClassDeclaration);
+        // This runs after sibling removal, so it rewrites only the retained code. It also runs
+        // after lifecycle rewriting, so it sees an inherited fixture call in its final form.
+        // InheritedTestCaseFilter already showed that this class can lose its ancestry.
+        TestCaseDetachment.detach(generalizedClassDeclaration);
 
         CtPath assertionPath = new CtPathStringBuilder().fromString(
             GeneralizationRecipe.rewriteCtPathForClone(

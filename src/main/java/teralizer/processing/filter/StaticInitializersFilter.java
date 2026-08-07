@@ -17,8 +17,8 @@ public class StaticInitializersFilter extends AbstractFilter {
     @Override
     public FilterResult check() throws Exception {
         CtClass<?> testClass = this.spoonLauncher.getFactory().Class().get(this.testRecord.getTestClassQualifiedName());
-        // A class absent from the model yields no evidence about initializers. This filter only
-        // reports, so it accepts rather than failing the filtering task for every other filter too.
+        // A class that is absent from the model gives no evidence about initializers. This
+        // filter only reports, so it accepts. A failure here would stop every other filter.
         if (testClass == null) {
             return new FilterResult(this.getName(), FilterDecision.ACCEPT);
         }

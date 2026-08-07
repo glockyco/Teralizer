@@ -233,7 +233,7 @@ public class GeneralizedTestBuilderTest {
         Assert.assertTrue(code, code.contains("return false"));
     }
     @Example
-    void junit3LifecycleIsRewrittenAndVintageShapeRetained() {
+    void junit3GeneralizationBecomesASingleOwnerContainer() {
         CtClass<?> generalized = build(scenario(JUNIT3_SOURCE), identityPlan());
 
         CtMethod<?> setUp = generalized.getMethodsByName("setUp").get(0);
@@ -242,8 +242,46 @@ public class GeneralizedTestBuilderTest {
             "net.jqwik.api.lifecycle.BeforeProperty".equals(annotation.getAnnotationType().getQualifiedName())));
         Assert.assertTrue(tearDown.getAnnotations().stream().anyMatch(annotation ->
             "net.jqwik.api.lifecycle.AfterProperty".equals(annotation.getAnnotationType().getQualifiedName())));
-        Assert.assertEquals("junit.framework.TestCase", generalized.getSuperclass().getQualifiedName());
-        Assert.assertFalse(generalized.getMethodsByName("testSibling").isEmpty());
+        // The vintage engine claims a TestCase subclass whatever annotations it carries, so the
+        // ancestry and the convention-named sibling both have to go or two engines run the property.
+        Assert.assertNull(generalized.getSuperclass());
+        Assert.assertTrue(generalized.getMethodsByName("testSibling").isEmpty());
+    }
+
+    @Example
+    void detachingJUnit3QualifiesInheritedAssertionsAndDropsSuperFixtureCalls() {
+        CtClass<?> generalized = build(scenario(JUNIT3_INHERITED_SOURCE), identityPlan());
+
+        Assert.assertNull(generalized.getSuperclass());
+        for (String fixture : new String[] {"setUp", "tearDown"}) {
+            Assert.assertTrue("@Override cannot compile without the ancestry: " + fixture,
+                generalized.getMethodsByName(fixture).get(0).getAnnotations().stream().noneMatch(annotation ->
+                    "java.lang.Override".equals(annotation.getAnnotationType().getQualifiedName())));
+        }
+
+        List<CtInvocation> inherited = generalized.getElements(new TypeFilter<>(CtInvocation.class)).stream()
+            .filter(invocation -> invocation.getExecutable() != null
+                && invocation.getExecutable().getDeclaringType() != null)
+            .filter(invocation -> {
+                String declaring = invocation.getExecutable().getDeclaringType().getQualifiedName();
+                return "junit.framework.TestCase".equals(declaring) || "junit.framework.Assert".equals(declaring);
+            })
+            .collect(java.util.stream.Collectors.toList());
+
+        // The inherited assertion survives, now naming the type that declares it, and nothing
+        // reaches a superclass that no longer exists.
+        Assert.assertFalse("expected a retained inherited assertion", inherited.isEmpty());
+        for (CtInvocation<?> invocation : inherited) {
+            if (invocation.getExecutable().isConstructor()) {
+                continue;
+            }
+            Assert.assertFalse("super fixture call survived: " + invocation,
+                invocation.getTarget() instanceof spoon.reflect.code.CtSuperAccess);
+            Assert.assertTrue("assertion not qualified: " + invocation,
+                invocation.getTarget() instanceof spoon.reflect.code.CtTypeAccess);
+            Assert.assertEquals("junit.framework.Assert",
+                ((spoon.reflect.code.CtTypeAccess<?>) invocation.getTarget()).getAccessedType().getQualifiedName());
+        }
     }
 
     @Example
@@ -420,6 +458,21 @@ public class GeneralizedTestBuilderTest {
         + "    org.junit.Assert.assertEquals(2, new Subject().id(2));\n"
         + "  }\n"
         + "  public void testSibling() {}\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  int id(int x) { return x; }\n"
+        + "}\n";
+
+    // Inherited assertions and inherited fixture calls: what detachment has to rewrite.
+    private static final String JUNIT3_INHERITED_SOURCE = ""
+        + "package example;\n"
+        + "public class SubjectTest extends junit.framework.TestCase {\n"
+        + "  @Override protected void setUp() { super.setUp(); }\n"
+        + "  @Override protected void tearDown() { super.tearDown(); }\n"
+        + "  public void returnsInput() {\n"
+        + "    assertEquals(2, new Subject().id(2));\n"
+        + "  }\n"
+        + "  public void testSibling() { assertTrue(true); }\n"
         + "}\n"
         + "class Subject {\n"
         + "  int id(int x) { return x; }\n"

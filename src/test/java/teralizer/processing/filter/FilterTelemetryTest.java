@@ -352,6 +352,80 @@ public class FilterTelemetryTest {
     }
 
     @Example
+    void inheritedTestCaseFilterAcceptsADetachableJUnit3Test() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(
+            "public class T extends junit.framework.TestCase {"
+            + "  protected void setUp() { super.setUp(); }"
+            + "  public void testOne() { assertEquals(1, 1); }"
+            + "}"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+        record.setTestMethodName("testOne");
+
+        FilterResult result = new InheritedTestCaseFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
+    void inheritedTestCaseFilterRejectsAnIntermediateBaseClass() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(
+            "abstract class Base extends junit.framework.TestCase { protected int helper() { return 1; } }"));
+        launcher.addInputResource(new VirtualFile(
+            "public class T extends Base { public void testOne() { assertEquals(1, helper()); } }"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+        record.setTestMethodName("testOne");
+
+        FilterResult result = new InheritedTestCaseFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.INHERITED_TEST_CASE_MEMBERS, result.getReasonCode());
+    }
+
+    @Example
+    void inheritedTestCaseFilterRejectsInheritedNonAssertionUse() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(
+            "public class T extends junit.framework.TestCase {"
+            + "  public void testOne() { assertEquals(getName(), \"x\"); }"
+            + "}"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+        record.setTestMethodName("testOne");
+
+        // getName() has no static equivalent to qualify, so the ancestry cannot be dropped.
+        FilterResult result = new InheritedTestCaseFilter(launcher, record).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.INHERITED_TEST_CASE_MEMBERS, result.getReasonCode());
+    }
+
+    @Example
+    void inheritedTestCaseFilterIgnoresSiblingInheritedCalls() throws Exception {
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(new VirtualFile(
+            "public class T extends junit.framework.TestCase {"
+            + "  public void testOne() { assertEquals(1, 1); }"
+            + "  public void testSibling() { setName(getName()); }"
+            + "}"));
+        launcher.buildModel();
+        TestRecord record = new TestRecord();
+        record.setTestClassQualifiedName("T");
+        record.setTestMethodName("testOne");
+
+        // Cloning deletes the sibling, so what it inherits must not cost this test its
+        // generalizations.
+        Assert.assertEquals(FilterDecision.ACCEPT,
+            new InheritedTestCaseFilter(launcher, record).check().getDecision());
+    }
+
+    @Example
     void reportingFiltersAcceptAClassAbsentFromTheModel() throws Exception {
         Launcher launcher = new Launcher();
         launcher.addInputResource(new VirtualFile("class Other {}"));
