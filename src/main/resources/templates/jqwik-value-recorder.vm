@@ -131,7 +131,8 @@ public static class JqwikValueRecorder {
     }
 
     private static String diagnosticKind(net.jqwik.api.lifecycle.PropertyExecutionResult raw, net.jqwik.api.lifecycle.PropertyExecutionResult mapped) {
-        boolean filterExhausted = raw.throwable().map(net.jqwik.api.TooManyFilterMissesException.class::isInstance).orElse(false);
+        boolean filterExhausted = raw.throwable().isPresent()
+            && raw.throwable().get() instanceof net.jqwik.api.TooManyFilterMissesException;
         if (mapped.status() == net.jqwik.api.lifecycle.PropertyExecutionResult.Status.SUCCESSFUL) {
             if (raw.status() == net.jqwik.api.lifecycle.PropertyExecutionResult.Status.FAILED && filterExhausted) {
                 return "LIMITED_TOO_MANY_FILTER_MISSES";
@@ -154,8 +155,11 @@ public static class JqwikValueRecorder {
         try {
             java.nio.file.Files.createDirectories(executionDirectory());
             java.nio.file.Files.write(valueLogPath(), rows, java.nio.charset.StandardCharsets.UTF_8);
-            String throwableType = raw.throwable().map(t -> t.getClass().getName()).orElse("");
-            String throwableMessage = raw.throwable().map(t -> t.getMessage() == null ? "" : t.getMessage()).orElse("");
+            Throwable rawThrowable = raw.throwable().isPresent() ? raw.throwable().get() : null;
+            String throwableType = rawThrowable == null ? "" : rawThrowable.getClass().getName();
+            String throwableMessage = rawThrowable == null || rawThrowable.getMessage() == null
+                ? ""
+                : rawThrowable.getMessage();
             String seed = raw.seed().orElse("");
             int distinctNewTuples = sawDistinctNonSeedTuple ? Math.max(1, distinctRows.size() - 1) : 0;
             String json = "{\n"
@@ -225,9 +229,8 @@ public static class JqwikValueRecorder {
         ) {
             net.jqwik.api.lifecycle.PropertyExecutionResult raw = property.execute();
             net.jqwik.api.lifecycle.PropertyExecutionResult mapped = raw;
-            boolean filterExhausted = raw.throwable()
-                .map(net.jqwik.api.TooManyFilterMissesException.class::isInstance)
-                .orElse(false);
+            boolean filterExhausted = raw.throwable().isPresent()
+                && raw.throwable().get() instanceof net.jqwik.api.TooManyFilterMissesException;
             if (raw.status() == net.jqwik.api.lifecycle.PropertyExecutionResult.Status.FAILED
                 && filterExhausted
                 && sawDistinctNonSeedTuple) {

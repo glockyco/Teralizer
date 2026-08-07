@@ -31,7 +31,9 @@ public class JqwikValueRecorderFactoryTest {
 
         Assert.assertTrue(source.contains("public static final class LimitedFilterMissesHook"));
         Assert.assertTrue(source.contains("implements net.jqwik.api.lifecycle.AroundPropertyHook"));
-        Assert.assertTrue(source.contains("net.jqwik.api.TooManyFilterMissesException.class::isInstance"));
+        // instanceof rather than a method reference, so the emitted class compiles at the source
+        // level a project declares. Most corpus projects declare one below 1.8.
+        Assert.assertTrue(source.contains("instanceof net.jqwik.api.TooManyFilterMissesException"));
         Assert.assertTrue(source.contains("sawDistinctNonSeedTuple"));
         Assert.assertTrue(source.contains("raw.mapToSuccessful()"));
     }
