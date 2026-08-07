@@ -9,6 +9,11 @@
         </outputFormats>
         <exportLineCoverage>true</exportLineCoverage>
         <verbose>false</verbose>
+        <!-- PIT's macos_focus feature adds -Djava.awt.headless=true to every minion to stop the
+             minion taking keyboard focus. A test that needs a display then fails without mutation,
+             and PIT refuses the whole project for a suite that does not pass, so the feature is off.
+             The apple.awt.UIElement jvmArg below keeps the minions out of the Dock and stops them
+             activating, which is the part we wanted, without making them headless. -->
         <extraFeatures>
             <extraFeature>-macos_focus</extraFeature>
         </extraFeatures>
@@ -20,6 +25,7 @@
         <threads>4</threads>
         <jvmArgs>
             <jvmArg>-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY</jvmArg>
+            <jvmArg>-Dapple.awt.UIElement=true</jvmArg>
         </jvmArgs>
     </configuration>
 </plugin>

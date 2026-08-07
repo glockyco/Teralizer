@@ -217,6 +217,9 @@ public class MavenSurefireFloorTest {
         Assert.assertTrue(xml, xml.contains("<jvmArg>-Xmx1g</jvmArg>"));
         Assert.assertTrue(xml, xml.contains(
             "<jvmArg>-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY</jvmArg>"));
+        // macos_focus is off because it forces headless minions, which fails a test that needs a
+        // display. This arg keeps the minions from taking focus without making them headless.
+        Assert.assertTrue(xml, xml.contains("<jvmArg>-Dapple.awt.UIElement=true</jvmArg>"));
         Assert.assertFalse(MavenDependencyManager.applySurefireFloor(doc));
     }
 

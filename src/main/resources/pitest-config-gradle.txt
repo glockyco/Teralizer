@@ -2,7 +2,7 @@ pitest {
     outputFormats = ['HTML', 'XML']
     exportLineCoverage = true
     verbose = true
-    jvmArgs = ['-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY']
+    jvmArgs = ['-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY', '-Dapple.awt.UIElement=true']
     targetClasses = project.hasProperty('targetClasses') ? project.getProperty('targetClasses').split(',').toList() : ['*']
     targetTests = project.hasProperty('targetTests') ? project.getProperty('targetTests').split(',').toList() : ['*']
     mutators = project.hasProperty('mutators') ? project.getProperty('mutators').split(',') as Set : ['DEFAULTS'] as Set

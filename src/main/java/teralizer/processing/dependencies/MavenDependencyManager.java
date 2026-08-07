@@ -412,6 +412,7 @@ public class MavenDependencyManager {
             "jvmArg",
             "-Dteralizer.jqwik.diagnosticsMode=IN_MEMORY_ONLY"
         );
+        changed |= ensureListValue(configuration, "jvmArgs", "jvmArg", "-Dapple.awt.UIElement=true");
         return changed;
     }
 
