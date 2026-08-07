@@ -80,10 +80,10 @@ remaining filters; only 17 JPF executions were then scheduled.
 
 ### Task 1: Launch
 
-- [x] Launch the fixed code into a fresh `postgres_reporeapers_rq6_v4` database, preserving
+- [x] Launch the fixed code into a fresh `postgres_reporeapers_rq6_v5` database, preserving
       the superseded `postgres_reporeapers_rq6` and `postgres_reporeapers_rq6_v2` databases
-      until the new measurement is signed off. Store data under `data/reporeapers-rerun-v4`,
-      keep the 14400 s project ceiling, and use the process name `reporeapers-rq6-v4`. Do not
+      until the new measurement is signed off. Store data under `data/reporeapers-rerun-v5`,
+      keep the 14400 s project ceiling, and use the process name `reporeapers-rq6-v5`. Do not
       resume any partial pre-fix corpus: v2 was stopped at 1,037 of 1,161 projects because its
       assertions lack resolver telemetry for the JUnit 3 population and its tail mixes code
       versions.
@@ -118,7 +118,7 @@ remaining filters; only 17 JPF executions were then scheduled.
 
 - [ ] Compare the funnel against the previous measurement and account for every band that
       moved.
-  Verification: `uv run --directory analysis python -m teralizer.eval rq6 --db postgres_reporeapers_rq6_v4 --targets md`
+  Verification: `uv run --directory analysis python -m teralizer.eval rq6 --db postgres_reporeapers_rq6_v5 --targets md`
   Expected: applicability is at least the superseded corpus's 73 of 611; the overall row rises from 42;
   Stages 1+2 and 3 are unchanged within the noise of non-deterministic build failures, and any
   band that moved has a named cause.
@@ -126,7 +126,7 @@ remaining filters; only 17 JPF executions were then scheduled.
 ### Task 3: Promote the corpus
 
 - [ ] Regenerate every RQ6 artifact plus the dataset report against the new database.
-      `rq6_causes.DEFAULT_DB` already names `postgres_reporeapers_rq6_v4`; the dataset
+      `rq6_causes.DEFAULT_DB` already names `postgres_reporeapers_rq6_v5`; the dataset
       report's second connection still needs pointing at it.
   Verification: `uv run --directory analysis pytest tests/eval` then `uv run --directory analysis python -m teralizer.eval rq6 --targets md,latex` then `uv run --directory analysis python -m teralizer.eval dataset --targets md`
   Expected: tests green against the new database; `reports/rq6.md`, `reports/dataset.md`,

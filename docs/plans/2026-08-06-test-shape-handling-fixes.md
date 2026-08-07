@@ -196,7 +196,7 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
 - [ ] Full gates: `./gradlew test`, `uv run --directory analysis pytest tests/eval -q`.
   Expected: green, except the corpus-dependent telemetry test until v4 exists.
 
-- [ ] Relaunch the corpus into a fresh database, superseding `postgres_reporeapers_rq6_v3`, into `postgres_reporeapers_rq6_v4`.
+- [ ] Relaunch the corpus into a fresh database, superseding `postgres_reporeapers_rq6_v3`, into `postgres_reporeapers_rq6_v5`.
       Update `2026-08-04-rq6-recollection` and the run map to the new measurement basis in the
       same commit.
 

@@ -51,7 +51,7 @@ bundle questions. Verified against the paper's `\input{tables/...}`:
 | `rq4-limitations` | RQ5 + RQ6 | RQ5 controlled tables (`conn_dev`); `-extended` + `tab-processing-failures` (RQ6, `conn_test`) | both: `conn_dev` and `conn_test` (RepoReapers) |
 
 Databases: `postgres_dev` = eqbench + commons-utils (RQ1--RQ5);
-`postgres_reporeapers_rq6_v4` = the canonical full-pipeline RepoReapers corpus
+`postgres_reporeapers_rq6_v5` = the canonical full-pipeline RepoReapers corpus
 (RQ6), collected with JUnit 3 assertion analysis and resolver-attributed
 `MissingValue` rejects. `postgres_reporeapers_rq6_v2` and `postgres_reporeapers_rq6`
 are superseded pre-fix corpora: v2 was stopped at 1,037 of 1,161 projects and mixes
@@ -63,7 +63,7 @@ code versions in its tail; neither may be cited.
 |---|---|---|---|---|---|
 | JARVIS scoreboard | full old Commons: `MATH_3_5` + `LANG_3_5`, the JARVIS Table-2 cases (the ones JARVIS succeeded on) | IMPROVED 100 / 200 / 1000 | all (reduction on) | RQ0 Axis 1 (head-to-head @100: PVC + IC) and Axis 2 (budget elasticity: PVC inflates ~10x with tries, covered mutation score flat) | `postgres_jarvis_scoreboard` |
 | Census | full old Commons: all ~12 JARVIS projects, full pinned suites (the breadth JARVIS did not report) | IMPROVED 100 | generalization first; reduction a later sized pass | RQ0 Axis 3 (breadth beyond JARVIS) | `postgres_jarvis_census` |
-| RepoReapers RQ6 | full RepoReapers corpus (1161 projects) | IMPROVED 200 | full pipeline (incl. Stage-5 reduction) | RQ6 refresh (real-world unsuccessful-generalization causes on the current pipeline) | `postgres_reporeapers_rq6_v4` (canonical full-pipeline corpus) |
+| RepoReapers RQ6 | full RepoReapers corpus (1161 projects) | IMPROVED 200 | full pipeline (incl. Stage-5 reduction) | RQ6 refresh (real-world unsuccessful-generalization causes on the current pipeline) | `postgres_reporeapers_rq6_v5` (canonical full-pipeline corpus) |
 
 RQ1--RQ5 are **not** re-run here; they stand from the prior evaluation on
 `postgres_dev`. The prior eval used the nine-variant scheme (BASELINE + NAIVE and

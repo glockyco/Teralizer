@@ -19,7 +19,7 @@ corpus: state-derived 866 of 2,445 refusals, string composition 713, boxing-only
 772, other unmodeled 94, with no `SYMBOLIC` or `CONSTANT` oracle refused).
 
 None of these counts may be cited for the thesis. The citable numbers come from
-re-running the bucket queries on `postgres_reporeapers_rq6_v4` once its
+re-running the bucket queries on `postgres_reporeapers_rq6_v5` once its
 collection finishes: the JUnit 3 assertion-analysis fix enlarges the analyzed
 assertion population by roughly a fifth, so the refusal population and shares
 must be re-derived, not assumed stable.

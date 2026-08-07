@@ -139,7 +139,7 @@ Two valid RepoReapers databases hold the RQ6 evidence over the full
   and JUnit 3 assertion-analysis fixes. Kept for archaeology, not citable.
 
 Consumption decision: both the paper and the thesis draw RQ6 from the
-`postgres_reporeapers_rq6_v4` corpus, collected with JUnit 3 assertion analysis,
+`postgres_reporeapers_rq6_v5` corpus, collected with JUnit 3 assertion analysis,
 guaranteed resolver telemetry, and resolver-attributed `MissingValue` rejects.
 Applicability is measured after Stage 5 of the full pipeline, including
 test-suite reduction, and the pre-reduction Stage-4 count is reported beside it.
