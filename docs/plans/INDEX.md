@@ -31,5 +31,6 @@
 - **Native Peer & Model-Class Coverage** [spec] `2026-06-28-native-peer-model-coverage` ← 2026-06-26-teralizer-overview
 - **Telemetry Harness as Precompiled Support Artifact** [spec] `2026-07-03-harness-support-artifact` ← 2026-06-26-teralizer-overview
 - **Evaluation Analysis and Reporting Redesign** [spec] `2026-07-08-evaluation-analysis-redesign` ← 2026-06-26-teralizer-overview
+- **Generated Properties Need Java 8** [plan] `2026-08-06-generated-source-level` (—) ← 2026-06-26-teralizer-overview
 
 _79 archived — see `docs/plans/archive/`._
