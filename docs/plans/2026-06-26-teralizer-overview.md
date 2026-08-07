@@ -22,7 +22,7 @@ leaves this queue; its evidence goes to the owning audit and its doc to `archive
 
 ## Strategy sequence
 
-1. **Finish and promote the RQ6 v5 corpus** — `postgres_reporeapers_rq6_v5` is
+1. **Finish and promote the RQ6 v6 corpus** — `postgres_reporeapers_rq6_v6` is
    collecting on the tree with the funnel levers, JUnit 3 assertion analysis, and
    resolver-attributed rejects (`2026-08-04-rq6-recollection`). Every RQ6 figure the
    thesis cites comes from this one measurement event.

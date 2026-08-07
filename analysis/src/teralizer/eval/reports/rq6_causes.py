@@ -17,7 +17,7 @@ from teralizer.eval.reports._causes_common import (
     build_filtering_table,
 )
 
-DEFAULT_DB = "postgres_reporeapers_rq6_v5"
+DEFAULT_DB = "postgres_reporeapers_rq6_v6"
 
 _ELIGIBILITY_CTE = """
 WITH eligible_projects AS (
