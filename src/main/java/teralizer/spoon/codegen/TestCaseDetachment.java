@@ -2,6 +2,7 @@ package teralizer.spoon.codegen;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -9,7 +10,11 @@ import java.util.Set;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtSuperAccess;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.ModifierKind;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
@@ -57,12 +62,33 @@ public final class TestCaseDetachment {
             // also keeps the class claimable by the vintage engine.
             return false;
         }
-        for (CtInvocation<?> invocation : inheritedCalls(retainedMethods(testClass, testMethod))) {
+        if (!canConstructWithoutArguments(testClass)) {
+            return false;
+        }
+        List<CtElement> scopes = new ArrayList<>(retainedMethods(testClass, testMethod));
+        scopes.addAll(testClass.getConstructors());
+        for (CtInvocation<?> invocation : inheritedCalls(scopes)) {
             if (!isRewritable(invocation)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Whether jqwik can construct the class after detachment. jqwik constructs a container without
+     * arguments. A class that declares no constructor gets the default one. Otherwise the class needs
+     * a constructor without arguments, or the String constructor that
+     * {@link #ensureNoArgConstructor} can delegate to.
+     */
+    private static boolean canConstructWithoutArguments(CtClass<?> testClass) {
+        Set<? extends CtConstructor<?>> constructors = testClass.getConstructors();
+        if (constructors.isEmpty()
+            || constructors.stream().anyMatch(constructor -> constructor.getParameters().isEmpty())) {
+            return true;
+        }
+        return constructors.stream().anyMatch(constructor -> constructor.getParameters().size() == 1
+            && "java.lang.String".equals(constructor.getParameters().get(0).getType().getQualifiedName()));
     }
 
     /**
@@ -84,7 +110,45 @@ public final class TestCaseDetachment {
             }
         }
         removeOverrideOnFixtures(generalizedClass);
+        deleteSuperConstructorCalls(generalizedClass);
+        ensureNoArgConstructor(generalizedClass);
         generalizedClass.setSuperclass(null);
+    }
+
+    /**
+     * Deletes calls to a {@code TestCase} constructor. JUnit 3 classes often declare
+     * {@code MyTest(String name)} and call {@code super(name)} from it. Object becomes the superclass
+     * after detachment, and it declares no constructor that takes a name, so the compiler reports
+     * {@code constructor Object in class java.lang.Object cannot be applied to given types}. The call
+     * only set the JUnit 3 test name, which nothing reads after detachment.
+     */
+    private static void deleteSuperConstructorCalls(CtClass<?> generalizedClass) {
+        inheritedCalls(generalizedClass.getConstructors()).stream()
+            .filter(invocation -> invocation.getExecutable().isConstructor())
+            .forEach(CtInvocation::delete);
+    }
+
+    /**
+     * Adds {@code MyTest()} when the class declares only {@code MyTest(String name)}. jqwik
+     * constructs a container without arguments. The new constructor delegates with {@code this("")},
+     * so the field initialization in the String constructor still runs.
+     * {@code InstrumentedClassBuilder} gives the symbolic driver the same shape.
+     */
+    private static void ensureNoArgConstructor(CtClass<?> generalizedClass) {
+        Set<? extends CtConstructor<?>> constructors = generalizedClass.getConstructors();
+        if (constructors.isEmpty()
+            || constructors.stream().anyMatch(constructor -> constructor.getParameters().isEmpty())) {
+            return;
+        }
+        Factory factory = generalizedClass.getFactory();
+        CtConstructor<?> noArgConstructor = factory.Constructor().create(
+            generalizedClass,
+            new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
+            Collections.emptyList(),
+            Collections.emptySet(),
+            factory.Core().createBlock()
+        );
+        noArgConstructor.getBody().addStatement(factory.Code().createCodeSnippetStatement("this(\"\")"));
     }
 
     /**
@@ -151,10 +215,10 @@ public final class TestCaseDetachment {
     }
 
     /** Calls to methods that {@code TestCase} or {@code Assert} declares. */
-    private static List<CtInvocation<?>> inheritedCalls(Iterable<? extends CtMethod<?>> methods) {
+    private static List<CtInvocation<?>> inheritedCalls(Iterable<? extends CtElement> scopes) {
         List<CtInvocation<?>> inherited = new ArrayList<>();
-        for (CtMethod<?> method : methods) {
-            for (CtInvocation<?> invocation : method.getElements(new TypeFilter<CtInvocation<?>>(CtInvocation.class))) {
+        for (CtElement scope : scopes) {
+            for (CtInvocation<?> invocation : scope.getElements(new TypeFilter<CtInvocation<?>>(CtInvocation.class))) {
                 CtExecutableReference<?> executable = invocation.getExecutable();
                 CtTypeReference<?> declaringType = executable == null ? null : executable.getDeclaringType();
                 if (declaringType == null) {
@@ -171,8 +235,8 @@ public final class TestCaseDetachment {
     }
 
     private static boolean isRewritable(CtInvocation<?> invocation) {
-        // A constructor call needs no rewrite. Removal of the ancestry makes Object the implicit
-        // superclass, and the call then names the no-argument constructor of Object.
+        // {@link #detach} deletes a call to a TestCase constructor. Keeping one would not compile:
+        // Object becomes the superclass, and it declares no constructor that takes a test name.
         return invocation.getExecutable().isConstructor()
             || isAssertionCall(invocation)
             || isSuperFixtureCall(invocation);

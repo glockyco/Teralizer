@@ -285,6 +285,22 @@ public class GeneralizedTestBuilderTest {
     }
 
     @Example
+    void detachingDropsTheSuperConstructorCallAndKeepsTheClassConstructible() {
+        CtClass<?> generalized = build(scenario(JUNIT3_STRING_CONSTRUCTOR_SOURCE), identityPlan());
+
+        Assert.assertNull(generalized.getSuperclass());
+        // Object declares no constructor taking a name, so a surviving super(testName) would not
+        // compile, and jqwik needs a constructor it can call without arguments.
+        Assert.assertTrue("super constructor call survived",
+            generalized.getElements(new TypeFilter<>(CtInvocation.class)).stream()
+                .noneMatch(invocation -> invocation.getExecutable() != null
+                    && invocation.getExecutable().isConstructor()
+                    && invocation.getTarget() instanceof spoon.reflect.code.CtSuperAccess));
+        Assert.assertTrue("no constructor jqwik can call",
+            generalized.getConstructors().stream().anyMatch(c -> c.getParameters().isEmpty()));
+    }
+
+    @Example
     void junit4LifecycleRewriteKeepsContainerHooksStatic() {
         CtClass<?> generalized = build(scenario(JUNIT4_LIFECYCLE_SOURCE), identityPlan());
 
@@ -473,6 +489,19 @@ public class GeneralizedTestBuilderTest {
         + "    assertEquals(2, new Subject().id(2));\n"
         + "  }\n"
         + "  public void testSibling() { assertTrue(true); }\n"
+        + "}\n"
+        + "class Subject {\n"
+        + "  int id(int x) { return x; }\n"
+        + "}\n";
+
+    // The conventional JUnit 3 shape: a String constructor calling super, and a suite() factory.
+    private static final String JUNIT3_STRING_CONSTRUCTOR_SOURCE = ""
+        + "package example;\n"
+        + "public class SubjectTest extends junit.framework.TestCase {\n"
+        + "  public SubjectTest(String testName) { super(testName); }\n"
+        + "  public void returnsInput() {\n"
+        + "    assertEquals(2, new Subject().id(2));\n"
+        + "  }\n"
         + "}\n"
         + "class Subject {\n"
         + "  int id(int x) { return x; }\n"
