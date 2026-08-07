@@ -214,6 +214,15 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
 - **Sibling removal and detachment go together.** Removing the convention-named siblings without
   dropping the `TestCase` ancestry makes vintage emit its "no tests found" sentinel as a failing
   test case and fails the build, under both surefire generations. Neither half is separable.
+- **`INHERITED_TEST_CASE_MEMBERS` has a measured cost, and it is accepted.** A JUnit 3 test whose
+  class extends an intermediate base is rejected, because cloning copies inherited test methods and
+  fixtures but not helpers, so the clone still needs the base and cannot lose the ancestry. Over the
+  first 297 projects of the corpus this rejected 752 tests in 6 projects and cost
+  `ESAPI_esapi-java-legacy` its 4 validated generalizations, against a net gain of 43 over v2.
+  Flattening the helpers would recover them. It is tracked as glockyco/Teralizer#196 rather than attempted
+  here, because a helper drags in the fields it reads, the base constructor that initializes those
+  fields, its own transitive calls, and the visibility and name collisions of merging two class
+  bodies. RQ6 reports the rejection.
 - **B4/B5/B6 are unverified.** Constructor instantiability, `suite()` factories, and the
   `public void` predicate are structurally present but unproven. Task 2 and Task 4 add loud,
   countable diagnostics for them; if the gate shows hits, they graduate to their own tasks
