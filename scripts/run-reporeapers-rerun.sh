@@ -29,6 +29,9 @@
 # funnel rows stay. The July baseline shows the cap only fires on zero-yield outliers, but capped
 # projects are identifiable by exit code for pairwise exclusion in baseline deltas.
 #
+# The corpus runner itself requires Java 8 because its bundled JPF revision imports JDK 8 internals.
+# Override auto-detection with REPOREAPERS_JAVA_HOME.
+#
 # The target DB/data dir are dedicated (env overrides: REPOREAPERS_DB, REPOREAPERS_DATA_DIR).
 # The ambient DB_NAME/.env pin is deliberately NOT used, so this can never hit dev/test/timeout_retry.
 set -uo pipefail
@@ -44,6 +47,48 @@ STATUS_TSV="$ROOT_DIR/$DATA_DIR/status.tsv"
 STOP_FILE="$ROOT_DIR/$DATA_DIR/STOP"
 PROJECT_TIMEOUT="${REPOREAPERS_PROJECT_TIMEOUT:-1800}"
 
+java8_version() {
+  local home="$1"
+  [[ -x "$home/bin/java" ]] || return 1
+  "$home/bin/java" -XshowSettings:properties -version 2>&1 \
+    | sed -n 's/^[[:space:]]*java.version = //p' \
+    | head -1
+}
+
+require_java8() {
+  local explicit="${REPOREAPERS_JAVA_HOME:-}"
+  local candidate version
+  local -a candidates=()
+
+  if [[ -n "$explicit" ]]; then
+    candidates+=("$explicit")
+  else
+    [[ -n "${JAVA_HOME:-}" ]] && candidates+=("$JAVA_HOME")
+    [[ -n "${JAVA_HOME_8_X64:-}" ]] && candidates+=("$JAVA_HOME_8_X64")
+    if [[ "$(uname -s)" == "Darwin" && -x /usr/libexec/java_home ]]; then
+      candidate=$(/usr/libexec/java_home -v 1.8 2>/dev/null || true)
+      [[ -n "$candidate" ]] && candidates+=("$candidate")
+    fi
+  fi
+
+  for candidate in "${candidates[@]}"; do
+    version=$(java8_version "$candidate" || true)
+    if [[ "$version" == 1.8.* ]]; then
+      export JAVA_HOME="$candidate"
+      export PATH="$JAVA_HOME/bin:$PATH"
+      echo "==> Java runtime: $JAVA_HOME ($version)"
+      return 0
+    fi
+  done
+
+  if [[ -n "$explicit" ]]; then
+    echo "REPOREAPERS_JAVA_HOME is not a Java 8 home: $explicit" >&2
+  else
+    echo "RepoReapers requires Java 8; set REPOREAPERS_JAVA_HOME to a JDK 8 home." >&2
+  fi
+  return 1
+}
+
 source "$ROOT_DIR/scripts/lib/db-guard.sh"
 DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
 
@@ -58,6 +103,8 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
+
+require_java8 || exit 1
 
 # shellcheck source=scripts/lib/run-supervisor.sh
 source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
