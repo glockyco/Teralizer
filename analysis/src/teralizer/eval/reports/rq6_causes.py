@@ -1,6 +1,8 @@
 """RQ6 real-world exclusion causes report."""
 
 from __future__ import annotations
+import json
+import re
 
 from dataclasses import replace
 
@@ -8,7 +10,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
-from teralizer.eval.model import Metric, Prose, RQReport, Section
+from teralizer.eval.model import ColumnSpec, Metric, Prose, RQReport, Section, Table
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.eval.reports import _funnel
@@ -36,6 +38,24 @@ WITH eligible_projects AS (
       )
 )
 """
+
+JPF_EXCEPTION_DETAIL_SQL = f"""
+{_ELIGIBILITY_CTE}
+SELECT td.detail_json
+FROM task_diagnostic td
+JOIN eligible_projects ep ON ep.id = td.project_id
+WHERE td.reason_code = 'UNCAUGHT_EXCEPTION_PATH'
+"""
+
+_JPF_EXCEPTION_CATEGORIES = (
+    "Application exception",
+    "JPF native-peer gap",
+    "JPF model/field gap",
+    "Unparsed",
+)
+_CAUSED_BY = re.compile(r"Caused by:\s*([\w.$]+)(?::\s*([^\r\n]*))?")
+_THROWN = re.compile(r"^([\w.$]+(?:Exception|Error))(?::\s*([^\r\n]*))?", re.MULTILINE)
+_JPF_PEER = re.compile(r"gov\.nasa\.jpf\.vm\.JPF_[\w_]+")
 
 
 def _query_params(variant: str) -> dict[str, object]:
@@ -254,10 +274,87 @@ def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
     )
 
 
+def _detail_message(detail: object) -> str:
+    if isinstance(detail, dict):
+        return str(detail.get("message") or detail.get("detail") or "")
+    if not isinstance(detail, str):
+        return ""
+    try:
+        decoded = json.loads(detail)
+    except json.JSONDecodeError:
+        return detail
+    if isinstance(decoded, dict):
+        return str(decoded.get("message") or decoded.get("detail") or "")
+    return detail
+
+
+def _classify_jpf_exception_detail(detail: object) -> str:
+    """Recover a concrete JPF failure family from retained diagnostic detail."""
+    message = _detail_message(detail)
+    caused_by = _CAUSED_BY.findall(message)
+    exception_type = caused_by[-1][0] if caused_by else ""
+    if not exception_type:
+        after_marker = message.split("gov.nasa.jpf.vm.NoUncaughtExceptionsProperty", 1)[
+            -1
+        ]
+        thrown = _THROWN.search(after_marker)
+        exception_type = thrown.group(1) if thrown else ""
+    if not exception_type:
+        return "Unparsed"
+    if exception_type.endswith(("NoSuchFieldException", "NoSuchMethodException")):
+        return "JPF model/field gap"
+    if _JPF_PEER.search(message):
+        return "JPF native-peer gap"
+    if exception_type.startswith("gov.nasa.jpf"):
+        return "Unparsed"
+    return "Application exception"
+
+
+def _fetch_jpf_exception_causes(conn: Connection, variant: str) -> pd.DataFrame:
+    details = read_sql(conn, JPF_EXCEPTION_DETAIL_SQL, params=_query_params(variant))
+    classified = details["detail_json"].map(_classify_jpf_exception_detail)
+    counts = classified.value_counts()
+    total = int(len(classified))
+    return pd.DataFrame(
+        [
+            {
+                "category": category,
+                "count": int(counts.get(category, 0)),
+                "share": int(counts.get(category, 0)) / total if total else 0.0,
+            }
+            for category in _JPF_EXCEPTION_CATEGORIES
+        ]
+    )
+
+
+def _jpf_exception_table(df: pd.DataFrame) -> Table:
+    return Table(
+        key="rq6_jpf_exception_causes",
+        df=df,
+        columns=[
+            ColumnSpec("Recovered cause", "category"),
+            ColumnSpec("Diagnostics", "count", "count", "r"),
+            ColumnSpec("Share", "share", "pct1", "r"),
+        ],
+        caption=(
+            "Retrospective classification of generic JPF uncaught-exception "
+            "diagnostics from retained detail."
+        ),
+        label="tab:jpf-exception-causes",
+        note=(
+            "This recovery changes cause attribution only; it does not change "
+            "project eligibility or funnel outcomes."
+        ),
+        provenance=capture(_fetch_jpf_exception_causes, query=JPF_EXCEPTION_DETAIL_SQL),
+    )
+
+
 def build(conn: Connection) -> RQReport:
     variant = _funnel.resolve_variant(conn)
     funnel = _funnel.build_funnel(conn, variant=variant)
     breakdown_data = _fetch_breakdown(conn, variant)
+    jpf_exception_data = _fetch_jpf_exception_causes(conn, variant)
+    jpf_exception_table = _jpf_exception_table(jpf_exception_data)
 
     breakdown = build_breakdown_table(
         breakdown_data,
@@ -378,6 +475,34 @@ def build(conn: Connection) -> RQReport:
             provenance=funnel_provenance,
         ),
     ]
+    jpf_rows = int(jpf_exception_data["count"].sum())
+    jpf_unparsed = int(
+        jpf_exception_data.loc[
+            jpf_exception_data["category"].eq("Unparsed"), "count"
+        ].sum()
+    )
+    metrics.extend(
+        [
+            Metric(
+                "realworld.jpf_uncaught_exception_diagnostics",
+                jpf_rows,
+                fmt="count",
+                provenance=capture(
+                    _fetch_jpf_exception_causes,
+                    query=JPF_EXCEPTION_DETAIL_SQL,
+                ),
+            ),
+            Metric(
+                "realworld.jpf_uncaught_exception_reclassified_pct",
+                (jpf_rows - jpf_unparsed) / jpf_rows if jpf_rows else 0.0,
+                fmt="pct1",
+                provenance=capture(
+                    _fetch_jpf_exception_causes,
+                    query=JPF_EXCEPTION_DETAIL_SQL,
+                ),
+            ),
+        ]
+    )
     section = Section(
         title="Project-level exclusions",
         blocks=[
@@ -386,6 +511,12 @@ def build(conn: Connection) -> RQReport:
                 "filtering and downstream test, assertion, and generalization failures."
             ),
             funnel.table,
+            Prose(
+                "Generic JPF uncaught-exception diagnostics are reclassified "
+                "from their retained detail into application exceptions and "
+                "JPF environment gaps."
+            ),
+            jpf_exception_table,
             breakdown,
             filtering,
         ],

@@ -7,7 +7,7 @@ from teralizer.eval.reports import _funnel
 from teralizer.eval.data import connect
 from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
-import teralizer.eval.reports.rq6_causes  # noqa: F401  (registers "rq6")
+from teralizer.eval.reports import rq6_causes  # noqa: F401  (registers "rq6")
 
 
 def _report() -> RQReport:
@@ -28,6 +28,35 @@ def test_rq6_has_funnel_and_shared_tables():
     assert any("processing-failures" in lbl for lbl in labels)
     assert any("exclusions-breakdown" in lbl for lbl in labels)
     assert any("exclusions-filtering" in lbl for lbl in labels)
+    assert "tab:jpf-exception-causes" in labels
+
+
+@pytest.mark.parametrize(
+    ("detail", "expected"),
+    [
+        (
+            {
+                "message": "gov.nasa.jpf.vm.NoUncaughtExceptionsProperty\n"
+                "java.lang.NullPointerException: application state"
+            },
+            "Application exception",
+        ),
+        (
+            {
+                "message": "Caused by: java.lang.IllegalStateException: peer failed\n"
+                "at gov.nasa.jpf.vm.JPF_java_lang_Class"
+            },
+            "JPF native-peer gap",
+        ),
+        (
+            '{"message":"Caused by: java.lang.NoSuchFieldException: value"}',
+            "JPF model/field gap",
+        ),
+        ({"message": "no exception type retained"}, "Unparsed"),
+    ],
+)
+def test_retained_jpf_details_recover_concrete_causes(detail, expected):
+    assert rq6_causes._classify_jpf_exception_detail(detail) == expected
 
 
 def test_rq6_funnel_causes_are_typed():
@@ -111,8 +140,8 @@ def test_rq6_generalization_inclusion_uses_validated_signal():
 
 def test_rq6_generalization_failures_exclude_reduction_attrition():
     # A reduction-dependent inclusion signal would push PIT collection losses into
-    # the failures column, so bound failures by the generalized build and execution
-    # losses that genuinely belong to generalized test creation.
+    # the failures column. Reconstruct only eligible creation failures: outputs that
+    # did not validate and were not rejected by a generation filter.
     report = _report()
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
     row = breakdown.df[breakdown.df["level"].eq("Generalization")].iloc[0]
@@ -121,12 +150,44 @@ def test_rq6_generalization_failures_exclude_reduction_attrition():
         creation_failures = conn.execute(
             text(
                 """
+                WITH eligible AS (
+                    SELECT p.id
+                    FROM project p
+                    WHERE p.use_test_generalization
+                      AND NOT EXISTS (
+                          SELECT 1 FROM task t
+                          WHERE t.project_id = p.id
+                            AND t.test_id IS NULL
+                            AND t.assertion_id IS NULL
+                            AND t.generalization_id IS NULL
+                            AND t.status <> 'SUCCEEDED'
+                            AND t.stage IN (
+                                'SETUP_PROJECT',
+                                'ADD_DEPENDENCIES',
+                                'BUILD_PROJECT_ORIGINAL'
+                            )
+                      )
+                )
                 SELECT count(*)
                 FROM generalization g
+                JOIN eligible e ON e.id = g.project_id
                 JOIN generalization_lifecycle l ON l.generalization_id = g.id
                 WHERE g.variant = :variant
-                  AND g.is_included
                   AND NOT l.generated_filter_passed
+                  AND NOT (
+                      NOT g.is_included
+                      AND (
+                          g.exclusion_info IN (
+                              'ORACLE_NOT_WIDENABLE',
+                              'INPUT_SPEC_NOT_SATISFIED_BY_SEED'
+                          )
+                          OR EXISTS (
+                              SELECT 1 FROM filter_result fr
+                              WHERE fr.generalization_id = g.id
+                                AND fr.decision = 'REJECT'
+                          )
+                      )
+                  )
                 """
             ),
             {"variant": variant},
