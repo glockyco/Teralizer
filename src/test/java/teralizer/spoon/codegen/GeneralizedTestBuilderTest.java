@@ -12,6 +12,7 @@ import spoon.Launcher;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.visitor.filter.NamedElementFilter;
@@ -285,19 +286,23 @@ public class GeneralizedTestBuilderTest {
     }
 
     @Example
-    void detachingDropsTheSuperConstructorCallAndKeepsTheClassConstructible() {
+    void detachingKeepsExactlyOneJqwikConstructorAndItsInitialization() {
         CtClass<?> generalized = build(scenario(JUNIT3_STRING_CONSTRUCTOR_SOURCE), identityPlan());
 
         Assert.assertNull(generalized.getSuperclass());
         // Object declares no constructor taking a name, so a surviving super(testName) would not
-        // compile, and jqwik needs a constructor it can call without arguments.
+        // compile. jqwik 1.8 also rejects every class with more than one declared constructor.
         Assert.assertTrue("super constructor call survived",
             generalized.getElements(new TypeFilter<>(CtInvocation.class)).stream()
                 .noneMatch(invocation -> invocation.getExecutable() != null
                     && invocation.getExecutable().isConstructor()
                     && invocation.getTarget() instanceof spoon.reflect.code.CtSuperAccess));
-        Assert.assertTrue("no constructor jqwik can call",
-            generalized.getConstructors().stream().anyMatch(c -> c.getParameters().isEmpty()));
+        Assert.assertEquals("jqwik requires exactly one constructor", 1, generalized.getConstructors().size());
+        CtConstructor<?> constructor = generalized.getConstructors().iterator().next();
+        Assert.assertTrue("jqwik constructor still requires arguments", constructor.getParameters().isEmpty());
+        String body = constructor.getBody().toString();
+        Assert.assertTrue("JUnit 3 name parameter was not rebound", body.contains("java.lang.String testName = \"\""));
+        Assert.assertTrue("constructor initialization was discarded", body.contains("this.initialName = testName"));
     }
 
     @Example
@@ -498,7 +503,8 @@ public class GeneralizedTestBuilderTest {
     private static final String JUNIT3_STRING_CONSTRUCTOR_SOURCE = ""
         + "package example;\n"
         + "public class SubjectTest extends junit.framework.TestCase {\n"
-        + "  public SubjectTest(String testName) { super(testName); }\n"
+        + "  private String initialName;\n"
+        + "  public SubjectTest(String testName) { super(testName); this.initialName = testName; }\n"
         + "  public void returnsInput() {\n"
         + "    assertEquals(2, new Subject().id(2));\n"
         + "  }\n"

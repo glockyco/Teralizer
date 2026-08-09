@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Set;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtSuperAccess;
+import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.ModifierKind;
-import spoon.reflect.factory.Factory;
+import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
@@ -76,19 +76,24 @@ public final class TestCaseDetachment {
     }
 
     /**
-     * Whether jqwik can construct the class after detachment. jqwik constructs a container without
-     * arguments. A class that declares no constructor gets the default one. Otherwise the class needs
-     * a constructor without arguments, or the String constructor that
-     * {@link #ensureNoArgConstructor} can delegate to.
+     * Whether a class cloned from this test can expose exactly one constructor to jqwik. jqwik 1.8
+     * rejects a container with multiple declared constructors regardless of their visibility. A
+     * class with no declared constructor gets Java's implicit no-argument constructor. Otherwise,
+     * detachment accepts one explicit no-argument constructor or one String constructor that
+     * {@link #normalizeConstructorForJqwik} can convert without discarding its initialization.
      */
     private static boolean canConstructWithoutArguments(CtClass<?> testClass) {
         Set<? extends CtConstructor<?>> constructors = testClass.getConstructors();
-        if (constructors.isEmpty()
-            || constructors.stream().anyMatch(constructor -> constructor.getParameters().isEmpty())) {
+        if (constructors.isEmpty()) {
             return true;
         }
-        return constructors.stream().anyMatch(constructor -> constructor.getParameters().size() == 1
-            && "java.lang.String".equals(constructor.getParameters().get(0).getType().getQualifiedName()));
+        if (constructors.size() != 1) {
+            return false;
+        }
+        CtConstructor<?> constructor = constructors.iterator().next();
+        return constructor.getParameters().isEmpty()
+            || (constructor.getParameters().size() == 1
+                && "java.lang.String".equals(constructor.getParameters().get(0).getType().getQualifiedName()));
     }
 
     /**
@@ -111,7 +116,7 @@ public final class TestCaseDetachment {
         }
         removeOverrideOnFixtures(generalizedClass);
         deleteSuperConstructorCalls(generalizedClass);
-        ensureNoArgConstructor(generalizedClass);
+        normalizeConstructorForJqwik(generalizedClass);
         generalizedClass.setSuperclass(null);
     }
 
@@ -129,26 +134,36 @@ public final class TestCaseDetachment {
     }
 
     /**
-     * Adds {@code MyTest()} when the class declares only {@code MyTest(String name)}. jqwik
-     * constructs a container without arguments. The new constructor delegates with {@code this("")},
-     * so the field initialization in the String constructor still runs.
-     * {@code InstrumentedClassBuilder} gives the symbolic driver the same shape.
+     * Converts a lone {@code MyTest(String name)} constructor into {@code MyTest()}. jqwik 1.8
+     * considers every declared constructor accessible, including private ones, and rejects a class
+     * with more than one. Replacing the parameter instead of adding a delegating overload therefore
+     * leaves the generated container with exactly one constructor.
+     *
+     * <p>If constructor initialization still reads the old JUnit 3 test name after
+     * {@link #deleteSuperConstructorCalls}, a local empty name preserves the previous
+     * {@code this("")} behavior. {@code InstrumentedClassBuilder} separately gives the symbolic
+     * driver its required no-argument entry point.
      */
-    private static void ensureNoArgConstructor(CtClass<?> generalizedClass) {
+    private static void normalizeConstructorForJqwik(CtClass<?> generalizedClass) {
         Set<? extends CtConstructor<?>> constructors = generalizedClass.getConstructors();
-        if (constructors.isEmpty()
-            || constructors.stream().anyMatch(constructor -> constructor.getParameters().isEmpty())) {
+        if (constructors.isEmpty()) {
             return;
         }
-        Factory factory = generalizedClass.getFactory();
-        CtConstructor<?> noArgConstructor = factory.Constructor().create(
-            generalizedClass,
-            new HashSet<>(Collections.singletonList(ModifierKind.PUBLIC)),
-            Collections.emptyList(),
-            Collections.emptySet(),
-            factory.Core().createBlock()
-        );
-        noArgConstructor.getBody().addStatement(factory.Code().createCodeSnippetStatement("this(\"\")"));
+        CtConstructor<?> constructor = constructors.iterator().next();
+        if (constructor.getParameters().isEmpty()) {
+            return;
+        }
+
+        CtParameter<?> nameParameter = constructor.getParameters().get(0);
+        boolean nameStillUsed = constructor.getBody().getElements(
+            new TypeFilter<CtVariableAccess<?>>(CtVariableAccess.class)
+        ).stream().anyMatch(access -> nameParameter.getSimpleName().equals(access.getVariable().getSimpleName()));
+        constructor.setParameters(Collections.emptyList());
+        if (nameStillUsed) {
+            constructor.getBody().insertBegin(constructor.getFactory().Code().createCodeSnippetStatement(
+                "java.lang.String " + nameParameter.getSimpleName() + " = \"\""
+            ));
+        }
     }
 
     /**
