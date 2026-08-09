@@ -29,6 +29,18 @@ def test_rq6_has_funnel_and_shared_tables():
     assert any("exclusions-breakdown" in lbl for lbl in labels)
     assert any("exclusions-filtering" in lbl for lbl in labels)
     assert "tab:jpf-exception-causes" in labels
+    assert "tab:mut-choice-sensitivity" in labels
+    choice = next(
+        table
+        for table in report.tables()
+        if table.label == "tab:mut-choice-sensitivity"
+    )
+    counts = choice.df.set_index("category")["count"]
+    total = int(counts.sum())
+    assert counts["Candidate detail unavailable"] > 0
+    assert float(
+        report.metric("realworld.parameter_type_choice_dependent_lower_bound_pct").value
+    ) == pytest.approx(counts["Choice-dependent"] / total)
 
 
 @pytest.mark.parametrize(
@@ -57,6 +69,24 @@ def test_rq6_has_funnel_and_shared_tables():
 )
 def test_retained_jpf_details_recover_concrete_causes(detail, expected):
     assert rq6_causes._classify_jpf_exception_detail(detail) == expected
+
+
+@pytest.mark.parametrize(
+    ("detail", "expected"),
+    [
+        (None, "Candidate detail unavailable"),
+        ("not JSON", "Candidate detail unavailable"),
+        ([], "Candidate detail unavailable"),
+        ([{"callSource": "subject.size()"}], "Choice-invariant"),
+        (
+            [{"callSource": "subject.contains(new Interval(1, 10), 5)"}],
+            "Choice-dependent",
+        ),
+        ([{"callSource": "subject.accept(factory.create())"}], "Choice-dependent"),
+    ],
+)
+def test_mut_candidate_details_preserve_choice_sensitivity(detail, expected):
+    assert rq6_causes._classify_mut_candidate_details(detail) == expected
 
 
 def test_rq6_funnel_causes_are_typed():

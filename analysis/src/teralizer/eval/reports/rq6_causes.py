@@ -57,6 +57,23 @@ _CAUSED_BY = re.compile(r"Caused by:\s*([\w.$]+)(?::\s*([^\r\n]*))?")
 _THROWN = re.compile(r"^([\w.$]+(?:Exception|Error))(?::\s*([^\r\n]*))?", re.MULTILINE)
 _JPF_PEER = re.compile(r"gov\.nasa\.jpf\.vm\.JPF_[\w_]+")
 
+MUT_CHOICE_SENSITIVITY_SQL = f"""
+{_ELIGIBILITY_CTE}
+SELECT DISTINCT o.assertion_id, o.candidate_details
+FROM mut_resolution_observation o
+JOIN eligible_projects ep ON ep.id = o.project_id
+JOIN filter_result fr ON fr.assertion_id = o.assertion_id
+WHERE fr.decision = 'REJECT'
+  AND fr.filter_name LIKE '%ParameterTypeFilter'
+  AND fr.reason_code = 'NO_GENERALIZABLE_PARAMETERS'
+"""
+
+_MUT_CHOICE_CATEGORIES = (
+    "Candidate detail unavailable",
+    "Choice-invariant",
+    "Choice-dependent",
+)
+
 
 def _query_params(variant: str) -> dict[str, object]:
     return {
@@ -349,12 +366,94 @@ def _jpf_exception_table(df: pd.DataFrame) -> Table:
     )
 
 
+def _call_has_arguments(source: str) -> bool:
+    """Whether the final Java call in source passes at least one argument."""
+    source = source.strip()
+    if not source.endswith(")"):
+        return False
+    depth = 0
+    for index in range(len(source) - 1, -1, -1):
+        value = source[index]
+        if value == ")":
+            depth += 1
+        elif value == "(":
+            depth -= 1
+            if depth == 0:
+                return bool(source[index + 1 : -1].strip())
+    return False
+
+
+def _classify_mut_candidate_details(detail: object) -> str:
+    if isinstance(detail, str):
+        try:
+            detail = json.loads(detail)
+        except json.JSONDecodeError:
+            return "Candidate detail unavailable"
+    if not isinstance(detail, list) or not detail:
+        return "Candidate detail unavailable"
+
+    sources: list[str] = []
+    for candidate in detail:
+        if not isinstance(candidate, dict):
+            return "Candidate detail unavailable"
+        source = candidate.get("callSource")
+        if not isinstance(source, str) or not source.strip():
+            return "Candidate detail unavailable"
+        sources.append(source)
+    if any(_call_has_arguments(source) for source in sources):
+        return "Choice-dependent"
+    return "Choice-invariant"
+
+
+def _fetch_mut_choice_sensitivity(conn: Connection, variant: str) -> pd.DataFrame:
+    details = read_sql(conn, MUT_CHOICE_SENSITIVITY_SQL, params=_query_params(variant))
+    classified = details["candidate_details"].map(_classify_mut_candidate_details)
+    counts = classified.value_counts()
+    total = int(len(classified))
+    return pd.DataFrame(
+        [
+            {
+                "category": category,
+                "count": int(counts.get(category, 0)),
+                "share": int(counts.get(category, 0)) / total if total else 0.0,
+            }
+            for category in _MUT_CHOICE_CATEGORIES
+        ]
+    )
+
+
+def _mut_choice_table(df: pd.DataFrame) -> Table:
+    return Table(
+        key="rq6_mut_choice_sensitivity",
+        df=df,
+        columns=[
+            ColumnSpec("Candidate evidence", "category"),
+            ColumnSpec("Rejections", "count", "count", "r"),
+            ColumnSpec("Share of all", "share", "pct1", "r"),
+        ],
+        caption=(
+            "Choice sensitivity of ParameterType rejections classified from "
+            "retained MUT candidate details."
+        ),
+        label="tab:mut-choice-sensitivity",
+        note=(
+            "Choice-dependent rows divided by all ParameterType rejections are "
+            "a lower bound; rows without candidate detail remain unscored."
+        ),
+        provenance=capture(
+            _fetch_mut_choice_sensitivity, query=MUT_CHOICE_SENSITIVITY_SQL
+        ),
+    )
+
+
 def build(conn: Connection) -> RQReport:
     variant = _funnel.resolve_variant(conn)
     funnel = _funnel.build_funnel(conn, variant=variant)
     breakdown_data = _fetch_breakdown(conn, variant)
     jpf_exception_data = _fetch_jpf_exception_causes(conn, variant)
     jpf_exception_table = _jpf_exception_table(jpf_exception_data)
+    mut_choice_data = _fetch_mut_choice_sensitivity(conn, variant)
+    mut_choice_table = _mut_choice_table(mut_choice_data)
 
     breakdown = build_breakdown_table(
         breakdown_data,
@@ -503,6 +602,34 @@ def build(conn: Connection) -> RQReport:
             ),
         ]
     )
+    mut_choice_total = int(mut_choice_data["count"].sum())
+    mut_choice_dependent = int(
+        mut_choice_data.loc[
+            mut_choice_data["category"].eq("Choice-dependent"), "count"
+        ].sum()
+    )
+    metrics.extend(
+        [
+            Metric(
+                "realworld.parameter_type_choice_dependent_lower_bound",
+                mut_choice_dependent,
+                fmt="count",
+                provenance=capture(
+                    _fetch_mut_choice_sensitivity,
+                    query=MUT_CHOICE_SENSITIVITY_SQL,
+                ),
+            ),
+            Metric(
+                "realworld.parameter_type_choice_dependent_lower_bound_pct",
+                mut_choice_dependent / mut_choice_total if mut_choice_total else 0.0,
+                fmt="pct1",
+                provenance=capture(
+                    _fetch_mut_choice_sensitivity,
+                    query=MUT_CHOICE_SENSITIVITY_SQL,
+                ),
+            ),
+        ]
+    )
     section = Section(
         title="Project-level exclusions",
         blocks=[
@@ -517,6 +644,12 @@ def build(conn: Connection) -> RQReport:
                 "JPF environment gaps."
             ),
             jpf_exception_table,
+            Prose(
+                "ParameterType choice sensitivity is reported conservatively: "
+                "only a rejection with an observed argument-taking alternative "
+                "is choice-dependent."
+            ),
+            mut_choice_table,
             breakdown,
             filtering,
         ],
