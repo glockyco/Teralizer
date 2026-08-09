@@ -7,8 +7,13 @@ from pathlib import Path
 import pytest
 from sqlalchemy import create_engine, text
 
-from teralizer.report_basis import collect_basis, format_basis_header
 from teralizer import report_basis
+from teralizer.report_basis import (
+    collect_basis,
+    format_basis_header,
+    open_report_connection,
+    require_complete_corpus,
+)
 
 
 def _create_basis_schema(conn) -> None:
@@ -103,5 +108,63 @@ def test_basis_header_fails_loudly_when_ledger_is_missing(tmp_path: Path):
             _create_basis_schema(conn)
             with pytest.raises(FileNotFoundError, match="attempt ledger not found"):
                 collect_basis(conn, "postgres_test", ledger=tmp_path / "missing.tsv")
+    finally:
+        engine.dispose()
+
+
+def test_report_connection_holds_one_snapshot(monkeypatch, tmp_path: Path):
+    engine = create_engine(f"sqlite:///{tmp_path / 'snapshot.sqlite'}")
+    with engine.begin() as conn:
+        conn.execute(text("PRAGMA journal_mode=WAL"))
+        conn.execute(text("CREATE TABLE state (value INTEGER NOT NULL)"))
+        conn.execute(text("INSERT INTO state VALUES (1)"))
+    monkeypatch.setattr(
+        report_basis.db_config, "get_engine", lambda *_args, **_kwargs: engine
+    )
+
+    with open_report_connection("snapshot") as conn:
+        first = conn.execute(text("SELECT value FROM state")).scalar_one()
+        with engine.begin() as writer:
+            writer.execute(text("UPDATE state SET value = 2"))
+        second = conn.execute(text("SELECT value FROM state")).scalar_one()
+
+    engine.dispose()
+    assert first == second == 1
+
+
+def test_complete_corpus_requires_configs_markers_ledger_and_projects(
+    tmp_path: Path,
+):
+    config_dir = tmp_path / "configs"
+    data_dir = tmp_path / "data"
+    done_dir = data_dir / "done"
+    config_dir.mkdir()
+    done_dir.mkdir(parents=True)
+    for number in ("1", "2"):
+        (config_dir / f"project-{number}.conf").write_text("")
+        (done_dir / f"project-{number}").write_text("")
+    (data_dir / "status.tsv").write_text(
+        "n\troot_path\texit_code\tlog\n"
+        "1\tprojects/a\t0\ta.log\n"
+        "2\tprojects/b\t1\tb.log\n"
+    )
+
+    engine = create_engine("sqlite:///:memory:")
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                text("CREATE TABLE project (id INTEGER PRIMARY KEY, root_path TEXT)")
+            )
+            conn.execute(
+                text(
+                    "INSERT INTO project (id, root_path) VALUES "
+                    "(1, 'projects/a'), (2, 'projects/b')"
+                )
+            )
+            require_complete_corpus(conn, data_dir=data_dir, config_dir=config_dir)
+
+            (done_dir / "project-2").unlink()
+            with pytest.raises(RuntimeError, match="done markers 1 != configs 2"):
+                require_complete_corpus(conn, data_dir=data_dir, config_dir=config_dir)
     finally:
         engine.dispose()

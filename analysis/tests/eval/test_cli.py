@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import inspect
 import pandas as pd
 from teralizer.eval import cli, provenance, registry
@@ -44,6 +46,42 @@ def test_cli_fans_out_to_targets(monkeypatch, tmp_path):
     assert (tmp_path / "reports" / "provenance.json").exists()
     assert (tmp_path / "build" / "k.tex").exists()
     assert (tmp_path / "build" / "macros.tex").exists()
+
+
+def test_cli_checks_corpus_completion_before_build(monkeypatch, tmp_path):
+    import contextlib
+
+    connection = object()
+    calls = []
+
+    @contextlib.contextmanager
+    def fake_connect(db, *, validate_schema=False, require=None):
+        yield connection
+
+    def fake_require_complete(conn, *, data_dir, config_dir):
+        calls.append((conn, data_dir, config_dir))
+
+    monkeypatch.setitem(
+        registry.REPORTS,
+        "complete",
+        registry.ReportSpec(_fixture_report, "sqlite", "new"),
+    )
+    monkeypatch.setattr(cli, "connect", fake_connect)
+    monkeypatch.setattr(cli, "require_complete_corpus", fake_require_complete)
+    monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
+    cli.main(
+        [
+            "complete",
+            "--targets",
+            "md",
+            "--corpus-data-dir",
+            "data/run",
+            "--corpus-config-dir",
+            "project-configs/run",
+        ]
+    )
+
+    assert calls == [(connection, Path("data/run"), Path("project-configs/run"))]
 
 
 def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):

@@ -15,6 +15,7 @@ from teralizer.eval.render import latex as latex_renderer
 from teralizer.eval.render import manifest as manifest_renderer
 from teralizer.eval.render import markdown as markdown_renderer
 from teralizer.eval.render import csv as csv_renderer
+from teralizer.report_basis import require_complete_corpus
 
 REPO_URL = "https://github.com/glockyco/Teralizer"
 _ANALYSIS = Path(__file__).resolve().parents[3]
@@ -23,13 +24,22 @@ BUILD_DIR = _ANALYSIS / "build"
 
 
 def _build_and_render(
-    rq: str, db: str | None, targets: set[str], paper_out: Path | None
+    rq: str,
+    db: str | None,
+    targets: set[str],
+    paper_out: Path | None,
+    corpus_data_dir: Path | None = None,
+    corpus_config_dir: Path | None = None,
 ) -> None:
     spec = registry.get(rq)
     validate = spec.schema == "old"
     with connect(
         db or spec.default_db, validate_schema=validate, require=spec.requires
     ) as conn:
+        if corpus_data_dir is not None and corpus_config_dir is not None:
+            require_complete_corpus(
+                conn, data_dir=corpus_data_dir, config_dir=corpus_config_dir
+            )
         report = spec.build(conn)
     if "figures" in targets:
         figures_renderer.materialize(report, REPORTS_DIR / "figures" / rq)
@@ -57,7 +67,19 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--db", default=None)
     parser.add_argument("--targets", default="md,figures,latex")
     parser.add_argument("--paper-out", default=os.environ.get("PAPER_REPO_PATH"))
+    parser.add_argument(
+        "--corpus-data-dir",
+        type=Path,
+        help="refuse output unless this corpus data directory is complete",
+    )
+    parser.add_argument(
+        "--corpus-config-dir",
+        type=Path,
+        help="project configs defining the expected complete corpus",
+    )
     args = parser.parse_args(argv)
+    if (args.corpus_data_dir is None) != (args.corpus_config_dir is None):
+        parser.error("--corpus-data-dir and --corpus-config-dir must be used together")
     os.chdir(_ANALYSIS.parent)
     targets = {t.strip() for t in args.targets.split(",") if t.strip()}
     paper_out = Path(args.paper_out) / "tables" if args.paper_out else None
@@ -66,7 +88,14 @@ def main(argv: list[str] | None = None) -> None:
         print("no reports registered")
         return
     for rq in rqs:
-        _build_and_render(rq, args.db, targets, paper_out)
+        _build_and_render(
+            rq,
+            args.db,
+            targets,
+            paper_out,
+            args.corpus_data_dir,
+            args.corpus_config_dir,
+        )
 
 
 if __name__ == "__main__":

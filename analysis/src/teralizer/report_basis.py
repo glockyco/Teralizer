@@ -37,10 +37,18 @@ class ReportBasis:
 
 @contextmanager
 def open_report_connection(db_name: str) -> Iterator[Connection]:
-    """Open a read-only analysis connection without schema validation."""
+    """Open one read-only, repeatable snapshot without schema validation."""
     engine = db_config.get_engine(db_name, validate=False)
-    with engine.connect() as conn:
-        yield conn
+    with engine.connect() as raw_conn:
+        conn = raw_conn
+        if raw_conn.dialect.name == "postgresql":
+            conn = raw_conn.execution_options(isolation_level="REPEATABLE READ")
+        with conn.begin():
+            if conn.dialect.name == "postgresql":
+                conn.execute(text("SET TRANSACTION READ ONLY"))
+            elif conn.dialect.name == "sqlite":
+                conn.exec_driver_sql("BEGIN")
+            yield conn
 
 
 def _scalar_int(conn: Connection, sql: str) -> int:
@@ -48,8 +56,8 @@ def _scalar_int(conn: Connection, sql: str) -> int:
     return int(value or 0)
 
 
-def _resolve_ledger_path(ledger: Path) -> Path:
-    expanded = ledger.expanduser()
+def _resolve_repo_path(path: Path) -> Path:
+    expanded = path.expanduser()
     if expanded.is_absolute() or expanded.exists():
         return expanded
     project_env = Path(find_project_root()).expanduser()
@@ -57,30 +65,87 @@ def _resolve_ledger_path(ledger: Path) -> Path:
     return project_root / expanded
 
 
-def _read_ledger_progress(ledger: Path) -> LedgerProgress:
-    resolved = _resolve_ledger_path(ledger)
+def _read_ledger_rows(ledger: Path) -> list[dict[str, str]]:
+    resolved = _resolve_repo_path(ledger)
     if not resolved.exists():
         raise FileNotFoundError(
             f"attempt ledger not found: {resolved} (pass --ledger explicitly)"
         )
 
-    total = 0
-    done = 0
-    capped = 0
     with resolved.open(newline="") as handle:
         reader = csv.DictReader(handle, delimiter="\t")
-        if reader.fieldnames is None or "exit_code" not in reader.fieldnames:
-            raise ValueError(f"attempt ledger missing exit_code column: {resolved}")
-        for row in reader:
-            total += 1
-            code = str(row.get("exit_code", "")).strip()
-            if code == "0":
-                done += 1
-            elif code == "124":
-                capped += 1
+        required = {"n", "root_path", "exit_code"}
+        if reader.fieldnames is None or not required.issubset(reader.fieldnames):
+            missing = sorted(required - set(reader.fieldnames or ()))
+            raise ValueError(f"attempt ledger missing columns {missing}: {resolved}")
+        return [
+            {key: str(value or "").strip() for key, value in row.items()}
+            for row in reader
+        ]
+
+
+def _read_ledger_progress(ledger: Path) -> LedgerProgress:
+    rows = _read_ledger_rows(ledger)
+    done = sum(row["exit_code"] == "0" for row in rows)
+    capped = sum(row["exit_code"] == "124" for row in rows)
     return LedgerProgress(
-        total=total, done=done, capped=capped, other=total - done - capped
+        total=len(rows), done=done, capped=capped, other=len(rows) - done - capped
     )
+
+
+def require_complete_corpus(
+    conn: Connection, *, data_dir: Path, config_dir: Path
+) -> None:
+    """Refuse a corpus report unless configs, markers, ledger, and DB projects agree.
+
+    The database query runs first and establishes the connection's repeatable-read snapshot. If a
+    runner starts after that point, removing markers makes this check fail while subsequent report
+    queries remain pinned to the pre-run database state.
+    """
+    resolved_data = _resolve_repo_path(data_dir)
+    resolved_configs = _resolve_repo_path(config_dir)
+    db_root_paths = [
+        str(root_path)
+        for root_path in conn.execute(text("SELECT root_path FROM project")).scalars()
+    ]
+    ledger_rows = _read_ledger_rows(resolved_data / "status.tsv")
+
+    config_numbers = {
+        path.stem.removeprefix("project-")
+        for path in resolved_configs.glob("project-*.conf")
+    }
+    marker_numbers = {
+        path.name.removeprefix("project-")
+        for path in (resolved_data / "done").glob("project-*")
+        if path.is_file()
+    }
+    ledger_numbers = [row["n"] for row in ledger_rows]
+    ledger_root_paths = [row["root_path"] for row in ledger_rows]
+
+    errors: list[str] = []
+    if not config_numbers:
+        errors.append(f"no project configs under {resolved_configs}")
+    if len(ledger_numbers) != len(set(ledger_numbers)):
+        errors.append("attempt ledger contains duplicate project numbers")
+    if len(ledger_root_paths) != len(set(ledger_root_paths)):
+        errors.append("attempt ledger contains duplicate root paths")
+    if set(ledger_numbers) != config_numbers:
+        errors.append(
+            f"ledger projects {len(set(ledger_numbers))} != configs {len(config_numbers)}"
+        )
+    if marker_numbers != config_numbers:
+        errors.append(
+            f"done markers {len(marker_numbers)} != configs {len(config_numbers)}"
+        )
+    if len(db_root_paths) != len(set(db_root_paths)):
+        errors.append("database contains duplicate project root paths")
+    if set(db_root_paths) != set(ledger_root_paths):
+        errors.append(
+            f"database projects {len(set(db_root_paths))} != ledger projects "
+            f"{len(set(ledger_root_paths))}"
+        )
+    if errors:
+        raise RuntimeError("corpus is incomplete or inconsistent: " + "; ".join(errors))
 
 
 def collect_basis(
