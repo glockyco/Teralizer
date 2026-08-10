@@ -110,7 +110,11 @@ public final class MethodUnderTestResolver {
         }
 
         if (assertion.getExecutable().getSimpleName().equals(Configuration.ASSERT_THROWS)) {
-            if (!TestAnalysis.isJUnit5Assertion(assertion) || assertion.getArguments().size() < 2) {
+            // JUnit 4.13 and JUnit 5 declare the same two-argument shape, a type literal and an
+            // executable lambda, and the body extraction below reads that shape rather than the
+            // framework. The argument count is the guard that matters: it is what stops the
+            // unchecked read of argument 1 on a malformed call.
+            if (!TestAnalysis.isSupportedFrameworkAssertion(assertion) || assertion.getArguments().size() < 2) {
                 return none(MutResolution.NoPickReason.UNSUPPORTED_ASSERTION_SHAPE, focal);
             }
             return resolveAssertThrows(testMethod, assertion, focal);

@@ -53,9 +53,21 @@ public class MethodUnderTestResolverTest {
     }
 
     @Example
-    void junit4AssertThrowsDegradesToNoPick() {
-        // JUnit 4.13 declares assertThrows but the resolver only extracts a JUnit 5 lambda body,
-        // so this shape must reach the no-pick outcome rather than an unchecked argument read.
+    void junit4AssertThrowsLambda_isT1() {
+        MutResolution r = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertThrows(RuntimeException.class, () -> new Subject().gcd(0, 0)); }\n"
+            + "}",
+            SUBJECT_SOURCE);
+        Assert.assertEquals(MutResolution.Tier.T1_PROVEN, r.getTier());
+        Assert.assertEquals(MutResolution.Signal.ASSERT_THROWS_LAMBDA, r.getDecidingSignal());
+        Assert.assertEquals("gcd", r.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void assertThrowsWithNonExecutableArgumentDegradesToNoPick() {
+        // The second argument is not an executable, so no body can be extracted from it. Reaching
+        // the no-pick outcome is what keeps the argument read below the extraction unchecked.
         Launcher launcher = new Launcher();
         launcher.getEnvironment().setNoClasspath(true);
         launcher.addInputResource(new VirtualFile(
