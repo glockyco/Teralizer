@@ -1,0 +1,59 @@
+name: Verification corpus
+
+# Deliberately not on pull_request. The corpus puts every fixture through the
+# real pipeline and takes tens of minutes, so gating review on it would trade a
+# fast signal for a slow one. It runs once the change is on the branch instead,
+# which still bounds how long a regression can hide to a single push.
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+  # Catches drift that arrives without a commit, such as a new runner image.
+  schedule:
+    - cron: '0 4 * * 1'
+
+# A newer push answers the same question, so the run already in flight is stale.
+concurrency:
+  group: verification-corpus
+  cancel-in-progress: true
+
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Must match the major version the goldens were produced under.
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'liberica'
+          java-version: '8'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # The scripts reach the server over TCP through libpq, so the client has
+      # to exist on PATH. Without one scripts/lib/psql.sh falls back to a
+      # container that this job does not run.
+      - name: Install the PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run the verification corpus
+        run: scripts/verify-pipeline.sh
