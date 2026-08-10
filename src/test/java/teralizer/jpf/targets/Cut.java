@@ -62,6 +62,35 @@ public final class Cut {
         return value + value;
     }
 
+    /** Computed boolean whose branches each return a bytecode boolean literal. */
+    public static boolean literalBoolean(int value) {
+        if (value > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    /** Non-boolean branch whose returns are bytecode integer literals. */
+    public static int literalInt(int value) {
+        if (value > 0) {
+            return 42;
+        }
+        return 7;
+    }
+
+    private static boolean fieldBoolean;
+
+    /** Boolean loaded from a field rather than produced by a bytecode literal. */
+    public static boolean fieldBoolean(int value) {
+        fieldBoolean = value > 0;
+        return fieldBoolean;
+    }
+
+    /** Symbolic arithmetic return. */
+    public static int divide(int value) {
+        return value / 20;
+    }
+
     /** Symbolic {@code long} in, boxed {@link Long} out through autoboxing. */
     public static Long boxedLongPlusOne(long value) {
         return value + 1L;

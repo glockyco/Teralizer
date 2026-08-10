@@ -367,6 +367,7 @@ public class TestGeneralizationTaskTest {
         assertionRecord.setOutputValuePath(outputValue.toString());
         assertionRecord.setOutputSpecificationPath(outputSpecification.toString());
         assertionRecord.setConcretizationEvents(concretizationEvents);
+        assertionRecord.setOutputIsLiteral(true);
         assertionRecord.setIsIncluded(true);
 
         return new Scenario(project, test, assertionRecord, launcher, testFile);
@@ -468,6 +469,7 @@ public class TestGeneralizationTaskTest {
         assertionRecord.setOutputValuePath(outputValue.toString());
         assertionRecord.setOutputSpecificationPath(outputSpecification.toString());
         assertionRecord.setConcretizationEvents(concretizationEvents);
+        assertionRecord.setOutputIsLiteral(true);
         assertionRecord.setIsIncluded(true);
 
         return new Scenario(project, test, assertionRecord, launcher, testFile);

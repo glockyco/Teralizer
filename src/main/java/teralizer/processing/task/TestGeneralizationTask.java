@@ -250,7 +250,7 @@ public class TestGeneralizationTask extends AbstractTask {
             output = specificationGson.fromJson(outputValueString, CapturedOutput.class);
             WideningLicense.Verdict wideningLicense = WideningLicense.evaluate(
                 OutputSpecClassifier.classify(output.getKind(), outputModel),
-                clonedRecipe.getOracleExpressionType(),
+                this.assertionRecord.getOutputIsLiteral(),
                 generalizableParameterNames,
                 pathConditionParameterNames,
                 this.assertionRecord.getConcretizationEvents(),

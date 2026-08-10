@@ -136,6 +136,7 @@ CREATE TABLE assertion
     input_model_statistics             TEXT, -- can be null before JPF analysis
     output_model_statistics            TEXT, -- can be null before JPF analysis
     output_spec_class                  TEXT, -- can be null before JPF execution; SYMBOLIC | CONSTANT | NULL_CONCRETE | EXCEPTION
+    output_is_literal                  BOOLEAN, -- can be null before JPF execution
     concretization_events              INTEGER, -- can be null before JPF execution
     post_concretization_divergence_risk BOOLEAN, -- can be null before JPF execution; true when native-boundary evidence can affect reachability
     concretized_methods                TEXT, -- can be null before JPF execution; JSON object mapping concretized method name to event count

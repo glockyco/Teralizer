@@ -28,44 +28,42 @@ import teralizer.transformer.VariableNameCollector;
  * and a native-origin throw whose reachability was decided at the boundary.
  *
  * <p>{@link OutputSpecClass#NULL_CONCRETE} has two siblings that look identical at the persisted
- * output-model boundary. A computed boolean result can be represented only by the path condition:
+ * output-model boundary. A bytecode literal return can be represented only by the path condition:
  * bytecode branches on the symbolic operands, and the captured return value has no separate return
- * attribute. That case is licensable only when the method's return type is {@code boolean} or
- * {@code java.lang.Boolean}, every widened parameter appears in at least one path-condition clause,
- * and no concretization event occurred. The clause requirement is evidence that the returned boolean
- * relation is pinned by the same predicate that admits generated inputs.
+ * attribute. That case is licensable when the listener confirms that the tested method returned a
+ * bytecode literal, every widened parameter appears in at least one path-condition clause, and no
+ * concretization event occurred. The clause requirement is evidence that the returned literal is
+ * pinned by the same predicate that admits generated inputs.
  *
- * <p>A pass-through boolean is the reason this class exists instead of treating all booleans as safe.
- * A method can load and return a stored symbolic flag without branching, leaving the path condition
- * empty even though the result varies with input. Empty path conditions therefore never license a
- * null-concrete oracle. Concretization events also refuse the license because native or modeled
- * boundaries can branch after dropping symbolic attributes, making path-condition evidence
- * incomplete for this inference.
- *
- * <p>The accepted residual risk is a boolean method whose path condition names a widened parameter
- * for some branch unrelated to the returned value while the return itself is pass-through. That is
- * still guarded by the later validation net, but it is not solved here: this gate is intentionally a
- * small generation-time policy that rejects claims without oracle evidence rather than weakening
- * the license.
- *
+ * <p>A pass-through boolean reads and returns a stored flag without producing a bytecode literal.
+ * Its value can vary with input even when the path condition is empty, so the listener does not mark
+ * it as literal and this license refuses the null-concrete oracle. Concretization events also refuse
+ * the license because native or modeled boundaries can branch after dropping symbolic attributes,
+ * making path-condition evidence incomplete for this inference.
+
  * <p>What the refusals cost is measured rather than assumed. {@code docs/exclusion-model.md}
  * carries the branch-level distribution over the current corpus. Refusals are overwhelmingly
- * {@code NULL_CONCRETE}. Boxed output capture is already implemented and does not recover them:
- * wrapper {@code valueOf} calls are unmodeled calls hit mid-path, so their operands are
- * concretized and no symbolic output survives to capture. Recovery needs symbolic models or native
- * peers for the concretized methods. Do not read the paragraphs above as a cause distribution;
- * they describe when the license is granted, not why it is refused.
+ * {@code NULL_CONCRETE}, which means the value on the operand stack at the return carried no SPF
+ * expression. Three causes account for that. A computed boolean returns a bytecode literal, and a
+ * literal has no attribute, so the relation lives in the path condition and this class recovers
+ * it. A value read from an array or a field has no attribute because {@code symbolic.arrays} and
+ * {@code symbolic.lazy} are disabled in the generated SPF configuration, so no heap location is
+ * ever symbolic. A value accumulated by a loop whose trip count depends on the input is concrete,
+ * and its path condition pins the input to a single value, so there is nothing left to generalize.
  *
- * <p>{@code NULL_CONCRETE} names the shape of the persisted artifact, not the semantics of the
- * output. A source audit of twenty refused cases found eighteen whose result plainly varies with a
- * generalizable input, so a refusal here is evidence that extraction produced no symbolic output
- * model, not evidence that the output is input-independent.
+ * <p>Concretization is not a leading cause. Assertions that never reach a native boundary carry a
+ * null output model almost as often as those that do, so symbolic models or native peers for the
+ * concretized methods would recover a small fraction of the refusals. Boxed output capture is
+ * already implemented and does not recover them either.
+ *
+ * <p>Do not read the paragraphs above as a cause distribution. They describe when the license is
+ * granted, not why it is refused.
  */
 public final class WideningLicense {
     public static final String ORACLE_NOT_WIDENABLE = "ORACLE_NOT_WIDENABLE";
     public static final String EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK = "EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK";
     public static final String EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS = "EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS";
-    public static final String NULL_CONCRETE_ORACLE_NOT_BOOLEAN = "NULL_CONCRETE_ORACLE_NOT_BOOLEAN";
+    public static final String NULL_CONCRETE_OUTPUT_NOT_LITERAL = "NULL_CONCRETE_OUTPUT_NOT_LITERAL";
     public static final String NULL_CONCRETE_CONCRETIZATION_EVENTS = "NULL_CONCRETE_CONCRETIZATION_EVENTS";
     public static final String NULL_CONCRETE_PARAMETERS_EMPTY = "NULL_CONCRETE_PARAMETERS_EMPTY";
     public static final String NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS = "NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS";
@@ -73,7 +71,7 @@ public final class WideningLicense {
     private static final Verdict WIDEN = new Verdict(true, null, null);
     private static final Verdict EXCEPTION_DIVERGENCE_REFUSAL = refusal(EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK);
     private static final Verdict EXCEPTION_PATH_REFUSAL = refusal(EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS);
-    private static final Verdict NULL_CONCRETE_TYPE_REFUSAL = refusal(NULL_CONCRETE_ORACLE_NOT_BOOLEAN);
+    private static final Verdict NULL_CONCRETE_LITERAL_REFUSAL = refusal(NULL_CONCRETE_OUTPUT_NOT_LITERAL);
     private static final Verdict NULL_CONCRETE_CONCRETIZATION_REFUSAL = refusal(NULL_CONCRETE_CONCRETIZATION_EVENTS);
     private static final Verdict NULL_CONCRETE_PARAMETERS_REFUSAL = refusal(NULL_CONCRETE_PARAMETERS_EMPTY);
     private static final Verdict NULL_CONCRETE_PATH_REFUSAL = refusal(NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS);
@@ -86,8 +84,8 @@ public final class WideningLicense {
     }
 
     /**
-     * Evaluate the widening license from the already-classified output shape, the type of the
-     * oracle expression the assertion observes, the set of parameter names that will be
+     * Evaluate the widening license from the already-classified output shape, whether the tested
+     * method returned a bytecode literal, the set of parameter names that will be
      * generated, the set of parameter names
      * mentioned anywhere in the flattened path-condition clauses, the persisted concretization
      * event count, and the post-event divergence risk flag. A null event count is an old-row absence
@@ -95,7 +93,7 @@ public final class WideningLicense {
      */
     public static Verdict evaluate(
         OutputSpecClass outputSpecClass,
-        String oracleExpressionType,
+        Boolean outputIsLiteral,
         Set<String> widenedParameterNames,
         Set<String> pathConditionParameterNames,
         Integer concretizationEvents,
@@ -115,8 +113,8 @@ public final class WideningLicense {
             }
             return pathNames.isEmpty() || pathNames.containsAll(widened) ? WIDEN : EXCEPTION_PATH_REFUSAL;
         }
-        if (!isBooleanOracle(oracleExpressionType)) {
-            return NULL_CONCRETE_TYPE_REFUSAL;
+        if (!Boolean.TRUE.equals(outputIsLiteral)) {
+            return NULL_CONCRETE_LITERAL_REFUSAL;
         }
         if (hasConcretizationEvents) {
             return NULL_CONCRETE_CONCRETIZATION_REFUSAL;
@@ -139,11 +137,6 @@ public final class WideningLicense {
             }
         }
         return referenced;
-    }
-
-    private static boolean isBooleanOracle(String oracleExpressionType) {
-        return "boolean".equals(oracleExpressionType)
-            || "java.lang.Boolean".equals(oracleExpressionType);
     }
 
     public static final class Verdict {

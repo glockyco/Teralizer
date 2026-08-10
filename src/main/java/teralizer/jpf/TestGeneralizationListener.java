@@ -61,6 +61,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private int concretizationEvents;
     private final Map<String, Integer> concretizedMethods = new TreeMap<>();
     private boolean concreteApplicationBranchAfterConcretization;
+    private boolean outputIsLiteral;
+    private boolean returnedOutputIsLiteral;
 
     public TestGeneralizationListener(Config config) {
         this.instrumentedMethodQualifiedName = config.getString("test_generalization.instrumented_method");
@@ -92,6 +94,8 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.concretizationEvents = 0;
         this.concretizedMethods.clear();
         this.concreteApplicationBranchAfterConcretization = false;
+        this.outputIsLiteral = false;
+        this.returnedOutputIsLiteral = false;
     }
 
     @Override
@@ -139,6 +143,13 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             return;
         }
 
+        if (this.testedMethodSpec.matches(insn.getMethodInfo()) && insn instanceof JVMReturnInstruction) {
+            this.returnedOutputIsLiteral = !(insn instanceof RETURN) && this.outputIsLiteral;
+        }
+        if (!(insn instanceof GOTO)) {
+            this.outputIsLiteral = isLiteralPush(insn);
+        }
+
         if (this.concretizationEvents > 0
             && isConditionalBranch(insn)
             && isApplicationInstruction(insn)
@@ -156,6 +167,19 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
             this.concretizationEvents++;
             this.concretizedMethods.merge(executedMethod.getFullName(), 1, Integer::sum);
         }
+    }
+
+    private static boolean isLiteralPush(Instruction instruction) {
+        return instruction instanceof ICONST
+            || instruction instanceof LCONST
+            || instruction instanceof FCONST
+            || instruction instanceof DCONST
+            || instruction instanceof BIPUSH
+            || instruction instanceof SIPUSH
+            || instruction instanceof LDC
+            || instruction instanceof LDC_W
+            || instruction instanceof LDC2_W
+            || instruction instanceof ACONST_NULL;
     }
 
     private static boolean isConditionalBranch(Instruction instruction) {
@@ -360,6 +384,11 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     /** Whether the tested method was entered at least once on the explored path. */
     public boolean wasTargetEntered() {
         return this.targetEntered;
+    }
+
+    /** Whether the tested method returned a value produced by a bytecode constant push. */
+    public boolean getOutputIsLiteral() {
+        return this.returnedOutputIsLiteral;
     }
 
     /** Number of native-call boundaries that received at least one symbolic argument attr. */

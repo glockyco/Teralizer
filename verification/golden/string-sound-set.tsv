@@ -1,4 +1,4 @@
 fixture	gen_count	gen_index	variant	is_included	exclusion_info	output_spec_class	diagnostic_kind	tries	distinct_tuples
-string-sound-set	3	1	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	1	1
-string-sound-set	3	2	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	1	1
+string-sound-set	3	1	IMPROVED_100_TRIES	false	ORACLE_NOT_WIDENABLE	NULL_CONCRETE			
+string-sound-set	3	2	IMPROVED_100_TRIES	false	ORACLE_NOT_WIDENABLE	NULL_CONCRETE			
 string-sound-set	3	3	IMPROVED_100_TRIES	true		NULL_CONCRETE	FULL	100	100

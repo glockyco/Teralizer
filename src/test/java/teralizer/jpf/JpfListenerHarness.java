@@ -54,17 +54,20 @@ public final class JpfListenerHarness {
         private final CapturedOutput output;
         private final String inputSpecificationJson;
         private final String outputSpecificationJson;
+        private final boolean outputIsLiteral;
 
         Capture(
             List<Value> inputValues,
             CapturedOutput output,
             String inputSpecificationJson,
-            String outputSpecificationJson
+            String outputSpecificationJson,
+            boolean outputIsLiteral
         ) {
             this.inputValues = inputValues;
             this.output = output;
             this.inputSpecificationJson = inputSpecificationJson;
             this.outputSpecificationJson = outputSpecificationJson;
+            this.outputIsLiteral = outputIsLiteral;
         }
 
         public List<Value> getInputValues() {
@@ -81,6 +84,10 @@ public final class JpfListenerHarness {
 
         public String getOutputSpecificationJson() {
             return this.outputSpecificationJson;
+        }
+
+        public boolean getOutputIsLiteral() {
+            return this.outputIsLiteral;
         }
     }
 
@@ -139,7 +146,8 @@ public final class JpfListenerHarness {
             new SpecificationExtractor().write(listener.getInvocation(),
                 inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath);
         }
-        return parse(inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath);
+        return parse(inputValuesPath, outputValuePath, inputSpecificationPath, outputSpecificationPath,
+            listener.getOutputIsLiteral());
     }
 
     /**
@@ -350,7 +358,8 @@ public final class JpfListenerHarness {
         Path inputValuesPath,
         Path outputValuePath,
         Path inputSpecificationPath,
-        Path outputSpecificationPath
+        Path outputSpecificationPath,
+        boolean outputIsLiteral
     ) {
         Gson gson = SpecificationGson.create();
         Type valueListType = new TypeToken<List<Value>>() {
@@ -359,7 +368,7 @@ public final class JpfListenerHarness {
         CapturedOutput output = gson.fromJson(readFile(outputValuePath), CapturedOutput.class);
         String inputSpecification = Files.exists(inputSpecificationPath) ? readFile(inputSpecificationPath) : null;
         String outputSpecification = Files.exists(outputSpecificationPath) ? readFile(outputSpecificationPath) : null;
-        return new Capture(inputs, output, inputSpecification, outputSpecification);
+        return new Capture(inputs, output, inputSpecification, outputSpecification, outputIsLiteral);
     }
 
     private static String readFile(Path path) {

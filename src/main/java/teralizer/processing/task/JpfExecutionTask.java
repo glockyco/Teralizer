@@ -123,6 +123,7 @@ public class JpfExecutionTask extends AbstractTask {
             Paths.get(this.assertionRecord.getInputSpecificationPath()),
             Paths.get(this.assertionRecord.getOutputSpecificationPath()));
         this.assertionRecord.setOutputSpecClass(OutputSpecClassifier.classify(invocation).name());
+        this.assertionRecord.setOutputIsLiteral(listener.getOutputIsLiteral());
         this.assertionRecord.setConcretizationEvents(listener.getConcretizationEvents());
         this.assertionRecord.setPostConcretizationDivergenceRisk(
             listener.getPostConcretizationDivergenceRisk());

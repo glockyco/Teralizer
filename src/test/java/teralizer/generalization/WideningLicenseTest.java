@@ -11,7 +11,7 @@ import teralizer.jpf.OutputSpecClassifier.OutputSpecClass;
 public class WideningLicenseTest {
     @Example
     void symbolicOutputWidens() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.SYMBOLIC, "long", names("x"), Collections.emptySet(), 3, null);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.SYMBOLIC, Boolean.FALSE, names("x"), Collections.emptySet(), 3, null);
 
         Assert.assertTrue(verdict.allowsWidening());
         Assert.assertNull(verdict.getExclusionInfo());
@@ -19,7 +19,7 @@ public class WideningLicenseTest {
 
     @Example
     void constantOutputWidens() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.CONSTANT, "int", names("x"), Collections.emptySet(), 1, null);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.CONSTANT, Boolean.FALSE, names("x"), Collections.emptySet(), 1, null);
 
         Assert.assertTrue(verdict.allowsWidening());
         Assert.assertNull(verdict.getExclusionInfo());
@@ -27,7 +27,7 @@ public class WideningLicenseTest {
 
     @Example
     void exceptionOutputWithEmptyPathConditionWidensBecauseUnconditionalThrowAppliesToEveryInput() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.EXCEPTION, "int", names("x"), Collections.emptySet(), 0, null);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.EXCEPTION, Boolean.FALSE, names("x"), Collections.emptySet(), 0, null);
 
         Assert.assertTrue(verdict.allowsWidening());
         Assert.assertNull(verdict.getExclusionInfo());
@@ -35,7 +35,7 @@ public class WideningLicenseTest {
 
     @Example
     void exceptionOutputWithEveryWidenedParameterNamedAndNoConcretizationEventsWidens() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.EXCEPTION, "int", names("left", "right"), names("left", "right", "temp"), 0, null);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.EXCEPTION, Boolean.FALSE, names("left", "right"), names("left", "right", "temp"), 0, null);
 
         Assert.assertTrue(verdict.allowsWidening());
         Assert.assertNull(verdict.getExclusionInfo());
@@ -45,7 +45,7 @@ public class WideningLicenseTest {
     void exceptionOutputWithEventsAndNoPostConcretizationRiskWidensWhenPathCoversWidenedParameters() {
         WideningLicense.Verdict verdict = WideningLicense.evaluate(
             OutputSpecClass.EXCEPTION,
-            "int",
+            Boolean.FALSE,
             names("left", "right"),
             names("left", "right", "temp"),
             7,
@@ -60,7 +60,7 @@ public class WideningLicenseTest {
     void exceptionOutputWithEventsAndNoPostConcretizationRiskRefusesUncoveredWidenedParameters() {
         WideningLicense.Verdict verdict = WideningLicense.evaluate(
             OutputSpecClass.EXCEPTION,
-            "int",
+            Boolean.FALSE,
             names("left", "right"),
             names("left"),
             7,
@@ -75,7 +75,7 @@ public class WideningLicenseTest {
     void exceptionOutputWithEventsAndPostConcretizationRiskIsRefused() {
         WideningLicense.Verdict verdict = WideningLicense.evaluate(
             OutputSpecClass.EXCEPTION,
-            "int",
+            Boolean.FALSE,
             names("x"),
             Collections.emptySet(),
             7,
@@ -90,7 +90,7 @@ public class WideningLicenseTest {
     void exceptionOutputWithEventsAndUnknownPostConcretizationRiskIsRefused() {
         WideningLicense.Verdict verdict = WideningLicense.evaluate(
             OutputSpecClass.EXCEPTION,
-            "int",
+            Boolean.FALSE,
             names("x"),
             Collections.emptySet(),
             7,
@@ -105,7 +105,7 @@ public class WideningLicenseTest {
     void exceptionOutputWithoutEventsIgnoresPostConcretizationRisk() {
         WideningLicense.Verdict covered = WideningLicense.evaluate(
             OutputSpecClass.EXCEPTION,
-            "int",
+            Boolean.FALSE,
             names("x"),
             names("x"),
             0,
@@ -113,7 +113,7 @@ public class WideningLicenseTest {
         );
         WideningLicense.Verdict uncovered = WideningLicense.evaluate(
             OutputSpecClass.EXCEPTION,
-            "int",
+            Boolean.FALSE,
             names("left", "right"),
             names("left"),
             0,
@@ -128,7 +128,7 @@ public class WideningLicenseTest {
 
     @Example
     void exceptionOutputMissingAWidenedParameterInPathConditionIsRefused() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.EXCEPTION, "int", names("left", "right"), names("left"), 0, null);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.EXCEPTION, Boolean.FALSE, names("left", "right"), names("left"), 0, null);
 
         Assert.assertFalse(verdict.allowsWidening());
         Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, verdict.getExclusionInfo());
@@ -136,7 +136,7 @@ public class WideningLicenseTest {
 
     @Example
     void nullConcreteBooleanWithEveryWidenedParameterNamedAndNoConcretizationEventsWidens() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("left", "right"), names("left", "right", "temp"), 0, null);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, names("left", "right"), names("left", "right", "temp"), 0, null);
 
         Assert.assertTrue(verdict.allowsWidening());
         Assert.assertNull(verdict.getExclusionInfo());
@@ -144,7 +144,7 @@ public class WideningLicenseTest {
 
     @Example
     void nullConcreteBooleanWithEmptyPathConditionIsRefused() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("flag"), Collections.emptySet(), 0, null);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, names("flag"), Collections.emptySet(), 0, null);
 
         Assert.assertFalse(verdict.allowsWidening());
         Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, verdict.getExclusionInfo());
@@ -152,31 +152,31 @@ public class WideningLicenseTest {
 
     @Example
     void nullConcreteBooleanWithConcretizationEventsIsRefusedEvenWhenPostConcretizationRiskIsFalse() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("flag"), names("flag"), 1, Boolean.FALSE);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, names("flag"), names("flag"), 1, Boolean.FALSE);
 
         Assert.assertFalse(verdict.allowsWidening());
         Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, verdict.getExclusionInfo());
     }
 
     @Example
-    void nullConcretePrimitiveNonBooleanIsRefusedEvenWithPathConditionEvidence() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "int", names("x"), names("x"), 0, null);
+    void nullConcreteNonBooleanLiteralWithPathConditionEvidenceWidens() {
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, names("x"), names("x"), 0, null);
+
+        Assert.assertTrue(verdict.allowsWidening());
+        Assert.assertNull(verdict.getExclusionInfo());
+    }
+
+    @Example
+    void nullConcreteFieldReadBooleanIsRefusedDespitePathConditionEvidence() {
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.FALSE, names("flag"), names("flag"), 0, null);
 
         Assert.assertFalse(verdict.allowsWidening());
         Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, verdict.getExclusionInfo());
     }
 
     @Example
-    void nullConcretePrimitiveNonBooleanIsRefusedWithoutPathConditionEvidence() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "int", names("x"), Collections.emptySet(), 0, null);
-
-        Assert.assertFalse(verdict.allowsWidening());
-        Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, verdict.getExclusionInfo());
-    }
-
-    @Example
-    void boxedBooleanIsTreatedAsBoolean() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "java.lang.Boolean", names("flag"), names("flag"), 0, null);
+    void nullConcreteLiteralSignalAllowsAnyReturnType() {
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, names("flag"), names("flag"), 0, null);
 
         Assert.assertTrue(verdict.allowsWidening());
         Assert.assertNull(verdict.getExclusionInfo());
@@ -186,33 +186,33 @@ public class WideningLicenseTest {
     void eachRefusalBranchHasItsOwnStableCode() {
         Assert.assertEquals(
             WideningLicense.EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK,
-            WideningLicense.evaluate(OutputSpecClass.EXCEPTION, "int", names("x"), Collections.emptySet(), 1, null).getWideningRefusalCode()
+            WideningLicense.evaluate(OutputSpecClass.EXCEPTION, Boolean.FALSE, names("x"), Collections.emptySet(), 1, null).getWideningRefusalCode()
         );
         Assert.assertEquals(
             WideningLicense.EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS,
-            WideningLicense.evaluate(OutputSpecClass.EXCEPTION, "int", names("x"), names("other"), 0, null).getWideningRefusalCode()
+            WideningLicense.evaluate(OutputSpecClass.EXCEPTION, Boolean.FALSE, names("x"), names("other"), 0, null).getWideningRefusalCode()
         );
         Assert.assertEquals(
-            WideningLicense.NULL_CONCRETE_ORACLE_NOT_BOOLEAN,
-            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "int", names("x"), names("x"), 0, null).getWideningRefusalCode()
+            WideningLicense.NULL_CONCRETE_OUTPUT_NOT_LITERAL,
+            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.FALSE, names("x"), names("x"), 0, null).getWideningRefusalCode()
         );
         Assert.assertEquals(
             WideningLicense.NULL_CONCRETE_CONCRETIZATION_EVENTS,
-            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("x"), names("x"), 1, null).getWideningRefusalCode()
+            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, names("x"), names("x"), 1, null).getWideningRefusalCode()
         );
         Assert.assertEquals(
             WideningLicense.NULL_CONCRETE_PARAMETERS_EMPTY,
-            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", Collections.emptySet(), names("x"), 0, null).getWideningRefusalCode()
+            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, Collections.emptySet(), names("x"), 0, null).getWideningRefusalCode()
         );
         Assert.assertEquals(
             WideningLicense.NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS,
-            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("x", "y"), names("x"), 0, null).getWideningRefusalCode()
+            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, names("x", "y"), names("x"), 0, null).getWideningRefusalCode()
         );
     }
 
     @Example
     void nullConcretizationEventColumnIsTreatedAsZero() {
-        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("flag"), names("flag"), null, null);
+        WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, Boolean.TRUE, names("flag"), names("flag"), null, null);
 
         Assert.assertTrue(verdict.allowsWidening());
         Assert.assertNull(verdict.getExclusionInfo());
