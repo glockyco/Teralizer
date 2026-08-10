@@ -8,7 +8,7 @@ from teralizer.eval.data import connect
 from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
 from teralizer.eval.reports import rq6_causes  # noqa: F401  (registers "rq6")
-from teralizer.eval.reports._causes_common import MECHANISM_OUTCOMES
+from teralizer.eval.reports._causes_common import MECHANISM_COLLAPSE
 
 
 def _report() -> RQReport:
@@ -100,8 +100,9 @@ def test_rq6_breakdown_conservation():
     report = _report()
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
     assert set(breakdown.df["level"]) <= {"Test", "Assertion", "Generalization"}
-    outcomes = [outcome.column for outcome in MECHANISM_OUTCOMES]
-    reconstructed = breakdown.df[outcomes].sum(axis=1)
+    # The rendered table is the reader-facing collapse. The per-mechanism
+    # partition it folds is asserted in test_rq6_invariants.py.
+    reconstructed = breakdown.df[list(MECHANISM_COLLAPSE)].sum(axis=1)
     assert (reconstructed == breakdown.df["total"]).all()
 
 

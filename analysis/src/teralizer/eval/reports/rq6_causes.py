@@ -15,9 +15,9 @@ from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.eval.reports import _funnel
 from teralizer.eval.reports._causes_common import (
-    MECHANISM_OUTCOMES,
     build_breakdown_table,
     build_filtering_table,
+    collapse_mechanisms,
 )
 
 DEFAULT_DB = "postgres_reporeapers_rq6_v6"
@@ -67,6 +67,52 @@ JOIN filter_result fr ON fr.assertion_id = o.assertion_id
 WHERE fr.decision = 'REJECT'
   AND fr.filter_name LIKE '%ParameterTypeFilter'
   AND fr.reason_code = 'NO_GENERALIZABLE_PARAMETERS'
+"""
+
+# Why WideningLicense refused, reconstructed in the branch order of
+# `WideningLicense.evaluate`. The verdict itself is a single constant in this
+# corpus, so the cause is derived from the persisted classifier output, oracle
+# type, and concretization telemetry. A corpus collected after
+# `generalization.widening_refusal_code` exists should read that column instead
+# of reconstructing, since it is the authoritative record. See
+# docs/exclusion-model.md.
+WIDENING_REFUSAL_SQL = f"""
+{_ELIGIBILITY_CTE},
+attempts AS (
+    SELECT count(*)::numeric AS n
+    FROM generalization g
+    JOIN eligible_projects ep ON ep.id = g.project_id
+    WHERE g.variant = :variant
+),
+refusals AS (
+    SELECT
+        CASE
+            WHEN a.output_spec_class = 'EXCEPTION'
+                 AND coalesce(a.concretization_events, 0) > 0
+                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false
+                THEN 'Exception oracle concretized with divergence risk'
+            WHEN a.output_spec_class = 'EXCEPTION'
+                THEN 'Generated parameters not covered by the path condition'
+            WHEN coalesce(
+                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''
+                 ) NOT IN ('boolean', 'java.lang.Boolean')
+                THEN 'No symbolic output model, oracle is not boolean'
+            WHEN coalesce(a.concretization_events, 0) > 0
+                THEN 'No symbolic output model, inputs were concretized'
+            ELSE 'Generated parameters not covered by the path condition'
+        END AS cause
+    FROM generalization g
+    JOIN assertion a ON a.id = g.assertion_id
+    JOIN eligible_projects ep ON ep.id = g.project_id
+    WHERE g.variant = :variant
+      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'
+)
+SELECT cause,
+       count(*)::bigint AS refusals,
+       count(*) / (SELECT n FROM attempts) AS attempts_pct
+FROM refusals
+GROUP BY cause
+ORDER BY refusals DESC
 """
 
 _MUT_CHOICE_CATEGORIES = (
@@ -508,6 +554,37 @@ def _mut_choice_table(df: pd.DataFrame) -> Table:
     )
 
 
+def _fetch_widening_refusals(conn: Connection, variant: str) -> pd.DataFrame:
+    """Return widening-refusal counts by cause for the eligible corpus."""
+    df = read_sql(conn, WIDENING_REFUSAL_SQL, _query_params(variant))
+    df["refusals"] = df["refusals"].astype(int)
+    df["attempts_pct"] = df["attempts_pct"].astype(float)
+    return pd.DataFrame(df, columns=["cause", "refusals", "attempts_pct"])
+
+
+def _widening_refusal_table(df: pd.DataFrame) -> Table:
+    return Table(
+        key="rq6_widening_refusals",
+        df=df,
+        columns=[
+            ColumnSpec("Refusal cause", "cause"),
+            ColumnSpec("Generalizations", "refusals", fmt="count", align="r"),
+            ColumnSpec("Attempts", "attempts_pct", fmt="pct1", align="r"),
+        ],
+        caption=(
+            "Why the widening license refused to emit a generalized test, by "
+            "cause, for the real-world dataset."
+        ),
+        label="tab:widening-refusals",
+        note=(
+            "Refusals are decided before a generalized test is written, so they "
+            "carry no filter decision and no lifecycle record. The percentage is "
+            "of all generalization attempts."
+        ),
+        provenance=capture(_fetch_widening_refusals, query=WIDENING_REFUSAL_SQL),
+    )
+
+
 def build(conn: Connection) -> RQReport:
     variant = _funnel.resolve_variant(conn)
     funnel = _funnel.build_funnel(conn, variant=variant)
@@ -518,15 +595,14 @@ def build(conn: Connection) -> RQReport:
     mut_choice_table = _mut_choice_table(mut_choice_data)
 
     breakdown = build_breakdown_table(
-        breakdown_data,
+        collapse_mechanisms(breakdown_data),
         key="rq6_breakdown",
         label="tab:exclusions-breakdown-extended",
         caption=(
-            "Eligible test, assertion, and generalization outcomes by exclusion "
-            "mechanism for the real-world dataset."
+            "Eligible test, assertion, and generalization outcomes by filtering "
+            "versus failures for the real-world dataset."
         ),
         include_strategy=False,
-        outcomes=MECHANISM_OUTCOMES,
     )
     breakdown = replace(
         breakdown, provenance=capture(_fetch_breakdown, query=BREAKDOWN_SQL)
@@ -715,6 +791,13 @@ def build(conn: Connection) -> RQReport:
             mut_choice_table,
             breakdown,
             filtering,
+            Prose(
+                "The generalization row's filtering column is dominated by the "
+                "widening license rather than by any filter. The license refuses "
+                "before a generalized test exists, so its causes are reported "
+                "separately."
+            ),
+            _widening_refusal_table(_fetch_widening_refusals(conn, variant)),
         ],
     )
     return RQReport(

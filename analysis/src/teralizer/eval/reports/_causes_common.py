@@ -30,9 +30,9 @@ LEGACY_OUTCOMES: tuple[Outcome, ...] = (
     Outcome("failures", "Failures", "Fail. %"),
 )
 
-# One column per exclusion mechanism, for schemas that record which one fired.
-# See docs/exclusion-model.md. The javac quarantine is a compile failure, so it
-# joins `failed` rather than earning a column of its own.
+# Internal vocabulary: one column per exclusion mechanism, for schemas that
+# record which one fired. See docs/exclusion-model.md. This is a correctness
+# device, not a table shape. Reports collapse it before rendering.
 MECHANISM_OUTCOMES: tuple[Outcome, ...] = (
     Outcome("included", "Included", "Incl. %"),
     Outcome("filtered", "Filtered", "Filt. %"),
@@ -40,6 +40,31 @@ MECHANISM_OUTCOMES: tuple[Outcome, ...] = (
     Outcome("unsupported", "Unsupported", "Unsup. %"),
     Outcome("failed", "Failed", "Fail. %"),
 )
+
+# The reader-facing split, and the whole reason the mechanisms are tracked
+# separately. Filtering is a decision the tool made about an unsuitable
+# candidate. Failures are breakage. A filter rejection, a refusal to widen an
+# oracle that cannot be shown to stay coherent, and a test shape the collector
+# cannot flatten are all the tool declining, so all three are filtering. A
+# generated test that does not compile is breakage, even though the quarantine
+# records its verdict in `filter_result`.
+MECHANISM_COLLAPSE: dict[str, tuple[str, ...]] = {
+    "included": ("included",),
+    "filtering": ("filtered", "refused", "unsupported"),
+    "failures": ("failed",),
+}
+
+
+def collapse_mechanisms(df: pd.DataFrame) -> pd.DataFrame:
+    """Fold per-mechanism counts into the reader-facing three-way split."""
+    out = df.copy()
+    for target, sources in MECHANISM_COLLAPSE.items():
+        out[target] = sum(out[source] for source in sources)
+    keep = ["level", "total", *MECHANISM_COLLAPSE]
+    if "strategy" in out.columns:
+        keep.insert(0, "strategy")
+    return pd.DataFrame(out, columns=keep)
+
 
 _VARIANT_HEAD = {"ORIGINAL": 0, "INITIAL": 1, "SHARED": 2, "BASELINE": 3}
 _VARIANT_GROUP = {"NAIVE": 4, "IMPROVED": 5}

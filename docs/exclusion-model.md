@@ -243,13 +243,15 @@ The verdict is recorded as a single constant, so the deciding branch is **not pe
 `generalization_recipe ->> 'oracleExpressionType'`, `assertion.concretization_events` and
 `assertion.post_concretization_divergence_risk`, in the branch order of `evaluate`:
 
-| Deciding branch | refused | of 3,471 |
-|---|---|---|
-| `NULL_CONCRETE`, oracle expression not boolean | 1,828 | 52.7% |
-| `NULL_CONCRETE`, concretization events present | 1,329 | 38.3% |
-| `NULL_CONCRETE`, generated parameters not covered by the path condition | 298 | 8.6% |
-| `EXCEPTION`, concretized with post-event divergence risk | 15 | 0.4% |
-| `EXCEPTION`, generated parameters not covered by the path condition | 1 | 0.0% |
+The report emits this as `tab:widening-refusals`, merging the two parameter-coverage branches
+because they differ only in output class.
+
+| Deciding branch | refused | of 3,471 | of 5,529 attempts |
+|---|---|---|---|
+| `NULL_CONCRETE`, oracle expression not boolean | 1,828 | 52.7% | 33.1% |
+| `NULL_CONCRETE`, concretization events present | 1,329 | 38.3% | 24.0% |
+| Generated parameters not covered by the path condition | 299 | 8.6% | 5.4% |
+| `EXCEPTION`, concretized with post-event divergence risk | 15 | 0.4% | 0.3% |
 
 The reconstruction reproduces the implementation exactly on the three deterministic branches:
 750 always-widen cases produced 0 refusals, 15 exception-risk cases produced 15 refusals, 1,329
@@ -260,20 +262,32 @@ without EM-8.
 
 ## Per-level composition in v6
 
-`analysis/build/rq6/rq6_breakdown.csv` reports one column per mechanism.
+`analysis/build/rq6/rq6_breakdown.csv` keeps the reader-facing three-way split. Mechanisms are
+tracked internally to make the assignment correct and testable, then collapsed by
+`MECHANISM_COLLAPSE` in `_causes_common.py`.
 
-| Level | total | included | filtered | refused | unsupported | failed |
-|---|---|---|---|---|---|---|
-| Test | 85,595 | 44,989 | 37,407 | 0 | 2,904 | 295 |
-| Assertion | 181,585 | 7,096 | 167,559 | 0 | 0 | 6,930 |
-| Generalization | 5,529 | 1,614 | 421 | 3,472 | 0 | 22 |
+| Level | total | included | filtering | failures |
+|---|---|---|---|---|
+| Test | 85,595 | 44,989 | 40,311 | 295 |
+| Assertion | 181,585 | 7,096 | 167,559 | 6,930 |
+| Generalization | 5,529 | 1,614 | 3,893 | 22 |
 
-`refused` is the generation gate, `unsupported` is the inline capability exclusion, and `failed`
-holds task exceptions together with the javac quarantine, which is a compile failure.
+Filtering is the tool declining an unsuitable candidate, so it holds filter rejections, gate
+refusals, and inline capability exclusions. Failures are breakage, so they hold task exceptions
+and the javac quarantine.
 
-The columns are sparse because most mechanisms can only fire at one level, and that is the point.
-The previous two-column shape reported 3,898 generalizations as filtered when 421 were, and 3,199
-tests as failed when 295 were.
+| Level | filtering breaks down as | failures break down as |
+|---|---|---|
+| Test | 37,407 filter rejections + 2,904 capability exclusions | 294 collector exceptions + 1 filter-task crash |
+| Assertion | 167,559 filter rejections | 6,746 JPF exceptions + 184 javac quarantines |
+| Generalization | 421 filter rejections + 3,472 gate refusals | 17 stage failures + 5 javac quarantines |
+
+The two-column shape was never the problem. Two mechanisms were on the wrong side of it: the
+javac quarantine counted as filtering because it borrows `filter_result`, and inline capability
+exclusions counted as failures because they fell through an `ELSE`.
+
+The generalization row's filtering column is 89.2% widening gate, which is not a filter, so its
+causes are reported separately in `tab:widening-refusals`.
 
 ## Known defects
 
