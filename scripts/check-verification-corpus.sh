@@ -13,9 +13,9 @@ HEADER=$'fixture\tgen_count\tgen_index\tvariant\tis_included\texclusion_info\tou
 source "$ROOT_DIR/scripts/lib/db-guard.sh"
 DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
 
-_psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
+source "$ROOT_DIR/scripts/lib/psql.sh"
 
-_psql -d "$DB_NAME" -c 'SELECT 1' >/dev/null 2>&1 || { echo "Database '$DB_NAME' is not reachable" >&2; exit 1; }
+teralizer_psql -d "$DB_NAME" -c 'SELECT 1' >/dev/null 2>&1 || { echo "Database '$DB_NAME' is not reachable" >&2; exit 1; }
 
 mapfile -t golden_files < <(find "$GOLDEN_DIR" -maxdepth 1 -name '*.tsv' | sort)
 [[ ${#golden_files[@]} -gt 0 ]] || { echo "No golden files under $GOLDEN_DIR" >&2; exit 1; }
@@ -30,7 +30,7 @@ for golden_file in "${golden_files[@]}"; do
   tail -n +2 "$golden_file" >> "$expected"
 done
 
-_psql -d "$DB_NAME" -AtF $'\t' -c "
+teralizer_psql -d "$DB_NAME" -AtF $'\t' -c "
 WITH latest_project AS (
   SELECT DISTINCT ON (regexp_replace(root_path, '^.*/', ''))
       id,

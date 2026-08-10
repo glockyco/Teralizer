@@ -10,7 +10,7 @@ DDL="$ROOT_DIR/src/main/resources/db/create-tables.sql"
 source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
 source "$ROOT_DIR/scripts/lib/db-lifecycle.sh"
 
-teralizer_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 || { echo "Postgres (postgres-teralizer) not reachable" >&2; exit 1; }
+teralizer_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 || { echo "Postgres ($(teralizer_psql_target)) not reachable" >&2; exit 1; }
 
 cleanup() {
   drop_scratch_db "$CODEGEN_DB"

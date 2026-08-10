@@ -18,7 +18,7 @@
 # never leaves an orphaned pipeline JVM behind.
 JARVIS_PROJECT_TIMEOUT="${JARVIS_PROJECT_TIMEOUT:-0}"
 
-_jarvis_psql() { docker exec postgres-teralizer psql -U postgres "$@"; }
+source "$ROOT_DIR/scripts/lib/psql.sh"
 
 jarvis_run() {
   source "$ROOT_DIR/scripts/lib/db-guard.sh"
@@ -86,7 +86,7 @@ jarvis_run() {
   # runs safe without --reset-db). The task table does not exist yet on a freshly reset DB, so
   # default to 0 and only override when the query succeeds -- a failing query must not trip set -e.
   local baseline_task_id=0 _q
-  if _q=$(_jarvis_psql -tA -d "$JARVIS_DB_NAME" -c "SELECT COALESCE(MAX(id),0) FROM task;" 2>/dev/null | tr -d '[:space:]'); then
+  if _q=$(teralizer_psql -tA -d "$JARVIS_DB_NAME" -c "SELECT COALESCE(MAX(id),0) FROM task;" 2>/dev/null | tr -d '[:space:]'); then
     baseline_task_id=${_q:-0}
   fi
 
@@ -132,26 +132,26 @@ jarvis_run() {
   # the pipeline swallows per-task errors and the JVM still exits 0.
   echo "==> Checking pipeline outcome"
   local jpf_excluded=0 breakage=0
-  if _q=$(_jarvis_psql -tA -d "$JARVIS_DB_NAME" -c \
+  if _q=$(teralizer_psql -tA -d "$JARVIS_DB_NAME" -c \
     "SELECT count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id} AND stage IN ('ANALYZE_JPF','EXECUTE_JPF');" 2>/dev/null | tr -d '[:space:]'); then
     jpf_excluded=${_q:-0}
   fi
   # Timed-out, no-input-spec, and proactively rejected oversized-generation tasks are measured
   # attrition, not breakage. The latter predates task diagnostics and is identified by its stable
   # exception message until the pipeline records a dedicated reason code.
-  if _q=$(_jarvis_psql -tA -d "$JARVIS_DB_NAME" -c \
+  if _q=$(teralizer_psql -tA -d "$JARVIS_DB_NAME" -c \
     "SELECT count(*) FROM task t WHERE t.status='FAILED' AND t.id > ${baseline_task_id} AND t.stage NOT IN ('ANALYZE_JPF','EXECUTE_JPF') AND t.info NOT LIKE '%Failing generalization to avoid potential ''code too large'' compilation errors%' AND NOT EXISTS (SELECT 1 FROM task_diagnostic td WHERE td.task_id = t.id AND td.reason_code IN ('SUITE_TIMEOUT','EXECUTION_TIMEOUT','NO_INPUT_SPEC'));" 2>/dev/null | tr -d '[:space:]'); then
     breakage=${_q:-0}
   fi
   echo "  per-assertion JPF exclusions (non-fatal coverage gaps): ${jpf_excluded}"
   if [[ "$jpf_excluded" -gt 0 ]]; then
-    _jarvis_psql -d "$JARVIS_DB_NAME" -c \
+    teralizer_psql -d "$JARVIS_DB_NAME" -c \
       "SELECT CASE WHEN info LIKE '%PATH_CONDITION_TOO_LARGE%' THEN 'path-condition size limit' WHEN info LIKE '%SEARCH_DEPTH_LIMIT%' THEN 'search depth limit' WHEN info LIKE '%EXECUTION_TIMEOUT%' THEN 'execution timeout' WHEN info LIKE '%NATIVE_MODEL_GAP%' THEN 'incomplete native peers' WHEN info LIKE '%TARGET_NOT_ENTERED%' THEN 'target not entered (unreachable)' WHEN info LIKE '%TARGET_NOT_EXITED%' THEN 'target not exited' WHEN info LIKE '%NonGeneralizableExpressionException%' THEN 'raw-bits non-generalizable' WHEN info LIKE '%class not found%' THEN 'unmodeled JDK/library class' WHEN info LIKE '%Unexpected rounding%' THEN 'symbolic control-arg out of range' ELSE 'other (investigate)' END AS cause, count(*) FROM task WHERE status='FAILED' AND id > ${baseline_task_id} AND stage IN ('ANALYZE_JPF','EXECUTE_JPF') GROUP BY 1 ORDER BY 2 DESC;" || true
   fi
   if [[ "$breakage" -gt 0 ]]; then
     echo "" >&2
     echo "${breakage} pipeline task(s) FAILED outside JPF analysis this run:" >&2
-    _jarvis_psql -d "$JARVIS_DB_NAME" -c \
+    teralizer_psql -d "$JARVIS_DB_NAME" -c \
       "SELECT p.root_path, t.stage, t.variant, left(t.info, 200) AS info_head FROM task t JOIN project p ON p.id = t.project_id WHERE t.status='FAILED' AND t.id > ${baseline_task_id} AND t.stage NOT IN ('ANALYZE_JPF','EXECUTE_JPF') AND t.info NOT LIKE '%Failing generalization to avoid potential ''code too large'' compilation errors%' AND NOT EXISTS (SELECT 1 FROM task_diagnostic td WHERE td.task_id = t.id AND td.reason_code IN ('SUITE_TIMEOUT','EXECUTION_TIMEOUT','NO_INPUT_SPEC')) ORDER BY t.id;" >&2 || true
     exit 1
   fi

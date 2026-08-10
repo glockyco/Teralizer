@@ -30,27 +30,34 @@
 #       TERM-then-KILL sweep of any process whose command line references <project_abs>.
 #       Drivers set SUPERVISOR_ACTIVE_PATH/SUPERVISOR_ACTIVE_LOG around each unit so the
 #       traps can sweep the right tree.
-#   teralizer_psql <args>...   /  ensure_postgres_up
-#       Shared Postgres access and readiness wait for the postgres-teralizer container.
+#   ensure_postgres_up
+#       Readiness wait for the server named by scripts/lib/psql.sh, which this file
+#       sources for teralizer_psql.
 
 SUPERVISOR_ACTIVE_PGID=""
 SUPERVISOR_ACTIVE_PATH=""
 SUPERVISOR_ACTIVE_LOG=""
 SUPERVISED_RC=""
 
-teralizer_psql() { docker exec -i postgres-teralizer psql -U postgres "$@"; }
+source "$ROOT_DIR/scripts/lib/psql.sh"
 
 ensure_postgres_up() {
   if teralizer_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
     return 0
   fi
-  echo "==> Postgres (postgres-teralizer) not ready; starting it"
+  # Only the Docker transport has a server this repository knows how to start. A native
+  # server is owned by the host, so guessing at a start command would hide the real fault.
+  if [[ "$TERALIZER_PSQL_TRANSPORT" != docker ]]; then
+    echo "Postgres at $(teralizer_psql_target) is not reachable." >&2
+    return 1
+  fi
+  echo "==> Postgres ($(teralizer_psql_target)) not ready; starting it"
   "$ROOT_DIR/gradlew" startPostgres >/dev/null 2>&1 || true
   for _ in $(seq 1 30); do
     teralizer_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1 && return 0
     sleep 1
   done
-  echo "Postgres (postgres-teralizer) is not reachable. Is another container holding port 5432?" >&2
+  echo "Postgres ($(teralizer_psql_target)) is not reachable. Is another container holding port 5432?" >&2
   echo "Start it with ./gradlew startPostgres and retry." >&2
   return 1
 }
