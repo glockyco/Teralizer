@@ -1,10 +1,15 @@
 import pytest
+
+
 import sqlalchemy.exc
 
 from teralizer.eval.data import connect
 from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
 import teralizer.eval.reports.rq5_causes  # noqa: F401  (registers "rq5")
+
+
+pytestmark = pytest.mark.db
 
 
 def _report() -> RQReport:

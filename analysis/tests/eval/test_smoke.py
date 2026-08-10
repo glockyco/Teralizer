@@ -7,11 +7,17 @@ validate.py eval hook used to perform, now a normal pytest.
 
 from __future__ import annotations
 
+import pytest
+
+
 from sqlalchemy.exc import OperationalError
 
 from teralizer.eval import registry
 from teralizer.eval.data import connect
 from teralizer.eval.model import RQReport
+
+
+pytestmark = pytest.mark.db
 
 
 def test_registered_reports_build():

@@ -70,3 +70,16 @@ def generalization_variants():
         "IMPROVED_50_TRIES",
         "IMPROVED_200_TRIES",
     ]
+
+
+# Requesting one of these means the test talks to PostgreSQL. Marking by fixture
+# keeps the set correct as tests are added, so nothing has to be tagged by hand.
+_DB_FIXTURES = frozenset(
+    {"conn", "dev_conn", "test_conn", "rq6_report", "funnel_result", "rq6_conn"}
+)
+
+
+def pytest_collection_modifyitems(items):
+    for item in items:
+        if _DB_FIXTURES.intersection(item.fixturenames):
+            item.add_marker("db")

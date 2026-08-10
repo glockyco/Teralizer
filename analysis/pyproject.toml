@@ -39,7 +39,11 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=src --cov-report=term-missing -v"
+addopts = "-v --strict-markers"
+# Coverage is a reporting concern and triples the inner loop, so CI asks for it.
+markers = [
+    "db: needs a populated PostgreSQL corpus, and skips when it is unreachable",
+]
 
 # Generated notebook/data artifacts mirror already-checked source; don't type-check them.
 [tool.ty.src]
