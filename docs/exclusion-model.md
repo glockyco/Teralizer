@@ -230,6 +230,12 @@ before the `!= NULL_CONCRETE` guard, so **that guard is unreachable**. Only `NUL
 **A symbolic output model was extracted for 750 of 5,529 attempts (13.6%), and every one of them
 was licensed to widen.** The gate is not the barrier. Output-specification extraction is.
 
+`NULL_CONCRETE` describes the persisted artifact, not the semantics. A 20-case source audit
+(`docs/plans/2026-08-10-null-concrete-sampling.md`) read the original test and the tested method
+for each sampled assertion and found 18 whose output plainly varies with a generalizable input,
+including six with no recorded concretization event. Report 13.6% as the yield this extractor
+achieved, never as the share of real Java tests whose outputs are input-independent.
+
 ### Refusal causes
 
 The verdict is recorded as a single constant, so the deciding branch is **not persisted**
@@ -254,41 +260,42 @@ without EM-8.
 
 ## Per-level composition in v6
 
-`analysis/build/rq6/rq6_breakdown.csv`, decomposed by mechanism.
+`analysis/build/rq6/rq6_breakdown.csv` reports one column per mechanism.
 
-| Level | total | included | filtering | failures |
-|---|---|---|---|---|
-| Test | 85,595 | 44,989 | 37,407 | 3,199 |
-| Assertion | 181,585 | 7,094 | 167,743 | 6,748 |
-| Generalization | 5,529 | 1,614 | 3,898 | 17 |
+| Level | total | included | filtered | refused | unsupported | failed |
+|---|---|---|---|---|---|---|
+| Test | 85,595 | 44,989 | 37,407 | 0 | 2,904 | 295 |
+| Assertion | 181,585 | 7,096 | 167,559 | 0 | 0 | 6,930 |
+| Generalization | 5,529 | 1,614 | 421 | 3,472 | 0 | 22 |
 
-What those buckets actually contain:
+`refused` is the generation gate, `unsupported` is the inline capability exclusion, and `failed`
+holds task exceptions together with the javac quarantine, which is a compile failure.
 
-| Level | `filtering` contains | `failures` contains |
-|---|---|---|
-| Test | 37,407 filter rejections, clean | **2,904 inline capability exclusions**, 294 collector exceptions, 1 filter-task crash |
-| Assertion | 167,559 filter rejections + **184 javac quarantines** | 6,744 JPF exceptions + 4 stale-included |
-| Generalization | 421 filter rejections + **5 javac quarantines** + **3,472 gate refusals** | 15 + 2 |
-
-Only 421 of the 3,898 generalizations reported as filtered were filtered. Only 295 of the 3,199
-tests reported as failed failed.
+The columns are sparse because most mechanisms can only fire at one level, and that is the point.
+The previous two-column shape reported 3,898 generalizations as filtered when 421 were, and 3,199
+tests as failed when 295 were.
 
 ## Known defects
 
-| ID | Defect | Layer | Blast radius | Fixable without a re-run |
+| ID | Defect | Layer | Blast radius | Status |
 |---|---|---|---|---|
-| EM-1 | Gate codes hardcoded into the `filtering` branch (`rq6_causes.py:198-202`) | analysis | 3,472 generalizations | yes |
-| EM-2 | `BREAKDOWN_SQL` counts any `filter_result` REJECT as filtering, including javac quarantine | analysis | 184 assertions, 5 generalizations | yes |
-| EM-3 | `ELSE 'failures'` absorbs inline capability exclusions | analysis | 2,904 tests | yes |
-| EM-4 | `assertion_counts` failed-task probe lacks the `generalization_id IS NULL` guard that `test_counts` has | analysis | 2 assertions | yes |
-| EM-5 | Project-scoped failures clear no `is_included`, but the lifecycle fans them out | implementation | 15 generalizations | mitigate in analysis |
-| EM-6 | `AbstractTask` catches `Exception`, not `Throwable` | implementation | 2 assertions | mitigate in analysis |
-| EM-7 | `deriveRollup` reports "never ran" as "failed at this stage" | implementation | 98 generalizations | mitigate in analysis |
-| EM-8 | Widening refusal sub-reason not persisted | implementation | 299 refusals unsplittable | **no** |
+| EM-1 | Gate codes hardcoded into the `filtering` branch | analysis | 3,472 generalizations | fixed, `refused` column |
+| EM-2 | `BREAKDOWN_SQL` counted any `filter_result` REJECT as filtering, including javac quarantine | analysis | 184 assertions, 5 generalizations | fixed, filter-name test |
+| EM-3 | `ELSE 'failures'` absorbed inline capability exclusions | analysis | 2,904 tests | fixed, `unsupported` column |
+| EM-4 | `assertion_counts` failed-task probe lacked the `generalization_id IS NULL` guard | analysis | 2 assertions | fixed |
+| EM-5 | Project-scoped failures cleared no `is_included` while the lifecycle fanned them out | implementation | 15 generalizations | fixed in code, needs a re-collection to show in data |
+| EM-6 | `AbstractTask` caught `Exception`, not `Throwable` | implementation | 2 assertions | fixed in code, needs a re-collection |
+| EM-7 | `deriveRollup` reports "never ran" as "failed at this stage" | implementation | 98 generalizations | **open**, guarded by an `xfail` invariant |
+| EM-8 | Widening refusal sub-reason not persisted | implementation | 299 refusals unsplittable | fixed in code via `generalization.widening_refusal_code`, needs a re-collection |
 
-The root cause behind EM-1 through EM-3 is structural: a two-bucket model over a five-mechanism
-pipeline, with a silent `ELSE` catch-all. Adding buckets without removing the catch-all will let
-the sixth mechanism disappear the same way.
+The root cause behind EM-1 through EM-3 was structural: a two-bucket model over a five-mechanism
+pipeline with a silent `ELSE` catch-all. The classification is now total, and `_fetch_breakdown`
+raises rather than publishing a report containing an entity it cannot name. Adding a sixth
+mechanism without giving it a bucket now fails the run instead of inflating an existing column.
+
+EM-5, EM-6 and EM-8 do not change any v6 figure. EM-5 and EM-6 only mislead code that reads
+`is_included` on its own, which the breakdown does not, and EM-8 costs the split of 299 refusals
+that no query over v6 can recover.
 
 ## Invariants
 
@@ -301,7 +308,9 @@ checks it.
 3. Every `filter_result.filter_name` either matches the filter regex or is a known non-filter.
    A new unknown name fails the suite rather than silently joining the filtering bucket.
 4. Every `exclusion_info` value matches a known mechanism. A new exclusion code fails the suite.
-5. The three breakdown buckets sum to the level total.
+5. The mechanism columns sum to the level total. `_fetch_breakdown` additionally raises rather
+   than publishing a report containing an entity it cannot classify, so the report itself refuses
+   to hide drift.
 6. Every generalization with `generated_filter_passed` has no `REJECT` filter result.
 7. A lifecycle failure stage was actually attempted. Currently `xfail` under EM-7.
 

@@ -37,5 +37,6 @@
 ## complete
 
 - **RQ6 Re-Collection After the Reduction Fixes** [plan] `2026-08-04-rq6-recollection` (2/11) ← 2026-06-26-teralizer-overview
+- **NULL_CONCRETE Sampling Audit** [audit] `2026-08-10-null-concrete-sampling` ← 2026-06-26-teralizer-overview
 
 _80 archived — see `docs/plans/archive/`._

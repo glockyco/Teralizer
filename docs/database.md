@@ -19,7 +19,9 @@ PostgreSQL database with schema defined in `src/main/resources/db/create-tables.
   candidates, input topology: `actual_shape`, `receiver_provenance`) for every assertion,
   including unresolved ones
 - `generalization` - Generated property-based test information. `is_included` and
-  `exclusion_info` carry typed exclusion labels (e.g. `ORACLE_NOT_WIDENABLE`)
+  `exclusion_info` carry typed exclusion labels (e.g. `ORACLE_NOT_WIDENABLE`).
+  `widening_refusal_code` names which `WideningLicense` branch refused, since
+  `exclusion_info` collapses all six into one label
 - `generalization_lifecycle` - end-to-end stage flags for the generalizations that were
   actually emitted (source created → compiled → executed → report collected → filter passed)
   with `final_usable` and the failure stage/code. The yield authority, not `is_included`.
