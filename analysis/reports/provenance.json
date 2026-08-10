@@ -1,0 +1,1736 @@
+{
+  "dataset": {
+    "db": "postgres_dev",
+    "figures": {},
+    "metrics": {
+      "dataset.projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.dataset_characteristics",
+        "qualname": "get_dataset_statistics",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/dataset_characteristics.py#L227",
+        "value": 10
+      }
+    },
+    "tables": {
+      "dataset_statistics": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.dataset_characteristics",
+        "qualname": "get_dataset_statistics",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/dataset_characteristics.py#L227",
+        "value": "Dataset files, classes, source lines, and test methods per project."
+      }
+    }
+  },
+  "rq0": {
+    "db": "postgres_jarvis_scoreboard",
+    "figures": {},
+    "metrics": {
+      "rq0.breadth.jarvis_total_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 9
+      },
+      "rq0.breadth.jarvis_total_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 1708
+      },
+      "rq0.breadth.published_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 2
+      },
+      "rq0.breadth.teralizer_total_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "43,177"
+      },
+      "rq0.breadth.teralizer_total_sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "337"
+      },
+      "rq0.budget.improved_1000_tries.covered_mutants": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 80
+      },
+      "rq0.budget.improved_1000_tries.covered_mutation_score": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 0.6375
+      },
+      "rq0.budget.improved_1000_tries.killed_mutants": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 51
+      },
+      "rq0.budget.improved_1000_tries.probes": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 10
+      },
+      "rq0.budget.improved_1000_tries.total_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 10055
+      },
+      "rq0.budget.improved_100_tries.covered_mutants": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 80
+      },
+      "rq0.budget.improved_100_tries.covered_mutation_score": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 0.6375
+      },
+      "rq0.budget.improved_100_tries.killed_mutants": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 51
+      },
+      "rq0.budget.improved_100_tries.probes": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 10
+      },
+      "rq0.budget.improved_100_tries.total_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 1135
+      },
+      "rq0.budget.improved_200_tries.covered_mutants": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 80
+      },
+      "rq0.budget.improved_200_tries.covered_mutation_score": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 0.6375
+      },
+      "rq0.budget.improved_200_tries.killed_mutants": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 51
+      },
+      "rq0.budget.improved_200_tries.probes": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 10
+      },
+      "rq0.budget.improved_200_tries.total_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_budget_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L248",
+        "value": 2152
+      },
+      "rq0.census.completed_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 7
+      },
+      "rq0.census.completion_marker": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "present"
+      },
+      "rq0.census.database": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "postgres_jarvis_census"
+      },
+      "rq0.census.failed_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 3
+      },
+      "rq0.census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 1324
+      },
+      "rq0.census.intended_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 12
+      },
+      "rq0.census.populated_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": 9
+      },
+      "rq0.census.project.commons_cli_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_cli_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_cli_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_cli_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_cli_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "2"
+      },
+      "rq0.census.project.commons_cli_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "complete"
+      },
+      "rq0.census.project.commons_cli_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "217"
+      },
+      "rq0.census.project.commons_cli_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_codec_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_codec_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_codec_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_codec_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_codec_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "6"
+      },
+      "rq0.census.project.commons_codec_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "complete"
+      },
+      "rq0.census.project.commons_codec_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "983"
+      },
+      "rq0.census.project.commons_codec_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_collections_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 1314
+      },
+      "rq0.census.project.commons_collections_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "COLLECT_JUNIT_REPORTS_ORIGINAL"
+      },
+      "rq0.census.project.commons_collections_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_collections_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_collections_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "2"
+      },
+      "rq0.census.project.commons_collections_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "failed"
+      },
+      "rq0.census.project.commons_collections_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "102"
+      },
+      "rq0.census.project.commons_collections_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_configuration_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_configuration_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_configuration_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_configuration_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_configuration_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "9"
+      },
+      "rq0.census.project.commons_configuration_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "complete"
+      },
+      "rq0.census.project.commons_configuration_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "1,403"
+      },
+      "rq0.census.project.commons_configuration_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_csv_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_csv_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_csv_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_csv_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_csv_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "1"
+      },
+      "rq0.census.project.commons_csv_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "complete"
+      },
+      "rq0.census.project.commons_csv_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "4"
+      },
+      "rq0.census.project.commons_csv_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_email_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_email_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_email_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_email_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_email_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_email_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "not_reached"
+      },
+      "rq0.census.project.commons_email_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_email_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_io_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_io_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_io_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_io_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_io_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "7"
+      },
+      "rq0.census.project.commons_io_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "complete"
+      },
+      "rq0.census.project.commons_io_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "774"
+      },
+      "rq0.census.project.commons_io_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_jexl_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_jexl_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_jexl_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_jexl_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_jexl_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_jexl_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "not_reached"
+      },
+      "rq0.census.project.commons_jexl_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_jexl_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_lang_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_lang_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_lang_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 2
+      },
+      "rq0.census.project.commons_lang_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 104
+      },
+      "rq0.census.project.commons_lang_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "208"
+      },
+      "rq0.census.project.commons_lang_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "complete"
+      },
+      "rq0.census.project.commons_lang_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "26,079"
+      },
+      "rq0.census.project.commons_lang_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_math_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 9
+      },
+      "rq0.census.project.commons_math_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "GENERALIZE_TESTS"
+      },
+      "rq0.census.project.commons_math_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 7
+      },
+      "rq0.census.project.commons_math_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 1604
+      },
+      "rq0.census.project.commons_math_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "90"
+      },
+      "rq0.census.project.commons_math_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "failed"
+      },
+      "rq0.census.project.commons_math_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "12,471"
+      },
+      "rq0.census.project.commons_math_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_pool_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 1
+      },
+      "rq0.census.project.commons_pool_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "EXECUTE_TESTS_ORIGINAL"
+      },
+      "rq0.census.project.commons_pool_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_pool_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_pool_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_pool_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "failed"
+      },
+      "rq0.census.project.commons_pool_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_pool_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.project.commons_text_2017_02_01_census.failed_task_count": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": 0
+      },
+      "rq0.census.project.commons_text_2017_02_01_census.first_failed_stage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": ""
+      },
+      "rq0.census.project.commons_text_2017_02_01_census.jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_text_2017_02_01_census.jarvis_pbt_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": 0
+      },
+      "rq0.census.project.commons_text_2017_02_01_census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "12"
+      },
+      "rq0.census.project.commons_text_2017_02_01_census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "complete"
+      },
+      "rq0.census.project.commons_text_2017_02_01_census.teralizer_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_build_breadth_table",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L179",
+        "value": "1,144"
+      },
+      "rq0.census.project.commons_text_2017_02_01_census.teralizer_sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "unavailable"
+      },
+      "rq0.census.pvc_basis": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "deduplicated_jqwik_value_logs_no_pit_reduction"
+      },
+      "rq0.census.sound_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": 337
+      },
+      "rq0.census.sound_properties": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": 1474
+      },
+      "rq0.census.status": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq0_jarvis",
+        "qualname": "_census_status_ledger",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L115",
+        "value": "partial"
+      },
+      "rq0.census.unresolved_mut_rows": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_by_mut",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L629",
+        "value": 0
+      },
+      "rq0.census.variant": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "IMPROVED_100_TRIES"
+      },
+      "rq0.table2.distinct_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "compare_to_jarvis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L831",
+        "value": 9
+      },
+      "rq0.table2.probes": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "compare_to_jarvis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L831",
+        "value": 10
+      },
+      "rq0.table2.reported_rows": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "compare_to_jarvis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L831",
+        "value": 10
+      },
+      "rq0.table2.row.charutilstest_isascii.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "129"
+      },
+      "rq0.table2.row.charutilstest_isprintable.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "196"
+      },
+      "rq0.table2.row.fastmathtest_testminmaxdouble.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "36"
+      },
+      "rq0.table2.row.fastmathtest_tointexact.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "2,004"
+      },
+      "rq0.table2.row.intervaltest.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "4"
+      },
+      "rq0.table2.row.polynomialfunctiontest_testconstants.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "5"
+      },
+      "rq0.table2.row.polynomialfunctiontest_testfirstderivativecomparison.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "7"
+      },
+      "rq0.table2.row.polynomialfunctiontest_testlinear.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "6"
+      },
+      "rq0.table2.row.precisiontest.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "19"
+      },
+      "rq0.table2.row.univariatefunctiontest_testabs.measured_cut_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "5"
+      },
+      "rq0.table2.sound_jarvis_muts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "compare_to_jarvis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L831",
+        "value": 7
+      },
+      "rq0.table2.sound_table2_rows": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "compare_to_jarvis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L831",
+        "value": 7
+      },
+      "rq0.table2.suite_basis": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "measured_cut_union_generalized"
+      },
+      "rq0.table2.suite_total_pvc": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "suite_union_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L887",
+        "value": "3,250"
+      },
+      "rq0.table2.variant": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "compare_to_jarvis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L831",
+        "value": "IMPROVED_100_TRIES"
+      }
+    },
+    "report_basis": {
+      "census_diagnostics": {
+        "completed_projects": 7,
+        "completion_marker": "present",
+        "failed_projects": 3,
+        "failed_task_count": 1324,
+        "intended_projects": 12,
+        "populated_projects": 9
+      },
+      "census_is_mutation_result": false,
+      "census_pit_reduction_required_for_pvc": false,
+      "census_pvc_basis": "deduplicated_jqwik_value_logs_no_pit_reduction",
+      "census_scope": "partial applicability snapshot",
+      "census_status": "partial",
+      "databases": {
+        "census": "postgres_jarvis_census",
+        "scoreboard": "postgres_jarvis_scoreboard"
+      },
+      "table_keys": [
+        "rq0-table2-comparison",
+        "rq0-breadth-summary",
+        "rq0-pvc-budget"
+      ],
+      "variants": {
+        "census": "IMPROVED_100_TRIES",
+        "table2": "IMPROVED_100_TRIES"
+      }
+    },
+    "tables": {
+      "rq0-breadth-summary": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "get_census_project_pvc",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L710",
+        "value": "Project-level PVC and MUT breadth for the RQ0 benchmark fixtures."
+      },
+      "rq0-pvc-budget": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "summarize_variants",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L993",
+        "value": "PVC rises with the tries budget while covered mutation score stays flat."
+      },
+      "rq0-table2-comparison": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.jarvis_scoreboard",
+        "qualname": "compare_to_jarvis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/jarvis_scoreboard.py#L831",
+        "value": "CUT and PBT PVC reported by JARVIS beside post-generalization suite PVC on the reconstructed fixtures."
+      }
+    }
+  },
+  "rq1": {
+    "db": "postgres_dev",
+    "figures": {
+      "mutation_detection_comparison": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq1_mutation_detection",
+        "qualname": "compute_detection_improvements",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq1_mutation_detection.py#L400",
+        "value": "Mutation detection rates and improvements across projects and variants."
+      }
+    },
+    "metrics": {
+      "rq1.mutation_rows": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq1_mutation_detection",
+        "qualname": "compute_detection_improvements",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq1_mutation_detection.py#L400",
+        "value": 49
+      },
+      "rq1.projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq1_mutation_detection",
+        "qualname": "compute_project_mutation_coverage",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq1_mutation_detection.py#L378",
+        "value": 7
+      }
+    },
+    "tables": {
+      "detections_per_mutator": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq1_mutation_detection",
+        "qualname": "compute_mutator_statistics",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq1_mutation_detection.py#L302",
+        "value": "Mutation detection rates by mutator."
+      },
+      "mutants_per_project": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq1_mutation_detection",
+        "qualname": "compute_project_mutation_coverage",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq1_mutation_detection.py#L378",
+        "value": "Number of total, covered, and uncovered mutants in included classes per project."
+      }
+    }
+  },
+  "rq2": {
+    "db": "postgres_dev",
+    "figures": {},
+    "metrics": {
+      "rq2.mutant_groups": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq1_mutation_detection",
+        "qualname": "compute_mutation_model_complexity",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq1_mutation_detection.py#L451",
+        "value": 14
+      }
+    },
+    "tables": {
+      "mutation_detection_comparison": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq1_mutation_detection",
+        "qualname": "compute_mutation_model_complexity",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq1_mutation_detection.py#L451",
+        "value": "Model properties of mutants that are (not) detected by the improved variant."
+      }
+    }
+  },
+  "rq3": {
+    "db": "postgres_dev",
+    "figures": {
+      "test_runtime_differences": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq3_suite_size_runtime",
+        "qualname": "_runtime_overhead",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L101",
+        "value": "Runtime comparison between original and generalized tests."
+      }
+    },
+    "metrics": {
+      "rq3.project_variant_rows": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq3_suite_size_runtime",
+        "qualname": "_effects",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L53",
+        "value": 14
+      }
+    },
+    "tables": {
+      "lines_per_project": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq3_suite_size_runtime",
+        "qualname": "_effects",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L53",
+        "value": "Line changes per project and variant."
+      },
+      "runtime_per_project": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq3_suite_size_runtime",
+        "qualname": "_effects",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L53",
+        "value": "Runtime changes per project and variant."
+      },
+      "test_runtime_differences": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq3_suite_size_runtime",
+        "qualname": "_runtime_overhead",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L101",
+        "value": "Runtime overhead of generalized tests per test and per try."
+      },
+      "tests_per_project": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq3_suite_size_runtime",
+        "qualname": "_effects",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L53",
+        "value": "Test changes per project and variant."
+      }
+    }
+  },
+  "rq4": {
+    "db": "postgres_dev",
+    "figures": {
+      "evosuite_runtime_phases": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq3_runtime_requirements",
+        "qualname": "compute_evosuite_phase_statistics",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L385",
+        "value": "Mean EvoSuite runtime by phase and search budget."
+      },
+      "teralizer_efficiency": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq3_runtime_requirements",
+        "qualname": "compute_pareto_efficiency_analysis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L237",
+        "value": "Pareto fronts for EvoSuite and Teralizer variants across projects."
+      },
+      "teralizer_runtimes": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq3_runtime_requirements",
+        "qualname": "compute_stage_runtime_breakdown",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L193",
+        "value": "Teralizer runtime by pipeline stage and variant."
+      }
+    },
+    "metrics": {
+      "rq4.pareto_points": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq3_runtime_requirements",
+        "qualname": "compute_pareto_efficiency_analysis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L237",
+        "value": 42
+      }
+    },
+    "tables": {
+      "evosuite_runtime_analysis": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq3_runtime_requirements",
+        "qualname": "compute_evosuite_phase_statistics",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L385",
+        "value": "EvoSuite runtime by phase and search budget."
+      },
+      "pareto_efficiency": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.rq3_runtime_requirements",
+        "qualname": "compute_pareto_efficiency_analysis",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L237",
+        "value": "EvoSuite and Teralizer Pareto efficiency points."
+      }
+    }
+  },
+  "rq5": {
+    "db": "postgres_dev",
+    "figures": {},
+    "metrics": {},
+    "tables": {
+      "rq5_breakdown": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq5_causes",
+        "qualname": "_fetch_breakdown",
+        "query": "\nWITH\n    test_counts AS (\n        SELECT\n            'All' AS strategy,\n            'Test' AS level,\n            CASE\n                WHEN t.is_included THEN 'included'\n                WHEN t.exclusion_info LIKE '%%TestFilteringTask%%'\n                    AND EXISTS (\n                        SELECT 1\n                        FROM filter_result fr\n                        WHERE fr.test_id = t.id\n                          AND fr.decision = 'REJECT'\n                    ) THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM test t\n        JOIN project p ON t.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY bucket\n    ),\n    assertion_counts AS (\n        SELECT\n            'All' AS strategy,\n            'Assertion' AS level,\n            CASE\n                WHEN a.is_included THEN 'included'\n                WHEN a.exclusion_info LIKE '%%TestFilteringTask%%'\n                    AND EXISTS (\n                        SELECT 1\n                        FROM filter_result fr\n                        WHERE fr.assertion_id = a.id\n                          AND fr.decision = 'REJECT'\n                    ) THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM assertion a\n        JOIN test t ON a.test_id = t.id\n        JOIN project p ON t.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY bucket\n    ),\n    generalization_counts AS (\n        SELECT\n            g.variant AS strategy,\n            'Generalization' AS level,\n            CASE\n                WHEN g.is_included THEN 'included'\n                WHEN g.exclusion_info LIKE '%%TestFilteringTask%%' THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM generalization g\n        JOIN project p ON g.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY g.variant, bucket\n    ),\n    combined AS (\n        SELECT strategy, level, bucket, item_count FROM test_counts\n        UNION ALL\n        SELECT strategy, level, bucket, item_count FROM assertion_counts\n        UNION ALL\n        SELECT strategy, level, bucket, item_count FROM generalization_counts\n    ),\n    report_rows AS (\n        SELECT 'All' AS strategy, 'Test' AS level\n        UNION ALL\n        SELECT 'All' AS strategy, 'Assertion' AS level\n        UNION ALL\n        SELECT DISTINCT g.variant AS strategy, 'Generalization' AS level\n        FROM generalization g\n        JOIN project p ON g.project_id = p.id\n        WHERE p.use_test_generalization\n    )\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtering'), 0)::bigint AS filtering,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failures'), 0)::bigint AS failures\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq5_causes.py#L215",
+        "value": "Test, assertion, and generalization exclusions by filtering versus failures for the controlled dataset."
+      },
+      "rq5_filtering": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq5_causes",
+        "qualname": "_fetch_filtering",
+        "query": "\nWITH\n    base_data AS (\n        SELECT\n            CASE\n                WHEN fr.test_id IS NOT NULL THEN 'Test'\n                WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'\n                WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'\n            END AS level,\n            substring(fr.filter_name from 'filter\\.(\\w+)Filter$') AS filter_name,\n            fr.decision,\n            count(*) AS count\n        FROM filter_result fr\n        JOIN project p ON fr.project_id = p.id\n        LEFT JOIN generalization g ON fr.generalization_id = g.id\n        WHERE p.use_test_generalization\n        GROUP BY\n            g.variant,\n            fr.filter_name,\n            CASE\n                WHEN fr.test_id IS NOT NULL THEN 'Test'\n                WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'\n                WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'\n            END,\n            fr.decision\n    ),\n    pivoted AS (\n        SELECT\n            level,\n            filter_name,\n            sum(count)::bigint AS total,\n            sum(CASE WHEN decision = 'ACCEPT' THEN count ELSE 0 END)::bigint AS accept,\n            sum(CASE WHEN decision = 'DEFER' THEN count ELSE 0 END)::bigint AS defer,\n            sum(CASE WHEN decision = 'REJECT' THEN count ELSE 0 END)::bigint AS reject\n        FROM base_data\n        GROUP BY level, filter_name\n    )\nSELECT\n    level,\n    CASE\n        WHEN filter_name = 'UnsupportedAssertion' THEN 'AssertionType'\n        ELSE filter_name\n    END AS filter,\n    total,\n    accept,\n    defer,\n    reject\nFROM pivoted\nWHERE reject > 0\n  AND level IN ('Test', 'Assertion')\nORDER BY\n    CASE level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    filter\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq5_causes.py#L205",
+        "value": "Filter rejection rates by level and filter for the controlled dataset."
+      }
+    }
+  },
+  "rq6": {
+    "db": "postgres_reporeapers_rq6_v6",
+    "figures": {},
+    "metrics": {
+      "realworld.applicability_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._funnel",
+        "qualname": "build_funnel",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_funnel.py#L300",
+        "value": 0.13911620294599017
+      },
+      "realworld.applicability_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._funnel",
+        "qualname": "build_funnel",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_funnel.py#L300",
+        "value": 85
+      },
+      "realworld.assertions_included": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_breakdown",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ntest_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Test' AS level,\n        CASE\n            WHEN t.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN t.exclusion_info LIKE :capability_pattern THEN 'unsupported'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.test_id = t.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN t.exclusion_info = ANY(:quarantine_codes)\n              OR t.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    GROUP BY bucket\n),\nassertion_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Assertion' AS level,\n        CASE\n            WHEN a.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.assertion_id = a.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN a.exclusion_info = ANY(:quarantine_codes)\n              OR a.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n    GROUP BY bucket\n),\ngeneralization_counts AS (\n    SELECT\n        g.variant AS strategy,\n        'Generalization' AS level,\n        CASE\n            WHEN l.generated_filter_passed THEN 'included'\n            WHEN g.exclusion_info = ANY(:gate_codes) THEN 'refused'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.generalization_id = g.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN g.exclusion_info = ANY(:quarantine_codes)\n              OR g.exclusion_info LIKE 'Excluded by%'\n              OR l.final_failure_stage IS NOT NULL\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fg\n                 WHERE fg.generalization_id = g.id\n                   AND fg.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n    GROUP BY g.variant, bucket\n),\ncombined AS (\n    SELECT strategy, level, bucket, item_count FROM test_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM assertion_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM generalization_counts\n),\nreport_rows AS (\n    SELECT 'All' AS strategy, 'Test' AS level\n    UNION ALL\n    SELECT 'All' AS strategy, 'Assertion' AS level\n    UNION ALL\n    SELECT :variant AS strategy, 'Generalization' AS level\n)\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtered'), 0)::bigint AS filtered,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'refused'), 0)::bigint AS refused,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'unsupported'), 0)::bigint\n        AS unsupported,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failed'), 0)::bigint AS failed,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'uncoded'), 0)::bigint AS uncoded\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L292",
+        "value": 7096
+      },
+      "realworld.assertions_included_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_breakdown",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ntest_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Test' AS level,\n        CASE\n            WHEN t.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN t.exclusion_info LIKE :capability_pattern THEN 'unsupported'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.test_id = t.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN t.exclusion_info = ANY(:quarantine_codes)\n              OR t.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    GROUP BY bucket\n),\nassertion_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Assertion' AS level,\n        CASE\n            WHEN a.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.assertion_id = a.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN a.exclusion_info = ANY(:quarantine_codes)\n              OR a.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n    GROUP BY bucket\n),\ngeneralization_counts AS (\n    SELECT\n        g.variant AS strategy,\n        'Generalization' AS level,\n        CASE\n            WHEN l.generated_filter_passed THEN 'included'\n            WHEN g.exclusion_info = ANY(:gate_codes) THEN 'refused'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.generalization_id = g.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN g.exclusion_info = ANY(:quarantine_codes)\n              OR g.exclusion_info LIKE 'Excluded by%'\n              OR l.final_failure_stage IS NOT NULL\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fg\n                 WHERE fg.generalization_id = g.id\n                   AND fg.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n    GROUP BY g.variant, bucket\n),\ncombined AS (\n    SELECT strategy, level, bucket, item_count FROM test_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM assertion_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM generalization_counts\n),\nreport_rows AS (\n    SELECT 'All' AS strategy, 'Test' AS level\n    UNION ALL\n    SELECT 'All' AS strategy, 'Assertion' AS level\n    UNION ALL\n    SELECT :variant AS strategy, 'Generalization' AS level\n)\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtered'), 0)::bigint AS filtered,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'refused'), 0)::bigint AS refused,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'unsupported'), 0)::bigint\n        AS unsupported,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failed'), 0)::bigint AS failed,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'uncoded'), 0)::bigint AS uncoded\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L292",
+        "value": 0.03907811768593221
+      },
+      "realworld.assertions_total": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_breakdown",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ntest_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Test' AS level,\n        CASE\n            WHEN t.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN t.exclusion_info LIKE :capability_pattern THEN 'unsupported'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.test_id = t.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN t.exclusion_info = ANY(:quarantine_codes)\n              OR t.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    GROUP BY bucket\n),\nassertion_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Assertion' AS level,\n        CASE\n            WHEN a.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.assertion_id = a.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN a.exclusion_info = ANY(:quarantine_codes)\n              OR a.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n    GROUP BY bucket\n),\ngeneralization_counts AS (\n    SELECT\n        g.variant AS strategy,\n        'Generalization' AS level,\n        CASE\n            WHEN l.generated_filter_passed THEN 'included'\n            WHEN g.exclusion_info = ANY(:gate_codes) THEN 'refused'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.generalization_id = g.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN g.exclusion_info = ANY(:quarantine_codes)\n              OR g.exclusion_info LIKE 'Excluded by%'\n              OR l.final_failure_stage IS NOT NULL\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fg\n                 WHERE fg.generalization_id = g.id\n                   AND fg.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n    GROUP BY g.variant, bucket\n),\ncombined AS (\n    SELECT strategy, level, bucket, item_count FROM test_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM assertion_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM generalization_counts\n),\nreport_rows AS (\n    SELECT 'All' AS strategy, 'Test' AS level\n    UNION ALL\n    SELECT 'All' AS strategy, 'Assertion' AS level\n    UNION ALL\n    SELECT :variant AS strategy, 'Generalization' AS level\n)\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtered'), 0)::bigint AS filtered,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'refused'), 0)::bigint AS refused,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'unsupported'), 0)::bigint\n        AS unsupported,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failed'), 0)::bigint AS failed,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'uncoded'), 0)::bigint AS uncoded\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L292",
+        "value": 181585
+      },
+      "realworld.assertions_without_resolution": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_assertions_without_resolution",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT count(*) AS assertions_without_resolution\nFROM assertion a\nJOIN eligible_projects ep ON ep.id = a.project_id\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM mut_resolution_observation o\n    WHERE o.assertion_id = a.id\n)\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L273",
+        "value": 0
+      },
+      "realworld.eligible_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._funnel",
+        "qualname": "build_funnel",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_funnel.py#L300",
+        "value": 611
+      },
+      "realworld.generalization_attempts": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_breakdown",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ntest_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Test' AS level,\n        CASE\n            WHEN t.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN t.exclusion_info LIKE :capability_pattern THEN 'unsupported'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.test_id = t.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN t.exclusion_info = ANY(:quarantine_codes)\n              OR t.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    GROUP BY bucket\n),\nassertion_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Assertion' AS level,\n        CASE\n            WHEN a.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.assertion_id = a.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN a.exclusion_info = ANY(:quarantine_codes)\n              OR a.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n    GROUP BY bucket\n),\ngeneralization_counts AS (\n    SELECT\n        g.variant AS strategy,\n        'Generalization' AS level,\n        CASE\n            WHEN l.generated_filter_passed THEN 'included'\n            WHEN g.exclusion_info = ANY(:gate_codes) THEN 'refused'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.generalization_id = g.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN g.exclusion_info = ANY(:quarantine_codes)\n              OR g.exclusion_info LIKE 'Excluded by%'\n              OR l.final_failure_stage IS NOT NULL\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fg\n                 WHERE fg.generalization_id = g.id\n                   AND fg.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n    GROUP BY g.variant, bucket\n),\ncombined AS (\n    SELECT strategy, level, bucket, item_count FROM test_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM assertion_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM generalization_counts\n),\nreport_rows AS (\n    SELECT 'All' AS strategy, 'Test' AS level\n    UNION ALL\n    SELECT 'All' AS strategy, 'Assertion' AS level\n    UNION ALL\n    SELECT :variant AS strategy, 'Generalization' AS level\n)\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtered'), 0)::bigint AS filtered,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'refused'), 0)::bigint AS refused,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'unsupported'), 0)::bigint\n        AS unsupported,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failed'), 0)::bigint AS failed,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'uncoded'), 0)::bigint AS uncoded\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L292",
+        "value": 5529
+      },
+      "realworld.generalization_validated_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_breakdown",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ntest_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Test' AS level,\n        CASE\n            WHEN t.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN t.exclusion_info LIKE :capability_pattern THEN 'unsupported'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.test_id = t.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN t.exclusion_info = ANY(:quarantine_codes)\n              OR t.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    GROUP BY bucket\n),\nassertion_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Assertion' AS level,\n        CASE\n            WHEN a.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.assertion_id = a.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN a.exclusion_info = ANY(:quarantine_codes)\n              OR a.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n    GROUP BY bucket\n),\ngeneralization_counts AS (\n    SELECT\n        g.variant AS strategy,\n        'Generalization' AS level,\n        CASE\n            WHEN l.generated_filter_passed THEN 'included'\n            WHEN g.exclusion_info = ANY(:gate_codes) THEN 'refused'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.generalization_id = g.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN g.exclusion_info = ANY(:quarantine_codes)\n              OR g.exclusion_info LIKE 'Excluded by%'\n              OR l.final_failure_stage IS NOT NULL\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fg\n                 WHERE fg.generalization_id = g.id\n                   AND fg.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n    GROUP BY g.variant, bucket\n),\ncombined AS (\n    SELECT strategy, level, bucket, item_count FROM test_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM assertion_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM generalization_counts\n),\nreport_rows AS (\n    SELECT 'All' AS strategy, 'Test' AS level\n    UNION ALL\n    SELECT 'All' AS strategy, 'Assertion' AS level\n    UNION ALL\n    SELECT :variant AS strategy, 'Generalization' AS level\n)\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtered'), 0)::bigint AS filtered,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'refused'), 0)::bigint AS refused,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'unsupported'), 0)::bigint\n        AS unsupported,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failed'), 0)::bigint AS failed,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'uncoded'), 0)::bigint AS uncoded\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L292",
+        "value": 0.2919153553988063
+      },
+      "realworld.generalizations_validated": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_breakdown",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ntest_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Test' AS level,\n        CASE\n            WHEN t.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN t.exclusion_info LIKE :capability_pattern THEN 'unsupported'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.test_id = t.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN t.exclusion_info = ANY(:quarantine_codes)\n              OR t.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    GROUP BY bucket\n),\nassertion_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Assertion' AS level,\n        CASE\n            WHEN a.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.assertion_id = a.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN a.exclusion_info = ANY(:quarantine_codes)\n              OR a.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n    GROUP BY bucket\n),\ngeneralization_counts AS (\n    SELECT\n        g.variant AS strategy,\n        'Generalization' AS level,\n        CASE\n            WHEN l.generated_filter_passed THEN 'included'\n            WHEN g.exclusion_info = ANY(:gate_codes) THEN 'refused'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.generalization_id = g.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN g.exclusion_info = ANY(:quarantine_codes)\n              OR g.exclusion_info LIKE 'Excluded by%'\n              OR l.final_failure_stage IS NOT NULL\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fg\n                 WHERE fg.generalization_id = g.id\n                   AND fg.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n    GROUP BY g.variant, bucket\n),\ncombined AS (\n    SELECT strategy, level, bucket, item_count FROM test_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM assertion_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM generalization_counts\n),\nreport_rows AS (\n    SELECT 'All' AS strategy, 'Test' AS level\n    UNION ALL\n    SELECT 'All' AS strategy, 'Assertion' AS level\n    UNION ALL\n    SELECT :variant AS strategy, 'Generalization' AS level\n)\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtered'), 0)::bigint AS filtered,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'refused'), 0)::bigint AS refused,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'unsupported'), 0)::bigint\n        AS unsupported,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failed'), 0)::bigint AS failed,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'uncoded'), 0)::bigint AS uncoded\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L292",
+        "value": 1614
+      },
+      "realworld.jpf_uncaught_exception_diagnostics": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._diagnostics",
+        "qualname": "fetch_jpf_exception_causes",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT td.detail_json\nFROM task_diagnostic td\nJOIN eligible_projects ep ON ep.id = td.project_id\nWHERE td.reason_code = 'UNCAUGHT_EXCEPTION_PATH'\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_diagnostics.py#L89",
+        "value": 1790
+      },
+      "realworld.jpf_uncaught_exception_reclassified_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._diagnostics",
+        "qualname": "fetch_jpf_exception_causes",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT td.detail_json\nFROM task_diagnostic td\nJOIN eligible_projects ep ON ep.id = td.project_id\nWHERE td.reason_code = 'UNCAUGHT_EXCEPTION_PATH'\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_diagnostics.py#L89",
+        "value": 0.9804469273743017
+      },
+      "realworld.parameter_type_choice_dependent_lower_bound": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._diagnostics",
+        "qualname": "fetch_mut_choice_sensitivity",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT DISTINCT o.assertion_id, o.candidate_details\nFROM mut_resolution_observation o\nJOIN eligible_projects ep ON ep.id = o.project_id\nJOIN filter_result fr ON fr.assertion_id = o.assertion_id\nWHERE fr.decision = 'REJECT'\n  AND fr.filter_name LIKE '%ParameterTypeFilter'\n  AND fr.reason_code = 'NO_GENERALIZABLE_PARAMETERS'\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_diagnostics.py#L169",
+        "value": 11479
+      },
+      "realworld.parameter_type_choice_dependent_lower_bound_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._diagnostics",
+        "qualname": "fetch_mut_choice_sensitivity",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT DISTINCT o.assertion_id, o.candidate_details\nFROM mut_resolution_observation o\nJOIN eligible_projects ep ON ep.id = o.project_id\nJOIN filter_result fr ON fr.assertion_id = o.assertion_id\nWHERE fr.decision = 'REJECT'\n  AND fr.filter_name LIKE '%ParameterTypeFilter'\n  AND fr.reason_code = 'NO_GENERALIZABLE_PARAMETERS'\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_diagnostics.py#L169",
+        "value": 0.17320256506978499
+      },
+      "realworld.reduction_excluded_baseline_side": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._funnel",
+        "qualname": "build_funnel",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_funnel.py#L300",
+        "value": 10
+      },
+      "realworld.reduction_excluded_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._funnel",
+        "qualname": "build_funnel",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_funnel.py#L300",
+        "value": 16
+      },
+      "realworld.stage4_projects": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._funnel",
+        "qualname": "build_funnel",
+        "query": null,
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_funnel.py#L300",
+        "value": 101
+      },
+      "realworld.widening_refusal_concretization": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 1329
+      },
+      "realworld.widening_refusal_concretization_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 0.3828867761452031
+      },
+      "realworld.widening_refusal_exception_divergence": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 15
+      },
+      "realworld.widening_refusal_exception_divergence_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 0.00432152117545376
+      },
+      "realworld.widening_refusal_non_boolean_oracle": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 1828
+      },
+      "realworld.widening_refusal_non_boolean_oracle_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 0.5266493805819649
+      },
+      "realworld.widening_refusal_path_coverage": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 299
+      },
+      "realworld.widening_refusal_path_coverage_pct": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 0.08614232209737828
+      },
+      "realworld.widening_refusals": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": 3471
+      }
+    },
+    "tables": {
+      "rq6_breakdown": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_breakdown",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ntest_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Test' AS level,\n        CASE\n            WHEN t.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN t.exclusion_info LIKE :capability_pattern THEN 'unsupported'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.test_id = t.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN t.exclusion_info = ANY(:quarantine_codes)\n              OR t.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task ft\n                 WHERE ft.test_id = t.id\n                   AND ft.assertion_id IS NULL\n                   AND ft.generalization_id IS NULL\n                   AND ft.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM test t\n    JOIN eligible_projects ep ON ep.id = t.project_id\n    GROUP BY bucket\n),\nassertion_counts AS (\n    SELECT\n        'All' AS strategy,\n        'Assertion' AS level,\n        CASE\n            WHEN a.is_included\n             AND NOT EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'included'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.assertion_id = a.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN a.exclusion_info = ANY(:quarantine_codes)\n              OR a.exclusion_info LIKE 'Excluded by%'\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fa\n                 WHERE fa.assertion_id = a.id\n                   AND fa.generalization_id IS NULL\n                   AND fa.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n    GROUP BY bucket\n),\ngeneralization_counts AS (\n    SELECT\n        g.variant AS strategy,\n        'Generalization' AS level,\n        CASE\n            WHEN l.generated_filter_passed THEN 'included'\n            WHEN g.exclusion_info = ANY(:gate_codes) THEN 'refused'\n            WHEN EXISTS (\n                SELECT 1\n                FROM filter_result fr\n                WHERE fr.generalization_id = g.id\n                  AND fr.decision = 'REJECT'\n                  AND fr.filter_name ~ :filter_class_pattern\n            ) THEN 'filtered'\n            WHEN g.exclusion_info = ANY(:quarantine_codes)\n              OR g.exclusion_info LIKE 'Excluded by%'\n              OR l.final_failure_stage IS NOT NULL\n              OR EXISTS (\n                 SELECT 1\n                 FROM task fg\n                 WHERE fg.generalization_id = g.id\n                   AND fg.status <> 'SUCCEEDED'\n             ) THEN 'failed'\n            ELSE 'uncoded'\n        END AS bucket,\n        count(*) AS item_count\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id\n    WHERE g.variant = :variant\n    GROUP BY g.variant, bucket\n),\ncombined AS (\n    SELECT strategy, level, bucket, item_count FROM test_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM assertion_counts\n    UNION ALL\n    SELECT strategy, level, bucket, item_count FROM generalization_counts\n),\nreport_rows AS (\n    SELECT 'All' AS strategy, 'Test' AS level\n    UNION ALL\n    SELECT 'All' AS strategy, 'Assertion' AS level\n    UNION ALL\n    SELECT :variant AS strategy, 'Generalization' AS level\n)\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtered'), 0)::bigint AS filtered,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'refused'), 0)::bigint AS refused,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'unsupported'), 0)::bigint\n        AS unsupported,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failed'), 0)::bigint AS failed,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'uncoded'), 0)::bigint AS uncoded\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L292",
+        "value": "Eligible test, assertion, and generalization outcomes by filtering versus failures for the real-world dataset."
+      },
+      "rq6_filtering": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports.rq6_causes",
+        "qualname": "_fetch_filtering",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nbase_data AS (\n    SELECT\n        CASE\n            WHEN fr.test_id IS NOT NULL THEN 'Test'\n            WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'\n            WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'\n        END AS level,\n        substring(fr.filter_name from 'filter\\.(\\w+)Filter$') AS filter_name,\n        fr.decision,\n        coalesce(fr.test_id, fr.assertion_id, fr.generalization_id) AS entity_id\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    LEFT JOIN generalization g ON g.id = fr.generalization_id\n    WHERE fr.test_id IS NOT NULL\n       OR fr.assertion_id IS NOT NULL\n       OR (fr.generalization_id IS NOT NULL AND g.variant = :variant)\n),\npivoted AS (\n    SELECT\n        level,\n        filter_name,\n        count(DISTINCT entity_id)::bigint AS total,\n        count(DISTINCT entity_id) FILTER (WHERE decision = 'ACCEPT')::bigint AS accept,\n        count(DISTINCT entity_id) FILTER (WHERE decision = 'DEFER')::bigint AS defer,\n        count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT')::bigint AS reject\n    FROM base_data\n    WHERE filter_name IS NOT NULL\n    GROUP BY level, filter_name\n)\nSELECT\n    level,\n    CASE\n        WHEN filter_name = 'UnsupportedAssertion' THEN 'AssertionType'\n        ELSE filter_name\n    END AS filter,\n    total,\n    accept,\n    defer,\n    reject\nFROM pivoted\nWHERE reject > 0\nORDER BY\n    CASE level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    filter\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq6_causes.py#L279",
+        "value": "Distinct eligible entities receiving each filter decision, by level and filter."
+      },
+      "rq6_jpf_exception_causes": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._diagnostics",
+        "qualname": "fetch_jpf_exception_causes",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT td.detail_json\nFROM task_diagnostic td\nJOIN eligible_projects ep ON ep.id = td.project_id\nWHERE td.reason_code = 'UNCAUGHT_EXCEPTION_PATH'\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_diagnostics.py#L89",
+        "value": "Retrospective classification of generic JPF uncaught-exception diagnostics from retained detail."
+      },
+      "rq6_mut_choice_sensitivity": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._diagnostics",
+        "qualname": "fetch_mut_choice_sensitivity",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT DISTINCT o.assertion_id, o.candidate_details\nFROM mut_resolution_observation o\nJOIN eligible_projects ep ON ep.id = o.project_id\nJOIN filter_result fr ON fr.assertion_id = o.assertion_id\nWHERE fr.decision = 'REJECT'\n  AND fr.filter_name LIKE '%ParameterTypeFilter'\n  AND fr.reason_code = 'NO_GENERALIZABLE_PARAMETERS'\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_diagnostics.py#L169",
+        "value": "Choice sensitivity of ParameterType rejections classified from retained MUT candidate details."
+      },
+      "rq6_widening_refusals": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._widening",
+        "qualname": "fetch_widening_refusals",
+        "query": "\n\nWITH eligible_projects AS (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nattempts AS (\n    SELECT count(*)::numeric AS n\n    FROM generalization g\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n),\nrefusals AS (\n    SELECT\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'EXCEPTION_DIVERGENCE'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'PATH_COVERAGE'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'NON_BOOLEAN_ORACLE'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'CONCRETIZATION'\n            ELSE 'PATH_COVERAGE'\n        END AS code,\n        CASE\n            WHEN a.output_spec_class = 'EXCEPTION'\n                 AND coalesce(a.concretization_events, 0) > 0\n                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false\n                THEN 'Exception oracle concretized with divergence risk'\n            WHEN a.output_spec_class = 'EXCEPTION'\n                THEN 'Path condition does not pin every generated parameter'\n            WHEN coalesce(\n                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''\n                 ) NOT IN ('boolean', 'java.lang.Boolean')\n                THEN 'Null output model, oracle expression is not boolean'\n            WHEN coalesce(a.concretization_events, 0) > 0\n                THEN 'Null output model, concretization weakened the path condition'\n            ELSE 'Path condition does not pin every generated parameter'\n        END AS cause\n    FROM generalization g\n    JOIN assertion a ON a.id = g.assertion_id\n    JOIN eligible_projects ep ON ep.id = g.project_id\n    WHERE g.variant = :variant\n      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'\n)\nSELECT code,\n       cause,\n       count(*)::bigint AS refusals,\n       count(*) / (SELECT n FROM attempts) AS attempts_pct,\n       count(*) / sum(count(*)) OVER () AS refusals_pct\nFROM refusals\nGROUP BY code, cause\nORDER BY refusals DESC\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_widening.py#L78",
+        "value": "Why the widening license refused to emit a generalized test, by cause, for the real-world dataset."
+      },
+      "tab:processing-failures": {
+        "commit": "b46ff655-dirty",
+        "module": "teralizer.eval.reports._funnel",
+        "qualname": "build_funnel",
+        "query": "\nWITH\n    included_tests AS (\n        SELECT project_id, count(*) AS included_tests\n        FROM test\n        WHERE is_included\n        GROUP BY project_id\n    ),\n    included_assertions AS (\n        SELECT project_id, count(*) AS included_assertions\n        FROM assertion\n        WHERE is_included\n        GROUP BY project_id\n    ),\n    spec_assertions AS (\n        SELECT project_id, count(*) AS spec_surviving_assertions\n        FROM assertion\n        WHERE is_included\n          -- Instrumentation fills spec paths before JPF; output_spec_class is\n          -- written only after an extracted invocation produces specifications.\n          AND output_spec_class IS NOT NULL\n        GROUP BY project_id\n    ),\n    generated_filter_passed AS (\n        SELECT g.project_id, count(*) AS generated_filter_passed\n        FROM generalization g\n        JOIN generalization_lifecycle l ON l.generalization_id = g.id\n        WHERE g.variant = :variant\n          AND l.generated_filter_passed\n        GROUP BY g.project_id\n    ),\n    final_usable AS (\n        SELECT g.project_id, count(*) AS final_usable\n        FROM generalization g\n        JOIN generalization_lifecycle l ON l.generalization_id = g.id\n        WHERE g.variant = :variant\n          AND l.final_usable\n        GROUP BY g.project_id\n    ),\n    excluded_assertions AS (\n        SELECT a.id, a.project_id\n        FROM assertion a\n        WHERE NOT a.is_included\n    ),\n    assertion_exclusions AS (\n        SELECT\n            ea.project_id,\n            count(*) AS excluded_assertions,\n            count(*) FILTER (\n                WHERE EXISTS (\n                    SELECT 1\n                    FROM filter_result fr\n                    WHERE fr.assertion_id = ea.id\n                      AND fr.decision = 'REJECT'\n                )\n            ) AS filter_rejected_assertions,\n            count(*) FILTER (\n                WHERE EXISTS (\n                    SELECT 1\n                    FROM task t\n                    WHERE t.assertion_id = ea.id\n                      AND t.status <> 'SUCCEEDED'\n                      AND t.stage = ANY(:assertion_failure_stages)\n                )\n            ) AS failure_excluded_assertions\n        FROM excluded_assertions ea\n        GROUP BY ea.project_id\n    ),\n    jacoco_artifacts AS (\n        SELECT\n            project_id,\n            bool_or(stage = 'COLLECT_JACOCO_DATA_ORIGINAL') AS jacoco_original,\n            bool_or(stage = 'COLLECT_JACOCO_DATA_INITIAL') AS jacoco_initial,\n            bool_or(stage = 'COLLECT_JACOCO_DATA_GENERALIZED') AS jacoco_generalized\n        FROM jacoco_coverage_report\n        GROUP BY project_id\n    ),\n    pit_artifacts AS (\n        SELECT\n            project_id,\n            bool_or(stage = 'COLLECT_PIT_DATA_ORIGINAL') AS pit_original,\n            bool_or(stage = 'COLLECT_PIT_DATA_INITIAL') AS pit_initial,\n            bool_or(stage = 'COLLECT_PIT_DATA_GENERALIZED') AS pit_generalized\n        FROM pit_mutation_report\n        GROUP BY project_id\n    ),\n    ineligible AS (\n        SELECT DISTINCT project_id\n        FROM task\n        WHERE test_id IS NULL\n          AND assertion_id IS NULL\n          AND generalization_id IS NULL\n          AND status <> 'SUCCEEDED'\n          AND stage = ANY(:ineligible_stages)\n    )\nSELECT\n    p.id AS project_id,\n    NOT EXISTS (SELECT 1 FROM ineligible i WHERE i.project_id = p.id) AS eligible,\n    coalesce(it.included_tests, 0) AS included_tests,\n    coalesce(ia.included_assertions, 0) AS included_assertions,\n    coalesce(sa.spec_surviving_assertions, 0) AS spec_surviving_assertions,\n    coalesce(gfp.generated_filter_passed, 0) AS generated_filter_passed,\n    coalesce(fu.final_usable, 0) AS final_usable,\n    coalesce(ae.excluded_assertions, 0) AS excluded_assertions,\n    coalesce(ae.filter_rejected_assertions, 0) AS filter_rejected_assertions,\n    coalesce(ae.failure_excluded_assertions, 0) AS failure_excluded_assertions,\n    coalesce(ja.jacoco_original, false) AS has_jacoco_original,\n    coalesce(ja.jacoco_initial, false) AS has_jacoco_initial,\n    coalesce(ja.jacoco_generalized, false) AS has_jacoco_generalized,\n    coalesce(pa.pit_original, false) AS has_pit_original,\n    coalesce(pa.pit_initial, false) AS has_pit_initial,\n    coalesce(pa.pit_generalized, false) AS has_pit_generalized\nFROM project p\nLEFT JOIN included_tests it ON it.project_id = p.id\nLEFT JOIN included_assertions ia ON ia.project_id = p.id\nLEFT JOIN spec_assertions sa ON sa.project_id = p.id\nLEFT JOIN generated_filter_passed gfp ON gfp.project_id = p.id\nLEFT JOIN final_usable fu ON fu.project_id = p.id\nLEFT JOIN assertion_exclusions ae ON ae.project_id = p.id\nLEFT JOIN jacoco_artifacts ja ON ja.project_id = p.id\nLEFT JOIN pit_artifacts pa ON pa.project_id = p.id\nWHERE p.use_test_generalization\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/_funnel.py#L300",
+        "value": "Project-level processing failures by funnel stage and cause."
+      }
+    }
+  }
+}

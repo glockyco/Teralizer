@@ -23,6 +23,33 @@ from teralizer.eval.reports._taxonomy import (
 INELIGIBLE_STAGES = frozenset(
     {"SETUP_PROJECT", "ADD_DEPENDENCIES", "BUILD_PROJECT_ORIGINAL"}
 )
+
+ELIGIBILITY_CTE = """
+WITH eligible_projects AS (
+    SELECT p.id
+    FROM project p
+    WHERE p.use_test_generalization
+      AND NOT EXISTS (
+          SELECT 1
+          FROM task t
+          WHERE t.project_id = p.id
+            AND t.test_id IS NULL
+            AND t.assertion_id IS NULL
+            AND t.generalization_id IS NULL
+            AND t.status <> 'SUCCEEDED'
+            AND t.stage = ANY(:ineligible_stages)
+      )
+)
+"""
+
+
+def base_query_params(variant: str) -> dict[str, object]:
+    return {
+        "variant": variant,
+        "ineligible_stages": list(INELIGIBLE_STAGES),
+    }
+
+
 # The funnel reports all five stages and measures applicability after Stage 5, so the
 # headline figure counts projects that complete the whole pipeline, including test suite
 # reduction. The Stage-4 figure -- projects holding a validated generalized test before

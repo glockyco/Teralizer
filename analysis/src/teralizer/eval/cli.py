@@ -28,18 +28,18 @@ def _build_and_render(
     db: str | None,
     targets: set[str],
     paper_out: Path | None,
-    corpus_data_dir: Path | None = None,
-    corpus_config_dir: Path | None = None,
+    corpus_override: tuple[Path, Path] | None = None,
 ) -> None:
     spec = registry.get(rq)
     validate = spec.schema == "old"
+    corpus = corpus_override
+    if corpus is None and spec.corpus is not None:
+        corpus = (Path(spec.corpus.data_dir), Path(spec.corpus.config_dir))
     with connect(
         db or spec.default_db, validate_schema=validate, require=spec.requires
     ) as conn:
-        if corpus_data_dir is not None and corpus_config_dir is not None:
-            require_complete_corpus(
-                conn, data_dir=corpus_data_dir, config_dir=corpus_config_dir
-            )
+        if corpus is not None:
+            require_complete_corpus(conn, data_dir=corpus[0], config_dir=corpus[1])
         report = spec.build(conn)
     if "figures" in targets:
         figures_renderer.materialize(report, REPORTS_DIR / "figures" / rq)
@@ -66,7 +66,9 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("rq", help="report id or 'all'")
     parser.add_argument("--db", default=None)
     parser.add_argument("--targets", default="md,figures,latex")
-    parser.add_argument("--paper-out", default=os.environ.get("PAPER_REPO_PATH"))
+    # No environment default. Publishing is an explicit act, and an ambient
+    # PAPER_REPO_PATH would make every run copy artifacts into another repo.
+    parser.add_argument("--paper-out", default=None)
     parser.add_argument(
         "--corpus-data-dir",
         type=Path,
@@ -80,6 +82,15 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     if (args.corpus_data_dir is None) != (args.corpus_config_dir is None):
         parser.error("--corpus-data-dir and --corpus-config-dir must be used together")
+    if args.corpus_data_dir is not None and args.rq == "all":
+        parser.error(
+            "--corpus-data-dir overrides one report's corpus and cannot be used "
+            "with 'all'. Each report declares its own"
+        )
+    # macros.tex and the CSV directory are shared across reports, so copying
+    # them out after a single-report run puts one fresh report beside stale ones.
+    if args.paper_out and args.rq != "all":
+        parser.error("--paper-out requires 'all'. Publish the whole set or none of it")
     os.chdir(_ANALYSIS.parent)
     targets = {t.strip() for t in args.targets.split(",") if t.strip()}
     paper_out = Path(args.paper_out) / "tables" if args.paper_out else None
@@ -87,15 +98,13 @@ def main(argv: list[str] | None = None) -> None:
     if not rqs or (args.rq == "all" and not registry.REPORTS):
         print("no reports registered")
         return
+    override = (
+        (args.corpus_data_dir, args.corpus_config_dir)
+        if args.corpus_data_dir is not None
+        else None
+    )
     for rq in rqs:
-        _build_and_render(
-            rq,
-            args.db,
-            targets,
-            paper_out,
-            args.corpus_data_dir,
-            args.corpus_config_dir,
-        )
+        _build_and_render(rq, args.db, targets, paper_out, override)
 
 
 if __name__ == "__main__":

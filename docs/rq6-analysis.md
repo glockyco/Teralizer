@@ -14,7 +14,25 @@ RQ6_TARGETS=md,latex,csv \
 scripts/run-rq6-analysis.sh
 ```
 
-The command materializes the registered `teralizer.eval` RQ6 report. It does not sync files to the paper repository. Generated Markdown, LaTeX, and CSV artifacts live under `analysis/reports/` and `analysis/build/`.
+This materializes the registered RQ6 report for iteration. Markdown and figures land in
+`analysis/reports/`, which is tracked. LaTeX and CSV land in `analysis/build/`, which is not.
+
+## Publishing to a consuming repository
+
+```bash
+PAPER_OUT=~/Projects/phd-thesis/chapters/05-teralizer scripts/publish-analysis.sh
+```
+
+Publication builds every registered report and copies the tables and CSVs into the consumer's
+`tables/` and `data/` directories. It is deliberately all-or-nothing. Reports share `macros.tex`
+and the CSV directory, so publishing after a single-report run would place one fresh report beside
+stale ones, and `--paper-out` refuses any report id other than `all`.
+
+Each report declares the corpus its database must agree with, so `all` checks each against its own.
+`--corpus-data-dir` overrides that for a scratch corpus and is rejected with `all`.
+
+Never hand-copy a table or a figure. Every number the chapter cites has to come from this command,
+including the ones that appear only in prose, which are emitted as macros.
 
 ## Authoritative definitions
 

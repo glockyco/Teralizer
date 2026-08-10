@@ -404,3 +404,7 @@ project-configs/timeout-retry*.conf
 
 # Agent worktrees for isolated implementation work
 /.worktrees/
+
+# Analysis intermediates. The citable copies live in the consuming repository,
+# published by scripts/publish-analysis.sh.
+analysis/build/

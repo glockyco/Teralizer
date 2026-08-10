@@ -1,144 +1,37 @@
 """RQ6 real-world exclusion causes report."""
 
 from __future__ import annotations
-import json
-import re
-
 from dataclasses import replace
 
 import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
-from teralizer.eval.model import ColumnSpec, Metric, Prose, RQReport, Section, Table
+from teralizer.eval.model import Metric, Prose, RQReport, Section
 from teralizer.eval.provenance import capture
-from teralizer.eval.registry import ReportSpec, register
+from teralizer.eval.registry import Corpus, ReportSpec, register
 from teralizer.eval.reports import _funnel
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
     build_filtering_table,
     collapse_mechanisms,
 )
+from teralizer.eval.reports._diagnostics import (
+    JPF_EXCEPTION_DETAIL_SQL,
+    MUT_CHOICE_SENSITIVITY_SQL,
+    fetch_jpf_exception_causes,
+    fetch_mut_choice_sensitivity,
+    jpf_exception_table,
+    mut_choice_table,
+)
+from teralizer.eval.reports._widening import (
+    WIDENING_REFUSAL_SQL,
+    fetch_widening_refusals,
+    widening_refusal_metrics,
+    widening_refusal_table,
+)
 
 DEFAULT_DB = "postgres_reporeapers_rq6_v6"
-
-_ELIGIBILITY_CTE = """
-WITH eligible_projects AS (
-    SELECT p.id
-    FROM project p
-    WHERE p.use_test_generalization
-      AND NOT EXISTS (
-          SELECT 1
-          FROM task t
-          WHERE t.project_id = p.id
-            AND t.test_id IS NULL
-            AND t.assertion_id IS NULL
-            AND t.generalization_id IS NULL
-            AND t.status <> 'SUCCEEDED'
-            AND t.stage = ANY(:ineligible_stages)
-      )
-)
-"""
-
-JPF_EXCEPTION_DETAIL_SQL = f"""
-{_ELIGIBILITY_CTE}
-SELECT td.detail_json
-FROM task_diagnostic td
-JOIN eligible_projects ep ON ep.id = td.project_id
-WHERE td.reason_code = 'UNCAUGHT_EXCEPTION_PATH'
-"""
-
-_JPF_EXCEPTION_CATEGORIES = (
-    "Application exception",
-    "JPF native-peer gap",
-    "JPF model/field gap",
-    "Unparsed",
-)
-_CAUSED_BY = re.compile(r"Caused by:\s*([\w.$]+)(?::\s*([^\r\n]*))?")
-_THROWN = re.compile(r"^([\w.$]+(?:Exception|Error))(?::\s*([^\r\n]*))?", re.MULTILINE)
-_JPF_PEER = re.compile(r"gov\.nasa\.jpf\.vm\.JPF_[\w_]+")
-
-MUT_CHOICE_SENSITIVITY_SQL = f"""
-{_ELIGIBILITY_CTE}
-SELECT DISTINCT o.assertion_id, o.candidate_details
-FROM mut_resolution_observation o
-JOIN eligible_projects ep ON ep.id = o.project_id
-JOIN filter_result fr ON fr.assertion_id = o.assertion_id
-WHERE fr.decision = 'REJECT'
-  AND fr.filter_name LIKE '%ParameterTypeFilter'
-  AND fr.reason_code = 'NO_GENERALIZABLE_PARAMETERS'
-"""
-
-# Reconstructs why WideningLicense refused. Corpora from before
-# `generalization.widening_refusal_code` existed record only the single
-# ORACLE_NOT_WIDENABLE label, so the cause has to be re-derived here. Read the
-# column instead once the corpus has it.
-#
-# The CASE order must match `WideningLicense.evaluate` branch for branch. It
-# decides attribution, not just naming: a non-boolean oracle that also
-# concretized belongs to the first branch that catches it.
-WIDENING_REFUSAL_SQL = f"""
-{_ELIGIBILITY_CTE},
-attempts AS (
-    SELECT count(*)::numeric AS n
-    FROM generalization g
-    JOIN eligible_projects ep ON ep.id = g.project_id
-    WHERE g.variant = :variant
-),
-refusals AS (
-    SELECT
-        CASE
-            WHEN a.output_spec_class = 'EXCEPTION'
-                 AND coalesce(a.concretization_events, 0) > 0
-                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false
-                THEN 'EXCEPTION_DIVERGENCE'
-            WHEN a.output_spec_class = 'EXCEPTION'
-                THEN 'PATH_COVERAGE'
-            WHEN coalesce(
-                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''
-                 ) NOT IN ('boolean', 'java.lang.Boolean')
-                THEN 'NON_BOOLEAN_ORACLE'
-            WHEN coalesce(a.concretization_events, 0) > 0
-                THEN 'CONCRETIZATION'
-            ELSE 'PATH_COVERAGE'
-        END AS code,
-        CASE
-            WHEN a.output_spec_class = 'EXCEPTION'
-                 AND coalesce(a.concretization_events, 0) > 0
-                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false
-                THEN 'Exception oracle concretized with divergence risk'
-            WHEN a.output_spec_class = 'EXCEPTION'
-                THEN 'Path condition does not pin every generated parameter'
-            WHEN coalesce(
-                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''
-                 ) NOT IN ('boolean', 'java.lang.Boolean')
-                THEN 'Null output model, oracle expression is not boolean'
-            WHEN coalesce(a.concretization_events, 0) > 0
-                THEN 'Null output model, concretization weakened the path condition'
-            ELSE 'Path condition does not pin every generated parameter'
-        END AS cause
-    FROM generalization g
-    JOIN assertion a ON a.id = g.assertion_id
-    JOIN eligible_projects ep ON ep.id = g.project_id
-    WHERE g.variant = :variant
-      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'
-)
-SELECT code,
-       cause,
-       count(*)::bigint AS refusals,
-       count(*) / (SELECT n FROM attempts) AS attempts_pct,
-       count(*) / sum(count(*)) OVER () AS refusals_pct
-FROM refusals
-GROUP BY code, cause
-ORDER BY refusals DESC
-"""
-
-_MUT_CHOICE_CATEGORIES = (
-    "Candidate detail unavailable",
-    "Choice-invariant",
-    "Choice-dependent",
-)
-
 
 # How each exclusion mechanism records itself. See docs/exclusion-model.md.
 # The name test matters: the javac quarantine writes REJECT rows to
@@ -155,8 +48,7 @@ CAPABILITY_PATTERN = "INHERITED_METHOD_NOT_FLATTENABLE%"
 
 def _query_params(variant: str) -> dict[str, object]:
     return {
-        "variant": variant,
-        "ineligible_stages": list(_funnel.INELIGIBLE_STAGES),
+        **_funnel.base_query_params(variant),
         "filter_class_pattern": FILTER_CLASS_PATTERN,
         "gate_codes": list(GATE_CODES),
         "quarantine_codes": list(QUARANTINE_CODES),
@@ -165,7 +57,7 @@ def _query_params(variant: str) -> dict[str, object]:
 
 
 FILTERING_SQL = rf"""
-{_ELIGIBILITY_CTE},
+{_funnel.ELIGIBILITY_CTE},
 base_data AS (
     SELECT
         CASE
@@ -217,7 +109,7 @@ ORDER BY
 """
 
 BREAKDOWN_SQL = f"""
-{_ELIGIBILITY_CTE},
+{_funnel.ELIGIBILITY_CTE},
 test_counts AS (
     SELECT
         'All' AS strategy,
@@ -366,7 +258,7 @@ ORDER BY
 
 
 UNRESOLVED_TELEMETRY_SQL = f"""
-{_ELIGIBILITY_CTE}
+{_funnel.ELIGIBILITY_CTE}
 SELECT count(*) AS assertions_without_resolution
 FROM assertion a
 JOIN eligible_projects ep ON ep.id = a.project_id
@@ -400,9 +292,9 @@ _BREAKDOWN_COLUMNS = ("included", "filtered", "refused", "unsupported", "failed"
 def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
     """Return eligible-entity outcomes, one column per exclusion mechanism.
 
-    Raises when an entity matches no mechanism. That means the pipeline grew a
-    way to exclude something that this SQL does not model, and the old `ELSE`
-    would have quietly added it to whichever column came last.
+    Raises when an entity matches no mechanism, which means the pipeline can
+    exclude something this SQL does not model. Add the mechanism rather than a
+    fallback branch, or the count lands in whichever column is written last.
     """
     df = read_sql(conn, BREAKDOWN_SQL, _query_params(variant))
     for column in (*_BREAKDOWN_COLUMNS, "total", "uncoded"):
@@ -418,245 +310,14 @@ def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
     return pd.DataFrame(df, columns=["strategy", "level", "total", *_BREAKDOWN_COLUMNS])
 
 
-def _detail_message(detail: object) -> str:
-    if isinstance(detail, dict):
-        return str(detail.get("message") or detail.get("detail") or "")
-    if not isinstance(detail, str):
-        return ""
-    try:
-        decoded = json.loads(detail)
-    except json.JSONDecodeError:
-        return detail
-    if isinstance(decoded, dict):
-        return str(decoded.get("message") or decoded.get("detail") or "")
-    return detail
-
-
-def _classify_jpf_exception_detail(detail: object) -> str:
-    """Recover a concrete JPF failure family from retained diagnostic detail."""
-    message = _detail_message(detail)
-    caused_by = _CAUSED_BY.findall(message)
-    exception_type = caused_by[-1][0] if caused_by else ""
-    if not exception_type:
-        after_marker = message.split("gov.nasa.jpf.vm.NoUncaughtExceptionsProperty", 1)[
-            -1
-        ]
-        thrown = _THROWN.search(after_marker)
-        exception_type = thrown.group(1) if thrown else ""
-    if not exception_type:
-        return "Unparsed"
-    if exception_type.endswith(("NoSuchFieldException", "NoSuchMethodException")):
-        return "JPF model/field gap"
-    if _JPF_PEER.search(message):
-        return "JPF native-peer gap"
-    if exception_type.startswith("gov.nasa.jpf"):
-        return "Unparsed"
-    return "Application exception"
-
-
-def _fetch_jpf_exception_causes(conn: Connection, variant: str) -> pd.DataFrame:
-    details = read_sql(conn, JPF_EXCEPTION_DETAIL_SQL, params=_query_params(variant))
-    classified = details["detail_json"].map(_classify_jpf_exception_detail)
-    counts = classified.value_counts()
-    total = int(len(classified))
-    return pd.DataFrame(
-        [
-            {
-                "category": category,
-                "count": int(counts.get(category, 0)),
-                "share": int(counts.get(category, 0)) / total if total else 0.0,
-            }
-            for category in _JPF_EXCEPTION_CATEGORIES
-        ]
-    )
-
-
-def _jpf_exception_table(df: pd.DataFrame) -> Table:
-    return Table(
-        key="rq6_jpf_exception_causes",
-        df=df,
-        columns=[
-            ColumnSpec("Recovered cause", "category"),
-            ColumnSpec("Diagnostics", "count", "count", "r"),
-            ColumnSpec("Share", "share", "pct1", "r"),
-        ],
-        caption=(
-            "Retrospective classification of generic JPF uncaught-exception "
-            "diagnostics from retained detail."
-        ),
-        label="tab:jpf-exception-causes",
-        note=(
-            "This recovery changes cause attribution only; it does not change "
-            "project eligibility or funnel outcomes."
-        ),
-        provenance=capture(_fetch_jpf_exception_causes, query=JPF_EXCEPTION_DETAIL_SQL),
-    )
-
-
-def _call_has_arguments(source: str) -> bool:
-    """Whether the final Java call in source passes at least one argument."""
-    source = source.strip()
-    if not source.endswith(")"):
-        return False
-    depth = 0
-    for index in range(len(source) - 1, -1, -1):
-        value = source[index]
-        if value == ")":
-            depth += 1
-        elif value == "(":
-            depth -= 1
-            if depth == 0:
-                return bool(source[index + 1 : -1].strip())
-    return False
-
-
-def _classify_mut_candidate_details(detail: object) -> str:
-    if isinstance(detail, str):
-        try:
-            detail = json.loads(detail)
-        except json.JSONDecodeError:
-            return "Candidate detail unavailable"
-    if not isinstance(detail, list) or not detail:
-        return "Candidate detail unavailable"
-
-    sources: list[str] = []
-    for candidate in detail:
-        if not isinstance(candidate, dict):
-            return "Candidate detail unavailable"
-        source = candidate.get("callSource")
-        if not isinstance(source, str) or not source.strip():
-            return "Candidate detail unavailable"
-        sources.append(source)
-    if any(_call_has_arguments(source) for source in sources):
-        return "Choice-dependent"
-    return "Choice-invariant"
-
-
-def _fetch_mut_choice_sensitivity(conn: Connection, variant: str) -> pd.DataFrame:
-    details = read_sql(conn, MUT_CHOICE_SENSITIVITY_SQL, params=_query_params(variant))
-    classified = details["candidate_details"].map(_classify_mut_candidate_details)
-    counts = classified.value_counts()
-    total = int(len(classified))
-    return pd.DataFrame(
-        [
-            {
-                "category": category,
-                "count": int(counts.get(category, 0)),
-                "share": int(counts.get(category, 0)) / total if total else 0.0,
-            }
-            for category in _MUT_CHOICE_CATEGORIES
-        ]
-    )
-
-
-def _mut_choice_table(df: pd.DataFrame) -> Table:
-    return Table(
-        key="rq6_mut_choice_sensitivity",
-        df=df,
-        columns=[
-            ColumnSpec("Candidate evidence", "category"),
-            ColumnSpec("Rejections", "count", "count", "r"),
-            ColumnSpec("Share of all", "share", "pct1", "r"),
-        ],
-        caption=(
-            "Choice sensitivity of ParameterType rejections classified from "
-            "retained MUT candidate details."
-        ),
-        label="tab:mut-choice-sensitivity",
-        note=(
-            "Choice-dependent rows divided by all ParameterType rejections are "
-            "a lower bound; rows without candidate detail remain unscored."
-        ),
-        provenance=capture(
-            _fetch_mut_choice_sensitivity, query=MUT_CHOICE_SENSITIVITY_SQL
-        ),
-    )
-
-
-def _fetch_widening_refusals(conn: Connection, variant: str) -> pd.DataFrame:
-    """Return widening-refusal counts by cause for the eligible corpus."""
-    df = read_sql(conn, WIDENING_REFUSAL_SQL, _query_params(variant))
-    df["refusals"] = df["refusals"].astype(int)
-    for column in ("attempts_pct", "refusals_pct"):
-        df[column] = df[column].astype(float)
-    return pd.DataFrame(
-        df, columns=["code", "cause", "refusals", "attempts_pct", "refusals_pct"]
-    )
-
-
-# Macro names are built from these slugs, so renaming one breaks the chapter.
-# Rename the label in the SQL instead, the code is what this keys on.
-_WIDENING_METRIC_KEYS = {
-    "NON_BOOLEAN_ORACLE": "non_boolean_oracle",
-    "CONCRETIZATION": "concretization",
-    "PATH_COVERAGE": "path_coverage",
-    "EXCEPTION_DIVERGENCE": "exception_divergence",
-}
-
-
-def _widening_refusal_table(df: pd.DataFrame, provenance) -> Table:
-    return Table(
-        key="rq6_widening_refusals",
-        df=df,
-        columns=[
-            ColumnSpec("Refusal cause", "cause"),
-            ColumnSpec("Generalizations", "refusals", fmt="count", align="r"),
-            ColumnSpec("Refusals", "refusals_pct", fmt="pct1", align="r"),
-            ColumnSpec("Attempts", "attempts_pct", fmt="pct1", align="r"),
-        ],
-        caption=(
-            "Why the widening license refused to emit a generalized test, by "
-            "cause, for the real-world dataset."
-        ),
-        label="tab:widening-refusals",
-        note=(
-            "Refusals are decided before a generalized test is written, so they "
-            "carry no filter decision and no lifecycle record."
-        ),
-        provenance=provenance,
-    )
-
-
-def _widening_refusal_metrics(df: pd.DataFrame, provenance) -> list[Metric]:
-    metrics = [
-        Metric(
-            "realworld.widening_refusals",
-            int(df["refusals"].sum()),
-            fmt="count",
-            provenance=provenance,
-        )
-    ]
-    for row in df.to_dict("records"):
-        key = _WIDENING_METRIC_KEYS.get(str(row["code"]))
-        if key is None:
-            raise RuntimeError(f"unmapped widening refusal code: {row['code']!r}")
-        metrics.append(
-            Metric(
-                f"realworld.widening_refusal_{key}",
-                int(row["refusals"]),
-                fmt="count",
-                provenance=provenance,
-            )
-        )
-        metrics.append(
-            Metric(
-                f"realworld.widening_refusal_{key}_pct",
-                float(row["refusals_pct"]),
-                fmt="pct1",
-                provenance=provenance,
-            )
-        )
-    return metrics
-
-
 def build(conn: Connection) -> RQReport:
     variant = _funnel.resolve_variant(conn)
     funnel = _funnel.build_funnel(conn, variant=variant)
     breakdown_data = _fetch_breakdown(conn, variant)
-    jpf_exception_data = _fetch_jpf_exception_causes(conn, variant)
-    jpf_exception_table = _jpf_exception_table(jpf_exception_data)
-    mut_choice_data = _fetch_mut_choice_sensitivity(conn, variant)
-    mut_choice_table = _mut_choice_table(mut_choice_data)
+    jpf_exception_data = fetch_jpf_exception_causes(conn, variant)
+    jpf_table = jpf_exception_table(jpf_exception_data)
+    mut_choice_data = fetch_mut_choice_sensitivity(conn, variant)
+    mut_table = mut_choice_table(mut_choice_data)
 
     breakdown = build_breakdown_table(
         collapse_mechanisms(breakdown_data),
@@ -790,7 +451,7 @@ def build(conn: Connection) -> RQReport:
                 jpf_rows,
                 fmt="count",
                 provenance=capture(
-                    _fetch_jpf_exception_causes,
+                    fetch_jpf_exception_causes,
                     query=JPF_EXCEPTION_DETAIL_SQL,
                 ),
             ),
@@ -799,7 +460,7 @@ def build(conn: Connection) -> RQReport:
                 (jpf_rows - jpf_unparsed) / jpf_rows if jpf_rows else 0.0,
                 fmt="pct1",
                 provenance=capture(
-                    _fetch_jpf_exception_causes,
+                    fetch_jpf_exception_causes,
                     query=JPF_EXCEPTION_DETAIL_SQL,
                 ),
             ),
@@ -818,7 +479,7 @@ def build(conn: Connection) -> RQReport:
                 mut_choice_dependent,
                 fmt="count",
                 provenance=capture(
-                    _fetch_mut_choice_sensitivity,
+                    fetch_mut_choice_sensitivity,
                     query=MUT_CHOICE_SENSITIVITY_SQL,
                 ),
             ),
@@ -827,16 +488,16 @@ def build(conn: Connection) -> RQReport:
                 mut_choice_dependent / mut_choice_total if mut_choice_total else 0.0,
                 fmt="pct1",
                 provenance=capture(
-                    _fetch_mut_choice_sensitivity,
+                    fetch_mut_choice_sensitivity,
                     query=MUT_CHOICE_SENSITIVITY_SQL,
                 ),
             ),
         ]
     )
-    widening_data = _fetch_widening_refusals(conn, variant)
-    widening_provenance = capture(_fetch_widening_refusals, query=WIDENING_REFUSAL_SQL)
-    widening_table = _widening_refusal_table(widening_data, widening_provenance)
-    metrics.extend(_widening_refusal_metrics(widening_data, widening_provenance))
+    widening_data = fetch_widening_refusals(conn, variant)
+    widening_provenance = capture(fetch_widening_refusals, query=WIDENING_REFUSAL_SQL)
+    widening_table = widening_refusal_table(widening_data, widening_provenance)
+    metrics.extend(widening_refusal_metrics(widening_data, widening_provenance))
     section = Section(
         title="Project-level exclusions",
         blocks=[
@@ -850,13 +511,13 @@ def build(conn: Connection) -> RQReport:
                 "from their retained detail into application exceptions and "
                 "JPF environment gaps."
             ),
-            jpf_exception_table,
+            jpf_table,
             Prose(
                 "ParameterType choice sensitivity is reported conservatively: "
                 "only a rejection with an observed argument-taking alternative "
                 "is choice-dependent."
             ),
-            mut_choice_table,
+            mut_table,
             breakdown,
             filtering,
             Prose(
@@ -875,4 +536,15 @@ def build(conn: Connection) -> RQReport:
     )
 
 
-register("rq6", ReportSpec(build, DEFAULT_DB, "new"))
+register(
+    "rq6",
+    ReportSpec(
+        build,
+        DEFAULT_DB,
+        "new",
+        corpus=Corpus(
+            data_dir="data/reporeapers-rerun-v6",
+            config_dir="project-configs/replication/extended",
+        ),
+    ),
+)

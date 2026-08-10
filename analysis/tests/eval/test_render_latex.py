@@ -1,6 +1,31 @@
 import pandas as pd
+import pytest
 from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
-from teralizer.eval.render.latex import render_macros, render_table
+from teralizer.eval.render.latex import render_macros, render_table, write_macros
+
+
+def _report(rq: str, key: str) -> RQReport:
+    return RQReport(
+        rq, "T", "db", [Section("s", [])], metrics=[Metric(key, 1, "count")]
+    )
+
+
+def test_macros_from_every_report_survive_a_single_report_run(tmp_path):
+    write_macros(_report("rq0", "jarvis.probes"), tmp_path)
+    write_macros(_report("rq6", "realworld.eligible_projects"), tmp_path)
+    write_macros(_report("rq6", "realworld.eligible_projects"), tmp_path)
+
+    aggregate = (tmp_path / "macros.tex").read_text()
+    assert "\\TzJarvisProbes" in aggregate
+    assert "\\TzRealworldEligibleProjects" in aggregate
+    assert aggregate.count("\\newcommand") == 2
+    assert "Reports included: rq0, rq6" in aggregate
+
+
+def test_two_reports_cannot_own_the_same_macro(tmp_path):
+    write_macros(_report("rq0", "shared.count"), tmp_path)
+    with pytest.raises(RuntimeError, match=r"rq0 and rq6"):
+        write_macros(_report("rq6", "shared.count"), tmp_path)
 
 
 def test_render_table_is_booktabs_with_formatted_cells():

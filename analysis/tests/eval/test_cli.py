@@ -2,6 +2,7 @@ from pathlib import Path
 
 import inspect
 import pandas as pd
+import pytest
 from teralizer.eval import cli, provenance, registry
 from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
 
@@ -99,17 +100,32 @@ def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "connect", fake_connect)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
     monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
-    cli.main(
-        [
-            "smoke_csv",
-            "--targets",
-            "md,latex,csv",
-            "--paper-out",
-            str(tmp_path / "paper"),
-        ]
+    cli._build_and_render(
+        "smoke_csv",
+        None,
+        {"md", "latex", "csv"},
+        tmp_path / "paper" / "tables",
     )
     assert (tmp_path / "build" / "smoke_csv" / "k.csv").exists()
     assert (tmp_path / "paper" / "tables" / "k.tex").exists()
     csv_path = tmp_path / "paper" / "data" / "k.csv"
     assert csv_path.exists()
     assert csv_path.read_text(encoding="utf-8").splitlines()[0] == "a"
+
+
+def test_publishing_one_report_is_refused(tmp_path):
+    with pytest.raises(SystemExit):
+        cli.main(["rq6", "--paper-out", str(tmp_path)])
+
+
+def test_overriding_the_corpus_across_all_reports_is_refused(tmp_path):
+    with pytest.raises(SystemExit):
+        cli.main(
+            [
+                "all",
+                "--corpus-data-dir",
+                str(tmp_path),
+                "--corpus-config-dir",
+                str(tmp_path),
+            ]
+        )
