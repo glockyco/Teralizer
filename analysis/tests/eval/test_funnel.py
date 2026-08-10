@@ -1,45 +1,28 @@
 import pandas as pd
-import pytest
-import sqlalchemy.exc
 from sqlalchemy import text
 
-from teralizer.eval.data import connect
 from teralizer.eval.reports import _funnel
-from teralizer.eval.reports.rq6_causes import DEFAULT_DB
 
 
 # Keep the database-specific integration assertions below separate from the
 # pure funnel arithmetic checks so failures identify the broken contract.
-def _connect():
-    return connect(DEFAULT_DB)
-
-
-def _funnel_result():
-    try:
-        with _connect() as conn:
-            return _funnel.build_funnel(conn)
-    except sqlalchemy.exc.OperationalError:
-        pytest.skip("database unavailable")
-    raise AssertionError("unreachable: pytest.skip should have raised")
-
-
-def test_no_uncoded_attributions():
-    result = _funnel_result()
+def test_no_uncoded_attributions(funnel_result):
+    result = funnel_result
     assert result.uncoded_projects == [], (
         f"unclassified projects: {result.uncoded_projects[:10]}"
     )
 
 
-def test_eligibility_audit_only_ineligible_causes_at_setup_stages():
-    result = _funnel_result()
+def test_eligibility_audit_only_ineligible_causes_at_setup_stages(funnel_result):
+    result = funnel_result
     assert result.eligibility_audit_unexpected == [], (
         f"eligible-looking failures at fail-at-start stages: "
         f"{result.eligibility_audit_unexpected[:10]}"
     )
 
 
-def test_funnel_arithmetic_is_consistent():
-    result = _funnel_result()
+def test_funnel_arithmetic_is_consistent(funnel_result):
+    result = funnel_result
     stages = result.stages
     assert [stage.stage for stage in stages] == ["1 + 2", "3", "4", "5"]
     assert stages[0].entering == result.eligible
@@ -59,14 +42,14 @@ def test_funnel_arithmetic_is_consistent():
     assert result.reduction.entering > result.success_count
 
 
-def test_every_cause_row_has_a_known_type():
-    result = _funnel_result()
+def test_every_cause_row_has_a_known_type(funnel_result):
+    result = funnel_result
     assert set(result.table.df["type"]) <= {"Internal", "External", "Mixed"}
     assert (result.table.df["count"] > 0).all()
 
 
-def test_funnel_table_has_band_summary_note():
-    result = _funnel_result()
+def test_funnel_table_has_band_summary_note(funnel_result):
+    result = funnel_result
     note = result.table.note
     assert note is not None and note.strip()
     assert str(result.eligible) in note
@@ -106,9 +89,10 @@ def test_survivorship_band_overrides_upstream_taxonomy_stage():
     assert "all assertions excluded" in cause.cause
 
 
-def test_funnel_survivors_match_independent_sql():
-    result = _funnel_result()
-    with _connect() as conn:
+def test_funnel_survivors_match_independent_sql(funnel_result, rq6_conn):
+    result = funnel_result
+    with rq6_conn.begin_nested():
+        conn = rq6_conn
         variant = _funnel.resolve_variant(conn)
         counts = conn.execute(
             text(
@@ -205,9 +189,10 @@ def test_funnel_survivors_match_independent_sql():
     assert result.reduction.entering == counts[3]
 
 
-def test_funnel_stage3_and_stage5_ids_match_direct_oracles():
-    result = _funnel_result()
-    with _connect() as conn:
+def test_funnel_stage3_and_stage5_ids_match_direct_oracles(funnel_result, rq6_conn):
+    result = funnel_result
+    with rq6_conn.begin_nested():
+        conn = rq6_conn
         variant = _funnel.resolve_variant(conn)
         stage3_ids = {
             row[0]
@@ -279,9 +264,12 @@ def test_funnel_stage3_and_stage5_ids_match_direct_oracles():
     assert result.survivor_project_ids[4] == frozenset(stage5_ids)
 
 
-def test_funnel_stage4_matches_validated_generalization_projects():
-    result = _funnel_result()
-    with _connect() as conn:
+def test_funnel_stage4_matches_validated_generalization_projects(
+    funnel_result, rq6_conn
+):
+    result = funnel_result
+    with rq6_conn.begin_nested():
+        conn = rq6_conn
         variant = _funnel.resolve_variant(conn)
         expected = conn.execute(
             text(
@@ -315,10 +303,10 @@ def test_funnel_stage4_matches_validated_generalization_projects():
     assert result.reduction.entering == expected
 
 
-def test_reduction_causes_are_tabulated_and_define_final_success():
+def test_reduction_causes_are_tabulated_and_define_final_success(funnel_result):
     # The table documents all five stages, success is measured after reduction, and
     # the reduction attrition is quantified so the chapter can state what it costs.
-    result = _funnel_result()
+    result = funnel_result
     rows = result.table.df
     assert any(rows["stage"].eq("5")), rows
     assert any(

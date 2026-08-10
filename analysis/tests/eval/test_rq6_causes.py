@@ -1,28 +1,15 @@
 import pytest
-import sqlalchemy.exc
 from sqlalchemy import text
 
 from teralizer.eval.reports import _funnel
 
-from teralizer.eval.data import connect
-from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
 from teralizer.eval.reports import rq6_causes  # noqa: F401  (registers "rq6")
 from teralizer.eval.reports._causes_common import MECHANISM_COLLAPSE
 
 
-def _report() -> RQReport:
-    spec = get("rq6")
-    try:
-        with connect(spec.default_db) as conn:
-            return spec.build(conn)
-    except sqlalchemy.exc.OperationalError:
-        pytest.skip("database unavailable")
-    raise AssertionError("unreachable: pytest.skip should have raised")
-
-
-def test_rq6_has_funnel_and_shared_tables():
-    report = _report()
+def test_rq6_has_funnel_and_shared_tables(rq6_report):
+    report = rq6_report
     assert report.rq == "rq6"
     assert report.db == get("rq6").default_db
     labels = {t.label for t in report.tables()}
@@ -44,14 +31,14 @@ def test_rq6_has_funnel_and_shared_tables():
     ) == pytest.approx(counts["Choice-dependent"] / total)
 
 
-def test_rq6_funnel_causes_are_typed():
-    report = _report()
+def test_rq6_funnel_causes_are_typed(rq6_report):
+    report = rq6_report
     funnel = next(t for t in report.tables() if "processing-failures" in t.label)
     assert set(funnel.df["type"]) <= {"Internal", "External", "Mixed"}
 
 
-def test_rq6_breakdown_conservation():
-    report = _report()
+def test_rq6_breakdown_conservation(rq6_report):
+    report = rq6_report
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
     assert set(breakdown.df["level"]) <= {"Test", "Assertion", "Generalization"}
     # The rendered table is the reader-facing collapse. The per-mechanism
@@ -60,10 +47,11 @@ def test_rq6_breakdown_conservation():
     assert (reconstructed == breakdown.df["total"]).all()
 
 
-def test_rq6_breakdown_matches_eligible_entity_denominators():
-    report = _report()
+def test_rq6_breakdown_matches_eligible_entity_denominators(rq6_report, rq6_conn):
+    report = rq6_report
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
-    with connect(get("rq6").default_db) as conn:
+    with rq6_conn.begin_nested():
+        conn = rq6_conn
         variant = _funnel.resolve_variant(conn)
         counts = conn.execute(
             text(
@@ -105,11 +93,12 @@ def test_rq6_breakdown_matches_eligible_entity_denominators():
     assert observed["Generalization"] == counts[2]
 
 
-def test_rq6_generalization_inclusion_uses_validated_signal():
-    report = _report()
+def test_rq6_generalization_inclusion_uses_validated_signal(rq6_report, rq6_conn):
+    report = rq6_report
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
     row = breakdown.df[breakdown.df["level"].eq("Generalization")].iloc[0]
-    with connect(get("rq6").default_db) as conn:
+    with rq6_conn.begin_nested():
+        conn = rq6_conn
         variant = _funnel.resolve_variant(conn)
         validated = conn.execute(
             text(
@@ -125,13 +114,14 @@ def test_rq6_generalization_inclusion_uses_validated_signal():
     assert row["included"] == validated
 
 
-def test_rq6_generalization_reduction_attrition_stays_included():
+def test_rq6_generalization_reduction_attrition_stays_included(rq6_report, rq6_conn):
     # A reduction-dependent inclusion signal would push Stage-5 PIT losses into an
     # exclusion column. Inclusion must key on the generation-side filter verdict.
-    report = _report()
+    report = rq6_report
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
     row = breakdown.df[breakdown.df["level"].eq("Generalization")].iloc[0]
-    with connect(get("rq6").default_db) as conn:
+    with rq6_conn.begin_nested():
+        conn = rq6_conn
         variant = _funnel.resolve_variant(conn)
         filter_passed = conn.execute(
             text(
@@ -169,24 +159,24 @@ def test_rq6_generalization_reduction_attrition_stays_included():
     assert row["included"] == filter_passed
 
 
-def test_rq6_filtering_table_is_entity_conservative():
-    report = _report()
+def test_rq6_filtering_table_is_entity_conservative(rq6_report):
+    report = rq6_report
     filtering = next(t for t in report.tables() if "exclusions-filtering" in t.label)
     assert "Generalization" in set(filtering.df["level"])
     reconstructed = filtering.df[["accept", "defer", "reject"]].sum(axis=1)
     assert (reconstructed == filtering.df["total"]).all()
 
 
-def test_rq6_every_assertion_carries_resolver_telemetry():
+def test_rq6_every_assertion_carries_resolver_telemetry(rq6_report):
     # MethodUnderTestResolver.resolve runs unconditionally before the assertion
     # row is stored and MutResolution is total, so a missing observation row is
     # a persistence defect, never a category.
-    report = _report()
+    report = rq6_report
     assert int(report.metric("realworld.assertions_without_resolution").value) == 0
 
 
-def test_rq6_metrics_cover_applicability_and_are_well_formed():
-    report = _report()
+def test_rq6_metrics_cover_applicability_and_are_well_formed(rq6_report):
+    report = rq6_report
     eligible = int(report.metric("realworld.eligible_projects").value)
     assert eligible > 0
 
@@ -215,8 +205,8 @@ def test_rq6_metrics_cover_applicability_and_are_well_formed():
     )
 
 
-def test_rq6_applicability_is_measured_after_reduction():
-    report = _report()
+def test_rq6_applicability_is_measured_after_reduction(rq6_report):
+    report = rq6_report
     stage4 = int(report.metric("realworld.stage4_projects").value)
     excluded = int(report.metric("realworld.reduction_excluded_projects").value)
     baseline_side = int(

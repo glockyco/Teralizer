@@ -9,13 +9,10 @@ started writing somewhere new, and a bucket is now silently absorbing it. Read
 import re
 
 import pytest
-import sqlalchemy.exc
 from sqlalchemy import text
 
-from teralizer.eval.data import connect
 from teralizer.eval.reports import _funnel, rq6_causes
 from teralizer.eval.reports._causes_common import MECHANISM_OUTCOMES
-from teralizer.eval.reports.rq6_causes import DEFAULT_DB
 
 # `FILTERING_SQL` recognises a filter by its class name. Anything else that writes to
 # `filter_result` is a different mechanism wearing a filter's clothes.
@@ -38,37 +35,22 @@ KNOWN_EXCLUSION_CODES = GENERATION_GATE_CODES | QUARANTINE_CODES | CAPABILITY_CO
 ENTITY_TABLES = ("test", "assertion", "generalization")
 
 
-def _rows(sql: str, **params) -> list[tuple]:
-    """Run `sql` against the RQ6 database, skipping when it is not reachable."""
-    try:
-        with connect(DEFAULT_DB) as conn:
-            return [tuple(row) for row in conn.execute(text(sql), params)]
-    except sqlalchemy.exc.OperationalError:
-        pytest.skip("database unavailable")
-    raise AssertionError("unreachable: pytest.skip should have raised")
+def _rows(conn, sql: str, **params) -> list[tuple]:
+    return [tuple(row) for row in conn.execute(text(sql), params)]
 
 
-def _variant() -> str:
-    try:
-        with connect(DEFAULT_DB) as conn:
-            return _funnel.resolve_variant(conn)
-    except sqlalchemy.exc.OperationalError:
-        pytest.skip("database unavailable")
-    raise AssertionError("unreachable: pytest.skip should have raised")
+def _variant(conn) -> str:
+    return _funnel.resolve_variant(conn)
 
 
-def _breakdown():
-    try:
-        with connect(DEFAULT_DB) as conn:
-            return rq6_causes._fetch_breakdown(conn, _funnel.resolve_variant(conn))
-    except sqlalchemy.exc.OperationalError:
-        pytest.skip("database unavailable")
-    raise AssertionError("unreachable: pytest.skip should have raised")
+def _breakdown(conn):
+    return rq6_causes._fetch_breakdown(conn, _funnel.resolve_variant(conn))
 
 
-def test_generalizations_partition_into_gated_and_emitted():
+def test_generalizations_partition_into_gated_and_emitted(rq6_conn):
     """A generalization is either refused before emission or has a lifecycle row."""
     attempts, gated, emitted = _rows(
+        rq6_conn,
         """
         SELECT count(*),
                count(*) FILTER (WHERE g.exclusion_info = ANY(:codes)),
@@ -78,7 +60,7 @@ def test_generalizations_partition_into_gated_and_emitted():
         WHERE g.variant = :variant
         """,
         codes=sorted(GENERATION_GATE_CODES),
-        variant=_variant(),
+        variant=_variant(rq6_conn),
     )[0]
     assert gated + emitted == attempts, (
         f"{attempts} attempts != {gated} gated + {emitted} emitted; a third outcome "
@@ -86,9 +68,10 @@ def test_generalizations_partition_into_gated_and_emitted():
     )
 
 
-def test_gated_generalizations_leave_no_downstream_rows():
+def test_gated_generalizations_leave_no_downstream_rows(rq6_conn):
     """The generation gates return before emission, so nothing downstream may exist."""
     lifecycle, filtered = _rows(
+        rq6_conn,
         """
         SELECT count(l.id),
                count(*) FILTER (
@@ -99,7 +82,7 @@ def test_gated_generalizations_leave_no_downstream_rows():
         WHERE g.variant = :variant AND g.exclusion_info = ANY(:codes)
         """,
         codes=sorted(GENERATION_GATE_CODES),
-        variant=_variant(),
+        variant=_variant(rq6_conn),
     )[0]
     assert (lifecycle, filtered) == (0, 0), (
         f"gated generalizations have {lifecycle} lifecycle and {filtered} filter rows; "
@@ -107,10 +90,11 @@ def test_gated_generalizations_leave_no_downstream_rows():
     )
 
 
-def test_every_filter_result_writer_is_a_filter_or_declared_otherwise():
+def test_every_filter_result_writer_is_a_filter_or_declared_otherwise(rq6_conn):
     """`filter_result` is shared with the javac quarantine. Nothing else may join."""
     names = {
-        name for (name,) in _rows("SELECT DISTINCT filter_name FROM filter_result")
+        name
+        for (name,) in _rows(rq6_conn, "SELECT DISTINCT filter_name FROM filter_result")
     }
     unknown = {
         n for n in names if not FILTER_CLASS_NAME.search(n)
@@ -122,17 +106,18 @@ def test_every_filter_result_writer_is_a_filter_or_declared_otherwise():
 
 
 @pytest.mark.parametrize("table", ENTITY_TABLES)
-def test_every_typed_exclusion_code_is_a_known_mechanism(table):
+def test_every_typed_exclusion_code_is_a_known_mechanism(table, rq6_conn):
     """A new typed code means a new mechanism the breakdown does not model."""
     codes = {
         code
         for (code,) in _rows(
+            rq6_conn,
             f"""
             SELECT DISTINCT split_part(exclusion_info, ':', 1)
             FROM {table}
             WHERE exclusion_info IS NOT NULL
               AND exclusion_info NOT LIKE 'Excluded by%'
-            """
+            """,
         )
     }
     unknown = codes - KNOWN_EXCLUSION_CODES
@@ -142,21 +127,22 @@ def test_every_typed_exclusion_code_is_a_known_mechanism(table):
     )
 
 
-def test_breakdown_buckets_sum_to_level_total():
+def test_breakdown_buckets_sum_to_level_total(rq6_conn):
     """Every entity lands in exactly one mechanism.
 
     `_fetch_breakdown` already refuses to return an unclassified entity, so this
     also proves the classification is total rather than merely non-overlapping.
     """
-    df = _breakdown()
+    df = _breakdown(rq6_conn)
     counted = sum(df[outcome.column] for outcome in MECHANISM_OUTCOMES)
     mismatched = df[df["total"] != counted]
     assert mismatched.empty, f"mechanisms do not partition the level:\n{mismatched}"
 
 
-def test_filter_passed_generalizations_carry_no_rejection():
+def test_filter_passed_generalizations_carry_no_rejection(rq6_conn):
     """`generated_filter_passed` and a REJECT row are contradictory verdicts."""
     (contradictory,) = _rows(
+        rq6_conn,
         """
         SELECT count(*)
         FROM generalization_lifecycle l
@@ -166,7 +152,7 @@ def test_filter_passed_generalizations_carry_no_rejection():
           AND EXISTS (SELECT 1 FROM filter_result fr
                        WHERE fr.generalization_id = g.id AND fr.decision = 'REJECT')
         """,
-        variant=_variant(),
+        variant=_variant(rq6_conn),
     )[0]
     assert contradictory == 0, (
         f"{contradictory} generalizations both passed filtering and were rejected"
@@ -181,9 +167,10 @@ def test_filter_passed_generalizations_carry_no_rejection():
         "marker once the lifecycle gains a not-attempted outcome."
     ),
 )
-def test_lifecycle_failure_stage_was_actually_attempted():
+def test_lifecycle_failure_stage_was_actually_attempted(rq6_conn):
     """A generalization cannot fail at a stage its project never reached."""
     (never_ran,) = _rows(
+        rq6_conn,
         """
         SELECT count(*)
         FROM generalization_lifecycle l
@@ -192,7 +179,7 @@ def test_lifecycle_failure_stage_was_actually_attempted():
           AND NOT EXISTS (SELECT 1 FROM task t
                            WHERE t.project_id = g.project_id
                              AND t.stage::text = l.final_failure_stage)
-        """
+        """,
     )[0]
     assert never_ran == 0, (
         f"{never_ran} generalizations are blamed on a stage with no task row"
