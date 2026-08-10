@@ -322,6 +322,14 @@ have been decided at the native boundary rather than by a clause the generated i
 
 ### Refusal causes measured
 
+These are reported as macros, not a table. RQ6 reserves tables for the structured matrices it
+shares with RQ5, which are the stage funnel, the per-level breakdown, and the per-filter decision
+matrix. Every root-cause decomposition goes in prose with its figures interpolated, which is how
+the chapter already handles the `MissingValue` split and the Stage-3 extraction failures. A table
+for this one cause would make it look categorically different from causes of the same kind.
+The macros are `\TzRealworldWideningRefusals` and, per cause,
+`\TzRealworldWideningRefusal<Cause>` with a matching `Pct` giving the share of refusals.
+
 The verdict is recorded as a single constant, so the deciding branch is **not persisted**
 (defect **EM-8**). It can be reconstructed from `assertion.output_spec_class`,
 `generalization_recipe ->> 'oracleExpressionType'`, `assertion.concretization_events` and

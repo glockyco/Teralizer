@@ -90,6 +90,21 @@ refusals AS (
             WHEN a.output_spec_class = 'EXCEPTION'
                  AND coalesce(a.concretization_events, 0) > 0
                  AND a.post_concretization_divergence_risk IS DISTINCT FROM false
+                THEN 'EXCEPTION_DIVERGENCE'
+            WHEN a.output_spec_class = 'EXCEPTION'
+                THEN 'PATH_COVERAGE'
+            WHEN coalesce(
+                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''
+                 ) NOT IN ('boolean', 'java.lang.Boolean')
+                THEN 'NON_BOOLEAN_ORACLE'
+            WHEN coalesce(a.concretization_events, 0) > 0
+                THEN 'CONCRETIZATION'
+            ELSE 'PATH_COVERAGE'
+        END AS code,
+        CASE
+            WHEN a.output_spec_class = 'EXCEPTION'
+                 AND coalesce(a.concretization_events, 0) > 0
+                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false
                 THEN 'Exception oracle concretized with divergence risk'
             WHEN a.output_spec_class = 'EXCEPTION'
                 THEN 'Path condition does not pin every generated parameter'
@@ -107,11 +122,13 @@ refusals AS (
     WHERE g.variant = :variant
       AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'
 )
-SELECT cause,
+SELECT code,
+       cause,
        count(*)::bigint AS refusals,
-       count(*) / (SELECT n FROM attempts) AS attempts_pct
+       count(*) / (SELECT n FROM attempts) AS attempts_pct,
+       count(*) / sum(count(*)) OVER () AS refusals_pct
 FROM refusals
-GROUP BY cause
+GROUP BY code, cause
 ORDER BY refusals DESC
 """
 
@@ -558,31 +575,55 @@ def _fetch_widening_refusals(conn: Connection, variant: str) -> pd.DataFrame:
     """Return widening-refusal counts by cause for the eligible corpus."""
     df = read_sql(conn, WIDENING_REFUSAL_SQL, _query_params(variant))
     df["refusals"] = df["refusals"].astype(int)
-    df["attempts_pct"] = df["attempts_pct"].astype(float)
-    return pd.DataFrame(df, columns=["cause", "refusals", "attempts_pct"])
-
-
-def _widening_refusal_table(df: pd.DataFrame) -> Table:
-    return Table(
-        key="rq6_widening_refusals",
-        df=df,
-        columns=[
-            ColumnSpec("Refusal cause", "cause"),
-            ColumnSpec("Generalizations", "refusals", fmt="count", align="r"),
-            ColumnSpec("Attempts", "attempts_pct", fmt="pct1", align="r"),
-        ],
-        caption=(
-            "Why the widening license refused to emit a generalized test, by "
-            "cause, for the real-world dataset."
-        ),
-        label="tab:widening-refusals",
-        note=(
-            "Refusals are decided before a generalized test is written, so they "
-            "carry no filter decision and no lifecycle record. The percentage is "
-            "of all generalization attempts."
-        ),
-        provenance=capture(_fetch_widening_refusals, query=WIDENING_REFUSAL_SQL),
+    for column in ("attempts_pct", "refusals_pct"):
+        df[column] = df[column].astype(float)
+    return pd.DataFrame(
+        df, columns=["code", "cause", "refusals", "attempts_pct", "refusals_pct"]
     )
+
+
+# Refusal causes are a root-cause decomposition, and this chapter reports those
+# in prose with the figures interpolated, the way it already does for the
+# MissingValue and ParameterType causes. Tables are reserved for the structured
+# matrices that RQ5 and RQ6 share. So these become macros, not a table.
+_WIDENING_METRIC_KEYS = {
+    "NON_BOOLEAN_ORACLE": "non_boolean_oracle",
+    "CONCRETIZATION": "concretization",
+    "PATH_COVERAGE": "path_coverage",
+    "EXCEPTION_DIVERGENCE": "exception_divergence",
+}
+
+
+def _widening_refusal_metrics(df: pd.DataFrame, provenance) -> list[Metric]:
+    metrics = [
+        Metric(
+            "realworld.widening_refusals",
+            int(df["refusals"].sum()),
+            fmt="count",
+            provenance=provenance,
+        )
+    ]
+    for row in df.to_dict("records"):
+        key = _WIDENING_METRIC_KEYS.get(str(row["code"]))
+        if key is None:
+            raise RuntimeError(f"unmapped widening refusal code: {row['code']!r}")
+        metrics.append(
+            Metric(
+                f"realworld.widening_refusal_{key}",
+                int(row["refusals"]),
+                fmt="count",
+                provenance=provenance,
+            )
+        )
+        metrics.append(
+            Metric(
+                f"realworld.widening_refusal_{key}_pct",
+                float(row["refusals_pct"]),
+                fmt="pct1",
+                provenance=provenance,
+            )
+        )
+    return metrics
 
 
 def build(conn: Connection) -> RQReport:
@@ -769,6 +810,12 @@ def build(conn: Connection) -> RQReport:
             ),
         ]
     )
+    metrics.extend(
+        _widening_refusal_metrics(
+            _fetch_widening_refusals(conn, variant),
+            capture(_fetch_widening_refusals, query=WIDENING_REFUSAL_SQL),
+        )
+    )
     section = Section(
         title="Project-level exclusions",
         blocks=[
@@ -793,11 +840,11 @@ def build(conn: Connection) -> RQReport:
             filtering,
             Prose(
                 "The generalization row's filtering column is dominated by the "
-                "widening license rather than by any filter. The license refuses "
-                "before a generalized test exists, so its causes are reported "
-                "separately."
+                "widening license rather than by any filter. Its causes are "
+                "emitted as macros for the chapter prose, not as a table, "
+                "because they are a root-cause decomposition like the "
+                "MissingValue and ParameterType causes."
             ),
-            _widening_refusal_table(_fetch_widening_refusals(conn, variant)),
         ],
     )
     return RQReport(
