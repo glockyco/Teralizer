@@ -530,21 +530,23 @@ def build(conn: Connection) -> RQReport:
             ColumnSpec("Reported case", "table_row"),
             ColumnSpec("JARVIS CUT PVC", "original_cut_pvc", "count", "r"),
             ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", "count", "r"),
-            ColumnSpec("Measured CUT PVC", "measured_cut_pvc", "pvc", "r"),
+            # Measured CUT PVC is deliberately not shown. It is computed and kept
+            # in provenance for auditing, but the table compares JARVIS's reported
+            # values against Teralizer's suite PVC and nothing else.
             ColumnSpec("Teralizer suite PVC", "suite_pvc", "pvc", "r"),
         ],
         caption=(
-            "CUT and PBT PVC reported by JARVIS beside measured CUT and "
-            "post-generalization suite PVC on the reconstructed fixtures."
+            "CUT and PBT PVC reported by JARVIS beside post-generalization "
+            "suite PVC on the reconstructed fixtures."
         ),
         label="tab:teralizer-rq0-table2",
         latex_resize_to_width=True,
         note=(
             "JARVIS CUT and PBT PVC are the published values, with PBT PVC "
-            "measuring the synthesized properties alone. Measured CUT PVC comes "
-            "from the reconstructed original tests. Teralizer suite PVC unions "
-            "those values with the generalized tests' values. A dash marks a "
-            "case Teralizer excludes from generalization."
+            "measuring the synthesized properties alone. Teralizer suite PVC "
+            "unions the reconstructed original tests' values with the "
+            "generalized tests' values. A dash marks a case Teralizer excludes "
+            "from generalization."
         ),
         provenance=capture(compare_to_jarvis),
     )
