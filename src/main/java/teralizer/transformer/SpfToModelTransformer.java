@@ -34,6 +34,7 @@ public class SpfToModelTransformer {
             return null;
         }
 
+        rejectRawDoubleBits(constraint);
         ConstraintExpressionFactoryVisitor visitor = new ConstraintExpressionFactoryVisitor();
         constraint.accept(visitor);
         return visitor.getExpression();
@@ -44,6 +45,7 @@ public class SpfToModelTransformer {
             return null;
         }
 
+        rejectRawDoubleBits(constraint);
         ConstraintExpressionFactoryVisitor visitor = new ConstraintExpressionFactoryVisitor();
         constraint.accept(visitor);
         return visitor.getExpression();
@@ -54,6 +56,7 @@ public class SpfToModelTransformer {
             return null;
         }
 
+        rejectRawDoubleBits(expression);
         ConstraintExpressionFactoryVisitor visitor = new ConstraintExpressionFactoryVisitor();
         expression.accept(visitor);
         return visitor.getExpression();
@@ -74,6 +77,92 @@ public class SpfToModelTransformer {
         }
 
         return new ExceptionModel(exception.getName(), exception.getMessage());
+    }
+
+    private static void rejectRawDoubleBits(gov.nasa.jpf.symbc.numeric.Constraint constraint) {
+        if (constraint == null) {
+            return;
+        }
+
+        rejectRawDoubleBits(constraint.getLeft());
+        rejectRawDoubleBits(constraint.getRight());
+        rejectRawDoubleBits(constraint.and);
+    }
+
+    private static void rejectRawDoubleBits(gov.nasa.jpf.symbc.string.StringConstraint constraint) {
+        if (constraint == null) {
+            return;
+        }
+
+        rejectRawDoubleBits(constraint.getLeft());
+        rejectRawDoubleBits(constraint.getRight());
+        rejectRawDoubleBits(constraint.and());
+    }
+
+    private static void rejectRawDoubleBits(gov.nasa.jpf.symbc.numeric.Expression expression) {
+        if (expression == null) {
+            return;
+        }
+        if (expression instanceof gov.nasa.jpf.symbc.numeric.RawDoubleBitsExpression) {
+            throw new UnsupportedSpfTermException(
+                "RawDoubleBitsExpression represents Double.doubleToRawLongBits, an integer bit-pattern "
+                    + "conversion that is not mapped to a Model node.");
+        }
+        if (expression instanceof gov.nasa.jpf.symbc.numeric.BinaryLinearIntegerExpression) {
+            gov.nasa.jpf.symbc.numeric.BinaryLinearIntegerExpression binary =
+                (gov.nasa.jpf.symbc.numeric.BinaryLinearIntegerExpression) expression;
+            rejectRawDoubleBits(binary.getLeft());
+            rejectRawDoubleBits(binary.getRight());
+        } else if (expression instanceof gov.nasa.jpf.symbc.numeric.BinaryNonLinearIntegerExpression) {
+            gov.nasa.jpf.symbc.numeric.BinaryNonLinearIntegerExpression binary =
+                (gov.nasa.jpf.symbc.numeric.BinaryNonLinearIntegerExpression) expression;
+            rejectRawDoubleBits(binary.left);
+            rejectRawDoubleBits(binary.right);
+        } else if (expression instanceof gov.nasa.jpf.symbc.numeric.BinaryRealExpression) {
+            gov.nasa.jpf.symbc.numeric.BinaryRealExpression binary =
+                (gov.nasa.jpf.symbc.numeric.BinaryRealExpression) expression;
+            rejectRawDoubleBits(binary.getLeft());
+            rejectRawDoubleBits(binary.getRight());
+        } else if (expression instanceof gov.nasa.jpf.symbc.numeric.MathRealExpression) {
+            gov.nasa.jpf.symbc.numeric.MathRealExpression math =
+                (gov.nasa.jpf.symbc.numeric.MathRealExpression) expression;
+            rejectRawDoubleBits(math.arg1);
+            rejectRawDoubleBits(math.arg2);
+        } else if (expression instanceof gov.nasa.jpf.symbc.concolic.FunctionExpression) {
+            gov.nasa.jpf.symbc.concolic.FunctionExpression function =
+                (gov.nasa.jpf.symbc.concolic.FunctionExpression) expression;
+            if (function.sym_args != null) {
+                for (gov.nasa.jpf.symbc.numeric.Expression argument : function.sym_args) {
+                    rejectRawDoubleBits(argument);
+                }
+            }
+        } else if (expression instanceof gov.nasa.jpf.symbc.mixednumstrg.SpecialIntegerExpression) {
+            gov.nasa.jpf.symbc.mixednumstrg.SpecialIntegerExpression special =
+                (gov.nasa.jpf.symbc.mixednumstrg.SpecialIntegerExpression) expression;
+            rejectRawDoubleBits(special.opr);
+        } else if (expression instanceof gov.nasa.jpf.symbc.mixednumstrg.SpecialRealExpression) {
+            gov.nasa.jpf.symbc.mixednumstrg.SpecialRealExpression special =
+                (gov.nasa.jpf.symbc.mixednumstrg.SpecialRealExpression) expression;
+            rejectRawDoubleBits(special.opr);
+        } else if (expression instanceof gov.nasa.jpf.symbc.string.DerivedStringExpression) {
+            gov.nasa.jpf.symbc.string.DerivedStringExpression derived =
+                (gov.nasa.jpf.symbc.string.DerivedStringExpression) expression;
+            rejectRawDoubleBits(derived.left);
+            rejectRawDoubleBits(derived.right);
+            if (derived.oprlist != null) {
+                for (gov.nasa.jpf.symbc.numeric.Expression operand : derived.oprlist) {
+                    rejectRawDoubleBits(operand);
+                }
+            }
+        } else if (expression instanceof gov.nasa.jpf.symbc.arrays.SelectExpression) {
+            gov.nasa.jpf.symbc.arrays.SelectExpression select =
+                (gov.nasa.jpf.symbc.arrays.SelectExpression) expression;
+            rejectRawDoubleBits(select.indexExpression);
+        } else if (expression instanceof gov.nasa.jpf.symbc.string.SymbolicLengthInteger) {
+            gov.nasa.jpf.symbc.string.SymbolicLengthInteger length =
+                (gov.nasa.jpf.symbc.string.SymbolicLengthInteger) expression;
+            rejectRawDoubleBits(length.getExpression());
+        }
     }
 
     private static class ConstraintExpressionFactoryVisitor extends ConstraintExpressionVisitor {

@@ -3,11 +3,14 @@ package teralizer.transformer;
 import gov.nasa.jpf.symbc.concolic.FunctionExpression;
 import gov.nasa.jpf.symbc.mixednumstrg.SpecialIntegerExpression;
 import gov.nasa.jpf.symbc.mixednumstrg.SpecialRealExpression;
+import gov.nasa.jpf.symbc.numeric.BinaryLinearIntegerExpression;
 import gov.nasa.jpf.symbc.numeric.Comparator;
 import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.IntegerConstant;
 import gov.nasa.jpf.symbc.numeric.LinearIntegerConstraint;
+import gov.nasa.jpf.symbc.numeric.RawDoubleBitsExpression;
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+import gov.nasa.jpf.symbc.numeric.SymbolicReal;
 import gov.nasa.jpf.symbc.string.StringConstant;
 import gov.nasa.jpf.symbc.string.StringSymbolic;
 import gov.nasa.jpf.symbc.string.SymbolicIndexOfCharInteger;
@@ -102,6 +105,33 @@ public class SpfToModelTransformerUnsupportedTermTest {
             Assert.fail("expected UnsupportedSpfTermException");
         } catch (UnsupportedSpfTermException expected) {
             Assert.assertTrue(expected.getMessage().contains("FunctionExpression"));
+        }
+    }
+
+    @Example
+    void rawDoubleBitsExpressionRaisesTypedException() {
+        RawDoubleBitsExpression expression = new RawDoubleBitsExpression(new SymbolicReal("value_1_SYMREAL"));
+
+        try {
+            transformer().transform(expression);
+            Assert.fail("expected UnsupportedSpfTermException");
+        } catch (UnsupportedSpfTermException expected) {
+            Assert.assertTrue(expected.getMessage().contains("RawDoubleBitsExpression"));
+            Assert.assertTrue(expected.getMessage().contains("Double.doubleToRawLongBits"));
+        }
+    }
+
+    @Example
+    void nestedRawDoubleBitsExpressionRaisesTypedException() {
+        RawDoubleBitsExpression rawBits = new RawDoubleBitsExpression(new SymbolicReal("value_1_SYMREAL"));
+        BinaryLinearIntegerExpression expression = new BinaryLinearIntegerExpression(
+            rawBits, gov.nasa.jpf.symbc.numeric.Operator.PLUS, new IntegerConstant(1));
+
+        try {
+            transformer().transform(expression);
+            Assert.fail("expected UnsupportedSpfTermException");
+        } catch (UnsupportedSpfTermException expected) {
+            Assert.assertTrue(expected.getMessage().contains("RawDoubleBitsExpression"));
         }
     }
 
