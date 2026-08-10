@@ -235,7 +235,7 @@ the admitted path. Which of those applies is decided by the shape of the persist
 | `SYMBOLIC` | an expression over symbolic inputs, so the generated assertion recomputes the expected value for each input | always widen |
 | `CONSTANT` | a model with no variables, so SPF proved the value is constant along this path | always widen |
 | `EXCEPTION` | the captured output kind was `THROWN`, so the oracle is "this throws" | conditional |
-| `NULL_CONCRETE` | the persisted output model is literally `null`, so there is no symbolic evidence for the expected value | conditional and rare |
+| `NULL_CONCRETE` | the persisted output model is literally `null`, so there is no symbolic evidence for the expected value | conditional |
 
 `OutputSpecClass` has exactly four values and the first three all return before the
 `!= NULL_CONCRETE` guard, so that guard was unreachable and has been removed.
@@ -264,14 +264,58 @@ cannot follow the inputs. Telling them apart needs all four of:
 | `EXCEPTION` | 130 | 114 | 16 |
 | `NULL_CONCRETE` | 4,649 | 1,194 | 3,455 |
 
-**A symbolic output model was extracted for 750 of 5,529 attempts (13.6%), and every one of them
-was licensed to widen.** The gate is not the barrier. Output-specification extraction is.
+A null output model has several causes. The largest is the computed-boolean case, and the widening
+license already recovers it. In `postgres_reporeapers_rq6_v6`, `NULL_CONCRETE` with a boolean oracle
+covers 2,820 generalizations, of which 1,043 are emitted. With a non-boolean oracle it covers 1,829,
+of which none are emitted.
 
 `NULL_CONCRETE` describes the persisted artifact, not the semantics. A 20-case source audit
 (`docs/plans/2026-08-10-null-concrete-sampling.md`) read the original test and the tested method
 for each sampled assertion and found 18 whose output plainly varies with a generalizable input,
-including six with no recorded concretization event. Report 13.6% as the yield this extractor
-achieved, never as the share of real Java tests whose outputs are input-independent.
+including six with no recorded concretization event. These are observations about the named audit
+sample, not a general extraction-yield barrier.
+
+### Why the output model is missing
+
+The output specification is the SPF `Expression` attached to the value on the operand stack at the
+return instruction (`TestGeneralizationListener.java:295`, `jpf-core JVMReturnInstruction.java:154,166-168`).
+When the value has no attribute, no model is captured and the result is reported as `NULL_CONCRETE`.
+The measured symbolic yield by return type on `postgres_reporeapers_rq6_v6` is:
+
+| Return type | Symbolic yield | Assertions |
+|---|---:|---:|
+| `boolean` | 0.2% | 2,094 |
+| `char` | 3.2% | 124 |
+| `String` | 13.7% | 1,173 |
+| `int` | 19.3% | 1,496 |
+| `double` | 59.6% | 109 |
+| `long` | 75.5% | 261 |
+| `java.lang.Double` | 0% | 79 |
+
+The causes below are ordered by size.
+
+1. **Computed booleans.** A computed boolean compiles to a branch that pushes literal `0` or `1`,
+   and a literal carries no attribute. The input-output relation is recorded in the path condition,
+   so the widening license already recovers these cases (`WideningLicense.java:107-128`). The return
+   attribute capture point is `TestGeneralizationListener.java:295`, with JPF's return-value handling
+   at `jpf-core JVMReturnInstruction.java:154,166-168`.
+2. **Heap reads.** A value read from an array or field carries no attribute because
+   `symbolic.arrays` and `symbolic.lazy` are commented out in the generated configuration
+   (`src/main/resources/templates/jpf-config.vm:34-35`). Attribute propagation itself works for
+   field and array instructions (`GETFIELD.java:89-90`, `IALOAD.java:154-156`), so there is simply
+   no attribute on the heap location to propagate.
+3. **Callee returns.** A value returned by a callee is not itself a cause. Ordinary Java calls
+   propagate the return attribute (`jpf-core JVMReturnInstruction.java:154,166-168`). In the
+   25-case source audit of non-boolean `NULL_CONCRETE` assertions with zero concretization
+   (`docs/plans/2026-08-10-null-concrete-sampling.md`), ten cases bottomed out in a heap read or a
+   native call.
+4. **Loop accumulation.** A value accumulated by a loop whose trip count depends on the input is
+   concrete because the loop counter is concrete. Its path condition pins the input to one value,
+   making the generalization vacuous. The same 25-case source audit found one loop-accumulated
+   arithmetic case.
+5. **Concretization.** This is a minor cause. Assertions with no native boundary are 82.0%
+   `NULL_CONCRETE`, against 86.5% for assertions with one in `postgres_reporeapers_rq6_v6`.
+   The event boundary is recorded at `TestGeneralizationListener.java:143-161`.
 
 ### Why each refusal happens
 
@@ -297,7 +341,10 @@ application conditional branched with no symbolic operand, or the captured throw
 in application code. It is `false` when telemetry ruled both out, and `null` when unknown. The
 exception branch accepts an explicit `false` and refuses `null`, because unknown is not evidence.
 The null-concrete branch refuses on any event at all, because that inference needs the path
-condition to be complete rather than merely non-divergent.
+condition to be complete rather than merely non-divergent. The branch tests for this loss of
+path-condition evidence, but concretization is not a leading cause of the missing output model in
+`postgres_reporeapers_rq6_v6`: assertions with no native boundary are 82.0% `NULL_CONCRETE`,
+against 86.5% for assertions with one.
 
 **The path condition does not pin every generated parameter** (299). The generated set is the
 tested method's parameters plus *temporary parameters*, which are model variables appearing in the
@@ -401,6 +448,7 @@ causes are reported separately in `tab:widening-refusals`.
 | EM-6 | `AbstractTask` caught `Exception`, not `Throwable` | implementation | 2 assertions | fixed in code, needs a re-collection |
 | EM-7 | `deriveRollup` reports "never ran" as "failed at this stage" | implementation | 98 generalizations | **open**, guarded by an `xfail` invariant |
 | EM-8 | Widening refusal sub-reason not persisted | implementation | 299 refusals unsplittable | fixed in code via `generalization.widening_refusal_code`, needs a re-collection |
+| EM-9 | Generated SPF configuration comments out `symbolic.arrays` and `symbolic.lazy`, and never writes `symbolic.string_dp` although it writes `symbolic.string_dp_timeout_ms` (`src/main/resources/templates/jpf-config.vm:34-35,40`) | configuration | heap and string output models | both changes need a spike before any change. Enabling arrays and lazy costs state space. SPF string support may be weak regardless |
 
 The root cause behind EM-1 through EM-3 was structural: a two-bucket model over a five-mechanism
 pipeline with a silent `ELSE` catch-all. The classification is now total, and `_fetch_breakdown`

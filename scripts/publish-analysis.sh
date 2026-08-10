@@ -20,6 +20,16 @@ if [[ ! -d "$PAPER_OUT" ]]; then
   exit 2
 fi
 
+# Published files are generated, so a local edit to one means the consumer wants
+# a layout the generator does not produce. Overwriting it loses that work
+# silently. Commit it, revert it, or teach the generator to emit it.
+DIRTY=$(git -C "$PAPER_OUT" status --porcelain -- tables data 2>/dev/null || true)
+if [[ -n "$DIRTY" ]]; then
+  echo "refusing to publish over uncommitted changes in $PAPER_OUT:" >&2
+  echo "$DIRTY" >&2
+  exit 2
+fi
+
 exec uv run --directory "$ROOT_DIR/analysis" python -m teralizer.eval all \
   --targets md,figures,latex,csv \
   --paper-out "$PAPER_OUT" \
