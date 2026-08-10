@@ -408,3 +408,6 @@ project-configs/timeout-retry*.conf
 # Analysis intermediates. The citable copies live in the consuming repository,
 # published by scripts/publish-analysis.sh.
 analysis/build/
+
+# direnv loads the flake dev shell and caches it here.
+.direnv/
