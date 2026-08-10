@@ -303,10 +303,24 @@ The causes below are ordered by size.
    itself works for field and array instructions (`GETFIELD.java:89-90`, `IALOAD.java:154-156`), so
    there is simply no attribute on the heap location to propagate. Configuration cannot supply one.
    `symbolic.arrays` is refused outright when constraint collection is on, which this analysis
-   requires: `SymbolicInstructionFactory.java:737-739` throws `JPFConfigException`. `symbolic.lazy`
-   was measured over nine projects and changed nothing, which follows from there being no aliasing
-   choice to make along a single concrete path. Recovering these cases means abandoning single-path
-   constraint collection, not changing a setting.
+   requires: `SymbolicInstructionFactory.java:737-739` throws `JPFConfigException`.
+
+   `symbolic.lazy` was measured over nine projects and changed nothing, and it is the wrong
+   mechanism for this cause. Lazy initialization resolves aliasing for a reference that is already
+   symbolic, and it declines otherwise: `GETFIELD.java:85-91` returns to the plain instruction
+   unless `fi.isReference() && attr != null`. A primitive field never satisfies that test at all,
+   and no field of any type carries an attribute here, because `symbolic.fields` is unset
+   (`jpf-config.vm:23`) and `symbolicMarker` marks only parameters, forcing the receiver
+   `_target_` concrete (`InstrumentedClassBuilder.java:455-461`). No choice point is created.
+
+   The mechanism that would attach an attribute to a field read is `symbolic.fields = instance`,
+   which marks every declared instance field symbolic on method entry
+   (`BytecodeUtils.java:487-530`). It is unusable here for a reason above SPF: the generated
+   property test binds one `@ForAll TestParameters` holding the method's parameters
+   (`GeneralizedTestBuilder.java:287-299`), while the receiver is constructed by the replayed
+   setup code. An oracle over field variables would have free variables the generator cannot bind.
+   Recovering heap reads therefore requires generating object state as test input, subject to the
+   class invariants, which is a research problem rather than a setting.
 3. **Callee returns.** A value returned by a callee is not itself a cause. Ordinary Java calls
    propagate the return attribute (`jpf-core JVMReturnInstruction.java:154,166-168`). In the
    25-case source audit of non-boolean `NULL_CONCRETE` assertions with zero concretization
@@ -451,7 +465,7 @@ causes are reported separately in `tab:widening-refusals`.
 | EM-6 | `AbstractTask` caught `Exception`, not `Throwable` | implementation | 2 assertions | fixed in code, needs a re-collection |
 | EM-7 | `deriveRollup` reports "never ran" as "failed at this stage" | implementation | 98 generalizations | **open**, guarded by an `xfail` invariant |
 | EM-8 | Widening refusal sub-reason not persisted | implementation | 299 refusals unsplittable | fixed in code via `generalization.widening_refusal_code`, needs a re-collection |
-| EM-9 | ~~Generated SPF configuration comments out `symbolic.arrays` and `symbolic.lazy`, and never writes `symbolic.string_dp`~~ | configuration | none | **not a defect.** Measured over nine projects: `symbolic.arrays` is rejected by `SymbolicInstructionFactory.java:737-739` whenever constraint collection is on, and `symbolic.lazy` and `symbolic.string_dp` each produced results identical to the baseline. A string decision procedure decides satisfiability, and this analysis only collects. Widening the `symbolic.strings` gate to String-returning methods does raise their symbolic yield from 7 to 19, but costs 73 of 321 String assertions, which abort in `SymbolicStringHandler.handletoString` when a symbolic numeric reaches `toString`. Recovering strings means fixing that handler, not configuring SPF |
+| EM-9 | ~~Generated SPF configuration comments out `symbolic.arrays` and `symbolic.lazy`, and never writes `symbolic.string_dp`~~ | configuration | none | **not a defect.** Measured over nine projects: `symbolic.arrays` is rejected by `SymbolicInstructionFactory.java:737-739` whenever constraint collection is on, and `symbolic.lazy` and `symbolic.string_dp` each produced results identical to the baseline. A string decision procedure decides satisfiability, and this analysis only collects. Widening the `symbolic.strings` gate to String-returning methods does raise their symbolic yield from 7 to 19, but costs 73 of 321 String assertions, which abort in `SymbolicStringHandler.handletoString` when a symbolic numeric reaches `toString`. That abort is bounded work rather than a limitation: every piece it needs already exists, in `StringExpression._valueOf(IntegerExpression)`, `StringOperator.VALUEOF`, and this repository's own mapping of `VALUEOF` to `String.valueOf` (`SpfToModelTransformer.java:286-287`). The handler simply throws instead of building the term |
 
 The root cause behind EM-1 through EM-3 was structural: a two-bucket model over a five-mechanism
 pipeline with a silent `ELSE` catch-all. The classification is now total, and `_fetch_breakdown`
