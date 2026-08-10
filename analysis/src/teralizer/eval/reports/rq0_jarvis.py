@@ -25,13 +25,16 @@ from teralizer.jarvis_scoreboard import (
     suite_union_pvc,
     summarize_variants,
 )
-from teralizer.report_basis import open_report_connection
+from teralizer.report_basis import open_report_connection, resolve_repo_path
 
 
 SCOREBOARD_DB = "postgres_jarvis_scoreboard"
 CENSUS_DB = "postgres_jarvis_census"
 TABLE2_VARIANT = "IMPROVED_100_TRIES"
 CENSUS_VARIANT = "IMPROVED_100_TRIES"
+# Resolved against the repository root, not the process working directory. A
+# cwd-relative check reports the marker absent whenever the report is invoked
+# from anywhere but the root, which silently downgrades the census status.
 CENSUS_COMPLETION_MARKER = Path("data/detached/census-gen.complete")
 
 TABLE1_PROJECTS = (
@@ -157,7 +160,7 @@ def _census_status_ledger(conn: Any) -> tuple[pd.DataFrame, str, bool]:
             }
         )
     ledger = pd.DataFrame(records)
-    marker_present = CENSUS_COMPLETION_MARKER.is_file()
+    marker_present = resolve_repo_path(CENSUS_COMPLETION_MARKER).is_file()
     census_status = (
         "complete"
         if marker_present and (ledger["generalization_status"] == "complete").all()
@@ -429,36 +432,36 @@ def build(conn: Connection) -> RQReport:
             get_census_project_pvc,
         ),
     ]
-    for row in comparison.itertuples(index=False):
-        row_slug = re.sub(r"[^a-z0-9]+", "_", str(row.table_row).lower()).strip("_")
+    for row in comparison.to_dict("records"):
+        row_slug = re.sub(r"[^a-z0-9]+", "_", str(row["table_row"]).lower()).strip("_")
         metrics.append(
             _metric(
                 f"rq0.table2.row.{row_slug}.measured_cut_pvc",
-                _count_or_unavailable(row.measured_cut_pvc),
+                _count_or_unavailable(row["measured_cut_pvc"]),
                 "str",
                 suite_union_pvc,
             )
         )
-    for row in breadth.iloc[:-1].itertuples(index=False):
-        slug = str(row.project).replace("-", "_")
-        ledger_row = ledger.loc[ledger["project"].eq(row.project)].iloc[0]
+    for row in breadth.iloc[:-1].to_dict("records"):
+        slug = str(row["project"]).replace("-", "_")
+        ledger_row = ledger.loc[ledger["project"].eq(row["project"])].iloc[0]
         metrics.extend(
             [
                 _metric(
                     f"rq0.census.project.{slug}.jarvis_pbt_pvc",
-                    int(row.jarvis_successful_pbt_pvc),
+                    int(row["jarvis_successful_pbt_pvc"]),
                     "count",
                     _build_breadth_table,
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.jarvis_muts",
-                    int(row.jarvis_successful_muts),
+                    int(row["jarvis_successful_muts"]),
                     "count",
                     _build_breadth_table,
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.teralizer_pvc",
-                    _count_or_unavailable(row.aggregate_pvc),
+                    _count_or_unavailable(row["aggregate_pvc"]),
                     "str",
                     _build_breadth_table,
                 ),
@@ -472,7 +475,7 @@ def build(conn: Connection) -> RQReport:
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.sound_muts",
-                    _count_or_unavailable(row.sound_muts),
+                    _count_or_unavailable(row["sound_muts"]),
                     "str",
                     _build_breadth_table,
                 ),
@@ -496,8 +499,8 @@ def build(conn: Connection) -> RQReport:
                 ),
             ]
         )
-    for row in budget.itertuples(index=False):
-        variant = str(row.variant)
+    for row in budget.to_dict("records"):
+        variant = str(row["variant"])
         token = variant.lower()
         for field in (
             "probes",
@@ -506,7 +509,7 @@ def build(conn: Connection) -> RQReport:
             "covered_mutants",
             "covered_mutation_score",
         ):
-            value = getattr(row, field)
+            value = row[field]
             if pd.isna(value):
                 value = "unavailable"
             metrics.append(

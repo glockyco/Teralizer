@@ -911,12 +911,12 @@ def suite_union_pvc(
         else:
             cut_rows = cut_values[cut_values["table_row"] == row.table_row]
         union: dict[tuple[str, str, int], set[str]] = {}
-        for cut in cut_rows.itertuples(index=False):
-            parameter = str(cut.parameter)
+        for cut in cut_rows.to_dict("records"):
+            parameter = str(cut["parameter"])
             if not parameter.startswith("p") or not parameter[1:].isdigit():
                 raise ValueError(f"Unexpected capture parameter name: {parameter!r}")
-            key = (str(cut.mut_class), str(cut.mut_method), int(parameter[1:]))
-            union.setdefault(key, set()).add(str(cut.value))
+            key = (str(cut["mut_class"]), str(cut["mut_method"]), int(parameter[1:]))
+            union.setdefault(key, set()).add(str(cut["value"]))
         measured_cut = (
             sum(len(values) for values in union.values())
             if not cut_rows.empty

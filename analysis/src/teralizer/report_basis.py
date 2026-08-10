@@ -56,7 +56,7 @@ def _scalar_int(conn: Connection, sql: str) -> int:
     return int(value or 0)
 
 
-def _resolve_repo_path(path: Path) -> Path:
+def resolve_repo_path(path: Path) -> Path:
     expanded = path.expanduser()
     if expanded.is_absolute() or expanded.exists():
         return expanded
@@ -66,7 +66,7 @@ def _resolve_repo_path(path: Path) -> Path:
 
 
 def _read_ledger_rows(ledger: Path) -> list[dict[str, str]]:
-    resolved = _resolve_repo_path(ledger)
+    resolved = resolve_repo_path(ledger)
     if not resolved.exists():
         raise FileNotFoundError(
             f"attempt ledger not found: {resolved} (pass --ledger explicitly)"
@@ -102,8 +102,8 @@ def require_complete_corpus(
     runner starts after that point, removing markers makes this check fail while subsequent report
     queries remain pinned to the pre-run database state.
     """
-    resolved_data = _resolve_repo_path(data_dir)
-    resolved_configs = _resolve_repo_path(config_dir)
+    resolved_data = resolve_repo_path(data_dir)
+    resolved_configs = resolve_repo_path(config_dir)
     db_root_paths = [
         str(root_path)
         for root_path in conn.execute(text("SELECT root_path FROM project")).scalars()
