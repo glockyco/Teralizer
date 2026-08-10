@@ -53,7 +53,10 @@ public abstract class AbstractTask implements Task {
     public void execute(TaskContext context, Consumer<String> reportInfo, Consumer<Task> scheduleTask) throws Exception {
         try {
             this.executeInternal(context, reportInfo, scheduleTask);
-        } catch (Exception e) {
+        // Catch Throwable so Errors cannot leave the attached record included. Precise rethrow
+        // keeps the existing throws Exception contract because executeInternal declares Exception,
+        // while unchecked Errors remain legal to rethrow unchanged.
+        } catch (Throwable e) {
             StringWriter stringWriter = new StringWriter();
             e.printStackTrace(new PrintWriter(stringWriter));
             String stackTrace = stringWriter.toString();

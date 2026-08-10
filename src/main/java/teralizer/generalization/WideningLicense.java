@@ -60,9 +60,24 @@ import teralizer.transformer.VariableNameCollector;
  */
 public final class WideningLicense {
     public static final String ORACLE_NOT_WIDENABLE = "ORACLE_NOT_WIDENABLE";
+    public static final String EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK = "EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK";
+    public static final String EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS = "EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS";
+    public static final String NULL_CONCRETE_ORACLE_NOT_BOOLEAN = "NULL_CONCRETE_ORACLE_NOT_BOOLEAN";
+    public static final String NULL_CONCRETE_CONCRETIZATION_EVENTS = "NULL_CONCRETE_CONCRETIZATION_EVENTS";
+    public static final String NULL_CONCRETE_PARAMETERS_EMPTY = "NULL_CONCRETE_PARAMETERS_EMPTY";
+    public static final String NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS = "NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS";
 
-    private static final Verdict WIDEN = new Verdict(true, null);
-    private static final Verdict REFUSE = new Verdict(false, ORACLE_NOT_WIDENABLE);
+    private static final Verdict WIDEN = new Verdict(true, null, null);
+    private static final Verdict EXCEPTION_DIVERGENCE_REFUSAL = refusal(EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK);
+    private static final Verdict EXCEPTION_PATH_REFUSAL = refusal(EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS);
+    private static final Verdict NULL_CONCRETE_TYPE_REFUSAL = refusal(NULL_CONCRETE_ORACLE_NOT_BOOLEAN);
+    private static final Verdict NULL_CONCRETE_CONCRETIZATION_REFUSAL = refusal(NULL_CONCRETE_CONCRETIZATION_EVENTS);
+    private static final Verdict NULL_CONCRETE_PARAMETERS_REFUSAL = refusal(NULL_CONCRETE_PARAMETERS_EMPTY);
+    private static final Verdict NULL_CONCRETE_PATH_REFUSAL = refusal(NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS);
+
+    private static Verdict refusal(String code) {
+        return new Verdict(false, ORACLE_NOT_WIDENABLE, code);
+    }
 
     private WideningLicense() {
     }
@@ -92,23 +107,20 @@ public final class WideningLicense {
         }
         if (outputSpecClass == OutputSpecClass.EXCEPTION) {
             if (hasConcretizationEvents && !Boolean.FALSE.equals(postConcretizationDivergenceRisk)) {
-                return REFUSE;
+                return EXCEPTION_DIVERGENCE_REFUSAL;
             }
-            return pathNames.isEmpty() || pathNames.containsAll(widened) ? WIDEN : REFUSE;
-        }
-        if (outputSpecClass != OutputSpecClass.NULL_CONCRETE) {
-            return REFUSE;
+            return pathNames.isEmpty() || pathNames.containsAll(widened) ? WIDEN : EXCEPTION_PATH_REFUSAL;
         }
         if (!isBooleanReturn(testedMethodReturnType)) {
-            return REFUSE;
+            return NULL_CONCRETE_TYPE_REFUSAL;
         }
         if (hasConcretizationEvents) {
-            return REFUSE;
+            return NULL_CONCRETE_CONCRETIZATION_REFUSAL;
         }
         if (widened.isEmpty() || pathNames.isEmpty()) {
-            return REFUSE;
+            return NULL_CONCRETE_PARAMETERS_REFUSAL;
         }
-        return pathNames.containsAll(widened) ? WIDEN : REFUSE;
+        return pathNames.containsAll(widened) ? WIDEN : NULL_CONCRETE_PATH_REFUSAL;
     }
 
     /** Collects the path-condition parameter-name view consumed by {@link #evaluate}. */
@@ -132,10 +144,12 @@ public final class WideningLicense {
     public static final class Verdict {
         private final boolean allowsWidening;
         private final String exclusionInfo;
+        private final String wideningRefusalCode;
 
-        private Verdict(boolean allowsWidening, String exclusionInfo) {
+        private Verdict(boolean allowsWidening, String exclusionInfo, String wideningRefusalCode) {
             this.allowsWidening = allowsWidening;
             this.exclusionInfo = exclusionInfo;
+            this.wideningRefusalCode = wideningRefusalCode;
         }
 
         public boolean allowsWidening() {
@@ -144,6 +158,10 @@ public final class WideningLicense {
 
         public String getExclusionInfo() {
             return this.exclusionInfo;
+        }
+
+        public String getWideningRefusalCode() {
+            return this.wideningRefusalCode;
         }
     }
 }

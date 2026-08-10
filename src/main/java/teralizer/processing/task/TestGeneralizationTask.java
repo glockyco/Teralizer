@@ -259,6 +259,7 @@ public class TestGeneralizationTask extends AbstractTask {
             if (!wideningLicense.allowsWidening()) {
                 this.generalizationRecord.setIsIncluded(false);
                 this.generalizationRecord.setExclusionInfo(wideningLicense.getExclusionInfo());
+                this.generalizationRecord.setWideningRefusalCode(wideningLicense.getWideningRefusalCode());
                 this.generalizationRecord.store();
                 return null;
             }

@@ -93,6 +93,9 @@ public final class GeneralizationLifecycleWriter {
             }
             return;
         }
+        // Project-scoped failures use this same fanout as the lifecycle flags. Clear each
+        // matching generalization here because AbstractTask has no attached record at project
+        // scope, and keeping this beside fetchByProjectVariant prevents the two scopes diverging.
         for (GeneralizationLifecycleRecord record : fetchByProjectVariant(create, taskRecord.getProjectId(), taskRecord.getVariant())) {
             if (!failureCanAffect(record, stage)) {
                 continue;
@@ -100,6 +103,15 @@ public final class GeneralizationLifecycleWriter {
             setStageFlag(record, stage, false);
             applyRollup(record, reasonCode);
             record.store();
+
+            GeneralizationRecord generalization = create.selectFrom(Tables.GENERALIZATION)
+                .where(Tables.GENERALIZATION.ID.eq(record.getGeneralizationId()))
+                .fetchOne();
+            if (generalization != null) {
+                generalization.setIsIncluded(false);
+                generalization.setExclusionInfo(String.format("Excluded by %s: %s", stage, reasonCode));
+                generalization.store();
+            }
         }
     }
 

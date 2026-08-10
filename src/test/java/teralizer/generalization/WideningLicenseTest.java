@@ -183,6 +183,34 @@ public class WideningLicenseTest {
     }
 
     @Example
+    void eachRefusalBranchHasItsOwnStableCode() {
+        Assert.assertEquals(
+            WideningLicense.EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK,
+            WideningLicense.evaluate(OutputSpecClass.EXCEPTION, "int", names("x"), Collections.emptySet(), 1, null).getWideningRefusalCode()
+        );
+        Assert.assertEquals(
+            WideningLicense.EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS,
+            WideningLicense.evaluate(OutputSpecClass.EXCEPTION, "int", names("x"), names("other"), 0, null).getWideningRefusalCode()
+        );
+        Assert.assertEquals(
+            WideningLicense.NULL_CONCRETE_ORACLE_NOT_BOOLEAN,
+            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "int", names("x"), names("x"), 0, null).getWideningRefusalCode()
+        );
+        Assert.assertEquals(
+            WideningLicense.NULL_CONCRETE_CONCRETIZATION_EVENTS,
+            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("x"), names("x"), 1, null).getWideningRefusalCode()
+        );
+        Assert.assertEquals(
+            WideningLicense.NULL_CONCRETE_PARAMETERS_EMPTY,
+            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", Collections.emptySet(), names("x"), 0, null).getWideningRefusalCode()
+        );
+        Assert.assertEquals(
+            WideningLicense.NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS,
+            WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("x", "y"), names("x"), 0, null).getWideningRefusalCode()
+        );
+    }
+
+    @Example
     void nullConcretizationEventColumnIsTreatedAsZero() {
         WideningLicense.Verdict verdict = WideningLicense.evaluate(OutputSpecClass.NULL_CONCRETE, "boolean", names("flag"), names("flag"), null, null);
 

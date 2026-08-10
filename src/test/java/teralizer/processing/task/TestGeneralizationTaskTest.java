@@ -21,8 +21,10 @@ import org.jooq.SQLDialect;
 import org.jooq.Table;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.GeneralizationLifecycleRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.ProjectRecord;
+import org.jooq.generated.tables.records.TaskRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.MockConnection;
@@ -53,6 +55,7 @@ import teralizer.domain.Variable;
 import teralizer.generalization.WideningLicense;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.TaskContext;
+import teralizer.processing.diagnostics.GeneralizationLifecycleWriter;
 import teralizer.spoon.analysis.GeneralizableInput;
 import teralizer.spoon.analysis.GeneralizationRecipe;
 import teralizer.spoon.analysis.TestAnalysis;
@@ -61,6 +64,53 @@ import teralizer.transformer.ModelToJsonTransformer;
 import teralizer.transformer.SpecificationGson;
 
 public class TestGeneralizationTaskTest {
+    @Example
+    void errorDuringTaskExecutionClearsAttachedGeneralization() {
+        RecordingGeneralizations store = new RecordingGeneralizations();
+        GeneralizationRecord record = store.dsl().newRecord(Tables.GENERALIZATION);
+        record.setId(101L);
+        record.setIsIncluded(true);
+        store.generalization = record;
+
+        Assert.assertThrows(AssertionError.class,
+            () -> new ErrorTask(record).execute(new TaskContext(), ignored -> {}, ignored -> {}));
+
+        Assert.assertFalse(record.getIsIncluded());
+        Assert.assertTrue(record.getExclusionInfo().contains("AssertionError"));
+    }
+
+    @Example
+    void projectScopedFailureClearsFannedOutGeneralizations() {
+        ProjectFailureStore store = new ProjectFailureStore();
+        GeneralizationLifecycleRecord lifecycle = store.records.newRecord(Tables.GENERALIZATION_LIFECYCLE);
+        lifecycle.setId(201L);
+        lifecycle.setGeneralizationId(301L);
+        lifecycle.setGeneratedSourceCreated(true);
+        lifecycle.setGeneratedProjectCompiled(true);
+        lifecycle.setGeneratedTestsExecuted(false);
+        lifecycle.setGeneratedReportCollected(false);
+        lifecycle.setGeneratedFilterPassed(false);
+        lifecycle.setGeneratedPitCollected(false);
+        lifecycle.setFinalUsable(false);
+        store.lifecycle = lifecycle;
+
+        GeneralizationRecord generalization = store.records.newRecord(Tables.GENERALIZATION);
+        generalization.setId(301L);
+        generalization.setIsIncluded(true);
+        store.generalization = generalization;
+
+        TaskRecord task = store.records.newRecord(Tables.TASK);
+        task.setStage(ProcessingStage.EXECUTE_TESTS_GENERALIZED);
+        task.setProjectId(7L);
+        task.setVariant("IMPROVED_100_TRIES");
+
+        GeneralizationLifecycleWriter.recordStageFailed(store.dsl(), task, "PROCESS_EXECUTION_FAILED");
+
+        Assert.assertFalse(store.generalization.getIsIncluded());
+        Assert.assertTrue(store.generalization.getExclusionInfo().contains(ProcessingStage.EXECUTE_TESTS_GENERALIZED.name()));
+        Assert.assertTrue(store.generalization.getExclusionInfo().contains("PROCESS_EXECUTION_FAILED"));
+    }
+
     @Example
     void mapsTestedMethodArgumentsByNameSkippingWrapperExtras() {
         List<MethodParameter> parameters = Arrays.asList(new MethodParameter("double", "x"));
@@ -148,6 +198,7 @@ public class TestGeneralizationTaskTest {
 
         Assert.assertFalse(result.record.getIsIncluded());
         Assert.assertEquals(WideningLicense.ORACLE_NOT_WIDENABLE, result.record.getExclusionInfo());
+        Assert.assertEquals(WideningLicense.NULL_CONCRETE_PARAMETERS_EMPTY, result.record.getWideningRefusalCode());
         Assert.assertFalse("refused generalization must not write a doomed artifact", Files.exists(result.generatedPath));
     }
 
@@ -462,6 +513,67 @@ public class TestGeneralizationTaskTest {
         + "class Subject {\n"
         + "  int compare(int left, int right) { return java.lang.Integer.compare(left, right); }\n"
         + "}\n";
+
+    private static final class ProjectFailureStore implements MockDataProvider {
+        private final DSLContext records = DSL.using(SQLDialect.POSTGRES);
+        private GeneralizationLifecycleRecord lifecycle;
+        private GeneralizationRecord generalization;
+
+        private DSLContext dsl() {
+            return DSL.using(new MockConnection(this), SQLDialect.POSTGRES);
+        }
+
+        @Override
+        public MockResult[] execute(MockExecuteContext context) {
+            String sql = context.sql().trim().toLowerCase(Locale.ROOT);
+            if (sql.startsWith("select") && sql.contains("\"generalization_lifecycle\"")) {
+                Result<GeneralizationLifecycleRecord> result = this.records.newResult(Tables.GENERALIZATION_LIFECYCLE);
+                result.add(this.lifecycle);
+                return new MockResult[] {new MockResult(1, result)};
+            }
+            if (sql.startsWith("select") && sql.contains("\"generalization\"")) {
+                Result<GeneralizationRecord> result = this.records.newResult(Tables.GENERALIZATION);
+                result.add(this.generalization);
+                return new MockResult[] {new MockResult(1, result)};
+            }
+            if (sql.startsWith("update") && sql.contains("\"generalization_lifecycle\"")) {
+                return new MockResult[] {new MockResult(1, this.records.newResult(Tables.GENERALIZATION_LIFECYCLE))};
+            }
+            if (sql.startsWith("update") && sql.contains("\"generalization\"")) {
+                bindUpdate(this.generalization, Tables.GENERALIZATION, context.sql(), context.bindings());
+            }
+            return new MockResult[] {new MockResult(0, this.records.newResult(Tables.GENERALIZATION))};
+        }
+
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        private static void bindUpdate(org.jooq.Record record, Table<?> table, String sql, Object[] bindings) {
+            String lower = sql.toLowerCase(Locale.ROOT);
+            String assignments = sql.substring(lower.indexOf(" set ") + 5, lower.indexOf(" where "));
+            String[] names = assignments.split(",");
+            for (int i = 0; i < names.length && i < bindings.length; i++) {
+                Field field = table.field(DSL.name(columnName(names[i].substring(0, names[i].indexOf('=')))));
+                if (field != null) {
+                    record.set(field, bindings[i]);
+                }
+            }
+        }
+
+        private static String columnName(String sqlName) {
+            String name = sqlName.replace("\"", "").trim();
+            return name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name;
+        }
+    }
+
+    private static final class ErrorTask extends AbstractTask {
+        private ErrorTask(GeneralizationRecord record) {
+            this.generalizationRecord = record;
+        }
+
+        @Override
+        protected void executeInternal(TaskContext context, java.util.function.Consumer<String> reportInfo, java.util.function.Consumer<Task> scheduleTask) {
+            throw new AssertionError("boom");
+        }
+    }
 
     private static final class Scenario {
         private final ProjectRecord project;

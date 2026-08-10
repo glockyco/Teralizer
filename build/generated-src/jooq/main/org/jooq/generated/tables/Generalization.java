@@ -13,7 +13,7 @@ import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row16;
+import org.jooq.Row17;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -128,6 +128,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
      * The column <code>public.generalization.exclusion_info</code>.
      */
     public final TableField<GeneralizationRecord, String> EXCLUSION_INFO = createField(DSL.name("exclusion_info"), SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>public.generalization.widening_refusal_code</code>.
+     */
+    public final TableField<GeneralizationRecord, String> WIDENING_REFUSAL_CODE = createField(DSL.name("widening_refusal_code"), SQLDataType.CLOB, this, "");
 
     private Generalization(Name alias, Table<GeneralizationRecord> aliased) {
         this(alias, aliased, null);
@@ -244,11 +249,11 @@ public class Generalization extends TableImpl<GeneralizationRecord> {
     }
 
     // -------------------------------------------------------------------------
-    // Row16 type methods
+    // Row17 type methods
     // -------------------------------------------------------------------------
 
     @Override
-    public Row16<Long, Long, Long, Long, String, String, String, String, String, String, String, Integer, Integer, Integer, Boolean, String> fieldsRow() {
-        return (Row16) super.fieldsRow();
+    public Row17<Long, Long, Long, Long, String, String, String, String, String, String, String, Integer, Integer, Integer, Boolean, String, String> fieldsRow() {
+        return (Row17) super.fieldsRow();
     }
 }

@@ -174,6 +174,7 @@ CREATE TABLE generalization
 
     is_included            BOOLEAN NOT NULL,
     exclusion_info         TEXT,    -- can be null for generalizations that are not excluded
+    widening_refusal_code  TEXT,    -- nullable branch code when exclusion_info is ORACLE_NOT_WIDENABLE
 
     FOREIGN KEY (project_id) REFERENCES project (id) ON DELETE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test (id) ON DELETE CASCADE,
