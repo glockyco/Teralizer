@@ -18,6 +18,10 @@ globs:
   `ProcessingStage` enum, `stage_order()` in `src/main/resources/db/create-views.sql`, and
   `analysis/src/teralizer/stages.py`. Renumbering one without the others silently breaks
   runtime-by-stage analysis.
+- Excluding an entity: `docs/exclusion-model.md` lists the five existing mechanisms and where each
+  records its decision. Adding a sixth without a home in the analysis makes it disappear into
+  whichever bucket a predicate happens to match. `AbstractTask` clears `is_included` only for the
+  record attached to the failing task, so project-scoped failures clear nothing.
 - jOOQ: a DDL *column* change needs `scripts/regenerate-jooq.sh`; adding a `ProcessingStage` enum
   constant does NOT (runtime `EnumConverter` keyed on the class).
 - `./gradlew run` exits 0 even when a pipeline task fails. The authoritative success check is the

@@ -66,6 +66,8 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
 
 ## Layout & config
 - Architecture / DB references: `docs/architecture.md`, `docs/database.md`.
+- Why an entity is excluded, and which column may be trusted to say so:
+  `docs/exclusion-model.md`. Required reading before quoting any exclusion figure.
 - Planning & roadmap: read `docs/plans/INDEX.md` first; the north-star, strategy sequence, and current focus live in `docs/plans/2026-06-26-teralizer-overview.md`.
 - Config: Typesafe Config (HOCON); examples in `project-configs/example-*.conf`.
 - Analysis lives in `analysis/`.

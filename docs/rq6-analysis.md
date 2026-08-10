@@ -53,6 +53,7 @@ The report produces three primary table shapes:
    - Restricted to eligible projects.
    - Splits tests, assertions, and generalizations into included, filtering, and failure outcomes.
    - A generalization is included here when `generated_filter_passed`; this is not the same measure as final usability after Stage 5.
+   - The two exclusion buckets do not currently mean what they say. The pipeline has five exclusion mechanisms and this table has two columns, so generation-time gates and javac quarantines are reported as filtering, and inline capability exclusions are reported as failures. `docs/exclusion-model.md` gives the composition of every bucket and tracks the defects as EM-1 through EM-8. Do not quote a filtering or failure figure from this table without reading it.
 
 3. **Filter decisions** (`tab:exclusions-filtering`)
    - Restricted to eligible projects.

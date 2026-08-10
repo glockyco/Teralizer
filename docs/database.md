@@ -20,9 +20,12 @@ PostgreSQL database with schema defined in `src/main/resources/db/create-tables.
   including unresolved ones
 - `generalization` - Generated property-based test information. `is_included` and
   `exclusion_info` carry typed exclusion labels (e.g. `ORACLE_NOT_WIDENABLE`)
-- `generalization_lifecycle` - per-generalization end-to-end stage flags
-  (source created → compiled → executed → report collected → filter passed) with
-  `final_usable` and the failure stage/code. The yield authority, not `is_included`
+- `generalization_lifecycle` - end-to-end stage flags for the generalizations that were
+  actually emitted (source created → compiled → executed → report collected → filter passed)
+  with `final_usable` and the failure stage/code. The yield authority, not `is_included`.
+  Generalizations refused by a generation-time gate have no row here at all, so the row count
+  is the emitted-test count, not the attempt count. `final_failure_stage` reports the first
+  unset flag and cannot distinguish a stage that failed from one that never ran
 - `generation_clause` / `generation_parameter` - generation-coverage telemetry written at
   generation time: per-clause canonical shape and consumed status, per-parameter
   symbolic-spec presence and representation (encoded | residual | none)
@@ -43,7 +46,10 @@ PostgreSQL database with schema defined in `src/main/resources/db/create-tables.
 - `jacoco_coverage_report` - Code coverage data
 - `pit_mutation_report` - Mutation testing results
 - `pit_coverage_report` - PIT coverage information
-- `filter_result` - Test filtering decisions and reasons
+- `filter_result` - Filter decisions (`ACCEPT` / `DEFER` / `REJECT`) for the entities a filter
+  stage actually adjudicated. Also carries the javac quarantine verdicts written by
+  `ProjectBuildTask` under the non-filter name `GeneratedTestValidator`, so a `REJECT` row is
+  not by itself a filter rejection. See `docs/exclusion-model.md`
 
 ### Analysis Views
 
@@ -57,8 +63,10 @@ are unaffected.
 
 - **postgres_dev**: eqbench and commons-utils projects (published-paper corpus, protected)
 - **postgres_test**: RepoReapers projects (published-paper corpus, protected)
-- **postgres_reporeapers**: RepoReapers corpus on the current pipeline (in-flight for the next
-  paper version, unprotected). Cross-DB comparisons join on `root_path`, never `id`
+- **postgres_reporeapers_rq6_v6**: RepoReapers corpus on the current pipeline, 1,161 projects,
+  the canonical RQ6 source and the default of `scripts/run-rq6-analysis.sh`. Earlier
+  `postgres_reporeapers*` corpora are superseded and must not be cited. Cross-DB comparisons
+  join on `root_path`, never `id`
 - Scratch databases (`postgres_verification`, `postgres_<purpose>_verify`) are created and
   dropped by runner scripts. Never experiment on the databases above
 - Centralized config in `analysis/src/teralizer/config.py` provides `db_config.get_dev_engine()` and `db_config.get_test_engine()`
