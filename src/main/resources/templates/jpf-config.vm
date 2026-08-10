@@ -31,12 +31,17 @@ symbolic.collect_constraints=true
 #symbolic.max_double=100.0
 symbolic.debug = false
 symbolic.optimizechoices = false
-#symbolic.lazy=true
-#symbolic.arrays=true
+# symbolic.arrays is rejected outright: SymbolicInstructionFactory throws a JPFConfigException
+# when it is on together with symbolic.collect_constraints, which this analysis requires.
+# symbolic.lazy was measured to change nothing here, because there is no aliasing choice to make
+# along a single concrete path. Neither recovers a value read from the heap.
 symbolic.strings=${symbolicStrings}
 symbolic.dp=${symbolicDp}
 symbolic.fp=${symbolicFp}
 symbolic.bvlength=${symbolicBvLength}
+# No symbolic.string_dp is set. SPF reads that as `none`, which selects no string solver, and
+# measurement showed selecting one changes no result: a solver decides satisfiability, and this
+# analysis only collects constraints. The timeout below is inert for the same reason.
 symbolic.string_dp_timeout_ms=3000
 test_generalization.max_execution_time=${maxExecutionTime}
 test_generalization.max_path_condition_size=${maxPathConditionSize}

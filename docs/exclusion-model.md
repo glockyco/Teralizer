@@ -299,11 +299,14 @@ The causes below are ordered by size.
    so the widening license already recovers these cases (`WideningLicense.java:107-128`). The return
    attribute capture point is `TestGeneralizationListener.java:295`, with JPF's return-value handling
    at `jpf-core JVMReturnInstruction.java:154,166-168`.
-2. **Heap reads.** A value read from an array or field carries no attribute because
-   `symbolic.arrays` and `symbolic.lazy` are commented out in the generated configuration
-   (`src/main/resources/templates/jpf-config.vm:34-35`). Attribute propagation itself works for
-   field and array instructions (`GETFIELD.java:89-90`, `IALOAD.java:154-156`), so there is simply
-   no attribute on the heap location to propagate.
+2. **Heap reads.** A value read from an array or field carries no attribute. Attribute propagation
+   itself works for field and array instructions (`GETFIELD.java:89-90`, `IALOAD.java:154-156`), so
+   there is simply no attribute on the heap location to propagate. Configuration cannot supply one.
+   `symbolic.arrays` is refused outright when constraint collection is on, which this analysis
+   requires: `SymbolicInstructionFactory.java:737-739` throws `JPFConfigException`. `symbolic.lazy`
+   was measured over nine projects and changed nothing, which follows from there being no aliasing
+   choice to make along a single concrete path. Recovering these cases means abandoning single-path
+   constraint collection, not changing a setting.
 3. **Callee returns.** A value returned by a callee is not itself a cause. Ordinary Java calls
    propagate the return attribute (`jpf-core JVMReturnInstruction.java:154,166-168`). In the
    25-case source audit of non-boolean `NULL_CONCRETE` assertions with zero concretization
@@ -448,7 +451,7 @@ causes are reported separately in `tab:widening-refusals`.
 | EM-6 | `AbstractTask` caught `Exception`, not `Throwable` | implementation | 2 assertions | fixed in code, needs a re-collection |
 | EM-7 | `deriveRollup` reports "never ran" as "failed at this stage" | implementation | 98 generalizations | **open**, guarded by an `xfail` invariant |
 | EM-8 | Widening refusal sub-reason not persisted | implementation | 299 refusals unsplittable | fixed in code via `generalization.widening_refusal_code`, needs a re-collection |
-| EM-9 | Generated SPF configuration comments out `symbolic.arrays` and `symbolic.lazy`, and never writes `symbolic.string_dp` although it writes `symbolic.string_dp_timeout_ms` (`src/main/resources/templates/jpf-config.vm:34-35,40`) | configuration | heap and string output models | both changes need a spike before any change. Enabling arrays and lazy costs state space. SPF string support may be weak regardless |
+| EM-9 | ~~Generated SPF configuration comments out `symbolic.arrays` and `symbolic.lazy`, and never writes `symbolic.string_dp`~~ | configuration | none | **not a defect.** Measured over nine projects: `symbolic.arrays` is rejected by `SymbolicInstructionFactory.java:737-739` whenever constraint collection is on, and `symbolic.lazy` and `symbolic.string_dp` each produced results identical to the baseline. A string decision procedure decides satisfiability, and this analysis only collects. Widening the `symbolic.strings` gate to String-returning methods does raise their symbolic yield from 7 to 19, but costs 73 of 321 String assertions, which abort in `SymbolicStringHandler.handletoString` when a symbolic numeric reaches `toString`. Recovering strings means fixing that handler, not configuring SPF |
 
 The root cause behind EM-1 through EM-3 was structural: a two-bucket model over a five-mechanism
 pipeline with a silent `ELSE` catch-all. The classification is now total, and `_fetch_breakdown`
