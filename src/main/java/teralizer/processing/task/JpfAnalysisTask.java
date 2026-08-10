@@ -75,9 +75,15 @@ public class JpfAnalysisTask extends AbstractTask {
         Result<Record> records = PipelineQueries.fetchIncludedAssertions(create, this.getProjectId());
 
         if (records.isEmpty()) {
+            // Naming a stage here without reading the rejections blames whichever one this task
+            // happens to sit behind. Assertions are excluded by the filter that rejects them,
+            // which usually runs long before specification extraction.
+            List<String> rejections = PipelineQueries.fetchAssertionRejectionSummary(create, this.getProjectId());
             throw new RuntimeException(
-                "All assertions were excluded during specification extraction (SPF failures). " +
-                "No specifications available for test generalization."
+                "No assertion of project " + this.getProjectId() + " reached test generalization. "
+                + "Recorded rejections: "
+                + (rejections.isEmpty() ? "none, so no assertion was ever analyzed" : String.join(", ", rejections))
+                + ". Per-assertion reasons are in filter_result."
             );
         }
 

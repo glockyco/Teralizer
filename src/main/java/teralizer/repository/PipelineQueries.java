@@ -2,10 +2,13 @@ package teralizer.repository;
 
 import java.util.List;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.generated.Tables;
+import org.jooq.impl.DSL;
 import teralizer.processing.ProcessingStage;
+import teralizer.processing.filter.FilterDecision;
 
 public class PipelineQueries {
 
@@ -43,6 +46,25 @@ public class PipelineQueries {
             .where(Tables.TEST.PROJECT_ID.eq(projectId))
             .and(Tables.ASSERTION.IS_INCLUDED.eq(true))
             .fetch();
+    }
+
+    /**
+     * Summarizes why a project's assertions were rejected, most frequent first, as
+     * {@code filter/reason xN}. An assertion is excluded by whichever filter first rejects it, at
+     * whichever stage that filter runs, so a caller that finds nothing left to process must read
+     * this to name the stage instead of naming its own.
+     */
+    public static List<String> fetchAssertionRejectionSummary(DSLContext create, Long projectId) {
+        Field<Integer> occurrences = DSL.count();
+        return create
+            .select(Tables.FILTER_RESULT.FILTER_NAME, Tables.FILTER_RESULT.REASON_CODE, occurrences)
+            .from(Tables.FILTER_RESULT)
+            .where(Tables.FILTER_RESULT.PROJECT_ID.eq(projectId))
+            .and(Tables.FILTER_RESULT.ASSERTION_ID.isNotNull())
+            .and(Tables.FILTER_RESULT.DECISION.eq(FilterDecision.REJECT))
+            .groupBy(Tables.FILTER_RESULT.FILTER_NAME, Tables.FILTER_RESULT.REASON_CODE)
+            .orderBy(occurrences.desc())
+            .fetch(r -> r.value1() + "/" + r.value2() + " x" + r.value3());
     }
 
     public static Result<Record> fetchIncludedGeneralizations(DSLContext create, String variant, Long projectId) {
