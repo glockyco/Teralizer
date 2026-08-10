@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import net.jqwik.api.Example;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 
 class GeneratedTestValidatorTest {
@@ -53,15 +54,22 @@ class GeneratedTestValidatorTest {
         // Windows, where the system temp directory may be on a different drive.
         Path cwd = java.nio.file.Paths.get("").toAbsolutePath();
         Path root = Files.createTempDirectory(cwd, "validator-relative");
-        write(root, "Bad.java", "public class Bad { int v() { return Nonexistent.MISSING; } }");
-        Path relativeBad = cwd.relativize(root.resolve("Bad.java"));
-        Path relativeRoot = cwd.relativize(root);
+        // The fixture sits in the working directory, which is the repository root under Gradle, so
+        // it has to be removed on every exit. Leaving it behind litters the checkout with a new
+        // untracked directory per run.
+        try {
+            write(root, "Bad.java", "public class Bad { int v() { return Nonexistent.MISSING; } }");
+            Path relativeBad = cwd.relativize(root.resolve("Bad.java"));
+            Path relativeRoot = cwd.relativize(root);
 
-        Map<Path, String> errors = GeneratedTestValidator.compilationErrors(
-            Collections.singletonList(relativeBad), "", Collections.singletonList(relativeRoot));
+            Map<Path, String> errors = GeneratedTestValidator.compilationErrors(
+                Collections.singletonList(relativeBad), "", Collections.singletonList(relativeRoot));
 
-        Assert.assertEquals(Collections.singleton(relativeBad), errors.keySet());
-        assertCapturedJavacError(errors.get(relativeBad), "Nonexistent");
+            Assert.assertEquals(Collections.singleton(relativeBad), errors.keySet());
+            assertCapturedJavacError(errors.get(relativeBad), "Nonexistent");
+        } finally {
+            FileUtils.deleteDirectory(root.toFile());
+        }
     }
 
     private static void assertCapturedJavacError(String errorText, String expectedFragment) {
