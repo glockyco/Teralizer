@@ -37,7 +37,6 @@ import teralizer.spoon.analysis.TestMethodResolver;
 import teralizer.spoon.analysis.TestShape;
 import teralizer.spoon.codegen.InstrumentedClassBuilder;
 import teralizer.util.Configuration;
-import teralizer.util.SpfSymbolicConfig;
 
 
 public class JpfInstrumentationTask extends AbstractTask {
@@ -307,11 +306,7 @@ public class JpfInstrumentationTask extends AbstractTask {
         context.put("classpath", this.projectRecord.getClasspath());
         context.put("symbolicMethod", symbolicMethod);
 
-        SpfSymbolicConfig symbolicConfig = SpfSymbolicConfigSelector.select(testedMethod);
-        context.put("symbolicDp", symbolicConfig.getDp());
-        context.put("symbolicFp", symbolicConfig.isFp());
-        context.put("symbolicBvLength", symbolicConfig.getBvLength());
-        context.put("symbolicStrings", symbolicConfig.isStrings());
+        SpfSymbolicConfigSelector.select(testedMethod).templateBindings().forEach(context::put);
 
         context.put("maxExecutionTime", Configuration.getJpfTimeoutPerAssertion());
         context.put("maxPathConditionSize", Configuration.getJpfMaxPathConditionSize());

@@ -47,7 +47,7 @@ public final class SpfSymbolicConfigSelector {
 
     public static SpfSymbolicConfig select(CtMethod<?> testedMethod) {
         if (testedMethod.getBody() == null) {
-            return SpfSymbolicConfig.defaultProfile();
+            return defaults();
         }
         boolean usesRawBits = testedMethod.getBody()
             .getElements(new TypeFilter<>(CtInvocation.class))
@@ -55,6 +55,15 @@ public final class SpfSymbolicConfigSelector {
             .anyMatch(SpfSymbolicConfigSelector::isRawBitsConversion);
         SpfSymbolicConfig base = usesRawBits ? SpfSymbolicConfig.rawBits() : SpfSymbolicConfig.defaultProfile();
         return base.withStrings(hasStringParameter(testedMethod));
+    }
+
+    /**
+     * The profile a method with no distinguishing feature runs under. Callers that need production's
+     * settings without a method to analyze use this rather than restating them, which is how the
+     * numeric backend came to be written out by hand in three test sites.
+     */
+    public static SpfSymbolicConfig defaults() {
+        return SpfSymbolicConfig.defaultProfile();
     }
 
     private static boolean hasStringParameter(CtMethod<?> testedMethod) {

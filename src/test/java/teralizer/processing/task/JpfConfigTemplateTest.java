@@ -7,7 +7,9 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.junit.Assert;
+import teralizer.spoon.analysis.SpfSymbolicConfigSelector;
 import teralizer.util.Configuration;
+import teralizer.util.SpfSymbolicConfig;
 
 public class JpfConfigTemplateTest {
     @Example
@@ -19,9 +21,6 @@ public class JpfConfigTemplateTest {
 
         VelocityContext context = baseContext();
         context.put("classpath", "project/target/classes" + sep + "project/target/test-classes");
-        context.put("symbolicDp", "z3");
-        context.put("symbolicFp", false);
-        context.put("symbolicBvLength", 32);
 
         StringWriter writer = new StringWriter();
         Template template = velocity.getTemplate("jpf-config.vm");
@@ -36,10 +35,7 @@ public class JpfConfigTemplateTest {
         velocity.init();
 
         VelocityContext context = baseContext();
-        context.put("symbolicDp", "z3bitvector");
-        context.put("symbolicFp", true);
-        context.put("symbolicBvLength", 64);
-        context.put("symbolicStrings", true);
+        SpfSymbolicConfig.rawBits().withStrings(true).templateBindings().forEach(context::put);
 
         StringWriter writer = new StringWriter();
         Template template = velocity.getTemplate("jpf-config.vm");
@@ -51,6 +47,8 @@ public class JpfConfigTemplateTest {
         Assert.assertTrue("bvlength must come from context", rendered.contains("symbolic.bvlength=64"));
         Assert.assertTrue("strings must come from context", rendered.contains("symbolic.strings=true"));
         Assert.assertFalse("dp must not be hardcoded to z3", rendered.contains("symbolic.dp=z3\n"));
+        Assert.assertFalse("symbolic.arrays must stay off: it cannot coexist with constraint collection",
+            rendered.contains("symbolic.arrays=true"));
     }
 
     @Example
@@ -59,9 +57,6 @@ public class JpfConfigTemplateTest {
         velocity.init();
 
         VelocityContext context = baseContext();
-        context.put("symbolicDp", "z3");
-        context.put("symbolicFp", false);
-        context.put("symbolicBvLength", 32);
         context.put("maxSearchDepth", 250);
 
         StringWriter writer = new StringWriter();
@@ -80,6 +75,7 @@ public class JpfConfigTemplateTest {
         context.put("symbolicMethod", "example.Test.value(sym)");
         context.put("jpfSymbcModelClasspath", Configuration.JPF_SYMBC_MODEL_CLASSPATH);
         context.put("pathSeparator", ";");
+        SpfSymbolicConfigSelector.defaults().templateBindings().forEach(context::put);
         context.put("classpath", "project/target/classes");
         context.put("maxExecutionTime", 30.0);
         context.put("maxPathConditionSize", 100000L);

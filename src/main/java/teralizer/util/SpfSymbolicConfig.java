@@ -1,9 +1,13 @@
 package teralizer.util;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * SPF symbolic-analysis backend settings for one probe: the decision procedure
- * ({@code symbolic.dp}), the floating-point theory toggle ({@code symbolic.fp}),
- * and the bit-vector width ({@code symbolic.bvlength}).
+ * ({@code symbolic.dp}), the floating-point theory toggle ({@code symbolic.fp}), the bit-vector
+ * width ({@code symbolic.bvlength}), and whether strings are symbolized
+ * ({@code symbolic.strings}).
  *
  * <p>Teralizer runs SPF in single-path constraint-collection mode and does not
  * use SPF for solver-driven path exploration or input generation. These settings
@@ -19,7 +23,7 @@ public final class SpfSymbolicConfig {
     private final int bvLength;
     private final boolean strings;
 
-    public SpfSymbolicConfig(String dp, boolean fp, int bvLength, boolean strings) {
+    private SpfSymbolicConfig(String dp, boolean fp, int bvLength, boolean strings) {
         this.dp = dp;
         this.fp = fp;
         this.bvLength = bvLength;
@@ -39,6 +43,21 @@ public final class SpfSymbolicConfig {
     /** This profile with symbolic strings toggled — strings are orthogonal to the numeric backend. */
     public SpfSymbolicConfig withStrings(boolean strings) {
         return new SpfSymbolicConfig(this.dp, this.fp, this.bvLength, strings);
+    }
+
+    /**
+     * The {@code jpf-config.vm} bindings this profile owns. The template renders under
+     * {@code runtime.references.strict}, so a binding it names and no caller supplies is a render
+     * failure rather than a silent default. Every site that fills the template takes them from
+     * here, so adding a setting cannot leave one of them behind.
+     */
+    public Map<String, Object> templateBindings() {
+        Map<String, Object> bindings = new LinkedHashMap<>();
+        bindings.put("symbolicDp", this.dp);
+        bindings.put("symbolicFp", this.fp);
+        bindings.put("symbolicBvLength", this.bvLength);
+        bindings.put("symbolicStrings", this.strings);
+        return bindings;
     }
 
     public String getDp() {

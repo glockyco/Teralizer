@@ -23,6 +23,7 @@ import org.apache.velocity.app.VelocityEngine;
 import teralizer.domain.CapturedOutput;
 import teralizer.domain.Value;
 import teralizer.jpf.targets.Cut;
+import teralizer.spoon.analysis.SpfSymbolicConfigSelector;
 import teralizer.transformer.SpecificationGson;
 import teralizer.util.Configuration;
 
@@ -297,13 +298,11 @@ public final class JpfListenerHarness {
         context.put("pathSeparator", File.pathSeparator);
         context.put("classpath", fixturesClasspath());
         context.put("symbolicMethod", symbolicMethod);
-        // Plain-arithmetic solver defaults (the non-raw-bits SpfSymbolicConfigSelector selection).
+        // The non-raw-bits selection, which is what a numeric fixture runs under in the pipeline.
         // String symbolization is caller-selected so numeric fixtures mirror production's
         // no-String-parameter profile while String fixtures still exercise SymbolicStringHandler.
-        context.put("symbolicDp", "z3");
-        context.put("symbolicFp", false);
-        context.put("symbolicBvLength", 32);
-        context.put("symbolicStrings", symbolicStrings);
+        SpfSymbolicConfigSelector.defaults().withStrings(symbolicStrings).templateBindings()
+            .forEach(context::put);
         context.put("maxExecutionTime", maxExecutionTime);
         context.put("maxPathConditionSize", maxPathConditionSize);
         context.put("maxSearchDepth", 100);
