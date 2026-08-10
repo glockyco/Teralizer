@@ -8,6 +8,7 @@ from teralizer.eval.data import connect
 from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
 from teralizer.eval.reports import rq6_causes  # noqa: F401  (registers "rq6")
+from teralizer.eval.reports._causes_common import MECHANISM_OUTCOMES
 
 
 def _report() -> RQReport:
@@ -99,7 +100,8 @@ def test_rq6_breakdown_conservation():
     report = _report()
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
     assert set(breakdown.df["level"]) <= {"Test", "Assertion", "Generalization"}
-    reconstructed = breakdown.df[["included", "filtering", "failures"]].sum(axis=1)
+    outcomes = [outcome.column for outcome in MECHANISM_OUTCOMES]
+    reconstructed = breakdown.df[outcomes].sum(axis=1)
     assert (reconstructed == breakdown.df["total"]).all()
 
 
@@ -168,16 +170,15 @@ def test_rq6_generalization_inclusion_uses_validated_signal():
     assert row["included"] == validated
 
 
-def test_rq6_generalization_failures_exclude_reduction_attrition():
-    # A reduction-dependent inclusion signal would push PIT collection losses into
-    # the failures column. Reconstruct only eligible creation failures: outputs that
-    # did not validate and were not rejected by a generation filter.
+def test_rq6_generalization_reduction_attrition_stays_included():
+    # A reduction-dependent inclusion signal would push Stage-5 PIT losses into an
+    # exclusion column. Inclusion must key on the generation-side filter verdict.
     report = _report()
     breakdown = next(t for t in report.tables() if "exclusions-breakdown" in t.label)
     row = breakdown.df[breakdown.df["level"].eq("Generalization")].iloc[0]
     with connect(get("rq6").default_db) as conn:
         variant = _funnel.resolve_variant(conn)
-        creation_failures = conn.execute(
+        filter_passed = conn.execute(
             text(
                 """
                 WITH eligible AS (
@@ -203,26 +204,14 @@ def test_rq6_generalization_failures_exclude_reduction_attrition():
                 JOIN eligible e ON e.id = g.project_id
                 JOIN generalization_lifecycle l ON l.generalization_id = g.id
                 WHERE g.variant = :variant
-                  AND NOT l.generated_filter_passed
-                  AND NOT (
-                      NOT g.is_included
-                      AND (
-                          g.exclusion_info IN (
-                              'ORACLE_NOT_WIDENABLE',
-                              'INPUT_SPEC_NOT_SATISFIED_BY_SEED'
-                          )
-                          OR EXISTS (
-                              SELECT 1 FROM filter_result fr
-                              WHERE fr.generalization_id = g.id
-                                AND fr.decision = 'REJECT'
-                          )
-                      )
-                  )
+                  AND l.generated_filter_passed
                 """
             ),
             {"variant": variant},
         ).scalar_one()
-    assert row["failures"] == creation_failures
+    # Inclusion keys on the filter verdict, not on final_usable, so a generalized
+    # test that validated and then lost PIT collection stays included.
+    assert row["included"] == filter_passed
 
 
 def test_rq6_filtering_table_is_entity_conservative():

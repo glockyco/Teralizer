@@ -5,10 +5,41 @@ layer; the Table shape, columns, and percentage formatting live here once."""
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
+from dataclasses import dataclass
 
 import pandas as pd
 
 from teralizer.eval.model import ColumnSpec, Table
+
+
+@dataclass(frozen=True)
+class Outcome:
+    """One breakdown column: the frame column and its count/percentage headers."""
+
+    column: str
+    header: str
+    pct_header: str
+
+
+# The old schema cannot tell the exclusion mechanisms apart, so RQ5 keeps the
+# two-way split it was collected under.
+LEGACY_OUTCOMES: tuple[Outcome, ...] = (
+    Outcome("included", "Included", "Incl. %"),
+    Outcome("filtering", "Filtering", "Filt. %"),
+    Outcome("failures", "Failures", "Fail. %"),
+)
+
+# One column per exclusion mechanism, for schemas that record which one fired.
+# See docs/exclusion-model.md. The javac quarantine is a compile failure, so it
+# joins `failed` rather than earning a column of its own.
+MECHANISM_OUTCOMES: tuple[Outcome, ...] = (
+    Outcome("included", "Included", "Incl. %"),
+    Outcome("filtered", "Filtered", "Filt. %"),
+    Outcome("refused", "Refused", "Ref. %"),
+    Outcome("unsupported", "Unsupported", "Unsup. %"),
+    Outcome("failed", "Failed", "Fail. %"),
+)
 
 _VARIANT_HEAD = {"ORIGINAL": 0, "INITIAL": 1, "SHARED": 2, "BASELINE": 3}
 _VARIANT_GROUP = {"NAIVE": 4, "IMPROVED": 5}
@@ -78,21 +109,25 @@ def build_breakdown_table(
     label: str,
     caption: str,
     include_strategy: bool = False,
+    outcomes: Sequence[Outcome] = LEGACY_OUTCOMES,
 ) -> Table:
-    """df columns: level, total, included, filtering, failures (and optional strategy)."""
+    """df columns: level, total, one column per outcome (and optional strategy)."""
     out = df.copy()
-    for part in ("included", "filtering", "failures"):
-        out[f"{part}_pct"] = out[part] / out["total"]
+    for outcome in outcomes:
+        out[f"{outcome.column}_pct"] = out[outcome.column] / out["total"]
     columns = [
         ColumnSpec("Level", "level"),
         ColumnSpec("Total", "total", fmt="count", align="r"),
-        ColumnSpec("Included", "included", fmt="count", align="r"),
-        ColumnSpec("Incl. %", "included_pct", fmt="pct1", align="r"),
-        ColumnSpec("Filtering", "filtering", fmt="count", align="r"),
-        ColumnSpec("Filt. %", "filtering_pct", fmt="pct1", align="r"),
-        ColumnSpec("Failures", "failures", fmt="count", align="r"),
-        ColumnSpec("Fail. %", "failures_pct", fmt="pct1", align="r"),
     ]
+    for outcome in outcomes:
+        columns.append(
+            ColumnSpec(outcome.header, outcome.column, fmt="count", align="r")
+        )
+        columns.append(
+            ColumnSpec(
+                outcome.pct_header, f"{outcome.column}_pct", fmt="pct1", align="r"
+            )
+        )
     group_by = None
     if include_strategy:
         columns = [ColumnSpec("Strategy", "strategy"), *columns]

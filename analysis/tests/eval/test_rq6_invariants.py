@@ -14,6 +14,7 @@ from sqlalchemy import text
 
 from teralizer.eval.data import connect
 from teralizer.eval.reports import _funnel, rq6_causes
+from teralizer.eval.reports._causes_common import MECHANISM_OUTCOMES
 from teralizer.eval.reports.rq6_causes import DEFAULT_DB
 
 # `FILTERING_SQL` recognises a filter by its class name. Anything else that writes to
@@ -142,10 +143,15 @@ def test_every_typed_exclusion_code_is_a_known_mechanism(table):
 
 
 def test_breakdown_buckets_sum_to_level_total():
-    """Every entity lands in exactly one bucket."""
+    """Every entity lands in exactly one mechanism.
+
+    `_fetch_breakdown` already refuses to return an unclassified entity, so this
+    also proves the classification is total rather than merely non-overlapping.
+    """
     df = _breakdown()
-    mismatched = df[df["total"] != df["included"] + df["filtering"] + df["failures"]]
-    assert mismatched.empty, f"buckets do not partition the level:\n{mismatched}"
+    counted = sum(df[outcome.column] for outcome in MECHANISM_OUTCOMES)
+    mismatched = df[df["total"] != counted]
+    assert mismatched.empty, f"mechanisms do not partition the level:\n{mismatched}"
 
 
 def test_filter_passed_generalizations_carry_no_rejection():
