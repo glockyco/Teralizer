@@ -213,12 +213,49 @@ claims about end-to-end yield after Stage 5.
 
 ## The widening gate
 
-`WideningLicense.evaluate` (`src/main/java/teralizer/generalization/WideningLicense.java`) decides
-whether a generated property may widen its inputs while keeping the extracted oracle coherent.
+### The question it asks
 
-`OutputSpecClass` has exactly four values, and `SYMBOLIC`, `CONSTANT` and `EXCEPTION` all return
-before the `!= NULL_CONCRETE` guard, so **that guard is unreachable**. Only `NULL_CONCRETE` and
-`EXCEPTION` can be refused.
+Input generation already preserves the extracted path predicate. Both generation algorithms render
+the flattened predicate into the generated property's jqwik `.filter`, so every candidate input
+that survives filtering follows the execution path the specification came from
+(`ModelToJavaTransformer.transformPredicate`, `NaiveTestParametersSupplierFactory:90-93`,
+`ImprovedTestParametersSupplierFactory:32-35,106-110`). Widening the **inputs** is therefore
+already sound.
+
+The open question is whether the **oracle** can follow. `WideningLicense.evaluate` answers only
+that, and nothing else.
+
+### What licenses a widening
+
+The expected side must either co-vary with the generated inputs or be provably invariant across
+the admitted path. Which of those applies is decided by the shape of the persisted output model.
+
+| Output model | What it is | Verdict |
+|---|---|---|
+| `SYMBOLIC` | an expression over symbolic inputs, so the generated assertion recomputes the expected value for each input | always widen |
+| `CONSTANT` | a model with no variables, so SPF proved the value is constant along this path | always widen |
+| `EXCEPTION` | the captured output kind was `THROWN`, so the oracle is "this throws" | conditional |
+| `NULL_CONCRETE` | the persisted output model is literally `null`, so there is no symbolic evidence for the expected value | conditional and rare |
+
+`OutputSpecClass` has exactly four values and the first three all return before the
+`!= NULL_CONCRETE` guard, so that guard was unreachable and has been removed.
+
+**`EXCEPTION` is a reachability claim, not a value claim.** The oracle says control reaches the
+throw. That holds under widening when every branch deciding the throw either leaves a
+path-condition clause the generated inputs must satisfy, or does not depend on a widened input. So
+an empty path condition means an unconditional throw and is safe. Otherwise every widened
+parameter must be named by the path condition.
+
+**`NULL_CONCRETE` has two siblings that look identical on disk.** One is recoverable: a *computed
+boolean* whose result is decided entirely by which branch was taken. The bytecode branches on the
+symbolic operands, so the path condition captures the whole relation even though no separate
+return attribute survives. The other is an unlicensed concrete oracle whose expected value simply
+cannot follow the inputs. Telling them apart needs all four of:
+
+1. the oracle expression type is `boolean` or `java.lang.Boolean`
+2. no concretization event occurred
+3. neither parameter set is empty
+4. every generated parameter is named by the path condition
 
 | Output spec class | attempts | widened | refused |
 |---|---|---|---|
@@ -236,7 +273,54 @@ for each sampled assertion and found 18 whose output plainly varies with a gener
 including six with no recorded concretization event. Report 13.6% as the yield this extractor
 achieved, never as the share of real Java tests whose outputs are input-independent.
 
-### Refusal causes
+### Why each refusal happens
+
+**The oracle expression is not boolean** (1,828). This is the only discriminator between the two
+`NULL_CONCRETE` siblings. Without a boolean result there is no computed-boolean argument to make,
+and a null output model leaves no evidence at all for the expected value, so asserting the
+recorded concrete value against a different input would be a guess. Note that the check reads the
+type of the **oracle expression the assertion observes**, not the tested method's return type.
+Those usually coincide and sometimes do not, and using the wrong one mis-attributes roughly
+fifteen cases.
+
+**Concretization weakened the path condition** (1,329). A concretization event is counted when SPF
+reaches an `EXECUTENATIVE` instruction whose caller frame still carries a symbolic attribute in the
+native method's argument slots (`TestGeneralizationListener:143-161`). JPF boxes concrete arguments
+for MJI, and a native peer preserves symbolic attributes only if it explicitly reads and reattaches
+them, so each event marks a boundary where symbolic tracking may be dropped. Branches taken after
+that boundary run on concrete values and leave no clause behind. The path condition stops being a
+complete record of what decided the result, which is exactly the evidence the computed-boolean
+argument rests on.
+
+`post_concretization_divergence_risk` is `true` when at least one event occurred and either a later
+application conditional branched with no symbolic operand, or the captured throw did not originate
+in application code. It is `false` when telemetry ruled both out, and `null` when unknown. The
+exception branch accepts an explicit `false` and refuses `null`, because unknown is not evidence.
+The null-concrete branch refuses on any event at all, because that inference needs the path
+condition to be complete rather than merely non-divergent.
+
+**The path condition does not pin every generated parameter** (299). The generated set is the
+tested method's parameters plus *temporary parameters*, which are model variables appearing in the
+input or output model without being declared parameters, such as constructor argument sites,
+restricted to types the generator supports. The path-condition set is every `Variable` name in any
+flattened top-level conjunct of the input predicate. A generated parameter missing from that set
+is untested by the rendered filter, so jqwik may supply a value that leaves the captured execution
+region, and an oracle justified only for that region no longer applies.
+
+Three source codes report here, and they mean different things.
+
+- The generated set is empty. Nothing is being generalized, so there is no widening to license.
+- The path-condition set is empty. This is the **pass-through** case. A method can load and return
+  a stored symbolic flag without ever branching, so the result varies with the input while the path
+  condition stays empty. **An empty path condition means an unconditional throw for an exception
+  oracle and is safe, and means no evidence at all for a null-concrete oracle and is never safe.**
+  That asymmetry is the sharpest rule in the gate.
+- Both sets are non-empty but some generated parameter is absent.
+
+**An exception oracle was concretized with divergence risk** (15). The throw's reachability may
+have been decided at the native boundary rather than by a clause the generated inputs must satisfy.
+
+### Refusal causes measured
 
 The verdict is recorded as a single constant, so the deciding branch is **not persisted**
 (defect **EM-8**). It can be reconstructed from `assertion.output_spec_class`,
@@ -256,9 +340,16 @@ because they differ only in output class.
 The reconstruction reproduces the implementation exactly on the three deterministic branches:
 750 always-widen cases produced 0 refusals, 15 exception-risk cases produced 15 refusals, 1,329
 concretized cases produced 1,329 refusals, and 1,829 non-boolean cases produced 1,828 refusals
-plus one row pre-empted by the seed gate. The two parameter-coverage branches compare two
-`Set<String>` values that are never persisted, so 299 refusals (8.6%) cannot be split further
-without EM-8.
+plus one row pre-empted by the seed gate. The three coverage codes compare two `Set<String>` values
+that are never persisted, so 299 refusals (8.6%) cannot be split further without EM-8.
+
+### The residual risk the gate accepts
+
+A boolean method whose path condition names a widened parameter for some branch unrelated to the
+returned value, while the return itself is pass-through, is licensed and should not be. The source
+states this deliberately. The gate is a small generation-time policy that rejects claims without
+oracle evidence, and this case is left to the validation net downstream rather than handled by
+weakening the license.
 
 ## Per-level composition in v6
 

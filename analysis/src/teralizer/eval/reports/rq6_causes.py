@@ -92,14 +92,14 @@ refusals AS (
                  AND a.post_concretization_divergence_risk IS DISTINCT FROM false
                 THEN 'Exception oracle concretized with divergence risk'
             WHEN a.output_spec_class = 'EXCEPTION'
-                THEN 'Generated parameters not covered by the path condition'
+                THEN 'Path condition does not pin every generated parameter'
             WHEN coalesce(
                      a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''
                  ) NOT IN ('boolean', 'java.lang.Boolean')
-                THEN 'No symbolic output model, oracle is not boolean'
+                THEN 'Null output model, oracle expression is not boolean'
             WHEN coalesce(a.concretization_events, 0) > 0
-                THEN 'No symbolic output model, inputs were concretized'
-            ELSE 'Generated parameters not covered by the path condition'
+                THEN 'Null output model, concretization weakened the path condition'
+            ELSE 'Path condition does not pin every generated parameter'
         END AS cause
     FROM generalization g
     JOIN assertion a ON a.id = g.assertion_id

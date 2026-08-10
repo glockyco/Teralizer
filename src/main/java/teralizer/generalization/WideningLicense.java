@@ -48,15 +48,18 @@ import teralizer.transformer.VariableNameCollector;
  * small generation-time policy that rejects claims without oracle evidence rather than weakening
  * the license.
  *
- * <p>What the refusals cost, and what would recover them, is measured rather than assumed; see
- * {@code docs/plans/2026-08-04-oracle-refusal-taxonomy.md}. Refusals are overwhelmingly
- * {@code NULL_CONCRETE}, and they decompose into values derived from receiver, array, or collection
- * state, String composition concretized through {@code StringBuilder} and {@code String} calls,
- * wrapper {@code valueOf} boxing, and a small tail of other unmodeled calls. Boxed output capture is
- * already implemented and does not recover them: those wrapper calls are unmodeled calls hit
- * mid-path, so their operands are concretized and no symbolic output survives to capture. Recovery
- * needs symbolic models or native peers for the concretized methods. Do not read the paragraphs
- * above as a cause distribution; they describe when the license is granted, not why it is refused.
+ * <p>What the refusals cost is measured rather than assumed. {@code docs/exclusion-model.md}
+ * carries the branch-level distribution over the current corpus. Refusals are overwhelmingly
+ * {@code NULL_CONCRETE}. Boxed output capture is already implemented and does not recover them:
+ * wrapper {@code valueOf} calls are unmodeled calls hit mid-path, so their operands are
+ * concretized and no symbolic output survives to capture. Recovery needs symbolic models or native
+ * peers for the concretized methods. Do not read the paragraphs above as a cause distribution;
+ * they describe when the license is granted, not why it is refused.
+ *
+ * <p>{@code NULL_CONCRETE} names the shape of the persisted artifact, not the semantics of the
+ * output. A source audit of twenty refused cases found eighteen whose result plainly varies with a
+ * generalizable input, so a refusal here is evidence that extraction produced no symbolic output
+ * model, not evidence that the output is input-independent.
  */
 public final class WideningLicense {
     public static final String ORACLE_NOT_WIDENABLE = "ORACLE_NOT_WIDENABLE";
@@ -83,15 +86,16 @@ public final class WideningLicense {
     }
 
     /**
-     * Evaluate the widening license from the already-classified output shape, the tested method
-     * return type, the set of parameter names that will be generated, the set of parameter names
+     * Evaluate the widening license from the already-classified output shape, the type of the
+     * oracle expression the assertion observes, the set of parameter names that will be
+     * generated, the set of parameter names
      * mentioned anywhere in the flattened path-condition clauses, the persisted concretization
      * event count, and the post-event divergence risk flag. A null event count is an old-row absence
      * and is treated as no events. A null risk flag means the event risk is unknown.
      */
     public static Verdict evaluate(
         OutputSpecClass outputSpecClass,
-        String testedMethodReturnType,
+        String oracleExpressionType,
         Set<String> widenedParameterNames,
         Set<String> pathConditionParameterNames,
         Integer concretizationEvents,
@@ -111,7 +115,7 @@ public final class WideningLicense {
             }
             return pathNames.isEmpty() || pathNames.containsAll(widened) ? WIDEN : EXCEPTION_PATH_REFUSAL;
         }
-        if (!isBooleanReturn(testedMethodReturnType)) {
+        if (!isBooleanOracle(oracleExpressionType)) {
             return NULL_CONCRETE_TYPE_REFUSAL;
         }
         if (hasConcretizationEvents) {
@@ -137,8 +141,9 @@ public final class WideningLicense {
         return referenced;
     }
 
-    private static boolean isBooleanReturn(String returnType) {
-        return "boolean".equals(returnType) || "java.lang.Boolean".equals(returnType);
+    private static boolean isBooleanOracle(String oracleExpressionType) {
+        return "boolean".equals(oracleExpressionType)
+            || "java.lang.Boolean".equals(oracleExpressionType);
     }
 
     public static final class Verdict {
