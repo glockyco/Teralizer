@@ -69,13 +69,14 @@ WHERE fr.decision = 'REJECT'
   AND fr.reason_code = 'NO_GENERALIZABLE_PARAMETERS'
 """
 
-# Why WideningLicense refused, reconstructed in the branch order of
-# `WideningLicense.evaluate`. The verdict itself is a single constant in this
-# corpus, so the cause is derived from the persisted classifier output, oracle
-# type, and concretization telemetry. A corpus collected after
-# `generalization.widening_refusal_code` exists should read that column instead
-# of reconstructing, since it is the authoritative record. See
-# docs/exclusion-model.md.
+# Reconstructs why WideningLicense refused. Corpora from before
+# `generalization.widening_refusal_code` existed record only the single
+# ORACLE_NOT_WIDENABLE label, so the cause has to be re-derived here. Read the
+# column instead once the corpus has it.
+#
+# The CASE order must match `WideningLicense.evaluate` branch for branch. It
+# decides attribution, not just naming: a non-boolean oracle that also
+# concretized belongs to the first branch that catches it.
 WIDENING_REFUSAL_SQL = f"""
 {_ELIGIBILITY_CTE},
 attempts AS (
@@ -139,9 +140,10 @@ _MUT_CHOICE_CATEGORIES = (
 )
 
 
-# Exclusion mechanisms, as recorded by the pipeline. See docs/exclusion-model.md.
-# A filter is recognised by its class name, the same test FILTERING_SQL applies,
-# because the javac quarantine writes to `filter_result` without being one.
+# How each exclusion mechanism records itself. See docs/exclusion-model.md.
+# The name test matters: the javac quarantine writes REJECT rows to
+# `filter_result` without being a filter, so `decision = 'REJECT'` alone
+# overcounts filtering.
 FILTER_CLASS_PATTERN = r"filter\.\w+Filter$"
 GATE_CODES = ("ORACLE_NOT_WIDENABLE", "INPUT_SPEC_NOT_SATISFIED_BY_SEED")
 QUARANTINE_CODES = (
@@ -398,9 +400,9 @@ _BREAKDOWN_COLUMNS = ("included", "filtered", "refused", "unsupported", "failed"
 def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
     """Return eligible-entity outcomes, one column per exclusion mechanism.
 
-    An entity that matches no mechanism is a taxonomy-drift defect, never a
-    silent bucket. The pipeline grew an exclusion path the classification does
-    not model, so refuse to publish rather than let a column absorb it.
+    Raises when an entity matches no mechanism. That means the pipeline grew a
+    way to exclude something that this SQL does not model, and the old `ELSE`
+    would have quietly added it to whichever column came last.
     """
     df = read_sql(conn, BREAKDOWN_SQL, _query_params(variant))
     for column in (*_BREAKDOWN_COLUMNS, "total", "uncoded"):
@@ -582,16 +584,37 @@ def _fetch_widening_refusals(conn: Connection, variant: str) -> pd.DataFrame:
     )
 
 
-# Refusal causes are a root-cause decomposition, and this chapter reports those
-# in prose with the figures interpolated, the way it already does for the
-# MissingValue and ParameterType causes. Tables are reserved for the structured
-# matrices that RQ5 and RQ6 share. So these become macros, not a table.
+# Macro names are built from these slugs, so renaming one breaks the chapter.
+# Rename the label in the SQL instead, the code is what this keys on.
 _WIDENING_METRIC_KEYS = {
     "NON_BOOLEAN_ORACLE": "non_boolean_oracle",
     "CONCRETIZATION": "concretization",
     "PATH_COVERAGE": "path_coverage",
     "EXCEPTION_DIVERGENCE": "exception_divergence",
 }
+
+
+def _widening_refusal_table(df: pd.DataFrame, provenance) -> Table:
+    return Table(
+        key="rq6_widening_refusals",
+        df=df,
+        columns=[
+            ColumnSpec("Refusal cause", "cause"),
+            ColumnSpec("Generalizations", "refusals", fmt="count", align="r"),
+            ColumnSpec("Refusals", "refusals_pct", fmt="pct1", align="r"),
+            ColumnSpec("Attempts", "attempts_pct", fmt="pct1", align="r"),
+        ],
+        caption=(
+            "Why the widening license refused to emit a generalized test, by "
+            "cause, for the real-world dataset."
+        ),
+        label="tab:widening-refusals",
+        note=(
+            "Refusals are decided before a generalized test is written, so they "
+            "carry no filter decision and no lifecycle record."
+        ),
+        provenance=provenance,
+    )
 
 
 def _widening_refusal_metrics(df: pd.DataFrame, provenance) -> list[Metric]:
@@ -810,12 +833,10 @@ def build(conn: Connection) -> RQReport:
             ),
         ]
     )
-    metrics.extend(
-        _widening_refusal_metrics(
-            _fetch_widening_refusals(conn, variant),
-            capture(_fetch_widening_refusals, query=WIDENING_REFUSAL_SQL),
-        )
-    )
+    widening_data = _fetch_widening_refusals(conn, variant)
+    widening_provenance = capture(_fetch_widening_refusals, query=WIDENING_REFUSAL_SQL)
+    widening_table = _widening_refusal_table(widening_data, widening_provenance)
+    metrics.extend(_widening_refusal_metrics(widening_data, widening_provenance))
     section = Section(
         title="Project-level exclusions",
         blocks=[
@@ -839,12 +860,10 @@ def build(conn: Connection) -> RQReport:
             breakdown,
             filtering,
             Prose(
-                "The generalization row's filtering column is dominated by the "
-                "widening license rather than by any filter. Its causes are "
-                "emitted as macros for the chapter prose, not as a table, "
-                "because they are a root-cause decomposition like the "
-                "MissingValue and ParameterType causes."
+                "Most of the generalization row's filtering column is the "
+                "widening license rather than any filter."
             ),
+            widening_table,
         ],
     )
     return RQReport(

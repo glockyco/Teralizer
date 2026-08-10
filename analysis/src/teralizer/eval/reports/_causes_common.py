@@ -30,9 +30,8 @@ LEGACY_OUTCOMES: tuple[Outcome, ...] = (
     Outcome("failures", "Failures", "Fail. %"),
 )
 
-# Internal vocabulary: one column per exclusion mechanism, for schemas that
-# record which one fired. See docs/exclusion-model.md. This is a correctness
-# device, not a table shape. Reports collapse it before rendering.
+# Internal only. Reports collapse this before rendering, so do not add a column
+# here expecting it to appear in a table.
 MECHANISM_OUTCOMES: tuple[Outcome, ...] = (
     Outcome("included", "Included", "Incl. %"),
     Outcome("filtered", "Filtered", "Filt. %"),
@@ -41,13 +40,10 @@ MECHANISM_OUTCOMES: tuple[Outcome, ...] = (
     Outcome("failed", "Failed", "Fail. %"),
 )
 
-# The reader-facing split, and the whole reason the mechanisms are tracked
-# separately. Filtering is a decision the tool made about an unsuitable
-# candidate. Failures are breakage. A filter rejection, a refusal to widen an
-# oracle that cannot be shown to stay coherent, and a test shape the collector
-# cannot flatten are all the tool declining, so all three are filtering. A
-# generated test that does not compile is breakage, even though the quarantine
-# records its verdict in `filter_result`.
+# The reported split. Filtering is the tool declining an unsuitable candidate.
+# Failures are breakage. Two mechanisms are easy to put on the wrong side: a
+# javac quarantine is breakage despite recording its verdict in `filter_result`,
+# and an unflattenable test shape is a decision despite nothing having failed.
 MECHANISM_COLLAPSE: dict[str, tuple[str, ...]] = {
     "included": ("included",),
     "filtering": ("filtered", "refused", "unsupported"),
