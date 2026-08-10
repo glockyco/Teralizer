@@ -19,12 +19,10 @@ from typing import TypedDict, cast
 import pandas as pd
 
 from teralizer.jarvis_scoreboard import JARVIS_TABLE2, parse_jqwik_value_log
+from teralizer.report_basis import resolve_repo_relative_path
 
-CUT_VALUES_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "data"
-    / "jarvis-cut-values"
-    / "cut_values.tsv"
+CUT_VALUES_PATH = resolve_repo_relative_path(
+    "analysis/data/jarvis-cut-values/cut_values.tsv"
 )
 
 _LANG = "org.apache.commons.lang3"

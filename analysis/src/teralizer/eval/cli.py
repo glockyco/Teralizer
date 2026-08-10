@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 from pathlib import Path
 
@@ -15,7 +14,10 @@ from teralizer.eval.render import latex as latex_renderer
 from teralizer.eval.render import manifest as manifest_renderer
 from teralizer.eval.render import markdown as markdown_renderer
 from teralizer.eval.render import csv as csv_renderer
-from teralizer.report_basis import require_complete_corpus
+from teralizer.report_basis import (
+    require_complete_corpus,
+    resolve_repo_relative_path,
+)
 
 REPO_URL = "https://github.com/glockyco/Teralizer"
 _ANALYSIS = Path(__file__).resolve().parents[3]
@@ -34,7 +36,10 @@ def _build_and_render(
     validate = spec.schema == "old"
     corpus = corpus_override
     if corpus is None and spec.corpus is not None:
-        corpus = (Path(spec.corpus.data_dir), Path(spec.corpus.config_dir))
+        corpus = (
+            resolve_repo_relative_path(spec.corpus.data_dir),
+            resolve_repo_relative_path(spec.corpus.config_dir),
+        )
     with connect(
         db or spec.default_db, validate_schema=validate, require=spec.requires
     ) as conn:
@@ -91,7 +96,6 @@ def main(argv: list[str] | None = None) -> None:
     # them out after a single-report run puts one fresh report beside stale ones.
     if args.paper_out and args.rq != "all":
         parser.error("--paper-out requires 'all'. Publish the whole set or none of it")
-    os.chdir(_ANALYSIS.parent)
     targets = {t.strip() for t in args.targets.split(",") if t.strip()}
     paper_out = Path(args.paper_out) / "tables" if args.paper_out else None
     rqs = sorted(registry.REPORTS) if args.rq == "all" else [args.rq]

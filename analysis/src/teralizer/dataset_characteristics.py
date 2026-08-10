@@ -18,6 +18,7 @@ from .formatting import (
     replace_project_names_with_macros,
     build_latex_table_content,
 )
+from .report_basis import resolve_repo_relative_path
 
 
 # =============================================================================
@@ -150,13 +151,14 @@ def get_projects_path(raise_if_missing: bool = True) -> Path | None:
     load_dotenv()
 
     projects_path = os.getenv("PROJECTS_PATH")
-    if projects_path and Path(projects_path).exists():
-        return Path(projects_path)
+    if projects_path:
+        configured_path = resolve_repo_relative_path(projects_path)
+        if configured_path.exists():
+            return configured_path
 
-    # Fallback to relative path from notebook location
-    fallback_path = Path("../../projects")
+    fallback_path = resolve_repo_relative_path(Path("../../projects"))
     if fallback_path.exists():
-        return fallback_path.resolve()
+        return fallback_path
 
     if raise_if_missing:
         raise FileNotFoundError(

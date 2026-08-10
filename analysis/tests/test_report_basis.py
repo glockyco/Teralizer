@@ -13,6 +13,8 @@ from teralizer.report_basis import (
     format_basis_header,
     open_report_connection,
     require_complete_corpus,
+    resolve_repo_relative_path,
+    resolve_repo_path,
 )
 
 
@@ -99,6 +101,26 @@ def test_basis_header_resolves_relative_ledger_from_project_root(
 
     assert basis.progress is not None
     assert basis.progress.done == 1
+
+
+def test_repository_path_resolution_distinguishes_database_and_user_paths(
+    monkeypatch, tmp_path: Path
+):
+    root = tmp_path / "repo"
+    relative = Path("data/status.tsv")
+    repo_path = root / relative
+    local_path = tmp_path / relative
+    (root / ".env").parent.mkdir(parents=True)
+    repo_path.parent.mkdir(parents=True)
+    local_path.parent.mkdir(parents=True)
+    repo_path.write_text("repo")
+    local_path.write_text("local")
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(report_basis, "find_project_root", lambda: root / ".env")
+
+    assert resolve_repo_relative_path(Path("data/status.tsv")) == repo_path
+    assert resolve_repo_path(Path("data/status.tsv")).resolve() == local_path
 
 
 def test_basis_header_fails_loudly_when_ledger_is_missing(tmp_path: Path):

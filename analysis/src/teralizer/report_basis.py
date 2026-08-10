@@ -56,13 +56,22 @@ def _scalar_int(conn: Connection, sql: str) -> int:
     return int(value or 0)
 
 
-def resolve_repo_path(path: Path) -> Path:
-    expanded = path.expanduser()
-    if expanded.is_absolute() or expanded.exists():
+def resolve_repo_relative_path(path: str | Path) -> Path:
+    """Resolve a repository-relative value regardless of the process directory."""
+    expanded = Path(path).expanduser()
+    if expanded.is_absolute():
         return expanded
     project_env = Path(find_project_root()).expanduser()
     project_root = project_env.parent if project_env.name == ".env" else Path.cwd()
     return project_root / expanded
+
+
+def resolve_repo_path(path: Path) -> Path:
+    """Resolve a path supplied by a user, preserving existing cwd-relative paths."""
+    expanded = path.expanduser()
+    if expanded.is_absolute() or expanded.exists():
+        return expanded
+    return resolve_repo_relative_path(expanded)
 
 
 def _read_ledger_rows(ledger: Path) -> list[dict[str, str]]:

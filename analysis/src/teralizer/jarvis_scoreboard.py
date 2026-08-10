@@ -19,6 +19,8 @@ from typing import Iterable, cast
 
 import pandas as pd
 
+from teralizer.report_basis import resolve_repo_relative_path
+
 GENERATED_JUNIT_STAGE = "COLLECT_JUNIT_REPORTS_GENERALIZED"
 GENERATED_JACOCO_STAGE = "COLLECT_JACOCO_DATA_GENERALIZED"
 LIMITED_DIAGNOSTIC_KIND = "LIMITED_TOO_MANY_FILTER_MISSES"
@@ -311,6 +313,10 @@ def get_generated_test_runs(
     ORDER BY p.id, g.variant, g.id
     """
     runs = pd.read_sql_query(query, conn)
+    path_mask = runs["jqwik_value_log_path"].notna()
+    runs.loc[path_mask, "jqwik_value_log_path"] = runs.loc[
+        path_mask, "jqwik_value_log_path"
+    ].map(lambda path: resolve_repo_relative_path(str(path)))
     if runs.empty:
         runs["jqwik_value_log_path"] = pd.Series(dtype="object")
         runs["outcome_class"] = pd.Series(dtype="object")
@@ -1044,14 +1050,10 @@ def main() -> None:
     IMPROVED_100_TRIES variant against :data:`JARVIS_TABLE2`. ``--sweep`` instead
     prints the per-variant tries-sweep summary (PVC versus covered mutation score)
     for the IMPROVED tries ladder in :data:`SWEEP_VARIANTS`; its ``probes`` column shows the
-    passing probe count, so an excluded probe (13 of 14) stays visible. The working
-    directory moves to the repo root so the repo-relative jqwik value-log paths
-    resolve.
+    passing probe count, so an excluded probe (13 of 14) stays visible.
     """
     import argparse
-    import os
 
-    from teralizer.config import find_project_root
     from teralizer.report_basis import open_report_connection, print_basis_header
 
     parser = argparse.ArgumentParser(description="JARVIS scratch-scorecard tables.")
@@ -1073,8 +1075,6 @@ def main() -> None:
         ),
     )
     args = parser.parse_args()
-
-    os.chdir(Path(find_project_root()).parent)
 
     if args.census:
         db_name = args.db or "postgres_jarvis_census"

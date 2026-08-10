@@ -23,6 +23,7 @@ from .exports import (
     get_project_type,
     get_data_output_dir,
 )
+from .report_basis import resolve_repo_relative_path
 
 
 # =============================================================================
@@ -246,12 +247,15 @@ def get_total_classes_from_filesystem(conn) -> pd.DataFrame:
     # Get project source directories
     query = """
     SELECT p.id AS project_id, project_name(p.id) AS project_name,
-           '../../' || p.main_source_path AS impl_source_directory
+           p.main_source_path AS main_source_path
     FROM project p
     JOIN v_projects_successes ps ON ps.project_id = p.id
     WHERE p.use_test_generalization
     """
     df_projects = pd.read_sql_query(query, conn)
+    df_projects["impl_source_directory"] = df_projects["main_source_path"].map(
+        resolve_repo_relative_path
+    )
 
     # Check if any project directory exists
     any_directory_exists = False

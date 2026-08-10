@@ -25,7 +25,10 @@ from teralizer.jarvis_scoreboard import (
     suite_union_pvc,
     summarize_variants,
 )
-from teralizer.report_basis import open_report_connection, resolve_repo_path
+from teralizer.report_basis import (
+    open_report_connection,
+    resolve_repo_relative_path,
+)
 
 
 SCOREBOARD_DB = "postgres_jarvis_scoreboard"
@@ -160,7 +163,7 @@ def _census_status_ledger(conn: Any) -> tuple[pd.DataFrame, str, bool]:
             }
         )
     ledger = pd.DataFrame(records)
-    marker_present = resolve_repo_path(CENSUS_COMPLETION_MARKER).is_file()
+    marker_present = resolve_repo_relative_path(CENSUS_COMPLETION_MARKER).is_file()
     census_status = (
         "complete"
         if marker_present and (ledger["generalization_status"] == "complete").all()
