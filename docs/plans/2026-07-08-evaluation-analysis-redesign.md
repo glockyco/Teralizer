@@ -92,7 +92,7 @@ plus a presentation layer neither has cleanly.
   - RQ6 -> `postgres_reporeapers_rq6_v6` (canonical full-pipeline corpus, new schema).
   - RQ0 -> `postgres_jarvis_scoreboard` + `postgres_jarvis_census` (new schema).
   - `postgres_test` (the published v1 RepoReapers corpus) is no longer an
-    analysis input, superseded for RQ6 by `postgres_reporeapers`. The corpus
+    analysis input, superseded for RQ6 by `postgres_reporeapers_rq6_v6`. The corpus
     itself is kept, not dropped.
 - **Notebooks retired.** Pure Python + a thin CLI.
 - **Outputs and git:**
@@ -149,7 +149,7 @@ teralizer/eval/
     rq3_suite_size_runtime.py
     rq4_efficiency_evosuite.py
     rq5_causes_controlled.py       # old schema (postgres_dev)
-    rq6_causes_realworld.py        # new schema (postgres_reporeapers)
+    rq6_causes_realworld.py        # new schema (postgres_reporeapers_rq6_v6)
     _causes_common.py              # shared RQ5/RQ6 presentation
 ```
 
@@ -175,7 +175,7 @@ authoritative):
 | `rq3_suite_size_runtime` | RQ3 | suite size and runtime effects | old / `postgres_dev` |
 | `rq4_efficiency_evosuite` | RQ4 | efficiency vs EvoSuite | old / `postgres_dev` |
 | `rq5_causes_controlled` | RQ5 | unsuccessful-generalization causes (controlled) | old / `postgres_dev` |
-| `rq6_causes_realworld` | RQ6 | unsuccessful-generalization causes (real-world) | new / `postgres_reporeapers` |
+| `rq6_causes_realworld` | RQ6 | unsuccessful-generalization causes (real-world) | new / `postgres_reporeapers_rq6_v6` |
 
 ### Result model (`model.py`) -- the one contract
 
@@ -214,7 +214,7 @@ tables, figures, and metrics.
   required objects (`require`): each declared table or view must exist and carry
   every column the report reads (checked via `pg_catalog`). This replaces the
   retired working-tree DDL parse, which failed against the paper-tagged schema.
-- New-schema RQ0/RQ6 -> `postgres_reporeapers` /
+- New-schema RQ0/RQ6 -> `postgres_reporeapers_rq6_v6` /
   `postgres_jarvis_*`, `validate_schema=False` (the `report_basis`
   open-connection path).
 
@@ -249,17 +249,23 @@ LaTeX/PDF/CSV/macros export into the paper repo.
 ### RQ5 <-> RQ6 consolidation
 
 `_causes_common.py` owns the presentation shared by both RQs: the test,
-assertion, and generalization exclusion breakdown `Table` builders (filtering
-versus failures) and the filter-rejection cause tables. RQ5 (`postgres_dev`, old
-schema) and RQ6 (`postgres_reporeapers`, new schema) each supply a thin `get_*`
-data layer, so the **schema difference is isolated to the queries** while the
-presentation is shared.
+assertion, and generalization exclusion breakdown `Table` builders, with one
+bucket per exclusion mechanism rather than an exhaustive filtering-versus-failures
+split, and the filter-rejection cause tables. The mechanism definitions and
+known defects EM-1, EM-2, and EM-3 are tracked in
+[docs/exclusion-model.md](../exclusion-model.md). RQ5 (`postgres_dev`, old
+schema) and RQ6 (`postgres_reporeapers_rq6_v6`, new schema) each supply a thin
+`get_*` data layer, so the **schema difference is isolated to the queries**
+while the presentation is shared.
 
 RQ6 additionally owns the project-level exclusion funnel (`tab-processing-failures`,
 the "Project-level exclusions by stage and cause" table): the eligible
 denominator (projects that pass initial setup, dropping dependency-resolution,
 missing-sources, and original-build failures), the per-stage inclusion and
-exclusion counts, and the per-cause internal/external/mixed categorization. RQ5
+exclusion counts, and the per-cause internal/external/mixed categorization. The
+funnel distinguishes gate refusals, deaths before filtering, javac quarantine,
+filter rejections, and Stage-5 baseline attrition, as defined in
+[docs/exclusion-model.md](../exclusion-model.md). RQ5
 has no funnel: by design RQ1-RQ5 cover only projects that complete the pipeline,
 so there are no project-level exclusions.
 
@@ -391,9 +397,9 @@ Three reviewer-facing corrections the redesign forces:
   and `.csv` but not for rasters (matplotlib output is not byte-identical across
   versions or platforms). Output verification diffs figure **data**, not pixels.
 - **Database inventory.** The package ships `postgres_dev` and `postgres_test`.
-  The redesign reads `postgres_dev` (RQ1-5), `postgres_reporeapers` (RQ6),
+  The redesign reads `postgres_dev` (RQ1-5), `postgres_reporeapers_rq6_v6` (RQ6),
   and `postgres_jarvis_{scoreboard,census}` (RQ0). The `teralizer-core` bundle
-  must carry the `postgres_reporeapers` and jarvis dumps. The published-v1
+  must carry the `postgres_reporeapers_rq6_v6` and jarvis dumps. The published-v1
   `postgres_test` is kept but is no longer an analysis input.
 - **RQ0 mapping.** RQ0 (JARVIS) is new and absent from the current notebook map.
 

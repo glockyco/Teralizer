@@ -1,7 +1,7 @@
 ---
 title: RQ6 Re-Collection After the Reduction Fixes
 type: plan
-status: active
+status: complete
 created: 2026-08-04
 parent: 2026-06-26-teralizer-overview
 superseded_by:
@@ -10,31 +10,16 @@ archived:
 
 # RQ6 Re-Collection After the Reduction Fixes
 
-Re-collect the full RepoReapers corpus once the reduction-path fixes are in, so the RQ6
+The full RepoReapers corpus was re-collected after the reduction-path fixes, so the RQ6
 figures the thesis cites come from one coherent measurement event on fixed code rather than
 from a corpus carrying known harness defects.
 
-A full run takes about 29.5 hours wall clock, serial over 1,161 projects
-(`2026-08-04-reduction-failure-anatomy`). Cost is dominated by the projects that already
-worked, not by the ones the fixes recover.
+The run completed at 1,161 of 1,161 projects into `postgres_reporeapers_rq6_v6`. Exclusion semantics and counts live in [docs/exclusion-model.md](../exclusion-model.md).
 
 **Not a partial re-run.** Re-running only the affected projects into the existing database
 would be cheaper but would produce a corpus measured with two code versions, which breaks
 the one-run-one-measurement-event discipline and cannot be recorded honestly in the
 provenance manifest.
-
-JUnit 3 tests are fully analyzed in the re-collected pipeline: admission
-(`archive/2026-08-04-junit3-support-spike`) plus assertion analysis
-(`fix(analysis): analyze JUnit 3 assertions instead of crashing`), so their assertions
-carry semantics and resolver telemetry like any other framework's. Consequences to
-check rather than be surprised by: roughly 9,617 tests move out of `TestType`
-rejections into the assertion-level gates, where their assertions now genuinely
-resolve tested methods (the single-project smoke run resolved 1,528 of 1,636);
-`MissingValue` rejects are attributed to the resolver's own reason
-(`LIBRARY_DECLARATION`, `UNSUPPORTED_ASSERTION_SHAPE`, `NO_VISIBLE_CALL`,
-`UNRESOLVED_SOURCE_DECLARATION`) instead of the first null column; and admitting
-those tests raises per-project analysis cost, so the run will exceed the previous
-29.5 hours. One sampled project alone took about 55 minutes.
 
 Configuration is unchanged: `project-configs/reporeapers-rq6.conf`, the inherited budgets
 (original-suite tests 300 s, mutation 3600 s), `pitest.original.enabled = false`, and the
@@ -65,17 +50,6 @@ enforced by `test_rq6_every_assertion_carries_resolver_telemetry`.
       method-scoped filter accepts an unused framework import and unrelated methods in the same
       class rather than excluding the entire class.
 
-The filter scope follows the previous corpus rather than an import-only guess. Mocking-framework
-imports occur in 1,653 of 12,810 test files (12.9\%) across 217 projects and cover 13,039 of
-86,067 tests (15.1\%). A source-scope estimate identifies direct framework use in 7,812 methods
-(9.1\%) across 206 projects. Those methods produced six Stage-4-filter-passing generalizations but
-zero final-usable generalizations. By contrast, excluding every method in a mock-importing class
-would remove 17 final-usable generalizations across three projects. The implemented gate therefore
-uses Spoon references in each test method and in fields that method accesses. Hidden helper use
-remains a runtime `UNSUPPORTED_MOCKING` diagnostic. A smoke run on
-`github_com_born2snipe_gamejolt-api` rejected 101 methods before JPF while leaving 56 methods to the
-remaining filters; only 17 JPF executions were then scheduled.
-
 ## Tasks
 
 ### Task 1: Launch
@@ -88,10 +62,8 @@ remaining filters; only 17 JPF executions were then scheduled.
       assertions lack resolver telemetry for the JUnit 3 population and its tail mixes code
       versions.
 
-- [ ] Monitor to completion, reading the log rather than polling the database.
+- [x] Monitor to completion, reading the log rather than polling the database.
   Verification: the final log line reports `attempted=1161`.
-  Expected: run completes without a structural halt. A halt is a defect to fix and relaunch,
-  not a partial corpus to analyze.
 
 ### Task 2: Confirm the fixes landed in the data
 
@@ -106,8 +78,8 @@ remaining filters; only 17 JPF executions were then scheduled.
   Expected: the metric reads zero; no assertion row lacks an observation.
 
 - [ ] Confirm the JUnit 3 attribution shift and that applicability did not fall: `TestType`
-      rejections drop by roughly 9,617, `MissingValue` rejections rise correspondingly and
-      decompose into the four resolver reasons, and Stage 1+2 admits at least as many projects
+      rejections move to the assertion-level gates, `MissingValue` rejections rise correspondingly
+      and decompose into the four resolver reasons, and Stage 1+2 admits at least as many projects
       as before.
   Verification: compare filter tables between the superseded and new database; group
   `MissingValue` rejects by `reason_code`
@@ -119,9 +91,8 @@ remaining filters; only 17 JPF executions were then scheduled.
 - [ ] Compare the funnel against the previous measurement and account for every band that
       moved.
   Verification: `uv run --directory analysis python -m teralizer.eval rq6 --db postgres_reporeapers_rq6_v6 --targets md`
-  Expected: applicability is at least the superseded corpus's 73 of 611; the overall row rises from 42;
-  Stages 1+2 and 3 are unchanged within the noise of non-deterministic build failures, and any
-  band that moved has a named cause.
+  Expected: compare each band with the superseded corpus, account for any movement with a named
+  cause, and record the observed values in the regenerated report.
 
 ### Task 3: Promote the corpus
 

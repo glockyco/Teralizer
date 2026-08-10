@@ -11,7 +11,7 @@ archived:
 # RepoReapers Dataset Row for the Eligible Corpus
 
 Make the RepoReapers rows of the dataset-characteristics report describe the same
-corpus RQ6 reports on: the 611 projects that were checked out, resolved, and built.
+corpus RQ6 reports on: the 1,161 projects in the completed v6 run.
 Today the report mixes sources — test counts come from the paper-era RepoReapers
 database while file, class, and line counts aggregate every checkout in the
 statistics CSV, which is why the row cannot be reconciled with either corpus.
@@ -34,18 +34,20 @@ not change their values.
 - Modify: `analysis/src/teralizer/dataset_characteristics.py`
 - Test: `analysis/tests/test_dataset_characteristics.py`
 
-- [ ] In `build`, open the second connection on `postgres_reporeapers_rq6` instead of
+- [ ] In `build`, open the second connection on `postgres_reporeapers_rq6_v6` instead of
       `postgres_test`, and in `_get_test_counts_from_db` restrict the RepoReapers query to
       eligible projects, reusing `_funnel.INELIGIBLE_STAGES` rather than restating the stage list.
   Verification: `uv run --directory analysis pytest tests/test_dataset_characteristics.py -k repo_reapers_counts`
-  Expected: 611 projects and 85,372 test methods.
+  Expected: take the project and test-method values from the regenerated report, not from a hand query.
+      The RQ6 basis figures live in `docs/exclusion-model.md`.
 
 - [ ] Restrict the `github_com_` rows of the statistics CSV to those same projects by joining on
       `project.root_path`, never on `id`, and derive the total, mean, and median rows from the
       restricted frame.
   Verification: `uv run --directory analysis pytest tests/test_dataset_characteristics.py -k repo_reapers_rows`
-  Expected: the total row's project count matches the number of joined projects, the join leaves
-  no unmatched eligible project, and mean times project count equals the total for every column.
+  Expected: take the total row's project count and aggregate values from the regenerated report,
+      not from a hand query. The join leaves no unmatched eligible project, and mean times project
+      count equals the total for every column. The RQ6 basis figures live in `docs/exclusion-model.md`.
 
 - [ ] Commit.
   Message: `fix(eval): scope RepoReapers dataset rows to the eligible corpus`
@@ -57,8 +59,9 @@ not change their values.
 
 - [ ] Regenerate and read the RepoReapers rows.
   Run: `uv run --directory analysis python -m teralizer.eval dataset --targets md`
-  Expected: RepoReapers total, mean, and median rows describe 611 projects with 85,372 test
-  methods; EqBench and Commons rows are byte-identical to the previous output.
+  Expected: take the RepoReapers total, mean, and median values from the regenerated report,
+      not from a hand query. The RQ6 basis figures live in `docs/exclusion-model.md`; EqBench and
+      Commons rows are byte-identical to the previous output.
 
 - [ ] Run the gate.
   Run: `uv run --directory analysis pytest tests` then `uv run --directory analysis ruff check .` then `uv run --directory analysis ty check .`

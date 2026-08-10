@@ -1,11 +1,11 @@
 ---
 title: Oracle-Refusal Taxonomy on the RQ6 Corpus
 type: audit
-status: active
+status: complete
 created: 2026-08-04
 parent: 2026-06-26-teralizer-overview
-superseded_by:
-archived:
+superseded_by: docs/exclusion-model.md
+archived: 2026-08-10
 ---
 
 # Oracle-Refusal Taxonomy on the RQ6 Corpus

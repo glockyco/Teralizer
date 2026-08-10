@@ -120,10 +120,10 @@ the SPF `String.length` collect-mode fix, the seed-vs-spec guard, the dedup
 bound, the generalized-suite-timeout attrition, the `NO_INPUT_SPEC` attrition,
 and the var/var string-equality by-construction binding.)
 
-## RepoReapers RQ6 result
+## Historical pre-v6 RQ6 measurement (not current)
 
-Two valid RepoReapers databases hold the RQ6 evidence over the full
-1161-project corpus:
+The following block is a superseded pre-v6 measurement from the full
+1161-project corpus. Its counts must not be cited as current RQ6 evidence:
 
 - `postgres_reporeapers` — the gen-only Stages 1-4 applicability baseline: 84
   projects have at least one included generalization; 944 generalizations
@@ -148,9 +148,10 @@ are not presented. RQ1--RQ5 stay on `postgres_dev` and are not re-run, so their
 tables and prose are unchanged. Chapter work is tracked in the thesis repository
 under `2026-08-04-teralizer-chapter-refresh`.
 
-## Census PIT status
+## Census PIT status (RQ0 census, not RQ6)
 
-The first reduction-only launch failed immediately: the pass injects
+The current exclusion mechanisms and counts are maintained in
+[docs/exclusion-model.md](../exclusion-model.md). The first reduction-only launch failed immediately: the pass injects
 `-Dteralizer.pitest.enabled=true`, which the generation pass had left at its
 default, so the rendered config drifted and the `ProjectIdentity` attach guard
 refused to resume the stored workspace. Fixed at the root by treating
@@ -176,7 +177,7 @@ The classifier and the diagnostic writer's stage gate now record such timeouts
 as attrition, matching the planner and the tripwire intent, so a timed-out
 project drops rather than halting the run.
 
-Final result: seven of the nine projects with included generalizations produced
+Final result of this RQ0 nine-project census, not an RQ6 measurement: seven of the nine projects with included generalizations produced
 generalized mutation scores -- lang, configuration, collections, codec, text,
 cli, and csv. io and math time out during original-suite PIT (their full suites
 exceed the 3600-second budget) and are recorded as attrition. email, pool, and

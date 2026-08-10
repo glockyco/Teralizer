@@ -1,7 +1,7 @@
 ---
 title: Test-Shape Handling Fixes
 type: plan
-status: active
+status: implemented
 created: 2026-08-06
 parent: 2026-06-26-teralizer-overview
 superseded_by:
@@ -14,7 +14,7 @@ Make the pipeline handle every test, assertion, and report shape it admits, so t
 re-collection measures the tool rather than the tool's blind spots. Evidence and per-defect
 consequences: `2026-08-06-test-shape-defect-inventory`.
 
-The RQ6 v3 run was stopped 45 minutes in. Nothing relaunches until this plan's gate passes.
+**Historical pre-v6 status:** The RQ6 v3 run was stopped 45 minutes in and is not salvageable. The completed v6 run supersedes it.
 
 ## Design
 
@@ -43,11 +43,11 @@ A generalized class runs under jqwik alone, whatever framework its source test u
 The vintage engine runs any class that extends `junit.framework.TestCase`. jqwik runs any class
 with a `@Property` method. A generalized class that extends `TestCase` matches both rules, so
 both engines run its property. The second run fails, because the arbitrary has already recorded
-its values and rejects every new one: `exhausted after [200] tries and [200] rejections`.
+its values and rejects every new one: `exhausted after [200] tries and [200] rejections` in a pre-v6 measurement that must not be cited as current.
 Surefire writes each run to a different file, so the class reports the property as passed in one
 file and as failed in the other, and whichever file the pipeline reads decides the outcome.
 Mutation analysis requires a suite that passes, so it refuses the project. On `tomgibara_bits`
-this admitted 267 generalizations whose property had failed, then cost the project all 270.
+a pre-v6 measurement admitted 267 generalizations whose property had failed, then cost the project all 270. Those counts must not be cited as current.
 
 Two rules keep one engine per class:
 
@@ -91,7 +91,7 @@ This is what makes ingestion correct on both surefire generations the corpus exe
 it is why the surefire floor is **not** raised here. Pinning INITIAL and GENERALIZED to 3.x
 would also merge the reports and would give the corpus one uniform report shape, but it
 changes the build for every project that declares a surefire plugin, and 3.x drops legacy
-configuration that some of the 1,161 projects rely on. Correctness does not need it, so that
+configuration that a pre-v6 measurement found in some of the 1,161 projects. That count must not be cited as current. Correctness does not need it, so that
 trade is evaluated on its own rather than smuggled into a correctness fix.
 
 ## Tasks
@@ -180,9 +180,9 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
 - [x] Commit.
   Message: `fix(collection): attribute mutations and parse reports faithfully`
 
-### Task 7: Gate, then relaunch
+### Task 7: Gate and relaunch (completed)
 
-- [ ] Run the two pinned JUnit 3-heavy projects into a scratch database and confirm the shape
+- [x] Run the two pinned JUnit 3-heavy projects into a scratch database and confirm the shape
       contract end to end.
   Verification: zero `Failed to identify matching test case report` on a project whose
   surefire is floored to 2.22.2 (the split-report case) and on one running the injected 3.2.5;
@@ -193,12 +193,12 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
   Expected: all hold on both surefire generations, which is the point of the content-directed
   lookup.
 
-- [ ] Full gates: `./gradlew test`, `uv run --directory analysis pytest tests/eval -q`.
-  Expected: green, except the corpus-dependent telemetry test until v4 exists.
+- [x] Full gates: `./gradlew test`, `uv run --directory analysis pytest tests/eval -q`.
+  Expected: green.
 
-- [ ] Relaunch the corpus into a fresh database, superseding `postgres_reporeapers_rq6_v3`, into `postgres_reporeapers_rq6_v6`.
-      Update `2026-08-04-rq6-recollection` and the run map to the new measurement basis in the
-      same commit.
+- [x] Relaunched the corpus into a fresh database, superseding `postgres_reporeapers_rq6_v3`, into
+      `postgres_reporeapers_rq6_v6`. Updated `2026-08-04-rq6-recollection` and the run map to the
+      new measurement basis in the same commit.
 
 ## Assumptions & contingencies
 
@@ -216,9 +216,10 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
   test case and fails the build, under both surefire generations. Neither half is separable.
 - **`INHERITED_TEST_CASE_MEMBERS` has a measured cost, and it is accepted.** A JUnit 3 test whose
   class extends an intermediate base is rejected, because cloning copies inherited test methods and
-  fixtures but not helpers, so the clone still needs the base and cannot lose the ancestry. Over the
-  first 297 projects of the corpus this rejected 752 tests in 6 projects and cost
-  `ESAPI_esapi-java-legacy` its 4 validated generalizations, against a net gain of 43 over v2.
+  fixtures but not helpers, so the clone still needs the base and cannot lose the ancestry. A pre-v6 measurement over the
+  first 297 projects of the corpus rejected 752 tests in 6 projects and cost
+  `ESAPI_esapi-java-legacy` its 4 validated generalizations, against a net gain of 43 over v2. These
+  figures must not be cited as current.
   Flattening the helpers would recover them. It is tracked as glockyco/Teralizer#196 rather than attempted
   here, because a helper drags in the fields it reads, the base constructor that initializes those
   fields, its own transitive calls, and the visibility and name collisions of merging two class
@@ -227,5 +228,5 @@ trade is evaluated on its own rather than smuggled into a correctness fix.
   `public void` predicate are structurally present but unproven. Task 2 and Task 4 add loud,
   countable diagnostics for them; if the gate shows hits, they graduate to their own tasks
   rather than being fixed speculatively.
-- **v3 is not salvageable.** It carries 45 minutes of data from the defective tree and its
-  successor supersedes it entirely. Do not merge or compare against it.
+- **Historical pre-v6 v3 status:** v3 is not salvageable. It carries 45 minutes of data from the
+  defective tree and its successor supersedes it entirely. Do not merge or compare against it.

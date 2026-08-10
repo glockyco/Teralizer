@@ -48,7 +48,7 @@ bundle questions. Verified against the paper's `\input{tables/...}`:
 | `rq1-mutation-detection` | RQ1 + RQ2 | `tab-detections-per-mutator` (RQ1), `tab-mutation-detection-comparison` (RQ2) | eqbench + commons-utils (`conn_dev`) |
 | `rq2-test-suite-effects` | RQ3 | `tab-tests/lines/runtime-per-project` | eqbench + commons-utils (`conn_dev`) |
 | `rq3-runtime-requirements` | RQ4 | `tab-pareto-eqbench`, `tab-pareto-commons` | eqbench + commons-utils (`conn_dev`) |
-| `rq4-limitations` | RQ5 + RQ6 | RQ5 controlled tables (`conn_dev`); `-extended` + `tab-processing-failures` (RQ6, `conn_test`) | both: `conn_dev` and `conn_test` (RepoReapers) |
+| `rq4-limitations` | RQ5 + RQ6 | RQ5 controlled tables (`conn_dev`); RQ6 via `scripts/run-rq6-analysis.sh` against `postgres_reporeapers_rq6_v6`, reported through the registered `teralizer.eval` report | RQ5: `conn_dev`; RQ6: `postgres_reporeapers_rq6_v6` via `teralizer.eval` |
 
 Databases: `postgres_dev` = eqbench + commons-utils (RQ1--RQ5);
 `postgres_reporeapers_rq6_v6` = the canonical full-pipeline RepoReapers corpus
@@ -80,7 +80,7 @@ reported beside it.
 ## Shared data primitives
 
 - `generalization` + `jqwik_property_execution.diagnostic_kind = 'FULL'` — sound generalizations (applicability numerator).
-- `filter_result.reason_code` — the funnel: why each test / assertion / generalization drops. Compile-based quarantine now writes a row here with the javac error as `reason` (previously invisible). This is the core RQ6 dataset.
+- The five exclusion mechanisms and their persisted evidence are defined in [docs/exclusion-model.md](../exclusion-model.md).
 - `jacoco_coverage_report` — IC. `pit_coverage_report` / `pit_mutation_report` — covered mutation score / kills (PVC and RQ0 Axis 2 come from here).
 - `v_projects_reduced` — post-reduction RQ6 applicability; `v_projects_generalized`
   supplies the pre-reduction Stage-4 count reported beside it.

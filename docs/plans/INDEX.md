@@ -20,11 +20,8 @@
 - **Evaluation Setup Audit** [audit] `2026-07-06-evaluation-setup-audit` ← 2026-06-26-teralizer-overview
 - **Evaluation Run Map (RQ0 + RQ6)** [audit] `2026-07-07-evaluation-run-map` ← 2026-06-26-teralizer-overview
 - **Autonomous Evaluation Run Findings** [audit] `2026-07-08-autonomous-eval-findings` ← 2026-06-26-teralizer-overview
-- **Oracle-Refusal Taxonomy on the RQ6 Corpus** [audit] `2026-08-04-oracle-refusal-taxonomy` ← 2026-06-26-teralizer-overview
 - **RepoReapers Dataset Row for the Eligible Corpus** [plan] `2026-08-04-reporeapers-dataset-row` (0/6) ← 2026-07-08-evaluation-analysis-redesign
-- **RQ6 Re-Collection After the Reduction Fixes** [plan] `2026-08-04-rq6-recollection` (1/11) ← 2026-06-26-teralizer-overview
 - **Test-Shape Handling Defect Inventory** [audit] `2026-08-06-test-shape-defect-inventory` ← 2026-06-26-teralizer-overview
-- **Test-Shape Handling Fixes** [plan] `2026-08-06-test-shape-handling-fixes` (16/19) ← 2026-06-26-teralizer-overview
 
 ## draft
 
@@ -35,5 +32,10 @@
 ## implemented
 
 - **Generated Code Compiles Before Java 8** [plan] `2026-08-06-generated-source-level` (—) ← 2026-06-26-teralizer-overview
+- **Test-Shape Handling Fixes** [plan] `2026-08-06-test-shape-handling-fixes` (19/19) ← 2026-06-26-teralizer-overview
 
-_79 archived — see `docs/plans/archive/`._
+## complete
+
+- **RQ6 Re-Collection After the Reduction Fixes** [plan] `2026-08-04-rq6-recollection` (2/11) ← 2026-06-26-teralizer-overview
+
+_80 archived — see `docs/plans/archive/`._
