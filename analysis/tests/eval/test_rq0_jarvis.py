@@ -243,6 +243,38 @@ def test_breadth_keeps_available_pvc_when_task_status_failed():
     assert pd.isna(breadth.loc["commons-cli-2017-02-01-census", "aggregate_pvc"])
 
 
+def test_breadth_leaves_jarvis_unreported_projects_blank_not_zero():
+    ledger = pd.DataFrame(
+        {
+            "project": TABLE1_PROJECTS,
+            "generalization_status": ["complete"] * 12,
+        }
+    )
+    project_pvc = pd.DataFrame(
+        {
+            "project": ["commons-math-2017-02-01-census"],
+            "variant": ["IMPROVED_100_TRIES"],
+            "aggregate_pvc": [42],
+            "sound_muts": [3],
+            "sound_properties": [4],
+        }
+    )
+    breadth = _build_breadth_table(ledger, project_pvc).set_index("project")
+
+    # JARVIS reports cases for two projects only. Zero would claim it measured
+    # nothing there, when it published nothing at all.
+    assert breadth.loc["commons-math-2017-02-01-census", "jarvis_successful_muts"] == 7
+    assert pd.isna(breadth.loc["commons-cli-2017-02-01-census", "jarvis_successful_muts"])
+    assert pd.isna(
+        breadth.loc["commons-pool-2017-02-01-census", "jarvis_successful_pbt_pvc"]
+    )
+
+    # The total covers what JARVIS did report, so it is unchanged by the blanks.
+    total = breadth.loc["all 12 projects"]
+    assert total["jarvis_successful_pbt_pvc"] == 1708
+    assert total["jarvis_successful_muts"] == 9
+
+
 def test_budget_marks_missing_pit_variants_unavailable():
     scoreboard = pd.DataFrame(
         {

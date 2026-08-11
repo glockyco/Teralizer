@@ -186,12 +186,13 @@ def _build_breadth_table(
     ledger: pd.DataFrame, project_pvc: pd.DataFrame
 ) -> pd.DataFrame:
     rows = pd.DataFrame({"project": list(TABLE1_PROJECTS)})
+    # JARVIS surveys all twelve projects but reports cases for only two, so the
+    # rest have no published value. Defaulting them to zero would claim a
+    # measurement of none where the paper simply makes none.
     rows["jarvis_successful_pbt_pvc"] = rows["project"].map(
-        lambda project: JARVIS_PROJECT_PBT_PVC.get(project, 0)
+        JARVIS_PROJECT_PBT_PVC.get
     )
-    rows["jarvis_successful_muts"] = rows["project"].map(
-        lambda project: JARVIS_PROJECT_MUTS.get(project, 0)
-    )
+    rows["jarvis_successful_muts"] = rows["project"].map(JARVIS_PROJECT_MUTS.get)
     project_rows = project_pvc[project_pvc["variant"].eq(CENSUS_VARIANT)]
     pvc_columns = ["project", "aggregate_pvc", "sound_muts"]
     if "sound_properties" in project_rows.columns:
@@ -213,9 +214,11 @@ def _build_breadth_table(
             {
                 "project": "all 12 projects",
                 "jarvis_successful_pbt_pvc": int(
-                    rows["jarvis_successful_pbt_pvc"].sum()
+                    rows["jarvis_successful_pbt_pvc"].dropna().sum()
                 ),
-                "jarvis_successful_muts": int(rows["jarvis_successful_muts"].sum()),
+                "jarvis_successful_muts": int(
+                    rows["jarvis_successful_muts"].dropna().sum()
+                ),
                 "aggregate_pvc": (
                     int(rows["aggregate_pvc"].dropna().sum())
                     if rows["aggregate_pvc"].notna().any()
@@ -592,14 +595,14 @@ def build(conn: Connection) -> RQReport:
             ColumnSpec(
                 "PBT PVC",
                 "jarvis_successful_pbt_pvc",
-                "count",
+                "pvc",
                 "r",
                 group_header="JARVIS (reported)",
             ),
             ColumnSpec(
                 "MUTs",
                 "jarvis_successful_muts",
-                "count",
+                "pvc",
                 "r",
                 group_header="JARVIS (reported)",
             ),
@@ -623,7 +626,7 @@ def build(conn: Connection) -> RQReport:
         label="tab:teralizer-rq0-breadth",
         latex_resize_to_width=False,
         note=(
-            "JARVIS columns use zero for projects without a reported case. "
+            "JARVIS columns are unavailable for projects it reports no case for. "
             "Teralizer aggregate PVC counts distinct values exercised by "
             "generalized tests for each MUT and parameter. Generalized MUTs have "
             "at least one generalized test."
