@@ -11,7 +11,7 @@ _db_guard_root() {
   if [[ -n "${DB_GUARD_ROOT:-}" ]]; then
     printf '%s' "$DB_GUARD_ROOT"
   else
-    cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P
+    cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P
   fi
 }
 

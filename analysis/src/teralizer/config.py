@@ -41,8 +41,8 @@ class DatabaseConfig:
     def __init__(self):
         self.host = os.getenv("DB_HOST", "localhost")
         self.port = os.getenv("DB_PORT", "5432")
-        self.user = os.getenv("DB_USER", "teralizer")
-        self.password = os.getenv("DB_PASSWORD", "teralizer")
+        self.user = os.getenv("DB_USER", "postgres")
+        self.password = os.getenv("DB_PASSWORD", "postgres")
 
         # Configurable database names for flexibility during reproduction
         self.db_name_dev = os.getenv("DB_NAME_DEV", "postgres_dev")
