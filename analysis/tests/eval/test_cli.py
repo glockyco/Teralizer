@@ -24,9 +24,9 @@ def _fixture_report(_conn):
     )
 
 
-def test_provenance_module_never_reads_environment():
+def test_provenance_documents_dirty_publish_opt_out():
     src = inspect.getsource(provenance)
-    assert "environ" not in src and "getenv" not in src and ".env" not in src
+    assert provenance.DIRTY_PROVENANCE_ENV in src
 
 
 def test_cli_fans_out_to_targets(monkeypatch, tmp_path):
@@ -88,6 +88,8 @@ def test_cli_checks_corpus_completion_before_build(monkeypatch, tmp_path):
 def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
     import contextlib
 
+    monkeypatch.setenv(provenance.DIRTY_PROVENANCE_ENV, "1")
+
     @contextlib.contextmanager
     def fake_connect(db, *, validate_schema=False, require=None):
         yield None
@@ -111,6 +113,15 @@ def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
     csv_path = tmp_path / "paper" / "data" / "k.csv"
     assert csv_path.exists()
     assert csv_path.read_text(encoding="utf-8").splitlines()[0] == "a"
+
+
+def test_publishing_dirty_tree_is_refused(monkeypatch, tmp_path):
+    monkeypatch.delenv(provenance.DIRTY_PROVENANCE_ENV, raising=False)
+    monkeypatch.setattr(
+        provenance, "_git_snapshot", lambda: ("a" * 40, True)
+    )
+    with pytest.raises(RuntimeError, match=provenance.DIRTY_PROVENANCE_ENV):
+        cli.main(["all", "--paper-out", str(tmp_path)])
 
 
 def test_publishing_one_report_is_refused(tmp_path):

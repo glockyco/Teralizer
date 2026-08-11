@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 import teralizer.eval.reports  # noqa: F401
-from teralizer.eval import registry
+from teralizer.eval import provenance, registry
 from teralizer.eval.data import connect
 from teralizer.eval.render import figures as figures_renderer
 from teralizer.eval.render import latex as latex_renderer
@@ -32,6 +32,8 @@ def _build_and_render(
     paper_out: Path | None,
     corpus_override: tuple[Path, Path] | None = None,
 ) -> None:
+    if paper_out is not None:
+        provenance.require_publishable_tree()
     spec = registry.get(rq)
     validate = spec.schema == "old"
     corpus = corpus_override

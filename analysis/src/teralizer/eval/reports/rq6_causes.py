@@ -347,7 +347,9 @@ def build(conn: Connection) -> RQReport:
         filtering, provenance=capture(_fetch_filtering, query=FILTERING_SQL)
     )
 
-    funnel_provenance = capture(_funnel.build_funnel)
+    funnel_provenance = capture(
+        _funnel.build_funnel, query=_funnel._PROJECT_SIGNALS_SQL
+    )
     breakdown_provenance = capture(_fetch_breakdown, query=BREAKDOWN_SQL)
     levels = breakdown_data.set_index("level")
     assertions = levels.loc["Assertion"]

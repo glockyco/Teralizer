@@ -2,7 +2,11 @@ import json
 from pathlib import Path
 from teralizer.eval.model import Metric, RQReport, Section, Table
 from teralizer.eval.provenance import Provenance
-from teralizer.eval.render.manifest import build_manifest, write_manifest
+from teralizer.eval.render.manifest import (
+    ANALYSIS_VERSION,
+    build_manifest,
+    write_manifest,
+)
 
 
 def test_manifest_maps_metric_to_source(tmp_path: Path):
@@ -11,7 +15,7 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
         "project_funnel",
         30,
         "SELECT 1",
-        "abc1234",
+        "a" * 40,
     )
     report = RQReport(
         "rq6",
@@ -26,7 +30,10 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
     data = json.loads(Path(path).read_text())
     entry = data["rq6"]["metrics"]["realworld.eligible_projects"]
     assert entry["value"] == 632
-    assert entry["commit"] == "abc1234"
+    assert entry["commit"] == "a" * 40
+    assert len(entry["commit"]) == 40
+    assert entry["version"] == ANALYSIS_VERSION
+    assert entry["dirty"] is False
     assert entry["qualname"] == "project_funnel"
     assert entry["source_url"].endswith("rq6_causes_realworld.py#L30")
 

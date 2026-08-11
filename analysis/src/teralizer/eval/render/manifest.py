@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+from importlib.metadata import version
 from pathlib import Path
 
 from teralizer.eval.model import RQReport
+
+ANALYSIS_VERSION = version("teralizer-analysis")
 
 
 def _entry(value, prov, repo_url: str) -> dict:
@@ -15,6 +18,8 @@ def _entry(value, prov, repo_url: str) -> dict:
         "qualname": prov.qualname,
         "query": prov.query,
         "commit": prov.commit,
+        "dirty": prov.dirty,
+        "version": ANALYSIS_VERSION,
         "source_url": prov.source_url(repo_url),
     }
 

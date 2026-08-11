@@ -1,13 +1,15 @@
 """Provenance: link every generated artifact to the exact code + commit.
 
-Captured at build time, never hand-maintained. The commit carries a `-dirty`
-suffix when the working tree has uncommitted changes, so a number is never
-falsely pinned to a clean commit.
+Captured at build time, never hand-maintained. Publishable artifacts require a
+clean working tree. For local iteration only, set
+``TERALIZER_ALLOW_DIRTY_PROVENANCE=1`` to opt out of that check. The resulting
+provenance records ``dirty=True`` so it remains self-describing.
 """
 
 from __future__ import annotations
 
 import inspect
+import os
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -25,6 +27,7 @@ class Provenance:
     lineno: int
     query: str | None
     commit: str
+    dirty: bool = False
 
     def rel_path(self) -> str:
         parts = self.module.split(".")
@@ -34,23 +37,42 @@ class Provenance:
         return f"{repo_url}/blob/{self.commit}/{self.rel_path()}#L{self.lineno}"
 
 
+DIRTY_PROVENANCE_ENV = "TERALIZER_ALLOW_DIRTY_PROVENANCE"
+
+
 @lru_cache(maxsize=1)
-def git_commit() -> str:
+def _git_snapshot() -> tuple[str, bool]:
     head = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"],
+        ["git", "rev-parse", "HEAD"],
         cwd=_REPO_ROOT,
         capture_output=True,
         text=True,
         check=True,
     ).stdout.strip()
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain"],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
-    return f"{head}-dirty" if dirty else head
+    dirty = bool(
+        subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    )
+    return head, dirty
+
+
+def require_publishable_tree() -> None:
+    """Reject publishing from a dirty tree unless local iteration is enabled."""
+    _, dirty = _git_snapshot()
+    if dirty and os.environ.get(DIRTY_PROVENANCE_ENV) != "1":
+        raise RuntimeError(
+            "cannot publish provenance from a dirty tree; "
+            f"set {DIRTY_PROVENANCE_ENV}=1 for local iteration"
+        )
+
+
+def git_commit() -> str:
+    return _git_snapshot()[0]
 
 
 def capture(fn: Callable[..., object], *, query: str | None = None) -> Provenance:
@@ -60,10 +82,12 @@ def capture(fn: Callable[..., object], *, query: str | None = None) -> Provenanc
         lineno = inspect.getsourcelines(fn)[1]
     except (OSError, TypeError):
         lineno = 0
+    commit, dirty = _git_snapshot()
     return Provenance(
         module=module,
         qualname=qualname,
         lineno=lineno,
         query=query,
-        commit=git_commit(),
+        commit=commit,
+        dirty=dirty,
     )
