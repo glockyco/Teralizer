@@ -218,8 +218,10 @@ supervised_run() {
   SUPERVISED_RC=""
   while :; do
     if ! kill -0 "$pid" 2>/dev/null; then
-      wait "$pid"
-      SUPERVISED_RC=$?
+      # wait returns the status of the child. Under set -e, a nonzero status here stops the
+      # whole script before the caller records the run. The caller must see every status.
+      SUPERVISED_RC=0
+      wait "$pid" || SUPERVISED_RC=$?
       break
     fi
     if [[ "$timeout_secs" -gt 0 ]] && (( SECONDS - started >= timeout_secs )); then
@@ -259,8 +261,10 @@ supervised_container_run() {
   SUPERVISED_RC=""
   while :; do
     if ! kill -0 "$pid" 2>/dev/null; then
-      wait "$pid"
-      SUPERVISED_RC=$?
+      # wait returns the status of the child. Under set -e, a nonzero status here stops the
+      # whole script before the caller records the run. The caller must see every status.
+      SUPERVISED_RC=0
+      wait "$pid" || SUPERVISED_RC=$?
       break
     fi
     if [[ "$timeout_secs" -gt 0 ]] && (( SECONDS - started >= timeout_secs )); then
