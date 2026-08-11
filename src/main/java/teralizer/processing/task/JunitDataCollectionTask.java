@@ -286,7 +286,14 @@ public class JunitDataCollectionTask extends AbstractTask {
         String testMethodQualifiedName = this.generalizationRecord.getMethodQualifiedName();
         TestReportSelection selection = this.identifyTestReportPath(
             this.generalizationRecord.getClassName(), testClassQualifiedName, testMethodQualifiedName);
-        return selection.testCaseReports.stream()
+        // The method name selects the report file. It does not select the rows.
+        // The generated class contains the property and the test methods from its superclass.
+        // PIT runs all of these tests and stops if one test fails.
+        // This task therefore records one row for each test case in the file.
+        // If it records only the property, no filter can see a failed inherited test.
+        List<ReportTestCase> classTestCaseReports = parseTestCaseReports(
+            selection.path, testClassQualifiedName, null);
+        return classTestCaseReports.stream()
             .map(testCaseReport -> this.buildTestReportRecord(create, selection.path, testCaseReport))
             .collect(Collectors.toList());
     }
