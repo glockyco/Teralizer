@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/dataset/dataset.iml" filepath="$PROJECT_DIR$/dataset/dataset.iml" />
-      <module fileurl="file://$PROJECT_DIR$/notebooks/notebooks.iml" filepath="$PROJECT_DIR$/notebooks/notebooks.iml" />
       <module fileurl="file://$PROJECT_DIR$/test-generalization.iml" filepath="$PROJECT_DIR$/test-generalization.iml" />
     </modules>
   </component>

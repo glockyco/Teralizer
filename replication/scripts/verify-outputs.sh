@@ -151,7 +151,9 @@ compare_content() {
 echo -e "${CYAN}File Counts:${NC}"
 compare_subdir "tables" "*.tex" || ((errors++))
 compare_subdir "data" "*.csv" || ((errors++))
-compare_subdir "figures" "*.pdf" || ((errors++))
+# teralizer.eval renders PNG figures, while older references may contain PDFs.
+# Compare whichever image artifacts each run produced without assuming a format.
+compare_subdir "figures" "*" || ((errors++))
 echo ""
 
 echo -e "${CYAN}Content Comparison (tables):${NC}"

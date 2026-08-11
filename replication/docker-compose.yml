@@ -3,7 +3,6 @@
 # Services:
 #   postgres  - PostgreSQL 17.1 database (port 5432)
 #   adminer   - Database web UI (port 18080)
-#   analysis  - Jupyter Lab for analysis notebooks (port 8888)
 #   teralizer - Java pipeline for data collection (on-demand)
 #   verify    - Output comparison tool (on-demand)
 #
@@ -11,10 +10,10 @@
 #   # Quick start (inspect data, re-run analysis)
 #   docker compose up -d postgres adminer
 #   ./scripts/import-databases.sh
-#   docker compose up -d analysis
-#   # Open http://localhost:8888 for Jupyter, http://localhost:18080 for Adminer
+#   ./scripts/run-analysis.sh verify
+#   # Open http://localhost:18080 for Adminer
 #
-#   # Verify outputs match after re-running notebooks
+#   # Verify outputs match after re-running analysis
 #   docker compose run --rm verify original verify
 #
 #   # Run pipeline on subset (via run.sh script)
@@ -77,34 +76,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-
-  analysis:
-    build:
-      context: ..
-      dockerfile: replication/Dockerfile.analysis
-    container_name: analysis-replication
-    ports:
-      - "127.0.0.1:${JUPYTER_PORT:-8888}:8888"
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: ${DB_USER:-teralizer}
-      DB_PASSWORD: ${DB_PASSWORD:-teralizer}
-      DB_NAME_DEV: ${DB_NAME_DEV:-postgres_dev}
-      DB_NAME_TEST: ${DB_NAME_TEST:-postgres_test}
-      # Variant controls database selection and output paths:
-      # - verify: use original DBs, output to verify/ (default for evaluators)
-      # - replicate: use replication DBs, output to replicate/
-      DATASET_VARIANT: ${DATASET_VARIANT:-verify}
-    volumes:
-      - ../analysis:/app/analysis
-    depends_on:
-      postgres:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 4G
 
   teralizer:
     build:

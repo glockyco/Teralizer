@@ -17,5 +17,4 @@ database
 docker-data
 evosuite-report
 
-notebooks
 venv

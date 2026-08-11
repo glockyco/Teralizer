@@ -115,7 +115,6 @@ check_port() {
 
 check_port 5432 "PostgreSQL"
 check_port 18080 "Adminer"
-check_port 8888 "Jupyter"
 echo ""
 
 # Check for database dumps

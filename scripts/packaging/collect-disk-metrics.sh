@@ -179,10 +179,6 @@ echo "| Adminer | $adminer_version | docker-compose.yml |"
 python_version=$(grep '^FROM python:' "$ROOT_DIR/replication/Dockerfile.analysis" 2>/dev/null | sed 's/FROM python://' | sed 's/-.*//' || echo "N/A")
 echo "| Python | $python_version | Dockerfile.analysis |"
 
-# JupyterLab from uv.lock
-jupyter_version=$(grep -A1 'name = "jupyterlab"' "$ROOT_DIR/analysis/uv.lock" 2>/dev/null | grep 'version' | sed 's/.*= "//' | sed 's/"//' || echo "N/A")
-echo "| JupyterLab | $jupyter_version | uv.lock |"
-
 # Gradle and JDK from Dockerfile
 gradle_line=$(grep '^FROM gradle:' "$ROOT_DIR/Dockerfile" 2>/dev/null | sed 's/FROM gradle://' || echo "")
 if [[ -n "$gradle_line" ]]; then

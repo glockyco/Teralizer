@@ -5,15 +5,14 @@
 #   1. Runs preflight checks (Docker, resources)
 #   2. Starts PostgreSQL and Adminer
 #   3. Imports database dumps
-#   4. Starts Jupyter Lab
-#   5. Opens browser to Jupyter
+#
+# Run ./scripts/run-analysis.sh verify after setup to build the reports.
 #
 # Usage:
 #   ./quick-start.sh
 #
-# After running, access:
-#   - Jupyter Lab: http://localhost:8888
-#   - Adminer (DB UI): http://localhost:18080
+# After running, access Adminer at http://localhost:18080 or run the
+# analysis wrapper from the repository root.
 
 set -euo pipefail
 
@@ -124,7 +123,7 @@ echo -e "${GREEN}Database dumps found${NC}"
 echo ""
 
 # Step 3: Start PostgreSQL and Adminer
-echo -e "${YELLOW}[3/5]${NC} Starting PostgreSQL and Adminer..."
+echo -e "${YELLOW}[3/4]${NC} Starting PostgreSQL and Adminer..."
 docker compose up -d postgres adminer
 
 # Wait for PostgreSQL to be healthy
@@ -143,30 +142,11 @@ done
 echo ""
 
 # Step 4: Import databases
-echo -e "${YELLOW}[4/5]${NC} Importing databases (this may take a few minutes)..."
+echo -e "${YELLOW}[4/4]${NC} Importing databases (this may take a few minutes)..."
 if ! scripts/import-databases.sh --force datasets/; then
     echo -e "${RED}Error: Database import failed${NC}"
     exit 1
 fi
-echo ""
-
-# Step 5: Start Jupyter
-echo -e "${YELLOW}[5/5]${NC} Starting Jupyter Lab..."
-docker compose up -d analysis
-
-# Wait for Jupyter to be ready
-echo "Waiting for Jupyter to be ready..."
-for i in {1..30}; do
-    if curl -s http://localhost:8888 &> /dev/null; then
-        echo -e "${GREEN}Jupyter is ready${NC}"
-        break
-    fi
-    if [[ $i -eq 30 ]]; then
-        echo -e "${YELLOW}Warning: Could not verify Jupyter is running${NC}"
-        break
-    fi
-    sleep 1
-done
 echo ""
 
 # Done!
@@ -174,8 +154,8 @@ echo "=========================================="
 echo -e "${GREEN}  Setup Complete!${NC}"
 echo "=========================================="
 echo ""
-echo "Open Jupyter Lab in your browser:"
-echo "  http://localhost:8888"
+echo "Analysis reports:"
+echo "  ./scripts/run-analysis.sh verify"
 echo ""
 echo "Database UI (Adminer):"
 echo "  http://localhost:18080"

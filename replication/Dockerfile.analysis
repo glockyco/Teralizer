@@ -1,8 +1,8 @@
-# Dockerfile for Teralizer analysis environment (Jupyter Lab).
+# Dockerfile for the Python analysis and verification environment.
 #
-# This container provides a pre-configured Python environment for running
-# the analysis notebooks that reproduce paper figures and tables.
-#
+# The replication compose file uses this image for the one-shot `verify`
+# service. Reviewer-facing report generation runs through uv on the host with
+# replication/scripts/run-analysis.sh, so this image no longer serves a web UI.
 # Build context should be the repository root:
 #   docker build -f replication/Dockerfile.analysis -t teralizer-analysis .
 
@@ -10,7 +10,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies including fonts for matplotlib
+# Install system dependencies including fonts for matplotlib.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     fontconfig \
@@ -18,29 +18,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && fc-cache -f -v
 
-# Install uv for fast dependency management
+# Install uv for fast dependency management.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy analysis package
+# Copy the analysis package and install its locked runtime dependencies.
 COPY analysis/pyproject.toml analysis/uv.lock* /app/analysis/
 COPY analysis/src /app/analysis/src/
 
-# Install dependencies to /opt/venv (outside the volume mount path)
 WORKDIR /app/analysis
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 RUN uv sync --frozen --no-dev 2>/dev/null || uv sync --no-dev
 
-# Install JupyterLab into the virtual environment
-RUN uv pip install --python /opt/venv jupyterlab
-
-# Create output directory
+# Keep a writable output location for one-shot verification commands.
 RUN mkdir -p /app/analysis/output
 
 WORKDIR /app/analysis
-
-# Expose Jupyter port
-EXPOSE 8888
-
-# Start Jupyter Lab without authentication (for ease of reproduction)
-# Security: Port is bound to localhost only in docker-compose.yml
-CMD ["/opt/venv/bin/jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=", "--NotebookApp.password="]

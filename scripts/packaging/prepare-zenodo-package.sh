@@ -2,7 +2,7 @@
 # Prepare Zenodo archives for artifact submission.
 #
 # This script creates multiple archives for Zenodo submission:
-#   1. teralizer-results.zip                   - Results only (HTML, tables, figures, data)
+#   1. teralizer-results.zip                   - Results only (tables, figures, data)
 #   2. teralizer-core.zip                      - Verification package (code, database dumps)
 #   3. teralizer-projects-primary.zip          - Primary dataset projects
 #   4. teralizer-projects-extended-sample.zip  - Sampled extended projects
@@ -112,7 +112,7 @@ done
 # Validate required paths exist
 if [[ ! -d "$REPO_ROOT/analysis/output/original" ]]; then
     log_error "Original outputs not found at $REPO_ROOT/analysis/output/original"
-    log_error "Run notebooks first to generate outputs."
+    log_error "Run ./replication/scripts/run-analysis.sh verify first to generate outputs."
     exit 1
 fi
 
@@ -161,13 +161,6 @@ if [[ "$DRY_RUN" == "false" ]]; then
     cp -r "$REPO_ROOT/analysis/output/original/tables" "$RESULTS_DIR/"
     cp -r "$REPO_ROOT/analysis/output/original/figures" "$RESULTS_DIR/"
     cp -r "$REPO_ROOT/analysis/output/original/data" "$RESULTS_DIR/"
-
-    # Copy HTML notebooks if they exist
-    if [[ -d "$REPO_ROOT/analysis/output/original/html" ]]; then
-        cp -r "$REPO_ROOT/analysis/output/original/html" "$RESULTS_DIR/"
-    else
-        log_warning "HTML notebooks not found - run notebook export first"
-    fi
 
     # Create archive
     (cd "$STAGING_DIR" && zip -rq "$OUTPUT_DIR/${RESULTS_NAME}.zip" "$RESULTS_NAME")
