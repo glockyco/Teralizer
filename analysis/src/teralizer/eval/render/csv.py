@@ -14,13 +14,17 @@ def render_table(table: Table, output_dir: Path) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{table.key}.csv"
     with path.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.writer(stream)
-        writer.writerow([column.source for column in table.columns])
+        # csv defaults to the RFC 4180 CRLF terminator. Every consumer of these
+        # files -- git, the thesis, the plotting macros -- is line-oriented Unix
+        # text, so the export matches the repository instead of the RFC.
+        writer = csv.writer(stream, lineterminator="\n")
+        sources = [column.csv_source or column.source for column in table.columns]
+        writer.writerow(sources)
         for _, row in table.df.iterrows():
             writer.writerow(
                 [
-                    render_value(row[column.source], column.fmt)
-                    for column in table.columns
+                    render_value(row[source], column.fmt)
+                    for source, column in zip(sources, table.columns, strict=True)
                 ]
             )
     return path

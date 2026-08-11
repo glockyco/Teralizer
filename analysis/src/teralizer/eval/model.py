@@ -38,6 +38,10 @@ class ColumnSpec:
     fmt: str = "str"
     align: str = "l"  # l | r | c
     group_header: str | None = None
+    # Where LaTeX grouping abbreviates a cell -- a label row lifting the shared
+    # prefix out of every member -- the rectangular CSV still owes readers the
+    # qualified value. Naming it here keeps the export unambiguous.
+    csv_source: str | None = None
 
 
 @dataclass(frozen=True)
