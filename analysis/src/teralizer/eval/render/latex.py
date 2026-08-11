@@ -64,18 +64,20 @@ def _group_header_rows(columns: Sequence[ColumnSpec], align: str) -> list[str]:
 
 def render_table(table: Table) -> str:
     cols = "".join(_ALIGN[c.align] for c in table.columns)
-    if table.short_caption is None:
-        caption = f"  \\caption{{{table.caption}}}"
-    else:
-        # The trailing comment keeps the line break out of the float, which would
-        # otherwise put a stray space between the caption and its label.
-        caption = f"  \\caption[{table.short_caption}]{{{table.caption}}}%"
+    command = "\\caption" if table.floating else "\\captionof{table}"
+    short = "" if table.short_caption is None else f"[{table.short_caption}]"
+    # The trailing comment keeps the line break out of the caption, which would
+    # otherwise put a stray space before the label.
+    end = "%" if table.short_caption else ""
+    indent = "  " if table.floating else ""
+    style = "\n".join(f"{indent}{line}" for line in table.body_style.splitlines())
     lines = [
-        "\\begin{table}" + (f"[{table.float_spec}]" if table.float_spec else ""),
-        caption,
-        f"  \\label{{{table.label}}}",
-        f"  {table.body_style}",
+        f"{indent}{command}{short}{{{table.caption}}}{end}",
+        f"{indent}\\label{{{table.label}}}",
+        style,
     ]
+    if table.floating:
+        lines.insert(0, "\\begin{table}" + (f"[{table.float_spec}]" if table.float_spec else ""))
     if table.latex_resize_to_width:
         lines.append("  \\resizebox{\\textwidth}{!}{%")
     header_rows: list[str] = []
@@ -123,7 +125,9 @@ def render_table(table: Table) -> str:
     lines += ["  \\bottomrule", "  \\end{tabular*}" if table.full_width else "  \\end{tabular}"]
     if table.latex_resize_to_width:
         lines.append("  }")
-    lines += ["\\end{table}", ""]
+    if table.floating:
+        lines.append("\\end{table}")
+    lines.append("")
     return "\n".join(lines)
 
 

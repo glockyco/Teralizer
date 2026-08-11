@@ -58,8 +58,11 @@ class Table:
     # that the generator must emit itself, because they sit inside the float it
     # writes; everything else stays in the document's preamble.
     short_caption: str | None = None  # \caption[short]{caption} for the list of tables
-    body_style: str = "\\centering"  # e.g. a document's own \tabstyle macro
+    body_style: str = "\\centering"  # a document's own style macros, one per line
     float_spec: str | None = None  # placement, e.g. H or tbp
+    # A table the document places itself -- side by side in minipages, say --
+    # cannot open its own float, and captions itself with \captionof instead.
+    floating: bool = True
     full_width: bool = False  # tabular* stretched to \textwidth
     group_header_align: str = "c"  # alignment of spanning group headers
     note: str | None = None

@@ -112,6 +112,25 @@ def test_render_table_emits_the_consuming_documents_house_style():
     assert any("\\multicolumn{2}{r}{Impl}" in line for line in lines)
 
 
+def test_render_table_captions_itself_when_the_document_owns_the_float():
+    table = Table(
+        key="sidebyside",
+        df=pd.DataFrame({"a": [1]}),
+        columns=[ColumnSpec("A", "a", "int")],
+        caption="Pareto points.",
+        label="tab:pareto",
+        short_caption="Pareto",
+        body_style="\\tabstyle[\\footnotesize]\n\\setlength{\\tabcolsep}{3pt}",
+        floating=False,
+    )
+    lines = render_table(table).splitlines()
+    # Nothing may open or close a float the surrounding document already opened.
+    assert not any("begin{table}" in line or "end{table}" in line for line in lines)
+    assert lines[0] == "\\captionof{table}[Pareto]{Pareto points.}%"
+    assert lines[1] == "\\label{tab:pareto}"
+    assert lines[2:4] == ["\\tabstyle[\\footnotesize]", "\\setlength{\\tabcolsep}{3pt}"]
+
+
 def test_render_table_defaults_stay_on_the_plain_centred_float():
     table = Table(
         key="plain",
