@@ -103,13 +103,8 @@ cannot be flattened (`JunitDataCollectionTask.java:475-480`). It writes a typed 
 | `INHERITED_METHOD_NOT_FLATTENABLE:PRIVATE_MEMBER` | 876 |
 
 This overlaps conceptually with `InheritedTestCaseFilter`, which rejected 1,064 tests through
-mechanism 1. A third decision is `InheritedTestMethodsFilter`, also mechanism 1. It rejects a test
-when a superclass declares a test method, because the generalized class keeps that superclass and
-cannot delete the method. Three mechanisms decide about inherited tests. Two appear in the filter
-table and one does not.
-
-`InheritedTestMethodsFilter` has no v6 number. It was added after the v6 run, and the next full run
-measures it. On the JARVIS census fixtures, 129 test classes inherit a test method.
+mechanism 1. Two mechanisms decide about inherited tests. One appears in the filter table and one
+does not.
 
 `EvoSuitePostprocessingTask.java:216-232` is a second instance of this mechanism, inactive on
 RepoReapers corpora.
