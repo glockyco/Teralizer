@@ -1,6 +1,6 @@
 # Teralizer - Replication Package
 
-This (https://doi.org/10.5281/zenodo.17950380) is a replication package for the paper:
+This (https://doi.org/10.5281/zenodo.18242626) is a replication package for the paper:
 
 **Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests**
 
@@ -25,7 +25,7 @@ Our work proposes a semantics-based test generalization approach that automatica
 
 | Resource | Location |
 |----------|----------|
-| Zenodo Archive | [10.5281/zenodo.17950380](https://zenodo.org/records/17950380) |
+| Zenodo Archive | [10.5281/zenodo.18242626](https://doi.org/10.5281/zenodo.18242626) |
 | Paper (arXiv) | [arXiv:2512.14475](https://arxiv.org/abs/2512.14475) |
 | Artifact Repository | [glockyco/Teralizer](https://github.com/glockyco/Teralizer) |
 | Paper Repository | [glockyco/Teralizer-Paper](https://github.com/glockyco/Teralizer-Paper) |

@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this replication package, please cite it as follows."
+title: 'Replication Package for: "Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests"'
+type: software
+authors:
+  - given-names: Johann
+    family-names: Glock
+    affiliation: University of Klagenfurt
+    orcid: https://orcid.org/0000-0002-0152-8611
+  - given-names: Clemens
+    family-names: Bauer
+    affiliation: University of Klagenfurt
+    orcid: https://orcid.org/0009-0000-9199-8563
+  - given-names: Martin
+    family-names: Pinzger
+    affiliation: University of Klagenfurt
+    orcid: https://orcid.org/0000-0002-5536-3859
+doi: 10.5281/zenodo.18242626
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.18242626
+    description: Concept DOI for the replication package
+repository: https://github.com/glockyco/Teralizer
+repository-code: https://github.com/glockyco/Teralizer
+license:
+  - MIT
+  - CC-BY-4.0
+abstract: >-
+  Source code (Java, Python, and scripts) is licensed under MIT. Data and
+  documentation are licensed under CC BY 4.0. Analyzed projects retain their
+  original licenses.
+references:
+  - type: article
+    title: 'Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests'
+    authors:
+      - given-names: Johann
+        family-names: Glock
+      - given-names: Clemens
+        family-names: Bauer
+      - given-names: Martin
+        family-names: Pinzger
+    identifiers:
+      - type: doi
+        value: 10.48550/arXiv.2512.14475

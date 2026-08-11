@@ -1,0 +1,45 @@
+{
+  "title": "Replication Package for: \"Teralizer: Semantics-Based Test Generalization from Conventional Unit Tests to Property-Based Tests\"",
+  "upload_type": "software",
+  "description": "Replication package for Teralizer, a semantics-based approach to generalizing conventional unit tests into property-based tests. Source code (Java, Python, and scripts) is licensed under MIT. Data and documentation are licensed under CC BY 4.0. Analyzed projects retain their original licenses. Funding: FWF Austrian Science Fund grant 10.55776/P36698 (Semantic Change Impact Analysis) and Austrian Research Promotion Agency (FFG) grant 892418 (INTEGRATE).",
+  "creators": [
+    {
+      "name": "Glock, Johann",
+      "affiliation": "University of Klagenfurt",
+      "orcid": "0000-0002-0152-8611"
+    },
+    {
+      "name": "Bauer, Clemens",
+      "affiliation": "University of Klagenfurt",
+      "orcid": "0009-0000-9199-8563"
+    },
+    {
+      "name": "Pinzger, Martin",
+      "affiliation": "University of Klagenfurt",
+      "orcid": "0000-0002-5536-3859"
+    }
+  ],
+  "license": "mit-license",
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "10.48550/arXiv.2512.14475",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/glockyco/Teralizer",
+      "relation": "isIdenticalTo",
+      "scheme": "url"
+    }
+  ],
+  "grants": [
+    {
+      "id": "10.55776/P36698"
+    },
+    {
+      "id": "892418"
+    }
+  ]
+}

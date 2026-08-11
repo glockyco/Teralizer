@@ -2,7 +2,7 @@
 
 ## Download
 
-Download archives from Zenodo: [10.5281/zenodo.17950380](https://zenodo.org/records/17950380)
+Download archives from Zenodo: [10.5281/zenodo.18242626](https://doi.org/10.5281/zenodo.18242626)
 
 See README.md §Package Contents for which archives to download.
 
