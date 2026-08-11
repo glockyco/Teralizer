@@ -174,21 +174,31 @@ public class SpoonUtils {
         return clonedClass;
     }
 
+    /**
+     * The superclasses of a class, with the nearest superclass first.
+     *
+     * <p>The list stops at the first superclass that the model does not contain. Spoon knows the
+     * name of such a class, but it does not know the members. A caller that must read the members
+     * gets no data about that class and about the classes above it.
+     */
+    public static List<CtClass<?>> superclasses(CtClass<?> type) {
+        List<CtClass<?>> superclasses = new ArrayList<>();
+        CtTypeReference<?> reference = type.getSuperclass();
+        while (reference != null && reference.getDeclaration() instanceof CtClass<?>) {
+            CtClass<?> superclass = (CtClass<?>) reference.getDeclaration();
+            superclasses.add(superclass);
+            reference = superclass.getSuperclass();
+        }
+        return superclasses;
+    }
+
     private static void flattenInheritedTestMethods(CtClass<?> originalClass, CtClass<?> clonedClass) {
-        CtTypeReference<?> superclassReference = originalClass.getSuperclass();
-        while (superclassReference != null) {
-            CtClass<?> superclass = superclassReference.getDeclaration() instanceof CtClass<?>
-                ? (CtClass<?>) superclassReference.getDeclaration()
-                : null;
-            if (superclass == null) {
-                return;
-            }
+        for (CtClass<?> superclass : superclasses(originalClass)) {
             for (CtMethod<?> method : superclass.getMethods()) {
                 if (isFlattenableInheritedMethod(originalClass, clonedClass, method)) {
                     clonedClass.addMethod(method.clone());
                 }
             }
-            superclassReference = superclass.getSuperclass();
         }
     }
 
