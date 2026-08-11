@@ -66,6 +66,16 @@ jarvis_run() {
     fi
   done
 
+  # Keep attempts separate from the pipeline's database evidence so an early process failure is
+  # still attributable to its config and a stale marker cannot describe a later failed run.
+  local data_dir_abs="$ROOT_DIR/$JARVIS_DATA_DIR"
+  local log_dir="$data_dir_abs/run-logs"
+  local status_tsv="$data_dir_abs/status.tsv"
+  local complete_marker="$data_dir_abs/complete"
+  mkdir -p "$log_dir"
+  [[ -f "$status_tsv" ]] || printf 'config\texit_code\tlog\n' > "$status_tsv"
+  rm -f "$complete_marker"
+
   ensure_postgres_up || exit 1
 
   if [[ "$prepare_fixtures" == true ]]; then
@@ -91,7 +101,12 @@ jarvis_run() {
   fi
 
   local gradle_failed=false
+  local config_name log log_abs rc
   for config in "${configs[@]}"; do
+    config_name="${config##*/}"
+    config_name="${config_name%.conf}"
+    log="$JARVIS_DATA_DIR/run-logs/$config_name.log"
+    log_abs="$ROOT_DIR/$log"
     echo "==> Running $config (DB_NAME=$JARVIS_DB_NAME DATA_DIR=$JARVIS_DATA_DIR)"
     # Build the run command as an array so an empty flag set never trips set -u on bash 3.2.
     local -a run_cmd=(
@@ -115,11 +130,13 @@ jarvis_run() {
       )
     fi
     run_cmd+=(--no-daemon)
-    supervised_run - "$JARVIS_PROJECT_TIMEOUT" "${run_cmd[@]}"
-    if [[ "$SUPERVISED_RC" -eq 124 ]]; then
+    supervised_run "$log_abs" "$JARVIS_PROJECT_TIMEOUT" "${run_cmd[@]}"
+    rc="$SUPERVISED_RC"
+    printf '%s\t%s\t%s\n' "$config_name" "$rc" "$log" >> "$status_tsv"
+    if [[ "$rc" -eq 124 ]]; then
       echo "run capped at ${JARVIS_PROJECT_TIMEOUT}s for $config" >&2
       gradle_failed=true
-    elif [[ "$SUPERVISED_RC" -ne 0 ]]; then
+    elif [[ "$rc" -ne 0 ]]; then
       echo "gradle exited non-zero for $config" >&2
       gradle_failed=true
     fi
@@ -159,5 +176,7 @@ jarvis_run() {
     echo "A gradle invocation exited non-zero, though no FAILED task was recorded; check the run log." >&2
     exit 1
   fi
+  touch "$complete_marker"
   echo "$JARVIS_LABEL run complete: no pipeline breakage (${jpf_excluded} per-assertion JPF exclusions)."
+  echo "Run ledger: $JARVIS_DATA_DIR/status.tsv   Logs: $JARVIS_DATA_DIR/run-logs/   Completion: $JARVIS_DATA_DIR/complete"
 }
