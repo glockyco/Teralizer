@@ -71,7 +71,7 @@ SELECT code,
        count(*) / sum(count(*)) OVER () AS refusals_pct
 FROM refusals
 GROUP BY code, cause
-ORDER BY refusals DESC
+ORDER BY refusals DESC, code COLLATE "C"
 """
 
 
