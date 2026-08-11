@@ -20,9 +20,14 @@
 #       `docker stop`, then clean up the compose-run process group. Always
 #       returns 0 so set -e callers can inspect SUPERVISED_RC.
 #   supervisor_install_traps
-#       EXIT/INT/TERM kill the in-flight group immediately and sweep leftovers. Bash holds
-#       traps while a foreground command runs, and the background-job launch in
-#       supervised_run is what makes the traps fire without delay.
+#       Acquires the repository working-tree lock, then installs EXIT/INT/TERM traps that kill
+#       the in-flight group, sweep leftovers, and release the lock. Bash holds traps while a
+#       foreground command runs, and the background-job launch in supervised_run is what makes
+#       the traps fire without delay.
+#
+# The lock uses an atomic mkdir at .teralizer-run.lock. A live holder is reported immediately;
+# a lock whose recorded PID is no longer alive is taken over. Set TERALIZER_ALLOW_CONCURRENT_RUNS=1
+# only when knowingly bypassing this protection.
 #   supervisor_stop_requested <stop_file>
 #       True once when <stop_file> exists, consuming it. Check at loop boundaries for a
 #       zero-loss pause (the in-flight unit finishes, nothing new starts).
@@ -38,8 +43,67 @@ SUPERVISOR_ACTIVE_PGID=""
 SUPERVISOR_ACTIVE_PATH=""
 SUPERVISOR_ACTIVE_LOG=""
 SUPERVISED_RC=""
+SUPERVISOR_LOCK_DIR="$ROOT_DIR/.teralizer-run.lock"
+SUPERVISOR_LOCK_HELD=false
 
 source "$ROOT_DIR/scripts/lib/psql.sh"
+
+# mkdir is atomic on macOS and avoids the unavailable flock(2) command. Metadata is kept in
+# the lock directory so a second run can identify a live holder and safely reclaim dead locks.
+supervisor_acquire_lock() {
+  [[ "$SUPERVISOR_LOCK_HELD" == true ]] && return 0
+  if [[ "${TERALIZER_ALLOW_CONCURRENT_RUNS:-}" == "1" ]]; then
+    echo "run-supervisor: bypassing working-tree lock (TERALIZER_ALLOW_CONCURRENT_RUNS=1)." >&2
+    return 0
+  fi
+
+  local lock_dir="$SUPERVISOR_LOCK_DIR"
+  local holder_pid holder_command holder_started stale_dir
+  while :; do
+    if mkdir "$lock_dir" 2>/dev/null; then
+      printf '%s\n' "$$" > "$lock_dir/pid"
+      ps -p "$$" -o command= 2>/dev/null | sed -n '1p' > "$lock_dir/command"
+      date '+%Y-%m-%d %H:%M:%S %z' > "$lock_dir/started"
+      SUPERVISOR_LOCK_HELD=true
+      return 0
+    fi
+
+    if [[ ! -e "$lock_dir" ]]; then
+      echo "run-supervisor: unable to create working-tree lock at $lock_dir." >&2
+      return 1
+    fi
+    holder_pid=$(cat "$lock_dir/pid" 2>/dev/null || true)
+    if [[ "$holder_pid" =~ ^[1-9][0-9]*$ ]] && kill -0 "$holder_pid" 2>/dev/null; then
+      holder_command=$(cat "$lock_dir/command" 2>/dev/null || true)
+      holder_started=$(cat "$lock_dir/started" 2>/dev/null || true)
+      echo "run-supervisor: working tree is already locked by PID $holder_pid" \
+        "(${holder_command:-command unavailable}) since ${holder_started:-time unavailable}." >&2
+      echo "run-supervisor: wait for that run to finish or set TERALIZER_ALLOW_CONCURRENT_RUNS=1" \
+        "to bypass deliberately." >&2
+      return 1
+    fi
+
+    # Rename before removing so concurrent stale-lock reclaimers cannot delete a newly
+    # acquired lock. A missing or dead PID makes this lock stale.
+    stale_dir="${lock_dir}.stale.$$"
+    rm -rf "$stale_dir" 2>/dev/null || true
+    if mv "$lock_dir" "$stale_dir" 2>/dev/null; then
+      rm -rf "$stale_dir"
+      continue
+    fi
+    # The holder may have released the directory between our checks. Retry that race, but
+    # report filesystem errors instead of spinning forever when the path cannot be moved.
+    [[ -e "$lock_dir" ]] || continue
+    echo "run-supervisor: unable to reclaim stale working-tree lock at $lock_dir." >&2
+    return 1
+  done
+}
+
+supervisor_release_lock() {
+  [[ "$SUPERVISOR_LOCK_HELD" == true ]] || return 0
+  rm -rf "$SUPERVISOR_LOCK_DIR"
+  SUPERVISOR_LOCK_HELD=false
+}
 
 ensure_postgres_up() {
   if teralizer_psql -d postgres -c 'SELECT 1' >/dev/null 2>&1; then
@@ -111,13 +175,17 @@ cleanup_leftover_project_processes() {
 
 cleanup_active_project_processes() {
   supervisor_kill_active_group
-  [[ -n "$SUPERVISOR_ACTIVE_PATH" ]] || return 0
-  cleanup_leftover_project_processes "$SUPERVISOR_ACTIVE_PATH" "$SUPERVISOR_ACTIVE_LOG"
+  if [[ -n "$SUPERVISOR_ACTIVE_PATH" ]]; then
+    cleanup_leftover_project_processes "$SUPERVISOR_ACTIVE_PATH" "$SUPERVISOR_ACTIVE_LOG"
+  fi
+  supervisor_release_lock
 }
 
 supervisor_install_traps() {
+  # Install EXIT first so an interrupt during lock acquisition still runs the cleanup path.
   trap cleanup_active_project_processes EXIT
   trap 'cleanup_active_project_processes; exit 130' INT TERM
+  supervisor_acquire_lock || exit 1
 }
 
 supervisor_stop_requested() {
