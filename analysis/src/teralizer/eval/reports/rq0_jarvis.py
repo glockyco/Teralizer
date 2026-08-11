@@ -75,6 +75,9 @@ _REQUIRED_STAGES = (
     "COLLECT_JUNIT_REPORTS_GENERALIZED",
 )
 _SUCCESS_STATUSES = {"SUCCEEDED", "SUCCESS", "COMPLETED"}
+# Every fixture is pinned to a corpus snapshot date, which the reader does not need
+# repeated on all twelve rows; the caption carries the date instead.
+_SNAPSHOT_SUFFIX = re.compile(r"-\d{4}-\d{2}-\d{2}$")
 
 # Table-2's ten scenario rows collapse to nine MUTs: the three PolynomialFunction
 # rows share one value(double) MUT, while the two Precision overloads are distinct.
@@ -233,18 +236,21 @@ def _build_breadth_table(
         ]
     )
     result = pd.concat([rows, total], ignore_index=True)
-    # Reader-facing label drops the internal `-census` DB suffix; the internal
-    # `project` identity stays intact for merges and manifest metric slugs.
+    # Reader-facing label drops the internal `-census` DB suffix and the corpus
+    # snapshot date every fixture carries; the internal `project` identity stays
+    # intact for merges and manifest metric slugs.
     result["display_project"] = result["project"].map(
-        lambda project: str(project).removesuffix("-census")
+        lambda project: _SNAPSHOT_SUFFIX.sub("", str(project).removesuffix("-census"))
     )
+    # The total is its own group, which is what puts a rule above it.
+    result["row_group"] = ["projects"] * len(rows) + ["total"] * len(total)
     return result
 
 
 _VARIANT_DISPLAY = {
-    "IMPROVED_100_TRIES": "Improved, 100 tries",
-    "IMPROVED_200_TRIES": "Improved, 200 tries",
-    "IMPROVED_1000_TRIES": "Improved, 1,000 tries",
+    "IMPROVED_100_TRIES": "100 tries",
+    "IMPROVED_200_TRIES": "200 tries",
+    "IMPROVED_1000_TRIES": "1,000 tries",
 }
 
 
@@ -296,6 +302,10 @@ def build(conn: Connection) -> RQReport:
     cut_values = load_cut_values()
     suite = suite_union_pvc(full_scoreboard, cut_values, variant=TABLE2_VARIANT)
     comparison = comparison.merge(suite, on="table_row", how="left")
+    table_parts = comparison["table_row"].astype(str).str.partition("::")
+    has_table_group = table_parts[1].eq("::")
+    comparison["table_group"] = table_parts[0].where(has_table_group, "")
+    comparison["table_label"] = table_parts[2].where(has_table_group, table_parts[0])
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
     budget = _build_budget_table(scoreboard, mutation)
 
@@ -530,20 +540,41 @@ def build(conn: Connection) -> RQReport:
         key="rq0-table2-comparison",
         df=comparison,
         columns=[
-            ColumnSpec("Reported case", "table_row"),
-            ColumnSpec("JARVIS CUT PVC", "original_cut_pvc", "count", "r"),
-            ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", "count", "r"),
+            ColumnSpec("Reported case", "table_label", csv_source="table_row"),
+            ColumnSpec(
+                "CUT PVC",
+                "original_cut_pvc",
+                "count",
+                "r",
+                group_header="Original",
+            ),
+            ColumnSpec(
+                "PBT PVC",
+                "jarvis_pbt_pvc",
+                "count",
+                "r",
+                group_header="JARVIS",
+            ),
             # Measured CUT PVC is deliberately not shown. It is computed and kept
             # in provenance for auditing, but the table compares JARVIS's reported
             # values against Teralizer's suite PVC and nothing else.
-            ColumnSpec("Teralizer suite PVC", "suite_pvc", "pvc", "r"),
+            ColumnSpec(
+                "PBT PVC",
+                "suite_pvc",
+                "pvc",
+                "r",
+                group_header="\\ToolTeralizer{}",
+            ),
         ],
+        group_by="table_group",
+        group_style="label-row",
         caption=(
-            "CUT and PBT PVC reported by JARVIS beside post-generalization "
-            "suite PVC on the reconstructed fixtures."
+            "PVC of the original tests, of the property-based tests JARVIS "
+            "synthesized for them, and of the suite after generalization with "
+            "\\ToolTeralizer{}."
         ),
         label="tab:teralizer-rq0-table2",
-        latex_resize_to_width=True,
+        latex_resize_to_width=False,
         note=(
             "JARVIS CUT and PBT PVC are the published values, with PBT PVC "
             "measuring the synthesized properties alone. Teralizer suite PVC "
@@ -557,19 +588,40 @@ def build(conn: Connection) -> RQReport:
         key="rq0-breadth-summary",
         df=breadth,
         columns=[
-            ColumnSpec("JARVIS benchmark fixture", "display_project"),
+            ColumnSpec("Benchmark project", "display_project"),
             ColumnSpec(
-                "JARVIS successful PBT PVC", "jarvis_successful_pbt_pvc", "count", "r"
+                "PBT PVC",
+                "jarvis_successful_pbt_pvc",
+                "count",
+                "r",
+                group_header="JARVIS (reported)",
             ),
             ColumnSpec(
-                "JARVIS successful MUTs", "jarvis_successful_muts", "count", "r"
+                "MUTs",
+                "jarvis_successful_muts",
+                "count",
+                "r",
+                group_header="JARVIS (reported)",
             ),
-            ColumnSpec("Teralizer aggregate PVC", "aggregate_pvc", "pvc", "r"),
-            ColumnSpec("Teralizer generalized MUTs", "sound_muts", "pvc", "r"),
+            ColumnSpec(
+                "PBT PVC",
+                "aggregate_pvc",
+                "pvc",
+                "r",
+                group_header="\\ToolTeralizer{} (measured)",
+            ),
+            ColumnSpec(
+                "MUTs",
+                "sound_muts",
+                "pvc",
+                "r",
+                group_header="\\ToolTeralizer{} (measured)",
+            ),
         ],
-        caption="Project-level PVC and MUT breadth for the RQ0 benchmark fixtures.",
+        group_by="row_group",
+        caption="Project-level PVC and MUT counts across the 12 benchmark projects.",
         label="tab:teralizer-rq0-breadth",
-        latex_resize_to_width=True,
+        latex_resize_to_width=False,
         note=(
             "JARVIS columns use zero for projects without a reported case. "
             "Teralizer aggregate PVC counts distinct values exercised by "
@@ -582,8 +634,8 @@ def build(conn: Connection) -> RQReport:
         key="rq0-pvc-budget",
         df=budget,
         columns=[
-            ColumnSpec("Variant", "display_variant"),
-            ColumnSpec("Probes", "probes", "count", "r"),
+            ColumnSpec("Sampling budget", "display_variant"),
+            ColumnSpec("Generalized tests", "probes", "count", "r"),
             ColumnSpec("Total PVC", "total_pvc", "count", "r"),
             ColumnSpec("Killed mutants", "killed_mutants", "pvc", "r"),
             ColumnSpec("Covered mutants", "covered_mutants", "pvc", "r"),
@@ -591,7 +643,7 @@ def build(conn: Connection) -> RQReport:
         ],
         caption="PVC rises with the tries budget while covered mutation score stays flat.",
         label="tab:teralizer-rq0-pvc",
-        latex_resize_to_width=True,
+        latex_resize_to_width=False,
         note=(
             "PVC is a generation-volume diagnostic. Rows with persisted PIT "
             "results carry kills and mutation scores. Missing PIT results appear "
