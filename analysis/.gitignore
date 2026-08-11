@@ -1,20 +1,3 @@
-# Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,visualstudiocode,pycharm+all,python,jupyternotebooks
-# Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,windows,visualstudiocode,pycharm+all,python,jupyternotebooks
-
-### JupyterNotebooks ###
-# gitignore template for Jupyter Notebooks
-# website: http://jupyter.org/
-
-.ipynb_checkpoints
-*/.ipynb_checkpoints/*
-
-# IPython
-profile_default/
-ipython_config.py
-
-# Remove previous ipynb_checkpoints
-#   git rm -r .ipynb_checkpoints/
-
 ### Linux ###
 *~
 
@@ -229,10 +212,6 @@ docs/_build/
 .pybuilder/
 target/
 
-# Jupyter Notebook
-
-# IPython
-
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
 #   intended to run in multiple environments; otherwise, check them in:
@@ -365,9 +344,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,visualstudiocode,pycharm+all,python,jupyternotebooks
-
 # Generated files
 /build/
-notebooks/*.pdf
-notebooks/*.sql

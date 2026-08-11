@@ -5,8 +5,6 @@ requires-python = ">=3.11"
 dependencies = [
     "matplotlib>=3.10.3",
     "natsort>=8.4.0",
-    "nbstripout>=0.8.1",
-    "notebook>=7.4.4",
     "pandas>=2.3.0",
     "psycopg2-binary>=2.9.10",
     "python-dotenv>=1.1.1",
@@ -45,6 +43,6 @@ markers = [
     "db: needs a populated PostgreSQL corpus, and skips when it is unreachable",
 ]
 
-# Generated notebook/data artifacts mirror already-checked source; don't type-check them.
+# Generated report artifacts mirror already-checked source; don't type-check them.
 [tool.ty.src]
 exclude = ["output"]

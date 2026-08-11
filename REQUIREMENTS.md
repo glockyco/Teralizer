@@ -27,6 +27,8 @@ All checks should pass before proceeding with installation.
 | Docker | 20.10 or later |
 | Docker Compose | V2 (integrated) |
 | Bash | Any |
+| uv | 0.11 or later |
+| Python | 3.11 or later (managed by uv for `analysis/`) |
 
 Docker Compose V2 is included with Docker Desktop and recent Docker Engine installations. Verify with `docker compose version`.
 
@@ -101,7 +103,6 @@ Time estimates are based on evaluation hardware. Actual times may vary based on 
 |-----------|---------|-----------|
 | PostgreSQL | 17.1 | postgres |
 | Python | 3.11 | analysis |
-| JupyterLab | 4.4.4 | analysis |
 | Adminer | 4.8.1 | adminer |
 | JDK | 8 | teralizer (pipeline only) |
 | Maven | 3.9.8 | teralizer (pipeline only) |

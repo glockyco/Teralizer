@@ -1,4 +1,4 @@
-exclude: ^(dataset/|notebooks/legacy/)
+exclude: ^dataset/
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.5
@@ -11,7 +11,7 @@ repos:
     hooks:
       - id: ty
         name: ty
-        entry: uv run --directory analysis ty check src/ tests/ validate.py
+        entry: uv run --directory analysis ty check src/ tests/
         language: system
         types: [python]
         pass_filenames: false

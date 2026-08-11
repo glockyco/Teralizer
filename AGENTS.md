@@ -15,15 +15,13 @@ within the same execution paths. Java/Gradle pipeline + PostgreSQL + a Python an
 | Start / stop DB | `./gradlew startPostgres` / `./gradlew stopPostgres` |
 | DB UI | `docker compose up adminer` → http://localhost:18080 (password: `teralizer`) |
 | Analysis deps | `uv sync --directory analysis` |
-| Notebooks | `uv run --directory analysis jupyter lab` |
-| Validate notebooks (legacy) | `uv run --directory analysis python validate.py --changed` |
+| Build eval reports | `uv run --directory analysis python -m teralizer.eval all` |
 | Lint / format / types / tests | `uv run --directory analysis ruff check --fix .` · `ruff format .` · `ty check .` · `pytest` |
 
-Run everything from the project root. New analysis code -- `teralizer.eval` and
-its tests -- is gated by `pytest` plus the ruff and ty pre-commit hooks, which
-run on every commit. `validate.py --changed` remains the gate for the legacy
-Jupyter notebooks and the notebook-era Python they import (e.g. `rq*_*.py`,
-`exports.py`), until the redesign ports them.
+Run everything from the project root. Analysis code -- `teralizer.eval` and its
+tests -- is gated by `pytest` plus the ruff and ty pre-commit hooks, which run on
+every commit. Use `scripts/publish-analysis.sh` to render the complete report set
+and copy citable tables and CSV data into the paper repository.
 
 ## Verification tiers
 Match the gate to the change. Goldens are observed truth: on a mismatch, investigate instead of
@@ -31,8 +29,7 @@ editing the golden to match broken output.
 
 | Change | Gate |
 |---|---|
-| New analysis (`teralizer.eval`, its tests) | `pytest` + the ruff/ty pre-commit hooks |
-| Legacy notebooks + the Python they import (`rq*_*.py`, `exports.py`, ...) | `validate.py --changed` until ported |
+| Analysis (`teralizer.eval`, its tests) | `pytest` + the ruff/ty pre-commit hooks |
 | Java unit-level | `./gradlew test --tests '<Class>'` while iterating, one full `./gradlew build` before commit |
 | Pipeline behavior (codegen, SPF, filters, licenses, build files) | `scripts/verify-pipeline.sh` (~5–10 min, full fixture corpus) — ONCE PER WAVE of related changes, at the wave's end or when a golden must flip, NEVER per commit or per small change; iterate with `--only` below |
 | SPF submodule (`jpf-symbc/**`) | additionally `cd jpf-symbc && ./gradlew :jpf-symbc:test` (the root build does NOT run this suite, so a red suite survives "build green" without it) |
@@ -125,7 +122,7 @@ dropped by their runner scripts. Direct query:
 ## Style & commits
 - Explicit over implicit; minimal comments (explain *why*, not *what*); fail fast.
 - No marketing/temporal language in code or comments ("modern", "new", "enhanced").
-- Never reference paper section numbers (e.g. "Section 4.1") in code or notebooks.
+- Never reference paper section numbers (e.g. "Section 4.1") in code.
 - Commits: follow `skill://commit`.
 
 ## Boundaries

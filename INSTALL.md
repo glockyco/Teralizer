@@ -37,9 +37,10 @@ cd replication
 This script:
 1. Extracts sibling archives (if present)
 2. Starts PostgreSQL and imports the database dumps
-3. Starts Jupyter Lab with the analysis notebooks
+3. Starts the analysis service used by the verification scripts
 
-When complete, open http://localhost:8888 in your browser.
+When complete, open http://localhost:18080 in your browser to inspect the
+imported databases with Adminer.
 
 ## Verification Checkpoints
 
@@ -71,28 +72,38 @@ Extended Dataset (postgres_test)
   ✓ Project count: 1161 (expected 1161)
 ```
 
-### Checkpoint 3: Jupyter Works
+### Checkpoint 3: Evaluation CLI Works
 
-Open http://localhost:8888 and open `analysis/notebooks/dataset-characteristics.ipynb`.
+From the repository root, build the dataset report against the imported database:
 
-Run the first cell (imports and database connection).
+```bash
+cd analysis
+uv run python -m teralizer.eval dataset --targets md
+cd ..
+```
 
-**Expected**: Cell executes without errors.
+**Expected**: The command completes without errors and writes the rendered report
+to `analysis/reports/dataset.md`.
 
-### Checkpoint 4: Reproduce a Result
+### Checkpoint 4: Reproduce the Reports
 
-Run all cells in `rq1-mutation-detection.ipynb`.
+Run the verification wrapper to build every registered report:
+
+```bash
+./replication/scripts/run-analysis.sh verify
+```
 
 **Expected**:
-- Notebook completes without errors
-- Output tables generated in `analysis/output/verify/tables/`
+- All reports complete without errors
+- Tables, figures, and CSV files are generated in `analysis/output/verify/`
 
 ## Installation Complete
 
 Installation is successful when:
 - All four checkpoints pass
-- Jupyter Lab is accessible at http://localhost:8888
+- Adminer is accessible at http://localhost:18080
 - Database queries return expected row counts
+- `teralizer.eval` produces the dataset report and verification outputs
 
 ## Stopping Services
 

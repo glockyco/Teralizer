@@ -1,8 +1,7 @@
 ---
-description: Python analysis conventions (uv, ruff, ty, notebooks)
+description: Python analysis conventions (uv, ruff, ty, eval reports)
 globs:
   - "analysis/**/*.py"
-  - "**/*.ipynb"
 ---
 
 # Python analysis conventions
@@ -17,6 +16,5 @@ globs:
 - Marking is automatic for anything requesting a database fixture, see
   `pytest_collection_modifyitems` in `tests/conftest.py`. Mark a module explicitly only when it
   opens a connection in the test body.
-- Run `validate.py --changed` before committing analysis changes.
-- Clear notebook outputs before committing; `notebooks/legacy/` is excluded via `pyproject.toml`.
-- Export via `teralizer.exports` (`save_latex_table`/`save_csv_data`/`save_figure`), not ad-hoc writes.
+- Build reports with `uv run --directory analysis python -m teralizer.eval all` before publishing.
+- Export through the eval renderers and `teralizer.exports` (`save_latex_table`/`save_csv_data`/`save_figure`), not ad-hoc writes.
