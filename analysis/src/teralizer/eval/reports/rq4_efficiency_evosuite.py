@@ -52,25 +52,71 @@ REQUIRES = (
 )
 
 
-def _pareto_table(data: pd.DataFrame) -> Table:
+def _pareto_table(data: pd.DataFrame, project_name: str) -> Table:
+    """Build one of the side-by-side Pareto tables used by the thesis."""
+    table_info = {
+        "eqbench": (
+            "tab-pareto-eqbench",
+            r"\ToolEvoSuite{} and \ToolTeralizer{} Pareto points for \DatasetEqBench{}",
+            "Pareto points for eqbench.",
+            "tab:pareto-eqbench",
+        ),
+        "commons-utils": (
+            "tab-pareto-commons",
+            r"\ToolEvoSuite{} and \ToolTeralizer{} Pareto points for commons-utils",
+            "Pareto points for commons-utils.",
+            "tab:pareto-commons",
+        ),
+    }
+    try:
+        key, short_caption, caption, label = table_info[project_name]
+    except KeyError as error:
+        raise ValueError(f"No thesis Pareto table configured for {project_name!r}") from error
+
+    result = data[
+        data["project_name"].eq(project_name) & data["is_pareto_optimal"].eq(True)
+    ].sort_values("runtime_seconds").reset_index(drop=True)
+    result = result.assign(
+        point=np.arange(1, len(result) + 1),
+        teralizer_display=result.apply(
+            lambda row: _format_variant(row["teralizer_variant"], row["type"]),
+            axis=1,
+        ),
+        detection_display=result["detection_rate"].map(lambda value: f"{value:.1f}"),
+        runtime_display=result["runtime_seconds"].map(
+            lambda value: f"{int(round(value)):,}"
+        ),
+    )
     columns = [
-        ColumnSpec("Project", "project_name"),
-        ColumnSpec("EvoSuite budget", "evosuite_budget"),
-        ColumnSpec("Variant", "teralizer_variant"),
-        ColumnSpec("Type", "type"),
-        ColumnSpec("Runtime (s)", "runtime_seconds", "float2"),
-        ColumnSpec("Detection", "detection_rate", "float2"),
-        ColumnSpec("Detection/s", "detection_per_second", "float2"),
-        ColumnSpec("Pareto", "is_pareto_optimal"),
+        ColumnSpec("Pt.", "point", "int", "r"),
+        ColumnSpec("EvoSuite", "evosuite_budget", align="r"),
+        ColumnSpec("Teralizer", "teralizer_display", "tex", "l"),
+        ColumnSpec("Det. \\%", "detection_display", align="r"),
+        ColumnSpec("Runtime (s)", "runtime_display", align="r"),
     ]
     return Table(
-        "pareto_efficiency",
-        data,
+        key,
+        result,
         columns,
-        "EvoSuite and Teralizer Pareto efficiency points.",
-        "tab:pareto-efficiency",
+        caption,
+        label,
+        short_caption=short_caption,
+        body_style="\\tabstyle[\\footnotesize]\n\\setlength{\\tabcolsep}{3pt}",
+        floating=False,
         provenance=capture(compute_pareto_efficiency_analysis),
     )
+
+
+def _format_variant(variant: object, approach_type: object) -> str:
+    if approach_type == "ES_ONLY":
+        return "-"
+    text = str(variant)
+    if "_" in text:
+        name, tries, suffix = text.rpartition("_")
+        if suffix == "TRIES" and name.rsplit("_", 1)[-1].isdigit():
+            variant_name, count = name.rsplit("_", 1)
+            return f"{variant_name}$_{{{count}}}$"
+    return text
 
 
 def _phase_table(data: pd.DataFrame) -> Table:
@@ -491,7 +537,11 @@ def build(conn: Connection) -> RQReport:
     )
     phases = compute_evosuite_phase_statistics(get_evosuite_runtime_analysis(conn))
     stages = compute_stage_runtime_breakdown(get_teralizer_runtime_by_stage(conn))
-    tables = [_pareto_table(pareto), _phase_table(phases)]
+    tables = [
+        _pareto_table(pareto, "eqbench"),
+        _pareto_table(pareto, "commons-utils"),
+        _phase_table(phases),
+    ]
     metrics = [
         Metric(
             "rq4.pareto_points",
@@ -507,9 +557,10 @@ def build(conn: Connection) -> RQReport:
                 "The efficiency comparison contains {rq4.pareto_points} candidate points."
             ),
             tables[0],
+            tables[1],
             _efficiency_figure(pareto),
             _runtime_stage_figure(stages),
-            tables[1],
+            tables[2],
             _phase_figure(phases),
         ],
     )

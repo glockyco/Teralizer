@@ -2,10 +2,47 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 
+from teralizer.eval.render.latex import render_table
 from teralizer.eval.reports.rq4_efficiency_evosuite import (
     _efficiency_figure,
+    _pareto_table,
     _runtime_stage_figure,
 )
+
+
+def test_rq4_pareto_tables_match_thesis_keys_and_nonfloating_layout():
+    data = pd.DataFrame(
+        {
+            "project_name": ["eqbench", "eqbench", "commons-utils"],
+            "evosuite_budget": ["1s", "10s", "1s"],
+            "teralizer_variant": ["ES_ONLY", "IMPROVED_50_TRIES", "ES_ONLY"],
+            "type": ["ES_ONLY", "IMPROVED", "ES_ONLY"],
+            "runtime_seconds": [26479.0, 37457.0, 4649.0],
+            "detection_rate": [48.1, 51.4, 56.8],
+            "is_pareto_optimal": [True, True, True],
+        }
+    )
+
+    eqbench = _pareto_table(data, "eqbench")
+    commons = _pareto_table(data, "commons-utils")
+
+    assert [table.key for table in (eqbench, commons)] == [
+        "tab-pareto-eqbench",
+        "tab-pareto-commons",
+    ]
+    assert all(not table.floating for table in (eqbench, commons))
+    assert eqbench.body_style == "\\tabstyle[\\footnotesize]\n\\setlength{\\tabcolsep}{3pt}"
+    assert commons.body_style == eqbench.body_style
+
+    eqbench_tex = render_table(eqbench)
+    commons_tex = render_table(commons)
+    assert "\\begin{table}" not in eqbench_tex
+    assert "\\begin{table}" not in commons_tex
+    assert "\\captionof{table}[\\ToolEvoSuite{} and \\ToolTeralizer{} Pareto points" in eqbench_tex
+    assert "\\label{tab:pareto-eqbench}" in eqbench_tex
+    assert "1 & 1s & - & 48.1 & 26,479" in eqbench_tex
+    assert "2 & 10s & IMPROVED$_{50}$ & 51.4 & 37,457" in eqbench_tex
+    assert "\\label{tab:pareto-commons}" in commons_tex
 
 
 def test_rq4_efficiency_figure_matches_notebook_two_project_layout():
