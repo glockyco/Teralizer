@@ -528,8 +528,9 @@ public class FilterTelemetryTest {
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.TEST_NOT_PASSING, result.getReasonCode());
     }
+
     @Example
-    void nonPassingGeneralizationIgnoresFailingSiblingTestCase() {
+    void nonPassingGeneralizationRejectsFailingSiblingTestCase() {
         DSLContext dsl = DSL.using(new MockConnection(ctx -> {
             DSLContext inner = DSL.using(SQLDialect.DEFAULT);
             Field<String> f = DSL.field("test_case_name", String.class);
@@ -547,7 +548,10 @@ public class FilterTelemetryTest {
 
         FilterResult result = new NonPassingTestFilter(dsl, new TestRecord(), generalization).check();
 
-        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+        // The sibling is in the same class as the property. PIT runs the complete class and stops
+        // when any test in it fails, so the generalization cannot be used.
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.TEST_NOT_PASSING, result.getReasonCode());
     }
 
     private static String exceptionRecipeJson(String oracleExpressionType) {

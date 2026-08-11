@@ -1,13 +1,11 @@
 package teralizer.processing.filter;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 import org.jooq.generated.Tables;
 import org.jooq.generated.tables.records.GeneralizationRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import teralizer.processing.TestResult;
-import teralizer.processing.reports.SurefireReportNames;
 
 public class NonPassingTestFilter extends AbstractFilter {
 
@@ -27,9 +25,9 @@ public class NonPassingTestFilter extends AbstractFilter {
 
     @Override
     public FilterResult check() {
+        // PIT selects a test class, not one test method, and it stops when any test in that class
+        // fails before mutation. Both branches below therefore look at the complete class.
         if (this.generalizationRecord == null) {
-            // PIT requires all processed tests to pass and offers only class-level inclusion and
-            // exclusion settings, so the test-level decision covers the complete test class.
             List<String> failingTests = this.create
                 .select(Tables.JUNIT_TEST_REPORT.TEST_METHOD_NAME)
                 .from(Tables.JUNIT_TEST_REPORT)
@@ -52,10 +50,7 @@ public class NonPassingTestFilter extends AbstractFilter {
                 .and(Tables.JUNIT_TEST_REPORT.TEST_CLASS_NAME.eq(this.generalizationRecord.getClassName()))
                 .and(Tables.JUNIT_TEST_REPORT.VARIANT.eq(this.generalizationRecord.getVariant()))
                 .and(Tables.JUNIT_TEST_REPORT.RESULT.ne(TestResult.PASSED))
-                .fetchInto(String.class).stream()
-                .filter(testCaseName -> SurefireReportNames.matches(
-                    this.generalizationRecord.getMethodQualifiedName(), testCaseName))
-                .collect(Collectors.toList());
+                .fetchInto(String.class);
 
             if (!failingTests.isEmpty()) {
                 String reason = "Failing generalized tests in test class " + this.generalizationRecord.getClassQualifiedName() + ": " + String.join(", ", failingTests);
