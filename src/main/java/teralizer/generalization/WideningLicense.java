@@ -46,15 +46,25 @@ import teralizer.transformer.VariableNameCollector;
  * {@code NULL_CONCRETE}, which means the value on the operand stack at the return carried no SPF
  * expression. Three causes account for that. A computed boolean returns a bytecode literal, and a
  * literal has no attribute, so the relation lives in the path condition and this class recovers
- * it. A value read from an array or a field has no attribute because {@code symbolic.arrays} and
- * {@code symbolic.lazy} are disabled in the generated SPF configuration, so no heap location is
- * ever symbolic. A value accumulated by a loop whose trip count depends on the input is concrete,
+ * it. A value read from an array has no attribute because {@code symbolic.arrays} is off, which is
+ * the switch that selects the {@code symarrays} instruction classes that transfer element
+ * attributes. A field read is not a cause: jpf-core copies the operand attribute onto the field in
+ * {@code PutHelper.setField} and back onto the stack in {@code GETFIELD}, for primitives as well as
+ * references, so a symbolic value stored into a field and read back keeps its expression, and
+ * {@code symbolic.lazy} governs only lazy initialization of reference fields. A value accumulated
+ * by a loop whose trip count depends on the input is concrete,
  * and its path condition pins the input to a single value, so there is nothing left to generalize.
  *
  * <p>Concretization is not a leading cause. Assertions that never reach a native boundary carry a
  * null output model almost as often as those that do, so symbolic models or native peers for the
  * concretized methods would recover a small fraction of the refusals. Boxed output capture is
  * already implemented and does not recover them either.
+ *
+ * <p>Where the remaining attributes are lost is not established. {@code NULL_CONCRETE_OUTPUT_NOT_LITERAL}
+ * is the largest recorded refusal branch, and the two mechanisms once blamed for it, a field
+ * round-trip and {@code symbolic.lazy}, are ruled out by the jpf-core and jpf-symbc sources cited
+ * above. Locating the loss needs a traced execution of a refused case, not a further reading of
+ * the configuration.
  *
  * <p>Do not read the paragraphs above as a cause distribution. They describe when the license is
  * granted, not why it is refused.
