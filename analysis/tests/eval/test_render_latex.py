@@ -82,6 +82,52 @@ def test_render_table_stacks_headers_only_when_a_group_header_is_set():
     assert not any("cmidrule" in line for line in lines)
 
 
+def test_render_table_emits_the_consuming_documents_house_style():
+    table = Table(
+        key="styled",
+        df=pd.DataFrame({"p": ["x"], "a": [1], "b": [2]}),
+        columns=[
+            ColumnSpec("Project", "p"),
+            ColumnSpec("Files", "a", "int", "r", group_header="Impl"),
+            ColumnSpec("SLOC", "b", "int", "r", group_header="Impl"),
+        ],
+        caption="Long caption.",
+        label="tab:styled",
+        short_caption="Short caption",
+        body_style="\\tabstyle",
+        float_spec="H",
+        full_width=True,
+        group_header_align="r",
+    )
+    lines = render_table(table).splitlines()
+    assert lines[0] == "\\begin{table}[H]"
+    # The trailing comment keeps a stray space out of the float.
+    assert lines[1] == "  \\caption[Short caption]{Long caption.}%"
+    assert lines[3] == "  \\tabstyle"
+    assert lines[4] == (
+        "  \\begin{tabular*}{\\textwidth}"
+        "{@{\\hspace{\\tabcolsep}\\extracolsep{\\fill}}lrr}"
+    )
+    assert "  \\end{tabular*}" in lines
+    assert any("\\multicolumn{2}{r}{Impl}" in line for line in lines)
+
+
+def test_render_table_defaults_stay_on_the_plain_centred_float():
+    table = Table(
+        key="plain",
+        df=pd.DataFrame({"a": [1]}),
+        columns=[ColumnSpec("A", "a", "int")],
+        caption="Cap",
+        label="tab:plain",
+    )
+    lines = render_table(table).splitlines()
+    assert lines[0] == "\\begin{table}"
+    assert lines[1] == "  \\caption{Cap}"
+    assert lines[3] == "  \\centering"
+    assert lines[4] == "  \\begin{tabular}{l}"
+    assert not any("tabular*" in line for line in lines)
+
+
 def test_render_table_spans_and_rules_group_headers_shared_by_columns():
     table = Table(
         key="spanned",

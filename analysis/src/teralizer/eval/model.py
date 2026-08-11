@@ -54,6 +54,14 @@ class Table:
     group_by: str | None = None  # column that drives midrules / section splits
     group_style: str = "midrule"
     latex_resize_to_width: bool = False
+    # A consuming document sets its own house style. These carry the parts of it
+    # that the generator must emit itself, because they sit inside the float it
+    # writes; everything else stays in the document's preamble.
+    short_caption: str | None = None  # \caption[short]{caption} for the list of tables
+    body_style: str = "\\centering"  # e.g. a document's own \tabstyle macro
+    float_spec: str | None = None  # placement, e.g. H or tbp
+    full_width: bool = False  # tabular* stretched to \textwidth
+    group_header_align: str = "c"  # alignment of spanning group headers
     note: str | None = None
     provenance: "Provenance | None" = None
 

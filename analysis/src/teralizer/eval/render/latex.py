@@ -30,7 +30,7 @@ def _is_empty_group(value: object) -> bool:
         return False
 
 
-def _group_header_rows(columns: Sequence[ColumnSpec]) -> list[str]:
+def _group_header_rows(columns: Sequence[ColumnSpec], align: str) -> list[str]:
     """Header cells for the group row, spanning runs of columns that share a header.
 
     A run of two or more becomes one `\\multicolumn` cell underlined by a
@@ -53,7 +53,7 @@ def _group_header_rows(columns: Sequence[ColumnSpec]) -> list[str]:
         elif span == 1:
             cells.append(header)
         else:
-            cells.append(f"\\multicolumn{{{span}}}{{c}}{{{header}}}")
+            cells.append(f"\\multicolumn{{{span}}}{{{align}}}{{{header}}}")
             rules.append(f"\\cmidrule(lr){{{start + 1}-{end}}}")
         start = end
     rows = ["  " + " & ".join(cells) + " \\\\"]
@@ -64,20 +64,35 @@ def _group_header_rows(columns: Sequence[ColumnSpec]) -> list[str]:
 
 def render_table(table: Table) -> str:
     cols = "".join(_ALIGN[c.align] for c in table.columns)
+    if table.short_caption is None:
+        caption = f"  \\caption{{{table.caption}}}"
+    else:
+        # The trailing comment keeps the line break out of the float, which would
+        # otherwise put a stray space between the caption and its label.
+        caption = f"  \\caption[{table.short_caption}]{{{table.caption}}}%"
     lines = [
-        "\\begin{table}",
-        f"  \\caption{{{table.caption}}}",
+        "\\begin{table}" + (f"[{table.float_spec}]" if table.float_spec else ""),
+        caption,
         f"  \\label{{{table.label}}}",
-        "  \\centering",
+        f"  {table.body_style}",
     ]
     if table.latex_resize_to_width:
         lines.append("  \\resizebox{\\textwidth}{!}{%")
     header_rows: list[str] = []
     if any(c.group_header is not None for c in table.columns):
-        header_rows += _group_header_rows(table.columns)
+        header_rows += _group_header_rows(table.columns, table.group_header_align)
     header_rows.append("  " + " & ".join(c.header for c in table.columns) + " \\\\")
+    if table.full_width:
+        # \extracolsep{\fill} spreads the slack between columns, so the table
+        # occupies the text width instead of being scaled down to fit it.
+        opening = (
+            "  \\begin{tabular*}{\\textwidth}"
+            f"{{@{{\\hspace{{\\tabcolsep}}\\extracolsep{{\\fill}}}}{cols}}}"
+        )
+    else:
+        opening = f"  \\begin{{tabular}}{{{cols}}}"
     lines += [
-        f"  \\begin{{tabular}}{{{cols}}}",
+        opening,
         "  \\toprule",
         *header_rows,
         "  \\midrule",
@@ -105,7 +120,7 @@ def render_table(table: Table) -> str:
         if indent:
             cells[0] = "\\quad " + cells[0]
         lines.append("  " + " & ".join(cells) + " \\\\")
-    lines += ["  \\bottomrule", "  \\end{tabular}"]
+    lines += ["  \\bottomrule", "  \\end{tabular*}" if table.full_width else "  \\end{tabular}"]
     if table.latex_resize_to_width:
         lines.append("  }")
     lines += ["\\end{table}", ""]
