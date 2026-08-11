@@ -411,3 +411,6 @@ analysis/build/
 
 # direnv loads the flake dev shell and caches it here.
 .direnv/
+
+# Exclusive run lock, held only while a pipeline run is in flight.
+.teralizer-run.lock/
