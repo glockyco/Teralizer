@@ -5,16 +5,15 @@
 # computed automatically - no hardcoded values.
 #
 # Usage:
-#   ./scripts/collect-disk-metrics.sh [ARCHIVE_DIR]
+#   ./scripts/packaging/collect-disk-metrics.sh [ARCHIVE_DIR]
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)
 
 ARCHIVE_DIR="${1:-$HOME/zenodo-upload-test}"
-DEV_DIR="/Users/joaichberger/Projects/test-generalization-dev"
-PROD_DIR="/Users/joaichberger/Projects/test-generalization"
+DEV_DIR="${DEV_DIR:-${ROOT_DIR}-dev}"
+PROD_DIR="${PROD_DIR:-$ROOT_DIR}"
 
 # Format bytes to human readable (GB/MB)
 format_size() {
@@ -169,23 +168,23 @@ echo "| Component | Version | Source |"
 echo "|-----------|---------|--------|"
 
 # PostgreSQL from docker-compose.yml
-pg_version=$(grep 'image: postgres:' "$REPO_ROOT/replication/docker-compose.yml" 2>/dev/null | sed 's/.*postgres://' | tr -d ' ' || echo "N/A")
+pg_version=$(grep 'image: postgres:' "$ROOT_DIR/replication/docker-compose.yml" 2>/dev/null | sed 's/.*postgres://' | tr -d ' ' || echo "N/A")
 echo "| PostgreSQL | $pg_version | docker-compose.yml |"
 
 # Adminer from docker-compose.yml
-adminer_version=$(grep 'image: adminer:' "$REPO_ROOT/replication/docker-compose.yml" 2>/dev/null | sed 's/.*adminer://' | tr -d ' ' || echo "N/A")
+adminer_version=$(grep 'image: adminer:' "$ROOT_DIR/replication/docker-compose.yml" 2>/dev/null | sed 's/.*adminer://' | tr -d ' ' || echo "N/A")
 echo "| Adminer | $adminer_version | docker-compose.yml |"
 
 # Python from Dockerfile.analysis
-python_version=$(grep '^FROM python:' "$REPO_ROOT/replication/Dockerfile.analysis" 2>/dev/null | sed 's/FROM python://' | sed 's/-.*//' || echo "N/A")
+python_version=$(grep '^FROM python:' "$ROOT_DIR/replication/Dockerfile.analysis" 2>/dev/null | sed 's/FROM python://' | sed 's/-.*//' || echo "N/A")
 echo "| Python | $python_version | Dockerfile.analysis |"
 
 # JupyterLab from uv.lock
-jupyter_version=$(grep -A1 'name = "jupyterlab"' "$REPO_ROOT/analysis/uv.lock" 2>/dev/null | grep 'version' | sed 's/.*= "//' | sed 's/"//' || echo "N/A")
+jupyter_version=$(grep -A1 'name = "jupyterlab"' "$ROOT_DIR/analysis/uv.lock" 2>/dev/null | grep 'version' | sed 's/.*= "//' | sed 's/"//' || echo "N/A")
 echo "| JupyterLab | $jupyter_version | uv.lock |"
 
 # Gradle and JDK from Dockerfile
-gradle_line=$(grep '^FROM gradle:' "$REPO_ROOT/Dockerfile" 2>/dev/null | sed 's/FROM gradle://' || echo "")
+gradle_line=$(grep '^FROM gradle:' "$ROOT_DIR/Dockerfile" 2>/dev/null | sed 's/FROM gradle://' || echo "")
 if [[ -n "$gradle_line" ]]; then
     gradle_version=$(echo "$gradle_line" | sed 's/-.*//')
     jdk_version=$(echo "$gradle_line" | sed 's/.*-jdk//' | sed 's/[^0-9].*//')
@@ -197,5 +196,5 @@ else
 fi
 
 # Maven from Dockerfile
-maven_version=$(grep 'MAVEN_VERSION=' "$REPO_ROOT/Dockerfile" 2>/dev/null | sed 's/.*MAVEN_VERSION=//' | tr -d ' ' || echo "N/A")
+maven_version=$(grep 'MAVEN_VERSION=' "$ROOT_DIR/Dockerfile" 2>/dev/null | sed 's/.*MAVEN_VERSION=//' | tr -d ' ' || echo "N/A")
 echo "| Maven | $maven_version | Dockerfile |"

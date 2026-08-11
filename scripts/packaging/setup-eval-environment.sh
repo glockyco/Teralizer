@@ -7,7 +7,7 @@
 # extracting to a test location.
 #
 # Usage:
-#   ./scripts/setup-eval-environment.sh [OPTIONS]
+#   ./scripts/packaging/setup-eval-environment.sh [OPTIONS]
 #
 # Options:
 #   --with-projects PATH       Symlink projects directory from PATH
@@ -26,15 +26,15 @@
 #
 # Examples:
 #   # Basic setup (no projects/data)
-#   ./scripts/setup-eval-environment.sh
+#   ./scripts/packaging/setup-eval-environment.sh
 #
 #   # With merged projects from both repos
-#   ./scripts/setup-eval-environment.sh \
+#   ./scripts/packaging/setup-eval-environment.sh \
 #       --merge-projects ~/Projects/test-generalization/projects \
 #                        ~/Projects/test-generalization-dev/projects
 #
 #   # Full setup with projects and data
-#   ./scripts/setup-eval-environment.sh \
+#   ./scripts/packaging/setup-eval-environment.sh \
 #       --merge-projects ~/Projects/test-generalization/projects \
 #                        ~/Projects/test-generalization-dev/projects \
 #       --merge-data ~/Projects/test-generalization/data \
@@ -44,7 +44,7 @@
 set -euo pipefail
 
 # Configuration
-GITHUB_REPO="git@github.com:glockyco/test-generalization.git"
+GITHUB_REPO="https://github.com/glockyco/test-generalization.git"
 CLONE_DIR="/tmp/teralizer-clean"
 ARCHIVE_PATH="/tmp/teralizer-replication.zip"
 EVAL_DIR="/tmp/teralizer-eval"

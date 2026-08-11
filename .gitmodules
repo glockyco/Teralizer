@@ -1,8 +1,8 @@
 [submodule "jpf-symbc"]
 	path = jpf-symbc
-	url = git@github.com:glockyco/jpf-symbc.git
+	url = https://github.com/glockyco/jpf-symbc.git
 	branch = gradle-build
 [submodule "projects/EqBench"]
 	path = projects/EqBench
-	url = git@github.com:glockyco/EqBench.git
+	url = https://github.com/glockyco/EqBench.git
 	branch = test-generalization

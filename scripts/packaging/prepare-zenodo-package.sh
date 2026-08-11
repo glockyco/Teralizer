@@ -11,7 +11,7 @@
 #   7. teralizer-data-extended.zip             - Extended dataset logs and tool reports
 #
 # USAGE:
-#   ./scripts/prepare-zenodo-package.sh [OPTIONS]
+#   ./scripts/packaging/prepare-zenodo-package.sh [OPTIONS]
 #
 # OPTIONS:
 #   --output-dir DIR         Output directory for archives (default: ~/zenodo-upload)
@@ -31,14 +31,14 @@
 #
 # EXAMPLES:
 #   # Dry run to preview what would be created
-#   ./scripts/prepare-zenodo-package.sh --dry-run \
+#   ./scripts/packaging/prepare-zenodo-package.sh --dry-run \
 #       --projects-primary ~/Projects/test-generalization/projects \
 #       --projects-extended ~/Projects/test-generalization-dev/projects \
 #       --data-primary ~/Projects/test-generalization/data \
 #       --data-extended ~/Projects/test-generalization-dev/data
 #
 #   # Create all archives except full extended (saves time/space)
-#   ./scripts/prepare-zenodo-package.sh \
+#   ./scripts/packaging/prepare-zenodo-package.sh \
 #       --projects-primary ~/Projects/test-generalization/projects \
 #       --projects-extended ~/Projects/test-generalization-dev/projects \
 #       --data-primary ~/Projects/test-generalization/data \
@@ -46,7 +46,7 @@
 #       --skip-extended-full
 #
 #   # Create only results and core archives (no projects or data)
-#   ./scripts/prepare-zenodo-package.sh
+#   ./scripts/packaging/prepare-zenodo-package.sh
 
 set -euo pipefail
 
