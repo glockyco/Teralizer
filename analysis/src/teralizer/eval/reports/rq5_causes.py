@@ -225,9 +225,15 @@ def _fetch_breakdown(conn: Connection) -> pd.DataFrame:
 def build(conn: Connection) -> RQReport:
     filtering = build_filtering_table(
         _fetch_filtering(conn),
-        key="rq5_filtering",
+        key="tab-exclusions-filtering",
         label="tab:exclusions-filtering",
-        caption="Filter rejection rates by level and filter for the controlled dataset.",
+        caption=(
+            "Filtering results for tests and assertions in the "
+            "\\DatasetsCommons{} and \\DatasetsEqBenchEs{} projects."
+        ),
+        short_caption="Filtering decisions by level and filter",
+        body_style="\\tabstyle",
+        full_width=True,
     )
     filtering = replace(
         filtering, provenance=capture(_fetch_filtering, query=FILTERING_SQL)
@@ -235,12 +241,16 @@ def build(conn: Connection) -> RQReport:
 
     breakdown = build_breakdown_table(
         _fetch_breakdown(conn),
-        key="rq5_breakdown",
+        key="tab-exclusions-breakdown",
         label="tab:exclusions-breakdown",
         caption=(
-            "Test, assertion, and generalization exclusions by filtering versus "
-            "failures for the controlled dataset."
+            "Exclusion results for tests, assertions, and generalizations in the "
+            "\\DatasetsCommons{} and \\DatasetsEqBenchEs{} projects."
         ),
+        short_caption="Inclusion, filtering, and failure counts by level",
+        body_style="\\tabstyle\\setlength{\\tabcolsep}{3pt}",
+        full_width=True,
+        group_header_align="r",
         include_strategy=True,
     )
     breakdown = replace(

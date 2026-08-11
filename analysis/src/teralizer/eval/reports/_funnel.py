@@ -612,17 +612,53 @@ def _stage_bands(survivor_sets: list[set[int]]) -> list[StageBand]:
 
 
 def _build_table(df: pd.DataFrame, note: str) -> Table:
+    display = df.copy()
+    cause_macros = {
+        "PIT execution error during mutation testing": (
+            r"\ToolPit{} execution error during mutation testing"
+        ),
+        "PIT reports not found": r"\ToolPit{} reports not found",
+        "failed to process PIT reports": r"failed to process \ToolPit{} reports",
+    }
+    timeout_macros = {
+        "per original test suite": r"per \VariantOriginal{} test suite",
+        "per initial test suite": r"per \VariantInitial{} test suite",
+        "per generalized test suite": r"per \VariantImprovedC{} test suite",
+    }
+
+    def cause_display(cause: object) -> str:
+        text = str(cause)
+        if text in cause_macros:
+            return cause_macros[text]
+        for raw, macro in timeout_macros.items():
+            if raw in text:
+                return text.replace(raw, macro)
+        return text
+
+    display["cause_display"] = display["cause"].map(cause_display)
     return Table(
-        key="tab:processing-failures",
-        df=df,
+        key="tab-processing-failures",
+        df=display,
         columns=[
             ColumnSpec("Stage", "stage"),
             ColumnSpec("Type", "type"),
-            ColumnSpec("Cause", "cause"),
+            ColumnSpec("Cause", "cause_display", csv_source="cause"),
             ColumnSpec("Count", "count", fmt="int", align="r"),
         ],
-        caption="Project-level processing failures by funnel stage and cause.",
+        caption=(
+            "Project-level exclusions by stage and cause for the "
+            "\\VariantImprovedC{} generalization strategy in RepoReapers projects. "
+            "Internal causes are due to configured resource limits or current "
+            "limitations of \\ToolTeralizer{}. External causes are due to "
+            "\\ToolTeralizer{}'s dependencies (i.e., JUnit, Spoon, "
+            "\\ToolJPF{} / \\ToolSPF{}, \\ToolJacoco{}, and \\ToolPit{}). "
+            "Mixed causes are influenced by both internal and external factors."
+        ),
         label="tab:processing-failures",
+        short_caption="RepoReapers exclusions by stage and cause",
+        body_style="\\tabstyle",
+        float_spec="tbp",
+        full_width=True,
         group_by="stage",
         note=note,
         provenance=capture(build_funnel, query=_PROJECT_SIGNALS_SQL),

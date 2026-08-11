@@ -25,13 +25,16 @@ def test_filtering_table_shapes_columns_and_percentages():
         "level",
         "filter",
         "total",
-        "accept_pct",
-        "defer_pct",
-        "reject_pct",
+        "accept_display",
+        "defer_display",
+        "reject_display",
     ]
     row = table.df.set_index("filter").loc["NonPassingTest"]
     assert row["reject_pct"] == 0.12
     assert row["accept_pct"] == 0.88
+    assert row["accept_display"] == "88 (88.0%)"
+    assert row["defer_display"] == "-"
+    assert table.columns[3].csv_source == "accept"
 
 
 def test_breakdown_table_percentages_over_total():
@@ -52,12 +55,17 @@ def test_breakdown_table_percentages_over_total():
     assert [c.source for c in table.columns] == [
         "level",
         "total",
+        "included_display",
+        "filtering_display",
+        "failures_display",
+    ]
+    assert row["included_display"] == "33,385 (40.8%)"
+    assert row["filtering_display"] == "40,583 (49.6%)"
+    assert row["failures_display"] == "7,842 (9.6%)"
+    assert [c.csv_source for c in table.columns[2:]] == [
         "included",
-        "included_pct",
         "filtering",
-        "filtering_pct",
         "failures",
-        "failures_pct",
     ]
 
 
@@ -75,8 +83,10 @@ def test_breakdown_table_with_strategy_column():
     table = build_breakdown_table(
         df, key="b", label="tab:z", caption="C", include_strategy=True
     )
-    assert table.columns[0].source == "strategy"
+    assert table.columns[0].source == "strategy_display"
+    assert table.columns[0].csv_source == "strategy"
     assert table.columns[1].source == "level"
+    assert table.df.iloc[0]["strategy_display"] == r"\VariantAll{}"
     assert table.group_by == "level"
     # two generalization rows survive (per strategy), not collapsed
     assert (table.df["level"] == "Generalization").sum() == 2

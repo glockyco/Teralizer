@@ -18,6 +18,14 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
     assert any("exclusions-filtering" in lbl for lbl in labels)
     assert "tab:jpf-exception-causes" in labels
     assert "tab:mut-choice-sensitivity" in labels
+    assert {table.key for table in report.tables()} == {
+        "tab-processing-failures",
+        "tab-exclusions-breakdown-extended",
+        "tab-exclusions-filtering-extended",
+        "rq6_jpf_exception_causes",
+        "rq6_mut_choice_sensitivity",
+        "rq6_widening_refusals",
+    }
     choice = next(
         table
         for table in report.tables()

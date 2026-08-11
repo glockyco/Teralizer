@@ -64,6 +64,16 @@ def collapse_mechanisms(df: pd.DataFrame) -> pd.DataFrame:
 
 _VARIANT_HEAD = {"ORIGINAL": 0, "INITIAL": 1, "SHARED": 2, "BASELINE": 3}
 _VARIANT_GROUP = {"NAIVE": 4, "IMPROVED": 5}
+_VARIANT_MACROS = {
+    "All": r"\VariantAll{}",
+    "BASELINE": r"\VariantBaseline{}",
+    "NAIVE_10_TRIES": r"\VariantNaiveA{}",
+    "NAIVE_50_TRIES": r"\VariantNaiveB{}",
+    "NAIVE_200_TRIES": r"\VariantNaiveC{}",
+    "IMPROVED_10_TRIES": r"\VariantImprovedA{}",
+    "IMPROVED_50_TRIES": r"\VariantImprovedB{}",
+    "IMPROVED_200_TRIES": r"\VariantImprovedC{}",
+}
 _LEVEL_ORDER = {"Test": 0, "Assertion": 1, "Generalization": 2}
 # Paper/table display order for filters. This is the hand-curated order used in
 # the published tables, deliberately NOT the pipeline application order.
@@ -84,6 +94,11 @@ def filter_sort_key(filter_name: str) -> int:
     return _FILTER_ORDER.get(filter_name, 99)
 
 
+def _count_with_pct(count: object, pct: object) -> str:
+    """Render a publication cell while leaving raw counts and rates in the frame."""
+    return f"{int(count):,} ({float(pct) * 100:.1f}%)"
+
+
 def variant_sort_key(variant: str) -> int:
     """Canonical rank: baseline first, then naive then improved, each ascending by tries."""
     if variant in _VARIANT_HEAD:
@@ -95,12 +110,25 @@ def variant_sort_key(variant: str) -> int:
 
 
 def build_filtering_table(
-    df: pd.DataFrame, *, key: str, label: str, caption: str
+    df: pd.DataFrame,
+    *,
+    key: str,
+    label: str,
+    caption: str,
+    short_caption: str | None = None,
+    body_style: str | None = None,
+    full_width: bool = False,
 ) -> Table:
     """df columns: level, filter, total, accept, defer, reject (integer counts)."""
     out = df.copy()
     for decision in ("accept", "defer", "reject"):
         out[f"{decision}_pct"] = out[decision] / out["total"]
+        out[f"{decision}_display"] = [
+            "-"
+            if decision == "defer" and int(count) == 0
+            else _count_with_pct(count, pct)
+            for count, pct in zip(out[decision], out[f"{decision}_pct"], strict=True)
+        ]
     out = out.assign(
         _lvl=out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99)),
         _fil=out["filter"].map(filter_sort_key),
@@ -114,12 +142,26 @@ def build_filtering_table(
         ColumnSpec("Level", "level"),
         ColumnSpec("Filter Name", "filter"),
         ColumnSpec("Total", "total", fmt="count", align="r"),
-        ColumnSpec("Accept", "accept_pct", fmt="pct1", align="r"),
-        ColumnSpec("Defer", "defer_pct", fmt="pct1", align="r"),
-        ColumnSpec("Reject", "reject_pct", fmt="pct1", align="r"),
+        ColumnSpec(
+            "Accept", "accept_display", fmt="str", align="r", csv_source="accept"
+        ),
+        ColumnSpec(
+            "Defer", "defer_display", fmt="str", align="r", csv_source="defer"
+        ),
+        ColumnSpec(
+            "Reject", "reject_display", fmt="str", align="r", csv_source="reject"
+        ),
     ]
     return Table(
-        key=key, df=out, columns=columns, caption=caption, label=label, group_by="level"
+        key=key,
+        df=out,
+        columns=columns,
+        caption=caption,
+        label=label,
+        group_by="level",
+        short_caption=short_caption,
+        body_style="\\centering" if body_style is None else body_style,
+        full_width=full_width,
     )
 
 
@@ -131,27 +173,46 @@ def build_breakdown_table(
     caption: str,
     include_strategy: bool = False,
     outcomes: Sequence[Outcome] = LEGACY_OUTCOMES,
+    short_caption: str | None = None,
+    body_style: str | None = None,
+    full_width: bool = False,
+    group_header_align: str = "c",
 ) -> Table:
     """df columns: level, total, one column per outcome (and optional strategy)."""
     out = df.copy()
     for outcome in outcomes:
         out[f"{outcome.column}_pct"] = out[outcome.column] / out["total"]
+        out[f"{outcome.column}_display"] = [
+            _count_with_pct(count, pct)
+            for count, pct in zip(
+                out[outcome.column], out[f"{outcome.column}_pct"], strict=True
+            )
+        ]
     columns = [
         ColumnSpec("Level", "level"),
         ColumnSpec("Total", "total", fmt="count", align="r"),
     ]
     for outcome in outcomes:
-        columns.append(
-            ColumnSpec(outcome.header, outcome.column, fmt="count", align="r")
-        )
+        group_header = "Excluded" if outcome.column in {"filtering", "failures"} else None
         columns.append(
             ColumnSpec(
-                outcome.pct_header, f"{outcome.column}_pct", fmt="pct1", align="r"
+                outcome.header,
+                f"{outcome.column}_display",
+                fmt="str",
+                align="r",
+                group_header=group_header,
+                csv_source=outcome.column,
             )
         )
     group_by = None
     if include_strategy:
-        columns = [ColumnSpec("Strategy", "strategy"), *columns]
+        out["strategy_display"] = out["strategy"].map(
+            lambda value: _VARIANT_MACROS.get(str(value), str(value))
+        )
+        columns = [
+            ColumnSpec("Strategy", "strategy_display", csv_source="strategy"),
+            *columns,
+        ]
         group_by = "level"
     if include_strategy:
         out = out.assign(
@@ -170,4 +231,8 @@ def build_breakdown_table(
         caption=caption,
         label=label,
         group_by=group_by,
+        short_caption=short_caption,
+        body_style="\\centering" if body_style is None else body_style,
+        full_width=full_width,
+        group_header_align=group_header_align,
     )

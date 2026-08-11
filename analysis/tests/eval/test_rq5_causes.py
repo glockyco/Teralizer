@@ -31,6 +31,10 @@ def test_rq5_has_breakdown_and_filtering_tables():
     labels = {t.label for t in report.tables()}
     assert any("exclusions-breakdown" in lbl for lbl in labels)
     assert any("exclusions-filtering" in lbl for lbl in labels)
+    assert {table.key for table in report.tables()} == {
+        "tab-exclusions-breakdown",
+        "tab-exclusions-filtering",
+    }
 
 
 def test_rq5_breakdown_levels_and_nonnegative_counts():

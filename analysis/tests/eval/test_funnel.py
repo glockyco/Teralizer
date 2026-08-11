@@ -6,6 +6,25 @@ from teralizer.eval.reports import _funnel
 
 # Keep the database-specific integration assertions below separate from the
 # pure funnel arithmetic checks so failures identify the broken contract.
+def test_processing_table_keeps_raw_causes_for_csv():
+    table = _funnel._build_table(
+        pd.DataFrame(
+            {
+                "stage": ["5"],
+                "type": ["External"],
+                "cause": ["PIT execution error during mutation testing"],
+                "count": [2],
+            }
+        ),
+        "note",
+    )
+    assert table.df.iloc[0]["cause"] == "PIT execution error during mutation testing"
+    assert table.df.iloc[0]["cause_display"] == (
+        r"\ToolPit{} execution error during mutation testing"
+    )
+    assert table.columns[2].csv_source == "cause"
+
+
 def test_no_uncoded_attributions(funnel_result):
     result = funnel_result
     assert result.uncoded_projects == [], (

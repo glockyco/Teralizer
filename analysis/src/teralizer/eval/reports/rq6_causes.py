@@ -321,12 +321,14 @@ def build(conn: Connection) -> RQReport:
 
     breakdown = build_breakdown_table(
         collapse_mechanisms(breakdown_data),
-        key="rq6_breakdown",
+        key="tab-exclusions-breakdown-extended",
         label="tab:exclusions-breakdown-extended",
-        caption=(
-            "Eligible test, assertion, and generalization outcomes by filtering "
-            "versus failures for the real-world dataset."
+        caption="Exclusion results for \\VariantImprovedC{} in the RepoReapers projects.",
+        short_caption=(
+            "\\VariantImprovedC{} inclusion, filtering, and failure counts in RepoReapers"
         ),
+        body_style="\\tabstyle",
+        full_width=True,
         include_strategy=False,
     )
     breakdown = replace(
@@ -336,12 +338,14 @@ def build(conn: Connection) -> RQReport:
     filtering_data = _fetch_filtering(conn, variant)
     filtering = build_filtering_table(
         filtering_data,
-        key="rq6_filtering",
+        key="tab-exclusions-filtering-extended",
         label="tab:exclusions-filtering-extended",
-        caption=(
-            "Distinct eligible entities receiving each filter decision, by level "
-            "and filter."
+        caption="Filtering results for \\VariantImprovedC{} in the RepoReapers projects.",
+        short_caption=(
+            "RepoReapers filtering decisions for \\VariantImprovedC{} by level and filter"
         ),
+        body_style="\\tabstyle",
+        full_width=True,
     )
     filtering = replace(
         filtering, provenance=capture(_fetch_filtering, query=FILTERING_SQL)
