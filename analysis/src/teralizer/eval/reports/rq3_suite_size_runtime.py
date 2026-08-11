@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import re
-from typing import cast
-
 import numpy as np
 import pandas as pd
 from sqlalchemy.engine import Connection
 
-from teralizer.eval.data import Required, read_sql
+from teralizer.eval.data import Required
 from teralizer.eval.model import (
     ColumnSpec,
     Figure,
@@ -21,6 +19,17 @@ from teralizer.eval.model import (
 )
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
+from teralizer.exports import get_project_type
+from teralizer.rq2_test_suite_effects import (
+    compute_line_count_change_statistics,
+    compute_runtime_change_statistics,
+    compute_test_suite_change_statistics,
+    compute_test_vs_generalization_runtime_statistics,
+    get_line_count_changes_by_project_variant,
+    get_runtime_changes_by_project_variant,
+    get_test_count_changes_by_project_variant,
+    get_test_vs_generalization_runtime_comparison,
+)
 from teralizer.plotting import (
     FIGURE_CONFIG,
     calculate_label_offset,
@@ -51,67 +60,40 @@ REQUIRES = (
 
 
 def _effects(conn: Connection, unit: str) -> pd.DataFrame:
-    columns = {
-        "test": (
-            "project_name",
-            "a_variant",
-            "b_variant",
-            "tests_before",
-            "added_tests",
-            "removed_tests",
-            "tests_after",
-            "tests_delta",
-            "tests_delta_pct",
-        ),
-        "line": (
-            "project_name",
-            "a_variant",
-            "b_variant",
-            "lines_before",
-            "added_lines",
-            "removed_lines",
-            "lines_after",
-            "lines_delta",
-            "lines_delta_pct",
-        ),
-        "runtime": (
-            "project_name",
-            "a_variant",
-            "b_variant",
-            "runtime_before",
-            "added_runtime",
-            "removed_runtime",
-            "runtime_after",
-            "runtime_delta",
-            "runtime_delta_pct",
-        ),
-    }[unit]
-    raw = read_sql(
-        conn,
-        "SELECT * FROM mv_generalization_effects WHERE a_variant = 'ORIGINAL' AND b_variant IN ('NAIVE_200_TRIES', 'IMPROVED_200_TRIES')",
+    if unit == "test":
+        result = compute_test_suite_change_statistics(
+            get_test_count_changes_by_project_variant(conn, list(VARIANTS))
+        )
+    elif unit == "line":
+        result = compute_line_count_change_statistics(
+            get_line_count_changes_by_project_variant(conn, list(VARIANTS))
+        )
+    elif unit == "runtime":
+        result = compute_runtime_change_statistics(
+            get_runtime_changes_by_project_variant(conn, list(VARIANTS))
+        )
+    else:
+        raise ValueError(f"unknown effects unit: {unit}")
+
+    # The shared computation establishes corpus order; stabilize each project's
+    # rows in the thesis's Naive-then-Improved order without replacing that order
+    # with lexical project names.
+    project_order, _ = pd.factorize(result["project_name"], sort=False)
+    variant_order = result["b_variant"].map(
+        {variant: index for index, variant in enumerate(VARIANTS)}
+    ).fillna(len(VARIANTS))
+    return (
+        result.assign(_project_order=project_order, _variant_order=variant_order)
+        .sort_values(["_project_order", "_variant_order"], kind="stable")
+        .drop(columns=["_project_order", "_variant_order"])
+        .reset_index(drop=True)
     )
-    result = cast(pd.DataFrame, raw[list(columns)].copy())
-    for column in columns[3:]:
-        result[column] = cast(
-            pd.Series, pd.to_numeric(result[column], errors="coerce")
-        ).fillna(0)
-    return result.sort_values(["project_name", "b_variant"]).reset_index(drop=True)
 
 
 def _runtime_overhead(conn: Connection) -> pd.DataFrame:
-    query = """
-        SELECT variant,
-               avg(t_runtime * 1000) AS mean_t_runtime_ms,
-               avg(g_runtime * 1000) AS mean_g_runtime_ms,
-               avg(runtime_diff * 1000) AS mean_runtime_diff_ms,
-               avg(g_runtime) / NULLIF(avg(t_runtime), 0) AS ratio_of_mean_runtimes,
-               min(tries) AS tries,
-               avg(runtime_diff_per_try * 1000) AS mean_runtime_diff_per_try_ms
-        FROM mv_runtime_comparison_test_vs_generalization
-        GROUP BY variant, variant_order
-        ORDER BY variant_order
-    """
-    return read_sql(conn, query)
+    return compute_test_vs_generalization_runtime_statistics(
+        get_test_vs_generalization_runtime_comparison(conn)
+    )
 
 
 def _effects_table(key: str, df: pd.DataFrame, unit: str, label: str) -> Table:
@@ -133,23 +115,60 @@ def _effects_table(key: str, df: pd.DataFrame, unit: str, label: str) -> Table:
         .str.replace("-default", "", regex=False)
         .replace({"commons-utils": "commons-utils-dev"})
     )
+    # The legacy tables separate the EqBench, Commons-ES, and Commons-dev rows.
+    result["project_group"] = result["project_name"].map(get_project_type)
     numeric_fmt = "count" if unit in {"test", "line"} else "float2"
+    group_header = {
+        "test": "Tests",
+        "line": "Lines",
+        "runtime": "Runtime (in seconds)",
+    }[unit]
     columns = [
         ColumnSpec("Project", "display_project"),
         ColumnSpec("Variant", "b_variant"),
-        ColumnSpec("Before", f"{prefix}_before", numeric_fmt),
-        ColumnSpec("Added", f"added_{prefix}", numeric_fmt),
-        ColumnSpec("Removed", f"removed_{prefix}", numeric_fmt),
-        ColumnSpec("After", f"{prefix}_after", numeric_fmt),
-        ColumnSpec("Delta", "delta_display"),
-        ColumnSpec("Delta %", "delta_pct_display"),
+        ColumnSpec(
+            "Before", f"{prefix}_before", numeric_fmt, "r", group_header=group_header
+        ),
+        ColumnSpec(
+            "Added", f"added_{prefix}", numeric_fmt, "r", group_header=group_header
+        ),
+        ColumnSpec(
+            "Removed", f"removed_{prefix}", numeric_fmt, "r", group_header=group_header
+        ),
+        ColumnSpec(
+            "After", f"{prefix}_after", numeric_fmt, "r", group_header=group_header
+        ),
+        ColumnSpec("Delta", "delta_display", align="r", group_header=group_header),
+        ColumnSpec(
+            "Delta \\%", "delta_pct_display", align="r", group_header=group_header
+        ),
     ]
+    if unit == "runtime":
+        caption = "Test suite runtime before and after generalization, with changes, per project."
+        short_caption = "Test-suite runtime additions, removals, and deltas after generalization"
+        body_style = "\\tabstyle\n\\setlength{\\tabcolsep}{3pt}"
+        float_spec = "tbp"
+    elif unit == "test":
+        caption = "Number of tests before and after generalization, with changes, per project."
+        short_caption = "Test count additions, removals, and deltas after generalization"
+        body_style = "\\tabstyle"
+        float_spec = None
+    else:
+        caption = "Number of test lines before and after generalization, with changes, per project."
+        short_caption = "Test-line additions, removals, and deltas after generalization"
+        body_style = "\\tabstyle"
+        float_spec = None
     return Table(
         key,
         result,
         columns,
-        f"{unit.title()} changes per project and variant.",
+        caption,
         label,
+        group_by="project_group",
+        short_caption=short_caption,
+        body_style=body_style,
+        float_spec=float_spec,
+        full_width=True,
         provenance=capture(_effects),
     )
 
@@ -242,10 +261,10 @@ def build(conn: Connection) -> RQReport:
     runtimes = _effects(conn, "runtime")
     overhead = _runtime_overhead(conn)
     tables = [
-        _effects_table("tests_per_project", tests, "test", "tab:tests-per-project"),
-        _effects_table("lines_per_project", lines, "line", "tab:lines-per-project"),
+        _effects_table("tab-tests-per-project", tests, "test", "tab:tests-per-project"),
+        _effects_table("tab-lines-per-project", lines, "line", "tab:lines-per-project"),
         _effects_table(
-            "runtime_per_project", runtimes, "runtime", "tab:runtime-per-project"
+            "tab-runtime-per-project", runtimes, "runtime", "tab:runtime-per-project"
         ),
         _overhead_table(overhead),
     ]

@@ -13,15 +13,15 @@ def test_rq3_effects_preserve_thesis_test_counts():
     engine = create_engine("sqlite://")
     frame = pd.DataFrame(
         {
-            "project_name": ["eqbench-es-1s"],
-            "a_variant": ["ORIGINAL"],
-            "b_variant": ["NAIVE_200_TRIES"],
-            "tests_before": [4718],
-            "added_tests": [177],
-            "removed_tests": [177],
-            "tests_after": [4718],
-            "tests_delta": [0],
-            "tests_delta_pct": [0.0],
+            "project_name": ["eqbench-es-1s", "eqbench-es-1s"],
+            "a_variant": ["ORIGINAL", "ORIGINAL"],
+            "b_variant": ["IMPROVED_200_TRIES", "NAIVE_200_TRIES"],
+            "tests_before": [4718, 4718],
+            "added_tests": [206, 177],
+            "removed_tests": [206, 177],
+            "tests_after": [4718, 4718],
+            "tests_delta": [0, 0],
+            "tests_delta_pct": [0.0, 0.0],
         }
     )
     frame.to_sql("mv_generalization_effects", engine, index=False)
@@ -29,7 +29,16 @@ def test_rq3_effects_preserve_thesis_test_counts():
         result = _effects(conn, "test")
     assert result.loc[0, "tests_before"] == 4718
     assert result.loc[0, "added_tests"] == 177
-    table = _effects_table("tests_per_project", result, "test", "tab:tests-per-project")
+    assert result.loc[0, "b_variant"] == "NAIVE_200_TRIES"
+    table = _effects_table("tab-tests-per-project", result, "test", "tab:tests-per-project")
+    assert table.key == "tab-tests-per-project"
+    assert table.short_caption == "Test count additions, removals, and deltas after generalization"
+    assert table.body_style == r"\tabstyle"
+    assert table.full_width
+    assert table.group_by == "project_group"
+    assert [column.group_header for column in table.columns[2:]] == ["Tests"] * 6
+    assert [column.align for column in table.columns] == ["l", "l"] + ["r"] * 6
+    assert table.columns[-1].header == r"Delta \%"
     assert [column.source for column in table.columns] == [
         "display_project",
         "b_variant",
@@ -64,8 +73,17 @@ def test_rq3_runtime_effects_use_singular_runtime_columns():
     with engine.connect() as conn:
         result = _effects(conn, "runtime")
     table = _effects_table(
-        "runtime_per_project", result, "runtime", "tab:runtime-per-project"
+        "tab-runtime-per-project", result, "runtime", "tab:runtime-per-project"
     )
+    assert table.key == "tab-runtime-per-project"
+    assert table.short_caption == "Test-suite runtime additions, removals, and deltas after generalization"
+    assert table.body_style == "\\tabstyle\n\\setlength{\\tabcolsep}{3pt}"
+    assert table.float_spec == "tbp"
+    assert table.full_width
+    assert table.group_by == "project_group"
+    assert [column.group_header for column in table.columns[2:]] == ["Runtime (in seconds)"] * 6
+    assert [column.align for column in table.columns] == ["l", "l"] + ["r"] * 6
+    assert table.columns[-1].header == r"Delta \%"
     assert [column.source for column in table.columns] == [
         "display_project",
         "b_variant",
