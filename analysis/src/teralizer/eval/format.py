@@ -28,6 +28,9 @@ def _runtime(value: float) -> str:
 
 _FORMATTERS: dict[str, Callable[[object], str]] = {
     "str": lambda v: str(v),
+    # A value that is already LaTeX: a math subscript, a macro. Renderers must
+    # leave it alone, so escaping is skipped for this format alone.
+    "tex": lambda v: str(v),
     "int": lambda v: str(int(v)),
     "count": lambda v: f"{int(v):,}",
     "pvc": _optional_int,

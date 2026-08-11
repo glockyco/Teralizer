@@ -16,7 +16,10 @@ _ALIGN = {"l": "l", "r": "r", "c": "c"}
 
 
 def _cell(value: object, fmt: str) -> str:
-    return render_value(value, fmt).replace("%", "\\%").replace("_", "\\_")
+    text = render_value(value, fmt)
+    if fmt == "tex":
+        return text
+    return text.replace("%", "\\%").replace("_", "\\_")
 
 
 def _is_empty_group(value: object) -> bool:
@@ -30,32 +33,37 @@ def _is_empty_group(value: object) -> bool:
         return False
 
 
-def _group_header_rows(columns: Sequence[ColumnSpec], align: str) -> list[str]:
-    """Header cells for the group row, spanning runs of columns that share a header.
+def _spanned_cells(labels: Sequence[str | None], align: str) -> tuple[list[str], list[str]]:
+    """Merge runs of columns sharing a label into one cell, and rule those spans.
 
-    A run of two or more becomes one `\\multicolumn` cell underlined by a
-    `\\cmidrule`; a lone column keeps a plain cell so single-column groups render
-    exactly as they did before spans existed. Columns without a group header never
-    join a run -- they space the row out and stay unruled.
+    A run of two or more becomes a `\\multicolumn` underlined by a `\\cmidrule`; a
+    lone column keeps a plain cell, so a label covering one column renders exactly
+    as it did before spans existed. A column labelled `None` never joins a run --
+    it spaces the row out and stays unruled.
     """
     cells: list[str] = []
     rules: list[str] = []
     start = 0
-    while start < len(columns):
-        header = columns[start].group_header
+    while start < len(labels):
+        label = labels[start]
         end = start + 1
-        if header is not None:
-            while end < len(columns) and columns[end].group_header == header:
+        if label is not None:
+            while end < len(labels) and labels[end] == label:
                 end += 1
         span = end - start
-        if header is None:
+        if label is None:
             cells.append("")
         elif span == 1:
-            cells.append(header)
+            cells.append(label)
         else:
-            cells.append(f"\\multicolumn{{{span}}}{{{align}}}{{{header}}}")
+            cells.append(f"\\multicolumn{{{span}}}{{{align}}}{{{label}}}")
             rules.append(f"\\cmidrule(lr){{{start + 1}-{end}}}")
         start = end
+    return cells, rules
+
+
+def _group_header_rows(columns: Sequence[ColumnSpec], align: str) -> list[str]:
+    cells, rules = _spanned_cells([c.group_header for c in columns], align)
     rows = ["  " + " & ".join(cells) + " \\\\"]
     if rules:
         rows.append("  " + " ".join(rules))
@@ -83,7 +91,16 @@ def render_table(table: Table) -> str:
     header_rows: list[str] = []
     if any(c.group_header is not None for c in table.columns):
         header_rows += _group_header_rows(table.columns, table.group_header_align)
-    header_rows.append("  " + " & ".join(c.header for c in table.columns) + " \\\\")
+    if table.merge_equal_headers:
+        # Where a label covers a pair of columns -- a value and its delta, say --
+        # it sits on the leaf row itself. No rule: the group row above already
+        # carries one, and a second would box the header in.
+        leaf, _ = _spanned_cells(
+            [c.header for c in table.columns], table.group_header_align
+        )
+    else:
+        leaf = [c.header for c in table.columns]
+    header_rows.append("  " + " & ".join(leaf) + " \\\\")
     if table.full_width:
         # \extracolsep{\fill} spreads the slack between columns, so the table
         # occupies the text width instead of being scaled down to fit it.

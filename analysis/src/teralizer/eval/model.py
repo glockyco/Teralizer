@@ -65,6 +65,9 @@ class Table:
     floating: bool = True
     full_width: bool = False  # tabular* stretched to \textwidth
     group_header_align: str = "c"  # alignment of spanning group headers
+    # Opt-in, because two columns may legitimately carry the same header without
+    # one label being meant to cover both.
+    merge_equal_headers: bool = False  # adjacent equal headers span as one cell
     note: str | None = None
     provenance: "Provenance | None" = None
 

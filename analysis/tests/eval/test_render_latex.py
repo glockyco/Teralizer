@@ -112,6 +112,47 @@ def test_render_table_emits_the_consuming_documents_house_style():
     assert any("\\multicolumn{2}{r}{Impl}" in line for line in lines)
 
 
+def test_equal_leaf_headers_span_only_when_the_table_asks():
+    columns = [
+        ColumnSpec("Mutator", "m"),
+        ColumnSpec("Naive", "a", "int", "r"),
+        ColumnSpec("Naive", "b", "int", "r"),
+    ]
+    df = pd.DataFrame({"m": ["Math"], "a": [1], "b": [2]})
+
+    merged = render_table(
+        Table(
+            key="m",
+            df=df,
+            columns=columns,
+            caption="Cap",
+            label="tab:m",
+            merge_equal_headers=True,
+        )
+    )
+    assert "  Mutator & \\multicolumn{2}{c}{Naive} \\\\" in merged.splitlines()
+    # The pair is already ruled by the group row above, so no rule is added here.
+    assert "cmidrule" not in merged
+
+    # Default: two columns may share a header without one label covering both.
+    plain = render_table(
+        Table(key="m", df=df, columns=columns, caption="Cap", label="tab:m")
+    )
+    assert "  Mutator & Naive & Naive \\\\" in plain.splitlines()
+
+
+def test_tex_cells_keep_their_markup_while_others_stay_escaped():
+    table = Table(
+        key="tex",
+        df=pd.DataFrame({"v": ["IMPROVED$_{50}$"], "p": ["a_b 50%"]}),
+        columns=[ColumnSpec("Variant", "v", "tex"), ColumnSpec("Plain", "p")],
+        caption="Cap",
+        label="tab:tex",
+    )
+    body = [line for line in render_table(table).splitlines() if "IMPROVED" in line]
+    assert body == ["  IMPROVED$_{50}$ & a\\_b 50\\% \\\\"]
+
+
 def test_render_table_captions_itself_when_the_document_owns_the_float():
     table = Table(
         key="sidebyside",
