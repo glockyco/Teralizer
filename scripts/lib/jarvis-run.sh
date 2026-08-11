@@ -90,6 +90,11 @@ jarvis_run() {
   if [[ "$reset_db" == true ]]; then
     echo "==> Resetting database $JARVIS_DB_NAME"
     recreate_scratch_db "$JARVIS_DB_NAME" || exit 1
+    # A new database holds no runs. A row from an earlier run describes data that
+    # is not there any more, thus the ledger must start again with the database.
+    rm -rf "$log_dir" "$status_tsv"
+    mkdir -p "$log_dir"
+    printf 'config\texit_code\tlog\n' > "$status_tsv"
   fi
 
   # High-water task id so the post-run check sees only this invocation's tasks (keeps incremental
