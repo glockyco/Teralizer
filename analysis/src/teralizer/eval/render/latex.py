@@ -3,17 +3,63 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from pathlib import Path
+
+from pandas import isna
 
 from teralizer.eval.format import render_value
 from teralizer.eval.macros import macro_name
-from teralizer.eval.model import RQReport, Table
+from teralizer.eval.model import ColumnSpec, RQReport, Table
 
 _ALIGN = {"l": "l", "r": "r", "c": "c"}
 
 
 def _cell(value: object, fmt: str) -> str:
     return render_value(value, fmt).replace("%", "\\%").replace("_", "\\_")
+
+
+def _is_empty_group(value: object) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return not value
+    try:
+        return bool(isna(value))
+    except (TypeError, ValueError):
+        return False
+
+
+def _group_header_rows(columns: Sequence[ColumnSpec]) -> list[str]:
+    """Header cells for the group row, spanning runs of columns that share a header.
+
+    A run of two or more becomes one `\\multicolumn` cell underlined by a
+    `\\cmidrule`; a lone column keeps a plain cell so single-column groups render
+    exactly as they did before spans existed. Columns without a group header never
+    join a run -- they space the row out and stay unruled.
+    """
+    cells: list[str] = []
+    rules: list[str] = []
+    start = 0
+    while start < len(columns):
+        header = columns[start].group_header
+        end = start + 1
+        if header is not None:
+            while end < len(columns) and columns[end].group_header == header:
+                end += 1
+        span = end - start
+        if header is None:
+            cells.append("")
+        elif span == 1:
+            cells.append(header)
+        else:
+            cells.append(f"\\multicolumn{{{span}}}{{c}}{{{header}}}")
+            rules.append(f"\\cmidrule(lr){{{start + 1}-{end}}}")
+        start = end
+    rows = ["  " + " & ".join(cells) + " \\\\"]
+    if rules:
+        rows.append("  " + " ".join(rules))
+    return rows
 
 
 def render_table(table: Table) -> str:
@@ -26,24 +72,39 @@ def render_table(table: Table) -> str:
     ]
     if table.latex_resize_to_width:
         lines.append("  \\resizebox{\\textwidth}{!}{%")
+    header_rows: list[str] = []
+    if any(c.group_header is not None for c in table.columns):
+        header_rows += _group_header_rows(table.columns)
+    header_rows.append("  " + " & ".join(c.header for c in table.columns) + " \\\\")
     lines += [
         f"  \\begin{{tabular}}{{{cols}}}",
         "  \\toprule",
-        "  " + " & ".join(c.header for c in table.columns) + " \\\\",
+        *header_rows,
         "  \\midrule",
     ]
     prev_group = None
+    has_previous_group = False
     for _, row in table.df.iterrows():
+        indent = False
         if table.group_by is not None:
             group = row[table.group_by]
-            if prev_group is not None and group != prev_group:
-                lines.append("  \\midrule")
-            prev_group = group
-        lines.append(
-            "  "
-            + " & ".join(_cell(row[c.source], c.fmt) for c in table.columns)
-            + " \\\\"
-        )
+            if table.group_style == "label-row":
+                if _is_empty_group(group):
+                    has_previous_group = False
+                else:
+                    if not has_previous_group or group != prev_group:
+                        lines.append("  " + _cell(group, "str") + " \\\\")
+                    prev_group = group
+                    has_previous_group = True
+                    indent = True
+            else:
+                if prev_group is not None and group != prev_group:
+                    lines.append("  \\midrule")
+                prev_group = group
+        cells = [_cell(row[c.source], c.fmt) for c in table.columns]
+        if indent:
+            cells[0] = "\\quad " + cells[0]
+        lines.append("  " + " & ".join(cells) + " \\\\")
     lines += ["  \\bottomrule", "  \\end{tabular}"]
     if table.latex_resize_to_width:
         lines.append("  }")

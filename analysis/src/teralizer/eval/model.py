@@ -37,6 +37,7 @@ class ColumnSpec:
     source: str  # source DataFrame column name
     fmt: str = "str"
     align: str = "l"  # l | r | c
+    group_header: str | None = None
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ class Table:
     caption: str
     label: str
     group_by: str | None = None  # column that drives midrules / section splits
+    group_style: str = "midrule"
     latex_resize_to_width: bool = False
     note: str | None = None
     provenance: "Provenance | None" = None
