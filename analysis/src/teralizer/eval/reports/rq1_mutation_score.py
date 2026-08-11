@@ -109,18 +109,34 @@ def _coverage_table(df: pd.DataFrame) -> Table:
     )
     columns = [
         ColumnSpec("Project", "display_project"),
-        ColumnSpec("Included test methods", "included_tests_display"),
-        ColumnSpec("Included implementation classes", "included_classes_display"),
-        ColumnSpec("Total mutants", "total", "count"),
-        ColumnSpec("Covered mutants", "covered_display"),
-        ColumnSpec("Uncovered mutants", "uncovered_display"),
+        ColumnSpec(
+            "Test Methods",
+            "included_tests_display",
+            align="r",
+            group_header="Included",
+        ),
+        ColumnSpec(
+            "Impl. Classes",
+            "included_classes_display",
+            align="r",
+            # Keep the two singleton ``Included`` cells from being merged into
+            # one span: the thesis distinguishes the two measures in this row.
+            group_header="Included ",
+        ),
+        ColumnSpec("Total", "total", "count", "r", group_header="Mutants"),
+        ColumnSpec("Covered", "covered_display", align="r", group_header="Mutants"),
+        ColumnSpec("Uncovered", "uncovered_display", align="r", group_header="Mutants"),
     ]
     return Table(
-        "mutants_per_project",
+        "tab-mutants-per-project",
         result,
         columns,
         "Number of total, covered, and uncovered mutants in included classes per project.",
         "tab:mutants-per-project",
+        short_caption="Included tests and classes with covered and uncovered mutants per project",
+        body_style="",
+        float_spec="H",
+        group_header_align="r",
         provenance=capture(compute_project_mutation_coverage),
     )
 
@@ -152,8 +168,6 @@ def _mutator_table(df: pd.DataFrame) -> Table:
         "mutator",
         "total_mutants",
         "percent",
-        "min_percent",
-        "max_percent",
         "INITIAL",
         "NAIVE_200_TRIES",
         "detected_diff_naive_200_tries",
@@ -168,22 +182,53 @@ def _mutator_table(df: pd.DataFrame) -> Table:
     result = result[wanted]
     columns = [
         ColumnSpec("Mutator", "mutator"),
-        ColumnSpec("Total", "total_mutants", "count"),
-        ColumnSpec("Total %", "percent", "float2"),
-        ColumnSpec("Min %", "min_percent", "float2"),
-        ColumnSpec("Max %", "max_percent", "float2"),
-        ColumnSpec("Initial", "INITIAL", "float2"),
-        ColumnSpec("Naive 200", "NAIVE_200_TRIES", "float2"),
-        ColumnSpec("Naive Δ", "naive_delta_display"),
-        ColumnSpec("Improved 200", "IMPROVED_200_TRIES", "float2"),
-        ColumnSpec("Improved Δ", "improved_delta_display"),
+        ColumnSpec("Total", "total_mutants", "count", "r"),
+        ColumnSpec("Total \\%", "percent", "float2", "r"),
+        ColumnSpec(
+            "\\VariantInitial{}",
+            "INITIAL",
+            "float2",
+            "c",
+            group_header="Detected \\%",
+        ),
+        ColumnSpec(
+            "\\VariantNaiveC{}",
+            "NAIVE_200_TRIES",
+            "float2",
+            "r",
+            group_header="Detected \\%",
+        ),
+        ColumnSpec(
+            "\\VariantNaiveC{}",
+            "naive_delta_display",
+            align="r",
+            group_header="Detected \\%",
+        ),
+        ColumnSpec(
+            "\\VariantImprovedC{}",
+            "IMPROVED_200_TRIES",
+            "float2",
+            "r",
+            group_header="Detected \\%",
+        ),
+        ColumnSpec(
+            "\\VariantImprovedC{}",
+            "improved_delta_display",
+            align="r",
+            group_header="Detected \\%",
+        ),
     ]
     return Table(
-        "detections_per_mutator",
+        "tab-detections-per-mutator",
         result,
         columns,
-        "Mutation detection rates by mutator.",
+        "Number of mutants and percentage of detections per mutator in \\DatasetsEqBenchEs{} and \\DatasetsCommons{} projects.",
         "tab:detections-per-mutator",
+        short_caption="Mutants and detections by mutator and dataset",
+        body_style="\\tabstyle",
+        full_width=True,
+        group_header_align="c",
+        merge_equal_headers=True,
         provenance=capture(compute_mutator_statistics),
     )
 

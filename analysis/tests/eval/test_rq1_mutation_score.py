@@ -28,7 +28,22 @@ def test_rq1_coverage_table_calculates_inclusion_percentages():
     assert row["included_classes_display"] == "3 (50.0%)"
     assert row["covered_display"] == "7 (70.0%)"
     assert row["uncovered_display"] == "3 (30.0%)"
+    assert table.key == "tab-mutants-per-project"
     assert table.label == "tab:mutants-per-project"
+    assert table.short_caption == (
+        "Included tests and classes with covered and uncovered mutants per project"
+    )
+    assert table.body_style == ""
+    assert table.float_spec == "H"
+    assert table.group_header_align == "r"
+    assert [column.header for column in table.columns] == [
+        "Project",
+        "Test Methods",
+        "Impl. Classes",
+        "Total",
+        "Covered",
+        "Uncovered",
+    ]
 
 
 def test_rq1_figure_matches_notebook_grid():
@@ -69,3 +84,21 @@ def test_rq1_mutator_table_keeps_missing_variant_columns_renderable():
     assert table.df.loc[0, "mutator"] == "X"
     assert table.df.loc[0, "NAIVE_200_TRIES"] == 0
     assert table.df.loc[0, "IMPROVED_200_TRIES"] == 0
+    assert table.key == "tab-detections-per-mutator"
+    assert table.short_caption == "Mutants and detections by mutator and dataset"
+    assert table.body_style == r"\tabstyle"
+    assert table.full_width
+    assert table.group_header_align == "c"
+    assert [column.header for column in table.columns] == [
+        "Mutator",
+        "Total",
+        r"Total \%",
+        r"\VariantInitial{}",
+        r"\VariantNaiveC{}",
+        r"\VariantNaiveC{}",
+        r"\VariantImprovedC{}",
+        r"\VariantImprovedC{}",
+    ]
+    assert [column.group_header for column in table.columns[3:]] == [
+        r"Detected \%"
+    ] * 5

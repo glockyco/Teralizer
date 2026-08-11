@@ -39,20 +39,24 @@ def _table(df: pd.DataFrame) -> Table:
     result = result[wanted]
     columns = [
         ColumnSpec("Project", "project"),
-        ColumnSpec("Implementation files", "main_files", "count"),
-        ColumnSpec("Implementation classes", "main_classes", "count"),
-        ColumnSpec("Implementation SLOC", "main_sloc", "count"),
-        ColumnSpec("Test files", "test_files", "count"),
-        ColumnSpec("Test classes", "test_classes", "count"),
-        ColumnSpec("Test SLOC", "test_sloc", "count"),
-        ColumnSpec("Test methods", "test_methods", "count"),
+        ColumnSpec("Files", "main_files", "count", "r", group_header="Implementation"),
+        ColumnSpec("Classes", "main_classes", "count", "r", group_header="Implementation"),
+        ColumnSpec("SLOC", "main_sloc", "count", "r", group_header="Implementation"),
+        ColumnSpec("Files", "test_files", "count", "r", group_header="Test"),
+        ColumnSpec("Classes", "test_classes", "count", "r", group_header="Test"),
+        ColumnSpec("SLOC", "test_sloc", "count", "r", group_header="Test"),
+        ColumnSpec("Methods", "test_methods", "count", "r", group_header="Test"),
     ]
     return Table(
-        "dataset_statistics",
+        "tab-dataset-statistics",
         result,
         columns,
-        "Dataset files, classes, source lines, and test methods per project.",
+        "Number of files, classes, source lines of code (SLOC), and test methods per project.",
         "tab:dataset-statistics",
+        short_caption="Implementation and test-suite size per evaluation project",
+        body_style="\\tabstyle",
+        full_width=True,
+        group_header_align="r",
         provenance=capture(get_dataset_statistics),
     )
 

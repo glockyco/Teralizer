@@ -53,24 +53,67 @@ def _table(df: pd.DataFrame) -> Table:
             ]
         ],
     ).copy()
+    result["avg_used_constraint_display"] = result["avg_used_constraint_pct"].map(
+        lambda value: f"{float(value):.0f}%"
+    )
+    result["median_used_constraint_display"] = result[
+        "median_used_constraint_pct"
+    ].map(lambda value: f"{float(value):.0f}%")
     columns = [
         ColumnSpec("Project", "project_name"),
-        ColumnSpec("Detected", "is_detected"),
-        ColumnSpec("Mutants", "count", "count"),
-        ColumnSpec("Share", "mutant_percent", "float2"),
-        ColumnSpec("Operations mean", "avg_model_operation_count", "float2"),
-        ColumnSpec("Operations median", "median_model_operation_count", "float2"),
-        ColumnSpec("Constraints mean", "avg_total_constraint_count", "float2"),
-        ColumnSpec("Constraints median", "median_total_constraint_count", "float2"),
-        ColumnSpec("Used constraints mean", "avg_used_constraint_pct", "float2"),
-        ColumnSpec("Used constraints median", "median_used_constraint_pct", "float2"),
+        ColumnSpec("Detected", "is_detected", align="c"),
+        ColumnSpec("Mutants", "count", "count", "r"),
+        ColumnSpec(
+            "Mean",
+            "avg_model_operation_count",
+            "count",
+            "r",
+            group_header="Operations",
+        ),
+        ColumnSpec(
+            "Median",
+            "median_model_operation_count",
+            "count",
+            "r",
+            group_header="Operations",
+        ),
+        ColumnSpec(
+            "Mean",
+            "avg_total_constraint_count",
+            "count",
+            "r",
+            group_header="Constraints",
+        ),
+        ColumnSpec(
+            "Median",
+            "median_total_constraint_count",
+            "count",
+            "r",
+            group_header="Constraints",
+        ),
+        ColumnSpec(
+            "Mean",
+            "avg_used_constraint_display",
+            align="r",
+            group_header="Constraints Used",
+        ),
+        ColumnSpec(
+            "Median",
+            "median_used_constraint_display",
+            align="r",
+            group_header="Constraints Used",
+        ),
     ]
     return Table(
-        "mutation_detection_comparison",
+        "tab-mutation-detection-comparison",
         result,
         columns,
-        "Model properties of mutants that are (not) detected by the improved variant.",
+        "Model properties of mutants that are (not) detected by the \\VariantImprovedC{} variant.",
         "tab:mutation-detection-comparison",
+        short_caption="Operations and constraints for \\VariantImprovedC{} detections and misses",
+        group_by="project_name",
+        body_style="\\tabstyle",
+        full_width=True,
         provenance=capture(compute_mutation_model_complexity),
     )
 

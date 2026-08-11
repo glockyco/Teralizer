@@ -29,6 +29,22 @@ def test_rq2_complexity_table_preserves_thesis_statistics():
         "project_name",
         "is_detected",
         "count",
-        "mutant_percent",
+        "avg_model_operation_count",
     ]
+    assert table.df.loc[0, "avg_used_constraint_display"] == "47%"
+    assert table.key == "tab-mutation-detection-comparison"
     assert table.label == "tab:mutation-detection-comparison"
+    assert table.short_caption == (
+        "Operations and constraints for \\VariantImprovedC{} detections and misses"
+    )
+    assert table.body_style == r"\tabstyle"
+    assert table.full_width
+    assert table.group_by == "project_name"
+    assert [column.group_header for column in table.columns[3:]] == [
+        "Operations",
+        "Operations",
+        "Constraints",
+        "Constraints",
+        "Constraints Used",
+        "Constraints Used",
+    ]
