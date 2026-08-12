@@ -13,7 +13,6 @@ from teralizer.eval.model import (
     ColumnSpec,
     Figure,
     Metric,
-    Prose,
     RQReport,
     Section,
     Table,
@@ -71,11 +70,15 @@ def _pareto_table(data: pd.DataFrame, project_name: str) -> Table:
     try:
         key, short_caption, caption, label = table_info[project_name]
     except KeyError as error:
-        raise ValueError(f"No thesis Pareto table configured for {project_name!r}") from error
+        raise ValueError(
+            f"No thesis Pareto table configured for {project_name!r}"
+        ) from error
 
-    result = data[
-        data["project_name"].eq(project_name) & data["is_pareto_optimal"].eq(True)
-    ].sort_values("runtime_seconds").reset_index(drop=True)
+    result = (
+        data[data["project_name"].eq(project_name) & data["is_pareto_optimal"].eq(True)]
+        .sort_values("runtime_seconds")
+        .reset_index(drop=True)
+    )
     result = result.assign(
         point=np.arange(1, len(result) + 1),
         teralizer_display=result.apply(
@@ -137,6 +140,17 @@ def _phase_table(data: pd.DataFrame) -> Table:
         if col not in result:
             result[col] = 0
     result = result[wanted]
+    # One EvoSuite run per row arrives here. The table reports one row per project and budget,
+    # which is the same grouping the phase figure draws.
+    if not result.empty:
+        result = (
+            result.groupby(["project_name", "search_budget"], as_index=False)[
+                wanted[2:]
+            ]
+            .mean()
+            .sort_values(["project_name", "search_budget"])
+            .reset_index(drop=True)
+        )
     cols = [
         ColumnSpec("Project", "project_name"),
         ColumnSpec("Budget (s)", "search_budget", "float2"),
@@ -148,9 +162,10 @@ def _phase_table(data: pd.DataFrame) -> Table:
         "evosuite_runtime_analysis",
         result,
         cols,
-        "EvoSuite runtime by phase and search budget.",
+        "Mean EvoSuite runtime per phase, by project and search budget.",
         "tab:evosuite-runtime-analysis",
         provenance=capture(compute_evosuite_phase_statistics),
+        note="Each row is the mean over the runs of one project at one search budget.",
     )
 
 
@@ -553,9 +568,6 @@ def build(conn: Connection) -> RQReport:
     section = Section(
         "Efficiency versus EvoSuite",
         [
-            Prose(
-                "The efficiency comparison contains {rq4.pareto_points} candidate points."
-            ),
             tables[0],
             tables[1],
             _efficiency_figure(pareto),
