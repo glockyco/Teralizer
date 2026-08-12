@@ -31,14 +31,20 @@ def test_rq4_pareto_tables_match_thesis_keys_and_nonfloating_layout():
         "tab-pareto-commons",
     ]
     assert all(not table.floating for table in (eqbench, commons))
-    assert eqbench.body_style == "\\tabstyle[\\footnotesize]\n\\setlength{\\tabcolsep}{3pt}"
+    assert (
+        eqbench.body_style
+        == "\\tabstyle[\\footnotesize]\n\\setlength{\\tabcolsep}{3pt}"
+    )
     assert commons.body_style == eqbench.body_style
 
     eqbench_tex = render_table(eqbench)
     commons_tex = render_table(commons)
     assert "\\begin{table}" not in eqbench_tex
     assert "\\begin{table}" not in commons_tex
-    assert "\\captionof{table}[\\ToolEvoSuite{} and \\ToolTeralizer{} Pareto points" in eqbench_tex
+    assert (
+        "\\captionof{table}[\\ToolEvoSuite{} and \\ToolTeralizer{} Pareto points"
+        in eqbench_tex
+    )
     assert "\\label{tab:pareto-eqbench}" in eqbench_tex
     assert "1 & 1s & - & 48.1 & 26,479" in eqbench_tex
     assert "2 & 10s & IMPROVED$_{50}$ & 51.4 & 37,457" in eqbench_tex

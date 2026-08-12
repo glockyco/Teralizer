@@ -117,9 +117,7 @@ def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
 
 def test_publishing_dirty_tree_is_refused(monkeypatch, tmp_path):
     monkeypatch.delenv(provenance.DIRTY_PROVENANCE_ENV, raising=False)
-    monkeypatch.setattr(
-        provenance, "_git_snapshot", lambda: ("a" * 40, True)
-    )
+    monkeypatch.setattr(provenance, "_git_snapshot", lambda: ("a" * 40, True))
     with pytest.raises(RuntimeError, match=provenance.DIRTY_PROVENANCE_ENV):
         cli.main(["all", "--paper-out", str(tmp_path)])
 

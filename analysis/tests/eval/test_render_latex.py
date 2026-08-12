@@ -41,23 +41,27 @@ def test_render_table_is_booktabs_with_formatted_cells():
     )
     tex = render_table(t)
     row_end = chr(92) * 2  # LaTeX terminates a row with two backslashes
-    assert tex == "\n".join(
-        [
-            "\\begin{table}",
-            "  \\caption{Cap}",
-            "  \\label{tab:funnel}",
-            "  \\centering",
-            "  \\begin{tabular}{lr}",
-            "  \\toprule",
-            "  Reason & Count " + row_end,
-            "  \\midrule",
-            "  A & 3,598 " + row_end,
-            "  B & 12 " + row_end,
-            "  \\bottomrule",
-            "  \\end{tabular}",
-            "\\end{table}",
-        ]
-    ) + "\n"
+    assert (
+        tex
+        == "\n".join(
+            [
+                "\\begin{table}",
+                "  \\caption{Cap}",
+                "  \\label{tab:funnel}",
+                "  \\centering",
+                "  \\begin{tabular}{lr}",
+                "  \\toprule",
+                "  Reason & Count " + row_end,
+                "  \\midrule",
+                "  A & 3,598 " + row_end,
+                "  B & 12 " + row_end,
+                "  \\bottomrule",
+                "  \\end{tabular}",
+                "\\end{table}",
+            ]
+        )
+        + "\n"
+    )
 
 
 def test_render_table_stacks_headers_only_when_a_group_header_is_set():
@@ -211,9 +215,13 @@ def test_render_table_spans_and_rules_group_headers_shared_by_columns():
     # The rule line sits between the two header rows and carries no row terminator.
     rules = "  \\cmidrule(lr){2-3} \\cmidrule(lr){4-5}"
     assert rules in lines
-    assert lines.index(rules) == lines.index(
-        "  Benchmark project & PBT PVC & MUTs & PBT PVC & MUTs " + row_end
-    ) - 1
+    assert (
+        lines.index(rules)
+        == lines.index(
+            "  Benchmark project & PBT PVC & MUTs & PBT PVC & MUTs " + row_end
+        )
+        - 1
+    )
 
 
 def test_render_table_label_rows_indent_members_and_flatten_empty_groups():

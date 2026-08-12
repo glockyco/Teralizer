@@ -264,7 +264,9 @@ def test_breadth_leaves_jarvis_unreported_projects_blank_not_zero():
     # JARVIS reports cases for two projects only. Zero would claim it measured
     # nothing there, when it published nothing at all.
     assert breadth.loc["commons-math-2017-02-01-census", "jarvis_successful_muts"] == 7
-    assert pd.isna(breadth.loc["commons-cli-2017-02-01-census", "jarvis_successful_muts"])
+    assert pd.isna(
+        breadth.loc["commons-cli-2017-02-01-census", "jarvis_successful_muts"]
+    )
     assert pd.isna(
         breadth.loc["commons-pool-2017-02-01-census", "jarvis_successful_pbt_pvc"]
     )

@@ -99,6 +99,4 @@ def test_rq1_mutator_table_keeps_missing_variant_columns_renderable():
         r"\VariantImprovedC{}",
         r"\VariantImprovedC{}",
     ]
-    assert [column.group_header for column in table.columns[3:]] == [
-        r"Detected \%"
-    ] * 5
+    assert [column.group_header for column in table.columns[3:]] == [r"Detected \%"] * 5
