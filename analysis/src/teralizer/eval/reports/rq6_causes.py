@@ -31,7 +31,7 @@ from teralizer.eval.reports._widening import (
     widening_refusal_table,
 )
 
-DEFAULT_DB = "postgres_reporeapers_rq6_v6"
+DEFAULT_DB = "postgres_reporeapers_rq6_v7"
 
 # How each exclusion mechanism records itself. See docs/exclusion-model.md.
 # The name test matters: the javac quarantine writes REJECT rows to
@@ -549,7 +549,7 @@ register(
         DEFAULT_DB,
         "new",
         corpus=Corpus(
-            data_dir="data/reporeapers-rerun-v6",
+            data_dir="data/reporeapers-rerun-v7",
             config_dir="project-configs/replication/extended",
         ),
     ),

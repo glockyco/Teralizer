@@ -6,9 +6,9 @@ _Source database: `postgres_dev`._
 
 The dataset summary contains 10 aggregate rows.
 
-**Dataset files, classes, source lines, and test methods per project.**
+**Number of files, classes, source lines of code (SLOC), and test methods per project.**
 
-| Project | Implementation files | Implementation classes | Implementation SLOC | Test files | Test classes | Test SLOC | Test methods |
+| Project | Files | Classes | SLOC | Files | Classes | SLOC | Methods |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | commons-utils-dev | 106 | 247 | 19,709 | 80 | 119 | 14,389 | 725 |
 | commons-utils-es-10s | 106 | 247 | 19,709 | 103 | 103 | 19,082 | 2,738 |
@@ -21,4 +21,4 @@ The dataset summary contains 10 aggregate rows.
 | repo-reapers (mean) | 68 | 82 | 4,447 | 34 | 45 | 3,305 | 162 |
 | repo-reapers (median) | 51 | 57 | 3,244 | 22 | 26 | 2,023 | 86 |
 
-source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/dataset_characteristics.py#L227)
+source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/dataset_characteristics.py#L238)

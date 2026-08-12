@@ -6,33 +6,33 @@ _Source database: `postgres_dev`._
 
 Controlled-dataset exclusions separate successful inclusions from proactive filter rejections and task failures.
 
-**Test, assertion, and generalization exclusions by filtering versus failures for the controlled dataset.**
+**Exclusion results for tests, assertions, and generalizations in the \DatasetsCommons{} and \DatasetsEqBenchEs{} projects.**
 
-| Strategy | Level | Total | Included | Incl. % | Filtering | Filt. % | Failures | Fail. % |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| All | Test | 23,246 | 19,306 | 83.1% | 3,933 | 16.9% | 7 | 0.0% |
-| All | Assertion | 28,923 | 13,836 | 47.8% | 12,092 | 41.8% | 2,995 | 10.4% |
-| BASELINE | Generalization | 13,836 | 13,814 | 99.8% | 22 | 0.2% | 0 | 0.0% |
-| NAIVE_10_TRIES | Generalization | 13,836 | 10,743 | 77.6% | 3,061 | 22.1% | 32 | 0.2% |
-| NAIVE_50_TRIES | Generalization | 13,836 | 9,964 | 72.0% | 3,840 | 27.8% | 32 | 0.2% |
-| NAIVE_200_TRIES | Generalization | 13,836 | 9,881 | 71.4% | 3,923 | 28.4% | 32 | 0.2% |
-| IMPROVED_10_TRIES | Generalization | 13,836 | 11,788 | 85.2% | 2,016 | 14.6% | 32 | 0.2% |
-| IMPROVED_50_TRIES | Generalization | 13,836 | 11,660 | 84.3% | 2,144 | 15.5% | 32 | 0.2% |
-| IMPROVED_200_TRIES | Generalization | 13,836 | 11,597 | 83.8% | 2,207 | 16.0% | 32 | 0.2% |
+| Strategy | Level | Total | Included | Filtering | Failures |
+| --- | --- | --- | --- | --- | --- |
+| \VariantAll{} | Test | 23,246 | 19,306 (83.1%) | 3,933 (16.9%) | 7 (0.0%) |
+| \VariantAll{} | Assertion | 28,923 | 13,836 (47.8%) | 12,092 (41.8%) | 2,995 (10.4%) |
+| \VariantBaseline{} | Generalization | 13,836 | 13,814 (99.8%) | 22 (0.2%) | 0 (0.0%) |
+| \VariantNaiveA{} | Generalization | 13,836 | 10,743 (77.6%) | 3,061 (22.1%) | 32 (0.2%) |
+| \VariantNaiveB{} | Generalization | 13,836 | 9,964 (72.0%) | 3,840 (27.8%) | 32 (0.2%) |
+| \VariantNaiveC{} | Generalization | 13,836 | 9,881 (71.4%) | 3,923 (28.4%) | 32 (0.2%) |
+| \VariantImprovedA{} | Generalization | 13,836 | 11,788 (85.2%) | 2,016 (14.6%) | 32 (0.2%) |
+| \VariantImprovedB{} | Generalization | 13,836 | 11,660 (84.3%) | 2,144 (15.5%) | 32 (0.2%) |
+| \VariantImprovedC{} | Generalization | 13,836 | 11,597 (83.8%) | 2,207 (16.0%) | 32 (0.2%) |
 
-source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq5_causes.py#L215)
+source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/eval/reports/rq5_causes.py#L215)
 
-**Filter rejection rates by level and filter for the controlled dataset.**
+**Filtering results for tests and assertions in the \DatasetsCommons{} and \DatasetsEqBenchEs{} projects.**
 
 | Level | Filter Name | Total | Accept | Defer | Reject |
 | --- | --- | --- | --- | --- | --- |
-| Test | NonPassingTest | 23,246 | 93.4% | 0.0% | 6.6% |
-| Test | TestType | 23,246 | 99.2% | 0.0% | 0.8% |
-| Test | NoAssertions | 21,532 | 89.7% | 0.0% | 10.3% |
-| Assertion | AssertionType | 28,923 | 97.4% | 0.0% | 2.6% |
-| Assertion | ExcludedTest | 28,923 | 94.5% | 0.0% | 5.5% |
-| Assertion | MissingValue | 28,923 | 75.3% | 0.0% | 24.7% |
-| Assertion | ParameterType | 28,923 | 61.7% | 22.9% | 15.4% |
-| Assertion | VoidReturnType | 28,923 | 75.2% | 24.7% | 0.0% |
+| Test | NonPassingTest | 23,246 | 21,719 (93.4%) | - | 1,527 (6.6%) |
+| Test | TestType | 23,246 | 23,066 (99.2%) | - | 180 (0.8%) |
+| Test | NoAssertions | 21,532 | 19,306 (89.7%) | - | 2,226 (10.3%) |
+| Assertion | AssertionType | 28,923 | 28,180 (97.4%) | - | 743 (2.6%) |
+| Assertion | ExcludedTest | 28,923 | 27,326 (94.5%) | - | 1,597 (5.5%) |
+| Assertion | MissingValue | 28,923 | 21,766 (75.3%) | - | 7,157 (24.7%) |
+| Assertion | ParameterType | 28,923 | 17,835 (61.7%) | 6,630 (22.9%) | 4,458 (15.4%) |
+| Assertion | VoidReturnType | 28,923 | 21,763 (75.2%) | 7,157 (24.7%) | 3 (0.0%) |
 
-source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/eval/reports/rq5_causes.py#L205)
+source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/eval/reports/rq5_causes.py#L205)

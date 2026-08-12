@@ -6,66 +6,56 @@ _Source database: `postgres_dev`._
 
 The efficiency comparison contains 42 candidate points.
 
-**EvoSuite and Teralizer Pareto efficiency points.**
+**Pareto points for eqbench.**
 
-| Project | EvoSuite budget | Variant | Type | Runtime (s) | Detection | Detection/s | Pareto |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| commons-utils | 10s | ES_ONLY | ES_ONLY | 5597.31 | 57.32 | 0.00 | True |
-| commons-utils | 1s | ES_ONLY | ES_ONLY | 4648.72 | 56.77 | 0.00 | True |
-| commons-utils | 60s | ES_ONLY | ES_ONLY | 10239.78 | 58.12 | 0.00 | True |
-| commons-utils | 60s | NAIVE_10_TRIES | NAIVE | 14159.70 | 59.13 | 0.00 | False |
-| commons-utils | 60s | NAIVE_50_TRIES | NAIVE | 15050.81 | 59.09 | 0.00 | False |
-| commons-utils | 60s | NAIVE_200_TRIES | NAIVE | 19925.23 | 59.35 | 0.00 | False |
-| commons-utils | 1s | NAIVE_10_TRIES | NAIVE | 7595.23 | 57.78 | 0.00 | False |
-| commons-utils | 1s | NAIVE_50_TRIES | NAIVE | 10304.80 | 57.81 | 0.00 | False |
-| commons-utils | 1s | NAIVE_200_TRIES | NAIVE | 12163.62 | 58.00 | 0.00 | False |
-| commons-utils | 10s | NAIVE_10_TRIES | NAIVE | 10445.06 | 58.14 | 0.00 | True |
-| commons-utils | 10s | NAIVE_50_TRIES | NAIVE | 11573.41 | 58.27 | 0.00 | False |
-| commons-utils | 10s | NAIVE_200_TRIES | NAIVE | 16496.87 | 58.48 | 0.00 | False |
-| commons-utils | 60s | IMPROVED_10_TRIES | IMPROVED | 13938.73 | 59.32 | 0.00 | True |
-| commons-utils | 60s | IMPROVED_50_TRIES | IMPROVED | 14727.52 | 59.39 | 0.00 | True |
-| commons-utils | 60s | IMPROVED_200_TRIES | IMPROVED | 15735.70 | 59.45 | 0.00 | True |
-| commons-utils | 1s | IMPROVED_10_TRIES | IMPROVED | 7294.47 | 57.92 | 0.00 | True |
-| commons-utils | 1s | IMPROVED_50_TRIES | IMPROVED | 8171.58 | 57.88 | 0.00 | False |
-| commons-utils | 1s | IMPROVED_200_TRIES | IMPROVED | 10256.43 | 57.97 | 0.00 | False |
-| commons-utils | 10s | IMPROVED_10_TRIES | IMPROVED | 11081.51 | 58.41 | 0.00 | True |
-| commons-utils | 10s | IMPROVED_50_TRIES | IMPROVED | 10603.38 | 58.35 | 0.00 | True |
-| commons-utils | 10s | IMPROVED_200_TRIES | IMPROVED | 13270.35 | 58.48 | 0.00 | True |
-| eqbench | 10s | ES_ONLY | ES_ONLY | 29861.06 | 50.57 | 0.00 | True |
-| eqbench | 1s | ES_ONLY | ES_ONLY | 26479.27 | 48.10 | 0.00 | True |
-| eqbench | 60s | ES_ONLY | ES_ONLY | 55075.23 | 51.64 | 0.00 | False |
-| eqbench | 60s | NAIVE_10_TRIES | NAIVE | 67944.98 | 53.97 | 0.00 | False |
-| eqbench | 60s | NAIVE_50_TRIES | NAIVE | 68782.21 | 54.66 | 0.00 | True |
-| eqbench | 60s | NAIVE_200_TRIES | NAIVE | 93017.10 | 54.98 | 0.00 | True |
-| eqbench | 1s | NAIVE_10_TRIES | NAIVE | 36727.87 | 50.67 | 0.00 | True |
-| eqbench | 1s | NAIVE_50_TRIES | NAIVE | 37531.94 | 51.72 | 0.00 | True |
-| eqbench | 1s | NAIVE_200_TRIES | NAIVE | 46903.02 | 52.03 | 0.00 | False |
-| eqbench | 10s | NAIVE_10_TRIES | NAIVE | 43145.88 | 52.99 | 0.00 | False |
-| eqbench | 10s | NAIVE_50_TRIES | NAIVE | 45398.00 | 53.77 | 0.00 | True |
-| eqbench | 10s | NAIVE_200_TRIES | NAIVE | 62938.16 | 54.08 | 0.00 | True |
-| eqbench | 60s | IMPROVED_10_TRIES | IMPROVED | 65173.02 | 52.86 | 0.00 | False |
-| eqbench | 60s | IMPROVED_50_TRIES | IMPROVED | 68092.91 | 54.51 | 0.00 | True |
-| eqbench | 60s | IMPROVED_200_TRIES | IMPROVED | 75081.43 | 54.76 | 0.00 | True |
-| eqbench | 1s | IMPROVED_10_TRIES | IMPROVED | 36552.38 | 49.46 | 0.00 | False |
-| eqbench | 1s | IMPROVED_50_TRIES | IMPROVED | 37457.43 | 51.41 | 0.00 | True |
-| eqbench | 1s | IMPROVED_200_TRIES | IMPROVED | 43019.83 | 51.86 | 0.00 | False |
-| eqbench | 10s | IMPROVED_10_TRIES | IMPROVED | 41525.32 | 51.86 | 0.00 | True |
-| eqbench | 10s | IMPROVED_50_TRIES | IMPROVED | 42256.23 | 53.60 | 0.00 | True |
-| eqbench | 10s | IMPROVED_200_TRIES | IMPROVED | 48268.61 | 53.83 | 0.00 | True |
+| Pt. | EvoSuite | Teralizer | Det. \% | Runtime (s) |
+| --- | --- | --- | --- | --- |
+| 1 | 1s | - | 48.1 | 26,479 |
+| 2 | 10s | - | 50.6 | 29,861 |
+| 3 | 1s | NAIVE$_{10}$ | 50.7 | 36,728 |
+| 4 | 1s | IMPROVED$_{50}$ | 51.4 | 37,457 |
+| 5 | 1s | NAIVE$_{50}$ | 51.7 | 37,532 |
+| 6 | 10s | IMPROVED$_{10}$ | 51.9 | 41,525 |
+| 7 | 10s | IMPROVED$_{50}$ | 53.6 | 42,256 |
+| 8 | 10s | NAIVE$_{50}$ | 53.8 | 45,398 |
+| 9 | 10s | IMPROVED$_{200}$ | 53.8 | 48,269 |
+| 10 | 10s | NAIVE$_{200}$ | 54.1 | 62,938 |
+| 11 | 60s | IMPROVED$_{50}$ | 54.5 | 68,093 |
+| 12 | 60s | NAIVE$_{50}$ | 54.7 | 68,782 |
+| 13 | 60s | IMPROVED$_{200}$ | 54.8 | 75,081 |
+| 14 | 60s | NAIVE$_{200}$ | 55.0 | 93,017 |
 
-source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
+source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
+
+**Pareto points for commons-utils.**
+
+| Pt. | EvoSuite | Teralizer | Det. \% | Runtime (s) |
+| --- | --- | --- | --- | --- |
+| 1 | 1s | - | 56.8 | 4,649 |
+| 2 | 10s | - | 57.3 | 5,597 |
+| 3 | 1s | IMPROVED$_{10}$ | 57.9 | 7,294 |
+| 4 | 60s | - | 58.1 | 10,240 |
+| 5 | 10s | NAIVE$_{10}$ | 58.1 | 10,445 |
+| 6 | 10s | IMPROVED$_{50}$ | 58.4 | 10,603 |
+| 7 | 10s | IMPROVED$_{10}$ | 58.4 | 11,082 |
+| 8 | 10s | IMPROVED$_{200}$ | 58.5 | 13,270 |
+| 9 | 60s | IMPROVED$_{10}$ | 59.3 | 13,939 |
+| 10 | 60s | IMPROVED$_{50}$ | 59.4 | 14,728 |
+| 11 | 60s | IMPROVED$_{200}$ | 59.5 | 15,736 |
+
+source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
 
 ![Pareto fronts for EvoSuite and Teralizer variants across projects.](figures/rq4/teralizer_efficiency.png)
 
 **Pareto fronts for EvoSuite and Teralizer variants across projects.**
 
-source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
+source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
 
 ![Teralizer runtime by pipeline stage and variant.](figures/rq4/teralizer_runtimes.png)
 
 **Teralizer runtime by pipeline stage and variant.**
 
-source: [`compute_stage_runtime_breakdown`](https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L193)
+source: [`compute_stage_runtime_breakdown`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/rq3_runtime_requirements.py#L193)
 
 **EvoSuite runtime by phase and search budget.**
 
@@ -2019,10 +2009,10 @@ source: [`compute_stage_runtime_breakdown`](https://github.com/glockyco/Teralize
 | commons-utils-es-default-10s | 10.00 | 61.69 | 0.51 | 0.03 | 0.93 | 0.05 | 0.46 | 59.67 | 0.02 |
 | commons-utils-es-default-10s | 10.00 | 25.10 | 11.06 | 0.00 | 0.04 | 0.02 | 0.80 | 13.15 | 0.01 |
 
-source: [`compute_evosuite_phase_statistics`](https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L385)
+source: [`compute_evosuite_phase_statistics`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/rq3_runtime_requirements.py#L385)
 
 ![Mean EvoSuite runtime by phase and search budget.](figures/rq4/evosuite_runtime_phases.png)
 
 **Mean EvoSuite runtime by phase and search budget.**
 
-source: [`compute_evosuite_phase_statistics`](https://github.com/glockyco/Teralizer/blob/b46ff655-dirty/analysis/src/teralizer/rq3_runtime_requirements.py#L385)
+source: [`compute_evosuite_phase_statistics`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/rq3_runtime_requirements.py#L385)
