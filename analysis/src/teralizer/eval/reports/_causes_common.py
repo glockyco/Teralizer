@@ -145,9 +145,7 @@ def build_filtering_table(
         ColumnSpec(
             "Accept", "accept_display", fmt="str", align="r", csv_source="accept"
         ),
-        ColumnSpec(
-            "Defer", "defer_display", fmt="str", align="r", csv_source="defer"
-        ),
+        ColumnSpec("Defer", "defer_display", fmt="str", align="r", csv_source="defer"),
         ColumnSpec(
             "Reject", "reject_display", fmt="str", align="r", csv_source="reject"
         ),
@@ -193,7 +191,9 @@ def build_breakdown_table(
         ColumnSpec("Total", "total", fmt="count", align="r"),
     ]
     for outcome in outcomes:
-        group_header = "Excluded" if outcome.column in {"filtering", "failures"} else None
+        group_header = (
+            "Excluded" if outcome.column in {"filtering", "failures"} else None
+        )
         columns.append(
             ColumnSpec(
                 outcome.header,
