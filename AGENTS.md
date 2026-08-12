@@ -18,9 +18,11 @@ within the same execution paths. Java/Gradle pipeline + PostgreSQL + a Python an
 | Build eval reports | `uv run --directory analysis python -m teralizer.eval all` |
 | Lint / format / types / tests | `uv run --directory analysis ruff check --fix .` · `ruff format .` · `ty check .` · `pytest` |
 
-Run everything from the project root. Analysis code -- `teralizer.eval` and its
-tests -- is gated by `pytest` plus the ruff and ty pre-commit hooks, which run on
-every commit. Use `scripts/publish-analysis.sh` to render the complete report set
+Run everything from the project root. The gate that always runs is CI:
+`.github/workflows/build.yml` executes `./gradlew build` and `pytest -m "not db"`,
+so database-backed checks are NOT enforced there and must be run locally.
+`analysis/.pre-commit-config.yaml` adds ruff and ty, and applies only once you run
+`pre-commit install`; it is not installed by cloning. Use `scripts/publish-analysis.sh` to render the complete report set
 and copy citable tables and CSV data into the paper repository.
 
 ## Verification tiers
@@ -103,7 +105,6 @@ dropped by their runner scripts. Direct query:
   (`is_included`/`exclusion_info` — typed labels like `ORACLE_NOT_WIDENABLE`), `task`,
   `filter_result`, `jqwik_property_execution` (`tries`, `distinct_tuples`, `diagnostic_kind`).
 - Cross-DB comparisons join on `root_path`, never on `id` (registration-order drift).
-- For read-only analytical queries, use the read-only `teralizer-db` MCP.
 
 ## Pitfalls
 - **Raw-SQL `LIKE` escaping:** in SQLAlchemy raw strings, double the percent signs —
