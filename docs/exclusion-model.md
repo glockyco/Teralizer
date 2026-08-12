@@ -194,7 +194,7 @@ Not only filters. Mechanism 2 writes here too. The honest test for "is this a fi
 fr.filter_name ~ 'filter\.\w+Filter$'
 ```
 
-`BREAKDOWN_SQL` does not apply it, which is defect **EM-2**.
+`BREAKDOWN_SQL` applies the same test, in its test, assertion, and generalization arms.
 
 ### `generalization_lifecycle`
 

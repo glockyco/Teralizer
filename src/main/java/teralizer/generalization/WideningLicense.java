@@ -51,7 +51,9 @@ import teralizer.transformer.VariableNameCollector;
  * {@code ArrayLoadInstruction}. A field or an array therefore keeps whatever the stored value
  * carried.
  *
- * <p>Three shapes reach the return with a concrete value. A computed boolean returns a bytecode
+ * <p>Four shapes reach the return with a concrete value. The most common one by a wide margin is a
+ * nested call. The oracle is then whatever another method returned, and that value carries an
+ * expression only when SPF tracked one through the callee. A computed boolean returns a bytecode
  * literal, and a literal carries no attribute. The relation stays in the path condition, and this
  * class recovers it from there. A container of literals holds elements that never carried an
  * attribute, so a read returns a plain constant. A loop accumulator over an input-dependent trip
