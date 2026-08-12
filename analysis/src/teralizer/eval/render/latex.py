@@ -33,7 +33,9 @@ def _is_empty_group(value: object) -> bool:
         return False
 
 
-def _spanned_cells(labels: Sequence[str | None], align: str) -> tuple[list[str], list[str]]:
+def _spanned_cells(
+    labels: Sequence[str | None], align: str
+) -> tuple[list[str], list[str]]:
     """Merge runs of columns sharing a label into one cell, and rule those spans.
 
     A run of two or more becomes a `\\multicolumn` underlined by a `\\cmidrule`; a
@@ -85,7 +87,9 @@ def render_table(table: Table) -> str:
         style,
     ]
     if table.floating:
-        lines.insert(0, "\\begin{table}" + (f"[{table.float_spec}]" if table.float_spec else ""))
+        lines.insert(
+            0, "\\begin{table}" + (f"[{table.float_spec}]" if table.float_spec else "")
+        )
     if table.latex_resize_to_width:
         lines.append("  \\resizebox{\\textwidth}{!}{%")
     header_rows: list[str] = []
@@ -139,7 +143,10 @@ def render_table(table: Table) -> str:
         if indent:
             cells[0] = "\\quad " + cells[0]
         lines.append("  " + " & ".join(cells) + " \\\\")
-    lines += ["  \\bottomrule", "  \\end{tabular*}" if table.full_width else "  \\end{tabular}"]
+    lines += [
+        "  \\bottomrule",
+        "  \\end{tabular*}" if table.full_width else "  \\end{tabular}",
+    ]
     if table.latex_resize_to_width:
         lines.append("  }")
     if table.floating:
