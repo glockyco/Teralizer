@@ -15,7 +15,6 @@ from teralizer.eval.model import (
     ColumnSpec,
     Figure,
     Metric,
-    Prose,
     RQReport,
     Section,
     Table,
@@ -396,9 +395,6 @@ def build(conn: Connection) -> RQReport:
     section = Section(
         "Mutation score",
         [
-            Prose(
-                "The report covers {rq1.projects} projects and {rq1.mutation_rows} project-variant mutation summaries."
-            ),
             tables[0],
             _figure(detection),
             tables[1],

@@ -12,7 +12,6 @@ from teralizer.eval.model import (
     ColumnSpec,
     Figure,
     Metric,
-    Prose,
     RQReport,
     Section,
     Table,
@@ -79,9 +78,11 @@ def _effects(conn: Connection, unit: str) -> pd.DataFrame:
     # rows in the thesis's Naive-then-Improved order without replacing that order
     # with lexical project names.
     project_order, _ = pd.factorize(result["project_name"], sort=False)
-    variant_order = result["b_variant"].map(
-        {variant: index for index, variant in enumerate(VARIANTS)}
-    ).fillna(len(VARIANTS))
+    variant_order = (
+        result["b_variant"]
+        .map({variant: index for index, variant in enumerate(VARIANTS)})
+        .fillna(len(VARIANTS))
+    )
     return (
         result.assign(_project_order=project_order, _variant_order=variant_order)
         .sort_values(["_project_order", "_variant_order"], kind="stable")
@@ -145,12 +146,16 @@ def _effects_table(key: str, df: pd.DataFrame, unit: str, label: str) -> Table:
     ]
     if unit == "runtime":
         caption = "Test suite runtime before and after generalization, with changes, per project."
-        short_caption = "Test-suite runtime additions, removals, and deltas after generalization"
+        short_caption = (
+            "Test-suite runtime additions, removals, and deltas after generalization"
+        )
         body_style = "\\tabstyle\n\\setlength{\\tabcolsep}{3pt}"
         float_spec = "tbp"
     elif unit == "test":
         caption = "Number of tests before and after generalization, with changes, per project."
-        short_caption = "Test count additions, removals, and deltas after generalization"
+        short_caption = (
+            "Test count additions, removals, and deltas after generalization"
+        )
         body_style = "\\tabstyle"
         float_spec = None
     else:
@@ -274,9 +279,6 @@ def build(conn: Connection) -> RQReport:
     section = Section(
         "Test-suite size and runtime",
         [
-            Prose(
-                "Generalization changes {rq3.project_variant_rows} project-variant observations."
-            ),
             *tables,
             _overhead_figure(overhead),
         ],

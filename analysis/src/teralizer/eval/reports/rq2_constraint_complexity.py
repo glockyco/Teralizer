@@ -8,7 +8,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required
-from teralizer.eval.model import ColumnSpec, Metric, Prose, RQReport, Section, Table
+from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.rq1_mutation_detection import (
@@ -56,9 +56,9 @@ def _table(df: pd.DataFrame) -> Table:
     result["avg_used_constraint_display"] = result["avg_used_constraint_pct"].map(
         lambda value: f"{float(value):.0f}%"
     )
-    result["median_used_constraint_display"] = result[
-        "median_used_constraint_pct"
-    ].map(lambda value: f"{float(value):.0f}%")
+    result["median_used_constraint_display"] = result["median_used_constraint_pct"].map(
+        lambda value: f"{float(value):.0f}%"
+    )
     columns = [
         ColumnSpec("Project", "project_name"),
         ColumnSpec("Detected", "is_detected", align="c"),
@@ -132,9 +132,6 @@ def build(conn: Connection) -> RQReport:
     section = Section(
         "Constraint complexity",
         [
-            Prose(
-                "The comparison contains {rq2.mutant_groups} project and detection groups."
-            ),
             table,
         ],
     )

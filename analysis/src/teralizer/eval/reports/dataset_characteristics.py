@@ -6,7 +6,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required
-from teralizer.eval.model import ColumnSpec, Metric, Prose, RQReport, Section, Table
+from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.report_basis import open_report_connection
@@ -40,7 +40,9 @@ def _table(df: pd.DataFrame) -> Table:
     columns = [
         ColumnSpec("Project", "project"),
         ColumnSpec("Files", "main_files", "count", "r", group_header="Implementation"),
-        ColumnSpec("Classes", "main_classes", "count", "r", group_header="Implementation"),
+        ColumnSpec(
+            "Classes", "main_classes", "count", "r", group_header="Implementation"
+        ),
         ColumnSpec("SLOC", "main_sloc", "count", "r", group_header="Implementation"),
         ColumnSpec("Files", "test_files", "count", "r", group_header="Test"),
         ColumnSpec("Classes", "test_classes", "count", "r", group_header="Test"),
@@ -76,7 +78,6 @@ def build(conn: Connection) -> RQReport:
     section = Section(
         "Dataset characteristics",
         [
-            Prose("The dataset summary contains {dataset.projects} aggregate rows."),
             table,
         ],
     )
