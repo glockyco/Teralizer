@@ -10,8 +10,6 @@ import gov.nasa.jpf.symbc.numeric.PathCondition;
 import gov.nasa.jpf.util.MethodSpec;
 import gov.nasa.jpf.util.ObjectList;
 import gov.nasa.jpf.vm.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,10 +36,6 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
     private final MethodSpec instrumentedMethodSpec;
     private final MethodSpec testedMethodSpec;
 
-    private final Path inputValuesPath;
-    private final Path outputValuePath;
-    private final Path inputSpecificationPath;
-    private final Path outputSpecificationPath;
 
     private final double maxExecutionTime;
     private final long maxPathConditionSize;
@@ -72,10 +66,6 @@ public class TestGeneralizationListener extends PropertyListenerAdapter {
         this.instrumentedParameterNames = parameterNames.isEmpty()
             ? Collections.emptyList()
             : Arrays.asList(parameterNames.split(","));
-        this.inputValuesPath = Paths.get(config.getString("test_generalization.input_values_path"));
-        this.outputValuePath = Paths.get(config.getString("test_generalization.output_value_path"));
-        this.inputSpecificationPath = Paths.get(config.getString("test_generalization.input_specification_path"));
-        this.outputSpecificationPath = Paths.get(config.getString("test_generalization.output_specification_path"));
         this.maxExecutionTime = config.getDouble("test_generalization.max_execution_time");
         this.maxPathConditionSize = config.getLong("test_generalization.max_path_condition_size");
     }
