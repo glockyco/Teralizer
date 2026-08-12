@@ -27,11 +27,11 @@ Teralizer derives a path-exact specification from each concrete execution throug
 
 _JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. Teralizer suite PVC unions the reconstructed original tests' values with the generalized tests' values. A dash marks a case Teralizer excludes from generalization._
 
-source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/jarvis_scoreboard.py#L837)
+source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/jarvis_scoreboard.py#L837)
 
 ## Applicability breadth
 
-RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons project versions of the JARVIS evaluation. RQ1--RQ5 use the constructed commons-utils dataset. The JARVIS columns aggregate the reported cases by project, and a zero states that the publication reports no case for that project. Teralizer PVC deduplicates values per MUT and parameter across generalized tests, so a value exercised by several tests counts once.
+RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons project versions of the JARVIS evaluation. RQ1--RQ5 use the constructed commons-utils dataset. The JARVIS columns aggregate the reported cases by project. Projects with no reported case carry no value, because the publication does not measure them. Teralizer PVC deduplicates values per MUT and parameter across generalized tests, so a value exercised by several tests counts once.
 
 **Project-level PVC and MUT counts across the 12 benchmark projects.**
 
@@ -53,9 +53,9 @@ RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons pr
 
 _JARVIS columns are unavailable for projects it reports no case for. Teralizer aggregate PVC counts distinct values exercised by generalized tests for each MUT and parameter. Generalized MUTs have at least one generalized test._
 
-source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/jarvis_scoreboard.py#L716)
+source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/jarvis_scoreboard.py#L716)
 
-Census status partial. Intended projects 12, persisted PVC rows 9, complete projects 7, failed projects 3. Completion marker absent.
+Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows. Completion marker absent.
 
 ## PVC and mutation score
 
@@ -71,4 +71,4 @@ PVC rewards every additional distinct input value, so it grows with the sampling
 
 _PVC is a generation-volume diagnostic. Rows with persisted PIT results carry kills and mutation scores. Missing PIT results appear as unavailable cells._
 
-source: [`summarize_variants`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/jarvis_scoreboard.py#L999)
+source: [`summarize_variants`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/jarvis_scoreboard.py#L999)

@@ -4,8 +4,6 @@ _Source database: `postgres_dev`._
 
 ## Constraint complexity
 
-The comparison contains 14 project and detection groups.
-
 **Model properties of mutants that are (not) detected by the \VariantImprovedC{} variant.**
 
 | Project | Detected | Mutants | Mean | Median | Mean | Median | Mean | Median |
@@ -25,4 +23,4 @@ The comparison contains 14 project and detection groups.
 | commons-utils | yes | 4,193 | 107 | 11 | 4 | 4 | 26% | 75% |
 | commons-utils | no | 1,022 | 173 | 10 | 4 | 4 | 20% | 75% |
 
-source: [`compute_mutation_model_complexity`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/rq1_mutation_detection.py#L455)
+source: [`compute_mutation_model_complexity`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/rq1_mutation_detection.py#L455)

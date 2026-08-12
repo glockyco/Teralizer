@@ -25,9 +25,9 @@ Real-world exclusions separate project-level failures from filtering and downstr
 | 5 | Internal | timeout exceeded (3600 seconds during PIT mutation testing) | 4 |
 | 5 | Mixed | unmutated test suite has failing tests | 6 |
 
-_Eligible projects: 611. Stage 1 + 2: 611 entering, 182 included, 429 excluded (29.8%). Stage 3: 182 entering, 176 included, 6 excluded (96.7%). Stage 4: 176 entering, 98 included, 78 excluded (55.7%). Stage 5: 98 entering, 85 included, 13 excluded (86.7%). Overall: 85 of 611 included (13.9%)._
+_Eligible projects: 611. Stage 1 + 2: 611 entering, 182 included (29.8%), 429 excluded. Stage 3: 182 entering, 176 included (96.7%), 6 excluded. Stage 4: 176 entering, 98 included (55.7%), 78 excluded. Stage 5: 98 entering, 85 included (86.7%), 13 excluded. Overall: 85 of 611 included (13.9%)._
 
-source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/eval/reports/_funnel.py#L300)
+source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/eval/reports/_funnel.py#L318)
 
 Generic JPF uncaught-exception diagnostics are reclassified from their retained detail into application exceptions and JPF environment gaps.
 
@@ -42,7 +42,7 @@ Generic JPF uncaught-exception diagnostics are reclassified from their retained 
 
 _This recovery changes cause attribution only; it does not change project eligibility or funnel outcomes._
 
-source: [`fetch_jpf_exception_causes`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/eval/reports/_diagnostics.py#L89)
+source: [`fetch_jpf_exception_causes`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/eval/reports/_diagnostics.py#L89)
 
 ParameterType choice sensitivity is reported conservatively: only a rejection with an observed argument-taking alternative is choice-dependent.
 
@@ -56,7 +56,7 @@ ParameterType choice sensitivity is reported conservatively: only a rejection wi
 
 _Choice-dependent rows divided by all ParameterType rejections are a lower bound; rows without candidate detail remain unscored._
 
-source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/eval/reports/_diagnostics.py#L169)
+source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/eval/reports/_diagnostics.py#L169)
 
 **Exclusion results for \VariantImprovedC{} in the RepoReapers projects.**
 
@@ -66,7 +66,7 @@ source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/b
 | Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
 | Generalization | 5,356 | 1,615 (30.2%) | 3,719 (69.4%) | 22 (0.4%) |
 
-source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/eval/reports/rq6_causes.py#L292)
+source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/eval/reports/rq6_causes.py#L292)
 
 **Filtering results for \VariantImprovedC{} in the RepoReapers projects.**
 
@@ -86,7 +86,7 @@ source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/6d2110cf
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | - | 5,203 (2.9%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | - | 420 (20.6%) |
 
-source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/eval/reports/rq6_causes.py#L279)
+source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/eval/reports/rq6_causes.py#L279)
 
 Most of the generalization row's filtering column is the widening license rather than any filter.
 
@@ -103,4 +103,4 @@ Most of the generalization row's filtering column is the widening license rather
 
 _Refusals are decided before a generalized test is written, so they carry no filter decision and no lifecycle record._
 
-source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/eval/reports/_widening.py#L89)
+source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/eval/reports/_widening.py#L89)

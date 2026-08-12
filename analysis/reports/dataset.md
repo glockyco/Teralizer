@@ -4,8 +4,6 @@ _Source database: `postgres_dev`._
 
 ## Dataset characteristics
 
-The dataset summary contains 10 aggregate rows.
-
 **Number of files, classes, source lines of code (SLOC), and test methods per project.**
 
 | Project | Files | Classes | SLOC | Files | Classes | SLOC | Methods |
@@ -21,4 +19,4 @@ The dataset summary contains 10 aggregate rows.
 | repo-reapers (mean) | 68 | 82 | 4,447 | 34 | 45 | 3,305 | 162 |
 | repo-reapers (median) | 51 | 57 | 3,244 | 22 | 26 | 2,023 | 86 |
 
-source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/6d2110cf4ec7758273b824a7d7fad33548428c9d/analysis/src/teralizer/dataset_characteristics.py#L238)
+source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/dataset_characteristics.py#L238)
