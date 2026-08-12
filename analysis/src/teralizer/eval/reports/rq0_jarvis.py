@@ -421,6 +421,12 @@ def build(conn: Connection) -> RQReport:
             _census_status_ledger,
         ),
         _metric(
+            "rq0.census.not_reached_projects",
+            int((ledger["generalization_status"] == "not_reached").sum()),
+            "count",
+            _census_status_ledger,
+        ),
+        _metric(
             "rq0.census.failed_task_count",
             int(ledger["failed_task_count"].sum()),
             "count",
@@ -704,20 +710,21 @@ def build(conn: Connection) -> RQReport:
                     "RQ0 uses a separate, pinned fixture set reproducing the twelve "
                     "Apache Commons project versions of the JARVIS evaluation. "
                     "RQ1--RQ5 use the constructed commons-utils dataset. The JARVIS "
-                    "columns aggregate the reported cases by project, and a zero "
-                    "states that the publication reports no case for that project. "
-                    "Teralizer PVC deduplicates values per MUT and parameter across "
-                    "generalized tests, so a value exercised by several tests "
-                    "counts once."
+                    "columns aggregate the reported cases by project. Projects with "
+                    "no reported case carry no value, because the publication does "
+                    "not measure them. Teralizer PVC "
+                    "deduplicates values per MUT and parameter across generalized "
+                    "tests, so a value exercised by several tests counts once."
                 ),
                 breadth_table,
                 Prose(
-                    "Census status {rq0.census.status}. Intended projects "
-                    "{rq0.census.intended_projects}, persisted PVC rows "
-                    "{rq0.census.populated_projects}, complete projects "
-                    "{rq0.census.completed_projects}, failed projects "
-                    "{rq0.census.failed_projects}. Completion marker "
-                    "{rq0.census.completion_marker}."
+                    "Census status {rq0.census.status}. The census intended "
+                    "{rq0.census.intended_projects} projects: "
+                    "{rq0.census.completed_projects} completed, "
+                    "{rq0.census.failed_projects} failed, and the run did not reach "
+                    "{rq0.census.not_reached_projects}. "
+                    "{rq0.census.populated_projects} projects carry persisted PVC "
+                    "rows. Completion marker {rq0.census.completion_marker}."
                 ),
             ],
         ),
