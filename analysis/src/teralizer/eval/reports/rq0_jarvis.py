@@ -189,9 +189,7 @@ def _build_breadth_table(
     # JARVIS surveys all twelve projects but reports cases for only two, so the
     # rest have no published value. Defaulting them to zero would claim a
     # measurement of none where the paper simply makes none.
-    rows["jarvis_successful_pbt_pvc"] = rows["project"].map(
-        JARVIS_PROJECT_PBT_PVC.get
-    )
+    rows["jarvis_successful_pbt_pvc"] = rows["project"].map(JARVIS_PROJECT_PBT_PVC.get)
     rows["jarvis_successful_muts"] = rows["project"].map(JARVIS_PROJECT_MUTS.get)
     project_rows = project_pvc[project_pvc["variant"].eq(CENSUS_VARIANT)]
     pvc_columns = ["project", "aggregate_pvc", "sound_muts"]
@@ -463,16 +461,18 @@ def build(conn: Connection) -> RQReport:
         ledger_row = ledger.loc[ledger["project"].eq(row["project"])].iloc[0]
         metrics.extend(
             [
+                # JARVIS publishes a value for two of the twelve projects. The other ten carry
+                # no measurement, so they render like every other absent figure in this table.
                 _metric(
                     f"rq0.census.project.{slug}.jarvis_pbt_pvc",
-                    int(row["jarvis_successful_pbt_pvc"]),
-                    "count",
+                    _count_or_unavailable(row["jarvis_successful_pbt_pvc"]),
+                    "str",
                     _build_breadth_table,
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.jarvis_muts",
-                    int(row["jarvis_successful_muts"]),
-                    "count",
+                    _count_or_unavailable(row["jarvis_successful_muts"]),
+                    "str",
                     _build_breadth_table,
                 ),
                 _metric(
