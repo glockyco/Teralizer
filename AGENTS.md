@@ -5,6 +5,16 @@ in constraint-collection mode along a test's concrete path to extract path-exact
 (input partitions + symbolic outputs), then generates property-based tests that explore more inputs
 within the same execution paths. Java/Gradle pipeline + PostgreSQL + a Python analysis project.
 
+## Measurement integrity
+No check can enforce this section. Every other rule in this file has a test, a command, or a
+loud failure behind it. This one depends on you.
+
+First-run numbers stand. A runtime limit is a real filter and a part of the measured system.
+A stage that times out is a result, not noise. Never delete a project or a fixture and run it
+again to get a cleaner number. Never run anything again to pick the better of two numbers.
+Every gate runs once. If you suspect nondeterminism, investigate it as a defect. Do not average
+it away with repeat runs.
+
 ## Commands
 | Task | Command |
 |---|---|
@@ -31,19 +41,13 @@ editing the golden to match broken output.
 
 | Change | Gate |
 |---|---|
-| Analysis (`teralizer.eval`, its tests) | `pytest` + the ruff/ty pre-commit hooks |
+| Analysis (`teralizer.eval`, its tests) | `pytest`. Add ruff and ty when you run `pre-commit install` |
 | Java unit-level | `./gradlew test --tests '<Class>'` while iterating, one full `./gradlew build` before commit |
 | Pipeline behavior (codegen, SPF, filters, licenses, build files) | `scripts/verify-pipeline.sh` (~5–10 min, full fixture corpus) — ONCE PER WAVE of related changes, at the wave's end or when a golden must flip, NEVER per commit or per small change; iterate with `--only` below |
 | SPF submodule (`jpf-symbc/**`) | additionally `cd jpf-symbc && ./gradlew :jpf-symbc:test` (the root build does NOT run this suite, so a red suite survives "build green" without it) |
 | One fixture while iterating | `scripts/run-verification-corpus.sh --only <fixture-name>` (~45 s) |
 | Real-world seams (surefire versions, reports, big suites) | sentinel subset (~10 min, five stable projects, expected census in the config headers) |
 | Full spike / corpus | evaluation events only, never a debugging loop |
-
-First-run numbers stand. Runtime limits (timeouts, memory) are real filters, part of the
-measured system — a stage that times out is a result, not noise. Never delete-and-rerun a
-project or fixture to get a cleaner number, and never rerun anything to pick the better of
-two numbers. Every gate runs ONCE. Suspected nondeterminism is a defect to investigate, not
-something to average away with repeat runs.
 
 Sentinel and hotspot runs are measurement events, not per-change gates. A lever's
 refusal-to-licensed conversion is verified by its fixture golden and unit tests at commit
@@ -61,6 +65,9 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
 - Spoon-model tests build models via `VirtualFile` + `Launcher`. Virtual files have no
   `SourcePosition.getFile()`, so path-derived logic needs real files or the fixture corpus.
 - JPF listener tests: `JpfListenerHarness` + target classes in `src/test/java/teralizer/jpf/targets/`.
+- Classify a failure by its type, never by its message. A message is prose and it changes.
+  `TaskDiagnosticClassifierCouplingTest` fails when the classifier matches text that no source
+  produces, and `EXTERNAL_MESSAGES` in that test lists the tool that owns each foreign string.
 - `./gradlew spotlessApply` before committing (build gate enforces formatting).
 
 ## Layout & config
@@ -68,7 +75,7 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
 - Why an entity is excluded, and which column may be trusted to say so:
   `docs/exclusion-model.md`. Required reading before quoting any exclusion figure.
 - Planning & roadmap: read `docs/plans/INDEX.md` first; the north-star, strategy sequence, and current focus live in `docs/plans/2026-06-26-teralizer-overview.md`.
-- Config: Typesafe Config (HOCON); examples in `project-configs/example-*.conf`.
+- Config: Typesafe Config (HOCON). Examples are in `project-configs/example-*.conf`.
 - Analysis lives in `analysis/`.
 - Exports: `save_latex_table`, `save_csv_data`, `save_figure` from `teralizer.exports` →
   `analysis/output/{tables,data,figures}`.
@@ -76,8 +83,11 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
   `.env`. Never sync automatically.
 
 ## Evaluation analysis
-Search `docs/plans/` first: its audits record measured findings and prevent repeating completed
-investigations before starting new analysis.
+Before you call a behaviour a defect, search the tests and `git log` for it. Decisions here are
+recorded as regression tests named after the observable symptom, such as
+`leavesVintageInitializationErrorUnlinked` and `ProcessingPipelineCascadeTest`, and as commit
+messages that give the reason. Unexpected data is more often a decision you have not read than a
+bug. `docs/plans/` holds the longer audits, and it is the second place to look, not the first.
 
 **Evidence rule:** implementation docstrings describe intent and mechanism, never empirical
 distributions or outcomes. A claim about what the corpus contains must come from a query or report,
@@ -85,9 +95,14 @@ not from comments such as `WideningLicense`'s explanation of refusal handling or
 Treat boxed output capture as an implemented mechanism, not as evidence that refusals are recoverable.
 
 **Metric rule:** RQ6 definitions live in `analysis/src/teralizer/eval/reports/_funnel.py` and the
-report builders. Quote every figure with its measure and denominator. Before comparing figures from
-two databases, confirm that both were computed through the same code path and therefore have the same
-definition; in particular, current Stage-4 success requires `generated_filter_passed`.
+report builders. Quote every figure with its measure and denominator. Current Stage-4 success
+requires `generated_filter_passed`.
+
+Before you compare figures from two databases, run
+`uv run --directory analysis python -m teralizer.comparability <db_a> <db_b>`. It exits non-zero
+when the two runs record different tool versions, or when a funnel table has a different set of
+columns. A column that one run records and the other does not makes a per-project comparison
+meaningless, and a query that never names the column cannot show you that.
 
 ## Database
 Dockerized Postgres, container `postgres-teralizer`, `localhost:5432`. Protected DBs are the
@@ -121,15 +136,15 @@ dropped by their runner scripts. Direct query:
   `ALTER DATABASE template1 REFRESH COLLATION VERSION;` then retry (runner scripts guard this).
 
 ## Style & commits
-- Explicit over implicit; minimal comments (explain *why*, not *what*); fail fast.
+- Explicit over implicit. Write few comments, and let them explain *why* and not *what*. Fail fast.
 - No marketing/temporal language in code or comments ("modern", "new", "enhanced").
 - Never reference paper section numbers (e.g. "Section 4.1") in code.
 - Commits: follow `skill://commit`.
 
 ## Boundaries
-- `projects/` holds git submodules (target programs) — **read-only**; don't edit them as
-  Teralizer work. Exception: deleting Teralizer-generated `_*_Generalized_*_Test.java` litter
-  there is fine (runner scripts do it automatically).
+- `projects/` holds git submodules (target programs) and is **read-only**. Do not edit them as
+  Teralizer work. You can delete Teralizer-generated `_*_Generalized_*_Test.java` litter there,
+  and the runner scripts already do it.
 - Never commit build artifacts or generated datasets.
 - Local state (gitignored run outputs, scratch DBs, generated litter — what owns it, what is
   safe to delete): `docs/local-state.md`.
