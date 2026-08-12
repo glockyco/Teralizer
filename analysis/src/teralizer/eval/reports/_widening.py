@@ -10,14 +10,16 @@ from teralizer.eval.model import ColumnSpec, Metric, Table
 from teralizer.eval.reports import _funnel
 
 
-# Reconstructs why WideningLicense refused. Corpora from before
-# `generalization.widening_refusal_code` existed record only the single
-# ORACLE_NOT_WIDENABLE label, so the cause has to be re-derived here. Read the
-# column instead once the corpus has it.
+# `WideningLicense` writes the cause it decided on into
+# `generalization.widening_refusal_code`, so this reads that column. The license
+# picks one code per refusal from an ordered set of checks, and a refusal that
+# satisfies several of them carries the first. Re-deriving the cause here would
+# have to repeat that order, and a copy that drifts reports a cause the pipeline
+# never assigned.
 #
-# The CASE order must match `WideningLicense.evaluate` branch for branch. It
-# decides attribution, not just naming: a non-boolean oracle that also
-# concretized belongs to the first branch that catches it.
+# A corpus written before the column existed carries only the ORACLE_NOT_WIDENABLE
+# label. `fetch_widening_refusals` rejects such a corpus rather than report a
+# partial table.
 WIDENING_REFUSAL_SQL = f"""
 {_funnel.ELIGIBILITY_CTE},
 attempts AS (
@@ -27,73 +29,86 @@ attempts AS (
     WHERE g.variant = :variant
 ),
 refusals AS (
-    SELECT
-        CASE
-            WHEN a.output_spec_class = 'EXCEPTION'
-                 AND coalesce(a.concretization_events, 0) > 0
-                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false
-                THEN 'EXCEPTION_DIVERGENCE'
-            WHEN a.output_spec_class = 'EXCEPTION'
-                THEN 'PATH_COVERAGE'
-            WHEN coalesce(
-                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''
-                 ) NOT IN ('boolean', 'java.lang.Boolean')
-                THEN 'NON_BOOLEAN_ORACLE'
-            WHEN coalesce(a.concretization_events, 0) > 0
-                THEN 'CONCRETIZATION'
-            ELSE 'PATH_COVERAGE'
-        END AS code,
-        CASE
-            WHEN a.output_spec_class = 'EXCEPTION'
-                 AND coalesce(a.concretization_events, 0) > 0
-                 AND a.post_concretization_divergence_risk IS DISTINCT FROM false
-                THEN 'Exception oracle concretized with divergence risk'
-            WHEN a.output_spec_class = 'EXCEPTION'
-                THEN 'Path condition does not pin every generated parameter'
-            WHEN coalesce(
-                     a.generalization_recipe::jsonb ->> 'oracleExpressionType', ''
-                 ) NOT IN ('boolean', 'java.lang.Boolean')
-                THEN 'Null output model, oracle expression is not boolean'
-            WHEN coalesce(a.concretization_events, 0) > 0
-                THEN 'Null output model, concretization weakened the path condition'
-            ELSE 'Path condition does not pin every generated parameter'
-        END AS cause
+    SELECT g.widening_refusal_code AS code
     FROM generalization g
-    JOIN assertion a ON a.id = g.assertion_id
     JOIN eligible_projects ep ON ep.id = g.project_id
     WHERE g.variant = :variant
-      AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'
+      AND g.widening_refusal_code IS NOT NULL
 )
 SELECT code,
-       cause,
        count(*)::bigint AS refusals,
        count(*) / (SELECT n FROM attempts) AS attempts_pct,
        count(*) / sum(count(*)) OVER () AS refusals_pct
 FROM refusals
-GROUP BY code, cause
+GROUP BY code
 ORDER BY refusals DESC, code COLLATE "C"
 """
+
+# A corpus that predates the typed column. Counted separately so the reader gets
+# a refusal rather than a table that silently omits every refusal.
+UNTYPED_REFUSAL_SQL = f"""
+{_funnel.ELIGIBILITY_CTE}
+SELECT count(*)::bigint AS n
+FROM generalization g
+JOIN eligible_projects ep ON ep.id = g.project_id
+WHERE g.variant = :variant
+  AND g.exclusion_info = 'ORACLE_NOT_WIDENABLE'
+  AND g.widening_refusal_code IS NULL
+"""
+
+# The metric slug and the table label for each code `WideningLicense` can write.
+# Adding a code to the license means adding it here, and an unmapped code raises.
+WIDENING_REFUSALS = {
+    "NULL_CONCRETE_OUTPUT_NOT_LITERAL": (
+        "output_not_literal",
+        "Null output model, and the returned value is not a bytecode literal",
+    ),
+    "NULL_CONCRETE_CONCRETIZATION_EVENTS": (
+        "concretization",
+        "Null output model, and a native call received a symbolic argument",
+    ),
+    "NULL_CONCRETE_PARAMETERS_EMPTY": (
+        "parameters_empty",
+        "Null output model, and no generated parameter reaches the path condition",
+    ),
+    "NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS": (
+        "path_coverage",
+        "Null output model, and the path condition does not pin every generated parameter",
+    ),
+    "EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK": (
+        "exception_divergence",
+        "Exception oracle, concretized with a risk of divergence",
+    ),
+    "EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS": (
+        "exception_path_coverage",
+        "Exception oracle, and the path condition does not pin every generated parameter",
+    ),
+}
 
 
 def fetch_widening_refusals(conn: Connection, variant: str) -> pd.DataFrame:
     """Return widening-refusal counts by cause for the eligible corpus."""
-    df = read_sql(conn, WIDENING_REFUSAL_SQL, _funnel.base_query_params(variant))
+    params = _funnel.base_query_params(variant)
+    untyped = int(read_sql(conn, UNTYPED_REFUSAL_SQL, params)["n"].iloc[0])
+    if untyped:
+        raise RuntimeError(
+            f"{untyped} refusals carry no widening_refusal_code. This corpus predates the "
+            "column, and the cause it recorded cannot be recovered from the database."
+        )
+
+    df = read_sql(conn, WIDENING_REFUSAL_SQL, params)
     df["refusals"] = df["refusals"].astype(int)
     for column in ("attempts_pct", "refusals_pct"):
         df[column] = df[column].astype(float)
+
+    unmapped = sorted(set(df["code"]) - set(WIDENING_REFUSALS))
+    if unmapped:
+        raise RuntimeError(f"unmapped widening refusal codes: {unmapped}")
+    df["cause"] = df["code"].map(lambda code: WIDENING_REFUSALS[code][1])
+
     return pd.DataFrame(
         df, columns=["code", "cause", "refusals", "attempts_pct", "refusals_pct"]
     )
-
-
-# Macro names are built from these slugs, so renaming one breaks the chapter.
-# Rename the label in the SQL instead, the code is what this keys on.
-_WIDENING_METRIC_KEYS = {
-    "NON_BOOLEAN_ORACLE": "non_boolean_oracle",
-    "CONCRETIZATION": "concretization",
-    "PATH_COVERAGE": "path_coverage",
-    "EXCEPTION_DIVERGENCE": "exception_divergence",
-}
 
 
 def widening_refusal_table(df: pd.DataFrame, provenance) -> Table:
@@ -129,9 +144,10 @@ def widening_refusal_metrics(df: pd.DataFrame, provenance) -> list[Metric]:
         )
     ]
     for row in df.to_dict("records"):
-        key = _WIDENING_METRIC_KEYS.get(str(row["code"]))
-        if key is None:
+        entry = WIDENING_REFUSALS.get(str(row["code"]))
+        if entry is None:
             raise RuntimeError(f"unmapped widening refusal code: {row['code']!r}")
+        key = entry[0]
         metrics.append(
             Metric(
                 f"realworld.widening_refusal_{key}",
