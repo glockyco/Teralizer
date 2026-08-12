@@ -36,7 +36,7 @@ because the devshell does not provide it. Docker must come from your own install
 | Verify sentinel spike subset — 10 min. A measurement event. Ask the operator first | `REPOREAPERS_DB=postgres_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db` |
 | Run one config — a full pipeline for one project. Minutes to hours | `./gradlew run -Dteralizer.config=<config-file>` |
 | Start / stop DB | `./gradlew startPostgres` / `./gradlew stopPostgres` |
-| DB UI | `docker compose up adminer` → http://localhost:18080 (password: `teralizer`) |
+| DB UI | `docker compose up adminer` → http://localhost:18080. The password is `DB_PASSWORD` from `.env`, and it defaults to `postgres` |
 | Analysis deps | `uv sync --directory analysis` |
 | Build eval reports | `uv run --directory analysis python -m teralizer.eval all` |
 | Lint / format / types / tests | `uv run --directory analysis ruff check --fix .` · `ruff format .` · `ty check .` · `pytest` |
@@ -91,7 +91,7 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
 - Config: Typesafe Config (HOCON). Examples are in `project-configs/example-*.conf`.
 - Analysis lives in `analysis/`.
 - Exports: `save_latex_table`, `save_csv_data`, `save_figure` from `teralizer.exports` →
-  `analysis/output/{tables,data,figures}`.
+  `analysis/output/<variant>/{tables,data,figures}`. `_get_output_base` selects the variant.
 - Paper sync (on-demand only): `uv run --directory analysis python sync.py`; `PAPER_REPO_PATH` in
   `.env`. Never sync automatically.
 
@@ -119,9 +119,10 @@ meaningless, and a query that never names the column cannot show you that.
 
 ## Database
 Dockerized Postgres, container `postgres-teralizer`, `localhost:5432`. Protected DBs are the
-corpora the published paper depends on (never drop, never use for experiments): `postgres_dev`
-(eqbench + commons-utils) and `postgres_test` (RepoReapers). Corpora still being iterated for the
-next paper version stay deliberately unprotected. A run names its target database in its profile (`teralizer.database.name`),
+corpora the published paper depends on. Never drop one and never use one for an experiment.
+`src/main/resources/db/protected-databases.txt` is the canonical list. Among them, `postgres_dev`
+holds eqbench and commons-utils, and `postgres_test` holds RepoReapers. Corpora still being
+iterated for the next paper version stay deliberately unprotected. A run names its target database in its profile (`teralizer.database.name`),
 or on the command line with `-Dteralizer.database.name`. Targeting a protected corpus requires
 `teralizer.database.allow-protected = true`. The canonical protected list lives in
 `src/main/resources/db/protected-databases.txt`.
