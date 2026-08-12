@@ -632,8 +632,10 @@ def build(conn: Connection) -> RQReport:
         label="tab:teralizer-rq0-breadth",
         latex_resize_to_width=False,
         note=(
-            "JARVIS columns are unavailable for projects it reports no case for. "
-            "Teralizer aggregate PVC counts distinct values exercised by "
+            "A dash in the JARVIS columns marks a project that the publication "
+            "reports no case for. A dash in the Teralizer columns marks a project "
+            "for which the pipeline produced no generalized test. Teralizer "
+            "aggregate PVC counts distinct values exercised by "
             "generalized tests for each MUT and parameter. Generalized MUTs have "
             "at least one generalized test."
         ),
@@ -678,21 +680,16 @@ def build(conn: Connection) -> RQReport:
                     "distinct MUTs."
                 ),
                 Prose(
-                    "JARVIS operates on test code alone and abstracts positive and "
-                    "negative examples through a predefined template library with a "
-                    "fixed ranking. The abstractions deliberately overapproximate, "
-                    "so their precision depends on multiple related tests per "
-                    "scenario, and the values JARVIS reports reflect this mechanism: the "
-                    "isPrintable and toIntExact CUT suites loop over large ranges "
-                    "that exceed 100 property samples, and the IntervalTest "
-                    "property exposed MATH-1256 and failed on its second sample. "
                     "The JARVIS implementation and template library are "
                     "unavailable, so JARVIS is not rerun and its Table-2 rows serve "
-                    "as the comparison reference."
+                    "as the comparison reference. A reported PBT PVC counts the "
+                    "values that the synthesized properties sampled. IntervalTest "
+                    "reports 2 because its property stopped on the second sample, "
+                    "so that cell counts a run that ended rather than the values a "
+                    "passing property covered."
                 ),
                 Prose(
-                    "Teralizer derives a path-exact specification from each "
-                    "concrete execution through single-path symbolic analysis. "
+                    "Teralizer extracts its specification from a single execution. "
                     "Generalized tests exercise the original inputs as their first "
                     "samples by design, so coverage after generalization never "
                     "falls below the original tests' values. The Teralizer column "
@@ -710,9 +707,7 @@ def build(conn: Connection) -> RQReport:
                     "RQ0 uses a separate, pinned fixture set reproducing the twelve "
                     "Apache Commons project versions of the JARVIS evaluation. "
                     "RQ1--RQ5 use the constructed commons-utils dataset. The JARVIS "
-                    "columns aggregate the reported cases by project. Projects with "
-                    "no reported case carry no value, because the publication does "
-                    "not measure them. Teralizer PVC "
+                    "columns aggregate the reported cases by project. Teralizer PVC "
                     "deduplicates values per MUT and parameter across generalized "
                     "tests, so a value exercised by several tests counts once."
                 ),
