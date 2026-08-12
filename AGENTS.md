@@ -15,25 +15,38 @@ again to get a cleaner number. Never run anything again to pick the better of tw
 Every gate runs once. If you suspect nondeterminism, investigate it as a defect. Do not average
 it away with repeat runs.
 
+## Dev environment
+Nix provides the toolchain. The devshell pins Java 8, because `build.gradle` targets 1.8 and
+jpf-core reads class files through its own bytecode model and rejects anything newer. The shell
+also provides Maven, PostgreSQL 17, uv and git-lfs, and it sets `JAVA_HOME`.
+
+Enter the shell in one of two ways:
+- Run `direnv allow` once. The shell then loads whenever you enter the repository. `.envrc`
+  holds `use flake`.
+- Run `nix develop` for an interactive shell, or `nix develop --command <cmd>` for one command.
+
+Every command in this file assumes that you are inside the devshell. Docker is the exception,
+because the devshell does not provide it. Docker must come from your own installation.
+
 ## Commands
 | Task | Command |
 |---|---|
 | Build (incl. SPF submodules) | `./gradlew build` |
-| Verify pipeline fixture corpus | `scripts/verify-pipeline.sh` |
-| Verify sentinel spike subset | `REPOREAPERS_DB=postgres_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db` |
-| Run one config | `./gradlew run -Dteralizer.config=<config-file>` |
+| Verify pipeline fixture corpus — 5-10 min. Run at a wave end, never per change | `scripts/verify-pipeline.sh` |
+| Verify sentinel spike subset — 10 min. A measurement event. Ask the operator first | `REPOREAPERS_DB=postgres_sentinel_verify REPOREAPERS_DATA_DIR=data/sentinel-verify REPOREAPERS_CONFIG_DIR=project-configs/sentinel scripts/run-reporeapers-rerun.sh --reset-db` |
+| Run one config — a full pipeline for one project. Minutes to hours | `./gradlew run -Dteralizer.config=<config-file>` |
 | Start / stop DB | `./gradlew startPostgres` / `./gradlew stopPostgres` |
 | DB UI | `docker compose up adminer` → http://localhost:18080 (password: `teralizer`) |
 | Analysis deps | `uv sync --directory analysis` |
 | Build eval reports | `uv run --directory analysis python -m teralizer.eval all` |
 | Lint / format / types / tests | `uv run --directory analysis ruff check --fix .` · `ruff format .` · `ty check .` · `pytest` |
 
-Run everything from the project root. The gate that always runs is CI:
-`.github/workflows/build.yml` executes `./gradlew build` and `pytest -m "not db"`,
-so database-backed checks are NOT enforced there and must be run locally.
-`analysis/.pre-commit-config.yaml` adds ruff and ty, and applies only once you run
-`pre-commit install`; it is not installed by cloning. Use `scripts/publish-analysis.sh` to render the complete report set
-and copy citable tables and CSV data into the paper repository.
+Run everything from the project root. CI is the gate that always runs.
+`.github/workflows/build.yml` executes `./gradlew build` and `pytest -m "not db"`, so CI does not
+enforce any check that needs a database. Run those locally.
+`analysis/.pre-commit-config.yaml` adds ruff and ty, and it applies only after you run
+`pre-commit install`. A clone does not install it. Use `scripts/publish-analysis.sh` to render
+the complete report set and to copy citable tables and CSV data into the paper repository.
 
 ## Verification tiers
 Match the gate to the change. Goldens are observed truth: on a mismatch, investigate instead of
