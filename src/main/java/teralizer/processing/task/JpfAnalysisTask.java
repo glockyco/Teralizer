@@ -37,6 +37,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.jpf.ModelStatistics;
 import teralizer.jpf.ModelStatisticsExtractor;
+import teralizer.jpf.OutputSpecClassifier.OutputSpecClass;
 import teralizer.processing.NoGeneralizableAssertionException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProcessingStatus;
@@ -163,13 +164,13 @@ public class JpfAnalysisTask extends AbstractTask {
             .filter(task -> task.getStatus() == ProcessingStatus.FAILED)
             .count());
         record.setAssertionsWithInputSpec((int) scopedAssertions.stream()
-            .filter(assertion -> assertion.getOutputSpecClass() != null)
+            .filter(assertion -> hasInputSpecification(assertion, gson))
             .count());
         record.setAssertionsWithOutputSpec((int) scopedAssertions.stream()
-            .filter(assertion -> assertion.getOutputSpecClass() != null)
+            .filter(JpfAnalysisTask::hasOutputSpecification)
             .count());
         record.setAssertionsWithCompleteSpec((int) scopedAssertions.stream()
-            .filter(assertion -> assertion.getOutputSpecClass() != null)
+            .filter(assertion -> hasInputSpecification(assertion, gson) && hasOutputSpecification(assertion))
             .count());
         record.setFailureCounts(JSONB.valueOf(gson.toJson(failureCounts)));
         return record;
@@ -236,6 +237,31 @@ public class JpfAnalysisTask extends AbstractTask {
         public int hashCode() {
             return Objects.hash(this.fileHash, this.methodName);
         }
+    }
+
+    /**
+     * Whether the assertion captured an input model. The path condition is written for every
+     * extraction, and it holds the JSON literal {@code null} when SPF collected no constraint, so
+     * the rendered size is what separates a captured model from an empty file.
+     */
+    static boolean hasInputSpecification(AssertionRecord assertion, Gson gson) {
+        String statistics = assertion.getInputModelStatistics();
+        if (statistics == null) {
+            return false;
+        }
+        ModelStatistics inputStatistics = gson.fromJson(statistics, ModelStatistics.class);
+        return inputStatistics != null && inputStatistics.getJavaSize() > 0;
+    }
+
+    /**
+     * Whether the assertion captured an output model. {@link OutputSpecClass#NULL_CONCRETE} is the
+     * classifier's name for a null model, and every other class is an oracle the pipeline can use,
+     * including {@link OutputSpecClass#EXCEPTION}.
+     */
+    static boolean hasOutputSpecification(AssertionRecord assertion) {
+        String outputSpecClass = assertion.getOutputSpecClass();
+        return outputSpecClass != null
+            && !OutputSpecClass.NULL_CONCRETE.name().equals(outputSpecClass);
     }
 
     private void updateModelStatistics(Gson gson) throws IOException {
