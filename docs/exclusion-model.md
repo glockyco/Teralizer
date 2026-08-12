@@ -395,26 +395,17 @@ the evaluation.
 Chapter prose cites the macros instead: `\TzRealworldWideningRefusals`, and per cause
 `\TzRealworldWideningRefusal<Cause>` with a matching `Pct` for the share of refusals.
 
-The verdict is recorded as a single constant, so the deciding branch is **not persisted**
-(defect **EM-8**). It can be reconstructed from `assertion.output_spec_class`,
-`generalization_recipe ->> 'oracleExpressionType'`, `assertion.concretization_events` and
-`assertion.post_concretization_divergence_risk`, in the branch order of `evaluate`:
+`WideningLicense` writes the branch it took to `generalization.widening_refusal_code`, and the report
+reads that column. The six codes it can write are `NULL_CONCRETE_OUTPUT_NOT_LITERAL`,
+`NULL_CONCRETE_CONCRETIZATION_EVENTS`, `NULL_CONCRETE_PARAMETERS_EMPTY`,
+`NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS`, `EXCEPTION_CONCRETIZATION_DIVERGENCE_RISK`
+and `EXCEPTION_PATH_CONDITION_NOT_COVERING_PARAMETERS`. The report emits one row per code, and
+`analysis/tests/eval/test_widening.py` fails when the Java declares a code the report cannot label.
 
-The report emits this as `tab:widening-refusals`, merging the two parameter-coverage branches
-because they differ only in output class.
-
-| Deciding branch | refused | of 3,471 | of 5,529 attempts |
-|---|---|---|---|
-| `NULL_CONCRETE`, oracle expression not boolean | 1,828 | 52.7% | 33.1% |
-| `NULL_CONCRETE`, concretization events present | 1,329 | 38.3% | 24.0% |
-| Generated parameters not covered by the path condition | 299 | 8.6% | 5.4% |
-| `EXCEPTION`, concretized with post-event divergence risk | 15 | 0.4% | 0.3% |
-
-The reconstruction reproduces the implementation exactly on the three deterministic branches:
-750 always-widen cases produced 0 refusals, 15 exception-risk cases produced 15 refusals, 1,329
-concretized cases produced 1,329 refusals, and 1,829 non-boolean cases produced 1,828 refusals
-plus one row pre-empted by the seed gate. The three coverage codes compare two `Set<String>` values
-that are never persisted, so 299 refusals (8.6%) cannot be split further without EM-8.
+The license applies its checks in order, so a refusal that satisfies several of them carries the
+first one. The literal check runs before the concretization check. A refusal that has concretization
+events and a non-literal return therefore carries the literal code, and a count under one code is a
+count of the refusals that reached that check first.
 
 ### The residual risk the gate accepts
 
@@ -464,7 +455,7 @@ causes are reported separately in `tab:widening-refusals`.
 | EM-5 | Project-scoped failures cleared no `is_included` while the lifecycle fanned them out | implementation | 15 generalizations | fixed in code, needs a re-collection to show in data |
 | EM-6 | `AbstractTask` caught `Exception`, not `Throwable` | implementation | 2 assertions | fixed in code, needs a re-collection |
 | EM-7 | `deriveRollup` reports "never ran" as "failed at this stage" | implementation | 98 generalizations | **open**, guarded by an `xfail` invariant |
-| EM-8 | Widening refusal sub-reason not persisted | implementation | 299 refusals unsplittable | fixed in code via `generalization.widening_refusal_code`, needs a re-collection |
+| EM-8 | Widening refusal sub-reason not persisted | implementation | 299 refusals unsplittable | fixed, `generalization.widening_refusal_code`, carried by v7 |
 | EM-9 | ~~Generated SPF configuration comments out `symbolic.arrays` and `symbolic.lazy`, and never writes `symbolic.string_dp`~~ | configuration | none | **not a defect.** Measured over nine projects: `symbolic.arrays` is rejected by `SymbolicInstructionFactory.java:737-739` whenever constraint collection is on, and `symbolic.lazy` and `symbolic.string_dp` each produced results identical to the baseline. A string decision procedure decides satisfiability, and this analysis only collects. Widening the `symbolic.strings` gate to String-returning methods does raise their symbolic yield from 7 to 19, but costs 73 of 321 String assertions, which abort in `SymbolicStringHandler.handletoString` when a symbolic numeric reaches `toString`. That abort is bounded work rather than a limitation: every piece it needs already exists, in `StringExpression._valueOf(IntegerExpression)`, `StringOperator.VALUEOF`, and this repository's own mapping of `VALUEOF` to `String.valueOf` (`SpfToModelTransformer.java:286-287`). The handler simply throws instead of building the term |
 
 The root cause behind EM-1 through EM-3 was structural: a two-bucket model over a five-mechanism
@@ -536,21 +527,9 @@ Substitute `test` or `assertion` for `generalization` for the other levels.
 Widening refusal taxonomy:
 
 ```sql
-SELECT CASE
-         WHEN a.output_spec_class IN ('SYMBOLIC', 'CONSTANT')       THEN 'widened'
-         WHEN a.output_spec_class = 'EXCEPTION'
-              AND coalesce(a.concretization_events, 0) > 0
-              AND a.post_concretization_divergence_risk IS DISTINCT FROM false
-                                                                    THEN 'exception: divergence risk'
-         WHEN a.output_spec_class = 'EXCEPTION'                     THEN 'exception: parameter coverage'
-         WHEN coalesce(a.generalization_recipe::jsonb ->> 'oracleExpressionType', '')
-              NOT IN ('boolean', 'java.lang.Boolean')               THEN 'null model: oracle not boolean'
-         WHEN coalesce(a.concretization_events, 0) > 0              THEN 'null model: concretized'
-         ELSE                                                            'null model: parameter coverage'
-       END AS branch,
-       count(*) FILTER (WHERE g.exclusion_info = 'ORACLE_NOT_WIDENABLE') AS refused,
-       count(*)                                                          AS total
-FROM generalization g JOIN assertion a ON a.id = g.assertion_id
+SELECT coalesce(widening_refusal_code, 'widened') AS branch,
+       count(*)
+FROM generalization
 GROUP BY 1 ORDER BY 2 DESC;
 ```
 
