@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 import teralizer.jpf.ExtractionAborted;
 import teralizer.jpf.ExtractionOutcome;
+import teralizer.processing.NoGeneralizableAssertionException;
 import teralizer.processing.ProcessingStage;
 import teralizer.transformer.UnsupportedSpfTermException;
 import teralizer.util.ConsoleCommandException;
@@ -51,7 +52,9 @@ public final class TaskDiagnosticClassifier {
         if (typed instanceof JPFNativePeerException || contains(failure, "native peer")) {
             return diagnostic(TaskDiagnosticCodes.MISSING_NATIVE_PEER, messageDetail(failure));
         }
-        if (stage == ProcessingStage.ANALYZE_JPF && contains(failure, "All assertions were excluded")) {
+        // Match the type, not the wording. PipelinePlanner exempts NO_INPUT_SPEC from structural
+        // failure, so this line decides whether the project is recorded as attrition or halts.
+        if (typed instanceof NoGeneralizableAssertionException) {
             return diagnostic(TaskDiagnosticCodes.NO_INPUT_SPEC, messageDetail(failure));
         }
         if (stage == ProcessingStage.BUILD_PROJECT_INSTRUMENTED || stage == ProcessingStage.BUILD_PROJECT_GENERALIZED) {

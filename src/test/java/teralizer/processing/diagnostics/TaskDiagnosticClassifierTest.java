@@ -4,6 +4,7 @@ import net.jqwik.api.Example;
 import org.junit.Assert;
 import teralizer.jpf.ExtractionAborted;
 import teralizer.jpf.ExtractionOutcome;
+import teralizer.processing.NoGeneralizableAssertionException;
 import teralizer.processing.ProcessingStage;
 import teralizer.transformer.UnsupportedSpfTermException;
 
@@ -145,6 +146,30 @@ public class TaskDiagnosticClassifierTest {
 
         Assert.assertNotEquals(TaskDiagnosticCodes.EXECUTION_TIMEOUT, reasonCode);
         Assert.assertNotEquals(TaskDiagnosticCodes.SUITE_TIMEOUT, reasonCode);
+    }
+
+    @Example
+    void typesAProjectWithNoGeneralizableAssertionAsAMeasuredOutcome() {
+        // PipelinePlanner exempts NO_INPUT_SPEC from structural failure. Any other code halts the
+        // project, so this classification must not depend on the wording of the message.
+        Throwable failure = new NoGeneralizableAssertionException(
+            "No assertion of project 292 reached test generalization. Recorded rejections: "
+            + "ParameterType 62, MissingValue 41. Per-assertion reasons are in filter_result.");
+
+        TaskDiagnosticClassifier.Diagnostic diagnostic =
+            TaskDiagnosticClassifier.classify(ProcessingStage.ANALYZE_JPF, failure);
+
+        Assert.assertEquals(TaskDiagnosticCodes.NO_INPUT_SPEC, diagnostic.reasonCode());
+        Assert.assertNotEquals(TaskDiagnosticCodes.LISTENER_BUG, diagnostic.reasonCode());
+    }
+
+    @Example
+    void typesTheSameOutcomeWhenTheRunnerWrapsIt() {
+        Throwable wrapped = new RuntimeException(
+            new NoGeneralizableAssertionException("No assertion of project 292 reached test generalization."));
+
+        Assert.assertEquals(TaskDiagnosticCodes.NO_INPUT_SPEC,
+            TaskDiagnosticClassifier.classify(ProcessingStage.ANALYZE_JPF, wrapped).reasonCode());
     }
 
     private static String jpfUncaughtMessage(String exceptionBlock) {

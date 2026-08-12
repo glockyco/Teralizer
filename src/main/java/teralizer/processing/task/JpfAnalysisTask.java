@@ -37,6 +37,7 @@ import teralizer.domain.MethodParameter;
 import teralizer.domain.Model;
 import teralizer.jpf.ModelStatistics;
 import teralizer.jpf.ModelStatisticsExtractor;
+import teralizer.processing.NoGeneralizableAssertionException;
 import teralizer.processing.ProcessingStage;
 import teralizer.processing.ProcessingStatus;
 import teralizer.processing.TaskContext;
@@ -79,7 +80,7 @@ public class JpfAnalysisTask extends AbstractTask {
             // happens to sit behind. Assertions are excluded by the filter that rejects them,
             // which usually runs long before specification extraction.
             List<String> rejections = PipelineQueries.fetchAssertionRejectionSummary(create, this.getProjectId());
-            throw new RuntimeException(
+            throw new NoGeneralizableAssertionException(
                 "No assertion of project " + this.getProjectId() + " reached test generalization. "
                 + "Recorded rejections: "
                 + (rejections.isEmpty() ? "none, so no assertion was ever analyzed" : String.join(", ", rejections))
