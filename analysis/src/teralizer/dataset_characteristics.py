@@ -114,20 +114,29 @@ def _count_line_types(file_path: str) -> Tuple[int, int, int]:
     return code_lines, comment_lines, empty_lines
 
 
-def _get_project_name(directory: str) -> str:
-    """Extract project name from directory path.
+def _relative_to_projects(directory: str, projects_root: Path) -> tuple[str, ...]:
+    """Return the path of a source directory relative to the projects root.
 
-    Args:
-        directory: Directory path string
-
-    Returns:
-        Project name (last segment before 'src')
+    Every name in this module is anchored to that root. An absolute path also contains the
+    directories the repository is checked out under, and any of those can carry a name the
+    convention uses, so reading a name out of the absolute path reports the checkout location
+    instead of the project.
     """
-    parts = Path(directory).parts
-    for i, part in enumerate(parts):
-        if part == "src" and i > 0:
-            return parts[i - 1]
-    return directory
+    return Path(directory).resolve().relative_to(Path(projects_root).resolve()).parts
+
+
+def _get_project_name(directory: str, projects_root: Path) -> str:
+    """Return the project directory name, which is the first component under the root."""
+    parts = _relative_to_projects(directory, projects_root)
+    if not parts:
+        raise ValueError(f"source directory is the projects root itself: {directory}")
+    return parts[0]
+
+
+def _get_source_type(directory: str, projects_root: Path) -> str:
+    """Return whether a source directory holds main or test sources."""
+    parts = _relative_to_projects(directory, projects_root)
+    return "main" if "main" in parts[1:] else "test"
 
 
 # =============================================================================
@@ -376,9 +385,8 @@ def compute_project_statistics(
     stats = []
     for directory in directories:
         stat = compute_directory_statistics(directory)
-        stat["project"] = _get_project_name(directory)
-        # Determine type by checking if path contains /main/ or /test/
-        stat["type"] = "main" if "/main/" in directory else "test"
+        stat["project"] = _get_project_name(directory, projects_root)
+        stat["type"] = _get_source_type(directory, projects_root)
         stats.append(stat)
 
     return pd.DataFrame(stats)
