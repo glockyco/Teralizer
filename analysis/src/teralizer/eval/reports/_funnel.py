@@ -262,6 +262,24 @@ class StageBand:
     passing: int
 
 
+def _funnel_note(eligible: int, stages: "list[StageBand]", success_count: int) -> str:
+    """Describe each stage of the funnel in one sentence.
+
+    The rate is the share of entering projects that the stage includes, so it is written next to
+    the included count.
+    """
+    parts = [f"Eligible projects: {eligible}."]
+    for band in stages:
+        rate = band.passing / band.entering if band.entering else 0.0
+        parts.append(
+            f"Stage {band.stage}: {band.entering} entering, "
+            f"{band.passing} included ({rate:.1%}), {band.exclusions} excluded."
+        )
+    overall = success_count / eligible if eligible else 0.0
+    parts.append(f"Overall: {success_count} of {eligible} included ({overall:.1%}).")
+    return " ".join(parts)
+
+
 @dataclass(frozen=True)
 class ProjectFailure:
     project_id: int
@@ -349,18 +367,7 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
     reduction = next(band for band in stages if band.stage == _REDUCTION_STAGE)
     eligible = len(eligible_ids)
     success_count = len(survivor_sets[-1])
-    band_parts = [f"Eligible projects: {eligible}."]
-    for band in stages:
-        rate = band.passing / band.entering if band.entering else 0.0
-        band_parts.append(
-            f"Stage {band.stage}: {band.entering} entering, "
-            f"{band.passing} included, {band.exclusions} excluded ({rate:.1%})."
-        )
-    overall = success_count / eligible if eligible else 0.0
-    band_parts.append(
-        f"Overall: {success_count} of {eligible} included ({overall:.1%})."
-    )
-    note = " ".join(band_parts)
+    note = _funnel_note(eligible, stages, success_count)
 
     return FunnelResult(
         eligible=eligible,
