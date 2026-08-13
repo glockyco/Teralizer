@@ -594,6 +594,7 @@ def build(conn: Connection) -> RQReport:
         ],
         group_by="table_group",
         group_style="label-row",
+        full_width=True,
         caption=(
             "PVC of the test suite before generalization, after "
             "generalization with JARVIS, and after generalization with "

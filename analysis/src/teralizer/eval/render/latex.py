@@ -131,6 +131,8 @@ def render_table(table: Table) -> str:
                     has_previous_group = False
                 else:
                     if not has_previous_group or group != prev_group:
+                        if lines[-1] != "  \\midrule":
+                            lines.append("  \\addlinespace")
                         lines.append("  " + _cell(group, "str") + " \\\\")
                     prev_group = group
                     has_previous_group = True
@@ -141,7 +143,7 @@ def render_table(table: Table) -> str:
                 prev_group = group
         cells = [_cell(row[c.source], c.fmt) for c in table.columns]
         if indent:
-            cells[0] = "\\quad " + cells[0]
+            cells[0] = "\\qquad " + cells[0]
         lines.append("  " + " & ".join(cells) + " \\\\")
     lines += [
         "  \\bottomrule",
