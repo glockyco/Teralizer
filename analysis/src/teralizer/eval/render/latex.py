@@ -19,6 +19,11 @@ def _cell(value: object, fmt: str) -> str:
     text = render_value(value, fmt)
     if fmt == "tex":
         return text
+    if text == "—":
+        # An absent value renders as an en dash, matching the thesis's other
+        # tables. The formatter keeps the em dash as the renderer-agnostic
+        # marker, so CSV exports stay stable.
+        return "--"
     return text.replace("%", "\\%").replace("_", "\\_")
 
 
