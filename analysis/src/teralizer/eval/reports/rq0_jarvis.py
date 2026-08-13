@@ -506,9 +506,7 @@ def build(conn: Connection) -> RQReport:
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.teralizer_sound_properties",
-                    "unavailable"
-                    if "sound_properties" not in breadth.columns
-                    else _count_or_unavailable(getattr(row, "sound_properties", None)),
+                    _count_or_unavailable(row.get("sound_properties")),
                     "str",
                     get_census_project_pvc,
                 ),
