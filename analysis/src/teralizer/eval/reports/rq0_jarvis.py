@@ -650,6 +650,7 @@ def build(conn: Connection) -> RQReport:
         caption="Project-level PVC and MUT counts across the 12 benchmark projects.",
         label="tab:teralizer-rq0-breadth",
         latex_resize_to_width=False,
+        full_width=True,
         note=(
             "A dash in the JARVIS columns marks a project that the publication "
             "reports no case for. A dash in the Teralizer columns marks a project "
