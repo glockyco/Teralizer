@@ -100,6 +100,20 @@ _JARVIS_ROW_MUT = {
 }
 
 
+def _mut_display(table_row: str) -> str:
+    """Label-row text for a Table-2 row: its MUT(s) as ``Class.method``.
+
+    The module prefix and parameter list of ``_JARVIS_ROW_MUT`` entries are
+    dropped: the table's ten rows leave no overload ambiguity, and the short
+    form matches how the surrounding prose names the MUTs.
+    """
+    names: dict[str, None] = {}
+    for mut in _JARVIS_ROW_MUT[table_row]:
+        qualified = mut.split("(", 1)[0]
+        names.setdefault(".".join(qualified.split(".")[-2:]))
+    return "\\texttt{" + ", ".join(names) + "}"
+
+
 def _fetch_task_rows(conn: Any) -> pd.DataFrame:
     """Return project task counts for the census variant and cross-variant stages."""
     query = f"""
@@ -303,10 +317,13 @@ def build(conn: Connection) -> RQReport:
     cut_values = load_cut_values()
     suite = suite_union_pvc(full_scoreboard, cut_values, variant=TABLE2_VARIANT)
     comparison = comparison.merge(suite, on="table_row", how="left")
+    # Group the ten published scenario rows by the MUTs that align the two
+    # approaches. Consecutive rows sharing a MUT (the three PolynomialFunction
+    # scenarios) share one label row; every data row is a reported scenario.
     table_parts = comparison["table_row"].astype(str).str.partition("::")
-    has_table_group = table_parts[1].eq("::")
-    comparison["table_group"] = table_parts[0].where(has_table_group, "")
-    comparison["table_label"] = table_parts[2].where(has_table_group, table_parts[0])
+    has_method = table_parts[1].eq("::")
+    comparison["table_group"] = comparison["table_row"].map(_mut_display)
+    comparison["table_label"] = table_parts[2].where(has_method, table_parts[0])
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
     budget = _build_budget_table(scoreboard, mutation)
 
@@ -549,7 +566,7 @@ def build(conn: Connection) -> RQReport:
         key="rq0-table2-comparison",
         df=comparison,
         columns=[
-            ColumnSpec("Reported case", "table_label", csv_source="table_row"),
+            ColumnSpec("Reported scenario", "table_label", csv_source="table_row"),
             ColumnSpec(
                 "CUT PVC",
                 "original_cut_pvc",
@@ -580,7 +597,8 @@ def build(conn: Connection) -> RQReport:
         caption=(
             "PVC of the original tests, of the property-based tests JARVIS "
             "synthesized for them, and of the suite after generalization with "
-            "\\ToolTeralizer{}."
+            "\\ToolTeralizer{}. Label rows name the MUTs. The indented rows "
+            "are the scenarios JARVIS reports, with their published values."
         ),
         label="tab:teralizer-rq0-table2",
         latex_resize_to_width=False,
@@ -588,8 +606,8 @@ def build(conn: Connection) -> RQReport:
             "JARVIS CUT and PBT PVC are the published values, with PBT PVC "
             "measuring the synthesized properties alone. Teralizer suite PVC "
             "unions the reconstructed original tests' values with the "
-            "generalized tests' values. A dash marks a case Teralizer excludes "
-            "from generalization."
+            "generalized tests' values. A dash marks a scenario Teralizer "
+            "excludes from generalization."
         ),
         provenance=capture(compare_to_jarvis),
     )
