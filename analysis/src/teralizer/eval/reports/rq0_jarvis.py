@@ -595,10 +595,10 @@ def build(conn: Connection) -> RQReport:
         group_by="table_group",
         group_style="label-row",
         caption=(
-            "PVC of the original tests, of the property-based tests JARVIS "
-            "synthesized for them, and of the suite after generalization with "
-            "\\ToolTeralizer{}. Label rows name the MUTs. The indented rows "
-            "are the scenarios JARVIS reports, with their published values."
+            "PVC of the test suite before generalization, after "
+            "generalization with JARVIS, and after generalization with "
+            "\\ToolTeralizer{}. Label rows name the MUTs of the indented "
+            "scenario rows."
         ),
         label="tab:teralizer-rq0-table2",
         latex_resize_to_width=False,
