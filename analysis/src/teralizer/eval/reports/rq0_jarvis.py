@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, cast
 
@@ -270,9 +271,22 @@ _VARIANT_DISPLAY = {
 
 
 def _build_budget_table(
-    scoreboard: pd.DataFrame, mutation: pd.DataFrame
+    scoreboard: pd.DataFrame,
+    mutation: pd.DataFrame,
+    suite_pvc_totals: Mapping[str, int],
 ) -> pd.DataFrame:
+    """Per-budget suite PVC against covered mutation score.
+
+    ``total_pvc`` reports ``suite_pvc_totals``, which unions the reconstructed
+    original inputs with the generated values. The scenario comparison table uses
+    that same basis, so the lowest budget row equals the sum of its Teralizer
+    column. The per-property sum that :func:`summarize_variants` computes reports a
+    different total for the same tests at the same budget, so it is replaced here.
+    """
     summary = summarize_variants(scoreboard, mutation)
+    summary["total_pvc"] = (
+        summary["variant"].astype(str).map(suite_pvc_totals).astype("Int64")
+    )
     summary["variant"] = pd.Categorical(
         summary["variant"], categories=list(SWEEP_VARIANTS), ordered=True
     )
@@ -325,7 +339,15 @@ def build(conn: Connection) -> RQReport:
     comparison["table_group"] = comparison["table_row"].map(_mut_display)
     comparison["table_label"] = table_parts[2].where(has_method, table_parts[0])
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
-    budget = _build_budget_table(scoreboard, mutation)
+    suite_pvc_totals = {
+        variant: int(
+            suite_union_pvc(full_scoreboard, cut_values, variant=variant)["suite_pvc"]
+            .dropna()
+            .sum()
+        )
+        for variant in SWEEP_VARIANTS
+    }
+    budget = _build_budget_table(full_scoreboard, mutation, suite_pvc_totals)
 
     with open_report_connection(CENSUS_DB) as census_conn:
         mut_rows = get_census_by_mut(census_conn, variants=[CENSUS_VARIANT])
@@ -665,18 +687,23 @@ def build(conn: Connection) -> RQReport:
         columns=[
             ColumnSpec("Sampling budget", "display_variant"),
             ColumnSpec("Generalized tests", "probes", "count", "r"),
-            ColumnSpec("Total PVC", "total_pvc", "count", "r"),
+            ColumnSpec("Suite PVC", "total_pvc", "pvc", "r"),
             ColumnSpec("Killed mutants", "killed_mutants", "pvc", "r"),
             ColumnSpec("Covered mutants", "covered_mutants", "pvc", "r"),
             ColumnSpec("Covered mutation score", "covered_mutation_score", "pct1", "r"),
         ],
-        caption="PVC rises with the tries budget while covered mutation score stays flat.",
+        caption=(
+            "Suite PVC rises with the sampling budget "
+            "while covered mutation score stays flat."
+        ),
+        short_caption="PVC and covered mutation score per sampling budget",
         label="tab:teralizer-rq0-pvc",
-        latex_resize_to_width=False,
+        latex_resize_to_width=True,
         note=(
-            "PVC is a generation-volume diagnostic. Rows with persisted PIT "
-            "results carry kills and mutation scores. Missing PIT results appear "
-            "as unavailable cells."
+            "Total PVC unions the reconstructed original inputs with the generated "
+            "values, the same basis as the scenario comparison. Rows with persisted "
+            "PIT results carry kills and mutation scores. Missing PIT results "
+            "appear as unavailable cells."
         ),
         provenance=capture(summarize_variants),
     )

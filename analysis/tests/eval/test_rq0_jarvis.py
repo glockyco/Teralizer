@@ -294,10 +294,17 @@ def test_budget_marks_missing_pit_variants_unavailable():
             "total_mutants": [20],
         }
     )
-    budget = _build_budget_table(scoreboard, mutation).set_index("variant")
+    budget = _build_budget_table(
+        scoreboard,
+        mutation,
+        {"IMPROVED_100_TRIES": 3250, "IMPROVED_200_TRIES": 4210},
+    ).set_index("variant")
     assert budget.loc["IMPROVED_100_TRIES", "killed_mutants"] == 5
     assert pd.isna(budget.loc["IMPROVED_200_TRIES", "killed_mutants"])
     assert pd.isna(budget.loc["IMPROVED_200_TRIES", "covered_mutation_score"])
+    # The suite basis replaces the per-property sums of 100 and 200.
+    assert budget.loc["IMPROVED_100_TRIES", "total_pvc"] == 3250
+    assert budget.loc["IMPROVED_200_TRIES", "total_pvc"] == 4210
 
 
 def test_suite_union_joins_captured_and_generated_values(tmp_path):
