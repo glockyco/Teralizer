@@ -109,7 +109,8 @@ def test_code_quality() -> bool:
     """Run the analysis lint and type checks."""
     print("\nTesting code quality...")
     checks = [
-        ("ruff formatting", ["uv", "run", "ruff", "format", "."]),
+        # --check, because a validator reports state and never changes it.
+        ("ruff formatting", ["uv", "run", "ruff", "format", "--check", "."]),
         ("ruff linting", ["uv", "run", "ruff", "check", "."]),
         ("type checking", ["uv", "run", "ty", "check", "src/", "tests/"]),
     ]
