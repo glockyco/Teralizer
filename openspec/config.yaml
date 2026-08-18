@@ -1,0 +1,54 @@
+schema: spec-driven
+
+context: |
+  Teralizer turns JUnit tests into property-based jqwik tests. It runs Symbolic
+  PathFinder in constraint-collection mode along a test's concrete path, extracts
+  path-exact specifications, and generates tests that explore more inputs within
+  the same execution paths.
+
+  Stack: Java 8 + Gradle (pipeline, SPF submodules), Python 3 + uv (analysis under
+  `analysis/`), PostgreSQL 17 in Docker (container `postgres-teralizer`), Nix devshell.
+
+  This is a research artifact, not a product. Two properties outrank convenience:
+  - Measurement integrity. First-run numbers stand. A stage that times out is a
+    result, not noise. Never re-run to get a cleaner number. See AGENTS.md.
+  - Replicability. Every reported figure must be traceable to a corpus, a tool
+    version, and a run. A third party must be able to reproduce it.
+
+  Reported figures land in a PhD thesis at ../phd-thesis and in the published
+  papers, so any change to a measured definition ripples into prose that cites it.
+
+  Conventions: Conventional Commits with a causal body. Simplified Technical English
+  in docs. `docs/exclusion-model.md` is required reading before quoting any exclusion
+  figure. Read `docs/plans/INDEX.md` for roadmap context.
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
