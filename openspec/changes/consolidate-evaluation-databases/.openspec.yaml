@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-08-18
+goal: A third party can reproduce every reported figure from the replication
+  artifact, and no figure can silently come from the wrong corpus
