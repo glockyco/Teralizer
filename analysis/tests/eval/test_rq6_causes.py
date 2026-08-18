@@ -39,6 +39,39 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
     ) == pytest.approx(counts["Choice-dependent"] / total)
 
 
+def test_rq6_stage_metrics_chain_the_funnel(rq6_report, funnel_result):
+    """Each stage macro must match its band, and the bands must chain.
+
+    A stage's included count is the next stage's entering count. Without this,
+    prose can cite two macros that describe incompatible funnels.
+    """
+    report = rq6_report
+    slugs = [rq6_causes._stage_slug(band.stage) for band in funnel_result.stages]
+    assert slugs == ["1_2", "3", "4", "5"]
+    for band, slug in zip(funnel_result.stages, slugs):
+        assert report.metric(f"realworld.stage_{slug}.entering").value == band.entering
+        assert report.metric(f"realworld.stage_{slug}.included").value == band.passing
+        assert (
+            report.metric(f"realworld.stage_{slug}.excluded").value == band.exclusions
+        )
+        assert float(
+            report.metric(f"realworld.stage_{slug}.included_pct").value
+        ) == pytest.approx(band.passing / band.entering)
+    for earlier, later in zip(slugs, slugs[1:]):
+        assert (
+            report.metric(f"realworld.stage_{earlier}.included").value
+            == report.metric(f"realworld.stage_{later}.entering").value
+        )
+    assert (
+        report.metric("realworld.stage_1_2.entering").value
+        == report.metric("realworld.eligible_projects").value
+    )
+    assert (
+        report.metric("realworld.stage_5.included").value
+        == report.metric("realworld.applicability_projects").value
+    )
+
+
 def test_rq6_funnel_causes_are_typed(rq6_report):
     report = rq6_report
     funnel = next(t for t in report.tables() if "processing-failures" in t.label)

@@ -8,7 +8,7 @@ from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
 from teralizer.eval.model import Metric, Prose, RQReport, Section
-from teralizer.eval.provenance import capture
+from teralizer.eval.provenance import Provenance, capture
 from teralizer.eval.registry import Corpus, ReportSpec, register
 from teralizer.eval.reports import _funnel
 from teralizer.eval.reports._causes_common import (
@@ -310,6 +310,55 @@ def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
     return pd.DataFrame(df, columns=["strategy", "level", "total", *_BREAKDOWN_COLUMNS])
 
 
+def _stage_slug(stage: str) -> str:
+    """Stage label to metric-key segment ("1 + 2" -> "1_2")."""
+    return "_".join(part for part in stage.replace("+", " ").split() if part)
+
+
+def _stage_metrics(
+    funnel: _funnel.FunnelResult, provenance: Provenance | None
+) -> list[Metric]:
+    """One entering/included/excluded/rate quartet per pipeline stage.
+
+    The funnel note states these figures in the markdown report only. Citing a
+    stage in prose needs a macro, otherwise the chapter hardcodes a number that
+    no regeneration can correct.
+    """
+    metrics: list[Metric] = []
+    for band in funnel.stages:
+        slug = _stage_slug(band.stage)
+        rate = band.passing / band.entering if band.entering else 0.0
+        metrics.extend(
+            [
+                Metric(
+                    f"realworld.stage_{slug}.entering",
+                    band.entering,
+                    fmt="int",
+                    provenance=provenance,
+                ),
+                Metric(
+                    f"realworld.stage_{slug}.included",
+                    band.passing,
+                    fmt="int",
+                    provenance=provenance,
+                ),
+                Metric(
+                    f"realworld.stage_{slug}.excluded",
+                    band.exclusions,
+                    fmt="int",
+                    provenance=provenance,
+                ),
+                Metric(
+                    f"realworld.stage_{slug}.included_pct",
+                    rate,
+                    fmt="pct1",
+                    provenance=provenance,
+                ),
+            ]
+        )
+    return metrics
+
+
 def build(conn: Connection) -> RQReport:
     variant = _funnel.resolve_variant(conn)
     funnel = _funnel.build_funnel(conn, variant=variant)
@@ -444,6 +493,7 @@ def build(conn: Connection) -> RQReport:
             provenance=funnel_provenance,
         ),
     ]
+    metrics.extend(_stage_metrics(funnel, funnel_provenance))
     jpf_rows = int(jpf_exception_data["count"].sum())
     jpf_unparsed = int(
         jpf_exception_data.loc[
