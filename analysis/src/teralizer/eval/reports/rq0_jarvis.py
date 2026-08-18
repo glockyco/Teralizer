@@ -332,9 +332,7 @@ def build(conn: Connection) -> RQReport:
     has_method = table_parts[1].eq("::")
     scenario_names = table_parts[2].where(has_method, table_parts[0])
     comparison["scenario_number"] = comparison["table_row"].map(_scenario_number)
-    comparison["scenario_name"] = scenario_names.map(
-        lambda name: f"\\texttt{{{name}}}"
-    )
+    comparison["scenario_name"] = scenario_names.map(lambda name: f"\\texttt{{{name}}}")
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
     suite_pvc_totals = {
         variant: int(

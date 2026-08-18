@@ -93,7 +93,9 @@ def test_database_connection() -> bool:
         except ConnectionError:
             print("  ℹ postgres_test not available: Connection failed")
         except RuntimeError as error:
-            print(f"  ℹ postgres_test schema incomplete:\n    {str(error).split(chr(10))[0]}...")
+            print(
+                f"  ℹ postgres_test schema incomplete:\n    {str(error).split(chr(10))[0]}..."
+            )
         except Exception as error:
             print(f"  ℹ postgres_test unavailable: {type(error).__name__}")
 

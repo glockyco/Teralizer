@@ -266,7 +266,9 @@ def test_render_table_label_rows_indent_members_and_flatten_empty_groups():
     # Groups are separated by one \\addlinespace, and the first label row,
     # which follows the header midrule directly, gets none.
     assert lines.count("  \\addlinespace") == 1
-    assert lines.index("  \\addlinespace") + 1 == lines.index("  IntervalTest " + row_end)
+    assert lines.index("  \\addlinespace") + 1 == lines.index(
+        "  IntervalTest " + row_end
+    )
     assert "  \\qquad contains & 2 " + row_end in lines
     assert "  flat-empty & 0 " + row_end in lines
     assert "  flat-null & 1 " + row_end in lines
