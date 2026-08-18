@@ -1,0 +1,35 @@
+# Git hooks managed by lefthook, installed by entering the devshell.
+#
+# Every job reaches its tool through `nix develop`, named by the absolute path of
+# the system Nix, so a commit works from an editor, a GUI client or an agent that
+# has no toolchain on PATH. The tools themselves come from `uv.lock`, which stays
+# the only place a Python tool version is decided.
+
+assert_lefthook_installed: true
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: ruff-format
+      root: analysis/
+      glob: "**/*.py"
+      run: /nix/var/nix/profiles/default/bin/nix develop --command uv run ruff format {staged_files}
+      stage_fixed: true
+    - name: ruff-lint
+      root: analysis/
+      glob: "**/*.py"
+      run: /nix/var/nix/profiles/default/bin/nix develop --command uv run ruff check --fix {staged_files}
+      stage_fixed: true
+    - name: ty
+      root: analysis/
+      glob: "**/*.py"
+      run: /nix/var/nix/profiles/default/bin/nix develop --command uv run ty check src/ tests/
+
+pre-push:
+  jobs:
+    # The database tests need the corpus, which CI does not have, so a push is the
+    # last point they run. They skip when PostgreSQL is unreachable, and -ra makes
+    # a run that proved nothing say so.
+    - name: pytest
+      root: analysis/
+      run: /nix/var/nix/profiles/default/bin/nix develop --command uv run python -m pytest -q -ra

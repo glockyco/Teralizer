@@ -44,9 +44,10 @@ because the devshell does not provide it. Docker must come from your own install
 Run everything from the project root. CI is the gate that always runs.
 `.github/workflows/build.yml` executes `./gradlew build` and `pytest -m "not db"`, so CI does not
 enforce any check that needs a database. Run those locally.
-`analysis/.pre-commit-config.yaml` adds ruff and ty, and it applies only after you run
-`pre-commit install`. A clone does not install it. Use `scripts/publish-analysis.sh` to render
-the complete report set and to copy citable tables and CSV data into the paper repository.
+`lefthook.yml` holds the hooks and entering the devshell installs them. Each job reaches its tool
+through `nix develop`, so a commit works from an editor or a GUI client, and `uv.lock` decides every
+tool version. Use `scripts/publish-analysis.sh` to render the complete report set and to copy
+citable tables and CSV data into the paper repository.
 
 ## Verification tiers
 Match the gate to the change. Goldens are observed truth: on a mismatch, investigate instead of
@@ -54,7 +55,7 @@ editing the golden to match broken output.
 
 | Change | Gate |
 |---|---|
-| Analysis (`teralizer.eval`, its tests) | `pytest`. Add ruff and ty when you run `pre-commit install` |
+| Analysis (`teralizer.eval`, its tests) | `pytest`. The devshell's hooks add formatting, lint and types |
 | Java unit-level | `./gradlew test --tests '<Class>'` while iterating, one full `./gradlew build` before commit |
 | Pipeline behavior (codegen, SPF, filters, licenses, build files) | `scripts/verify-pipeline.sh` (~5–10 min, full fixture corpus) — ONCE PER WAVE of related changes, at the wave's end or when a golden must flip, NEVER per commit or per small change; iterate with `--only` below |
 | SPF submodule (`jpf-symbc/**`) | additionally `cd jpf-symbc && ./gradlew :jpf-symbc:test` (the root build does NOT run this suite, so a red suite survives "build green" without it) |

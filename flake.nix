@@ -34,9 +34,18 @@
             pkgs.postgresql_17
             pkgs.uv
             pkgs.git-lfs
+            pkgs.lefthook
           ];
 
           JAVA_HOME = "${pkgs.zulu8}";
+
+          # Installing is idempotent, so it is safe on every entry. The guard
+          # keeps it quiet outside a work tree.
+          shellHook = ''
+            if [ -d .git ]; then
+              lefthook install >/dev/null
+            fi
+          '';
         };
       });
     };
