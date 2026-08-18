@@ -10,30 +10,30 @@ The JARVIS implementation and template library are unavailable, so JARVIS is not
 
 Teralizer extracts its specification from a single execution. Generalized tests exercise the original inputs as their first samples by design, so coverage after generalization never falls below the original tests' values. The Teralizer column reports the measured value coverage after generalization, joining the captured original-suite values with the generalized tests' value logs.
 
-**PVC of the original tests, of the property-based tests JARVIS synthesized for them, and of the suite after generalization with \ToolTeralizer{}.**
+**PVC before generalization, after generalization with JARVIS, and after generalization with \ToolTeralizer{} for each of the 10 scenarios reported by JARVIS.**
 
-| Reported case | CUT PVC | PBT PVC | PBT PVC |
-| --- | --- | --- | --- |
-| isAscii | 6 | 59 | 230 |
-| isPrintable | 195 | 45 | 197 |
-| testMinMaxDouble | 9 | 400 | 368 |
-| toIntExact | 2,001 | 65 | 2,074 |
-| IntervalTest | 2 | 2 | 172 |
-| testConstants | 5 | 105 | — |
-| testfirstDerivativeComparison | 7 | 264 | 105 |
-| testLinear | 5 | 160 | 104 |
-| PrecisionTest | 8 | 102 | — |
-| testAbs | 5 | 506 | — |
+| \# | JARVIS scenario | CUT PVC | PBT PVC | PBT PVC |
+| --- | --- | --- | --- | --- |
+| 1 | \texttt{isAscii} | 6 | 59 | 230 |
+| 2 | \texttt{isPrintable} | 195 | 45 | 197 |
+| 3 | \texttt{testMinMaxDouble} | 9 | 400 | 368 |
+| 4 | \texttt{toIntExact} | 2,001 | 65 | 2,074 |
+| 5 | \texttt{IntervalTest} | 2 | 2 | 172 |
+| 6 | \texttt{testConstants} | 5 | 105 | — |
+| 7 | \texttt{testfirstDerivativeComparison} | 7 | 264 | 105 |
+| 8 | \texttt{testLinear} | 5 | 160 | 104 |
+| 9 | \texttt{PrecisionTest} | 8 | 102 | — |
+| 10 | \texttt{testAbs} | 5 | 506 | — |
 
-_JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. Teralizer suite PVC unions the reconstructed original tests' values with the generalized tests' values. A dash marks a case Teralizer excludes from generalization._
+_JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. Teralizer suite PVC unions the reconstructed original tests' values with the generalized tests' values. A dash marks a scenario Teralizer excludes from generalization._
 
-source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/0740e735159259a96c82eccc260797d9ae8b23bf/analysis/src/teralizer/jarvis_scoreboard.py#L837)
+source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/jarvis_scoreboard.py#L837)
 
 ## Applicability breadth
 
 RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons project versions of the JARVIS evaluation. RQ1--RQ5 use the constructed commons-utils dataset. The JARVIS columns aggregate the reported cases by project. Teralizer PVC deduplicates values per MUT and parameter across generalized tests, so a value exercised by several tests counts once.
 
-**Project-level PVC and MUT counts across the 12 benchmark projects.**
+**MUTs with a generalized test and the PVC of those tests, per project.**
 
 | Benchmark project | PBT PVC | MUTs | PBT PVC | MUTs |
 | --- | --- | --- | --- | --- |
@@ -53,22 +53,22 @@ RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons pr
 
 _A dash in the JARVIS columns marks a project that the publication reports no case for. A dash in the Teralizer columns marks a project for which the pipeline produced no generalized test. Teralizer aggregate PVC counts distinct values exercised by generalized tests for each MUT and parameter. Generalized MUTs have at least one generalized test._
 
-source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/0740e735159259a96c82eccc260797d9ae8b23bf/analysis/src/teralizer/jarvis_scoreboard.py#L716)
+source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/jarvis_scoreboard.py#L716)
 
-Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows. Completion marker absent.
+Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows. Completion marker present.
 
 ## PVC and mutation score
 
 PVC rewards every additional distinct input value, so it grows with the sampling budget by construction. Killed mutants, covered mutants, and covered mutation score stay flat across the sweep, so mutation score remains the effectiveness measure for the later research questions.
 
-**PVC rises with the tries budget while covered mutation score stays flat.**
+**Suite PVC rises with the sampling budget while covered mutation score stays flat.**
 
-| Sampling budget | Generalized tests | Total PVC | Killed mutants | Covered mutants | Covered mutation score |
+| Sampling budget | Generalized tests | Suite PVC | Killed mutants | Covered mutants | Covered mutation score |
 | --- | --- | --- | --- | --- | --- |
-| 100 tries | 10 | 1,135 | 51 | 80 | 63.7% |
-| 200 tries | 10 | 2,152 | 51 | 80 | 63.7% |
-| 1,000 tries | 10 | 10,055 | 51 | 80 | 63.7% |
+| 100 tries | 10 | 3,250 | 51 | 80 | 63.7% |
+| 200 tries | 10 | 4,210 | 51 | 80 | 63.7% |
+| 1,000 tries | 10 | 11,909 | 51 | 80 | 63.7% |
 
-_PVC is a generation-volume diagnostic. Rows with persisted PIT results carry kills and mutation scores. Missing PIT results appear as unavailable cells._
+_Total PVC unions the reconstructed original inputs with the generated values, the same basis as the scenario comparison. Rows with persisted PIT results carry kills and mutation scores. Missing PIT results appear as unavailable cells._
 
-source: [`summarize_variants`](https://github.com/glockyco/Teralizer/blob/0740e735159259a96c82eccc260797d9ae8b23bf/analysis/src/teralizer/jarvis_scoreboard.py#L999)
+source: [`summarize_variants`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/jarvis_scoreboard.py#L999)

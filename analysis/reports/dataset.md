@@ -19,4 +19,4 @@ _Source database: `postgres_dev`._
 | repo-reapers (mean) | 68 | 82 | 4,447 | 34 | 45 | 3,305 | 162 |
 | repo-reapers (median) | 51 | 57 | 3,244 | 22 | 26 | 2,023 | 86 |
 
-source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/0a446d9a6d6f2269f4ed22c2e491444ebfd5824a/analysis/src/teralizer/dataset_characteristics.py#L238)
+source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/dataset_characteristics.py#L238)
