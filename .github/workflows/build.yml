@@ -39,6 +39,15 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
 
+      - name: Setup Nix
+        uses: DeterminateSystems/determinate-nix-action@v3.21.9
+
+      # The hooks are the definition of formatting, lint and types, so CI runs
+      # them rather than a second list that could disagree. `pre-push` stays out:
+      # its tests need the corpus, which CI does not have.
+      - name: Run the commit hooks
+        run: nix develop --command lefthook run pre-commit --all-files
+
       # No RepoReapers corpus here, so the `db` tests would skip rather than
       # run. Deselecting them keeps a skip from reading as a pass.
       - name: Run the analysis tests

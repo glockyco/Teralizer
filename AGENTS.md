@@ -42,8 +42,8 @@ because the devshell does not provide it. Docker must come from your own install
 | Lint / format / types / tests | `uv run --directory analysis ruff check --fix .` · `ruff format .` · `ty check .` · `pytest` |
 
 Run everything from the project root. CI is the gate that always runs.
-`.github/workflows/build.yml` executes `./gradlew build` and `pytest -m "not db"`, so CI does not
-enforce any check that needs a database. Run those locally.
+`.github/workflows/build.yml` executes `./gradlew build`, the commit hooks, and `pytest -m "not db"`.
+It enforces no check that needs a database, so the `pre-push` hook is the last point those run.
 `lefthook.yml` holds the hooks and entering the devshell installs them. Each job reaches its tool
 through `nix develop`, so a commit works from an editor or a GUI client, and `uv.lock` decides every
 tool version. Use `scripts/publish-analysis.sh` to render the complete report set and to copy
