@@ -6,11 +6,10 @@ from teralizer.eval.render.csv import render_table
 from teralizer.eval.model import ColumnSpec, Table
 from teralizer.eval.reports.rq0_jarvis import (
     TABLE1_PROJECTS,
-    _JARVIS_ROW_MUT,
     _build_breadth_table,
     _build_budget_table,
     _census_status_ledger,
-    _mut_display,
+    _scenario_number,
     _table2_mut_counts,
 )
 from teralizer.jarvis_scoreboard import (
@@ -404,18 +403,6 @@ def test_csv_headers_follow_table_source_order(tmp_path):
     )
 
 
-def test_mut_display_names_short_muts_for_label_rows():
-    # Module prefix and parameter list are dropped; prose names MUTs the same way.
-    assert _mut_display("CharUtilsTest::isAscii") == "\\texttt{CharUtils.isAscii}"
-    # A scenario with two MUTs lists both on one label row.
-    assert _mut_display("FastMathTest::testMinMaxDouble") == (
-        "\\texttt{FastMath.min, FastMath.max}"
-    )
-    # The three PolynomialFunction scenarios collapse to one shared label,
-    # which is what groups them under a single MUT in the rendered table.
-    labels = {
-        _mut_display(row)
-        for row in _JARVIS_ROW_MUT
-        if row.startswith("PolynomialFunctionTest::")
-    }
-    assert labels == {"\\texttt{PolynomialFunction.value}"}
+def test_scenario_numbers_follow_stable_table_order():
+    assert _scenario_number("CharUtilsTest::isAscii") == 1
+    assert _scenario_number("UnivariateFunctionTest::testAbs") == 10

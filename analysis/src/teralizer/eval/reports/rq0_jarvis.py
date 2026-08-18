@@ -101,18 +101,14 @@ _JARVIS_ROW_MUT = {
 }
 
 
-def _mut_display(table_row: str) -> str:
-    """Label-row text for a Table-2 row: its MUT(s) as ``Class.method``.
+_JARVIS_SCENARIO_NUMBER = {
+    row.table_row: number for number, row in enumerate(JARVIS_TABLE2, start=1)
+}
 
-    The module prefix and parameter list of ``_JARVIS_ROW_MUT`` entries are
-    dropped: the table's ten rows leave no overload ambiguity, and the short
-    form matches how the surrounding prose names the MUTs.
-    """
-    names: dict[str, None] = {}
-    for mut in _JARVIS_ROW_MUT[table_row]:
-        qualified = mut.split("(", 1)[0]
-        names.setdefault(".".join(qualified.split(".")[-2:]))
-    return "\\texttt{" + ", ".join(names) + "}"
+
+def _scenario_number(table_row: str) -> int:
+    """Return the stable row number for a JARVIS Table-2 scenario."""
+    return _JARVIS_SCENARIO_NUMBER[table_row]
 
 
 def _fetch_task_rows(conn: Any) -> pd.DataFrame:
@@ -331,13 +327,14 @@ def build(conn: Connection) -> RQReport:
     cut_values = load_cut_values()
     suite = suite_union_pvc(full_scoreboard, cut_values, variant=TABLE2_VARIANT)
     comparison = comparison.merge(suite, on="table_row", how="left")
-    # Group the ten published scenario rows by the MUTs that align the two
-    # approaches. Consecutive rows sharing a MUT (the three PolynomialFunction
-    # scenarios) share one label row; every data row is a reported scenario.
+    # Each published JARVIS scenario is one observation in the comparison table.
     table_parts = comparison["table_row"].astype(str).str.partition("::")
     has_method = table_parts[1].eq("::")
-    comparison["table_group"] = comparison["table_row"].map(_mut_display)
-    comparison["table_label"] = table_parts[2].where(has_method, table_parts[0])
+    scenario_names = table_parts[2].where(has_method, table_parts[0])
+    comparison["scenario_number"] = comparison["table_row"].map(_scenario_number)
+    comparison["scenario_name"] = scenario_names.map(
+        lambda name: f"\\texttt{{{name}}}"
+    )
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
     suite_pvc_totals = {
         variant: int(
@@ -586,7 +583,19 @@ def build(conn: Connection) -> RQReport:
         key="rq0-table2-comparison",
         df=comparison,
         columns=[
-            ColumnSpec("Reported scenario", "table_label", csv_source="table_row"),
+            # Both labels belong in the lower header row, where the thesis puts
+            # the labels of columns that carry no spanning group header.
+            ColumnSpec(
+                "\\#",
+                "scenario_number",
+                "count",
+                "r",
+            ),
+            ColumnSpec(
+                "JARVIS scenario",
+                "scenario_name",
+                csv_source="table_row",
+            ),
             ColumnSpec(
                 "CUT PVC",
                 "original_cut_pvc",
@@ -612,15 +621,13 @@ def build(conn: Connection) -> RQReport:
                 group_header="\\ToolTeralizer{}",
             ),
         ],
-        group_by="table_group",
-        group_style="label-row",
         full_width=True,
         caption=(
-            "PVC of the test suite before generalization, after "
-            "generalization with JARVIS, and after generalization with "
-            "\\ToolTeralizer{}. Label rows name the MUTs of the indented "
-            "scenario rows."
+            "PVC before generalization, after generalization with JARVIS, and "
+            "after generalization with \\ToolTeralizer{} for each of the 10 "
+            "scenarios reported by JARVIS."
         ),
+        short_caption="PVC per JARVIS scenario before and after generalization",
         label="tab:teralizer-rq0-table2",
         latex_resize_to_width=False,
         note=(
@@ -642,35 +649,41 @@ def build(conn: Connection) -> RQReport:
                 "jarvis_successful_pbt_pvc",
                 "pvc",
                 "r",
-                group_header="JARVIS (reported)",
+                group_header="JARVIS",
             ),
             ColumnSpec(
                 "MUTs",
                 "jarvis_successful_muts",
                 "pvc",
                 "r",
-                group_header="JARVIS (reported)",
+                group_header="JARVIS",
             ),
             ColumnSpec(
                 "PBT PVC",
                 "aggregate_pvc",
                 "pvc",
                 "r",
-                group_header="\\ToolTeralizer{} (measured)",
+                group_header="\\ToolTeralizer{}",
             ),
             ColumnSpec(
                 "MUTs",
                 "sound_muts",
                 "pvc",
                 "r",
-                group_header="\\ToolTeralizer{} (measured)",
+                group_header="\\ToolTeralizer{}",
             ),
         ],
         group_by="row_group",
-        caption="Project-level PVC and MUT counts across the 12 benchmark projects.",
+        caption=(
+            "MUTs with a generalized test and the PVC of those tests, per project."
+        ),
+        short_caption="MUTs with generalized tests and their PVC per project",
         label="tab:teralizer-rq0-breadth",
         latex_resize_to_width=False,
         full_width=True,
+        # The spanning tool labels sit over numeric columns, so they follow the
+        # same right alignment as the values and as the scenario comparison table.
+        group_header_align="r",
         note=(
             "A dash in the JARVIS columns marks a project that the publication "
             "reports no case for. A dash in the Teralizer columns marks a project "
