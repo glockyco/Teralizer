@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, cast
 
@@ -267,22 +266,10 @@ _VARIANT_DISPLAY = {
 
 
 def _build_budget_table(
-    scoreboard: pd.DataFrame,
-    mutation: pd.DataFrame,
-    suite_pvc_totals: Mapping[str, int],
+    scoreboard: pd.DataFrame, mutation: pd.DataFrame
 ) -> pd.DataFrame:
-    """Per-budget suite PVC against covered mutation score.
-
-    ``total_pvc`` reports ``suite_pvc_totals``, which unions the reconstructed
-    original inputs with the generated values. The scenario comparison table uses
-    that same basis, so the lowest budget row equals the sum of its Teralizer
-    column. The per-property sum that :func:`summarize_variants` computes reports a
-    different total for the same tests at the same budget, so it is replaced here.
-    """
+    """Return generalized-test counts, PVC, and mutation outcomes by budget."""
     summary = summarize_variants(scoreboard, mutation)
-    summary["total_pvc"] = (
-        summary["variant"].astype(str).map(suite_pvc_totals).astype("Int64")
-    )
     summary["variant"] = pd.Categorical(
         summary["variant"], categories=list(SWEEP_VARIANTS), ordered=True
     )
@@ -304,6 +291,7 @@ def _build_budget_table(
                     "covered_mutation_score",
                 ],
             ] = None
+
     return summary
 
 
@@ -334,15 +322,7 @@ def build(conn: Connection) -> RQReport:
     comparison["scenario_number"] = comparison["table_row"].map(_scenario_number)
     comparison["scenario_name"] = scenario_names.map(lambda name: f"\\texttt{{{name}}}")
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
-    suite_pvc_totals = {
-        variant: int(
-            suite_union_pvc(full_scoreboard, cut_values, variant=variant)["suite_pvc"]
-            .dropna()
-            .sum()
-        )
-        for variant in SWEEP_VARIANTS
-    }
-    budget = _build_budget_table(full_scoreboard, mutation, suite_pvc_totals)
+    budget = _build_budget_table(full_scoreboard, mutation)
 
     with open_report_connection(CENSUS_DB) as census_conn:
         mut_rows = get_census_by_mut(census_conn, variants=[CENSUS_VARIANT])
@@ -558,7 +538,6 @@ def build(conn: Connection) -> RQReport:
         token = variant.lower()
         for field in (
             "probes",
-            "total_pvc",
             "killed_mutants",
             "covered_mutants",
             "covered_mutation_score",
@@ -630,8 +609,8 @@ def build(conn: Connection) -> RQReport:
         latex_resize_to_width=False,
         note=(
             "JARVIS CUT and PBT PVC are the published values, with PBT PVC "
-            "measuring the synthesized properties alone. Teralizer suite PVC "
-            "unions the reconstructed original tests' values with the "
+            "measuring the synthesized properties alone. For Teralizer, PVC "
+            "includes the reconstructed original tests' values and the "
             "generalized tests' values. A dash marks a scenario Teralizer "
             "excludes from generalization."
         ),
@@ -696,27 +675,54 @@ def build(conn: Connection) -> RQReport:
         key="rq0-pvc-budget",
         df=budget,
         columns=[
-            ColumnSpec("Sampling budget", "display_variant"),
-            ColumnSpec("Generalized tests", "probes", "count", "r"),
-            ColumnSpec("Suite PVC", "total_pvc", "pvc", "r"),
-            ColumnSpec("Killed mutants", "killed_mutants", "pvc", "r"),
-            ColumnSpec("Covered mutants", "covered_mutants", "pvc", "r"),
-            ColumnSpec("Covered mutation score", "covered_mutation_score", "pct1", "r"),
+            ColumnSpec(
+                "Sampling Budget",
+                "display_variant",
+                # Every row holds the input-selection strategy fixed, so the
+                # variant belongs over the budget column, not in each cell.
+                group_header="\\VariantImproved{}",
+            ),
+            ColumnSpec("Tests", "probes", "count", "r"),
+            ColumnSpec("PVC", "total_pvc", "pvc", "r"),
+            ColumnSpec(
+                "Killed",
+                "killed_mutants",
+                "pvc",
+                "r",
+                group_header="Mutation Testing Results",
+            ),
+            ColumnSpec(
+                "Covered",
+                "covered_mutants",
+                "pvc",
+                "r",
+                group_header="Mutation Testing Results",
+            ),
+            ColumnSpec(
+                "Score",
+                "covered_mutation_score",
+                "pct1",
+                "r",
+                group_header="Mutation Testing Results",
+            ),
         ],
         caption=(
-            "Suite PVC rises with the sampling budget "
-            "while covered mutation score stays flat."
+            "PVC and mutation testing results for the same 10 generalized tests "
+            "at 3 sampling budgets. Only the sampling budget changes between the "
+            "rows. PVC sums the distinct input values that the tests exercise, "
+            "and Score is the killed mutants divided by the covered mutants."
         ),
-        short_caption="PVC and covered mutation score per sampling budget",
+        short_caption="PVC and mutation testing results per sampling budget",
         label="tab:teralizer-rq0-pvc",
-        latex_resize_to_width=True,
-        note=(
-            "Total PVC unions the reconstructed original inputs with the generated "
-            "values, the same basis as the scenario comparison. Rows with persisted "
-            "PIT results carry kills and mutation scores. Missing PIT results "
-            "appear as unavailable cells."
-        ),
-        provenance=capture(summarize_variants),
+        body_style="\\tabstyle",
+        float_spec="H",
+        latex_resize_to_width=False,
+        full_width=True,
+        group_header_align="r",
+        # The caption defines PVC and the score, so the note carries only what a
+        # reader cannot read off the rows.
+        note="The same mutant sets are covered and killed at every budget.",
+        provenance=capture(_build_budget_table),
     )
     sections = [
         Section(
@@ -783,11 +789,14 @@ def build(conn: Connection) -> RQReport:
             title="PVC and mutation score",
             blocks=[
                 Prose(
-                    "PVC rewards every additional distinct input value, so it grows "
-                    "with the sampling budget by construction. Killed mutants, "
-                    "covered mutants, and covered mutation score stay flat across "
-                    "the sweep, so mutation score remains the effectiveness measure "
-                    "for the later research questions."
+                    "A larger sampling budget can raise PVC by exercising more "
+                    "distinct values. In this sweep, the same 10 tests kill "
+                    "{rq0.budget.improved_100_tries.killed_mutants} of "
+                    "{rq0.budget.improved_100_tries.covered_mutants} covered mutants "
+                    "at every budget. Their covered mutation score therefore stays "
+                    "at {rq0.budget.improved_100_tries.covered_mutation_score}. More "
+                    "sampling effort does not change detection of the selected "
+                    "mutants in this sweep."
                 ),
                 budget_table,
             ],

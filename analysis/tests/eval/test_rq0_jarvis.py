@@ -278,7 +278,7 @@ def test_breadth_leaves_jarvis_unreported_projects_blank_not_zero():
     assert total["jarvis_successful_muts"] == 9
 
 
-def test_budget_marks_missing_pit_variants_unavailable():
+def test_budget_table_marks_missing_pit_variants_unavailable():
     scoreboard = pd.DataFrame(
         {
             "variant": ["IMPROVED_100_TRIES", "IMPROVED_200_TRIES"],
@@ -293,17 +293,12 @@ def test_budget_marks_missing_pit_variants_unavailable():
             "total_mutants": [20],
         }
     )
-    budget = _build_budget_table(
-        scoreboard,
-        mutation,
-        {"IMPROVED_100_TRIES": 3250, "IMPROVED_200_TRIES": 4210},
-    ).set_index("variant")
+    budget = _build_budget_table(scoreboard, mutation).set_index("variant")
     assert budget.loc["IMPROVED_100_TRIES", "killed_mutants"] == 5
     assert pd.isna(budget.loc["IMPROVED_200_TRIES", "killed_mutants"])
     assert pd.isna(budget.loc["IMPROVED_200_TRIES", "covered_mutation_score"])
-    # The suite basis replaces the per-property sums of 100 and 200.
-    assert budget.loc["IMPROVED_100_TRIES", "total_pvc"] == 3250
-    assert budget.loc["IMPROVED_200_TRIES", "total_pvc"] == 4210
+    # PVC comes from the scoreboard, so it survives a variant that PIT never ran.
+    assert budget.loc["IMPROVED_200_TRIES", "total_pvc"] == 200
 
 
 def test_suite_union_joins_captured_and_generated_values(tmp_path):
