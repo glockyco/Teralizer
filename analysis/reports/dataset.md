@@ -8,15 +8,15 @@ _Source database: `postgres_dev`._
 
 | Project | Files | Classes | SLOC | Files | Classes | SLOC | Methods |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| commons-utils-dev | 106 | 247 | 19,709 | 80 | 119 | 14,389 | 725 |
-| commons-utils-es-10s | 106 | 247 | 19,709 | 103 | 103 | 19,082 | 2,738 |
-| commons-utils-es-1s | 106 | 247 | 19,709 | 103 | 103 | 17,524 | 2,481 |
-| commons-utils-es-60s | 106 | 247 | 19,709 | 102 | 102 | 18,839 | 2,735 |
-| eqbench-es-60s | 544 | 652 | 27,871 | 544 | 544 | 37,836 | 4,974 |
-| eqbench-es-10s | 544 | 652 | 27,871 | 543 | 543 | 36,937 | 4,875 |
-| eqbench-es-1s | 544 | 652 | 27,871 | 544 | 544 | 35,666 | 4,718 |
-| repo-reapers (total) | 78,817 | 95,404 | 5,145,629 | 39,659 | 53,039 | 3,823,941 | 81,810 |
-| repo-reapers (mean) | 68 | 82 | 4,447 | 34 | 45 | 3,305 | 162 |
-| repo-reapers (median) | 51 | 57 | 3,244 | 22 | 26 | 2,023 | 86 |
+| \DatasetEqBenchA{} | 544 | 652 | 27,871 | 544 | 544 | 35,666 | 4,718 |
+| \DatasetEqBenchB{} | 544 | 652 | 27,871 | 543 | 543 | 36,937 | 4,875 |
+| \DatasetEqBenchC{} | 544 | 652 | 27,871 | 544 | 544 | 37,836 | 4,974 |
+| \DatasetCommonsA{} | 106 | 247 | 19,709 | 103 | 103 | 17,524 | 2,481 |
+| \DatasetCommonsB{} | 106 | 247 | 19,709 | 103 | 103 | 19,082 | 2,738 |
+| \DatasetCommonsC{} | 106 | 247 | 19,709 | 102 | 102 | 18,839 | 2,735 |
+| \DatasetCommonsDev{} | 106 | 247 | 19,709 | 80 | 119 | 14,389 | 725 |
+| \DatasetRepoReapers{} (total) | 38,916 | 47,334 | 2,552,342 | 20,948 | 28,990 | 1,867,904 | 85,368 |
+| \DatasetRepoReapers{} (mean) | 66 | 80 | 4,362 | 35 | 49 | 3,192 | 163 |
+| \DatasetRepoReapers{} (median) | 50 | 57 | 3,321 | 24 | 29 | 2,131 | 82 |
 
-source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/dataset_characteristics.py#L238)
+source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/50007a02f04b478117c9c39e4dbae0cde1e1bffb/analysis/src/teralizer/dataset_characteristics.py#L238)

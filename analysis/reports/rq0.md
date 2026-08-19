@@ -25,9 +25,9 @@ Teralizer extracts its specification from a single execution. Generalized tests 
 | 9 | \texttt{PrecisionTest} | 8 | 102 | — |
 | 10 | \texttt{testAbs} | 5 | 506 | — |
 
-_JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. Teralizer suite PVC unions the reconstructed original tests' values with the generalized tests' values. A dash marks a scenario Teralizer excludes from generalization._
+_JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. For Teralizer, PVC includes the reconstructed original tests' values and the generalized tests' values. A dash marks a scenario Teralizer excludes from generalization._
 
-source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/jarvis_scoreboard.py#L837)
+source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/50007a02f04b478117c9c39e4dbae0cde1e1bffb/analysis/src/teralizer/jarvis_scoreboard.py#L837)
 
 ## Applicability breadth
 
@@ -53,22 +53,22 @@ RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons pr
 
 _A dash in the JARVIS columns marks a project that the publication reports no case for. A dash in the Teralizer columns marks a project for which the pipeline produced no generalized test. Teralizer aggregate PVC counts distinct values exercised by generalized tests for each MUT and parameter. Generalized MUTs have at least one generalized test._
 
-source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/jarvis_scoreboard.py#L716)
+source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/50007a02f04b478117c9c39e4dbae0cde1e1bffb/analysis/src/teralizer/jarvis_scoreboard.py#L716)
 
 Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows. Completion marker present.
 
 ## PVC and mutation score
 
-PVC rewards every additional distinct input value, so it grows with the sampling budget by construction. Killed mutants, covered mutants, and covered mutation score stay flat across the sweep, so mutation score remains the effectiveness measure for the later research questions.
+A larger sampling budget can raise PVC by exercising more distinct values. In this sweep, the same 10 tests kill 51 of 80 covered mutants at every budget. Their covered mutation score therefore stays at 63.7%. More sampling effort does not change detection of the selected mutants in this sweep.
 
-**Suite PVC rises with the sampling budget while covered mutation score stays flat.**
+**PVC and mutation testing results for the same 10 generalized tests at 3 sampling budgets. Only the sampling budget changes between the rows. PVC sums the distinct input values that the tests exercise, and Score is the killed mutants divided by the covered mutants.**
 
-| Sampling budget | Generalized tests | Suite PVC | Killed mutants | Covered mutants | Covered mutation score |
+| Sampling Budget | Tests | PVC | Killed | Covered | Score |
 | --- | --- | --- | --- | --- | --- |
-| 100 tries | 10 | 3,250 | 51 | 80 | 63.7% |
-| 200 tries | 10 | 4,210 | 51 | 80 | 63.7% |
-| 1,000 tries | 10 | 11,909 | 51 | 80 | 63.7% |
+| 100 tries | 10 | 1,135 | 51 | 80 | 63.7% |
+| 200 tries | 10 | 2,152 | 51 | 80 | 63.7% |
+| 1,000 tries | 10 | 10,055 | 51 | 80 | 63.7% |
 
-_Total PVC unions the reconstructed original inputs with the generated values, the same basis as the scenario comparison. Rows with persisted PIT results carry kills and mutation scores. Missing PIT results appear as unavailable cells._
+_The same mutant sets are covered and killed at every budget._
 
-source: [`summarize_variants`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/jarvis_scoreboard.py#L999)
+source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/50007a02f04b478117c9c39e4dbae0cde1e1bffb/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268)
