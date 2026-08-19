@@ -65,8 +65,10 @@ _NO_EXECUTED_TEST_PROJECTS = frozenset(
     }
 )
 
+# MATERIALIZED: inlined, the planner re-checks eligibility per row of the table the
+# consumer scans, which costs 1.2 billion join-filter comparisons over filter_result.
 ELIGIBILITY_CTE = """
-WITH eligible_projects AS (
+WITH eligible_projects AS MATERIALIZED (
     SELECT p.id
     FROM project p
     WHERE p.use_test_generalization
