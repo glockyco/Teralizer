@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from teralizer.eval.format import COUNT_SHARE
 from teralizer.eval.model import ColumnSpec, Table
 
 
@@ -94,11 +95,6 @@ def filter_sort_key(filter_name: str) -> int:
     return _FILTER_ORDER.get(filter_name, 99)
 
 
-def _count_with_pct(count: object, pct: object) -> str:
-    """Render a publication cell while leaving raw counts and rates in the frame."""
-    return f"{int(count):,} ({float(pct) * 100:.1f}%)"
-
-
 def variant_sort_key(variant: str) -> int:
     """Canonical rank: baseline first, then naive then improved, each ascending by tries."""
     if variant in _VARIANT_HEAD:
@@ -123,12 +119,6 @@ def build_filtering_table(
     out = df.copy()
     for decision in ("accept", "defer", "reject"):
         out[f"{decision}_pct"] = out[decision] / out["total"]
-        out[f"{decision}_display"] = [
-            "-"
-            if decision == "defer" and int(count) == 0
-            else _count_with_pct(count, pct)
-            for count, pct in zip(out[decision], out[f"{decision}_pct"], strict=True)
-        ]
     out = out.assign(
         _lvl=out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99)),
         _fil=out["filter"].map(filter_sort_key),
@@ -143,11 +133,18 @@ def build_filtering_table(
         ColumnSpec("Filter Name", "filter"),
         ColumnSpec("Total", "total", fmt="count", align="r"),
         ColumnSpec(
-            "Accept", "accept_display", fmt="str", align="r", csv_source="accept"
+            "Accept", "accept", fmt=COUNT_SHARE, align="r", share_source="accept_pct"
         ),
-        ColumnSpec("Defer", "defer_display", fmt="str", align="r", csv_source="defer"),
         ColumnSpec(
-            "Reject", "reject_display", fmt="str", align="r", csv_source="reject"
+            "Defer",
+            "defer",
+            fmt=COUNT_SHARE,
+            align="r",
+            share_source="defer_pct",
+            zero_is_absent=True,
+        ),
+        ColumnSpec(
+            "Reject", "reject", fmt=COUNT_SHARE, align="r", share_source="reject_pct"
         ),
     ]
     return Table(
@@ -180,12 +177,6 @@ def build_breakdown_table(
     out = df.copy()
     for outcome in outcomes:
         out[f"{outcome.column}_pct"] = out[outcome.column] / out["total"]
-        out[f"{outcome.column}_display"] = [
-            _count_with_pct(count, pct)
-            for count, pct in zip(
-                out[outcome.column], out[f"{outcome.column}_pct"], strict=True
-            )
-        ]
     columns = [
         ColumnSpec("Level", "level"),
         ColumnSpec("Total", "total", fmt="count", align="r"),
@@ -197,11 +188,11 @@ def build_breakdown_table(
         columns.append(
             ColumnSpec(
                 outcome.header,
-                f"{outcome.column}_display",
-                fmt="str",
+                outcome.column,
+                fmt=COUNT_SHARE,
                 align="r",
                 group_header=group_header,
-                csv_source=outcome.column,
+                share_source=f"{outcome.column}_pct",
             )
         )
     group_by = None

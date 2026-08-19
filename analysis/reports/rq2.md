@@ -23,4 +23,4 @@ _Source database: `postgres_dev`._
 | commons-utils | yes | 4,193 | 107 | 11 | 4 | 4 | 26% | 75% |
 | commons-utils | no | 1,022 | 173 | 10 | 4 | 4 | 20% | 75% |
 
-source: [`compute_mutation_model_complexity`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/rq1_mutation_detection.py#L455)
+source: [`compute_mutation_model_complexity`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/rq1_mutation_detection.py#L455)

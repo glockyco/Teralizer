@@ -56,6 +56,12 @@ def base_query_params(variant: str) -> dict[str, object]:
 # reduction -- is reported beside it, because reduction earns its place by removing
 # generalized tests that do not improve fault detection (see the RQ3 and RQ4 results).
 _PIPELINE_STAGES = ("1 + 2", "3", "4", "5")
+_STAGE_TITLES = {
+    "1 + 2": "Stage 1 + 2 - Project Analysis",
+    "3": "Stage 3 - Spec. Extraction",
+    "4": "Stage 4 - Gen. Test Creation",
+    "5": "Stage 5 - Test Suite Reduction",
+}
 _REDUCTION_STAGE = "5"
 _BASELINE_REDUCTION_STAGES = frozenset(
     {"COLLECT_PIT_DATA_INITIAL", "COLLECT_JACOCO_DATA_INITIAL"}
@@ -373,7 +379,9 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
         eligible=eligible,
         success_count=success_count,
         stages=stages,
-        table=_build_table(table_df, note),
+        table=_build_table(
+            table_df, note, *_stage_bands_text(stages, eligible, success_count)
+        ),
         uncoded_projects=uncoded_projects,
         eligibility_audit_unexpected=eligibility_audit_unexpected,
         survivor_project_ids=tuple(frozenset(ids) for ids in survivor_sets),
@@ -618,7 +626,63 @@ def _stage_bands(survivor_sets: list[set[int]]) -> list[StageBand]:
     return bands
 
 
-def _build_table(df: pd.DataFrame, note: str) -> Table:
+def _stage_band_text(
+    title: str, entering: int, passing: int, exclusions: int, widths: dict[str, int]
+) -> str:
+    """One band: a fixed-width title, then the stage's totals.
+
+    Every figure is padded to the widest in its position so the bands read down
+    the table as a column of totals rather than as ragged sentences.
+    """
+
+    def pad(value: str, key: str) -> str:
+        missing = widths[key] - len(value)
+        return f"\\phantom{{{'0' * missing}}}{value}" if missing > 0 else value
+
+    rate = f"{passing / entering:.1%}" if entering else "0.0%"
+    fields = [
+        f"{pad(f'{entering:,}', 'entering')} projects",
+        f"{pad(f'{passing:,}', 'passing')} inclusions",
+        f"{pad(f'{exclusions:,}', 'exclusions')} exclusions",
+        # Padded before escaping, because a width is counted in glyphs and `\%` is
+        # one glyph written as two characters. A bare `%` would comment out the
+        # rest of the row.
+        f"{pad(rate, 'rate').replace('%', chr(92) + '%')} inclusion rate",
+    ]
+    return f"{title}:\t" + "\\enspace{}".join(fields)
+
+
+def _stage_bands_text(
+    stages: "list[StageBand]", eligible: int, success_count: int
+) -> tuple[dict[str, str], str]:
+    """A band per stage plus the closing overall band, aligned as one block."""
+    entries = [
+        (_STAGE_TITLES[b.stage], b.stage, b.entering, b.passing, b.exclusions)
+        for b in stages
+    ]
+    entries.append(("Overall", "", eligible, success_count, eligible - success_count))
+    widths = {
+        "entering": max(len(f"{e:,}") for _, _, e, _, _ in entries),
+        "passing": max(len(f"{p:,}") for _, _, _, p, _ in entries),
+        "exclusions": max(len(f"{x:,}") for _, _, _, _, x in entries),
+        "rate": max(len(f"{p / e:.1%}" if e else "0.0%") for _, _, e, p, _ in entries),
+    }
+    bands = {
+        stage: _stage_band_text(title, entering, passing, exclusions, widths)
+        for title, stage, entering, passing, exclusions in entries
+        if stage
+    }
+    title, _, entering, passing, exclusions = entries[-1]
+    overall = _stage_band_text(title, entering, passing, exclusions, widths)
+    return bands, overall
+
+
+def _build_table(
+    df: pd.DataFrame,
+    note: str,
+    bands: dict[str, str] | None = None,
+    overall_band: str | None = None,
+) -> Table:
     display = df.copy()
     cause_macros = {
         "PIT execution error during mutation testing": (
@@ -643,13 +707,19 @@ def _build_table(df: pd.DataFrame, note: str) -> Table:
         return text
 
     display["cause_display"] = display["cause"].map(cause_display)
+    # Numbering is data, because this is where row order is decided. A band is not
+    # a row of the frame, so it consumes no number, and the CSV keeps both the
+    # number and the stage.
+    display["number"] = range(1, len(display) + 1)
     return Table(
         key="tab-processing-failures",
         df=display,
         columns=[
-            ColumnSpec("Stage", "stage"),
+            ColumnSpec("\\#", "number", fmt="int", align="r"),
             ColumnSpec("Type", "type"),
-            ColumnSpec("Cause", "cause_display", csv_source="cause"),
+            ColumnSpec(
+                "Cause of Project-level Exclusion", "cause_display", csv_source="cause"
+            ),
             ColumnSpec("Count", "count", fmt="int", align="r"),
         ],
         caption=(
@@ -667,6 +737,8 @@ def _build_table(df: pd.DataFrame, note: str) -> Table:
         float_spec="tbp",
         full_width=True,
         group_by="stage",
+        bands=bands,
+        overall_band=overall_band,
         note=note,
         provenance=capture(build_funnel, query=_PROJECT_SIGNALS_SQL),
     )

@@ -23,7 +23,7 @@ _Source database: `postgres_dev`._
 | 13 | 60s | IMPROVED$_{200}$ | 54.8 | 75,081 |
 | 14 | 60s | NAIVE$_{200}$ | 55.0 | 93,017 |
 
-source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
+source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
 
 **Pareto points for commons-utils.**
 
@@ -41,19 +41,19 @@ source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teral
 | 10 | 60s | IMPROVED$_{50}$ | 59.4 | 14,728 |
 | 11 | 60s | IMPROVED$_{200}$ | 59.5 | 15,736 |
 
-source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
+source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
 
 ![Pareto fronts for EvoSuite and Teralizer variants across projects.](figures/rq4/teralizer_efficiency.png)
 
 **Pareto fronts for EvoSuite and Teralizer variants across projects.**
 
-source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
+source: [`compute_pareto_efficiency_analysis`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/rq3_runtime_requirements.py#L237)
 
 ![Teralizer runtime by pipeline stage and variant.](figures/rq4/teralizer_runtimes.png)
 
 **Teralizer runtime by pipeline stage and variant.**
 
-source: [`compute_stage_runtime_breakdown`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/rq3_runtime_requirements.py#L193)
+source: [`compute_stage_runtime_breakdown`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/rq3_runtime_requirements.py#L193)
 
 **Mean EvoSuite runtime per phase, by project and search budget.**
 
@@ -68,10 +68,10 @@ source: [`compute_stage_runtime_breakdown`](https://github.com/glockyco/Teralize
 
 _Each row is the mean over the runs of one project at one search budget._
 
-source: [`compute_evosuite_phase_statistics`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/rq3_runtime_requirements.py#L385)
+source: [`compute_evosuite_phase_statistics`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/rq3_runtime_requirements.py#L385)
 
 ![Mean EvoSuite runtime by phase and search budget.](figures/rq4/evosuite_runtime_phases.png)
 
 **Mean EvoSuite runtime by phase and search budget.**
 
-source: [`compute_evosuite_phase_statistics`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/rq3_runtime_requirements.py#L385)
+source: [`compute_evosuite_phase_statistics`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/rq3_runtime_requirements.py#L385)

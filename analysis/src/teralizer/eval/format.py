@@ -7,6 +7,16 @@ from collections.abc import Callable
 import math
 
 
+def is_missing(value: object) -> bool:
+    """A value the source could not supply, as opposed to a zero."""
+    return value is None or (isinstance(value, float) and math.isnan(value))
+
+
+# A count paired with the share it represents. One column to a reader and two
+# values to every renderer, so each target pairs and aligns them its own way.
+COUNT_SHARE = "count_share"
+
+
 def _optional_int(value: object) -> str:
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return "—"

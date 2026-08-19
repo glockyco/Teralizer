@@ -23,7 +23,7 @@ _Source database: `postgres_dev`._
 | commons-utils-dev | NAIVE_200_TRIES | 725 | 3 | 0 | 728 | +3 | +0.4% |
 | commons-utils-dev | IMPROVED_200_TRIES | 725 | 3 | 0 | 728 | +3 | +0.4% |
 
-source: [`_effects`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L61)
+source: [`_effects`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L61)
 
 **Number of test lines before and after generalization, with changes, per project.**
 
@@ -44,7 +44,7 @@ source: [`_effects`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93
 | commons-utils-dev | NAIVE_200_TRIES | 8,561 | 421 | 0 | 8,982 | +421 | +4.9% |
 | commons-utils-dev | IMPROVED_200_TRIES | 8,561 | 457 | 0 | 9,018 | +457 | +5.3% |
 
-source: [`_effects`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L61)
+source: [`_effects`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L61)
 
 **Test suite runtime before and after generalization, with changes, per project.**
 
@@ -65,7 +65,7 @@ source: [`_effects`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93
 | commons-utils-dev | NAIVE_200_TRIES | 7.95 | 4.54 | 0.00 | 12.48 | +4.54 | +57.1% |
 | commons-utils-dev | IMPROVED_200_TRIES | 7.95 | 0.74 | 0.00 | 8.69 | +0.74 | +9.4% |
 
-source: [`_effects`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L61)
+source: [`_effects`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L61)
 
 **Runtime overhead of generalized tests per test and per try.**
 
@@ -79,10 +79,10 @@ source: [`_effects`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93
 | IMPROVED_50_TRIES | 4.56 | 251.41 | 246.85 | 55.18 | 50 | 4.94 |
 | IMPROVED_200_TRIES | 4.57 | 399.83 | 395.26 | 87.55 | 200 | 1.98 |
 
-source: [`_runtime_overhead`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L94)
+source: [`_runtime_overhead`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L94)
 
 ![Runtime comparison between original and generalized tests.](figures/rq3/test_runtime_differences.png)
 
 **Runtime comparison between original and generalized tests.**
 
-source: [`_runtime_overhead`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L94)
+source: [`_runtime_overhead`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/eval/reports/rq3_suite_size_runtime.py#L94)

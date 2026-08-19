@@ -1,6 +1,8 @@
 import pandas as pd
 
+from teralizer.eval.format import COUNT_SHARE
 from teralizer.eval.model import Table
+from teralizer.eval.render.latex import render_table
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
     build_filtering_table,
@@ -25,16 +27,23 @@ def test_filtering_table_shapes_columns_and_percentages():
         "level",
         "filter",
         "total",
-        "accept_display",
-        "defer_display",
-        "reject_display",
+        "accept",
+        "defer",
+        "reject",
     ]
+    # The frame keeps numbers. Pairing a count with its share is the renderer's
+    # job, because only a whole column can be aligned.
+    decisions = {c.source: c for c in table.columns[3:]}
+    assert [c.fmt for c in decisions.values()] == [COUNT_SHARE] * 3
+    assert decisions["accept"].share_source == "accept_pct"
     row = table.df.set_index("filter").loc["NonPassingTest"]
     assert row["reject_pct"] == 0.12
     assert row["accept_pct"] == 0.88
-    assert row["accept_display"] == "88 (88.0%)"
-    assert row["defer_display"] == "-"
-    assert table.columns[3].csv_source == "accept"
+
+    latex = render_table(table)
+    assert "88\\; (88.0\\%)" in latex
+    # A decision the filter never takes reads as an absence, not as a zero share.
+    assert "& -- &" in latex
 
 
 def test_breakdown_table_percentages_over_total():
@@ -55,18 +64,26 @@ def test_breakdown_table_percentages_over_total():
     assert [c.source for c in table.columns] == [
         "level",
         "total",
-        "included_display",
-        "filtering_display",
-        "failures_display",
-    ]
-    assert row["included_display"] == "33,385 (40.8%)"
-    assert row["filtering_display"] == "40,583 (49.6%)"
-    assert row["failures_display"] == "7,842 (9.6%)"
-    assert [c.csv_source for c in table.columns[2:]] == [
         "included",
         "filtering",
         "failures",
     ]
+    assert [c.share_source for c in table.columns[2:]] == [
+        "included_pct",
+        "filtering_pct",
+        "failures_pct",
+    ]
+
+    latex = render_table(table)
+    assert "33,385\\; (40.8\\%)" in latex
+    assert "40,583\\; (49.6\\%)" in latex
+    # A share narrower than the widest in its own column is padded, so the
+    # parentheses line up. 9.6 sits under 99.1 here, and gains one digit.
+    assert "23\\; (\\phantom{0}9.6\\%)" in latex
+    # Its neighbour needs none: every share in that column is equally wide.
+    assert "7,842\\; (9.6\\%)" in latex
+    # Nothing pads a count: its column is right-aligned already.
+    assert "\\phantom{}" not in latex
 
 
 def test_breakdown_table_with_strategy_column():

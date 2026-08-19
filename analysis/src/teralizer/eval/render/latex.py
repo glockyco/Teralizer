@@ -8,7 +8,7 @@ from pathlib import Path
 
 from pandas import isna
 
-from teralizer.eval.format import render_value
+from teralizer.eval.format import COUNT_SHARE, render_value
 from teralizer.eval.macros import macro_name
 from teralizer.eval.model import ColumnSpec, RQReport, Table
 
@@ -25,6 +25,68 @@ def _cell(value: object, fmt: str) -> str:
         # marker, so CSV exports stay stable.
         return "--"
     return text.replace("%", "\\%").replace("_", "\\_")
+
+
+def _pad_to(text: str, width: int) -> str:
+    """Reserve the width the widest share of a column occupies.
+
+    Digits are tabular, so a zero reserves exactly one digit. Only the share needs
+    this: it sits inside parentheses, which would otherwise shift row to row. The
+    count beside it needs nothing, because its column is right-aligned already.
+    """
+    missing = width - len(text)
+    if missing <= 0:
+        return text
+    return f"\\phantom{{{'0' * missing}}}{text}"
+
+
+def _count_share_parts(table: Table, column: ColumnSpec) -> list[tuple[str, str]]:
+    """Every (count, share) pair of one column, already formatted as digits."""
+    assert column.share_source is not None
+    return [
+        (
+            _cell(row[column.source], "count"),
+            _cell(row[column.share_source], "pct1"),
+        )
+        for _, row in table.df.iterrows()
+    ]
+
+
+def _count_share_column(table: Table, column: ColumnSpec) -> list[str]:
+    """Pair a count with its share, aligned down the column.
+
+    Both parts align independently, because a wide count beside a narrow share
+    would otherwise push the parenthesis out of line. A share of zero prints as
+    a dash, which is how the thesis marks a decision a filter never takes.
+    """
+    parts = _count_share_parts(table, column)
+    width = max((len(s) for _, s in parts), default=0)
+    cells = []
+    for (count, share), (_, row) in zip(parts, table.df.iterrows(), strict=True):
+        if int(row[column.source]) == 0 and column.zero_is_absent:
+            cells.append("--")
+            continue
+        cells.append(f"{count}\\; ({_pad_to(share, width)})")
+    return cells
+
+
+def _column_cells(table: Table, column: ColumnSpec) -> list[str]:
+    """Render one column, which is the unit alignment is decided over."""
+    if column.fmt == COUNT_SHARE:
+        return _count_share_column(table, column)
+    return [_cell(row[column.source], column.fmt) for _, row in table.df.iterrows()]
+
+
+def _band_row(text: str, columns: int, label_width: str = "13.25em") -> str:
+    """A row spanning the table that states the totals of the group beneath it.
+
+    The label is set to a fixed width so the figures of every band line up down
+    the table, which is what makes the bands readable as a column of totals.
+    """
+    label, _, rest = text.partition("\t")
+    boxed = f"\\makebox[{label_width}][l]{{{label}}}"
+    body = f"{boxed} {rest}" if rest else boxed
+    return f"  \\multicolumn{{{columns}}}{{l}}{{\\textit{{{body}}}}} \\\\"
 
 
 def _is_empty_group(value: object) -> bool:
@@ -108,7 +170,14 @@ def render_table(table: Table) -> str:
             [c.header for c in table.columns], table.group_header_align
         )
     else:
-        leaf = [c.header for c in table.columns]
+        # A composite cell is wider than its header, so the header reads centred
+        # over the pair rather than pinned to the right edge of the column.
+        leaf = [
+            f"\\multicolumn{{1}}{{c}}{{{c.header}}}"
+            if c.fmt == COUNT_SHARE
+            else c.header
+            for c in table.columns
+        ]
     header_rows.append("  " + " & ".join(leaf) + " \\\\")
     if table.full_width:
         # \extracolsep{\fill} spreads the slack between columns, so the table
@@ -125,9 +194,13 @@ def render_table(table: Table) -> str:
         *header_rows,
         "  \\midrule",
     ]
+    # Alignment is a property of a column, so every column is rendered before any
+    # row is assembled. A row-at-a-time loop cannot know how wide its neighbours
+    # below will be.
+    rendered = {c.source: _column_cells(table, c) for c in table.columns}
     prev_group = None
     has_previous_group = False
-    for _, row in table.df.iterrows():
+    for position, (_, row) in enumerate(table.df.iterrows()):
         indent = False
         if table.group_by is not None:
             group = row[table.group_by]
@@ -142,14 +215,26 @@ def render_table(table: Table) -> str:
                     prev_group = group
                     has_previous_group = True
                     indent = True
+            elif table.bands is not None:
+                if group != prev_group:
+                    if lines[-1] != "  \\midrule":
+                        lines.append("  \\midrule")
+                    band = table.bands.get(str(group))
+                    if band is not None:
+                        lines.append(_band_row(band, len(table.columns)))
+                        lines.append("  \\midrule")
+                prev_group = group
             else:
                 if prev_group is not None and group != prev_group:
                     lines.append("  \\midrule")
                 prev_group = group
-        cells = [_cell(row[c.source], c.fmt) for c in table.columns]
+        cells = [rendered[c.source][position] for c in table.columns]
         if indent:
             cells[0] = "\\qquad " + cells[0]
         lines.append("  " + " & ".join(cells) + " \\\\")
+    if table.overall_band is not None:
+        lines.append("  \\midrule")
+        lines.append(_band_row(table.overall_band, len(table.columns)))
     lines += [
         "  \\bottomrule",
         "  \\end{tabular*}" if table.full_width else "  \\end{tabular}",

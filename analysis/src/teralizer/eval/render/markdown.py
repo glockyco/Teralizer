@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from teralizer.eval.format import render_value
+from teralizer.eval.format import COUNT_SHARE, render_value
 from teralizer.eval.model import Figure, Prose, RQReport, Table
 
 _PLACEHOLDER = re.compile(r"\{([a-zA-Z0-9_.]+)\}")
@@ -26,6 +26,18 @@ def _source_link(provenance, repo_url: str) -> str:
     return f"\n\nsource: [`{provenance.qualname}`]({provenance.source_url(repo_url)})"
 
 
+def _md_cell(row, column) -> str:
+    """Markdown pairs a count with its share and adds no typesetting."""
+    if column.fmt != COUNT_SHARE:
+        return render_value(row[column.source], column.fmt)
+    assert column.share_source is not None
+    if int(row[column.source]) == 0 and column.zero_is_absent:
+        return "—"
+    count = render_value(row[column.source], "count")
+    share = render_value(row[column.share_source], "pct1")
+    return f"{count} ({share})"
+
+
 def _table_md(table: Table, repo_url: str) -> str:
     headers = [c.header for c in table.columns]
     lines = [
@@ -33,11 +45,7 @@ def _table_md(table: Table, repo_url: str) -> str:
         "| " + " | ".join("---" for _ in headers) + " |",
     ]
     for _, row in table.df.iterrows():
-        lines.append(
-            "| "
-            + " | ".join(render_value(row[c.source], c.fmt) for c in table.columns)
-            + " |"
-        )
+        lines.append("| " + " | ".join(_md_cell(row, c) for c in table.columns) + " |")
     block = f"**{table.caption}**\n\n" + "\n".join(lines)
     if table.note:
         block += f"\n\n_{table.note}_"

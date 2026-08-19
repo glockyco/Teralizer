@@ -27,7 +27,7 @@ Teralizer extracts its specification from a single execution. Generalized tests 
 
 _JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. Teralizer suite PVC unions the reconstructed original tests' values with the generalized tests' values. A dash marks a scenario Teralizer excludes from generalization._
 
-source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/jarvis_scoreboard.py#L837)
+source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/jarvis_scoreboard.py#L837)
 
 ## Applicability breadth
 
@@ -53,7 +53,7 @@ RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons pr
 
 _A dash in the JARVIS columns marks a project that the publication reports no case for. A dash in the Teralizer columns marks a project for which the pipeline produced no generalized test. Teralizer aggregate PVC counts distinct values exercised by generalized tests for each MUT and parameter. Generalized MUTs have at least one generalized test._
 
-source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/jarvis_scoreboard.py#L716)
+source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/jarvis_scoreboard.py#L716)
 
 Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows. Completion marker present.
 
@@ -71,4 +71,4 @@ PVC rewards every additional distinct input value, so it grows with the sampling
 
 _Total PVC unions the reconstructed original inputs with the generated values, the same basis as the scenario comparison. Rows with persisted PIT results carry kills and mutation scores. Missing PIT results appear as unavailable cells._
 
-source: [`summarize_variants`](https://github.com/glockyco/Teralizer/blob/c48a96bbf9414e93853b9a61f540f05d08271c7d/analysis/src/teralizer/jarvis_scoreboard.py#L999)
+source: [`summarize_variants`](https://github.com/glockyco/Teralizer/blob/26a2c2ae6c0c02bd9182cb8749facb49b5d1fd99/analysis/src/teralizer/jarvis_scoreboard.py#L999)
