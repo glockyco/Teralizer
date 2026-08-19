@@ -23,7 +23,7 @@ pre-commit:
     - name: ty
       root: analysis/
       glob: "**/*.py"
-      run: /nix/var/nix/profiles/default/bin/nix develop --command uv run ty check src/ tests/
+      run: /nix/var/nix/profiles/default/bin/nix develop --command uv run ty check {staged_files}
 
 pre-push:
   jobs:
