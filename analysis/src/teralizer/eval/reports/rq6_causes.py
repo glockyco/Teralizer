@@ -397,7 +397,9 @@ def build(conn: Connection) -> RQReport:
         full_width=True,
     )
     filtering = replace(
-        filtering, provenance=capture(_fetch_filtering, query=FILTERING_SQL)
+        filtering,
+        latex_resize_to_width=True,
+        provenance=capture(_fetch_filtering, query=FILTERING_SQL),
     )
 
     funnel_provenance = capture(
@@ -408,6 +410,24 @@ def build(conn: Connection) -> RQReport:
     assertions = levels.loc["Assertion"]
     generalizations = levels.loc["Generalization"]
     metrics = [
+        Metric(
+            "realworld.selected_projects",
+            funnel.selected,
+            fmt="int",
+            provenance=funnel_provenance,
+        ),
+        Metric(
+            "realworld.initial_gate_excluded_projects",
+            funnel.initial_gate_excluded,
+            fmt="int",
+            provenance=funnel_provenance,
+        ),
+        Metric(
+            "realworld.no_executed_test_excluded_projects",
+            funnel.no_executed_test_excluded,
+            fmt="int",
+            provenance=funnel_provenance,
+        ),
         Metric(
             "realworld.eligible_projects",
             funnel.eligible,
@@ -577,8 +597,8 @@ def build(conn: Connection) -> RQReport:
             breakdown,
             filtering,
             Prose(
-                "Most of the generalization row's filtering column is the "
-                "widening license rather than any filter."
+                "Most of the generalization row's filtering column contains "
+                "pre-emission soundness rejections rather than filter decisions."
             ),
             widening_table,
         ],

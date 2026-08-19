@@ -120,6 +120,7 @@ def test_funnel_survivors_match_independent_sql(funnel_result, rq6_conn):
                     SELECT p.id
                     FROM project p
                     WHERE p.use_test_generalization
+                      AND p.root_path != ALL(:no_executed_test_projects)
                       AND NOT EXISTS (
                           SELECT 1
                           FROM task t
@@ -191,7 +192,10 @@ def test_funnel_survivors_match_independent_sql(funnel_result, rq6_conn):
                     (SELECT count(*) FROM stage5)
                 """
             ),
-            {"variant": variant},
+            {
+                "variant": variant,
+                "no_executed_test_projects": sorted(_funnel._NO_EXECUTED_TEST_PROJECTS),
+            },
         ).one()
     assert tuple(stage.entering for stage in result.stages) == (
         counts[0],

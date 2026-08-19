@@ -259,7 +259,12 @@ def get_dataset_statistics(
         print(f"Computing statistics from {projects_path}...")
         detailed_stats = compute_project_statistics(projects_path, excluded_projects)
         print(f"Found {len(detailed_stats)} source directories to analyze")
-        return compute_project_aggregates(detailed_stats, db_conn_dev, db_conn_test)
+        return compute_project_aggregates(
+            detailed_stats,
+            db_conn_dev,
+            db_conn_test,
+            excluded_test_projects=excluded_projects,
+        )
     else:
         # No projects - load pre-computed reference
         print(
@@ -392,12 +397,15 @@ def compute_project_statistics(
     return pd.DataFrame(stats)
 
 
-def _get_test_counts_from_db(db_conn_dev, db_conn_test):
+def _get_test_counts_from_db(
+    db_conn_dev, db_conn_test, excluded_test_projects: set[str] | None = None
+):
     """Get test method counts from database by project name.
 
     Args:
         db_conn_dev: Database connection for dev database (EqBench, Commons)
         db_conn_test: Database connection for test database (RepoReapers)
+        excluded_test_projects: RepoReapers project names excluded from the corpus
 
     Returns:
         Tuple of (project_counts_dict, repo_reapers_per_project_list)
@@ -434,10 +442,20 @@ def _get_test_counts_from_db(db_conn_dev, db_conn_test):
 
     # Get counts from test database (RepoReapers projects)
     if db_conn_test is not None:
-        excluded_ids = get_excluded_project_ids(db_conn_test)
-        excluded_ids_str = (
-            ",".join(str(id) for id in excluded_ids) if excluded_ids else "0"
-        )
+        if excluded_test_projects is None:
+            excluded_ids = get_excluded_project_ids(db_conn_test)
+            excluded_ids_str = (
+                ",".join(str(id) for id in excluded_ids) if excluded_ids else "0"
+            )
+            exclusion_clause = f"AND p.id NOT IN ({excluded_ids_str})"
+            exclusion_params = None
+        else:
+            exclusion_clause = "AND p.root_path != ALL(:excluded_roots)"
+            exclusion_params = {
+                "excluded_roots": sorted(
+                    f"projects/{name}" for name in excluded_test_projects
+                )
+            }
 
         # Get counts per project type
         query = text(f"""
@@ -447,11 +465,11 @@ def _get_test_counts_from_db(db_conn_dev, db_conn_test):
             FROM project p
             JOIN test t ON t.project_id = p.id
             WHERE p.use_test_generalization
-              AND p.id NOT IN ({excluded_ids_str})
+              {exclusion_clause}
             GROUP BY p.type
         """)
 
-        df = pd.read_sql_query(query, db_conn_test)
+        df = pd.read_sql_query(query, db_conn_test, params=exclusion_params)
         counts.update(dict(zip(df["project_name"], df["test_count"])))
 
         # Get per-project counts for repo-reapers (MAVEN projects)
@@ -461,20 +479,25 @@ def _get_test_counts_from_db(db_conn_dev, db_conn_test):
             FROM project p
             JOIN test t ON t.project_id = p.id
             WHERE p.use_test_generalization
-              AND p.id NOT IN ({excluded_ids_str})
+              {exclusion_clause}
               AND p.type = 'MAVEN'
             GROUP BY p.id
             ORDER BY p.id
         """)
 
-        repo_reapers_df = pd.read_sql_query(repo_reapers_query, db_conn_test)
+        repo_reapers_df = pd.read_sql_query(
+            repo_reapers_query, db_conn_test, params=exclusion_params
+        )
         repo_reapers_per_project = repo_reapers_df["test_count"].tolist()
 
     return counts, repo_reapers_per_project
 
 
 def compute_project_aggregates(
-    df: pd.DataFrame, db_conn_dev, db_conn_test
+    df: pd.DataFrame,
+    db_conn_dev,
+    db_conn_test,
+    excluded_test_projects: set[str] | None = None,
 ) -> pd.DataFrame:
     """Compute aggregated project statistics.
 
@@ -488,6 +511,7 @@ def compute_project_aggregates(
         df: DataFrame with detailed project statistics from filesystem
         db_conn_dev: Database connection for dev database (EqBench, Commons)
         db_conn_test: Database connection for test database (RepoReapers)
+        excluded_test_projects: RepoReapers project names excluded from the corpus
 
     Returns:
         DataFrame with aggregated statistics per project
@@ -496,7 +520,9 @@ def compute_project_aggregates(
 
     # Get database test counts
     db_test_counts, repo_reapers_per_project = _get_test_counts_from_db(
-        db_conn_dev, db_conn_test
+        db_conn_dev,
+        db_conn_test,
+        excluded_test_projects=excluded_test_projects,
     )
 
     # All non-github projects individually

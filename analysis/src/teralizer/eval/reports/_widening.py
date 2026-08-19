@@ -122,8 +122,8 @@ def widening_refusal_table(df: pd.DataFrame, provenance) -> Table:
             ColumnSpec("Attempts", "attempts_pct", fmt="pct1", align="r"),
         ],
         caption=(
-            "Why the widening license refused to emit a generalized test, by "
-            "cause, for the real-world dataset."
+            "Causes for generalization attempts that produce no generalized test "
+            "in the real-world dataset."
         ),
         label="tab:widening-refusals",
         note=(

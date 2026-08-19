@@ -72,6 +72,19 @@ def test_rq6_stage_metrics_chain_the_funnel(rq6_report, funnel_result):
     )
 
 
+def test_rq6_eligibility_partition_is_complete(rq6_report):
+    selected = int(rq6_report.metric("realworld.selected_projects").value)
+    initial_gate = int(
+        rq6_report.metric("realworld.initial_gate_excluded_projects").value
+    )
+    no_executed_test = int(
+        rq6_report.metric("realworld.no_executed_test_excluded_projects").value
+    )
+    eligible = int(rq6_report.metric("realworld.eligible_projects").value)
+
+    assert selected == initial_gate + no_executed_test + eligible
+
+
 def test_rq6_funnel_causes_are_typed(rq6_report):
     report = rq6_report
     funnel = next(t for t in report.tables() if "processing-failures" in t.label)

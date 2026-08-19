@@ -5,24 +5,44 @@ from __future__ import annotations
 import pandas as pd
 from sqlalchemy.engine import Connection
 
-from teralizer.eval.data import Required
+from teralizer.eval.data import Required, read_sql
 from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.report_basis import open_report_connection
 from teralizer.dataset_characteristics import get_dataset_statistics
+from teralizer.eval.reports import _funnel
+from teralizer.formatting import (
+    replace_project_names_with_macros,
+    sort_dataframe_by_project,
+)
 
 REQUIRES = (Required("project", "table", ("id",)),)
+REPOREAPERS_DB = "postgres_reporeapers_rq6_v7"
+
+_INELIGIBLE_PROJECTS_SQL = f"""
+{_funnel.ELIGIBILITY_CTE}
+SELECT p.root_path
+FROM project p
+WHERE p.use_test_generalization
+  AND NOT EXISTS (
+      SELECT 1 FROM eligible_projects e WHERE e.id = p.id
+  )
+"""
+
+
+def _ineligible_project_names(conn: Connection) -> set[str]:
+    rows = read_sql(
+        conn,
+        _INELIGIBLE_PROJECTS_SQL,
+        _funnel.base_query_params(""),
+    )
+    return {str(path).rsplit("/", maxsplit=1)[-1] for path in rows["root_path"]}
 
 
 def _table(df: pd.DataFrame) -> Table:
     result = df.copy()
-    result["project"] = (
-        result["project"]
-        .astype(str)
-        .str.replace("-default", "", regex=False)
-        .replace({"commons-utils": "commons-utils-dev"})
-    )
+    result["project"] = result["project"].astype(str)
     wanted = [
         "project",
         "main_files",
@@ -37,6 +57,8 @@ def _table(df: pd.DataFrame) -> Table:
         if col not in result:
             result[col] = 0
     result = result[wanted]
+    result = sort_dataframe_by_project(result, "project")
+    result = replace_project_names_with_macros(result, "project")
     columns = [
         ColumnSpec("Project", "project"),
         ColumnSpec("Files", "main_files", "count", "r", group_header="Implementation"),
@@ -64,8 +86,12 @@ def _table(df: pd.DataFrame) -> Table:
 
 
 def build(conn: Connection) -> RQReport:
-    with open_report_connection("postgres_test") as test_conn:
-        stats = get_dataset_statistics(db_conn_dev=conn, db_conn_test=test_conn)
+    with open_report_connection(REPOREAPERS_DB) as test_conn:
+        stats = get_dataset_statistics(
+            db_conn_dev=conn,
+            db_conn_test=test_conn,
+            excluded_projects=_ineligible_project_names(test_conn),
+        )
     table = _table(stats)
     metrics = [
         Metric(

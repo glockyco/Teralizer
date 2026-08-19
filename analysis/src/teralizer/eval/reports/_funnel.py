@@ -24,11 +24,53 @@ INELIGIBLE_STAGES = frozenset(
     {"SETUP_PROJECT", "ADD_DEPENDENCIES", "BUILD_PROJECT_ORIGINAL"}
 )
 
+# The frozen corpus does not record the number of tests that Maven executed. These
+# projects reached the test-report collector, but their Maven logs show that the
+# project disabled its tests or that Surefire discovered no tests. They have no
+# baseline test that Teralizer can generalize, so they are corpus exclusions rather
+# than pipeline failures.
+_NO_EXECUTED_TEST_PROJECTS = frozenset(
+    {
+        "projects/github_com_FibreFoX_i-can-see-aliens-JSP",
+        "projects/github_com_Groupe2_Groupe2",
+        "projects/github_com_IISH_file-validation",
+        "projects/github_com_KunkkaCoco_dsaij",
+        "projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient",
+        "projects/github_com_acciente_oacc-core",
+        "projects/github_com_bluebibi_springframe",
+        "projects/github_com_fit2cloud_qingcloud-api-java-wrapper",
+        "projects/github_com_git4sinu_proDesi",
+        "projects/github_com_halafi_msg-system",
+        "projects/github_com_happyfish100_fastdfs-client-java",
+        "projects/github_com_injcristianrojas_swsec-intro",
+        "projects/github_com_jpvetterli_time2lib",
+        "projects/github_com_ltemal94_SpringMVCMovies",
+        "projects/github_com_lucachaves_lattesHyperjaxb3",
+        "projects/github_com_madwenoma_tadu-jedis",
+        "projects/github_com_mikolai_HomeMultimediaStorage",
+        "projects/github_com_mirage22_miko-spring-mongodb",
+        "projects/github_com_mirage22_miko-spring-postgresql",
+        "projects/github_com_mtedone_podam",
+        "projects/github_com_perwendel_spark",
+        "projects/github_com_santo74_vertx-arangodb",
+        "projects/github_com_sbunciak_test-result-tracking-system",
+        "projects/github_com_sebprunier_concours-devoxx-france-2013",
+        "projects/github_com_sistar_woodle_backend",
+        "projects/github_com_spstorey_hicksfamilyhistory",
+        "projects/github_com_sscdotopen_aim3",
+        "projects/github_com_stacksync_java-cloudfiles",
+        "projects/github_com_svanimpe_reminders",
+        "projects/github_com_unisgn_nova",
+        "projects/github_com_yiminliu_ims-mvc",
+    }
+)
+
 ELIGIBILITY_CTE = """
 WITH eligible_projects AS (
     SELECT p.id
     FROM project p
     WHERE p.use_test_generalization
+      AND p.root_path != ALL(:no_executed_test_projects)
       AND NOT EXISTS (
           SELECT 1
           FROM task t
@@ -47,6 +89,7 @@ def base_query_params(variant: str) -> dict[str, object]:
     return {
         "variant": variant,
         "ineligible_stages": list(INELIGIBLE_STAGES),
+        "no_executed_test_projects": sorted(_NO_EXECUTED_TEST_PROJECTS),
     }
 
 
@@ -199,7 +242,7 @@ WITH
         FROM pit_mutation_report
         GROUP BY project_id
     ),
-    ineligible AS (
+    initial_gate_failures AS (
         SELECT DISTINCT project_id
         FROM task
         WHERE test_id IS NULL
@@ -210,7 +253,13 @@ WITH
     )
 SELECT
     p.id AS project_id,
-    NOT EXISTS (SELECT 1 FROM ineligible i WHERE i.project_id = p.id) AS eligible,
+    NOT EXISTS (
+        SELECT 1 FROM initial_gate_failures i WHERE i.project_id = p.id
+    ) AND p.root_path != ALL(:no_executed_test_projects) AS eligible,
+    EXISTS (
+        SELECT 1 FROM initial_gate_failures i WHERE i.project_id = p.id
+    ) AS failed_initial_gate,
+    p.root_path = ANY(:no_executed_test_projects) AS no_executed_test,
     coalesce(it.included_tests, 0) AS included_tests,
     coalesce(ia.included_assertions, 0) AS included_assertions,
     coalesce(sa.spec_surviving_assertions, 0) AS spec_surviving_assertions,
@@ -297,7 +346,10 @@ class ProjectFailure:
 
 @dataclass(frozen=True)
 class FunnelResult:
+    selected: int
     eligible: int
+    initial_gate_excluded: int
+    no_executed_test_excluded: int
     # Projects through all five stages, which the funnel table reports as its overall
     # row and the chapter cites as its applicability figure. The count holding a
     # validated generalized test before reduction is the reduction band's input.
@@ -330,6 +382,7 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
             "variant": selected_variant,
             "assertion_failure_stages": list(_ASSERTION_FAILURE_STAGES),
             "ineligible_stages": list(INELIGIBLE_STAGES),
+            "no_executed_test_projects": sorted(_NO_EXECUTED_TEST_PROJECTS),
         },
     )
     failures = _fetch_project_failures(conn)
@@ -371,12 +424,20 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
     table_df = _cause_table_df(causes)
     stages = _stage_bands(survivor_sets)
     reduction = next(band for band in stages if band.stage == _REDUCTION_STAGE)
+    selected = len(signals)
+    failed_initial_gate = signals["failed_initial_gate"].astype(bool)
+    no_executed_test = signals["no_executed_test"].astype(bool)
+    initial_gate_excluded = int(failed_initial_gate.sum())
+    no_executed_test_excluded = int((no_executed_test & ~failed_initial_gate).sum())
     eligible = len(eligible_ids)
     success_count = len(survivor_sets[-1])
     note = _funnel_note(eligible, stages, success_count)
 
     return FunnelResult(
+        selected=selected,
         eligible=eligible,
+        initial_gate_excluded=initial_gate_excluded,
+        no_executed_test_excluded=no_executed_test_excluded,
         success_count=success_count,
         stages=stages,
         table=_build_table(
