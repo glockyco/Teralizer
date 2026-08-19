@@ -13,23 +13,16 @@ import pytest
 from sqlalchemy.exc import OperationalError
 
 from teralizer.eval import registry
-from teralizer.eval.data import connect
 from teralizer.eval.model import RQReport
 
 
 pytestmark = pytest.mark.db
 
 
-def test_registered_reports_build():
+def test_registered_reports_build(build_report):
     for rq in sorted(registry.REPORTS):
-        spec = registry.get(rq)
         try:
-            with connect(
-                spec.default_db,
-                validate_schema=(spec.schema == "old"),
-                require=spec.requires,
-            ) as conn:
-                report = spec.build(conn)
+            report = build_report(rq)
         except OperationalError:
             continue  # database unreachable in this environment; skip, do not fail
         assert isinstance(report, RQReport)
