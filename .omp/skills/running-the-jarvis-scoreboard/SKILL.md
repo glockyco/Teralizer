@@ -17,10 +17,10 @@ task fails — the pipeline catches the error, drops the downstream tasks, and t
 still exits cleanly. A green gradle build is **not** a clean scorecard. Always verify
 the pipeline log, not the exit code.
 
-The authoritative contract — definitions, data boundaries, the case map, the rows→probes
-distinction — plus all comparison evidence and current numbers live in
-`docs/plans/2026-06-30-jarvis-comparison.md`. This skill covers **how to collect the data**, not
-what the numbers are.
+The executable comparison contract and case map live in
+`analysis/src/teralizer/eval/reports/rq0_jarvis.py`. Current evidence and source links live in
+`analysis/reports/rq0.md` and `analysis/reports/provenance.json`. This skill covers **how to collect
+the data**, not what the numbers are.
 
 ## When to use
 
@@ -65,7 +65,7 @@ against `postgres_dev` / `postgres_test` / `_replication` (read-only; never muta
 4. **Aggregate and compare.** Run the scorer from the repo root (it chdirs so the relative
    value-log paths resolve): `uv run --directory analysis python -m teralizer.jarvis_scoreboard`
    for the Table-2 head-to-head, `--sweep` for the tries sweep, `--census` for breadth. Interpret
-   the output against `docs/plans/2026-06-30-jarvis-comparison.md`; the raw-bits `Precision` row
+   the output against `analysis/reports/rq0.md`; the raw-bits `Precision` row
    is expected absent (a soundness exclusion), not a run failure.
 
 ## Long detached runs (census, rerun) and the `--no-reduction` pass
@@ -100,7 +100,7 @@ its PIT minions.
 | `CREATE DATABASE` → `template1 has a collation version mismatch` | glibc upgraded under the container | `ALTER DATABASE template1 REFRESH COLLATION VERSION;` then CREATE |
 | Rebuild fails on `_*Generalized*_Test.java` from a prior run | Failed `BUILD_PROJECT_GENERALIZED` dropped the cleanup task | Delete stale generated tests before re-running (step 3) |
 | `BUILD SUCCESSFUL` but no scorecard data | A pipeline task failed and dropped downstream tasks; gradle still exits 0 | Grep the pipeline log for `ERROR`; never trust the gradle exit code |
-| `precisionEqualsMaxUlps` excluded | It is a raw-bits probe, **outside** Table-2 (documented concession) | Expected, not a regression. Raw-bits MUTs fail loud / exclude rather than silently concretize — see the soundness axis of `docs/plans/2026-06-30-jarvis-comparison.md` |
+| `precisionEqualsMaxUlps` excluded | It is a raw-bits probe, **outside** Table-2 (documented concession) | Expected, not a regression. Raw-bits MUTs fail loud / exclude rather than silently concretize — see the reported-case comparison in `analysis/reports/rq0.md` |
 | Orphaned `java`/`MutationTestMinion` processes (PPID 1, 0% CPU) from a killed run | The runner was `kill -9`'d, bypassing its cleanup traps, so the gradle-forked JVMs never got torn down | `scripts/detached-run.sh sweep <data-dir>` (path-based tree kill); in future, stop via `scripts/detached-run.sh stop <name>`, never `kill -9` the runner |
 
 ## Data boundaries

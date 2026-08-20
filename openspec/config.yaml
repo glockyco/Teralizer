@@ -20,7 +20,8 @@ context: |
 
   Conventions: Conventional Commits with a causal body. Simplified Technical English
   in docs. `docs/exclusion-model.md` is required reading before quoting any exclusion
-  figure. Read `docs/plans/INDEX.md` for roadmap context.
+  figure. Current work lives in `openspec/changes/`, and accepted contracts live in
+  `openspec/specs/`.
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.

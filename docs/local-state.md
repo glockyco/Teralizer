@@ -8,7 +8,7 @@ Rules that keep this doc from going stale:
 
 - Rows describe patterns and owners, never the instances that exist today. What exists right
   now is `ls`, not documentation.
-- No volatile numbers. Sizes and counts belong in dated audit docs under `docs/plans/`.
+- No volatile numbers. Published sizes and counts belong in registered reports with provenance. Unpublished measurements belong in the OpenSpec change that owns their use.
 - Adding or removing a run driver or generator changes its row in the same commit.
 
 ## Run outputs under `data/` (gitignored)

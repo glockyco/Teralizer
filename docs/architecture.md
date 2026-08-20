@@ -85,8 +85,7 @@ Facts that span multiple pipeline stages and are load-bearing for any change:
   path-name coverage condition (empty path condition, or every widened parameter named).
   Boolean-in-PC (NULL_CONCRETE boolean return) widens only with zero events and full
   path-name coverage. Everything else becomes the typed exclusion `ORACLE_NOT_WIDENABLE`.
-  Design authorities: `docs/plans/archive/2026-07-03-widening-license.md`,
-  `docs/plans/archive/2026-07-05-exception-message-widening.md`.
+  `WideningLicenseTest` and the verification corpus pin these cases.
 - **Extraction telemetry** (written at SPF analysis time, consumed by the license and by
   analysis): `assertion.output_spec_class` (SYMBOLIC | CONSTANT | NULL_CONCRETE | EXCEPTION),
   `assertion.concretization_events` (symbolic values entering unmodeled native methods — a
@@ -127,8 +126,8 @@ Facts that span multiple pipeline stages and are load-bearing for any change:
   captured seed tuple first and dedups random draws (`first-value-arbitrary.vm`).
 - **Input generation** (`teralizer.jqwik.planning`): a type is generatable iff a registered
   `DomainPlanner` supports it. Planners encode path-condition clauses by construction and the
-  unconditional residual filter enforces the rest. Design authority:
-  `docs/plans/2026-06-28-clause-driven-input-generation.md`.
+  unconditional residual filter enforces the rest. Planner tests and the verification corpus pin
+  this contract.
 
 ## Verification
 

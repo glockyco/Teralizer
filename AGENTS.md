@@ -88,7 +88,7 @@ verification subsets (60s-ceiling jitter or native flakes) and stay evaluation-c
 - Architecture / DB references: `docs/architecture.md`, `docs/database.md`.
 - Why an entity is excluded, and which column may be trusted to say so:
   `docs/exclusion-model.md`. Required reading before quoting any exclusion figure.
-- Planning & roadmap: read `docs/plans/INDEX.md` first; the north-star, strategy sequence, and current focus live in `docs/plans/2026-06-26-teralizer-overview.md`.
+- Planning: current work lives in `openspec/changes/`, and accepted behavior lives in `openspec/specs/`. Use `openspec list --json` before starting or resuming work.
 - Config: Typesafe Config (HOCON). Examples are in `project-configs/example-*.conf`.
 - Analysis lives in `analysis/`.
 - Exports: `save_latex_table`, `save_csv_data`, `save_figure` from `teralizer.exports` →
@@ -101,7 +101,7 @@ Before you call a behaviour a defect, search the tests and `git log` for it. Dec
 recorded as regression tests named after the observable symptom, such as
 `leavesVintageInitializationErrorUnlinked` and `ProcessingPipelineCascadeTest`, and as commit
 messages that give the reason. Unexpected data is more often a decision you have not read than a
-bug. `docs/plans/` holds the longer audits, and it is the second place to look, not the first.
+bug. Read accepted OpenSpec contracts and active changes after the tests and history. Historical planning records are available only through Git history.
 
 **Evidence rule:** implementation docstrings describe intent and mechanism, never empirical
 distributions or outcomes. A claim about what the corpus contains must come from a query or report,

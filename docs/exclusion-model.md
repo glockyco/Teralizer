@@ -269,11 +269,16 @@ license already recovers it. In `postgres_reporeapers_rq6_v6`, `NULL_CONCRETE` w
 covers 2,820 generalizations, of which 1,043 are emitted. With a non-boolean oracle it covers 1,829,
 of which none are emitted.
 
-`NULL_CONCRETE` describes the persisted artifact, not the semantics. A 20-case source audit
-(`docs/plans/2026-08-10-null-concrete-sampling.md`) read the original test and the tested method
-for each sampled assertion and found 18 whose output plainly varies with a generalizable input,
-including six with no recorded concretization event. These are observations about the named audit
-sample, not a general extraction-yield barrier.
+`NULL_CONCRETE` describes the persisted artifact, not the semantics. A source audit used
+`postgres_reporeapers_rq6_v6`, variant `IMPROVED_200_TRIES`, whose population contained 4,649
+`NULL_CONCRETE` generalizations. It selected 20 rows with `ORDER BY random()`, stratified as eight
+non-boolean oracle expressions, eight rows with concretization events, and four remaining rows.
+The corresponding population strata contained 1,829, 1,329, and 1,491 rows. The audit read each
+original test, tested method, and output-specification file. Every output specification contained
+the JSON literal `null`. In 18 cases, the output plainly varied with a generalizable input. Six of
+those cases had no recorded concretization event. Two outputs were input-independent. This was a
+deliberately stratified source audit, not a prevalence sample or a general extraction-yield
+estimate.
 
 ### Why the output model is missing
 
@@ -323,9 +328,8 @@ The causes below are ordered by size.
    class invariants, which is a research problem rather than a setting.
 3. **Callee returns.** A value returned by a callee is not itself a cause. Ordinary Java calls
    propagate the return attribute (`jpf-core JVMReturnInstruction.java:154,166-168`). In the
-   25-case source audit of non-boolean `NULL_CONCRETE` assertions with zero concretization
-   (`docs/plans/2026-08-10-null-concrete-sampling.md`), ten cases bottomed out in a heap read or a
-   native call.
+   separate 25-case source audit of non-boolean `NULL_CONCRETE` assertions with zero
+   concretization, ten cases bottomed out in a heap read or a native call.
 4. **Loop accumulation.** A value accumulated by a loop whose trip count depends on the input is
    concrete because the loop counter is concrete. Its path condition pins the input to one value,
    making the generalization vacuous. The same 25-case source audit found one loop-accumulated

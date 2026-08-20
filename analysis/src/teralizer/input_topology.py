@@ -1,15 +1,14 @@
 """Input-topology spike: classify asserted 'actual' expressions by shape.
 
-Answers: where would generated inputs enter, and where is the oracle value
-read, for every supported assertion in the corpus? The shape taxonomy sizes
-the recipe increments in ``docs/plans/2026-07-02-input-topology-spike.md``
-(T0 direct call, T1 inline ctor receiver, T2 expression slice, T3 statement
-slice, T4 fixture, T5 environment).
+Answers where generated inputs enter and where the oracle value is read for
+supported assertions. The taxonomy is T0 direct call, T1 inline constructor
+receiver, T2 expression slice, T3 statement slice, T4 fixture, and T5
+environment.
 
-Textual heuristic over Spoon-printed expression source (the DB stores no
-AST); expect a few percent noise. The AST-exact version is the
-``actual_shape`` column of ``mut_resolution_observation``
-(``2026-07-02-mut-id-confidence-fusion``).
+This is a textual heuristic over Spoon-printed expression source because the
+database stores no AST. Treat its classifications as approximate. The
+``actual_shape`` column of ``mut_resolution_observation`` stores the AST-based
+classification produced during analysis.
 
 Run:  uv run --directory analysis python -m teralizer.input_topology
 """

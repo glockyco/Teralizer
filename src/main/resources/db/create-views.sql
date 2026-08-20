@@ -1975,7 +1975,7 @@ WITH
                 WHEN info LIKE '%NATIVE_MODEL_GAP%' THEN 'Incomplete native peers'
                 WHEN info LIKE '%TARGET_NOT_ENTERED%' THEN 'Target not entered (unreachable)'
                 WHEN info LIKE '%TARGET_NOT_EXITED%' THEN 'Target not exited'
-                -- SPF/JPF engine failures not yet typed (see 2026-06-28-native-peer-model-coverage).
+                -- Legacy SPF/JPF engine failures that do not yet have typed task diagnostics.
                 WHEN info LIKE '%java.lang.NoSuchMethodException!!%' THEN 'NoSuchMethodException'
                 WHEN info LIKE '%java.lang.ArithmeticException: !!!div by 0%' THEN 'ArithmeticException: div by 0'
                 WHEN info LIKE '%java.lang.RuntimeException: NEWARRAY: symbolic array length%' THEN 'RuntimeException: symbolic array length'
