@@ -12,7 +12,6 @@ dictionary and warns on anything outside it, so the same string rides in
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib
@@ -20,26 +19,24 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from teralizer.eval.artifacts import (
+    ArtifactId,
+    ArtifactSet,
+    RenderedArtifact,
+    RenderTarget,
+)
 from teralizer.eval.model import RQReport
 from teralizer.eval.provenance import capture
 from teralizer.plotting import setup_paper_style
 
 
-@dataclass(frozen=True)
-class MaterializedFigures:
-    """What a figure run produced. ``pdf`` is keyed by figure key, because
-    publishing resolves a consumer's declaration against those keys."""
-
-    png: list[Path]
-    pdf: dict[str, Path]
-
-
-def materialize(report: RQReport, fig_dir: Path, pdf_dir: Path) -> MaterializedFigures:
+def materialize(
+    report: RQReport, fig_dir: Path, pdf_dir: Path, *, staging_root: Path
+) -> ArtifactSet:
     setup_paper_style()
     fig_dir.mkdir(parents=True, exist_ok=True)
     pdf_dir.mkdir(parents=True, exist_ok=True)
-    pngs: list[Path] = []
-    pdfs: dict[str, Path] = {}
+    artifacts = ArtifactSet(staging_root)
     for figure in report.figures():
         # Resolved through the figure's own build function, so the image records
         # the commit of the code that drew it and stops changing on unrelated
@@ -55,7 +52,11 @@ def materialize(report: RQReport, fig_dir: Path, pdf_dir: Path) -> MaterializedF
                 bbox_inches="tight",
                 metadata={"Comment": provenance},
             )
-            pngs.append(png)
+            artifacts.add(
+                RenderedArtifact(
+                    ArtifactId(RenderTarget.MARKDOWN, figure.key), png, report.rq
+                )
+            )
             pdf = pdf_dir / f"{figure.key}.pdf"
             # No dpi: the paper style's 300 applies, and for a vector page it
             # only governs any raster element the figure embeds.
@@ -64,7 +65,11 @@ def materialize(report: RQReport, fig_dir: Path, pdf_dir: Path) -> MaterializedF
                 bbox_inches="tight",
                 metadata={"Subject": provenance},
             )
-            pdfs[figure.key] = pdf
+            artifacts.add(
+                RenderedArtifact(
+                    ArtifactId(RenderTarget.FIGURES, figure.key), pdf, report.rq
+                )
+            )
         finally:
             plt.close(fig)
-    return MaterializedFigures(png=pngs, pdf=pdfs)
+    return artifacts

@@ -8,6 +8,13 @@ from pathlib import Path
 
 from pandas import isna
 
+from teralizer.eval.artifacts import (
+    ArtifactId,
+    ArtifactSet,
+    RenderedArtifact,
+    RenderTarget,
+    RunAggregate,
+)
 from teralizer.eval.format import COUNT_SHARE, render_value
 from teralizer.eval.inputs import CorpusInputSnapshot
 from teralizer.eval.macros import macro_name
@@ -259,13 +266,8 @@ def render_macros(report: RQReport) -> str:
 _NEWCOMMAND = re.compile(r"\\newcommand\{\\(\w+)\}")
 
 
-def write_macros(built: BuiltReport, build_dir: Path) -> Path:
-    """Write this report's macros and rebuild the aggregate from all reports.
-
-    Each report owns one file under `macros/`. `macros.tex` is derived by
-    concatenation, so never write to it directly: a report that does will drop
-    every other report's macros.
-    """
+def write_owned_macros(built: BuiltReport, build_dir: Path) -> Path:
+    """Write the macro file owned by one report."""
     report = built.report
     database = next(
         snapshot.database
@@ -274,11 +276,15 @@ def write_macros(built: BuiltReport, build_dir: Path) -> Path:
     )
     owned_dir = build_dir / "macros"
     owned_dir.mkdir(parents=True, exist_ok=True)
+    path = owned_dir / f"{report.rq}.tex"
     header = f"% {report.rq} from {database}\n"
-    (owned_dir / f"{report.rq}.tex").write_text(
-        header + render_macros(report), encoding="utf-8"
-    )
+    path.write_text(header + render_macros(report), encoding="utf-8")
+    return path
 
+
+def write_aggregate_macros(build_dir: Path) -> Path:
+    """Rebuild the run-owned aggregate from the staged report macro files."""
+    owned_dir = build_dir / "macros"
     bodies = {
         path.stem: path.read_text(encoding="utf-8")
         for path in sorted(owned_dir.glob("*.tex"))
@@ -302,13 +308,33 @@ def write_macros(built: BuiltReport, build_dir: Path) -> Path:
     return aggregate
 
 
-def render(built: BuiltReport, build_dir: Path) -> list[Path]:
+def render(built: BuiltReport, build_dir: Path, *, staging_root: Path) -> ArtifactSet:
     report = built.report
     build_dir.mkdir(parents=True, exist_ok=True)
-    written: list[Path] = []
+    artifacts = ArtifactSet(staging_root)
     for table in report.tables():
         out = build_dir / f"{table.key}.tex"
         out.write_text(render_table(table), encoding="utf-8")
-        written.append(out)
-    written.append(write_macros(built, build_dir))
-    return written
+        artifacts.add(
+            RenderedArtifact(ArtifactId(RenderTarget.LATEX, table.key), out, report.rq)
+        )
+    macro_path = write_owned_macros(built, build_dir)
+    artifacts.add(
+        RenderedArtifact(
+            ArtifactId(RenderTarget.LATEX, f"macros/{report.rq}"),
+            macro_path,
+            report.rq,
+        )
+    )
+    return artifacts
+
+
+def render_aggregate(build_dir: Path, *, staging_root: Path) -> ArtifactSet:
+    path = write_aggregate_macros(build_dir)
+    artifacts = ArtifactSet(staging_root)
+    artifacts.add(
+        RenderedArtifact(
+            ArtifactId(RenderTarget.LATEX, "macros"), path, RunAggregate.RUN
+        )
+    )
+    return artifacts

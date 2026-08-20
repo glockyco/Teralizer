@@ -5,6 +5,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from teralizer.eval.artifacts import (
+    ArtifactId,
+    ArtifactSet,
+    RenderedArtifact,
+    RenderTarget,
+)
 from teralizer.eval.format import COUNT_SHARE, render_value
 from teralizer.eval.inputs import CorpusInputSnapshot
 from teralizer.eval.model import BuiltReport, Figure, Prose, Table
@@ -83,9 +89,15 @@ def render_str(built: BuiltReport, *, repo_url: str) -> str:
     return "\n\n".join(parts) + "\n"
 
 
-def render(built: BuiltReport, reports_dir: Path, *, repo_url: str) -> Path:
+def render(
+    built: BuiltReport, reports_dir: Path, *, staging_root: Path, repo_url: str
+) -> ArtifactSet:
     report = built.report
     reports_dir.mkdir(parents=True, exist_ok=True)
     out = reports_dir / f"{report.rq}.md"
     out.write_text(render_str(built, repo_url=repo_url), encoding="utf-8")
-    return out
+    artifacts = ArtifactSet(staging_root)
+    artifacts.add(
+        RenderedArtifact(ArtifactId(RenderTarget.MARKDOWN, report.rq), out, report.rq)
+    )
+    return artifacts

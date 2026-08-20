@@ -27,7 +27,7 @@ Teralizer extracts its specification from a single execution. Generalized tests 
 
 _JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. For Teralizer, PVC includes the reconstructed original tests' values and the generalized tests' values. A dash marks a scenario Teralizer excludes from generalization._
 
-source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/b5112480c27aad999d9308a996ebc3ee9ef7fe5c/analysis/src/teralizer/jarvis_scoreboard.py#L838)
+source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/749cc5c2f6afc62ab67178a09208af80fad3926e/analysis/src/teralizer/jarvis_scoreboard.py#L838)
 
 ## Applicability breadth
 
@@ -71,4 +71,4 @@ A larger sampling budget can raise PVC by exercising more distinct values. In th
 
 _The same mutant sets are covered and killed at every budget._
 
-source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/b3fd3d5d1bfde88b63e71abad1b762c3c181ec17/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L255)
+source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/749cc5c2f6afc62ab67178a09208af80fad3926e/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L255)

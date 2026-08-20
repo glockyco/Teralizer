@@ -3,12 +3,17 @@ from pathlib import Path
 
 import pytest
 
+from teralizer.eval.artifacts import (
+    ArtifactId,
+    ArtifactSet,
+    RenderedArtifact,
+    RenderTarget,
+)
 from teralizer.eval.publish import (
     DECLARATION_NAME,
     FigureDeclaration,
     PublishError,
     deliver,
-    merge_emitted,
     read_declaration,
 )
 
@@ -32,12 +37,19 @@ def _declaration(destination: Path) -> FigureDeclaration:
     return declaration
 
 
-def _emitted(tmp_path: Path, **keys: str) -> dict[str, Path]:
+def _emitted(tmp_path: Path, **keys: str) -> ArtifactSet:
     build = tmp_path / "build"
     build.mkdir(exist_ok=True)
-    return {
-        key: _written(build / f"{key}.pdf", content) for key, content in keys.items()
-    }
+    artifacts = ArtifactSet(tmp_path)
+    for key, content in keys.items():
+        artifacts.add(
+            RenderedArtifact(
+                ArtifactId(RenderTarget.FIGURES, key),
+                _written(build / f"{key}.pdf", content),
+                "rq",
+            )
+        )
+    return artifacts
 
 
 def _written(path: Path, content: str) -> Path:
@@ -179,16 +191,3 @@ def test_committed_consumer_figure_is_overwritten(tmp_path: Path):
     _commit_all(declaration.root)
     deliver(declaration, _emitted(tmp_path, a="A"))
     assert target.read_text() == "A"
-
-
-def test_merge_rejects_a_key_two_reports_emit(tmp_path: Path):
-    """A declaration names a key, not a report, so report order must not decide
-    which figure a consumer prints."""
-    first = _emitted(tmp_path, shared="first")
-    with pytest.raises(PublishError, match="re-emits figure key 'shared'"):
-        merge_emitted(dict(first), {"shared": tmp_path / "other.pdf"}, "rq4")
-
-
-def test_merge_accumulates_distinct_keys(tmp_path: Path):
-    merged = merge_emitted({"a": tmp_path / "a.pdf"}, {"b": tmp_path / "b.pdf"}, "rq3")
-    assert set(merged) == {"a", "b"}

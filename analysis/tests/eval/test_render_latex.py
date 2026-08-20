@@ -9,7 +9,12 @@ from teralizer.eval.model import (
     Section,
     Table,
 )
-from teralizer.eval.render.latex import render_macros, render_table, write_macros
+from teralizer.eval.render.latex import (
+    render_macros,
+    render_table,
+    write_aggregate_macros,
+    write_owned_macros,
+)
 
 
 def _report(rq: str, key: str) -> BuiltReport:
@@ -21,9 +26,10 @@ def _report(rq: str, key: str) -> BuiltReport:
 
 
 def test_macros_from_every_report_survive_a_single_report_run(tmp_path):
-    write_macros(_report("rq0", "jarvis.probes"), tmp_path)
-    write_macros(_report("rq6", "realworld.eligible_projects"), tmp_path)
-    write_macros(_report("rq6", "realworld.eligible_projects"), tmp_path)
+    write_owned_macros(_report("rq0", "jarvis.probes"), tmp_path)
+    write_owned_macros(_report("rq6", "realworld.eligible_projects"), tmp_path)
+    write_owned_macros(_report("rq6", "realworld.eligible_projects"), tmp_path)
+    write_aggregate_macros(tmp_path)
 
     aggregate = (tmp_path / "macros.tex").read_text()
     assert "\\TzJarvisProbes" in aggregate
@@ -33,9 +39,10 @@ def test_macros_from_every_report_survive_a_single_report_run(tmp_path):
 
 
 def test_two_reports_cannot_own_the_same_macro(tmp_path):
-    write_macros(_report("rq0", "shared.count"), tmp_path)
+    write_owned_macros(_report("rq0", "shared.count"), tmp_path)
+    write_owned_macros(_report("rq6", "shared.count"), tmp_path)
     with pytest.raises(RuntimeError, match=r"rq0 and rq6"):
-        write_macros(_report("rq6", "shared.count"), tmp_path)
+        write_aggregate_macros(tmp_path)
 
 
 def test_render_table_is_booktabs_with_formatted_cells():

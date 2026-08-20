@@ -5,6 +5,12 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+from teralizer.eval.artifacts import (
+    ArtifactId,
+    ArtifactSet,
+    RenderedArtifact,
+    RenderTarget,
+)
 from teralizer.eval.format import COUNT_SHARE, render_value
 from teralizer.eval.model import RQReport, Table
 
@@ -41,6 +47,12 @@ def render_table(table: Table, output_dir: Path) -> Path:
     return path
 
 
-def render(report: RQReport, output_dir: Path) -> list[Path]:
-    """Write all report tables and return their paths."""
-    return [render_table(table, output_dir) for table in report.tables()]
+def render(report: RQReport, output_dir: Path, *, staging_root: Path) -> ArtifactSet:
+    """Write all report tables and return their typed artifacts."""
+    artifacts = ArtifactSet(staging_root)
+    for table in report.tables():
+        path = render_table(table, output_dir)
+        artifacts.add(
+            RenderedArtifact(ArtifactId(RenderTarget.CSV, table.key), path, report.rq)
+        )
+    return artifacts

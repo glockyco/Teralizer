@@ -1,4 +1,4 @@
-"""python -m teralizer.eval <rq|all> [--targets md,figures,latex] [--paper-out PATH]"""
+"""python -m teralizer.eval <rq|all> [--targets md,figures,latex,csv]."""
 
 from __future__ import annotations
 
@@ -8,105 +8,138 @@ from pathlib import Path
 
 import teralizer.eval.reports  # noqa: F401
 from teralizer.eval import inputs, provenance, publish, registry
+from teralizer.eval.artifacts import ArtifactSet, RenderTarget
 from teralizer.eval.model import BuiltReport
+from teralizer.eval.render import csv as csv_renderer
 from teralizer.eval.render import figures as figures_renderer
 from teralizer.eval.render import latex as latex_renderer
 from teralizer.eval.render import manifest as manifest_renderer
 from teralizer.eval.render import markdown as markdown_renderer
-from teralizer.eval.render import csv as csv_renderer
 
 REPO_URL = "https://github.com/glockyco/Teralizer"
 _ANALYSIS = Path(__file__).resolve().parents[3]
 REPORTS_DIR = _ANALYSIS / "reports"
 BUILD_DIR = _ANALYSIS / "build"
-_RENDER_TARGETS = frozenset({"md", "figures", "latex", "csv"})
+_RENDER_TARGETS = frozenset(
+    target.value for target in RenderTarget if target != "manifest"
+)
 
 
-def _build_and_render(
-    rq: str,
-    targets: set[str],
-    paper_out: Path | None,
-) -> dict[str, Path]:
-    """Returns the PDF emitted per figure key, for the caller to publish once the
-    whole run is known."""
-    if paper_out is not None:
+def _build(rq: str, *, publishing: bool) -> BuiltReport:
+    if publishing:
         provenance.require_publishable_tree()
     spec = registry.get(rq)
     with inputs.resolve_inputs(rq, spec.inputs) as context:
         report = spec.build(context)
         built = BuiltReport(report, context.snapshots)
-    if paper_out is not None:
+    if publishing:
         provenance.require_publishable_inputs(built.inputs)
-    emitted: dict[str, Path] = {}
+    return built
+
+
+def _render_report(
+    built: BuiltReport, targets: set[str], *, staging_root: Path
+) -> ArtifactSet:
+    rq = built.report.rq
+    artifacts = ArtifactSet(staging_root)
     if "figures" in targets:
-        emitted = figures_renderer.materialize(
-            report, REPORTS_DIR / "figures" / rq, BUILD_DIR / "figures" / rq
-        ).pdf
+        artifacts.merge(
+            figures_renderer.materialize(
+                built.report,
+                REPORTS_DIR / "figures" / rq,
+                BUILD_DIR / "figures" / rq,
+                staging_root=staging_root,
+            )
+        )
     if "md" in targets:
-        markdown_renderer.render(built, REPORTS_DIR, repo_url=REPO_URL)
-        manifest_renderer.write_manifest(built, REPORTS_DIR, repo_url=REPO_URL)
+        artifacts.merge(
+            markdown_renderer.render(
+                built, REPORTS_DIR, staging_root=staging_root, repo_url=REPO_URL
+            )
+        )
     if "latex" in targets:
-        written = latex_renderer.render(built, BUILD_DIR)
-        if paper_out is not None:
-            paper_out.mkdir(parents=True, exist_ok=True)
-            for path in written:
-                shutil.copy2(path, paper_out / path.name)
+        artifacts.merge(
+            latex_renderer.render(built, BUILD_DIR, staging_root=staging_root)
+        )
     if "csv" in targets:
-        csv_paths = csv_renderer.render(report, BUILD_DIR / rq)
-        if paper_out is not None:
-            data_dir = paper_out.parent / "data"
+        artifacts.merge(
+            csv_renderer.render(built.report, BUILD_DIR / rq, staging_root=staging_root)
+        )
+    return artifacts
+
+
+def _deliver_legacy_paper_outputs(
+    artifacts: ArtifactSet,
+    paper_root: Path,
+    declaration: publish.FigureDeclaration | None,
+) -> None:
+    tables_dir = paper_root / "tables"
+    data_dir = paper_root / "data"
+    for artifact in artifacts:
+        if artifact.id.target is RenderTarget.LATEX:
+            if artifact.id.key.startswith("macros/"):
+                continue
+            tables_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(artifact.path, tables_dir / artifact.path.name)
+        elif artifact.id.target is RenderTarget.CSV:
             data_dir.mkdir(parents=True, exist_ok=True)
-            for path in csv_paths:
-                shutil.copy2(path, data_dir / path.name)
-    return emitted
+            shutil.copy2(artifact.path, data_dir / artifact.path.name)
+    if declaration is not None:
+        for path in publish.deliver(declaration, artifacts):
+            print(f"published {path}")
 
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="teralizer.eval")
     parser.add_argument("rq", help="report id or 'all'")
     parser.add_argument("--targets", default="md,figures,latex")
-    # No environment default. Publishing is an explicit act, and an ambient
-    # PAPER_REPO_PATH would make every run copy artifacts into another repo.
     parser.add_argument("--paper-out", default=None)
     args = parser.parse_args(argv)
     targets = {target.strip() for target in args.targets.split(",") if target.strip()}
     unknown_targets = targets - _RENDER_TARGETS
     if unknown_targets:
         parser.error(f"unknown render targets: {', '.join(sorted(unknown_targets))}")
-    # macros.tex and the CSV directory are shared across reports, so copying
-    # them out after a single-report run puts one fresh report beside stale ones.
     if args.paper_out and args.rq != "all":
         parser.error("--paper-out requires 'all'. Publish the whole set or none of it")
-    # Without the figure target every declared key would be reported as missing,
-    # blaming the consumer's declaration for a mistake in this invocation.
     if (
         args.paper_out
         and "figures" not in targets
         and (Path(args.paper_out) / publish.DECLARATION_NAME).is_file()
     ):
         parser.error(
-            f"{args.paper_out} declares figures in {publish.DECLARATION_NAME}; "
-            "add 'figures' to --targets or publishing would skip them"
+            f"{args.paper_out} declares figures in {publish.DECLARATION_NAME}. "
+            "Add 'figures' to --targets or publishing would skip them"
         )
-    paper_out = Path(args.paper_out) / "tables" if args.paper_out else None
     rqs = sorted(registry.REPORTS) if args.rq == "all" else [args.rq]
-    if not rqs or (args.rq == "all" and not registry.REPORTS):
+    if not rqs:
         print("no reports registered")
         return
-    # Figures are declared per report but published once: a consumer's
-    # declaration is checked against everything this run emitted, so a key that
-    # no report produces fails rather than passing because another report ran.
     declaration = (
         publish.read_declaration(Path(args.paper_out)) if args.paper_out else None
     )
-    emitted: dict[str, Path] = {}
-    for rq in rqs:
-        emitted = publish.merge_emitted(
-            emitted, _build_and_render(rq, targets, paper_out), rq
+    built_reports = tuple(
+        _build(rq, publishing=args.paper_out is not None) for rq in rqs
+    )
+    staging_root = REPORTS_DIR.parent.resolve()
+    artifacts = ArtifactSet(staging_root)
+    for built in built_reports:
+        artifacts.merge(_render_report(built, targets, staging_root=staging_root))
+    if "latex" in targets:
+        artifacts.merge(
+            latex_renderer.render_aggregate(BUILD_DIR, staging_root=staging_root)
         )
-    if declaration is not None:
-        for path in publish.deliver(declaration, emitted):
-            print(f"published {path}")
+    if "md" in targets:
+        artifacts.merge(
+            manifest_renderer.render(
+                built_reports,
+                artifacts,
+                REPORTS_DIR,
+                staging_root=staging_root,
+                repo_url=REPO_URL,
+            )
+        )
+    if args.paper_out:
+        _deliver_legacy_paper_outputs(artifacts, Path(args.paper_out), declaration)
 
 
 if __name__ == "__main__":

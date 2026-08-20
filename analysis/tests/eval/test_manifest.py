@@ -1,13 +1,15 @@
 import json
 from pathlib import Path
+from teralizer.eval.artifacts import (
+    ArtifactId,
+    ArtifactSet,
+    RenderedArtifact,
+    RenderTarget,
+)
 from teralizer.eval.inputs import CorpusInputSnapshot, FileInputSnapshot
 from teralizer.eval.model import BuiltReport, Metric, RQReport, Section
 from teralizer.eval.provenance import Provenance
-from teralizer.eval.render.manifest import (
-    ANALYSIS_VERSION,
-    build_manifest,
-    write_manifest,
-)
+from teralizer.eval.render.manifest import ANALYSIS_VERSION, build_manifest, render
 
 
 def test_manifest_maps_metric_to_source(tmp_path: Path):
@@ -39,10 +41,22 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
             ),
         ),
     )
-    path = write_manifest(
-        built, tmp_path, repo_url="https://github.com/glockyco/Teralizer"
+    rendered = ArtifactSet(tmp_path)
+    rendered.add(
+        RenderedArtifact(
+            ArtifactId(RenderTarget.MARKDOWN, "rq6"), tmp_path / "rq6.md", "rq6"
+        )
     )
-    data = json.loads(Path(path).read_text())
+    written = render(
+        (built,),
+        rendered,
+        tmp_path,
+        staging_root=tmp_path,
+        repo_url="https://github.com/glockyco/Teralizer",
+    )
+    path = written.get(ArtifactId(RenderTarget.MANIFEST, "provenance")).path
+    data = json.loads(path.read_text())
+    assert data["rq6"]["artifacts"] == {"md": ["rq6"]}
     entry = data["rq6"]["metrics"]["realworld.eligible_projects"]
     assert entry["value"] == 632
     assert entry["commit"] == "a" * 40
@@ -83,7 +97,9 @@ def test_manifest_records_all_corpus_file_and_absent_roles():
         ),
     )
 
-    manifest = build_manifest(built, repo_url="https://github.com/glockyco/Teralizer")
+    manifest = build_manifest(
+        built, ArtifactSet(Path.cwd()), repo_url="https://github.com/glockyco/Teralizer"
+    )
 
     assert manifest["inputs"]["scenarios"]["corpus_id"] == "jarvis-scenarios"
     assert manifest["inputs"]["benchmark"]["database"] == "census"

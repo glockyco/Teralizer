@@ -6,6 +6,13 @@ import json
 from importlib.metadata import version
 from pathlib import Path
 
+from teralizer.eval.artifacts import (
+    ArtifactSet,
+    RenderedArtifact,
+    ArtifactId,
+    RenderTarget,
+    RunAggregate,
+)
 from teralizer.eval.inputs import CorpusInputSnapshot, FileInputSnapshot, InputSnapshot
 from teralizer.eval.model import BuiltReport
 
@@ -48,10 +55,21 @@ def _input_entry(snapshot: InputSnapshot) -> dict[str, object]:
     raise TypeError(f"unsupported report input snapshot: {type(snapshot)!r}")
 
 
-def build_manifest(built: BuiltReport, *, repo_url: str) -> dict:
+def build_manifest(
+    built: BuiltReport, artifacts: ArtifactSet, *, repo_url: str
+) -> dict:
     report = built.report
+    artifact_ids: dict[str, list[str]] = {}
+    for artifact in artifacts:
+        if artifact.owner == report.rq:
+            artifact_ids.setdefault(artifact.id.target.value, []).append(
+                artifact.id.key
+            )
     manifest = {
         "inputs": {snapshot.role: _input_entry(snapshot) for snapshot in built.inputs},
+        "artifacts": {
+            target: sorted(keys) for target, keys in sorted(artifact_ids.items())
+        },
         "metrics": {
             m.key: _entry(m.value, m.provenance, repo_url)
             for m in report.metrics
@@ -71,12 +89,30 @@ def build_manifest(built: BuiltReport, *, repo_url: str) -> dict:
     return manifest
 
 
-def write_manifest(built: BuiltReport, reports_dir: Path, *, repo_url: str) -> Path:
+def render(
+    built_reports: tuple[BuiltReport, ...],
+    rendered: ArtifactSet,
+    reports_dir: Path,
+    *,
+    staging_root: Path,
+    repo_url: str,
+) -> ArtifactSet:
+    """Write one complete run-owned provenance manifest."""
     reports_dir.mkdir(parents=True, exist_ok=True)
     path = reports_dir / "provenance.json"
-    existing = json.loads(path.read_text()) if path.exists() else {}
-    existing[built.report.rq] = build_manifest(built, repo_url=repo_url)
+    document = {
+        built.report.rq: build_manifest(built, rendered, repo_url=repo_url)
+        for built in built_reports
+    }
     path.write_text(
-        json.dumps(existing, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    return path
+    artifacts = ArtifactSet(staging_root)
+    artifacts.add(
+        RenderedArtifact(
+            ArtifactId(RenderTarget.MANIFEST, "provenance"),
+            path,
+            RunAggregate.RUN,
+        )
+    )
+    return artifacts

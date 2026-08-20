@@ -24,9 +24,10 @@ from __future__ import annotations
 import shutil
 import subprocess
 import tomllib
-from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+
+from teralizer.eval.artifacts import ArtifactSet, RenderTarget
 
 DECLARATION_NAME = "publish.toml"
 
@@ -134,28 +135,7 @@ def _uncommitted(declaration: FigureDeclaration) -> list[str]:
     ]
 
 
-def merge_emitted(
-    accumulated: dict[str, Path], produced: Mapping[str, Path], rq: str
-) -> dict[str, Path]:
-    """Accumulate one report's figures into the run's set.
-
-    Two reports emitting one figure key is an ambiguity a consumer's declaration
-    cannot resolve, since it names the key and not the report. Fail rather than
-    letting report order decide which figure the thesis prints.
-    """
-    collisions = sorted(set(accumulated) & set(produced))
-    if collisions:
-        raise PublishError(
-            [
-                f"report '{rq}' re-emits figure key '{key}', already emitted as "
-                f"{accumulated[key]}"
-                for key in collisions
-            ]
-        )
-    return accumulated | dict(produced)
-
-
-def deliver(declaration: FigureDeclaration, emitted: Mapping[str, Path]) -> list[Path]:
+def deliver(declaration: FigureDeclaration, artifacts: ArtifactSet) -> list[Path]:
     """Copy every declared figure, or nothing.
 
     A declared key that nothing emits is an error: the consumer is printing a
@@ -166,6 +146,10 @@ def deliver(declaration: FigureDeclaration, emitted: Mapping[str, Path]) -> list
     Containment was settled when the declaration was built, so the only failure
     left here is the one that depends on what this run produced.
     """
+    emitted = {
+        artifact.id.key: artifact.path
+        for artifact in artifacts.by_target(RenderTarget.FIGURES)
+    }
     reasons = [
         f"declared figure '{key}' is not emitted by any report in this run"
         for key in sorted(declaration.targets)

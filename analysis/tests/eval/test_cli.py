@@ -76,20 +76,24 @@ def test_cli_resolves_declared_inputs_before_build(monkeypatch, tmp_path):
 
 def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
     monkeypatch.setenv(provenance.DIRTY_PROVENANCE_ENV, "1")
-    monkeypatch.setitem(
-        registry.REPORTS,
-        "smoke_csv",
-        registry.ReportSpec(_fixture_report, ()),
+    monkeypatch.setattr(
+        registry,
+        "REPORTS",
+        {"smoke_csv": registry.ReportSpec(_fixture_report, ())},
     )
     monkeypatch.setattr(cli.inputs, "resolve_inputs", _resolved)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
     monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
-    cli._build_and_render(
-        "smoke_csv",
-        {"md", "latex", "csv"},
-        tmp_path / "paper" / "tables",
+    cli.main(
+        [
+            "all",
+            "--targets",
+            "md,latex,csv",
+            "--paper-out",
+            str(tmp_path / "paper"),
+        ]
     )
-    assert (tmp_path / "build" / "smoke_csv" / "k.csv").exists()
+    assert (tmp_path / "build" / "smoke" / "k.csv").exists()
     assert (tmp_path / "paper" / "tables" / "k.tex").exists()
     csv_path = tmp_path / "paper" / "data" / "k.csv"
     assert csv_path.exists()
