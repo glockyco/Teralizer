@@ -19,4 +19,4 @@ _Source database: `postgres_dev`._
 | \DatasetRepoReapers{} (mean) | 66 | 80 | 4,362 | 35 | 49 | 3,192 | 163 |
 | \DatasetRepoReapers{} (median) | 50 | 57 | 3,321 | 24 | 29 | 2,131 | 82 |
 
-source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/57d235ce321541372494cfa9b2f52ab0ef054997/analysis/src/teralizer/dataset_characteristics.py#L238)
+source: [`get_dataset_statistics`](https://github.com/glockyco/Teralizer/blob/50007a02f04b478117c9c39e4dbae0cde1e1bffb/analysis/src/teralizer/dataset_characteristics.py#L238)
