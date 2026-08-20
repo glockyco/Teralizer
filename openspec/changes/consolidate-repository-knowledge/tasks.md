@@ -71,7 +71,7 @@
 
 - [x] 6.1 Run the focused repository-state test module, including every positive control and the real
       repository assertion.
-- [ ] 6.2 Run the complete non-database analysis test suite.
+- [x] 6.2 Run the complete non-database analysis test suite.
 - [ ] 6.3 Run the repository's formatting, lint, type, and file-hygiene commit hooks over all changed
       files.
 - [ ] 6.4 Run `openspec validate --all --strict` and confirm both this change and the reconciled
