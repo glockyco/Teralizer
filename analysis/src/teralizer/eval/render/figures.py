@@ -12,7 +12,7 @@ dictionary and warns on anything outside it, so the same string rides in
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib
@@ -30,15 +30,16 @@ class MaterializedFigures:
     """What a figure run produced. ``pdf`` is keyed by figure key, because
     publishing resolves a consumer's declaration against those keys."""
 
-    png: list[Path] = field(default_factory=list)
-    pdf: dict[str, Path] = field(default_factory=dict)
+    png: list[Path]
+    pdf: dict[str, Path]
 
 
 def materialize(report: RQReport, fig_dir: Path, pdf_dir: Path) -> MaterializedFigures:
     setup_paper_style()
     fig_dir.mkdir(parents=True, exist_ok=True)
     pdf_dir.mkdir(parents=True, exist_ok=True)
-    result = MaterializedFigures()
+    pngs: list[Path] = []
+    pdfs: dict[str, Path] = {}
     provenance = f"teralizer.eval {report.rq} @ {git_commit()}"
     for figure in report.figures():
         fig, ax = plt.subplots()
@@ -51,7 +52,7 @@ def materialize(report: RQReport, fig_dir: Path, pdf_dir: Path) -> MaterializedF
                 bbox_inches="tight",
                 metadata={"Comment": provenance},
             )
-            result.png.append(png)
+            pngs.append(png)
             pdf = pdf_dir / f"{figure.key}.pdf"
             # No dpi: the paper style's 300 applies, and for a vector page it
             # only governs any raster element the figure embeds.
@@ -60,7 +61,7 @@ def materialize(report: RQReport, fig_dir: Path, pdf_dir: Path) -> MaterializedF
                 bbox_inches="tight",
                 metadata={"Subject": provenance},
             )
-            result.pdf[figure.key] = pdf
+            pdfs[figure.key] = pdf
         finally:
             plt.close(fig)
-    return result
+    return MaterializedFigures(png=pngs, pdf=pdfs)

@@ -116,15 +116,34 @@ generator stopped producing — which is exactly the state this change exists to
 *Why all failures rather than the first:* a figure-key rename breaks every consumer that names it, and
 reporting one at a time turns one edit into several publish attempts.
 
-### 5. Reuse the existing guards rather than adding a figure-specific one
+### 5. Each layer guards what it copies
 
 The generator's clean-tree requirement already covers this path, because it is checked once per run
-when a publish destination is supplied. The consumer-side guard in `publish-analysis.sh` currently
-inspects `tables` and `data`; it gains the figure directories the declaration resolves to, computed
-from the declaration rather than hardcoded.
+when a publish destination is supplied. Nothing is added for it.
 
-*Why not hardcode `figures`:* the guard would then be wrong for a consumer that keeps figures
-elsewhere, which is the situation the declaration exists to allow.
+The consumer-side guard is split rather than extended. `publish-analysis.sh` keeps its check on
+`tables` and `data`, the artifacts the shell layer knows the location of. The figure check moves into
+the delivery code, which runs it against the paths the declaration resolved, immediately before
+copying them.
+
+*Why not extend the shell guard, as first planned:* it would have to parse TOML to learn the figure
+paths, or be handed them, and either way the paths it guards are maintained separately from the paths
+that get written. A guard that can drift from what it protects is worth less than no guard, because it
+reports success in the case it exists to catch. Running the check where the paths are known makes
+drift impossible.
+
+*Consequence:* two guards, each complete for the artifacts its own layer copies. Consolidating them
+means moving table and CSV delivery into the same code, which is a larger change than this one and
+touches functions another change is restructuring.
+
+### 6. A duplicate figure key fails the run, not just the publish
+
+A key emitted by two reports is checked while accumulating, so it fails whether or not the run
+publishes.
+
+*Why not only when publishing:* the ambiguity is a defect in the report set itself. Surfacing it only
+on a publish means it appears first to whoever is publishing, in a step that has already spent the
+whole report run, rather than to whoever introduced it.
 
 ## Risks / Trade-offs
 

@@ -21,34 +21,37 @@
 
 ## 2. Resolve the consumer declaration
 
-- [ ] 2.1 Read `publish.toml` from the publish destination with `tomllib`, taking `[figures]` as a
+- [x] 2.1 Read `publish.toml` from the publish destination with `tomllib`, taking `[figures]` as a
       figure key to consumer-relative path mapping. A destination with no such file declares no
       figures.
       Verification: a destination without the file publishes tables and data and no figure.
-- [ ] 2.2 Resolve the consumer's root with `git -C <paper-out> rev-parse --show-toplevel`. Resolve each
+- [x] 2.2 Resolve the consumer's root with `git -C <paper-out> rev-parse --show-toplevel`. Resolve each
       declared path against it.
       Verification: a declared path resolves to an absolute path under that root.
-- [ ] 2.3 Fail when the root cannot be resolved, naming the destination.
+- [x] 2.3 Fail when the root cannot be resolved, naming the destination.
       Verification: publishing into a directory outside a git repository fails with that reason.
-- [ ] 2.4 Tests: a well-formed declaration, an absent file, a malformed file, and an unresolvable root.
+- [x] 2.4 Tests: a well-formed declaration, an absent file, a malformed file, and an unresolvable root.
       Run: `uv run --directory analysis python -m pytest tests/eval -q`
 - [ ] 2.5 Commit.
       Message: `feat(eval): read the consumer's figure declaration`
 
 ## 3. Validate before delivering
 
-- [ ] 3.1 Collect every figure key the run emits, then check each declared key against that set.
+- [x] 3.1 Collect every figure key the run emits, then check each declared key against that set.
       Report every declared key that nothing emits, not only the first.
       Verification: a declaration naming two absent keys reports both.
-- [ ] 3.2 Check that each resolved path stays inside the consumer's root, and report every path that
-      does not.
-      Verification: a declaration escaping the root fails naming that path.
-- [ ] 3.3 Perform both checks before copying any figure, and copy nothing when either fails.
+- [x] 3.2 Check that each resolved path stays inside the consumer's root, and report every path that
+      does not. Moved into the declaration's construction: containment is a static property, so this
+      now fails before a report run rather than after one. See design.md Decision 5's sibling note in
+      the module docstring.
+      Verification: a declaration escaping the root fails naming that path, and cannot be constructed
+      at all.
+- [x] 3.3 Perform both checks before copying any figure, and copy nothing when either fails.
       Verification: after a failed publish the consumer's figure paths are unchanged.
-- [ ] 3.4 Do not treat an emitted figure that no consumer declares as an error.
+- [x] 3.4 Do not treat an emitted figure that no consumer declares as an error.
       Verification: publishing with `evosuite_runtime_phases` undeclared succeeds and does not deliver
       it.
-- [ ] 3.5 Tests: missing key, escaping path, multiple simultaneous failures, no-copy-on-failure, and
+- [x] 3.5 Tests: missing key, escaping path, multiple simultaneous failures, no-copy-on-failure, and
       the undeclared-figure case.
       Run: `uv run --directory analysis python -m pytest tests/eval -q`
 - [ ] 3.6 Commit.
@@ -56,13 +59,17 @@
 
 ## 4. Deliver, under the existing guards
 
-- [ ] 4.1 Copy each declared figure's PDF from the build tree to its resolved path, creating parent
+- [x] 4.1 Copy each declared figure's PDF from the build tree to its resolved path, creating parent
       directories.
       Verification: a publish run leaves each declared file at its declared path.
-- [ ] 4.2 Extend the consumer-side guard in `scripts/publish-analysis.sh` to cover the paths the
-      declaration resolves to, computed from the declaration rather than hardcoded.
-      Verification: an uncommitted change to a declared figure path refuses the publish.
-- [ ] 4.3 Confirm the generator's clean-tree requirement already covers this path and add nothing.
+- [x] 4.2 Guard the declared figure paths against uncommitted consumer changes. Implemented in the
+      delivery code rather than in `scripts/publish-analysis.sh` as this task first said: the shell
+      layer would have to parse TOML to learn those paths, or hold a second copy of them, and a guard
+      maintained apart from the paths it protects drifts into reporting success in the case it exists
+      to catch. See design.md Decision 5.
+      Verification: an uncommitted change to a declared figure path refuses the publish and leaves the
+      file untouched; a committed one is overwritten.
+- [x] 4.3 Confirm the generator's clean-tree requirement already covers this path and add nothing.
       Verification: publishing from a dirty generator tree is refused before any figure is written,
       and the documented override permits it.
 - [ ] 4.4 Commit.

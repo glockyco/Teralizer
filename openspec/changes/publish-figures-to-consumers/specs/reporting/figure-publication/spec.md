@@ -79,6 +79,20 @@ set after detecting one.
 - **WHEN** a report changes a figure's key while a consumer still declares the old key
 - **THEN** the publish fails rather than silently leaving the consumer's figure stale
 
+### Requirement: A figure key identifies one figure across the whole report set
+
+No two reports SHALL emit the same figure key. A run that produces a duplicate key SHALL fail naming
+the key and the reports that claim it.
+
+A consumer declares a figure by key and not by report, so a duplicate key is an ambiguity the
+declaration cannot express, and report order would otherwise decide which figure a consumer prints.
+
+#### Scenario: Two reports emit one key
+
+- **WHEN** a report emits a figure key another report in the run already emitted
+- **THEN** the run fails naming that key
+- **AND** no figure is delivered
+
 ### Requirement: Publishing a figure is subject to the same guards as publishing a table
 
 Figure delivery SHALL observe the preconditions that govern the delivery of other generated

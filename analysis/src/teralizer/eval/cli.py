@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 import teralizer.eval.reports  # noqa: F401
-from teralizer.eval import provenance, registry
+from teralizer.eval import provenance, publish, registry
 from teralizer.eval.data import connect
 from teralizer.eval.render import figures as figures_renderer
 from teralizer.eval.render import latex as latex_renderer
@@ -31,7 +31,9 @@ def _build_and_render(
     targets: set[str],
     paper_out: Path | None,
     corpus_override: tuple[Path, Path] | None = None,
-) -> None:
+) -> dict[str, Path]:
+    """Returns the PDF emitted per figure key, for the caller to publish once the
+    whole run is known."""
     if paper_out is not None:
         provenance.require_publishable_tree()
     spec = registry.get(rq)
@@ -48,10 +50,11 @@ def _build_and_render(
         if corpus is not None:
             require_complete_corpus(conn, data_dir=corpus[0], config_dir=corpus[1])
         report = spec.build(conn)
+    emitted: dict[str, Path] = {}
     if "figures" in targets:
-        figures_renderer.materialize(
+        emitted = figures_renderer.materialize(
             report, REPORTS_DIR / "figures" / rq, BUILD_DIR / "figures" / rq
-        )
+        ).pdf
     if "md" in targets:
         markdown_renderer.render(report, REPORTS_DIR, repo_url=REPO_URL)
         manifest_renderer.write_manifest(report, REPORTS_DIR, repo_url=REPO_URL)
@@ -68,6 +71,7 @@ def _build_and_render(
             data_dir.mkdir(parents=True, exist_ok=True)
             for path in csv_paths:
                 shutil.copy2(path, data_dir / path.name)
+    return emitted
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -100,6 +104,17 @@ def main(argv: list[str] | None = None) -> None:
     # them out after a single-report run puts one fresh report beside stale ones.
     if args.paper_out and args.rq != "all":
         parser.error("--paper-out requires 'all'. Publish the whole set or none of it")
+    # Without the figure target every declared key would be reported as missing,
+    # blaming the consumer's declaration for a mistake in this invocation.
+    if (
+        args.paper_out
+        and "figures" not in {t.strip() for t in args.targets.split(",")}
+        and (Path(args.paper_out) / publish.DECLARATION_NAME).is_file()
+    ):
+        parser.error(
+            f"{args.paper_out} declares figures in {publish.DECLARATION_NAME}; "
+            "add 'figures' to --targets or publishing would skip them"
+        )
     targets = {t.strip() for t in args.targets.split(",") if t.strip()}
     paper_out = Path(args.paper_out) / "tables" if args.paper_out else None
     rqs = sorted(registry.REPORTS) if args.rq == "all" else [args.rq]
@@ -111,8 +126,20 @@ def main(argv: list[str] | None = None) -> None:
         if args.corpus_data_dir is not None
         else None
     )
+    # Figures are declared per report but published once: a consumer's
+    # declaration is checked against everything this run emitted, so a key that
+    # no report produces fails rather than passing because another report ran.
+    declaration = (
+        publish.read_declaration(Path(args.paper_out)) if args.paper_out else None
+    )
+    emitted: dict[str, Path] = {}
     for rq in rqs:
-        _build_and_render(rq, args.db, targets, paper_out, override)
+        emitted = publish.merge_emitted(
+            emitted, _build_and_render(rq, args.db, targets, paper_out, override), rq
+        )
+    if declaration is not None:
+        for path in publish.deliver(declaration, emitted):
+            print(f"published {path}")
 
 
 if __name__ == "__main__":
