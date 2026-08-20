@@ -32,9 +32,11 @@ publish deposits files it must then delete.
   because a declaration names an artifact and cannot express which report it came from.
 - **The consumer's uncommitted-change guard covers every delivered path.** Today it protects declared
   figure paths only, so an edited table is overwritten without warning.
-- **Delivery happens once, after the whole run.** Tables and CSV files are currently copied per report
-  from inside the render step, so a run that fails partway leaves a partial set in the consumer. The
-  run will accumulate what it emitted and resolve the declaration once, as figures already do.
+- **Delivery happens once, after the complete generator run is promoted.** Tables and CSV files are
+  currently copied per report from inside the render step, so a run that fails partway leaves a
+  partial set in the consumer. `make-report-runs-explicit` owns construction, staging, artifact
+  accumulation, manifest validation, and generator promotion. This change receives its validated
+  `ArtifactSet` and performs declaration-driven consumer delivery once.
 - **BREAKING** for a consuming repository with no declaration: it receives nothing. The thesis
   declaration must gain its tables and data in the same step, or the thesis stops receiving artifacts.
 
@@ -61,12 +63,13 @@ now states only that an absent declaration is not an error. The correction lande
 
 ## Impact
 
-- `analysis/src/teralizer/eval/publish.py`: the declaration becomes kind-aware, and `read_declaration`,
-  `deliver`, `merge_emitted`, and the uncommitted-change guard generalise from figures to artifacts.
-- `analysis/src/teralizer/eval/cli.py`: the two unconditional `shutil.copy2` loops in
-  `_build_and_render` are removed, that function reports what it emitted per kind, and `main` resolves
-  the declaration once after the run. The argument check that currently guards only a figure
-  declaration against a missing `figures` target must cover every declared kind.
+- `analysis/src/teralizer/eval/publish.py`: declaration parsing, declared-set validation, consumer
+  guards, and delivery generalise from figures to every artifact target and consume the common
+  `ArtifactSet`. Publication does not merge renderer output itself.
+- `make-report-runs-explicit` removes the unconditional copies from `cli.py`, replaces renderer return
+  shapes with `ArtifactSet`, stages and promotes generator output, and invokes publication only after
+  promotion. This change adds no second run orchestrator. Its only CLI-facing check validates that the
+  requested targets cover every kind declared by a destination.
 - Consuming repositories: the thesis declaration at `chapters/05-teralizer/publish.toml` gains its
   tables and data. This change and that declaration land together.
 - `analysis/scripts/publish-analysis.sh` keeps its interface: it already builds the whole report set

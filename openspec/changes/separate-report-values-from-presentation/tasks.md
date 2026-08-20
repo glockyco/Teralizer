@@ -1,6 +1,7 @@
 ## 1. Baseline and guards
 
-- [ ] 1.1 Snapshot every file under `analysis/build/` as the comparison baseline
+- [ ] 1.1 After `make-report-runs-explicit` lands, snapshot every staged artifact returned through
+      `ArtifactSet` as the comparison baseline; do not introduce another renderer-return shape
 - [ ] 1.2 Add a test that fails when any rendered markdown contains a backslash
 - [ ] 1.3 Add a test that fails when any CSV numeric field does not parse as a number, covering digit
       grouping, percent suffixes, and placeholder dashes
@@ -11,7 +12,8 @@
 
 - [ ] 2.1 Replace `ColumnSpec.fmt` display formats with value kinds: `count`, `share`, `runtime`,
       `identifier`, `text`, `entity`
-- [ ] 2.2 Split `format.py` into one kind-to-text map per target, each beside its renderer
+- [ ] 2.2 Split `format.py` into one kind-to-text map per target, each inside the renderer contract
+      provided by `make-report-runs-explicit`
 - [ ] 2.3 Remove the `pvc` kind and make an absent `count` render as empty in CSV and as a dash in the
       other targets
 - [ ] 2.4 Update every `ColumnSpec` declaration across the report modules

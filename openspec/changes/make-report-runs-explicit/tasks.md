@@ -1,56 +1,62 @@
 ## 1. Reconcile Ownership and Establish Baselines
 
-- [ ] 1.1 Re-read the current artifacts for `consolidate-evaluation-databases`,
+- [x] 1.1 Re-read the current artifacts for `consolidate-evaluation-databases`,
   `separate-report-values-from-presentation`, `declare-published-artifacts`, and
   `materialize-exclusion-evidence`; build a task-and-interface ownership matrix and resolve every
   overlap before editing implementation code.
-- [ ] 1.2 Update `consolidate-evaluation-databases` so it owns the corpus registry, registry validation,
+- [x] 1.2 Update `consolidate-evaluation-databases` so it owns the corpus registry, registry validation,
   read-only lifecycle, dumps, and physical renames, while this change owns one-or-more report input
   roles, report construction context, removal of `ReportSpec.schema`, and removal of database
   overrides; correct every singular-corpus requirement and design premise.
-- [ ] 1.3 Update `separate-report-values-from-presentation` to depend on the explicit run result and
+- [x] 1.3 Update `separate-report-values-from-presentation` to depend on the explicit run result and
   artifact interfaces while retaining sole ownership of value kinds, entity rendering, and target
   formatting.
-- [ ] 1.4 Update `declare-published-artifacts` so it retains declaration syntax, declared-set policy,
+- [x] 1.4 Update `declare-published-artifacts` so it retains declaration syntax, declared-set policy,
   consumer guards, and delivery, but consumes this change's `ArtifactSet` and staged run instead of
   implementing a nested emitted map or generator-run orchestration.
-- [ ] 1.5 Update `materialize-exclusion-evidence` to depend on this change, declare its corpus and audit
+- [x] 1.5 Update `materialize-exclusion-evidence` to depend on this change, declare its corpus and audit
   inputs through the common model, aggregate its canonical SQL facts before transfer, and add no
   report-run, manifest, renderer-return, or publication special case.
-- [ ] 1.6 Validate all affected OpenSpec changes and prove each capability, implementation interface,
+- [x] 1.6 Validate all affected OpenSpec changes and prove each capability, implementation interface,
   and task has one active owner.
-- [ ] 1.7 Trace every registered report's direct and transitive inputs, including secondary database
+- [x] 1.7 Trace every registered report's direct and transitive inputs, including secondary database
   connections, optional markers, committed data files, fallback data, and pinned project source trees;
   use the resulting inventory to define the migration, not as a second durable registry.
-- [ ] 1.8 Snapshot every generated Markdown report, provenance manifest, LaTeX artifact, CSV file, and
+- [x] 1.8 Snapshot every generated Markdown report, provenance manifest, LaTeX artifact, CSV file, and
   figure outside the repository for byte-level comparison; record current artifact ownership by report
   and target.
-- [ ] 1.9 Create one new `docs(openspec)` commit containing only the reconciled planning artifacts, with
+- [x] 1.9 Create one new `docs(openspec)` commit containing only the reconciled planning artifacts, with
   a causal body and strict validation results; do not reset, rebase, amend, squash, or rewrite an
   existing commit.
 
-## 2. Define and Resolve Report Inputs
+## 2. Materialize, Define, and Resolve Report Inputs
 
-- [ ] 2.1 Add focused tests for corpus, file, and tracked-tree declarations, including unique roles,
+- [ ] 2.1 Add focused tests for corpus and file declarations, including unique roles,
   repository-relative paths, required and optional files, invalid corpus ids, and immutable declaration
   tuples.
-- [ ] 2.2 Implement the closed report-input declaration types and registration validation without a
-  primary-input alias or an unconstrained physical database field.
-- [ ] 2.3 Implement resolved input handles and immutable corpus, file, tree, and absent-input snapshots;
+- [ ] 2.2 Implement the closed corpus-or-file declaration types and registration validation without a
+  primary-input alias, generic directory type, or unconstrained physical database field.
+- [ ] 2.3 Implement resolved input handles and immutable corpus, file, and absent-input snapshots;
   expose role-based lookup with errors that name the report and role.
 - [ ] 2.4 Resolve corpus roles through the finalized corpus registry, verify expected project count,
   read-only access, corpus-definition completeness, and role-specific required objects before calling a
   builder.
 - [ ] 2.5 Resolve repository file roles with required or optional absence semantics, SHA-256, last file
   commit, and dirty state; reject absolute or escaping declaration paths.
-- [ ] 2.6 Resolve tracked-tree roles through Git tree or gitlink identity plus dirty state, and reject an
-  untracked or generated directory masquerading as a tracked-tree input.
-- [ ] 2.7 Use one `ExitStack` per report to own every corpus connection and prove connections remain live
+- [ ] 2.6 Add one project-source evidence extractor that writes a compact versioned per-project relation
+  shared by dataset and RQ1, records nested repository or source-bundle identities and reconciliation
+  totals, validates before atomic replacement, and matches both current raw-source report paths.
+- [ ] 2.7 Add one JARVIS evidence extractor that replaces the 1,524 database-selected jqwik log reads
+  with normalized scoreboard and census PVC facts, records both corpus identities and selection totals,
+  validates before atomic replacement, and matches current RQ0 results.
+- [ ] 2.8 Create one new `feat(eval)` commit for the normalized report evidence inputs and extractors,
+  including the generated compact files and focused raw-source reconciliation checks.
+- [ ] 2.9 Use one `ExitStack` per report to own every corpus connection and prove connections remain live
   during construction and close before rendering.
-- [ ] 2.8 Recompute repository input snapshots after construction and fail before rendering when a file
-  or tree changed during the build.
-- [ ] 2.9 Add focused resolver tests with two corpus roles, a required missing file, an optional absent
-  marker, a dirty tracked input, a changed-during-build input, and one invalid corpus among several.
+- [ ] 2.10 Recompute repository file snapshots after construction and fail before rendering when a file
+  changed during the build.
+- [ ] 2.11 Add focused resolver tests with two corpus roles, a required missing file, an optional absent
+  marker, a dirty file, a changed-during-build input, and one invalid corpus among several.
 
 ## 3. Cut Every Report Over to Explicit Context
 
@@ -59,14 +65,15 @@
   builder contract.
 - [ ] 3.2 Introduce `BuiltReport` as the renderable report plus runner-captured input snapshots, and
   remove physical database identity from `RQReport`.
-- [ ] 3.3 Migrate the dataset report to declared controlled, real-world, and project-source roles; remove
-  its internal real-world connection and hidden source-root or fallback resolution.
-- [ ] 3.4 Migrate RQ0 to declared scenario, benchmark, CUT-value, and completion-marker roles; remove its
-  internal benchmark connection, module-default evidence reads, and database-valued provenance
-  metrics.
-- [ ] 3.5 Migrate RQ1 through RQ5 to the controlled corpus and every actual tracked-tree or file input
-  found in the inventory; pass resolved paths into imported helpers instead of retaining global
-  fallbacks.
+- [ ] 3.3 Migrate the dataset report to declared controlled, real-world, and required
+  `project-source-facts` roles; remove its internal real-world connection, `PROJECTS_PATH` traversal,
+  and stale dataset-statistics fallback.
+- [ ] 3.4 Migrate RQ0 to declared scenario, benchmark, required `jarvis-pvc-facts`, CUT-value, and
+  completion-marker roles; remove its internal benchmark connection, dynamic jqwik-log reads,
+  module-default evidence paths, and database-valued provenance metrics.
+- [ ] 3.5 Migrate RQ1 to the controlled corpus and required `project-source-facts` role, removing its
+  database-selected source traversal and stale mutants-per-project fallback; migrate RQ2 through RQ5
+  to the controlled corpus with no placeholder file inputs.
 - [ ] 3.6 Migrate RQ6 to the real-world corpus role and preserve its corpus-completeness validation;
   leave the future widening audit undeclared until its real file exists.
 - [ ] 3.7 Remove `--db`, `--corpus-data-dir`, and `--corpus-config-dir`, add closed render-target parsing,
@@ -79,8 +86,9 @@
 ## 4. Record Generic Input Provenance
 
 - [ ] 4.1 Extend provenance tests so every built report records all declared roles, corpus identity,
-  observed registry state, file or tree content identity, optional absence, source revision, and dirty
-  state through one schema.
+  observed registry state, file content identity, optional absence, source revision, and dirty state
+  through one schema; validate normalized evidence metadata without teaching the generic runner its
+  domain fields.
 - [ ] 4.2 Build manifest entries from `BuiltReport`, keeping current per-artifact source-file provenance
   separate from report-level input snapshots and preventing builders from supplying either input
   identity or input omission.

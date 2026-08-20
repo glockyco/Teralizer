@@ -41,25 +41,25 @@ Verified state (probed read-only on both machines):
 
 ## Decisions
 
-### 1. Delete `ReportSpec.schema`; let the requirement declaration decide
+### 1. The registry owns corpus identity; the report runner owns input roles
 
-The field holds `"old"` or `"new"`, and its only use is `validate = spec.schema == "old"` at
-`cli.py:38`. Across all eight reports the value correlates perfectly with whether the report declares
-`requires`, so the field carries no information. It also cannot be trusted: `"old"` with an empty
-`requires` raises at runtime, and `"new"` with a non-empty `requires` **silently skips the check the
-report asked for**.
+This change supplies immutable registry entries, lookup by semantic corpus id, expected-project-count
+validation, lifecycle classification, and read-only connection facts. It does not decide how many
+corpora a report reads or how a report builder receives them.
 
-Beyond redundancy the name is wrong twice. It describes a schema generation, which is a property of a
-database, not of a report — two reports on the same database could disagree. And what it actually
-controls is whether declared objects are checked.
+`make-report-runs-explicit` owns that consumer boundary. A report declares one or more semantic corpus
+roles, the runner resolves each role through this registry, and the runner validates role-specific
+schema objects before construction. That change also removes `ReportSpec.schema`, report-level
+physical database defaults, and physical database overrides. This plan therefore contains no parallel
+single-corpus API and no report registration migration.
 
-So: remove the field and derive `validate = bool(spec.requires)`. A report that declares objects gets
-them checked, always; a report that declares none gets no check and surfaces a missing object as the
-failing query's own error. Verified against the table above: behavior is unchanged for all eight
-reports, and the silent-skip case becomes impossible.
+*Why:* the dataset report reads controlled and real-world corpora, while RQ0 reads two JARVIS corpora.
+Treating each report as if it had one fixed corpus would force both reports to retain hidden secondary
+connections and would make the registry unable to prove the complete input set.
 
-*Alternative considered:* rename it to `validates_schema: bool`. Rejected — it would still be state
-that can disagree with `requires`, and the declaration already says everything.
+*Alternative considered:* let this change add one primary corpus field and let the report-run change
+add secondary roles later. Rejected because the intermediate API would preserve the defect being
+removed and would need a second clean cutover.
 
 ### 2. Names state the evaluation condition, in the thesis's own words
 
@@ -151,8 +151,9 @@ the unattributed count, and the result is recorded in the manifest. No regenerat
 idempotence check, no enforcement.
 
 *Also dropped:* the schema-era taxonomy from the previous draft. It invented a three-value
-classification to guard a report-by-corpus matrix that does not exist — each report has one fixed
-corpus — and it duplicated `ReportSpec.schema`, the very field decision 1 deletes.
+classification that neither the registry nor report input validation needs. Reports may declare one
+or more corpus roles through `make-report-runs-explicit`; each role carries the exact object
+requirements it needs, so a second schema-era classification would duplicate those declarations.
 
 ### 5. The dump is the unit of record
 
@@ -194,20 +195,20 @@ Dropping runs last, after each retained dump has been restored and counted.
   stale name must fail rather than resolve through an alias.
 - **Frozen run configs will name databases that no longer exist.** → Deliberate. They record what ran.
   A note in that directory says so.
-- **Deriving validation from `requires` means a report can opt out by declaring nothing.** → That is
-  already true today via `"new"`, and it is now visible in one place instead of two.
 - **Retiring `postgres_test` breaks four spike CLIs.** → They move to the real-world corpus, which is
   the same dataset. Their SQL was written against the legacy schema, so each is run once to confirm it
   still works; one that depends on legacy-only structure is deleted rather than kept alive by a dump.
 
 ## Migration Plan
 
-1. Land the registry and the lifecycle patterns, pointing at the current physical names, plus the
+1. Land the registry and lifecycle patterns, pointing at the current physical names, plus the
    name-literal check. Nothing renamed; the sprawl is described.
-2. Delete `ReportSpec.schema` and derive validation from `requires`.
-3. Move the analysis package, packaging, import, manifest, and replication metadata onto corpus ids.
+2. Let `make-report-runs-explicit` consume the registry through one-or-more corpus roles, remove
+   `ReportSpec.schema` and physical overrides, and prove the report set unchanged.
+3. Move non-report live consumers, packaging, import, corpus publication, and replication metadata
+   onto corpus ids.
 4. Rename the four corpora and `postgres_verification`, updating only the registry.
-5. Point reports at `teralizer_ro` and confirm no write path reaches a corpus.
+5. Enforce `teralizer_ro` access and confirm no report-owned connection can write a corpus.
 6. Build publication and the manifest, including the provenance statements and the definition inputs
    that RQ6 checks.
 7. Import into a clean environment and reproduce the report set.
@@ -216,8 +217,10 @@ Dropping runs last, after each retained dump has been restored and counted.
 **Rollback:** steps 1 to 3 revert with git. Step 4 reverses with a rename back. Step 5 reverses with a
 `GRANT`. Step 8 is the only irreversible step and runs last.
 
-**Verification at every step:** the full report set must produce byte-identical output against the
-canonical baseline, which is confirmed reproducible on this workstation.
+**Verification at every step:** before physical rename, the full report set must produce
+byte-identical output against the canonical baseline. At rename, compare every value and rendered
+artifact byte-for-byte while allowing only the reviewed corpus-identity changes in provenance-bearing
+outputs. Any other difference is a regression.
 
 ## Open Questions
 
@@ -248,15 +251,11 @@ Neither is a request to change measured data.
   (`scripts/run-reporeapers-rerun.sh:40`). The committed config names a database the run did not use,
   so freezing it preserves a misleading record rather than an accurate one.
 
-- **Byte-identical report output and a corpus rename cannot both hold.** The acceptance criterion in
-  `proposal.md` and the checks at tasks 2.4, 3.7, and 4.3 require the full report set to reproduce
-  byte-identically. A report's source database is a reported value: `analysis/reports/provenance.json`
-  records it per report, the generated LaTeX macro file carries it as a comment, and the generated
-  markdown carries it too. The consuming thesis commits eight of those names in one tracked file,
-  `chapters/05-teralizer/tables/macros.tex`, one per report. Renaming a corpus therefore changes
-  generated output by construction, so the three checks fail for the expected reason and an operator
-  cannot tell that failure from a regression. State the source-database strings as the one permitted
-  difference, and compare the rest, or restate the criterion against a diff that excludes them.
+- **Resolved: byte-identical report output and a corpus rename cannot both hold.** A report's source
+  database is a reported value in `analysis/reports/provenance.json`, generated Markdown, and the
+  thesis macro file. The acceptance criterion now requires byte identity before rename and isolates
+  the expected corpus-identity changes at rename. Every measured value and rendered artifact must
+  remain byte-identical; any other difference fails the migration.
 
 - **This repository's own guidance names the databases it renames.** `AGENTS.md:124-125` states which
   corpus each of two databases holds, `AGENTS.md:36` puts a database name in a runnable command, and

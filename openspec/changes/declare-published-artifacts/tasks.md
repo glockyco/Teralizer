@@ -29,24 +29,24 @@ and written there, not here.
 - [ ] 2.5 Commit.
       Message: `feat(eval): declare published artifacts per render target`
 
-## 3. Accumulate per kind and deliver once
+## 3. Validate and deliver one run artifact set
 
-- [ ] 3.1 Stop copying inside the render step. Have it report what it emitted, per kind, as name to
-      path, and remove the two unconditional copy loops.
-      Verification: a run without a publish destination writes nothing outside the build tree.
-- [ ] 3.2 Accumulate across reports per kind, and fail on a duplicate name within a kind, naming the
-      artifact and the reports that claim it. A name shared between a table and its data file is not a
-      collision, per design.md Decision 3.
-      Verification: a table and a CSV of the same name publish together; two reports emitting one table
-      name fail.
-- [ ] 3.3 Deliver once, after the last report, resolving the declaration against everything the run
-      emitted.
-      Verification: an artifact only the final report emits is delivered.
-- [ ] 3.4 Confirm a run that fails before finishing leaves the consuming repository unchanged.
-      Verification: a failure injected after the first report leaves the consumer untouched.
-- [ ] 3.5 Tests for 3.2, 3.3, and 3.4.
+- [ ] 3.1 Depend on `make-report-runs-explicit` for renderer return types, target-plus-key identity,
+      collision detection, output containment, complete-run staging, manifest assembly, and generator
+      promotion; add no nested emitted map or second report-run orchestrator.
+- [ ] 3.2 Validate a destination declaration directly against the supplied `ArtifactSet` before
+      generator promotion, without re-merging artifacts or repeating same-target collision checks.
+      Verification: a table and CSV sharing a key validate together, and a missing declared artifact
+      fails with its target and key.
+- [ ] 3.3 Deliver the validated declared subset once, after generator promotion succeeds.
+      Verification: an artifact owned by the final report is delivered, while an undeclared artifact
+      remains only in generator output.
+- [ ] 3.4 Confirm a report, render, manifest, or declaration failure leaves the consuming repository
+      unchanged.
+      Verification: failure injection at every pre-delivery boundary writes no consumer path.
+- [ ] 3.5 Tests for 3.2, 3.3, and 3.4 using `ArtifactSet` fixtures.
 - [ ] 3.6 Commit.
-      Message: `fix(eval): deliver published artifacts once per run`
+      Message: `fix(eval): deliver the validated run artifact set`
 
 ## 4. Guard every delivered path
 
@@ -62,8 +62,9 @@ and written there, not here.
 
 ## 5. Fail before building when a declared kind is not requested
 
-- [ ] 5.1 Generalise the argument check that today considers only a figure declaration, so a run fails
-      before any report is built when the invocation omits a target the destination declares.
+- [ ] 5.1 Generalise declaration inspection so it returns every render target the destination requires;
+      the `make-report-runs-explicit` preflight uses that result to fail before any report is built when
+      an invocation omits a declared target.
       Verification: a destination declaring figures and CSV files fails an invocation that omits CSV,
       and the failure names the missing target.
 - [ ] 5.2 Confirm an invocation covering every declared kind proceeds.

@@ -25,9 +25,10 @@ following the documented path cannot generate the RQ6 report at all.
   and expected project count. Every corpus in it is shipped; a database
   that backs no published figure does not belong in it. Live code, packaging, and generated replication metadata
   resolve names through it.
-- **BREAKING**: reports address a **corpus id**. The literals in `dataset_characteristics.py:67`,
-  `rq6_causes.py:34`, `run-rq6-analysis.sh:11`, and the rq1-rq5 defaults are removed, and a check
-  keeps them out.
+- **BREAKING**: live consumers address a **corpus id**. This change provides the registry and
+  validation boundary. `make-report-runs-explicit` owns report input roles and migrates every report;
+  non-report live tools resolve corpus ids here. A check keeps physical database literals out of live
+  code while preserving archival run inputs unchanged.
 - **BREAKING**: rename the corpora after the evaluation condition each provides, in the thesis's own
   vocabulary: `teralizer_controlled`, `teralizer_real_world`, `teralizer_jarvis_benchmark`, and
   `teralizer_jarvis_scenarios`. No deployment role, no research question, no counter, and no
@@ -36,9 +37,6 @@ following the documented path cannot generate the RQ6 report at all.
   the corpus table is regenerated from the real-world corpus, so it is archived and dropped rather
   than shipped. `postgres_verification` is recreated by its own runner on every use and holds
   different content on each machine, so it becomes `scratch_verification`.
-- **Delete `ReportSpec.schema`.** Its two values `"old"` and `"new"` correlate exactly with whether a
-  report declares required objects, so the field carries no information, and it can silently disagree
-  with that declaration. Validation follows from the declaration alone.
 - **Treat the dump as the unit of record.** Publishing writes one dump per corpus plus a manifest
   carrying checksum, project count, and a provenance statement derived from the corpus. A live
   database becomes a materialization of a dump, for the author as much as for a replicator.
@@ -67,9 +65,10 @@ None. This repository has no existing specs; these three are the first.
 
 ## Impact
 
-- **Analysis package**: every `ReportSpec` default and `open_report_connection` literal under
-  `analysis/src/teralizer/eval/reports/`; `ReportSpec.schema` and its only consumer at `cli.py:38`;
-  `config.py:32-83` (`VALID_VARIANTS`, `DB_NAME_DEV`/`DB_NAME_TEST`, the `_replication` suffix).
+- **Analysis package**: the corpus registry reader, registry validation, non-report live consumers,
+  and `config.py:32-83` (`VALID_VARIANTS`, `DB_NAME_DEV`/`DB_NAME_TEST`, the `_replication` suffix).
+  `make-report-runs-explicit` consumes this registry and owns report declarations, connection
+  resolution, `ReportSpec.schema` removal, and the clean removal of physical database overrides.
 - **Packaging and replication**: `prepare-zenodo-package.sh`, `replication/quick-start.sh`,
   `replication/scripts/import-databases.sh` (whose default container name disagrees with
   `replication/docker-compose.yml:84-92`), `collect-disk-metrics.sh:148-156`, `REQUIREMENTS.md`.
@@ -81,5 +80,6 @@ None. This repository has no existing specs; these three are the first.
   the rename.
 - **Data on disk**: 24 databases on the evaluation machine, 8 locally, and the `data/*/status.tsv`
   ledgers that identify them.
-- **No measured figure changes, and no run is repeated.** Report output must stay byte-identical to
-  the current canonical baseline at every step.
+- **No measured value changes, and no run is repeated.** Prose, tables, CSV values, and figures stay
+  byte-identical to the canonical baseline. The physical rename deliberately changes only recorded
+  corpus identity in provenance-bearing outputs; that difference is isolated and reviewed.

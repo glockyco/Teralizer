@@ -117,7 +117,26 @@ renderer already spans cells for group headers and already emits label rows with
 band row extends existing machinery rather than adding a parallel path. Row numbering is a rendered
 ordinal, not a data column, so band rows do not consume one and the CSV keeps the group as data.
 
-### 5. Verification is staged, and each stage has one criterion
+### 5. Rendering semantics sit inside the common artifact contract
+
+`make-report-runs-explicit` establishes `BuiltReport`, `RenderTarget`, `ArtifactId`,
+`RenderedArtifact`, and `ArtifactSet`, and supplies each renderer with a staging root. This change
+implements value-to-text and table-layout behavior inside those renderer functions. Each renderer
+returns its artifacts through the common contract without choosing final paths or adding another
+emitted-output shape.
+
+The ownership boundary is strict:
+
+- this change owns value kinds, entities, target formatting, and LaTeX table layout;
+- `make-report-runs-explicit` owns artifact identity, output containment, ownership, merging, staging,
+  and promotion;
+- `declare-published-artifacts` owns consumer declarations, guards, and delivery.
+
+*Alternative considered:* finish value rendering against the current bare path lists and adapt it to
+`ArtifactSet` later. Rejected because that would touch every renderer twice and create an intermediate
+return contract with no durable owner.
+
+### 6. Verification is staged, and each stage has one criterion
 
 Stage one, the separation: snapshot `analysis/build/`, then require every file to be byte-identical.
 This proves the refactor is inert.
@@ -149,13 +168,16 @@ markdown, and every numeric CSV field must parse as a number.
 
 ## Migration Plan
 
-1. Snapshot `analysis/build/` as the comparison baseline.
-2. Introduce value kinds and the three per-target maps, leaving behavior identical.
+1. Land the `make-report-runs-explicit` renderer contract and snapshot its complete staged artifact
+   set as the comparison baseline.
+2. Introduce value kinds and the three per-target maps inside those renderers, leaving behavior
+   identical.
 3. Move combined-cell composition into the LaTeX renderer and delete the `*_display` columns and
    `csv_source`.
 4. Move entities into one table with a rendering per target, and delete `fmt="tex"`.
 5. Extend caption placeholders to entities.
-6. Regenerate: require byte-identical LaTeX, and review the markdown and CSV diffs.
+6. Regenerate through `ArtifactSet`: require byte-identical LaTeX, and review the Markdown and CSV
+   diffs.
 7. Copy regenerated CSVs into the thesis, rebuild it, and confirm no figure changed.
 
 **Rollback:** every step reverts with git, and no measured value is touched at any point.

@@ -14,28 +14,30 @@
 - [ ] 1.6 Add the name-literal check over live code only, exempting the frozen run machinery, running
       without a database connection, and wire it into CI
 
-## 2. Delete the redundant schema flag
+## 2. Expose the registry resolution boundary
 
-- [ ] 2.1 Remove `ReportSpec.schema` and derive `validate = bool(spec.requires)` at `cli.py:38`
-- [ ] 2.2 Update all eight `register(...)` calls to drop the positional flag
-- [ ] 2.3 Add a test that a report declaring required objects always has them checked, and that one
-      declaring none is not checked
-- [ ] 2.4 Regenerate the report set and confirm byte-identical output
+- [ ] 2.1 Expose immutable lookup by semantic corpus id, returning the physical database, corpus
+      definition paths, expected project count, and notes without a primary-corpus alias
+- [ ] 2.2 Expose registry-owned existence and expected-project-count validation for callers that resolve
+      one or more corpus roles; keep role-specific object validation outside this change
+- [ ] 2.3 Test successful and unknown-id lookup, immutable entries, and count mismatch diagnostics
+- [ ] 2.4 Complete these registry interfaces before `make-report-runs-explicit` removes
+      `ReportSpec.schema`, physical defaults, and database overrides
 
 ## 3. Move the live path onto corpus ids
 
-- [ ] 3.1 Replace `ReportSpec` defaults and `open_report_connection` literals with corpus ids across
-      `analysis/src/teralizer/eval/reports/`, including `dataset_characteristics.py:67` and
-      `rq6_causes.py:34`
+- [ ] 3.1 Replace physical database literals in non-report live consumers with registry corpus ids;
+      `make-report-runs-explicit` owns every `ReportSpec` and registered-report migration
 - [ ] 3.2 Point the four spike CLIs at the `real-world` corpus, run each once, and delete any whose
       SQL depends on legacy-only structure rather than keeping it alive by a dump
 - [ ] 3.3 Remove `DB_NAME_DEV`, `DB_NAME_TEST`, `DATASET_VARIANT`, `VALID_VARIANTS`, and the
       `_replication` suffix from `config.py:32-83`, and update `.env.example`
-- [ ] 3.4 Make reports refuse a non-registry database and refuse a corpus whose project count
-      disagrees with its entry
-- [ ] 3.5 Fix `run-rq6-analysis.sh:11`, which still defaults to the superseded `_v6`
+- [ ] 3.4 Make registry resolution refuse an unknown corpus id and refuse a corpus whose project count
+      disagrees with its entry; report-role resolution remains owned by `make-report-runs-explicit`
+- [ ] 3.5 Preserve `run-rq6-analysis.sh:11` as an archival run input and add the scoped note that its
+      physical name predates the registry; do not make it a live consumer
 - [ ] 3.6 Point `collect-disk-metrics.sh:148-156` and the replication compose defaults at the registry
-- [ ] 3.7 Regenerate the report set and confirm byte-identical output
+- [ ] 3.7 After the report-input cutover, regenerate the report set and confirm byte-identical output
 
 ## 4. Rename and read-only access
 
@@ -43,7 +45,8 @@
       rename `postgres_verification` to `scratch_verification`
 - [ ] 4.2 Add a note to `project-configs/` recording that the frozen configs name the databases as
       they were when each run wrote them
-- [ ] 4.3 Run `verify-corpora`, regenerate the report set, and confirm byte-identical output
+- [ ] 4.3 Run `verify-corpora`, regenerate the report set, and confirm every measured value and rendered
+      artifact is byte-identical while only reviewed corpus-identity provenance fields change
 - [ ] 4.4 Point every analysis connection at `teralizer_ro`, then confirm at the database level that
       insert, update, delete, and schema change against a corpus are rejected
 
@@ -64,9 +67,9 @@
       count before reporting success, failing on a missing dump
 - [ ] 5.7 Fix the container name disagreement between `import-databases.sh:19-22` and
       `replication/docker-compose.yml:84-92`
-- [ ] 5.8 Validate that every registered report corpus resolves through the registry and that every
-      registry corpus appears once in `replication/datasets/manifest.json`; reject retired physical
-      names in live consumers or generated replication metadata
+- [ ] 5.8 Validate that every registry corpus appears once in `replication/datasets/manifest.json` and
+      reject retired physical names in live consumers or generated replication metadata;
+      `make-report-runs-explicit` owns validation of every report corpus role against this registry
 - [ ] 5.9 Re-measure the `REQUIREMENTS.md` disk and version tables from the artifact
 - [ ] 5.10 Restore the author's own databases from the published dumps, so the artifact path is the
       tested path

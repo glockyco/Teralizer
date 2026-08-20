@@ -89,11 +89,12 @@ The analysis package, the packaging and import tooling, and generated replicatio
 obtain every evaluation database name from the registry. A literal evaluation database name in live code is
 a defect. Archival run inputs are exempt, because they record what was run.
 
-#### Scenario: A report declares the corpus it reads
+#### Scenario: A report declares corpus input roles
 
-- **WHEN** a report is registered
-- **THEN** it names a corpus id
-- **AND** the database it connects to is whatever the registry binds to that id
+- **WHEN** a report declares one or more corpus input roles
+- **THEN** every role names a corpus id
+- **AND** the registry resolves each role independently to the physical database bound to that id
+- **AND** the report declaration contains no physical database name
 
 #### Scenario: A literal name is reintroduced into live code
 
@@ -107,35 +108,11 @@ a defect. Archival run inputs are exempt, because they record what was run.
 - **THEN** the check does not flag it
 - **AND** the directory holding it states that its names predate the rename
 
-#### Scenario: Replication metadata states which corpus backs a report
+#### Scenario: Replication metadata states which corpora back a report
 
-- **WHEN** a report and its published output identify the corpus they read
-- **THEN** the manifest obtains that identity from the registry
-- **AND** it cannot disagree with the corpus the report reads
-
-### Requirement: A report declares the schema objects it needs, and nothing more
-
-A report MUST declare the database objects and columns it depends on. That declaration alone MUST
-decide whether the objects are checked before the report runs. No separate flag may describe a
-report's schema, because a schema generation is a property of a database rather than of a report.
-
-#### Scenario: A report declares required objects
-
-- **WHEN** a report that declares required objects is run
-- **THEN** those objects and columns are checked before the report builds
-- **AND** a missing object fails with the object and column named
-
-#### Scenario: A report declares no required objects
-
-- **WHEN** a report that declares no required objects is run
-- **THEN** no object check runs
-- **AND** a missing object surfaces as the database error from the failing query
-
-#### Scenario: A declaration cannot be silently ignored
-
-- **WHEN** a report declares required objects
-- **THEN** they are always checked
-- **AND** no configuration can leave the declaration unchecked
+- **WHEN** a report and its published output identify the corpus roles they read
+- **THEN** the manifest obtains every corpus identity from captured registry resolution
+- **AND** it cannot omit a declared role or disagree with the corpus resolved for that role
 
 ### Requirement: The registry is verifiable against reality
 

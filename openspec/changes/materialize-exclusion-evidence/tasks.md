@@ -1,9 +1,9 @@
 ## 1. Reconcile Knowledge Ownership
 
 - [ ] 1.1 Re-read the current artifacts for `consolidate-repository-knowledge`,
-  `consolidate-evaluation-databases`, `separate-report-values-from-presentation`, and
-  `declare-published-artifacts`; map every overlapping task to one active owner and record dependency
-  order without duplicating implementation.
+  `consolidate-evaluation-databases`, `make-report-runs-explicit`,
+  `separate-report-values-from-presentation`, and `declare-published-artifacts`; map every overlapping
+  task to one active owner and record dependency order without duplicating implementation.
 - [ ] 1.2 Reopen the six-document claim audit and cutover checks in
   `consolidate-repository-knowledge`; add the explicit five-mechanism collapse, true
   filter-adjudication boundary, qualitative-evidence provenance, and EM-7 attempted-stage limitation to
@@ -26,16 +26,18 @@
 - [ ] 2.1 Add focused classifier fixtures for each included or excluded mechanism, the valid
   quarantine/filter storage overlap, contradictory multi-mechanism records, unknown codes, unknown
   record shapes, and unknown decision producers.
-- [ ] 2.2 Implement one typed entity-fact relation for eligible tests, assertions, and generalizations
-  using the finalized corpus-registry and consistent-snapshot interfaces; do not embed a physical
+- [ ] 2.2 Implement one canonical static SQL entity-fact CTE for eligible tests, assertions, and
+  generalizations using the finalized `ReportContext` corpus role and consistent snapshot; aggregate
+  typed mechanism and reconciliation counts in SQL before transfer, and do not embed a physical
   database name or add a compatibility path.
 - [ ] 2.3 Encode mechanism precedence and explicit writer classes so actual filter decisions,
   pre-emission gate refusals, unsupported capabilities, build quarantines, and task failures remain
   distinct despite overlapping persistence channels.
 - [ ] 2.4 Add fail-loud exclusivity, population, and unknown-producer checks that report the offending
   level and entity identifiers before any renderer or publisher receives output.
-- [ ] 2.5 Materialize the typed five-mechanism partition and the declared three-outcome semantic collapse
-  from the same fact relation; remove any duplicate mapping from report or renderer code.
+- [ ] 2.5 Materialize the typed five-mechanism partition and declared three-outcome semantic collapse
+  as database-side aggregates over the same fact CTE; transfer only aggregate rows and remove any
+  duplicate mapping from report or renderer code.
 - [ ] 2.6 Run the focused classifier, mechanism-partition, provenance, and typed-renderer checks against
   controlled fixtures and the frozen v7 corpus.
 - [ ] 2.7 Create one new `feat(eval)` commit for the canonical fact relation and mechanism partition,
@@ -85,8 +87,9 @@
 
 ## 5. Declare and Generate Evidence Artifacts
 
-- [ ] 5.1 Register `rq6-exclusion-mechanisms.csv`, `rq6-generalization-funnel.csv`, the audit summary, and
-  all new metrics in the report manifest with one captured corpus and source provenance object.
+- [ ] 5.1 Return `rq6-exclusion-mechanisms.csv`, `rq6-generalization-funnel.csv`, the audit summary, and
+  all new metrics through the existing report and `ArtifactSet` interfaces; let the generic run
+  manifest attach the captured corpus, audit-file, and source provenance without an RQ6 branch.
 - [ ] 5.2 Use `declare-published-artifacts` interfaces to declare only thesis-consumed LaTeX artifacts and
   metrics; leave undeclared normalized tables and audit evidence in the generator build tree.
 - [ ] 5.3 Add or update thesis-facing macros for every count and denominator-bearing rate that downstream

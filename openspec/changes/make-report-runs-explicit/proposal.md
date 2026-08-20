@@ -9,7 +9,9 @@ each will add another local convention around these gaps.
 ## What Changes
 
 - **BREAKING**: replace the single-connection report builder with a `ReportContext` that resolves every
-  named corpus, file, and tracked-tree input declared by `ReportSpec`.
+  named corpus and repository-file input declared by `ReportSpec`. Large ignored source and run-data
+  trees are reduced once by domain extractors to compact, versioned evidence files rather than hidden
+  behind a generic directory abstraction.
 - **BREAKING**: remove physical database identity from `RQReport`; input identity is captured by the
   runner and cannot be supplied or overridden by report code.
 - **BREAKING**: remove the ambiguous `--db` and single-corpus directory override interfaces. Reports
@@ -24,8 +26,9 @@ each will add another local convention around these gaps.
   one complete manifest, validate all artifact and consumer declarations, then promote generator
   output and deliver consumer output.
 - Replace report-specific manifest branches with generic report input snapshots and code provenance.
-  Corpus inputs record semantic corpus identity and verified registry state; file and tree inputs record
-  stable content identity.
+  Corpus inputs record semantic corpus identity and verified registry state; file inputs record stable
+  content identity. Compact evidence extracts also carry their upstream corpus or source identities and
+  fail-loud reconciliation totals.
 - Reconcile task ownership and dependency order with `consolidate-evaluation-databases`,
   `separate-report-values-from-presentation`, `declare-published-artifacts`, and
   `materialize-exclusion-evidence`. Those changes consume this run architecture rather than introducing
@@ -63,8 +66,9 @@ each will add another local convention around these gaps.
 - Every renderer returns the same artifact abstraction and writes only below a supplied staging root.
 - `analysis/src/teralizer/eval/publish.py`: consumes a validated `ArtifactSet`; it remains responsible
   for consumer declarations and delivery, not report building or render orchestration.
-- All eight registered report modules: builder signatures, declared corpus roles, file/tree inputs, and
-  removal of builder-owned connection or path resolution.
+- All eight registered report modules: builder signatures, declared corpus and file roles, compact
+  project-source and JARVIS evidence extraction, and removal of builder-owned connection, dynamic raw
+  path, or fallback resolution.
 - `consolidate-evaluation-databases`: retains ownership of the corpus registry, lifecycle, dumps, and
   physical renames; this change owns multi-input report resolution and corrects its single-corpus
   assumption.

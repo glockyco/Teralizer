@@ -67,12 +67,7 @@ class FileInputSpec:
     path: Path
     required: bool = True
 
-@dataclass(frozen=True)
-class TrackedTreeInputSpec:
-    role: str
-    path: Path
-
-ReportInputSpec = CorpusInputSpec | FileInputSpec | TrackedTreeInputSpec
+ReportInputSpec = CorpusInputSpec | FileInputSpec
 
 @dataclass(frozen=True)
 class ReportSpec:
@@ -85,14 +80,25 @@ registry is available, and an empty role. Required database objects move from th
 corpus role they describe. `default_db`, `schema`, and the current optional single-corpus definition
 disappear.
 
-The actual declarations are explicit:
+The complete migration inventory is explicit:
 
-```text
-dataset  controlled, real-world, project-sources
-rq0      scenarios, benchmark, cut-values, completion-marker
-rq1-rq5  controlled, plus any verified project-tree input they actually read
-rq6      real-world
-```
+| Report | Corpus roles | File roles | Hidden input removed |
+|---|---|---|---|
+| dataset | `controlled`, `real-world` | `project-source-facts` | `PROJECTS_PATH`, ignored nested repositories, stale dataset-statistics fallback |
+| rq0 | `scenarios`, `benchmark` | `jarvis-pvc-facts`, `cut-values`, optional `completion-marker` | internal benchmark connection, 1,524 database-selected jqwik log paths, module defaults |
+| rq1 | `controlled` | `project-source-facts` | database-selected source directories and stale mutants-per-project fallback |
+| rq2 | `controlled` | none | none |
+| rq3 | `controlled` | none | none |
+| rq4 | `controlled` | none | none |
+| rq5 | `controlled` | none | none |
+| rq6 | `real-world` | none initially | physical default and builder-owned corpus definition |
+
+`project-source-facts` is one normalized per-project relation shared by dataset and RQ1. It does not
+duplicate the raw project repositories. `jarvis-pvc-facts` contains the scoreboard and census facts
+needed after unioning values by project, variant, MUT, and parameter; it does not copy raw jqwik logs.
+Both versioned files include source corpus or repository identities, selected entity and file counts,
+and reconciliation totals. Domain extractors create them atomically from the frozen external inputs.
+The registered reports require the extracts and never fall back to raw trees or old output files.
 
 `materialize-exclusion-evidence` later adds `widening-audit` to RQ6. Its path is not introduced early
 as an absent placeholder.
@@ -101,7 +107,33 @@ as an absent placeholder.
 inputs. Rejected because it retains two construction conventions and leaves primary input identity
 outside the same validation path.
 
-### 2. A resolved context owns handles; a snapshot owns identity
+### 2. Large external collections are reduced before report construction
+
+The report input model deliberately has no generic directory or repository-collection type. The actual
+large collections are domain-shaped: project checkouts need Java source statistics, while JARVIS logs
+need value unions keyed by project, variant, MUT, and parameter. A generic tree snapshot would still
+leave each report to rediscover those semantics, and would repeatedly scan hundreds of nested
+repositories or gigabytes of ignored run data.
+
+Two focused extractors instead write compact, versioned, self-describing evidence files below
+`analysis/data/report-inputs/`. Each extractor:
+
+- takes explicit frozen corpus and external source roots;
+- records the source corpus manifest identities or nested repository revisions it observed;
+- selects only the entities required by the registered reports;
+- writes normalized facts plus source, selected-entity, selected-file, and reconciliation counts;
+- validates its schema and count identities before atomically replacing the tracked file.
+
+The project-source extract is shared by dataset and RQ1. The JARVIS extract is shared by the scenario
+and benchmark calculations. Reports receive only the resolved files and contain no raw-tree fallback.
+The extractors are not report plugins and do not participate in ordinary report orchestration.
+
+**Alternative considered:** Add `TrackedTreeInputSpec` or a generalized external-collection resolver.
+Rejected because `projects/` is an ignored collection of nested repositories rather than one Git tree,
+and RQ0 discovers 1,524 ignored value logs through database rows. Pretending either is a tracked tree
+would record a false identity; rescanning both for every run would be costly and brittle.
+
+### 3. A resolved context owns handles; a snapshot owns identity
 
 Input resolution produces two different concepts:
 
@@ -129,9 +161,9 @@ report run. Read-only restoration from the recorded dump, registry validation, a
 the established corpus boundary.
 
 File snapshots carry role, repository-relative path, presence, SHA-256 when present, last file commit,
-and dirty state. Tracked-tree snapshots carry the Git tree or gitlink identity and dirty state. A
-tracked tree is only valid for version-controlled source. A generated or otherwise untracked input is
-declared as an explicit file rather than hidden behind a tree snapshot.
+and dirty state. The normalized project-source and JARVIS evidence files also carry their upstream
+source identities and reconciliation totals as validated domain data. The generic runner hashes those
+files but does not interpret their domain schema.
 
 The runner captures repository input identity before construction and recomputes it afterward. A
 mismatch fails before rendering. Corpus connections use the read-only report account and remain open
@@ -142,7 +174,7 @@ claimed.
 **Alternative considered:** Attach paths, connections, and provenance directly to `RQReport`. Rejected
 because renderers would retain live resources and builders could again assert input identity.
 
-### 3. Remove physical input overrides from the command interface
+### 4. Remove physical input overrides from the command interface
 
 `--db`, `--corpus-data-dir`, and `--corpus-config-dir` are removed. `--db` has no defined meaning for
 RQ0 or the dataset report, and all three flags bypass the semantic registry contract.
@@ -159,7 +191,7 @@ resolve through the registry and arbitrary file substitution would make the mani
 the report did not declare. Focused tests can replace the resolver without exposing that power to a
 published command.
 
-### 4. Split orchestration from argument parsing
+### 5. Split orchestration from argument parsing
 
 `cli.py` parses arguments and calls a small functional run API. A new `run.py` owns these phases:
 
@@ -184,7 +216,7 @@ already retain their data after the current connection closes.
 No long-lived runner class or service locator is introduced. Phase functions accept values and return
 values so failure injection and unit testing remain direct.
 
-### 5. Every renderer returns the same artifact abstraction
+### 6. Every renderer returns the same artifact abstraction
 
 A render target and key identify an artifact. The producing report remains explicit for diagnostics and
 partial-run ownership.
@@ -225,7 +257,7 @@ than a bare list, an ad hoc figure map, or an implicit direct write.
 `declare-published-artifacts`. Rejected because it cannot carry ownership without another parallel map
 and leaves duplicate, path, and merge validation spread across callers.
 
-### 6. Rendering and validation happen in a same-filesystem staging root
+### 7. Rendering and validation happen in a same-filesystem staging root
 
 The runner creates a temporary root beneath `analysis/`, so staged and final paths share a filesystem.
 All selected report and aggregate outputs are rendered there. The runner then validates:
@@ -254,7 +286,7 @@ write is the state change staging is meant to prevent. Directory swaps were also
 build output occupy separate directories, and replacing their common parent would include maintained
 analysis source.
 
-### 7. Full and partial runs have explicit manifest semantics
+### 8. Full and partial runs have explicit manifest semantics
 
 A full run constructs `provenance.json` from scratch using the registry's complete report set. Removed
 reports therefore disappear. A partial run reads the last complete manifest, replaces only selected
@@ -276,7 +308,7 @@ information used by a consumer is lost before deleting the branch.
 Rejected because fragments introduce a second durable generated format and make stale-fragment cleanup
 the new version of the current stale-entry problem.
 
-### 8. Existing code provenance and input provenance remain separate
+### 9. Existing code provenance and input provenance remain separate
 
 The current provenance rule is correct: a produced value names the last commit that changed its source
 file, not the checkout position. Rename the type to `CodeProvenance` only if doing so improves clarity
@@ -294,7 +326,7 @@ visible in its snapshot.
 **Alternative considered:** Build an artifact-level provenance graph with input references. Rejected as
 unnecessary for eight reports and more fragile than one closed report input set.
 
-### 9. Active changes consume this architecture without duplicated ownership
+### 10. Active changes consume this architecture without duplicated ownership
 
 Before code migration, reconcile the active artifacts:
 
@@ -310,10 +342,23 @@ Before code migration, reconcile the active artifacts:
   model, returns domain evidence to the existing report view model, and adds no runner, manifest,
   renderer-return, or publication special case.
 
-Task ownership changes land as planning-only edits before implementation, in one append-only
-`docs(openspec)` commit. No previously completed implementation commit is rewritten.
+The implementation ownership matrix is closed:
 
-### 10. Atomic implementation commits follow architectural boundaries
+| Interface or task boundary | Active owner | Consumers |
+|---|---|---|
+| corpus registry entries, lookup, count validation, lifecycle, dumps, physical renames | `consolidate-evaluation-databases` | report input resolver, corpus publisher |
+| report input declarations, `ReportContext`, `BuiltReport`, input snapshots, connection lifetime | `make-report-runs-explicit` | all report builders, generic provenance |
+| `ReportSpec.schema` and physical override removal | `make-report-runs-explicit` | CLI and all report registrations |
+| value kinds, entity rendering, target formatting, table layout | `separate-report-values-from-presentation` | target renderers |
+| `ArtifactId`, `RenderedArtifact`, `ArtifactSet`, staging, manifests, generator promotion | `make-report-runs-explicit` | renderers and publisher |
+| consumer declaration syntax, declared-set checks, dirty guards, delivery | `declare-published-artifacts` | post-promotion run phase |
+| RQ6 mechanism CTE, aggregate evidence, funnel, and deterministic audit | `materialize-exclusion-evidence` | RQ6 builder and downstream thesis change |
+
+Every dependent task consumes the named interface rather than adding an alternative. Task ownership
+changes land as planning-only edits before implementation, in one append-only `docs(openspec)` commit.
+No previously completed implementation commit is rewritten.
+
+### 11. Atomic implementation commits follow architectural boundaries
 
 The intended new commit sequence is:
 
@@ -333,8 +378,10 @@ history is unchanged.
 - **[Risk] The input inventory misses a filesystem dependency hidden behind an imported helper.** ->
   Trace every registered builder transitively, add an architecture check for direct connection and
   path-resolution calls under report modules, and compare output after migration.
-- **[Risk] Tree hashing is expensive over pinned project sources.** -> Use Git tree or gitlink identity
-  plus dirty state for tracked trees; reserve content SHA-256 for explicit files.
+- **[Risk] A normalized evidence extract can drift from its frozen raw sources.** -> Each domain
+  extractor records source identities and selected-input counts, validates report-level reconciliation
+  totals, writes atomically, and is rerun only when its declared upstream identity changes. Report
+  tests recompute against available raw sources as a positive control.
 - **[Risk] Multi-corpus reports imply a cross-database snapshot that PostgreSQL cannot provide.** ->
   Rely only on the established frozen, read-only corpus identities and record each input separately;
   never claim a cross-database transaction.
@@ -361,15 +408,18 @@ history is unchanged.
 2. Reconcile all active OpenSpec artifacts and validate that every task and capability has one owner.
 3. Inventory direct and transitive inputs for every registered report and freeze a byte-level baseline
    of all current generated output.
-4. Introduce input declarations, snapshots, context resolution, and builder migration as one clean API
-   cutover. Remove physical database and hidden secondary-connection paths.
-5. Build every report and prove generated output remains byte-identical while the new manifest gains
+4. Add the project-source and JARVIS evidence extractors, generate their compact versioned files from
+   the current frozen inputs, and prove report values match the raw-source path before removing it.
+5. Introduce corpus and file declarations, snapshots, context resolution, and builder migration as one
+   clean API cutover. Remove physical database, hidden secondary-connection, raw-tree, and fallback
+   paths.
+6. Build every report and prove generated output remains byte-identical while the new manifest gains
    only the intended generic input records.
-6. Introduce the artifact abstraction and migrate every renderer without changing rendered files.
-7. Add complete-run staging, validation, promotion journaling, and partial/full manifest behavior.
-8. Exercise build, render, validation, promotion, and consumer-delivery failure paths with injected
+7. Introduce the artifact abstraction and migrate every renderer without changing rendered files.
+8. Add complete-run staging, validation, promotion journaling, and partial/full manifest behavior.
+9. Exercise build, render, validation, promotion, and consumer-delivery failure paths with injected
    failures, then run every registered report from its declared inputs.
-9. Allow the value, publication, exclusion-evidence, and thesis changes to proceed in dependency order.
+10. Allow the value, publication, exclusion-evidence, and thesis changes to proceed in dependency order.
 
 Rollback reverts the new commits in reverse dependency order. It restores the prior report API and
 output path without modifying corpus data or existing Git history.

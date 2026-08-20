@@ -50,10 +50,10 @@ this change may mutate it or manufacture a cleaner rerun. The existing commits r
 
 ## Decisions
 
-### 1. Build one entity-fact relation before aggregation
+### 1. Define one canonical SQL fact relation and aggregate before transfer
 
-The report will first derive one row per reportable test, assertion, or generalization with these
-logical fields:
+A shared static SQL CTE derives the logical entity facts for reportable tests, assertions, and
+generalizations:
 
 ```text
 corpus, variant, level, entity_id, included,
@@ -73,16 +73,19 @@ pre-emission typed gate
     > included
 ```
 
-The implementation will reject contradictory matches rather than silently accepting precedence as a
-repair. The precedence only resolves valid overlapping storage representations, such as quarantine in
+The CTE rejects contradictory matches rather than silently accepting precedence as a repair. The
+precedence only resolves valid overlapping storage representations, such as quarantine in
 `filter_result`.
 
-Both the mechanism partition and generalization funnel aggregate this relation. This avoids two SQL
-queries that independently encode classification and later drift.
+The mechanism partition and generalization funnel each aggregate this same CTE in SQL. Only typed
+aggregate rows and reconciliation counts cross the database boundary; the report does not materialize
+the full entity population in Python. This keeps the semantic source singular without paying the
+allocation and transfer cost of an entity-sized intermediate relation.
 
-**Alternative considered:** Keep the current breakdown query and add an unrelated funnel query. This is
-smaller initially, but it duplicates the hardest semantic boundary and makes reconciliation a test of
-two implementations rather than a property of one model.
+**Alternative considered:** Transfer every fact row and aggregate in Python. Rejected because the
+report needs only grouped counts, and transferring the full population would add memory, serialization,
+and type-conversion work without improving the contract. Keeping the current breakdown query and
+adding an unrelated funnel query is also rejected because it duplicates the hardest semantic boundary.
 
 ### 2. Keep mechanism identity separate from reader-facing outcome
 
@@ -150,9 +153,16 @@ rates needed by downstream macros. Publication declarations identify only the La
 metrics that the thesis consumes; normalized CSVs remain supporting build evidence unless explicitly
 declared.
 
-All rows and metrics share one captured corpus and source provenance object. Report construction occurs
-inside one read-only consistent database snapshot. The corpus is selected through the registry; the
-physical v7 database name is not embedded in report code or tests.
+RQ6 declares the `real-world` corpus role through the common `ReportSpec` input tuple, including its
+role-specific required objects. The later audit summary also declares
+`analysis/audits/rq6-widening-v7.json` as a required repository-file role only when that file is added;
+no absent placeholder or module-default path is registered early. `ReportContext` supplies the live
+read-only connection and resolved audit path, and `BuiltReport` carries the runner-captured snapshots.
+
+All rows and metrics therefore share one captured corpus and source provenance object. Report
+construction occurs inside one runner-owned read-only consistent database snapshot. The physical v7
+database name is not embedded in report code or tests, and the report neither opens another connection
+nor constructs a special manifest entry.
 
 **Alternative considered:** Generate thesis-specific LaTeX directly inside RQ6. That repeats the
 presentation coupling being removed by `separate-report-values-from-presentation`.

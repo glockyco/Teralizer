@@ -58,6 +58,10 @@ and regenerating it surfaced what the generator had been producing.
   fields. The thesis reads these files through its plotting macros, which must be checked.
 - **Deletions**, not additions: `fmt="tex"`, the `csv_source` redirect, and the `*_display` DataFrame
   columns all disappear, because nothing pre-renders a cell any more.
+- **Consumes the explicit report-run architecture.** Renderers receive staged output roots and return
+  report-owned artifacts through `ArtifactSet`. This change owns only value kinds, entity rendering,
+  target formatting, and table layout. It does not own artifact identity, output paths, staging,
+  promotion, manifests, or consumer delivery.
 
 ## Capabilities
 
@@ -72,8 +76,9 @@ None.
 
 ## Impact
 
-- `analysis/src/teralizer/eval/model.py` (`ColumnSpec`, `Prose`), `format.py`,
-  `render/{csv,markdown,latex}.py`.
+- `analysis/src/teralizer/eval/model.py` (`ColumnSpec`, `Prose`), `format.py`, and the target-specific
+  value-to-text logic in `render/{csv,markdown,latex}.py`. Renderer output identity and return types
+  come from `make-report-runs-explicit` and are not redefined here.
 - `reports/_causes_common.py` (`_VARIANT_MACROS`, the `*_display` columns), `reports/_funnel.py`
   (`cause_macros`, `timeout_macros`), `reports/rq0_jarvis.py` (the `\texttt{}` mapping and the `\#`
   header), and every report that declares a column.

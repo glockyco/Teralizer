@@ -53,6 +53,10 @@ for capabilities that do not yet exist in the main spec set.
 
 - `analysis/src/teralizer/eval/reports/rq6_causes.py`, `_causes_common.py`, and a focused report helper
   if separation is needed: mechanism and denominator materialization.
+- `make-report-runs-explicit`: RQ6 declares the real-world corpus and deterministic audit input through
+  `ReportSpec`, receives them through `ReportContext`, and returns evidence through `BuiltReport` and
+  `ArtifactSet`. This change adds no report-run, manifest, renderer-return, or publication special
+  case.
 - `analysis/src/teralizer/eval/model.py` and renderers only through the interfaces finalized by
   `separate-report-values-from-presentation`; this change does not introduce a parallel table model.
 - RQ6 report tests, corpus-backed invariants, metric-manifest tests, and generated report output.

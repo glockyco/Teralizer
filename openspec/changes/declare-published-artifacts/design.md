@@ -29,6 +29,8 @@ generator-owned would delete maintained work.
   be stated.
 - Pruning. Publishing writes; it never removes. See Decision 6.
 - The form of a delivered artifact. `separate-report-values-from-presentation` owns that.
+- Renderer return types, artifact accumulation, generator staging, manifest assembly, and promotion.
+  `make-report-runs-explicit` owns those and passes the completed `ArtifactSet` to publication.
 
 ## Decisions
 
@@ -47,23 +49,25 @@ while a `[tables]` section would have had to lie about it.
 Extension does not determine kind — `.tex` covers both a table and the macro file — and inference turns
 a declaration mistake into a silently different outcome.
 
-### 2. Delivery leaves the render step and happens once
+### 2. Delivery consumes the validated run artifact set once
 
-`_build_and_render` stops copying. It reports what it emitted, per target, as name to path. The caller
-accumulates across reports and delivers once, which is what figures already do.
+`make-report-runs-explicit` removes copying from renderers, builds every selected report, renders below
+a staging root, validates and promotes generator output, and returns one complete `ArtifactSet`.
+Publication receives that already validated set and performs consumer delivery once, after generator
+promotion succeeds. This change does not modify `_build_and_render`, invent another emitted map, or
+orchestrate report construction and staging.
 
 *Why:* the current per-report copy writes into the consumer while the run is still going, so a report
-that fails at report five leaves four reports' tables behind. Validating after the fact cannot undo
-that. Moving the write after the last report makes "nothing, or the declared set" achievable rather
-than aspirational.
+that fails at report five leaves four reports' tables behind. The common runner fixes that defect for
+every target and gives publication one stable input. Reimplementing the boundary here would restore
+two run orchestrators that can disagree.
 
-*Alternative rejected:* copy per report and roll back on failure. Rollback means restoring files in
-another repository from memory of what they were, which is a worse guarantee than not writing yet.
+### 3. Artifact identity and collision detection come from `ArtifactSet`
 
-### 3. Accumulation and collision detection become per-kind
-
-The emitted map becomes kind to name to path. Collision detection runs within a kind, for the reason in
-Context: a table and its data file share a name by design.
+`ArtifactSet` keys each output by render target and generated key, carries its owner and staged or
+promoted path, and rejects same-target collisions while allowing a LaTeX table and CSV file to share a
+key. Publication compares consumer declarations with those typed identities. It does not accumulate
+paths or repeat collision and containment checks that the run already performed.
 
 ### 4. One guard call over every declared path
 
@@ -117,9 +121,12 @@ change stops the accumulation; it does not undo it.
 
 1. Finish and archive `publish-figures-to-consumers`, correcting its *Publishing without a declaration*
    scenario, so the accepted spec set does not hold two contradictory rules.
-2. Generalise the declaration, the accumulation, and the guard. Keep figure behaviour unchanged: the
-   existing figure tests are the regression check.
-3. Write the thesis declaration, then verify the delivered set equals the thesis's tracked generated
+2. Land `make-report-runs-explicit` through the `ArtifactSet`, staged generator promotion, and
+   post-promotion delivery boundary.
+3. Generalise declaration parsing, declared-set validation, consumer guards, and delivery over the
+   supplied `ArtifactSet`. Keep figure behavior unchanged: the existing figure tests are the
+   regression check.
+4. Write the thesis declaration, then verify the delivered set equals the thesis's tracked generated
    files.
 
 Rollback is the revert. A declaration file left behind is inert to the previous code, which reads only
