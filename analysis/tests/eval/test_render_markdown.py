@@ -6,7 +6,12 @@ from teralizer.eval.render.markdown import render_str
 
 def _report():
     prov = Provenance(
-        "teralizer.eval.reports.example", "build_report", 50, None, "abc1234"
+        "teralizer.eval.reports.example",
+        "build_report",
+        50,
+        None,
+        "abc1234",
+        "analysis/src/teralizer/eval/reports/example.py",
     )
     t = Table(
         key="x",

@@ -27,14 +27,11 @@ class Provenance:
     lineno: int
     query: str | None
     commit: str
+    path: str
     dirty: bool = False
 
-    def rel_path(self) -> str:
-        parts = self.module.split(".")
-        return "analysis/src/" + "/".join(parts) + ".py"
-
     def source_url(self, repo_url: str) -> str:
-        return f"{repo_url}/blob/{self.commit}/{self.rel_path()}#L{self.lineno}"
+        return f"{repo_url}/blob/{self.commit}/{self.path}#L{self.lineno}"
 
 
 DIRTY_PROVENANCE_ENV = "TERALIZER_ALLOW_DIRTY_PROVENANCE"
@@ -42,23 +39,53 @@ DIRTY_PROVENANCE_ENV = "TERALIZER_ALLOW_DIRTY_PROVENANCE"
 
 @lru_cache(maxsize=1)
 def _git_snapshot() -> tuple[str, bool]:
-    head = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+    """Where the checkout stands, and whether anything in it is uncommitted.
+
+    Used for the publish guard, which is an act of attribution across a
+    repository boundary, and as the fallback for a file with no commit. An
+    individual artifact resolves through :func:`_file_snapshot` instead.
+    """
+    return _git(["rev-parse", "HEAD"]), bool(_git(["status", "--porcelain"]))
+
+
+def _relative_to_repo(source: str | None) -> str | None:
+    """The repository-relative path of a loaded source file, or None when it lives
+    outside this repository."""
+    if source is None:
+        return None
+    try:
+        return str(Path(source).resolve().relative_to(_REPO_ROOT))
+    except ValueError:
+        return None
+
+
+@lru_cache(maxsize=None)
+def _file_snapshot(path: str) -> tuple[str, bool]:
+    """The last commit that changed ``path``, and whether it has uncommitted
+    changes.
+
+    This is the identity of the code that produced an artifact: whatever the file
+    holds now, it has held since that commit. ``HEAD`` answers a different
+    question -- where the checkout stands -- and coincides only just after this
+    file was committed. Using it made every artifact record an unrelated commit,
+    and made every regeneration rewrite every artifact.
+    """
+    commit = _git(["log", "-1", "--format=%H", "--", path])
+    if not commit:
+        # Never committed. A blank commit would render a broken permalink, so
+        # record the checkout position and say the value is uncertain.
+        return _git_snapshot()[0], True
+    return commit, bool(_git(["status", "--porcelain", "--", path]))
+
+
+def _git(args: list[str]) -> str:
+    return subprocess.run(
+        ["git", *args],
         cwd=_REPO_ROOT,
         capture_output=True,
         text=True,
         check=True,
     ).stdout.strip()
-    dirty = bool(
-        subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=_REPO_ROOT,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    )
-    return head, dirty
 
 
 def require_publishable_tree() -> None:
@@ -82,12 +109,18 @@ def capture(fn: Callable[..., object], *, query: str | None = None) -> Provenanc
         lineno = inspect.getsourcelines(fn)[1]
     except (OSError, TypeError):
         lineno = 0
-    commit, dirty = _git_snapshot()
+    path = _relative_to_repo(inspect.getsourcefile(fn))
+    if path is None:
+        # Defined outside this repository, so no file here explains the value.
+        commit, dirty, path = _git_snapshot()[0], True, ""
+    else:
+        commit, dirty = _file_snapshot(path)
     return Provenance(
         module=module,
         qualname=qualname,
         lineno=lineno,
         query=query,
         commit=commit,
+        path=path,
         dirty=dirty,
     )

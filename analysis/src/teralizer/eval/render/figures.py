@@ -21,7 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from teralizer.eval.model import RQReport
-from teralizer.eval.provenance import git_commit
+from teralizer.eval.provenance import capture
 from teralizer.plotting import setup_paper_style
 
 
@@ -40,8 +40,11 @@ def materialize(report: RQReport, fig_dir: Path, pdf_dir: Path) -> MaterializedF
     pdf_dir.mkdir(parents=True, exist_ok=True)
     pngs: list[Path] = []
     pdfs: dict[str, Path] = {}
-    provenance = f"teralizer.eval {report.rq} @ {git_commit()}"
     for figure in report.figures():
+        # Resolved through the figure's own build function, so the image records
+        # the commit of the code that drew it and stops changing on unrelated
+        # commits.
+        provenance = f"teralizer.eval {report.rq} @ {capture(figure.build).commit}"
         fig, ax = plt.subplots()
         try:
             figure.build(ax)

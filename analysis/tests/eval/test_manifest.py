@@ -16,6 +16,7 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
         30,
         "SELECT 1",
         "a" * 40,
+        "analysis/src/teralizer/eval/reports/rq6_causes_realworld.py",
     )
     report = RQReport(
         "rq6",
