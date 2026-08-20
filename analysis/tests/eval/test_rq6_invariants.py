@@ -1,9 +1,8 @@
-"""Invariants of the exclusion model documented in `docs/exclusion-model.md`.
+"""Invariants for the five persisted exclusion mechanisms used by the RQ6 report.
 
-The RQ6 breakdown sorts every excluded entity into `filtering` or `failures`, but the
-pipeline has five ways to exclude one. A failure here means a mechanism grew, moved, or
-started writing somewhere new, and a bucket is now silently absorbing it. Read
-`docs/exclusion-model.md` before relaxing an assertion.
+The report classifies every excluded entity as filtering or failure. A failure here means
+that a mechanism grew, moved, or started writing somewhere new. Update the accepted
+`reporting/exclusion-accounting` capability and the report map before changing an assertion.
 """
 
 import re
@@ -63,8 +62,8 @@ def test_generalizations_partition_into_gated_and_emitted(rq6_conn):
         variant=_variant(rq6_conn),
     )[0]
     assert gated + emitted == attempts, (
-        f"{attempts} attempts != {gated} gated + {emitted} emitted; a third outcome "
-        "exists that docs/exclusion-model.md does not describe"
+        f"{attempts} attempts != {gated} gated + {emitted} emitted; "
+        "the exclusion-accounting contract has an unclassified third outcome"
     )
 
 

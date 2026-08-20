@@ -7,17 +7,18 @@ globs:
 
 # Database conventions
 
-- Container `postgres-teralizer`, `localhost:5432`. Protected DBs are the published-paper corpora
-  (never drop, never use for experiments): `postgres_dev`, `postgres_test`. In-flight corpora for
-  the next version stay unprotected. Experiments use scratch DBs (`postgres_<purpose>_verify`,
-  `postgres_verification`) created/dropped by runner scripts. Schema reference:
-  `docs/database.md`. Source of truth: `src/main/resources/db/create-tables.sql`.
-- Exclusion semantics: `docs/exclusion-model.md`. Read it before writing a query that counts
-  excluded tests, assertions, or generalizations. `filter_result` is not only filters,
-  `is_included` is not a success signal, and generation-time gates leave no row anywhere except
-  `exclusion_info`. Invariants are enforced by `analysis/tests/eval/test_rq6_invariants.py`.
-- Cross-DB comparisons join on `root_path`, never on `id`.
-- Raw-SQL `LIKE`: double percent signs in SQLAlchemy strings (`LIKE '%%_TRIES'`).
-- Prefer read-only access for analysis; use the read-only `teralizer-db` MCP over ad-hoc
-  superuser `psql`.
-- Never DROP/TRUNCATE or write to the analysis databases from analysis code.
+- `src/main/resources/db/protected-databases.txt` owns the protected corpus list. Never drop,
+  truncate, rename, or write to a listed database. Never use one for an experiment.
+- Runner scripts own scratch databases through `scripts/lib/db-lifecycle.sh`. Use those runners for
+  creation and deletion.
+- `src/main/resources/db/create-tables.sql` is the schema authority. Generated jOOQ bindings reflect
+  that DDL.
+- `database/teralizer/` is PostgreSQL storage. Never edit or commit it.
+- Before counting exclusions, read `analysis/src/teralizer/eval/reports/rq6_causes.py`,
+  `analysis/tests/eval/test_rq6_invariants.py`, and the accepted
+  `reporting/exclusion-accounting` capability. `filter_result` is not only filters.
+  `is_included` is not a success signal. Generation-time gates record their decision only in
+  `exclusion_info`.
+- Join cross-database records on `root_path`, never on surrogate IDs.
+- Double percent signs in SQLAlchemy raw SQL, for example `LIKE '%%_TRIES'`.
+- Analysis code must use read-only connections. It must not contain destructive or write queries.

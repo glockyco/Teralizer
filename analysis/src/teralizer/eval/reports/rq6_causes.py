@@ -33,7 +33,7 @@ from teralizer.eval.reports._widening import (
 
 DEFAULT_DB = "postgres_reporeapers_rq6_v7"
 
-# How each exclusion mechanism records itself. See docs/exclusion-model.md.
+# Map each persisted exclusion mechanism to the filtering or failure bucket reported below.
 # The name test matters: the javac quarantine writes REJECT rows to
 # `filter_result` without being a filter, so `decision = 'REJECT'` alone
 # overcounts filtering.
@@ -305,7 +305,8 @@ def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
             f"{row['level']}: {row['uncoded']}" for row in drifted.to_dict("records")
         )
         raise RuntimeError(
-            "unclassified exclusions, see docs/exclusion-model.md: " + levels
+            "unclassified exclusions; update the exclusion-accounting map for: "
+            + levels
         )
     return pd.DataFrame(df, columns=["strategy", "level", "total", *_BREAKDOWN_COLUMNS])
 

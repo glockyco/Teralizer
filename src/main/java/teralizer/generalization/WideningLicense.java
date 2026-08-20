@@ -41,18 +41,15 @@ import teralizer.transformer.VariableNameCollector;
  * the license because native or modeled boundaries can branch after dropping symbolic attributes,
  * making path-condition evidence incomplete for this inference.
 
- * <p>What the refusals cost is measured rather than assumed. {@code docs/exclusion-model.md}
- * carries the branch-level distribution over the current corpus. Refusals are overwhelmingly
- * {@code NULL_CONCRETE}, which means the value on the operand stack at the return carried no SPF
- * expression. A value carries an expression when it descends from a symbolic input through
+ * <p>A returned value carries an expression when it descends from a symbolic input through
  * instructions that transfer attributes. The heap transfers them in both directions. jpf-core
  * copies the operand attribute onto a field in {@code PutHelper.setField}, and onto an array
  * element in {@code ArrayStoreInstruction}. It reads the attribute back in {@code GETFIELD} and
  * {@code ArrayLoadInstruction}. A field or an array therefore keeps whatever the stored value
  * carried.
  *
- * <p>Four shapes reach the return with a concrete value. The most common one by a wide margin is a
- * nested call. The oracle is then whatever another method returned, and that value carries an
+ * <p>Four representative shapes reach the return with a concrete value. A nested call returns the
+ * callee's value, and that value carries an
  * expression only when SPF tracked one through the callee. A computed boolean returns a bytecode
  * literal, and a literal carries no attribute. The relation stays in the path condition, and this
  * class recovers it from there. A container of literals holds elements that never carried an
@@ -63,11 +60,6 @@ import teralizer.transformer.VariableNameCollector;
  * puts a load in that position, so {@code return value > 0} is widened and
  * {@code boolean r = value > 0; return r} is refused. {@code NullConcreteRefusalShapeTest} holds
  * each of these shapes.
- *
- * <p>Concretization explains few refusals. Assertions that never reach a native boundary carry a
- * null output model almost as often as those that do. Symbolic models or native peers for the
- * concretized methods therefore recover a small share. Boxed output capture is implemented, and it
- * recovers a small share as well.
  *
  * <p>Do not read the paragraphs above as a cause distribution. They describe when the license is
  * granted, not why it is refused.

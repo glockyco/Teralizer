@@ -227,25 +227,33 @@ The primary dataset requires a two-phase workflow:
 
 ## Project Structure
 
+Use these executable and accepted authorities when you inspect or change the system:
+
+- Pipeline stages: `src/main/java/teralizer/processing/ProcessingStage.java` and
+  `src/main/java/teralizer/processing/PipelinePlanner.java`
+- Database schema: `src/main/resources/db/create-tables.sql`
+- Report set: `analysis/src/teralizer/eval/registry.py`
+- Accepted behavioral contracts: `openspec/specs/`
+- Regenerable expression-slice regression: `verification/fixtures/expression-slice/`,
+  `project-configs/verification/fixture-expression-slice.conf`, and
+  `verification/golden/expression-slice.tsv`
+
 ```
 teralizer/
 ├── README.md                   # This file
 ├── INSTALL.md                  # Installation instructions
 ├── REQUIREMENTS.md             # System requirements
 ├── LICENSE-MIT                 # MIT license (code)
-├── LICENSE-CC-BY-4.0           # CC BY 4.0 license (data, docs)
-├── src/                        # Teralizer Java source code
+├── LICENSE-CC-BY-4.0           # CC BY 4.0 license (data, documentation)
+├── src/                        # Java pipeline and schema declarations
 ├── analysis/
-│   ├── src/                    # Python analysis package and eval reports
-│   ├── reports/                # Rendered Markdown reports and figures
-│   └── output/                 # Reference and verification artifacts
-├── replication/
-│   ├── docker-compose.yml      # Docker services configuration
-│   ├── quick-start.sh          # One-command setup script
-│   ├── datasets/               # Database dumps
-│   └── scripts/                # Automation scripts
+│   ├── src/                    # Python analysis package and registered reports
+│   ├── reports/                # Rendered Markdown reports and provenance
+│   └── output/                 # Regenerable publication artifacts
+├── replication/               # Artifact packaging and reproduction scripts
 ├── project-configs/            # Pipeline configuration files
-└── docs/                       # Architecture documentation
+├── verification/              # Regenerable fixtures and observed goldens
+└── openspec/                   # Active changes and accepted contracts
 ```
 
 ---

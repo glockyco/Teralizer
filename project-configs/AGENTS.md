@@ -1,32 +1,26 @@
 # Pipeline run configurations
 
-Configs compose via `-Dteralizer.config=<profile>,<project>` — later files override earlier
-ones, JVM system properties override both, `reference.conf` fills the rest. `reference.conf`
-deliberately defines no database name and no generalization variants: a profile (or the
-driver's system properties) must supply them.
+Configs compose through `-Dteralizer.config=<profile>,<project>`. Later files override earlier
+files. JVM system properties override both. `reference.conf` fills missing values.
 
-## Directory roles
+## Ownership
 
-| Path | Species | Consumed by |
-|---|---|---|
-| `reporeapers-rerun.conf`, `verification.conf` | Composable profiles (DB, variants, PIT policy) | `scripts/run-reporeapers-rerun.sh`, `scripts/run-verification-corpus.sh` |
-| `example-*.conf`, `eqbench.conf` | Self-contained runnable configs | manual `./gradlew run` (AGENTS.md command table) |
-| `replication/extended/` (1,161) | Per-project corpus, local roots | reporeapers driver default; `replication/scripts/run.sh` |
-| `extended/` (1,161) | SOURCE corpus, remote GitHub URLs | `replication/scripts/generate-replication-configs.sh` regenerates `replication/extended/` from it; `replication/scripts/run.sh` falls back to it |
-| `primary/{generation,generalization}/` | Primary-dataset lane (EqBench + commons-utils) | `replication/scripts/run.sh --dataset primary` |
-| `verification/` (16) | Fixture corpus configs | verification driver |
-| `sentinel/` (5) | Tier-2 real-project verification subset | reporeapers driver via `REPOREAPERS_CONFIG_DIR` |
-| `jarvis-scoreboard/` (26) | JARVIS scorecard + 12-project census lane (PIT-on defaults, `-no-pit` overlays for fast validation) | `scripts/run-jarvis-scoreboard.sh`, `scripts/run-jarvis-census.sh` |
-| `fusion-spike/` (23) | Corpus-claims verification tier (~1 h) | verifying-pipeline-changes skill, top tier |
-| `hotspot/` (1) | Concretization-census hotspot | manual; retires when the queued antiaction NPE trace lands |
-| `spikes/` (1) | R1-viability spike | retires with the R1/R2 verdict |
-| `timeout-retry*.conf` (untracked) | Stale July retry one-offs | nothing; regenerated from the next timeout list, then deleted |
+- Profiles define database targets, variants, and run policy.
+- Per-project configs define project roots and project-specific limits.
+- `extended/` is the source for generated configs under `replication/extended/`. Change the source
+  or generator, then regenerate. Do not hand-edit generated configs.
+- `verification/` maps one config to each fixture under `verification/fixtures/`.
+- Runner scripts define which profile and config directories they consume. Read the runner before
+  adding or moving a lane.
+- Completed measurement configs are historical inputs. Do not rewrite their database names or limits
+  after the run.
 
-## Don't / Instead
+## Safety and composition
 
-| Don't | Instead |
-|---|---|
-| Treat `extended/` as a dead duplicate of `replication/extended/` and delete it | It is the generation SOURCE and the replication runner's fallback. Regenerate `replication/extended/` from it via `replication/scripts/generate-replication-configs.sh`. |
-| Point a run at `postgres_dev`/`postgres_test`/other protected DBs from a config | Scratch DBs only. The protected list is `src/main/resources/db/protected-databases.txt`, enforced by the Java startup guard and `scripts/lib/db-guard.sh`. |
-| Add a generalization variant to `reference.conf` | Variants are profile-only (`teralizer.generalizations` blocks). `reference.conf` stays variant-free by design. |
-| Hand-edit files under `replication/extended/` | Fix the source config under `extended/` (or the generator) and regenerate. |
+- `reference.conf` must not define a database name or generalization variant. A profile or runner
+  must supply both.
+- Do not target a database listed in `src/main/resources/db/protected-databases.txt`.
+- HOCON merges object keys. A `teralizer.generalizations` block does not replace the earlier block.
+  Inspect the merged configuration after changing either side.
+- `Configuration` freezes values when its class loads. Tests must put defaults in
+  `src/test/resources/reference.conf`. Do not depend on a later `System.setProperty` call.
