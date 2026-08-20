@@ -1,0 +1,4262 @@
+{
+  "projects": [
+    {
+      "main_classes": 247,
+      "main_files": 106,
+      "main_sloc": 19709,
+      "project": "commons-utils",
+      "test_classes": 119,
+      "test_files": 80,
+      "test_methods": 725,
+      "test_sloc": 14389
+    },
+    {
+      "main_classes": 247,
+      "main_files": 106,
+      "main_sloc": 19709,
+      "project": "commons-utils-es-default-10s",
+      "test_classes": 103,
+      "test_files": 103,
+      "test_methods": 2738,
+      "test_sloc": 19082
+    },
+    {
+      "main_classes": 247,
+      "main_files": 106,
+      "main_sloc": 19709,
+      "project": "commons-utils-es-default-1s",
+      "test_classes": 103,
+      "test_files": 103,
+      "test_methods": 2481,
+      "test_sloc": 17524
+    },
+    {
+      "main_classes": 247,
+      "main_files": 106,
+      "main_sloc": 19709,
+      "project": "commons-utils-es-default-60s",
+      "test_classes": 102,
+      "test_files": 102,
+      "test_methods": 2735,
+      "test_sloc": 18839
+    },
+    {
+      "main_classes": 652,
+      "main_files": 544,
+      "main_sloc": 27871,
+      "project": "eqbench-es-default-60s",
+      "test_classes": 544,
+      "test_files": 544,
+      "test_methods": 4974,
+      "test_sloc": 37836
+    },
+    {
+      "main_classes": 652,
+      "main_files": 544,
+      "main_sloc": 27871,
+      "project": "eqbench-es-default-10s",
+      "test_classes": 543,
+      "test_files": 543,
+      "test_methods": 4875,
+      "test_sloc": 36937
+    },
+    {
+      "main_classes": 652,
+      "main_files": 544,
+      "main_sloc": 27871,
+      "project": "eqbench-es-default-1s",
+      "test_classes": 544,
+      "test_files": 544,
+      "test_methods": 4718,
+      "test_sloc": 35666
+    },
+    {
+      "main_classes": 47334,
+      "main_files": 38916,
+      "main_sloc": 2552342,
+      "project": "repo-reapers (total)",
+      "test_classes": 28990,
+      "test_files": 20948,
+      "test_methods": 85368,
+      "test_sloc": 1867904
+    },
+    {
+      "main_classes": 80,
+      "main_files": 66,
+      "main_sloc": 4362,
+      "project": "repo-reapers (mean)",
+      "test_classes": 49,
+      "test_files": 35,
+      "test_methods": 163,
+      "test_sloc": 3192
+    },
+    {
+      "main_classes": 57,
+      "main_files": 50,
+      "main_sloc": 3321,
+      "project": "repo-reapers (median)",
+      "test_classes": 29,
+      "test_files": 24,
+      "test_methods": 82,
+      "test_sloc": 2131
+    }
+  ],
+  "reconciliation": {
+    "excluded_real_world_projects": 577,
+    "report_rows": 10,
+    "selected_source_projects": 592
+  },
+  "schema_version": 1,
+  "sources": {
+    "corpus_ids": [
+      "controlled",
+      "real-world"
+    ],
+    "project_revisions": [
+      {
+        "included_bytes": 2503490,
+        "included_files": 186,
+        "included_sha256": "d35ea5e6eec7a58816aba32d21ddb300ac05dc1d95eccdc74076c6630b03145d",
+        "project": "commons-utils",
+        "revision": "4eb8695e7ff944bf6faab856b21b148530fa28ed"
+      },
+      {
+        "included_bytes": 2798110,
+        "included_files": 209,
+        "included_sha256": "48623d8ac1f94ac293960894a9682bb14fc31cc8f4a0a015c7e4d35b5e51a511",
+        "project": "commons-utils-es-default-10s",
+        "revision": "4eb8695e7ff944bf6faab856b21b148530fa28ed"
+      },
+      {
+        "included_bytes": 2696633,
+        "included_files": 209,
+        "included_sha256": "a6d790793ec51b7260d83b6eb6da093b8126819ccd2a0f5feac58f59e6a57cbe",
+        "project": "commons-utils-es-default-1s",
+        "revision": "4eb8695e7ff944bf6faab856b21b148530fa28ed"
+      },
+      {
+        "included_bytes": 2771993,
+        "included_files": 208,
+        "included_sha256": "6d62b12bea9d93d317e7350db319440c9bf990673fd737dabd279a5b5af2ecaa",
+        "project": "commons-utils-es-default-60s",
+        "revision": "4eb8695e7ff944bf6faab856b21b148530fa28ed"
+      },
+      {
+        "included_bytes": 2944882,
+        "included_files": 1087,
+        "included_sha256": "a1f391753496ea805726078f8685404586f64c0b0e8ae20f64f2b91ed6a11780",
+        "project": "eqbench-es-default-10s",
+        "revision": "4eb8695e7ff944bf6faab856b21b148530fa28ed"
+      },
+      {
+        "included_bytes": 2870415,
+        "included_files": 1088,
+        "included_sha256": "726e3c41380c5f164be5ea3576dd3a610cb7e31df5806d9b75c5c3007fddd523",
+        "project": "eqbench-es-default-1s",
+        "revision": "4eb8695e7ff944bf6faab856b21b148530fa28ed"
+      },
+      {
+        "included_bytes": 3005717,
+        "included_files": 1088,
+        "included_sha256": "4003ef383d121701c690e8e5ef74054f6e007f29593259eaa652c1f9b4fcfe42",
+        "project": "eqbench-es-default-60s",
+        "revision": "4eb8695e7ff944bf6faab856b21b148530fa28ed"
+      },
+      {
+        "included_bytes": 2760,
+        "included_files": 2,
+        "included_sha256": "846b991332a766e0a7329e0806d9963b88afaece626277ba9220f78cec4654c9",
+        "project": "github_com_3cw_octhemeconverter",
+        "revision": "eb942f073e377d8f9755806764540c0e94aa6b55"
+      },
+      {
+        "included_bytes": 634004,
+        "included_files": 177,
+        "included_sha256": "19a813a85e9c1b2ec8a0dab2467f106c25e784b5002947b7922cd30715969290",
+        "project": "github_com_42BV_pdf-library",
+        "revision": "45360abdf5047896b903060aeabcb8862264da75"
+      },
+      {
+        "included_bytes": 369881,
+        "included_files": 122,
+        "included_sha256": "5dcb6524877904b61ec555c7a9bd8a7574b58a1642891778505b585fe7b3ee41",
+        "project": "github_com_47deg_firebrand",
+        "revision": "b5690039ad9a30091f85d429ae71a3a75bab19ea"
+      },
+      {
+        "included_bytes": 7889,
+        "included_files": 6,
+        "included_sha256": "116b5757c64ebe06736b827321d189cf6bf24c7feb3aa524e8a1f3b99794ad91",
+        "project": "github_com_6-pz_componentLab",
+        "revision": "5defdae0f3277bd43df51180501b88531a6fdaf4"
+      },
+      {
+        "included_bytes": 1570706,
+        "included_files": 201,
+        "included_sha256": "3f783a2e3271d09967f61a21ea727a2e18eb8bd9dd58280c99996596417bfd35",
+        "project": "github_com_Accla_d4m_api_java",
+        "revision": "28199c7a7b0d23e1858efb927b0ed25ea66098d6"
+      },
+      {
+        "included_bytes": 86838,
+        "included_files": 25,
+        "included_sha256": "5e43d54f2ec34ff586a67199ca13fb3203b21930eb550c832aae65e77a7997cd",
+        "project": "github_com_Achill2_WebEngineering-UE-2",
+        "revision": "252794c7ab620ca3d97a2ed1846d71692be446f8"
+      },
+      {
+        "included_bytes": 462103,
+        "included_files": 52,
+        "included_sha256": "73305819f0cafe405d184e6f4831e5c65d85bd2fdba297293dddeb3bd6bf3814",
+        "project": "github_com_AdSpore_Tinder",
+        "revision": "6eedb36f5ad2bbbd8499c6a6cf1bc87fd2bd6001"
+      },
+      {
+        "included_bytes": 458406,
+        "included_files": 190,
+        "included_sha256": "92df2a29a9ecbbd2282c3393a3fca30e32ece8f752b90fb8933563f52ac8afd2",
+        "project": "github_com_AlexRNL_Commons",
+        "revision": "e65e42f3649d6381a6f644beb03304c2ae4ad524"
+      },
+      {
+        "included_bytes": 21964,
+        "included_files": 17,
+        "included_sha256": "51def0226b7d471dc5d177c10ff5ed4cefe1301995f260d126d21c8de51505af",
+        "project": "github_com_AncientMariner_Questionnaire",
+        "revision": "573ebfead99a0d2c26b35c26a40b3fc9a69a4941"
+      },
+      {
+        "included_bytes": 341700,
+        "included_files": 71,
+        "included_sha256": "e39a1d7efed10a32320cd81c541b0b360a762b91e23c35dc2a1e927e22361abd",
+        "project": "github_com_AncientMariner_TDD-Katas",
+        "revision": "6e1ecacecbd7c4076677b1bb1c116431cf7ba7d2"
+      },
+      {
+        "included_bytes": 186855,
+        "included_files": 99,
+        "included_sha256": "112095306f59b86602aba32ad5b86f7698b0276f5be008e5d71971e9626e9d28",
+        "project": "github_com_Apereo-Learning-Analytics-Initiative_Larissa",
+        "revision": "96a26e4a9f6eccdeb7a960a8291881f503b1d320"
+      },
+      {
+        "included_bytes": 53200,
+        "included_files": 10,
+        "included_sha256": "0482884280b44d4353fd5b57545325edec223f8af05f0ae4b7a9b79aaa9383f3",
+        "project": "github_com_Appdynamics_f5-monitoring-extension",
+        "revision": "9bc142756650982e3a11675f78caee3a99149f70"
+      },
+      {
+        "included_bytes": 434833,
+        "included_files": 100,
+        "included_sha256": "f0db3e1468b8d5fbb8eb6c5bed94c60e92abd8e4a9aca2a72998d7e8f0e12133",
+        "project": "github_com_Arci_Carcassonne",
+        "revision": "6010fdb9ba7070162ebce384c5189fdfc7ba7fd5"
+      },
+      {
+        "included_bytes": 387730,
+        "included_files": 105,
+        "included_sha256": "9dc09646510ea2be9d5efd613953c84f044a9981a3ca293265971153f1546584",
+        "project": "github_com_Beam-Project_beam-common",
+        "revision": "20f82f7875bb3afdecaf46e16394579ddb24263d"
+      },
+      {
+        "included_bytes": 408795,
+        "included_files": 64,
+        "included_sha256": "fe943dd592073457381209a678b128420f25278e9d50c27f8cb96bf59d3ede99",
+        "project": "github_com_Bedework_exchange-ws-client",
+        "revision": "3f21f056a6050a82f41ffe17c4144fabe95ff3b2"
+      },
+      {
+        "included_bytes": 307126,
+        "included_files": 146,
+        "included_sha256": "cd49be891fe5346ec75d56d8d4eaf22c2716dc55b4d143e5888dffa6c30faf4c",
+        "project": "github_com_Bombe_ams",
+        "revision": "ed765ce3965895976398537a54ed48d4d44ab1d0"
+      },
+      {
+        "included_bytes": 250584,
+        "included_files": 41,
+        "included_sha256": "d784e7eba776cd15dab6a1dbfd74cbc7c22f55e84376a8480e128fa0d71c79a2",
+        "project": "github_com_Carbonado_CarbonadoDirmi",
+        "revision": "7089dc36fdc6e05c8ec9995efac0c5cad8ebcc05"
+      },
+      {
+        "included_bytes": 101879,
+        "included_files": 39,
+        "included_sha256": "65f53a3d05ab71d9eb8eb2778372d52dfb4f389dd858ad28761dc9415beacd22",
+        "project": "github_com_CheslavGolubetsky_smscredit",
+        "revision": "cd07afcaf5737e5a557017e381141aaf88f1af5a"
+      },
+      {
+        "included_bytes": 308494,
+        "included_files": 142,
+        "included_sha256": "53668d677a60d26ca5eff8fc3d18ed288fa881c4995b6fca730bfdf01b9b845e",
+        "project": "github_com_ClausPolanka_dddsample",
+        "revision": "453da336e43ee03f495ac7212087a38f11d25093"
+      },
+      {
+        "included_bytes": 340527,
+        "included_files": 153,
+        "included_sha256": "8f54c664edc959be312da652a46d1cad07ee8befa29b48cf56f978900fc57334",
+        "project": "github_com_CodeStory_code-story-http",
+        "revision": "425ad37173e6f401b8d3b52637d229ca06726a9c"
+      },
+      {
+        "included_bytes": 286138,
+        "included_files": 74,
+        "included_sha256": "e1dd5d2c7a82139c5c3de4ed07bbd4276ba9482c9eafd18d0edafe50c1e06e3d",
+        "project": "github_com_DAT055-2_OpenFlisp",
+        "revision": "04d7c733cd1bbe6269367296f37722d9d3bcb021"
+      },
+      {
+        "included_bytes": 267369,
+        "included_files": 109,
+        "included_sha256": "dedb0e34b5825e42824c18b281cfa6c4a9eee9ddbbd7eb53cf51d9afbfe85d97",
+        "project": "github_com_DRB-IT_blacktiger",
+        "revision": "f0cd023337bc41a9010ba9a3b57f3394de72cccf"
+      },
+      {
+        "included_bytes": 335946,
+        "included_files": 104,
+        "included_sha256": "9dc19b32277c6e4b5b0e4a4bb24e744ffd35d401efd3f63e312a572d74ff9db7",
+        "project": "github_com_Demishev_HoldemDojo",
+        "revision": "07d80aef67c179a002ad28644e3adec0702e3f91"
+      },
+      {
+        "included_bytes": 54559,
+        "included_files": 57,
+        "included_sha256": "a056630046f067657ea22eab741ac46c2883fa9e18eadeaa4b31da74a2773b85",
+        "project": "github_com_Djpet_ScrumStory",
+        "revision": "44911ceee9da64e9999c17b8ef990cb38376d65b"
+      },
+      {
+        "included_bytes": 2729172,
+        "included_files": 340,
+        "included_sha256": "b00c136b3a20c9d68293a9d448699b336445d551b6c292d41dd64c7b0134f8eb",
+        "project": "github_com_ESAPI_esapi-java-legacy",
+        "revision": "e2183d6170a250ad97289e4090e3faeec1eecadf"
+      },
+      {
+        "included_bytes": 96387,
+        "included_files": 18,
+        "included_sha256": "8d2801187e84831cc2c7d70f66824b4f6b2b71b67ed026e6db542a90894d0cad",
+        "project": "github_com_Early-Modern-OCR_Juxta-cl",
+        "revision": "f170cf5e47763fda525c336c9d205408d70cc355"
+      },
+      {
+        "included_bytes": 537181,
+        "included_files": 150,
+        "included_sha256": "bdea542739223c24a122ff3050ad3937a46a10b128671148d872bbb2a51753af",
+        "project": "github_com_EaseTech_easytest-core",
+        "revision": "faba9e0d8f161bb2eec570a8b160afcc95b9c011"
+      },
+      {
+        "included_bytes": 202789,
+        "included_files": 125,
+        "included_sha256": "a8bfbc7f9c43a60017440b3c03c3a14221be391620e1c3413b388846bc1ef64f",
+        "project": "github_com_EsmerilProgramming_cloverx",
+        "revision": "a12fd41252f358e7f9bd46c3519298005e223452"
+      },
+      {
+        "included_bytes": 223267,
+        "included_files": 49,
+        "included_sha256": "fc38686fedf33a3d97f99571e595ceae35abab6da5b81f040b143e0a8a04213f",
+        "project": "github_com_EtaliaSA_jalia",
+        "revision": "7b458cfcd4fad39b89ed19bef90a06e73a28c85a"
+      },
+      {
+        "included_bytes": 673625,
+        "included_files": 68,
+        "included_sha256": "96f8745176734c3069267b904517f1275fda57deef89ca9ebda7bb396f268337",
+        "project": "github_com_ExactTarget_fuel-java",
+        "revision": "bcc6960301ccbfbd2281c91e74078078eae38574"
+      },
+      {
+        "included_bytes": 2759928,
+        "included_files": 472,
+        "included_sha256": "049bad053eb0bdd31cfb1cc234d84103a1d97ba26aa68472c846cfb3aefee6d1",
+        "project": "github_com_FIWARE-Middleware_KIARA",
+        "revision": "d21dc7e9ff233e9265bdde0ee2b1d670c9104fb7"
+      },
+      {
+        "included_bytes": 163207,
+        "included_files": 50,
+        "included_sha256": "48c118cd7d041235f89bf659b5335865ce7c677e7f06080d917517b21afdb0dd",
+        "project": "github_com_Fl0r14n_CDPS",
+        "revision": "c9e0ddf423ab35dbe39c45a683cb089ea0a75df0"
+      },
+      {
+        "included_bytes": 266365,
+        "included_files": 200,
+        "included_sha256": "dfa606805cac59860ddfe10b1607bdf3fa587850d287b31803100643f63b5463",
+        "project": "github_com_FutureProcessing_document-juggler",
+        "revision": "1f66d40164af71d101327a831ce86a13e4a7203c"
+      },
+      {
+        "included_bytes": 303774,
+        "included_files": 67,
+        "included_sha256": "fad522c44c5be51252fe627fba7e325a8086c28c52142334e65b07d32319a379",
+        "project": "github_com_GEOINT_keyhole",
+        "revision": "f1222f7cf530257b4d79d5d596a4f9344705c5f5"
+      },
+      {
+        "included_bytes": 331143,
+        "included_files": 88,
+        "included_sha256": "d72ca86544d48e8254cc17b1c18e9745f379c5fe5cd8970d53883d0def502d4e",
+        "project": "github_com_GSA_fssi-file-processor",
+        "revision": "80634699bc52d6fd1cb5833903ccbd5dbbaa0ae3"
+      },
+      {
+        "included_bytes": 325347,
+        "included_files": 119,
+        "included_sha256": "4e1e25e5a5a0d51793cddd1815214d87b465f04559ff32b4186b64a93633fa23",
+        "project": "github_com_Gabro86_java-command-line-interface",
+        "revision": "3f21f988775e5b2b52df8282271bf1ae33545a89"
+      },
+      {
+        "included_bytes": 53872,
+        "included_files": 17,
+        "included_sha256": "95bf06e29716b9bf891da266c607080f3ed2a22012e5a87b1cfadde7c7a1b090",
+        "project": "github_com_Grateds_TP2",
+        "revision": "a7a8f41c3b3e11532601db4c7239c172277175f1"
+      },
+      {
+        "included_bytes": 278137,
+        "included_files": 45,
+        "included_sha256": "86581fab93f5c2d6b3c065511e4b0a364efd49d299c5800501267543caaff5c4",
+        "project": "github_com_HaraldWalker_user-agent-utils",
+        "revision": "7f954514298f76afff8a75723bc25205bfe30d1b"
+      },
+      {
+        "included_bytes": 969951,
+        "included_files": 66,
+        "included_sha256": "6daa2815f7fcc653b0ca49ce916b164d94f2508d61f49b527a8a4f43f5a26cea",
+        "project": "github_com_HdrHistogram_HdrHistogram",
+        "revision": "de84b0a7de2378abfc405da503bf4898e84ea98e"
+      },
+      {
+        "included_bytes": 1226110,
+        "included_files": 189,
+        "included_sha256": "ffbe141907983ccda67b34cbea5360b369bdb38e11c9c94c822d2d255a58b7fb",
+        "project": "github_com_Hellblazer_DNS-Client",
+        "revision": "30fe401feda2e84fbde54e5b4c0ab49f546bc595"
+      },
+      {
+        "included_bytes": 559316,
+        "included_files": 261,
+        "included_sha256": "f28d778bf74432b8f134df43d613c2cb9b5fbf8b65158391c8efbb93bbdd427d",
+        "project": "github_com_ImmobilienScout24_deadcode4j",
+        "revision": "166a87945398d99811f52136883476cf94aa1208"
+      },
+      {
+        "included_bytes": 21580,
+        "included_files": 7,
+        "included_sha256": "a6e1958bf57d4fe5a03da1da8e04050da50c80d00778c6f79992eb8de9006a23",
+        "project": "github_com_JPiekarski_addressbook",
+        "revision": "81fb8bf496170328d0ba18bb184d0e92165ed3e6"
+      },
+      {
+        "included_bytes": 1360868,
+        "included_files": 279,
+        "included_sha256": "80382ec08ec7875709a9d544b10935cfdeee7034d18de1a7e3ccd83a14804e4e",
+        "project": "github_com_Jaeyo_lanterna",
+        "revision": "1d1f10337cbf64201a515a1096d644fddd50db2e"
+      },
+      {
+        "included_bytes": 1752018,
+        "included_files": 7,
+        "included_sha256": "59991b5d585b546868e6d7cdba3e96181eb63ce33f757bde51c798057547de95",
+        "project": "github_com_Javastro_jsofa",
+        "revision": "e8dc8ed3e9d43c9e581d09b0f13cd209110e23f4"
+      },
+      {
+        "included_bytes": 436901,
+        "included_files": 41,
+        "included_sha256": "6a1cc390209db14c8fec75c1c482c5cb96cfdbaf9d6959452110cc176070440b",
+        "project": "github_com_JeffreyRodriguez_JSOG",
+        "revision": "99e1a9036cac63d49c44564216cd16048a04b5a5"
+      },
+      {
+        "included_bytes": 1189784,
+        "included_files": 149,
+        "included_sha256": "df7ccca418d6ecce0170d999839e0d12015dc6e506f7c0e97ad4ceaadbc7fec0",
+        "project": "github_com_JensBee_QueryClarity",
+        "revision": "6536bbbdbf9d8c4f34a29a7403a651a698bbc701"
+      },
+      {
+        "included_bytes": 1053765,
+        "included_files": 178,
+        "included_sha256": "1f96d30e22286ce174c3d304b94903e1ef0abe602061d36d079600ac22c6533b",
+        "project": "github_com_Jorgamundus_xenqtt",
+        "revision": "19ba26fed369e087e5d69a385c8f1876c587f39e"
+      },
+      {
+        "included_bytes": 228649,
+        "included_files": 104,
+        "included_sha256": "a4267fecc87a3c58bb037dbcb7b96c632681e10b492321adfdea499aac7f026a",
+        "project": "github_com_Karriem_hospital",
+        "revision": "0beaffd062f874a58dd218a9b430213e8a5e194b"
+      },
+      {
+        "included_bytes": 16401,
+        "included_files": 18,
+        "included_sha256": "8f00043dd47c0b21e8a42876a32a37adb0898836be2cfa7144a246700c632379",
+        "project": "github_com_Lxzw_SpringMVCTemplate",
+        "revision": "56d9fe606721713bbdac76b3ce8cbd5830b28453"
+      },
+      {
+        "included_bytes": 804489,
+        "included_files": 231,
+        "included_sha256": "99e19fc4c167df064c57bc6d9801149bcb29f41aa8210c874d2a8bcb5062c1a5",
+        "project": "github_com_MagIciaNGTAO_a9-playground",
+        "revision": "fd28d48cd93f36e8fa31eae5532330dcc6d8f058"
+      },
+      {
+        "included_bytes": 804489,
+        "included_files": 231,
+        "included_sha256": "99e19fc4c167df064c57bc6d9801149bcb29f41aa8210c874d2a8bcb5062c1a5",
+        "project": "github_com_MagIciaNGTAO_leetcode",
+        "revision": "fd28d48cd93f36e8fa31eae5532330dcc6d8f058"
+      },
+      {
+        "included_bytes": 1800512,
+        "included_files": 125,
+        "included_sha256": "52ef541f0b98b7ff0efc3939192c25ee2c8dce0946519bf1f8aad5585cc477af",
+        "project": "github_com_ManfredTremmel_gwt-commons-codec",
+        "revision": "def79800e7a546458c8f1074b5f314f09d89fa70"
+      },
+      {
+        "included_bytes": 1351723,
+        "included_files": 149,
+        "included_sha256": "d58313292cf9ca03f05ad92c39917829153181f7bbf40ebf7416be2fcc161f37",
+        "project": "github_com_ManfredTremmel_gwt-commons-validator",
+        "revision": "f8def7771044d5eac0bf16f40cf26291c4d3de93"
+      },
+      {
+        "included_bytes": 66362,
+        "included_files": 15,
+        "included_sha256": "bef6146115ef06caaa0648e804d1cceea7733b0ce47955cb292dd3e559e8d0d1",
+        "project": "github_com_MartinSeeler_forecast-io-wrapper",
+        "revision": "3a1ec72889b480c49e581e258405732fdf49ebe1"
+      },
+      {
+        "included_bytes": 1682970,
+        "included_files": 509,
+        "included_sha256": "7b0e47a9685c657599b0cb10cc3d2d950d04295418dbb08b53962f1a31d5287f",
+        "project": "github_com_Mause_snakeyaml",
+        "revision": "e158f73868d247fc53c7badf011e6be13df9256c"
+      },
+      {
+        "included_bytes": 351326,
+        "included_files": 54,
+        "included_sha256": "396617614dbcc6a2756a83b7970baed2a6f77de41390a28b1d64c9bd2fb09293",
+        "project": "github_com_Misenko_jOCCI-core",
+        "revision": "20a0dc7132cf9e08a80a7bdda2874496e3ea9913"
+      },
+      {
+        "included_bytes": 338746,
+        "included_files": 78,
+        "included_sha256": "02f05667caaabe93d5d53c42f829cd1f353f9d96b959e354185208f25becc83f",
+        "project": "github_com_NamelessRom_android_frameworks_volley",
+        "revision": "25014128758e147a67255a4b56951a0fd36e3569"
+      },
+      {
+        "included_bytes": 156228,
+        "included_files": 47,
+        "included_sha256": "3abc0a6b0bae9cfcf3659b571b7656341e6e1f3eeb18894cb95c69c0d49c042d",
+        "project": "github_com_Nephtys_jollyday",
+        "revision": "4e37463732f989dc53cf13dd667b757ea2d9284e"
+      },
+      {
+        "included_bytes": 744217,
+        "included_files": 440,
+        "included_sha256": "694fae5b04fac67afb21e9ccbdfd233faf1ed59ad9afb97aa5fd1109634eb770",
+        "project": "github_com_Normegil_Librarium-Server",
+        "revision": "27eb274d600df5cbc2e049b52f19372db9396f3a"
+      },
+      {
+        "included_bytes": 712154,
+        "included_files": 168,
+        "included_sha256": "d79441fd20b3e2a011a0b772b91bbc4edf0d7576f7f0d3d77ec0dd77f15c206d",
+        "project": "github_com_Omertron_api-themoviedb",
+        "revision": "34b337aecd058847da704be19cb40ab60f6ccf33"
+      },
+      {
+        "included_bytes": 230645,
+        "included_files": 64,
+        "included_sha256": "ac21384e9b5a928eba58d991f46e41bba0f9057b4c169c26f1d3e266dee053d1",
+        "project": "github_com_Orange-OpenSource_spring-social-weibo",
+        "revision": "db5564a9adb87c9d45b048b42aa72e270b6f4af9"
+      },
+      {
+        "included_bytes": 26806,
+        "included_files": 26,
+        "included_sha256": "4efb178803767208ec226a55a35c1ee53e79dbfa301b360b2894652e852cbf2a",
+        "project": "github_com_Pullse_snackbar",
+        "revision": "2be2ddc6aa711ca4808eea6f3144fca8ceece84f"
+      },
+      {
+        "included_bytes": 193529,
+        "included_files": 26,
+        "included_sha256": "184233fc41dd1950570628464263f292b3448d19cb9e515e42e0ca66cfeb6c8a",
+        "project": "github_com_RickSBrown_jgenhtml",
+        "revision": "809e1e42bd3a4ae079095e678401f97ae630e8e5"
+      },
+      {
+        "included_bytes": 563340,
+        "included_files": 55,
+        "included_sha256": "abade277275e6cb727a9f782e362e797bb6a3f244540993f44128a912882e684",
+        "project": "github_com_RobertoIA_PLQuiz",
+        "revision": "522b9224e09c54fe45f24288a426ad1cfd7abe1e"
+      },
+      {
+        "included_bytes": 266601,
+        "included_files": 41,
+        "included_sha256": "1ad8a6660d21e69d344d5c2c80db3f9fad5507c98afad563bd5325b2530d0597",
+        "project": "github_com_Salmela_Quicktionary",
+        "revision": "de7f19f0d8f71eea43dcc796563b182bcd2f738a"
+      },
+      {
+        "included_bytes": 1470774,
+        "included_files": 275,
+        "included_sha256": "ca88db491345d04c014d6d2cfc7e682d4579f32ee88fc65a773d5dc94819e49f",
+        "project": "github_com_SharedKnowledge_SharkFW",
+        "revision": "6feb89e99c360536481744e0183fba7b1db244fd"
+      },
+      {
+        "included_bytes": 317173,
+        "included_files": 126,
+        "included_sha256": "351a31318c693140e47de251dee0ffab5c6b9d1ed683e275b058e8ef5761dbbb",
+        "project": "github_com_SmartOnCloud_jangod",
+        "revision": "6b1f250f9541c2194baa7ade0ea3d3b1be9e0d24"
+      },
+      {
+        "included_bytes": 171493,
+        "included_files": 90,
+        "included_sha256": "3c211dbf91354ed6c32c5fd1ad78a19a447cbf5547fbd7a0397f67732285c230",
+        "project": "github_com_SomMeri_org_meri_jpa_tutorial",
+        "revision": "49df7659a92b4f71b7cdb8e1ea605323a311ea8d"
+      },
+      {
+        "included_bytes": 235430,
+        "included_files": 54,
+        "included_sha256": "468dcc211a57512a5e9f449852da8cd437e84740438de839cc9ceca9db3506a6",
+        "project": "github_com_SonarCommunity_sonar-sonargraph",
+        "revision": "a6f0a12549e20ce88b2be506872433409cef2fe6"
+      },
+      {
+        "included_bytes": 4095,
+        "included_files": 4,
+        "included_sha256": "8e27b5edb5cf714c3e6e52f1a8b0a63007d561d702ff2ca59513890e1fe11b43",
+        "project": "github_com_Starter4Ten_js-web-application-framework",
+        "revision": "8f64d9d90943029cfe1640868b849aec541f107b"
+      },
+      {
+        "included_bytes": 217954,
+        "included_files": 198,
+        "included_sha256": "1ac19a362cc13d93a17156a088d95a73091ca93f98669dab3030086640c1e0ed",
+        "project": "github_com_TakeshiHoriuchi_java8_training",
+        "revision": "466d8898950af7f436344a41a2406d843b7a0b11"
+      },
+      {
+        "included_bytes": 777544,
+        "included_files": 380,
+        "included_sha256": "3227e7d7cba134225de4191952f44fe7835d0c9fec73b2689890aeb646973055",
+        "project": "github_com_TeachingKidsProgramming_TeachingKidsProgramming_Source_Java",
+        "revision": "38ad20cc99aa2c89294d44a85da89d464be03e27"
+      },
+      {
+        "included_bytes": 209242,
+        "included_files": 93,
+        "included_sha256": "20db4eff610f336b1a2b687deefc054632531b48d9c0c63110f0d26d19dcf168",
+        "project": "github_com_Teleinformatyka_CopperAnt",
+        "revision": "639f775a318801fbb36616631acf7b390efd81e9"
+      },
+      {
+        "included_bytes": 672104,
+        "included_files": 122,
+        "included_sha256": "3ac068fa9ab207de356c8f6f70bb54931fbd552b0b4d40e058c87428fee78573",
+        "project": "github_com_TestingForum_seleniumtestsframework",
+        "revision": "4d4df57af228c4fc2da12fea8f263ce26fc6ef82"
+      },
+      {
+        "included_bytes": 729178,
+        "included_files": 185,
+        "included_sha256": "483ab86e1ede6aee205305d4d22980bee6865976c26599ea949a53c33b15ef6c",
+        "project": "github_com_Themis-J_Themis-Service",
+        "revision": "0b3ab5b52fd3ad1c6f31b106b4dcef962c360733"
+      },
+      {
+        "included_bytes": 2596921,
+        "included_files": 113,
+        "included_sha256": "8ebd9557de689523b819b253475fd38de0978f01571a4249f32df57b88a343a5",
+        "project": "github_com_ThreeTen_threeten-extra",
+        "revision": "4e016340b97cab604114d10e02a672c1e94c6be5"
+      },
+      {
+        "included_bytes": 655232,
+        "included_files": 235,
+        "included_sha256": "a5515dde3258f725812c688a0b4f09ed4a922e6c9a914b350e33f7eca871b030",
+        "project": "github_com_TridentSDK_TridentSDK",
+        "revision": "c60da34d514127551fe05213e59522fbc416fb28"
+      },
+      {
+        "included_bytes": 199670,
+        "included_files": 57,
+        "included_sha256": "2db4f11c6c7e1e8905aa43d20fea26b1d85bcce3f9cc162ca66bd912ef5816d9",
+        "project": "github_com_TripBoxDev_TB_Backend",
+        "revision": "2318f3d2506df9d711382028373ffffc6349a152"
+      },
+      {
+        "included_bytes": 1053765,
+        "included_files": 178,
+        "included_sha256": "1f96d30e22286ce174c3d304b94903e1ef0abe602061d36d079600ac22c6533b",
+        "project": "github_com_TwoGuysFromKabul_xenqtt",
+        "revision": "19ba26fed369e087e5d69a385c8f1876c587f39e"
+      },
+      {
+        "included_bytes": 361477,
+        "included_files": 89,
+        "included_sha256": "54553fa2b3b6a61231822eba4f6cb21535b3b1637cd07b29ad7507e873591b4b",
+        "project": "github_com_UdayKumarNettem_Test",
+        "revision": "d7d5ab154e16000cc4f184d9d586a5575622029c"
+      },
+      {
+        "included_bytes": 84719,
+        "included_files": 24,
+        "included_sha256": "f478ff698bb0f202ba3fa7a97eecd45a52a5c1a8010c6ebce8792811fabf0b3c",
+        "project": "github_com_UsabilityTester_UTest2",
+        "revision": "12a2973051c4881e52b5d1f500146abc01577361"
+      },
+      {
+        "included_bytes": 84719,
+        "included_files": 24,
+        "included_sha256": "f478ff698bb0f202ba3fa7a97eecd45a52a5c1a8010c6ebce8792811fabf0b3c",
+        "project": "github_com_UsabilityTester_UTest3",
+        "revision": "453ef88dc9ef83e16275e186c76027f463de8377"
+      },
+      {
+        "included_bytes": 84719,
+        "included_files": 24,
+        "included_sha256": "f478ff698bb0f202ba3fa7a97eecd45a52a5c1a8010c6ebce8792811fabf0b3c",
+        "project": "github_com_UsabilityTester_UTest5",
+        "revision": "769cb8831a28facae668a37eb3f06cde4464bc56"
+      },
+      {
+        "included_bytes": 150978,
+        "included_files": 81,
+        "included_sha256": "c0c7d8e18b62a3c4c72675e187261453860ecc92825fd25305ae5c87883383d0",
+        "project": "github_com_Vanik888_javaServerForTests",
+        "revision": "47d9f3437d853912c1f2b991853bd8d47dce908c"
+      },
+      {
+        "included_bytes": 300594,
+        "included_files": 42,
+        "included_sha256": "2ee8f3d9cea3a05514ab2347ddd76635331b323290ebc94eb9f00846b5bf7f1c",
+        "project": "github_com_WANdisco_s3hdfs",
+        "revision": "09231ecf50d9353f34761294f302f9c8d78e0da7"
+      },
+      {
+        "included_bytes": 734751,
+        "included_files": 150,
+        "included_sha256": "4631253a021eddc9587b99466ab967a36683377ece2b9bb270362b1a4f9d6d79",
+        "project": "github_com_WPI-RAIL_jrosbridge",
+        "revision": "52c5fea041038ae85b920a648c6347012de76626"
+      },
+      {
+        "included_bytes": 297906,
+        "included_files": 27,
+        "included_sha256": "7b3ea3433afca007dc0906b5ade1f6984f0fa5036f90085d7d26906ae2221360",
+        "project": "github_com_Wohlie_YaHc",
+        "revision": "a0c76f4ea167a84d6600e79ab0476e5a8daa2a47"
+      },
+      {
+        "included_bytes": 79341,
+        "included_files": 18,
+        "included_sha256": "c6159770b2c1046db3899f3e1bc0593768e04c9ffc8915392752314a11fe33bd",
+        "project": "github_com_ZenGirl_EmbeddedJettyRepository",
+        "revision": "7e328410e58fc90ea6da51390c3ed0af87f79f6f"
+      },
+      {
+        "included_bytes": 444007,
+        "included_files": 102,
+        "included_sha256": "8df05775a3eb0637e1612507306295a516abd7aef776e5e2780c98bbeee55f9d",
+        "project": "github_com_ZihangYin_unicorn-menu-server",
+        "revision": "6938a9dd3a92bb6cb2d8a21da102d03cbf47641d"
+      },
+      {
+        "included_bytes": 600147,
+        "included_files": 182,
+        "included_sha256": "e6621661602064023e026dbbfa8aaa55f7ab4911488b97d776ea6a82d21a850b",
+        "project": "github_com_aamm_hyphenType",
+        "revision": "ae28ef09072ce285e4eb8a1b9265be2efa38da07"
+      },
+      {
+        "included_bytes": 84410,
+        "included_files": 65,
+        "included_sha256": "f6ca07e14d0c74d0dfdf935d3c76cb0634e8872da6320642be42362dbc89d9c8",
+        "project": "github_com_abejan_outBidMe",
+        "revision": "fd626b22deca66dadbec4c413f27ffdc169f7763"
+      },
+      {
+        "included_bytes": 92814,
+        "included_files": 4,
+        "included_sha256": "251685485d92d886c829a0569755e189fd6e72123bd71fb847d9abfe52c40f48",
+        "project": "github_com_accuweaver_WordPressRecover",
+        "revision": "38c5ef40d4518b5911f76620b24249267dcc9ec1"
+      },
+      {
+        "included_bytes": 1078316,
+        "included_files": 177,
+        "included_sha256": "5edf8324209c4553528ac5d76c743d0f5c71c8e0f5e255b0ec0a2232c1775afa",
+        "project": "github_com_adamdubiel_jason",
+        "revision": "3f4db02925cbffa35c81a9fdaacd970c44796576"
+      },
+      {
+        "included_bytes": 559078,
+        "included_files": 88,
+        "included_sha256": "c0f4ebd1ec7a8ff54236ee5df6873d80fc5df707b17c6c56b43abd93f14a773d",
+        "project": "github_com_adamfisk_LittleProxy",
+        "revision": "70edbe1c502d79449fb5ceb9d00cca6a0759d56f"
+      },
+      {
+        "included_bytes": 322855,
+        "included_files": 60,
+        "included_sha256": "d52a2bfa70dfc51ee296db14afb4ca0e0b38ec0c7a003ae66a403b1cc0d5b10c",
+        "project": "github_com_adangel_yal10n",
+        "revision": "2d4e076973e34365bc698efaf6302dc06242d9d7"
+      },
+      {
+        "included_bytes": 93897,
+        "included_files": 42,
+        "included_sha256": "484bf831a502a217d394fedfb5b28f0bde305141624a639d90fd39e01df54a48",
+        "project": "github_com_agiletrailblazers_demo",
+        "revision": "d2a46424980a0ac90337a3c2bb2d49b8018cad40"
+      },
+      {
+        "included_bytes": 273547,
+        "included_files": 102,
+        "included_sha256": "488a1973e3478017030498bc3182cbd9e921169bddcdc2a9a921cf89dcce4f0a",
+        "project": "github_com_agoncal_agoncal-application-petstore-ee7",
+        "revision": "725839cad3c52515b9702dec2edb3984df58d04f"
+      },
+      {
+        "included_bytes": 352528,
+        "included_files": 74,
+        "included_sha256": "5f9267919d739d1147a9fc8a246423f435811c824c780d16a22920b3727eea7b",
+        "project": "github_com_agouge_Java-Network-Analyzer",
+        "revision": "386445683b91d186bc2ee241e9e0727db1832c74"
+      },
+      {
+        "included_bytes": 11801,
+        "included_files": 7,
+        "included_sha256": "b652061e88ccfc82d5a53ea19923624cce618eed43921149b6d5c681e23b914f",
+        "project": "github_com_ahliddin_goodapp",
+        "revision": "9b165ad66a40ec6fdc5978d4ed25e7a9c747af10"
+      },
+      {
+        "included_bytes": 324473,
+        "included_files": 38,
+        "included_sha256": "1f84d10e4482211e15d20c95da558648e90d0902feafd877aeec93498c7d50fd",
+        "project": "github_com_airminer_jnlua",
+        "revision": "3d3161bee23f9f2692319c0ebe1cafc7f3862530"
+      },
+      {
+        "included_bytes": 376094,
+        "included_files": 102,
+        "included_sha256": "e5c53ca429453db82ddb0798e0eef532943aa7e3c94373ab3163c28fc0b14d24",
+        "project": "github_com_akwei_halo-query",
+        "revision": "ceb730f529f81aa99d90b0f494c963c6b750e20e"
+      },
+      {
+        "included_bytes": 69681,
+        "included_files": 52,
+        "included_sha256": "99692fb082f85a24e8bb382c5ccd32ac27f78e78ed69c3ff51a1e3e79fdd0528",
+        "project": "github_com_alex-agency_AngularSpring",
+        "revision": "9058b17d3dc3a04e90af33a68880edbc46655a0e"
+      },
+      {
+        "included_bytes": 395977,
+        "included_files": 108,
+        "included_sha256": "39a9367efdb1aafb32b72509ab1c3ca6b2c0b1ca640214150a4b225ea1469180",
+        "project": "github_com_alibaba_tamper",
+        "revision": "781c159496991705e273fb8538024dfa687235a5"
+      },
+      {
+        "included_bytes": 419066,
+        "included_files": 102,
+        "included_sha256": "fe3050573bc333ff33a0dec77e1e21454e979e6dbd922f6c36b11c0f242c09f4",
+        "project": "github_com_almondtools_rexlex",
+        "revision": "2e0d625e402f5a551d4bd603876274eec64460d6"
+      },
+      {
+        "included_bytes": 357199,
+        "included_files": 19,
+        "included_sha256": "fc25f8d089f843c0f6e7a9d1eae7941062963a4fffd46c8b867c12fe76a5a699",
+        "project": "github_com_alwex_JBoy",
+        "revision": "e1caecf2c2ace05d1dd3ad8c4eb57a00d017a508"
+      },
+      {
+        "included_bytes": 533068,
+        "included_files": 78,
+        "included_sha256": "09f267b1a4772fe595e2fc116ba786a42a4853b47134b97a75d9b04ab62c11a0",
+        "project": "github_com_amplafi_htmlcleaner",
+        "revision": "acb97ecceb7d63bde8a804c04fe962560f862f04"
+      },
+      {
+        "included_bytes": 17221,
+        "included_files": 8,
+        "included_sha256": "80dc2c8ad62d52e54855d3e1b6e100ed4a4e61d36744e58ec20962f3f85b115f",
+        "project": "github_com_andianderson522_ankai808builtutils",
+        "revision": "ed8355a4d50764693d87202862937be649380960"
+      },
+      {
+        "included_bytes": 282472,
+        "included_files": 202,
+        "included_sha256": "9b208f9853b09610f435bb6e614132871a6300024c91230628e9ee34a0765c84",
+        "project": "github_com_andrefbsantos_libdynticker",
+        "revision": "a41267ecb5f9d7893687f77cd296072ef9d22447"
+      },
+      {
+        "included_bytes": 41026,
+        "included_files": 17,
+        "included_sha256": "fb9be4e7e26868c053195931ed066197fd9335cb3bb4b43439ddceca3330c8c2",
+        "project": "github_com_andrena_no-package-cycles-enforcer-rule",
+        "revision": "6754b6093c8c04320157a306732e3079b4cdc454"
+      },
+      {
+        "included_bytes": 9296,
+        "included_files": 6,
+        "included_sha256": "ccf4600a83511d58cf0d9c9802b653e3533fefbe574f567c3dcb55a51a1d7435",
+        "project": "github_com_andxbes_calc",
+        "revision": "5651b8e30c7ae38f9346cde8a35e3781f0d5c709"
+      },
+      {
+        "included_bytes": 1115386,
+        "included_files": 288,
+        "included_sha256": "71dc091bcd25dfa3d93b756e0064b550f5372db8169fad1819a866581998b17c",
+        "project": "github_com_apache_commons-ognl",
+        "revision": "bf1cf2a93b03ff037ea1a02c29534060301b2ef2"
+      },
+      {
+        "included_bytes": 767522,
+        "included_files": 166,
+        "included_sha256": "c6c0d455a6585f2023a9e8da2d9f59407d7fc0d2b90718c0de5fd0a3165a3175",
+        "project": "github_com_apache_webservices-commons-xmlschema",
+        "revision": "9d6e2b950621ec0019086ac0a29ab809d00ff4ab"
+      },
+      {
+        "included_bytes": 42760,
+        "included_files": 14,
+        "included_sha256": "36bd24b68efb10c68cf618be7c4bd7bff4296b86607da60dee93a9155dd0b60f",
+        "project": "github_com_arey_musicbrainz-elasticsearch",
+        "revision": "4c339bcad86dfeb30e568b959ce09e869906a0b8"
+      },
+      {
+        "included_bytes": 489281,
+        "included_files": 120,
+        "included_sha256": "46cc964f0cf2a9486d21a092e77ec44ee10f4e4d7a720239117fd11ec5180e64",
+        "project": "github_com_arrk-jeevank_Spring-Example",
+        "revision": "e5b702edd2451de8327d9d9dce2976d55d8d6b06"
+      },
+      {
+        "included_bytes": 460979,
+        "included_files": 53,
+        "included_sha256": "34f007d6d9622e66886dc2471148f9162ade593f19171dfb233502034a71e36f",
+        "project": "github_com_artefactop_lighter",
+        "revision": "41123def44845e13e510ba48e27baab716e18969"
+      },
+      {
+        "included_bytes": 205509,
+        "included_files": 64,
+        "included_sha256": "7df906179140779d74a96a64dfc15f0a3de3130c7341fda4ccb073d3239b49d4",
+        "project": "github_com_astina_console",
+        "revision": "5e74e6ef48ca67a3c170c46a80b1956f68db846d"
+      },
+      {
+        "included_bytes": 229997,
+        "included_files": 151,
+        "included_sha256": "47335356da2a2d69456489605c3cf68969d35d6e1592c6afe235b00b2d0e8790",
+        "project": "github_com_atorstling_bychan",
+        "revision": "779b07681bf2836efcd5c92e7bbdd85931de5156"
+      },
+      {
+        "included_bytes": 748974,
+        "included_files": 236,
+        "included_sha256": "16a00686eec8b97d0ecf50c08d02ddfc66b15e4aba09b3b93732754c4abd9429",
+        "project": "github_com_audit4j_audit4j-core",
+        "revision": "4e08cbfcf0bb05141fe0b96ff058562e3cb12a7f"
+      },
+      {
+        "included_bytes": 24171,
+        "included_files": 18,
+        "included_sha256": "db207239b43ffd765533065dac1cfcbdcfac6043eb6ab08c8f811b979ff55985",
+        "project": "github_com_aug2_HRSystem",
+        "revision": "c59a8240fba4c7f8bb9e18354c65734150492477"
+      },
+      {
+        "included_bytes": 471506,
+        "included_files": 176,
+        "included_sha256": "0492a6ddcc553686e98c1d0e657cf5b60ae2806c44f2c490d5d4e7236aa1f96a",
+        "project": "github_com_baileyje_classfilewriter",
+        "revision": "c9e48a6c5c453e19b310c931fecf7c3a0bc23b89"
+      },
+      {
+        "included_bytes": 459559,
+        "included_files": 106,
+        "included_sha256": "466abdcfca4b20618ef5a6bdfa7c4549d4da63c8ab11935a27b26fda0f21f4c4",
+        "project": "github_com_bandwidthcom_java-bandwidth",
+        "revision": "8f7ef1fce8ac5842d19a2a80b3fde3122f5f99df"
+      },
+      {
+        "included_bytes": 10486,
+        "included_files": 9,
+        "included_sha256": "241d3e63e643c628fcf2fc8bd512ac92924c0ab4fe8cab2ca8da5bf743ac0f8d",
+        "project": "github_com_bclarance_social-moms",
+        "revision": "5f05e4705224287102cc1184535bb17de3968fe7"
+      },
+      {
+        "included_bytes": 319628,
+        "included_files": 27,
+        "included_sha256": "8462b84aaeed413f05b255b07bba4b40522d190bda243a92b2acc8fdffa02177",
+        "project": "github_com_beckerdo_Frets",
+        "revision": "dec5598df5e57ea7f080b339c4fa4e9ffbda2771"
+      },
+      {
+        "included_bytes": 372170,
+        "included_files": 87,
+        "included_sha256": "7b505c43de19280e71641f522e6fbe7a1b4f39719d7bc63bdd885705bf6a2ecf",
+        "project": "github_com_beldenge_ZodiacGenetics",
+        "revision": "5f89452b8a2e83ce50e8c735f1fb1df7e77c4e82"
+      },
+      {
+        "included_bytes": 1762950,
+        "included_files": 305,
+        "included_sha256": "22aefa8f81e650c14780c94c37f20ae090406787b5b13bd46274d455160c4dc0",
+        "project": "github_com_berinle_jawr-core",
+        "revision": "d88bb6871f3c2243e8f4f6885fd1bc7940e6bab3"
+      },
+      {
+        "included_bytes": 2625756,
+        "included_files": 448,
+        "included_sha256": "5a5d5c90f9fa3ae6dfbe7112e8b406b687b03a4fff3dd6bd104b9881aac18c1b",
+        "project": "github_com_bfh-evg_unicrypt",
+        "revision": "2270dc25b55202134217da1de85fe922b6a31a57"
+      },
+      {
+        "included_bytes": 452575,
+        "included_files": 149,
+        "included_sha256": "c80912a4ffd3e76db13d4fc3db83c7aec15a8cc363f255561d24bdfd289165d3",
+        "project": "github_com_bguerout_jongo",
+        "revision": "1f0aed9ac1a4a331642204ae57f5b64e8ac90b6b"
+      },
+      {
+        "included_bytes": 276812,
+        "included_files": 42,
+        "included_sha256": "1953c7c843111808021c5e0a32a62684bb88f77c5c2ec0c070db336b0b6bd3ff",
+        "project": "github_com_bill-brown_rsspect",
+        "revision": "b195884948dafbfea385f22bc08b3d8eb79f8cbd"
+      },
+      {
+        "included_bytes": 83480,
+        "included_files": 18,
+        "included_sha256": "4185b9ff09dea3fbd86c4c6dfc2fe047cd2837c8f1fed3e1fa4a85c107bf8c11",
+        "project": "github_com_bitcoinerie_bitcoinWeb3",
+        "revision": "6478736856a3d380da8ad0131f055eba5f1d4b90"
+      },
+      {
+        "included_bytes": 78712,
+        "included_files": 18,
+        "included_sha256": "671f92960d7c02082a392c63c19c4cf874a384e839ed67f45b3d3eb8ca64aad3",
+        "project": "github_com_bitcoinerie_bitcoinWeb4",
+        "revision": "751baad3283769ce96eaa3f15404f0d6cd242cb2"
+      },
+      {
+        "included_bytes": 1884470,
+        "included_files": 292,
+        "included_sha256": "89a5e9f8372564caabd4c4ba570d44d81d44f6b22a5abafa299037042df83e93",
+        "project": "github_com_blurpy_kouchat",
+        "revision": "e91c96f5cf196e6ea4a817fbc27be10b2d934c41"
+      },
+      {
+        "included_bytes": 1520520,
+        "included_files": 383,
+        "included_sha256": "8ca613cb67480742b8c5ccff49c1aabb3e633b7ba4dbf295323264502a3c75f0",
+        "project": "github_com_blurpy_kouinject",
+        "revision": "ba362486b016ddbb5e9fa4968c0f9c54cd4f88c2"
+      },
+      {
+        "included_bytes": 562692,
+        "included_files": 126,
+        "included_sha256": "9be77e1d522cb3b4b36b697cca5d59b0294912138934e8e7009d4e30e03c76ad",
+        "project": "github_com_bodawei_JPEGFile",
+        "revision": "1b58370a3187fa3f9462b6d45aeefd887103a02c"
+      },
+      {
+        "included_bytes": 1163235,
+        "included_files": 123,
+        "included_sha256": "7f830533540ae7867f994a5a024fb2e0f6ea4271379563b6a44e1e0de58db90e",
+        "project": "github_com_bojantomic_jeff",
+        "revision": "bba2bb68e73c21c8e5f873f4c4c69c799ca75fd3"
+      },
+      {
+        "included_bytes": 208753,
+        "included_files": 61,
+        "included_sha256": "9bfbea50b86e58de40b86cdd9190711988bdd4db406273e7863f9017fab11089",
+        "project": "github_com_boky01_SubjectParser",
+        "revision": "d4f17be7f9d5d69925872d084407f131aa59be74"
+      },
+      {
+        "included_bytes": 109791,
+        "included_files": 25,
+        "included_sha256": "489f9a594b4289f82f9cba5753e17ced15bf67dc1380fd05c9c8a6c853ee5d4a",
+        "project": "github_com_bonitasoft_bonita-theme-builder",
+        "revision": "91590c876a4ed2b119cbdd26e9ec0cdfa4dbf07b"
+      },
+      {
+        "included_bytes": 206552,
+        "included_files": 74,
+        "included_sha256": "fdcb39b259da369acfa3352be95dbaad3b910d1847dc5da16bad9a1b6812c152",
+        "project": "github_com_born2snipe_gamejolt-api",
+        "revision": "2bc211d50a9ec4a46210cd092b78f71288ca14be"
+      },
+      {
+        "included_bytes": 578495,
+        "included_files": 135,
+        "included_sha256": "ead7d3f966cd422ec2b29b1dec1ca7f3dd707f4017cda179bcb0e3cf5bcd7d1c",
+        "project": "github_com_bramp_ffmpeg-cli-wrapper",
+        "revision": "a6655138d7cc1b2c62a57a5e95798695e060de6e"
+      },
+      {
+        "included_bytes": 315933,
+        "included_files": 122,
+        "included_sha256": "555e5db9d8ad3cf23203a6819aca8a3d462fbf946c783d49f215802a25aad589",
+        "project": "github_com_btaz_data-util",
+        "revision": "f01de64854c456a88a31ffbe8bac6d605151b496"
+      },
+      {
+        "included_bytes": 308855,
+        "included_files": 69,
+        "included_sha256": "577b73f4261578b2db3b76612eb85b70f31255148e44ed9e8fd64e8671320f23",
+        "project": "github_com_btoddb_cassandra-queue",
+        "revision": "3b4835e1fa30989ac132d219c98a8c69f1ed85c9"
+      },
+      {
+        "included_bytes": 1355356,
+        "included_files": 249,
+        "included_sha256": "ace2b5a2de73f5ad533940bbf1999be586438ebb98c16fa9501b17892c20c352",
+        "project": "github_com_buddycloud_buddycloud-server-java",
+        "revision": "11ddd92deb91142ac056b76546dc00a8e04e44c1"
+      },
+      {
+        "included_bytes": 104410,
+        "included_files": 23,
+        "included_sha256": "f574387bbbd7cd7d8af44661b449eda6855fdced2357e755f5c32dcf7ae1445c",
+        "project": "github_com_bugzmanov_sms-api-wrapper",
+        "revision": "8a3bbdc8b105d25f148cfcfea72ec0f32f6f6cfa"
+      },
+      {
+        "included_bytes": 327581,
+        "included_files": 38,
+        "included_sha256": "eb5124ab55154df68df6f250c0c351ef6484a4b99bb61f31117e1dcc26099c31",
+        "project": "github_com_buksy_jnlua",
+        "revision": "86f4c23927332c176f4ab4c6b28cee6a28d7ae60"
+      },
+      {
+        "included_bytes": 208729,
+        "included_files": 31,
+        "included_sha256": "4e054fdfbce173389dba86502de9169ac13f69e5c76b3a0f6b67b470f7872183",
+        "project": "github_com_bulldog2011_bigqueue",
+        "revision": "60f6954604cfa671aa0d04d90f375fd6f25e8771"
+      },
+      {
+        "included_bytes": 363392,
+        "included_files": 70,
+        "included_sha256": "d43e05efdac052d2cc9ec8021370e51405841cbfaccd82fa6e298d80a3f29eaf",
+        "project": "github_com_burks-pub_gecco2015",
+        "revision": "2a7e32381d2e978e52c824d8348cf106619bb795"
+      },
+      {
+        "included_bytes": 138279,
+        "included_files": 51,
+        "included_sha256": "56dacf18f6decbe4c7d7632a933411904da7e6bf1105881595f8ac6d55bce7b1",
+        "project": "github_com_carlosvillademor_fonti",
+        "revision": "174269a18740df8e88517d8f2cbe7444574a1ce8"
+      },
+      {
+        "included_bytes": 318822,
+        "included_files": 51,
+        "included_sha256": "32fdf100eb6f3be521bbb3357679500c4744c0c2145f9dd933fe6e5262daf263",
+        "project": "github_com_carrotsearch_smartsprites",
+        "revision": "799a9ac47fb2a9c4f88bbb51b2f1b8db5e638ff5"
+      },
+      {
+        "included_bytes": 27095,
+        "included_files": 21,
+        "included_sha256": "3be24b78b02085f04ca8be941ee997d446379e757e5ac38105002839ed269897",
+        "project": "github_com_caseydunham_pirate-paste",
+        "revision": "d736e1f0df26d4e38fd6b8e4a2acb8f50198d636"
+      },
+      {
+        "included_bytes": 603606,
+        "included_files": 256,
+        "included_sha256": "dc5ba91b0e84337df322ebd886cc233a79ebcd33897ad6eb2831c3f687e3ebb5",
+        "project": "github_com_cchabanois_transmorph",
+        "revision": "118550f30b9680a84eab7496bd8b04118740dcec"
+      },
+      {
+        "included_bytes": 340007,
+        "included_files": 101,
+        "included_sha256": "c2a1e869116a231edc7bc8b2024c4f9a1854114a042363c6544e555e876cfafc",
+        "project": "github_com_chamelaeon_Dicebot",
+        "revision": "fd1da04026115f82e4276b4e638c88a625c83afc"
+      },
+      {
+        "included_bytes": 12772,
+        "included_files": 13,
+        "included_sha256": "f9b83197c5256041e59b6fd98030e0a62e8ea5c85f4c7b820b9d42eb4c91c401",
+        "project": "github_com_chaminda204_AngularSpringMVC",
+        "revision": "5abbfd71bbc7d40e97b8e37e4416c95277d1806e"
+      },
+      {
+        "included_bytes": 492699,
+        "included_files": 32,
+        "included_sha256": "9e6281f62a0d5267f5564a657d2cbae8f9f358052be1dfa777ec9d993031db00",
+        "project": "github_com_chargebee_JSON-java",
+        "revision": "88d815a5a93e2d061539bf8091a99dd5e2294207"
+      },
+      {
+        "included_bytes": 305370,
+        "included_files": 86,
+        "included_sha256": "08231d737be11020abc142a7083679442af2d5ba8f85b9b86abc6e5bd6663885",
+        "project": "github_com_chb0github_ariadne",
+        "revision": "4bb5e07fa71a3a6c947b4fc9bb4698c64c302207"
+      },
+      {
+        "included_bytes": 1442155,
+        "included_files": 227,
+        "included_sha256": "ce3b3733ca035ec69ddac359b065bc1f039b1ee33fd8427d82107feac3f53f97",
+        "project": "github_com_chewiebug_GCViewer",
+        "revision": "3c2b290e40ec70469fc358daeddaf74e1aab07b2"
+      },
+      {
+        "included_bytes": 439084,
+        "included_files": 101,
+        "included_sha256": "ba22112c60031e9c6cfedffc4d7b5a1c3a59b6a2206b086b5c3dd1051d1db25b",
+        "project": "github_com_choeger_jdae",
+        "revision": "4db5f93dc2fbd21de347ae67d0e8b103159e6f4c"
+      },
+      {
+        "included_bytes": 2285,
+        "included_files": 3,
+        "included_sha256": "6119da90c10fd94226d0d8428f15598053e7fbd7fffd7f2e2d98441ae93190c8",
+        "project": "github_com_chrishenkel_spring-angularjs-tutorial-3",
+        "revision": "621c78961c92eb993bdfda9a5e29c1e0c403d3c8"
+      },
+      {
+        "included_bytes": 9181,
+        "included_files": 6,
+        "included_sha256": "b113e7a0fe2cf2269b52bfeba980f9fdae770aad5e3ec0bcf87ed90770b19950",
+        "project": "github_com_chrishenkel_spring-angularjs-tutorial-4",
+        "revision": "666628515cbd50f0d5b28c09f667d05b600df242"
+      },
+      {
+        "included_bytes": 42868,
+        "included_files": 31,
+        "included_sha256": "13a07894388177729c74a33fda50a24cef4c0da111034041497bd77d7eecf41e",
+        "project": "github_com_chrishenkel_spring-angularjs-tutorial-5",
+        "revision": "879a35b8de47c84f8a7f271e7a7d9efa245ece19"
+      },
+      {
+        "included_bytes": 42422,
+        "included_files": 31,
+        "included_sha256": "42e0d7192cf15edb1560b6a89d9912b45edbb6926974ff2c124c9f00ed21dcd0",
+        "project": "github_com_chrishenkel_spring-angularjs-tutorial-5-start",
+        "revision": "fa5ee70a98b8e511dfd58beeb970def9f79a108a"
+      },
+      {
+        "included_bytes": 45378,
+        "included_files": 34,
+        "included_sha256": "eac082ca60cd4f94228c9e16b6e1c0b5ee6db3f0811d17576c2408c260a3104a",
+        "project": "github_com_chrishenkel_spring-angularjs-tutorial-6",
+        "revision": "db1dbf1c791fc3de951b5ca35b9887521c4a741e"
+      },
+      {
+        "included_bytes": 65087,
+        "included_files": 44,
+        "included_sha256": "fd94d231475cc977ac6354bc4bcc77b6b38e384eb3677d867a41bc82b2a6e0ae",
+        "project": "github_com_chrishenkel_spring-angularjs-tutorial-7",
+        "revision": "2c86dcd28cf4964141f375db5e08b49f81016e18"
+      },
+      {
+        "included_bytes": 64881,
+        "included_files": 44,
+        "included_sha256": "4091090311dd85e4d90cbcabb9714826ee59c6945dc99d863277efa39859d6a4",
+        "project": "github_com_chrishenkel_spring-angularjs-tutorial-7-start",
+        "revision": "d54fbc63e98874eb6d513933ab5637e6b3e3792a"
+      },
+      {
+        "included_bytes": 65087,
+        "included_files": 44,
+        "included_sha256": "fd94d231475cc977ac6354bc4bcc77b6b38e384eb3677d867a41bc82b2a6e0ae",
+        "project": "github_com_chrishenkel_spring-angularjs-tutorial-8",
+        "revision": "69760950bba501370246bb98ebfefe77a0554497"
+      },
+      {
+        "included_bytes": 155987,
+        "included_files": 38,
+        "included_sha256": "b72662239ebdaa8d16a523aa379500e5667baa536c5e686c8598975fce80e639",
+        "project": "github_com_chrisvest_stormpot-jdbc",
+        "revision": "c00f6edff0e48642483cb42d462f3547b362308d"
+      },
+      {
+        "included_bytes": 510812,
+        "included_files": 68,
+        "included_sha256": "93fbea90e5bd6ecd38b11663928de5990d517e4e731755c9e6778e1419f31a9a",
+        "project": "github_com_cjmcgraw_MarkupTagScanner",
+        "revision": "1c4141b1ada3036b92f0ed229d1e340da4cb128f"
+      },
+      {
+        "included_bytes": 586606,
+        "included_files": 150,
+        "included_sha256": "bf72db092fc7503ebe0277a216d15d6df79ea9a392d37dd1993d95608c57f43a",
+        "project": "github_com_claasahl_MOSIS",
+        "revision": "413c597b2f124bb0d5390c64f6f1fc2c73fe3800"
+      },
+      {
+        "included_bytes": 322030,
+        "included_files": 112,
+        "included_sha256": "27ed19795521ad8fe96bfc00341380e1817e90f735871163d86d59bf9e149b8d",
+        "project": "github_com_clinejj_foursquare-api-java",
+        "revision": "fb410237d333e08ed55a0aabd737c9c72d6258b4"
+      },
+      {
+        "included_bytes": 718871,
+        "included_files": 89,
+        "included_sha256": "a78fae1d9ee24c3bf54384add926fb55b3f3cfb4e514d439436a1c88958310c7",
+        "project": "github_com_code4craft_jsoup-learning",
+        "revision": "2c0580fdd895cabedeb5eee14241bf511270dc61"
+      },
+      {
+        "included_bytes": 38129,
+        "included_files": 26,
+        "included_sha256": "a6ebd5729496d0fb215f0401ae03f98a84f08892cf409fb0d6faca770cc99d01",
+        "project": "github_com_codingricky_runkeeper-client",
+        "revision": "dfeb9959f5e4ab1917b72419e0af4c92265fb6e1"
+      },
+      {
+        "included_bytes": 685824,
+        "included_files": 167,
+        "included_sha256": "989a99cabfe38ad51b28eb8d9b06de1aef2d5d5daaf26abd9610165573ae0e10",
+        "project": "github_com_cognitivabrasil_obaa",
+        "revision": "939fd04b03f7e9593dc67cf5f5b73a90ec6dbb6c"
+      },
+      {
+        "included_bytes": 341235,
+        "included_files": 106,
+        "included_sha256": "7d4a1792b97aaaf585d588a7ab1e5ce47e3f25fc1f3621dccebe585b934b5889",
+        "project": "github_com_const3_doctor",
+        "revision": "a03f5889ca1617c37cd21f4b10cbd405f0e20e93"
+      },
+      {
+        "included_bytes": 2753341,
+        "included_files": 557,
+        "included_sha256": "cf1c96d3f85d70a294f1f804cd140a574d6f27a0409df52b6bc8b12463bd7b21",
+        "project": "github_com_couchbase_couchbase-jvm-core",
+        "revision": "980a37fa11670bfc0df31e079643951a06db6f35"
+      },
+      {
+        "included_bytes": 201106,
+        "included_files": 116,
+        "included_sha256": "5f14bc73b20b1fa0c2057f28f1f3e6c2219c40b72e122ad48d18e3ab65dde9f8",
+        "project": "github_com_cpj0106_eDAS",
+        "revision": "c85ef56bb7ee7052e70c40e5845d0107c7dead4d"
+      },
+      {
+        "included_bytes": 804489,
+        "included_files": 231,
+        "included_sha256": "99e19fc4c167df064c57bc6d9801149bcb29f41aa8210c874d2a8bcb5062c1a5",
+        "project": "github_com_craigmingtaozhang_leetcode",
+        "revision": "fd28d48cd93f36e8fa31eae5532330dcc6d8f058"
+      },
+      {
+        "included_bytes": 532854,
+        "included_files": 210,
+        "included_sha256": "943752cb3d374e3754f77df7ff5b1110dbabd2ed50479e08de3fd9dd9a9548e9",
+        "project": "github_com_crazycode_morphia",
+        "revision": "20f6d3ce503d374d74309c35b264c4728cbb74f8"
+      },
+      {
+        "included_bytes": 300990,
+        "included_files": 161,
+        "included_sha256": "98451bf321dbc785ff8f85df70c3714d41daab2e7bcf0b715b3ede599d77e4a0",
+        "project": "github_com_curtcox_Rambaldi",
+        "revision": "a89e73775c0bfb3d40be50240e311936d2e48886"
+      },
+      {
+        "included_bytes": 37936,
+        "included_files": 15,
+        "included_sha256": "014fcae720af67e1c76b659f33c0670b468f35ea44459d0c8978bb3154551190",
+        "project": "github_com_dancastellani_bbb-paredao",
+        "revision": "fd2f38f085a6f914fdb00c031dfb319e4cf5274f"
+      },
+      {
+        "included_bytes": 249802,
+        "included_files": 129,
+        "included_sha256": "28c1479c6f9a232981e39704c782fb53b6ec0f24d7b55a15344e3ea1a49092cc",
+        "project": "github_com_danielnowak_sproc-spring-mapper",
+        "revision": "705d6cad1967aadb401667b7ad2b14e7bb7e70e4"
+      },
+      {
+        "included_bytes": 29387,
+        "included_files": 13,
+        "included_sha256": "1f8c07c772dccc9b1ad13bc0577d8748c00ac3243b23e7e399732f7e34f4695d",
+        "project": "github_com_daniran_blogr",
+        "revision": "b4c653d427c79a7470485c3cbcbea2cbabcb8811"
+      },
+      {
+        "included_bytes": 417184,
+        "included_files": 140,
+        "included_sha256": "4b8c5875a12d0d211438f7351bfdd62a0f7f78c26e2354975e81109e2f1312ab",
+        "project": "github_com_darcy-framework_darcy-ui",
+        "revision": "ae0d89a1ca45f8257ef2764a01e4cfe68f432e33"
+      },
+      {
+        "included_bytes": 110080,
+        "included_files": 8,
+        "included_sha256": "a21e8f4fdf4071c6fb387e42475624960df76f72efc033fc0cfb482393cf793c",
+        "project": "github_com_datumbox_lpsolve",
+        "revision": "201b3e99153d907bb99c189e5647bc71a3a1add6"
+      },
+      {
+        "included_bytes": 319415,
+        "included_files": 81,
+        "included_sha256": "f3424641b182d13c0c6a8d19e74f85ad15fd6d78c6a933276525a2cc9a4330ce",
+        "project": "github_com_daveayan_rjson",
+        "revision": "f8fcb8373142a1ee41bd1ada54d9681458b5e706"
+      },
+      {
+        "included_bytes": 388007,
+        "included_files": 79,
+        "included_sha256": "fbddabcd616ce9434ee549ce45cdc2f06919116d792d3326182a24b6e4284b55",
+        "project": "github_com_davidmoten_rxjava-jdbc",
+        "revision": "ce2c789adb4415ef8f812549d97497fd2826c47e"
+      },
+      {
+        "included_bytes": 30640,
+        "included_files": 26,
+        "included_sha256": "32a4ec3f1eb116b8e5968cab533a7842436818c7cf68fdd96df863c7a3adbd82",
+        "project": "github_com_davilj_springmvchibernate",
+        "revision": "cb0ecc8b742baae64094de2453da067b377fa216"
+      },
+      {
+        "included_bytes": 321707,
+        "included_files": 159,
+        "included_sha256": "90bc71ebf17a88548af1ed1706ce35ba72581a714aca3baf36266286b11d1a47",
+        "project": "github_com_debop_hibernate-examples",
+        "revision": "fd5bae2e124780b2f9a4299ae6d51aa2aa7543f3"
+      },
+      {
+        "included_bytes": 153475,
+        "included_files": 31,
+        "included_sha256": "9ee8b0f5ff68b1f61aa3539064590be46df8f52746325f2cade31bb8f8d6d504",
+        "project": "github_com_deniskiriusin_combinatorius",
+        "revision": "31f51288a9b726a7000c62a31fd96e3a1b95519a"
+      },
+      {
+        "included_bytes": 1446877,
+        "included_files": 235,
+        "included_sha256": "2d1392d62c0f5ac5934369998abc4ee34165fcd2a86e189fa9e040706b9ba27b",
+        "project": "github_com_digitalfondue_lavagna",
+        "revision": "b76487305e5191bc32b0422244d7b648ffcb8530"
+      },
+      {
+        "included_bytes": 352365,
+        "included_files": 94,
+        "included_sha256": "a4278ea93505ff161b4cd1eeda6129352b3fb231bcb2fc508c10c3a764ad610e",
+        "project": "github_com_diirt_util",
+        "revision": "24aca0a173a635aaf0b78d213a3fee8d4f91c077"
+      },
+      {
+        "included_bytes": 693709,
+        "included_files": 256,
+        "included_sha256": "9193c5a2bf0d2e2e1ccca2aa9cbb9ac69052384728079ec72388c052e6b786c4",
+        "project": "github_com_discoverydns_dnsapi-client",
+        "revision": "9ecffcdb8dab3b379072a3beeb198e66fdb7d8b0"
+      },
+      {
+        "included_bytes": 189683,
+        "included_files": 81,
+        "included_sha256": "96ce0423c73b7ddc322a12478bdd8f29cccb82c8b6637355591a974e62605b47",
+        "project": "github_com_djr4488_spelling",
+        "revision": "9e70651cc40596baf8a0db307b04feddbaa5d09e"
+      },
+      {
+        "included_bytes": 103732,
+        "included_files": 13,
+        "included_sha256": "3c5abc81d81e3f5f9657b38a29d59fd245944b53ad5d2667e7ae411eab7e4d58",
+        "project": "github_com_dmak_jaxb-xew-plugin",
+        "revision": "f48935133d6ad30ad31613fca3b64db50f77fd26"
+      },
+      {
+        "included_bytes": 246152,
+        "included_files": 67,
+        "included_sha256": "bce74a7662462a4650f9dc24cf54b0d3b2020da1a7d83472d59c14650ed351cd",
+        "project": "github_com_dozedoff_aid",
+        "revision": "0ecd9130801a47a07cf95948202eaa8b83da1bce"
+      },
+      {
+        "included_bytes": 283478,
+        "included_files": 54,
+        "included_sha256": "73882cfd58b655afab658863ce17476aeaf7c0312ae67d6de6f1444474f7535d",
+        "project": "github_com_dpaukov_combinatoricslib",
+        "revision": "22e3e1cd127221d6f55a365f58ca82dd168cfc9b"
+      },
+      {
+        "included_bytes": 282472,
+        "included_files": 202,
+        "included_sha256": "9b208f9853b09610f435bb6e614132871a6300024c91230628e9ee34a0765c84",
+        "project": "github_com_drpout_libdynticker",
+        "revision": "a41267ecb5f9d7893687f77cd296072ef9d22447"
+      },
+      {
+        "included_bytes": 158669,
+        "included_files": 58,
+        "included_sha256": "bc91c1a0a4519f51b07cfa6b9041c341d69e6723d858fb8ea3fd89f5e40b65ce",
+        "project": "github_com_drubioa_FurnitureCollectionService",
+        "revision": "ea99aab84e4d35f43b3a734ba72f06942e528e11"
+      },
+      {
+        "included_bytes": 122779,
+        "included_files": 51,
+        "included_sha256": "901e4e67e75beddc0688f2a8b9efbe907c48591212a638d78140860c0d1bf648",
+        "project": "github_com_dtr-trading_spring-ex16-crud",
+        "revision": "d338c87d7d2e69a29c86a2e133b84e2a82b6f4a0"
+      },
+      {
+        "included_bytes": 788421,
+        "included_files": 261,
+        "included_sha256": "26bb05f97bf45a8827b3d83fd77f4758cc18edce906cf14d8880bd88dffa5365",
+        "project": "github_com_dzhemriza_fsola",
+        "revision": "17cefd494d6d2efb2a876d1bb52988e629134f70"
+      },
+      {
+        "included_bytes": 392341,
+        "included_files": 73,
+        "included_sha256": "5ccdc85b1e98d9c700784a1787d425b6d672a34c5a824fc7ac05e65a659e8029",
+        "project": "github_com_e-mzungu_rjc",
+        "revision": "a78c76dc0fe08ade0071a06a1735c576a819ac75"
+      },
+      {
+        "included_bytes": 401670,
+        "included_files": 131,
+        "included_sha256": "3aad56c5cafa38abe520effbfad06a724ce3b4c3b4dbd44725f6ee3d12061f67",
+        "project": "github_com_echocat_locela-api-java",
+        "revision": "f8cbd387d34585a11923e40d3c3645f2d0afc330"
+      },
+      {
+        "included_bytes": 1009808,
+        "included_files": 95,
+        "included_sha256": "a2b80cccfb80d9eb3cbf246aa1010f8ba5fb5d48ad975e1a423d5a3f8b46ac17",
+        "project": "github_com_eclipsesource_J2V8",
+        "revision": "00dddaa31a80782abbe93c4a01f325db3c4975d6"
+      },
+      {
+        "included_bytes": 336797,
+        "included_files": 78,
+        "included_sha256": "98c8b9d0c23c04ed048d7867c74d7522edca34df36471a672024f825dd41501a",
+        "project": "github_com_eduardb_volley",
+        "revision": "7dd5681676ccbde63e7b270da7cb048340d68267"
+      },
+      {
+        "included_bytes": 15262,
+        "included_files": 11,
+        "included_sha256": "480d775176540a942985b0ca637c18b28deed53fa0e91744e65ba3c2ec1860f0",
+        "project": "github_com_eleasahloresco_springmvc-demo",
+        "revision": "c928cbec124e8f0e92fb8e422a007701fa3f0c4f"
+      },
+      {
+        "included_bytes": 3889,
+        "included_files": 5,
+        "included_sha256": "f95b2ad3b05213627a2061aa419a417c7581873be05909e37524e840c2dcac2c",
+        "project": "github_com_elemerz_hermes",
+        "revision": "a6e278ed939826c87d63bc4f17096d02673a97b6"
+      },
+      {
+        "included_bytes": 324895,
+        "included_files": 100,
+        "included_sha256": "ec0d02da2a17baf7fd1ac4e7ac327dce704b641c9712645c8f44b49bec5accb6",
+        "project": "github_com_emamedov_smscenter",
+        "revision": "91431a77bab442cd83f0fde1a34d23ca206d9b17"
+      },
+      {
+        "included_bytes": 558574,
+        "included_files": 169,
+        "included_sha256": "aa4fd1984f86c45b02290404661466b8a772d07af8997900e406f2f3c5be83b1",
+        "project": "github_com_epsilony_terse-meshfree",
+        "revision": "d05c305d811a396eba3fe9d704b8633311c2e568"
+      },
+      {
+        "included_bytes": 436459,
+        "included_files": 51,
+        "included_sha256": "227e868c93926c54ae6daa36416a8fdd2abc554f978191225652e673ebee4273",
+        "project": "github_com_erchu_bean-cp",
+        "revision": "675bbdbf22d1c9b69ce59bd113c8e13c2b3d1002"
+      },
+      {
+        "included_bytes": 28949,
+        "included_files": 9,
+        "included_sha256": "98d84b99b2b0ad0fced45ccc06934ba1eb5957a9f281cddd83395966a46071d9",
+        "project": "github_com_erkobridee_restful-bookmarks-jerseyspring",
+        "revision": "dcfa5d5736e51bfe1a834ea3afdf60eafa04d9c5"
+      },
+      {
+        "included_bytes": 30049,
+        "included_files": 9,
+        "included_sha256": "ad0b0b0e259104e01ade0b03ab896ad58cb9fc4b522431e26f5694192f23d22d",
+        "project": "github_com_erkobridee_restful-bookmarks-springrest",
+        "revision": "a8847c98e0cc38535e751cc02de94b4e09c0c15c"
+      },
+      {
+        "included_bytes": 257671,
+        "included_files": 115,
+        "included_sha256": "f7de52a8cf17c2791de26c8acc7ba489480c1a135f17e7ef7f806d0012f66c3e",
+        "project": "github_com_etcinitd_jalf",
+        "revision": "97ce174c46b8989a95cb2d03e241c28066692027"
+      },
+      {
+        "included_bytes": 447537,
+        "included_files": 80,
+        "included_sha256": "c5f1ccbf1209102160d6fb13b8d9bd2a5725b9a97e7f0714e260e0b40062d4b0",
+        "project": "github_com_excella-core_excella-core",
+        "revision": "af577790c25d6a6a31018777083bfc6a8d96292b"
+      },
+      {
+        "included_bytes": 639899,
+        "included_files": 80,
+        "included_sha256": "99a7fd33f1f66000021e5ef53ee4be04ce585f7598772361ff02e3571133bc44",
+        "project": "github_com_excella-core_excella-reports",
+        "revision": "d7c7ed6e0b2bcfe39d22e2b5eeec24114445de33"
+      },
+      {
+        "included_bytes": 381413,
+        "included_files": 61,
+        "included_sha256": "ecc8c8cfe6d36c7fa0b07e21f4a8b2f0f621b4799707f9153913aa567abf1d9a",
+        "project": "github_com_excella-core_excella-trans",
+        "revision": "00b9b3a6ac260894a8f8b26047f34bec9e91d10c"
+      },
+      {
+        "included_bytes": 96381,
+        "included_files": 45,
+        "included_sha256": "cf4f77d48044e367ebb06731a489553999e928e6d428279ef3f8b5a5f6912b25",
+        "project": "github_com_fadying_spring-tutorial",
+        "revision": "2e45116e421b9e48d56f050757944b12b7f35352"
+      },
+      {
+        "included_bytes": 329703,
+        "included_files": 113,
+        "included_sha256": "dde1771bf715bde5711d866d0200b64d5e677a33d605cbdf060bc8649a14d50c",
+        "project": "github_com_fantastico_camera-manager",
+        "revision": "51a014a739c47e19009b06cf9ede0c8c52eeeab4"
+      },
+      {
+        "included_bytes": 276694,
+        "included_files": 72,
+        "included_sha256": "5a782550320c3aa8501a0043a194e1349bb9ae9e0b3c37673d7d693f46416184",
+        "project": "github_com_ferstl_pedantic-pom-enforcers",
+        "revision": "e4eaf61f201fa8d2d0192ed3f90e8ba802ed12d0"
+      },
+      {
+        "included_bytes": 20044,
+        "included_files": 13,
+        "included_sha256": "d117e4470adc875da6338fef14b8ed6db08a5f4f4da6592618136925d7032e93",
+        "project": "github_com_ffbit_spring-security-bcrypt",
+        "revision": "ae8eb6ddc3e350aa05723e21f1fad1d809933ba2"
+      },
+      {
+        "included_bytes": 208486,
+        "included_files": 101,
+        "included_sha256": "fada15f45b5dd05871b8c995f91e97f9152cdb3b1d0e68d14eb30988d743da2e",
+        "project": "github_com_firebones_Architecture-Logicielle",
+        "revision": "04cabd279a42c102115154a64128ea17bc23ee5d"
+      },
+      {
+        "included_bytes": 196951,
+        "included_files": 40,
+        "included_sha256": "52520029e5c81885a35bc2be25d0368cb834a1f0d4cb2f991c303111b6d24692",
+        "project": "github_com_fmannhardt_opencsv",
+        "revision": "6e1a245de5253c1b053617d7063d4cc3e84038f2"
+      },
+      {
+        "included_bytes": 26647,
+        "included_files": 11,
+        "included_sha256": "20773e267cd3045c0184b25969c19e3ab7724e175f29f59a69f8a8397e582249",
+        "project": "github_com_fmyfabio_sgt-web",
+        "revision": "ec053f40dbb196f846e02ae94741f54d8a715c7a"
+      },
+      {
+        "included_bytes": 949149,
+        "included_files": 226,
+        "included_sha256": "37a9583fd2426912b5c9989b4a71a76132b87978195e8397472482d4b8916924",
+        "project": "github_com_fommil_matrix-toolkits-java",
+        "revision": "6157618bc86bcda3749af2a60bf869d8f3292960"
+      },
+      {
+        "included_bytes": 3464576,
+        "included_files": 503,
+        "included_sha256": "c644f4b59512c05ec36011f60eaae390f71867e7916f0686ad72fa3d04b43828",
+        "project": "github_com_frizbog_gedcom4j",
+        "revision": "e0aa5da86699cdcd5bc6be995a22a07dcbe25f7f"
+      },
+      {
+        "included_bytes": 164196,
+        "included_files": 71,
+        "included_sha256": "0bb4f4787877c26d6386e332c3a1363a273487c62de36fbc06a51725f5dce993",
+        "project": "github_com_fsarradin_Broceliand",
+        "revision": "1d6335c1163159c020faa9dd8c345bf82bfb46db"
+      },
+      {
+        "included_bytes": 16936,
+        "included_files": 14,
+        "included_sha256": "2bbd94353bda6e39356b3438b6783965c33c21bf98bb8ccacc63ca875c44328c",
+        "project": "github_com_fsw0723_carkoo",
+        "revision": "860562e9fa50805383e282b7b5864f2511226c84"
+      },
+      {
+        "included_bytes": 149560,
+        "included_files": 66,
+        "included_sha256": "3fffb9bde33961b9a3dac29f277784df4657a1a7d9432463ca5ea271d53be9e8",
+        "project": "github_com_gajab_grahak",
+        "revision": "cedc2547af59312d392ec5ccfe8e72aa100805ce"
+      },
+      {
+        "included_bytes": 79041,
+        "included_files": 19,
+        "included_sha256": "21d329a1a33148258de0a55bcb40d7fe308add9f6d6859cefd785f96e6101444",
+        "project": "github_com_galan_language-detector",
+        "revision": "0de99973e231fc75999447e163d357a3de3cd25a"
+      },
+      {
+        "included_bytes": 35011,
+        "included_files": 33,
+        "included_sha256": "4c44e0e34c60441f28e9de8957664ba11344e4a160e92e3c6a8feab75d6aec11",
+        "project": "github_com_gangz_loan_demo",
+        "revision": "bb3b4efde64b88057455b24458dbd9ba2b141155"
+      },
+      {
+        "included_bytes": 965637,
+        "included_files": 133,
+        "included_sha256": "7e4cf8782b2c21b7ca9d3e4a862ac49f4626de21d58c5c250ace826cd3541e0c",
+        "project": "github_com_gburgett_XFlat",
+        "revision": "cf071f58a91df2499733c940a192be52653a1b97"
+      },
+      {
+        "included_bytes": 953274,
+        "included_files": 253,
+        "included_sha256": "734182dbc47d22d4986dab7c21a0d21922124c361ef188bdef7278c4d2b973cc",
+        "project": "github_com_geophile_erdo",
+        "revision": "b712c2e036e3b44acc870e14bba254f997a90869"
+      },
+      {
+        "included_bytes": 928012,
+        "included_files": 134,
+        "included_sha256": "2f1d8514db0c61cf20f135250186aec5f3ef7f176b5f86e09f84a220660f8372",
+        "project": "github_com_geosolutions-it_geoserver-manager",
+        "revision": "d518e9e5a4dc8a13ce8b47462225c7051570a07d"
+      },
+      {
+        "included_bytes": 645384,
+        "included_files": 136,
+        "included_sha256": "8cb1ee8adea723d9d01218189bff2220f9cba1035b4271f498b8eb1d2b84111d",
+        "project": "github_com_gerryai_pddl-parser",
+        "revision": "00ca425aabe45d3b13fe0d07bc8fe13442285454"
+      },
+      {
+        "included_bytes": 984002,
+        "included_files": 289,
+        "included_sha256": "a53ef3f94c5f606200183efdf299f9bede56e5bcc446713602055cbc55a6c262",
+        "project": "github_com_gert-wijns_TypeSafeQueryBuilder",
+        "revision": "65c4f7c300db998b1939f72bd9c9b993cacab61e"
+      },
+      {
+        "included_bytes": 769560,
+        "included_files": 131,
+        "included_sha256": "07c4ee1fa6ba859a892a7758010f8b5d3baaf7b50541218cdc01dbc24c017c50",
+        "project": "github_com_gitblit_iciql",
+        "revision": "5969ab7d90583422048c88ed120e583586cb0c4f"
+      },
+      {
+        "included_bytes": 900131,
+        "included_files": 205,
+        "included_sha256": "7a855a30e6a5e92d2b21cece8023db0853fa87581c5fd8786025b1f0431ba913",
+        "project": "github_com_gmbender_explainable",
+        "revision": "e5c729227011c9739d9d1ea1145b5424bbe3cbbc"
+      },
+      {
+        "included_bytes": 359831,
+        "included_files": 30,
+        "included_sha256": "a398049a3a14518a177cd1199bdf15f2f01371c8fb757a723fae90e95cbd1ab3",
+        "project": "github_com_gnapse_metric",
+        "revision": "d84d8371b8c442109f180e5411ed580c6ba8fc55"
+      },
+      {
+        "included_bytes": 372727,
+        "included_files": 77,
+        "included_sha256": "76806572f04579e46334a62791cd683ea0590899ef1baade546526f66059e852",
+        "project": "github_com_goodjour_RestFixture",
+        "revision": "df9797251ade23227bde2271c962471ae1f63231"
+      },
+      {
+        "included_bytes": 291109,
+        "included_files": 77,
+        "included_sha256": "9656e43ae983a18aa6903f95273a56150c026ef3fa6aa6fbc4a79d3ff3e9264a",
+        "project": "github_com_granpanda_autheo",
+        "revision": "c162399b1f57c53b840ad426ffdd1ebbbd5bab12"
+      },
+      {
+        "included_bytes": 46070,
+        "included_files": 33,
+        "included_sha256": "51e2c5e385a324850e3ca92c2424f238b58b1a09eeb96a97ada14b7e5ba9af2d",
+        "project": "github_com_gregoiredx_web-letter",
+        "revision": "ee9c8d260e26bbd5f73631f551738e21616a5c10"
+      },
+      {
+        "included_bytes": 12787,
+        "included_files": 9,
+        "included_sha256": "49c3116f3389b1939fece8d1c7ebca30c8ebca16c77b9b461bdf17d06bb7689a",
+        "project": "github_com_grimcoder_BugTracking",
+        "revision": "6c64caeea9cfa76b76ace3e49cdbe7a95a64971f"
+      },
+      {
+        "included_bytes": 37102,
+        "included_files": 12,
+        "included_sha256": "c4c98d91d19ca2aa17f76888c1d63dd83fd8cd20517c087a78812691c1618787",
+        "project": "github_com_groakley_phase-vocoder-java",
+        "revision": "d916a1b8fa9063006ebdf89e5c04f16430070f07"
+      },
+      {
+        "included_bytes": 992121,
+        "included_files": 193,
+        "included_sha256": "0e67c5525c732f088d87dcad9e3d75f5940b71d5b6e911d6ed9d699db7678465",
+        "project": "github_com_grouplens_grapht",
+        "revision": "96483d4518b964ddc259e989947dcaa33577778d"
+      },
+      {
+        "included_bytes": 630155,
+        "included_files": 182,
+        "included_sha256": "9e5b756977302a1dc30bc3308aebc33e17b659d345bbd34b8accc9adf41cdfba",
+        "project": "github_com_guifre_crawljax",
+        "revision": "00b31c509f9b41612bd048f357e9440684480616"
+      },
+      {
+        "included_bytes": 15508,
+        "included_files": 12,
+        "included_sha256": "02e82c2eef15cf92b7137832b13e4e12f4b556ca57b2cd2c1dd6a40eeb67b087",
+        "project": "github_com_gunnarmorling_ogm-hiking-demo",
+        "revision": "89a9e3a533cf89259a1486be25ff29f3aec0cd26"
+      },
+      {
+        "included_bytes": 33790,
+        "included_files": 14,
+        "included_sha256": "9c131062bb7ff3e85ca13e0e2fecb865f3d652066df4d45d4dddd83327a017b7",
+        "project": "github_com_gvenzl_ClassFinder",
+        "revision": "b1bfe211f1e412dd48c458f1d0d51ca492fc53b7"
+      },
+      {
+        "included_bytes": 600958,
+        "included_files": 87,
+        "included_sha256": "2cf6b6d47359dd6ad543393f7e6d55ab66186b6360e60df3876eccb0eedd0311",
+        "project": "github_com_gwenn_sqlite-jna",
+        "revision": "b4e0a69eb115e433a878ea15b2696a4e463e8034"
+      },
+      {
+        "included_bytes": 10184,
+        "included_files": 3,
+        "included_sha256": "7cc9b6ba7f30f77e5185d87bba54599bb9b60aa32b6a6d38ecfc1df862d67f11",
+        "project": "github_com_hamano_regdom4j",
+        "revision": "416a40f7d5247baf046355a404190860f96abf41"
+      },
+      {
+        "included_bytes": 678491,
+        "included_files": 178,
+        "included_sha256": "357b6a14949e3abe8eaca0252ffee243820ec8bb70a09cd8ccae5c22f7d13e21",
+        "project": "github_com_hampelratte_svdrp4j",
+        "revision": "9a80037d8f94abe86073eeae407479956fae3113"
+      },
+      {
+        "included_bytes": 16910,
+        "included_files": 11,
+        "included_sha256": "4954dc6730ea672202959b94bb949e73bbb63eb25bddf5eab0ed4840713e49ee",
+        "project": "github_com_harshappt_ppt",
+        "revision": "3ecfa0f5fc71f10c8340845a4fc7bb8b5b59582a"
+      },
+      {
+        "included_bytes": 454563,
+        "included_files": 89,
+        "included_sha256": "92ec2575aec320763b205d28a86b97a8eaaba82799e2e11b8c4d9b2382152581",
+        "project": "github_com_hashio_websocket-client",
+        "revision": "45b77740869258812e320384e5aaf7ad3ba9556b"
+      },
+      {
+        "included_bytes": 5783,
+        "included_files": 4,
+        "included_sha256": "b530e1c2cc3cbabdee5e1c2e771aab78690acbd46b64917c85bc0cb0728ebd03",
+        "project": "github_com_helikobakteri_InfonalSpringMvc",
+        "revision": "284b6f79f65c507e7babeab3ab132a3a7e977b7a"
+      },
+      {
+        "included_bytes": 13014,
+        "included_files": 7,
+        "included_sha256": "a3463a9c0d1d2f0d9288d6413e2b2d2baae7adecc960475ec2272010d5c10857",
+        "project": "github_com_hgdeoro_ejemplo-rest-java-php",
+        "revision": "aa4e0240399afe69d35fafb1506daf027b717877"
+      },
+      {
+        "included_bytes": 21624,
+        "included_files": 3,
+        "included_sha256": "6c9a4c69606c9eceb9bb2ac4d7b7bafbd6172b04cf9fc971ab6c0a1e11e6249b",
+        "project": "github_com_hitec-luxembourg_DISP-MELM-UTILS",
+        "revision": "c31063ccb514af5fc73b1a5af924584586d33441"
+      },
+      {
+        "included_bytes": 250559,
+        "included_files": 42,
+        "included_sha256": "7faa582bc803cedfc99b3fec9f9349ee93fe8662f7c7e924feda63907447b2f8",
+        "project": "github_com_hofmeister_smartq",
+        "revision": "eff4a13412f27a2c49f301d3beeef89e59d27366"
+      },
+      {
+        "included_bytes": 64998,
+        "included_files": 21,
+        "included_sha256": "a0e87466aafb9138c83d8d9b57909671735f7e08f98e30218260966223bd48e6",
+        "project": "github_com_huytan_springmvcut",
+        "revision": "bfc147130b4a4c0731c1c82a0b22b7b2250efa26"
+      },
+      {
+        "included_bytes": 220267,
+        "included_files": 129,
+        "included_sha256": "643ec2de2612b4c40a4c2d7c4543faf8cfdea7c7a9946dc28c1f998e4d3d8f79",
+        "project": "github_com_icejoywoo_guava-book",
+        "revision": "8ed463f447c5da0a06eb2757cb14080f779c6f70"
+      },
+      {
+        "included_bytes": 571215,
+        "included_files": 154,
+        "included_sha256": "3e45e4249dab8e4e2f48b1b1cc035efbbc7d95b2723b0fda2a20f5e702e3b477",
+        "project": "github_com_idubrov_nanorm",
+        "revision": "f141e9bc785d756b8d3270b296a96cdb2188e6fa"
+      },
+      {
+        "included_bytes": 181997,
+        "included_files": 77,
+        "included_sha256": "38ea4ffce4617a7d88131adb679e2c83fa7afdad3ef6c10ab626a82e778b6b28",
+        "project": "github_com_iipolovinkin_JupiterBank",
+        "revision": "4b4556e0f21566f84d73ce6a9133c1670fbd8516"
+      },
+      {
+        "included_bytes": 279301,
+        "included_files": 49,
+        "included_sha256": "ac5ec38fbd6b5135beeb61bf645d6d646a001f04cdb8ab40a785e1df38bb8463",
+        "project": "github_com_iisys-hof_neo4j-websocket-common",
+        "revision": "fce9086ed21e4fdf8491761a9cc5e99e54354e02"
+      },
+      {
+        "included_bytes": 43118,
+        "included_files": 19,
+        "included_sha256": "f995ca01addecfc238f66a9945e72644a2ed4c076a1a7b0e82dea75ef6aa8f9a",
+        "project": "github_com_insano10_explorerChallenge",
+        "revision": "6355564617f94c9c6ae84c898472f3824cd88ccb"
+      },
+      {
+        "included_bytes": 295755,
+        "included_files": 120,
+        "included_sha256": "6415b8d3a50c7e7d7b412c9c963acb5a7c2de82148afd6d52982322b1c3085f4",
+        "project": "github_com_intelie_lognit-cli",
+        "revision": "a9ee6c1c0d910f12051aba9e2013be478b485b67"
+      },
+      {
+        "included_bytes": 133247,
+        "included_files": 57,
+        "included_sha256": "2850fb850fdccb266e8be1ba9ffc638862c4297690267f984eceba8645d91448",
+        "project": "github_com_interruptus_interruptus",
+        "revision": "4a831938914208c061e0f9d9f538e17aa9585537"
+      },
+      {
+        "included_bytes": 40800,
+        "included_files": 19,
+        "included_sha256": "9c943c32d6ff3144f5b3f0db40247d8666b75b80382fff4f23dfb028c4e5d4a9",
+        "project": "github_com_iref_wildfly-exceptions-web",
+        "revision": "b787d94b5c1bca8966815bf77f8bbee9ba66ab24"
+      },
+      {
+        "included_bytes": 692906,
+        "included_files": 363,
+        "included_sha256": "634c68ea2f176994259d8609ae0f31975eb33b7056a4a40bb14b87479e481d36",
+        "project": "github_com_irgsmirx_Utilities",
+        "revision": "bf1b216bd1d12cc128c11a591d81e5573b24863c"
+      },
+      {
+        "included_bytes": 629502,
+        "included_files": 169,
+        "included_sha256": "09661e1e76cf6523ca8794a61efcc24039b3ed3faad8fc6e497e055d9c50e352",
+        "project": "github_com_ishubin_oculus-experior",
+        "revision": "6cb389f46f6d27cc326f3fb0a6c73669fed4e1d6"
+      },
+      {
+        "included_bytes": 627741,
+        "included_files": 65,
+        "included_sha256": "294d70f52134ce9798855fc5d6f272fd2b8cdb29eac841d0b0ea54f1a50613eb",
+        "project": "github_com_isparkes_OpenRateProv",
+        "revision": "cd7c7418396d6d69c966a4510edd13ced288b1d1"
+      },
+      {
+        "included_bytes": 329090,
+        "included_files": 56,
+        "included_sha256": "00feab88bf27cfd324a2b2ecefaf1550a0c78a9a665ce652ef4d8753a29c1df5",
+        "project": "github_com_j256_simplejmx",
+        "revision": "7276a1c36df3f387b749dd6b6df5d85737d432ab"
+      },
+      {
+        "included_bytes": 351454,
+        "included_files": 99,
+        "included_sha256": "122bbd5d0bc7d28562cb5ad625831f0415731ad186a1ebdc0948bef966c9a6bc",
+        "project": "github_com_j256_simplemagic",
+        "revision": "fdd5e5b519ed60a2e4c83db13ae2ccdb0700e87f"
+      },
+      {
+        "included_bytes": 59494,
+        "included_files": 18,
+        "included_sha256": "9de76a26f8905d5b3fed12853c2d381a4b4672bda2f2a01d79d85866f488912f",
+        "project": "github_com_jKostet_StormSurge",
+        "revision": "147c87646cf8672e769524ef79801d0609e9924b"
+      },
+      {
+        "included_bytes": 300614,
+        "included_files": 125,
+        "included_sha256": "449522115e751a6abf6cf15f3bae9d526f90dddafdc8f319b3cff6e225b14273",
+        "project": "github_com_jacksonps4_jutils",
+        "revision": "b6ef1b2490a45681ed02fd228b59ce7aea2498c0"
+      },
+      {
+        "included_bytes": 273115,
+        "included_files": 59,
+        "included_sha256": "2bcafdeb664bb859642ed86e6e468aa51b84bec4e7f54726bba1413b89a7837a",
+        "project": "github_com_jacobhyphenated_PokerServer",
+        "revision": "3661149077ecb5332e608e47675e5aa6baa103da"
+      },
+      {
+        "included_bytes": 158279,
+        "included_files": 30,
+        "included_sha256": "6480b60f479b8e309d5eae58efaeb339a9061ac2a8da719d8494c073ca767e04",
+        "project": "github_com_jactiveresource_jactiveresource",
+        "revision": "d0d7a79cac98dd7af72e3b4d23dae11d1610b5d4"
+      },
+      {
+        "included_bytes": 323832,
+        "included_files": 127,
+        "included_sha256": "7b3fd2d9ad55c52904ab5ac0dc09368ce5852d19c3338fbcb3a330f84ddcf501",
+        "project": "github_com_james-jory_foursquare-api-java",
+        "revision": "a0e5e90b04a861affaa380902d775562a264251d"
+      },
+      {
+        "included_bytes": 77201,
+        "included_files": 32,
+        "included_sha256": "77a053154c39bb344e326052034b50da15e24ef82697c7d8f9629f39aa2d74b7",
+        "project": "github_com_jamesanto_kite-test",
+        "revision": "3ed8cb6d8ccf66534aea7baaaaa01162eb6dd165"
+      },
+      {
+        "included_bytes": 55306,
+        "included_files": 36,
+        "included_sha256": "bf3f51ac9cbbfd1bbfccc2e51dd1f7b15558337557c406ca6e72a6a9cfc0801f",
+        "project": "github_com_janosgyerik_java-examples",
+        "revision": "a2bbc5bde699167736452bc5fb083f3677b2579c"
+      },
+      {
+        "included_bytes": 20801,
+        "included_files": 15,
+        "included_sha256": "35e713c50f77602806fa8add2ac47cf8194c425d119fe51455729ab1a192145d",
+        "project": "github_com_javajigi_slipp-user",
+        "revision": "b4fe635c5cb5e8d30fab11c46418c474471b2e9e"
+      },
+      {
+        "included_bytes": 665540,
+        "included_files": 57,
+        "included_sha256": "46783df4b42346823ea0a8edce9117d178445b0d7269fcac0b468066369464c7",
+        "project": "github_com_javasoze_kamikaze",
+        "revision": "e904c2672b46d9469ab858541fb5c3cddafb87ff"
+      },
+      {
+        "included_bytes": 676638,
+        "included_files": 91,
+        "included_sha256": "581c29a462f848d2de03a5b7706ca4f561a3348daec26f51706eadff18d5db79",
+        "project": "github_com_jdcasey_pom-version-manipulator",
+        "revision": "70d24c591a044219439f140589840e847ecb4d6e"
+      },
+      {
+        "included_bytes": 87929,
+        "included_files": 19,
+        "included_sha256": "3329d597afe11599ec1ecd73e6f2c061072061b914e6e9947a70fb33dafdd9c9",
+        "project": "github_com_jdussouillez_JCLAP",
+        "revision": "1ff751fd7818d9caa8078da7ca55ae5205b8918c"
+      },
+      {
+        "included_bytes": 16932,
+        "included_files": 12,
+        "included_sha256": "9df9c8305af19e60afb337ac71655939a38b2820cb9b699fb95a7da556f10702",
+        "project": "github_com_jeanlaurent_CurrencyConverter",
+        "revision": "3dd5ae05044497620432ecf3f220a0b7805cf897"
+      },
+      {
+        "included_bytes": 365718,
+        "included_files": 252,
+        "included_sha256": "97af70b6b3639c48adb682ec0a7a1af3c9023d1f4eaafe14cb1c1c6c046f37d6",
+        "project": "github_com_jeffcharles_pong",
+        "revision": "4758e0f6c49bbb1a425a2def502ae71393eed496"
+      },
+      {
+        "included_bytes": 1682970,
+        "included_files": 509,
+        "included_sha256": "7b0e47a9685c657599b0cb10cc3d2d950d04295418dbb08b53962f1a31d5287f",
+        "project": "github_com_jeremypepper_snakeyaml",
+        "revision": "3b612542826b3806db6dee7fa30a36ab74dec837"
+      },
+      {
+        "included_bytes": 714763,
+        "included_files": 241,
+        "included_sha256": "6e22731e6c873d695058a6ea59216c6b447aeda76155242da136eed99551675c",
+        "project": "github_com_jericks_geometrycommands",
+        "revision": "596a289a74073796eed0f60185e0d136e5951e3b"
+      },
+      {
+        "included_bytes": 542881,
+        "included_files": 57,
+        "included_sha256": "4613508d939b9d01ca46588decdbb70acdceb482a79a7b5c17757ceab5be4bd9",
+        "project": "github_com_jericks_geoserver-shell",
+        "revision": "56699b2b09eaf8ffb501dec7d86c605a735d9ccd"
+      },
+      {
+        "included_bytes": 1362297,
+        "included_files": 551,
+        "included_sha256": "d124fc69cad76f83b61654cd0f1473151bda26fa6c8fc4dd844db8ff4203c318",
+        "project": "github_com_jfaster_mango",
+        "revision": "c5bad3c4f337ac6580023d705ccfdeef5fd7f149"
+      },
+      {
+        "included_bytes": 284165,
+        "included_files": 55,
+        "included_sha256": "d5ea9ae43eddb60ca39ada8b1bbc60d5cf071843b4ab91c9612ac2ee91dbe1e8",
+        "project": "github_com_jfgiraud_temmental",
+        "revision": "fc35e9ff155208dbe63e5d6fb6a11a8e6e7a7c90"
+      },
+      {
+        "included_bytes": 283622,
+        "included_files": 80,
+        "included_sha256": "4ea1777d27a9a7f02fdf80b0c543732bc2ce3b31825c6e1b03304c5a5d436d25",
+        "project": "github_com_jhalterman_fabrique",
+        "revision": "7c7e7431812d54c9ebffb8d5c83e7b5ec8d023e6"
+      },
+      {
+        "included_bytes": 318840,
+        "included_files": 60,
+        "included_sha256": "e0d4e676858dab82cb8a1ea8f4ecf58936a1fd11354ee313e18435ddeccfe6c8",
+        "project": "github_com_jibrail-idris_mt4-services",
+        "revision": "c8e1d72ea11b785515bdf462f25e201448d8f78f"
+      },
+      {
+        "included_bytes": 165199,
+        "included_files": 58,
+        "included_sha256": "14f689016fc4e055c7967745baaca8c2356a44d90c0047e9345ae8030349b655",
+        "project": "github_com_jimmysfu_appFuseProject",
+        "revision": "13708f3107f4286f1c925af911acb7b99d90a5d6"
+      },
+      {
+        "included_bytes": 359525,
+        "included_files": 49,
+        "included_sha256": "9ed88c39863aaf9708101c99a66ce221bbd07efd6c62f5f383b302140b719811",
+        "project": "github_com_jitsi_dnssecjava",
+        "revision": "763611656eaaa6a091bd3104168eee10442bf91b"
+      },
+      {
+        "included_bytes": 219422,
+        "included_files": 71,
+        "included_sha256": "e88b54e549c0240e7e9385a10fe782529de8a6e568b78aa50877a28ef9ad2dd1",
+        "project": "github_com_jjlharrison_jollyday",
+        "revision": "99fb60ea964dbb3ec9c29917cf90651123ca996a"
+      },
+      {
+        "included_bytes": 557620,
+        "included_files": 76,
+        "included_sha256": "8ddb4ddba29d710e2a671bd5a4e5f0033f10a629cb43829c49d4affa05863144",
+        "project": "github_com_jline_jline2",
+        "revision": "12b98d94589e3bd6a60719c495b0ab911c571329"
+      },
+      {
+        "included_bytes": 38943,
+        "included_files": 12,
+        "included_sha256": "ce0de4411035ca764612cab6a27db761a620b80a294e874b47bf25a54c363a6f",
+        "project": "github_com_jmitchener_spring-images",
+        "revision": "d7f343bbdbc0c4604596fb09294321ee095a9c3f"
+      },
+      {
+        "included_bytes": 890133,
+        "included_files": 201,
+        "included_sha256": "6c28d5d0ef96d198a292f90e0dbfd2bbfef811185989c8039d62f33da0173c76",
+        "project": "github_com_jmrozanec_cron-utils",
+        "revision": "d31697ec4c30d4f43a1b528e5781d1d00ea1c967"
+      },
+      {
+        "included_bytes": 461760,
+        "included_files": 90,
+        "included_sha256": "ae49dcd83a398269811f4cc6546075f1a6dc1bbd077333be4b5d563b762ebd19",
+        "project": "github_com_jmxtrans_embedded-jmxtrans",
+        "revision": "3b5761341ba892bee4aad13c376b732e5f912d2f"
+      },
+      {
+        "included_bytes": 17704,
+        "included_files": 30,
+        "included_sha256": "f825ffed8126f8285d5f3f1367ba6041c01dbafeaada0f4a9af1ee3c90ec2c7e",
+        "project": "github_com_jnjeG_springtest",
+        "revision": "73159b700cc5f7cd816efd573872c47c9f1d36c2"
+      },
+      {
+        "included_bytes": 313222,
+        "included_files": 113,
+        "included_sha256": "7bdcb1680b53d8cf4c51bb5ef5a6ea183b0dd02373a66b2b1553eb2c42f54b9f",
+        "project": "github_com_joakimsahlstrom_jles",
+        "revision": "bdefce5004cf0a7222384c5dabb274ddceb18c3c"
+      },
+      {
+        "included_bytes": 788185,
+        "included_files": 318,
+        "included_sha256": "0b87d35e4a9869bdd145efc948004742e5a47081047e5fc422b9abdd412d0665",
+        "project": "github_com_jochenwierum_sshclient",
+        "revision": "c629e048d3133721cdaf41f0e07a9a6184190fad"
+      },
+      {
+        "included_bytes": 402197,
+        "included_files": 82,
+        "included_sha256": "a9a899a0b0af46370f34ad7289f95b2a6539ab8b2c69ac919aa420f4ec90cd21",
+        "project": "github_com_jodal_mmfplanner",
+        "revision": "ff1f4778d34cb5e8d5864ed25fc4cfa8a83721d6"
+      },
+      {
+        "included_bytes": 1462368,
+        "included_files": 105,
+        "included_sha256": "c4b24f922e21e7e2e4c28b32c1032afae1364b6503400e27453a187638034830",
+        "project": "github_com_johanlelan_lightweightCMISserver",
+        "revision": "09ead52f87e83244cb12af93dbe9f6f1957fe6da"
+      },
+      {
+        "included_bytes": 35477,
+        "included_files": 11,
+        "included_sha256": "5a382ca8bf1053722e83ebf349be1af285435706e834179ac177e00273f47fe0",
+        "project": "github_com_johanmynhardt_bkmwatch",
+        "revision": "eac6828f1f164e5cc280939b3e75c858c6edeef9"
+      },
+      {
+        "included_bytes": 308494,
+        "included_files": 142,
+        "included_sha256": "53668d677a60d26ca5eff8fc3d18ed288fa881c4995b6fca730bfdf01b9b845e",
+        "project": "github_com_joolu_ddd-sample",
+        "revision": "fea5ae8e67050fbe77e9e35918a172e40f480fe9"
+      },
+      {
+        "included_bytes": 494323,
+        "included_files": 225,
+        "included_sha256": "3af312ccc17ab57cb59665a4f1ff54b47e9dd74c6ff5c0e39f4358c35afda8fb",
+        "project": "github_com_joschi_JadConfig",
+        "revision": "91eec3f68158850942170a6db6fcf275391a529e"
+      },
+      {
+        "included_bytes": 498190,
+        "included_files": 95,
+        "included_sha256": "33b5c13dd7a8bd66d3429945c767658f330f516d2d42c7ae740a7aea193e9f10",
+        "project": "github_com_jroper_mongojack",
+        "revision": "51c5e9e838e80051cf11f83fe209a9674df330a4"
+      },
+      {
+        "included_bytes": 83698,
+        "included_files": 48,
+        "included_sha256": "206e3efb55967969bee1a717c164e47e6da14a3994b6976e599b1586ea24a158",
+        "project": "github_com_jsiggy_sonar",
+        "revision": "82d2c329ce5b26bd91b1d08ea9dc28872370ab87"
+      },
+      {
+        "included_bytes": 447155,
+        "included_files": 138,
+        "included_sha256": "3b39ca24d1e7c30312e3da77b7c2e2380e026608e23015365b80dafc480dc5e3",
+        "project": "github_com_jsolve_sweetener",
+        "revision": "9c9e1a63b32e6d6795e0eda29b882dc77f65e869"
+      },
+      {
+        "included_bytes": 218167,
+        "included_files": 139,
+        "included_sha256": "26b2284ef7f7e142b3adea5cff2127cfb054f17df3750155320dae9fe706415d",
+        "project": "github_com_jtorbicki_docbag",
+        "revision": "ca7bfddc47af9617390e94274030c4b4bdc15bff"
+      },
+      {
+        "included_bytes": 763881,
+        "included_files": 169,
+        "included_sha256": "d85a4854215504939a115093f4a825a0deeda984c7685691ed02240e9a7202c0",
+        "project": "github_com_julienchastang_charts4j",
+        "revision": "08201256063f8de7c19d5cc18dab112c7b9953b7"
+      },
+      {
+        "included_bytes": 36756,
+        "included_files": 16,
+        "included_sha256": "952a0d03741010595709f21f683f7eb2a845ee2ff3bad5fe2eade9bfc7a93280",
+        "project": "github_com_juraj-blahunka_logpile",
+        "revision": "0c84c25d86dd4f3f70df39e30947c2221bdff253"
+      },
+      {
+        "included_bytes": 374293,
+        "included_files": 80,
+        "included_sha256": "5020dc15a24488998e5a4a8a496fd8a87e2877d7328d83506743b355d3feb5d5",
+        "project": "github_com_jxblum_codeprimate-api",
+        "revision": "646ddbff757c113a8d103960848d11fbee43436c"
+      },
+      {
+        "included_bytes": 13202,
+        "included_files": 6,
+        "included_sha256": "85cf8937c922c8a10f86dbe0e612e3cb8281ffe5e3f8bc1972cbf54535a82a97",
+        "project": "github_com_kalyanpursunil85_RomanNumericUtils",
+        "revision": "8848cc9e1828688b5effc94db5c085fd6b2c2c47"
+      },
+      {
+        "included_bytes": 221699,
+        "included_files": 56,
+        "included_sha256": "50b70a08191f9945eb3a0b2242fb1a709d12e56f1174294e3062ec54f9164e23",
+        "project": "github_com_karlwettin_json-simple-kalle",
+        "revision": "118e9561e9ec917e870da296fd1bd3c88804eeb9"
+      },
+      {
+        "included_bytes": 41788,
+        "included_files": 30,
+        "included_sha256": "78a8bd234944231d4c9729cba731f5313df23a45567378696bfb6dd37cc6f4a1",
+        "project": "github_com_kavingct_filtro",
+        "revision": "3f685177a0d15933c098441113a36be4ca30efc0"
+      },
+      {
+        "included_bytes": 1119978,
+        "included_files": 96,
+        "included_sha256": "e77a7f0891de8aca7cb55b0992289f010aec3ea3407a9cef410467ef44941e29",
+        "project": "github_com_keystrokex_htm_java",
+        "revision": "f844d8bf52ae0aa15f20355c10668098c5c35f62"
+      },
+      {
+        "included_bytes": 242695,
+        "included_files": 158,
+        "included_sha256": "97c9cda6ee37bad6dd9ed2249fdbba71a0651f2de1fe1820e20de9c59696ff51",
+        "project": "github_com_khanyaMvumbi_AnimalRest",
+        "revision": "60a6ada0455a6f9ccff81bab6999bc08aa8afed0"
+      },
+      {
+        "included_bytes": 229716,
+        "included_files": 154,
+        "included_sha256": "ea88ca10cd6da8723cf080393a0c2a29738c0027c507d728556cdcc0c13677aa",
+        "project": "github_com_khanyaMvumbi_DesignPatterns",
+        "revision": "2d9c2548fdc03fb6b80e2debdff4f2ca3e301544"
+      },
+      {
+        "included_bytes": 38647,
+        "included_files": 21,
+        "included_sha256": "8bb50909e887bf652dcc8839c4e775926f2cc4d530606bbee3b950c29deeb237",
+        "project": "github_com_kikimans_openpaas-admin",
+        "revision": "1598c7a98a73ad165bca8ee5dded44e8b01e9ada"
+      },
+      {
+        "included_bytes": 1622221,
+        "included_files": 256,
+        "included_sha256": "2bc8120a8ddb556c8ee02ac15cb4a61c5d585fa43a14fa65be5017085649a1ff",
+        "project": "github_com_killme2008_gecko",
+        "revision": "0873b690ffde51e40e6eadfcd5d599eb4e3b642d"
+      },
+      {
+        "included_bytes": 795469,
+        "included_files": 74,
+        "included_sha256": "bf32e2a98a22701dfa171c194c3d6791bf5f35ab9d1eedcbf55b9290065f5f91",
+        "project": "github_com_kinow_commons-pool",
+        "revision": "d622030d664c0680cd2cdfc7475a3b7db4e94fe0"
+      },
+      {
+        "included_bytes": 308494,
+        "included_files": 142,
+        "included_sha256": "53668d677a60d26ca5eff8fc3d18ed288fa881c4995b6fca730bfdf01b9b845e",
+        "project": "github_com_kkarthik616_ddd",
+        "revision": "6861bf1fe5036a1c8a74ac23bcd4f8219d3c88e2"
+      },
+      {
+        "included_bytes": 322891,
+        "included_files": 135,
+        "included_sha256": "5cc5181ed4c90421b0b1db0ad9a690bf3bee6ac7df182e759b9da0f4493e8ad1",
+        "project": "github_com_kolchytsky_expense-tracker",
+        "revision": "a0989812da82b08174fafa06531b7f047b012283"
+      },
+      {
+        "included_bytes": 548153,
+        "included_files": 113,
+        "included_sha256": "daeb98d60480b589da54e4dd3410cf3f32dc06da57f1d6630643eafd97d8e161",
+        "project": "github_com_koraktor_steam-condenser-java",
+        "revision": "022724f5ba0802970ba4682afe13def201188434"
+      },
+      {
+        "included_bytes": 660376,
+        "included_files": 74,
+        "included_sha256": "887090389538593e00a503b2b1a4b3d639029c4ce7d42fed5b18731f91f50b8e",
+        "project": "github_com_korpling_tiger2-api",
+        "revision": "79dbf368fe34e98636dafb76ce5a818a95dcf51c"
+      },
+      {
+        "included_bytes": 660376,
+        "included_files": 74,
+        "included_sha256": "887090389538593e00a503b2b1a4b3d639029c4ce7d42fed5b18731f91f50b8e",
+        "project": "github_com_korpling_tiger2-emf-api",
+        "revision": "79dbf368fe34e98636dafb76ce5a818a95dcf51c"
+      },
+      {
+        "included_bytes": 20665,
+        "included_files": 11,
+        "included_sha256": "2ddb9af69059bb13191b7d23c741c07da7a51ce8553258b33955e3617ed995c0",
+        "project": "github_com_krishna75_poi-webapp",
+        "revision": "964498b7f06eae83e4d2a8811da8ef48bf42e86a"
+      },
+      {
+        "included_bytes": 228254,
+        "included_files": 127,
+        "included_sha256": "5ff919800cf544780501e59858b89916222401410c79171cd819971adbeab650",
+        "project": "github_com_krka_mockachino",
+        "revision": "9bcdda0598f3e14019f1fee4bcc050f2ba76dd1c"
+      },
+      {
+        "included_bytes": 1156223,
+        "included_files": 123,
+        "included_sha256": "4c03989317075ed68aed6d07932b1f0cb6b2c91db00c8c6f8d82e72ed3276418",
+        "project": "github_com_krummas_DrizzleJDBC",
+        "revision": "716f31fd71f3cc289edf69844d8117deb86d98d6"
+      },
+      {
+        "included_bytes": 28411,
+        "included_files": 17,
+        "included_sha256": "db8b03884264fae11b9ce661c703e02f997176fc95cb19778125e87f0b2bfc7e",
+        "project": "github_com_ktk3_Invoice-App",
+        "revision": "650e6aba042b00766463afad98e8a38b538c6fa9"
+      },
+      {
+        "included_bytes": 188440,
+        "included_files": 123,
+        "included_sha256": "91b567abfdbe55fb17b07e57de221b5ab5a44543c0dc9f26e7a799ea9e8233fb",
+        "project": "github_com_kuwalab_spring-mvc40",
+        "revision": "038523fad3f0e22242e9dfbe86d56d5105c2e03b"
+      },
+      {
+        "included_bytes": 3764,
+        "included_files": 2,
+        "included_sha256": "038ba007f2ae7b4235870241e2b44f290d855528756687d6a1591ba28ebf6cb4",
+        "project": "github_com_kwaltzer_dojo-fire8bits",
+        "revision": "24d13cd032ddbb9d45dc4c463dc4a7007cc78f06"
+      },
+      {
+        "included_bytes": 291016,
+        "included_files": 59,
+        "included_sha256": "d9fd570c8f8fefbd6066a665e50c2842263409e50e18cf58ce147b03e64530e1",
+        "project": "github_com_kwaxi_dans-dbf-lib",
+        "revision": "6561a5237bfd170153e6b22cbcc3fc5f4c485cdf"
+      },
+      {
+        "included_bytes": 104682,
+        "included_files": 39,
+        "included_sha256": "7dbf1797748dc515f5986a1a227864987020cb53609ce08b7b22bb9f07ebccaa",
+        "project": "github_com_kychill1986_mav",
+        "revision": "96419478db37c73932ba98291365d871f0b10a27"
+      },
+      {
+        "included_bytes": 56532,
+        "included_files": 9,
+        "included_sha256": "2c5e1216ef7f715ba1c1015f9afb7dc7ea0445d55df00ab8457e886ba171a6e8",
+        "project": "github_com_ladutsko_isbn-core",
+        "revision": "94ee1b92f02fa98db8b60c0e265f760f1498b025"
+      },
+      {
+        "included_bytes": 489664,
+        "included_files": 240,
+        "included_sha256": "49b6540fef8a0eb5ac018f84ac813f086619d26ab8092aff3c832a2e1437d038",
+        "project": "github_com_laforge49_JActor",
+        "revision": "204739967b68f50c7b4fb6d0d1ad87f6d2ce0853"
+      },
+      {
+        "included_bytes": 485985,
+        "included_files": 164,
+        "included_sha256": "da34f4509a6bbc6d3a1faa45c09b003caaa59228d477bc06265a4c99f015597a",
+        "project": "github_com_laforge49_JID",
+        "revision": "1dde11d72a17f3c3c3a690b8b17e3d27f3333e3a"
+      },
+      {
+        "included_bytes": 9787,
+        "included_files": 4,
+        "included_sha256": "7d8e82113f1d0a8dc03f6514d4c24f39951f18adaea29c3a3ecea302397485e0",
+        "project": "github_com_lborie_AppImport",
+        "revision": "10369a5d975953ef4865adb69a01f9e3cc93d918"
+      },
+      {
+        "included_bytes": 2546409,
+        "included_files": 373,
+        "included_sha256": "611fa51efb4c750bc5324cced881e8f4d344d352df12ab599ae28a71fcbd8059",
+        "project": "github_com_ldbc_ldbc_driver",
+        "revision": "48a6836559a8b58e2c73d3d671e0fc1950dc8f04"
+      },
+      {
+        "included_bytes": 36288,
+        "included_files": 26,
+        "included_sha256": "b21f977431d1826804ba9eac721d6f7f5dfe44cccc93a98b573c981423db3c24",
+        "project": "github_com_leonardiwagner_bank-of-java",
+        "revision": "096586036013cd179c3453b8aaeeb588836a2d0a"
+      },
+      {
+        "included_bytes": 324340,
+        "included_files": 142,
+        "included_sha256": "fbb84d23c86bdedee4ffe172c1bb2662d67ee54b40d934d7181dc62c386c6dfd",
+        "project": "github_com_letrait_magenta",
+        "revision": "de1cf334e85dff8e5884002903b6cee2a4ec59f9"
+      },
+      {
+        "included_bytes": 216981,
+        "included_files": 96,
+        "included_sha256": "75cd6f089df6054b5c49312be9ca54cdd5446e107ecb2207b32d097f319705b2",
+        "project": "github_com_lgueye_elasticsearch-continuity",
+        "revision": "17ed1a9c002ce9879bf6a524be3e978f063af87d"
+      },
+      {
+        "included_bytes": 188228,
+        "included_files": 40,
+        "included_sha256": "ae956d8c3860d53ceb124ee5c2e8255c163455fc01eec05489383b1a3dc59f6c",
+        "project": "github_com_lightcouch_LightCouch",
+        "revision": "9646889503475e862fd2158487e1cdd805447f4a"
+      },
+      {
+        "included_bytes": 969824,
+        "included_files": 141,
+        "included_sha256": "12ff744c0fb4088c982c07db3a890a0cff32e1919772baab92182f145066b6bf",
+        "project": "github_com_likethecolor_Alchemy-API",
+        "revision": "5208cfc92a878ceeaff052787af29da92d98db7e"
+      },
+      {
+        "included_bytes": 1576593,
+        "included_files": 137,
+        "included_sha256": "abcbb7223e535ff02f8e00fc4a00c3df0f61916a4c20af93d588029417709e01",
+        "project": "github_com_linkhub-sdk_popbill_sdk_java",
+        "revision": "6f895c02db57e6ab584513ecd614ae5fb90b7f2a"
+      },
+      {
+        "included_bytes": 589583,
+        "included_files": 66,
+        "included_sha256": "3048778194de8a56133ee53a75e824ef6cb4154997208b4aba1940ba4798ef53",
+        "project": "github_com_livingobjects_felix-configadmin",
+        "revision": "22d69f23f69be41682b196c0b19428433b15f6f6"
+      },
+      {
+        "included_bytes": 219091,
+        "included_files": 138,
+        "included_sha256": "faa51e749bfa98774b0e227717d5d83e6bfea3b3a76caef5ecbd82874c3e315b",
+        "project": "github_com_lly123_Wheels",
+        "revision": "3ef0a6086ca7c3c1b85e8dcbe84677db5d88566a"
+      },
+      {
+        "included_bytes": 21236,
+        "included_files": 15,
+        "included_sha256": "e529a01ca159393128a059b80d3598f59d38d8a0433242e0ecd77e280512af2c",
+        "project": "github_com_lmancel_todooz",
+        "revision": "bec3037aebe1aec644019b1a05701bb14f86d7ab"
+      },
+      {
+        "included_bytes": 79055,
+        "included_files": 51,
+        "included_sha256": "cfff2b08ee71df18d76165fdd849d00aae09a93db3d551601556bcb537362268",
+        "project": "github_com_lmeadors_xppio",
+        "revision": "78084d3360c38d9558c6657fd9456d8229d3e203"
+      },
+      {
+        "included_bytes": 77060,
+        "included_files": 23,
+        "included_sha256": "864451b437c034138f3f0d6e51985fd655fcd97d6dc0979ce6365e3269fdbb5a",
+        "project": "github_com_lordmat0_github-stream",
+        "revision": "085c3a2558e1840ad1455397fccb378f0cd9038f"
+      },
+      {
+        "included_bytes": 77060,
+        "included_files": 23,
+        "included_sha256": "864451b437c034138f3f0d6e51985fd655fcd97d6dc0979ce6365e3269fdbb5a",
+        "project": "github_com_lordmat0_githubstream",
+        "revision": "085c3a2558e1840ad1455397fccb378f0cd9038f"
+      },
+      {
+        "included_bytes": 449905,
+        "included_files": 182,
+        "included_sha256": "c777400532f1514c560b6c59c6fe94c74247fe87b3210684be07ba02308b06b9",
+        "project": "github_com_lrozenblyum_chess",
+        "revision": "c1e3eba8238eb61849fc53474f9d2d6144543d00"
+      },
+      {
+        "included_bytes": 333196,
+        "included_files": 104,
+        "included_sha256": "75af80f15e91e3d74847173f0d670b78ca337e012f25d310f031f9317775c870",
+        "project": "github_com_lucaspouzac_contiperf",
+        "revision": "e5cb4be446e80917db4dc6b14e54956113ffbaf1"
+      },
+      {
+        "included_bytes": 332726,
+        "included_files": 99,
+        "included_sha256": "600012f44241c9aa8e9bcae8274a9fd7ebec29149c9abbbf3673d0de0700c42c",
+        "project": "github_com_lukas-krecan_spring-ws-test",
+        "revision": "39b50d22d88488a4babba6584681e091c7cd39f4"
+      },
+      {
+        "included_bytes": 591437,
+        "included_files": 91,
+        "included_sha256": "e5789a55d218b2b26ecd19894b621b6e872322c6478915ab99935671f51eb8d6",
+        "project": "github_com_lwes_lwes-java",
+        "revision": "0c1848b0bd301f99c55acd2aa79194ed85beb147"
+      },
+      {
+        "included_bytes": 78091,
+        "included_files": 33,
+        "included_sha256": "19fedfc3be86d7b10ef4bb2e97f503e055785f6a7d9259edb6e45a67e34242b3",
+        "project": "github_com_m3dev_multilane",
+        "revision": "5e36720292b210e5a4cb17df7de8971899b03507"
+      },
+      {
+        "included_bytes": 587415,
+        "included_files": 161,
+        "included_sha256": "be6157eb05198afb08739253cc0920140519739e033e79c1414c3cd683572f64",
+        "project": "github_com_m3dev_scalaflavor4j",
+        "revision": "60b1ded40012640587eb20b46829a3ae8a7317b0"
+      },
+      {
+        "included_bytes": 80089,
+        "included_files": 40,
+        "included_sha256": "5888e39856dfbc8b9824c10c5c3464271d7dcaa91dda64bc616c8c25c7c59e93",
+        "project": "github_com_m4rius_KomGikk",
+        "revision": "b4a555c3a2c35b071fa120ae4670b6bf3bc2eb79"
+      },
+      {
+        "included_bytes": 892927,
+        "included_files": 146,
+        "included_sha256": "dd65bdce5698df4603109d7c4cb89f3b3395f0445a67aeb5b247f9e8577622ec",
+        "project": "github_com_maddingo_sojo",
+        "revision": "6f1e9c3968727a2d552b032b542508fdfe2b4579"
+      },
+      {
+        "included_bytes": 235881,
+        "included_files": 76,
+        "included_sha256": "1db29f5b187c2423466276484d7dec7f55bd159c2dde8f9405482a77fd76f4fe",
+        "project": "github_com_maestrano_maestrano-java",
+        "revision": "e71c6d3172d7645529d678d1cb3ea9e0a59de314"
+      },
+      {
+        "included_bytes": 112911,
+        "included_files": 20,
+        "included_sha256": "0fc75f518d00ca1899f8b4159ce82da21e08599619064c3e55542ce725402a12",
+        "project": "github_com_magwas_worldmodel",
+        "revision": "197aa44507293c3453177d206006a0aa139d3daa"
+      },
+      {
+        "included_bytes": 112878,
+        "included_files": 47,
+        "included_sha256": "7b62033842a2ea08feec7704f0cf91898ef1d2fa86018aae0707ab509cc241db",
+        "project": "github_com_maiteyanguas_innova4b-daw-modulo7-empresaReparto",
+        "revision": "4a0c9cba516c2b01cd2f5833a158263b7c6e1b2c"
+      },
+      {
+        "included_bytes": 245920,
+        "included_files": 125,
+        "included_sha256": "3fd59b1a69c411b49ad6b41d20feb1d23a74c9efc9181152b1e8551a05485147",
+        "project": "github_com_makersoft_mybatis-shards",
+        "revision": "35216fd264adfcc1466d2969fdda5e97b2626aa8"
+      },
+      {
+        "included_bytes": 99923,
+        "included_files": 58,
+        "included_sha256": "a5e932b4f40af74b63b2f50c63825504f447b4fc229ea78d3b983af6bb62639d",
+        "project": "github_com_malalanayake_Air-Care",
+        "revision": "6e001384a333aef12e3555ef27db5b89dd34c1b6"
+      },
+      {
+        "included_bytes": 265783,
+        "included_files": 95,
+        "included_sha256": "fa948b397360b4bf57fb8ece86965c699531a9a0c8f3850a46b635459f6f716e",
+        "project": "github_com_mangobin_SSNOC",
+        "revision": "5df812990a111c23c36e6b45b2a8df1e8133e652"
+      },
+      {
+        "included_bytes": 2384215,
+        "included_files": 359,
+        "included_sha256": "54c511d97a915a70c4a7f05d8514316785a2bd3ec2805894efcd77686a6af218",
+        "project": "github_com_mangstadt_ez-vcard",
+        "revision": "3de4d56527f7160de1b1e05fba2f4dce2466c243"
+      },
+      {
+        "included_bytes": 1192,
+        "included_files": 2,
+        "included_sha256": "86b26b944226af07da9b6227994d1dbcd0b10118aaf1e04b6d806b5b087268d0",
+        "project": "github_com_marteloge_FagdagItera",
+        "revision": "ba39b161ccd7c9e7c5777e4080d29b486296b7a1"
+      },
+      {
+        "included_bytes": 36248,
+        "included_files": 28,
+        "included_sha256": "a92d50c79f83136e4eff50612765797b61b7326d85bbc8545d835612ca0eaad2",
+        "project": "github_com_matiasvinjevoll_java8-scala-workshop",
+        "revision": "aef14143c01ce077d65ff388c64e0f8969fd21f8"
+      },
+      {
+        "included_bytes": 289962,
+        "included_files": 59,
+        "included_sha256": "e08574e6cf8558603bfff2900668907ab819f2f784a0b56def179298a754d1de",
+        "project": "github_com_mattsidesinger_words-with-core",
+        "revision": "68865f34c7f36203ada290fd35a9049dd46f5509"
+      },
+      {
+        "included_bytes": 1819228,
+        "included_files": 268,
+        "included_sha256": "ab9f83ee1286bac829e9f2edbdfe9aed6761a9495f9aceffac5bb82270e857df",
+        "project": "github_com_mboudreau_Alternator",
+        "revision": "4b230ac843494cb10e46ddc2848f5b5d377d7b72"
+      },
+      {
+        "included_bytes": 62071,
+        "included_files": 39,
+        "included_sha256": "6c4428196e53ef36990ac10c0155d354e941e4a4f014c267032d4ddda37b0b4a",
+        "project": "github_com_mcabaj_lunch_app",
+        "revision": "22d8b7d561f41cdc8e50eba849f62b29b15878a6"
+      },
+      {
+        "included_bytes": 349504,
+        "included_files": 80,
+        "included_sha256": "88e965fa7f5e74454237ab4769c8086633fc367b2bb76728613fa6bb2e67607e",
+        "project": "github_com_mcxiaoke_android-volley",
+        "revision": "6864be3efadf3a33793228c0ce721a72d7a78731"
+      },
+      {
+        "included_bytes": 91926,
+        "included_files": 16,
+        "included_sha256": "871c13103dbe0d4642479ebfed09f3ca6d8d7572045bc02125db2d1ab500f734",
+        "project": "github_com_mduerig_json-jerk",
+        "revision": "b4822a7123e272bfca435161d88b7935c43b7772"
+      },
+      {
+        "included_bytes": 972442,
+        "included_files": 279,
+        "included_sha256": "570176dc66a550e46b3019b295f68fedb72160aec308118254696644190cf6d6",
+        "project": "github_com_metamx_java-util",
+        "revision": "02dccb0bab36c3acaa3a8911ced34c9becf2ff50"
+      },
+      {
+        "included_bytes": 456174,
+        "included_files": 99,
+        "included_sha256": "226cf01706820ad32198a3aa2d58dfce349491157bf3954c9847b83b08f7f3d0",
+        "project": "github_com_mfriesen_cthulhu-dht",
+        "revision": "3be2a31f94ec69abd00d9af6cc1a5996d8fced33"
+      },
+      {
+        "included_bytes": 436139,
+        "included_files": 54,
+        "included_sha256": "1a7f370dd1b3902355bd20b2b1d66e8aad2854f2a9e6a3ff023f25d220717c49",
+        "project": "github_com_mgledi_drums",
+        "revision": "b70d64c7c9bcad07b0b12729fd4cfc34d4dca325"
+      },
+      {
+        "included_bytes": 484455,
+        "included_files": 123,
+        "included_sha256": "2b536277f3c039de0bf04f322335692c66a82b16891c16478300288b939b64e8",
+        "project": "github_com_mgormley_prim",
+        "revision": "5dce5e1ae94a9ae558a6262fc246e1a24f56686c"
+      },
+      {
+        "included_bytes": 132085,
+        "included_files": 81,
+        "included_sha256": "d7195bfb2d66b1e177b29b080ed0f41f6473f937decf0a032be3dd929ea48ce7",
+        "project": "github_com_michaelszymczak_speccare-specminer",
+        "revision": "dd4c859f6b9b0f0cff8305f0b13c27cd3319d5a7"
+      },
+      {
+        "included_bytes": 215536,
+        "included_files": 83,
+        "included_sha256": "9a9cb4da4d6b2523ea8e9b8a6926b9a10b32d0728955ae1b04f3f7d65028fb1e",
+        "project": "github_com_mikehartley_yottr",
+        "revision": "77d4b120835f12f27159196c1ad7090f1ac8e772"
+      },
+      {
+        "included_bytes": 3421,
+        "included_files": 2,
+        "included_sha256": "ea4324d86c0fcc6b5e38453e9c3c423983e4b48862e01742ee59cd71ffc120ee",
+        "project": "github_com_misdoro_ivoa_mappings",
+        "revision": "f4b9a09af83a16863078c59f0895c76afbf8f21f"
+      },
+      {
+        "included_bytes": 15540,
+        "included_files": 17,
+        "included_sha256": "427fae4cd5c76eb78abd0e34fe173a58e2d38cda5123815754b124ac9b620fce",
+        "project": "github_com_mjjaniec_car-expert",
+        "revision": "79d553086cf76edbf03bed75dc5638fa533693e4"
+      },
+      {
+        "included_bytes": 673798,
+        "included_files": 191,
+        "included_sha256": "29fe259cc992305815ac93ce2c81865edd8f76cd0dc9d9f5c862fd8248805961",
+        "project": "github_com_mp911de_logstash-gelf",
+        "revision": "a938063de1f822c8d26c8d51ed3871db24355017"
+      },
+      {
+        "included_bytes": 393725,
+        "included_files": 67,
+        "included_sha256": "c026783255d4c6e7a683cc827f5cd67cbb06ab69b69aee236fd46d802567ab00",
+        "project": "github_com_mpatric_mp3agic",
+        "revision": "bf3a1ab46bf542734712bad27fdb0fe5470621fe"
+      },
+      {
+        "included_bytes": 322352,
+        "included_files": 63,
+        "included_sha256": "bbeff741c0a9f292ac67744dbe19dce9c00f30efa55ddbab7e40af801ea605da",
+        "project": "github_com_msteiger_javampd",
+        "revision": "976f9342a3a131848bd5ee2025e752a887e6b5dc"
+      },
+      {
+        "included_bytes": 64248,
+        "included_files": 55,
+        "included_sha256": "fc9168aa160e4d700063aef4827de7960068786d2f1cdc9024fa71ac135c4caa",
+        "project": "github_com_mthtcancicek_UserManager",
+        "revision": "3ec4bb118153d6bc8113c19df3ab7c1c33b74f8e"
+      },
+      {
+        "included_bytes": 1755574,
+        "included_files": 289,
+        "included_sha256": "b7d419748b4ef57031daf812f5c8d6993495336bf44303ba17d7d296dcc89629",
+        "project": "github_com_muga_msgpack-java-0_7",
+        "revision": "fa48b47539e1f53558f5dbfd6d0540aa56592e65"
+      },
+      {
+        "included_bytes": 340736,
+        "included_files": 97,
+        "included_sha256": "a6f639c9547e8cf01f5e8cab1b7962c7c9730cf460241504e65096ac42e874ec",
+        "project": "github_com_mungohq_mungo",
+        "revision": "31815e42e8b62b48c8d0d3ab38410315ff322b05"
+      },
+      {
+        "included_bytes": 289414,
+        "included_files": 67,
+        "included_sha256": "c9446acc65a15b1e6bb907d96c4a9a74838c163a92f81571819373a337289c83",
+        "project": "github_com_mwanji_migrate4j-maven",
+        "revision": "830959e9ae67b85779ae78a77916e14426459a37"
+      },
+      {
+        "included_bytes": 313844,
+        "included_files": 67,
+        "included_sha256": "294548f2f5a58e0dededaf10d207014ee9c37f8fc0ceaf82a25c941847a8d611",
+        "project": "github_com_mxbossard_java-saml2-sp",
+        "revision": "696b544a601b90b37ed5377206cb5810732c927e"
+      },
+      {
+        "included_bytes": 744181,
+        "included_files": 211,
+        "included_sha256": "aa2a13b479096152b7560d17574123e8674a5a31ac271b1e9d60230e0d64a9e1",
+        "project": "github_com_myGrid_RightField",
+        "revision": "f5d7903fe8c4adbdd1d95af709b369f778c48520"
+      },
+      {
+        "included_bytes": 383491,
+        "included_files": 239,
+        "included_sha256": "390f8ee3850c0a4b806430337e287d556e930b09dd61ece1f8c1f6e4fd48ba47",
+        "project": "github_com_naousse_urerp",
+        "revision": "16fdb1d3e4aad17c6f1eaa1e10b89aea67cf1945"
+      },
+      {
+        "included_bytes": 456961,
+        "included_files": 154,
+        "included_sha256": "6cb86563b5804705c072c45c53ce201d772aa297d1821d6864be07207b10dc0d",
+        "project": "github_com_natarajsbhargav_read_everyday",
+        "revision": "a8f946e6e59a73e2b4238408bb9cc5170e38cd7a"
+      },
+      {
+        "included_bytes": 1948478,
+        "included_files": 376,
+        "included_sha256": "7ccc48da9588313db8bdbc5ed052db342987ddf364f4955ccffe534691a6ce11",
+        "project": "github_com_naver_arcus-java-client",
+        "revision": "f60ed483c1d9ad76f5bbcaa1d8f17e1a294d6643"
+      },
+      {
+        "included_bytes": 408795,
+        "included_files": 64,
+        "included_sha256": "fe943dd592073457381209a678b128420f25278e9d50c27f8cb96bf59d3ede99",
+        "project": "github_com_nblair_exchange-ws-client",
+        "revision": "b17081568bc2950df22900f7fa74493e4e8cf613"
+      },
+      {
+        "included_bytes": 902276,
+        "included_files": 74,
+        "included_sha256": "32e5b46262ac4469a538ed0aa9b476bb8b786e0a259010fbd9b023287066961f",
+        "project": "github_com_nclarkekb_antiaction-common-json",
+        "revision": "a6aded117fd94c06261a2bb754e5982d91c0365b"
+      },
+      {
+        "included_bytes": 77448,
+        "included_files": 55,
+        "included_sha256": "cf275036f461b68fbec016ee8cb3c6de521d2936d21d00306b696c705f476c7b",
+        "project": "github_com_ncoap_AngularExample",
+        "revision": "6dfc1c4993f716555472d5e6e2a5b89f42a031a6"
+      },
+      {
+        "included_bytes": 426892,
+        "included_files": 82,
+        "included_sha256": "5d0f3f182f8ed61db23ee23b5eb8df9af4f8c48d3c829dc04acdc755f4b0caa6",
+        "project": "github_com_neiljbrown_brighttalk-channel-reporting-api-client",
+        "revision": "e4281c3db3382603445c6e0dd914c0ccc986fc90"
+      },
+      {
+        "included_bytes": 632327,
+        "included_files": 127,
+        "included_sha256": "f32215d57f6eeb806c3cadb13e82c0f0b8ee9eca8c15c0bc0213989523c46d62",
+        "project": "github_com_neo4j-contrib_graph-collections",
+        "revision": "5f9d32dedb441da388e3f0b8c6fa84104b9a5572"
+      },
+      {
+        "included_bytes": 335022,
+        "included_files": 66,
+        "included_sha256": "9da240e03e52257ac17464bd61aba9449590fe81fb2c34d17b787e273f8ebfec",
+        "project": "github_com_nereuschen_eda-components",
+        "revision": "f93e5711e4836f15af5db769d72b1b8d7774b9d8"
+      },
+      {
+        "included_bytes": 195624,
+        "included_files": 57,
+        "included_sha256": "fdb9ff0693d464990d469811f303e8ed75e61c3e99fc518e6ba1d8e65ef43aa6",
+        "project": "github_com_netceteragroup_trema-core",
+        "revision": "e6f1cafa4a35e4e1dd2e837ec110225c25a444eb"
+      },
+      {
+        "included_bytes": 483852,
+        "included_files": 137,
+        "included_sha256": "c14c57105ea15b7cfb020a279e0436bb963b8204fe5cb15f35f0cf0d684b7e3d",
+        "project": "github_com_nidi3_raml-tester",
+        "revision": "6241a5f46a05cc0988be2ce3825495fa2cf95006"
+      },
+      {
+        "included_bytes": 21721,
+        "included_files": 14,
+        "included_sha256": "a19a5a3c3f00a4d363ef926f10211ebd26373003cc1ab82f6ca13ae14f9f043e",
+        "project": "github_com_nikunjp_spring-angularjs",
+        "revision": "bb041287a857d71b9216c85d84845213510a0767"
+      },
+      {
+        "included_bytes": 14310,
+        "included_files": 3,
+        "included_sha256": "0ce43b9786a00b546209790375b73e9bff99261c89aa583852a899cbc1074750",
+        "project": "github_com_nilesh892003_map1234",
+        "revision": "2a7c9cfc3dcce2becc17598ee72e00d00d74ecbf"
+      },
+      {
+        "included_bytes": 44380,
+        "included_files": 7,
+        "included_sha256": "33520e5afc793a71ac727f087066dbfbaca943f0cfa05122026b5986431f6614",
+        "project": "github_com_niloc132_drunken-wallhack",
+        "revision": "f7b1d591d4f3aae8bd72eb34c26c8bb36bc48ba0"
+      },
+      {
+        "included_bytes": 2058294,
+        "included_files": 211,
+        "included_sha256": "a69dcfc1ad5c38bdf358c3135de52f18db7f985bae164f75383d7ca77a4b2cda",
+        "project": "github_com_nishihatapalmer_byteseek",
+        "revision": "2600c05a06ea81a942f0b6b81981da1b6bf40cae"
+      },
+      {
+        "included_bytes": 22942,
+        "included_files": 8,
+        "included_sha256": "2b618faf32b0454cd0d61d13bc1cbb81ed5c72860ae6e412e3cadb19110cd74a",
+        "project": "github_com_njosephef_vertx-service",
+        "revision": "776e7bdc0eba62584460858d2d60c49af69e6eb3"
+      },
+      {
+        "included_bytes": 356033,
+        "included_files": 124,
+        "included_sha256": "a7b4b41b4726f7e11f85c4385163c36b902fa11a04044297010b458c29e2c752",
+        "project": "github_com_nosqltips_elasticstore",
+        "revision": "68207fb258f88790e66f8d8557bbda6b236e7af2"
+      },
+      {
+        "included_bytes": 424971,
+        "included_files": 74,
+        "included_sha256": "ccc91a8ed33334f64c59cc3ac763bf449c2c62d2cf0dd279a7ce8daf5cf1eda1",
+        "project": "github_com_notnoop_java-apns",
+        "revision": "4b02c9e9196087530590bf6442abbf3c35423216"
+      },
+      {
+        "included_bytes": 52811,
+        "included_files": 43,
+        "included_sha256": "aed68f89ad38f89bd8ccfafffaa789b2cc5d09f65619bb140a3e1285d37ce2a5",
+        "project": "github_com_nsimonova_UrlShortener",
+        "revision": "b499e040ab6a50351aa98c55785602d8e1884cca"
+      },
+      {
+        "included_bytes": 138056,
+        "included_files": 89,
+        "included_sha256": "484cc9f9e3ab38988479f994a5034b058bd3e0858ead448e94e9d28d4d3a8464",
+        "project": "github_com_nurkiewicz_java8-workshop",
+        "revision": "6e52e762f7ade6f3788d130950a3d5d68785a184"
+      },
+      {
+        "included_bytes": 1688102,
+        "included_files": 501,
+        "included_sha256": "0933317548ea3043a404d37d82762b0b3dbaedcf29792ee301c18fea15ea2a3c",
+        "project": "github_com_nyolfen_snakeyaml",
+        "revision": "c25e466d39b7e22d7f94341e237eca8c7a18d6e2"
+      },
+      {
+        "included_bytes": 7224,
+        "included_files": 7,
+        "included_sha256": "282b01b1cc3b8be2b80a898521276ea7cdf98ad293409cd90bf3fa589b967d24",
+        "project": "github_com_nyxz_KanbanBoard",
+        "revision": "33b6284e55cd7ff4ebb38c5a58ebd001566caafc"
+      },
+      {
+        "included_bytes": 336878,
+        "included_files": 78,
+        "included_sha256": "012479c08412f955dd74d51dd8fac1b09aa49ec114192ba4c7eca680efa918d8",
+        "project": "github_com_object1984_volley_2015",
+        "revision": "2b6b66be82c1560fd6c1f3f34def9ac0d19cda83"
+      },
+      {
+        "included_bytes": 771575,
+        "included_files": 271,
+        "included_sha256": "ff9a9293032a2adea4a91f2d1e8b539c97d1d17736f0505bfa0290cd4c1b4e31",
+        "project": "github_com_obourgain_elasticsearch-http",
+        "revision": "3d335c037466a13663bc1b6f96c44fa14d3ed438"
+      },
+      {
+        "included_bytes": 343527,
+        "included_files": 127,
+        "included_sha256": "92f4855217b1302b0c1c3d0fa2c84e77e7c65c8ad97f36b9aada950dc1580289",
+        "project": "github_com_olgaalex_ipharm",
+        "revision": "ce269fbca12e6b87059cad2dac6acb43762808ff"
+      },
+      {
+        "included_bytes": 168063,
+        "included_files": 64,
+        "included_sha256": "54ea71afda3d1058da26d3ebf66e945f4f5117492a2e153d247fd9e0322658d6",
+        "project": "github_com_ontometrics_scraper",
+        "revision": "029fcc90823f0f855b4f5b4b8bd406b589b617dc"
+      },
+      {
+        "included_bytes": 80438,
+        "included_files": 25,
+        "included_sha256": "d809774f2b914bde6d52abc16e195d0fcbbcd297a67d354a804b9a57ec5814f5",
+        "project": "github_com_opengeospatial_ets-osxeo10",
+        "revision": "d6c2da94240742c79c0a6d653c2b139a55cd1b24"
+      },
+      {
+        "included_bytes": 80798,
+        "included_files": 25,
+        "included_sha256": "0e7c87e2eeeab9de3fc761eaaac34a36b207bced787fe110b37216be098efa34",
+        "project": "github_com_opengeospatial_ets-osxgeotime10",
+        "revision": "994083c40ba0759298327e0303e9bbad4317ec23"
+      },
+      {
+        "included_bytes": 270558,
+        "included_files": 154,
+        "included_sha256": "07b531598a6fb194ea5eb8e4863987b724a965410aa039c86bd20be434574640",
+        "project": "github_com_oregami_oregami-server",
+        "revision": "ed4fabb7b6b24ef72bc606eb0da2ca59bdb37e2b"
+      },
+      {
+        "included_bytes": 296163,
+        "included_files": 59,
+        "included_sha256": "3564cf74f3da14725b486b928567f40c4ed4089778bfcbcfa2a1f6b15ee2e60f",
+        "project": "github_com_ow2-chameleon_core",
+        "revision": "2c2a423bc0c3b4cb3b9d6bf4dbcb86c9c9a2c08c"
+      },
+      {
+        "included_bytes": 105182,
+        "included_files": 18,
+        "included_sha256": "136bca0e315dc86524a7fddf343df6048b21c0f66ac09e0d6366ca43756a0c9f",
+        "project": "github_com_paepcke_WARCUtils",
+        "revision": "e1f8b092a6a43a6d7bff6df3d209725df51928d3"
+      },
+      {
+        "included_bytes": 435671,
+        "included_files": 81,
+        "included_sha256": "3bbe19d242c4e85fb63f0ac42c67e6c07b3b97c7a8cbe5c0f780efb5f6754f67",
+        "project": "github_com_pageone_jbosh",
+        "revision": "b30b1521c15a16cf07ac62f524031b3f1176d26c"
+      },
+      {
+        "included_bytes": 310338,
+        "included_files": 49,
+        "included_sha256": "9cfbfea5a5ebfbbb58155831407343cbe3adb822aa98032ca538d511797da0c7",
+        "project": "github_com_passwordmaker_java-passwordmaker-lib",
+        "revision": "18c22fca7dd9a47f08161425b85a5bd257afbb2b"
+      },
+      {
+        "included_bytes": 340736,
+        "included_files": 97,
+        "included_sha256": "a6f639c9547e8cf01f5e8cab1b7962c7c9730cf460241504e65096ac42e874ec",
+        "project": "github_com_pastekit_twist",
+        "revision": "31815e42e8b62b48c8d0d3ab38410315ff322b05"
+      },
+      {
+        "included_bytes": 290139,
+        "included_files": 53,
+        "included_sha256": "acd05576d705064e1be3ca98d0db88534a0829af9ab328d6ad283e610635666e",
+        "project": "github_com_pearson-enabling-technologies_elasticsearch-approx-plugin",
+        "revision": "ca1228c6723918a6e912fcbc03248956dc6f3d2e"
+      },
+      {
+        "included_bytes": 10661,
+        "included_files": 9,
+        "included_sha256": "7c7c53f499e523dd226c7fdb00ea0810efeabe486aece4991f731705843d3d1c",
+        "project": "github_com_peterarsentev_AmazonParser",
+        "revision": "fae2e005619698ee540bca09dafcb300d2c441a0"
+      },
+      {
+        "included_bytes": 1012429,
+        "included_files": 387,
+        "included_sha256": "e9877cb6c8e87d695187f16d8b33af4991047b98d34885b857a9b057f0926e4b",
+        "project": "github_com_php-coder_mystamps",
+        "revision": "b997c9114f377d2860060cb097026423dd32aad1"
+      },
+      {
+        "included_bytes": 116144,
+        "included_files": 67,
+        "included_sha256": "533d3ab47f097061c2c3c07aec2f08aa491a01e0867a084fac29101638f37d9c",
+        "project": "github_com_picaro_cookapp-cloud",
+        "revision": "ed1d4b80a5430a5f52edb8e0033bd1b1cace6f26"
+      },
+      {
+        "included_bytes": 144169,
+        "included_files": 60,
+        "included_sha256": "70bc68bbbb1b1d9598bb23b49db8c1f7291fb4cb2f4555a1169b1454f7cef528",
+        "project": "github_com_pinkius_wages",
+        "revision": "e048444a412f064f898fe6547a484aca6ff80447"
+      },
+      {
+        "included_bytes": 1083022,
+        "included_files": 116,
+        "included_sha256": "6588a0a56d3da71c413b594502e2a76fd2886d00f52de6adea9143b04c2033dc",
+        "project": "github_com_pobrelkey_moxiemocks",
+        "revision": "d0dccc4d85b75c3a36b82c436b02ac0d0db331bd"
+      },
+      {
+        "included_bytes": 41248,
+        "included_files": 32,
+        "included_sha256": "d941f41fef7e0c165fde52eb6b830375d2b61c29c8a5fe0c61c91d4cbaa57bbd",
+        "project": "github_com_poolik_callback-websocket",
+        "revision": "ecfd982f569ca173636c4eb5e30a939dec2610d3"
+      },
+      {
+        "included_bytes": 397274,
+        "included_files": 125,
+        "included_sha256": "1a68de757e8b436fbc39d8c4c9cda564ad1f7871cea26aa56236ec0affb7042e",
+        "project": "github_com_ppke-nlpg_purepos",
+        "revision": "e83acaafc4d7c821c62162e71458d3e58ebd187a"
+      },
+      {
+        "included_bytes": 274901,
+        "included_files": 69,
+        "included_sha256": "41d958f7d7931e59d76caedc574527d94371afcb5b78cba96950c5599f057a03",
+        "project": "github_com_predatorray_jdbc-utils",
+        "revision": "51448cc5ec02d7f989f73e2af1e81d64dc64ed8d"
+      },
+      {
+        "included_bytes": 266877,
+        "included_files": 38,
+        "included_sha256": "747a46c729fc8e4c4b481f524902eb0d396719dc8e5c6f51dd517a13d3068e95",
+        "project": "github_com_protegeproject_sparq-dl-api",
+        "revision": "80d430d439e17a691d0111819af2d3613e28d625"
+      },
+      {
+        "included_bytes": 330353,
+        "included_files": 74,
+        "included_sha256": "aa7712b53288488ce01e7fcda3e60fec8557ce666e19c07d78f613c121c38829",
+        "project": "github_com_psidnell_ofexport2",
+        "revision": "07cbb0c1b200111547b9d645477c4f9c757a3126"
+      },
+      {
+        "included_bytes": 812010,
+        "included_files": 14,
+        "included_sha256": "639a07fdfe6ac9dcf048c388a9132ba7bf9c831cd46ffd24951bd55caaf89bfc",
+        "project": "github_com_pulseenergy_harmony-treemap",
+        "revision": "47da10d5688ddd1e7a9a727543fa1a33d81768cd"
+      },
+      {
+        "included_bytes": 891037,
+        "included_files": 167,
+        "included_sha256": "cac7c32d29abfc1fbf2274daa68d767ea4e1a840cd92e4e9e00b72fc3a3e81fe",
+        "project": "github_com_q-programming_tasq",
+        "revision": "bcb986ab99596174ab8b0a2cd53705648ad794c5"
+      },
+      {
+        "included_bytes": 343330,
+        "included_files": 41,
+        "included_sha256": "c93c7b019fae9a9f864e501cb3ebfb415c0214dfd7b38649892350146fe99857",
+        "project": "github_com_quux00_simplecsv",
+        "revision": "aa4bab228e2657b033d8a415d755f2bb74a83048"
+      },
+      {
+        "included_bytes": 207422,
+        "included_files": 88,
+        "included_sha256": "8f152b13915cb4bf98a8d33b91ffa147fa1f93d5f4b8317870aaa2ed975eb17f",
+        "project": "github_com_r-veiga_TFC-spring",
+        "revision": "fc442649531e65a345ab8e7a7bf1ce9b377503c3"
+      },
+      {
+        "included_bytes": 291489,
+        "included_files": 68,
+        "included_sha256": "b9bad39e76ab8b4127b787377023672e98e736f97df0372165a755d2369a52e0",
+        "project": "github_com_ragesteel_migrate4j",
+        "revision": "686e1a106e827a5f7a9bb241b16ccc9f0592e547"
+      },
+      {
+        "included_bytes": 308494,
+        "included_files": 142,
+        "included_sha256": "53668d677a60d26ca5eff8fc3d18ed288fa881c4995b6fca730bfdf01b9b845e",
+        "project": "github_com_rahulbjp_cookbook",
+        "revision": "5b5d3f09d48907024cd11994d631c236184b561a"
+      },
+      {
+        "included_bytes": 91352,
+        "included_files": 34,
+        "included_sha256": "13b5ea4c7796d44489f83d79060f1fbf541bbe89ec55f2fceb53d966df27bbf9",
+        "project": "github_com_raiderx_currency-watcher",
+        "revision": "fd0aefdb1cb99c7a99ae13c8c457b6737359810f"
+      },
+      {
+        "included_bytes": 519758,
+        "included_files": 105,
+        "included_sha256": "8d4d2d4bbd765e56db26489ec022cbea248f588c30208597fdb032cd3158f11f",
+        "project": "github_com_ralscha_wampspring",
+        "revision": "7571bb6773b848c580b29890587eb35397bfe5b5"
+      },
+      {
+        "included_bytes": 302755,
+        "included_files": 100,
+        "included_sha256": "de15fabd26ead7f87bb9133b1fb4e55e004a1b92d963fff42e36e418ef504fdf",
+        "project": "github_com_rapidpro_mage",
+        "revision": "c43421671dc6045510b74ab17c078e6d7cbc7678"
+      },
+      {
+        "included_bytes": 303736,
+        "included_files": 66,
+        "included_sha256": "15413775f105cd99ce18506cf8d3fe4759a604e6ef4fa5d8a60ad94d568a692a",
+        "project": "github_com_rchargel_zlib-config",
+        "revision": "3a199d484399775f9d0fe0b6ecaa60abc89afcaa"
+      },
+      {
+        "included_bytes": 231230,
+        "included_files": 120,
+        "included_sha256": "ce2ace7bd20a69d9869d0038293c5e92d1617dc5171bed81ecb71d3bdaffdcea",
+        "project": "github_com_rchavarria_RAccount",
+        "revision": "84bc317ff6edeb23a12cc49bd4b010a220197120"
+      },
+      {
+        "included_bytes": 40173,
+        "included_files": 20,
+        "included_sha256": "da1e6cb4ae112a4c048049513c19a8bf295c0a34aa03d556668d9e894b1a172c",
+        "project": "github_com_rdammkoehler_medusa",
+        "revision": "2e1efef66df40136c3b483b66807ddcae297c1b7"
+      },
+      {
+        "included_bytes": 328189,
+        "included_files": 71,
+        "included_sha256": "aa2f6fcf31926207cbab9264261ac79a24f0f6e39127d8b446011e7141e762d2",
+        "project": "github_com_reines_httptunnel",
+        "revision": "64078bf478e65b034c672c25b5e247a4c107a0e6"
+      },
+      {
+        "included_bytes": 338072,
+        "included_files": 78,
+        "included_sha256": "e0afa565308cc602c58e683a8fea18b6e5beadfeee35918abedc3c7017521ef7",
+        "project": "github_com_rfdy_volley",
+        "revision": "93eaf5c474fc2d6bab50ed0145b0b5941f2e0cdc"
+      },
+      {
+        "included_bytes": 468863,
+        "included_files": 90,
+        "included_sha256": "e7b69a2381f0b656d5924f9c28da2750a4cc06fae6bfebad28bd83f4e9816162",
+        "project": "github_com_rga78_surfapi-heroku",
+        "revision": "39db5dc46647b846d53fd71424a5716d85714c0c"
+      },
+      {
+        "included_bytes": 6066,
+        "included_files": 4,
+        "included_sha256": "dac8039a43e59ded5c3e427e2c64ab4c48257d086e3729c4b1570a491de6eeb6",
+        "project": "github_com_rhersen_gallery-servlet",
+        "revision": "b0eceaa7f524e610f0d2df4fcaf03076f06d3381"
+      },
+      {
+        "included_bytes": 287948,
+        "included_files": 90,
+        "included_sha256": "0ee29b6c8b6d86115c29db1a35130583f864a6cf5dbbfccf007c41c402c9dd57",
+        "project": "github_com_rhinoforms_rhinoforms",
+        "revision": "64097bf8e83c8238b3745b4466c07ed5d69d365a"
+      },
+      {
+        "included_bytes": 1560187,
+        "included_files": 261,
+        "included_sha256": "6bdd3fc390e884b19f8db6cb26ec33dfa559930d8c84230a1577c20ef9218846",
+        "project": "github_com_rhuss_docker-maven-plugin",
+        "revision": "2d926fe57c81397d37ebdc04a11de381c3203b79"
+      },
+      {
+        "included_bytes": 488941,
+        "included_files": 72,
+        "included_sha256": "f90760dce53ec63a1e7068b64add0533eb9231536046202e8b3bd2ffeb3791c1",
+        "project": "github_com_robert0714_2014_rl_web_selenium_demo",
+        "revision": "39c5fac4779b26a7b9ffd64b4365d8ed5ff641d6"
+      },
+      {
+        "included_bytes": 382022,
+        "included_files": 70,
+        "included_sha256": "3c605c0635aeb557a80895c0c1bc1aeddb1bd979742a29ae19a0e5e5420d8638",
+        "project": "github_com_robusta-code_rra",
+        "revision": "893ce431406a1b4de40e1a4ce8dd1b8260783fbe"
+      },
+      {
+        "included_bytes": 741317,
+        "included_files": 52,
+        "included_sha256": "19a29f543a19d19304c7194263c2d5c8f6b721f7d12d56faaafe1ac7d752b418",
+        "project": "github_com_rogiok_leta-core",
+        "revision": "d6f408d24f63dfbccb0ee7e5cb6f3ba7221a9a93"
+      },
+      {
+        "included_bytes": 402004,
+        "included_files": 94,
+        "included_sha256": "e1009096d25862191fcba7610ef9192af1727bd0b98eedb07eedbae2533f3acb",
+        "project": "github_com_rquinio_l10n-maven-plugin",
+        "revision": "4030f9d0763bc0b99dd65bec3239cbb5cdcb5860"
+      },
+      {
+        "included_bytes": 284969,
+        "included_files": 138,
+        "included_sha256": "eb37fe626aa49e7441a9609eff052df669e0386d57cd0e7daff847cb580ba7f4",
+        "project": "github_com_runeflobakk_motif",
+        "revision": "648c4fefacf11ff5ceeeffffaf162d1c742224b7"
+      },
+      {
+        "included_bytes": 147108,
+        "included_files": 33,
+        "included_sha256": "49755ab27c1d8124fa97acdda8225880e7e831954c061e340228350bf7877fa8",
+        "project": "github_com_safarijv_ifpress-solr-plugin",
+        "revision": "b5611eb82783a99bfb68674cf46a2fb1ab13f3c4"
+      },
+      {
+        "included_bytes": 567071,
+        "included_files": 175,
+        "included_sha256": "342ddb00eaf280950f9adc3590cc5c4b332da2cb047475cd640b05b08fb68884",
+        "project": "github_com_sarahtattersall_PIPECore",
+        "revision": "7c99490ac1da90eeed033fe38c13dc5d5e4ce668"
+      },
+      {
+        "included_bytes": 59279,
+        "included_files": 20,
+        "included_sha256": "0d78848af5a44da3f56c880ffaa6c5a4f0c034fc0e4a21d55a375bf300f59aec",
+        "project": "github_com_sayar_flight-booking-example",
+        "revision": "457af4cf260c9771db9cce594607234b3ca5fe4d"
+      },
+      {
+        "included_bytes": 307940,
+        "included_files": 142,
+        "included_sha256": "5cb76983c9de8e234df27efe29f75f140c2bd2d07125d7a000c1e9c31d04fe88",
+        "project": "github_com_scogneau_devoxxfr2013",
+        "revision": "b7ade4257b6668d7534817f493755477f301bf1c"
+      },
+      {
+        "included_bytes": 967582,
+        "included_files": 295,
+        "included_sha256": "145bad0d2a410e6964b1dbcdbe987571576730712512c03e5ba9dc73c5fbaf8f",
+        "project": "github_com_sdaschner_jaxrs-analyzer",
+        "revision": "4ac62942202d05632977d6c14d3cd7e2d27e2b9b"
+      },
+      {
+        "included_bytes": 34658,
+        "included_files": 20,
+        "included_sha256": "340d745dfb59f6defd54140cabe7ff1d3342e54ae01547f6606de6fe0711819b",
+        "project": "github_com_sdellang_vertx-webapp",
+        "revision": "cb23fa452b50a094cde0e85739bb3238d540d60c"
+      },
+      {
+        "included_bytes": 7750,
+        "included_files": 5,
+        "included_sha256": "b9223271b4e42d7bf2a73f587b305e58fa08de5c0a8a7a77e9c68973f6ddf6b8",
+        "project": "github_com_seana7a7_springmvc-hibernate-example",
+        "revision": "c30a0954e8a43d2284b6bda4cf2a1bdbe3f3f61a"
+      },
+      {
+        "included_bytes": 635559,
+        "included_files": 119,
+        "included_sha256": "eb40b1be62e508ad4624b5ff36d4dc47017d0be16961ba1c179f4b03ccfe5a1b",
+        "project": "github_com_searchisko_elasticsearch-river-jira",
+        "revision": "487a9d8804165ad02264f4300b3ebd11346df6df"
+      },
+      {
+        "included_bytes": 881658,
+        "included_files": 146,
+        "included_sha256": "5d4a3fd9bddfd7340cec5ca017a4ecaee5da48bf4f6ac46e532ee0a050098763",
+        "project": "github_com_searchisko_elasticsearch-river-remote",
+        "revision": "b11c332ea156febd9345d770c823d56a22c71668"
+      },
+      {
+        "included_bytes": 254477,
+        "included_files": 79,
+        "included_sha256": "a6a751773d4e4e910e8eaa96faad844dab1fa39a872e32baeb283ed42dbac8d7",
+        "project": "github_com_searchisko_elasticsearch-river-sysinfo",
+        "revision": "5cae718df9d954efddc718067d210012663c2039"
+      },
+      {
+        "included_bytes": 323251,
+        "included_files": 51,
+        "included_sha256": "8709ea07dc523c158fdb8570127d02a6be40a528f776b8b0d04c38f4877609a5",
+        "project": "github_com_searchisko_structured-content-tools",
+        "revision": "8e79be29618699cfd23efa3c795d2212ef06afab"
+      },
+      {
+        "included_bytes": 245900,
+        "included_files": 84,
+        "included_sha256": "d4ba708496037afef95a40be6755078f687c73af87f28c987166ac297281e5a3",
+        "project": "github_com_searls_jasmine-maven-plugin",
+        "revision": "0a1425c09636aef885a22a86165664adb81bee95"
+      },
+      {
+        "included_bytes": 477290,
+        "included_files": 99,
+        "included_sha256": "4fd744352fd14e3df89f4ec3c4bf7e490f568b58c99ff01b54172170a9ad6e5c",
+        "project": "github_com_sebastiangraf_perfidix",
+        "revision": "f13aa793b6a3055215ed4edbb946c1bb5d564886"
+      },
+      {
+        "included_bytes": 546862,
+        "included_files": 117,
+        "included_sha256": "1575b42c6d0dcf2cd3714eeb11f46d75c857115f2008546b10f8dd0b27028e39",
+        "project": "github_com_seblm_books-marketplace",
+        "revision": "d1845b7b36e5f2d41d6c4ad7cc8787302695860a"
+      },
+      {
+        "included_bytes": 35397,
+        "included_files": 20,
+        "included_sha256": "2c665712d1fea4e5b2caa66e17deda7f90d1f251be33439bd768e67055243842",
+        "project": "github_com_seblm_icloud",
+        "revision": "f5d85e2c3f21dc26735eccb7d19a9f97652cc54f"
+      },
+      {
+        "included_bytes": 275114,
+        "included_files": 83,
+        "included_sha256": "7071ce65b22334a4b409cf4bbecc1f0f7f0377d44fe578dc02d8cb0ef15569ce",
+        "project": "github_com_seerhein-lab_tcc",
+        "revision": "e2b3162cdcbe54051fd693d1f325fc1ffa67bedd"
+      },
+      {
+        "included_bytes": 232152,
+        "included_files": 99,
+        "included_sha256": "5b54d18d3cb2c24b3aa51a77d875e67637ad3298aa486ff126cf1c90a9409924",
+        "project": "github_com_serba_jmxterm",
+        "revision": "13a6c3236e0106355ae6c5affa73944ea45410b7"
+      },
+      {
+        "included_bytes": 27837,
+        "included_files": 22,
+        "included_sha256": "d7460a6e026f28fb4d3753dd224252ad9379661beb8cc61597d3b7605ec437c5",
+        "project": "github_com_sergepeter_itm-int-admin",
+        "revision": "887a7b321228fc0c608c6849a987479ad4eb90c1"
+      },
+      {
+        "included_bytes": 337819,
+        "included_files": 78,
+        "included_sha256": "c41b530e4f9bc28eff0f5c4a550d2e34a352a0b340d9e09f33ac1d569f825a4c",
+        "project": "github_com_seventhmoon_android-platform-frameworks-volley",
+        "revision": "b1a9085ebd2e7bfb2ebe0c200411b4b17c1ecdec"
+      },
+      {
+        "included_bytes": 3593,
+        "included_files": 6,
+        "included_sha256": "c0f687d5078f44fbc664c9f59a28cdc1db7a97fc087006ffcbb63672ecc818e6",
+        "project": "github_com_sexycommando_quickstart-springmvc-mybatis",
+        "revision": "3c61c802eb41dbad1e1913d48ea23e41a7a503a3"
+      },
+      {
+        "included_bytes": 171778,
+        "included_files": 31,
+        "included_sha256": "a0509aa7d607815ba4a228fe354a14d259d39bdc9a4d7c8de0eb4ba98bf678d9",
+        "project": "github_com_sfuhrm_html2sax",
+        "revision": "68edcf0fe8d291fa666a0e635fb0197249f7b53c"
+      },
+      {
+        "included_bytes": 18592,
+        "included_files": 17,
+        "included_sha256": "20474307d6d447a7a1151468833645a6ce92a58accc2e2b21c4eb400049276a3",
+        "project": "github_com_shagstrom_spring-mvc-hibernate-skeleton",
+        "revision": "9614692320432a60078b980ed1c91f9f70f21d38"
+      },
+      {
+        "included_bytes": 821701,
+        "included_files": 88,
+        "included_sha256": "780ed9777955bbf4112882cfdc948f62c8516c35d2c63bc03c7dc6845c71b09e",
+        "project": "github_com_shaunjohnson_suafe",
+        "revision": "975938b29216b59cfb41b501b8602ca90766bc36"
+      },
+      {
+        "included_bytes": 193333,
+        "included_files": 42,
+        "included_sha256": "3dcfff4b27cae9f255696cab16954450b0a12a0b264ec5970239da6368427fb8",
+        "project": "github_com_shellac_java-rdfa",
+        "revision": "b614bcc14e6463a513404fedbcc037f79ee31f25"
+      },
+      {
+        "included_bytes": 222208,
+        "included_files": 63,
+        "included_sha256": "efdb588570a3f000a46835c851307055d6e20d8e891fad27eed9ce1655cda5cf",
+        "project": "github_com_shiguera_gpxparser",
+        "revision": "8db1644f51b52b76aace0170e86a23e11f3891a8"
+      },
+      {
+        "included_bytes": 234478,
+        "included_files": 81,
+        "included_sha256": "1eb6020ae09ec642acf4e448eced98d5b1383011388331504db81b9229181ded",
+        "project": "github_com_shma2001gmailcom_lie-fe",
+        "revision": "ed7f95a4adfadf79ac4b98a13c5df5391465d2b5"
+      },
+      {
+        "included_bytes": 122481,
+        "included_files": 37,
+        "included_sha256": "929ab8356a650bd5cca61af565a26b77d0cf95cc6bcdaa104f832dc10325c08f",
+        "project": "github_com_sihai_camel",
+        "revision": "689f6bbaddf02f2f6df68a43b2ecaae8ea2cf943"
+      },
+      {
+        "included_bytes": 77993,
+        "included_files": 28,
+        "included_sha256": "5940d9167b9ae2cdf545a4feed93ceddc744657feca5308430aa9f694f13e368",
+        "project": "github_com_sihaya_wbs-creator",
+        "revision": "1d4194668c7fa00cbf2e30f1c095bdc8733d1392"
+      },
+      {
+        "included_bytes": 205510,
+        "included_files": 58,
+        "included_sha256": "7c2b2ba3b40b0ca02e58e9ce049f344fabeb61015f69d0db6da893b9b7b9277a",
+        "project": "github_com_sijpesteijn_mafia-maven-plugin",
+        "revision": "a0401b804b25be7767bb4561b87e8a4bae86c3cb"
+      },
+      {
+        "included_bytes": 84918,
+        "included_files": 40,
+        "included_sha256": "4d55fb096f997365243f05109304e67fddb2088b834f8d8a5492e6fadc76d988",
+        "project": "github_com_silentbang_time-management",
+        "revision": "7eb9396403d2936699705a9063f0674b28aad301"
+      },
+      {
+        "included_bytes": 61372,
+        "included_files": 39,
+        "included_sha256": "4ee975f3ee70356013ffa79d84e13988d0ae3d78b16ec717b844c45853e343b3",
+        "project": "github_com_sitina_BatchProcessor",
+        "revision": "c1565bda83da91d3e5004188b8c1bd89290edb58"
+      },
+      {
+        "included_bytes": 318504,
+        "included_files": 152,
+        "included_sha256": "18aa47943c56e1d4d5657719d262786bcde7ebd114169d7e65f4eb4c5e5cbc30",
+        "project": "github_com_sk1418_jalgorithm",
+        "revision": "ff9decdaa809c152f7d917ae20bd5586120a71c4"
+      },
+      {
+        "included_bytes": 59399,
+        "included_files": 24,
+        "included_sha256": "52b17d9dd6e91b1c7687877c4f3e7ec76595b2c958727979a955377a8c4fee64",
+        "project": "github_com_skrall_mailoverlord",
+        "revision": "f40595ed7071cbb3e2233776b06c665ca4376b38"
+      },
+      {
+        "included_bytes": 1003879,
+        "included_files": 194,
+        "included_sha256": "4b46a845dbf88f6dd4f83fddf352fd9bc467bef1fd90993ba74c01cfab23de03",
+        "project": "github_com_slaubenberger_wichtel",
+        "revision": "624b318c3ce8389d3340be4062fbab20b4dc7f86"
+      },
+      {
+        "included_bytes": 199613,
+        "included_files": 66,
+        "included_sha256": "3c57b83879135f2b48fac4a8c1dcfaccf46e916a72cba2e11ef80a48e51fd488",
+        "project": "github_com_slickqa_slickqa-java-client",
+        "revision": "05cda5c8b7724cb8b1f080dade3933ec599b5c94"
+      },
+      {
+        "included_bytes": 258116,
+        "included_files": 38,
+        "included_sha256": "cb15a23bd0829cb3b86d004556804f001d222d6a1960e5c991daf31d0a96f822",
+        "project": "github_com_slub_qucosa-webapi",
+        "revision": "632d382fcb60d9a6aa4c47bdf4c8bed202cc4ee0"
+      },
+      {
+        "included_bytes": 45882,
+        "included_files": 9,
+        "included_sha256": "8f9ce37a5586c1f77d78704346e09549b1af2ba59d616e2b58b23aeeb322351a",
+        "project": "github_com_smartfile_client-java",
+        "revision": "080ff8ea247485e7e13c1e9a08be3adb7b64cd5f"
+      },
+      {
+        "included_bytes": 416654,
+        "included_files": 82,
+        "included_sha256": "b006d2f8150a9dda594e4fa991c2388a8c534e9a4d5166560c064739cb1e8176",
+        "project": "github_com_smartrics_RestFixture",
+        "revision": "d73c8ccd8dc6a3bae1b652df0874007109888fd9"
+      },
+      {
+        "included_bytes": 1985664,
+        "included_files": 433,
+        "included_sha256": "605924265f6682b406f0c7bd1fdef621157a61a4f0b0dc19b43151ac724672a4",
+        "project": "github_com_smartsheet-platform_smartsheet-java-sdk",
+        "revision": "6026f5195f79f17b33ab7cc6eb983adf2dc0937e"
+      },
+      {
+        "included_bytes": 322987,
+        "included_files": 53,
+        "included_sha256": "dd3046af9e5d134d423112db3351a8f999c898b6596346fc83849dfdadd72e67",
+        "project": "github_com_smola_galimatias",
+        "revision": "0771a10ef5021181fc172b95ac39e9f4c7ada2e8"
+      },
+      {
+        "included_bytes": 56954,
+        "included_files": 22,
+        "included_sha256": "f9e24d5f135bbb17dc5826582b767b082d91093ae51de9f908a17d07232d38a7",
+        "project": "github_com_solita_datatree",
+        "revision": "7fc9058515259fa99fb46fa59e11c880ec9fd432"
+      },
+      {
+        "included_bytes": 643524,
+        "included_files": 133,
+        "included_sha256": "d4928a9791e46555689abb52c18f7c2c02e9db5bba831ffc132be0f9b3b61acc",
+        "project": "github_com_sonalgoyal_hiho",
+        "revision": "77dd5af9b4b19167f062112945433dd588d10640"
+      },
+      {
+        "included_bytes": 165538,
+        "included_files": 65,
+        "included_sha256": "68f2fb6c0fa9188f188b6689ee37922c9794578f32cba5c3229548a0e49b390e",
+        "project": "github_com_sonyfe25cp_ParseEverything",
+        "revision": "f8c4c3da9e178bd087f5d93eff8b491a07375d09"
+      },
+      {
+        "included_bytes": 644988,
+        "included_files": 117,
+        "included_sha256": "81c10a11dbc7b5d246ba8e962ff23ac82132fb256541634e7f6c2c72c5557f54",
+        "project": "github_com_sonyxperiadev_gerrit-events",
+        "revision": "974336e502cde2e6e984fd1f8ea230b74116d95f"
+      },
+      {
+        "included_bytes": 246116,
+        "included_files": 79,
+        "included_sha256": "6d858dd9dd4342218a80cdcdd785f64bd5683dfb8ba3ae1ce5d4be4dbd3c9cc4",
+        "project": "github_com_sparkapi_SparkJava",
+        "revision": "86d826e8b734b3f2744eeecdd952e0bb2e5f0eaa"
+      },
+      {
+        "included_bytes": 1280961,
+        "included_files": 354,
+        "included_sha256": "a49035cab05a6d1ea016509e590473bc51b271dba51316f4c361f8fda4a81747",
+        "project": "github_com_spbsu-ml-community_commons",
+        "revision": "21eeb8c456f0d9c655b9fc8b175e711e27a86503"
+      },
+      {
+        "included_bytes": 293939,
+        "included_files": 74,
+        "included_sha256": "974f9018a53f590b6ee389d68024f49b9de12b18ed84dbc1db573d34ebb15b3c",
+        "project": "github_com_spotify_sparkey-java",
+        "revision": "e3efaa77250f3db2ad0971d28c09048aaa2ab5a0"
+      },
+      {
+        "included_bytes": 94038,
+        "included_files": 58,
+        "included_sha256": "0f08b39fb50108767570b0aec1b29dbe81ca9a4069c36068820724cd32d05367",
+        "project": "github_com_spring-projects_spring-mvc-showcase",
+        "revision": "71d8c7e3432b226f09092dd13a7cfe2298fdd265"
+      },
+      {
+        "included_bytes": 88015,
+        "included_files": 37,
+        "included_sha256": "3711854421b23653b17a9904fd04c68aacd3322240afda4325eb88bbcdc6f338",
+        "project": "github_com_spwntr_rnr2",
+        "revision": "7414e062adfcef6c307418c2039e6cb6e26b3913"
+      },
+      {
+        "included_bytes": 453687,
+        "included_files": 39,
+        "included_sha256": "2df25080b99320f4f2914d44d892f552eacfe8fd40b7b4515f7c3499418f4f6d",
+        "project": "github_com_square_javapoet",
+        "revision": "b9017a9503b76e11b4ad4c1a9f050e2d29112cb0"
+      },
+      {
+        "included_bytes": 558227,
+        "included_files": 190,
+        "included_sha256": "963c7f4d64ca7e78cc50146268ebad61c2e4a2247ca804ee0e92bf180dbc0b03",
+        "project": "github_com_srcc-msu_octotron_core",
+        "revision": "ce7628c2b5452b7ffc84e53301e8efa0b15661c1"
+      },
+      {
+        "included_bytes": 338799,
+        "included_files": 77,
+        "included_sha256": "de7ea6d20a428653632fed257b343aeb64ca07e005b3fc1d1eb6362a48b2149a",
+        "project": "github_com_stephenc_redmine-java-api",
+        "revision": "7e5270c84aba32d74a506260ec47ff86ab6c9d84"
+      },
+      {
+        "included_bytes": 286257,
+        "included_files": 131,
+        "included_sha256": "6bcd38b95791244535dc077ce38762d9a3c42d50105ef7ce4231febdfef07ed6",
+        "project": "github_com_stuforbes_adriver",
+        "revision": "76269d0f44b67abd162394c94cb616441dc5380c"
+      },
+      {
+        "included_bytes": 244924,
+        "included_files": 66,
+        "included_sha256": "9121a82854e3b2c0e07a56acfd33f9edc7259632ad804522d3dd0ce4bda0d1de",
+        "project": "github_com_subwoofer359_aplsystem",
+        "revision": "08cbe2b977eea5d20064f8f8b6cdfbb6fe209cca"
+      },
+      {
+        "included_bytes": 329059,
+        "included_files": 192,
+        "included_sha256": "ec482696d15c132e2ae67573eee89ae1aa5ab10bc237d5b2c4758a66c649fafb",
+        "project": "github_com_sunesimonsen_changeless",
+        "revision": "7925d40590ec19f664294d96919c30e19ed9db37"
+      },
+      {
+        "included_bytes": 92536,
+        "included_files": 55,
+        "included_sha256": "8d131c9d739243d66176c8e65acc99daeb33f29ed397a577c36afb4310cee0bc",
+        "project": "github_com_svdsrinivas_myexp",
+        "revision": "55424cc125eb23ed9d008db25615608e40358bd9"
+      },
+      {
+        "included_bytes": 1088182,
+        "included_files": 170,
+        "included_sha256": "e1559bbf727b5b18f1300313f05c2d6cbde4817584f63795c442766f91d0a138",
+        "project": "github_com_svn2github_commons-scxml2",
+        "revision": "d63d355116744acbd3b9c5dbdf72f347560429dc"
+      },
+      {
+        "included_bytes": 286747,
+        "included_files": 43,
+        "included_sha256": "30ee34b4b6140f727e77257e0f925ac12f93f30ef9d08e7714646f72453250a9",
+        "project": "github_com_swordapp_JavaClient2_0",
+        "revision": "0ecebabe136b19948b2108bb1ee8b05e99bff075"
+      },
+      {
+        "included_bytes": 569938,
+        "included_files": 55,
+        "included_sha256": "c395d984562bd2dfa50db1169ec7d4774fba4115d423b501ea311275e0a00b45",
+        "project": "github_com_t3t5u_common-util",
+        "revision": "1adb6b4bb15baf0bfc9ff9172ee9b99a115187e4"
+      },
+      {
+        "included_bytes": 340066,
+        "included_files": 141,
+        "included_sha256": "acfe0a783712a0c175b4bfd6c13b7efac4a5207845efbee59b446a036965b0be",
+        "project": "github_com_t7mp_maven-t7-plugin",
+        "revision": "e1be3c8554403d95a3667c68909300c8396634ba"
+      },
+      {
+        "included_bytes": 346468,
+        "included_files": 54,
+        "included_sha256": "daff46affb1048ef438761d7892b5f2ee1dc390e6608b35eba1e09641aba6b42",
+        "project": "github_com_tabulapdf_tabula-java",
+        "revision": "2cdf3b4fd3f7e921dca8cc6814cdd9316be40f0f"
+      },
+      {
+        "included_bytes": 524485,
+        "included_files": 68,
+        "included_sha256": "af397f27c3e4979511787b260aa3d80ca81436777f81ec2fbea71bf1af30568e",
+        "project": "github_com_tarent_pkg-maven-plugin",
+        "revision": "1fd4e207be64e27ff070070fff15673c0789f6f2"
+      },
+      {
+        "included_bytes": 118655,
+        "included_files": 46,
+        "included_sha256": "726a5005417186cf6a86b6eb23d84d7011f347b400d0f8ce07562ddc3e215521",
+        "project": "github_com_tchoubid0o_projet",
+        "revision": "c184e3f7286e3582a389ad944f48c361aa6e3a40"
+      },
+      {
+        "included_bytes": 376105,
+        "included_files": 78,
+        "included_sha256": "bcef633e1a87dbabafa608d3e3a34ea12e7cb3f1fce273ba7c3a8b6981224d30",
+        "project": "github_com_tcurdt_jdeb",
+        "revision": "912ea0291ac9f42b72e6734774258863a9713ef9"
+      },
+      {
+        "included_bytes": 41102,
+        "included_files": 19,
+        "included_sha256": "cdf709fbe3e2e251e44949c6f405f67b529cfbe80aaffed0795b7e9e3bc6c384",
+        "project": "github_com_tdurieux_CrashGraph",
+        "revision": "1e31617354e8a0c59b9a7d22e8913a9bc376aecb"
+      },
+      {
+        "included_bytes": 336795,
+        "included_files": 144,
+        "included_sha256": "1189065d333989a6d11cc1380e7a17b71422e2e6252be9ca4159371a565626fd",
+        "project": "github_com_teanutella_AppEmployee",
+        "revision": "788e172f80fa5d19c57845e2beeff1f9078454d8"
+      },
+      {
+        "included_bytes": 250937,
+        "included_files": 68,
+        "included_sha256": "1ed9987aa8db7045ade48a28003438e5225774f5fde0fa147ba5e7288ff2c2c3",
+        "project": "github_com_telosys-monitoring_telosys-monitoring",
+        "revision": "abb70c7978ab1a03bc427b9654ea7065453b0ff0"
+      },
+      {
+        "included_bytes": 521306,
+        "included_files": 119,
+        "included_sha256": "1d2b8a6efdeb8a3b99c1b1b6f519807a61c7b208769a9e987c92d12b7980faef",
+        "project": "github_com_termd_termd",
+        "revision": "c2aa8c4c54ef3fbb546bb9da4fed7681de657923"
+      },
+      {
+        "included_bytes": 340736,
+        "included_files": 97,
+        "included_sha256": "a6f639c9547e8cf01f5e8cab1b7962c7c9730cf460241504e65096ac42e874ec",
+        "project": "github_com_textquo_twist",
+        "revision": "31815e42e8b62b48c8d0d3ab38410315ff322b05"
+      },
+      {
+        "included_bytes": 436159,
+        "included_files": 135,
+        "included_sha256": "4d4ad2866a26b9223a543be0c28ba8a877e10e88f0cbb592f3dbc4152819df1b",
+        "project": "github_com_thradec_wolf-validator",
+        "revision": "ac6f8053ad7427958a2d516469d70e2a6cecc390"
+      },
+      {
+        "included_bytes": 1019319,
+        "included_files": 407,
+        "included_sha256": "226e1bd800b877c1d831d7e7f62f9423bf3d73fe5faed178135577ffbcad5ae2",
+        "project": "github_com_thrawn-sh_subversion",
+        "revision": "db253a3ff3874e6b3fa449a8771f28553f429c35"
+      },
+      {
+        "included_bytes": 161494,
+        "included_files": 55,
+        "included_sha256": "2cfd970830c6e76b9c3b3802124e1b95918b3af40cdb1b55fd866694c87379a7",
+        "project": "github_com_tingley_tipp-java",
+        "revision": "9ac7adc959702cf9d3984164f2d40216dc7e4f98"
+      },
+      {
+        "included_bytes": 308492,
+        "included_files": 142,
+        "included_sha256": "da7ddc16d37789e54c4830af98549484d6ea52cc16f77311ad6e658ed65d9be0",
+        "project": "github_com_tjchaplin_DDDSample",
+        "revision": "b8befd68dcc85306a94382001b5a0b17caaf75b8"
+      },
+      {
+        "included_bytes": 336878,
+        "included_files": 78,
+        "included_sha256": "012479c08412f955dd74d51dd8fac1b09aa49ec114192ba4c7eca680efa918d8",
+        "project": "github_com_tmxdyf_Volley",
+        "revision": "2b6b66be82c1560fd6c1f3f34def9ac0d19cda83"
+      },
+      {
+        "included_bytes": 330475,
+        "included_files": 147,
+        "included_sha256": "d298983c1976c62784a4c418390a58965065c4ae7835119904041c6dca90f856",
+        "project": "github_com_tobyweston_simple-http",
+        "revision": "2faaf6cc48bb29df8885afd02ee04d8cd6258447"
+      },
+      {
+        "included_bytes": 1171312,
+        "included_files": 105,
+        "included_sha256": "59dd583e100b4f96ad431ffc44d079d833d3b026408362eb442b571e7114c053",
+        "project": "github_com_tolgamyth_Common-Java-Utilities",
+        "revision": "6b898933f16bdadabd20aeeeadd3a57dabf45070"
+      },
+      {
+        "included_bytes": 619794,
+        "included_files": 106,
+        "included_sha256": "c363149e0d301d4369c41f6e79ecf23c237130ce298ef353e7606c5b527c569b",
+        "project": "github_com_tomgibara_bits",
+        "revision": "56c32c0a30efd3d7c4e7c6600a0ca39e51eecc97"
+      },
+      {
+        "included_bytes": 8424,
+        "included_files": 3,
+        "included_sha256": "8fe766f69bc881797d48a485d02c44044162a0ad060aebf0587bd6021c81c9c9",
+        "project": "github_com_tomitribe_tomee-jaxrs-angular-starter-project",
+        "revision": "a208fdf206d746ab44c8f54c0e9af361319007bc"
+      },
+      {
+        "included_bytes": 26350,
+        "included_files": 14,
+        "included_sha256": "f4f0868a5a6864f9022b9ba3eaf5cf57f8cdb6a933861ae1a1d13f3d0578627e",
+        "project": "github_com_trecloux_stateless-demo-app",
+        "revision": "7eb914367cddc75bfa6b86e8f74a5d1a14ea0e7e"
+      },
+      {
+        "included_bytes": 30084,
+        "included_files": 30,
+        "included_sha256": "e6ae9189c79ccd71490d1222b60725a9aa4382aa404ca9551ef05a98b9159753",
+        "project": "github_com_trefsahl_eventstoredemo",
+        "revision": "945951a74de0646f76daf9b34418e4329d3888c2"
+      },
+      {
+        "included_bytes": 425799,
+        "included_files": 122,
+        "included_sha256": "f13015108ed84625fb872d8f7d7fa1cea107786443859b9643f1d66ee815a7c5",
+        "project": "github_com_troyding_resa-experiment",
+        "revision": "54aa0102b4f4746afa93462259d52d3fa737dda9"
+      },
+      {
+        "included_bytes": 391475,
+        "included_files": 44,
+        "included_sha256": "126ecd8913df4f6f07056088941995b303d87792febe130cfaf3a5f774d8f725",
+        "project": "github_com_tstack_SqliteJdbcNG",
+        "revision": "0215febab8fd8e589ef1e2c437fc30f3bd864d7b"
+      },
+      {
+        "included_bytes": 268105,
+        "included_files": 52,
+        "included_sha256": "6ab755c3da0ad8fbeb707e0fb70b96a22448c6eaee46b6e294803d0fac951ff1",
+        "project": "github_com_ttddyy_spring-social-evernote",
+        "revision": "a6811f99d8fc3c1a2660a73ac33320427b226854"
+      },
+      {
+        "included_bytes": 333282,
+        "included_files": 123,
+        "included_sha256": "0853e28ef4fbad1f360a94499157c945f5a8c7d4a8d62a5a2b8712043e4fc2c2",
+        "project": "github_com_tupilabs_tap4j",
+        "revision": "03ca2ba23ed04daa191386c783d3f0627f78fa3b"
+      },
+      {
+        "included_bytes": 1895228,
+        "included_files": 211,
+        "included_sha256": "fadabb6580ff71fd500fc56fc6da044c35c655556fe7b5e255b715912077e693",
+        "project": "github_com_uaihebert_uaicriteria",
+        "revision": "e2d42b7fd9eebbcf3eea85f3980416ce546aac4f"
+      },
+      {
+        "included_bytes": 1632015,
+        "included_files": 218,
+        "included_sha256": "15c0981c725fe069ed41d898a30582d7b556802d3658506cc8c605661e831efd",
+        "project": "github_com_uaithne_uaithne-generator",
+        "revision": "153a86eef3b89c6f907c7cab341424537a5bbb43"
+      },
+      {
+        "included_bytes": 17670,
+        "included_files": 9,
+        "included_sha256": "b9711aa6d318bcf1362a1cf05dfb487bd0267fceeec8b8e24c2838884e096b13",
+        "project": "github_com_unportant-thoughts_201405_JEP_180",
+        "revision": "a9a12b9bb02492f2bb4121825d450e88e1030c13"
+      },
+      {
+        "included_bytes": 385431,
+        "included_files": 77,
+        "included_sha256": "b1fcc6e4f7b0597a9cb32cf14367e810094d44481c1da7f8ecf14160b961371a",
+        "project": "github_com_uoa-group-applications_morc",
+        "revision": "3add6308b1fbfc98187364ac73007c83012ea8ba"
+      },
+      {
+        "included_bytes": 431893,
+        "included_files": 99,
+        "included_sha256": "823f7c73f87b1d07cfb13f502b70a987e6c766cc4375717661388f3b25f1f793",
+        "project": "github_com_urbanairship_datacube",
+        "revision": "697d1373c841de23030e386d742d3ba43e914ff3"
+      },
+      {
+        "included_bytes": 3068346,
+        "included_files": 920,
+        "included_sha256": "d1245e40750b4ba8e5b324188f61c2b054408a2616dbf36ee1ea21d6d9687f31",
+        "project": "github_com_urbanairship_java-library",
+        "revision": "c6c08d7f8da86b71cfc1684725360f052b9b9bab"
+      },
+      {
+        "included_bytes": 32243,
+        "included_files": 17,
+        "included_sha256": "7cb02ff746ee9eabcba865ca5f559c9ba7e6f78fe96d977664333db5ec3ca91a",
+        "project": "github_com_valdasraps_rfidloc",
+        "revision": "09d3e65d70a64922b033f86a4c6391a7d075c338"
+      },
+      {
+        "included_bytes": 287392,
+        "included_files": 156,
+        "included_sha256": "5e4609fc4f13b70c556f61ce6a478a66e9ea4653d1a39fe72d22b68d2a8216ad",
+        "project": "github_com_varokas_jpaQuery",
+        "revision": "234468d2f1f1e42ad9555177474c5b8cd81b61a2"
+      },
+      {
+        "included_bytes": 74714,
+        "included_files": 25,
+        "included_sha256": "33117120aecb2c14ab4d0a72bbc930c1d39f8b25859098b57e50304718a83ce4",
+        "project": "github_com_vastus_Soko",
+        "revision": "7153e63644748d8fc49266eb39047a4ae6da90b7"
+      },
+      {
+        "included_bytes": 19661,
+        "included_files": 25,
+        "included_sha256": "96c33a9d4fec0d139b9f2545a388b8862ad48a1d49418adc063c773b8fed2b2a",
+        "project": "github_com_vbasem_messenger",
+        "revision": "d688d32f9330075748d466edc3dba8baa28dc61d"
+      },
+      {
+        "included_bytes": 287784,
+        "included_files": 179,
+        "included_sha256": "675151a229eefd60dfa03defa4d0f647ef71ec639383d9598486d0f056155391",
+        "project": "github_com_vidageek_mirror",
+        "revision": "42af9dad8c0d6e5040b75e83dbcee34bc63dd539"
+      },
+      {
+        "included_bytes": 778715,
+        "included_files": 304,
+        "included_sha256": "c4cab8991fc54207deed85f7a352836540d54c769395acf7ac8be3e28ad126ad",
+        "project": "github_com_vikingbrain_thedavidbox-client4j",
+        "revision": "b2375a59b30fc3bd5dae34316bda68e01d006535"
+      },
+      {
+        "included_bytes": 692878,
+        "included_files": 117,
+        "included_sha256": "d301ee61e76aadf524e42001672586b00f00bb039254190f76cf620fc76e45a3",
+        "project": "github_com_vkostyukov_la4j",
+        "revision": "dd1b917caf9606399a49afa6b0d738934cd3a7b3"
+      },
+      {
+        "included_bytes": 73942,
+        "included_files": 41,
+        "included_sha256": "c631b03359cd32645c6ab8e2fdb2313d08a57d1974af3b032c8c94122a88adc4",
+        "project": "github_com_vladimirus_learnedsomething",
+        "revision": "ce41b2c3af5c2cbbefe29da1a8caa76b82154c5d"
+      },
+      {
+        "included_bytes": 807264,
+        "included_files": 147,
+        "included_sha256": "c956277141171f29cce18f6b404de4c27917fdfd30e27f32cf63c71e4bc54071",
+        "project": "github_com_vrockai_beast",
+        "revision": "73b2ff86a03a9192b4e2f94b8cd1005ca6c6f2eb"
+      },
+      {
+        "included_bytes": 155456,
+        "included_files": 19,
+        "included_sha256": "0f9a2d664a1d3e1daedc51d022d7e6710ccbd849c2a90d84968ec907972dd321",
+        "project": "github_com_vrockai_picketlink-idm-webapp",
+        "revision": "a51561d0a50d7cb232cdd6bf97e46b1e7b699d2d"
+      },
+      {
+        "included_bytes": 342132,
+        "included_files": 64,
+        "included_sha256": "cd3b3b2bc2397163304694b123ebeeffffc4df342a07cdee69029e644fff2190",
+        "project": "github_com_waldheinz_fat32-lib",
+        "revision": "3d8f1a986339573576e02eb0b6ea49bfdc9cce26"
+      },
+      {
+        "included_bytes": 251790,
+        "included_files": 133,
+        "included_sha256": "0c9f014962b58a04616290c84bad8f09085687164bac038a85007957d331ceff",
+        "project": "github_com_webber-s_java-ai-techniques",
+        "revision": "e2e40181065e0b315920d1b1ca5a3851fbdd4040"
+      },
+      {
+        "included_bytes": 345630,
+        "included_files": 131,
+        "included_sha256": "0e9178f97d4a398db001d1a456bedb626d4645ca37e22a9fca1dd36de7d96754",
+        "project": "github_com_webbit_webbit",
+        "revision": "5403edae6373ea4ff47cfccda0d61135e77db5b4"
+      },
+      {
+        "included_bytes": 1003298,
+        "included_files": 322,
+        "included_sha256": "f18961e0e5ba744f6b328144d7b6768a400e0304b189b643c5e6799e949fdd48",
+        "project": "github_com_weblicht_wlfxb",
+        "revision": "b961c8f10428dd701037b600641f2bfb51567ae2"
+      },
+      {
+        "included_bytes": 234516,
+        "included_files": 52,
+        "included_sha256": "139bfb46b9db63be6bdba2cb6aa3fd6434095687050c7db9fd3d562bffa1bff2",
+        "project": "github_com_weikai77_fdb",
+        "revision": "2b7fcfa3921f3e0c18ed472cc52a907c76a12b56"
+      },
+      {
+        "included_bytes": 165135,
+        "included_files": 110,
+        "included_sha256": "9523bc96ccea896c99547263493c18fc6634b0bb808115161360ba5cb9c7600c",
+        "project": "github_com_weswilliams_GivWenZen",
+        "revision": "455a03aa215f6362bc10cefb5e691d28246b2ebc"
+      },
+      {
+        "included_bytes": 513904,
+        "included_files": 153,
+        "included_sha256": "736069120905032e633fd06891e5560484854e74174c47aa1b391d1f70c1bc77",
+        "project": "github_com_whizzosoftware_WZWave",
+        "revision": "b5a337842605bb88f4cb4c31211c4793dc4811e5"
+      },
+      {
+        "included_bytes": 530604,
+        "included_files": 97,
+        "included_sha256": "4444125afe8073740b9d23e9fb147d229b3af53b59fcd5e7119dc5ce189428dc",
+        "project": "github_com_wlu-mstr_leveldb-java",
+        "revision": "e94be0bf359634be181a6083ce357530c81a10c9"
+      },
+      {
+        "included_bytes": 618466,
+        "included_files": 89,
+        "included_sha256": "08ada205be5c5248a723c8400c663837f48a8d555b6c9e7511de495e662531a5",
+        "project": "github_com_wojtask_CormenImpl",
+        "revision": "d6b18c99fca7596a45b1bee39c6b3b70bf31c669"
+      },
+      {
+        "included_bytes": 22627,
+        "included_files": 12,
+        "included_sha256": "26305affada916d18c51560046b5553cad8e4f8ae5dee443fefd5fd31fa551f0",
+        "project": "github_com_wokier_TEH",
+        "revision": "b32a26764ea761eb91174f4f1baac96601fd1251"
+      },
+      {
+        "included_bytes": 394708,
+        "included_files": 69,
+        "included_sha256": "176c39ec1ac0f408406e4d92a62b6923c2afba97eade7c0ddc58b3fe720d03ed",
+        "project": "github_com_wspeirs_sop4j-dbutils",
+        "revision": "458f6c0ad67dbd5b64ff99d7c62bbd37cc1aa087"
+      },
+      {
+        "included_bytes": 746617,
+        "included_files": 350,
+        "included_sha256": "5375ea520014789ccb3432d31b6ba018841157ba2d494f7be9a05e80e83f6871",
+        "project": "github_com_wyldebeast-wunderliebe_socrates",
+        "revision": "bc4ebdbe7be0f211ea36c3d22d09abb86064fac5"
+      },
+      {
+        "included_bytes": 136299,
+        "included_files": 65,
+        "included_sha256": "dba49d7f323c8293722ce50bda343a1c2942c185cf1bb6b01da8db923293046f",
+        "project": "github_com_xebia-france_xebay",
+        "revision": "56c98956080fb5d94a8907ef145c23acd5551981"
+      },
+      {
+        "included_bytes": 150043,
+        "included_files": 35,
+        "included_sha256": "b8a08a93616f6163dcf402be82fbe3b1667464b1bfcc5821591b719036bc45e2",
+        "project": "github_com_xebia_Xebium",
+        "revision": "435fd4add98a5173311d16405af5accb8d52f26b"
+      },
+      {
+        "included_bytes": 226362,
+        "included_files": 75,
+        "included_sha256": "0615775da08f14baec83c24d21c3bdeb163b4346c6c7db06b96712f59579ee29",
+        "project": "github_com_xionghuiCoder_clearpool",
+        "revision": "7c09ffc00bbc7e931760a4210409223d6965a36b"
+      },
+      {
+        "included_bytes": 1151807,
+        "included_files": 149,
+        "included_sha256": "399a84f34557ae6639e328a1602ca6e7e4b008f5e1ebad9cde383c95fc10314c",
+        "project": "github_com_xjodoin_torpedoquery",
+        "revision": "09a3357b34f1e68b3715142c421507c2a38bdd96"
+      },
+      {
+        "included_bytes": 572401,
+        "included_files": 57,
+        "included_sha256": "28238b3c2140a1fb85f0ba43c388427e98100d5b3d02aff1f2d31d00005804a7",
+        "project": "github_com_xose_tinder",
+        "revision": "5d69280f661a90f9f39adb7a36f7035e20e028a7"
+      },
+      {
+        "included_bytes": 974481,
+        "included_files": 133,
+        "included_sha256": "2017c8b3fcf446c71e3ea4cc7fefd80b63e849a44d002be452ac27174516628b",
+        "project": "github_com_xuanyue202_jedis-byte-cluster",
+        "revision": "8ef930d5df22347ae161c23368e6bcdff5bdfc6b"
+      },
+      {
+        "included_bytes": 330317,
+        "included_files": 35,
+        "included_sha256": "0d418cf8659983f22be732faef617eeba2dc3e084d90cb0d03a326211fdfb39c",
+        "project": "github_com_yankai913_dubbo-rpc-thrift",
+        "revision": "54b3e3256891ca86d94a2956684ce11165213bc8"
+      },
+      {
+        "included_bytes": 208541,
+        "included_files": 71,
+        "included_sha256": "4dd7c3bd7211815f6d15ffe612ebf7c833b9a27c5eab4d69cca5d67283cb41b7",
+        "project": "github_com_yboujallab_hang",
+        "revision": "a882ff638d749836d02d08091b82ef20ee8f1281"
+      },
+      {
+        "included_bytes": 185070,
+        "included_files": 65,
+        "included_sha256": "15bf9f477229ad1c0853d96fc366ceac5509853887c0441e4367f649c1c66154",
+        "project": "github_com_yoodoc_crams-consumer",
+        "revision": "7911116de4ece991f8e1bf68d471c91f04872d42"
+      },
+      {
+        "included_bytes": 290925,
+        "included_files": 110,
+        "included_sha256": "2fd03b871bb411af4045626c2eec410b8146aa6679263bd6062fe001f2784663",
+        "project": "github_com_ytaras_mp3downloader",
+        "revision": "14dce80ba2d796f0cb20b553d43fcbc625ffb3f6"
+      },
+      {
+        "included_bytes": 288985,
+        "included_files": 196,
+        "included_sha256": "3387084dc294a4843aa6ca5b358d4d8497aa2bb5ec7bc48dd014a2deea1832be",
+        "project": "github_com_yujunliang_seleniumcapsules",
+        "revision": "5b666d95ddb02a685b2d7f28d86ec149f0da365f"
+      },
+      {
+        "included_bytes": 614695,
+        "included_files": 259,
+        "included_sha256": "1dc388c62e91bfbbc8238dfbbe926fe94605a74479cab43c8908b35187ea1a8f",
+        "project": "github_com_zalando_java-sproc-wrapper",
+        "revision": "822ae0953bb4ba0aeb585305d0872bc81343e5a6"
+      },
+      {
+        "included_bytes": 271912,
+        "included_files": 77,
+        "included_sha256": "692e8e4a7e4cca2cb83b7b98fdbc6926eec62d84575f77946685b6ce84595f1b",
+        "project": "github_com_zavakid_mushroom",
+        "revision": "a523a89bb040b75383141cc279e0a7f4249cfdc2"
+      },
+      {
+        "included_bytes": 421772,
+        "included_files": 70,
+        "included_sha256": "c3a8248356ffd7f1ccbe36ce1ee90076e2ce0166c46fbc662f2f9fcfdced7e19",
+        "project": "github_com_zeroturnaround_zt-zip",
+        "revision": "f75b706420edabe71677ae50022f8610d1d29ba0"
+      },
+      {
+        "included_bytes": 562770,
+        "included_files": 92,
+        "included_sha256": "27ed514f959ef37cab38dfbd31bc933e456ed0fa0a2ce3ac6646549877cce4df",
+        "project": "github_com_zewt_jbosh",
+        "revision": "5d70a561e53c385c30085b9ae087fb748526df4a"
+      },
+      {
+        "included_bytes": 415447,
+        "included_files": 167,
+        "included_sha256": "f957a788229aad0cef5631ab5428fe51cbeee1acabd0658c2df0da35d5b2daea",
+        "project": "github_com_zscott_MultiBitExchange",
+        "revision": "4796365d01ab9832533ffac941d948bf6f3f406a"
+      },
+      {
+        "included_bytes": 26571,
+        "included_files": 11,
+        "included_sha256": "1b48ed79a024cb678849212a8462e2c7b4e1dd919ba292129db7f2e10f7c17c4",
+        "project": "github_com_zsniper_SwordSpa-Server",
+        "revision": "37aa9e795e94f1b065fd3dffa5ee3df0f89ad9e3"
+      },
+      {
+        "included_bytes": 137232,
+        "included_files": 20,
+        "included_sha256": "4f922a10fe573a28ea7aaeb318d6c755a9d98ec3deec26e19885ce078c5a86d6",
+        "project": "github_com_zsoman_beadando",
+        "revision": "8e435079b662bd14c5ee068cccacc9f54f815dc0"
+      },
+      {
+        "included_bytes": 742126,
+        "included_files": 182,
+        "included_sha256": "5593605c7124dde79d63034d2f39460dcbe1530def64204662b2728d2e6944bf",
+        "project": "github_com_zzorn_flowutils",
+        "revision": "b9b0869a40b55680495432b5bc8e16b3d6c13e60"
+      }
+    ]
+  }
+}

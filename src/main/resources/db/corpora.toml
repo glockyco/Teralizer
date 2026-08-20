@@ -11,8 +11,8 @@ id = "real-world"
 database = "postgres_reporeapers_rq6_v7"
 data_dir = "data/reporeapers-rerun-v7"
 config_dir = "project-configs/replication/extended"
-expected_projects = 632
-notes = "Published RepoReapers real-world evaluation corpus."
+expected_projects = 1161
+notes = "Published RepoReapers real-world evaluation corpus; 632 projects are selected for analysis."
 
 [[corpus]]
 id = "jarvis-benchmark"

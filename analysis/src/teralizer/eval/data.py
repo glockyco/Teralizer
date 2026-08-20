@@ -33,7 +33,7 @@ _KIND_RELKINDS = {
 }
 
 
-def _validate(conn: Connection, require: Sequence[Required]) -> None:
+def validate_required(conn: Connection, require: Sequence[Required]) -> None:
     """Check each required object exists with the right kind and columns.
 
     Uses pg_catalog, not information_schema: a materialized view (e.g.
@@ -98,7 +98,7 @@ def connect(
     with open_report_connection(db) as conn:
         if validate_schema:
             assert require is not None
-            _validate(conn, require)
+            validate_required(conn, require)
         yield conn
 
 

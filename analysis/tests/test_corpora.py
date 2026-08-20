@@ -26,7 +26,7 @@ def test_repository_registry_declares_each_published_corpus_once():
         "jarvis-scenarios",
     )
     assert len({entry.database for entry in registry.entries}) == 4
-    assert registry.get("real-world").expected_projects == 632
+    assert registry.get("real-world").expected_projects == 1161
     assert registry.get("real-world").data_dir == "data/reporeapers-rerun-v7"
     assert registry.get("controlled").data_dir is None
 

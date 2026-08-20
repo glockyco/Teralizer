@@ -31,25 +31,25 @@
 
 ## 2. Materialize, Define, and Resolve Report Inputs
 
-- [ ] 2.1 Add focused tests for corpus and file declarations, including unique roles,
+- [x] 2.1 Add focused tests for corpus and file declarations, including unique roles,
   repository-relative paths, required and optional files, invalid corpus ids, and immutable declaration
   tuples.
-- [ ] 2.2 Implement the closed corpus-or-file declaration types and registration validation without a
+- [x] 2.2 Implement the closed corpus-or-file declaration types and registration validation without a
   primary-input alias, generic directory type, or unconstrained physical database field.
-- [ ] 2.3 Implement resolved input handles and immutable corpus, file, and absent-input snapshots;
+- [x] 2.3 Implement resolved input handles and immutable corpus, file, and absent-input snapshots;
   expose role-based lookup with errors that name the report and role.
-- [ ] 2.4 Resolve corpus roles through the finalized corpus registry, verify expected project count,
+- [x] 2.4 Resolve corpus roles through the finalized corpus registry, verify expected project count,
   read-only access, corpus-definition completeness, and role-specific required objects before calling a
   builder.
-- [ ] 2.5 Resolve repository file roles with required or optional absence semantics, SHA-256, last file
+- [x] 2.5 Resolve repository file roles with required or optional absence semantics, SHA-256, last file
   commit, and dirty state; reject absolute or escaping declaration paths.
-- [ ] 2.6 Add one project-source evidence extractor that writes a compact versioned per-project relation
+- [x] 2.6 Add one project-source evidence extractor that writes a compact versioned per-project relation
   shared by dataset and RQ1, records nested repository or source-bundle identities and reconciliation
   totals, validates before atomic replacement, and matches both current raw-source report paths.
-- [ ] 2.7 Add one JARVIS evidence extractor that replaces the 1,524 database-selected jqwik log reads
+- [x] 2.7 Add one JARVIS evidence extractor that replaces the 1,524 database-selected jqwik log reads
   with normalized scoreboard and census PVC facts, records both corpus identities and selection totals,
   validates before atomic replacement, and matches current RQ0 results.
-- [ ] 2.8 Create one new `feat(eval)` commit for the normalized report evidence inputs and extractors,
+- [x] 2.8 Create one new `feat(eval)` commit for the normalized report evidence inputs and extractors,
   including the generated compact files and focused raw-source reconciliation checks.
 - [ ] 2.9 Use one `ExitStack` per report to own every corpus connection and prove connections remain live
   during construction and close before rendering.
