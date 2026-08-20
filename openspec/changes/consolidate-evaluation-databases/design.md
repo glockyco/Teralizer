@@ -257,3 +257,12 @@ Neither is a request to change measured data.
   generated output by construction, so the three checks fail for the expected reason and an operator
   cannot tell that failure from a regression. State the source-database strings as the one permitted
   difference, and compare the rest, or restate the criterion against a diff that excludes them.
+
+- **This repository's own guidance names the databases it renames.** `AGENTS.md:124-125` states which
+  corpus each of two databases holds, `AGENTS.md:36` puts a database name in a runnable command, and
+  `.omp/rules/db.md` names the protected pair and classifies the rest as unprotected in-flight
+  corpora. That classification is what drifts: the corpus this change ships as a registry entry
+  already backs published real-world figures while the rule still reads as in-flight. The rename
+  makes every one of those statements wrong, and a reader cannot tell a renamed corpus from a
+  retired one. Guidance changes belong in the same commit as the rename, for the reason this change
+  already gives about frozen configs preserving a misleading record.
