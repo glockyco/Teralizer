@@ -1,12 +1,12 @@
 ## 1. Registry and lifecycle, describing the current state
 
-- [ ] 1.1 Add `src/main/resources/db/corpora.toml` with one entry per corpus, pointing at the current
+- [x] 1.1 Add `src/main/resources/db/corpora.toml` with one entry per corpus, pointing at the current
       physical names, carrying `id`, `database`, `data_dir`, `config_dir`, `expected_projects`, and
       `notes`, with one entry each for `controlled`, `real-world`,
       `jarvis-benchmark`, and `jarvis-scenarios`
-- [ ] 1.2 Add a Python registry reader over `tomllib` that fails on a missing field or a duplicate
+- [x] 1.2 Add a Python registry reader over `tomllib` that fails on a missing field or a duplicate
       physical name, plus unit tests for both failures
-- [ ] 1.3 Add the shell accessor that reads the registry through the Python helper
+- [x] 1.3 Add the shell accessor that reads the registry through the Python helper
 - [ ] 1.4 Define the `scratch_` pattern and a classifier that buckets a database name as corpus,
       scratch, or unclassified
 - [ ] 1.5 Add `verify-corpora`: check existence and project count for every entry, and report
@@ -16,12 +16,12 @@
 
 ## 2. Expose the registry resolution boundary
 
-- [ ] 2.1 Expose immutable lookup by semantic corpus id, returning the physical database, corpus
+- [x] 2.1 Expose immutable lookup by semantic corpus id, returning the physical database, corpus
       definition paths, expected project count, and notes without a primary-corpus alias
-- [ ] 2.2 Expose registry-owned existence and expected-project-count validation for callers that resolve
+- [x] 2.2 Expose registry-owned existence and expected-project-count validation for callers that resolve
       one or more corpus roles; keep role-specific object validation outside this change
-- [ ] 2.3 Test successful and unknown-id lookup, immutable entries, and count mismatch diagnostics
-- [ ] 2.4 Complete these registry interfaces before `make-report-runs-explicit` removes
+- [x] 2.3 Test successful and unknown-id lookup, immutable entries, and count mismatch diagnostics
+- [x] 2.4 Complete these registry interfaces before `make-report-runs-explicit` removes
       `ReportSpec.schema`, physical defaults, and database overrides
 
 ## 3. Move the live path onto corpus ids

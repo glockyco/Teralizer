@@ -1,0 +1,31 @@
+[[corpus]]
+id = "controlled"
+database = "postgres_dev"
+data_dir = ""
+config_dir = ""
+expected_projects = 13
+notes = "Controlled EqBench and Apache Commons evaluation corpus."
+
+[[corpus]]
+id = "real-world"
+database = "postgres_reporeapers_rq6_v7"
+data_dir = "data/reporeapers-rerun-v7"
+config_dir = "project-configs/replication/extended"
+expected_projects = 632
+notes = "Published RepoReapers real-world evaluation corpus."
+
+[[corpus]]
+id = "jarvis-benchmark"
+database = "postgres_jarvis_census"
+data_dir = ""
+config_dir = ""
+expected_projects = 12
+notes = "JARVIS benchmark corpus used for applicability comparison."
+
+[[corpus]]
+id = "jarvis-scenarios"
+database = "postgres_jarvis_scoreboard"
+data_dir = ""
+config_dir = ""
+expected_projects = 2
+notes = "JARVIS scenarios corpus used for value-coverage comparison."
