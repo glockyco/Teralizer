@@ -125,3 +125,68 @@ def test_rq4_runtime_figure_matches_notebook_order_and_legend():
         ]
     finally:
         plt.close(fig)
+
+
+def _runtime_axes(project="eqbench-es-default-1s"):
+    variants = [
+        ("SHARED", 0),
+        ("BASELINE", 1),
+        ("NAIVE_10_TRIES", 2),
+        ("NAIVE_50_TRIES", 3),
+        ("NAIVE_200_TRIES", 4),
+        ("IMPROVED_10_TRIES", 5),
+        ("IMPROVED_50_TRIES", 6),
+        ("IMPROVED_200_TRIES", 7),
+    ]
+    rows = [
+        {
+            "project_name": project,
+            "stage_group": stage,
+            "variant": variant,
+            "variant_order": order,
+            "total_runtime": 10.0 + order,
+        }
+        for stage in ("Stage 1 + 2", "Stage 3", "Stage 4", "Stage 5")
+        for variant, order in variants
+        if not (stage in {"Stage 1 + 2", "Stage 3"} and variant != "SHARED")
+    ]
+    figure = _runtime_stage_figure(pd.DataFrame(rows))
+    fig, ax = plt.subplots()
+    figure.build(ax)
+    return fig
+
+
+def test_rq4_runtime_dividers_fall_between_stage_bands():
+    """A midpoint between group centres is a boundary only when both groups are
+    the same width. Stage 3 holds one variant against Stage 4's seven, so a centre
+    midpoint lands inside Stage 4 and draws BASELINE on the Stage 3 side of the
+    line."""
+    fig = _runtime_axes()
+    try:
+        axes = fig.axes[0]
+        dividers = sorted(
+            float(line.get_xdata()[0])
+            for line in axes.lines
+            if line.get_linestyle() == "--"
+        )
+        at = {
+            line.get_marker(): float(line.get_xdata()[0])
+            for line in axes.lines
+            if line.get_marker() != "None"
+        }
+        shared = sorted(
+            float(line.get_xdata()[0])
+            for line in axes.lines
+            if line.get_marker() == "o"
+        )
+        assert len(dividers) == 3
+        # The Stage 3 / Stage 4 boundary: only the two shared markers precede it.
+        boundary = dividers[1]
+        assert [x for x in shared if x < boundary] == shared
+        for marker in ("s", "^", "D"):
+            assert at[marker] > boundary, f"{marker} fell on the Stage 3 side"
+        # BASELINE and the first NAIVE variant are both Stage 4, so nothing
+        # separates them.
+        assert not [d for d in dividers if at["s"] < d < at["^"]]
+    finally:
+        plt.close(fig)

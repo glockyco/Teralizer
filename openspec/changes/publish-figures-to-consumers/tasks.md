@@ -77,15 +77,19 @@
 
 ## 5. Verification against the thesis
 
-- [ ] 5.1 Regenerate the full report set and confirm all five figures exist in both formats.
-      Run: the publish command from `.omp/rules/generated-artifacts.md` once that rule is corrected,
-      or `publish-analysis.sh` directly with a scratch destination.
-- [ ] 5.2 Compare each of the four thesis figures against the copy committed in the thesis, by content
-      rather than by bytes. A rendering difference is expected and acceptable. A difference in a
-      plotted value is a stop: these four draw from the frozen controlled corpus, so the data must
-      match.
-      Verification: recorded per figure, with the verdict and what was compared.
-- [ ] 5.3 Confirm `evosuite_runtime_phases` was emitted and not delivered.
+- [x] 5.1 Confirmed against the local evaluation databases, which hold `postgres_dev` and
+      `postgres_reporeapers_rq6_v7` natively on this machine. RQ1, RQ3, and RQ4 emit all five figures
+      in both formats.
+- [x] 5.2 Compared by rasterising both PDFs at equal width and differencing pixels.
+      `mutation_detection_comparison` and `test_runtime_differences`: identical, empty difference box.
+      `teralizer_efficiency`: no pixel differs beyond anti-aliasing. `teralizer_runtimes`: bars,
+      markers, axes and dividers identical, so the data is identical; its value labels sit about one
+      native pixel lower, which is a text-metric difference present before this change and reduced by
+      task 5.8.
+      Verification: no plotted value differs on any of the four.
+- [x] 5.3 Confirm `evosuite_runtime_phases` was emitted and not delivered.
+      Verification: emitted to the build tree by RQ4; absent from every consumer declaration, so
+      `deliver` never writes it.
 - [ ] 5.4 Publish into a scratch clone of the thesis with a declaration, and confirm the four files
       land at their declared paths with no other file touched.
       Verification: `git status` in the scratch clone shows exactly four modified figure paths, plus
@@ -96,7 +100,15 @@
 - [ ] 5.6 Full test suite.
       Run: `uv run --directory analysis python -m pytest tests -q`
       Expected: pass.
-- [ ] 5.7 Commit any fix this verification required.
+- [x] 5.7 Commit any fix this verification required.
+
+- [x] 5.8 Fix the stage-band divider in the runtime figure. It was drawn midway between adjacent group
+      centres, which is a boundary only when both groups are the same width. Stage 3 carries one
+      variant against Stage 4's seven, so the line landed at 1.58 inside Stage 4's span of 1.20 to
+      3.60 and drew BASELINE on the Stage 3 side. Now drawn in the gap between the groups, at 1.05,
+      which is where the committed figure has it.
+      Verification: a regression test asserts every Stage 4 marker lies right of the Stage 3 boundary,
+      and it fails on the old formula with `1.35 > 1.575`.
 
 ## 6. Hand off
 

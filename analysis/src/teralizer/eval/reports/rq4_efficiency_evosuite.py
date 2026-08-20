@@ -327,12 +327,14 @@ def _runtime_stage_figure(data: pd.DataFrame) -> Figure:
         }
         width, spacing, group_spacing = 0.3, 0.05, 0.3
         centers: dict[str, float] = {}
+        extents: dict[str, tuple[float, float]] = {}
         positions: dict[tuple[str, str], float] = {}
         current = 0.0
         for group in groups:
             members = stage_variants[group]
             group_width = len(members) * width + max(0, len(members) - 1) * spacing
             centers[group] = current + group_width / 2
+            extents[group] = (current, current + group_width)
             for index, variant in enumerate(members):
                 positions[(group, variant)] = (
                     current + index * (width + spacing) + width / 2
@@ -434,10 +436,13 @@ def _runtime_stage_figure(data: pd.DataFrame) -> Figure:
                         va="bottom",
                         fontsize=8,
                     )
-            for group in groups[:-1]:
+            # In the gap between two groups, not midway between their centres: a
+            # centre midpoint is a boundary only when both groups are the same
+            # width, and Stage 3 holds one variant against Stage 4's seven, so it
+            # landed inside Stage 4 and put BASELINE on the Stage 3 side.
+            for group, following in zip(groups, groups[1:]):
                 axis.axvline(
-                    centers[group]
-                    + (centers[groups[groups.index(group) + 1]] - centers[group]) / 2,
+                    (extents[group][1] + extents[following][0]) / 2,
                     color="gray",
                     linestyle="--",
                     linewidth=0.8,

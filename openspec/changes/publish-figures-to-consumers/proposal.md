@@ -58,8 +58,12 @@ None. `reporting/` has no accepted spec in this repository yet.
 
 ## Non-Goals
 
-- Changing any figure's appearance, data, size, or style. The four thesis figures must regenerate to
-  the same content they show today, and the check for that is a task.
+- Changing any figure's appearance, data, size, or style, **except** to restore what the thesis
+  already prints. The four thesis figures must regenerate to the content they show today, and the
+  check for that is a task. That check found the stage-band divider in the runtime figure drawn inside
+  Stage 4 rather than between Stage 3 and Stage 4, so the published figure would have contradicted the
+  committed one the first time publishing worked. Fixed here, because enabling delivery is what would
+  have shipped it.
 - Adding a render target. PDF is a second format within the existing `figures` target.
 - Restyling figures to match the thesis body font. The figures use the paper's serif stack today and
   continue to.
