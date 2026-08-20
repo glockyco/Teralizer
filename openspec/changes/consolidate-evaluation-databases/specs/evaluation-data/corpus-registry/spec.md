@@ -85,8 +85,8 @@ invites a reader to look for the other numbers, which are not published and are 
 
 ### Requirement: Live code holds no database name literal
 
-The analysis package, the packaging and import tooling, and the generated documentation MUST obtain
-every evaluation database name from the registry. A literal evaluation database name in live code is
+The analysis package, the packaging and import tooling, and generated replication metadata MUST
+obtain every evaluation database name from the registry. A literal evaluation database name in live code is
 a defect. Archival run inputs are exempt, because they record what was run.
 
 #### Scenario: A report declares the corpus it reads
@@ -107,10 +107,10 @@ a defect. Archival run inputs are exempt, because they record what was run.
 - **THEN** the check does not flag it
 - **AND** the directory holding it states that its names predate the rename
 
-#### Scenario: Documentation states which corpus backs a figure
+#### Scenario: Replication metadata states which corpus backs a report
 
-- **WHEN** documentation names the corpus a reported figure came from
-- **THEN** that statement is generated from the registry
+- **WHEN** a report and its published output identify the corpus they read
+- **THEN** the manifest obtains that identity from the registry
 - **AND** it cannot disagree with the corpus the report reads
 
 ### Requirement: A report declares the schema objects it needs, and nothing more

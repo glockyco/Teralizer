@@ -10,8 +10,8 @@ a `_v2`..`_v7` suffix whose meaning is recorded nowhere, `_rq6_` names a corpus 
 question that reads it, and `census` and `scoreboard` are implementation words that appear in the
 thesis zero times. A partial 451-project snapshot differs from the complete 1,161-project corpus
 by the suffix `_local`, so pointing a report at the wrong one yields plausible wrong numbers instead
-of an error. `docs/database.md:66-74` and `run-rq6-analysis.sh:11` still name `_v6` as canonical
-while RQ6 reads `_v7`.
+of an error. the frozen `run-rq6-analysis.sh:11` input still names `_v6` while the live RQ6 report reads `_v7`.
+The run input must remain historical evidence, not become a second current corpus inventory.
 
 The artifact cannot deliver any of this. `README.md:43` promises dumps that
 `prepare-zenodo-package.sh` never builds. `replication/datasets/` ships only the two corpora whose
@@ -23,7 +23,7 @@ following the documented path cannot generate the RQ6 report at all.
 
 - Add a **corpus registry** as the single source of truth: corpus id, database, corpus definition,
   and expected project count. Every corpus in it is shipped; a database
-  that backs no published figure does not belong in it. Live code, packaging, and generated docs
+  that backs no published figure does not belong in it. Live code, packaging, and generated replication metadata
   resolve names through it.
 - **BREAKING**: reports address a **corpus id**. The literals in `dataset_characteristics.py:67`,
   `rq6_causes.py:34`, `run-rq6-analysis.sh:11`, and the rq1-rq5 defaults are removed, and a check
@@ -73,7 +73,8 @@ None. This repository has no existing specs; these three are the first.
 - **Packaging and replication**: `prepare-zenodo-package.sh`, `replication/quick-start.sh`,
   `replication/scripts/import-databases.sh` (whose default container name disagrees with
   `replication/docker-compose.yml:84-92`), `collect-disk-metrics.sh:148-156`, `REQUIREMENTS.md`.
-- **Docs**: `docs/database.md` and the corpus table in `docs/evaluation-run-map` become generated.
+- **Replication metadata**: the manifest records the current corpus identities and provenance. Accepted
+  capability specs retain the durable registry, publication, and lifecycle contracts.
 - **Not touched**: the Java pipeline, `project-configs/**`, `reference.conf`, the runner scripts, and
   `protected-databases.txt`. They are the record of what was run, they will not run again, and
   rewriting them would falsify that record. A note in each directory states that its names predate

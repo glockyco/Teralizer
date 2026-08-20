@@ -64,8 +64,9 @@
       count before reporting success, failing on a missing dump
 - [ ] 5.7 Fix the container name disagreement between `import-databases.sh:19-22` and
       `replication/docker-compose.yml:84-92`
-- [ ] 5.8 Generate `docs/database.md` and the corpus table in `docs/evaluation-run-map` from the
-      registry, removing the stale `_v6` claims
+- [ ] 5.8 Validate that every registered report corpus resolves through the registry and that every
+      registry corpus appears once in `replication/datasets/manifest.json`; reject retired physical
+      names in live consumers or generated replication metadata
 - [ ] 5.9 Re-measure the `REQUIREMENTS.md` disk and version tables from the artifact
 - [ ] 5.10 Restore the author's own databases from the published dumps, so the artifact path is the
       tested path

@@ -131,8 +131,8 @@ not laziness: those files record which database each run wrote, and rewriting th
 falsify that record. A note in each directory states that its names predate the rename.
 
 The boundary is therefore explicit: **frozen run machinery** keeps its old names and its denylist;
-**live artifact machinery** — the analysis package, packaging, import, generated docs — uses the
-registry. The name-literal check applies to the live side only.
+**live artifact machinery** — the analysis package, packaging, import, manifest, and replication
+metadata — uses the registry. The name-literal check applies to the live side only.
 
 `corpora.toml` lives in `src/main/resources/db/` beside the existing schema files, read by `tomllib`
 in Python and by a small Python helper from shell, so no format is parsed twice.
@@ -180,7 +180,7 @@ does not consult it.
 |---|---|---|
 | Registry corpus, shipped | `postgres_dev`, `_rq6_v7`, `postgres_jarvis_census`, `postgres_jarvis_scoreboard` | the reported figures come from these four |
 | Scratch | `postgres_verification` | recreated per run; 1 project on the Air against 22 locally |
-| Retain as dump, then drop | `postgres_test`, `_rq6`, `_v2`, `_v4`, `_v6`, `postgres_reporeapers` | real measurements that no published figure reads; `_v6` retained until the docs naming it are regenerated |
+| Retain as dump, then drop | `postgres_test`, `_rq6`, `_v2`, `_v4`, `_v6`, `postgres_reporeapers` | real measurements that no published figure reads; `_v6` retained until the manifest records the replacement corpus |
 | Drop | `_v3` (8 projects), `_v5` (8), `*_detach_gate*`, `*_shape_gate*`, `postgres_source_level_gate`, `_rq6_fix_smoke`, `_rq6_junit3_smoke`, `jooq_codegen_scratch`, local `_rq6_v7_local` | small experiment scratch; nothing reads them |
 | Investigate, then clean | `postgres` (server default, 15 project rows) | a pipeline once wrote into the server's own database |
 
@@ -188,8 +188,8 @@ Dropping runs last, after each retained dump has been restored and counted.
 
 ## Risks / Trade-offs
 
-- **A frozen corpus cannot be improved.** Any defect found in the data is now a documentation task. →
-  The provenance statement makes the limits explicit so a reader can judge a figure.
+- **A frozen corpus cannot be improved.** Any defect found in the data must be recorded without changing
+  the measurement. → The provenance statement makes the limits explicit so a reader can judge a figure.
 - **Renaming breaks muscle memory and any uncommitted local script.** → One-time, and deliberate: a
   stale name must fail rather than resolve through an alias.
 - **Frozen run configs will name databases that no longer exist.** → Deliberate. They record what ran.
@@ -205,7 +205,7 @@ Dropping runs last, after each retained dump has been restored and counted.
 1. Land the registry and the lifecycle patterns, pointing at the current physical names, plus the
    name-literal check. Nothing renamed; the sprawl is described.
 2. Delete `ReportSpec.schema` and derive validation from `requires`.
-3. Move the analysis package, packaging, import, and generated docs onto corpus ids.
+3. Move the analysis package, packaging, import, manifest, and replication metadata onto corpus ids.
 4. Rename the four corpora and `postgres_verification`, updating only the registry.
 5. Point reports at `teralizer_ro` and confirm no write path reaches a corpus.
 6. Build publication and the manifest, including the provenance statements and the definition inputs
