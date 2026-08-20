@@ -1,152 +1,113 @@
-## 1. Reconcile Knowledge Ownership
+## 1. Reconcile prerequisites and one-time claim inventory
 
-- [ ] 1.1 Re-read the current artifacts for `consolidate-repository-knowledge`,
-  `consolidate-evaluation-databases`, `make-report-runs-explicit`,
-  `separate-report-values-from-presentation`, and `declare-published-artifacts`; map every overlapping
-  task to one active owner and record dependency order without duplicating implementation.
-- [ ] 1.2 Reopen the six-document claim audit and cutover checks in
-  `consolidate-repository-knowledge`; add the explicit five-mechanism collapse, true
-  filter-adjudication boundary, qualitative-evidence provenance, and EM-7 attempted-stage limitation to
-  its proposal, design, capability deltas, and tasks where they belong.
-- [ ] 1.3 Enumerate every substantive claim from the six deleted sources using their deletion parent's
-  tree only as a checklist; create
-  `evidence/retired-knowledge-claims.yaml` with one normalized, schema-valid entry per claim and no
-  blanket file-level dispositions.
-- [ ] 1.4 Re-derive the initial disposition of every claim from current executable source,
-  configuration, focused tests, registered reports, or read-only corpus observations; mark unresolved,
-  stale, disproven, unreproducible, and intentionally discarded claims explicitly.
-- [ ] 1.5 Validate every affected OpenSpec change and prove no active change has competing ownership for
-  the same implementation task or capability requirement.
-- [ ] 1.6 Create one new `docs(openspec)` commit containing only the reconciled planning contracts and
-  claim-audit structure, with a causal body and the focused OpenSpec validation results; do not amend,
-  rebase, squash, reset, or rewrite any existing commit.
+- [ ] 1.1 Re-read the finalized artifacts for `consolidate-repository-knowledge`,
+      `consolidate-evaluation-databases`, `make-report-runs-explicit`,
+      `separate-report-values-from-presentation`, and `declare-published-artifacts`. Map each overlapping
+      implementation subject to one owner and record the dependency order without duplicating code.
+- [ ] 1.2 Read the six sources deleted by `consolidate-repository-knowledge` from their deletion parent
+      only as a checklist. Create one change-local claim inventory with one normalized entry per
+      substantive claim and no file-level blanket dispositions.
+- [ ] 1.3 Re-derive every initial disposition from current accepted specs, executable source,
+      configuration, focused checks, registered reports, provenance, and read-only corpus observations.
+      Historical prose and comments are not evidence.
+- [ ] 1.4 Assign each claim exactly one disposition: accepted contract, executable checked fact,
+      registered empirical result, deterministic qualitative evidence, stale/disproved, or intentionally
+      discarded. Name the current owner and evidence for every retained claim.
+- [ ] 1.5 Review the completed inventory before archive. Keep it as change evidence only; add no runtime
+      parser, permanent ledger, repository guard, or future-document workflow.
 
-## 2. Derive Canonical Exclusion Facts
+## 2. Build the canonical exclusion fact relation
 
-- [ ] 2.1 Add focused classifier fixtures for each included or excluded mechanism, the valid
-  quarantine/filter storage overlap, contradictory multi-mechanism records, unknown codes, unknown
-  record shapes, and unknown decision producers.
-- [ ] 2.2 Implement one canonical static SQL entity-fact CTE for eligible tests, assertions, and
-  generalizations using the finalized `ReportContext` corpus role and consistent snapshot; aggregate
-  typed mechanism and reconciliation counts in SQL before transfer, and do not embed a physical
-  database name or add a compatibility path.
-- [ ] 2.3 Encode mechanism precedence and explicit writer classes so actual filter decisions,
-  pre-emission gate refusals, unsupported capabilities, build quarantines, and task failures remain
-  distinct despite overlapping persistence channels.
-- [ ] 2.4 Add fail-loud exclusivity, population, and unknown-producer checks that report the offending
-  level and entity identifiers before any renderer or publisher receives output.
-- [ ] 2.5 Materialize the typed five-mechanism partition and declared three-outcome semantic collapse
-  as database-side aggregates over the same fact CTE; transfer only aggregate rows and remove any
-  duplicate mapping from report or renderer code.
-- [ ] 2.6 Run the focused classifier, mechanism-partition, provenance, and typed-renderer checks against
-  controlled fixtures and the frozen v7 corpus.
-- [ ] 2.7 Create one new `feat(eval)` commit for the canonical fact relation and mechanism partition,
-  with a causal body and focused verification; split it further if deriving facts and presenting the
-  partition prove independently reviewable.
+- [ ] 2.1 Implement one normalized entity-to-mechanism fact relation from typed producer evidence and
+      the accepted exclusion-accounting mapping. Include semantic corpus id, entity level, stable entity
+      identity, mechanism, collapsed outcome, stage evidence, and provenance keys.
+- [ ] 2.2 Distinguish filter rejection, pre-emission refusal, unsupported capability, build quarantine,
+      and task failure by producer semantics. Do not classify from the `filter_result` storage shape
+      alone.
+- [ ] 2.3 Fail on every unknown exclusion code, record shape, non-filter producer, missing entity
+      identity, or multiply classified entity. Name the offending evidence.
+- [ ] 2.4 Add focused fixtures for every known mechanism, the quarantine/filter-shape collision, unknown
+      producer failure, duplicate attribution, and an included entity.
+- [ ] 2.5 Reconcile mechanism counts to eligible populations and the existing collapsed headline
+      outcomes at project, test, assertion, and generalization levels.
 
-## 3. Materialize the Generalization Funnel
+## 3. Materialize the denominator funnel
 
-- [ ] 3.1 Add focused tests for attempts, first seed-gate refusal, first widening refusal, emitted tests,
-  pre-filter failure, build quarantine, true filter adjudication, filter rejection, filter pass,
-  downstream attrition, and final usability.
-- [ ] 3.2 Derive the ordered funnel from the canonical fact relation, excluding non-filter validator rows
-  from filter adjudication and assigning each refused attempt to its first failing gate exactly once.
-- [ ] 3.3 Add construction-time identities for every funnel transition and reconcile attempts, mechanism
-  counts, persisted refusal codes, filter decisions, and final-use outcomes over one corpus and variant.
-- [ ] 3.4 Register typed count metrics and denominator-bearing rate metrics for filter-passed per attempt,
-  emitted test, and filter-adjudicated test, plus final-usable per filter-passed test and per attempt.
-- [ ] 3.5 Materialize `rq6-generalization-funnel.csv` and its Markdown and LaTeX views through the common
-  typed renderer; keep raw numeric values separate from labels, spacing, macros, and target formatting.
-- [ ] 3.6 Verify the v7 funnel against independent SQL identities, including the distinction between
-  filter-shaped quarantine rows and actual filter-class adjudication; retain EM-7 as a strict expected
-  failure and avoid attempted-stage claims.
-- [ ] 3.7 Create one new `feat(eval)` commit for the denominator-explicit funnel and metrics, with a
-  causal body and the focused fixture and v7 reconciliation results.
+- [ ] 3.1 Model attempted, emitted, filter-adjudicated, filter-passed, validated, reduced, and final-usable
+      populations as named typed counts from the canonical facts and independent attempt records.
+- [ ] 3.2 Attribute each excluded entity to its first observed failing gate exactly once; test an entity
+      that would also fail a later condition.
+- [ ] 3.3 Keep absent attempt evidence unknown. Add no inference from a later failure stage, and record
+      the limitation wherever final-use results remain publishable.
+- [ ] 3.4 Emit normalized funnel tables, metric keys, and band summaries for each supported entity level.
+      Prove that every band reconciles to its entering population and the final count.
+- [ ] 3.5 Add corpus-backed invariant tests for all funnel identities and explicit numerator/denominator
+      compatibility.
 
-## 4. Rebuild Reproducible Widening Evidence
+## 4. Register the complete thesis-consumed metric surface
 
-- [ ] 4.1 Define the versioned `analysis/audits/rq6-widening-v7.json` schema for corpus and source
-  identity, population and strata, deterministic selection, selected entity identities, stored
-  observations, human causal labels, rationale, reviewer, and review timestamp.
-- [ ] 4.2 Implement a deterministic candidate-selection command that resolves the v7 corpus through the
-  registry, emits a stable ordered sample, and refuses to overwrite reviewed labels or accept corpus
-  drift.
-- [ ] 4.3 Generate the candidate set, inspect every selected project and method at the recorded source
-  revision, and record causal labels and concise evidence-backed rationale without inferring
-  unobserved source causes from aggregate telemetry.
-- [ ] 4.4 Implement audit validation that re-derives database-backed observations, verifies source and
-  corpus identities, rejects missing or duplicate selected entities, and detects label-schema or
-  population drift.
-- [ ] 4.5 Add a registered typed audit summary whose wording distinguishes immediate persisted refusal
-  causes, controlled-fixture mechanism evidence, sampled qualitative observations, and any estimator
-  justified by the selection design.
-- [ ] 4.6 Add focused tests for deterministic selection, audit round-trip, provenance mismatch, drift,
-  incomplete review, unsupported labels, and report refusal on invalid evidence.
-- [ ] 4.7 Create one new `feat(eval)` commit for the deterministic audit input, validator, and registered
-  summary, with a causal body and the audit and report verification results.
+- [ ] 4.1 Inventory every current thesis RQ6 macro, generated table cell, numeric claim, controlled
+      comparison, and carried successor input. Classify it as retained, corrected, or removed by the
+      final thesis reconciliation.
+- [ ] 4.2 Add stable metric identities for every retained project, test, assertion, and generalization
+      population; filter and failure cause; assertion-kind and type composition; class-level cascade;
+      output and exception-model split; legacy and unresolved case; parameter and return-type result;
+      symbolic-argument reach; and controlled-comparison quantity.
+- [ ] 4.3 Make each metric carry raw value, unit, population, optional denominator key, semantic corpus
+      id, source revision, query identity, and dirty state. Reject incompatible rate operands.
+- [ ] 4.4 Derive duplicate representations, such as a macro and a table cell, from one metric identity.
+      Remove report-local recomputation of the same fact.
+- [ ] 4.5 Add a declared-consumer completeness test that fails when a required metric or table key is
+      absent, duplicated, unprovenanced, or lacks its required denominator.
+- [ ] 4.6 Generate all registered RQ6 Markdown, LaTeX, CSV, and macro artifacts through `ArtifactSet` and
+      the typed renderer. Add no hand-formatted table or special publication path.
 
-## 5. Declare and Generate Evidence Artifacts
+## 5. Replace the widening audit with reproducible evidence
 
-- [ ] 5.1 Return `rq6-exclusion-mechanisms.csv`, `rq6-generalization-funnel.csv`, the audit summary, and
-  all new metrics through the existing report and `ArtifactSet` interfaces; let the generic run
-  manifest attach the captured corpus, audit-file, and source provenance without an RQ6 branch.
-- [ ] 5.2 Use `declare-published-artifacts` interfaces to declare only thesis-consumed LaTeX artifacts and
-  metrics; leave undeclared normalized tables and audit evidence in the generator build tree.
-- [ ] 5.3 Add or update thesis-facing macros for every count and denominator-bearing rate that downstream
-  prose may quote, without formatting numeric values inside report computation.
-- [ ] 5.4 Correct the `ProjectBuildTask` quarantine description and the stale RQ6 invariant comment so
-  both describe current writer-based classification; make no pipeline behavior change.
-- [ ] 5.5 Build every registered report once from a read-only consistent snapshot, regenerate declared
-  artifacts, and fail if the mechanism table, funnel, audit summary, metrics, provenance, and
-  publication manifest do not reconcile.
-- [ ] 5.6 Compare regenerated output with the committed tree and independently confirm that every
-  unrelated table, CSV, figure, metric, and report remains byte-identical or has an explained
-  database-backed change.
-- [ ] 5.7 Create one new `feat(eval)` commit for publication declarations and regenerated evidence, with
-  a causal body and full report-generation proof; keep diagnostic-comment corrections in a separate
-  `fix` or `docs` commit if they are not causal to the published artifact change.
+- [ ] 5.1 Define the exact causal questions not already answered by persisted refusal codes or focused
+      fixtures. Do not audit claims that executable evidence already proves.
+- [ ] 5.2 Build a deterministic candidate set or sampling rule from the `real-world` corpus and record
+      source revision, seed where applicable, selected stable entity ids, observations, labels,
+      exclusions, reviewer rationale, and disagreements.
+- [ ] 5.3 Store the reviewed audit input as a versioned, schema-validated report input and register its
+      provenance. Ensure another reviewer can locate every selected source entity.
+- [ ] 5.4 Emit audit summaries separately from persisted-mechanism counts and label interpretations as
+      reviewer evidence rather than pipeline facts.
+- [ ] 5.5 Reject the historical identity-free audit as current evidence and record that disposition in
+      the one-time claim inventory.
 
-## 6. Complete the Knowledge Cutover
+## 6. Correct contradictions at their maintained owners
 
-- [ ] 6.1 Resolve every open claim-ledger entry to exactly one verified owner or explicit stale,
-  disproven, unreproducible, or discarded disposition; reject Git history alone as a current owner.
-- [ ] 6.2 For every retained contract, executable fact, empirical result, operator instruction, and
-  qualitative claim, exercise the named owner and record focused verification in the ledger.
-- [ ] 6.3 Search current source, configuration, tests, reports, README, scoped guidance, and OpenSpec
-  artifacts for references to the six retired documents, obsolete physical database names,
-  hand-maintained RQ6 values, and superseded mechanism descriptions; fix every second instance of the
-  same defect.
-- [ ] 6.4 Extend the repository-state guard to validate claim-ledger schema and completion, reject
-  unowned retired knowledge and reintroduced narrative authority, and include positive controls for
-  every forbidden state.
-- [ ] 6.5 Run the focused repository-state module and prove each positive control fails for its intended
-  reason before the real repository passes.
-- [ ] 6.6 Create one new `docs(repo)` or `test(repo)` commit for the completed claim ledger and activated
-  retirement guard, splitting evidence completion from guard mechanics when either subject stands
-  alone; include causal bodies and focused verification.
+- [ ] 6.1 Find source comments, diagnostics, and report descriptions that contradict the accepted
+      mechanism mapping or denominator vocabulary. Correct each in the same causal commit as its owner;
+      do not add a second narrative explanation.
+- [ ] 6.2 Re-run the complete one-time claim inventory after implementation. Every retained claim must
+      resolve to an accepted contract, focused executable check, registered empirical result, or
+      deterministic audit evidence.
+- [ ] 6.3 Confirm `consolidate-repository-knowledge` remains closed and unchanged except for any
+      separately necessary contradiction fix discovered in its still-active artifacts. Do not reopen its
+      completed document-retirement tasks or create a permanent knowledge-retirement spec.
 
-## 7. Verify the Analysis Repository
+## 7. Regenerate and prove the producer outputs
 
-- [ ] 7.1 Run all focused exclusion-classification, funnel, widening-audit, provenance, manifest,
-  publication, renderer, and repository-state tests.
-- [ ] 7.2 Run the complete non-database analysis suite once and record the exact pass, skip, and expected
-  failure totals; investigate every new skip or expected failure.
-- [ ] 7.3 Run every registered report once against its declared corpus and confirm the run emits no
-  partial artifact before validation completes.
-- [ ] 7.4 Run repository formatting, lint, type, file-hygiene, and commit hooks once over the completed
-  change.
-- [ ] 7.5 Validate every active OpenSpec change, inspect the final diff by subject, and confirm no Java
-  pipeline behavior, frozen corpus, undeclared consumer artifact, or existing commit changed.
-- [ ] 7.6 Confirm the branch remains append-only relative to its starting history and that each new
-  commit contains one subject, a causal body, and the verification appropriate to that subject.
+- [ ] 7.1 Resolve the `real-world` corpus through the registry, verify its project count and derived-view
+      revision, and run every registered report once from one clean session.
+- [ ] 7.2 Prove all mechanism partitions, funnel identities, rate denominators, metric/table key
+      completeness, and provenance checks against the generated artifact manifest.
+- [ ] 7.3 Review every generated RQ6 table, macro, CSV, and Markdown artifact. Confirm semantic row keys,
+      typed values, plain CSV fields, readable Markdown, and no unregistered display recomputation.
+- [ ] 7.4 Exercise declaration-driven publication into a clean scratch thesis checkout. Confirm the
+      declared set lands transactionally and every undeclared evidence artifact remains producer-side.
+- [ ] 7.5 Build the scratch thesis with strict LaTeX reference errors and inspect affected pages. This is
+      a compatibility proof only; leave the real thesis untouched.
+- [ ] 7.6 Run repository tests, lint, format, type checks, hooks, and strict OpenSpec validation.
 
-## 8. Hand Off the Thesis Refresh
+## 8. Hand off one finalized evidence revision
 
-- [ ] 8.1 Record the finalized artifact names, metric keys, provenance identifiers, denominator
-  definitions, publication declarations, and known EM-7 limitation in the change completion notes.
-- [ ] 8.2 Create or update a thesis-repository OpenSpec change that depends on these finalized outputs and
-  covers generated-artifact synchronization, claim replacement across every consumer chapter,
-  thesis build, style and LaTeX checks, and rendered-page inspection; do not edit the thesis from this
-  repository-scoped change.
-- [ ] 8.3 Verify the downstream plan requires separate atomic thesis commits for generated artifact sync,
-  each independent prose subject, and final cross-chapter reconciliation, with no history rewrite.
+- [ ] 8.1 Record the finalized producer commit, artifact manifest, semantic corpus id, derived-view
+      revision, metric keys, table row keys, denominator definitions, and known attempt-state limitation
+      in this change's completion notes.
+- [ ] 8.2 Confirm `reconcile-reporeapers-claims` names this exact revision and consumes the artifacts
+      through `chapters/05-teralizer/publish.toml`, not by query or manual copy.
+- [ ] 8.3 Archive only after the one-time claim inventory is complete and every overlapping requirement
+      has one owner. Do not edit the thesis from this repository.

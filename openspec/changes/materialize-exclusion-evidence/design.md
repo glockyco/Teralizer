@@ -1,291 +1,173 @@
 ## Context
 
-See `proposal.md` for motivation and `specs/repository/knowledge-retirement/spec.md` and
-`specs/reporting/exclusion-evidence/spec.md` for the required behavior.
+See proposal.md - Why.
 
-The current RQ6 implementation already has the right core distinction: an internal mechanism table
-separates included, filter rejection, pre-emission refusal, unsupported capability, and failure, then
-a declared mapping collapses those mechanisms into reader-facing inclusion, filtering, and failures.
-The registered output exposes only the collapsed table. Its generalization row also mixes attempted,
-emitted, filter-adjudicated, filter-passed, and final-usable populations.
+The accepted exclusion-accounting contract defines which mechanism owns each excluded entity and how
+reader-facing outcomes collapse those mechanisms. The report still implements parts of that mapping in
+separate SQL fragments and exposes only collapsed headline tables. This change must materialize facts
+without becoming a second semantic authority.
 
-Current persistence is intentionally heterogeneous. Filter decisions use `filter_result`; gate refusals
-use typed generalization exclusion codes without lifecycle rows; unsupported tests use a typed test
-exclusion; build quarantine uses a filter-shaped rejection with a non-filter producer; task failures
-use task, diagnostic, exclusion, or lifecycle records. Classification must therefore follow the writer
-and typed code, not the storage table or the shape of `exclusion_info` alone.
-
-The implementation must compose with four active changes:
-
-- `consolidate-evaluation-databases` owns corpus registry and schema validation.
-- `separate-report-values-from-presentation` owns typed report values and renderers.
-- `declare-published-artifacts` owns consumer declarations and publication manifests.
-- `consolidate-repository-knowledge` owns the broader knowledge-authority cutover and currently contains
-  the incomplete retirement assessment this change repairs.
-
-The v7 corpus is frozen evidence. Report code may read it through the corpus registry, but no task in
-this change may mutate it or manufacture a cleaner rerun. The existing commits remain in place.
+Six retired narrative files remain useful only as a migration checklist. Their historical claims mix
+contracts, stale inventories, empirical observations, and explanations. A permanent claim-retirement
+ledger would reproduce that mixed narrative authority in a new format. The useful operation is a
+one-time audit against current source, configuration, tests, reports, provenance, and read-only corpus
+observations.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Derive one auditable exclusion fact model and use it for both mechanism and funnel outputs.
-- Preserve typed values until target rendering and attach one consistent provenance record to every
-  emitted result.
-- Make every arithmetic identity executable and fail before publication on disagreement.
-- Replace the anonymous historical source sample with a deterministic, reviewable v7 audit.
-- Produce a claim ledger that proves the six retired sources no longer carry unique current knowledge.
-- Land implementation and consumer updates as append-only, single-subject commits.
+- One canonical entity-to-mechanism fact relation for RQ6 evidence.
+- Every thesis-consumed RQ6 quantity is emitted with semantic identity, population, denominator, and
+  provenance.
+- Funnel counts and mechanism counts reconcile at every published entity level.
+- Causal explanations beyond persisted codes have deterministic, reviewable audit evidence.
+- The retired-source checklist receives a complete one-time disposition.
 
 **Non-Goals:**
 
-- Changing exclusion decisions, stage scheduling, persistence semantics, or the frozen v7 corpus.
-- Treating `is_included` as evidence of final yield.
-- Repairing the EM-7 lifecycle writer defect. This change preserves its strict expected-failure check
-  and prevents the report from overstating attempted stages.
-- Restoring a free-standing narrative documentation tree.
-- Rewriting, squashing, rebasing, amending, or force-pushing existing commits.
-- Folding the later thesis prose refresh into the analysis repository's commit history.
+- A permanent repository-wide claim ledger, runtime retirement validator, or deletion workflow.
+- Reopening `consolidate-repository-knowledge` or duplicating its exclusion-accounting requirements.
+- Changing pipeline scheduling, classification decisions, measured corpus rows, or report-run
+  architecture.
+- Publishing directly into the thesis or deciding final prose.
 
 ## Decisions
 
-### 1. Define one canonical SQL fact relation and aggregate before transfer
+### 1. The accepted accounting contract is the semantic authority
 
-A shared static SQL CTE derives the logical entity facts for reportable tests, assertions, and
-generalizations:
+The report consumes the exclusion-accounting mapping established by
+`consolidate-repository-knowledge`. This change may encode that mapping once in executable form and
+prove it, but it does not redefine which mechanism owns an entity.
 
-```text
-corpus, variant, level, entity_id, included,
-mechanism, mechanism_code, writer_class,
-was_emitted, was_filter_adjudicated, was_filter_passed,
-was_final_usable, downstream_failure_stage
-```
+Every entity-level fact resolves to one of the declared mechanisms or inclusion. Unknown exclusion
+codes, record shapes, and non-filter producers fail before aggregation. A catch-all bucket is forbidden.
 
-Mechanism assignment uses explicit precedence because the physical channels overlap:
+### 2. One canonical fact relation feeds every table and metric
 
-```text
-pre-emission typed gate
-    > unsupported typed capability
-    > non-filter quarantine producer
-    > actual filter-class decision
-    > task/diagnostic/lifecycle failure
-    > included
-```
+A normalized relation carries, at minimum:
 
-The CTE rejects contradictory matches rather than silently accepting precedence as a repair. The
-precedence only resolves valid overlapping storage representations, such as quarantine in
-`filter_result`.
+- semantic corpus id and entity level;
+- stable entity identity;
+- mechanism identity and reader-facing outcome;
+- relevant stage and producer evidence;
+- attempted/emitted/adjudicated/filter-passed/validated/reduced/final-usable state; and
+- provenance identifiers needed to reproduce the row.
 
-The mechanism partition and generalization funnel each aggregate this same CTE in SQL. Only typed
-aggregate rows and reconciliation counts cross the database boundary; the report does not materialize
-the full entity population in Python. This keeps the semantic source singular without paying the
-allocation and transfer cost of an entity-sized intermediate relation.
+The fact relation is built once from typed writers and explicit joins. Headline collapse, detailed
+mechanism tables, funnel bands, composition metrics, and macros aggregate from it. No renderer or report
+section may recreate the mechanism mapping.
 
-**Alternative considered:** Transfer every fact row and aggregate in Python. Rejected because the
-report needs only grouped counts, and transferring the full population would add memory, serialization,
-and type-conversion work without improving the contract. Keeping the current breakdown query and
-adding an unrelated funnel query is also rejected because it duplicates the hardest semantic boundary.
+Filter adjudication uses producer semantics, not storage shape alone. A quarantine record written
+through `filter_result` remains a build-quarantine outcome rather than filter rejection.
 
-### 2. Keep mechanism identity separate from reader-facing outcome
+### 3. The funnel is an ordered typed record, not labels on one rate
 
-The fact relation carries one of six values: `included`, `filter-rejection`, `pre-emission-refusal`,
-`unsupported-capability`, `build-quarantine`, or `task-failure`. A single declared mapping produces the
-three reader-facing outcomes:
+The funnel names its populations: attempted, emitted, filter-adjudicated, filter-passed, validated,
+reduced, and final usable. Each count names its entering population and exclusions. First-failing-gate
+attribution assigns an entity once even when later conditions would also reject it.
 
-```text
-included                                      -> inclusion
-filter-rejection, pre-emission-refusal,
-unsupported-capability                        -> filtering
-build-quarantine, task-failure                -> failures
-```
+Project, test, assertion, and generalization funnels use the same vocabulary where the underlying state
+exists. A missing attempt record is reported as unknown attempt state, not inferred from a later
+failure. Final-use reporting remains valid where historical attempt state is incomplete, with that
+limitation recorded.
 
-Tables that answer "what excluded the entity" use the mechanism values. Headline tables use the
-collapse. No renderer or report section may recreate this mapping.
+### 4. Every metric key binds value, population, denominator, and provenance
 
-**Alternative considered:** Add more reader-facing columns to every existing exclusion table. That
-would preserve detail but overload the comparative tables and spread mechanism semantics into
-presentation code.
+A metric is not only a formatted scalar. It carries a stable key, raw value, unit, population, optional
+denominator key, semantic corpus id, and provenance record. Rate publication fails if its numerator and
+denominator do not belong to compatible populations.
 
-### 3. Model the generalization funnel as count identities, not labels on one rate
+The complete RQ6 consumer inventory is derived from current thesis citations and the retired-source
+audit. It includes mechanism and funnel facts plus assertion-kind composition, filter and failure
+causes, class-level cascades, test exclusions, output and exception-model splits, legacy and unresolved
+cases, parameter and return-type composition, symbolic-argument reach, and controlled-comparison
+quantities. Adding a thesis-consumed quantity later requires a registered metric or table key, never an
+ad hoc prose query.
 
-The funnel is an ordered typed record with named counts:
+### 5. The qualitative audit is deterministic evidence, not a hidden notebook
 
-```text
-attempts
-  - seed_refused
-  - widening_refused
-= emitted
-  - pre_filter_failures
-  - build_quarantines
-= filter_adjudicated
-  - filter_rejected
-= filter_passed
-  - downstream_attrition
-= final_usable
-```
+Causal claims not already supported by persisted refusal codes or focused fixtures use a registered
+audit input. Selection records the corpus id, source revision, deterministic seed or complete candidate
+set, selected entity ids, observations, labels, reviewer rationale, and exclusions. The report validates
+and summarizes that input without rewriting it.
 
-Every equality is checked during report construction. Rates are derived only after the counts pass and
-have denominator-bearing metric keys. At minimum, the report exposes:
+The audit must be reproducible by another reviewer from the retained identifiers and source revision.
+A source sample without identities is not evidence and is discarded.
 
-- filter passed / attempts;
-- filter passed / emitted;
-- filter passed / filter adjudicated;
-- final usable / filter passed;
-- final usable / attempts.
+### 6. Retired knowledge receives one migration record
 
-A build validator row is quarantine, not filter adjudication. A pre-emission refusal has no emitted
-row. First-failing-gate attribution assigns an attempt to exactly one gate even when later conditions
-would also reject it.
+Read the six deleted sources from their deletion parent only as a checklist. For every substantive
+claim, record exactly one disposition:
 
-**Alternative considered:** Preserve `generalizations_validated` as the sole success metric. The name
-hides whether it means filter-passed or final-usable and cannot support denominator-specific claims.
+- durable accepted contract;
+- executable behavior with a focused check;
+- registered empirical result with provenance;
+- deterministic qualitative evidence;
+- stale or disproved claim with current evidence; or
+- intentionally discarded material with rationale.
 
-### 4. Publish normalized evidence and render consumer artifacts from it
+The record lives under this change, is reviewed before archive, and then becomes historical change
+evidence. No application code reads it. Repository validation does not require future documents to
+append to it.
 
-The registered report emits two normalized data tables in addition to its Markdown section:
+### 7. Existing architecture owns identity, rendering, and delivery
 
-- `rq6-exclusion-mechanisms.csv`: entity level by mechanism, count, and share;
-- `rq6-generalization-funnel.csv`: ordered funnel step, count, preceding-step share, and attempt share.
+`make-report-runs-explicit` supplies `ReportContext`, `BuiltReport`, `ArtifactId`, and `ArtifactSet`.
+`separate-report-values-from-presentation` supplies typed values, semantic entities, row keys, and
+per-target rendering. `declare-published-artifacts` supplies consumer selection and transactional
+delivery. This change supplies normalized RQ6 facts, metrics, tables, and audit artifacts only.
 
-The common typed table model produces any LaTeX tables and Markdown views. Metrics expose all counts and
-rates needed by downstream macros. Publication declarations identify only the LaTeX artifacts and
-metrics that the thesis consumes; normalized CSVs remain supporting build evidence unless explicitly
-declared.
+All generated output remains in the producer build until a consumer declaration requests it. The
+thesis migration runs later from one finalized producer revision.
 
-RQ6 declares the `real-world` corpus role through the common `ReportSpec` input tuple, including its
-role-specific required objects. The later audit summary also declares
-`analysis/audits/rq6-widening-v7.json` as a required repository-file role only when that file is added;
-no absent placeholder or module-default path is registered early. `ReportContext` supplies the live
-read-only connection and resolved audit path, and `BuiltReport` carries the runner-captured snapshots.
+### 8. Commits follow causal subjects
 
-All rows and metrics therefore share one captured corpus and source provenance object. Report
-construction occurs inside one runner-owned read-only consistent database snapshot. The physical v7
-database name is not embedded in report code or tests, and the report neither opens another connection
-nor constructs a special manifest entry.
+Recommended implementation subjects:
 
-**Alternative considered:** Generate thesis-specific LaTeX directly inside RQ6. That repeats the
-presentation coupling being removed by `separate-report-values-from-presentation`.
+1. normalized exclusion fact relation and invariant tests;
+2. denominator funnel and metric model;
+3. complete RQ6 registered metric/table surface;
+4. deterministic widening audit;
+5. report rendering and provenance integration;
+6. source-comment corrections that share the classification cause; and
+7. one-time retired-claim audit completion.
 
-### 5. Store a deterministic widening audit as versioned source evidence
-
-The replacement audit lives in `analysis/audits/rq6-widening-v7.json`. It contains:
-
-- audit schema version and audit purpose;
-- corpus registry ID, database snapshot identity, report variant, and selection-query identity;
-- implementation and inspected-project source revisions;
-- complete population and stratum definitions;
-- deterministic selection seed and ordered selected generalization/assertion IDs;
-- project, test, method, output-shape, literal-signal, and refusal-code observations;
-- reviewer-assigned causal label and rationale;
-- reviewer identity and review timestamp.
-
-A command derives the immutable candidate records from the frozen corpus and checks stored observations
-against them. Human labels and rationale remain versioned input. The registered report summarizes only
-validated records and states the audit's sampling limits. The audit supports causal examples and
-within-sample observations, not corpus-wide prevalence unless its sampling design justifies that
-estimator.
-
-**Alternative considered:** Re-run `ORDER BY random()` and keep aggregate notes. That cannot recover the
-reviewed entities, source state, or selection probability and repeats the evidence loss.
-
-### 6. Record retirement proof in a structured claim ledger
-
-Implementation creates
-`openspec/changes/materialize-exclusion-evidence/evidence/retired-knowledge-claims.yaml`. Each entry has:
-
-```text
-source_file, source_anchor, normalized_claim,
-knowledge_class, disposition, current_owner,
-verification, status, notes
-```
-
-The six deleted sources are read from the parent of their deletion commit only to enumerate candidate
-claims. Every conclusion is re-derived from current source, configuration, tests, registered reports,
-or read-only corpus checks. The ledger rejects duplicate entries, missing owners, unverifiable
-"derivable" dispositions, and retained claims whose owner does not exist or produce the asserted fact.
-
-The ledger stays with the OpenSpec change and moves to its archive with the completed change. Durable
-requirements move into accepted capabilities; current empirical values remain report outputs. The
-ledger is audit evidence for the cutover, not a second documentation authority.
-
-**Alternative considered:** Restore the six Markdown files and correct them. That recreates a manually
-maintained shadow of contracts, implementation, and report results and will drift again.
-
-### 7. Reconcile overlapping active changes before code work
-
-Before report implementation, update `consolidate-repository-knowledge` so it:
-
-- reopens the six-document claim audit and final cutover checks;
-- states the explicit five-mechanism collapse and filter-adjudication boundary;
-- records that derived lifecycle failure stage does not prove attempted stage;
-- requires reproducible qualitative evidence;
-- treats this change's accepted capabilities and evidence ledger as replacement owners.
-
-Then re-read the active database, typed-value, and publication designs and use their finalized
-interfaces. If those changes have not established the required interfaces, complete their prerequisite
-tasks first under their own change ownership rather than adding compatibility shims here.
-
-**Alternative considered:** Duplicate provisional registry, rendering, or publishing helpers in this
-change. That would create the parallel architecture the active changes exist to remove.
-
-### 8. Use append-only atomic commits
-
-Implementation uses new Conventional Commits only. Each commit has one subject, a causal body, and its
-focused verification. The intended boundaries are:
-
-1. `docs(openspec)`: reconcile retirement and exclusion contracts and record the claim audit method;
-2. `feat(eval)`: derive and validate the canonical exclusion fact relation and mechanism partition;
-3. `feat(eval)`: materialize the denominator-explicit generalization funnel and metrics;
-4. `feat(eval)`: add and validate the deterministic widening audit and registered summary;
-5. `feat(eval)`: declare consumer artifacts and regenerate report outputs;
-6. `docs(repo)`: complete the six-source claim ledger and activate the retirement guard;
-7. separate thesis-repository commits: sync generated artifacts, update prose by subject, and verify the
-   rendered thesis.
-
-A boundary may be split further when tests and production code would otherwise cover two independent
-contracts. It may not be merged merely to reduce commit count. Existing commits are not modified.
+Do not mix thesis publication into these commits. Do not preserve intermediate output as a new
+baseline; regenerate from the reviewed corpus and source revision.
 
 ## Risks / Trade-offs
 
-- **[Risk] The canonical fact relation becomes one large, opaque query.** -> Keep named classification
-  CTEs or typed intermediate frames, expose each mechanism predicate, and test positive and negative
-  examples for every writer.
-- **[Risk] First-match precedence hides contradictory records.** -> Assert exclusivity after valid
-  storage overlaps are normalized; fail with entity IDs on every other multi-match.
-- **[Risk] EM-7 contaminates downstream attribution.** -> Compute final usability without claiming an
-  attempted failure stage, retain the strict expected-failure invariant, and publish the limitation.
-- **[Risk] Audit labels overstate prevalence.** -> Separate deterministic selection from human labels,
-  record strata and population, and constrain report prose to what the sampling design supports.
-- **[Risk] Active changes revise their interfaces during implementation.** -> Gate code work on their
-  finalized accepted contracts and migrate directly; do not add aliases or fallback paths.
-- **[Risk] The claim ledger becomes another stale narrative.** -> Keep normalized claims short, require
-  executable/reported owners, validate the schema, and archive it after the cutover rather than using
-  it as ongoing implementation documentation.
-- **[Risk] Publication emits partial artifacts before an invariant fails.** -> Build all values and run
-  reconciliation before renderers or publishers receive output.
-- **[Trade-off] The deterministic audit requires manual review.** -> Store the reviewed entities and
-  rationale once so the work is inspectable and reusable instead of cheap but irreproducible.
+- **The normalized relation can become a second classifier.** -> It may only consume typed producer
+  evidence and the accepted mapping, with fail-loud unknowns and reconciliation against existing
+  accounting totals.
+- **Historical attempt state is incomplete.** -> Publish unknown state explicitly and avoid claims
+  about a stage running without an independent attempt record.
+- **The consumer inventory may miss a prose literal.** -> Build it from generated macro/table usage,
+  current thesis claim inventory, and the one-time audit. The final thesis reconciliation performs a
+  second complete consumer search.
+- **A permanent ledger feels safer.** -> Rejected. It would be another narrative authority that can go
+  stale. Accepted specs, executable checks, registered outputs, and change history already provide the
+  durable homes.
+- **The audit may overstate causality.** -> Separate persisted-code conclusions from human-reviewed
+  explanations and require retained entity identities and rationale for the latter.
 
 ## Migration Plan
 
-1. Reconcile the overlapping OpenSpec artifacts and mark their dependency boundaries. Do not modify
-   existing commits.
-2. Build and test the canonical fact relation against controlled fixtures and the frozen v7 corpus.
-3. Materialize the mechanism table, funnel, metrics, and fail-loud reconciliation inside one report
-   snapshot.
-4. Generate the deterministic audit candidate set, review and record every selected case, then validate
-   and register its summary.
-5. Update publication declarations, regenerate every registered report once, and prove no unrelated
-   report or figure changed.
-6. Complete the six-source claim ledger. Correct stale source comments and diagnostics in the same
-   subject commit as their authoritative replacement.
-7. Activate the repository retirement guard only after all ledger entries pass.
-8. In the thesis repository, regenerate and sync declared artifacts, update each consumer claim to a
-   denominator-bearing macro or table, build the thesis, run style and LaTeX checks, and inspect rendered
-   pages containing changed tables.
-9. Archive changes only after their overlapping requirements and task ownership are coherent.
+1. Finish and archive `consolidate-repository-knowledge`; consume its accounting contract unchanged.
+2. Land corpus identity, report-run, typed rendering, and declaration prerequisites.
+3. Implement and prove the canonical fact relation and denominator funnel.
+4. Materialize the complete registered RQ6 metric and artifact surface.
+5. Run and retain the deterministic causal audit.
+6. Complete the one-time retired-source disposition and correct any stale source comments found.
+7. Regenerate all registered reports once from the finalized producer revision and verify
+   reconciliation, provenance, and publication into a scratch consumer.
+8. Hand the exact revision and artifact manifest to `reconcile-reporeapers-claims`.
 
-Rollback is append-only. Revert the offending new commit or commits in reverse dependency order. Never
-repair rollback by mutating the frozen corpus, restoring hand-maintained numbers, or rewriting existing
-history.
+Rollback is a normal revert of the responsible producer commit. Frozen corpus rows and historical Git
+state are never edited.
+
+## Open Questions
+
+None. Permanent knowledge-retirement machinery is rejected; the one-time audit is sufficient for this
+migration.
