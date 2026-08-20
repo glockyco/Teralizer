@@ -48,13 +48,16 @@ publish deposits files it must then delete.
 
 ### Modified Capabilities
 
-None. `openspec/specs/` holds no accepted spec yet, so there is no existing capability path to modify.
+- `reporting/figure-publication`: loses the four requirements that were never about figures — the
+  consumer's declaration, the declaration-versus-emitted-set failure, name uniqueness, and the
+  publish guards. `reporting/artifact-delivery` states all four for every artifact kind. What remains
+  is the one genuinely figure-shaped requirement: that a declared figure is emitted in a print format
+  and a screen format.
 
-The requirement this change replaces lives in an unaccepted delta: `publish-figures-to-consumers`
-specifies the scenario *Publishing without a declaration*, whose outcome states that the tables and
-data a destination expects are still published. That outcome is the behaviour this change removes.
-It must be corrected in that change before it is archived, or the accepted spec set will contain a
-requirement that contradicts this one.
+The outcome that directly contradicted this change has already been retired at source. That spec
+stated that a destination supplying no declaration still receives the tables and data it expects; it
+now states only that an absent declaration is not an error. The correction landed before
+`publish-figures-to-consumers` was archived, so the contradiction never entered the accepted spec set.
 
 ## Impact
 

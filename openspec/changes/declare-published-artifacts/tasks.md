@@ -1,15 +1,17 @@
 Edits are scoped to this repository. The consuming repository's own declaration is recorded in group 6
 and written there, not here.
 
-## 1. Retire the superseded outcome
+## 1. Narrow the figure capability
 
-- [x] 1.1 In `openspec/changes/publish-figures-to-consumers`, correct the scenario *Publishing without
-      a declaration*. Its outcome states that the tables and data a destination expects are still
-      published, which is the behaviour this change removes. State only what remains true for figures.
-      Verification: no scenario in that change sanctions delivery of an undeclared artifact, and
-      `openspec validate publish-figures-to-consumers --strict` passes.
-- [ ] 1.2 Commit.
-      Message: `docs(openspec): retire the undeclared-delivery outcome`
+- [x] 1.1 Retire the outcome in the figure spec stating that tables and data are published when no
+      declaration exists. Done at source before that change was archived, so the contradiction never
+      entered the accepted spec set (`1487dae3`).
+- [ ] 1.2 When this change is archived and its specs merge, narrow the Purpose of
+      `reporting/figure-publication` to the formats a figure is emitted in. A requirement delta cannot
+      restate a Purpose, so the removal of its four delivery requirements would otherwise leave a
+      Purpose describing behaviour the capability no longer governs.
+      Verification: the accepted figure spec lists exactly one requirement, and its Purpose names no
+      declaration and no delivery.
 
 ## 2. Declare artifacts per render target
 

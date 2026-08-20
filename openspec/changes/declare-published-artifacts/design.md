@@ -27,7 +27,7 @@ generator-owned would delete maintained work.
 
 - Choosing what the thesis declares. That belongs to the thesis, and this change only requires that it
   be stated.
-- Pruning. Publishing writes; it never removes. See Decision 5.
+- Pruning. Publishing writes; it never removes. See Decision 6.
 - The form of a delivered artifact. `separate-report-values-from-presentation` owns that.
 
 ## Decisions
@@ -71,7 +71,21 @@ The uncommitted-change guard takes the union of declared paths across kinds and 
 repository once. It already shells out to git a single time for figures; widening the path list keeps
 that shape and keeps the refusal ahead of the first write.
 
-### 5. Publishing never removes a file
+### 5. The figure capability loses its delivery requirements rather than keeping a copy
+
+Four of the five accepted figure requirements describe delivery, not figures. They are removed there
+and stated once in the new capability.
+
+*Why not leave them:* two capabilities asserting the same rule is the failure mode this change exists
+to fix, one level up. A figure-shaped copy would also keep the weaker form of two rules: name
+uniqueness could not be expressed per kind, so a table and its data file would read as a collision,
+and the guard requirement pointed at a table's guards as though a figure's were derivative.
+
+*Known limit of the delta form:* a requirement delta cannot restate a capability's Purpose, and the
+accepted figure Purpose still describes declaration and delivery. It has to be narrowed to formats when
+this change is archived and its specs are merged. That is a task, not an assumption.
+
+### 6. Publishing never removes a file
 
 An undeclared file in a delivery directory is left exactly as it is, whether a person wrote it or an
 earlier publish deposited it.
