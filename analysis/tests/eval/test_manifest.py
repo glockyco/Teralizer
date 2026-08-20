@@ -42,6 +42,7 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
         ),
     )
     rendered = ArtifactSet(tmp_path)
+    (tmp_path / "rq6.md").write_text("report")
     rendered.add(
         RenderedArtifact(
             ArtifactId(RenderTarget.MARKDOWN, "rq6"), tmp_path / "rq6.md", "rq6"
@@ -56,7 +57,9 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
     )
     path = written.get(ArtifactId(RenderTarget.MANIFEST, "provenance")).path
     data = json.loads(path.read_text())
-    assert data["rq6"]["artifacts"] == {"md": ["rq6"]}
+    assert data["rq6"]["artifacts"] == [
+        {"target": "md", "key": "rq6", "path": "rq6.md"}
+    ]
     entry = data["rq6"]["metrics"]["realworld.eligible_projects"]
     assert entry["value"] == 632
     assert entry["commit"] == "a" * 40

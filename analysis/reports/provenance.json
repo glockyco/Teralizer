@@ -1,17 +1,27 @@
 {
   "dataset": {
-    "artifacts": {
-      "csv": [
-        "tab-dataset-statistics"
-      ],
-      "latex": [
-        "macros/dataset",
-        "tab-dataset-statistics"
-      ],
-      "md": [
-        "dataset"
-      ]
-    },
+    "artifacts": [
+      {
+        "key": "tab-dataset-statistics",
+        "path": "build/dataset/tab-dataset-statistics.csv",
+        "target": "csv"
+      },
+      {
+        "key": "macros/dataset",
+        "path": "build/macros/dataset.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-dataset-statistics",
+        "path": "build/tab-dataset-statistics.tex",
+        "target": "latex"
+      },
+      {
+        "key": "dataset",
+        "path": "reports/dataset.md",
+        "target": "md"
+      }
+    ],
     "figures": {},
     "inputs": {
       "controlled": {
@@ -67,22 +77,48 @@
     }
   },
   "rq0": {
-    "artifacts": {
-      "csv": [
-        "rq0-breadth-summary",
-        "rq0-pvc-budget",
-        "rq0-table2-comparison"
-      ],
-      "latex": [
-        "macros/rq0",
-        "rq0-breadth-summary",
-        "rq0-pvc-budget",
-        "rq0-table2-comparison"
-      ],
-      "md": [
-        "rq0"
-      ]
-    },
+    "artifacts": [
+      {
+        "key": "rq0-breadth-summary",
+        "path": "build/rq0/rq0-breadth-summary.csv",
+        "target": "csv"
+      },
+      {
+        "key": "rq0-pvc-budget",
+        "path": "build/rq0/rq0-pvc-budget.csv",
+        "target": "csv"
+      },
+      {
+        "key": "rq0-table2-comparison",
+        "path": "build/rq0/rq0-table2-comparison.csv",
+        "target": "csv"
+      },
+      {
+        "key": "macros/rq0",
+        "path": "build/macros/rq0.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq0-breadth-summary",
+        "path": "build/rq0-breadth-summary.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq0-pvc-budget",
+        "path": "build/rq0-pvc-budget.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq0-table2-comparison",
+        "path": "build/rq0-table2-comparison.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq0",
+        "path": "reports/rq0.md",
+        "target": "md"
+      }
+    ],
     "figures": {},
     "inputs": {
       "benchmark": {
@@ -95,7 +131,7 @@
         "observed_projects": 12
       },
       "completion-marker": {
-        "commit": "749cc5c2f6afc62ab67178a09208af80fad3926e",
+        "commit": "66c258b19eb97b7370cc5b135da4b7223929939d",
         "dirty": true,
         "kind": "file",
         "path": "data/detached/census-gen.complete",
@@ -1604,24 +1640,48 @@
     }
   },
   "rq1": {
-    "artifacts": {
-      "csv": [
-        "tab-detections-per-mutator",
-        "tab-mutants-per-project"
-      ],
-      "figures": [
-        "mutation_detection_comparison"
-      ],
-      "latex": [
-        "macros/rq1",
-        "tab-detections-per-mutator",
-        "tab-mutants-per-project"
-      ],
-      "md": [
-        "mutation_detection_comparison",
-        "rq1"
-      ]
-    },
+    "artifacts": [
+      {
+        "key": "tab-detections-per-mutator",
+        "path": "build/rq1/tab-detections-per-mutator.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-mutants-per-project",
+        "path": "build/rq1/tab-mutants-per-project.csv",
+        "target": "csv"
+      },
+      {
+        "key": "mutation_detection_comparison",
+        "path": "build/figures/rq1/mutation_detection_comparison.pdf",
+        "target": "figures"
+      },
+      {
+        "key": "macros/rq1",
+        "path": "build/macros/rq1.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-detections-per-mutator",
+        "path": "build/tab-detections-per-mutator.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-mutants-per-project",
+        "path": "build/tab-mutants-per-project.tex",
+        "target": "latex"
+      },
+      {
+        "key": "mutation_detection_comparison",
+        "path": "reports/figures/rq1/mutation_detection_comparison.png",
+        "target": "md"
+      },
+      {
+        "key": "rq1",
+        "path": "reports/rq1.md",
+        "target": "md"
+      }
+    ],
     "figures": {
       "mutation_detection_comparison": {
         "commit": "b5112480c27aad999d9308a996ebc3ee9ef7fe5c",
@@ -1699,18 +1759,28 @@
     }
   },
   "rq2": {
-    "artifacts": {
-      "csv": [
-        "tab-mutation-detection-comparison"
-      ],
-      "latex": [
-        "macros/rq2",
-        "tab-mutation-detection-comparison"
-      ],
-      "md": [
-        "rq2"
-      ]
-    },
+    "artifacts": [
+      {
+        "key": "tab-mutation-detection-comparison",
+        "path": "build/rq2/tab-mutation-detection-comparison.csv",
+        "target": "csv"
+      },
+      {
+        "key": "macros/rq2",
+        "path": "build/macros/rq2.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-mutation-detection-comparison",
+        "path": "build/tab-mutation-detection-comparison.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq2",
+        "path": "reports/rq2.md",
+        "target": "md"
+      }
+    ],
     "figures": {},
     "inputs": {
       "controlled": {
@@ -1749,28 +1819,68 @@
     }
   },
   "rq3": {
-    "artifacts": {
-      "csv": [
-        "tab-lines-per-project",
-        "tab-runtime-per-project",
-        "tab-tests-per-project",
-        "test_runtime_differences"
-      ],
-      "figures": [
-        "test_runtime_differences"
-      ],
-      "latex": [
-        "macros/rq3",
-        "tab-lines-per-project",
-        "tab-runtime-per-project",
-        "tab-tests-per-project",
-        "test_runtime_differences"
-      ],
-      "md": [
-        "rq3",
-        "test_runtime_differences"
-      ]
-    },
+    "artifacts": [
+      {
+        "key": "tab-lines-per-project",
+        "path": "build/rq3/tab-lines-per-project.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-runtime-per-project",
+        "path": "build/rq3/tab-runtime-per-project.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-tests-per-project",
+        "path": "build/rq3/tab-tests-per-project.csv",
+        "target": "csv"
+      },
+      {
+        "key": "test_runtime_differences",
+        "path": "build/rq3/test_runtime_differences.csv",
+        "target": "csv"
+      },
+      {
+        "key": "test_runtime_differences",
+        "path": "build/figures/rq3/test_runtime_differences.pdf",
+        "target": "figures"
+      },
+      {
+        "key": "macros/rq3",
+        "path": "build/macros/rq3.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-lines-per-project",
+        "path": "build/tab-lines-per-project.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-runtime-per-project",
+        "path": "build/tab-runtime-per-project.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-tests-per-project",
+        "path": "build/tab-tests-per-project.tex",
+        "target": "latex"
+      },
+      {
+        "key": "test_runtime_differences",
+        "path": "build/test_runtime_differences.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq3",
+        "path": "reports/rq3.md",
+        "target": "md"
+      },
+      {
+        "key": "test_runtime_differences",
+        "path": "reports/figures/rq3/test_runtime_differences.png",
+        "target": "md"
+      }
+    ],
     "figures": {
       "test_runtime_differences": {
         "commit": "749cc5c2f6afc62ab67178a09208af80fad3926e",
@@ -1850,30 +1960,78 @@
     }
   },
   "rq4": {
-    "artifacts": {
-      "csv": [
-        "evosuite_runtime_analysis",
-        "tab-pareto-commons",
-        "tab-pareto-eqbench"
-      ],
-      "figures": [
-        "evosuite_runtime_phases",
-        "teralizer_efficiency",
-        "teralizer_runtimes"
-      ],
-      "latex": [
-        "evosuite_runtime_analysis",
-        "macros/rq4",
-        "tab-pareto-commons",
-        "tab-pareto-eqbench"
-      ],
-      "md": [
-        "evosuite_runtime_phases",
-        "rq4",
-        "teralizer_efficiency",
-        "teralizer_runtimes"
-      ]
-    },
+    "artifacts": [
+      {
+        "key": "evosuite_runtime_analysis",
+        "path": "build/rq4/evosuite_runtime_analysis.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-pareto-commons",
+        "path": "build/rq4/tab-pareto-commons.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-pareto-eqbench",
+        "path": "build/rq4/tab-pareto-eqbench.csv",
+        "target": "csv"
+      },
+      {
+        "key": "evosuite_runtime_phases",
+        "path": "build/figures/rq4/evosuite_runtime_phases.pdf",
+        "target": "figures"
+      },
+      {
+        "key": "teralizer_efficiency",
+        "path": "build/figures/rq4/teralizer_efficiency.pdf",
+        "target": "figures"
+      },
+      {
+        "key": "teralizer_runtimes",
+        "path": "build/figures/rq4/teralizer_runtimes.pdf",
+        "target": "figures"
+      },
+      {
+        "key": "evosuite_runtime_analysis",
+        "path": "build/evosuite_runtime_analysis.tex",
+        "target": "latex"
+      },
+      {
+        "key": "macros/rq4",
+        "path": "build/macros/rq4.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-pareto-commons",
+        "path": "build/tab-pareto-commons.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-pareto-eqbench",
+        "path": "build/tab-pareto-eqbench.tex",
+        "target": "latex"
+      },
+      {
+        "key": "evosuite_runtime_phases",
+        "path": "reports/figures/rq4/evosuite_runtime_phases.png",
+        "target": "md"
+      },
+      {
+        "key": "rq4",
+        "path": "reports/rq4.md",
+        "target": "md"
+      },
+      {
+        "key": "teralizer_efficiency",
+        "path": "reports/figures/rq4/teralizer_efficiency.png",
+        "target": "md"
+      },
+      {
+        "key": "teralizer_runtimes",
+        "path": "reports/figures/rq4/teralizer_runtimes.png",
+        "target": "md"
+      }
+    ],
     "figures": {
       "evosuite_runtime_phases": {
         "commit": "ae4724e344fd9d1b73cf031e1855c05e96fb3039",
@@ -1963,20 +2121,38 @@
     }
   },
   "rq5": {
-    "artifacts": {
-      "csv": [
-        "tab-exclusions-breakdown",
-        "tab-exclusions-filtering"
-      ],
-      "latex": [
-        "macros/rq5",
-        "tab-exclusions-breakdown",
-        "tab-exclusions-filtering"
-      ],
-      "md": [
-        "rq5"
-      ]
-    },
+    "artifacts": [
+      {
+        "key": "tab-exclusions-breakdown",
+        "path": "build/rq5/tab-exclusions-breakdown.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-exclusions-filtering",
+        "path": "build/rq5/tab-exclusions-filtering.csv",
+        "target": "csv"
+      },
+      {
+        "key": "macros/rq5",
+        "path": "build/macros/rq5.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-exclusions-breakdown",
+        "path": "build/tab-exclusions-breakdown.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-exclusions-filtering",
+        "path": "build/tab-exclusions-filtering.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq5",
+        "path": "reports/rq5.md",
+        "target": "md"
+      }
+    ],
     "figures": {},
     "inputs": {
       "controlled": {
@@ -2014,28 +2190,78 @@
     }
   },
   "rq6": {
-    "artifacts": {
-      "csv": [
-        "rq6_jpf_exception_causes",
-        "rq6_mut_choice_sensitivity",
-        "rq6_widening_refusals",
-        "tab-exclusions-breakdown-extended",
-        "tab-exclusions-filtering-extended",
-        "tab-processing-failures"
-      ],
-      "latex": [
-        "macros/rq6",
-        "rq6_jpf_exception_causes",
-        "rq6_mut_choice_sensitivity",
-        "rq6_widening_refusals",
-        "tab-exclusions-breakdown-extended",
-        "tab-exclusions-filtering-extended",
-        "tab-processing-failures"
-      ],
-      "md": [
-        "rq6"
-      ]
-    },
+    "artifacts": [
+      {
+        "key": "rq6_jpf_exception_causes",
+        "path": "build/rq6/rq6_jpf_exception_causes.csv",
+        "target": "csv"
+      },
+      {
+        "key": "rq6_mut_choice_sensitivity",
+        "path": "build/rq6/rq6_mut_choice_sensitivity.csv",
+        "target": "csv"
+      },
+      {
+        "key": "rq6_widening_refusals",
+        "path": "build/rq6/rq6_widening_refusals.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-exclusions-breakdown-extended",
+        "path": "build/rq6/tab-exclusions-breakdown-extended.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-exclusions-filtering-extended",
+        "path": "build/rq6/tab-exclusions-filtering-extended.csv",
+        "target": "csv"
+      },
+      {
+        "key": "tab-processing-failures",
+        "path": "build/rq6/tab-processing-failures.csv",
+        "target": "csv"
+      },
+      {
+        "key": "macros/rq6",
+        "path": "build/macros/rq6.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6_jpf_exception_causes",
+        "path": "build/rq6_jpf_exception_causes.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6_mut_choice_sensitivity",
+        "path": "build/rq6_mut_choice_sensitivity.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6_widening_refusals",
+        "path": "build/rq6_widening_refusals.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-exclusions-breakdown-extended",
+        "path": "build/tab-exclusions-breakdown-extended.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-exclusions-filtering-extended",
+        "path": "build/tab-exclusions-filtering-extended.tex",
+        "target": "latex"
+      },
+      {
+        "key": "tab-processing-failures",
+        "path": "build/tab-processing-failures.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6",
+        "path": "reports/rq6.md",
+        "target": "md"
+      }
+    ],
     "figures": {},
     "inputs": {
       "real-world": {

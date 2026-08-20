@@ -17,7 +17,7 @@ def _fixture_report(_conn):
         label="tab:k",
     )
     return RQReport(
-        "smoke",
+        _conn.report,
         "Smoke",
         [Section("s", [t])],
         metrics=[Metric("smoke.n", 1, "int")],
@@ -42,7 +42,8 @@ def test_cli_fans_out_to_targets(monkeypatch, tmp_path):
     monkeypatch.setitem(
         registry.REPORTS, "smoke", registry.ReportSpec(_fixture_report, ())
     )
-    monkeypatch.setattr(cli.inputs, "resolve_inputs", _resolved)
+    monkeypatch.setattr(cli.run.inputs, "resolve_inputs", _resolved)
+    monkeypatch.setattr(cli, "_ANALYSIS", tmp_path)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
     monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
     cli.main(["smoke", "--targets", "md,figures,latex"])
@@ -67,8 +68,10 @@ def test_cli_resolves_declared_inputs_before_build(monkeypatch, tmp_path):
 
     spec = registry.ReportSpec(build, ())
     monkeypatch.setitem(registry.REPORTS, "complete", spec)
-    monkeypatch.setattr(cli.inputs, "resolve_inputs", resolve)
+    monkeypatch.setattr(cli.run.inputs, "resolve_inputs", resolve)
+    monkeypatch.setattr(cli, "_ANALYSIS", tmp_path)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
+    monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
     cli.main(["complete", "--targets", "md"])
 
     assert events == [("resolve", "complete", ()), ("build", "complete")]
@@ -81,7 +84,8 @@ def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
         "REPORTS",
         {"smoke_csv": registry.ReportSpec(_fixture_report, ())},
     )
-    monkeypatch.setattr(cli.inputs, "resolve_inputs", _resolved)
+    monkeypatch.setattr(cli.run.inputs, "resolve_inputs", _resolved)
+    monkeypatch.setattr(cli, "_ANALYSIS", tmp_path)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
     monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
     cli.main(
@@ -93,7 +97,7 @@ def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
             str(tmp_path / "paper"),
         ]
     )
-    assert (tmp_path / "build" / "smoke" / "k.csv").exists()
+    assert (tmp_path / "build" / "smoke_csv" / "k.csv").exists()
     assert (tmp_path / "paper" / "tables" / "k.tex").exists()
     csv_path = tmp_path / "paper" / "data" / "k.csv"
     assert csv_path.exists()

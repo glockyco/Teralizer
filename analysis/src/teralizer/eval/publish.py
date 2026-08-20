@@ -135,6 +135,22 @@ def _uncommitted(declaration: FigureDeclaration) -> list[str]:
     ]
 
 
+def validate(declaration: FigureDeclaration, artifacts: ArtifactSet) -> None:
+    """Validate a declaration against a complete artifact set without copying."""
+    emitted = {
+        artifact.id.key: artifact.path
+        for artifact in artifacts.by_target(RenderTarget.FIGURES)
+    }
+    reasons = [
+        f"declared figure '{key}' is not emitted by any report in this run"
+        for key in sorted(declaration.targets)
+        if key not in emitted
+    ]
+    reasons += _uncommitted(declaration)
+    if reasons:
+        raise PublishError(reasons)
+
+
 def deliver(declaration: FigureDeclaration, artifacts: ArtifactSet) -> list[Path]:
     """Copy every declared figure, or nothing.
 
@@ -150,14 +166,7 @@ def deliver(declaration: FigureDeclaration, artifacts: ArtifactSet) -> list[Path
         artifact.id.key: artifact.path
         for artifact in artifacts.by_target(RenderTarget.FIGURES)
     }
-    reasons = [
-        f"declared figure '{key}' is not emitted by any report in this run"
-        for key in sorted(declaration.targets)
-        if key not in emitted
-    ]
-    reasons += _uncommitted(declaration)
-    if reasons:
-        raise PublishError(reasons)
+    validate(declaration, artifacts)
     written: list[Path] = []
     for key, target in sorted(declaration.targets.items()):
         target.parent.mkdir(parents=True, exist_ok=True)

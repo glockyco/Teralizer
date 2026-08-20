@@ -71,12 +71,17 @@ def _figure_md(fig: Figure, rq: str, repo_url: str) -> str:
 def render_str(built: BuiltReport, *, repo_url: str) -> str:
     report = built.report
     database = next(
-        snapshot.database
-        for snapshot in built.inputs
-        if isinstance(snapshot, CorpusInputSnapshot)
+        (
+            snapshot.database
+            for snapshot in built.inputs
+            if isinstance(snapshot, CorpusInputSnapshot)
+        ),
+        None,
     )
     metrics = report.metric_map()
-    parts = [f"# {report.title}", f"_Source database: `{database}`._"]
+    parts = [f"# {report.title}"]
+    if database is not None:
+        parts.append(f"_Source database: `{database}`._")
     for section in report.sections:
         parts.append(f"## {section.title}")
         for block in section.blocks:

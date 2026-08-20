@@ -59,17 +59,21 @@ def build_manifest(
     built: BuiltReport, artifacts: ArtifactSet, *, repo_url: str
 ) -> dict:
     report = built.report
-    artifact_ids: dict[str, list[str]] = {}
-    for artifact in artifacts:
-        if artifact.owner == report.rq:
-            artifact_ids.setdefault(artifact.id.target.value, []).append(
-                artifact.id.key
-            )
+    artifact_records = sorted(
+        (
+            {
+                "target": artifact.id.target.value,
+                "key": artifact.id.key,
+                "path": str(artifact.path.relative_to(artifacts.root)),
+            }
+            for artifact in artifacts
+            if artifact.owner == report.rq
+        ),
+        key=lambda record: (record["target"], record["key"]),
+    )
     manifest = {
         "inputs": {snapshot.role: _input_entry(snapshot) for snapshot in built.inputs},
-        "artifacts": {
-            target: sorted(keys) for target, keys in sorted(artifact_ids.items())
-        },
+        "artifacts": artifact_records,
         "metrics": {
             m.key: _entry(m.value, m.provenance, repo_url)
             for m in report.metrics
@@ -96,14 +100,29 @@ def render(
     *,
     staging_root: Path,
     repo_url: str,
+    base_document: dict[str, object] | None = None,
 ) -> ArtifactSet:
-    """Write one complete run-owned provenance manifest."""
+    """Write one run-owned provenance manifest, replacing selected entries."""
     reports_dir.mkdir(parents=True, exist_ok=True)
     path = reports_dir / "provenance.json"
-    document = {
-        built.report.rq: build_manifest(built, rendered, repo_url=repo_url)
-        for built in built_reports
-    }
+    document = dict(base_document or {})
+    for built in built_reports:
+        entry = build_manifest(built, rendered, repo_url=repo_url)
+        prior = document.get(built.report.rq)
+        prior_artifacts = prior.get("artifacts", []) if isinstance(prior, dict) else []
+        current_targets = {record["target"] for record in entry["artifacts"]}
+        if isinstance(prior_artifacts, list):
+            entry["artifacts"] = sorted(
+                entry["artifacts"]
+                + [
+                    record
+                    for record in prior_artifacts
+                    if isinstance(record, dict)
+                    and record.get("target") not in current_targets
+                ],
+                key=lambda record: (record["target"], record["key"]),
+            )
+        document[built.report.rq] = entry
     path.write_text(
         json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

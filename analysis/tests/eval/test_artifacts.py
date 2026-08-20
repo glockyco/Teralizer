@@ -13,6 +13,8 @@ from teralizer.eval.artifacts import (
 
 def artifact(root: Path, target: RenderTarget, key: str, owner: str | RunAggregate):
     path = root / target.value / key
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(key)
     return RenderedArtifact(ArtifactId(target, key), path, owner)
 
 

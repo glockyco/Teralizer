@@ -61,6 +61,10 @@ class ArtifactSet:
                 f"artifact {artifact.id.target.value}/{artifact.id.key} path "
                 f"escapes staging root {self.root}: {path}"
             )
+        if not path.is_file():
+            raise ValueError(
+                f"artifact {artifact.id.target.value}/{artifact.id.key} is missing: {path}"
+            )
         prior = self._artifacts.get(artifact.id)
         if prior is not None:
             raise ValueError(
