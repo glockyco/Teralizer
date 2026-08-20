@@ -1,0 +1,73 @@
+## Why
+
+Publishing copies every table and every CSV the report set renders into the consuming repository,
+whether or not that repository prints them. One measured run against the thesis deposited 24 files the
+thesis does not carry: 5 LaTeX tables and 19 CSV files. The thesis prints 18 generated tables and 3
+CSV files.
+
+The consequence is not cosmetic. A publish leaves the consumer with untracked files that a person has
+to recognise and delete, and the deletion has already happened once by hand: thesis commit `3b21b53`
+removed three deposited tables and their CSV files after a sync. The reader of a published tree cannot
+tell a file the repository prints from a file the generator happened to render.
+
+Figures already work the other way. A consumer declares which figures it takes and the path each one
+lands under, publishing delivers exactly that set, and a declared key that no report emitted fails the
+run. Tables and data have no such declaration, so the same publish step is declaration-driven for one
+artifact kind and unconditional for the other two. That asymmetry is the defect, and it was introduced
+when figure delivery was added: the delivery rule was written for figures instead of for artifacts.
+
+It also blocks documentation. A consuming repository cannot be told to publish and commit while a
+publish deposits files it must then delete.
+
+## What Changes
+
+- **A consumer declares every artifact kind it takes**, not only figures. The declaration states the
+  tables and the data files the repository prints, each with the path it lands under.
+- **Publishing delivers the declared set and nothing else.** No generated file reaches a consuming
+  repository that the consumer has not named.
+- **A declared artifact that no report emitted fails the publish**, naming the artifact, exactly as a
+  declared figure key already does. A renamed table therefore fails loudly instead of leaving the
+  consumer's copy stale.
+- **A name that two reports emit fails the publish**, exactly as a duplicate figure key already does,
+  because a declaration names an artifact and cannot express which report it came from.
+- **The consumer's uncommitted-change guard covers every delivered path.** Today it protects declared
+  figure paths only, so an edited table is overwritten without warning.
+- **Delivery happens once, after the whole run.** Tables and CSV files are currently copied per report
+  from inside the render step, so a run that fails partway leaves a partial set in the consumer. The
+  run will accumulate what it emitted and resolve the declaration once, as figures already do.
+- **BREAKING** for a consuming repository with no declaration: it receives nothing. The thesis
+  declaration must gain its tables and data in the same step, or the thesis stops receiving artifacts.
+
+## Capabilities
+
+### New Capabilities
+
+- `reporting/artifact-delivery`: which generated artifacts reach a consuming repository, how that
+  repository states what it takes, and what happens when the declaration and the emitted set
+  disagree.
+
+### Modified Capabilities
+
+None. `openspec/specs/` holds no accepted spec yet, so there is no existing capability path to modify.
+
+The requirement this change replaces lives in an unaccepted delta: `publish-figures-to-consumers`
+specifies the scenario *Publishing without a declaration*, whose outcome states that the tables and
+data a destination expects are still published. That outcome is the behaviour this change removes.
+It must be corrected in that change before it is archived, or the accepted spec set will contain a
+requirement that contradicts this one.
+
+## Impact
+
+- `analysis/src/teralizer/eval/publish.py`: the declaration becomes kind-aware, and `read_declaration`,
+  `deliver`, `merge_emitted`, and the uncommitted-change guard generalise from figures to artifacts.
+- `analysis/src/teralizer/eval/cli.py`: the two unconditional `shutil.copy2` loops in
+  `_build_and_render` are removed, that function reports what it emitted per kind, and `main` resolves
+  the declaration once after the run. The argument check that currently guards only a figure
+  declaration against a missing `figures` target must cover every declared kind.
+- Consuming repositories: the thesis declaration at `chapters/05-teralizer/publish.toml` gains its
+  tables and data. This change and that declaration land together.
+- `analysis/scripts/publish-analysis.sh` keeps its interface: it already builds the whole report set
+  with every render target.
+- Not in scope: the form of a delivered table. Four report modules emit raw database identifiers where
+  the thesis prints dataset macros, and digit padding is missing.
+  `separate-report-values-from-presentation` owns that, and this change neither fixes nor worsens it.
