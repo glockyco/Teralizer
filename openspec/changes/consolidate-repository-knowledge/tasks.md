@@ -26,16 +26,16 @@
 
 ## 3. Extend Repository-State Validation
 
-- [ ] 3.1 Generalize `analysis/tests/test_planning_home.py` into a repository-state guard while
+- [x] 3.1 Generalize `analysis/tests/test_planning_home.py` into a repository-state guard while
       preserving every existing single-planning-home positive control and repository assertion.
-- [ ] 3.2 Add injected positive controls that reject a tracked `docs/` path and an operative
+- [x] 3.2 Add injected positive controls that reject a tracked `docs/` path and an operative
       non-OpenSpec reference to each retired technical-document path; allow OpenSpec migration
       records to name those paths.
-- [ ] 3.3 Add an injected positive control that rejects project-specific context, rules, or operation
+- [x] 3.3 Add an injected positive control that rejects project-specific context, rules, or operation
       guidance in `openspec/config.yaml` while accepting the single `schema: spec-driven` mapping.
-- [ ] 3.4 Add an injected positive control that rejects the known R1 spike paths after promotion, and
+- [x] 3.4 Add an injected positive control that rejects the known R1 spike paths after promotion, and
       make the real-repository check require the expression-slice config and golden to remain.
-- [ ] 3.5 Run the focused guard controls before cutover and prove each known-bad fixture fails for its
+- [x] 3.5 Run the focused guard controls before cutover and prove each known-bad fixture fails for its
       intended reason rather than through an unrelated check.
 
 ## 4. Migrate Operative Guidance

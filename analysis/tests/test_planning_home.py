@@ -1,4 +1,4 @@
-"""Repository guard for the single OpenSpec planning home."""
+"""Repository-state guard for knowledge and planning authority."""
 
 from __future__ import annotations
 
@@ -6,14 +6,35 @@ import re
 import subprocess
 from pathlib import Path
 
+import pytest
+
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 _PLANNING_DIRECTORY_NAMES = {"planning", "plans", "roadmap", "roadmaps"}
 _PLANNING_RECORD_TYPES = {"audit", "note", "overview", "plan", "spec"}
-_RETIRED_REFERENCES = (
+_RETIRED_PLANNING_REFERENCES = (
     "docs" + "/plans",
     "planning" + "-files",
     "omp" + "-plans",
+)
+_RETIRED_TECHNICAL_REFERENCES = tuple(
+    "docs" + f"/{name}.md"
+    for name in (
+        "architecture",
+        "artifacts",
+        "database",
+        "exclusion-model",
+        "local-state",
+        "rq6-analysis",
+    )
+)
+_RETIRED_SPIKE_REFERENCES = (
+    "project-configs" + "/spikes/r1-viability.conf",
+    "verification" + "/spikes/r1-viability",
+)
+_REQUIRED_PROMOTED_PATHS = (
+    Path("project-configs/verification/fixture-expression-slice.conf"),
+    Path("verification/golden/expression-slice.tsv"),
 )
 _PLANNING_GUIDANCE = re.compile(
     r"\b(?:current\s+(?:planning|plans|work)|planning\s+(?:home|roadmap|state))\b",
@@ -24,6 +45,8 @@ _PLANNING_PATH_REFERENCE = re.compile(
     re.IGNORECASE,
 )
 _FRONTMATTER_FIELD = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):\s*(.*?)\s*$")
+_OPEN_SPEC_CONFIG = Path("openspec/config.yaml")
+_EXPECTED_OPEN_SPEC_CONFIG = ["schema: spec-driven"]
 
 
 def _tracked_paths(root: Path) -> list[Path]:
@@ -57,11 +80,28 @@ def _frontmatter(text: str) -> dict[str, str]:
     return fields
 
 
-def planning_home_violations(root: Path, paths: list[Path] | None = None) -> list[str]:
-    """Return tracked paths that declare or point to a second planning home."""
+def _config_lines(text: str) -> list[str]:
+    return [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+
+
+def repository_state_violations(
+    root: Path, paths: list[Path] | None = None
+) -> list[str]:
+    """Return tracked repository paths that conflict with declared authorities."""
     violations: set[str] = set()
-    for relative in paths if paths is not None else _tracked_paths(root):
-        if not relative.parts or relative.parts[0] == "openspec":
+    scan_paths = paths if paths is not None else _tracked_paths(root)
+
+    if paths is None:
+        for required in _REQUIRED_PROMOTED_PATHS:
+            if required not in scan_paths or not (root / required).is_file():
+                violations.add(f"{required.as_posix()}: promoted fixture owner missing")
+
+    for relative in scan_paths:
+        if not relative.parts:
             continue
 
         path = root / relative
@@ -69,6 +109,26 @@ def planning_home_violations(root: Path, paths: list[Path] | None = None) -> lis
             continue
 
         rendered = relative.as_posix()
+        if relative == _OPEN_SPEC_CONFIG:
+            text = _read_text(path)
+            if text is None or _config_lines(text) != _EXPECTED_OPEN_SPEC_CONFIG:
+                violations.add(
+                    f"{rendered}: project-specific OpenSpec configuration is not allowed"
+                )
+            continue
+
+        if relative.parts[0] == "openspec":
+            continue
+
+        if relative.parts[0] == "docs":
+            violations.add(f"{rendered}: retired technical-document tree")
+
+        if any(
+            rendered == retired or rendered.startswith(f"{retired}/")
+            for retired in _RETIRED_SPIKE_REFERENCES
+        ):
+            violations.add(f"{rendered}: superseded R1 spike path")
+
         has_planning_directory = any(
             part.lower() in _PLANNING_DIRECTORY_NAMES for part in relative.parts[:-1]
         )
@@ -81,9 +141,17 @@ def planning_home_violations(root: Path, paths: list[Path] | None = None) -> lis
         if text is None:
             continue
 
-        for retired in _RETIRED_REFERENCES:
+        for retired in _RETIRED_PLANNING_REFERENCES:
             if retired in text:
                 violations.add(f"{rendered}: retired planning reference {retired}")
+
+        for retired in _RETIRED_TECHNICAL_REFERENCES:
+            if retired in text:
+                violations.add(f"{rendered}: retired technical reference {retired}")
+
+        for retired in _RETIRED_SPIKE_REFERENCES:
+            if retired in text:
+                violations.add(f"{rendered}: superseded R1 spike reference {retired}")
 
         metadata = _frontmatter(text)
         if (
@@ -113,20 +181,21 @@ def _write(root: Path, relative: str, content: str) -> Path:
 def test_detects_second_planning_directory(tmp_path):
     relative = _write(tmp_path, "docs/roadmaps/item.md", "# Proposed work\n")
 
-    assert planning_home_violations(tmp_path, [relative]) == [
-        "docs/roadmaps/item.md: planning directory outside openspec"
+    assert repository_state_violations(tmp_path, [relative]) == [
+        "docs/roadmaps/item.md: planning directory outside openspec",
+        "docs/roadmaps/item.md: retired technical-document tree",
     ]
 
 
 def test_detects_current_planning_metadata_outside_openspec(tmp_path):
     relative = _write(
         tmp_path,
-        "docs/work-item.md",
+        "outside/work-item.md",
         "---\ntype: plan\nstatus: active\n---\n# Work item\n",
     )
 
-    assert planning_home_violations(tmp_path, [relative]) == [
-        "docs/work-item.md: planning metadata outside openspec"
+    assert repository_state_violations(tmp_path, [relative]) == [
+        "outside/work-item.md: planning metadata outside openspec"
     ]
 
 
@@ -134,7 +203,7 @@ def test_detects_retired_path_reference(tmp_path):
     retired = "docs" + "/plans/INDEX.md"
     relative = _write(tmp_path, "AGENTS.md", f"Read `{retired}` first.\n")
 
-    assert planning_home_violations(tmp_path, [relative]) == [
+    assert repository_state_violations(tmp_path, [relative]) == [
         "AGENTS.md: retired planning reference docs/plans"
     ]
 
@@ -147,7 +216,7 @@ def test_detects_duplicate_planning_guidance(tmp_path):
         f"Current planning lives in `{destination}`.\n",
     )
 
-    assert planning_home_violations(tmp_path, [relative]) == [
+    assert repository_state_violations(tmp_path, [relative]) == [
         "AGENTS.md: planning guidance points outside openspec"
     ]
 
@@ -159,7 +228,7 @@ def test_positive_control_reports_injected_path(tmp_path):
         "---\ntype: plan\nstatus: active\n---\n# Known conflict\n",
     )
 
-    violations = planning_home_violations(tmp_path, [relative])
+    violations = repository_state_violations(tmp_path, [relative])
 
     assert violations
     assert all(
@@ -167,5 +236,80 @@ def test_positive_control_reports_injected_path(tmp_path):
     )
 
 
-def test_repository_has_one_planning_home():
-    assert planning_home_violations(REPOSITORY_ROOT) == []
+def test_detects_tracked_technical_document(tmp_path):
+    relative = _write(tmp_path, "docs/architecture.md", "# Snapshot\n")
+
+    assert repository_state_violations(tmp_path, [relative]) == [
+        "docs/architecture.md: retired technical-document tree"
+    ]
+
+
+@pytest.mark.parametrize(
+    "name",
+    (
+        "architecture",
+        "artifacts",
+        "database",
+        "exclusion-model",
+        "local-state",
+        "rq6-analysis",
+    ),
+)
+def test_detects_operative_retired_technical_reference(tmp_path, name):
+    retired = "docs" + f"/{name}.md"
+    relative = _write(tmp_path, "AGENTS.md", f"Read `{retired}` first.\n")
+
+    assert repository_state_violations(tmp_path, [relative]) == [
+        f"AGENTS.md: retired technical reference {retired}"
+    ]
+
+
+def test_allows_retired_reference_in_openspec_migration_record(tmp_path):
+    retired = "docs" + "/database.md"
+    relative = _write(
+        tmp_path,
+        "openspec/changes/remove-snapshot/tasks.md",
+        f"- [ ] Remove `{retired}`.\n",
+    )
+
+    assert repository_state_violations(tmp_path, [relative]) == []
+
+
+def test_rejects_project_specific_openspec_configuration(tmp_path):
+    relative = _write(
+        tmp_path,
+        "openspec/config.yaml",
+        "schema: spec-driven\ncontext: project snapshot\n",
+    )
+
+    assert repository_state_violations(tmp_path, [relative]) == [
+        "openspec/config.yaml: project-specific OpenSpec configuration is not allowed"
+    ]
+
+
+def test_accepts_minimal_openspec_configuration(tmp_path):
+    relative = _write(tmp_path, "openspec/config.yaml", "schema: spec-driven\n")
+
+    assert repository_state_violations(tmp_path, [relative]) == []
+
+
+@pytest.mark.parametrize("retired", _RETIRED_SPIKE_REFERENCES)
+def test_detects_superseded_r1_spike_path(tmp_path, retired):
+    relative = _write(tmp_path, retired, "retired spike\n")
+
+    assert repository_state_violations(tmp_path, [relative]) == [
+        f"{retired}: superseded R1 spike path"
+    ]
+
+
+def test_detects_superseded_r1_spike_reference(tmp_path):
+    retired = "project-configs" + "/spikes/r1-viability.conf"
+    relative = _write(tmp_path, "AGENTS.md", f"Run `{retired}`.\n")
+
+    assert repository_state_violations(tmp_path, [relative]) == [
+        f"AGENTS.md: superseded R1 spike reference {retired}"
+    ]
+
+
+def test_repository_knowledge_has_one_authority():
+    assert repository_state_violations(REPOSITORY_ROOT) == []
