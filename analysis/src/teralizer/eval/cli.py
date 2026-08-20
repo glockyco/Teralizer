@@ -49,7 +49,9 @@ def _build_and_render(
             require_complete_corpus(conn, data_dir=corpus[0], config_dir=corpus[1])
         report = spec.build(conn)
     if "figures" in targets:
-        figures_renderer.materialize(report, REPORTS_DIR / "figures" / rq)
+        figures_renderer.materialize(
+            report, REPORTS_DIR / "figures" / rq, BUILD_DIR / "figures" / rq
+        )
     if "md" in targets:
         markdown_renderer.render(report, REPORTS_DIR, repo_url=REPO_URL)
         manifest_renderer.write_manifest(report, REPORTS_DIR, repo_url=REPO_URL)
