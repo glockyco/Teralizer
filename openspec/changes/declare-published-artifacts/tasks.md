@@ -74,17 +74,19 @@ and written there, not here.
 
 ## 6. Record what the consuming repository must declare
 
-- [ ] 6.1 Record the declaration the thesis must carry at `chapters/05-teralizer/publish.toml`: the
-      LaTeX artifacts it prints, the CSV files it prints, and the figures it already declares. Derive
-      each set rather than restating a count: the LaTeX set is the tracked files under
-      `chapters/05-teralizer/tables` that a report emits, which excludes the hand-authored table that
-      no report produces; the CSV set is the tracked files under `chapters/05-teralizer/data`.
-      Verification: the record names how each set is derived, and is filed against the thesis change
-      that owns the regeneration procedure.
-- [ ] 6.2 Record the completeness check from design.md Risks: the delivered set and the consuming
-      repository's tracked generated files must agree once, when the declaration is written, because a
-      missing entry cannot fail on its own.
-      Verification: the check is stated as a step the consuming repository performs.
+- [ ] 6.1 Record the declaration the thesis must carry at `chapters/05-teralizer/publish.toml` from an
+      explicit inventory, not directory membership. Include each generated LaTeX file the document
+      inputs, including the aggregate macro file, each figure the document includes, and only those CSV
+      files the thesis deliberately retains as reviewable evidence. Exclude hand-authored tables and
+      generator outputs with no declared consumer purpose.
+      Verification: every entry names its document input or evidence-retention reason, and the record is
+      filed against the thesis change that owns the regeneration procedure.
+- [ ] 6.2 Record the completeness audit from design.md Risks: compare the declaration with the thesis's
+      tracked generated files and with one reviewed full-run manifest. Every tracked generated file is
+      either declared or classified as obsolete and removed by the thesis change, and every declaration
+      key is emitted by that run.
+      Verification: the audit is a repeatable consumer step and does not infer intent from a directory
+      or filename extension.
 - [ ] 6.3 Commit.
       Message: `docs(openspec): record the consumer declaration the thesis must carry`
 

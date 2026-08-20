@@ -107,8 +107,10 @@ markup that only a typesetter resolves.
 
 ### Requirement: Separating values from presentation changes no output
 
-Moving presentation out of the model MUST leave every target's output byte-identical, so the refactor
-is provably inert and a later format change is reviewable on its own.
+Moving presentation out of the model MUST leave every target's output byte-identical for the same
+reviewed source revision and corpus inputs, so the refactor is provably inert and a later format change
+is reviewable on its own. The comparison MUST use complete runs in clean output roots, not a mutable
+build directory whose origin is unknown.
 
 #### Scenario: The refactor is verified
 
@@ -122,10 +124,10 @@ is provably inert and a later format change is reviewable on its own.
 
 ### Requirement: A generated LaTeX table typesets correctly in the consuming document
 
-A generated table MUST drop into the consuming document without a hand edit, and MUST produce the
-intended typeset result on the page. The contract is the rendered outcome, not the source text: a
-document's committed table MUST NOT be treated as the specification, because it may itself contain
-workarounds.
+A generated table MUST reach the consuming document through its declared publication path without a
+hand edit, preserve the maintained structural features of the consumer's committed generated source,
+and produce the intended typeset result on the page. Source comparison detects structural regressions;
+the rendered page is authoritative for visual layout.
 
 #### Scenario: Numbers align within a column
 
@@ -159,10 +161,11 @@ workarounds.
 - **WHEN** the same table is rendered to markdown or CSV
 - **THEN** no alignment artefact, spacing command, or column-pairing appears: each value is one field
 
-### Requirement: A table may summarise a group in a band row
+### Requirement: A table may summarise groups and identify rows semantically
 
-A table MUST be able to carry a row that spans every column and summarises the rows beneath it, and to
-number its rows, so a grouped table states each group's totals and makes a row citable.
+A table MUST be able to carry a row that spans every column and summarises the rows beneath it. A table
+that makes data rows citable MUST give each such row a stable semantic key distinct from its visible
+ordinal. LaTeX labels MUST derive from the table key and row key, not from the row's current position.
 
 #### Scenario: A grouped table states each group's totals
 
@@ -174,10 +177,27 @@ number its rows, so a grouped table states each group's totals and makes a row c
 - **WHEN** a grouped table declares an overall summary
 - **THEN** a final band row carries it
 
-#### Scenario: Rows are numbered
+#### Scenario: Rows are numbered and labeled
 
-- **WHEN** a table declares row numbering
-- **THEN** each data row carries its number and band rows do not consume one
+- **WHEN** a table declares citable row numbering
+- **THEN** each data row carries a visible ordinal and a label derived from its semantic key
+- **AND** band rows consume neither an ordinal nor a row key
+
+#### Scenario: Rows are reordered
+
+- **WHEN** a later report run reorders rows without changing their semantic keys
+- **THEN** visible ordinals follow the new order
+- **AND** each reference still resolves to the same semantic row
+
+#### Scenario: A row key is duplicated
+
+- **WHEN** two data rows in one table declare the same semantic key
+- **THEN** rendering fails naming the duplicate key
+
+#### Scenario: A referenced row is removed
+
+- **WHEN** a generated table no longer emits a row that the consuming document references
+- **THEN** the document's strict build fails with an undefined reference
 
 #### Scenario: A band row reaches another target
 

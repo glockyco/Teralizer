@@ -25,8 +25,8 @@ generator-owned would delete maintained work.
 
 **Non-Goals**
 
-- Choosing what the thesis declares. That belongs to the thesis, and this change only requires that it
-  be stated.
+- Choosing what the thesis retains. That belongs to the thesis. This change only requires the choice
+  to be explicit and checkable.
 - Pruning. Publishing writes; it never removes. See Decision 6.
 - The form of a delivered artifact. `separate-report-values-from-presentation` owns that.
 - Renderer return types, artifact accumulation, generator staging, manifest assembly, and promotion.
@@ -108,9 +108,10 @@ change stops the accumulation; it does not undo it.
 - **A consumer omits an entry and silently stops receiving that artifact.** The failure modes are
   asymmetric on purpose: a declared artifact that nothing emits fails loudly, because it names a
   disagreement, while an emitted artifact nobody declares is the ordinary case and cannot fail. →
-  Mitigate once, when the declaration is written, by listing the delivered set against the consuming
-  repository's tracked generated files and requiring the two to agree. After that, a dropped entry
-  shows up as a file that stops changing.
+  Mitigate when the declaration is written by classifying every tracked generated consumer file: each
+  file is either a document input or explicitly retained evidence, and each resulting declaration key
+  must be emitted by the reviewed full run. Re-run this audit whenever the consumer adds or removes a
+  maintained generated artifact.
 - **The thesis receives nothing until its declaration exists.** → The declaration lands in the same
   step, and the verification above is what proves it complete.
 - **Two in-flight changes touch the same publish module.** `publish-figures-to-consumers` introduced it
@@ -126,8 +127,9 @@ change stops the accumulation; it does not undo it.
 3. Generalise declaration parsing, declared-set validation, consumer guards, and delivery over the
    supplied `ArtifactSet`. Keep figure behavior unchanged: the existing figure tests are the
    regression check.
-4. Write the thesis declaration, then verify the delivered set equals the thesis's tracked generated
-   files.
+4. Write the thesis declaration from an inventory of document inputs and explicitly retained evidence.
+   Publish the reviewed full run into a clean scratch checkout, then verify that every declaration entry
+   is emitted and that the delivered set equals the maintained generated-artifact inventory.
 
 Rollback is the revert. A declaration file left behind is inert to the previous code, which reads only
 its `[figures]` section.

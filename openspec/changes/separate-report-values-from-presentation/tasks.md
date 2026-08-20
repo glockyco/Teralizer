@@ -1,12 +1,14 @@
 ## 1. Baseline and guards
 
-- [ ] 1.1 After `make-report-runs-explicit` lands, snapshot every staged artifact returned through
-      `ArtifactSet` as the comparison baseline; do not introduce another renderer-return shape
+- [ ] 1.1 After `make-report-runs-explicit` lands, run the complete report set from one reviewed commit
+      and declared corpus set into a clean temporary root. Record its manifest and artifact checksums as
+      the comparison baseline; do not use `analysis/build/` or introduce another renderer-return shape.
 - [ ] 1.2 Add a test that fails when any rendered markdown contains a backslash
 - [ ] 1.3 Add a test that fails when any CSV numeric field does not parse as a number, covering digit
       grouping, percent suffixes, and placeholder dashes
-- [ ] 1.4 Find every thesis consumer of `chapters/05-teralizer/data/*.csv` and record whether it parses
-      formatted numbers
+- [ ] 1.4 Record the completed thesis consumer audit: no chapter, figure, preamble file, or build entry
+      reads `chapters/05-teralizer/data/*.csv`; selected CSVs are retained review evidence. Re-run the
+      positive-control search before implementation in case a consumer has since been added.
 
 ## 2. Value kinds
 
@@ -29,8 +31,9 @@
 
 ## 4. Entities
 
-- [ ] 4.1 Extend the variant table in `_causes_common.py` with a plain-text rendering per entity, and
-      move the tool and dataset macros from `_funnel.py` into it
+- [ ] 4.1 Create one neutral entity registry under `teralizer.eval` with a stable key, plain name, and
+      LaTeX rendering for each shared variant, tool, dataset, stage, and cause. Move report-local entity
+      maps into it; do not make `_causes_common.py` the global vocabulary owner.
 - [ ] 4.2 Store entity references in cells, and render them per target
 - [ ] 4.3 Replace the `\texttt{}` mapping and the `\#` header in `rq0_jarvis.py` with an identifier
       column and a plain header
@@ -55,17 +58,27 @@
 - [ ] 6.5 Keep the percent sign inline in every share cell
 - [ ] 6.6 Add band rows: a spanned row carrying a fixed-width label and the group's summary, plus a
       closing overall band, reusing the existing spanned-cell and label-row machinery
-- [ ] 6.7 Add rendered row numbering that band rows do not consume, and keep the group as data in CSV
-- [ ] 6.8 Declare the funnel's band summaries from the funnel result so the stage figures come from the
-      same source as the macros
-- [ ] 6.9 Copy the regenerated tables into the thesis, rebuild, and verify each table on the rendered
-      page with `scripts/pdf-page.swift`: numbers aligned, headers over their columns, groups stating
-      their totals, nothing overflowing the text width
+- [ ] 6.7 Add a stable semantic row key to numbered data-row metadata and reject duplicate keys within
+      a table. Do not add the key or visible ordinal as a CSV data column.
+- [ ] 6.8 Emit visible ordinals from a LaTeX counter and labels of the form
+      `tabrow:<table-key>:<row-key>`; band rows consume neither. Test reorder stability, duplicate-key
+      failure, and label output.
+- [ ] 6.9 Declare the funnel's band summaries and row keys from the funnel result so stage figures and
+      cause identities come from the same typed source as the macros.
+- [ ] 6.10 Compare every deliberate LaTeX source change with the corresponding committed thesis table,
+      publish through the declared consumer mapping into a clean scratch thesis checkout, run its strict
+      full build, and inspect each affected page with `scripts/pdf-page.swift`: references resolve,
+      numbers align, headers cover their columns, groups state totals, and nothing overflows.
 
-## 7. Publish the cleaned output
+## 7. Verify the cleaned producer output
 
-- [ ] 7.1 Review the markdown diff for all 8 reports and confirm each reads as plain text
-- [ ] 7.2 Review the CSV diff and confirm every numeric column is bare and every absence is empty
-- [ ] 7.3 Copy the regenerated tables and CSVs into the thesis, rebuild it, and inspect the three RQ6
-      tables on the rendered page
-- [ ] 7.4 Run the full analysis test suite and the two new guards
+- [ ] 7.1 Run a second complete report set into a clean temporary root and compare its artifact manifest
+      with task 1.1. Account for every deliberate LaTeX diff and require every pre-format separation
+      artifact to remain byte-identical.
+- [ ] 7.2 Review all 8 markdown reports and confirm each reads as plain text with no LaTeX residue.
+- [ ] 7.3 Review every CSV and confirm each numeric field is bare, each absence is empty, and no synthetic
+      row ordinal appears.
+- [ ] 7.4 Run the full analysis suite, lint, format, type, file-hygiene, and positive-control guards.
+- [ ] 7.5 Exercise declaration-driven publication into a clean scratch thesis checkout and confirm the
+      complete declared set lands transactionally. Leave the real thesis untouched; its
+      `reconcile-reporeapers-claims` change owns the final publication and prose migration.

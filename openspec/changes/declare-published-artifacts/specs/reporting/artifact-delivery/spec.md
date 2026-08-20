@@ -1,8 +1,8 @@
 ## Purpose
 
-Governs which generated artifacts reach a repository that prints them: how that repository states what
-it takes and under which paths, what publishing guarantees about the set it delivers, and what happens
-when the declaration and the set a run emitted disagree.
+Governs which generated artifacts reach a repository that intentionally retains them: how that
+repository states what it takes and under which paths, what publishing guarantees about the set it
+delivers, and what happens when the declaration and the set a run emitted disagree.
 
 ## ADDED Requirements
 
@@ -15,12 +15,19 @@ one kind.
 Publishing SHALL NOT derive a consumer's path from the name a generator gave an artifact. Two
 consumers MAY declare different paths for the same artifact.
 
-A declared path SHALL resolve inside the consuming repository.
+A declared path SHALL resolve inside the consuming repository. A consumer MAY declare an artifact that
+is not a document input when it intentionally retains that artifact as reviewable evidence. The
+consumer's declaration remains the authority for that choice.
 
 #### Scenario: A repository declares artifacts of several kinds
 
 - **WHEN** a consuming repository declares tables, data files, and figures
 - **THEN** publishing writes each declared artifact to the path the consumer named
+
+#### Scenario: A consumer retains machine-readable evidence
+
+- **WHEN** a consuming repository declares a generated evidence file that its document does not include
+- **THEN** publishing delivers the file because the declaration records the repository's intent to retain it
 
 #### Scenario: An artifact has no consumer
 

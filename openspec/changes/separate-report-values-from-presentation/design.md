@@ -36,7 +36,8 @@ is a local patch on one missing rule.
 - One rule: the model holds values and entity references; renderers hold presentation.
 - CSV becomes data a tool can read without preprocessing.
 - Markdown becomes readable text.
-- LaTeX output does not move.
+- The value/presentation refactor is inert before any deliberate format or row-label change.
+- Deliberate LaTeX changes reproduce the thesis's maintained structure and rendered layout.
 - Net removal of mechanism, not addition.
 
 **Non-Goals:**
@@ -67,9 +68,10 @@ other targets when the value is absent.
 
 ### 2. Entities get one definition and one rendering per target
 
-`_VARIANT_MACROS` already maps a variant code to its thesis macro. It gains a plain-text column, and
-the tool and dataset macros in `_funnel.py` join it, so one table answers "how does entity X read in
-target Y". Cells store the entity reference, not its rendering.
+`_VARIANT_MACROS` already maps a variant code to its thesis macro, but a report-specific causes module
+is the wrong owner for a repository-wide vocabulary. A neutral registry under `teralizer.eval` defines
+each entity's stable key, plain name, and LaTeX rendering. Variant, tool, dataset, stage, and cause
+references use that registry. Cells store the entity reference, not its rendering.
 
 For captions and notes, the placeholder mechanism `Prose` already uses for metrics is extended to
 entities, so a caption reads `... for the {variant.improved_c} strategy ...` and each target
@@ -114,8 +116,18 @@ revisiting on their own. Mixing both mechanisms inside one table would be worse 
 
 The funnel's band row is a spanned cell carrying a fixed-width label plus the group's summary. The
 renderer already spans cells for group headers and already emits label rows with group spacing, so the
-band row extends existing machinery rather than adding a parallel path. Row numbering is a rendered
-ordinal, not a data column, so band rows do not consume one and the CSV keeps the group as data.
+band row extends existing machinery rather than adding a parallel path.
+
+Row numbering and row identity are deliberately different. A numbered data row carries a stable
+semantic key as model metadata, separate from its data columns. The LaTeX renderer increments a table
+row counter for the visible ordinal and emits a label derived from the table key and row key, such as
+`tabrow:<table-key>:<row-key>`. Band rows consume neither. Markdown and CSV receive the data and group
+summaries but no synthetic row-number field. Duplicate row keys within a table fail rendering.
+
+This makes reordering safe: the printed ordinal can change while `\cref` still denotes the same cause.
+A removed referenced row becomes an undefined LaTeX reference, which the thesis's strict full build
+must reject. Exporting the current ordinal as data was rejected because it would turn presentation
+order into a false semantic identifier.
 
 ### 5. Rendering semantics sit inside the common artifact contract
 
@@ -138,22 +150,26 @@ return contract with no durable owner.
 
 ### 6. Verification is staged, and each stage has one criterion
 
-Stage one, the separation: snapshot `analysis/build/`, then require every file to be byte-identical.
-This proves the refactor is inert.
+Stage one, the separation: from one reviewed commit and one declared corpus set, run the complete
+report set into two clean temporary roots before and after the refactor. Require every corresponding
+artifact to be byte-identical. The mutable `analysis/build/` directory is never a baseline.
 
-Stage two, the format: verify the rendered page. `scripts/pdf-page.swift` renders the pages carrying
-each table, and the criterion is that numbers align, headers sit over their columns, and each group
-states its totals. A source diff against the committed table is explicitly not the criterion, because
-that table is what this stage replaces.
+Stage two, the deliberate format and label changes: compare generated LaTeX with the thesis's committed
+generated sources to explain every structural difference, then publish through the declared consumer
+mapping into a clean scratch thesis checkout. `scripts/pdf-page.swift` renders the affected pages. The
+source comparison catches accidental loss of maintained structure; the page decides whether numbers
+align, headers sit over their columns, row references resolve, and each group states its totals.
 
-Two standing checks then keep the other targets clean: no backslash may appear in any rendered
-markdown, and every numeric CSV field must parse as a number.
+Two standing checks keep the other targets clean: no backslash may appear in any rendered markdown,
+and every numeric CSV field must parse as a number. A complete manifest comparison proves that the
+same artifact identities exist before and after the inert stage.
 
 ## Risks / Trade-offs
 
-- **The thesis reads the CSV files through plotting macros that may expect the current formatting.** →
-  Grep the thesis for readers of `chapters/05-teralizer/data/*.csv` and rebuild it before committing.
-  The change is worthless if a figure breaks.
+- **A downstream CSV consumer may expect display-formatted fields.** The thesis was checked and has no
+  build-time reader of `chapters/05-teralizer/data/*.csv`; selected files are retained evidence. → Treat
+  the CSV change as a declared interface break, review every numeric field, and record any other known
+  consumer before release.
 - **Padding is computed from the data, so a later corpus can change every cell in a column.** → It is
   derived, not stated, so a regeneration recomputes it; the diff is noisier than the numbers alone.
 - **A padded composite hides its alignment in invisible boxes**, which is harder to read in source than
@@ -168,21 +184,23 @@ markdown, and every numeric CSV field must parse as a number.
 
 ## Migration Plan
 
-1. Land the `make-report-runs-explicit` renderer contract and snapshot its complete staged artifact
-   set as the comparison baseline.
-2. Introduce value kinds and the three per-target maps inside those renderers, leaving behavior
-   identical.
-3. Move combined-cell composition into the LaTeX renderer and delete the `*_display` columns and
-   `csv_source`.
-4. Move entities into one table with a rendering per target, and delete `fmt="tex"`.
-5. Extend caption placeholders to entities.
-6. Regenerate through `ArtifactSet`: require byte-identical LaTeX, and review the Markdown and CSV
-   diffs.
-7. Copy regenerated CSVs into the thesis, rebuild it, and confirm no figure changed.
+1. Land `make-report-runs-explicit`, then create a clean full-run baseline from one reviewed commit and
+   declared corpus set.
+2. Introduce value kinds and per-target maps, move combined-cell composition into the LaTeX renderer,
+   and delete `*_display`, `csv_source`, and `fmt="tex"`; prove this stage byte-identical.
+3. Move entities into the neutral registry and extend prose placeholders.
+4. Add computed layout, band rows, semantic row keys, and LaTeX counter labels. Review every deliberate
+   source diff against the thesis's committed generated tables.
+5. Publish the complete declared set into a clean scratch thesis checkout through the common
+   publication command. Run the strict thesis build and inspect affected pages. Do not copy any artifact
+   by hand.
+6. Leave the real thesis untouched. `reconcile-reporeapers-claims` publishes the finalized artifact set
+   and updates every consumer claim as one coherent thesis migration.
 
-**Rollback:** every step reverts with git, and no measured value is touched at any point.
+**Rollback:** revert the responsible producer commit. Consumer publication is transactional, so a
+failed verification leaves the thesis checkout unchanged.
 
 ## Open Questions
 
-- **Which thesis figures read the CSV files, and do any parse the formatted numbers?** This decides
-  whether step 7 needs a change on the thesis side. It changes one task, not the approach.
+None. The thesis has no build-time CSV reader; the remaining consumer risk is handled as an explicit
+interface review rather than an unresolved design choice.

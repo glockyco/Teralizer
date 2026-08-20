@@ -1,9 +1,9 @@
 ## Why
 
 Publishing copies every table and every CSV the report set renders into the consuming repository,
-whether or not that repository prints them. One measured run against the thesis deposited 24 files the
-thesis does not carry: 5 LaTeX tables and 19 CSV files. The thesis prints 18 generated tables and 3
-CSV files.
+whether or not that repository intentionally retains them. One measured run against the thesis
+deposited 24 files outside its maintained generated-artifact set: 5 LaTeX tables and 19 CSV files. The
+thesis currently retains 18 generated tables and 3 CSV files.
 
 The consequence is not cosmetic. A publish leaves the consumer with untracked files that a person has
 to recognise and delete, and the deletion has already happened once by hand: thesis commit `3b21b53`
@@ -21,8 +21,9 @@ publish deposits files it must then delete.
 
 ## What Changes
 
-- **A consumer declares every artifact kind it takes**, not only figures. The declaration states the
-  tables and the data files the repository prints, each with the path it lands under.
+- **A consumer declares every artifact kind it intentionally retains**, not only figures. The
+  declaration states each maintained generated artifact and the path it lands under. A declaration MAY
+  retain a machine-readable evidence file that is not a document input, but that intent must be explicit.
 - **Publishing delivers the declared set and nothing else.** No generated file reaches a consuming
   repository that the consumer has not named.
 - **A declared artifact that no report emitted fails the publish**, naming the artifact, exactly as a

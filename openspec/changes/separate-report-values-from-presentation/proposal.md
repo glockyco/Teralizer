@@ -42,7 +42,9 @@ and regenerating it surfaced what the generator had been producing.
   sub-ten-percent shares within a column.
 - **A table may carry band rows**: a row spanning every column that summarises the group beneath it,
   which is how the funnel states each stage's projects, inclusions, exclusions, and rate.
-- **A table may number its rows**, which the funnel uses to make a cause citable.
+- **A table may number its rows and label them by semantic key.** The funnel uses visible ordinals for
+  readability and a stable table-key-plus-row-key label for citations. Reordering rows may change the
+  displayed number without changing which cause a citation denotes.
 - A table column declares the **kind of value** it holds — count, share, identifier, text, or a named
   entity — instead of a display format string.
 - Each render target owns its presentation:
@@ -55,7 +57,8 @@ and regenerating it surfaced what the generator had been producing.
   reference and rendered per target, so markdown says `PIT` where LaTeX says `\ToolPit{}`. Captions
   reference entities through the placeholder syntax `Prose` already uses for metrics.
 - **BREAKING** for CSV consumers: numeric columns become raw numbers and missing values become empty
-  fields. The thesis reads these files through its plotting macros, which must be checked.
+  fields. The thesis currently retains selected CSV files as evidence but does not read them during its
+  build; the published CSV diff is still reviewed as a machine-readable interface change.
 - **Deletions**, not additions: `fmt="tex"`, the `csv_source` redirect, and the `*_display` DataFrame
   columns all disappear, because nothing pre-renders a cell any more.
 - **Consumes the explicit report-run architecture.** Renderers receive staged output roots and return
@@ -79,12 +82,12 @@ None.
 - `analysis/src/teralizer/eval/model.py` (`ColumnSpec`, `Prose`), `format.py`, and the target-specific
   value-to-text logic in `render/{csv,markdown,latex}.py`. Renderer output identity and return types
   come from `make-report-runs-explicit` and are not redefined here.
-- `reports/_causes_common.py` (`_VARIANT_MACROS`, the `*_display` columns), `reports/_funnel.py`
-  (`cause_macros`, `timeout_macros`), `reports/rq0_jarvis.py` (the `\texttt{}` mapping and the `\#`
-  header), and every report that declares a column.
-- Regenerated output: all 8 markdown reports, all CSV files under `analysis/build/`, and the copies in
-  the thesis at `chapters/05-teralizer/data/`.
-- **Two staged acceptance criteria.** While values are separated from presentation, LaTeX output must
-  stay byte-identical, which proves the refactor is inert. The format work that follows then changes
-  LaTeX deliberately, and its criterion is that each generated table matches the thesis's committed
-  table apart from the data rows.
+- A neutral shared entity registry under `teralizer.eval`, plus the report-local mappings and display
+  columns it replaces in `reports/_causes_common.py`, `reports/_funnel.py`, and `reports/rq0_jarvis.py`.
+- Regenerated output: all 8 markdown reports and the complete staged LaTeX and CSV artifact sets. No
+  file is copied into the thesis by hand; consumer publication belongs to `declare-published-artifacts`
+  and the final thesis reconciliation change.
+- **Two staged acceptance criteria.** The value/presentation separation is compared against a clean
+  full-run baseline from the same reviewed inputs, never whatever happens to be in `analysis/build/`.
+  The deliberate LaTeX format work then targets the thesis's committed generated source and its
+  rendered pages: source structure is reviewable, while the page is authoritative for layout.
