@@ -40,36 +40,36 @@
 
 ## 4. Migrate Operative Guidance
 
-- [ ] 4.1 Replace the architecture and database links in `AGENTS.md` and
+- [x] 4.1 Replace the architecture and database links in `AGENTS.md` and
       `.omp/rules/{pipeline,db}.md` with direct executable owners and the new capability paths;
       retain only non-obvious stage-alignment, exclusion, and destructive-operation rules.
-- [ ] 4.2 Move safety-critical local-state retention rules to the narrowest applicable agent guidance
+- [x] 4.2 Move safety-critical local-state retention rules to the narrowest applicable agent guidance
       for databases, measurement run roots, verification residue, detached-run records, and
       regenerable scratch outputs; discard volatile inventories and unowned defer-until-later notes.
-- [ ] 4.3 Make RQ6 report comments, diagnostics, and invariant-test messages self-contained or point
+- [x] 4.3 Make RQ6 report comments, diagnostics, and invariant-test messages self-contained or point
       to `reporting/exclusion-accounting`; remove prescriptive links to `docs/exclusion-model.md`.
-- [ ] 4.4 Update README navigation to point to stage declarations, DDL, the report registry, accepted
+- [x] 4.4 Update README navigation to point to stage declarations, DDL, the report registry, accepted
       specs, and the regenerable expression-slice fixture instead of a `docs/` directory.
-- [ ] 4.5 Remove the active R1-spike row from project-config guidance and verify no current guidance
+- [x] 4.5 Remove the active R1-spike row from project-config guidance and verify no current guidance
       describes the experiment as a runnable lane.
 
 ## 5. Perform the Atomic Cutover
 
-- [ ] 5.1 Delete `project-configs/spikes/r1-viability.conf`, the empty config directory, and
+- [x] 5.1 Delete `project-configs/spikes/r1-viability.conf`, the empty config directory, and
       `verification/spikes/r1-viability/`; keep the promoted fixture, config, and golden unchanged.
-- [ ] 5.2 Reduce `openspec/config.yaml` to the single `schema: spec-driven` mapping without moving its
+- [x] 5.2 Reduce `openspec/config.yaml` to the single `schema: spec-driven` mapping without moving its
       former narrative into another file.
-- [ ] 5.3 Delete all six files under `docs/` and remove the empty directory in the same change as their
+- [x] 5.3 Delete all six files under `docs/` and remove the empty directory in the same change as their
       operative reference updates.
-- [ ] 5.4 Enable the real-repository knowledge assertions and confirm there is no tracked `docs/`
+- [x] 5.4 Enable the real-repository knowledge assertions and confirm there is no tracked `docs/`
       path, no operative retired-document reference outside OpenSpec, no duplicate OpenSpec context,
       and no superseded spike path.
-- [ ] 5.5 Review the complete diff by subject and confirm it changes no Java pipeline behavior,
+- [x] 5.5 Review the complete diff by subject and confirm it changes no Java pipeline behavior,
       report query, generated report value, database, corpus input, or published consumer artifact.
 
 ## 6. Verify the Cutover
 
-- [ ] 6.1 Run the focused repository-state test module, including every positive control and the real
+- [x] 6.1 Run the focused repository-state test module, including every positive control and the real
       repository assertion.
 - [ ] 6.2 Run the complete non-database analysis test suite.
 - [ ] 6.3 Run the repository's formatting, lint, type, and file-hygiene commit hooks over all changed
