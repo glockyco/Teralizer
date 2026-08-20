@@ -229,6 +229,17 @@ def test_file_snapshot_records_content_commit_and_dirty_state(
     )
 
 
+def test_untracked_file_has_no_fabricated_commit(monkeypatch, tmp_path: Path):
+    path = tmp_path / "facts.json"
+    path.write_text("evidence", encoding="utf-8")
+    monkeypatch.setattr(inputs, "_git", lambda _root, _args: "")
+
+    snapshot = inputs._snapshot_file("facts", "facts.json", tmp_path)
+
+    assert snapshot.commit is None
+    assert snapshot.dirty is True
+
+
 def test_context_rejects_a_role_with_the_wrong_input_kind(monkeypatch, tmp_path: Path):
     path = tmp_path / "facts.json"
     path.write_text("{}", encoding="utf-8")

@@ -131,7 +131,7 @@
         "observed_projects": 12
       },
       "completion-marker": {
-        "commit": "66c258b19eb97b7370cc5b135da4b7223929939d",
+        "commit": null,
         "dirty": true,
         "kind": "file",
         "path": "data/detached/census-gen.complete",

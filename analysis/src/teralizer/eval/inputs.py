@@ -151,10 +151,10 @@ def _snapshot_file(role: str, relative: str, repo_root: Path) -> FileInputSnapsh
     path = repo_root / relative
     if not path.is_file():
         return FileInputSnapshot(role, relative, False, None, None, False)
-    commit = _git(repo_root, ["log", "-1", "--format=%H", "--", relative])
+    commit: str | None = _git(repo_root, ["log", "-1", "--format=%H", "--", relative])
     dirty = bool(_git(repo_root, ["status", "--porcelain", "--", relative]))
     if not commit:
-        commit = _git(repo_root, ["rev-parse", "HEAD"])
+        commit = None
         dirty = True
     return FileInputSnapshot(
         role=role,
