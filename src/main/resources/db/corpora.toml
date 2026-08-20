@@ -11,8 +11,9 @@ id = "real-world"
 database = "postgres_reporeapers_rq6_v7"
 data_dir = "data/reporeapers-rerun-v7"
 config_dir = "project-configs/replication/extended"
+# This count validates physical project rows. It is not the RQ6 denominator.
 expected_projects = 1161
-notes = "Published RepoReapers real-world evaluation corpus; 632 projects are selected for analysis."
+notes = "The completed v7 run contains 1,161 projects. RQ6 reports 584 eligible projects."
 
 [[corpus]]
 id = "jarvis-benchmark"
