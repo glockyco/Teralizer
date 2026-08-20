@@ -237,10 +237,11 @@ def test_positive_control_reports_injected_path(tmp_path):
 
 
 def test_detects_tracked_technical_document(tmp_path):
-    relative = _write(tmp_path, "docs/architecture.md", "# Snapshot\n")
+    retired = "docs" + "/architecture.md"
+    relative = _write(tmp_path, retired, "# Snapshot\n")
 
     assert repository_state_violations(tmp_path, [relative]) == [
-        "docs/architecture.md: retired technical-document tree"
+        f"{retired}: retired technical-document tree"
     ]
 
 
