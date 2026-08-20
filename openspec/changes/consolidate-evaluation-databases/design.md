@@ -227,3 +227,23 @@ canonical baseline, which is confirmed reproducible on this workstation.
   decides whether it is folded into the code generator's scratch setup or deleted.
 - **Do all four spike CLIs still run against the real-world corpus?** Each is run once after the
   repoint. The answer decides per CLI whether it is kept or deleted, and changes no other decision.
+
+## Inbound scope notes from the thesis repository
+
+Raised while revising the thesis corpus description, which states the criteria these files
+implement. Both are recorded here because this change owns corpus definition and publication.
+Neither is a request to change measured data.
+
+- **The first and most selective corpus filter is not executable.** `dataset/README.md:7` documents
+  it as an `awk` command over the downloaded curated dataset rather than committing it as a script.
+  The later stages are scripts (`dataset/build-extended-dataset.py`,
+  `dataset/build-filtered-dataset.py`), so the chain is reproducible from stage 2 onward only. This
+  change's `corpus-publication` capability covers the inputs reports refuse to run without, and a
+  replicator cannot reconstruct the corpus definition without this step.
+
+- **The run configs do not record which database each run wrote,** which is the justification Decision
+  3 gives for leaving them untouched. `project-configs/reporeapers-rq6.conf:17` declares
+  `database { name = "postgres_reporeapers_scratch" }`, while the real-world run wrote
+  `postgres_reporeapers_rq6_v7` through the harness environment override
+  (`scripts/run-reporeapers-rerun.sh:40`). The committed config names a database the run did not use,
+  so freezing it preserves a misleading record rather than an accurate one.
