@@ -51,11 +51,11 @@
   validates before atomic replacement, and matches current RQ0 results.
 - [x] 2.8 Create one new `feat(eval)` commit for the normalized report evidence inputs and extractors,
   including the generated compact files and focused raw-source reconciliation checks.
-- [ ] 2.9 Use one `ExitStack` per report to own every corpus connection and prove connections remain live
+- [x] 2.9 Use one `ExitStack` per report to own every corpus connection and prove connections remain live
   during construction and close before rendering.
-- [ ] 2.10 Recompute repository file snapshots after construction and fail before rendering when a file
+- [x] 2.10 Recompute repository file snapshots after construction and fail before rendering when a file
   changed during the build.
-- [ ] 2.11 Add focused resolver tests with two corpus roles, a required missing file, an optional absent
+- [x] 2.11 Add focused resolver tests with two corpus roles, a required missing file, an optional absent
   marker, a dirty file, a changed-during-build input, and one invalid corpus among several.
 
 ## 3. Cut Every Report Over to Explicit Context
