@@ -1,5 +1,14 @@
 import pandas as pd
-from teralizer.eval.model import ColumnSpec, Metric, Prose, RQReport, Section, Table
+from teralizer.eval.inputs import CorpusInputSnapshot
+from teralizer.eval.model import (
+    BuiltReport,
+    ColumnSpec,
+    Metric,
+    Prose,
+    RQReport,
+    Section,
+    Table,
+)
 from teralizer.eval.provenance import Provenance
 from teralizer.eval.render.markdown import render_str
 
@@ -24,12 +33,19 @@ def _report():
         label="tab:x",
         provenance=prov,
     )
-    return RQReport(
+    report = RQReport(
         "example",
         "Example Title",
-        "postgres_dev",
         [Section("Overview", [Prose("Total {m.total}."), t])],
         metrics=[Metric("m.total", 3598, "count")],
+    )
+    return BuiltReport(
+        report,
+        (
+            CorpusInputSnapshot(
+                "controlled", "controlled", "postgres_dev", 13, 13, None, None
+            ),
+        ),
     )
 
 

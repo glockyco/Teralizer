@@ -8,6 +8,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required
+from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import (
     ColumnSpec,
     Figure,
@@ -260,7 +261,8 @@ def _overhead_figure(data: pd.DataFrame) -> Figure:
     )
 
 
-def build(conn: Connection) -> RQReport:
+def build(context: ReportContext) -> RQReport:
+    conn = context.corpus("controlled")
     tests = _effects(conn, "test")
     lines = _effects(conn, "line")
     runtimes = _effects(conn, "runtime")
@@ -283,9 +285,10 @@ def build(conn: Connection) -> RQReport:
             _overhead_figure(overhead),
         ],
     )
-    return RQReport(
-        "rq3", "RQ3 - Test-suite size and runtime", "postgres_dev", [section], metrics
-    )
+    return RQReport("rq3", "RQ3 - Test-suite size and runtime", [section], metrics)
 
 
-register("rq3", ReportSpec(build, "postgres_dev", "old", REQUIRES))
+register(
+    "rq3",
+    ReportSpec(build, (CorpusInputSpec("controlled", "controlled", REQUIRES),)),
+)

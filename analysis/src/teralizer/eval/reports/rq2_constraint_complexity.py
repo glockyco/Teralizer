@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import cast
 
 import pandas as pd
-from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required
+from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
@@ -118,7 +118,8 @@ def _table(df: pd.DataFrame) -> Table:
     )
 
 
-def build(conn: Connection) -> RQReport:
+def build(context: ReportContext) -> RQReport:
+    conn = context.corpus("controlled")
     data = compute_mutation_model_complexity(get_mutation_detection_comparison(conn))
     table = _table(data)
     metrics = [
@@ -135,9 +136,10 @@ def build(conn: Connection) -> RQReport:
             table,
         ],
     )
-    return RQReport(
-        "rq2", "RQ2 - Constraint complexity", "postgres_dev", [section], metrics
-    )
+    return RQReport("rq2", "RQ2 - Constraint complexity", [section], metrics)
 
 
-register("rq2", ReportSpec(build, "postgres_dev", "old", REQUIRES))
+register(
+    "rq2",
+    ReportSpec(build, (CorpusInputSpec("controlled", "controlled", REQUIRES),)),
+)

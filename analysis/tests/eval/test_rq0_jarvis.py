@@ -2,6 +2,7 @@ import sqlite3
 
 import pandas as pd
 
+from teralizer.eval.evidence.jarvis_values import value_identity
 from teralizer.eval.render.csv import render_table
 from teralizer.eval.model import ColumnSpec, Table
 from teralizer.eval.reports.rq0_jarvis import (
@@ -96,9 +97,7 @@ def _create_census_schema(conn: sqlite3.Connection) -> None:
     )
 
 
-def test_census_status_ledger_keeps_failed_and_unreached_projects(
-    tmp_path, monkeypatch
-):
+def test_census_status_ledger_keeps_failed_and_unreached_projects():
     conn = sqlite3.connect(":memory:")
     try:
         conn.executescript(
@@ -142,12 +141,9 @@ def test_census_status_ledger_keeps_failed_and_unreached_projects(
             [(stage,) for stage in required[:2]],
         )
         conn.commit()
-        marker = tmp_path / "census-gen.complete"
-        marker.touch()
-        monkeypatch.setattr(
-            "teralizer.eval.reports.rq0_jarvis.CENSUS_COMPLETION_MARKER", marker
+        ledger, status, marker_present = _census_status_ledger(
+            conn, marker_present=True
         )
-        ledger, status, marker_present = _census_status_ledger(conn)
         by_project = ledger.set_index("project")
         assert marker_present is True
         assert status == "partial"
@@ -301,11 +297,7 @@ def test_budget_table_marks_missing_pit_variants_unavailable():
     assert budget.loc["IMPROVED_200_TRIES", "total_pvc"] == 200
 
 
-def test_suite_union_joins_captured_and_generated_values(tmp_path):
-    lang_log = tmp_path / "isascii.tsv"
-    lang_log.write_text("ch=a\nch=b\n", encoding="utf-8")
-    abs_log = tmp_path / "abs.tsv"
-    abs_log.write_text("x=1.0\nx=2.0\n", encoding="utf-8")
+def test_suite_union_joins_captured_and_generated_values():
     scoreboard = pd.DataFrame(
         {
             "variant": ["IMPROVED_100_TRIES", "IMPROVED_100_TRIES"],
@@ -314,7 +306,16 @@ def test_suite_union_joins_captured_and_generated_values(tmp_path):
                 '[{"type":"char","name":"ch"}]',
                 '[{"type":"double","name":"x"}]',
             ],
-            "jqwik_value_log_path": [str(lang_log), str(abs_log)],
+            "parameter_values": [
+                [
+                    {"parameter": "ch", "value_base64": value_identity("a")},
+                    {"parameter": "ch", "value_base64": value_identity("b")},
+                ],
+                [
+                    {"parameter": "x", "value_base64": value_identity("1.0")},
+                    {"parameter": "x", "value_base64": value_identity("2.0")},
+                ],
+            ],
         }
     )
     cut_values = pd.DataFrame(
@@ -353,15 +354,15 @@ def test_suite_union_joins_captured_and_generated_values(tmp_path):
     assert (both["suite_pvc"] >= both["measured_cut_pvc"]).all()
 
 
-def test_suite_union_without_capture_dataset_keeps_generated_rows(tmp_path):
-    log = tmp_path / "isascii.tsv"
-    log.write_text("ch=a\n", encoding="utf-8")
+def test_suite_union_without_capture_dataset_keeps_generated_rows():
     scoreboard = pd.DataFrame(
         {
             "variant": ["IMPROVED_100_TRIES"],
             "generated_method_name": ["isAscii"],
             "tested_method_parameters": ['[{"type":"char","name":"ch"}]'],
-            "jqwik_value_log_path": [str(log)],
+            "parameter_values": [
+                [{"parameter": "ch", "value_base64": value_identity("a")}]
+            ],
         }
     )
     empty = pd.DataFrame(

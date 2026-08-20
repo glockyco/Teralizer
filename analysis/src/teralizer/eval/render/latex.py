@@ -9,8 +9,9 @@ from pathlib import Path
 from pandas import isna
 
 from teralizer.eval.format import COUNT_SHARE, render_value
+from teralizer.eval.inputs import CorpusInputSnapshot
 from teralizer.eval.macros import macro_name
-from teralizer.eval.model import ColumnSpec, RQReport, Table
+from teralizer.eval.model import BuiltReport, ColumnSpec, RQReport, Table
 
 _ALIGN = {"l": "l", "r": "r", "c": "c"}
 
@@ -258,16 +259,22 @@ def render_macros(report: RQReport) -> str:
 _NEWCOMMAND = re.compile(r"\\newcommand\{\\(\w+)\}")
 
 
-def write_macros(report: RQReport, build_dir: Path) -> Path:
+def write_macros(built: BuiltReport, build_dir: Path) -> Path:
     """Write this report's macros and rebuild the aggregate from all reports.
 
     Each report owns one file under `macros/`. `macros.tex` is derived by
     concatenation, so never write to it directly: a report that does will drop
     every other report's macros.
     """
+    report = built.report
+    database = next(
+        snapshot.database
+        for snapshot in built.inputs
+        if isinstance(snapshot, CorpusInputSnapshot)
+    )
     owned_dir = build_dir / "macros"
     owned_dir.mkdir(parents=True, exist_ok=True)
-    header = f"% {report.rq} from {report.db}\n"
+    header = f"% {report.rq} from {database}\n"
     (owned_dir / f"{report.rq}.tex").write_text(
         header + render_macros(report), encoding="utf-8"
     )
@@ -295,12 +302,13 @@ def write_macros(report: RQReport, build_dir: Path) -> Path:
     return aggregate
 
 
-def render(report: RQReport, build_dir: Path) -> list[Path]:
+def render(built: BuiltReport, build_dir: Path) -> list[Path]:
+    report = built.report
     build_dir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
     for table in report.tables():
         out = build_dir / f"{table.key}.tex"
         out.write_text(render_table(table), encoding="utf-8")
         written.append(out)
-    written.append(write_macros(report, build_dir))
+    written.append(write_macros(built, build_dir))
     return written

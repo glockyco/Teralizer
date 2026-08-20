@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import cast
 
 import numpy as np
@@ -10,7 +11,9 @@ import pandas as pd
 from matplotlib.axes import Axes
 from sqlalchemy.engine import Connection
 
-from teralizer.eval.data import Required
+from teralizer.eval.data import Required, read_sql
+from teralizer.eval.evidence import project_sources
+from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
 from teralizer.eval.model import (
     ColumnSpec,
     Figure,
@@ -40,7 +43,6 @@ from teralizer.rq1_mutation_detection import (
     get_mutation_results_by_mutator,
     get_mutation_results_by_project_variant,
     get_project_mutator_data,
-    get_total_classes_from_filesystem,
 )
 
 VARIANTS = (
@@ -366,9 +368,33 @@ def _figure(data: pd.DataFrame) -> Figure:
     )
 
 
-def build(conn: Connection) -> RQReport:
+_PROJECT_IDENTITIES_SQL = """
+SELECT p.id AS project_id, project_name(p.id) AS project
+FROM project p
+JOIN v_projects_successes ps ON ps.project_id = p.id
+WHERE p.use_test_generalization
+"""
+
+
+def _source_class_counts(conn: Connection, facts_path: Path) -> pd.DataFrame:
+    projects = read_sql(conn, _PROJECT_IDENTITIES_SQL)
+    facts = project_sources.frame(facts_path).loc[:, ["project", "main_classes"]]
+    merged = projects.merge(facts, on="project", how="left", validate="one_to_one")
+    missing = merged.loc[merged["main_classes"].isna(), "project"].astype(str).tolist()
+    if missing:
+        raise ValueError(f"project-source facts lack controlled projects: {missing}")
+    return merged.loc[:, ["project_id", "main_classes"]].rename(
+        columns={"main_classes": "total_classes"}
+    )
+
+
+def build(context: ReportContext) -> RQReport:
+    conn = context.corpus("controlled")
+    facts_path = context.file("project-source-facts")
+    if facts_path is None:
+        raise AssertionError("required project-source facts resolved as absent")
     coverage = compute_project_mutation_coverage(
-        get_mutation_coverage_data(conn), get_total_classes_from_filesystem(conn)
+        get_mutation_coverage_data(conn), _source_class_counts(conn, facts_path)
     )
     detection = compute_detection_improvements(
         get_mutation_results_by_project_variant(conn)
@@ -400,9 +426,19 @@ def build(conn: Connection) -> RQReport:
             tables[1],
         ],
     )
-    return RQReport(
-        "rq1", "RQ1 - Mutation-score improvement", "postgres_dev", [section], metrics
-    )
+    return RQReport("rq1", "RQ1 - Mutation-score improvement", [section], metrics)
 
 
-register("rq1", ReportSpec(build, "postgres_dev", "old", REQUIRES))
+register(
+    "rq1",
+    ReportSpec(
+        build,
+        (
+            CorpusInputSpec("controlled", "controlled", REQUIRES),
+            FileInputSpec(
+                "project-source-facts",
+                "analysis/data/report-inputs/project-source-facts.json",
+            ),
+        ),
+    ),
+)

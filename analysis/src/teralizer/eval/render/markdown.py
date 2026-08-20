@@ -6,7 +6,8 @@ import re
 from pathlib import Path
 
 from teralizer.eval.format import COUNT_SHARE, render_value
-from teralizer.eval.model import Figure, Prose, RQReport, Table
+from teralizer.eval.inputs import CorpusInputSnapshot
+from teralizer.eval.model import BuiltReport, Figure, Prose, Table
 
 _PLACEHOLDER = re.compile(r"\{([a-zA-Z0-9_.]+)\}")
 
@@ -61,9 +62,15 @@ def _figure_md(fig: Figure, rq: str, repo_url: str) -> str:
     return block
 
 
-def render_str(report: RQReport, *, repo_url: str) -> str:
+def render_str(built: BuiltReport, *, repo_url: str) -> str:
+    report = built.report
+    database = next(
+        snapshot.database
+        for snapshot in built.inputs
+        if isinstance(snapshot, CorpusInputSnapshot)
+    )
     metrics = report.metric_map()
-    parts = [f"# {report.title}", f"_Source database: `{report.db}`._"]
+    parts = [f"# {report.title}", f"_Source database: `{database}`._"]
     for section in report.sections:
         parts.append(f"## {section.title}")
         for block in section.blocks:
@@ -76,8 +83,9 @@ def render_str(report: RQReport, *, repo_url: str) -> str:
     return "\n\n".join(parts) + "\n"
 
 
-def render(report: RQReport, reports_dir: Path, *, repo_url: str) -> Path:
+def render(built: BuiltReport, reports_dir: Path, *, repo_url: str) -> Path:
+    report = built.report
     reports_dir.mkdir(parents=True, exist_ok=True)
     out = reports_dir / f"{report.rq}.md"
-    out.write_text(render_str(report, repo_url=repo_url), encoding="utf-8")
+    out.write_text(render_str(built, repo_url=repo_url), encoding="utf-8")
     return out

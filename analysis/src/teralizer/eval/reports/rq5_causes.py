@@ -8,6 +8,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required, read_sql
+from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import Prose, RQReport, Section
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
@@ -222,7 +223,8 @@ def _fetch_breakdown(conn: Connection) -> pd.DataFrame:
     )
 
 
-def build(conn: Connection) -> RQReport:
+def build(context: ReportContext) -> RQReport:
+    conn = context.corpus("controlled")
     filtering = build_filtering_table(
         _fetch_filtering(conn),
         key="tab-exclusions-filtering",
@@ -271,9 +273,11 @@ def build(conn: Connection) -> RQReport:
     return RQReport(
         rq="rq5",
         title="RQ5 - Causes of Unsuccessful Generalization (Controlled)",
-        db="postgres_dev",
         sections=[section],
     )
 
 
-register("rq5", ReportSpec(build, "postgres_dev", "old", REQUIRES))
+register(
+    "rq5",
+    ReportSpec(build, (CorpusInputSpec("controlled", "controlled", REQUIRES),)),
+)

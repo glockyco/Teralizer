@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 import teralizer.eval.provenance as provenance
+from teralizer.eval.inputs import FileInputSnapshot
 from teralizer.eval.provenance import (
     DIRTY_PROVENANCE_ENV,
     Provenance,
@@ -94,6 +95,19 @@ def test_dirty_tree_opt_out_permits_publishing(monkeypatch):
     monkeypatch.setenv(DIRTY_PROVENANCE_ENV, "1")
     monkeypatch.setattr(provenance, "_git_snapshot", lambda: ("a" * 40, True))
     require_publishable_tree()
+
+
+def test_dirty_declared_input_fails_without_opt_out(monkeypatch):
+    monkeypatch.delenv(DIRTY_PROVENANCE_ENV, raising=False)
+    snapshot = FileInputSnapshot("facts", "facts.json", True, "a" * 64, "b" * 40, True)
+    with pytest.raises(RuntimeError, match="dirty declared inputs: facts"):
+        provenance.require_publishable_inputs((snapshot,))
+
+
+def test_dirty_declared_input_opt_out_permits_publishing(monkeypatch):
+    monkeypatch.setenv(DIRTY_PROVENANCE_ENV, "1")
+    snapshot = FileInputSnapshot("facts", "facts.json", True, "a" * 64, "b" * 40, True)
+    provenance.require_publishable_inputs((snapshot,))
 
 
 def test_source_url_builds_permalink():

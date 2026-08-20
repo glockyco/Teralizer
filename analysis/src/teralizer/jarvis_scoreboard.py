@@ -12,6 +12,7 @@ shape with a test/generalization key when exact per-test IC is required.
 
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 import json
 from pathlib import Path
@@ -890,6 +891,11 @@ def compare_to_jarvis(
     return pd.DataFrame(result)
 
 
+def _value_identity(value: object) -> str:
+    encoded = str(value).encode("utf-8", errors="surrogatepass")
+    return base64.b64encode(encoded).decode("ascii")
+
+
 def suite_union_pvc(
     scoreboard: pd.DataFrame,
     cut_values: pd.DataFrame,
@@ -922,7 +928,7 @@ def suite_union_pvc(
             if not parameter.startswith("p") or not parameter[1:].isdigit():
                 raise ValueError(f"Unexpected capture parameter name: {parameter!r}")
             key = (str(cut["mut_class"]), str(cut["mut_method"]), int(parameter[1:]))
-            union.setdefault(key, set()).add(str(cut["value"]))
+            union.setdefault(key, set()).add(_value_identity(cut["value"]))
         measured_cut = (
             sum(len(values) for values in union.values())
             if not cut_rows.empty
@@ -955,21 +961,30 @@ def suite_union_pvc(
             parameters = json.loads(str(run["tested_method_parameters"]))
             names = [str(parameter["name"]) for parameter in parameters]
             index_of = {name: index for index, name in enumerate(names)}
-            values = parse_jqwik_value_log(run["jqwik_value_log_path"])
-            unknown = set(values["parameter_name"].astype(str)).difference(names)
+            values = run["parameter_values"]
+            if not isinstance(values, list):
+                raise ValueError(
+                    f"Normalized parameter values for {spec.generated_method_name!r} "
+                    "must be a list"
+                )
+            unknown = {
+                str(record["parameter"])
+                for record in values
+                if str(record["parameter"]) not in index_of
+            }
             if unknown:
                 raise ValueError(
-                    f"Value log parameters {sorted(unknown)} not in "
+                    f"Value-log parameters {sorted(unknown)} not in "
                     f"tested_method_parameters of probe "
                     f"{spec.generated_method_name!r}"
                 )
-            for record in values.to_dict("records"):
+            for record in values:
                 key = (
                     spec.tested_class,
                     spec.tested_method,
-                    index_of[str(record["parameter_name"])],
+                    index_of[str(record["parameter"])],
                 )
-                union.setdefault(key, set()).add(str(record["value"]))
+                union.setdefault(key, set()).add(str(record["value_base64"]))
         rows.append(
             {
                 "table_row": row.table_row,

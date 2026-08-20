@@ -7,9 +7,10 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
+from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import Metric, Prose, RQReport, Section
 from teralizer.eval.provenance import Provenance, capture
-from teralizer.eval.registry import Corpus, ReportSpec, register
+from teralizer.eval.registry import ReportSpec, register
 from teralizer.eval.reports import _funnel
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
@@ -30,8 +31,6 @@ from teralizer.eval.reports._widening import (
     widening_refusal_metrics,
     widening_refusal_table,
 )
-
-DEFAULT_DB = "postgres_reporeapers_rq6_v7"
 
 # Map each persisted exclusion mechanism to the filtering or failure bucket reported below.
 # The name test matters: the javac quarantine writes REJECT rows to
@@ -360,7 +359,8 @@ def _stage_metrics(
     return metrics
 
 
-def build(conn: Connection) -> RQReport:
+def build(context: ReportContext) -> RQReport:
+    conn = context.corpus("real-world")
     variant = _funnel.resolve_variant(conn)
     funnel = _funnel.build_funnel(conn, variant=variant)
     breakdown_data = _fetch_breakdown(conn, variant)
@@ -607,7 +607,6 @@ def build(conn: Connection) -> RQReport:
     return RQReport(
         rq="rq6",
         title="RQ6 - Causes of Unsuccessful Generalization (Real-World)",
-        db=str(conn.engine.url.database),
         sections=[section],
         metrics=metrics,
     )
@@ -615,13 +614,5 @@ def build(conn: Connection) -> RQReport:
 
 register(
     "rq6",
-    ReportSpec(
-        build,
-        DEFAULT_DB,
-        "new",
-        corpus=Corpus(
-            data_dir="data/reporeapers-rerun-v7",
-            config_dir="project-configs/replication/extended",
-        ),
-    ),
+    ReportSpec(build, (CorpusInputSpec("real-world", "real-world"),)),
 )

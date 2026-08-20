@@ -3,7 +3,7 @@ import pytest
 
 import sqlalchemy.exc
 
-from teralizer.eval.data import connect
+from teralizer.eval.inputs import CorpusInputSpec, resolve_inputs
 from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
 import teralizer.eval.reports.rq5_causes  # noqa: F401  (registers "rq5")
@@ -15,10 +15,8 @@ pytestmark = pytest.mark.db
 def _report() -> RQReport:
     spec = get("rq5")
     try:
-        with connect(
-            spec.default_db, validate_schema=True, require=spec.requires
-        ) as conn:
-            return spec.build(conn)
+        with resolve_inputs("rq5", spec.inputs) as context:
+            return spec.build(context)
     except sqlalchemy.exc.OperationalError:
         pytest.skip("database unavailable")
     raise AssertionError("unreachable: pytest.skip should have raised")
@@ -27,7 +25,9 @@ def _report() -> RQReport:
 def test_rq5_has_breakdown_and_filtering_tables():
     report = _report()
     assert report.rq == "rq5"
-    assert report.db == "postgres_dev"
+    input_spec = get("rq5").inputs[0]
+    assert isinstance(input_spec, CorpusInputSpec)
+    assert (input_spec.role, input_spec.corpus_id) == ("controlled", "controlled")
     labels = {t.label for t in report.tables()}
     assert any("exclusions-breakdown" in lbl for lbl in labels)
     assert any("exclusions-filtering" in lbl for lbl in labels)

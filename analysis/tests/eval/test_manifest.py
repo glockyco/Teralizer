@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
-from teralizer.eval.model import Metric, RQReport, Section, Table
+from teralizer.eval.inputs import CorpusInputSnapshot, FileInputSnapshot
+from teralizer.eval.model import BuiltReport, Metric, RQReport, Section
 from teralizer.eval.provenance import Provenance
 from teralizer.eval.render.manifest import (
     ANALYSIS_VERSION,
@@ -21,12 +22,25 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
     report = RQReport(
         "rq6",
         "T",
-        "postgres_reporeapers_rq6",
         [Section("S", [])],
         metrics=[Metric("realworld.eligible_projects", 632, "int", provenance=prov)],
     )
+    built = BuiltReport(
+        report,
+        (
+            CorpusInputSnapshot(
+                "real-world",
+                "real-world",
+                "postgres_reporeapers_rq6",
+                1161,
+                1161,
+                "data/run",
+                "project-configs/run",
+            ),
+        ),
+    )
     path = write_manifest(
-        report, tmp_path, repo_url="https://github.com/glockyco/Teralizer"
+        built, tmp_path, repo_url="https://github.com/glockyco/Teralizer"
     )
     data = json.loads(Path(path).read_text())
     entry = data["rq6"]["metrics"]["realworld.eligible_projects"]
@@ -39,60 +53,47 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
     assert entry["source_url"].endswith("rq6_causes_realworld.py#L30")
 
 
-def test_rq0_manifest_records_report_basis():
-    import pandas as pd
-
-    tables = [
-        Table(
-            key=key,
-            df=pd.DataFrame(),
-            columns=[],
-            caption=key,
-            label=f"tab:{key}",
-        )
-        for key in (
-            "rq0-table2-comparison",
-            "rq0-breadth-summary",
-            "rq0-pvc-budget",
-        )
-    ]
-    report = RQReport(
-        "rq0",
-        "RQ0",
-        "postgres_jarvis_scoreboard",
-        [Section("S", tables)],
-        metrics=[
-            Metric("rq0.census.database", "postgres_jarvis_census"),
-            Metric("rq0.table2.variant", "IMPROVED_100_TRIES"),
-            Metric("rq0.census.variant", "IMPROVED_100_TRIES"),
-            Metric("rq0.census.status", "partial"),
-            Metric(
-                "rq0.census.pvc_basis", "deduplicated_jqwik_value_logs_no_pit_reduction"
+def test_manifest_records_all_corpus_file_and_absent_roles():
+    report = RQReport("rq0", "RQ0", [Section("S", [])])
+    built = BuiltReport(
+        report,
+        (
+            CorpusInputSnapshot(
+                "scenarios", "jarvis-scenarios", "scoreboard", 2, 2, None, None
             ),
-            Metric("rq0.census.intended_projects", 12),
-            Metric("rq0.census.populated_projects", 9),
-            Metric("rq0.census.completed_projects", 8),
-            Metric("rq0.census.failed_projects", 2),
-            Metric("rq0.census.failed_task_count", 4),
-            Metric("rq0.census.completion_marker", "absent"),
-        ],
+            CorpusInputSnapshot(
+                "benchmark", "jarvis-benchmark", "census", 12, 12, None, None
+            ),
+            FileInputSnapshot(
+                "jarvis-pvc-facts",
+                "analysis/data/report-inputs/jarvis-value-facts.json",
+                True,
+                "a" * 64,
+                "b" * 40,
+                True,
+            ),
+            FileInputSnapshot(
+                "completion-marker",
+                "data/detached/census-gen.complete",
+                False,
+                None,
+                None,
+                False,
+            ),
+        ),
     )
 
-    manifest = build_manifest(report, repo_url="https://github.com/glockyco/Teralizer")
-    basis = manifest["report_basis"]
-    assert basis["databases"] == {
-        "scoreboard": "postgres_jarvis_scoreboard",
-        "census": "postgres_jarvis_census",
+    manifest = build_manifest(built, repo_url="https://github.com/glockyco/Teralizer")
+
+    assert manifest["inputs"]["scenarios"]["corpus_id"] == "jarvis-scenarios"
+    assert manifest["inputs"]["benchmark"]["database"] == "census"
+    assert manifest["inputs"]["jarvis-pvc-facts"] == {
+        "kind": "file",
+        "path": "analysis/data/report-inputs/jarvis-value-facts.json",
+        "present": True,
+        "sha256": "a" * 64,
+        "commit": "b" * 40,
+        "dirty": True,
     }
-    assert basis["variants"] == {
-        "table2": "IMPROVED_100_TRIES",
-        "census": "IMPROVED_100_TRIES",
-    }
-    assert basis["table_keys"] == [
-        "rq0-table2-comparison",
-        "rq0-breadth-summary",
-        "rq0-pvc-budget",
-    ]
-    assert basis["census_status"] == "partial"
-    assert basis["census_pit_reduction_required_for_pvc"] is False
-    assert basis["census_is_mutation_result"] is False
+    assert manifest["inputs"]["completion-marker"]["present"] is False
+    assert "report_basis" not in manifest

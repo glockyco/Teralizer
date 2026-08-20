@@ -1,12 +1,22 @@
 import pandas as pd
 import pytest
-from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
+from teralizer.eval.inputs import CorpusInputSnapshot
+from teralizer.eval.model import (
+    BuiltReport,
+    ColumnSpec,
+    Metric,
+    RQReport,
+    Section,
+    Table,
+)
 from teralizer.eval.render.latex import render_macros, render_table, write_macros
 
 
-def _report(rq: str, key: str) -> RQReport:
-    return RQReport(
-        rq, "T", "db", [Section("s", [])], metrics=[Metric(key, 1, "count")]
+def _report(rq: str, key: str) -> BuiltReport:
+    report = RQReport(rq, "T", [Section("s", [])], metrics=[Metric(key, 1, "count")])
+    return BuiltReport(
+        report,
+        (CorpusInputSnapshot("controlled", "controlled", "db", 1, 1, None, None),),
     )
 
 
@@ -315,7 +325,6 @@ def test_render_macros_one_newcommand_per_metric():
     report = RQReport(
         "rq6",
         "T",
-        "db",
         [Section("s", [])],
         metrics=[Metric("realworld.eligible_projects_pct", 0.794, "pct1")],
     )

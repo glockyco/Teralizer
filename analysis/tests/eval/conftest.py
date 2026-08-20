@@ -3,11 +3,11 @@ from collections.abc import Callable
 import pytest
 import sqlalchemy.exc
 
-from teralizer.eval.data import connect
+from teralizer import corpora
+from teralizer.eval.inputs import resolve_inputs
 from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
 from teralizer.eval.reports import _funnel
-from teralizer.eval.reports.rq6_causes import DEFAULT_DB
 
 
 @pytest.fixture(scope="session")
@@ -23,12 +23,8 @@ def build_report() -> Callable[[str], RQReport]:
     def build(rq: str) -> RQReport:
         if rq not in built:
             spec = get(rq)
-            with connect(
-                spec.default_db,
-                validate_schema=(spec.schema == "old"),
-                require=spec.requires,
-            ) as conn:
-                built[rq] = spec.build(conn)
+            with resolve_inputs(rq, spec.inputs) as context:
+                built[rq] = spec.build(context)
         return built[rq]
 
     return build
@@ -46,7 +42,7 @@ def rq6_report(build_report) -> RQReport:
 @pytest.fixture(scope="session")
 def funnel_result():
     try:
-        with connect(DEFAULT_DB) as conn:
+        with corpora.open_corpus("real-world") as (_, conn):
             return _funnel.build_funnel(conn)
     except sqlalchemy.exc.OperationalError:
         pytest.skip("database unavailable")
@@ -56,7 +52,7 @@ def funnel_result():
 @pytest.fixture(scope="session")
 def rq6_conn():
     try:
-        with connect(DEFAULT_DB) as conn:
+        with corpora.open_corpus("real-world") as (_, conn):
             yield conn
     except sqlalchemy.exc.OperationalError:
         pytest.skip("database unavailable")

@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
-from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required
+from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import (
     ColumnSpec,
     Figure,
@@ -551,7 +551,8 @@ def _phase_figure(data: pd.DataFrame) -> Figure:
     )
 
 
-def build(conn: Connection) -> RQReport:
+def build(context: ReportContext) -> RQReport:
+    conn = context.corpus("controlled")
     pareto = compute_pareto_efficiency_analysis(
         get_evosuite_vs_teralizer_efficiency(conn)
     )
@@ -581,9 +582,10 @@ def build(conn: Connection) -> RQReport:
             _phase_figure(phases),
         ],
     )
-    return RQReport(
-        "rq4", "RQ4 - Efficiency versus EvoSuite", "postgres_dev", [section], metrics
-    )
+    return RQReport("rq4", "RQ4 - Efficiency versus EvoSuite", [section], metrics)
 
 
-register("rq4", ReportSpec(build, "postgres_dev", "old", REQUIRES))
+register(
+    "rq4",
+    ReportSpec(build, (CorpusInputSpec("controlled", "controlled", REQUIRES),)),
+)

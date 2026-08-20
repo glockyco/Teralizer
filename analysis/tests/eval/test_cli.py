@@ -1,9 +1,10 @@
-from pathlib import Path
+from contextlib import contextmanager
 
 import inspect
 import pandas as pd
 import pytest
 from teralizer.eval import cli, provenance, registry
+from teralizer.eval.inputs import CorpusInputSnapshot, ReportContext
 from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
 
 
@@ -18,9 +19,17 @@ def _fixture_report(_conn):
     return RQReport(
         "smoke",
         "Smoke",
-        "sqlite",
         [Section("s", [t])],
         metrics=[Metric("smoke.n", 1, "int")],
+    )
+
+
+@contextmanager
+def _resolved(report, _declarations):
+    yield ReportContext(
+        report,
+        (),
+        (CorpusInputSnapshot("controlled", "controlled", "sqlite", 1, 1, None, None),),
     )
 
 
@@ -30,16 +39,10 @@ def test_provenance_documents_dirty_publish_opt_out():
 
 
 def test_cli_fans_out_to_targets(monkeypatch, tmp_path):
-    import contextlib
-
-    @contextlib.contextmanager
-    def fake_connect(db, *, validate_schema=False, require=None):
-        yield None
-
     monkeypatch.setitem(
-        registry.REPORTS, "smoke", registry.ReportSpec(_fixture_report, "sqlite", "new")
+        registry.REPORTS, "smoke", registry.ReportSpec(_fixture_report, ())
     )
-    monkeypatch.setattr(cli, "connect", fake_connect)
+    monkeypatch.setattr(cli.inputs, "resolve_inputs", _resolved)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
     monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
     cli.main(["smoke", "--targets", "md,figures,latex"])
@@ -49,62 +52,40 @@ def test_cli_fans_out_to_targets(monkeypatch, tmp_path):
     assert (tmp_path / "build" / "macros.tex").exists()
 
 
-def test_cli_checks_corpus_completion_before_build(monkeypatch, tmp_path):
-    import contextlib
+def test_cli_resolves_declared_inputs_before_build(monkeypatch, tmp_path):
+    events = []
 
-    connection = object()
-    calls = []
+    @contextmanager
+    def resolve(report, declarations):
+        events.append(("resolve", report, declarations))
+        with _resolved(report, declarations) as context:
+            yield context
 
-    @contextlib.contextmanager
-    def fake_connect(db, *, validate_schema=False, require=None):
-        yield connection
+    def build(context):
+        events.append(("build", context.report))
+        return _fixture_report(context)
 
-    def fake_require_complete(conn, *, data_dir, config_dir):
-        calls.append((conn, data_dir, config_dir))
-
-    monkeypatch.setitem(
-        registry.REPORTS,
-        "complete",
-        registry.ReportSpec(_fixture_report, "sqlite", "new"),
-    )
-    monkeypatch.setattr(cli, "connect", fake_connect)
-    monkeypatch.setattr(cli, "require_complete_corpus", fake_require_complete)
+    spec = registry.ReportSpec(build, ())
+    monkeypatch.setitem(registry.REPORTS, "complete", spec)
+    monkeypatch.setattr(cli.inputs, "resolve_inputs", resolve)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
-    cli.main(
-        [
-            "complete",
-            "--targets",
-            "md",
-            "--corpus-data-dir",
-            "data/run",
-            "--corpus-config-dir",
-            "project-configs/run",
-        ]
-    )
+    cli.main(["complete", "--targets", "md"])
 
-    assert calls == [(connection, Path("data/run"), Path("project-configs/run"))]
+    assert events == [("resolve", "complete", ()), ("build", "complete")]
 
 
 def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
-    import contextlib
-
     monkeypatch.setenv(provenance.DIRTY_PROVENANCE_ENV, "1")
-
-    @contextlib.contextmanager
-    def fake_connect(db, *, validate_schema=False, require=None):
-        yield None
-
     monkeypatch.setitem(
         registry.REPORTS,
         "smoke_csv",
-        registry.ReportSpec(_fixture_report, "sqlite", "new"),
+        registry.ReportSpec(_fixture_report, ()),
     )
-    monkeypatch.setattr(cli, "connect", fake_connect)
+    monkeypatch.setattr(cli.inputs, "resolve_inputs", _resolved)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
     monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
     cli._build_and_render(
         "smoke_csv",
-        None,
         {"md", "latex", "csv"},
         tmp_path / "paper" / "tables",
     )

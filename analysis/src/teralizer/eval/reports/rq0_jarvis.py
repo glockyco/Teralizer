@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, cast
 
 import re
 
 import pandas as pd
-from sqlalchemy.engine import Connection
 
 from teralizer.cut_pvc import load_cut_values
+from teralizer.eval.evidence import jarvis_values
+from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
 from teralizer.eval.model import ColumnSpec, Metric, Prose, RQReport, Section, Table
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
@@ -18,28 +18,14 @@ from teralizer.jarvis_scoreboard import (
     JARVIS_TABLE2,
     SWEEP_VARIANTS,
     compare_to_jarvis,
-    get_census_by_mut,
-    get_census_project_pvc,
     get_mutation_scores,
-    get_scoreboard,
     suite_union_pvc,
     summarize_variants,
 )
-from teralizer.report_basis import (
-    open_report_connection,
-    resolve_repo_relative_path,
-)
 
 
-SCOREBOARD_DB = "postgres_jarvis_scoreboard"
-CENSUS_DB = "postgres_jarvis_census"
 TABLE2_VARIANT = "IMPROVED_100_TRIES"
 CENSUS_VARIANT = "IMPROVED_100_TRIES"
-# Resolved against the repository root, not the process working directory. A
-# cwd-relative check reports the marker absent whenever the report is invoked
-# from anywhere but the root, which silently downgrades the census status.
-CENSUS_COMPLETION_MARKER = Path("data/detached/census-gen.complete")
-
 TABLE1_PROJECTS = (
     "commons-math-2017-02-01-census",
     "commons-lang-2017-02-01-census",
@@ -128,7 +114,9 @@ def _fetch_task_rows(conn: Any) -> pd.DataFrame:
     return pd.read_sql_query(query, conn)
 
 
-def _census_status_ledger(conn: Any) -> tuple[pd.DataFrame, str, bool]:
+def _census_status_ledger(
+    conn: Any, *, marker_present: bool
+) -> tuple[pd.DataFrame, str, bool]:
     """Build an all-project task ledger and aggregate census status."""
     task_rows = _fetch_task_rows(conn)
     records: list[dict[str, object]] = []
@@ -176,7 +164,6 @@ def _census_status_ledger(conn: Any) -> tuple[pd.DataFrame, str, bool]:
             }
         )
     ledger = pd.DataFrame(records)
-    marker_present = resolve_repo_relative_path(CENSUS_COMPLETION_MARKER).is_file()
     census_status = (
         "complete"
         if marker_present and (ledger["generalization_status"] == "complete").all()
@@ -304,15 +291,24 @@ def _count_or_unavailable(value) -> str:
     return "unavailable" if pd.isna(value) else f"{int(value):,}"
 
 
-def build(conn: Connection) -> RQReport:
-    scoreboard = get_scoreboard(conn, variants=SWEEP_VARIANTS)
+def build(context: ReportContext) -> RQReport:
+    conn = context.corpus("scenarios")
+    census_conn = context.corpus("benchmark")
+    facts_path = context.file("jarvis-pvc-facts")
+    cut_values_path = context.file("cut-values")
+    if facts_path is None or cut_values_path is None:
+        raise AssertionError("required RQ0 evidence resolved as absent")
+    scoreboard = jarvis_values.scoreboard_frame(facts_path)
+    scoreboard = cast(
+        pd.DataFrame, scoreboard.loc[scoreboard["variant"].isin(SWEEP_VARIANTS)]
+    )
     full_scoreboard = scoreboard
     if "diagnostic_kind" in scoreboard.columns:
         full_scoreboard = cast(
             pd.DataFrame, scoreboard.loc[scoreboard["diagnostic_kind"].eq("FULL")]
         )
     comparison = compare_to_jarvis(full_scoreboard, variant=TABLE2_VARIANT)
-    cut_values = load_cut_values()
+    cut_values = load_cut_values(cut_values_path)
     suite = suite_union_pvc(full_scoreboard, cut_values, variant=TABLE2_VARIANT)
     comparison = comparison.merge(suite, on="table_row", how="left")
     # Each published JARVIS scenario is one observation in the comparison table.
@@ -324,10 +320,16 @@ def build(conn: Connection) -> RQReport:
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
     budget = _build_budget_table(full_scoreboard, mutation)
 
-    with open_report_connection(CENSUS_DB) as census_conn:
-        mut_rows = get_census_by_mut(census_conn, variants=[CENSUS_VARIANT])
-        project_pvc = get_census_project_pvc(census_conn, variants=[CENSUS_VARIANT])
-        ledger, census_status, marker_present = _census_status_ledger(census_conn)
+    mut_rows = jarvis_values.census_by_mut_frame(facts_path)
+    mut_rows = cast(pd.DataFrame, mut_rows.loc[mut_rows["variant"].eq(CENSUS_VARIANT)])
+    project_pvc = jarvis_values.census_project_frame(facts_path)
+    project_pvc = cast(
+        pd.DataFrame, project_pvc.loc[project_pvc["variant"].eq(CENSUS_VARIANT)]
+    )
+    ledger, census_status, marker_present = _census_status_ledger(
+        census_conn,
+        marker_present=context.file("completion-marker") is not None,
+    )
 
     breadth = _build_breadth_table(ledger, project_pvc)
     sound_rows, sound_muts = _table2_mut_counts(comparison)
@@ -395,15 +397,19 @@ def build(conn: Connection) -> RQReport:
             "str",
             _build_breadth_table,
         ),
-        _metric("rq0.census.database", CENSUS_DB, "str", _census_status_ledger),
         _metric(
             "rq0.census.pvc_basis",
             "deduplicated_jqwik_value_logs_no_pit_reduction",
             "str",
-            get_census_project_pvc,
+            jarvis_values.census_project_frame,
         ),
         _metric("rq0.table2.variant", TABLE2_VARIANT, "str", compare_to_jarvis),
-        _metric("rq0.census.variant", CENSUS_VARIANT, "str", get_census_project_pvc),
+        _metric(
+            "rq0.census.variant",
+            CENSUS_VARIANT,
+            "str",
+            jarvis_values.census_project_frame,
+        ),
         _metric(
             "rq0.census.intended_projects",
             len(TABLE1_PROJECTS),
@@ -414,13 +420,13 @@ def build(conn: Connection) -> RQReport:
             "rq0.census.unresolved_mut_rows",
             int((~mut_rows["signature_known"]).sum()) if not mut_rows.empty else 0,
             "count",
-            get_census_by_mut,
+            jarvis_values.census_by_mut_frame,
         ),
         _metric(
             "rq0.census.populated_projects",
             int(project_pvc["project"].nunique()),
             "count",
-            get_census_project_pvc,
+            jarvis_values.census_project_frame,
         ),
         _metric(
             "rq0.census.completed_projects",
@@ -457,13 +463,13 @@ def build(conn: Connection) -> RQReport:
             "rq0.census.sound_properties",
             int(project_pvc["sound_properties"].sum()) if not project_pvc.empty else 0,
             "count",
-            get_census_project_pvc,
+            jarvis_values.census_project_frame,
         ),
         _metric(
             "rq0.census.sound_muts",
             int(project_pvc["sound_muts"].sum()) if not project_pvc.empty else 0,
             "count",
-            get_census_project_pvc,
+            jarvis_values.census_project_frame,
         ),
     ]
     for row in comparison.to_dict("records"):
@@ -505,7 +511,7 @@ def build(conn: Connection) -> RQReport:
                     f"rq0.census.project.{slug}.teralizer_sound_properties",
                     _count_or_unavailable(row.get("sound_properties")),
                     "str",
-                    get_census_project_pvc,
+                    jarvis_values.census_project_frame,
                 ),
                 _metric(
                     f"rq0.census.project.{slug}.sound_muts",
@@ -669,7 +675,7 @@ def build(conn: Connection) -> RQReport:
             "generalized tests for each MUT and parameter. Generalized MUTs have "
             "at least one generalized test."
         ),
-        provenance=capture(get_census_project_pvc),
+        provenance=capture(jarvis_values.census_project_frame),
     )
     budget_table = Table(
         key="rq0-pvc-budget",
@@ -805,10 +811,31 @@ def build(conn: Connection) -> RQReport:
     return RQReport(
         rq="rq0",
         title="RQ0 - JARVIS Comparison",
-        db=SCOREBOARD_DB,
         sections=sections,
         metrics=metrics,
     )
 
 
-register("rq0", ReportSpec(build, SCOREBOARD_DB, "new"))
+register(
+    "rq0",
+    ReportSpec(
+        build,
+        (
+            CorpusInputSpec("scenarios", "jarvis-scenarios"),
+            CorpusInputSpec("benchmark", "jarvis-benchmark"),
+            FileInputSpec(
+                "jarvis-pvc-facts",
+                "analysis/data/report-inputs/jarvis-value-facts.json",
+            ),
+            FileInputSpec(
+                "cut-values",
+                "analysis/data/jarvis-cut-values/cut_values.tsv",
+            ),
+            FileInputSpec(
+                "completion-marker",
+                "data/detached/census-gen.complete",
+                required=False,
+            ),
+        ),
+    ),
+)

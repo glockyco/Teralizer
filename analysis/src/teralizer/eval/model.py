@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from matplotlib.axes import Axes
 
+    from teralizer.eval.inputs import InputSnapshot
     from teralizer.eval.provenance import Provenance
 
 
@@ -117,7 +118,6 @@ class Section:
 class RQReport:
     rq: str  # "rq6"
     title: str
-    db: str
     sections: list[Section]
     metrics: list[Metric] = field(default_factory=list)
 
@@ -137,3 +137,11 @@ class RQReport:
 
     def figures(self) -> list[Figure]:
         return [b for s in self.sections for b in s.blocks if isinstance(b, Figure)]
+
+
+@dataclass(frozen=True)
+class BuiltReport:
+    """A renderable report and the runner-captured identities of all its inputs."""
+
+    report: RQReport
+    inputs: tuple["InputSnapshot", ...]

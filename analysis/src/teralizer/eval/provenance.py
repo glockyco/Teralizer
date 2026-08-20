@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from teralizer.eval.inputs import FileInputSnapshot, InputSnapshot
+
 # analysis/src/teralizer/eval/provenance.py -> repo root is parents[4]
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 
@@ -93,8 +95,21 @@ def require_publishable_tree() -> None:
     _, dirty = _git_snapshot()
     if dirty and os.environ.get(DIRTY_PROVENANCE_ENV) != "1":
         raise RuntimeError(
-            "cannot publish provenance from a dirty tree; "
-            f"set {DIRTY_PROVENANCE_ENV}=1 for local iteration"
+            "cannot publish provenance from a dirty tree. "
+            f"Set {DIRTY_PROVENANCE_ENV}=1 for local iteration"
+        )
+
+
+def require_publishable_inputs(snapshots: tuple[InputSnapshot, ...]) -> None:
+    """Reject dirty declared files unless local iteration is enabled."""
+    dirty_roles = sorted(
+        snapshot.role
+        for snapshot in snapshots
+        if isinstance(snapshot, FileInputSnapshot) and snapshot.dirty
+    )
+    if dirty_roles and os.environ.get(DIRTY_PROVENANCE_ENV) != "1":
+        raise RuntimeError(
+            "cannot publish with dirty declared inputs: " + ", ".join(dirty_roles)
         )
 
 

@@ -13,7 +13,6 @@ def _report(*keys: str) -> RQReport:
     return RQReport(
         "example",
         "T",
-        "db",
         [
             Section(
                 "S",
@@ -73,6 +72,6 @@ def test_directories_are_created(tmp_path: Path):
 
 
 def test_a_report_without_figures_writes_nothing(tmp_path: Path):
-    report = RQReport("example", "T", "db", [Section("S", [])])
+    report = RQReport("example", "T", [Section("S", [])])
     written = materialize(report, tmp_path / "png", tmp_path / "pdf")
     assert written.png == [] and written.pdf == {}

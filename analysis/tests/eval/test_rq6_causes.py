@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import text
 
+from teralizer.eval.inputs import CorpusInputSpec
 from teralizer.eval.reports import _funnel
 
 from teralizer.eval.registry import get
@@ -11,7 +12,9 @@ from teralizer.eval.reports._causes_common import MECHANISM_COLLAPSE
 def test_rq6_has_funnel_and_shared_tables(rq6_report):
     report = rq6_report
     assert report.rq == "rq6"
-    assert report.db == get("rq6").default_db
+    input_spec = get("rq6").inputs[0]
+    assert isinstance(input_spec, CorpusInputSpec)
+    assert (input_spec.role, input_spec.corpus_id) == ("real-world", "real-world")
     labels = {t.label for t in report.tables()}
     assert any("processing-failures" in lbl for lbl in labels)
     assert any("exclusions-breakdown" in lbl for lbl in labels)

@@ -3,41 +3,19 @@
 from __future__ import annotations
 
 import pandas as pd
-from sqlalchemy.engine import Connection
 
-from teralizer.eval.data import Required, read_sql
+from teralizer.eval.data import Required
+from teralizer.eval.evidence import project_sources
+from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
 from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
-from teralizer.report_basis import open_report_connection
-from teralizer.dataset_characteristics import get_dataset_statistics
-from teralizer.eval.reports import _funnel
 from teralizer.formatting import (
     replace_project_names_with_macros,
     sort_dataframe_by_project,
 )
 
 REQUIRES = (Required("project", "table", ("id",)),)
-REPOREAPERS_DB = "postgres_reporeapers_rq6_v7"
-
-_INELIGIBLE_PROJECTS_SQL = f"""
-{_funnel.ELIGIBILITY_CTE}
-SELECT p.root_path
-FROM project p
-WHERE p.use_test_generalization
-  AND NOT EXISTS (
-      SELECT 1 FROM eligible_projects e WHERE e.id = p.id
-  )
-"""
-
-
-def _ineligible_project_names(conn: Connection) -> set[str]:
-    rows = read_sql(
-        conn,
-        _INELIGIBLE_PROJECTS_SQL,
-        _funnel.base_query_params(""),
-    )
-    return {str(path).rsplit("/", maxsplit=1)[-1] for path in rows["root_path"]}
 
 
 def _table(df: pd.DataFrame) -> Table:
@@ -81,24 +59,24 @@ def _table(df: pd.DataFrame) -> Table:
         body_style="\\tabstyle",
         full_width=True,
         group_header_align="r",
-        provenance=capture(get_dataset_statistics),
+        provenance=capture(project_sources.frame),
     )
 
 
-def build(conn: Connection) -> RQReport:
-    with open_report_connection(REPOREAPERS_DB) as test_conn:
-        stats = get_dataset_statistics(
-            db_conn_dev=conn,
-            db_conn_test=test_conn,
-            excluded_projects=_ineligible_project_names(test_conn),
-        )
+def build(context: ReportContext) -> RQReport:
+    context.corpus("controlled")
+    context.corpus("real-world")
+    facts_path = context.file("project-source-facts")
+    if facts_path is None:
+        raise AssertionError("required project-source facts resolved as absent")
+    stats = project_sources.frame(facts_path)
     table = _table(stats)
     metrics = [
         Metric(
             "dataset.projects",
             int(len(stats)),
             "count",
-            capture(get_dataset_statistics),
+            capture(project_sources.frame),
         )
     ]
     section = Section(
@@ -107,9 +85,20 @@ def build(conn: Connection) -> RQReport:
             table,
         ],
     )
-    return RQReport(
-        "dataset", "Dataset characteristics", "postgres_dev", [section], metrics
-    )
+    return RQReport("dataset", "Dataset characteristics", [section], metrics)
 
 
-register("dataset", ReportSpec(build, "postgres_dev", "old", REQUIRES))
+register(
+    "dataset",
+    ReportSpec(
+        build,
+        (
+            CorpusInputSpec("controlled", "controlled", REQUIRES),
+            CorpusInputSpec("real-world", "real-world", REQUIRES),
+            FileInputSpec(
+                "project-source-facts",
+                "analysis/data/report-inputs/project-source-facts.json",
+            ),
+        ),
+    ),
+)

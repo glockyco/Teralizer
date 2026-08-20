@@ -27,7 +27,7 @@ Teralizer extracts its specification from a single execution. Generalized tests 
 
 _JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. For Teralizer, PVC includes the reconstructed original tests' values and the generalized tests' values. A dash marks a scenario Teralizer excludes from generalization._
 
-source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/b5112480c27aad999d9308a996ebc3ee9ef7fe5c/analysis/src/teralizer/jarvis_scoreboard.py#L837)
+source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/b5112480c27aad999d9308a996ebc3ee9ef7fe5c/analysis/src/teralizer/jarvis_scoreboard.py#L838)
 
 ## Applicability breadth
 
@@ -53,7 +53,7 @@ RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons pr
 
 _A dash in the JARVIS columns marks a project that the publication reports no case for. A dash in the Teralizer columns marks a project for which the pipeline produced no generalized test. Teralizer aggregate PVC counts distinct values exercised by generalized tests for each MUT and parameter. Generalized MUTs have at least one generalized test._
 
-source: [`get_census_project_pvc`](https://github.com/glockyco/Teralizer/blob/b5112480c27aad999d9308a996ebc3ee9ef7fe5c/analysis/src/teralizer/jarvis_scoreboard.py#L716)
+source: [`census_project_frame`](https://github.com/glockyco/Teralizer/blob/0ef9a91bee8787db60d33691db27ebe9493cc501/analysis/src/teralizer/eval/evidence/jarvis_values.py#L223)
 
 Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows. Completion marker present.
 
@@ -71,4 +71,4 @@ A larger sampling budget can raise PVC by exercising more distinct values. In th
 
 _The same mutant sets are covered and killed at every budget._
 
-source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/b3fd3d5d1bfde88b63e71abad1b762c3c181ec17/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268)
+source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/b3fd3d5d1bfde88b63e71abad1b762c3c181ec17/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L255)
