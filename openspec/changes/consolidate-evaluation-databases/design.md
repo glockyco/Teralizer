@@ -247,3 +247,13 @@ Neither is a request to change measured data.
   `postgres_reporeapers_rq6_v7` through the harness environment override
   (`scripts/run-reporeapers-rerun.sh:40`). The committed config names a database the run did not use,
   so freezing it preserves a misleading record rather than an accurate one.
+
+- **Byte-identical report output and a corpus rename cannot both hold.** The acceptance criterion in
+  `proposal.md` and the checks at tasks 2.4, 3.7, and 4.3 require the full report set to reproduce
+  byte-identically. A report's source database is a reported value: `analysis/reports/provenance.json`
+  records it per report, the generated LaTeX macro file carries it as a comment, and the generated
+  markdown carries it too. The consuming thesis commits eight of those names in one tracked file,
+  `chapters/05-teralizer/tables/macros.tex`, one per report. Renaming a corpus therefore changes
+  generated output by construction, so the three checks fail for the expected reason and an operator
+  cannot tell that failure from a regression. State the source-database strings as the one permitted
+  difference, and compare the rest, or restate the criterion against a diff that excludes them.
