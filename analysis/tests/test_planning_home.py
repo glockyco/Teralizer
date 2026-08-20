@@ -200,11 +200,12 @@ def test_detects_current_planning_metadata_outside_openspec(tmp_path):
 
 
 def test_detects_retired_path_reference(tmp_path):
-    retired = "docs" + "/plans/INDEX.md"
+    retired_root = "docs" + "/plans"
+    retired = f"{retired_root}/INDEX.md"
     relative = _write(tmp_path, "AGENTS.md", f"Read `{retired}` first.\n")
 
     assert repository_state_violations(tmp_path, [relative]) == [
-        "AGENTS.md: retired planning reference docs/plans"
+        f"AGENTS.md: retired planning reference {retired_root}"
     ]
 
 
