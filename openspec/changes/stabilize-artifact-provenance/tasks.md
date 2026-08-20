@@ -33,24 +33,21 @@
 
 ## 3. Verify reproducibility
 
-- [ ] 3.1 Regenerate the full report set twice in succession and confirm the second run leaves no diff.
-      Run: the report set with all targets, then `git status --porcelain -- analysis/reports`
-      Expected: empty after the second run.
-- [ ] 3.2 Confirm publishing twice in succession is not refused for a tree the first publish dirtied.
-      Verification: the second publish runs, having committed nothing in between.
-- [ ] 3.3 Confirm the rewrite touched only provenance fields.
-      Run: `git diff -- analysis/reports`
-      Expected: commit, dirty, and source-URL values only; no metric value, table cell, or caption
-      differs.
-- [ ] 3.4 Confirm each rewritten permalink resolves to the producing lines.
-      Verification: spot-check one metric per report module against the file at the recorded commit.
-- [ ] 3.5 Measure the added `git log` cost across a full run.
-      Verification: recorded; if it is material, the resolver is batched instead.
-- [ ] 3.6 Full suite.
+- [x] 3.1 Regenerated the full set with all four targets twice. The second run left zero dirty files
+      in `analysis/reports` and zero in the whole tree.
+- [x] 3.2 A full publish now leaves the generator tree with zero dirty files, so the generator's
+      clean-tree guard no longer blocks the next publish. The consumer-side guard still refuses a
+      second publish over the files the first one delivered, which is its purpose and is unrelated.
+- [x] 3.3 Classified every changed line rather than sampling: 962 changed lines, 962 of them
+      provenance, 0 other. No metric value, table cell, caption, or figure geometry differs.
+- [x] 3.4 Checked all 227 provenance entries rather than one per module: every recorded commit and
+      path resolves with `git show`, and every recorded line number lands on a definition. 11 distinct
+      commit and path pairs, zero failures.
+- [x] 3.5 11 distinct files resolve in 175 ms, about 16 ms each, and 220 cached lookups take 0.03 ms.
+      That is 0.6 percent of a 27 second run, so the resolver is not batched.
+- [x] 3.6 Full suite: 327 passed, 1 xfailed.
       Run: `uv run --directory analysis python -m pytest tests -q`
-- [ ] 3.7 Commit the regenerated reports separately from the code change, so the rewrite is reviewable
-      on its own.
-      Message: `chore(eval): rewrite report provenance with correct commits`
+- [x] 3.7 Committed separately as `chore(eval): rewrite report provenance with correct commits`.
 
 ## 4. Hand off
 
