@@ -53,7 +53,7 @@ different names for the same figure.
 
 - **WHEN** a publish destination supplies no figure declaration
 - **THEN** no figure is delivered
-- **AND** the tables and data the destination expects are still published
+- **AND** the run does not fail for the absence of a declaration
 
 ### Requirement: A declaration that disagrees with the emitted set fails the publish
 

@@ -3,7 +3,7 @@ and written there, not here.
 
 ## 1. Retire the superseded outcome
 
-- [ ] 1.1 In `openspec/changes/publish-figures-to-consumers`, correct the scenario *Publishing without
+- [x] 1.1 In `openspec/changes/publish-figures-to-consumers`, correct the scenario *Publishing without
       a declaration*. Its outcome states that the tables and data a destination expects are still
       published, which is the behaviour this change removes. State only what remains true for figures.
       Verification: no scenario in that change sanctions delivery of an undeclared artifact, and

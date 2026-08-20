@@ -16,7 +16,7 @@
 - [x] 1.5 Tests: both formats written, PDF at the build path, provenance present in each, no warning
       raised.
       Run: `uv run --directory analysis python -m pytest tests/eval -q`
-- [ ] 1.6 Commit.
+- [x] 1.6 Commit. `ed2e8fc1`
       Message: `fix(eval): emit a print format for every figure`
 
 ## 2. Resolve the consumer declaration
@@ -32,7 +32,9 @@
       Verification: publishing into a directory outside a git repository fails with that reason.
 - [x] 2.4 Tests: a well-formed declaration, an absent file, a malformed file, and an unresolvable root.
       Run: `uv run --directory analysis python -m pytest tests/eval -q`
-- [ ] 2.5 Commit.
+- [x] 2.5 Commit. Groups 2, 3 and 4 landed as one commit, `bc602f76`: the declaration
+      parser, the delivery, and the consumer-side guard are one subject, and splitting them would have
+      committed a parser no caller used.
       Message: `feat(eval): read the consumer's figure declaration`
 
 ## 3. Validate before delivering
@@ -54,7 +56,7 @@
 - [x] 3.5 Tests: missing key, escaping path, multiple simultaneous failures, no-copy-on-failure, and
       the undeclared-figure case.
       Run: `uv run --directory analysis python -m pytest tests/eval -q`
-- [ ] 3.6 Commit.
+- [x] 3.6 Commit. See 2.5.
       Message: `feat(eval): stop a publish whose figure declaration disagrees`
 
 ## 4. Deliver, under the existing guards
@@ -72,7 +74,7 @@
 - [x] 4.3 Confirm the generator's clean-tree requirement already covers this path and add nothing.
       Verification: publishing from a dirty generator tree is refused before any figure is written,
       and the documented override permits it.
-- [ ] 4.4 Commit.
+- [x] 4.4 Commit. See 2.5.
       Message: `feat(eval): publish figures to the paths a consumer declares`
 
 ## 5. Verification against the thesis
@@ -90,14 +92,15 @@
 - [x] 5.3 Confirm `evosuite_runtime_phases` was emitted and not delivered.
       Verification: emitted to the build tree by RQ4; absent from every consumer declaration, so
       `deliver` never writes it.
-- [ ] 5.4 Publish into a scratch clone of the thesis with a declaration, and confirm the four files
+- [x] 5.4 Publish into a scratch clone of the thesis with a declaration, and confirm the four files
       land at their declared paths with no other file touched.
       Verification: `git status` in the scratch clone shows exactly four modified figure paths, plus
       the tables and data the publish also delivers.
-- [ ] 5.5 Confirm no report content changed.
+- [x] 5.5 Confirm no report content changed. Four PNGs differed only by the embedded provenance
+      commit and were restored; only the runtime figure changed in pixels, explained by the divider fix.
       Run: `git diff --stat -- analysis/build analysis/reports`
       Expected: figure additions only; no table, CSV, macro, or Markdown value differs.
-- [ ] 5.6 Full test suite.
+- [x] 5.6 Full test suite. 185 passed, 1 xfailed, with ruff and ty clean.
       Run: `uv run --directory analysis python -m pytest tests -q`
       Expected: pass.
 - [x] 5.7 Commit any fix this verification required.
@@ -112,10 +115,12 @@
 
 ## 6. Hand off
 
-- [ ] 6.1 Record what the thesis repository must now do: add `publish.toml` at
+- [x] 6.1 Record what the thesis repository must now do: add `publish.toml` at
       `chapters/05-teralizer/`, declaring the four figures at their current paths, and stop treating
       `figures/teralizer-*` as hand-imported assets.
       Verification: the note is filed against the thesis repository's authoring-guidance change, which
       owns the procedure text.
-- [ ] 6.2 Record whether the paper repository should gain a declaration, per design.md Open Questions.
+- [x] 6.2 Record whether the paper repository should gain a declaration, per design.md Open Questions.
+      Answered no, and closed rather than deferred: `projects/**` are pinned submodules the thesis must
+      not edit, and the paper's figures are its record at its own commit.
       Verification: the answer is recorded, or the question is closed as not applicable.

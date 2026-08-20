@@ -17,7 +17,7 @@
 - [x] 1.6 Tests: per-file resolution, unrelated-commit stability, uncommitted producing file,
       never-committed file, path derivation, and that the publish guard is untouched.
       Run: `uv run --directory analysis python -m pytest tests/eval/test_provenance.py -q`
-- [ ] 1.7 Commit.
+- [x] 1.7 Commit. `9e4c70f7`
       Message: `fix(eval): attribute provenance to the code that produced the artifact`
 
 ## 2. Resolve figure metadata by the same rule
@@ -28,7 +28,7 @@
 - [x] 2.2 Tests: the embedded string carries the resolved commit, and is unchanged by an unrelated
       commit.
       Run: `uv run --directory analysis python -m pytest tests/eval/test_render_figures.py -q`
-- [ ] 2.3 Commit.
+- [x] 2.3 Commit. `031cb2bd`
       Message: `fix(eval): resolve figure provenance through the figure's source`
 
 ## 3. Verify reproducibility
@@ -51,6 +51,6 @@
 
 ## 4. Hand off
 
-- [ ] 4.1 Record that the regeneration procedure in the thesis repository can now state a single
+- [x] 4.1 Record that the regeneration procedure in the thesis repository can now state a single
       publish step, with no instruction to commit churn between runs.
       Verification: the note is filed against that repository's authoring-guidance change.
