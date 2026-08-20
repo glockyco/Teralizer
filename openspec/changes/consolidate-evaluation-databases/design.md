@@ -1,267 +1,190 @@
 ## Context
 
-Measurement is finished, so the corpora are frozen archival inputs. The analysis code that reads them
-is still live, because the remaining prose needs new tables from the same data. Everything below
-follows from that asymmetry: freeze the run machinery, fix the live path.
+See proposal.md - Why.
 
-Verified state (probed read-only on both machines):
+Measurement is finished, but reproducibility work is not. The corpus databases are immutable empirical
+inputs. The scripts, configuration, view definitions, and report code that restore or read them remain
+live because a replicator or a future correction must be able to run them again.
 
-| Fact | Evidence |
-|---|---|
-| 24 databases on the evaluation machine, 8 locally | `psql -l` |
-| `postgres_dev` = 13 controlled projects; `postgres_test` = 1,161 RepoReapers projects | `SELECT count(*) FROM project` |
-| `_rq6_v7` written by 3 commits (411/373/48) plus 329 projects with NULL version | `SELECT tool_git_version, count(*) FROM project GROUP BY 1` |
-| `postgres_verification` holds 1 project on the Air and 22 locally, and its runner recreates it every run | inventory probe; `run-verification-corpus.sh:50-51` |
-| `ReportSpec.schema` is `"old"` for the 6 reports that declare `REQUIRES` and `"new"` for the 2 that declare none | `register(...)` in all 8 report modules |
-| Its only consumer is `validate = spec.schema == "old"` | `cli.py:38` |
-| Reports refuse a corpus without its definition inputs; those ship only behind opt-in flags | `report_basis.py:105-157` vs `prepare-zenodo-package.sh:376-424` |
-| Definition inputs are tiny: 116 KB ledger, 1,161 empty markers, 4.6 MB configs | `du`, `ls \| wc -l` |
-| `data/jarvis-census` is 13 GB of run material no report reads | `du -sh` |
-| Compressed dumps are small: 197 MB, 71 MB, 75 MB for the three largest corpora | `pg_dump -Fc -Z6` |
-| Four spike CLIs read `postgres_test`; none is part of `teralizer.eval` | module docstrings; no reference from `eval/` |
-| The thesis contrasts "controlled" (30 uses) with "real-world" (43); `census` and `scoreboard` appear 0 times | `grep` over `chapters/05-teralizer/` |
-| RQ0's two databases hold the 2 projects with JARVIS's reported scenarios and all 12 benchmark projects | `04-evaluation-rq0.tex:158-169`; project counts 2 and 12 |
-| Only RQ6 declares a corpus definition to check, so only its inputs must ship | `Corpus(...)` appears once, in `rq6_causes.py` |
+The current tree already contains `src/main/resources/db/corpora.toml` with semantic ids and current
+physical database names. Reports increasingly resolve input roles through that registry. The remaining
+risk comes from physical names embedded in runners and configuration, incomplete local installations,
+and derived views whose installed definition is not verified before a report reads them.
+
+The evaluation host holds the complete corpus set. A local workstation may validly hold only a subset.
+Publication and local analysis therefore need different completeness modes while sharing the same
+identity and integrity checks.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- One place in the live code knows a database name.
-- A name states what the data is.
-- A wrong or partial corpus fails loudly.
-- A third party reproduces the reported figures from the artifact alone.
+- One stable semantic identity for each published corpus.
+- Future reruns use the same registry as reports and publication.
+- Restored corpora have known base data and known derived-view definitions before becoming read-only.
+- Publication is reproducible from a dump and declared non-database inputs.
+- Partial local installations are valid for explicitly requested corpora; publication is complete.
+- Retirement decisions are evidence-backed and leave no runnable stale consumer.
 
 **Non-Goals:**
 
-- Re-running or re-measuring anything. Settled: the corpora stand, mixed provenance included.
-- Rewriting the Java pipeline, run configs, or runner scripts. They are the record of what was run.
-- Preventing future mixed-provenance runs. There are no future runs.
-- Migrating any corpus to a newer schema.
+- Renaming the four physical databases that currently back published corpora.
+- Re-running an evaluation merely to adopt semantic ids.
+- Treating mutable scripts or configuration as frozen historical evidence.
+- Shipping bulk logs or every intermediate database.
+- Teaching Java a second registry implementation when a launcher can provide resolved connection
+  settings.
 
 ## Decisions
 
-### 1. The registry owns corpus identity; the report runner owns input roles
+### 1. The registry owns semantic identity and current physical resolution
 
-This change supplies immutable registry entries, lookup by semantic corpus id, expected-project-count
-validation, lifecycle classification, and read-only connection facts. It does not decide how many
-corpora a report reads or how a report builder receives them.
+Each entry carries a stable corpus id, current physical database name, data and configuration paths,
+expected project count, publication status, and notes needed to distinguish similarly shaped corpora.
+The id describes the empirical condition, not a machine role, research question, version counter, or
+storage location.
 
-`make-report-runs-explicit` owns that consumer boundary. A report declares one or more semantic corpus
-roles, the runner resolves each role through this registry, and the runner validates role-specific
-schema objects before construction. That change also removes `ReportSpec.schema`, report-level
-physical database defaults, and physical database overrides. This plan therefore contains no parallel
-single-corpus API and no report registration migration.
+Live callers accept a corpus id. One Python accessor and a thin shell command resolve the entry and
+expose individual fields without duplicating TOML parsing. Launchers pass the resolved connection
+settings to Java and other programs that already consume environment or configuration values.
 
-*Why:* the dataset report reads controlled and real-world corpora, while RQ0 reads two JARVIS corpora.
-Treating each report as if it had one fixed corpus would force both reports to retain hidden secondary
-connections and would make the registry unable to prove the complete input set.
+A physical-name check scans live source, runner scripts, configuration, and packaging. It permits names
+only in the registry, database lifecycle code that must address PostgreSQL, and generated provenance
+that explicitly records the resolved endpoint. There is no blanket exemption for `project-configs/**`
+or run scripts.
 
-*Alternative considered:* let this change add one primary corpus field and let the report-run change
-add secondary roles later. Rejected because the intermediate API would preserve the defect being
-removed and would need a second clean cutover.
+### 2. Semantic ids replace physical renaming
 
-### 2. Names state the evaluation condition, in the thesis's own words
+The four published corpora keep their current database names. No `ALTER DATABASE`, compatibility
+alias, duplicated service, or renamed dump is needed. Consumers stop depending on those names, so a
+future deployment may change them by editing one registry entry and regenerating provenance.
 
-Every current name fails for a different reason, and each failure rules out a class of replacement:
+This is safer than the earlier rename plan. A physical rename would change scripts, dumps, protection
+rules, host operations, and historical diagnostics while adding no semantic information beyond the
+registry id. It would also create misleading churn in provenance-bearing output.
 
-- `dev` / `test` describe a **deployment role the data never had**.
-- `_rq6_` names a corpus after a **question that reads it**. A new question would force a rename.
-- `_v7` is a **counter**, and a counter in a replication package invites the reader to ask where v1 to
-  v6 are. They are not missing; they were superseded during development and were never published.
-- `census` / `scoreboard` are **implementation identifiers**. Both appear in the thesis exactly zero
-  times, and `rule://prose-style` forbids adopting an implementation term as published vocabulary.
+`postgres_test` is not mapped to a new id. It is retired only after a consumer audit and row-count check
+show that no published report reads it. The verification fixture is scratch and uses a reserved
+`scratch_` name because its runner recreates it.
 
-What survives all four is the axis the thesis actually argues along. It contrasts **controlled** with
-**real-world** — 30 uses against 43, and the two are the titles of RQ5 ("Barriers Under Controlled
-Settings") and RQ6 ("Barriers Under Real-World Settings"). RQ0's two databases are likewise
-distinguished by what they measure, not by their implementation: `postgres_jarvis_scoreboard` holds
-the 2 projects containing the scenarios JARVIS reports, and `postgres_jarvis_census` holds all 12
-projects of the JARVIS benchmark (`04-evaluation-rq0.tex:158-169`). "Scenario" and "benchmark" are
-the thesis's terms; "scenario" is fixed vocabulary by `rule://prose-style`.
+### 3. Run machinery is live; provenance makes historical runs historical
 
-| Corpus id | Database | Was | Serves |
-|---|---|---|---|
-| `controlled` | `teralizer_controlled` | `postgres_dev` | RQ1-RQ5, controlled rows of the corpus table |
-| `real-world` | `teralizer_real_world` | `postgres_reporeapers_rq6_v7` | RQ6, real-world rows of the corpus table |
-| `jarvis-benchmark` | `teralizer_jarvis_benchmark` | `postgres_jarvis_census` | RQ0 applicability across the 12 benchmark projects |
-| `jarvis-scenarios` | `teralizer_jarvis_scenarios` | `postgres_jarvis_scoreboard` | RQ0 value coverage on the scenarios JARVIS reports |
+Runner scripts, project configurations, corpus definitions, and view-installation SQL are executable
+reproducibility machinery. They are migrated to semantic ids and current registry resolution. An old
+run remains attributable through its commit, corpus manifest, attempt ledger, and generated provenance;
+stale executable literals are not preserved as a substitute for history.
 
-Four names for the four things the thesis measures, and the first two form the contrast the thesis
-draws. No counter, so nothing implies a missing series. `real-world` also resolves the ambiguity that
-produced `_v7` in the first place: two RepoReapers corpora exist, but exactly one real-world corpus is
-published, so the condition names it unambiguously where the dataset name would not.
+A run records the semantic corpus id, resolved physical database name, source commit, dirty state,
+corpus-definition inputs, and view-definition revision. This keeps physical deployment information as
+observed provenance without making it an API.
 
-The prefix is spelled out rather than abbreviated, so `psql -l` explains itself to a replicator, and
-because `postgres_` collided with the server's own `postgres` database — which is on the protected
-list and has itself accumulated 15 project rows.
+### 4. Corpus preparation is explicit, idempotent, and precedes read-only access
 
-Renames use `ALTER DATABASE ... RENAME TO`: metadata-only, no copy, no measurement row rewritten.
+A single `prepare-corpus <id>` operation owns derived schema. It:
 
-The registry records **only the current name**. An earlier draft kept a `published_as` field so a
-holder of the archived artifact could map the old dump names, which contradicted this change's own
-rule that a stale name must fail rather than work: it is an alias stored as data. The archived
-artifact is immutable and self-describing, so it needs nothing from this registry, and the rename
-itself is recorded where history belongs, in the commit that performs it. The frozen run inputs keep
-the names they wrote, and a note in their directory says so.
+1. resolves and verifies the registered database and expected project count;
+2. applies the checked-in `create-views.sql` transactionally as an owner role;
+3. records the canonical checksum of that SQL as the installed view-definition revision;
+4. verifies that required views exist and can be queried; and
+5. enables or verifies the report read-only role.
 
-### 2a. Two databases leave the set entirely
+The base measurement tables are never rewritten. Views and indexes are derived schema and may be
+recreated from checked-in source after restore. Report preflight compares the installed revision with
+the current checked-in revision and refuses a mismatch. A report must not silently use whichever
+materialized-view version happened to survive in a restored database.
 
-`postgres_test` is **retired, not renamed**. It holds a real 1,161-project RepoReapers measurement,
-but once the corpus-characteristics table is regenerated from the real-world corpus, no reported
-figure reads it. Its only remaining readers are four CLIs whose own docstrings call them spikes, and
-none of them is part of `teralizer.eval`. A corpus that backs no published figure does not belong in a
-replication package: shipping it would invite a reviewer to ask which RepoReapers result is the real
-one. It is dumped for the archive and dropped, and the spike CLIs move to the real-world corpus.
+The preparation operation replaces ad hoc `create-views.sql` calls. Restore, local setup, the evaluation
+host, and the replication quick start all use it.
 
-`postgres_verification` is **not a corpus at all**. Its runner recreates it on every use
-(`run-verification-corpus.sh:50-51`), and it holds 1 project on the Air against 22 locally, so its
-content is not a measurement of record. It becomes `scratch_verification`, which matches the term the
-repository already uses for it: "Experiments use scratch DBs (`postgres_verification`, ...) created
-and dropped by their runner scripts."
+### 5. Verification has requested-subset and complete-publication modes
 
-Dropping both removes the two databases most likely to make a replicator doubt the artifact, and it
-leaves the registry with exactly the corpora the reported figures come from.
+`verify-corpora` without an explicit request inventories every database it can see, reports registered,
+scratch, missing, and unclassified entries, and fails on malformed registry entries or collisions. It
+does not treat a missing unrelated corpus as an error on a valid partial workstation.
 
-### 3. The registry is read by Python and shell, not by Java
+`verify-corpora --require <id>...` verifies the named subset completely: database presence, expected
+project count, corpus-definition paths, preparation revision, and read-only access.
 
-The pipeline will not run again, so the Java side never needs to resolve a corpus id. Leaving Java,
-`project-configs/**`, `reference.conf`, the runner scripts, and `protected-databases.txt` untouched is
-not laziness: those files record which database each run wrote, and rewriting them to new names would
-falsify that record. A note in each directory states that its names predate the rename.
+Publication uses `verify-corpora --published` and requires every registry entry marked published. This
+prevents a partial workstation from producing a plausible incomplete replication artifact.
 
-The boundary is therefore explicit: **frozen run machinery** keeps its old names and its denylist;
-**live artifact machinery** — the analysis package, packaging, import, manifest, and replication
-metadata — uses the registry. The name-literal check applies to the live side only.
+### 6. Lifecycle classes are semantic corpus and disposable scratch
 
-`corpora.toml` lives in `src/main/resources/db/` beside the existing schema files, read by `tomllib`
-in Python and by a small Python helper from shell, so no format is parsed twice.
+A database is either:
 
-*Dropped from the earlier draft:* a Java registry reader, and rewriting the run configs.
+- a registered corpus: immutable base data, prepared derived schema, report-readable through a
+  read-only role; or
+- scratch: reserved-name, disposable, recreated by its owner, and forbidden as report input.
 
-### 4. Provenance is one derived statement per corpus, not a subsystem
+A database in neither class is unclassified. Verification reports it. It is retained until its
+consumers and evidence are checked, then dumped or dropped in one causal retirement commit. A suffix
+such as `_local`, `_v6`, or `_old` is not a lifecycle class.
 
-An earlier draft added a `run` table and refused writes that would make a corpus a mosaic. Both only
-pay off on a future run, and there is none; the corpora are already mosaics, so the machinery would
-have been born legacy.
+Protection follows the registry. The database guard refuses destructive operations against every
+registered corpus and permits a scratch database only when the requested name matches the reserved
+pattern. The old hand-maintained physical-name list is removed after the registry guard passes positive
+and negative tests.
 
-What is actually needed is that the artifact states what produced each corpus. Because the corpora are
-frozen, that statement is a one-time measurement: a query emits commits with per-project counts and
-the unattributed count, and the result is recorded in the manifest. No regeneration loop, no
-idempotence check, no enforcement.
+### 7. A corpus artifact is dump plus manifest plus required inputs
 
-*Also dropped:* the schema-era taxonomy from the previous draft. It invented a three-value
-classification that neither the registry nor report input validation needs. Reports may declare one
-or more corpus roles through `make-report-runs-explicit`; each role carries the exact object
-requirements it needs, so a second schema-era classification would duplicate those declarations.
+Publication creates one dump per published corpus and a manifest entry binding it to:
 
-### 5. The dump is the unit of record
+- semantic corpus id and current physical database name;
+- checksum and byte size;
+- expected and observed project counts;
+- producer commit and dirty state;
+- corpus-definition files and their checksums;
+- installed view-definition revision; and
+- the attempt ledger, completion markers, and project configurations the report validates.
 
-`publish-corpora` dumps each corpus and writes `replication/datasets/manifest.json` with corpus id,
-file, sha256, bytes, project count, and provenance. Import restores from the manifest and verifies
-checksum and project count. The author restores from the same dumps, which is what keeps the
-artifact's path the tested path.
+A dump is built once per corpus and imported through the same documented path a replicator uses.
+Import verifies the archive before restore, runs `prepare-corpus`, checks the installed view revision
+and project count, and then runs the report's declared read-only input check. Publication fails before
+promotion if any manifest fact disagrees.
 
-Checksum plus project count is the whole verification. A sha256 over the dump already covers every
-byte of schema and data, so adding a schema check on top would be redundant.
+### 8. Retirement is the last phase
 
-Immutability then costs one `GRANT`: reports connect as the existing `teralizer_ro` role, nothing
-writes a corpus, and a damaged local copy is re-restored.
+First migrate and validate consumers, runners, preparation, protection, and publication. Then audit
+unclassified databases on both hosts. Retire only entries with a recorded consumer result, observed
+project count, and disposition. Drop superseded and partial databases only after their required dump or
+evidence has been retained.
 
-### 6. Two classes replace the denylist, on the live side
-
-Corpus: in the registry. Scratch: `scratch_<purpose>`. Reports refuse anything else and refuse a
-corpus whose project count disagrees with its entry, which is what kills the `_local` trap. The
-`protected-databases.txt` denylist stays where it is, serving the frozen runners; the live tooling
-does not consult it.
-
-### 7. Disposition of the 24 databases
-
-| Disposition | Databases | Evidence |
-|---|---|---|
-| Registry corpus, shipped | `postgres_dev`, `_rq6_v7`, `postgres_jarvis_census`, `postgres_jarvis_scoreboard` | the reported figures come from these four |
-| Scratch | `postgres_verification` | recreated per run; 1 project on the Air against 22 locally |
-| Retain as dump, then drop | `postgres_test`, `_rq6`, `_v2`, `_v4`, `_v6`, `postgres_reporeapers` | real measurements that no published figure reads; `_v6` retained until the manifest records the replacement corpus |
-| Drop | `_v3` (8 projects), `_v5` (8), `*_detach_gate*`, `*_shape_gate*`, `postgres_source_level_gate`, `_rq6_fix_smoke`, `_rq6_junit3_smoke`, `jooq_codegen_scratch`, local `_rq6_v7_local` | small experiment scratch; nothing reads them |
-| Investigate, then clean | `postgres` (server default, 15 project rows) | a pipeline once wrote into the server's own database |
-
-Dropping runs last, after each retained dump has been restored and counted.
+The destructive phase is one append-only commit after all replacement paths pass. No reset, history
+rewrite, or modification of frozen corpus rows is part of rollback.
 
 ## Risks / Trade-offs
 
-- **A frozen corpus cannot be improved.** Any defect found in the data must be recorded without changing
-  the measurement. → The provenance statement makes the limits explicit so a reader can judge a figure.
-- **Renaming breaks muscle memory and any uncommitted local script.** → One-time, and deliberate: a
-  stale name must fail rather than resolve through an alias.
-- **Frozen run configs will name databases that no longer exist.** → Deliberate. They record what ran.
-  A note in that directory says so.
-- **Retiring `postgres_test` breaks four spike CLIs.** → They move to the real-world corpus, which is
-  the same dataset. Their SQL was written against the legacy schema, so each is run once to confirm it
-  still works; one that depends on legacy-only structure is deleted rather than kept alive by a dump.
+- **A registry entry points at the wrong but plausible database.** -> Verify expected project count,
+  corpus-definition inputs, and installed view revision before any report runs. Publication additionally
+  checks the complete set.
+- **A future view change alters results without changing corpus rows.** -> Treat view definitions as
+  versioned executable input. Install them explicitly and record their checksum in provenance and the
+  publication manifest.
+- **A local machine lacks most corpora.** -> Requested-subset verification remains usable. Only a
+  published-artifact build requires the complete set.
+- **Physical names remain unattractive.** -> Accepted. They are deployment details hidden behind
+  semantic ids. Renaming them would spend operational risk on presentation.
+- **A runner bypasses the registry.** -> Include runners and configuration in the physical-literal
+  check and exercise the actual rerun command in both host and local modes.
+- **Preparing derived schema needs write access.** -> Keep a narrow owner-only preparation phase,
+  transactionally apply checked-in SQL, then return to the report read-only role. Reports themselves
+  never receive write access.
 
 ## Migration Plan
 
-1. Land the registry and lifecycle patterns, pointing at the current physical names, plus the
-   name-literal check. Nothing renamed; the sprawl is described.
-2. Let `make-report-runs-explicit` consume the registry through one-or-more corpus roles, remove
-   `ReportSpec.schema` and physical overrides, and prove the report set unchanged.
-3. Move non-report live consumers, packaging, import, corpus publication, and replication metadata
-   onto corpus ids.
-4. Rename the four corpora and `postgres_verification`, updating only the registry.
-5. Enforce `teralizer_ro` access and confirm no report-owned connection can write a corpus.
-6. Build publication and the manifest, including the provenance statements and the definition inputs
-   that RQ6 checks.
-7. Import into a clean environment and reproduce the report set.
-8. Only then act on the dispositions: archive retained dumps, verify each restores, drop the rest.
+1. Finish the registry accessor, semantic report inputs, and requested-subset verification.
+2. Migrate runner scripts, project configuration, packaging, import, and diagnostics to corpus ids.
+3. Add idempotent view preparation and report preflight over the installed view revision.
+4. Replace the physical-name guard with registry and scratch lifecycle rules.
+5. Build and import one complete publication artifact through the documented path; reproduce every
+   registered report read-only.
+6. Audit and retire unclassified and superseded databases only after all replacement paths pass.
 
-**Rollback:** steps 1 to 3 revert with git. Step 4 reverses with a rename back. Step 5 reverses with a
-`GRANT`. Step 8 is the only irreversible step and runs last.
-
-**Verification at every step:** before physical rename, the full report set must produce
-byte-identical output against the canonical baseline. At rename, compare every value and rendered
-artifact byte-for-byte while allowing only the reviewed corpus-identity changes in provenance-bearing
-outputs. Any other difference is a regression.
+Rollback is append-only: revert the responsible code or registry commit, restore a retired database
+from its retained dump when required, and rerun verification. Never mutate a published corpus to make a
+check pass.
 
 ## Open Questions
 
-- **Do the 15 project rows in the server's own `postgres` database back any reported figure?** Must be
-  traced before cleaning. Either way it is one row in the disposition table.
-- **Does any code read a view from `create-views.sql`?** No path applies that file today. The answer
-  decides whether it is folded into the code generator's scratch setup or deleted.
-- **Do all four spike CLIs still run against the real-world corpus?** Each is run once after the
-  repoint. The answer decides per CLI whether it is kept or deleted, and changes no other decision.
-
-## Inbound scope notes from the thesis repository
-
-Raised while revising the thesis corpus description, which states the criteria these files
-implement. Both are recorded here because this change owns corpus definition and publication.
-Neither is a request to change measured data.
-
-- **The first and most selective corpus filter is not executable.** `dataset/README.md:7` documents
-  it as an `awk` command over the downloaded curated dataset rather than committing it as a script.
-  The later stages are scripts (`dataset/build-extended-dataset.py`,
-  `dataset/build-filtered-dataset.py`), so the chain is reproducible from stage 2 onward only. This
-  change's `corpus-publication` capability covers the inputs reports refuse to run without, and a
-  replicator cannot reconstruct the corpus definition without this step.
-
-- **The run configs do not record which database each run wrote,** which is the justification Decision
-  3 gives for leaving them untouched. `project-configs/reporeapers-rq6.conf:17` declares
-  `database { name = "postgres_reporeapers_scratch" }`, while the real-world run wrote
-  `postgres_reporeapers_rq6_v7` through the harness environment override
-  (`scripts/run-reporeapers-rerun.sh:40`). The committed config names a database the run did not use,
-  so freezing it preserves a misleading record rather than an accurate one.
-
-- **Resolved: byte-identical report output and a corpus rename cannot both hold.** A report's source
-  database is a reported value in `analysis/reports/provenance.json`, generated Markdown, and the
-  thesis macro file. The acceptance criterion now requires byte identity before rename and isolates
-  the expected corpus-identity changes at rename. Every measured value and rendered artifact must
-  remain byte-identical; any other difference fails the migration.
-
-- **This repository's own guidance names the databases it renames.** `AGENTS.md:124-125` states which
-  corpus each of two databases holds, `AGENTS.md:36` puts a database name in a runnable command, and
-  `.omp/rules/db.md` names the protected pair and classifies the rest as unprotected in-flight
-  corpora. That classification is what drifts: the corpus this change ships as a registry entry
-  already backs published real-world figures while the rule still reads as in-flight. The rename
-  makes every one of those statements wrong, and a reader cannot tell a renamed corpus from a
-  retired one. Guidance changes belong in the same commit as the rename, for the reason this change
-  already gives about frozen configs preserving a misleading record.
+None. The earlier physical-rename question is resolved in favor of stable semantic ids, and the view
+installation question is resolved by the explicit preparation boundary.

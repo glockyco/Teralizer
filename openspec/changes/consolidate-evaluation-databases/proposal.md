@@ -1,85 +1,73 @@
 ## Why
 
-Measurement is finished. The databases that exist now are the final inputs to the replication
-artifact and to the remaining thesis and paper prose, which makes them archival records. They are
-not fit to be archived.
+The same empirical corpus is currently identified three ways: a report role, a physical PostgreSQL
+name, and an informal version suffix. The mapping is scattered across report declarations, runners,
+configuration, packaging scripts, and prose. A wrong physical name can therefore select a plausible
+but incomplete corpus, while the replication artifact does not ship or verify every input its reports
+require.
 
-24 databases sit on the evaluation machine. `postgres_dev` holds the controlled corpus and
-`postgres_test` holds RepoReapers, and neither name says so. Seven RQ6 corpora are separated only by
-a `_v2`..`_v7` suffix whose meaning is recorded nowhere, `_rq6_` names a corpus after a research
-question that reads it, and `census` and `scoreboard` are implementation words that appear in the
-thesis zero times. A partial 451-project snapshot differs from the complete 1,161-project corpus
-by the suffix `_local`, so pointing a report at the wrong one yields plausible wrong numbers instead
-of an error. the frozen `run-rq6-analysis.sh:11` input still names `_v6` while the live RQ6 report reads `_v7`.
-The run input must remain historical evidence, not become a second current corpus inventory.
-
-The artifact cannot deliver any of this. `README.md:43` promises dumps that
-`prepare-zenodo-package.sh` never builds. `replication/datasets/` ships only the two corpora whose
-names mislead, omitting the RQ6 and JARVIS corpora every current figure is read from. The corpus
-definition inputs that reports refuse to run without travel only in opt-in archives, so a replicator
-following the documented path cannot generate the RQ6 report at all.
+The durable identity is the corpus and its provenance, not the database service name. Physical
+renaming would add operational risk without improving that identity. Future reruns must also remain
+possible, so runner scripts and configuration are live code rather than frozen historical evidence.
 
 ## What Changes
 
-- Add a **corpus registry** as the single source of truth: corpus id, database, corpus definition,
-  and expected project count. Every corpus in it is shipped; a database
-  that backs no published figure does not belong in it. Live code, packaging, and generated replication metadata
-  resolve names through it.
-- **BREAKING**: live consumers address a **corpus id**. This change provides the registry and
-  validation boundary. `make-report-runs-explicit` owns report input roles and migrates every report;
-  non-report live tools resolve corpus ids here. A check keeps physical database literals out of live
-  code while preserving archival run inputs unchanged.
-- **BREAKING**: rename the corpora after the evaluation condition each provides, in the thesis's own
-  vocabulary: `teralizer_controlled`, `teralizer_real_world`, `teralizer_jarvis_benchmark`, and
-  `teralizer_jarvis_scenarios`. No deployment role, no research question, no counter, and no
-  implementation identifier, and no alias to the superseded name.
-- **Retire two databases instead of renaming them.** `postgres_test` backs no published figure once
-  the corpus table is regenerated from the real-world corpus, so it is archived and dropped rather
-  than shipped. `postgres_verification` is recreated by its own runner on every use and holds
-  different content on each machine, so it becomes `scratch_verification`.
-- **Treat the dump as the unit of record.** Publishing writes one dump per corpus plus a manifest
-  carrying checksum, project count, and a provenance statement derived from the corpus. A live
-  database becomes a materialization of a dump, for the author as much as for a replicator.
-- **Ship what reports refuse to run without**: the attempt ledger, completion markers, and project
-  configs that RQ6 checks, rather than leaving them behind an opt-in flag. Bulk run material that no
-  report reads stays out.
-- **Verify on import**: checksum and project count are checked before an import reports success.
-- Two **lifecycle classes** replace the four-entry denylist: registry corpora, restored read-only,
-  and `scratch_` names that no report may read.
-- **Retire the sprawl once**, recording each decision and its evidence where the retirement happens.
+- Add a **corpus registry** as the single source of truth for semantic corpus id, current physical
+  database name, corpus-definition paths, expected project count, and publication status. Reports,
+  runners, packaging, and diagnostics resolve a corpus id through it.
+- **BREAKING**: live consumers address semantic corpus ids. Physical database names remain deployment
+  details and are forbidden outside the registry, database lifecycle machinery, and reproducible
+  provenance that explicitly records the resolved endpoint.
+- Keep the four published corpus databases under their current physical names. Do not rename them and
+  do not add aliases. Stable semantic ids remove the need for a risky `ALTER DATABASE` migration.
+- Retire databases that are neither registered published corpora nor valid scratch databases.
+  `postgres_test` is retired after proving that no published result reads it.
+  `postgres_verification` becomes a reserved `scratch_` database because its runner recreates it.
+- Treat runner scripts, project configuration, view definitions, and preparation commands as live
+  reproducibility code. Update them to accept semantic corpus ids and resolve current physical names
+  at runtime. Git and generated provenance record which revision produced an historical run.
+- Add one idempotent **prepare-corpus** boundary. After restore and before read-only access, it installs
+  the checked-in derived views and records their definition revision. Report preflight rejects a
+  corpus whose installed view revision does not match the source revision it is about to query.
+- Treat the dump as the portable unit of record. Publishing writes one dump per corpus plus a manifest
+  carrying checksum, byte size, project count, semantic id, source revision, view-definition revision,
+  and a corpus-derived provenance statement.
+- Ship every non-database input that a report validates: corpus definition, attempt ledger, completion
+  markers, and project configurations. Bulk logs and intermediate run output remain optional.
+- Verify checksums, project counts, corpus ids, and view definitions on import. A full publication run
+  requires every registered published corpus. Ordinary local analysis may request a verified subset.
+- Replace the physical-name denylist with lifecycle rules for registered corpora and `scratch_`
+  databases. Reports use a read-only role and may never read scratch.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `evaluation-data/corpus-registry`: the registry that binds a corpus id to a database and its
-  expected shape, how a corpus is named, and the rule that live code holds no name literal.
-- `evaluation-data/database-lifecycle`: the corpus and scratch classes, read-only corpora, and which
-  databases a report may read.
-- `evaluation-data/corpus-publication`: the dump, manifest, provenance, and verification contract the
-  artifact depends on, including the inputs reports refuse to run without.
+- `evaluation-data/corpus-registry`: stable corpus identity, required metadata, resolution of physical
+  names, and the boundary that keeps deployment literals out of live consumers.
+- `evaluation-data/database-lifecycle`: preparation, derived-view revision, read-only corpus access,
+  scratch isolation, and evidence-backed retirement.
+- `evaluation-data/corpus-publication`: verified dumps, manifests, provenance, and the complete set of
+  non-database inputs required to reproduce a report.
 
 ### Modified Capabilities
 
-None. This repository has no existing specs; these three are the first.
+None. These are the repository's first accepted evaluation-data contracts.
 
 ## Impact
 
-- **Analysis package**: the corpus registry reader, registry validation, non-report live consumers,
-  and `config.py:32-83` (`VALID_VARIANTS`, `DB_NAME_DEV`/`DB_NAME_TEST`, the `_replication` suffix).
-  `make-report-runs-explicit` consumes this registry and owns report declarations, connection
-  resolution, `ReportSpec.schema` removal, and the clean removal of physical database overrides.
-- **Packaging and replication**: `prepare-zenodo-package.sh`, `replication/quick-start.sh`,
-  `replication/scripts/import-databases.sh` (whose default container name disagrees with
-  `replication/docker-compose.yml:84-92`), `collect-disk-metrics.sh:148-156`, `REQUIREMENTS.md`.
-- **Replication metadata**: the manifest records the current corpus identities and provenance. Accepted
-  capability specs retain the durable registry, publication, and lifecycle contracts.
-- **Not touched**: the Java pipeline, `project-configs/**`, `reference.conf`, the runner scripts, and
-  `protected-databases.txt`. They are the record of what was run, they will not run again, and
-  rewriting them would falsify that record. A note in each directory states that its names predate
-  the rename.
-- **Data on disk**: 24 databases on the evaluation machine, 8 locally, and the `data/*/status.tsv`
-  ledgers that identify them.
-- **No measured value changes, and no run is repeated.** Prose, tables, CSV values, and figures stay
-  byte-identical to the canonical baseline. The physical rename deliberately changes only recorded
-  corpus identity in provenance-bearing outputs; that difference is isolated and reviewed.
+- `src/main/resources/db/corpora.toml` and one shared Python/shell accessor for reports, runners,
+  packaging, import, diagnostics, and publication. Java receives the resolved connection settings and
+  need not implement a second registry parser.
+- `src/main/resources/db/create-views.sql`, corpus preparation, report preflight, and read-only database
+  roles. The measured base tables stay unchanged; preparation installs only checked-in derived schema
+  before access is frozen.
+- Runner scripts and `project-configs/**` are migrated as executable reproducibility machinery. They
+  are not exempted as historical text.
+- Packaging and replication scripts, `REQUIREMENTS.md`, generated manifests, and scoped repository
+  guidance are updated to use semantic corpus ids.
+- The four published databases keep their current physical names. Scratch databases may be recreated;
+  superseded and partial databases are retired only after their consumers and project counts are
+  checked.
+- Existing measured values are expected to remain unchanged. Any report diff must be explained by the
+  resolved corpus identity or corrected preparation state, not accepted as rename noise.

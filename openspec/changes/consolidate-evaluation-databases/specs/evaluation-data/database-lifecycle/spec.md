@@ -1,108 +1,81 @@
 ## Purpose
 
-Every evaluation database is either a corpus, which is an archival record restored from a dump and
-never written, or scratch, which is disposable and unreadable by reports. Two classes replace a
-four-entry denylist that cannot keep up with new names.
+Defines how evaluation databases are prepared, protected, read, classified, and retired without
+mutating published empirical inputs or allowing scratch state to become report evidence.
 
 ## ADDED Requirements
 
-### Requirement: Every evaluation database belongs to exactly one class
+### Requirement: Every evaluation database is a corpus or scratch
 
-A database MUST be either a corpus declared in the registry or a scratch database whose name matches
-the reserved scratch pattern. A database that is neither MUST be reported as unclassified.
+An evaluation database MUST be either a corpus declared in the registry or a scratch database whose
+name matches the reserved scratch pattern. A database that is neither MUST be reported as unclassified.
 
-#### Scenario: A scratch database is named
+A scratch database MUST be recreated by its owning command and MUST NOT be read by a published report.
 
-- **WHEN** an experiment, a fixture gate, or a code generator needs a database
-- **THEN** its name matches the reserved scratch pattern
-- **AND** the pattern distinguishes it from every corpus name at a glance
+#### Scenario: A report selects scratch
 
-#### Scenario: A database is recreated by its own runner on every use
-
-- **WHEN** a database is recreated from scratch whenever its runner executes
-- **THEN** it is classified scratch rather than a corpus
-- **AND** it is not published, because its content is not a measurement of record
+- **WHEN** a report input resolves to a scratch database
+- **THEN** report preflight fails before querying it
 
 #### Scenario: An unclassified database is found
 
-- **WHEN** a server is inspected and a database is neither a registry corpus nor validly named
-  scratch
-- **THEN** it is reported as unclassified, with its size and project count
-- **AND** the report does not delete it
+- **WHEN** lifecycle verification finds a database outside both classes
+- **THEN** it reports the database and requires an explicit retain, dump, or drop disposition
 
-### Requirement: A corpus is read-only
+### Requirement: Corpus base data is immutable and report access is read-only
 
-A corpus MUST be restored and then left read-only: the account the reports use MUST NOT hold
-privileges that would let it modify a measurement. Because measurement is finished, no routine
-operation reopens a corpus for writing.
+Published corpus base tables MUST NOT be modified after measurement. Reports MUST connect through a
+role that cannot write corpus data or schema. Destructive database operations MUST refuse every
+registered corpus.
 
-#### Scenario: A report reads a corpus
+#### Scenario: A report attempts a write
 
-- **WHEN** a report connects to a corpus
-- **THEN** it can read every table it needs
-- **AND** it holds no privilege that would let it write
+- **WHEN** a report connection attempts to modify a corpus
+- **THEN** the database refuses the operation
 
-#### Scenario: A write reaches a corpus
+#### Scenario: A destructive command targets a corpus
 
-- **WHEN** an insert, update, delete, or schema change is attempted against a corpus
-- **THEN** the database rejects it
-- **AND** the rejection comes from the database, not only from application code
+- **WHEN** a reset or drop command resolves to a registered corpus
+- **THEN** the guard refuses the command and names the corpus id
 
-#### Scenario: A local copy is damaged
+### Requirement: Derived schema is prepared from versioned source before reports run
 
-- **WHEN** a local materialization of a corpus is damaged or deleted
-- **THEN** it is restored from the corpus dump
-- **AND** no measurement is recomputed
+A restored or newly registered corpus MUST be prepared before report access. Preparation MUST install
+required derived views from checked-in source, record a deterministic revision of that source, verify
+the required views, and then establish read-only report access. Preparation MUST be idempotent and MUST
+NOT rewrite measured base rows.
 
-### Requirement: A report may only read a registry corpus
+Report preflight MUST compare the installed derived-schema revision with the revision expected by the
+running source and refuse a mismatch.
 
-A report MUST refuse to read a scratch or unclassified database, and MUST refuse a corpus whose
-project count disagrees with its registry entry, so a partial or experimental dataset cannot
-silently produce a reported figure.
+#### Scenario: A corpus is restored from a dump
 
-#### Scenario: A report is pointed at a scratch database
+- **WHEN** restore completes
+- **THEN** preparation installs and verifies the current declared derived schema before reports may read it
+- **AND** report access is read-only afterward
 
-- **WHEN** a report is asked to read a database that is not a registry corpus
-- **THEN** it refuses, names the corpus ids that are available, and produces no output
+#### Scenario: A stale materialized view survives
 
-#### Scenario: A report is pointed at a partial corpus
+- **WHEN** the installed derived-schema revision differs from the checked-in revision
+- **THEN** report preflight fails naming the corpus and both revisions
 
-- **WHEN** a report is asked to read a registry corpus whose project count does not match its entry
-- **THEN** it refuses and reports the expected and observed counts
+#### Scenario: Preparation runs twice
 
-### Requirement: Scratch databases are disposable, corpora are not droppable
+- **WHEN** preparation is repeated against an already prepared corpus
+- **THEN** it succeeds with the same derived-schema revision and unchanged measured base rows
 
-Creating and dropping a scratch database MUST require no override. Dropping or renaming a registry
-corpus MUST be refused by the tooling.
+### Requirement: Retirement is evidence-backed and happens after replacement
 
-#### Scenario: A runner recreates its scratch database
+A corpus, partial snapshot, or unclassified database MUST NOT be dropped until its consumers, observed
+project count, and disposition are recorded. Any retained dump MUST be verified before the drop. Live
+consumers and protection rules MUST already resolve through the replacement lifecycle model.
 
-- **WHEN** a runner or code generator resets a scratch database
-- **THEN** the operation succeeds without an override flag
+#### Scenario: A superseded database is retired
 
-#### Scenario: A drop targets a corpus
+- **WHEN** its consumer audit finds no current reader and any required dump verifies
+- **THEN** it may be dropped together with its retirement record
 
-- **WHEN** tooling attempts to drop or rename a database the registry declares
-- **THEN** the attempt is refused and the corpus id is named
+#### Scenario: Retirement evidence is incomplete
 
-### Requirement: Databases that are neither published nor scratch are retired once
-
-Every database now present on an evaluation machine MUST reach one of three end states: declared in
-the registry, retained only as a dump, or dropped. The decision and its evidence MUST be recorded
-where the retirement happens, not kept as a permanent field.
-
-#### Scenario: A superseded corpus is retired
-
-- **WHEN** a corpus is superseded and no report and no document reads it
-- **THEN** that evidence is recorded, and the corpus is retained as a dump or dropped
-
-#### Scenario: A partial snapshot exists beside its complete corpus
-
-- **WHEN** a database holds a subset of a corpus and differs from it only by a name suffix
-- **THEN** it is dropped together with the ledger that identifies it
-
-#### Scenario: A retained dump is verified before its database is dropped
-
-- **WHEN** a corpus is to be dropped after being retained as a dump
-- **THEN** the dump is restored and its project count checked first
-- **AND** the drop happens only after that check passes
+- **WHEN** a database lacks a consumer result, project count, or disposition
+- **THEN** retirement is refused and the database remains intact

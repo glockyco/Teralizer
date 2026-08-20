@@ -1,133 +1,81 @@
 ## Purpose
 
-The corpus registry is the single declarative source of truth binding a semantic corpus id to one
-physical database and to the expected shape of that database. It exists so that a database name
-appears in exactly one place in the live code, and so a report cannot read the wrong corpus.
+The corpus registry is the single declarative source of truth that gives each empirical corpus a stable
+semantic identity and resolves it to the deployment-specific inputs required by reports, reruns, and
+publication.
 
 ## ADDED Requirements
 
-### Requirement: A registry entry declares the identity and expected shape of a corpus
+### Requirement: A registry entry declares corpus identity and expected shape
 
-Each entry MUST declare a corpus id, the physical database name, the corpus definition (data
-directory and config directory) where one exists, and the expected project count. An entry MUST NOT record a name the
-corpus previously carried: a superseded name is history, and history belongs in the commit that
-changed it.
+Each registered corpus MUST have exactly one stable semantic id, one current physical database name,
+its corpus-definition paths, an expected project count, and publication status. An entry MUST NOT use a
+research-question number, storage role, version counter, or machine location as its semantic id.
 
-Every corpus in the registry is shipped. A corpus that no published figure is read from does not
-belong in the registry.
+A physical database name previously carried by a corpus is history and MUST NOT be recorded as an
+alias. History belongs to the commit and provenance that changed the mapping.
 
-#### Scenario: Reading a corpus by id
+#### Scenario: A consumer asks for a corpus id
 
-- **WHEN** a consumer asks the registry to resolve a corpus id
-- **THEN** it receives the physical database name, the corpus definition, and the expected project
-  count
-- **AND** no consumer needs to know the physical name in order to ask
+- **WHEN** a live consumer requests a registered corpus id
+- **THEN** it receives the current database and corpus-definition inputs from that one entry
 
-#### Scenario: An entry omits a required field
+#### Scenario: An entry omits required metadata
 
-- **WHEN** the registry is loaded and an entry lacks any required field
-- **THEN** loading fails and names the entry and the missing field
+- **WHEN** a registry entry omits its database, expected project count, corpus definition, or publication status
+- **THEN** registry validation fails naming the corpus id and missing field
 
-#### Scenario: Two entries collide on a physical name
+#### Scenario: Two entries collide
 
-- **WHEN** the registry is loaded and two entries declare the same physical database name
-- **THEN** loading fails and names both corpus ids
+- **WHEN** two registry entries share an id or resolve to the same published corpus ambiguously
+- **THEN** registry validation fails before a consumer connects
 
-#### Scenario: A corpus was renamed
+### Requirement: Live consumers use semantic corpus ids
 
-- **WHEN** a corpus is renamed
-- **THEN** the entry states only the current name
-- **AND** the rename is recorded in the commit that performed it
+Reports, rerun commands, project configuration, packaging, import, and diagnostics MUST address a
+corpus by semantic id. A physical database literal MUST NOT appear in live consumer code or executable
+configuration outside the registry and database lifecycle machinery.
 
-#### Scenario: A database backs no published figure
+Generated provenance MAY record the physical database that resolution observed. That record is an
+observation, not an input alias.
 
-- **WHEN** a database holds a real measurement that no published figure is read from
-- **THEN** it is not a registry corpus
-- **AND** it is handled by the retirement record instead
+#### Scenario: A report requests a corpus
 
-### Requirement: A corpus id states the evaluation condition it provides
+- **WHEN** a report declares its empirical input
+- **THEN** it declares a semantic corpus id or role that resolves to one
+- **AND** it does not carry a physical database name
 
-A corpus id MUST state the evaluation condition the corpus provides, in the vocabulary the published
-work already uses for that condition. It MUST be understandable without further context.
+#### Scenario: A rerun command is executed
 
-A corpus id MUST NOT contain a research question number, a report name, an implementation
-identifier, or a run counter. A question and a report are consumers, which change independently of
-the data. An implementation identifier means nothing to a reader of the published work. A counter
-invites a reader to look for the other numbers, which are not published and are not missing.
+- **WHEN** a runner is invoked for a registered corpus
+- **THEN** it resolves the corpus id through the same registry used by reports
+- **AND** it records the resolved identity in provenance
 
-#### Scenario: A corpus is named
+#### Scenario: Live configuration embeds a database name
 
-- **WHEN** a corpus id is chosen
-- **THEN** it names the condition the corpus provides, using the term the published work uses
-- **AND** a reader who has only the artifact can tell what the corpus is for
+- **WHEN** validation finds a registered physical database literal in a runner or executable configuration
+- **THEN** validation fails naming the file and literal
 
-#### Scenario: Two corpora provide contrasting conditions
+### Requirement: Verification distinguishes requested subsets from publication completeness
 
-- **WHEN** the published work contrasts two conditions and a corpus exists for each
-- **THEN** their ids form that contrast
+A workstation MAY hold only a subset of registered corpora. Verification of an explicitly requested
+subset MUST require every named corpus and validate its complete entry. Inventory mode MUST report
+missing and unclassified databases without treating unrelated absent corpora as corruption.
 
-#### Scenario: A new consumer reads an existing corpus
+A publication build MUST require every corpus marked published.
 
-- **WHEN** a new report or research question reads an existing corpus
-- **THEN** neither the corpus id nor the physical database name changes
+#### Scenario: A local workstation has one requested corpus
 
-#### Scenario: Earlier runs of the same condition were superseded
+- **WHEN** verification requests that corpus and its database and inputs satisfy the registry
+- **THEN** verification succeeds even if unrelated registered corpora are absent
 
-- **WHEN** a condition was measured more than once during development and only the final run is
-  published
-- **THEN** the id carries no counter and does not imply a series
-- **AND** the superseded runs are recorded in the retirement record, not in the name
+#### Scenario: Publication runs from an incomplete host
 
-#### Scenario: A candidate name comes from the implementation
-
-- **WHEN** a candidate id uses a term that appears only in the implementation
-- **THEN** it is rejected in favor of the term the published work uses
-
-### Requirement: Live code holds no database name literal
-
-The analysis package, the packaging and import tooling, and generated replication metadata MUST
-obtain every evaluation database name from the registry. A literal evaluation database name in live code is
-a defect. Archival run inputs are exempt, because they record what was run.
-
-#### Scenario: A report declares corpus input roles
-
-- **WHEN** a report declares one or more corpus input roles
-- **THEN** every role names a corpus id
-- **AND** the registry resolves each role independently to the physical database bound to that id
-- **AND** the report declaration contains no physical database name
-
-#### Scenario: A literal name is reintroduced into live code
-
-- **WHEN** the repository is checked for evaluation database name literals in live code
-- **THEN** the check fails and reports each offending location
-- **AND** the check runs without a database connection
-
-#### Scenario: An archival run input names a database
-
-- **WHEN** a frozen run configuration or run script names the database it wrote
-- **THEN** the check does not flag it
-- **AND** the directory holding it states that its names predate the rename
-
-#### Scenario: Replication metadata states which corpora back a report
-
-- **WHEN** a report and its published output identify the corpus roles they read
-- **THEN** the manifest obtains every corpus identity from captured registry resolution
-- **AND** it cannot omit a declared role or disagree with the corpus resolved for that role
-
-### Requirement: The registry is verifiable against reality
-
-A verification operation MUST report, for every entry, whether the database exists and whether its
-project count matches the declaration, and MUST report any evaluation database that is neither a
-registry corpus nor a validly named scratch database.
-
-#### Scenario: A declared corpus is absent or has the wrong size
-
-- **WHEN** verification runs and an entry's database is missing, or its project count differs from
-  the declaration
-- **THEN** verification fails and reports the corpus id, the expectation, and the observation
+- **WHEN** any published corpus is absent or invalid
+- **THEN** publication fails naming each missing or invalid corpus
 
 #### Scenario: An unclassified database exists
 
-- **WHEN** verification finds an evaluation database that no entry declares and whose name is not
-  valid scratch
-- **THEN** verification reports it as unclassified
+- **WHEN** inventory finds a database that is neither registered nor valid scratch
+- **THEN** it reports the database as unclassified
+- **AND** it does not silently assign that database to a corpus
