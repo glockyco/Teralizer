@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 from typing import cast
 
-import pandas as pd
 import pytest
 
 from teralizer.eval.evidence import jarvis_values, project_sources
@@ -29,13 +28,9 @@ def _project_row(name: str = "fixture") -> dict[str, object]:
     }
 
 
-def test_shipped_project_source_facts_replace_the_stale_fallback_values():
+def test_shipped_project_source_facts_have_reconciled_values():
     actual = project_sources.frame(_PROJECT_FACTS).set_index("project")
-    prior = pd.read_csv(
-        _REPO_ROOT / "analysis/output/original/data/dataset-statistics-data.csv"
-    ).set_index("project_name")
 
-    assert int(prior.loc["repo-reapers (total)", "implementation_files"]) == 41_292
     assert actual.loc["repo-reapers (total)"].to_dict() == {
         "main_files": 38_916,
         "main_classes": 47_334,
