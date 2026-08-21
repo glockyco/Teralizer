@@ -1,6 +1,6 @@
 ## 1. Establish the release input boundary
 
-- [ ] 1.1 Complete and validate tasks 5.9 through 6.5 of `consolidate-evaluation-databases`. Require its four-corpus manifest, clean import, preparation, read-only report run, and clean-tree checks before this release consumes it.
+- [x] 1.1 Complete and validate tasks 5.9 through 6.5 of `consolidate-evaluation-databases`. Require its four-corpus manifest, clean import, preparation, read-only report run, and clean-tree checks before this release consumes it.
 - [ ] 1.2 Verify `make-report-runs-explicit` supplies one complete registered report run whose manifest covers Markdown reports, LaTeX tables, CSV data, figures, and provenance. Record and test the release-facing loader rather than rediscovering output directories.
 - [ ] 1.3 Inventory every intended version-2 source, corpus, result, project, data, paper, license, container, and documentation input, assign it one semantic component and install path, and reject any input with no declared owner.
 - [ ] 1.4 Add the typed release declaration under `replication/` with release identity, DOI roles, paper identity, component relationships, workflow selections, supported platforms, resources, network phases, claims, licenses, and references to semantic corpus/report ids.
