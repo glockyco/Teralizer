@@ -97,9 +97,9 @@ def fetch_widening_refusals(conn: Connection, variant: str) -> pd.DataFrame:
         )
 
     df = read_sql(conn, WIDENING_REFUSAL_SQL, params)
-    df.loc[:, "refusals"] = df["refusals"].astype(int)
+    df.isetitem(df.columns.get_loc("refusals"), df["refusals"].astype(int))
     for column in ("attempts_pct", "refusals_pct"):
-        df.loc[:, column] = df[column].astype(float)
+        df.isetitem(df.columns.get_loc(column), df[column].astype(float))
 
     unmapped = sorted(set(df["code"]) - set(WIDENING_REFUSALS))
     if unmapped:

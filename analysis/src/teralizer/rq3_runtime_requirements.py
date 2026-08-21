@@ -183,9 +183,12 @@ def compute_teralizer_runtime_statistics(df: pd.DataFrame) -> pd.DataFrame:
     df_sorted = sort_dataframe_by_project(df, "project_name")
 
     # Convert runtime to numeric for calculations
-    df_sorted.loc[:, "runtime"] = cast(
-        pd.Series, pd.to_numeric(df_sorted["runtime"], errors="coerce")
-    ).fillna(0.0)
+    df_sorted.isetitem(
+        df_sorted.columns.get_loc("runtime"),
+        cast(pd.Series, pd.to_numeric(df_sorted["runtime"], errors="coerce")).fillna(
+            0.0
+        ),
+    )
 
     return df_sorted
 
@@ -221,15 +224,25 @@ def compute_stage_runtime_breakdown(df: pd.DataFrame) -> pd.DataFrame:
         "Stage 5",
     ]
 
-    df_processed.loc[:, "stage_group"] = pd.Categorical(
-        df_processed["stage_group"], categories=ordered_groups, ordered=True
+    df_processed.isetitem(
+        df_processed.columns.get_loc("stage_group"),
+        pd.Categorical(
+            df_processed["stage_group"], categories=ordered_groups, ordered=True
+        ),
     )
-    df_processed.loc[:, "variant"] = pd.Categorical(df_processed["variant"])
+    df_processed.isetitem(
+        df_processed.columns.get_loc("variant"),
+        pd.Categorical(df_processed["variant"]),
+    )
 
     # Convert runtime to numeric
-    df_processed.loc[:, "total_runtime"] = cast(
-        pd.Series, pd.to_numeric(df_processed["total_runtime"], errors="coerce")
-    ).fillna(0.0)
+    df_processed.isetitem(
+        df_processed.columns.get_loc("total_runtime"),
+        cast(
+            pd.Series,
+            pd.to_numeric(df_processed["total_runtime"], errors="coerce"),
+        ).fillna(0.0),
+    )
 
     return df_processed
 
@@ -393,8 +406,9 @@ def compute_evosuite_phase_statistics(df: pd.DataFrame) -> pd.DataFrame:
     """
     # Convert search_budget to numeric
     df_processed = df.copy()
-    df_processed.loc[:, "search_budget"] = pd.to_numeric(
-        df_processed["search_budget"], errors="coerce"
+    df_processed.isetitem(
+        df_processed.columns.get_loc("search_budget"),
+        pd.to_numeric(df_processed["search_budget"], errors="coerce"),
     )
 
     # Define the runtime columns to analyze
@@ -415,9 +429,13 @@ def compute_evosuite_phase_statistics(df: pd.DataFrame) -> pd.DataFrame:
     # Convert runtime columns to numeric
     for col in runtime_columns:
         if col in df_processed.columns:
-            df_processed.loc[:, col] = cast(
-                pd.Series, pd.to_numeric(df_processed[col], errors="coerce")
-            ).fillna(0.0)
+            df_processed.isetitem(
+                df_processed.columns.get_loc(col),
+                cast(
+                    pd.Series,
+                    pd.to_numeric(df_processed[col], errors="coerce"),
+                ).fillna(0.0),
+            )
 
     # Calculate percentage of time spent in each phase
     percentage_columns = [col for col in runtime_columns if col != "total"]

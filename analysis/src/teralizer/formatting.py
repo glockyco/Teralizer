@@ -164,7 +164,7 @@ def format_percentage_columns(
             raise KeyError(f"Column '{col}' not found in DataFrame")
 
         # Convert to percentage and format
-        df.loc[:, col] = (df[col] * 100).round(decimal_places)
+        df.isetitem(df.columns.get_loc(col), (df[col] * 100).round(decimal_places))
 
     return df
 
@@ -189,7 +189,10 @@ def format_thousands_separator(df: pd.DataFrame, columns: List[str]) -> pd.DataF
             raise KeyError(f"Column '{col}' not found in DataFrame")
 
         if pd.api.types.is_numeric_dtype(df[col]):
-            df.loc[:, col] = df[col].apply(lambda x: f"{x:,.0f}" if pd.notna(x) else x)
+            df.isetitem(
+                df.columns.get_loc(col),
+                df[col].apply(lambda x: f"{x:,.0f}" if pd.notna(x) else x),
+            )
 
     return df
 
@@ -251,7 +254,10 @@ def replace_project_names_with_macros(
         else:
             return project_name
 
-    df.loc[:, project_column] = df[project_column].apply(replace_with_macro)
+    df.isetitem(
+        df.columns.get_loc(project_column),
+        df[project_column].apply(replace_with_macro),
+    )
 
     return df
 
@@ -290,8 +296,11 @@ def replace_variant_names_with_macros(
         "IMPROVED_200_TRIES",
     }
 
-    df.loc[:, variant_column] = df[variant_column].apply(
-        lambda x: get_variant_macro(x) if x in known_variants else x
+    df.isetitem(
+        df.columns.get_loc(variant_column),
+        df[variant_column].apply(
+            lambda x: get_variant_macro(x) if x in known_variants else x
+        ),
     )
 
     return df

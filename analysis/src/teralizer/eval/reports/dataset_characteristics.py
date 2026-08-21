@@ -20,7 +20,7 @@ REQUIRES = (Required("project", "table", ("id",)),)
 
 def _table(df: pd.DataFrame) -> Table:
     result = df.copy()
-    result.loc[:, "project"] = result["project"].astype(str)
+    result.isetitem(result.columns.get_loc("project"), result["project"].astype(str))
     wanted = [
         "project",
         "main_files",

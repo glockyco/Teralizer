@@ -297,6 +297,36 @@ def test_budget_table_marks_missing_pit_variants_unavailable():
     assert budget.loc["IMPROVED_200_TRIES", "total_pvc"] == 200
 
 
+def test_budget_table_sorts_numeric_budgets_not_variant_text():
+    variants = [
+        "IMPROVED_1000_TRIES",
+        "IMPROVED_100_TRIES",
+        "IMPROVED_200_TRIES",
+    ]
+    scoreboard = pd.DataFrame(
+        {
+            "variant": variants,
+            "parameter_value_coverage": [1000, 100, 200],
+        }
+    )
+    mutation = pd.DataFrame(
+        {
+            "variant": variants,
+            "killed_mutants": [5, 5, 5],
+            "covered_mutants": [10, 10, 10],
+            "total_mutants": [20, 20, 20],
+        }
+    )
+
+    budget = _build_budget_table(scoreboard, mutation)
+
+    assert budget["display_variant"].tolist() == [
+        "100 tries",
+        "200 tries",
+        "1,000 tries",
+    ]
+
+
 def test_suite_union_joins_captured_and_generated_values():
     scoreboard = pd.DataFrame(
         {

@@ -319,28 +319,33 @@ def get_generated_test_runs(
         path_mask, "jqwik_value_log_path"
     ].map(lambda path: resolve_repo_relative_path(str(path)))
     if runs.empty:
-        runs["jqwik_value_log_path"] = pd.Series(dtype="object")
-        runs["outcome_class"] = pd.Series(dtype="object")
-        runs["outcome"] = pd.Series(dtype="object")
-        runs["generation_diagnostic"] = pd.Series(dtype="object")
-        return runs
+        return runs.assign(
+            jqwik_value_log_path=pd.Series(dtype="object"),
+            outcome_class=pd.Series(dtype="object"),
+            outcome=pd.Series(dtype="object"),
+            generation_diagnostic=pd.Series(dtype="object"),
+        )
 
     if project_ids is not None:
         runs = runs[runs["project_id"].isin(list(project_ids))]
     if variants is not None:
         runs = runs[runs["variant"].isin(list(variants))]
     runs = runs.copy()
-    runs["outcome_class"] = runs.apply(
-        lambda run: classify_generated_test_outcome(
-            str(run["test_result"]),
-            run["failure_type"],
-            run["diagnostic_kind"],
-        ),
-        axis=1,
+    runs = runs.assign(
+        outcome_class=runs.apply(
+            lambda run: classify_generated_test_outcome(
+                str(run["test_result"]),
+                run["failure_type"],
+                run["diagnostic_kind"],
+            ),
+            axis=1,
+        )
     )
-    runs["outcome"] = runs["outcome_class"]
-    runs["generation_diagnostic"] = runs["diagnostic_kind"].map(
-        classify_generation_diagnostic
+    runs = runs.assign(
+        outcome=runs["outcome_class"],
+        generation_diagnostic=runs["diagnostic_kind"].map(
+            classify_generation_diagnostic
+        ),
     )
     if outcomes is not None:
         runs = runs[runs["outcome_class"].isin(set(outcomes))]
@@ -412,14 +417,19 @@ def get_instruction_coverage_scores(
             ]
         )
 
-    coverage = coverage.copy()
-    coverage["instruction_covered"] = coverage["instruction_covered"].astype(int)
-    coverage["instruction_missed"] = coverage["instruction_missed"].astype(int)
-    coverage["instruction_total"] = (
-        coverage["instruction_covered"] + coverage["instruction_missed"]
+    coverage = coverage.assign(
+        instruction_covered=coverage["instruction_covered"].astype(int),
+        instruction_missed=coverage["instruction_missed"].astype(int),
     )
-    coverage["instruction_coverage"] = (
-        coverage["instruction_covered"] / coverage["instruction_total"]
+    coverage = coverage.assign(
+        instruction_total=(
+            coverage["instruction_covered"] + coverage["instruction_missed"]
+        )
+    )
+    coverage = coverage.assign(
+        instruction_coverage=(
+            coverage["instruction_covered"] / coverage["instruction_total"]
+        )
     )
     return cast(pd.DataFrame, coverage.reset_index(drop=True))
 
@@ -479,7 +489,7 @@ def get_mutation_scores(
         return pd.DataFrame(columns=columns)
     scores = scores.copy()
     for column in ("killed_mutants", "covered_mutants", "total_mutants"):
-        scores.loc[:, column] = scores[column].astype(int)
+        scores.isetitem(scores.columns.get_loc(column), scores[column].astype(int))
     return cast(pd.DataFrame, scores[columns].reset_index(drop=True))
 
 
@@ -588,11 +598,13 @@ def get_census(
     columns = ["project", "variant", "test_class", "full_sound", "executions"]
     if census.empty:
         return pd.DataFrame(columns=columns)
-    census["project"] = census["root_path"].map(_project_label)
+    census = census.assign(project=census["root_path"].map(_project_label))
     if variants is not None:
         census = census[census["variant"].isin(list(variants))]
-    for column in ("full_sound", "executions"):
-        census[column] = census[column].astype(int)
+    census = census.assign(
+        full_sound=census["full_sound"].astype(int),
+        executions=census["executions"].astype(int),
+    )
     return cast(pd.DataFrame, census[columns].reset_index(drop=True))
 
 
@@ -686,9 +698,9 @@ def get_census_by_mut(
         axis=1,
     )
     raw = raw.copy()
-    raw["mut_key"] = [identity[0] for identity in identities]
-    raw["signature_known"] = [identity[1] for identity in identities]
-    raw["project"] = raw["root_path"].map(_project_label)
+    raw.loc[:, "mut_key"] = [identity[0] for identity in identities]
+    raw.loc[:, "signature_known"] = [identity[1] for identity in identities]
+    raw.loc[:, "project"] = raw["root_path"].map(_project_label)
     grouped = (
         raw.groupby(
             ["project", "variant", "mut_key", "signature_known"],
@@ -710,7 +722,7 @@ def get_census_by_mut(
         "all_property_executions",
         "source_test_classes",
     ):
-        grouped[column] = grouped[column].astype(int)
+        grouped.isetitem(grouped.columns.get_loc(column), grouped[column].astype(int))
     return cast(pd.DataFrame, grouped[columns].reset_index(drop=True))
 
 
@@ -811,8 +823,10 @@ def get_census_filter_tally(conn) -> pd.DataFrame:
     columns = ["project", "filter_name", "decision", "count"]
     if tally.empty:
         return pd.DataFrame(columns=columns)
-    tally["project"] = tally["root_path"].map(_project_label)
-    tally["count"] = tally["count"].astype(int)
+    tally = tally.assign(
+        project=tally["root_path"].map(_project_label),
+        count=tally["count"].astype(int),
+    )
     tally = tally.sort_values(
         ["project", "decision", "count"], ascending=[True, True, False]
     )
@@ -1041,7 +1055,9 @@ def summarize_variants(
         "total_mutants",
     )
     for column in int_columns:
-        summary.loc[:, column] = summary[column].fillna(0).astype(int)
+        summary.isetitem(
+            summary.columns.get_loc(column), summary[column].fillna(0).astype(int)
+        )
     summary.loc[:, "covered_mutation_score"] = [
         round(killed / covered, 4) if covered else 0.0
         for killed, covered in zip(

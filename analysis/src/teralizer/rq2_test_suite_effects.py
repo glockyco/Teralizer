@@ -192,15 +192,20 @@ def compute_test_suite_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
         "tests_delta",
     ]
     for col in numeric_cols:
-        df_sorted.loc[:, col] = (
+        values = (
             cast(pd.Series, pd.to_numeric(df_sorted[col], errors="coerce"))
             .fillna(0)
             .astype(int)
         )
+        df_sorted.isetitem(df_sorted.columns.get_loc(col), values)
 
-    df_sorted.loc[:, "tests_delta_pct"] = cast(
-        pd.Series, pd.to_numeric(df_sorted["tests_delta_pct"], errors="coerce")
-    ).fillna(0.0)
+    df_sorted.isetitem(
+        df_sorted.columns.get_loc("tests_delta_pct"),
+        cast(
+            pd.Series,
+            pd.to_numeric(df_sorted["tests_delta_pct"], errors="coerce"),
+        ).fillna(0.0),
+    )
 
     return df_sorted
 
@@ -226,15 +231,20 @@ def compute_line_count_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
         "lines_delta",
     ]
     for col in numeric_cols:
-        df_sorted.loc[:, col] = (
+        values = (
             cast(pd.Series, pd.to_numeric(df_sorted[col], errors="coerce"))
             .fillna(0)
             .astype(int)
         )
+        df_sorted.isetitem(df_sorted.columns.get_loc(col), values)
 
-    df_sorted.loc[:, "lines_delta_pct"] = cast(
-        pd.Series, pd.to_numeric(df_sorted["lines_delta_pct"], errors="coerce")
-    ).fillna(0.0)
+    df_sorted.isetitem(
+        df_sorted.columns.get_loc("lines_delta_pct"),
+        cast(
+            pd.Series,
+            pd.to_numeric(df_sorted["lines_delta_pct"], errors="coerce"),
+        ).fillna(0.0),
+    )
 
     return df_sorted
 
@@ -260,13 +270,18 @@ def compute_runtime_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
         "runtime_delta",
     ]
     for col in numeric_cols:
-        df_sorted.loc[:, col] = cast(
-            pd.Series, pd.to_numeric(df_sorted[col], errors="coerce")
-        ).fillna(0.0)
+        values = cast(pd.Series, pd.to_numeric(df_sorted[col], errors="coerce")).fillna(
+            0.0
+        )
+        df_sorted.isetitem(df_sorted.columns.get_loc(col), values)
 
-    df_sorted.loc[:, "runtime_delta_pct"] = cast(
-        pd.Series, pd.to_numeric(df_sorted["runtime_delta_pct"], errors="coerce")
-    ).fillna(0.0)
+    df_sorted.isetitem(
+        df_sorted.columns.get_loc("runtime_delta_pct"),
+        cast(
+            pd.Series,
+            pd.to_numeric(df_sorted["runtime_delta_pct"], errors="coerce"),
+        ).fillna(0.0),
+    )
 
     return df_sorted
 
@@ -289,14 +304,14 @@ def compute_test_vs_generalization_runtime_statistics(df: pd.DataFrame) -> pd.Da
         "mean_runtime_diff_per_try_ms",
     ]
     for col in numeric_cols:
-        df.loc[:, col] = cast(
-            pd.Series, pd.to_numeric(df[col], errors="coerce")
-        ).fillna(0.0)
+        values = cast(pd.Series, pd.to_numeric(df[col], errors="coerce")).fillna(0.0)
+        df.isetitem(df.columns.get_loc(col), values)
 
-    df.loc[:, "tries"] = (
+    df.isetitem(
+        df.columns.get_loc("tries"),
         cast(pd.Series, pd.to_numeric(df["tries"], errors="coerce"))
         .fillna(0)
-        .astype(int)
+        .astype(int),
     )
 
     return df
