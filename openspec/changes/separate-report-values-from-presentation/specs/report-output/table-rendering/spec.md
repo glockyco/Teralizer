@@ -8,8 +8,9 @@ for another.
 
 ### Requirement: A table model holds values, never presentation
 
-A table column MUST declare the kind of value it holds. A cell MUST hold the value itself, and MUST
-NOT hold a rendered string, a markup fragment, or a macro.
+A table column MUST declare the kind of value it holds. Supported kinds SHALL be count, share, decimal, delta, runtime, identifier, text, and entity. A cell MUST hold the value itself, and MUST NOT hold a rendered string, a markup fragment, or a macro.
+
+A decimal or delta SHALL retain its significant precision in the numeric value. Renderer metadata SHALL NOT define this precision. A delta is numeric data whose human-readable form uses an explicit sign. Its CSV form remains a bare number.
 
 #### Scenario: A column is declared
 
@@ -67,6 +68,12 @@ numeric value. A missing value MUST be an empty field.
 - **WHEN** a share is written to CSV
 - **THEN** the field holds its numeric value
 - **AND** it carries no percent sign
+
+#### Scenario: A decimal or delta is exported
+
+- **WHEN** a decimal or delta is written to CSV
+- **THEN** the field holds the bare numeric value at its declared significant precision
+- **AND** it carries no grouping, unit, parentheses, or forced positive sign
 
 #### Scenario: A missing value is exported
 

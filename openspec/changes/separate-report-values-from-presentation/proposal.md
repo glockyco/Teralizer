@@ -45,8 +45,10 @@ and regenerating it surfaced what the generator had been producing.
 - **A table may number its rows and label them by semantic key.** The funnel uses visible ordinals for
   readability and a stable table-key-plus-row-key label for citations. Reordering rows may change the
   displayed number without changing which cause a citation denotes.
-- A table column declares the **kind of value** it holds — count, share, identifier, text, or a named
-  entity — instead of a display format string.
+- A table column declares the **kind of value** it holds — count, share, decimal, delta, runtime,
+  identifier, text, or a named entity — instead of a display format string. Decimal values retain
+  their significant precision in the value. A delta also states that its human-readable form shows an
+  explicit sign.
 - Each render target owns its presentation:
   - **CSV** emits machine-readable values: `85368`, `0.526`, an empty field for a missing value, and a
     plain identifier. No thousands separators, no percent signs, no em dashes, no macros.

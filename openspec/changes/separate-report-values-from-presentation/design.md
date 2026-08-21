@@ -52,9 +52,9 @@ is a local patch on one missing rule.
 
 ### 1. `ColumnSpec.fmt` becomes a value kind, not a format string
 
-Today `fmt` names a display formatter (`count`, `pct1`, `pvc`, `tex`). It becomes the column's kind:
-`count`, `share`, `runtime`, `identifier`, `text`, `entity`. A kind says what the value *is*; each
-renderer decides what it *looks like*.
+Today `fmt` names a display formatter (`count`, `pct1`, `pvc`, `tex`). It becomes the column's kind: `count`, `share`, `decimal`, `delta`, `runtime`, `identifier`, `text`, `entity`. A kind states what the value *is*. Each renderer decides what it *looks like*.
+
+`decimal` covers ratios and fixed-precision measurements. `delta` covers signed integer or decimal differences. Its human-readable form needs an explicit sign. Both kinds store `Decimal` values at the intended significant precision. CSV emits their bare numeric form. Markdown and LaTeX preserve that precision. Only `delta` adds a positive sign. These kinds support current numeric fields without format strings or a general numeric-style system.
 
 `format.py` stops being one formatter table shared by all targets and becomes three small kind-to-text
 maps, one per target, so the display rules sit beside the target that owns them.

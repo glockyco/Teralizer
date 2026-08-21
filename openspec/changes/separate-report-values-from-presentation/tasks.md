@@ -12,8 +12,9 @@
 
 ## 2. Value kinds
 
-- [ ] 2.1 Replace `ColumnSpec.fmt` display formats with value kinds: `count`, `share`, `runtime`,
-      `identifier`, `text`, `entity`
+- [ ] 2.1 Replace `ColumnSpec.fmt` display formats with value kinds: `count`, `share`, `decimal`,
+      `delta`, `runtime`, `identifier`, `text`, `entity`. Store decimal and delta values as `Decimal`
+      at their significant precision; do not add renderer format metadata.
 - [ ] 2.2 Split `format.py` into one kind-to-text map per target, each inside the renderer contract
       provided by `make-report-runs-explicit`
 - [ ] 2.3 Remove the `pvc` kind and make an absent `count` render as empty in CSV and as a dash in the
