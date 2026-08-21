@@ -102,7 +102,7 @@
 - [x] 5.12 Use `jarvis-scenarios` as the positive control. Complete database-local export, checksum,
       transfer, isolated restore, preparation, and read-only report preflight before exporting the full
       corpus set.
-- [ ] 5.13 Restore the author's own corpus installation through the assembled package and documented
+- [x] 5.13 Restore the author's own corpus installation through the assembled package and documented
       clean import path. Do not keep a private restoration path.
 
 ## 6. End-to-end verification

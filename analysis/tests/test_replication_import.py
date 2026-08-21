@@ -58,8 +58,9 @@ printf 'docker\tproject=%s\t%s\n' "${COMPOSE_PROJECT_NAME:-}" "$*" >> "${FAKE_LO
 args=$*
 if [[ $args == *" ps --status running --services postgres"* ]]; then
     printf 'postgres\n'
-elif [[ $args == *"SELECT 1 FROM pg_database"* ]]; then
-    :
+elif [[ $args == *" -v name=controlled_db -f -"* ]]; then
+    cat >/dev/null
+    [[ ${DATABASE_EXISTS:-false} != true ]] || printf '1\n'
 elif [[ $args == *" createdb "* ]]; then
     :
 elif [[ $args == *" cp "* ]]; then
@@ -131,6 +132,15 @@ def test_importer_verifies_then_restores_prepares_and_preflights(
         f"registry-cwd\t{_REPO_ROOT}",
         f"registry-cwd\t{_REPO_ROOT}",
     ]
+
+
+def test_force_import_replaces_an_existing_corpus(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    result, lines = _run_importer(tmp_path, monkeypatch, DATABASE_EXISTS="true")
+
+    assert result.returncode == 0, result.stderr
+    assert _line_index(lines, " dropdb ") < _line_index(lines, " createdb ")
 
 
 def test_importer_requires_package_directory():

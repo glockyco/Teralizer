@@ -127,7 +127,8 @@ restore_corpus() {
     container_dump="/tmp/teralizer-${corpus_id}.dump"
 
     existing=$(compose_exec psql -U "$REPLICATION_DB_USER" -d postgres -tA \
-        -v name="$database" -c "SELECT 1 FROM pg_database WHERE datname = :'name'" 2>/dev/null || true)
+        -v name="$database" -f - 2>/dev/null \
+        <<<"SELECT 1 FROM pg_database WHERE datname = :'name'" || true)
     if [[ "$existing" == 1 ]]; then
         if [[ "$FORCE" != true ]]; then
             printf "Replace corpus '%s' database '%s'? [y/N] " "$corpus_id" "$database"
