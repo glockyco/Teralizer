@@ -46,10 +46,10 @@
 
 ## 6. Verify the complete boundary
 
-- [ ] 6.1 Run synthetic publication, package validation, import, hygiene positive-control, and hygiene negative-control tests.
-- [ ] 6.2 Run a production-package dry run from an external path and confirm release staging records the expected four corpus identities and 294,928,564 declared dump bytes without reading the checkout package path.
-- [ ] 6.3 Run archive-level acceptance from staged downloadable files in a clean location with no source checkout, author database, author credentials, or hydrated corpus LFS objects.
-- [ ] 6.4 Run `lefthook run pre-commit --all-files` and all repository checks required by the affected Python, shell, packaging, and documentation areas.
-- [ ] 6.5 Run `openspec validate separate-replication-data-from-source --strict` and validate the coordinated active changes strictly.
-- [ ] 6.6 Review the final source tree, Git attributes, ignored paths, release reference, package staging, documentation, and commit graph; remove incidental changes.
+- [x] 6.1 Run synthetic publication, package validation, import, hygiene positive-control, and hygiene negative-control tests.
+- [x] 6.2 Run a production-package dry run from an external path and confirm release staging records the expected four corpus identities and 294,928,564 declared dump bytes without reading the checkout package path.
+- [x] 6.3 Run archive-level acceptance from staged downloadable files in a clean location with no source checkout, author database, author credentials, or hydrated corpus LFS objects.
+- [x] 6.4 Run `lefthook run pre-commit --all-files` and all repository checks required by the affected Python, shell, packaging, and documentation areas.
+- [x] 6.5 Run `openspec validate separate-replication-data-from-source --strict` and validate the coordinated active changes strictly.
+- [x] 6.6 Review the final source tree, Git attributes, ignored paths, release reference, package staging, documentation, and commit graph; remove incidental changes.
 - [ ] 6.7 Report source-repository state, candidate release state, old GitHub LFS state, old Zenodo state, and any blocked external publication action separately.
