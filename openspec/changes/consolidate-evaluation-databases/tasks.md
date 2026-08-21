@@ -8,7 +8,7 @@
 - [x] 1.3 Add the shell accessor that reads the registry through the Python helper.
 - [x] 1.4 Add explicit publication status, define the reserved `scratch_` pattern, and classify every
       observed database as registered corpus, scratch, or unclassified.
-- [ ] 1.5 Extend `verify-corpora` with three modes: inventory all observed databases, fully verify an
+- [x] 1.5 Extend `verify-corpora` with three modes: inventory all observed databases, fully verify an
       explicitly requested subset, and require every published corpus. Test a valid partial local
       installation, missing requested corpus, complete publication host, count mismatch, and
       unclassified database.
