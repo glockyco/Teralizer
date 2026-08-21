@@ -97,7 +97,7 @@
 - [x] 5.10 Rewrite `import-databases.sh` to verify dump checksum and identity before restore, run
       `prepare-corpus`, verify project count and derived-view revision, and exercise read-only report
       preflight before success.
-- [ ] 5.11 Fix the replication container-name disagreement and prove import works with deployment names
+- [x] 5.11 Fix the replication container-name disagreement and prove import works with deployment names
       unrelated to the author's database service names.
 - [x] 5.12 Use `jarvis-scenarios` as the positive control. Complete database-local export, checksum,
       transfer, isolated restore, preparation, and read-only report preflight before exporting the full
