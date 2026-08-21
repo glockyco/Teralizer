@@ -126,7 +126,7 @@
 - [x] 7.2 Audit `postgres_test`, every superseded RepoReapers database, scratch families, and the partial
       local v7 snapshot. Record current consumers, observed project count, required retained dump, and
       final disposition for each.
-- [ ] 7.3 Build and restore every dump required by a retirement record before trusting it.
+- [x] 7.3 Build and restore every dump required by a retirement record before trusting it.
 - [ ] 7.4 Drop only databases whose retirement records are complete, together with disposable ledgers
       that no registered report or artifact reads. Preserve all others and record why.
 - [ ] 7.5 Run inventory on the evaluation host and local workstation. Confirm every remaining database
