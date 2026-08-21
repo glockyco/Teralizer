@@ -40,11 +40,13 @@ Docker Compose V2 is included with Docker Desktop and recent Docker Engine insta
 | Disk | Package preflight result | Preflight result plus pipeline workspace |
 
 The corpus manifest records each dump and restored database size. Read the verified requirement instead
-of applying a fixed database count or threshold:
+of applying a fixed database count or threshold. In a source checkout, set `CORPUS_PACKAGE_DIR` to an
+installed or downloaded corpus component:
 
 ```bash
+CORPUS_PACKAGE_DIR=/path/to/replication/datasets
 uv run --frozen --directory analysis python -m teralizer.corpus_publish \
-  --preflight-package replication/datasets
+  --preflight-package "$CORPUS_PACKAGE_DIR"
 ```
 
 ### Disk Space by Workflow

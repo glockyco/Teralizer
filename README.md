@@ -44,9 +44,10 @@ Our work proposes a semantics-based test generalization approach that automatica
 | `teralizer-data-primary` | Controlled-corpus logs, tool reports, and generalized tests |
 | `teralizer-data-extended` | Real-world logs, tool reports, and generalized tests |
 
-The package builder measures archive sizes. `replication/datasets/manifest.json` records every corpus
-dump and restored database size. [REQUIREMENTS.md](REQUIREMENTS.md) explains the derived free-disk
-requirement.
+The package builder measures archive sizes. In an installed `teralizer-core` release,
+`replication/datasets/manifest.json` records every corpus dump and restored database size. The source
+checkout does not contain production dumps. [REQUIREMENTS.md](REQUIREMENTS.md) explains the derived
+free-disk requirement and [replication/README.md](replication/README.md) defines the storage zones.
 
 **What to download:**
 - **Browse results only**: `teralizer-results`
@@ -60,12 +61,15 @@ requirement.
 
 See [REQUIREMENTS.md](REQUIREMENTS.md) for system requirements and [INSTALL.md](INSTALL.md) for detailed setup instructions.
 
+From an installed `teralizer-core` release, run:
+
 ```bash
 ./replication/quick-start.sh
 ```
 
-This starts PostgreSQL and imports the database dumps. Analysis reports run from the
-`analysis/` Python project with `uv`.
+In a source checkout, set `CORPUS_PACKAGE_DIR` to an installed or downloaded corpus component. The
+quick start verifies that package before PostgreSQL starts. Analysis reports run from the `analysis/`
+Python project with `uv`.
 
 **Access points** (open in browser after setup completes):
 - Database UI (Adminer): http://localhost:18080

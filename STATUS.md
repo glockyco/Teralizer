@@ -64,7 +64,7 @@ We apply for the following ACM artifact badges:
 |-----------|----------|----------|
 | Teralizer tool | Yes | `src/` directory |
 | Analysis package and reports | Yes | `analysis/src/teralizer/eval/` and `analysis/reports/` |
-| Database dumps | Yes | `replication/datasets/` |
+| Database dumps | Yes | Installed Zenodo `teralizer-core` component at `replication/datasets/` |
 | Pre-computed outputs | Yes | `analysis/output/original/` |
 | Project source code | Yes | `teralizer-projects-*` archives |
 | Intermediate data | Yes | `teralizer-data-*` archives |

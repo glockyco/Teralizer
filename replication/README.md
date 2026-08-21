@@ -1,59 +1,71 @@
-# Teralizer replication package
+# Teralizer corpus storage
 
-The corpus manifest at `datasets/manifest.json` defines the database artifacts in the package. It records each semantic corpus ID, physical database name, dump checksum and size, project counts, source inputs, producer provenance, and derived-view revision. Do not infer package contents from filenames or from a fixed database count.
+Production corpus data moves through four storage zones. Do not copy production dumps into the source checkout.
 
-## Verify and restore
+| Zone | Contents | Owner |
+|---|---|---|
+| Source checkout | Corpus declarations, schemas, code, and synthetic fixtures | Git |
+| Author staging | Completed dumps, `manifest.json`, and `checksums.sha256` | Operator-selected external directory |
+| Release staging | Verified archive inputs and generated release archives | `prepare-zenodo-package.sh` output directory |
+| Published installation | Immutable archives selected by a version DOI | Zenodo |
 
-From this directory, run:
+The source checkout uses `verification/fixtures/corpus-package/` for synthetic CI input. This fixture is not a production package.
 
-```bash
-./quick-start.sh
-```
+## Export and assemble
 
-The quick start verifies the manifest, dump bytes, checksum inventory, and checked-in corpus inputs before it starts PostgreSQL. It then restores every published corpus, prepares derived schema through `prepare-corpus`, and exercises the report-only connection.
-
-To inspect the verified package without restoring it, run:
-
-```bash
-uv run --frozen --directory ../analysis python -m teralizer.corpus_publish \
-  --summarize-package datasets
-```
-
-To restore only selected corpora from a complete package, run:
-
-```bash
-docker compose up -d postgres
-./scripts/import-databases.sh --force --corpus controlled datasets
-```
-
-Repeat `--corpus` for more entries. The importer still verifies the complete package before it changes a database.
-
-## Publish
-
-Publication uses two connections. `DB_HOST` and `DB_PORT` provide the read-only connection used for
-small identity and provenance queries. Bulk database rows never use that connection. The export command
-runs PostgreSQL's custom-format dump tool beside the source service and then transfers only the
-compressed archive.
-
-Set the deployment-specific batch endpoint without adding its host, executable path, or container name
-to the corpus registry:
+Set the deployment endpoint and two external staging paths:
 
 ```bash
 export CORPUS_EXPORT_HOST=<ssh-host>
 export CORPUS_EXPORT_SPOOL=<durable-directory-on-data-host>
 export CORPUS_EXPORT_DOCKER=<docker-executable-on-data-host>
 export CORPUS_EXPORT_CONTAINER=<postgres-container-on-data-host>
-./scripts/export-databases.sh
+export CORPUS_EXPORT_DUMP_DIR=/external/author-stage/dumps
+./replication/scripts/export-databases.sh /external/author-stage/package
 ```
 
-The command first inspects every published corpus. It then creates one durable `<corpus>.complete`
-checkpoint per corpus, resumes transfer into `analysis/build/corpus-exports`, and assembles the verified
-manifest set in `datasets/`. A failed export leaves only `<corpus>.partial`. A failed transfer leaves a
-local partial file. Rerun the same command to continue without repeating verified exports. Set
-`CORPUS_EXPORT_REPLACE=true` only to replace a completed checkpoint that fails identity or checksum
-verification.
+The command creates one `<corpus>.complete` checkpoint on the data host. It resumes interrupted transfers without replacing a verified dump.
 
-The assembled `manifest.json`, rather than filenames or a fixed count, defines package membership.
-`checksums.sha256` and all disk requirements derive from it. Scratch databases are never published.
-Pass the assembled package to the Zenodo builder with
-`CORPUS_PACKAGE_DIR=/path/to/datasets ./scripts/packaging/prepare-zenodo-package.sh`.
+The package manifest defines package membership. It records corpus identity, dump checksum, byte size, project count, source inputs, producer provenance, and derived-view revision. The checksum inventory remains beside the manifest and dumps.
+
+Set `CORPUS_EXPORT_REPLACE=true` only when a completed checkpoint fails identity or checksum verification.
+
+## Build release archives
+
+Give the release builder the verified external package:
+
+```bash
+CORPUS_PACKAGE_DIR=/external/author-stage/package \
+  ./scripts/packaging/prepare-zenodo-package.sh \
+  --corpus-package /external/author-stage/package
+```
+
+The builder verifies the complete package before it changes release staging. Zenodo is the public authority for production corpus payloads. Publish changed bytes as a new version under concept DOI `10.5281/zenodo.17950380`.
+
+## Verify and restore
+
+An installed release contains its verified corpus component at `replication/datasets/`. Run this command from the installed release:
+
+```bash
+./replication/quick-start.sh
+```
+
+The quick start verifies the package before it starts PostgreSQL. It restores each selected corpus, prepares derived schema, and checks report-only access.
+
+In a source checkout, select an installed or downloaded package explicitly:
+
+```bash
+CORPUS_PACKAGE_DIR=/external/published-installation/replication/datasets \
+  ./replication/quick-start.sh
+```
+
+To restore selected corpora without the quick start, run:
+
+```bash
+docker compose -f replication/docker-compose.yml up -d postgres
+./replication/scripts/import-databases.sh --force \
+  --corpus controlled \
+  /external/published-installation/replication/datasets
+```
+
+The importer verifies the complete package before it changes a database.

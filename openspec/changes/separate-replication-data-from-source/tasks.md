@@ -29,11 +29,11 @@
 ## 4. Bind archival publication and retrieval
 
 - [ ] 4.1 Define the small source-controlled release reference with artifact version, version DOI, concept DOI, release-manifest locator, and release-manifest SHA-256; keep payload membership in the release manifest.
-- [ ] 4.2 Make release assembly bind the corpus manifest, dump identities, sizes, checksums, provenance, and source revision to one immutable candidate release.
-- [ ] 4.3 Keep Zenodo under concept DOI `10.5281/zenodo.17950380` as the sole documented public payload authority and require a new version when any package byte changes.
+- [x] 4.2 Make release assembly bind the corpus manifest, dump identities, sizes, checksums, provenance, and source revision to one immutable candidate release.
+- [x] 4.3 Keep Zenodo under concept DOI `10.5281/zenodo.17950380` as the sole documented public payload authority and require a new version when any package byte changes.
 - [ ] 4.4 Make reviewer retrieval resolve an exact version, verify the release manifest and selected component, then verify every corpus dump before restore.
-- [ ] 4.5 Ensure maintainer, reviewer, requirements, and Zenodo documentation distinguish source checkout, author staging, release staging, and published installation commands.
-- [ ] 4.6 Prove normal source checkout, lint, format, build, and fixture CI complete without production dumps, Git LFS corpus downloads, Zenodo, or author credentials.
+- [x] 4.5 Ensure maintainer, reviewer, requirements, and Zenodo documentation distinguish source checkout, author staging, release staging, and published installation commands.
+- [x] 4.6 Prove normal source checkout, lint, format, build, and fixture CI complete without production dumps, Git LFS corpus downloads, Zenodo, or author credentials.
 
 ## 5. Remove the unpushed package from history
 

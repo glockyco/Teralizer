@@ -35,9 +35,10 @@ cd replication
 ```
 
 This script:
-1. Extracts sibling archives (if present)
-2. Starts PostgreSQL and imports the database dumps
-3. Starts the analysis service used by the verification scripts
+1. Extracts sibling archives, if they are present.
+2. Verifies the installed corpus component.
+3. Starts PostgreSQL and Adminer.
+4. Imports and verifies each registered corpus.
 
 When complete, open http://localhost:18080 in your browser to inspect the
 imported databases with Adminer.
