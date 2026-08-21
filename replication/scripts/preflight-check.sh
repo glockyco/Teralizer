@@ -76,7 +76,7 @@ DUMPS_DIR="$SCRIPT_DIR/../datasets"
 package_facts=""
 package_summary=""
 required_bytes=0
-if package_facts=$(uv run --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+if package_facts=$(uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
     --preflight-package "$DUMPS_DIR"); then
     required_line=${package_facts%%$'\n'*}
     required_bytes=${required_line#required_disk_bytes=}

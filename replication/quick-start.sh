@@ -114,7 +114,7 @@ echo ""
 # Step 2: Verify the complete manifest set before starting services
 echo -e "${YELLOW}[2/4]${NC} Verifying corpus package..."
 if [[ "$PACKAGE_VERIFIED" != true ]]; then
-    if ! uv run --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+    if ! uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
         --summarize-package "$SCRIPT_DIR/datasets"; then
         echo "Extract a complete, untampered replication package before setup." >&2
         exit 1

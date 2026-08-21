@@ -70,6 +70,7 @@ SAMPLE_SIZE=100
 VERSION=""
 SKIP_EXTENDED_FULL=false
 DRY_RUN=false
+CORPUS_PACKAGE_DIR="${CORPUS_PACKAGE_DIR:-$REPO_ROOT/replication/datasets}"
 
 usage() {
     sed -n '2,48p' "$0"
@@ -200,8 +201,12 @@ if [[ "$DRY_RUN" == "false" ]]; then
     # Remove unnecessary files for verification
     rm -rf "$CORE_DIR/projects" 2>/dev/null || true
     rm -rf "$CORE_DIR/data" 2>/dev/null || true
-    uv run --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
-        --output-dir "$REPO_ROOT/replication/datasets" --copy-inputs-to "$CORE_DIR"
+    rm -rf "$CORE_DIR/replication/datasets"
+    uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+        --output-dir "$CORPUS_PACKAGE_DIR" \
+        --copy-package-to "$CORE_DIR/replication/datasets"
+    uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+        --output-dir "$CORPUS_PACKAGE_DIR" --copy-inputs-to "$CORE_DIR"
     rm -rf "$CORE_DIR/.idea" 2>/dev/null || true
     rm -f "$CORE_DIR/.env" 2>/dev/null || true
 

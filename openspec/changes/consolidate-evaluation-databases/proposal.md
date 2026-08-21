@@ -29,9 +29,11 @@ possible, so runner scripts and configuration are live code rather than frozen h
 - Add one idempotent **prepare-corpus** boundary. After restore and before read-only access, it installs
   the checked-in derived views and records their definition revision. Report preflight rejects a
   corpus whose installed view revision does not match the source revision it is about to query.
-- Treat the dump as the portable unit of record. Publishing writes one dump per corpus plus a manifest
-  carrying checksum, byte size, project count, semantic id, source revision, view-definition revision,
-  and a corpus-derived provenance statement.
+- Treat the dump as the portable unit of record. Publication exports each corpus beside PostgreSQL into
+  durable per-corpus staging, transfers the verified compressed dump, and locally assembles one complete
+  manifest set carrying checksum, byte size, project count, semantic id, source revision,
+  view-definition revision, and a corpus-derived provenance statement. Interrupted work resumes from
+  verified corpus exports rather than restarting the complete set.
 - Ship every non-database input that a report validates: corpus definition, attempt ledger, completion
   markers, and project configurations. Bulk logs and intermediate run output remain optional.
 - Verify checksums, project counts, corpus ids, and view definitions on import. A full publication run
@@ -65,7 +67,9 @@ None. These are the repository's first accepted evaluation-data contracts.
 - Runner scripts and `project-configs/**` are migrated as executable reproducibility machinery. They
   are not exempted as historical text.
 - Packaging and replication scripts, `REQUIREMENTS.md`, generated manifests, and scoped repository
-  guidance are updated to use semantic corpus ids.
+  guidance are updated to use semantic corpus ids. The evaluation host performs only thin, server-local
+  database export; the workstation owns registry policy, verified transfer, manifest assembly, and
+  package validation.
 - The four published databases keep their current physical names. Scratch databases may be recreated;
   superseded and partial databases are retired only after their consumers and project counts are
   checked.

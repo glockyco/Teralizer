@@ -15,7 +15,7 @@ The quick start verifies the manifest, dump bytes, checksum inventory, and check
 To inspect the verified package without restoring it, run:
 
 ```bash
-uv run --directory ../analysis python -m teralizer.corpus_publish \
+uv run --frozen --directory ../analysis python -m teralizer.corpus_publish \
   --summarize-package datasets
 ```
 
@@ -30,10 +30,30 @@ Repeat `--corpus` for more entries. The importer still verifies the complete pac
 
 ## Publish
 
-Run publication only from a clean source checkout with every published corpus available:
+Publication uses two connections. `DB_HOST` and `DB_PORT` provide the read-only connection used for
+small identity and provenance queries. Bulk database rows never use that connection. The export command
+runs PostgreSQL's custom-format dump tool beside the source service and then transfers only the
+compressed archive.
+
+Set the deployment-specific batch endpoint without adding its host, executable path, or container name
+to the corpus registry:
 
 ```bash
+export CORPUS_EXPORT_HOST=<ssh-host>
+export CORPUS_EXPORT_SPOOL=<durable-directory-on-data-host>
+export CORPUS_EXPORT_DOCKER=<docker-executable-on-data-host>
+export CORPUS_EXPORT_CONTAINER=<postgres-container-on-data-host>
 ./scripts/export-databases.sh
 ```
 
-Publication stages every dump once, validates all manifest facts, and then replaces the package set. `checksums.sha256` and all size output derive from the manifest. Scratch databases are never published.
+The command first inspects every published corpus. It then creates one durable `<corpus>.complete`
+checkpoint per corpus, resumes transfer into `analysis/build/corpus-exports`, and assembles the verified
+manifest set in `datasets/`. A failed export leaves only `<corpus>.partial`. A failed transfer leaves a
+local partial file. Rerun the same command to continue without repeating verified exports. Set
+`CORPUS_EXPORT_REPLACE=true` only to replace a completed checkpoint that fails identity or checksum
+verification.
+
+The assembled `manifest.json`, rather than filenames or a fixed count, defines package membership.
+`checksums.sha256` and all disk requirements derive from it. Scratch databases are never published.
+Pass the assembled package to the Zenodo builder with
+`CORPUS_PACKAGE_DIR=/path/to/datasets ./scripts/packaging/prepare-zenodo-package.sh`.

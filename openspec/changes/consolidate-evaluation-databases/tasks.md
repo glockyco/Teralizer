@@ -12,7 +12,7 @@
       explicitly requested subset, and require every published corpus. Test a valid partial local
       installation, missing requested corpus, complete publication host, count mismatch, and
       unclassified database.
-- [ ] 1.6 Scan live reports, runner scripts, executable project configuration, packaging, and
+- [x] 1.6 Scan live reports, runner scripts, executable project configuration, packaging, and
       diagnostics for registered physical-name literals. Permit only the registry, lifecycle code that
       must address PostgreSQL, and generated observed provenance. Run the check without a database and
       wire it into CI.
@@ -70,25 +70,40 @@
 
 - [x] 5.1 Add the provenance query that emits, per corpus, each tool commit with its project count and
       the unattributed count.
-- [x] 5.2 Add `publish-corpora`: require all published entries, dump each corpus once, and write a
-      manifest containing semantic id, physical name, file, SHA-256, bytes, expected and observed
-      project counts, producer revision and dirty state, corpus-input checksums, derived-view revision,
-      and provenance.
+- [x] 5.2 Split publication planning and package assembly from corpus export. Require every published
+      entry, accept only explicitly staged dump inputs, and write a manifest containing semantic id,
+      physical name, file, SHA-256, bytes, expected and observed project counts, producer revision and
+      dirty state, corpus-input checksums, derived-view revision, and provenance. Local assembly must
+      never invoke bulk `pg_dump` through the configured report endpoint.
 - [x] 5.3 Fail publication before promotion on a missing published corpus, entry disagreement, duplicate
       entry, stale view revision, missing checked input, or dump/manifest mismatch.
 - [x] 5.4 Include corpus definitions, attempt ledgers, completion markers, and project configurations
       required by registered reports. Keep bulk logs and unread intermediate run material out.
-- [x] 5.5 Rewrite `prepare-zenodo-package.sh`, the quick start, README claims, and disk requirements to
-      consume the verified manifest and describe exactly what the package carries.
-- [ ] 5.6 Rewrite `import-databases.sh` to verify dump checksum and identity before restore, run
-      `prepare-corpus`, verify project count and derived-view revision, and exercise read-only report
-      preflight before success.
-- [ ] 5.7 Fix the replication container-name disagreement and prove import works with deployment names
-      unrelated to the author's database service names.
+- [x] 5.5 Add the evaluation-host export boundary. Run PostgreSQL 17 custom-format dumps beside the
+      source service, one published corpus at a time, through batch transport independent of the SQL
+      tunnel. Dump the complete database and remove object-name wildcard exclusions.
+- [x] 5.6 Persist each remote corpus export under distinct partial and complete names, checksum it before
+      completion, and reuse only exports whose corpus identity, physical database, byte size, and
+      checksum verify. Exercise interruption during one corpus and prove an earlier completed export
+      survives.
+- [x] 5.7 Transfer only completed archives through a resumable file transport, verify the source and
+      destination checksums, and prove an interrupted transfer continues without another database
+      export.
 - [x] 5.8 Validate that every published registry corpus appears exactly once in the manifest and that
       every manifest input exists with the recorded checksum.
-- [ ] 5.9 Restore the author's own corpus installation through the published import path in a clean
-      environment; do not keep a private restoration path.
+- [ ] 5.9 Rewrite `prepare-zenodo-package.sh`, the quick start, README claims, and disk requirements to
+      consume explicitly exported dumps and the verified assembled manifest. Document the data-host
+      export, transfer, assembly, and recovery boundaries without author-specific service names.
+- [ ] 5.10 Rewrite `import-databases.sh` to verify dump checksum and identity before restore, run
+      `prepare-corpus`, verify project count and derived-view revision, and exercise read-only report
+      preflight before success.
+- [ ] 5.11 Fix the replication container-name disagreement and prove import works with deployment names
+      unrelated to the author's database service names.
+- [ ] 5.12 Use `jarvis-scenarios` as the positive control. Complete database-local export, checksum,
+      transfer, isolated restore, preparation, and read-only report preflight before exporting the full
+      corpus set.
+- [ ] 5.13 Restore the author's own corpus installation through the assembled package and documented
+      clean import path. Do not keep a private restoration path.
 
 ## 6. End-to-end verification
 
@@ -99,7 +114,8 @@
 - [ ] 6.4 Confirm a corrupt dump, missing dump, wrong project count, stale derived-view revision, scratch
       report input, and unclassified database each fail with specific diagnostics.
 - [ ] 6.5 Run repository tests, lint, format, type checks, hooks, strict OpenSpec validation, and the
-      physical-name positive-control scan.
+      physical-name positive-control scan with frozen Python dependency resolution. Require a clean
+      source tree before and after validation.
 
 ## 7. Retire only proven sprawl
 

@@ -55,6 +55,9 @@ jobs:
       - name: Setup Nix
         uses: DeterminateSystems/determinate-nix-action@v3.21.9
 
+      - name: Check corpus identity boundary
+        run: nix develop --command uv run --frozen --directory analysis python -m teralizer.corpus_literal_check
+
       - name: Prepare minimal corpus fixture
         env:
           DB_HOST: 127.0.0.1

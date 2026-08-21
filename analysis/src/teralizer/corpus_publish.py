@@ -7,7 +7,6 @@ import hashlib
 import json
 import os
 import shutil
-import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,7 +15,6 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from teralizer import corpora
-from teralizer.config import db_config
 from teralizer.corpus_preparation import require_current_revision
 from teralizer.eval.provenance import checkout_snapshot, require_publishable_tree
 from teralizer.report_basis import resolve_repo_path
@@ -81,34 +79,7 @@ def producer_provenance(conn: Connection) -> dict[str, object]:
     return {"commits": commits, "unattributed_projects": unattributed}
 
 
-def _dump(entry: corpora.CorpusEntry, destination: Path) -> None:
-    env = os.environ.copy()
-    env["PGPASSWORD"] = db_config.password
-    subprocess.run(
-        [
-            "pg_dump",
-            "--host",
-            db_config.host,
-            "--port",
-            str(db_config.port),
-            "--username",
-            db_config.user,
-            "--format=custom",
-            "--no-owner",
-            "--no-privileges",
-            "--exclude-table=public.mv_*",
-            "--exclude-table=public.v_*",
-            "--exclude-table=public.teralizer_corpus_metadata",
-            "--file",
-            str(destination),
-            entry.database,
-        ],
-        env=env,
-        check=True,
-    )
-
-
-def _corpus_entry(entry: corpora.CorpusEntry, stage: Path) -> dict[str, object]:
+def _corpus_facts(entry: corpora.CorpusEntry) -> dict[str, object]:
     from teralizer.corpora import open_corpus
 
     with open_corpus(entry.id) as (_, conn):
@@ -122,9 +93,6 @@ def _corpus_entry(entry: corpora.CorpusEntry, stage: Path) -> dict[str, object]:
             require_current_revision(conn, entry.id) if entry.derived_views else None
         )
         provenance = producer_provenance(conn)
-    dump_path = stage / f"{entry.database}.dump"
-    _dump(entry, dump_path)
-    dump = _file_fact(dump_path, relative_to=stage)
     inputs = [
         _file_fact(path, relative_to=_REPO_ROOT).__dict__
         for path in _corpus_input_paths(entry)
@@ -132,13 +100,24 @@ def _corpus_entry(entry: corpora.CorpusEntry, stage: Path) -> dict[str, object]:
     return {
         "corpus_id": entry.id,
         "database": entry.database,
-        "dump": dump.__dict__,
+        "dump_path": f"{entry.database}.dump",
         "expected_projects": entry.expected_projects,
         "observed_projects": observed,
         "database_bytes": database_bytes,
         "derived_view_revision": revision,
         "inputs": inputs,
         "provenance": provenance,
+    }
+
+
+def publication_plan() -> dict[str, object]:
+    """Inspect every published corpus without exporting database rows."""
+    require_publishable_tree()
+    source_commit, dirty = checkout_snapshot()
+    return {
+        "schema_version": 1,
+        "producer": {"source_commit": source_commit, "dirty": dirty},
+        "corpora": [_corpus_facts(entry) for entry in corpora.load().published_entries],
     }
 
 
@@ -247,6 +226,21 @@ def verify_package(input_dir: Path) -> Path:
     return manifest_path
 
 
+def copy_package_artifacts(input_dir: Path, destination_dir: Path) -> int:
+    """Copy the verified manifest set without inferring dump filenames."""
+    manifest_path = verify_package(input_dir)
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    filenames = {MANIFEST_NAME, CHECKSUMS_NAME}
+    filenames.update(record["dump"]["path"] for record in document["corpora"])
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    for stale in destination_dir.glob("*.dump"):
+        if stale.name not in filenames:
+            stale.unlink()
+    for name in sorted(filenames):
+        shutil.copy2(input_dir / name, destination_dir / name)
+    return len(filenames)
+
+
 def copy_package_inputs(input_dir: Path, destination_root: Path) -> int:
     """Copy each manifest-declared corpus input to a package repository tree."""
     manifest_path = verify_package(input_dir)
@@ -353,30 +347,34 @@ def _promote(stage: Path, output_dir: Path, filenames: set[str]) -> None:
         raise
 
 
-def publish(output_dir: Path = DEFAULT_OUTPUT_DIR) -> Path:
-    """Dump every published corpus and atomically promote one verified manifest set."""
-    require_publishable_tree()
+def assemble(dump_dir: Path, output_dir: Path = DEFAULT_OUTPUT_DIR) -> Path:
+    """Build and atomically promote a package from explicit completed dumps."""
     registry = corpora.load()
-    source_commit, dirty = checkout_snapshot()
+    document = publication_plan()
+    records = document["corpora"]
+    assert isinstance(records, list)
     with tempfile.TemporaryDirectory(prefix="teralizer-corpora-") as temporary:
         stage = Path(temporary)
-        entries = [_corpus_entry(entry, stage) for entry in registry.published_entries]
-        document: dict[str, object] = {
-            "schema_version": 1,
-            "producer": {"source_commit": source_commit, "dirty": dirty},
-            "corpora": entries,
-        }
+        filenames: set[str] = set()
+        for record in records:
+            assert isinstance(record, dict)
+            dump_path = record.pop("dump_path")
+            assert isinstance(dump_path, str)
+            source = dump_dir / dump_path
+            if not source.is_file():
+                raise FileNotFoundError(
+                    f"published corpus {record['corpus_id']!r} dump not found: {source}"
+                )
+            destination = stage / dump_path
+            shutil.copy2(source, destination)
+            record["dump"] = _file_fact(destination, relative_to=stage).__dict__
+            filenames.add(dump_path)
         validate_manifest(document, stage, registry)
         manifest_path = stage / MANIFEST_NAME
         manifest_path.write_text(
             json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
         (stage / CHECKSUMS_NAME).write_text(_checksums(document), encoding="utf-8")
-        filenames = {
-            str(record["dump"]["path"])
-            for record in entries
-            if isinstance(record.get("dump"), dict)
-        }
         _promote(stage, output_dir, filenames)
     return output_dir / MANIFEST_NAME
 
@@ -384,7 +382,18 @@ def publish(output_dir: Path = DEFAULT_OUTPUT_DIR) -> Path:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="publish-corpora")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    action = parser.add_mutually_exclusive_group()
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument(
+        "--plan",
+        action="store_true",
+        help="inspect every published corpus without exporting database rows",
+    )
+    action.add_argument(
+        "--assemble-from",
+        type=Path,
+        metavar="DUMP_DIR",
+        help="assemble and promote a package from explicit completed dumps",
+    )
     action.add_argument(
         "--verify-package",
         type=Path,
@@ -406,12 +415,21 @@ def main(argv: list[str] | None = None) -> None:
         help="verify a package and print its required free disk bytes",
     )
     action.add_argument(
+        "--copy-package-to",
+        type=Path,
+        help="verify and copy the complete manifest set to a package directory",
+    )
+    action.add_argument(
         "--copy-inputs-to",
         type=Path,
         help="verify the output package and copy its declared inputs to a repository tree",
     )
     args = parser.parse_args(argv)
-    if args.verify_package is not None:
+    if args.plan:
+        print(json.dumps(publication_plan(), indent=2, sort_keys=True))
+    elif args.assemble_from is not None:
+        print(assemble(args.assemble_from, args.output_dir))
+    elif args.verify_package is not None:
         print(verify_package(args.verify_package))
     elif args.summarize_package is not None:
         print("\n".join(package_summary(args.summarize_package)))
@@ -419,11 +437,12 @@ def main(argv: list[str] | None = None) -> None:
         print("\n".join(package_preflight(args.preflight_package)))
     elif args.required_disk_bytes is not None:
         print(required_disk_bytes(args.required_disk_bytes))
+    elif args.copy_package_to is not None:
+        count = copy_package_artifacts(args.output_dir, args.copy_package_to)
+        print(f"copied {count} package files")
     elif args.copy_inputs_to is not None:
         count = copy_package_inputs(args.output_dir, args.copy_inputs_to)
         print(f"copied {count} corpus input files")
-    else:
-        print(publish(args.output_dir))
 
 
 if __name__ == "__main__":

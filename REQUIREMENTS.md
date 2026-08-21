@@ -37,13 +37,21 @@ Docker Compose V2 is included with Docker Desktop and recent Docker Engine insta
 | Resource | Minimum | Recommended |
 |----------|---------|-------------|
 | RAM | 8 GB | 16 GB |
-| Disk | 25 GB | 50 GB |
+| Disk | Package preflight result | Preflight result plus pipeline workspace |
+
+The corpus manifest records each dump and restored database size. Read the verified requirement instead
+of applying a fixed database count or threshold:
+
+```bash
+uv run --frozen --directory analysis python -m teralizer.corpus_publish \
+  --preflight-package replication/datasets
+```
 
 ### Disk Space by Workflow
 
 | Workflow | Required Space |
 |----------|----------------|
-| Verify analysis results | ~20 GB |
+| Verify analysis results | `required free disk` from the verified manifest |
 | Run data collection pipeline (extended sample) | ~25 GB |
 | Run data collection pipeline (extended full) | ~45 GB |
 | Run data collection pipeline (primary full) | ~55 GB |
@@ -54,7 +62,7 @@ Docker Compose V2 is included with Docker Desktop and recent Docker Engine insta
 
 | Archive | Compressed | Unpacked |
 |---------|------------|----------|
-| teralizer-core | ~250 MB | ~350 MB |
+| teralizer-core | Measured at package build | Manifest dumps plus declared inputs |
 | teralizer-results | ~1 MB | ~3 MB |
 | teralizer-projects-primary | ~45 MB | ~150 MB |
 | teralizer-projects-extended-sample | ~170 MB | ~275 MB |

@@ -15,6 +15,13 @@ The evaluation host holds the complete corpus set. A local workstation may valid
 Publication and local analysis therefore need different completeness modes while sharing the same
 identity and integrity checks.
 
+The workstation reaches the complete PostgreSQL service through an SSH-forwarded port. Running
+`pg_dump` on the workstation makes PostgreSQL send logical rows through that tunnel before the client
+compresses them. The corpus databases are tens of gigabytes, while their compressed custom-format
+archives are small enough to transfer as files. Publication must therefore create each compressed dump
+beside PostgreSQL and transfer the archive instead of treating the forwarded port as a bulk-export
+transport.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -23,6 +30,7 @@ identity and integrity checks.
 - Future reruns use the same registry as reports and publication.
 - Restored corpora have known base data and known derived-view definitions before becoming read-only.
 - Publication is reproducible from a dump and declared non-database inputs.
+- Publication checkpoints each corpus durably and resumes without repeating verified exports.
 - Partial local installations are valid for explicitly requested corpora; publication is complete.
 - Retirement decisions are evidence-backed and leave no runnable stale consumer.
 
@@ -32,6 +40,9 @@ identity and integrity checks.
 - Re-running an evaluation merely to adopt semantic ids.
 - Treating mutable scripts or configuration as frozen historical evidence.
 - Shipping bulk logs or every intermediate database.
+- Installing the analysis package on the evaluation host. That host performs only database-local export.
+- Excluding database objects through physical-name wildcards or redesigning schemas before a
+  server-local export demonstrates a separate bottleneck.
 - Teaching Java a second registry implementation when a launcher can provide resolved connection
   settings.
 
@@ -125,9 +136,35 @@ registered corpus and permits a scratch database only when the requested name ma
 pattern. The old hand-maintained physical-name list is removed after the registry guard passes positive
 and negative tests.
 
-### 7. A corpus artifact is dump plus manifest plus required inputs
+### 7. Publication separates database-local export from package assembly
 
-Publication creates one dump per published corpus and a manifest entry binding it to:
+Publication has two execution planes:
+
+- The evaluation-host data plane executes PostgreSQL's custom-format dump command beside the source
+  service. It exports one corpus at a time to durable staging, writes a partial name until the command
+  succeeds, records the archive checksum, and atomically marks the corpus export complete.
+- The workstation control plane resolves the registry, performs small validation queries, inventories
+  declared inputs, transfers completed archives, validates their checksums, assembles the manifest,
+  and atomically promotes only the complete package.
+
+The batch transport used for database-local export is independent of the long-lived SQL tunnel and
+must terminate normally when automation captures its output. The SQL tunnel remains suitable for
+small validation and provenance queries. It is not a bulk-export path. Archive transfer is resumable,
+and an interrupted transfer never requires a new database export.
+
+Durable staging is per corpus rather than per publication attempt. A failed command leaves an
+ineligible partial file. A successful export remains reusable after another corpus fails, but only
+when its recorded corpus id, physical database, byte size, and checksum still verify. This bounds
+recovery to at most one corpus export or one archive transfer. Local package assembly never writes an
+incomplete manifest set over the previous complete package.
+
+Publication dumps the complete database. It does not infer the derived-schema boundary from object
+name prefixes such as `mv_` or `v_`. Import restores the archive and then runs `prepare-corpus`, which
+recreates the versioned derived schema and verifies its revision. If server-local measurement later
+shows that derived objects dominate export cost, moving them into a dedicated schema is a separate
+design change.
+
+The manifest binds each dump to:
 
 - semantic corpus id and current physical database name;
 - checksum and byte size;
@@ -137,10 +174,10 @@ Publication creates one dump per published corpus and a manifest entry binding i
 - installed view-definition revision; and
 - the attempt ledger, completion markers, and project configurations the report validates.
 
-A dump is built once per corpus and imported through the same documented path a replicator uses.
-Import verifies the archive before restore, runs `prepare-corpus`, checks the installed view revision
-and project count, and then runs the report's declared read-only input check. Publication fails before
-promotion if any manifest fact disagrees.
+Import uses the same documented path for the author's clean restoration and a replicator. It verifies
+the archive before restore, runs `prepare-corpus`, checks the installed view revision and project
+count, and then runs the report's declared read-only input check. Publication fails before promotion
+if any manifest fact disagrees.
 
 ### 8. Retirement is the last phase
 
@@ -162,6 +199,15 @@ rewrite, or modification of frozen corpus rows is part of rollback.
   publication manifest.
 - **A local machine lacks most corpora.** -> Requested-subset verification remains usable. Only a
   published-artifact build requires the complete set.
+- **A stale staged dump is mistaken for the current corpus.** -> Partial and complete names are
+  distinct. Reuse requires the recorded corpus identity, physical database, byte size, and checksum to
+  verify before transfer or assembly.
+- **A transport failure loses expensive work.** -> Complete each dump durably on the data host, then
+  use resumable transfer. Never place all corpus exports in one attempt-scoped temporary directory.
+- **Publication observes mutable source data.** -> Keep published corpora read-only and verify their
+  registered shape and provenance before export. Refuse publication when those facts disagree.
+- **A validation command rewrites dependency state.** -> Run Python commands with frozen dependency
+  resolution and require a clean source snapshot before package assembly.
 - **Physical names remain unattractive.** -> Accepted. They are deployment details hidden behind
   semantic ids. Renaming them would spend operational risk on presentation.
 - **A runner bypasses the registry.** -> Include runners and configuration in the physical-literal
@@ -176,9 +222,13 @@ rewrite, or modification of frozen corpus rows is part of rollback.
 2. Migrate runner scripts, project configuration, packaging, import, and diagnostics to corpus ids.
 3. Add idempotent view preparation and report preflight over the installed view revision.
 4. Replace the physical-name guard with registry and scratch lifecycle rules.
-5. Build and import one complete publication artifact through the documented path; reproduce every
-   registered report read-only.
-6. Audit and retire unclassified and superseded databases only after all replacement paths pass.
+5. Prove database-local export, checksum transfer, restore, preparation, and read-only access with the
+   smallest published corpus. Do not start the complete export before this positive control passes.
+6. Export every published corpus into durable per-corpus staging, transfer verified archives, and
+   assemble one complete package on the workstation.
+7. Import that package into an isolated PostgreSQL volume with no corpus-host dependency, then
+   reproduce every registered report read-only.
+8. Audit and retire unclassified and superseded databases only after all replacement paths pass.
 
 Rollback is append-only: revert the responsible code or registry commit, restore a retired database
 from its retained dump when required, and rerun verification. Never mutate a published corpus to make a

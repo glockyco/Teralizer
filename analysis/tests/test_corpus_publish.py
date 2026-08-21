@@ -135,10 +135,34 @@ def test_package_verification_checks_manifest_dumps_inputs_and_inventory(
     assert (destination / "src/main/resources/db/corpora.toml").is_file()
     assert corpus_publish.required_disk_bytes(tmp_path) == 6019
     assert corpus_publish.package_preflight(tmp_path)[0] == "required_disk_bytes=6019"
+    package_destination = tmp_path / "package-artifacts"
+    assert corpus_publish.copy_package_artifacts(tmp_path, package_destination) == 4
+    assert (package_destination / "controlled_db.dump").read_bytes() == b"controlled"
 
     (tmp_path / corpus_publish.CHECKSUMS_NAME).write_text("stale\n", encoding="utf-8")
     with pytest.raises(ValueError, match="checksum inventory disagrees"):
         corpus_publish.verify_package(tmp_path)
+
+
+def test_assembly_consumes_explicit_dumps_without_exporting(
+    tmp_path: Path, monkeypatch
+):
+    document, registry = _manifest_fixture(tmp_path, monkeypatch)
+    plan = deepcopy(document)
+    records = plan["corpora"]
+    assert isinstance(records, list)
+    for record in records:
+        dump = record.pop("dump")
+        record["dump_path"] = dump["path"]
+    monkeypatch.setattr(corpus_publish, "publication_plan", lambda: plan)
+    monkeypatch.setattr(corpus_publish.corpora, "load", lambda: registry)
+    output = tmp_path / "output"
+
+    manifest = corpus_publish.assemble(tmp_path, output)
+
+    assert manifest == output / corpus_publish.MANIFEST_NAME
+    assert corpus_publish.verify_package(output) == manifest
+    assert (tmp_path / "controlled_db.dump").is_file()
 
 
 def test_promotion_removes_stale_dumps_only_after_complete_stage(tmp_path: Path):
