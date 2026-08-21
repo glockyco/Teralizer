@@ -38,7 +38,7 @@
       attribution through commit and provenance, not stale runnable literals.
 - [x] 3.3 Point the four spike CLIs at `real-world`, run each once, and delete any spike whose SQL
       depends on legacy-only structure instead of keeping a database alive for it.
-- [ ] 3.4 Remove `DB_NAME_DEV`, `DB_NAME_TEST`, `DATASET_VARIANT`, `VALID_VARIANTS`, and the
+- [x] 3.4 Remove `DB_NAME_DEV`, `DB_NAME_TEST`, `DATASET_VARIANT`, `VALID_VARIANTS`, and the
       `_replication` suffix from `config.py`, and update `.env.example` to the semantic-id boundary.
 - [ ] 3.5 Point disk metrics, replication compose defaults, packaging, import, and diagnostics through
       the registry accessor. No script may parse `corpora.toml` independently.

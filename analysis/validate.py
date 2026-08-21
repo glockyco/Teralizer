@@ -69,36 +69,31 @@ def test_database_connection() -> bool:
     """Test database connectivity and schema validation."""
     print("\nTesting database connections...")
     try:
+        from teralizer import corpora
         from teralizer.config import db_config
 
-        print("  Testing postgres_dev...")
-        try:
-            db_config.get_dev_engine(validate=True)
-            print("  ✓ postgres_dev connection successful and schema valid")
-        except ConnectionError as error:
-            print(f"  ✗ postgres_dev connection failed: {error}")
+        connected = 0
+        for entry in corpora.load().published_entries:
+            print(f"  Testing corpus {entry.id}...")
+            try:
+                engine = db_config.get_engine(entry.database, validate=False)
+                with engine.connect() as connection:
+                    corpora.validate_project_count(connection, entry)
+                engine.dispose()
+                connected += 1
+                print(f"  ✓ {entry.id} connection successful and identity valid")
+            except ConnectionError:
+                print(f"  ℹ {entry.id} not installed on this workstation")
+            except RuntimeError as error:
+                detail = str(error).split(chr(10))[0]
+                print(f"  ✗ {entry.id} identity validation failed: {detail}")
+                return False
+            except Exception as error:
+                print(f"  ✗ {entry.id} unexpected error: {error}")
+                return False
+        if connected == 0:
+            print("  ✗ No registered corpus is reachable")
             return False
-        except RuntimeError as error:
-            detail = str(error).replace(chr(10), chr(10) + "    ")
-            print(f"  ✗ postgres_dev schema validation failed:\n    {detail}")
-            return False
-        except Exception as error:
-            print(f"  ✗ postgres_dev unexpected error: {error}")
-            return False
-
-        print("  Testing postgres_test...")
-        try:
-            db_config.get_test_engine(validate=True)
-            print("  ✓ postgres_test connection successful and schema valid")
-        except ConnectionError:
-            print("  ℹ postgres_test not available: Connection failed")
-        except RuntimeError as error:
-            print(
-                f"  ℹ postgres_test schema incomplete:\n    {str(error).split(chr(10))[0]}..."
-            )
-        except Exception as error:
-            print(f"  ℹ postgres_test unavailable: {type(error).__name__}")
-
         return True
     except Exception as error:
         print(f"  ✗ Database test setup failed: {error}")

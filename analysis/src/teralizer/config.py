@@ -1,11 +1,4 @@
-"""
-Database configuration for teralizer analysis.
-
-Provides centralized database connections for both postgres_dev and postgres_test
-databases used for different project types:
-- postgres_dev: Contains eqbench and commons-utils projects
-- postgres_test: Contains repo-reapers projects
-"""
+"""PostgreSQL connection settings for Teralizer analysis."""
 
 import os
 import re
@@ -35,51 +28,21 @@ load_dotenv(find_project_root())
 class DatabaseConfig:
     """Centralized database configuration for teralizer analysis."""
 
-    # Valid dataset variants for replication and scorecard workflows
-    VALID_VARIANTS = ("original", "verify", "replicate", "jarvis")
-
     def __init__(self):
         self.host = os.getenv("DB_HOST", "localhost")
         self.port = os.getenv("DB_PORT", "5432")
         self.user = os.getenv("DB_USER", "postgres")
         self.password = os.getenv("DB_PASSWORD", "postgres")
 
-        # Configurable database names for flexibility during reproduction
-        self.db_name_dev = os.getenv("DB_NAME_DEV", "postgres_dev")
-        self.db_name_test = os.getenv("DB_NAME_TEST", "postgres_test")
-
-        # Dataset variant: "original", "verify", "replicate", or "jarvis"
-        # - original/verify/jarvis: use configured database names
-        # - replicate: use *_replication databases
-        self.variant = os.getenv("DATASET_VARIANT", "original")
-        if self.variant not in self.VALID_VARIANTS:
-            raise ValueError(
-                f"Invalid DATASET_VARIANT: {self.variant}. "
-                f"Must be one of {self.VALID_VARIANTS}"
-            )
-
         # Cache for parsed SQL files
         self._sql_objects_cache = None
 
-    def _get_db_name(self, base_name):
-        """Get database name with replication suffix if applicable.
-
-        Args:
-            base_name: Base database name (e.g., 'postgres_dev')
-
-        Returns:
-            Database name, with '_replication' suffix for replicate variant
-        """
-        if self.variant == "replicate":
-            return f"{base_name}_replication"
-        return base_name
-
-    def get_engine(self, database="postgres_dev", validate=True):
+    def get_engine(self, database: str, validate: bool = True):
         """
         Get SQLAlchemy engine for specified database.
 
         Args:
-            database: Database name ('postgres_dev' or 'postgres_test')
+            database: Physical name resolved by the corpus or scratch boundary
             validate: Whether to validate connection and schema (default: True)
 
         Returns:
@@ -294,26 +257,6 @@ class DatabaseConfig:
                 missing.append(("FUNCTION", func))
 
         return missing, sql_files
-
-    def get_dev_engine(self, validate=True):
-        """Get engine for dev database (eqbench and commons-utils projects).
-
-        Database name is configurable via DB_NAME_DEV environment variable,
-        defaulting to 'postgres_dev'. For replicate variant, uses
-        postgres_dev_replication.
-        """
-        db_name = self._get_db_name(self.db_name_dev)
-        return self.get_engine(db_name, validate=validate)
-
-    def get_test_engine(self, validate=True):
-        """Get engine for test database (repo-reapers projects).
-
-        Database name is configurable via DB_NAME_TEST environment variable,
-        defaulting to 'postgres_test'. For replicate variant, uses
-        postgres_test_replication.
-        """
-        db_name = self._get_db_name(self.db_name_test)
-        return self.get_engine(db_name, validate=validate)
 
 
 # Global instance for easy importing

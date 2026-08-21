@@ -5,19 +5,6 @@ Provides database connections and common test data based on actual project mappi
 """
 
 import pytest
-from teralizer.config import db_config
-
-
-@pytest.fixture(scope="session")
-def dev_conn():
-    """Database connection to postgres_dev (session-scoped)."""
-    return db_config.get_dev_engine()
-
-
-@pytest.fixture(scope="session")
-def test_conn():
-    """Database connection to postgres_test (session-scoped)."""
-    return db_config.get_test_engine()
 
 
 @pytest.fixture
@@ -74,9 +61,7 @@ def generalization_variants():
 
 # Requesting one of these means the test talks to PostgreSQL. Marking by fixture
 # keeps the set correct as tests are added, so nothing has to be tagged by hand.
-_DB_FIXTURES = frozenset(
-    {"conn", "dev_conn", "test_conn", "rq6_report", "funnel_result", "rq6_conn"}
-)
+_DB_FIXTURES = frozenset({"conn", "rq6_report", "funnel_result", "rq6_conn"})
 
 
 def pytest_collection_modifyitems(items):
