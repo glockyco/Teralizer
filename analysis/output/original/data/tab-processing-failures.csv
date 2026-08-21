@@ -1,0 +1,15 @@
+number,type,cause,count
+1,External,JUnit execution error during test execution,13
+2,External,Spoon execution error during test analysis,8
+3,Internal,JUnit reports not found,5
+4,Internal,timeout exceeded (300 seconds per original test suite),26
+5,Mixed,all assertions excluded due to filter rejections,151
+6,Mixed,all assertions excluded due to filter rejections and failures,105
+7,Mixed,all tests excluded due to filter rejections and failures,94
+8,External,Spoon execution error during test instrumentation,5
+9,Mixed,all assertions excluded due to earlier filter rejections and new failures,1
+10,Internal,all generalizations excluded due to filter rejections and failures,78
+11,External,PIT execution error during mutation testing,2
+12,Internal,JaCoCo outputs not found,1
+13,Internal,timeout exceeded (3600 seconds during PIT mutation testing),4
+14,Mixed,unmutated test suite has failing tests,6

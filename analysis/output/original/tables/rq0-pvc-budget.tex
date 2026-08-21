@@ -1,0 +1,16 @@
+\begin{table}[H]
+  \caption[PVC and mutation testing results per sampling budget]{PVC and mutation testing results for the same 10 generalized tests at 3 sampling budgets. Only the sampling budget changes between the rows. PVC sums the distinct input values that the tests exercise, and Score is the killed mutants divided by the covered mutants.}%
+  \label{tab:teralizer-rq0-pvc}
+  \tabstyle
+  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}lrrrrr}
+  \toprule
+  \VariantImproved{} &  &  & \multicolumn{3}{r}{Mutation Testing Results} \\
+  \cmidrule(lr){4-6}
+  Sampling Budget & Tests & PVC & Killed & Covered & Score \\
+  \midrule
+  100 tries & 10 & 1,135 & 51 & 80 & 63.7\% \\
+  200 tries & 10 & 2,152 & 51 & 80 & 63.7\% \\
+  1,000 tries & 10 & 10,055 & 51 & 80 & 63.7\% \\
+  \bottomrule
+  \end{tabular*}
+\end{table}

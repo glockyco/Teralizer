@@ -1,0 +1,15 @@
+display_project,b_variant,tests_before,added_tests,removed_tests,tests_after,delta_display,delta_pct_display
+eqbench-es-1s,NAIVE_200_TRIES,"4,718",177,177,"4,718",+0,+0.0%
+eqbench-es-1s,IMPROVED_200_TRIES,"4,718",206,206,"4,718",+0,+0.0%
+eqbench-es-10s,NAIVE_200_TRIES,"4,875",174,173,"4,876",+1,+0.0%
+eqbench-es-10s,IMPROVED_200_TRIES,"4,875",211,210,"4,876",+1,+0.0%
+eqbench-es-60s,NAIVE_200_TRIES,"4,974",174,174,"4,974",+0,+0.0%
+eqbench-es-60s,IMPROVED_200_TRIES,"4,974",210,210,"4,974",+0,+0.0%
+commons-utils-es-1s,NAIVE_200_TRIES,"2,481",60,59,"2,482",+1,+0.0%
+commons-utils-es-1s,IMPROVED_200_TRIES,"2,481",69,68,"2,482",+1,+0.0%
+commons-utils-es-10s,NAIVE_200_TRIES,"2,738",63,62,"2,739",+1,+0.0%
+commons-utils-es-10s,IMPROVED_200_TRIES,"2,738",70,69,"2,739",+1,+0.0%
+commons-utils-es-60s,NAIVE_200_TRIES,"2,735",60,59,"2,736",+1,+0.0%
+commons-utils-es-60s,IMPROVED_200_TRIES,"2,735",75,74,"2,736",+1,+0.0%
+commons-utils-dev,NAIVE_200_TRIES,725,3,0,728,+3,+0.4%
+commons-utils-dev,IMPROVED_200_TRIES,725,3,0,728,+3,+0.4%

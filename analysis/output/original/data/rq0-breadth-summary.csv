@@ -1,0 +1,14 @@
+display_project,jarvis_successful_pbt_pvc,jarvis_successful_muts,aggregate_pvc,sound_muts
+commons-math,"1,604",7,"12,471",90
+commons-lang,104,2,"26,079",208
+commons-cli,—,—,217,2
+commons-codec,—,—,983,6
+commons-collections,—,—,102,2
+commons-configuration,—,—,"1,403",9
+commons-csv,—,—,4,1
+commons-email,—,—,—,—
+commons-io,—,—,774,7
+commons-jexl,—,—,—,—
+commons-pool,—,—,—,—
+commons-text,—,—,"1,144",12
+all 12 projects,"1,708",9,"43,177",337

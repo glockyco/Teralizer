@@ -1,17 +1,16 @@
-\begin{table}[H]
-  \caption{Exclusion breakdown showing proactive filtering and reactive failures (extended dataset).}
+\begin{table}
+  \caption[\VariantImprovedC{} inclusion, filtering, and failure counts in RepoReapers]{Exclusion results for \VariantImprovedC{} in the RepoReapers projects.}%
   \label{tab:exclusions-breakdown-extended}
-  \begin{tabular}{llrrrr}
-    \toprule
-    & & & & \multicolumn{2}{r}{Excluded} \\
-    \cmidrule(lr){5-6}
-    Variant & Type & Total & Included & Filtering & Failures \\
-    \midrule
-    \VariantShared{} & Test & 81,810 & \phantom{}33,385\; (40.8\%) & \phantom{0,0}40,583\; (49.6\%) & \phantom{}7,842\; (\phantom{0}9.6\%) \\
-    \midrule
-    \VariantShared{} & Assertion & 122,153 & \phantom{0,}711\; (\phantom{0}0.6\%) & \phantom{}121,060\; (99.1\%) & \phantom{0,0}382\; (\phantom{0}0.3\%) \\
-    \midrule
-    \VariantImprovedC{} & Generalization & 239 & \phantom{0,}206\; (86.2\%) & \phantom{0,0,}23\; (\phantom{0}9.6\%) & \phantom{0,}10\; (\phantom{0}4.2\%) \\
-    \bottomrule
-  \end{tabular}
+  \tabstyle
+  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}lrrrr}
+  \toprule
+   &  &  & \multicolumn{2}{c}{Excluded} \\
+  \cmidrule(lr){4-5}
+  Level & Total & \multicolumn{1}{c}{Included} & \multicolumn{1}{c}{Filtering} & \multicolumn{1}{c}{Failures} \\
+  \midrule
+  Test & 85,368 & 44,875\; (52.6\%) & 40,198\; (47.1\%) & 295\; (0.3\%) \\
+  Assertion & 180,548 & 6,905\; (\phantom{0}3.8\%) & 166,602\; (92.3\%) & 7,041\; (3.9\%) \\
+  Generalization & 5,356 & 1,615\; (30.2\%) & 3,719\; (69.4\%) & 22\; (0.4\%) \\
+  \bottomrule
+  \end{tabular*}
 \end{table}

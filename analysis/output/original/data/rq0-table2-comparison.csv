@@ -1,0 +1,11 @@
+scenario_number,table_row,original_cut_pvc,jarvis_pbt_pvc,suite_pvc
+1,CharUtilsTest::isAscii,6,59,230
+2,CharUtilsTest::isPrintable,195,45,197
+3,FastMathTest::testMinMaxDouble,9,400,368
+4,FastMathTest::toIntExact,"2,001",65,"2,074"
+5,IntervalTest,2,2,172
+6,PolynomialFunctionTest::testConstants,5,105,—
+7,PolynomialFunctionTest::testfirstDerivativeComparison,7,264,105
+8,PolynomialFunctionTest::testLinear,5,160,104
+9,PrecisionTest,8,102,—
+10,UnivariateFunctionTest::testAbs,5,506,—

@@ -1,0 +1,22 @@
+\begin{table}
+  \caption[PVC per JARVIS scenario before and after generalization]{PVC before generalization, after generalization with JARVIS, and after generalization with \ToolTeralizer{} for each of the 10 scenarios reported by JARVIS.}%
+  \label{tab:teralizer-rq0-table2}
+  \centering
+  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}rlrrr}
+  \toprule
+   &  & Original & JARVIS & \ToolTeralizer{} \\
+  \# & JARVIS scenario & CUT PVC & PBT PVC & PBT PVC \\
+  \midrule
+  1 & \texttt{isAscii} & 6 & 59 & 230 \\
+  2 & \texttt{isPrintable} & 195 & 45 & 197 \\
+  3 & \texttt{testMinMaxDouble} & 9 & 400 & 368 \\
+  4 & \texttt{toIntExact} & 2,001 & 65 & 2,074 \\
+  5 & \texttt{IntervalTest} & 2 & 2 & 172 \\
+  6 & \texttt{testConstants} & 5 & 105 & -- \\
+  7 & \texttt{testfirstDerivativeComparison} & 7 & 264 & 105 \\
+  8 & \texttt{testLinear} & 5 & 160 & 104 \\
+  9 & \texttt{PrecisionTest} & 8 & 102 & -- \\
+  10 & \texttt{testAbs} & 5 & 506 & -- \\
+  \bottomrule
+  \end{tabular*}
+\end{table}

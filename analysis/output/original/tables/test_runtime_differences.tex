@@ -1,0 +1,18 @@
+\begin{table}
+  \caption{Runtime overhead of generalized tests per test and per try.}
+  \label{fig:test-runtime-differences}
+  \centering
+  \begin{tabular}{lllllll}
+  \toprule
+  Variant & Test mean (ms) & Generalized mean (ms) & Difference (ms) & Ratio & Tries & Difference / try (ms) \\
+  \midrule
+  BASELINE & 4.28 & 153.84 & 149.56 & 35.92 & 1 & 149.56 \\
+  NAIVE\_10\_TRIES & 4.53 & 290.66 & 286.13 & 64.22 & 10 & 28.61 \\
+  NAIVE\_50\_TRIES & 4.51 & 353.08 & 348.56 & 78.22 & 50 & 6.97 \\
+  NAIVE\_200\_TRIES & 4.54 & 1140.74 & 1136.21 & 251.49 & 200 & 5.68 \\
+  IMPROVED\_10\_TRIES & 4.53 & 193.70 & 189.17 & 42.75 & 10 & 18.92 \\
+  IMPROVED\_50\_TRIES & 4.56 & 251.41 & 246.85 & 55.18 & 50 & 4.94 \\
+  IMPROVED\_200\_TRIES & 4.57 & 399.83 & 395.26 & 87.55 & 200 & 1.98 \\
+  \bottomrule
+  \end{tabular}
+\end{table}

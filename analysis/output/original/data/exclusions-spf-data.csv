@@ -1,7 +1,0 @@
-error_type,failure_count,percentage
-SPF exception,1540,51.42
-PC size limit exceeded,790,26.38
-Depth limit exceeded,524,17.5
-Teralizer exception,97,3.24
-Execution timeout,28,0.93
-OutOfMemoryError,16,0.53

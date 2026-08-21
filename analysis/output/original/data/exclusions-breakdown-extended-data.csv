@@ -1,4 +1,0 @@
-variant,exclusion_level,total_count,included_count,filtering_count,failures_count,included_percentage,filtering_percentage,failures_percentage
-\VariantShared{},Test,81810,33385,40583,7842,40.8,49.6,9.6
-\VariantShared{},Assertion,122153,711,121060,382,0.6,99.1,0.3
-\VariantImprovedC{},Generalization,239,206,23,10,86.2,9.6,4.2

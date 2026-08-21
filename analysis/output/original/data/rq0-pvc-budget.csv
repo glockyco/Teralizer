@@ -1,0 +1,4 @@
+display_variant,probes,total_pvc,killed_mutants,covered_mutants,covered_mutation_score
+100 tries,10,"1,135",51,80,63.7%
+200 tries,10,"2,152",51,80,63.7%
+"1,000 tries",10,"10,055",51,80,63.7%

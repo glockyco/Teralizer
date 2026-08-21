@@ -1,25 +1,23 @@
-\begin{table}[H]
-  \caption{Number of files, classes, source lines of code (SLOC), and test methods per project.}
+\begin{table}
+  \caption[Implementation and test-suite size per evaluation project]{Number of files, classes, source lines of code (SLOC), and test methods per project.}%
   \label{tab:dataset-statistics}
-  \begin{tabular}{lrrrrrrr}
-    \toprule
-    & \multicolumn{3}{r}{Implementation} & \multicolumn{4}{r}{Test} \\
-    \cmidrule(lr){2-4} \cmidrule(lr){5-8}
-    Project & Files & Classes & SLOC & Files & Classes & SLOC & Methods \\
-    \midrule
-    \DatasetEqBenchA{} & 544 & 652 & 27,871 & 544 & 544 & 35,666 & 4,718 \\
-    \DatasetEqBenchB{} & 544 & 652 & 27,871 & 543 & 543 & 36,937 & 4,875 \\
-    \DatasetEqBenchC{} & 544 & 652 & 27,871 & 544 & 544 & 37,836 & 4,974 \\
-    \midrule
-    \DatasetCommonsA{} & 106 & 247 & 19,709 & 103 & 103 & 17,524 & 2,481 \\
-    \DatasetCommonsB{} & 106 & 247 & 19,709 & 103 & 103 & 19,082 & 2,738 \\
-    \DatasetCommonsC{} & 106 & 247 & 19,709 & 102 & 102 & 18,839 & 2,735 \\
-    \midrule
-    \DatasetCommonsDev{} & 106 & 247 & 19,709 & 80 & 119 & 14,389 & 725 \\
-    \midrule
-    \DatasetRepoReapers{} (total) & 41,292 & 50,474 & 2,735,127 & 22,281 & 30,894 & 2,012,601 & 81,810 \\
-    \DatasetRepoReapers{} (mean) & 65 & 79 & 4,320 & 35 & 48 & 3,179 & 162 \\
-    \DatasetRepoReapers{} (median) & 49 & 56 & 3,253 & 23 & 26 & 2,107 & 86 \\
-    \bottomrule
-  \end{tabular}
+  \tabstyle
+  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}lrrrrrrr}
+  \toprule
+   & \multicolumn{3}{r}{Implementation} & \multicolumn{4}{r}{Test} \\
+  \cmidrule(lr){2-4} \cmidrule(lr){5-8}
+  Project & Files & Classes & SLOC & Files & Classes & SLOC & Methods \\
+  \midrule
+  \DatasetEqBenchA{} & 544 & 652 & 27,871 & 544 & 544 & 35,666 & 4,718 \\
+  \DatasetEqBenchB{} & 544 & 652 & 27,871 & 543 & 543 & 36,937 & 4,875 \\
+  \DatasetEqBenchC{} & 544 & 652 & 27,871 & 544 & 544 & 37,836 & 4,974 \\
+  \DatasetCommonsA{} & 106 & 247 & 19,709 & 103 & 103 & 17,524 & 2,481 \\
+  \DatasetCommonsB{} & 106 & 247 & 19,709 & 103 & 103 & 19,082 & 2,738 \\
+  \DatasetCommonsC{} & 106 & 247 & 19,709 & 102 & 102 & 18,839 & 2,735 \\
+  \DatasetCommonsDev{} & 106 & 247 & 19,709 & 80 & 119 & 14,389 & 725 \\
+  \DatasetRepoReapers{} (total) & 38,916 & 47,334 & 2,552,342 & 20,948 & 28,990 & 1,867,904 & 85,368 \\
+  \DatasetRepoReapers{} (mean) & 66 & 80 & 4,362 & 35 & 49 & 3,192 & 163 \\
+  \DatasetRepoReapers{} (median) & 50 & 57 & 3,321 & 24 & 29 & 2,131 & 82 \\
+  \bottomrule
+  \end{tabular*}
 \end{table}

@@ -1,0 +1,7 @@
+project_name,search_budget,total,search,inlining,minimization,coverage_analysis,assertion_generation,junit_check,writing_tests
+commons-utils-es-default-10s,10.00,53.31,10.15,0.07,0.80,0.07,3.86,38.30,0.04
+commons-utils-es-default-1s,1.00,44.27,2.10,0.04,0.81,0.06,3.35,37.86,0.04
+commons-utils-es-default-60s,60.00,97.52,54.48,0.06,0.51,0.06,4.39,37.97,0.05
+eqbench-es-default-10s,10.00,54.89,12.75,0.42,2.71,0.72,5.11,32.85,0.31
+eqbench-es-default-1s,1.00,48.67,5.39,0.33,2.95,0.67,4.82,34.27,0.23
+eqbench-es-default-60s,60.00,101.24,56.30,0.47,3.13,0.72,5.07,35.16,0.38

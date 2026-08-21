@@ -1,0 +1,17 @@
+\begin{table}
+  \caption{Causes for generalization attempts that produce no generalized test in the real-world dataset.}
+  \label{tab:widening-refusals}
+  \centering
+  \begin{tabular}{lrrr}
+  \toprule
+  Refusal cause & Generalizations & Refusals & Attempts \\
+  \midrule
+  Null output model, and the returned value is not a bytecode literal & 2,552 & 77.4\% & 47.6\% \\
+  Null output model, and a native call received a symbolic argument & 488 & 14.8\% & 9.1\% \\
+  Null output model, and no generated parameter reaches the path condition & 206 & 6.2\% & 3.8\% \\
+  Null output model, and the path condition does not pin every generated parameter & 38 & 1.2\% & 0.7\% \\
+  Exception oracle, concretized with a risk of divergence & 13 & 0.4\% & 0.2\% \\
+  Exception oracle, and the path condition does not pin every generated parameter & 1 & 0.0\% & 0.0\% \\
+  \bottomrule
+  \end{tabular}
+\end{table}

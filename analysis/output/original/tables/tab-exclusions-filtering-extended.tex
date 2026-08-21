@@ -1,21 +1,28 @@
-\begin{table}[H]
-  \caption{Filtering results of the extended dataset for tests, assertions, and generalizations.}
+\begin{table}
+  \caption[RepoReapers filtering decisions for \VariantImprovedC{} by level and filter]{Filtering results for \VariantImprovedC{} in the RepoReapers projects.}%
   \label{tab:exclusions-filtering-extended}
-  \begin{tabular}{lllrrrr}
-    \toprule
-    Variant & Type & Filter Name & Total & \multicolumn{1}{c}{Accept} & \multicolumn{1}{c}{Defer} & \multicolumn{1}{c}{Reject} \\
-    \midrule
-    \VariantShared{} & Test & NoAssertions & 56,844 & 33,385\; (58.7\%) & - & 23,459\; (41.3\%) \\
-    \VariantShared{} & Test & NonPassingTest & 74,308 & 65,567\; (88.2\%) & - & 8,741\; (11.8\%) \\
-    \VariantShared{} & Test & TestType & 74,308 & 65,031\; (87.5\%) & - & 9,277\; (12.5\%) \\
-    \midrule
-    \VariantShared{} & Assertion & AssertionType & 122,153 & 92,986\; (76.1\%) & - & 29,167\; (23.9\%) \\
-    \VariantShared{} & Assertion & ExcludedTest & 122,153 & 101,513\; (83.1\%) & - & 20,640\; (16.9\%) \\
-    \VariantShared{} & Assertion & MissingValue & 122,153 & 51,425\; (42.1\%) & - & 70,728\; (57.9\%) \\
-    \VariantShared{} & Assertion & ParameterType & 122,153 & 5,393\; (\phantom{0}4.4\%) & 56,477\; (46.2\%) & 60,283\; (49.4\%) \\
-    \VariantShared{} & Assertion & ReturnType & 122,153 & 11,645\; (\phantom{0}9.5\%) & 70,728\; (57.9\%) & 39,780\; (32.6\%) \\
-    \midrule
-    \VariantImprovedC{} & Generalization & NonPassingTest & 229 & 206\; (90.0\%) & - & 23\; (10.0\%) \\
-    \bottomrule
-  \end{tabular}
+  \tabstyle
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}llrrrr}
+  \toprule
+  Level & Filter Name & Total & \multicolumn{1}{c}{Accept} & \multicolumn{1}{c}{Defer} & \multicolumn{1}{c}{Reject} \\
+  \midrule
+  Test & NonPassingTest & 82,445 & 73,780\; (\phantom{0}89.5\%) & -- & 8,665\; (10.5\%) \\
+  Test & TestType & 82,445 & 82,246\; (\phantom{0}99.8\%) & -- & 199\; (\phantom{0}0.2\%) \\
+  Test & NoAssertions & 73,662 & 49,396\; (\phantom{0}67.1\%) & -- & 24,266\; (32.9\%) \\
+  Test & DisabledTest & 73,662 & 73,657\; (100.0\%) & -- & 5\; (\phantom{0}0.0\%) \\
+  Test & InheritedTestCase & 73,662 & 72,609\; (\phantom{0}98.6\%) & -- & 1,053\; (\phantom{0}1.4\%) \\
+  Test & MockingFramework & 73,662 & 66,689\; (\phantom{0}90.5\%) & -- & 6,973\; (\phantom{0}9.5\%) \\
+  \midrule
+  Assertion & AssertionType & 180,548 & 148,901\; (\phantom{0}82.5\%) & -- & 31,647\; (17.5\%) \\
+  Assertion & ExcludedTest & 180,548 & 141,764\; (\phantom{0}78.5\%) & -- & 38,784\; (21.5\%) \\
+  Assertion & MissingValue & 180,548 & 109,865\; (\phantom{0}60.9\%) & -- & 70,683\; (39.1\%) \\
+  Assertion & ParameterType & 180,548 & 48,992\; (\phantom{0}27.1\%) & 65,706\; (36.4\%) & 65,850\; (36.5\%) \\
+  Assertion & ReturnType & 180,548 & 52,400\; (\phantom{0}29.0\%) & 70,683\; (39.1\%) & 57,465\; (31.8\%) \\
+  Assertion & StringOperation & 180,548 & 175,345\; (\phantom{0}97.1\%) & -- & 5,203\; (\phantom{0}2.9\%) \\
+  \midrule
+  Generalization & NonPassingTest & 2,035 & 1,615\; (\phantom{0}79.4\%) & -- & 420\; (20.6\%) \\
+  \bottomrule
+  \end{tabular*}
+  }
 \end{table}

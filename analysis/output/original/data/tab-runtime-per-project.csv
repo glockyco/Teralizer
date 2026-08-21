@@ -1,0 +1,15 @@
+display_project,b_variant,runtime_before,added_runtime,removed_runtime,runtime_after,delta_display,delta_pct_display
+eqbench-es-1s,NAIVE_200_TRIES,17.44,100.94,0.74,117.65,+100.20,+574.5%
+eqbench-es-1s,IMPROVED_200_TRIES,17.44,101.62,0.68,118.38,+100.94,+578.7%
+eqbench-es-10s,NAIVE_200_TRIES,16.70,106.19,0.66,122.23,+105.53,+632.0%
+eqbench-es-10s,IMPROVED_200_TRIES,16.70,139.64,0.56,155.77,+139.08,+832.9%
+eqbench-es-60s,NAIVE_200_TRIES,18.21,221.07,0.76,238.52,+220.31,+1210.0%
+eqbench-es-60s,IMPROVED_200_TRIES,18.21,124.68,0.69,142.20,+123.99,+681.0%
+commons-utils-es-1s,NAIVE_200_TRIES,4.31,114.42,0.09,118.64,+114.33,+2651.5%
+commons-utils-es-1s,IMPROVED_200_TRIES,4.31,29.49,0.14,33.66,+29.35,+680.5%
+commons-utils-es-10s,NAIVE_200_TRIES,7.40,148.54,0.14,155.80,+148.40,+2005.2%
+commons-utils-es-10s,IMPROVED_200_TRIES,7.40,71.50,0.21,78.70,+71.30,+963.3%
+commons-utils-es-60s,NAIVE_200_TRIES,6.30,122.11,0.07,128.34,+122.04,+1936.2%
+commons-utils-es-60s,IMPROVED_200_TRIES,6.30,28.07,0.08,34.29,+27.99,+444.1%
+commons-utils-dev,NAIVE_200_TRIES,7.95,4.54,0.00,12.48,+4.54,+57.1%
+commons-utils-dev,IMPROVED_200_TRIES,7.95,0.74,0.00,8.69,+0.74,+9.4%

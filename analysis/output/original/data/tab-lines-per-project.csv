@@ -1,0 +1,15 @@
+display_project,b_variant,lines_before,added_lines,removed_lines,lines_after,delta_display,delta_pct_display
+eqbench-es-1s,NAIVE_200_TRIES,"30,989","11,780","1,127","41,642",+10653,+34.4%
+eqbench-es-1s,IMPROVED_200_TRIES,"30,989","19,019","1,302","48,706",+17717,+57.2%
+eqbench-es-10s,NAIVE_200_TRIES,"32,503","11,520","1,061","42,962",+10459,+32.2%
+eqbench-es-10s,IMPROVED_200_TRIES,"32,503","20,353","1,284","51,572",+19069,+58.7%
+eqbench-es-60s,NAIVE_200_TRIES,"33,510","11,623","1,069","44,064",+10554,+31.5%
+eqbench-es-60s,IMPROVED_200_TRIES,"33,510","20,288","1,285","52,513",+19003,+56.7%
+commons-utils-es-1s,NAIVE_200_TRIES,"16,563","3,733",359,"19,937",+3374,+20.4%
+commons-utils-es-1s,IMPROVED_200_TRIES,"16,563","5,261",413,"21,411",+4848,+29.3%
+commons-utils-es-10s,NAIVE_200_TRIES,"18,124","3,942",379,"21,687",+3563,+19.7%
+commons-utils-es-10s,IMPROVED_200_TRIES,"18,124","5,423",421,"23,126",+5002,+27.6%
+commons-utils-es-60s,NAIVE_200_TRIES,"17,886","3,723",361,"21,248",+3362,+18.8%
+commons-utils-es-60s,IMPROVED_200_TRIES,"17,886","5,801",452,"23,235",+5349,+29.9%
+commons-utils-dev,NAIVE_200_TRIES,"8,561",421,0,"8,982",+421,+4.9%
+commons-utils-dev,IMPROVED_200_TRIES,"8,561",457,0,"9,018",+457,+5.3%

@@ -1,28 +1,33 @@
-\begin{table}[H]
-  \caption{Model properties of mutants that are (not) detected by the \VariantImprovedC{} variant.}
+\begin{table}
+  \caption[Operations and constraints for \VariantImprovedC{} detections and misses]{Model properties of mutants that are (not) detected by the \VariantImprovedC{} variant.}%
   \label{tab:mutation-detection-comparison}
-  \begin{tabular}{lcrrrrrrr}
-    \toprule
-    & & & \multicolumn{2}{c}{Operations} & \multicolumn{2}{c}{Constraints} & \multicolumn{2}{c}{Constraints Used} \\
-    \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
-    Project & Detected & Mutants & Mean & Median & Mean & Median & Mean & Median \\
-    \midrule
-    \DatasetEqBenchA{} & yes & 11,145 & 147 & \phantom{0}9 & \phantom{0}6 & 2 & \phantom{0}47\% & \phantom{0}80\% \\
-    \DatasetEqBenchA{} & no & 10,347 & 224 & 16 & 11 & 5 & \phantom{0}23\% & \phantom{0}50\% \\
-    \DatasetEqBenchB{} & yes & 11,658 & 139 & \phantom{0}9 & \phantom{0}6 & 2 & \phantom{0}62\% & 100\% \\
-    \DatasetEqBenchB{} & no & 9,999 & 231 & 15 & \phantom{0}8 & 2 & \phantom{0}57\% & 100\% \\
-    \DatasetEqBenchC{} & yes & 12,052 & 137 & \phantom{0}9 & \phantom{0}5 & 2 & \phantom{0}69\% & 100\% \\
-    \DatasetEqBenchC{} & no & 9,958 & 218 & 11 & \phantom{0}6 & 2 & \phantom{0}67\% & 100\% \\
-    \midrule
-    \DatasetCommonsA{} & yes & 4,390 & 290 & 15 & \phantom{0}7 & 5 & \phantom{0}43\% & \phantom{0}84\% \\
-    \DatasetCommonsA{} & no & 3,183 & 389 & 45 & 12 & 6 & \phantom{0}11\% & \phantom{0}50\% \\
-    \DatasetCommonsB{} & yes & 4,660 & 467 & 23 & \phantom{0}6 & 5 & \phantom{0}46\% & \phantom{0}85\% \\
-    \DatasetCommonsB{} & no & 3,309 & 507 & 46 & \phantom{0}8 & 6 & \phantom{0}10\% & \phantom{0}56\% \\
-    \DatasetCommonsC{} & yes & 4,821 & 374 & 20 & \phantom{0}6 & 5 & \phantom{0}47\% & \phantom{0}85\% \\
-    \DatasetCommonsC{} & no & 3,288 & 423 & 41 & 10 & 6 & \phantom{0}11\% & \phantom{0}54\% \\
-    \midrule
-    \DatasetCommonsDev{} & yes & 4,193 & 107 & 11 & \phantom{0}4 & 4 & \phantom{0}25\% & \phantom{0}75\% \\
-    \DatasetCommonsDev{} & no & 1,022 & 173 & 10 & \phantom{0}4 & 4 & \phantom{0}19\% & \phantom{0}75\% \\
-    \bottomrule
-  \end{tabular}
+  \tabstyle
+  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}lcrrrrrrr}
+  \toprule
+   &  &  & \multicolumn{2}{c}{Operations} & \multicolumn{2}{c}{Constraints} & \multicolumn{2}{c}{Constraints Used} \\
+  \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+  Project & Detected & Mutants & Mean & Median & Mean & Median & Mean & Median \\
+  \midrule
+  eqbench-es-default-1s & yes & 11,145 & 147 & 9 & 6 & 2 & 47\% & 80\% \\
+  eqbench-es-default-1s & no & 10,347 & 224 & 16 & 11 & 5 & 24\% & 50\% \\
+  \midrule
+  eqbench-es-default-10s & yes & 11,658 & 139 & 9 & 6 & 2 & 62\% & 100\% \\
+  eqbench-es-default-10s & no & 9,999 & 231 & 15 & 8 & 2 & 58\% & 100\% \\
+  \midrule
+  eqbench-es-default-60s & yes & 12,052 & 137 & 9 & 5 & 2 & 70\% & 100\% \\
+  eqbench-es-default-60s & no & 9,958 & 218 & 11 & 6 & 2 & 68\% & 100\% \\
+  \midrule
+  commons-utils-es-default-1s & yes & 4,390 & 290 & 15 & 7 & 5 & 44\% & 85\% \\
+  commons-utils-es-default-1s & no & 3,183 & 389 & 45 & 12 & 6 & 12\% & 50\% \\
+  \midrule
+  commons-utils-es-default-10s & yes & 4,660 & 467 & 23 & 6 & 5 & 47\% & 86\% \\
+  commons-utils-es-default-10s & no & 3,309 & 507 & 46 & 8 & 6 & 10\% & 56\% \\
+  \midrule
+  commons-utils-es-default-60s & yes & 4,821 & 374 & 20 & 6 & 5 & 47\% & 86\% \\
+  commons-utils-es-default-60s & no & 3,288 & 423 & 41 & 10 & 6 & 11\% & 55\% \\
+  \midrule
+  commons-utils & yes & 4,193 & 107 & 11 & 4 & 4 & 26\% & 75\% \\
+  commons-utils & no & 1,022 & 173 & 10 & 4 & 4 & 20\% & 75\% \\
+  \bottomrule
+  \end{tabular*}
 \end{table}

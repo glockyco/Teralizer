@@ -1,28 +1,29 @@
-\begin{table}[H]
-  \caption{Number of tests before and after generalization, with changes, per project.}
+\begin{table}
+  \caption[Test count additions, removals, and deltas after generalization]{Number of tests before and after generalization, with changes, per project.}%
   \label{tab:tests-per-project}
-  \begin{tabular}{llrrrrrr}
-    \toprule
-     & & \multicolumn{6}{c}{Tests} \\
-    \cmidrule(lr){3-8}
-    Project & Variant & Before & Added & Removed & After & Delta & Delta \% \\
-    \midrule
-    \DatasetEqBenchA{} & \VariantNaiveC{} & 4,718 & 177 & 177 & 4,718 & +0 & +0.0\% \\
-    \DatasetEqBenchA{} & \VariantImprovedC{} & 4,718 & 206 & 206 & 4,718 & +0 & +0.0\% \\
-    \DatasetEqBenchB{} & \VariantNaiveC{} & 4,875 & 174 & 173 & 4,876 & +1 & +0.0\% \\
-    \DatasetEqBenchB{} & \VariantImprovedC{} & 4,875 & 211 & 210 & 4,876 & +1 & +0.0\% \\
-    \DatasetEqBenchC{} & \VariantNaiveC{} & 4,974 & 174 & 174 & 4,974 & +0 & +0.0\% \\
-    \DatasetEqBenchC{} & \VariantImprovedC{} & 4,974 & 210 & 210 & 4,974 & +0 & +0.0\% \\
-    \midrule
-    \DatasetCommonsA{} & \VariantNaiveC{} & 2,481 & 60 & 59 & 2,482 & +1 & +0.0\% \\
-    \DatasetCommonsA{} & \VariantImprovedC{} & 2,481 & 69 & 68 & 2,482 & +1 & +0.0\% \\
-    \DatasetCommonsB{} & \VariantNaiveC{} & 2,738 & 63 & 62 & 2,739 & +1 & +0.0\% \\
-    \DatasetCommonsB{} & \VariantImprovedC{} & 2,738 & 70 & 69 & 2,739 & +1 & +0.0\% \\
-    \DatasetCommonsC{} & \VariantNaiveC{} & 2,735 & 60 & 59 & 2,736 & +1 & +0.0\% \\
-    \DatasetCommonsC{} & \VariantImprovedC{} & 2,735 & 75 & 74 & 2,736 & +1 & +0.0\% \\
-    \midrule
-    \DatasetCommonsDev{} & \VariantNaiveC{} & 725 & 3 & 0 & 728 & +3 & +0.4\% \\
-    \DatasetCommonsDev{} & \VariantImprovedC{} & 725 & 3 & 0 & 728 & +3 & +0.4\% \\
-    \bottomrule
-  \end{tabular}
+  \tabstyle
+  \begin{tabular*}{\textwidth}{@{\hspace{\tabcolsep}\extracolsep{\fill}}llrrrrrr}
+  \toprule
+   &  & \multicolumn{6}{c}{Tests} \\
+  \cmidrule(lr){3-8}
+  Project & Variant & Before & Added & Removed & After & Delta & Delta \% \\
+  \midrule
+  eqbench-es-1s & NAIVE\_200\_TRIES & 4,718 & 177 & 177 & 4,718 & +0 & +0.0\% \\
+  eqbench-es-1s & IMPROVED\_200\_TRIES & 4,718 & 206 & 206 & 4,718 & +0 & +0.0\% \\
+  eqbench-es-10s & NAIVE\_200\_TRIES & 4,875 & 174 & 173 & 4,876 & +1 & +0.0\% \\
+  eqbench-es-10s & IMPROVED\_200\_TRIES & 4,875 & 211 & 210 & 4,876 & +1 & +0.0\% \\
+  eqbench-es-60s & NAIVE\_200\_TRIES & 4,974 & 174 & 174 & 4,974 & +0 & +0.0\% \\
+  eqbench-es-60s & IMPROVED\_200\_TRIES & 4,974 & 210 & 210 & 4,974 & +0 & +0.0\% \\
+  \midrule
+  commons-utils-es-1s & NAIVE\_200\_TRIES & 2,481 & 60 & 59 & 2,482 & +1 & +0.0\% \\
+  commons-utils-es-1s & IMPROVED\_200\_TRIES & 2,481 & 69 & 68 & 2,482 & +1 & +0.0\% \\
+  commons-utils-es-10s & NAIVE\_200\_TRIES & 2,738 & 63 & 62 & 2,739 & +1 & +0.0\% \\
+  commons-utils-es-10s & IMPROVED\_200\_TRIES & 2,738 & 70 & 69 & 2,739 & +1 & +0.0\% \\
+  commons-utils-es-60s & NAIVE\_200\_TRIES & 2,735 & 60 & 59 & 2,736 & +1 & +0.0\% \\
+  commons-utils-es-60s & IMPROVED\_200\_TRIES & 2,735 & 75 & 74 & 2,736 & +1 & +0.0\% \\
+  \midrule
+  commons-utils-dev & NAIVE\_200\_TRIES & 725 & 3 & 0 & 728 & +3 & +0.4\% \\
+  commons-utils-dev & IMPROVED\_200\_TRIES & 725 & 3 & 0 & 728 & +3 & +0.4\% \\
+  \bottomrule
+  \end{tabular*}
 \end{table}

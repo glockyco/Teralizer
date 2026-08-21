@@ -1,8 +1,0 @@
-project_name,total_test_methods,included_test_methods,test_inclusion_rate,total_impl_classes,included_impl_classes,class_inclusion_rate,total_mutants,covered_mutants,uncovered_mutants,covered_mutants_percentage,uncovered_mutants_percentage
-eqbench-es-1s,4718,3937,0.83,652,607,0.93,23905,21492,2413,89.91,10.09
-eqbench-es-10s,4875,4049,0.83,652,600,0.92,23654,21657,1997,91.56,8.44
-eqbench-es-60s,4974,4124,0.83,652,603,0.92,23663,22010,1653,93.01,6.99
-commons-utils-es-1s,2481,2079,0.84,247,111,0.45,8581,7536,1045,87.82,12.18
-commons-utils-es-10s,2738,2330,0.85,247,112,0.45,8391,7939,452,94.61,5.39
-commons-utils-es-60s,2735,2326,0.85,247,112,0.45,8354,8109,245,97.07,2.93
-commons-utils-dev,725,461,0.64,247,90,0.36,8096,5215,2881,64.41,35.59

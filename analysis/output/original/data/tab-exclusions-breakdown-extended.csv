@@ -1,0 +1,4 @@
+level,total,included,included_pct,filtering,filtering_pct,failures,failures_pct
+Test,"85,368","44,875",52.6%,"40,198",47.1%,295,0.3%
+Assertion,"180,548","6,905",3.8%,"166,602",92.3%,"7,041",3.9%
+Generalization,"5,356","1,615",30.2%,"3,719",69.4%,22,0.4%
