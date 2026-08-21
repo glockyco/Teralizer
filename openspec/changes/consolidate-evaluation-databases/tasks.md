@@ -31,7 +31,7 @@
 
 ## 3. Move every live path onto corpus ids
 
-- [ ] 3.1 Replace physical database literals in non-report consumers with corpus ids;
+- [x] 3.1 Replace physical database literals in non-report consumers with corpus ids;
       `make-report-runs-explicit` owns every registered `ReportSpec` migration.
 - [ ] 3.2 Migrate `run-rq6-analysis.sh`, rerun scripts, and executable `project-configs/**` to accept a
       semantic corpus id and receive the resolved physical connection at runtime. Preserve historical

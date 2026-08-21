@@ -1059,7 +1059,7 @@ SWEEP_VARIANTS = (
 
 
 def main() -> None:
-    """Print a JARVIS scratch-scorecard table from ``postgres_jarvis_scoreboard``.
+    """Print JARVIS scorecard tables from registered corpora.
 
     ``uv run --directory analysis python -m teralizer.jarvis_scoreboard`` scores the
     IMPROVED_100_TRIES variant against :data:`JARVIS_TABLE2`. ``--sweep`` instead
@@ -1069,7 +1069,8 @@ def main() -> None:
     """
     import argparse
 
-    from teralizer.report_basis import open_report_connection, print_basis_header
+    from teralizer.corpora import open_corpus
+    from teralizer.report_basis import print_basis_header
 
     parser = argparse.ArgumentParser(description="JARVIS scratch-scorecard tables.")
     parser.add_argument(
@@ -1080,21 +1081,21 @@ def main() -> None:
     parser.add_argument(
         "--census",
         action="store_true",
-        help="print the beyond-JARVIS census from postgres_jarvis_census",
+        help="print the beyond-JARVIS census",
     )
     parser.add_argument(
-        "--db",
+        "--corpus",
         help=(
-            "database override (defaults: postgres_jarvis_scoreboard, or "
-            "postgres_jarvis_census with --census)"
+            "registered corpus override (defaults: jarvis-scenarios, or "
+            "jarvis-benchmark with --census)"
         ),
     )
     args = parser.parse_args()
 
     if args.census:
-        db_name = args.db or "postgres_jarvis_census"
-        with open_report_connection(db_name) as conn:
-            print_basis_header(conn, db_name)
+        corpus_id = args.corpus or "jarvis-benchmark"
+        with open_corpus(corpus_id) as (entry, conn):
+            print_basis_header(conn, entry.database)
             census = get_census(conn, variants=CENSUS_VARIANTS)
             gain = get_mutation_gain(conn, variants=CENSUS_VARIANTS)
             scores = get_mutation_scores(conn, variants=CENSUS_VARIANTS)
@@ -1115,9 +1116,9 @@ def main() -> None:
         print(tally.to_string(index=False))
         return
 
-    db_name = args.db or "postgres_jarvis_scoreboard"
-    with open_report_connection(db_name) as conn:
-        print_basis_header(conn, db_name)
+    corpus_id = args.corpus or "jarvis-scenarios"
+    with open_corpus(corpus_id) as (entry, conn):
+        print_basis_header(conn, entry.database)
         if args.sweep:
             summary = summarize_variants(
                 get_scoreboard(conn, variants=SWEEP_VARIANTS),

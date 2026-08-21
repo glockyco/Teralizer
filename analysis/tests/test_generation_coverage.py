@@ -111,6 +111,19 @@ def conn():
     engine.dispose()
 
 
+def test_main_rejects_a_registered_corpus_database(monkeypatch, capsys):
+    from teralizer import generation_coverage
+
+    monkeypatch.setattr(
+        "sys.argv", ["generation_coverage", "--scratch-db", "postgres_dev"]
+    )
+    with pytest.raises(SystemExit) as error:
+        generation_coverage.main()
+
+    assert error.value.args == (2,)
+    assert "must match the reserved scratch_ name pattern" in capsys.readouterr().err
+
+
 def test_top_residual_shapes(conn):
     from teralizer.generation_coverage import get_top_residual_shapes
 

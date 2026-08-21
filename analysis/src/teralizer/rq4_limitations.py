@@ -889,7 +889,7 @@ def compute_exclusion_breakdown_filtering_vs_failures(
     }
     df["Type"] = df["level"].map(level_map)
 
-    # Get excluded project IDs (only applies to postgres_test, returns empty set for postgres_dev)
+    # Controlled corpora have no project-level exclusion records, so this is empty there.
     excluded_project_ids = get_excluded_project_ids(conn)
 
     # Build exclusion clause

@@ -6,9 +6,9 @@ import argparse
 
 import pandas as pd
 from sqlalchemy import Connection, text
-from teralizer.report_basis import open_report_connection, print_basis_header
 
-_DEFAULT_DB = "postgres_dev"
+from teralizer.corpora import is_scratch_database
+from teralizer.report_basis import open_report_connection, print_basis_header
 
 
 def get_top_residual_shapes(conn: Connection) -> pd.DataFrame:
@@ -122,16 +122,18 @@ def print_report(report: dict[str, pd.DataFrame]) -> None:
 
 
 def main() -> None:
-    """Print a generation-coverage summary from the dev analysis database."""
+    """Print generation telemetry from an explicitly named scratch database."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--db",
-        default=_DEFAULT_DB,
-        help=f"database to inspect (default: {_DEFAULT_DB})",
+        "--scratch-db",
+        required=True,
+        help="scratch database containing current generation telemetry",
     )
     args = parser.parse_args()
-    with open_report_connection(args.db) as conn:
-        print_basis_header(conn, args.db)
+    if not is_scratch_database(args.scratch_db):
+        parser.error("--scratch-db must match the reserved scratch_ name pattern")
+    with open_report_connection(args.scratch_db) as conn:
+        print_basis_header(conn, args.scratch_db)
         print_report(generate_report(conn))
 
 

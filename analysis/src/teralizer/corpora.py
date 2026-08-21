@@ -95,7 +95,7 @@ class CorpusRegistry:
     def classify(self, database: str) -> DatabaseClassification:
         if corpus_id := self._physical_owners.get(database):
             return DatabaseClassification(database, DatabaseKind.CORPUS, corpus_id)
-        if SCRATCH_DATABASE_PATTERN.fullmatch(database):
+        if is_scratch_database(database):
             return DatabaseClassification(database, DatabaseKind.SCRATCH)
         return DatabaseClassification(database, DatabaseKind.UNCLASSIFIED)
 
@@ -176,6 +176,11 @@ def load(path: Path = REGISTRY_PATH) -> CorpusRegistry:
 def resolve(corpus_id: str, registry: CorpusRegistry | None = None) -> CorpusEntry:
     """Resolve a semantic corpus id without exposing a primary-corpus alias."""
     return (registry or load()).get(corpus_id)
+
+
+def is_scratch_database(database: str) -> bool:
+    """Return whether a physical name belongs to the reserved scratch namespace."""
+    return SCRATCH_DATABASE_PATTERN.fullmatch(database) is not None
 
 
 def validate_project_count(conn: Connection, entry: CorpusEntry) -> int:
