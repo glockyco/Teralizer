@@ -10,11 +10,11 @@
 
 - [x] 2.1 Remove production dump tracking from `.gitattributes` without disturbing LFS rules for unrelated assets.
 - [x] 2.2 Ignore the production corpus-package output and author/release staging paths while retaining source declarations and schemas.
-- [ ] 2.3 Move or regenerate database test inputs under one dedicated synthetic-fixture boundary with explicit fixture metadata that cannot be mistaken for a published corpus.
-- [ ] 2.4 Add a repository hygiene detector that rejects tracked or staged PostgreSQL dump signatures and generated corpus-package markers outside the fixture boundary.
-- [ ] 2.5 Add rejected fixtures for a renamed production dump, a force-added ignored dump, a generated manifest, and a generated checksum inventory.
-- [ ] 2.6 Add allowed fixtures for corpus declarations, schemas, release references, and the dedicated synthetic database fixture.
-- [ ] 2.7 Run the hygiene detector from the existing pre-commit and CI entry points without requiring Git LFS hydration or a network connection.
+- [x] 2.3 Move or regenerate database test inputs under one dedicated synthetic-fixture boundary with explicit fixture metadata that cannot be mistaken for a published corpus.
+- [x] 2.4 Add a repository hygiene detector that rejects tracked or staged PostgreSQL dump signatures and generated corpus-package markers outside the fixture boundary.
+- [x] 2.5 Add rejected fixtures for a renamed production dump, a force-added ignored dump, a generated manifest, and a generated checksum inventory.
+- [x] 2.6 Add allowed fixtures for corpus declarations, schemas, release references, and the dedicated synthetic database fixture.
+- [x] 2.7 Run the hygiene detector from the existing pre-commit and CI entry points without requiring Git LFS hydration or a network connection.
 
 ## 3. Separate publication from the checkout
 

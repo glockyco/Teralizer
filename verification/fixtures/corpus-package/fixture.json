@@ -1,0 +1,6 @@
+{
+  "corpus_id": "controlled",
+  "fixture_kind": "synthetic-postgresql-input",
+  "production": false,
+  "project_count": 13
+}

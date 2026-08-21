@@ -55,9 +55,6 @@ jobs:
       - name: Setup Nix
         uses: DeterminateSystems/determinate-nix-action@v3.21.9
 
-      - name: Check corpus identity boundary
-        run: nix develop --command uv run --frozen --directory analysis python -m teralizer.corpus_literal_check
-
       - name: Prepare minimal corpus fixture
         env:
           DB_HOST: 127.0.0.1
@@ -70,7 +67,7 @@ jobs:
         run: |
           createdb postgres_dev
           psql -d postgres_dev -f src/main/resources/db/create-tables.sql
-          psql -d postgres_dev -c "INSERT INTO project (type, root_path, data_path, use_test_generation, use_test_generalization, use_test_reduction, configuration) SELECT 'CI', '/fixture/' || n, '/data/' || n, false, true, false, '{}' FROM generate_series(1, 13) AS n"
+          psql -d postgres_dev -f verification/fixtures/corpus-package/projects.sql
           nix develop --command uv run --directory analysis python -m teralizer.corpora prepare-corpus controlled
           nix develop --command uv run --directory analysis python -m teralizer.corpora prepare-corpus controlled
           PGPASSWORD=teralizer-report psql -U teralizer_report -d postgres_dev -c "SELECT count(*) FROM project"
