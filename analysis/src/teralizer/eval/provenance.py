@@ -113,8 +113,13 @@ def require_publishable_inputs(snapshots: tuple[InputSnapshot, ...]) -> None:
         )
 
 
+def checkout_snapshot() -> tuple[str, bool]:
+    """Return the source checkout commit and dirty state for run provenance."""
+    return _git_snapshot()
+
+
 def git_commit() -> str:
-    return _git_snapshot()[0]
+    return checkout_snapshot()[0]
 
 
 def capture(fn: Callable[..., object], *, query: str | None = None) -> Provenance:

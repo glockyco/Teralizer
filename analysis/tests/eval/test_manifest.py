@@ -104,6 +104,9 @@ def test_manifest_records_all_corpus_file_and_absent_roles():
         built, ArtifactSet(Path.cwd()), repo_url="https://github.com/glockyco/Teralizer"
     )
 
+    assert len(manifest["run"]["source_commit"]) == 40
+    assert isinstance(manifest["run"]["dirty"], bool)
+    assert len(manifest["run"]["derived_view_revision"]) == 64
     assert manifest["inputs"]["scenarios"]["corpus_id"] == "jarvis-scenarios"
     assert manifest["inputs"]["benchmark"]["database"] == "census"
     assert manifest["inputs"]["jarvis-pvc-facts"] == {

@@ -318,6 +318,8 @@ def execute(
     """Execute one coherent report run and optionally deliver declared figures."""
     if full and set(report_ids) != set(registry.REPORTS):
         raise ValueError("a full run must select every registered report")
+    # Capture source state before generated outputs can make the checkout appear dirty.
+    provenance.checkout_snapshot()
     built_reports = build_reports(report_ids, publishing=publishing)
     final_root = paths.analysis_root.resolve()
     manifest_path = paths.reports_dir / "provenance.json"

@@ -6,6 +6,8 @@ import json
 from importlib.metadata import version
 from pathlib import Path
 
+from teralizer import corpora
+from teralizer.eval import provenance
 from teralizer.eval.artifacts import (
     ArtifactSet,
     RenderedArtifact,
@@ -71,7 +73,13 @@ def build_manifest(
         ),
         key=lambda record: (record["target"], record["key"]),
     )
+    source_commit, source_dirty = provenance.checkout_snapshot()
     manifest = {
+        "run": {
+            "source_commit": source_commit,
+            "dirty": source_dirty,
+            "derived_view_revision": corpora.derived_view_revision(),
+        },
         "inputs": {snapshot.role: _input_entry(snapshot) for snapshot in built.inputs},
         "artifacts": artifact_records,
         "metrics": {

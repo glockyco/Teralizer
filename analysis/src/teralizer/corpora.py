@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import shlex
 import tomllib
@@ -20,6 +21,7 @@ from teralizer.report_basis import open_report_connection
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 REGISTRY_PATH = _REPO_ROOT / "src/main/resources/db/corpora.toml"
+DERIVED_VIEW_PATH = _REPO_ROOT / "src/main/resources/db/create-views.sql"
 SCRATCH_DATABASE_PATTERN = re.compile(r"^scratch_[a-z0-9][a-z0-9_]*$")
 _REQUIRED_FIELDS = frozenset(
     {
@@ -181,6 +183,11 @@ def resolve(corpus_id: str, registry: CorpusRegistry | None = None) -> CorpusEnt
 def is_scratch_database(database: str) -> bool:
     """Return whether a physical name belongs to the reserved scratch namespace."""
     return SCRATCH_DATABASE_PATTERN.fullmatch(database) is not None
+
+
+def derived_view_revision(path: Path = DERIVED_VIEW_PATH) -> str:
+    """Return the canonical SHA-256 revision of the checked-in view definition."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def validate_project_count(conn: Connection, entry: CorpusEntry) -> int:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 
@@ -14,6 +15,16 @@ from teralizer import corpora
 def _write_registry(path: Path, entries: str) -> Path:
     path.write_text(entries, encoding="utf-8")
     return path
+
+
+def test_derived_view_revision_hashes_exact_source_bytes(tmp_path: Path):
+    source = tmp_path / "create-views.sql"
+    source.write_bytes(b"CREATE VIEW example AS SELECT 1;\n")
+
+    assert (
+        corpora.derived_view_revision(source)
+        == hashlib.sha256(source.read_bytes()).hexdigest()
+    )
 
 
 def test_repository_registry_declares_each_published_corpus_once():
