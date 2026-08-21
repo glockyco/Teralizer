@@ -42,7 +42,8 @@ def observed_databases() -> tuple[str, ...]:
             rows = conn.execute(
                 text(
                     "SELECT datname FROM pg_database "
-                    "WHERE datallowconn AND NOT datistemplate ORDER BY datname"
+                    "WHERE datallowconn AND NOT datistemplate "
+                    "AND datname <> 'postgres' ORDER BY datname"
                 )
             )
             return tuple(str(row.datname) for row in rows)

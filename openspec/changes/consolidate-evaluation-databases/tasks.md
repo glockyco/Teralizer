@@ -127,10 +127,10 @@
       local v7 snapshot. Record current consumers, observed project count, required retained dump, and
       final disposition for each.
 - [x] 7.3 Build and restore every dump required by a retirement record before trusting it.
-- [ ] 7.4 Drop only databases whose retirement records are complete, together with disposable ledgers
+- [x] 7.4 Drop only databases whose retirement records are complete, together with disposable ledgers
       that no registered report or artifact reads. Preserve all others and record why.
-- [ ] 7.5 Run inventory on the evaluation host and local workstation. Confirm every remaining database
+- [x] 7.5 Run inventory on the evaluation host and local workstation. Confirm every remaining database
       is a registered corpus or valid scratch and that each published corpus passes complete
       verification.
-- [ ] 7.6 Commit the destructive retirement phase separately after every non-destructive replacement
+- [x] 7.6 Commit the destructive retirement phase separately after every non-destructive replacement
       and publication check passes. Roll back only with a new revert or restore commit.

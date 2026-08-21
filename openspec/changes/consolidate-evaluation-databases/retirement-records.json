@@ -16,7 +16,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres",
@@ -25,7 +25,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "remove orphan evaluation schema; retain maintenance database",
-        "status": "pending"
+        "status": "evaluation-schema-removed"
       },
       {
         "database": "postgres_detach_gate",
@@ -34,7 +34,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_detach_gate_jason",
@@ -43,7 +43,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_detach_gate_jason2",
@@ -52,7 +52,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_detach_gate_slice",
@@ -61,7 +61,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_dev",
@@ -97,7 +97,7 @@
         "consumer": "none",
         "retained_dump": "retirement/postgres_reporeapers.dump",
         "disposition": "drop after retirement dump restores",
-        "status": "dump-verified",
+        "status": "dropped",
         "dump_sha256": "5f64c79b0b6102b07a067203129c68243710f53cf622231db9da68a91f574c14",
         "dump_bytes": 40221091,
         "restore_projects": 1161
@@ -109,7 +109,7 @@
         "consumer": "none",
         "retained_dump": "retirement/postgres_reporeapers_rq6.dump",
         "disposition": "drop after retirement dump restores",
-        "status": "dump-verified",
+        "status": "dropped",
         "dump_sha256": "983bd122e8918f80fb2a1bd653b7184fa8dd8dfda95771740907dc0a8f7daa04",
         "dump_bytes": 93523379,
         "restore_projects": 1161
@@ -121,7 +121,7 @@
         "consumer": "none",
         "retained_dump": "retirement/postgres_reporeapers_rq6_v2.dump",
         "disposition": "drop after retirement dump restores",
-        "status": "dump-verified",
+        "status": "dropped",
         "dump_sha256": "cde4479588f4e223386839afd2281ad72e6035db4bb51f7caaa0ce167ef8555d",
         "dump_bytes": 125180741,
         "restore_projects": 1048
@@ -133,7 +133,7 @@
         "consumer": "none",
         "retained_dump": "retirement/postgres_reporeapers_rq6_v3.dump",
         "disposition": "drop after retirement dump restores",
-        "status": "dump-verified",
+        "status": "dropped",
         "dump_sha256": "69208028a15a28a7d57262e38d2128f65f92384a8e00e40fbad0021f9ff979ed",
         "dump_bytes": 14880785,
         "restore_projects": 8
@@ -145,7 +145,7 @@
         "consumer": "none",
         "retained_dump": "retirement/postgres_reporeapers_rq6_v4.dump",
         "disposition": "drop after retirement dump restores",
-        "status": "dump-verified",
+        "status": "dropped",
         "dump_sha256": "952b5c9b8c5fa6c7cadc9b02c408b5f1c515daa0f9ec4fc0572fbab6e9ddbbd1",
         "dump_bytes": 91871767,
         "restore_projects": 272
@@ -157,7 +157,7 @@
         "consumer": "none",
         "retained_dump": "retirement/postgres_reporeapers_rq6_v5.dump",
         "disposition": "drop after retirement dump restores",
-        "status": "dump-verified",
+        "status": "dropped",
         "dump_sha256": "82624077e90a3bf0604b7b3052f10f2b70a224ebc0a6b5c45b9b069b50d77f6e",
         "dump_bytes": 25833363,
         "restore_projects": 8
@@ -169,7 +169,7 @@
         "consumer": "none",
         "retained_dump": "retirement/postgres_reporeapers_rq6_v6.dump",
         "disposition": "drop after retirement dump restores",
-        "status": "dump-verified",
+        "status": "dropped",
         "dump_sha256": "f58380f0ae4de194fe8419d8e3b35b60931523a5ba0e915a367ee3cdf9500fb5",
         "dump_bytes": 258113480,
         "restore_projects": 1161
@@ -190,7 +190,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_rq6_junit3_smoke",
@@ -199,7 +199,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_shape_gate",
@@ -208,7 +208,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_shape_gate_jason",
@@ -217,7 +217,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_source_level_gate",
@@ -226,7 +226,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_test",
@@ -235,7 +235,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_verification",
@@ -244,7 +244,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable unclassified database",
-        "status": "pending"
+        "status": "dropped"
       }
     ],
     "workstation": [
@@ -282,7 +282,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable scratch, partial, or unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_jarvis_scoreboard",
@@ -309,7 +309,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable scratch, partial, or unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_test",
@@ -318,7 +318,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable scratch, partial, or unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "postgres_verification",
@@ -327,7 +327,7 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable scratch, partial, or unclassified database",
-        "status": "pending"
+        "status": "dropped"
       },
       {
         "database": "scratch_verification",
@@ -336,8 +336,13 @@
         "consumer": "none",
         "retained_dump": null,
         "disposition": "drop disposable scratch, partial, or unclassified database",
-        "status": "pending"
+        "status": "dropped"
       }
     ]
+  },
+  "completed_on": "2026-08-21",
+  "verification": {
+    "evaluation": "all four published corpora verified; inventory contains only registered corpora",
+    "workstation": "all four published corpora verified; inventory contains only registered corpora"
   }
 }
