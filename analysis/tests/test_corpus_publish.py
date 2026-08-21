@@ -139,6 +139,16 @@ def test_package_verification_checks_manifest_dumps_inputs_and_inventory(
     assert corpus_publish.copy_package_artifacts(tmp_path, package_destination) == 4
     assert (package_destination / "controlled_db.dump").read_bytes() == b"controlled"
 
+    complete_destination = tmp_path / "complete-package"
+    assert corpus_publish.copy_complete_package(tmp_path, complete_destination) == (
+        4,
+        1,
+    )
+    assert (
+        complete_destination / "replication/datasets/controlled_db.dump"
+    ).read_bytes() == b"controlled"
+    assert (complete_destination / "src/main/resources/db/corpora.toml").is_file()
+
     (tmp_path / corpus_publish.CHECKSUMS_NAME).write_text("stale\n", encoding="utf-8")
     with pytest.raises(ValueError, match="checksum inventory disagrees"):
         corpus_publish.verify_package(tmp_path)

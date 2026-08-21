@@ -15,6 +15,7 @@
 #
 # OPTIONS:
 #   --output-dir DIR         Output directory for archives (default: ~/zenodo-upload)
+#   --corpus-package DIR     Verified assembled corpus package (default: replication/datasets)
 #   --projects-primary DIR   Primary projects directory
 #   --projects-extended DIR  Extended projects directory
 #   --data-primary DIR       Primary data directory (logs, tool reports)
@@ -73,7 +74,7 @@ DRY_RUN=false
 CORPUS_PACKAGE_DIR="${CORPUS_PACKAGE_DIR:-$REPO_ROOT/replication/datasets}"
 
 usage() {
-    sed -n '2,48p' "$0"
+    sed -n '2,50p' "$0"
     exit 0
 }
 
@@ -97,6 +98,7 @@ log_error() {
 while [[ $# -gt 0 ]]; do
     case $1 in
         --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
+        --corpus-package) CORPUS_PACKAGE_DIR="$2"; shift 2 ;;
         --projects-primary) PROJECTS_PRIMARY="$2"; shift 2 ;;
         --projects-extended) PROJECTS_EXTENDED="$2"; shift 2 ;;
         --data-primary) DATA_PRIMARY="$2"; shift 2 ;;
@@ -146,6 +148,23 @@ fi
 # Temporary directory for staging
 STAGING_DIR=$(mktemp -d)
 trap "rm -rf $STAGING_DIR" EXIT
+VERIFIED_CORPUS_ROOT="$STAGING_DIR/corpus-package"
+
+log_step "Verifying assembled corpus package"
+if [[ ! -d "$CORPUS_PACKAGE_DIR" ]]; then
+    log_error "Corpus package not found: $CORPUS_PACKAGE_DIR"
+    log_error "Export, transfer, and assemble every published corpus before packaging."
+    exit 1
+fi
+if [[ "$DRY_RUN" == "true" ]]; then
+    uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+        --summarize-package "$CORPUS_PACKAGE_DIR"
+else
+    uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+        --output-dir "$CORPUS_PACKAGE_DIR" \
+        --copy-complete-to "$VERIFIED_CORPUS_ROOT"
+fi
+log_success "Verified every manifest-declared corpus dump and input"
 
 # ----------------------------------------------------------------------------
 # Archive 1: Results Only
@@ -202,11 +221,10 @@ if [[ "$DRY_RUN" == "false" ]]; then
     rm -rf "$CORE_DIR/projects" 2>/dev/null || true
     rm -rf "$CORE_DIR/data" 2>/dev/null || true
     rm -rf "$CORE_DIR/replication/datasets"
-    uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
-        --output-dir "$CORPUS_PACKAGE_DIR" \
-        --copy-package-to "$CORE_DIR/replication/datasets"
-    uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
-        --output-dir "$CORPUS_PACKAGE_DIR" --copy-inputs-to "$CORE_DIR"
+    mkdir -p "$CORE_DIR/replication"
+    mv "$VERIFIED_CORPUS_ROOT/replication/datasets" "$CORE_DIR/replication/datasets"
+    rsync -a --exclude='replication/datasets/' "$VERIFIED_CORPUS_ROOT/" "$CORE_DIR/"
+    rm -rf "$VERIFIED_CORPUS_ROOT"
     rm -rf "$CORE_DIR/.idea" 2>/dev/null || true
     rm -f "$CORE_DIR/.env" 2>/dev/null || true
 

@@ -21,13 +21,13 @@
 #
 # DATASETS & EXPECTED RUNTIMES:
 #
-#   Primary Dataset (EqBench + Commons Utils):
+#   Controlled corpus (EqBench + Commons Utils):
 #     - Generation phase (EvoSuite): ~1.5-3 hours per config
 #     - Generalization phase: ~8-31 hours per config
 #     - Total for all configs: ~100+ hours
 #
-#   Extended Dataset (RepoReapers):
-#     - 1161 projects, ~12 hours with the default per-project cap
+#   Real-world corpus (RepoReapers):
+#     - Every registered project configuration, ~12 hours with the default cap
 #
 # USAGE:
 #   ./run.sh --corpus <controlled|real-world> [options]
@@ -319,8 +319,9 @@ estimate_runtime() {
     local total_minutes=0
 
     if [[ "$DATASET" == "extended" ]]; then
-        # Scale the ~12 h full capped run linearly by config count.
-        total_minutes=$(((${#configs[@]} * 720 + 1160) / 1161))
+        # Scale the measured full capped run by the current configuration inventory.
+        local full_count=${#all_configs[@]}
+        total_minutes=$(((${#configs[@]} * 720 + full_count - 1) / full_count))
     else
         # Primary dataset times (approximate)
         for conf in "${configs[@]}"; do

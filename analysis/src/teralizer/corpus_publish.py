@@ -196,8 +196,7 @@ def validate_manifest(
                 )
 
 
-def verify_package(input_dir: Path) -> Path:
-    """Verify a published manifest, every dump, and every declared corpus input."""
+def _verified_document(input_dir: Path) -> tuple[Path, dict[str, object]]:
     manifest_path = input_dir / MANIFEST_NAME
     try:
         document = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -223,15 +222,23 @@ def verify_package(input_dir: Path) -> Path:
         raise ValueError(
             "corpus package checksum inventory disagrees with its manifest"
         )
+    return manifest_path, document
+
+
+def verify_package(input_dir: Path) -> Path:
+    """Verify a published manifest, every dump, and every declared corpus input."""
+    manifest_path, _ = _verified_document(input_dir)
     return manifest_path
 
 
-def copy_package_artifacts(input_dir: Path, destination_dir: Path) -> int:
-    """Copy the verified manifest set without inferring dump filenames."""
-    manifest_path = verify_package(input_dir)
-    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+def _copy_package_artifacts(
+    input_dir: Path, destination_dir: Path, document: dict[str, object]
+) -> int:
+    """Copy one already verified manifest set without inferring dump filenames."""
+    records = document["corpora"]
+    assert isinstance(records, list)
     filenames = {MANIFEST_NAME, CHECKSUMS_NAME}
-    filenames.update(record["dump"]["path"] for record in document["corpora"])
+    filenames.update(record["dump"]["path"] for record in records)
     destination_dir.mkdir(parents=True, exist_ok=True)
     for stale in destination_dir.glob("*.dump"):
         if stale.name not in filenames:
@@ -241,12 +248,17 @@ def copy_package_artifacts(input_dir: Path, destination_dir: Path) -> int:
     return len(filenames)
 
 
-def copy_package_inputs(input_dir: Path, destination_root: Path) -> int:
-    """Copy each manifest-declared corpus input to a package repository tree."""
-    manifest_path = verify_package(input_dir)
-    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+def copy_package_artifacts(input_dir: Path, destination_dir: Path) -> int:
+    """Verify and copy the complete manifest set to a package directory."""
+    _, document = _verified_document(input_dir)
+    return _copy_package_artifacts(input_dir, destination_dir, document)
+
+
+def _copy_package_inputs(destination_root: Path, document: dict[str, object]) -> int:
+    records = document["corpora"]
+    assert isinstance(records, list)
     copied: set[str] = set()
-    for record in document["corpora"]:
+    for record in records:
         for fact in record["inputs"]:
             relative = str(fact["path"])
             if relative in copied:
@@ -259,6 +271,22 @@ def copy_package_inputs(input_dir: Path, destination_root: Path) -> int:
     return len(copied)
 
 
+def copy_package_inputs(input_dir: Path, destination_root: Path) -> int:
+    """Verify and copy manifest-declared inputs to a package repository tree."""
+    _, document = _verified_document(input_dir)
+    return _copy_package_inputs(destination_root, document)
+
+
+def copy_complete_package(input_dir: Path, destination_root: Path) -> tuple[int, int]:
+    """Verify once, then copy corpus artifacts and inputs into a package tree."""
+    _, document = _verified_document(input_dir)
+    artifact_count = _copy_package_artifacts(
+        input_dir, destination_root / "replication" / "datasets", document
+    )
+    input_count = _copy_package_inputs(destination_root, document)
+    return artifact_count, input_count
+
+
 def _required_disk_from_document(document: dict[str, object]) -> int:
     records = document["corpora"]
     assert isinstance(records, list)
@@ -269,8 +297,7 @@ def _required_disk_from_document(document: dict[str, object]) -> int:
 
 def required_disk_bytes(input_dir: Path) -> int:
     """Return dump storage plus two restored-database footprints for safe import."""
-    manifest_path = verify_package(input_dir)
-    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    _, document = _verified_document(input_dir)
     return _required_disk_from_document(document)
 
 
@@ -293,15 +320,13 @@ def _summary_from_document(document: dict[str, object]) -> tuple[str, ...]:
 
 def package_summary(input_dir: Path) -> tuple[str, ...]:
     """Return human-readable sizes from one verified package manifest."""
-    manifest_path = verify_package(input_dir)
-    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    _, document = _verified_document(input_dir)
     return _summary_from_document(document)
 
 
 def package_preflight(input_dir: Path) -> tuple[str, ...]:
     """Return a machine-readable disk requirement and human-readable inventory."""
-    manifest_path = verify_package(input_dir)
-    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    _, document = _verified_document(input_dir)
     return (
         f"required_disk_bytes={_required_disk_from_document(document)}",
         *_summary_from_document(document),
@@ -415,6 +440,12 @@ def main(argv: list[str] | None = None) -> None:
         help="verify a package and print its required free disk bytes",
     )
     action.add_argument(
+        "--copy-complete-to",
+        type=Path,
+        metavar="REPOSITORY_ROOT",
+        help="verify once and copy the corpus package plus declared inputs",
+    )
+    action.add_argument(
         "--copy-package-to",
         type=Path,
         help="verify and copy the complete manifest set to a package directory",
@@ -437,6 +468,11 @@ def main(argv: list[str] | None = None) -> None:
         print("\n".join(package_preflight(args.preflight_package)))
     elif args.required_disk_bytes is not None:
         print(required_disk_bytes(args.required_disk_bytes))
+    elif args.copy_complete_to is not None:
+        artifacts, inputs = copy_complete_package(
+            args.output_dir, args.copy_complete_to
+        )
+        print(f"copied {artifacts} package files and {inputs} corpus input files")
     elif args.copy_package_to is not None:
         count = copy_package_artifacts(args.output_dir, args.copy_package_to)
         print(f"copied {count} package files")

@@ -58,24 +58,16 @@ uv run --frozen --directory analysis python -m teralizer.corpus_publish \
 
 ### Disk Space Breakdown
 
-**Archive sizes** (run `./scripts/packaging/collect-disk-metrics.sh` to regenerate):
-
-| Archive | Compressed | Unpacked |
-|---------|------------|----------|
-| teralizer-core | Measured at package build | Manifest dumps plus declared inputs |
-| teralizer-results | ~1 MB | ~3 MB |
-| teralizer-projects-primary | ~45 MB | ~150 MB |
-| teralizer-projects-extended-sample | ~170 MB | ~275 MB |
-| teralizer-projects-extended | ~1.7 GB | ~4.5 GB |
-| teralizer-data-primary | ~1.1 GB | ~30 GB |
-| teralizer-data-extended | ~260 MB | ~5.5 GB |
+Run `./scripts/packaging/collect-disk-metrics.sh` for the exact compressed and unpacked
+sizes of a built archive set. The core archive includes only dumps and inputs declared by the
+verified corpus manifest.
 
 **Runtime components:**
 
-| Component | Size |
-|-----------|------|
-| Docker images (postgres, adminer, analysis) | 2 GB |
-| PostgreSQL volume (after import) | 17 GB |
+| Component | Size source |
+|-----------|-------------|
+| Docker images | Installed image inventory |
+| PostgreSQL volume after import | `database_bytes` for each selected manifest entry |
 
 **Built projects and pipeline output:**
 
@@ -100,8 +92,8 @@ uv run --frozen --directory analysis python -m teralizer.corpus_publish \
 | Workflow 1: Inspect results | ~5 minutes |
 | Workflow 2: Verify analysis | ~10 minutes |
 | Workflow 3: Verify pipeline (5 projects) | ~15 minutes |
-| Full reproduction of data collection for the extended dataset (1161 projects) | ~12 hours |
-| Full reproduction of data collection for the primary dataset (all variants) | ~100 hours |
+| Full reproduction of data collection for the real-world corpus | ~12 hours |
+| Full reproduction of data collection for the controlled corpus | ~100 hours |
 
 Time estimates are based on evaluation hardware. Actual times may vary based on machine specifications and resources allocated to Docker.
 

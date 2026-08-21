@@ -91,7 +91,7 @@
       export.
 - [x] 5.8 Validate that every published registry corpus appears exactly once in the manifest and that
       every manifest input exists with the recorded checksum.
-- [ ] 5.9 Rewrite `prepare-zenodo-package.sh`, the quick start, README claims, and disk requirements to
+- [x] 5.9 Rewrite `prepare-zenodo-package.sh`, the quick start, README claims, and disk requirements to
       consume explicitly exported dumps and the verified assembled manifest. Document the data-host
       export, transfer, assembly, and recovery boundaries without author-specific service names.
 - [ ] 5.10 Rewrite `import-databases.sh` to verify dump checksum and identity before restore, run

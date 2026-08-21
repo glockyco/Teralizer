@@ -34,15 +34,19 @@ Our work proposes a semantics-based test generalization approach that automatica
 
 ## Package Contents
 
-| Archive | Size | Contents |
-|---------|------|----------|
-| `teralizer-results` | ~1 MB | Markdown reports, tables, figures, and CSV data |
-| `teralizer-core` | Manifest-derived | Code, verified corpus dumps, required corpus inputs, reference outputs |
-| `teralizer-projects-primary` | ~45 MB | EqBench + commons-utils source code |
-| `teralizer-projects-extended-sample` | ~170 MB | 100 sampled RepoReapers projects |
-| `teralizer-projects-extended` | ~1.7 GB | All 1161 RepoReapers projects |
-| `teralizer-data-primary` | ~1.1 GB | Logs, tool reports, generalized tests |
-| `teralizer-data-extended` | ~260 MB | Logs, tool reports, generalized tests |
+| Archive | Contents |
+|---------|----------|
+| `teralizer-results` | Markdown reports, tables, figures, and CSV data |
+| `teralizer-core` | Code, the complete verified corpus manifest set, required corpus inputs, and reference outputs |
+| `teralizer-projects-primary` | Controlled-corpus project sources |
+| `teralizer-projects-extended-sample` | Declared sample of real-world project sources |
+| `teralizer-projects-extended` | Full declared real-world project-source component |
+| `teralizer-data-primary` | Controlled-corpus logs, tool reports, and generalized tests |
+| `teralizer-data-extended` | Real-world logs, tool reports, and generalized tests |
+
+The package builder measures archive sizes. `replication/datasets/manifest.json` records every corpus
+dump and restored database size. [REQUIREMENTS.md](REQUIREMENTS.md) explains the derived free-disk
+requirement.
 
 **What to download:**
 - **Browse results only**: `teralizer-results`
@@ -135,7 +139,7 @@ Confirm the data collection pipeline executes successfully.
 
 1. Run pipeline on a subset of projects:
    ```bash
-   ./replication/scripts/run.sh --dataset extended --count 5
+   ./replication/scripts/run.sh --corpus real-world --count 5
    ```
 
 2. Run every registered report on the new data:
@@ -162,7 +166,7 @@ uv run python -m teralizer.eval all --targets md,figures,latex,csv
 ```
 
 A single report can be built by its registry name (`dataset` or `rq0` through
-`rq6`), and `--db NAME` selects a database when the report supports it. The
+`rq6`). Each report resolves its semantic corpus inputs from the registry. The
 `--paper-out PATH` option is reserved for a complete `all` run and copies the
 LaTeX tables and CSV data into the paper repository. The publishing wrapper
 performs that complete run and refuses to overwrite uncommitted generated files:
@@ -191,29 +195,28 @@ Full reproduction requires significant compute time and may produce non-identica
 - Evaluated projects with unavailable dependencies (artifacts removed from repositories)
 - Evaluated projects with unpinned dependency versions (breaking changes in newer versions)
 
-### Extended Dataset (~12 hours)
+### Real-World Corpus (~12 hours)
 
 ```bash
-./replication/scripts/run.sh --dataset extended
+./replication/scripts/run.sh --corpus real-world
 ```
 
-Processes all 1161 RepoReapers projects with the same 30-minute per-project cap
-used for the paper's extended results. Most projects fail the pipeline early, and
-a few long-running ones are stopped at the cap. Both outcomes are recorded in the
-run ledger and are expected behavior.
+Processes every project configuration declared by the registered real-world corpus with the same
+30-minute per-project cap used for the paper. The run ledger records early exclusions, failures, and
+projects stopped at the cap. A rerun resumes from its first incomplete configuration.
 
-### Primary Dataset (~100+ hours)
+### Controlled Corpus (~100+ hours)
 
-The primary dataset requires a two-phase workflow:
+The controlled corpus requires a two-phase workflow:
 
 1. **Generate tests** (EvoSuite):
    ```bash
-   ./replication/scripts/run.sh --dataset primary --phase generation
+   ./replication/scripts/run.sh --corpus controlled --phase generation
    ```
 
 2. **Generalize tests**:
    ```bash
-   ./replication/scripts/run.sh --dataset primary --phase generalization
+   ./replication/scripts/run.sh --corpus controlled --phase generalization
    ```
 
 ### Analyzing Reproduced Data
