@@ -15,6 +15,11 @@ The evaluation host holds the complete corpus set. A local workstation may valid
 Publication and local analysis therefore need different completeness modes while sharing the same
 identity and integrity checks.
 
+`separate-replication-data-from-source` owns the later source-storage cutover. This change remains the
+authority for corpus identity, export, transfer, manifest assembly, validation, and import semantics;
+the successor removes checkout-owned production outputs and requires its existing package boundary at
+an explicit external path. It does not fork the publisher or redefine the corpus manifest.
+
 The workstation reaches the complete PostgreSQL service through an SSH-forwarded port. Running
 `pg_dump` on the workstation makes PostgreSQL send logical rows through that tunnel before the client
 compresses them. The corpus databases are tens of gigabytes, while their compressed custom-format
