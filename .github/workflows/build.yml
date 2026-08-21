@@ -32,6 +32,19 @@ jobs:
 
   analysis:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.1
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,6 +54,27 @@ jobs:
 
       - name: Setup Nix
         uses: DeterminateSystems/determinate-nix-action@v3.21.9
+
+      - name: Prepare minimal corpus fixture
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          REPORT_DB_USER: teralizer_report
+          REPORT_DB_PASSWORD: teralizer-report
+          PGPASSWORD: postgres
+        run: |
+          createdb postgres_dev
+          psql -d postgres_dev -f src/main/resources/db/create-tables.sql
+          psql -d postgres_dev -c "INSERT INTO project (type, root_path, data_path, use_test_generation, use_test_generalization, use_test_reduction, configuration) SELECT 'CI', '/fixture/' || n, '/data/' || n, false, true, false, '{}' FROM generate_series(1, 13) AS n"
+          nix develop --command uv run --directory analysis python -m teralizer.corpora prepare-corpus controlled
+          nix develop --command uv run --directory analysis python -m teralizer.corpora prepare-corpus controlled
+          PGPASSWORD=teralizer-report psql -U teralizer_report -d postgres_dev -c "SELECT count(*) FROM project"
+          if PGPASSWORD=teralizer-report psql -U teralizer_report -d postgres_dev -c "DELETE FROM project"; then
+            echo "report role unexpectedly modified the corpus" >&2
+            exit 1
+          fi
 
       # The hooks are the definition of formatting, lint and types, so CI runs
       # them rather than a second list that could disagree. `pre-push` stays out:

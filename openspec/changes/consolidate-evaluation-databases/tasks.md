@@ -63,7 +63,7 @@
 - [x] 4.5 Replace `protected-databases.txt` with registry-backed corpus protection and reserved scratch
       handling. Test destructive refusal for every corpus and successful recreation of a valid scratch
       database.
-- [ ] 4.6 Confirm the four published corpus databases retain their current physical names. Perform no
+- [x] 4.6 Confirm the four published corpus databases retain their current physical names. Perform no
       `ALTER DATABASE`, alias, or dump rename.
 
 ## 5. Publish and import the complete artifact
