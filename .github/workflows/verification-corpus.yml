@@ -49,6 +49,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
       # The scripts reach the server over TCP through libpq, so the client has
       # to exist on PATH. Without one scripts/lib/psql.sh falls back to a
       # container that this job does not run.
