@@ -1,74 +1,67 @@
 #!/usr/bin/env bash
-# Export PostgreSQL databases for the replication package.
-#
-# This script exports the postgres_dev and postgres_test databases
-# using pg_dump in custom format (compressed).
+# Export registered corpus databases in PostgreSQL custom format.
 #
 # Usage:
-#   ./export-databases.sh [output_dir]
+#   ./export-databases.sh [--corpus ID]... [output_dir]
 #
-# Environment variables:
-#   DB_USER      PostgreSQL user (default: teralizer)
-#   DB_NAME_DEV  Source database for dev data (default: postgres_dev)
-#   DB_NAME_TEST Source database for test data (default: postgres_test)
-#   CONTAINER    Docker container name (default: postgres-replication)
-#
-# Examples:
-#   # Export from default databases
-#   ./export-databases.sh
-#
-#   # Export to specific directory
-#   ./export-databases.sh /path/to/output
+# Without --corpus, the script exports every published corpus. Each dump uses
+# the registry-resolved physical database name.
 
 set -euo pipefail
 
-# Configuration
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
+OUTPUT_DIR=""
+CORPUS_IDS=()
 DB_USER="${DB_USER:-teralizer}"
-DB_NAME_DEV="${DB_NAME_DEV:-postgres_dev}"
-DB_NAME_TEST="${DB_NAME_TEST:-postgres_test}"
 CONTAINER="${CONTAINER:-postgres-replication}"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OUTPUT_DIR="${1:-$SCRIPT_DIR/../datasets}"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --corpus)
+            CORPUS_IDS+=("${2:?--corpus needs an id}")
+            shift 2
+            ;;
+        -h|--help)
+            sed -n '2,8p' "$0"
+            exit 0
+            ;;
+        -* )
+            echo "Unknown option: $1" >&2
+            exit 2
+            ;;
+        *)
+            if [[ -n "$OUTPUT_DIR" ]]; then
+                echo "Only one output directory is permitted" >&2
+                exit 2
+            fi
+            OUTPUT_DIR="$1"
+            shift
+            ;;
+    esac
+done
 
-# Ensure output directory exists
+OUTPUT_DIR="${OUTPUT_DIR:-$SCRIPT_DIR/../datasets}"
 mkdir -p "$OUTPUT_DIR"
+if [[ ${#CORPUS_IDS[@]} -eq 0 ]]; then
+    mapfile -t CORPUS_IDS < <("$REPO_ROOT/scripts/corpus-registry" list --published)
+fi
 
-echo "=== Teralizer Database Export ==="
-echo "Container: $CONTAINER"
-echo "Databases: $DB_NAME_DEV, $DB_NAME_TEST"
-echo "Output directory: $OUTPUT_DIR"
-echo ""
-
-# Check container is running
-if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
-    echo "Error: Container '$CONTAINER' is not running"
-    echo "Start it with: docker compose up -d postgres"
+if ! docker ps --format '{{.Names}}' | awk -v name="$CONTAINER" '$0 == name { found = 1 } END { exit !found }'; then
+    echo "Container '$CONTAINER' is not running" >&2
     exit 1
 fi
 
-# Check database connection
-if ! docker exec "$CONTAINER" psql -U "$DB_USER" -d "$DB_NAME_DEV" -c "SELECT 1" >/dev/null 2>&1; then
-    echo "Error: Cannot connect to $DB_NAME_DEV"
-    exit 1
-fi
+for corpus_id in "${CORPUS_IDS[@]}"; do
+    database=$("$REPO_ROOT/scripts/corpus-registry" get "$corpus_id" database)
+    dump="$OUTPUT_DIR/$database.dump"
+    echo "Exporting $corpus_id from $database"
+    docker exec "$CONTAINER" pg_dump -U "$DB_USER" -Fc "$database" > "$dump"
+    echo "Wrote $dump"
+done
 
-# Export postgres_dev
-echo "Exporting $DB_NAME_DEV..."
-docker exec "$CONTAINER" pg_dump -U "$DB_USER" -Fc "$DB_NAME_DEV" > "$OUTPUT_DIR/postgres_dev.dump"
-echo "  -> postgres_dev.dump ($(du -h "$OUTPUT_DIR/postgres_dev.dump" | cut -f1))"
-
-# Export postgres_test
-echo "Exporting $DB_NAME_TEST..."
-docker exec "$CONTAINER" pg_dump -U "$DB_USER" -Fc "$DB_NAME_TEST" > "$OUTPUT_DIR/postgres_test.dump"
-echo "  -> postgres_test.dump ($(du -h "$OUTPUT_DIR/postgres_test.dump" | cut -f1))"
-
-# Generate checksums
-echo "Generating checksums..."
-(cd "$OUTPUT_DIR" && shasum -a 256 *.dump > checksums.sha256)
-echo "  -> checksums.sha256"
-
-echo ""
-echo "Export complete!"
-echo "Files created:"
-ls -lh "$OUTPUT_DIR"/*.dump "$OUTPUT_DIR"/checksums.sha256
+(
+    cd "$OUTPUT_DIR"
+    sha256sum ./*.dump > checksums.sha256
+)
+echo "Wrote $OUTPUT_DIR/checksums.sha256"

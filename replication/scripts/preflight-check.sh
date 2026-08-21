@@ -117,22 +117,20 @@ check_port 5432 "PostgreSQL"
 check_port 18080 "Adminer"
 echo ""
 
-# Check for database dumps
+# Check for registered corpus dumps
 echo "Database Dumps:"
-DUMPS_DIR="$(dirname "$SCRIPT_DIR")/datasets"
-if [[ -f "$DUMPS_DIR/postgres_dev.dump" ]]; then
-    size=$(du -h "$DUMPS_DIR/postgres_dev.dump" | cut -f1)
-    check_pass "postgres_dev.dump found ($size)"
-else
-    check_fail "postgres_dev.dump not found in datasets/"
-fi
-
-if [[ -f "$DUMPS_DIR/postgres_test.dump" ]]; then
-    size=$(du -h "$DUMPS_DIR/postgres_test.dump" | cut -f1)
-    check_pass "postgres_test.dump found ($size)"
-else
-    check_fail "postgres_test.dump not found in datasets/"
-fi
+REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
+DUMPS_DIR="$SCRIPT_DIR/../datasets"
+while IFS= read -r corpus_id; do
+    database=$("$REPO_ROOT/scripts/corpus-registry" get "$corpus_id" database)
+    dump="$DUMPS_DIR/$database.dump"
+    if [[ -f "$dump" ]]; then
+        size=$(du -h "$dump" | cut -f1)
+        check_pass "$corpus_id dump found ($size)"
+    else
+        check_fail "$corpus_id dump not found in datasets/"
+    fi
+done < <("$REPO_ROOT/scripts/corpus-registry" list --published)
 echo ""
 
 # Summary

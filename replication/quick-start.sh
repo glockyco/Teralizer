@@ -16,7 +16,8 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd -P)
 cd "$SCRIPT_DIR"
 
 # Configuration
@@ -109,17 +110,20 @@ fi
 echo ""
 
 # Step 2: Check for database dumps
-echo -e "${YELLOW}[2/5]${NC} Checking for database dumps..."
-if [[ ! -f datasets/postgres_dev.dump ]] || [[ ! -f datasets/postgres_test.dump ]]; then
-    echo -e "${RED}Error: Database dumps not found in datasets/${NC}"
-    echo "Expected files:"
-    echo "  - datasets/postgres_dev.dump"
-    echo "  - datasets/postgres_test.dump"
-    echo ""
-    echo "Please ensure you have extracted the complete replication package."
+echo -e "${YELLOW}[2/4]${NC} Checking for database dumps..."
+missing_dump=false
+while IFS= read -r corpus_id; do
+    database=$("$REPO_ROOT/scripts/corpus-registry" get "$corpus_id" database)
+    if [[ ! -f "datasets/$database.dump" ]]; then
+        echo -e "${RED}Missing $corpus_id dump: datasets/$database.dump${NC}"
+        missing_dump=true
+    fi
+done < <("$REPO_ROOT/scripts/corpus-registry" list --published)
+if [[ "$missing_dump" == true ]]; then
+    echo "Extract the complete replication package before setup." >&2
     exit 1
 fi
-echo -e "${GREEN}Database dumps found${NC}"
+echo -e "${GREEN}All registered corpus dumps found${NC}"
 echo ""
 
 # Step 3: Start PostgreSQL and Adminer
@@ -163,7 +167,11 @@ echo "  System:   PostgreSQL"
 echo "  Server:   postgres"
 echo "  Username: teralizer"
 echo "  Password: teralizer"
-echo "  Database: postgres_dev (or postgres_test)"
+echo "  Registered corpora:"
+while IFS= read -r corpus_id; do
+    database=$("$REPO_ROOT/scripts/corpus-registry" get "$corpus_id" database)
+    echo "    $corpus_id: $database"
+done < <("$REPO_ROOT/scripts/corpus-registry" list --published)
 echo ""
 echo "To stop all services: docker compose down"
 echo "To remove all data:   docker compose down -v"

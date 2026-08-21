@@ -147,14 +147,16 @@ echo ""
 
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "postgres"; then
     container=$(docker ps --format '{{.Names}}' | grep postgres | head -1)
-    echo "| Database | Size |"
-    echo "|----------|------|"
+    echo "| Corpus | Database | Size |"
+    echo "|--------|----------|------|"
 
-    for db in postgres_dev postgres_test; do
-        size_bytes=$(docker exec "$container" psql -U teralizer -d "$db" -t -c "SELECT pg_database_size('$db');" 2>/dev/null | tr -d ' ' || echo "0")
+    while IFS= read -r corpus_id; do
+        db=$("$ROOT_DIR/scripts/corpus-registry" get "$corpus_id" database)
+        size_bytes=$(docker exec "$container" psql -U teralizer -d "$db" -t -c \
+            "SELECT pg_database_size(current_database());" 2>/dev/null | tr -d ' ' || echo "0")
         size=$(format_size "$size_bytes")
-        echo "| $db | $size |"
-    done
+        echo "| $corpus_id | $db | $size |"
+    done < <("$ROOT_DIR/scripts/corpus-registry" list --published)
 else
     echo "PostgreSQL container not running."
 fi

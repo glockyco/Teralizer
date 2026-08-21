@@ -139,25 +139,24 @@ def _show(values) -> str:
 
 
 def main(argv=None) -> int:
-    """Compare two databases. Exit status is non-zero when they are not comparable."""
+    """Compare two registered corpora. Return nonzero when they are not comparable."""
     import argparse
 
+    from teralizer import corpora
     from teralizer.config import DatabaseConfig
 
     parser = argparse.ArgumentParser(
-        description="Check that two corpus runs can be compared."
+        description="Check that two registered corpus runs can be compared."
     )
-    parser.add_argument("database_a")
-    parser.add_argument("database_b")
+    parser.add_argument("corpus_a")
+    parser.add_argument("corpus_b")
     args = parser.parse_args(argv)
 
+    entry_a = corpora.resolve(args.corpus_a)
+    entry_b = corpora.resolve(args.corpus_b)
     config = DatabaseConfig()
-    a = read_metadata(
-        config.get_engine(args.database_a, validate=False), args.database_a
-    )
-    b = read_metadata(
-        config.get_engine(args.database_b, validate=False), args.database_b
-    )
+    a = read_metadata(config.get_engine(entry_a.database, validate=False), entry_a.id)
+    b = read_metadata(config.get_engine(entry_b.database, validate=False), entry_b.id)
 
     report = compare(a, b)
     print(report.render())

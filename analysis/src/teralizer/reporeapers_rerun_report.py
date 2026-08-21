@@ -3,7 +3,7 @@
 Run from the repository root, for example:
 
     uv run --directory analysis python -m teralizer.reporeapers_rerun_report \
-        --db postgres_reporeapers
+        --corpus real-world
 
 The report is intentionally read-only. It summarizes the pipeline evidence we
 use for planning: telemetry integrity, the filter funnel by stable reason
@@ -22,8 +22,9 @@ from typing import Any
 import pandas as pd
 from sqlalchemy import Connection, text
 
+from teralizer.corpora import open_corpus
 from teralizer.exports import save_csv_data
-from teralizer.report_basis import open_report_connection, print_basis_header
+from teralizer.report_basis import print_basis_header
 
 _ASSERTION_SCOPE = "assertion"
 _TEST_SCOPE = "test"
@@ -1078,9 +1079,9 @@ def export_report(report: dict[str, pd.DataFrame], prefix: str) -> list[Path]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--db",
-        default="postgres_reporeapers",
-        help="database to inspect (default: postgres_reporeapers)",
+        "--corpus",
+        default="real-world",
+        help="registered corpus to inspect (default: real-world)",
     )
     parser.add_argument(
         "--ledger",
@@ -1103,8 +1104,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    with open_report_connection(args.db) as conn:
-        print_basis_header(conn, args.db, ledger=args.ledger)
+    with open_corpus(args.corpus) as (entry, conn):
+        print_basis_header(conn, entry.database, ledger=args.ledger)
         report = generate_report(conn, args.top)
         print_report(report, args.top)
     if args.csv_prefix:

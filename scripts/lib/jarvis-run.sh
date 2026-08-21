@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Shared run logic for the JARVIS scoreboard and census runners. This file is *sourced*, not
-# executed; the sourcing wrapper must define the following before calling jarvis_run:
+# executed. The sourcing wrapper must define the following before calling jarvis_run:
 #
 #   ROOT_DIR                repo root (absolute)
-#   JARVIS_DB_NAME          dedicated scratch DB (never a dev/test/replication corpus)
+#   JARVIS_CORPUS_ID        registered definition for the measurement
+#   JARVIS_DB_NAME          dedicated scratch database
 #   JARVIS_DATA_DIR         scratch data root (e.g. data/jarvis-scoreboard)
 #   JARVIS_LABEL            human label used in messages (e.g. "census", "scoreboard")
 #   JARVIS_PREPARE_FLAG     flag passed to the fixture prep script ("" or "--census")
@@ -21,6 +22,10 @@ JARVIS_PROJECT_TIMEOUT="${JARVIS_PROJECT_TIMEOUT:-0}"
 source "$ROOT_DIR/scripts/lib/psql.sh"
 
 jarvis_run() {
+  local registered_database
+  registered_database=$("$ROOT_DIR/scripts/corpus-registry" get "$JARVIS_CORPUS_ID" database) || exit $?
+  echo "==> Corpus: $JARVIS_CORPUS_ID (registered endpoint: $registered_database)"
+
   source "$ROOT_DIR/scripts/lib/db-guard.sh"
   DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$JARVIS_DB_NAME"
   source "$ROOT_DIR/scripts/lib/run-supervisor.sh"
@@ -40,10 +45,10 @@ jarvis_run() {
         echo "Usage: $(basename "$0") [--reset-db] [--prepare-fixtures] [--no-reduction] [--reduction-only] [config ...]"
         echo "  --reset-db           drop and recreate $JARVIS_DB_NAME before running"
         echo "  --prepare-fixtures   (re)materialize the $JARVIS_LABEL fixtures first"
-        echo "  --no-reduction       skip the reduction phase (Stage 5: mutation + coverage);"
-        echo "                       run generalization only, e.g. a fast Stage-4 applicability pass"
+        echo "  --no-reduction       skip the reduction phase (Stage 5: mutation + coverage)"
+        echo "                       and run only a fast Stage 4 applicability pass"
         echo "  --reduction-only     resume the reduction phase (Stage 5) with PIT enabled over the"
-        echo "                       persisted generalized workspace; skips generation/generalization"
+        echo "                       persisted generalized workspace and skip earlier phases"
         echo "  config ...           HOCON configs to run (default: the $JARVIS_LABEL configs)"
         exit 0 ;;
       --*) echo "Unknown flag: $arg" >&2; exit 1 ;;
@@ -84,7 +89,7 @@ jarvis_run() {
   fi
 
   # A failed BUILD_PROJECT_GENERALIZED drops its cleanup task, leaving uncompilable generated
-  # tests that break the next build. Always clear them; the pipeline regenerates from scratch.
+  # tests that break the next build. Always clear them. The pipeline regenerates from scratch.
   find "$ROOT_DIR/$JARVIS_DATA_DIR/fixtures" -name '_*Generalized*_Test.java' -delete 2>/dev/null || true
 
   if [[ "$reset_db" == true ]]; then
@@ -178,7 +183,7 @@ jarvis_run() {
     exit 1
   fi
   if [[ "$gradle_failed" == true ]]; then
-    echo "A gradle invocation exited non-zero, though no FAILED task was recorded; check the run log." >&2
+    echo "A Gradle invocation exited nonzero, but no FAILED task was recorded. Check the run log." >&2
     exit 1
   fi
   touch "$complete_marker"

@@ -40,7 +40,7 @@
       depends on legacy-only structure instead of keeping a database alive for it.
 - [x] 3.4 Remove `DB_NAME_DEV`, `DB_NAME_TEST`, `DATASET_VARIANT`, `VALID_VARIANTS`, and the
       `_replication` suffix from `config.py`, and update `.env.example` to the semantic-id boundary.
-- [ ] 3.5 Point disk metrics, replication compose defaults, packaging, import, and diagnostics through
+- [x] 3.5 Point disk metrics, replication compose defaults, packaging, import, and diagnostics through
       the registry accessor. No script may parse `corpora.toml` independently.
 - [ ] 3.6 Record semantic corpus id, resolved physical name, source commit, dirty state, corpus inputs,
       and derived-view revision in run provenance.

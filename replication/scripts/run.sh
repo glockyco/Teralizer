@@ -30,7 +30,7 @@
 #     - 1161 projects, ~12 hours with the default per-project cap
 #
 # USAGE:
-#   ./run.sh --dataset <primary|extended> [options]
+#   ./run.sh --corpus <controlled|real-world> [options]
 #
 # PRIMARY DATASET OPTIONS:
 #   --phase <generation|generalization>  Pipeline phase (required for primary)
@@ -49,22 +49,22 @@
 #
 # EXAMPLES:
 #   # Quick verification (~5 min)
-#   ./run.sh --dataset extended --count 5
+#   ./run.sh --corpus real-world --count 5
 #
 #   # Extended dataset subset (~31 min, project-dependent)
-#   ./run.sh --dataset extended --count 50
+#   ./run.sh --corpus real-world --count 50
 #
 #   # All extended dataset (~12 hours with the default cap)
-#   ./run.sh --dataset extended
+#   ./run.sh --corpus real-world
 #
 #   # Primary dataset - shortest config (~8 hours total)
-#   ./run.sh --dataset primary --phase generalization --time 1s
+#   ./run.sh --corpus controlled --phase generalization --time 1s
 #
 #   # Primary dataset - single project generation (~1.5 hours)
-#   ./run.sh --dataset primary --phase generation --time 1s --project commons-utils
+#   ./run.sh --corpus controlled --phase generation --time 1s --project commons-utils
 #
 #   # All primary dataset (~100+ hours)
-#   ./run.sh --dataset primary --phase generalization
+#   ./run.sh --corpus controlled --phase generalization
 
 set -euo pipefail
 
@@ -77,6 +77,7 @@ ROOT_DIR="$REPO_ROOT"
 source "$REPO_ROOT/scripts/lib/run-supervisor.sh"
 supervisor_install_traps
 # Default configuration
+CORPUS_ID=""
 DATASET=""
 PHASE=""
 TIME_VARIANT=""
@@ -102,8 +103,8 @@ usage() {
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --dataset)
-            DATASET="$2"
+        --corpus)
+            CORPUS_ID="$2"
             shift 2
             ;;
         --phase)
@@ -149,21 +150,32 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate dataset
-if [[ -z "$DATASET" ]]; then
-    echo -e "${RED}Error: --dataset is required${NC}"
+# Resolve the corpus definition. New measurements always use a scratch database.
+if [[ -z "$CORPUS_ID" ]]; then
+    echo -e "${RED}Error: --corpus is required${NC}"
     echo "Use --help for usage information"
     exit 1
 fi
+corpus_exports=$("$REPO_ROOT/scripts/corpus-registry" export "$CORPUS_ID") || exit $?
+eval "$corpus_exports"
+RESOLVED_CORPUS_DATABASE="$DB_NAME"
+CORPUS_CONFIG_DIR="$CONFIG_DIR"
+case "$CORPUS_ID" in
+    controlled) DATASET=primary ;;
+    real-world) DATASET=extended ;;
+    *)
+        echo -e "${RED}Error: pipeline replication is not defined for corpus '$CORPUS_ID'${NC}"
+        exit 1
+        ;;
+esac
+SCRATCH_DB="${REPLICATION_SCRATCH_DB:-scratch_replication_${CORPUS_ID//-/_}}"
+RUN_DATA_DIR="${REPLICATION_DATA_DIR:-data/replication-$CORPUS_ID}"
+source "$REPO_ROOT/scripts/lib/db-guard.sh"
+DB_GUARD_ROOT="$REPO_ROOT" require_scratch_db "$SCRATCH_DB"
 
-if [[ "$DATASET" != "primary" && "$DATASET" != "extended" ]]; then
-    echo -e "${RED}Error: --dataset must be 'primary' or 'extended'${NC}"
-    exit 1
-fi
-
-# Validate primary dataset options
+# Validate controlled-corpus options
 if [[ "$DATASET" == "primary" && -z "$PHASE" ]]; then
-    echo -e "${RED}Error: --phase is required for primary dataset${NC}"
+    echo -e "${RED}Error: --phase is required for the controlled corpus${NC}"
     echo "Use: --phase generation  OR  --phase generalization"
     exit 1
 fi
@@ -188,9 +200,9 @@ if [[ "$USE_DOCKER" == "auto" ]]; then
 fi
 
 # Runner state and helpers
-state_scope="$DATASET"
+state_scope="$CORPUS_ID"
 if [[ "$DATASET" == "primary" ]]; then
-    state_scope="primary-$PHASE"
+    state_scope="$CORPUS_ID-$PHASE"
 fi
 RUN_STATE_DIR="${REPLICATION_RUN_STATE_DIR:-$REPO_ROOT/replication/run-state/$state_scope}"
 DONE_DIR="$RUN_STATE_DIR/done"
@@ -247,7 +259,11 @@ else
     # projects/, so both read the replication configs that carry local paths.
     # The project-configs/extended set holds remote URLs and is the source that
     # generate-replication-configs.sh transforms, never a runnable config.
-    CONFIG_DIR="$REPO_ROOT/project-configs/replication/extended"
+    if [[ -z "$CORPUS_CONFIG_DIR" ]]; then
+        echo -e "${RED}Error: corpus '$CORPUS_ID' declares no configuration directory${NC}"
+        exit 1
+    fi
+    CONFIG_DIR="$REPO_ROOT/$CORPUS_CONFIG_DIR"
     if [[ ! -d "$CONFIG_DIR" ]]; then
         echo -e "${RED}Error: Replication configs not found at $CONFIG_DIR${NC}"
         echo "Run: ./scripts/generate-replication-configs.sh"
@@ -338,7 +354,9 @@ echo "=========================================="
 echo "  Teralizer Pipeline Runner"
 echo "=========================================="
 echo ""
-echo -e "Dataset:    ${CYAN}$DATASET${NC}"
+echo -e "Corpus:     ${CYAN}$CORPUS_ID${NC}"
+echo -e "Registered: ${CYAN}$RESOLVED_CORPUS_DATABASE${NC}"
+echo -e "Scratch:    ${CYAN}$SCRATCH_DB${NC}"
 [[ -n "$PHASE" ]] && echo -e "Phase:      ${CYAN}$PHASE${NC}"
 [[ -n "$TIME_VARIANT" ]] && echo -e "Time:       ${CYAN}$TIME_VARIANT${NC}"
 [[ -n "$PROJECT_FILTER" ]] && echo -e "Project:    ${CYAN}$PROJECT_FILTER${NC}"
@@ -383,27 +401,44 @@ run_config() {
         # Translate host path to container path
         # Host: /path/to/repo/project-configs/... -> Container: /app/project-configs/...
         local container_conf="${conf/$REPO_ROOT\/project-configs//app/project-configs}"
-        local container_name="teralizer-replication-${DATASET}-${name}"
+        local container_name="teralizer-replication-${CORPUS_ID}-${name}"
         container_name="${container_name//[^a-zA-Z0-9_.-]/-}"
         supervised_container_run "$container_name" "$PROJECT_TIMEOUT" \
             docker compose -f "$SCRIPT_DIR/../docker-compose.yml" run --rm \
             --name "$container_name" teralizer \
-            ./gradlew run -Dteralizer.config="$container_conf" --no-daemon
+            ./gradlew run -Dteralizer.config="$container_conf" \
+            -Dteralizer.database.name="$SCRATCH_DB" \
+            -Dteralizer.data-dir="/app/$RUN_DATA_DIR" --no-daemon
         return "$SUPERVISED_RC"
     else
         supervised_run "-" "$PROJECT_TIMEOUT" \
-            ./gradlew run -Dteralizer.config="$conf" --no-daemon
+            ./gradlew run -Dteralizer.config="$conf" \
+            -Dteralizer.database.name="$SCRATCH_DB" \
+            -Dteralizer.data-dir="$RUN_DATA_DIR" --no-daemon
         return "$SUPERVISED_RC"
     fi
 }
 
 cd "$REPO_ROOT"
 
-# Ensure PostgreSQL is running for Docker mode
+# Ensure the selected scratch database exists without replacing resumable state.
 if [[ "$USE_DOCKER" == "yes" ]]; then
     echo "Ensuring PostgreSQL is running..."
     docker compose -f "$SCRIPT_DIR/../docker-compose.yml" up -d postgres
     sleep 3
+    if [[ "$(docker compose -f "$SCRIPT_DIR/../docker-compose.yml" exec -T postgres \
+        psql -U "${DB_USER:-teralizer}" -d postgres -tA \
+        -c "SELECT 1 FROM pg_database WHERE datname = '$SCRATCH_DB'" 2>/dev/null)" != 1 ]]; then
+        docker compose -f "$SCRIPT_DIR/../docker-compose.yml" exec -T postgres \
+            createdb -U "${DB_USER:-teralizer}" "$SCRATCH_DB"
+    fi
+else
+    source "$REPO_ROOT/scripts/lib/db-lifecycle.sh"
+    ensure_postgres_up
+    if [[ "$(teralizer_psql -tA -d postgres \
+        -c "SELECT 1 FROM pg_database WHERE datname = '$SCRATCH_DB'" 2>/dev/null)" != 1 ]]; then
+        recreate_scratch_db "$SCRATCH_DB"
+    fi
 fi
 
 # Process configs

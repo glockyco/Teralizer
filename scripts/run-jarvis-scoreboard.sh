@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Runs the JARVIS Table-2 scorecard on the dedicated scratch DB (postgres_jarvis_scoreboard) and
-# data root (data/jarvis-scoreboard). Shared run logic, flags (--reset-db, --prepare-fixtures),
-# the container preflight, stale-test cleanup, and the post-run failure check live in
-# scripts/lib/jarvis-run.sh.
+# Runs the JARVIS Table 2 scorecard for the registered jarvis-scenarios definition. Measurements
+# use a dedicated scratch database and data root. Shared run logic lives in scripts/lib/jarvis-run.sh.
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-JARVIS_DB_NAME="${JARVIS_DB:-postgres_jarvis_scoreboard}"
+JARVIS_CORPUS_ID=jarvis-scenarios
+JARVIS_DB_NAME="${JARVIS_SCRATCH_DB:-scratch_jarvis_scoreboard}"
 JARVIS_DATA_DIR="${JARVIS_DATA_DIR:-data/jarvis-scoreboard}"
 JARVIS_LABEL=scoreboard
 JARVIS_PREPARE_FLAG=

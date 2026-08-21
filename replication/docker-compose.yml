@@ -17,7 +17,7 @@
 #   docker compose run --rm verify original verify
 #
 #   # Run pipeline on subset (via run.sh script)
-#   ./scripts/run.sh --dataset extended --count 5
+#   ./scripts/run.sh --corpus real-world --count 5
 #
 #   # Tear down
 #   docker compose down -v
@@ -88,8 +88,6 @@ services:
       DB_PORT: 5432
       DB_USER: ${DB_USER:-teralizer}
       DB_PASSWORD: ${DB_PASSWORD:-teralizer}
-      DB_NAME_DEV: ${DB_NAME_DEV:-postgres_dev}
-      DB_NAME_TEST: ${DB_NAME_TEST:-postgres_test}
       DATA_DIR: /app/data
     volumes:
       - ../projects:/app/projects

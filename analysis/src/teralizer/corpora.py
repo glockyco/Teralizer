@@ -253,7 +253,19 @@ def main(argv: list[str] | None = None) -> None:
     )
     export_parser.add_argument("corpus_id")
 
+    list_parser = commands.add_parser("list", help="print corpus ids")
+    list_parser.add_argument(
+        "--published", action="store_true", help="include only published corpora"
+    )
+
     args = parser.parse_args(argv)
+    if args.command == "list":
+        registry = load()
+        entries = registry.published_entries if args.published else registry.entries
+        for entry in entries:
+            print(entry.id)
+        return
+
     entry = resolve(args.corpus_id)
     if args.command == "get":
         print(field_value(entry, args.field))

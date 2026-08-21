@@ -156,6 +156,14 @@ def test_registry_cli_returns_one_field_and_shell_safe_exports(capsys):
     corpora.main(["get", "real-world", "database"])
     assert capsys.readouterr().out == "postgres_reporeapers_rq6_v7\n"
 
+    corpora.main(["list", "--published"])
+    assert capsys.readouterr().out.splitlines() == [
+        "controlled",
+        "real-world",
+        "jarvis-benchmark",
+        "jarvis-scenarios",
+    ]
+
     entry = corpora.CorpusEntry(
         id="fixture",
         database="database with spaces; still one value",
