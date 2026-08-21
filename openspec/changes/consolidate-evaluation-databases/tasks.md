@@ -99,7 +99,7 @@
       preflight before success.
 - [ ] 5.11 Fix the replication container-name disagreement and prove import works with deployment names
       unrelated to the author's database service names.
-- [ ] 5.12 Use `jarvis-scenarios` as the positive control. Complete database-local export, checksum,
+- [x] 5.12 Use `jarvis-scenarios` as the positive control. Complete database-local export, checksum,
       transfer, isolated restore, preparation, and read-only report preflight before exporting the full
       corpus set.
 - [ ] 5.13 Restore the author's own corpus installation through the assembled package and documented
