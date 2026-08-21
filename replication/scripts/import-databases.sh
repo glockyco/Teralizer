@@ -20,9 +20,12 @@ COMPOSE_FILE="$REPO_ROOT/replication/docker-compose.yml"
 INPUT_DIR=""
 FORCE=false
 CORPUS_IDS=()
-DB_USER="${DB_USER:-teralizer}"
-DB_PASSWORD="${DB_PASSWORD:-teralizer}"
-DB_PORT="${DB_PORT:-5432}"
+REPLICATION_DB_HOST="${REPLICATION_DB_HOST:-127.0.0.1}"
+REPLICATION_DB_PORT="${REPLICATION_DB_PORT:-5432}"
+REPLICATION_DB_USER="${REPLICATION_DB_USER:-teralizer}"
+REPLICATION_DB_PASSWORD="${REPLICATION_DB_PASSWORD:-teralizer}"
+REPLICATION_REPORT_DB_USER="${REPLICATION_REPORT_DB_USER:-teralizer_report}"
+REPLICATION_REPORT_DB_PASSWORD="${REPLICATION_REPORT_DB_PASSWORD:-teralizer-report}"
 
 usage() {
     sed -n '2,15p' "$0"
@@ -81,7 +84,7 @@ compose_exec() {
 
 remove_restored_corpus() {
     local database="$1"
-    compose_exec dropdb -U "$DB_USER" --force "$database" >/dev/null 2>&1
+    compose_exec dropdb -U "$REPLICATION_DB_USER" --force "$database" >/dev/null 2>&1
 }
 
 cleanup_failed_restore() {
@@ -106,7 +109,7 @@ restore_corpus() {
     dump="$INPUT_DIR/$dump_relative"
     container_dump="/tmp/teralizer-${corpus_id}.dump"
 
-    existing=$(compose_exec psql -U "$DB_USER" -d postgres -tA \
+    existing=$(compose_exec psql -U "$REPLICATION_DB_USER" -d postgres -tA \
         -v name="$database" -c "SELECT 1 FROM pg_database WHERE datname = :'name'" 2>/dev/null || true)
     if [[ "$existing" == 1 ]]; then
         if [[ "$FORCE" != true ]]; then
@@ -123,13 +126,13 @@ restore_corpus() {
         fi
     fi
 
-    compose_exec createdb -U "$DB_USER" "$database"
+    compose_exec createdb -U "$REPLICATION_DB_USER" "$database"
     if ! docker compose -f "$COMPOSE_FILE" cp "$dump" "postgres:$container_dump"; then
         echo "Could not copy the verified dump for corpus '$corpus_id'" >&2
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
-    if ! compose_exec pg_restore -U "$DB_USER" -d "$database" \
+    if ! compose_exec pg_restore -U "$REPLICATION_DB_USER" -d "$database" \
         --no-owner --no-privileges "$container_dump"; then
         echo "Could not restore corpus '$corpus_id'" >&2
         cleanup_failed_restore "$database" "$container_dump" || true
@@ -141,7 +144,7 @@ restore_corpus() {
         return 1
     fi
 
-    if ! observed=$(compose_exec psql -U "$DB_USER" -d "$database" -tA \
+    if ! observed=$(compose_exec psql -U "$REPLICATION_DB_USER" -d "$database" -tA \
         -c "SELECT count(*) FROM project"); then
         echo "Could not count projects for restored corpus '$corpus_id'" >&2
         cleanup_failed_restore "$database" "$container_dump" || true
@@ -153,20 +156,24 @@ restore_corpus() {
         return 1
     fi
 
-    if ! DB_HOST="${DB_HOST:-127.0.0.1}" \
-        DB_PORT="$DB_PORT" \
-        DB_USER="$DB_USER" \
-        DB_PASSWORD="$DB_PASSWORD" \
+    if ! DB_HOST="$REPLICATION_DB_HOST" \
+        DB_PORT="$REPLICATION_DB_PORT" \
+        DB_USER="$REPLICATION_DB_USER" \
+        DB_PASSWORD="$REPLICATION_DB_PASSWORD" \
+        REPORT_DB_USER="$REPLICATION_REPORT_DB_USER" \
+        REPORT_DB_PASSWORD="$REPLICATION_REPORT_DB_PASSWORD" \
         "$REPO_ROOT/scripts/corpus-registry" prepare-corpus "$corpus_id"; then
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
     # Package verification binds the manifest's revision to the checked-in revision.
     # verify-corpus checks that installed revision through the report-only role.
-    if ! DB_HOST="${DB_HOST:-127.0.0.1}" \
-        DB_PORT="$DB_PORT" \
-        DB_USER="$DB_USER" \
-        DB_PASSWORD="$DB_PASSWORD" \
+    if ! DB_HOST="$REPLICATION_DB_HOST" \
+        DB_PORT="$REPLICATION_DB_PORT" \
+        DB_USER="$REPLICATION_DB_USER" \
+        DB_PASSWORD="$REPLICATION_DB_PASSWORD" \
+        REPORT_DB_USER="$REPLICATION_REPORT_DB_USER" \
+        REPORT_DB_PASSWORD="$REPLICATION_REPORT_DB_PASSWORD" \
         "$REPO_ROOT/scripts/corpus-registry" verify-corpus "$corpus_id"; then
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1

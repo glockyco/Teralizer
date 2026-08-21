@@ -35,6 +35,9 @@ elif [[ $args == *"--resolve-package-corpus controlled"* ]]; then
     printf 'controlled_db\tcontrolled_db.dump\t2\tcurrent\n'
 elif [[ $args == *"teralizer.corpora prepare-corpus controlled"* ]]; then
     [[ ${FAIL_CORPUS_COMMAND:-} != prepare ]] || exit 9
+    printf 'connection\t%s\t%s\t%s\t%s\t%s\n' \
+        "${DB_HOST:-}" "${DB_PORT:-}" "${DB_USER:-}" \
+        "${REPORT_DB_USER:-}" "${REPORT_DB_PASSWORD:-}" >> "${FAKE_LOG:?}"
     printf 'prepared controlled\n'
 elif [[ $args == *"teralizer.corpora verify-corpus controlled"* ]]; then
     [[ ${FAIL_CORPUS_COMMAND:-} != verify ]] || exit 9
@@ -154,3 +157,45 @@ def test_importer_removes_incomplete_database_after_failure(
 
     assert result.returncode != 0
     assert _line_index(lines, " createdb ") < _line_index(lines, " dropdb ")
+
+
+def test_importer_ignores_author_database_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    result, lines = _run_importer(
+        tmp_path,
+        monkeypatch,
+        DB_HOST="author-host",
+        DB_PORT="6500",
+        DB_USER="author-user",
+        DB_PASSWORD="author-password",
+        REPORT_DB_USER="author-report",
+        REPORT_DB_PASSWORD="author-report-password",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (
+        "connection\t127.0.0.1\t5432\tteralizer\tteralizer_report\tteralizer-report"
+        in lines
+    )
+
+
+def test_importer_maps_explicit_replication_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    result, lines = _run_importer(
+        tmp_path,
+        monkeypatch,
+        REPLICATION_DB_HOST="replication-host",
+        REPLICATION_DB_PORT="6543",
+        REPLICATION_DB_USER="replication-user",
+        REPLICATION_DB_PASSWORD="replication-password",
+        REPLICATION_REPORT_DB_USER="replication-report",
+        REPLICATION_REPORT_DB_PASSWORD="replication-report-password",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (
+        "connection\treplication-host\t6543\treplication-user"
+        "\treplication-report\treplication-report-password"
+    ) in lines

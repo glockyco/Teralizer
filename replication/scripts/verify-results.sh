@@ -10,7 +10,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
-DB_USER="${DB_USER:-teralizer}"
+REPLICATION_DB_USER="${REPLICATION_DB_USER:-teralizer}"
 CORPUS_IDS=()
 
 while [[ $# -gt 0 ]]; do
@@ -38,7 +38,7 @@ query_db() {
     local database="$1"
     local sql="$2"
     docker compose -f "$SCRIPT_DIR/../docker-compose.yml" exec -T postgres \
-        psql -U "$DB_USER" -d "$database" -tA -c "$sql" 2>/dev/null
+        psql -U "$REPLICATION_DB_USER" -d "$database" -tA -c "$sql" 2>/dev/null
 }
 
 errors=0

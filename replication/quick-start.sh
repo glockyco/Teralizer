@@ -21,7 +21,7 @@ REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd -P)
 cd "$SCRIPT_DIR"
 
 # Configuration
-DB_USER="${DB_USER:-teralizer}"
+REPLICATION_DB_USER="${REPLICATION_DB_USER:-teralizer}"
 PACKAGE_VERIFIED=false
 
 # Colors for output
@@ -130,7 +130,7 @@ docker compose up -d postgres adminer
 # Wait for PostgreSQL to be healthy
 echo "Waiting for PostgreSQL to be ready..."
 for i in {1..30}; do
-    if docker compose exec -T postgres pg_isready -U "$DB_USER" &> /dev/null; then
+    if docker compose exec -T postgres pg_isready -U "$REPLICATION_DB_USER" &> /dev/null; then
         echo -e "${GREEN}PostgreSQL is ready${NC}"
         break
     fi

@@ -27,8 +27,8 @@ services:
     image: postgres:17.1
     shm_size: 512m
     environment:
-      POSTGRES_USER: ${DB_USER:-teralizer}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-teralizer}
+      POSTGRES_USER: ${REPLICATION_DB_USER:-teralizer}
+      POSTGRES_PASSWORD: ${REPLICATION_DB_PASSWORD:-teralizer}
     # Tuning for bulk imports and analysis queries
     command:
       - postgres
@@ -51,11 +51,11 @@ services:
       - -c
       - checkpoint_completion_target=0.9
     ports:
-      - "127.0.0.1:${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${REPLICATION_DB_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-teralizer}"]
+      test: ["CMD-SHELL", "pg_isready -U ${REPLICATION_DB_USER:-teralizer}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -68,7 +68,7 @@ services:
   adminer:
     image: adminer:4.8.1
     ports:
-      - "127.0.0.1:${ADMINER_PORT:-18080}:8080"
+      - "127.0.0.1:${REPLICATION_ADMINER_PORT:-18080}:8080"
     environment:
       ADMINER_DEFAULT_SERVER: postgres
     depends_on:
@@ -83,8 +83,8 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: ${DB_USER:-teralizer}
-      DB_PASSWORD: ${DB_PASSWORD:-teralizer}
+      DB_USER: ${REPLICATION_DB_USER:-teralizer}
+      DB_PASSWORD: ${REPLICATION_DB_PASSWORD:-teralizer}
       DATA_DIR: /app/data
     volumes:
       - ../projects:/app/projects
@@ -107,8 +107,8 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: ${DB_USER:-teralizer}
-      DB_PASSWORD: ${DB_PASSWORD:-teralizer}
+      DB_USER: ${REPLICATION_DB_USER:-teralizer}
+      DB_PASSWORD: ${REPLICATION_DB_PASSWORD:-teralizer}
     volumes:
       - ../analysis:/app/analysis
     working_dir: /app/analysis

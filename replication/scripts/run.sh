@@ -428,10 +428,10 @@ if [[ "$USE_DOCKER" == "yes" ]]; then
     docker compose -f "$SCRIPT_DIR/../docker-compose.yml" up -d postgres
     sleep 3
     if [[ "$(docker compose -f "$SCRIPT_DIR/../docker-compose.yml" exec -T postgres \
-        psql -U "${DB_USER:-teralizer}" -d postgres -tA \
+        psql -U "${REPLICATION_DB_USER:-teralizer}" -d postgres -tA \
         -c "SELECT 1 FROM pg_database WHERE datname = '$SCRATCH_DB'" 2>/dev/null)" != 1 ]]; then
         docker compose -f "$SCRIPT_DIR/../docker-compose.yml" exec -T postgres \
-            createdb -U "${DB_USER:-teralizer}" "$SCRATCH_DB"
+            createdb -U "${REPLICATION_DB_USER:-teralizer}" "$SCRATCH_DB"
     fi
 else
     source "$REPO_ROOT/scripts/lib/db-lifecycle.sh"
