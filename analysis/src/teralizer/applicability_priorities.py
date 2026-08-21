@@ -6,7 +6,7 @@ where it is the *first* reject and later filters also pass). Produces a ranked
 prioritization of generalizable fixes and the projects closest to completing
 the generalization pipeline.
 
-All queries are read-only. Pass ``--db`` to pick the snapshot explicitly.
+All queries are read-only. Pass ``--corpus`` to select a registered corpus.
 """
 
 from __future__ import annotations
@@ -20,9 +20,10 @@ from typing import Any, cast
 import pandas as pd
 from sqlalchemy import Connection, text
 
-from teralizer.report_basis import open_report_connection, print_basis_header
+from teralizer.corpora import open_corpus
+from teralizer.report_basis import print_basis_header
 
-_DEFAULT_DB = "postgres_test"
+_DEFAULT_CORPUS = "real-world"
 
 
 # Filter names are stored fully-qualified in filter_result.filter_name.
@@ -454,13 +455,13 @@ def get_stage_failure_causes(conn: Connection, stage: str) -> pd.DataFrame:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--db",
-        default=_DEFAULT_DB,
-        help=f"database to inspect (default: {_DEFAULT_DB})",
+        "--corpus",
+        default=_DEFAULT_CORPUS,
+        help=f"registered corpus to inspect (default: {_DEFAULT_CORPUS})",
     )
     args = parser.parse_args()
-    with open_report_connection(args.db) as conn:
-        print_basis_header(conn, args.db)
+    with open_corpus(args.corpus) as (entry, conn):
+        print_basis_header(conn, entry.database)
         report = generate_report(conn)
     print_report(report)
 

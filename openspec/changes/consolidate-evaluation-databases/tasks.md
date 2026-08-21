@@ -36,7 +36,7 @@
 - [ ] 3.2 Migrate `run-rq6-analysis.sh`, rerun scripts, and executable `project-configs/**` to accept a
       semantic corpus id and receive the resolved physical connection at runtime. Preserve historical
       attribution through commit and provenance, not stale runnable literals.
-- [ ] 3.3 Point the four spike CLIs at `real-world`, run each once, and delete any spike whose SQL
+- [x] 3.3 Point the four spike CLIs at `real-world`, run each once, and delete any spike whose SQL
       depends on legacy-only structure instead of keeping a database alive for it.
 - [ ] 3.4 Remove `DB_NAME_DEV`, `DB_NAME_TEST`, `DATASET_VARIANT`, `VALID_VARIANTS`, and the
       `_replication` suffix from `config.py`, and update `.env.example` to the semantic-id boundary.

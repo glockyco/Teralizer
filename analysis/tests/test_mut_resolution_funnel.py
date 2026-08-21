@@ -5,7 +5,10 @@ from __future__ import annotations
 import pandas as pd
 
 
-def test_main_uses_default_db_without_schema_validation(monkeypatch, capsys):
+def test_main_resolves_the_default_real_world_corpus(monkeypatch, capsys):
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
     from teralizer import mut_resolution_funnel
 
     calls: list[tuple[str, object]] = []
@@ -13,25 +16,16 @@ def test_main_uses_default_db_without_schema_validation(monkeypatch, capsys):
     class FakeConnection:
         pass
 
-    class FakeConnectionContext:
-        def __enter__(self) -> FakeConnection:
-            calls.append(("connect", "postgres_test"))
-            return FakeConnection()
-
-        def __exit__(self, exc_type, exc, tb) -> None:
-            return None
-
-    def fake_open_report_connection(db_name: str) -> FakeConnectionContext:
-        calls.append(("open_report_connection", db_name))
-        return FakeConnectionContext()
+    @contextmanager
+    def fake_open_corpus(corpus_id: str):
+        calls.append(("open_corpus", corpus_id))
+        yield SimpleNamespace(database="resolved_real_world"), FakeConnection()
 
     def fake_print_basis_header(conn: FakeConnection, db_name: str) -> None:
         calls.append(("print_basis_header", db_name))
         print("# Analysis basis")
 
-    monkeypatch.setattr(
-        mut_resolution_funnel, "open_report_connection", fake_open_report_connection
-    )
+    monkeypatch.setattr(mut_resolution_funnel, "open_corpus", fake_open_corpus)
     monkeypatch.setattr(
         mut_resolution_funnel, "print_basis_header", fake_print_basis_header
     )
@@ -117,9 +111,8 @@ def test_main_uses_default_db_without_schema_validation(monkeypatch, capsys):
     mut_resolution_funnel.main()
 
     assert calls == [
-        ("open_report_connection", "postgres_test"),
-        ("connect", "postgres_test"),
-        ("print_basis_header", "postgres_test"),
+        ("open_corpus", "real-world"),
+        ("print_basis_header", "resolved_real_world"),
     ]
     output = capsys.readouterr().out
     assert "== Tier funnel ==" in output

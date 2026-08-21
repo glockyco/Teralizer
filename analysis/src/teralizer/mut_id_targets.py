@@ -31,10 +31,11 @@ import argparse
 import pandas as pd
 from sqlalchemy import Connection, text
 
-from teralizer.report_basis import open_report_connection, print_basis_header
+from teralizer.corpora import open_corpus
+from teralizer.report_basis import print_basis_header
 
 _MISSING_VALUE = "teralizer.processing.filter.MissingValueFilter"
-_DEFAULT_DB = "postgres_test"
+_DEFAULT_CORPUS = "real-world"
 
 
 # Stage a project must reach for PIT_ORIGINAL (pipeline step 12) to collect
@@ -154,13 +155,13 @@ def print_targets(ranked: pd.DataFrame, top: int = 15) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--db",
-        default=_DEFAULT_DB,
-        help=f"database to inspect (default: {_DEFAULT_DB})",
+        "--corpus",
+        default=_DEFAULT_CORPUS,
+        help=f"registered corpus to inspect (default: {_DEFAULT_CORPUS})",
     )
     args = parser.parse_args()
-    with open_report_connection(args.db) as conn:
-        print_basis_header(conn, args.db)
+    with open_corpus(args.corpus) as (entry, conn):
+        print_basis_header(conn, entry.database)
         ranked = rank_targets(get_project_potential(conn))
     print_targets(ranked)
 
