@@ -29,9 +29,9 @@ Release membership SHALL come only from this declaration. A release builder SHAL
 
 ### Requirement: Release assembly is clean and atomic
 
-A release SHALL be assembled from a committed source revision, a complete verified corpus package, a complete registered report run, and explicitly declared optional project and data inputs. Assembly SHALL stage all release files separately, verify the staged set, and promote the complete set atomically.
+A release SHALL be assembled from a committed source revision, every required submodule materialized at its recorded gitlink commit, a complete verified four-corpus package, a complete registered report run, every database and file input declared by that run, and explicitly declared workflow-specific project and data inputs. Assembly SHALL stage all release files separately, verify the staged set, and promote the complete set atomically.
 
-The release SHALL record every input revision and dirty state. Production release assembly SHALL reject dirty or unattributed inputs and SHALL NOT require access to a corpus database, author workstation, or evaluation host after the verified corpus package exists.
+The release SHALL record every input revision and dirty state. It SHALL prove that each registered report's declared inputs resolve inside the staged release and that every producing source, nested source, configuration, report output, and workflow input has exactly one payload owner or an explicit non-payload disposition. Production release assembly SHALL reject dirty, unattributed, unresolved, or source-checkout-fallback inputs and SHALL NOT require access to a corpus database, author workstation, evaluation host, ambient ignored directory, or nested Git worktree after the verified inputs exist.
 
 #### Scenario: A release is built from verified inputs
 
@@ -49,29 +49,71 @@ The release SHALL record every input revision and dirty state. Production releas
 - **WHEN** production release assembly observes source or declared inputs that differ from their recorded revisions
 - **THEN** it fails before promoting any release file
 
-### Requirement: Every archive is self-identifying and safely composable
+#### Scenario: A report file input exists only in the source checkout
 
-Every downloadable archive SHALL contain an archive manifest, release identity, citation, license mapping, purpose, payload inventory, and instructions appropriate to that component. An archive SHALL use a unique component identity independent of its filename.
+- **WHEN** a registered report declares a file input that no staged component owns
+- **THEN** release validation fails with the report id, input role, and unresolved path
+- **AND** clean archive acceptance cannot obtain the file from the source checkout
 
-Installation SHALL verify each selected archive before extraction, stage its payload, and install every selected component. It SHALL detect path collisions and accept a collision only when both archives declare the same immutable file with the same checksum. The presence of an already populated shared directory SHALL NOT cause a selected archive to be skipped.
+#### Scenario: A required submodule contains only a gitlink
 
-#### Scenario: Primary and real-world projects are selected
+- **WHEN** staged source records a submodule commit but omits the source bytes required by build or execution
+- **THEN** release validation fails naming the submodule, commit, and consuming workflow
 
-- **WHEN** a replicator installs both declared project components
-- **THEN** every project from both components is installed
-- **AND** neither component is skipped because the destination already contains projects
+### Requirement: Large independent payloads are fine-grained and components remain isolated
 
-#### Scenario: Two components disagree on one path
+Every downloadable archive SHALL contain a component manifest, release identity, citation and license mapping, purpose, payload inventory, dependencies, and concise instructions. Each archive SHALL use a unique semantic component identity independent of its filename and SHALL install only below its own component root.
 
-- **WHEN** selected archives declare different bytes for the same installation path
-- **THEN** installation fails naming both components and the path
-- **AND** the existing installation remains unchanged
+The release SHALL keep source, runtime support, registered results, compact report inputs, and small backing evidence in core. It SHALL publish each large semantic corpus and independent project family as a separate component when a documented workflow can omit that payload. It SHALL NOT split small or tightly coupled payloads without a measured download or redistribution benefit.
 
-#### Scenario: The full component supersedes its sample
+Installation SHALL verify each selected archive before extraction and SHALL promote only that component directory after verification. It SHALL NOT merge component payload trees, maintain a package database, or infer that one installed component satisfies another. Workflow preflight SHALL name every missing or incompatible component before execution.
 
-- **WHEN** a workflow selects both a full component and a sample that the release declares as its subset
-- **THEN** installation either deduplicates checksum-identical members or rejects the redundant selection with a corrective command
-- **AND** it never installs an ambiguous mixture
+#### Scenario: A reviewer reproduces only RQ0
+
+- **WHEN** the reviewer selects the RQ0 reproduction workflow
+- **THEN** the release documentation requires core and the two JARVIS corpus components
+- **AND** it does not require the controlled corpus, real-world corpus, or unrelated project components
+
+#### Scenario: A user adds one component
+
+- **WHEN** a verified release workspace already contains other components and a new component id is absent
+- **THEN** installation verifies and promotes only the new component directory
+- **AND** it does not rewrite or merge existing component payloads
+
+#### Scenario: A component id already exists with different bytes
+
+- **WHEN** installation finds an existing component directory whose manifest or payload differs
+- **THEN** it fails with the component id and corrective action
+- **AND** it does not modify that directory
+
+#### Scenario: Full real-world collection is selected
+
+- **WHEN** the full workflow uses a sample component plus a non-overlapping remainder component
+- **THEN** preflight requires both components
+- **AND** the release stores no duplicate sample project payload
+
+### Requirement: JARVIS evidence has a complete, non-duplicated release chain
+
+The release SHALL bind the RQ0 JARVIS evidence to the `jarvis-scenarios` and `jarvis-benchmark` corpus packages, the two scorecard and twelve census fixture/config declarations, accepted run status and completion evidence, `jarvis-value-facts.json`, every source value log bound by its recorded counts and aggregate checksums (currently 1,494 census and 30 scorecard logs), `cut_values.tsv`, retained raw CUT-PVC captures, and every registered RQ0 report artifact. Each link SHALL record a checksum, provenance, payload owner, and whether the reviewer workflow inspects frozen evidence or regenerates it.
+
+The release SHALL NOT require the complete author working run roots when the selected source evidence and corpus packages close the declared lineage. It SHALL NOT use a stale detached completion marker, an alternate source-cache path, or a source-checkout file as an implicit substitute for declared payload.
+
+#### Scenario: A reviewer reproduces RQ0 reports
+
+- **WHEN** the reviewer installs core and the two declared JARVIS corpus components and runs RQ0 reproduction
+- **THEN** the report resolves every JARVIS database and file input inside that installation
+- **AND** verification compares every declared RQ0 report, table, CSV, macro, and provenance artifact
+
+#### Scenario: Compact facts have no backing logs
+
+- **WHEN** `jarvis-value-facts.json` is present but its declared source-log count or aggregate checksum cannot be verified from the evidence payload
+- **THEN** release validation fails the JARVIS evidence chain
+
+#### Scenario: CUT values have no retained capture lineage
+
+- **WHEN** `cut_values.tsv` is declared regenerable but the raw captures, fixture revisions, capture plan, or aggregate checksum are absent
+- **THEN** release validation rejects the regenerability claim
+- **AND** the release cannot silently relabel the values as independently reproduced
 
 ### Requirement: Public requirements and metadata state exact release facts
 
@@ -117,7 +159,7 @@ Publishing a revision SHALL create a new archival version. It SHALL NOT alter th
 
 The release SHALL contain a top-level license map covering source code, authored data and documentation, and third-party materials. Every redistributed project SHALL retain its original license and attribution and SHALL be listed with its origin URL, immutable source revision, license identity, and redistribution decision. A project without established redistribution permission SHALL NOT be included as though the artifact license covered it.
 
-The release SHALL document the corpus selection source, whether human-participant or sensitive data is present, and any ethical or legal constraint relevant to reuse. Independently downloadable result and data components SHALL include their schema and provenance context.
+The release SHALL document the corpus selection source, whether human-participant or sensitive data is present, and any ethical or legal constraint relevant to reuse. Core and every independently downloadable corpus or project component SHALL include the schema, provenance, license, and citation context applicable to its payload.
 
 #### Scenario: A redistributed project has a recognized license
 
@@ -130,7 +172,12 @@ The release SHALL document the corpus selection source, whether human-participan
 - **THEN** release validation rejects its source payload
 - **AND** the release may retain only legally distributable provenance and retrieval instructions
 
-#### Scenario: A user downloads only the results component
+#### Scenario: A user downloads only core
 
-- **WHEN** the results archive is opened without the core archive or Zenodo page
-- **THEN** it still identifies the study, release, citation, licenses, data schemas, provenance, and files it contains
+- **WHEN** core is opened without any corpus or project component or the Zenodo page
+- **THEN** it identifies the study, release, citation, licenses, report and evidence schemas, provenance, included results, and available workflows
+
+#### Scenario: A user downloads one corpus component
+
+- **WHEN** a corpus archive is opened without core or the Zenodo page
+- **THEN** it identifies the study, release, semantic corpus, citation, licenses, schema, provenance, and required companion components

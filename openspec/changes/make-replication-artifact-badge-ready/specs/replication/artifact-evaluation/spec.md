@@ -52,7 +52,9 @@ On the declared baseline with the release inputs already downloaded, this path S
 
 ### Requirement: Supported paper claims map to executable evidence
 
-The artifact SHALL contain a claims-to-evidence matrix covering every paper claim that it represents as supported. Each entry SHALL identify the paper section or research question, semantic corpus inputs, non-database inputs, command, output artifacts, expected values or invariants, comparison rule and tolerance, expected runtime, and whether the workflow regenerates evidence or only inspects it.
+The artifact SHALL contain a claims-to-evidence matrix covering every paper claim that it represents as supported. Each entry SHALL identify the paper section or research question, semantic corpus inputs, non-database inputs, command, output artifacts, expected values or invariants, comparison rule and tolerance, expected runtime, and whether the workflow regenerates evidence or only inspects it. Each evidence edge SHALL be classified as direct observation, deterministic transformation, analytic derivation, external published reference, or stochastic collection.
+
+For the JARVIS comparison, the matrix SHALL cite the exact external paper/table, identify fixture revisions and run scope, bind the restored JARVIS corpora and non-database evidence to every RQ0 artifact, and distinguish report regeneration from scorecard, census, and CUT-PVC collection. Possession of frozen compact facts SHALL NOT be described as independent repetition of their original collection.
 
 The matrix SHALL list paper claims not supported by the artifact and explain the boundary. A report name alone or a statement that differences are expected SHALL NOT substitute for an acceptance rule.
 
