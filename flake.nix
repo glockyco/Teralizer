@@ -1,10 +1,23 @@
 {
   description = "Teralizer: test generalization pipeline and its evaluation";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+
+    # Defines the OpenSpec artifact check every repository on this workstation
+    # runs, so the commands and the pinned CLI live in one place.
+    fleet = {
+      url = "github:glockyco/omp-agent-setup";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
   outputs =
-    { self, nixpkgs }:
+    {
+      self,
+      nixpkgs,
+      fleet,
+    }:
     let
       systems = [
         "aarch64-darwin"
@@ -17,6 +30,10 @@
         f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
     in
     {
+      checks = forAllSystems (pkgs: {
+        openspec = fleet.lib.openspecCheck { inherit pkgs; src = ./.; };
+      });
+
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           # Java 8 is not a preference. `build.gradle` targets 1.8, jpf-core reads

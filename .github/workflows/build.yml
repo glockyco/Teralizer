@@ -85,6 +85,11 @@ jobs:
       - name: Run the commit hooks
         run: nix develop --command lefthook run pre-commit --all-files
 
+      # Defined once for the whole workstation in the fleet input. Fails on an
+      # invalid artifact and on a change archived with unfinished tasks.
+      - name: Validate OpenSpec artifacts
+        run: nix build --no-link ".#checks.$(nix eval --raw --impure --expr builtins.currentSystem).openspec"
+
       # No RepoReapers corpus here, so the `db` tests would skip rather than
       # run. Deselecting them keeps a skip from reading as a pass.
       - name: Run the analysis tests
