@@ -152,6 +152,30 @@ def test_registry_lookup_is_semantic_and_immutable():
         registry.get("missing")
 
 
+def test_registry_cli_returns_one_field_and_shell_safe_exports(capsys):
+    corpora.main(["get", "real-world", "database"])
+    assert capsys.readouterr().out == "postgres_reporeapers_rq6_v7\n"
+
+    entry = corpora.CorpusEntry(
+        id="fixture",
+        database="database with spaces; still one value",
+        data_dir=None,
+        config_dir=None,
+        expected_projects=1,
+        published=False,
+        notes="fixture",
+    )
+    assert corpora.shell_exports(entry).splitlines() == [
+        "export TERALIZER_CORPUS_ID=fixture",
+        "export DB_NAME='database with spaces; still one value'",
+        "export DATA_DIR=''",
+        "export CONFIG_DIR=''",
+        "export EXPECTED_PROJECTS=1",
+        "export CORPUS_PUBLISHED=false",
+    ]
+    assert corpora.field_value(entry, "published") == "false"
+
+
 def test_project_count_validation_names_expected_and_observed_counts():
     engine = create_engine("sqlite:///:memory:")
     entry = corpora.CorpusEntry(

@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec uv run --directory "$repo_root/analysis" python -m teralizer.corpora "$@"
+CORPUS_REGISTRY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+corpus_registry_get() {
+  uv run --directory "$CORPUS_REGISTRY_ROOT/analysis" \
+    python -m teralizer.corpora get "$1" "$2"
+}
+
+corpus_registry_export() {
+  local assignments
+  assignments="$(uv run --directory "$CORPUS_REGISTRY_ROOT/analysis" \
+    python -m teralizer.corpora export "$1")" || return
+  eval "$assignments"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  exec uv run --directory "$CORPUS_REGISTRY_ROOT/analysis" \
+    python -m teralizer.corpora "$@"
+fi

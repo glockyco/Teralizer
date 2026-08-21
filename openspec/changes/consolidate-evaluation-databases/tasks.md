@@ -26,7 +26,7 @@
 - [x] 2.3 Test successful and unknown-id lookup, immutable entries, and count mismatch diagnostics.
 - [x] 2.4 Complete these registry interfaces before `make-report-runs-explicit` removes
       `ReportSpec.schema`, physical defaults, and database overrides.
-- [ ] 2.5 Extend the shell boundary to return one requested field safely and to export resolved
+- [x] 2.5 Extend the shell boundary to return one requested field safely and to export resolved
       connection settings for existing Java and shell runners; do not add a second Java TOML parser.
 
 ## 3. Move every live path onto corpus ids

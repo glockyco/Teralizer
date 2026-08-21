@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import shlex
 import tomllib
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
@@ -199,23 +200,60 @@ def open_corpus(
         yield entry, conn
 
 
+_FIELDS = (
+    "database",
+    "data-dir",
+    "config-dir",
+    "expected-projects",
+    "published",
+    "notes",
+)
+
+
+def field_value(entry: CorpusEntry, field: str) -> str:
+    """Render one declared field without exposing Python representation details."""
+    if field not in _FIELDS:
+        raise ValueError(f"unknown corpus field {field!r}")
+    value = getattr(entry, field.replace("-", "_"))
+    if isinstance(value, bool):
+        return str(value).lower()
+    return "" if value is None else str(value)
+
+
+def shell_exports(entry: CorpusEntry) -> str:
+    """Render safely quoted exports consumed by Java and shell launchers."""
+    values = {
+        "TERALIZER_CORPUS_ID": entry.id,
+        "DB_NAME": entry.database,
+        "DATA_DIR": entry.data_dir or "",
+        "CONFIG_DIR": entry.config_dir or "",
+        "EXPECTED_PROJECTS": str(entry.expected_projects),
+        "CORPUS_PUBLISHED": str(entry.published).lower(),
+    }
+    return "\n".join(
+        f"export {name}={shlex.quote(value)}" for name, value in values.items()
+    )
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="teralizer.corpora")
-    parser.add_argument("corpus_id")
-    parser.add_argument(
-        "field",
-        choices=(
-            "database",
-            "data-dir",
-            "config-dir",
-            "expected-projects",
-            "notes",
-        ),
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    get_parser = commands.add_parser("get", help="print one field")
+    get_parser.add_argument("corpus_id")
+    get_parser.add_argument("field", choices=_FIELDS)
+
+    export_parser = commands.add_parser(
+        "export", help="print safely quoted shell connection settings"
     )
+    export_parser.add_argument("corpus_id")
+
     args = parser.parse_args(argv)
     entry = resolve(args.corpus_id)
-    value: str | int | None = getattr(entry, args.field.replace("-", "_"))
-    print("" if value is None else value)
+    if args.command == "get":
+        print(field_value(entry, args.field))
+    else:
+        print(shell_exports(entry))
 
 
 if __name__ == "__main__":
