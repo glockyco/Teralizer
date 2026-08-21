@@ -10,6 +10,7 @@ from sqlalchemy import text
 
 from teralizer import corpora
 from teralizer.config import db_config
+from teralizer.corpus_preparation import require_current_revision
 from teralizer.report_basis import (
     open_report_connection,
     require_complete_corpus,
@@ -52,6 +53,8 @@ def observed_databases() -> tuple[str, ...]:
 def verify_entry(entry: corpora.CorpusEntry) -> int:
     """Verify one installed corpus against its registry entry and checked inputs."""
     with open_report_connection(entry.database) as conn:
+        if entry.derived_views:
+            require_current_revision(conn, entry.id)
         observed = corpora.validate_project_count(conn, entry)
         if entry.data_dir is not None and entry.config_dir is not None:
             require_complete_corpus(
