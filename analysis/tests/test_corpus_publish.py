@@ -29,6 +29,36 @@ def test_producer_provenance_counts_each_commit_and_unattributed_projects():
     }
 
 
+def test_publication_plan_names_every_missing_published_corpus(monkeypatch):
+    entries = (
+        corpora.CorpusEntry(
+            "controlled", "controlled_db", None, None, 2, True, "fixture", True
+        ),
+        corpora.CorpusEntry(
+            "real-world", "real_world_db", None, None, 3, True, "fixture", False
+        ),
+        corpora.CorpusEntry(
+            "jarvis", "jarvis_db", None, None, 1, True, "fixture", False
+        ),
+    )
+    registry = corpora.CorpusRegistry(entries)
+
+    monkeypatch.setattr(corpus_publish, "require_publishable_tree", lambda: None)
+    monkeypatch.setattr(corpus_publish, "checkout_snapshot", lambda: ("a" * 40, False))
+    monkeypatch.setattr(corpus_publish.corpora, "load", lambda: registry)
+    monkeypatch.setattr(
+        corpus_publish, "_installed_databases", lambda: {"postgres", "controlled_db"}
+    )
+
+    with pytest.raises(RuntimeError) as raised:
+        corpus_publish.publication_plan()
+
+    assert str(raised.value) == (
+        "complete corpus publication cannot continue; missing corpora: "
+        "real-world (real_world_db), jarvis (jarvis_db)"
+    )
+
+
 def _manifest_fixture(tmp_path: Path, monkeypatch):
     entries = (
         corpora.CorpusEntry(

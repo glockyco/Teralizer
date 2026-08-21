@@ -110,14 +110,33 @@ def _corpus_facts(entry: corpora.CorpusEntry) -> dict[str, object]:
     }
 
 
+def _installed_databases() -> set[str]:
+    from teralizer.report_basis import open_report_connection
+
+    with open_report_connection("postgres") as conn:
+        return set(conn.execute(text("SELECT datname FROM pg_database")).scalars())
+
+
 def publication_plan() -> dict[str, object]:
     """Inspect every published corpus without exporting database rows."""
     require_publishable_tree()
     source_commit, dirty = checkout_snapshot()
+    entries = corpora.load().published_entries
+    installed = _installed_databases()
+    missing = [
+        f"{entry.id} ({entry.database})"
+        for entry in entries
+        if entry.database not in installed
+    ]
+    if missing:
+        raise RuntimeError(
+            "complete corpus publication cannot continue; missing corpora: "
+            + ", ".join(missing)
+        )
     return {
         "schema_version": 1,
         "producer": {"source_commit": source_commit, "dirty": dirty},
-        "corpora": [_corpus_facts(entry) for entry in corpora.load().published_entries],
+        "corpora": [_corpus_facts(entry) for entry in entries],
     }
 
 
