@@ -166,6 +166,8 @@ def validate_manifest(
         if not isinstance(dump, dict) or not isinstance(dump.get("path"), str):
             raise ValueError(f"manifest dump fact is missing for {declared.id!r}")
         dump_path = str(dump["path"])
+        if dump_path != f"{declared.database}.dump":
+            raise ValueError(f"manifest dump filename disagrees for {declared.id!r}")
         if dump_path in dump_files:
             raise ValueError(f"manifest reuses dump file {dump_path!r}")
         dump_files.add(dump_path)
@@ -198,6 +200,36 @@ def validate_manifest(
                 raise ValueError(
                     f"manifest input fact disagrees for {declared.id!r}: {fact['path']}"
                 )
+
+
+def verify_package(input_dir: Path) -> Path:
+    """Verify a published manifest, every dump, and every declared corpus input."""
+    manifest_path = input_dir / MANIFEST_NAME
+    try:
+        document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise FileNotFoundError(f"corpus manifest not found: {manifest_path}") from None
+    if not isinstance(document, dict) or document.get("schema_version") != 1:
+        raise ValueError("unsupported or malformed corpus manifest")
+    producer = document.get("producer")
+    if (
+        not isinstance(producer, dict)
+        or not isinstance(producer.get("source_commit"), str)
+        or len(producer["source_commit"]) != 40
+        or producer.get("dirty") is not False
+    ):
+        raise ValueError("corpus manifest does not identify a clean producer commit")
+    validate_manifest(document, input_dir, corpora.load())
+    checksums_path = input_dir / CHECKSUMS_NAME
+    expected_checksums = _checksums(document)
+    if (
+        not checksums_path.is_file()
+        or checksums_path.read_text(encoding="utf-8") != expected_checksums
+    ):
+        raise ValueError(
+            "corpus package checksum inventory disagrees with its manifest"
+        )
+    return manifest_path
 
 
 def _checksums(document: dict[str, object]) -> str:
@@ -270,8 +302,16 @@ def publish(output_dir: Path = DEFAULT_OUTPUT_DIR) -> Path:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="publish-corpora")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument(
+        "--verify-package",
+        type=Path,
+        help="verify an existing package instead of publishing",
+    )
     args = parser.parse_args(argv)
-    print(publish(args.output_dir))
+    if args.verify_package is not None:
+        print(verify_package(args.verify_package))
+    else:
+        print(publish(args.output_dir))
 
 
 if __name__ == "__main__":

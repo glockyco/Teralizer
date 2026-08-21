@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -60,7 +61,11 @@ def _manifest_fixture(tmp_path: Path, monkeypatch):
                 "provenance": {"commits": [], "unattributed_projects": 0},
             }
         )
-    return {"schema_version": 1, "corpora": records}, registry
+    return {
+        "schema_version": 1,
+        "producer": {"source_commit": "a" * 40, "dirty": False},
+        "corpora": records,
+    }, registry
 
 
 def test_manifest_validation_accepts_one_complete_fact_set(tmp_path: Path, monkeypatch):
@@ -107,6 +112,27 @@ def test_manifest_validation_rejects_inconsistent_facts(
 
     with pytest.raises(ValueError, match=message):
         corpus_publish.validate_manifest(document, tmp_path, registry)
+
+
+def test_package_verification_checks_manifest_dumps_inputs_and_inventory(
+    tmp_path: Path, monkeypatch
+):
+    document, registry = _manifest_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(corpus_publish.corpora, "load", lambda: registry)
+    (tmp_path / corpus_publish.MANIFEST_NAME).write_text(
+        json.dumps(document), encoding="utf-8"
+    )
+    (tmp_path / corpus_publish.CHECKSUMS_NAME).write_text(
+        corpus_publish._checksums(document), encoding="utf-8"
+    )
+
+    assert corpus_publish.verify_package(tmp_path) == (
+        tmp_path / corpus_publish.MANIFEST_NAME
+    )
+
+    (tmp_path / corpus_publish.CHECKSUMS_NAME).write_text("stale\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="checksum inventory disagrees"):
+        corpus_publish.verify_package(tmp_path)
 
 
 def test_promotion_removes_stale_dumps_only_after_complete_stage(tmp_path: Path):

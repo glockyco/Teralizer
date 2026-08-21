@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Restore registered corpus databases from replication-package dumps.
+# Restore and verify registered corpora from one published manifest set.
 #
 # Usage:
 #   ./import-databases.sh [--force] [--corpus ID]... [input_dir]
@@ -9,18 +9,20 @@
 #   --force      Replace existing corpus databases without prompting.
 #   --help       Show this help text.
 #
-# Without --corpus, the script restores every published corpus. Dump files use
-# the registry-resolved physical name, for example <input_dir>/<database>.dump.
+# Without --corpus, the script restores every published corpus. The complete
+# package is verified before any database is changed.
 
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
+COMPOSE_FILE="$REPO_ROOT/replication/docker-compose.yml"
 INPUT_DIR=""
 FORCE=false
 CORPUS_IDS=()
 DB_USER="${DB_USER:-teralizer}"
-CONTAINER="${CONTAINER:-postgres-replication}"
+DB_PASSWORD="${DB_PASSWORD:-teralizer}"
+DB_PORT="${DB_PORT:-5432}"
 
 usage() {
     sed -n '2,15p' "$0"
@@ -40,7 +42,7 @@ while [[ $# -gt 0 ]]; do
             usage
             exit 0
             ;;
-        -* )
+        -*)
             echo "Unknown option: $1" >&2
             exit 2
             ;;
@@ -56,31 +58,42 @@ while [[ $# -gt 0 ]]; do
 done
 
 INPUT_DIR="${INPUT_DIR:-$SCRIPT_DIR/../datasets}"
+INPUT_DIR=$(cd "$INPUT_DIR" && pwd -P)
+
+uv run --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+    --verify-package "$INPUT_DIR"
+
 if [[ ${#CORPUS_IDS[@]} -eq 0 ]]; then
-    mapfile -t CORPUS_IDS < <("$REPO_ROOT/scripts/corpus-registry" list --published)
+    while IFS= read -r corpus_id; do
+        CORPUS_IDS+=("$corpus_id")
+    done < <("$REPO_ROOT/scripts/corpus-registry" list --published)
 fi
 
-if ! docker ps --format '{{.Names}}' | awk -v name="$CONTAINER" '$0 == name { found = 1 } END { exit !found }'; then
-    echo "Container '$CONTAINER' is not running" >&2
-    echo "Start it with: docker compose up -d postgres" >&2
+if [[ "$(docker compose -f "$COMPOSE_FILE" ps --status running --services postgres)" != "postgres" ]]; then
+    echo "The replication PostgreSQL service is not running" >&2
+    echo "Start it with: docker compose -f $COMPOSE_FILE up -d postgres" >&2
     exit 1
 fi
 
+compose_exec() {
+    docker compose -f "$COMPOSE_FILE" exec -T postgres "$@"
+}
+
+remove_restored_corpus() {
+    local database="$1"
+    compose_exec dropdb -U "$DB_USER" --force "$database" >/dev/null 2>&1 || true
+}
+
 restore_corpus() {
     local corpus_id="$1"
-    local exports database expected dump existing
+    local exports database expected dump existing observed
     exports=$("$REPO_ROOT/scripts/corpus-registry" export "$corpus_id") || return $?
     eval "$exports"
     database="$DB_NAME"
     expected="$EXPECTED_PROJECTS"
     dump="$INPUT_DIR/$database.dump"
 
-    if [[ ! -f "$dump" ]]; then
-        echo "Missing dump for corpus '$corpus_id': $dump" >&2
-        return 1
-    fi
-
-    existing=$(docker exec "$CONTAINER" psql -U "$DB_USER" -d postgres -tA \
+    existing=$(compose_exec psql -U "$DB_USER" -d postgres -tA \
         -v name="$database" -c "SELECT 1 FROM pg_database WHERE datname = :'name'" 2>/dev/null || true)
     if [[ "$existing" == 1 ]]; then
         if [[ "$FORCE" != true ]]; then
@@ -91,32 +104,44 @@ restore_corpus() {
                 return 1
             fi
         fi
-        docker exec "$CONTAINER" dropdb -U "$DB_USER" --force "$database"
+        remove_restored_corpus "$database"
     fi
 
-    docker exec "$CONTAINER" createdb -U "$DB_USER" "$database"
-    docker cp "$dump" "$CONTAINER:/tmp/corpus.dump"
-    if ! docker exec "$CONTAINER" pg_restore -U "$DB_USER" -d "$database" \
+    compose_exec createdb -U "$DB_USER" "$database"
+    docker compose -f "$COMPOSE_FILE" cp "$dump" "postgres:/tmp/corpus.dump"
+    if ! compose_exec pg_restore -U "$DB_USER" -d "$database" \
         --no-owner --no-privileges /tmp/corpus.dump; then
-        docker exec "$CONTAINER" rm -f /tmp/corpus.dump
-        docker exec "$CONTAINER" dropdb -U "$DB_USER" --force "$database"
+        compose_exec rm -f /tmp/corpus.dump
+        remove_restored_corpus "$database"
         return 1
     fi
-    docker exec "$CONTAINER" rm -f /tmp/corpus.dump
+    compose_exec rm -f /tmp/corpus.dump
 
-    observed=$(docker exec "$CONTAINER" psql -U "$DB_USER" -d "$database" -tA \
+    observed=$(compose_exec psql -U "$DB_USER" -d "$database" -tA \
         -c "SELECT count(*) FROM project")
     if [[ "$observed" != "$expected" ]]; then
         echo "Corpus '$corpus_id' expects $expected projects. The restored database has $observed." >&2
-        docker exec "$CONTAINER" dropdb -U "$DB_USER" --force "$database"
+        remove_restored_corpus "$database"
         return 1
     fi
-    DB_HOST="${DB_HOST:-127.0.0.1}" \
-        DB_PORT="${DB_PORT:-5432}" \
+
+    if ! DB_HOST="${DB_HOST:-127.0.0.1}" \
+        DB_PORT="$DB_PORT" \
         DB_USER="$DB_USER" \
-        DB_PASSWORD="${DB_PASSWORD:-teralizer}" \
-        "$REPO_ROOT/scripts/corpus-registry" prepare-corpus "$corpus_id"
-    echo "Restored and prepared $corpus_id to $database with $observed projects"
+        DB_PASSWORD="$DB_PASSWORD" \
+        "$REPO_ROOT/scripts/corpus-registry" prepare-corpus "$corpus_id"; then
+        remove_restored_corpus "$database"
+        return 1
+    fi
+    if ! DB_HOST="${DB_HOST:-127.0.0.1}" \
+        DB_PORT="$DB_PORT" \
+        DB_USER="$DB_USER" \
+        DB_PASSWORD="$DB_PASSWORD" \
+        "$REPO_ROOT/scripts/corpus-registry" verify-corpus "$corpus_id"; then
+        remove_restored_corpus "$database"
+        return 1
+    fi
+    echo "Restored, prepared, and verified $corpus_id in $database"
 }
 
 for corpus_id in "${CORPUS_IDS[@]}"; do

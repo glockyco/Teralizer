@@ -288,6 +288,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     classify_parser.add_argument("database")
 
+    verify_parser = commands.add_parser(
+        "verify-corpus", help="exercise one corpus through the report-only boundary"
+    )
+    verify_parser.add_argument("corpus_id")
+
     args = parser.parse_args(argv)
     if args.command == "classify":
         classification = load().classify(args.database)
@@ -298,6 +303,19 @@ def main(argv: list[str] | None = None) -> None:
         entries = registry.published_entries if args.published else registry.entries
         for entry in entries:
             print(entry.id)
+        return
+    if args.command == "verify-corpus":
+        from teralizer.report_basis import require_complete_corpus
+
+        with open_corpus(args.corpus_id) as (entry, conn):
+            if entry.data_dir is not None:
+                assert entry.config_dir is not None
+                require_complete_corpus(
+                    conn,
+                    data_dir=Path(entry.data_dir),
+                    config_dir=Path(entry.config_dir),
+                )
+            print(f"verified {entry.id}: {entry.database}")
         return
     if args.command == "prepare-corpus":
         from teralizer.corpus_preparation import prepare

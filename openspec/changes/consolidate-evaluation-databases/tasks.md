@@ -68,13 +68,13 @@
 
 ## 5. Publish and import the complete artifact
 
-- [ ] 5.1 Add the provenance query that emits, per corpus, each tool commit with its project count and
+- [x] 5.1 Add the provenance query that emits, per corpus, each tool commit with its project count and
       the unattributed count.
-- [ ] 5.2 Add `publish-corpora`: require all published entries, dump each corpus once, and write a
+- [x] 5.2 Add `publish-corpora`: require all published entries, dump each corpus once, and write a
       manifest containing semantic id, physical name, file, SHA-256, bytes, expected and observed
       project counts, producer revision and dirty state, corpus-input checksums, derived-view revision,
       and provenance.
-- [ ] 5.3 Fail publication before promotion on a missing published corpus, entry disagreement, duplicate
+- [x] 5.3 Fail publication before promotion on a missing published corpus, entry disagreement, duplicate
       entry, stale view revision, missing checked input, or dump/manifest mismatch.
 - [ ] 5.4 Include corpus definitions, attempt ledgers, completion markers, and project configurations
       required by registered reports. Keep bulk logs and unread intermediate run material out.
