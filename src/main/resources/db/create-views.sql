@@ -1,8 +1,5 @@
 -- Dialect: PostgreSQL
 
-ALTER SYSTEM SET max_wal_size = '4GB';
-SELECT pg_reload_conf();
-
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_test_fails;
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_jpf;
 DROP MATERIALIZED VIEW IF EXISTS mv_exclusions_filtering;
@@ -46,8 +43,6 @@ DROP FUNCTION IF EXISTS stage_order(stage TEXT);
 DROP FUNCTION IF EXISTS variant_order(variant TEXT);
 DROP FUNCTION IF EXISTS variant_name(stage TEXT, variant TEXT);
 DROP FUNCTION IF EXISTS simple_name(qualified_name TEXT);
-
-VACUUM ANALYZE;
 
 CREATE EXTENSION IF NOT EXISTS tablefunc;
 
@@ -2012,7 +2007,3 @@ WHERE result != 'PASSED'
 GROUP BY stage, variant, failure_type
 ORDER BY variant_order, count(*) DESC;
 
-VACUUM ANALYZE;
-
-ALTER SYSTEM RESET max_wal_size;
-SELECT pg_reload_conf();

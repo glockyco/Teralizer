@@ -30,6 +30,7 @@ _REQUIRED_FIELDS = frozenset(
         "data_dir",
         "config_dir",
         "expected_projects",
+        "derived_views",
         "published",
         "notes",
     }
@@ -64,6 +65,7 @@ class CorpusEntry:
     expected_projects: int
     published: bool
     notes: str
+    derived_views: bool = True
 
 
 class CorpusRegistry:
@@ -139,6 +141,10 @@ def _entry(raw: Mapping[str, object], index: int) -> CorpusEntry:
             f"corpus {label!r} field 'expected_projects' must not be negative"
         )
 
+    derived_views = raw["derived_views"]
+    if not isinstance(derived_views, bool):
+        raise ValueError(f"corpus {label!r} field 'derived_views' must be a boolean")
+
     published = raw["published"]
     if not isinstance(published, bool):
         raise ValueError(f"corpus {label!r} field 'published' must be a boolean")
@@ -158,6 +164,7 @@ def _entry(raw: Mapping[str, object], index: int) -> CorpusEntry:
         expected_projects=expected_projects,
         published=published,
         notes=_required_string(raw, "notes", label),
+        derived_views=derived_views,
     )
 
 
@@ -206,8 +213,12 @@ def open_corpus(
     corpus_id: str, registry: CorpusRegistry | None = None
 ) -> Iterator[tuple[CorpusEntry, Connection]]:
     """Open and validate one registry corpus as a read-only repeatable snapshot."""
+    from teralizer.corpus_preparation import require_current_revision
+
     entry = resolve(corpus_id, registry)
     with open_report_connection(entry.database) as conn:
+        if entry.derived_views:
+            require_current_revision(conn, entry.id)
         validate_project_count(conn, entry)
         yield entry, conn
 
@@ -217,6 +228,7 @@ _FIELDS = (
     "data-dir",
     "config-dir",
     "expected-projects",
+    "derived-views",
     "published",
     "notes",
 )
@@ -240,6 +252,7 @@ def shell_exports(entry: CorpusEntry) -> str:
         "DATA_DIR": entry.data_dir or "",
         "CONFIG_DIR": entry.config_dir or "",
         "EXPECTED_PROJECTS": str(entry.expected_projects),
+        "CORPUS_DERIVED_VIEWS": str(entry.derived_views).lower(),
         "CORPUS_PUBLISHED": str(entry.published).lower(),
     }
     return "\n".join(
@@ -265,12 +278,30 @@ def main(argv: list[str] | None = None) -> None:
         "--published", action="store_true", help="include only published corpora"
     )
 
+    prepare_parser = commands.add_parser(
+        "prepare-corpus", help="install and verify one corpus's derived schema"
+    )
+    prepare_parser.add_argument("corpus_id")
+
     args = parser.parse_args(argv)
     if args.command == "list":
         registry = load()
         entries = registry.published_entries if args.published else registry.entries
         for entry in entries:
             print(entry.id)
+        return
+    if args.command == "prepare-corpus":
+        from teralizer.corpus_preparation import prepare
+
+        result = prepare(args.corpus_id)
+        print(f"corpus: {result.corpus_id}")
+        print(f"database: {result.database}")
+        print(f"projects: {result.projects}")
+        print(
+            f"derived-view revision: {result.derived_view_revision or 'not applicable'}"
+        )
+        print(f"verified views: {len(result.views)}")
+        print(f"report role: {result.report_role}")
         return
 
     entry = resolve(args.corpus_id)

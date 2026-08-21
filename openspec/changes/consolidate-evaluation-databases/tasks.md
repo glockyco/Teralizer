@@ -50,10 +50,10 @@
 
 ## 4. Prepare derived schema and enforce read-only access
 
-- [ ] 4.1 Add one idempotent `prepare-corpus <id>` operation. Resolve and validate the corpus, apply
+- [x] 4.1 Add one idempotent `prepare-corpus <id>` operation. Resolve and validate the corpus, apply
       `src/main/resources/db/create-views.sql` transactionally as owner, record its canonical checksum,
       verify required views, and establish the report read-only role without modifying measured rows.
-- [ ] 4.2 Add report preflight that compares the installed derived-view revision with the checked-in
+- [x] 4.2 Add report preflight that compares the installed derived-view revision with the checked-in
       revision and fails before a query on absence or mismatch. Test stale, missing, current, and
       repeated preparation states.
 - [ ] 4.3 Route restore, local setup, evaluation-host setup, and replication quick start through

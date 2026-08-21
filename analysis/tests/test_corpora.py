@@ -40,6 +40,8 @@ def test_repository_registry_declares_each_published_corpus_once():
     assert registry.get("real-world").expected_projects == 1161
     assert registry.get("real-world").data_dir == "data/reporeapers-rerun-v7"
     assert registry.get("controlled").data_dir is None
+    assert registry.get("controlled").derived_views is True
+    assert registry.get("jarvis-benchmark").derived_views is False
     assert registry.published_entries == registry.entries
 
 
@@ -76,6 +78,7 @@ database = "postgres_dev"
 data_dir = ""
 config_dir = ""
 expected_projects = 13
+derived_views = true
 """,
     )
 
@@ -95,6 +98,7 @@ database = "postgres_dev"
 data_dir = ""
 config_dir = ""
 expected_projects = 13
+derived_views = true
 notes = "fixture"
 """,
     )
@@ -107,6 +111,7 @@ database = "postgres_dev"
 data_dir = ""
 config_dir = ""
 expected_projects = 13
+derived_views = true
 published = "yes"
 notes = "fixture"
 """,
@@ -128,6 +133,7 @@ database = "same_database"
 data_dir = ""
 config_dir = ""
 expected_projects = 13
+derived_views = true
 published = true
 notes = "first"
 
@@ -137,6 +143,7 @@ database = "same_database"
 data_dir = "data/run"
 config_dir = "project-configs/run"
 expected_projects = 632
+derived_views = true
 published = true
 notes = "second"
 """,
@@ -190,6 +197,7 @@ def test_registry_cli_returns_one_field_and_shell_safe_exports(capsys):
         "export DATA_DIR=''",
         "export CONFIG_DIR=''",
         "export EXPECTED_PROJECTS=1",
+        "export CORPUS_DERIVED_VIEWS=true",
         "export CORPUS_PUBLISHED=false",
     ]
     assert corpora.field_value(entry, "published") == "false"

@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+from sqlalchemy.engine import URL
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 
@@ -33,6 +34,8 @@ class DatabaseConfig:
         self.port = os.getenv("DB_PORT", "5432")
         self.user = os.getenv("DB_USER", "postgres")
         self.password = os.getenv("DB_PASSWORD", "postgres")
+        self.report_user = os.getenv("REPORT_DB_USER", "teralizer_report")
+        self.report_password = os.getenv("REPORT_DB_PASSWORD", "teralizer-report")
 
         # Cache for parsed SQL files
         self._sql_objects_cache = None
@@ -52,8 +55,15 @@ class DatabaseConfig:
             ConnectionError: If database connection fails
             RuntimeError: If required schema objects are missing
         """
-        connection_string = f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{database}"
-        engine = create_engine(connection_string)
+        connection_url = URL.create(
+            "postgresql",
+            username=self.user,
+            password=self.password,
+            host=self.host,
+            port=int(self.port),
+            database=database,
+        )
+        engine = create_engine(connection_url)
 
         if validate:
             self._validate_connection(engine, database)
