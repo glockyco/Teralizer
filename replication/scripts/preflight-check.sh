@@ -4,7 +4,7 @@
 # Verifies:
 #   - Docker is installed and running
 #   - Docker Compose is available
-#   - Sufficient disk space (25GB minimum)
+#   - Free disk space required by the verified corpus manifest
 #   - Ports are available
 #
 # Usage:
@@ -69,22 +69,35 @@ else
 fi
 echo ""
 
-# Check disk space
-echo "Disk Space:"
+# Verify the package once. Reuse its inventory for disk and dump checks.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if command -v df &> /dev/null; then
-    # Get available space in KB, then convert to GB (-P for POSIX output format)
-    available_kb=$(df -Pk "$SCRIPT_DIR" 2>/dev/null | awk 'NR==2 {print $4}')
-    available_gb=$((available_kb / 1024 / 1024))
-
-    if [[ $available_gb -ge 25 ]]; then
-        check_pass "Available disk space: ${available_gb}GB (minimum 25GB)"
-    elif [[ $available_gb -ge 20 ]]; then
-        check_warn "Available disk space: ${available_gb}GB (25GB recommended, may be tight)"
-    else
-        check_fail "Available disk space: ${available_gb}GB (minimum 25GB required)"
-    fi
+REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
+DUMPS_DIR="$SCRIPT_DIR/../datasets"
+package_facts=""
+package_summary=""
+required_bytes=0
+if package_facts=$(uv run --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+    --preflight-package "$DUMPS_DIR"); then
+    required_line=${package_facts%%$'\n'*}
+    required_bytes=${required_line#required_disk_bytes=}
+    package_summary=${package_facts#*$'\n'}
 else
+    check_fail "corpus package manifest or declared files failed verification"
+fi
+
+# Check disk space against the manifest's dump plus restored-database requirement.
+echo "Disk Space:"
+if command -v df &> /dev/null && [[ "$required_bytes" -gt 0 ]]; then
+    available_kb=$(df -Pk "$SCRIPT_DIR" 2>/dev/null | awk 'NR==2 {print $4}')
+    available_bytes=$((available_kb * 1024))
+    available_gb=$((available_kb / 1024 / 1024))
+    required_gb=$(((required_bytes + 1024 * 1024 * 1024 - 1) / 1024 / 1024 / 1024))
+    if [[ $available_bytes -ge $required_bytes ]]; then
+        check_pass "Available disk space: ${available_gb}GB (manifest requires ${required_gb}GB)"
+    else
+        check_fail "Available disk space: ${available_gb}GB (manifest requires ${required_gb}GB)"
+    fi
+elif [[ "$required_bytes" -gt 0 ]]; then
     check_warn "Could not check disk space"
 fi
 echo ""
@@ -117,20 +130,13 @@ check_port 5432 "PostgreSQL"
 check_port 18080 "Adminer"
 echo ""
 
-# Check for registered corpus dumps
+# Verify the manifest-bound corpus dumps and report their declared byte sizes.
 echo "Database Dumps:"
-REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
-DUMPS_DIR="$SCRIPT_DIR/../datasets"
-while IFS= read -r corpus_id; do
-    database=$("$REPO_ROOT/scripts/corpus-registry" get "$corpus_id" database)
-    dump="$DUMPS_DIR/$database.dump"
-    if [[ -f "$dump" ]]; then
-        size=$(du -h "$dump" | cut -f1)
-        check_pass "$corpus_id dump found ($size)"
-    else
-        check_fail "$corpus_id dump not found in datasets/"
-    fi
-done < <("$REPO_ROOT/scripts/corpus-registry" list --published)
+if [[ -n "$package_summary" ]]; then
+    while IFS= read -r line; do
+        check_pass "$line"
+    done <<< "$package_summary"
+fi
 echo ""
 
 # Summary

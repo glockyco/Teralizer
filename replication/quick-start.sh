@@ -22,6 +22,7 @@ cd "$SCRIPT_DIR"
 
 # Configuration
 DB_USER="${DB_USER:-teralizer}"
+PACKAGE_VERIFIED=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -95,6 +96,7 @@ if [[ -x scripts/preflight-check.sh ]]; then
         echo -e "${RED}Preflight checks failed. Please fix the issues above.${NC}"
         exit 1
     fi
+    PACKAGE_VERIFIED=true
 else
     # Minimal inline checks if preflight script doesn't exist
     if ! command -v docker &> /dev/null; then
@@ -109,21 +111,16 @@ else
 fi
 echo ""
 
-# Step 2: Check for database dumps
-echo -e "${YELLOW}[2/4]${NC} Checking for database dumps..."
-missing_dump=false
-while IFS= read -r corpus_id; do
-    database=$("$REPO_ROOT/scripts/corpus-registry" get "$corpus_id" database)
-    if [[ ! -f "datasets/$database.dump" ]]; then
-        echo -e "${RED}Missing $corpus_id dump: datasets/$database.dump${NC}"
-        missing_dump=true
+# Step 2: Verify the complete manifest set before starting services
+echo -e "${YELLOW}[2/4]${NC} Verifying corpus package..."
+if [[ "$PACKAGE_VERIFIED" != true ]]; then
+    if ! uv run --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+        --summarize-package "$SCRIPT_DIR/datasets"; then
+        echo "Extract a complete, untampered replication package before setup." >&2
+        exit 1
     fi
-done < <("$REPO_ROOT/scripts/corpus-registry" list --published)
-if [[ "$missing_dump" == true ]]; then
-    echo "Extract the complete replication package before setup." >&2
-    exit 1
 fi
-echo -e "${GREEN}All registered corpus dumps found${NC}"
+echo -e "${GREEN}Corpus package verified${NC}"
 echo ""
 
 # Step 3: Start PostgreSQL and Adminer

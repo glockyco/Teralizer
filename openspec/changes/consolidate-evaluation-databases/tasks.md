@@ -76,16 +76,16 @@
       and provenance.
 - [x] 5.3 Fail publication before promotion on a missing published corpus, entry disagreement, duplicate
       entry, stale view revision, missing checked input, or dump/manifest mismatch.
-- [ ] 5.4 Include corpus definitions, attempt ledgers, completion markers, and project configurations
+- [x] 5.4 Include corpus definitions, attempt ledgers, completion markers, and project configurations
       required by registered reports. Keep bulk logs and unread intermediate run material out.
-- [ ] 5.5 Rewrite `prepare-zenodo-package.sh`, the quick start, README claims, and disk requirements to
+- [x] 5.5 Rewrite `prepare-zenodo-package.sh`, the quick start, README claims, and disk requirements to
       consume the verified manifest and describe exactly what the package carries.
 - [ ] 5.6 Rewrite `import-databases.sh` to verify dump checksum and identity before restore, run
       `prepare-corpus`, verify project count and derived-view revision, and exercise read-only report
       preflight before success.
 - [ ] 5.7 Fix the replication container-name disagreement and prove import works with deployment names
       unrelated to the author's database service names.
-- [ ] 5.8 Validate that every published registry corpus appears exactly once in the manifest and that
+- [x] 5.8 Validate that every published registry corpus appears exactly once in the manifest and that
       every manifest input exists with the recorded checksum.
 - [ ] 5.9 Restore the author's own corpus installation through the published import path in a clean
       environment; do not keep a private restoration path.

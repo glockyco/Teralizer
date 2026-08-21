@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -95,6 +96,9 @@ def _dump(entry: corpora.CorpusEntry, destination: Path) -> None:
             "--format=custom",
             "--no-owner",
             "--no-privileges",
+            "--exclude-table=public.mv_*",
+            "--exclude-table=public.v_*",
+            "--exclude-table=public.teralizer_corpus_metadata",
             "--file",
             str(destination),
             entry.database,
@@ -109,6 +113,11 @@ def _corpus_entry(entry: corpora.CorpusEntry, stage: Path) -> dict[str, object]:
 
     with open_corpus(entry.id) as (_, conn):
         observed = corpora.validate_project_count(conn, entry)
+        database_bytes = int(
+            conn.execute(
+                text("SELECT pg_database_size(current_database())")
+            ).scalar_one()
+        )
         revision = (
             require_current_revision(conn, entry.id) if entry.derived_views else None
         )
@@ -126,6 +135,7 @@ def _corpus_entry(entry: corpora.CorpusEntry, stage: Path) -> dict[str, object]:
         "dump": dump.__dict__,
         "expected_projects": entry.expected_projects,
         "observed_projects": observed,
+        "database_bytes": database_bytes,
         "derived_view_revision": revision,
         "inputs": inputs,
         "provenance": provenance,
@@ -162,6 +172,11 @@ def validate_manifest(
             raise ValueError(
                 f"manifest observed project count disagrees for {declared.id!r}"
             )
+        if (
+            not isinstance(record.get("database_bytes"), int)
+            or record["database_bytes"] <= 0
+        ):
+            raise ValueError(f"manifest database size is invalid for {declared.id!r}")
         dump = record.get("dump")
         if not isinstance(dump, dict) or not isinstance(dump.get("path"), str):
             raise ValueError(f"manifest dump fact is missing for {declared.id!r}")
@@ -230,6 +245,73 @@ def verify_package(input_dir: Path) -> Path:
             "corpus package checksum inventory disagrees with its manifest"
         )
     return manifest_path
+
+
+def copy_package_inputs(input_dir: Path, destination_root: Path) -> int:
+    """Copy each manifest-declared corpus input to a package repository tree."""
+    manifest_path = verify_package(input_dir)
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    copied: set[str] = set()
+    for record in document["corpora"]:
+        for fact in record["inputs"]:
+            relative = str(fact["path"])
+            if relative in copied:
+                continue
+            source = _REPO_ROOT / relative
+            destination = destination_root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+            copied.add(relative)
+    return len(copied)
+
+
+def _required_disk_from_document(document: dict[str, object]) -> int:
+    records = document["corpora"]
+    assert isinstance(records, list)
+    dump_bytes = sum(int(record["dump"]["bytes"]) for record in records)
+    database_bytes = sum(int(record["database_bytes"]) for record in records)
+    return dump_bytes + 2 * database_bytes
+
+
+def required_disk_bytes(input_dir: Path) -> int:
+    """Return dump storage plus two restored-database footprints for safe import."""
+    manifest_path = verify_package(input_dir)
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    return _required_disk_from_document(document)
+
+
+def _summary_from_document(document: dict[str, object]) -> tuple[str, ...]:
+    records = document["corpora"]
+    assert isinstance(records, list)
+    lines = []
+    for record in records:
+        dump = record["dump"]
+        lines.append(
+            f"{record['corpus_id']}: {dump['path']} "
+            f"({int(dump['bytes']):,} dump bytes, "
+            f"{int(record['database_bytes']):,} database bytes)"
+        )
+    lines.append(
+        f"required free disk: {_required_disk_from_document(document):,} bytes"
+    )
+    return tuple(lines)
+
+
+def package_summary(input_dir: Path) -> tuple[str, ...]:
+    """Return human-readable sizes from one verified package manifest."""
+    manifest_path = verify_package(input_dir)
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    return _summary_from_document(document)
+
+
+def package_preflight(input_dir: Path) -> tuple[str, ...]:
+    """Return a machine-readable disk requirement and human-readable inventory."""
+    manifest_path = verify_package(input_dir)
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    return (
+        f"required_disk_bytes={_required_disk_from_document(document)}",
+        *_summary_from_document(document),
+    )
 
 
 def _checksums(document: dict[str, object]) -> str:
@@ -302,14 +384,44 @@ def publish(output_dir: Path = DEFAULT_OUTPUT_DIR) -> Path:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="publish-corpora")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument(
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument(
         "--verify-package",
         type=Path,
         help="verify an existing package instead of publishing",
     )
+    action.add_argument(
+        "--summarize-package",
+        type=Path,
+        help="verify and summarize an existing package",
+    )
+    action.add_argument(
+        "--preflight-package",
+        type=Path,
+        help="verify a package and print its inventory with a disk requirement",
+    )
+    action.add_argument(
+        "--required-disk-bytes",
+        type=Path,
+        help="verify a package and print its required free disk bytes",
+    )
+    action.add_argument(
+        "--copy-inputs-to",
+        type=Path,
+        help="verify the output package and copy its declared inputs to a repository tree",
+    )
     args = parser.parse_args(argv)
     if args.verify_package is not None:
         print(verify_package(args.verify_package))
+    elif args.summarize_package is not None:
+        print("\n".join(package_summary(args.summarize_package)))
+    elif args.preflight_package is not None:
+        print("\n".join(package_preflight(args.preflight_package)))
+    elif args.required_disk_bytes is not None:
+        print(required_disk_bytes(args.required_disk_bytes))
+    elif args.copy_inputs_to is not None:
+        count = copy_package_inputs(args.output_dir, args.copy_inputs_to)
+        print(f"copied {count} corpus input files")
     else:
         print(publish(args.output_dir))
 

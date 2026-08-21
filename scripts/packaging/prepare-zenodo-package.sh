@@ -200,6 +200,8 @@ if [[ "$DRY_RUN" == "false" ]]; then
     # Remove unnecessary files for verification
     rm -rf "$CORE_DIR/projects" 2>/dev/null || true
     rm -rf "$CORE_DIR/data" 2>/dev/null || true
+    uv run --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+        --output-dir "$REPO_ROOT/replication/datasets" --copy-inputs-to "$CORE_DIR"
     rm -rf "$CORE_DIR/.idea" 2>/dev/null || true
     rm -f "$CORE_DIR/.env" 2>/dev/null || true
 

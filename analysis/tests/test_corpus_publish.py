@@ -56,6 +56,7 @@ def _manifest_fixture(tmp_path: Path, monkeypatch):
                 ).__dict__,
                 "expected_projects": entry.expected_projects,
                 "observed_projects": entry.expected_projects,
+                "database_bytes": entry.expected_projects * 1000,
                 "derived_view_revision": "current" if entry.derived_views else None,
                 "inputs": [input_fact],
                 "provenance": {"commits": [], "unattributed_projects": 0},
@@ -129,6 +130,11 @@ def test_package_verification_checks_manifest_dumps_inputs_and_inventory(
     assert corpus_publish.verify_package(tmp_path) == (
         tmp_path / corpus_publish.MANIFEST_NAME
     )
+    destination = tmp_path / "package-root"
+    assert corpus_publish.copy_package_inputs(tmp_path, destination) == 1
+    assert (destination / "src/main/resources/db/corpora.toml").is_file()
+    assert corpus_publish.required_disk_bytes(tmp_path) == 6019
+    assert corpus_publish.package_preflight(tmp_path)[0] == "required_disk_bytes=6019"
 
     (tmp_path / corpus_publish.CHECKSUMS_NAME).write_text("stale\n", encoding="utf-8")
     with pytest.raises(ValueError, match="checksum inventory disagrees"):
