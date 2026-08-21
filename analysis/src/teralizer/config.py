@@ -40,9 +40,24 @@ class DatabaseConfig:
         # Cache for parsed SQL files
         self._sql_objects_cache = None
 
+    def _engine(self, database: str, user: str, password: str):
+        connection_url = URL.create(
+            "postgresql",
+            username=user,
+            password=password,
+            host=self.host,
+            port=int(self.port),
+            database=database,
+        )
+        return create_engine(connection_url)
+
+    def get_report_engine(self, database: str):
+        """Get an engine authenticated as the provisioned report-only role."""
+        return self._engine(database, self.report_user, self.report_password)
+
     def get_engine(self, database: str, validate: bool = True):
         """
-        Get SQLAlchemy engine for specified database.
+        Get an owner engine for specified database.
 
         Args:
             database: Physical name resolved by the corpus or scratch boundary
@@ -55,15 +70,7 @@ class DatabaseConfig:
             ConnectionError: If database connection fails
             RuntimeError: If required schema objects are missing
         """
-        connection_url = URL.create(
-            "postgresql",
-            username=self.user,
-            password=self.password,
-            host=self.host,
-            port=int(self.port),
-            database=database,
-        )
-        engine = create_engine(connection_url)
+        engine = self._engine(database, self.user, self.password)
 
         if validate:
             self._validate_connection(engine, database)

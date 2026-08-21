@@ -111,7 +111,12 @@ restore_corpus() {
         docker exec "$CONTAINER" dropdb -U "$DB_USER" --force "$database"
         return 1
     fi
-    echo "Restored $corpus_id to $database with $observed projects"
+    DB_HOST="${DB_HOST:-127.0.0.1}" \
+        DB_PORT="${DB_PORT:-5432}" \
+        DB_USER="$DB_USER" \
+        DB_PASSWORD="${DB_PASSWORD:-teralizer}" \
+        "$REPO_ROOT/scripts/corpus-registry" prepare-corpus "$corpus_id"
+    echo "Restored and prepared $corpus_id to $database with $observed projects"
 }
 
 for corpus_id in "${CORPUS_IDS[@]}"; do

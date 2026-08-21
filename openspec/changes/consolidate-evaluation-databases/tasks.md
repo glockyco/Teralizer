@@ -56,9 +56,9 @@
 - [x] 4.2 Add report preflight that compares the installed derived-view revision with the checked-in
       revision and fails before a query on absence or mismatch. Test stale, missing, current, and
       repeated preparation states.
-- [ ] 4.3 Route restore, local setup, evaluation-host setup, and replication quick start through
+- [x] 4.3 Route restore, local setup, evaluation-host setup, and replication quick start through
       `prepare-corpus`. Remove every ad hoc view-installation path after the shared command passes.
-- [ ] 4.4 Point analysis connections at the read-only role and prove insert, update, delete, and schema
+- [x] 4.4 Point analysis connections at the read-only role and prove insert, update, delete, and schema
       changes fail while every registered report query succeeds.
 - [ ] 4.5 Replace `protected-databases.txt` with registry-backed corpus protection and reserved scratch
       handling. Test destructive refusal for every corpus and successful recreation of a valid scratch

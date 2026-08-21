@@ -41,6 +41,7 @@ def test_repository_registry_declares_each_published_corpus_once():
     assert registry.get("real-world").data_dir == "data/reporeapers-rerun-v7"
     assert registry.get("controlled").data_dir is None
     assert registry.get("controlled").derived_views is True
+    assert registry.get("real-world").derived_views is False
     assert registry.get("jarvis-benchmark").derived_views is False
     assert registry.published_entries == registry.entries
 

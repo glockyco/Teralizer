@@ -141,7 +141,7 @@ def test_report_connection_holds_one_snapshot(monkeypatch, tmp_path: Path):
         conn.execute(text("CREATE TABLE state (value INTEGER NOT NULL)"))
         conn.execute(text("INSERT INTO state VALUES (1)"))
     monkeypatch.setattr(
-        report_basis.db_config, "get_engine", lambda *_args, **_kwargs: engine
+        report_basis.db_config, "get_report_engine", lambda *_args, **_kwargs: engine
     )
 
     with open_report_connection("snapshot") as conn:

@@ -15,7 +15,7 @@ data_dir = "data/reporeapers-rerun-v7"
 config_dir = "project-configs/replication/extended"
 # This count validates physical project rows. It is not the RQ6 denominator.
 expected_projects = 1161
-derived_views = true
+derived_views = false
 published = true
 notes = "The completed v7 run contains 1,161 projects. RQ6 reports 584 eligible projects."
 

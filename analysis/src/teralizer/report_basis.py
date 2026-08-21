@@ -38,17 +38,20 @@ class ReportBasis:
 @contextmanager
 def open_report_connection(db_name: str) -> Iterator[Connection]:
     """Open one read-only, repeatable snapshot without schema validation."""
-    engine = db_config.get_engine(db_name, validate=False)
-    with engine.connect() as raw_conn:
-        conn = raw_conn
-        if raw_conn.dialect.name == "postgresql":
-            conn = raw_conn.execution_options(isolation_level="REPEATABLE READ")
-        with conn.begin():
-            if conn.dialect.name == "postgresql":
-                conn.execute(text("SET TRANSACTION READ ONLY"))
-            elif conn.dialect.name == "sqlite":
-                conn.exec_driver_sql("BEGIN")
-            yield conn
+    engine = db_config.get_report_engine(db_name)
+    try:
+        with engine.connect() as raw_conn:
+            conn = raw_conn
+            if raw_conn.dialect.name == "postgresql":
+                conn = raw_conn.execution_options(isolation_level="REPEATABLE READ")
+            with conn.begin():
+                if conn.dialect.name == "postgresql":
+                    conn.execute(text("SET TRANSACTION READ ONLY"))
+                elif conn.dialect.name == "sqlite":
+                    conn.exec_driver_sql("BEGIN")
+                yield conn
+    finally:
+        engine.dispose()
 
 
 def _scalar_int(conn: Connection, sql: str) -> int:
