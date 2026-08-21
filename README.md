@@ -69,7 +69,7 @@ This starts PostgreSQL and imports the database dumps. Analysis reports run from
   - Server: postgres
   - Username: teralizer
   - Password: teralizer
-  - Database: postgres_dev (or postgres_test)
+  - Database: use `./scripts/corpus-registry get <corpus-id> database`
 
 **Stopping services:**
 ```bash

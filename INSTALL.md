@@ -58,19 +58,10 @@ docker compose ps
 ### Checkpoint 2: Database Populated
 
 ```bash
-./scripts/verify-results.sh
+./replication/scripts/verify-results.sh
 ```
 
-**Expected output**:
-```
-Primary Dataset (postgres_dev)
-  ✓ Database connection OK
-  ✓ Project count: 13 (expected 13)
-
-Extended Dataset (postgres_test)
-  ✓ Database connection OK
-  ✓ Project count: 1161 (expected 1161)
-```
+The command inventories the server and verifies every published semantic corpus id against its registered physical database, project count, checked inputs, and derived-view revision.
 
 ### Checkpoint 3: Evaluation CLI Works
 

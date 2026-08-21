@@ -4,14 +4,11 @@
 #
 # For artifact evaluation, use replication/scripts/run.sh instead.
 #
-# Automatically selects the correct database based on project type:
-# - GitHub URLs (RepoReapers) → DB_NAME_TEST (default: postgres_test)
-# - EqBench/Commons Utils → DB_NAME_DEV (default: postgres_dev)
+# Runs only against an explicitly disposable scratch database.
 #
 # Environment variables:
 #   DATA_DIR      Directory for pipeline output data (default: data)
-#   DB_NAME_DEV   Database for eqbench/commons-utils (default: postgres_dev)
-#   DB_NAME_TEST  Database for RepoReapers projects (default: postgres_test)
+#   DB_NAME       Reserved scratch database (default: scratch_dev_run)
 #   DB_HOST       PostgreSQL host (default: localhost)
 #   DB_PORT       PostgreSQL port (default: 5432)
 #   DB_USER       PostgreSQL user (default: teralizer)
@@ -30,9 +27,11 @@ set -euo pipefail
 
 # Configuration
 DATA_DIR="${DATA_DIR:-data}"
-DB_NAME_DEV="${DB_NAME_DEV:-postgres_dev}"
-DB_NAME_TEST="${DB_NAME_TEST:-postgres_test}"
+DB_NAME="${DB_NAME:-scratch_dev_run}"
 FORCE=false
+
+source scripts/lib/db-guard.sh
+require_scratch_db "$DB_NAME"
 
 # Parse --force flag
 args=()
@@ -44,29 +43,6 @@ for arg in "$@"; do
     fi
 done
 set -- "${args[@]+"${args[@]}"}"
-
-# Detect database from config file based on project type
-detect_database() {
-    local config="$1"
-    local root_path
-
-    # Extract root-path from config file
-    root_path=$(awk -F'"' '/root-path\s*=/ {print $2; exit}' "$config" 2>/dev/null)
-
-    if [[ -z "$root_path" ]]; then
-        echo "$DB_NAME_TEST"  # Default to test database
-        return
-    fi
-
-    # Determine database based on project type
-    if [[ "$root_path" == *eqbench* ]] || [[ "$root_path" == *commons-utils* ]]; then
-        # EqBench or Commons Utils projects → dev database
-        echo "$DB_NAME_DEV"
-    else
-        # RepoReapers and other projects → test database
-        echo "$DB_NAME_TEST"
-    fi
-}
 
 mkdir -p logs
 start_time=$(date +%s)
@@ -87,16 +63,13 @@ run_and_log() {
     completed=$((completed + 1))
     percent=$((completed * 100 / total_configs))
 
-    # Detect the correct database for this project
-    db_name=$(detect_database "$config")
-
-    echo "[$(date +"%H:%M:%S")] [$completed/$total_configs - $percent%] Running $config (DB: $db_name)"
+    echo "[$(date +"%H:%M:%S")] [$completed/$total_configs - $percent%] Running $config (DB: $DB_NAME)"
 
     # Capture start time for this task
     task_start=$(date +%s)
 
     # Run the task with the correct database and data directory
-    DB_NAME="$db_name" DATA_DIR="$DATA_DIR" ./gradlew run -Dteralizer.config=$config > "$logfile" 2>&1
+    DB_NAME="$DB_NAME" DATA_DIR="$DATA_DIR" ./gradlew run -Dteralizer.config=$config > "$logfile" 2>&1
 
     # Check result
     if [ $? -eq 0 ]; then
