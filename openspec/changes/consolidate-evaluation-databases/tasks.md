@@ -109,7 +109,7 @@
 
 - [x] 6.1 Import the artifact into a clean environment with no access to the author's machines.
 - [x] 6.2 Run every registered report read-only and confirm it reproduces the published artifact set.
-- [ ] 6.3 Confirm a partial workstation can verify and run an explicitly requested installed corpus,
+- [x] 6.3 Confirm a partial workstation can verify and run an explicitly requested installed corpus,
       while complete publication from that workstation fails naming the missing corpora.
 - [ ] 6.4 Confirm a corrupt dump, missing dump, wrong project count, stale derived-view revision, scratch
       report input, and unclassified database each fail with specific diagnostics.
