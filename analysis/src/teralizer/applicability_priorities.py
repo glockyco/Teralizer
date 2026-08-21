@@ -114,8 +114,7 @@ def get_assertion_filter_chain(conn: Connection) -> pd.DataFrame:
         """
     )
     df = pd.read_sql(sql, conn)
-    df["filter_name"] = df["filter_name"].map(_short_filter)
-    return df
+    return df.assign(filter_name=df["filter_name"].map(_short_filter))
 
 
 def get_missingvalue_assertions(conn: Connection) -> pd.DataFrame:
@@ -190,8 +189,10 @@ def compute_first_reject_blockers(chain_df: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
         .rename(columns={"index": "filter_name"})
     )
-    df["shadowed_count"] = df["total_reject_count"] - df["first_reject_count"]
-    df["net_reach"] = df["first_reject_count"]
+    df = df.assign(
+        shadowed_count=df["total_reject_count"] - df["first_reject_count"],
+        net_reach=df["first_reject_count"],
+    )
     df = df.sort_values("net_reach", ascending=False).reset_index(drop=True)
     return df
 
@@ -268,7 +269,7 @@ def compute_missingvalue_taxonomy(mv_df: pd.DataFrame) -> pd.DataFrame:
     categories = mv_df.apply(_classify_missingvalue_call, axis=1)
     counts = categories.value_counts().reset_index()
     counts.columns = ["category", "count"]
-    counts["pct"] = (counts["count"] / counts["count"].sum() * 100).round(1)
+    counts = counts.assign(pct=(counts["count"] / counts["count"].sum() * 100).round(1))
     counts = counts.sort_values("count", ascending=False).reset_index(drop=True)
     return counts
 
@@ -374,10 +375,12 @@ def get_project_summary(conn: Connection) -> pd.DataFrame:
         """
     )
     df = pd.read_sql(sql, conn)
-    df["project_name"] = df["root_path"].str.rsplit("/", n=1).str[-1]
-    df["pct_included"] = (
-        df["included_assertions"] / df["total_assertions"].replace(0, pd.NA) * 100
-    ).round(1)
+    df = df.assign(
+        project_name=df["root_path"].str.rsplit("/", n=1).str[-1],
+        pct_included=(
+            df["included_assertions"] / df["total_assertions"].replace(0, pd.NA) * 100
+        ).round(1),
+    )
     df = df.drop(columns=["root_path"])
     return df
 
@@ -431,7 +434,7 @@ def compute_stage_failure_summary(funnel_df: pd.DataFrame) -> pd.DataFrame:
         rows, columns=["first_failed_stage", "first_failed_step", "n_projects"]
     ).sort_values("first_failed_step", ignore_index=True)
     total = counts["n_projects"].sum()
-    counts["pct"] = (counts["n_projects"] / total * 100).round(1)
+    counts = counts.assign(pct=(counts["n_projects"] / total * 100).round(1))
     return counts
 
 

@@ -460,7 +460,7 @@ def get_filter_summary(conn: Connection, scope: str) -> pd.DataFrame:
         """,
     )
     if not df.empty:
-        df["filter_name"] = df["filter_name"].map(_short_filter)
+        df = df.assign(filter_name=df["filter_name"].map(_short_filter))
         if scope == _ASSERTION_SCOPE and has_reason_code:
             samples = _sample_assertion_sources(
                 conn,
@@ -468,9 +468,9 @@ def get_filter_summary(conn: Connection, scope: str) -> pd.DataFrame:
                 _strings(df["reason_code"]),
                 f"{where} AND fr.decision <> 'ACCEPT'",
             )
-            df["sample"] = df["reason_code"].map(samples).fillna("")
+            df = df.assign(sample=df["reason_code"].map(samples).fillna(""))
         elif scope == _ASSERTION_SCOPE:
-            df["sample"] = ""
+            df = df.assign(sample="")
     return df
 
 
@@ -774,7 +774,7 @@ def get_unsupported_assertion_counts(conn: Connection, top: int) -> pd.DataFrame
             "AND fr.filter_name LIKE '%UnsupportedAssertionFilter' "
             "AND fr.decision = 'REJECT'",
         )
-        df["sample"] = df["assertion_name"].map(samples).fillna("")
+        df = df.assign(sample=df["assertion_name"].map(samples).fillna(""))
     return df
 
 
@@ -837,7 +837,7 @@ def get_spf_failure_causes(conn: Connection) -> pd.DataFrame:
     )
     if not df.empty:
         samples = _sample_task_messages(conn, _strings(df["cause"]))
-        df["sample"] = df["cause"].map(samples).fillna("")
+        df = df.assign(sample=df["cause"].map(samples).fillna(""))
     return df
 
 
