@@ -126,8 +126,8 @@ check_port() {
     fi
 }
 
-check_port 5432 "PostgreSQL"
-check_port 18080 "Adminer"
+check_port "${REPLICATION_DB_PORT:-5432}" "PostgreSQL"
+check_port "${REPLICATION_ADMINER_PORT:-18080}" "Adminer"
 echo ""
 
 # Verify the manifest-bound corpus dumps and report their declared byte sizes.
