@@ -33,9 +33,9 @@ A release has two audiences with different trust boundaries. Maintainers need to
 
 The release builder consumes:
 
-1. the complete verified corpus package and its corpus manifest;
-2. the complete registered report output and artifact/provenance manifest; and
-3. a new release declaration that names public components, workflows, platform support, licenses, citations, paper claims, and optional source/data inputs.
+1. The complete verified corpus package and its corpus manifest.
+2. The complete registered report output and artifact/provenance manifest.
+3. A new release declaration that names public components, workflows, platform support, licenses, citations, paper claims, and optional source/data inputs.
 
 The release declaration references semantic corpus ids and registered report/artifact ids. It does not repeat physical database names, report implementations, or emitted-file discovery rules. Assembly resolves and cross-checks those references before reading bulk payloads.
 
@@ -47,7 +47,7 @@ A dedicated release module owns the declaration schema, component manifests, rel
 
 The upload set contains standalone `release-manifest.json`, its published schema, `checksums.sha256`, a human-readable release summary, Zenodo metadata, and the declared component archives. The release manifest records the final archive checksums and sizes and is therefore generated after every archive closes.
 
-Each archive has a unique wrapper root and contains `component-manifest.json`, citation and license information, and a payload subtree. Component ids are stable semantic names such as `core`, `results`, `projects-controlled`, `projects-real-world-sample`, `projects-real-world`, `data-controlled`, and `data-real-world`; filenames remain presentation. The component manifest records every installed path and checksum, component relationships, release identity, and payload provenance.
+Each archive has a unique wrapper root and contains `component-manifest.json`, citation and license information, and a payload subtree. Component ids are stable semantic names such as `core`, `results`, `projects-controlled`, `projects-real-world-sample`, `projects-real-world`, `data-controlled`, and `data-real-world`. Filenames remain presentation. The component manifest records every installed path and checksum, component relationships, release identity, and payload provenance.
 
 The core component contains the installer, reviewer documentation, embedded source provenance, corpus package, report reference outputs, and a component catalog. Optional components are built before core so that the catalog can bind their checksums and facts. The catalog deliberately omits the core archive's own final checksum. The standalone release manifest binds that value after core closes. This avoids recursive manifests whose bytes would depend on their own checksum or size.
 
@@ -59,7 +59,7 @@ Every archive is independently understandable. The standalone release summary an
 
 The release declaration produces an explicit source-to-archive plan. The archive writer streams each declared input into a temporary Zip64 archive, hashes file bytes while writing, normalizes archive metadata needed for deterministic output, and writes the completed component manifest. It then verifies the archive by reading its central directory and manifest before renaming the temporary file complete.
 
-The builder writes every archive and standalone release file into a new attempt directory. It promotes the directory only after schema validation, cross-component dependency checks, checksums, documentation validation, and the release acceptance suite pass. It never scans an existing output directory for membership. Failed attempts remain diagnosable or are removed explicitly; they never modify the previous complete release.
+The builder writes every archive and standalone release file into a new attempt directory. It promotes the directory only after schema validation, cross-component dependency checks, checksums, documentation validation, and the release acceptance suite pass. It never scans an existing output directory for membership. Failed attempts remain diagnosable or are removed explicitly. They never modify the previous complete release.
 
 This approach avoids copying tens of gigabytes into a second payload staging tree before compression. The unavoidable archive and checksum reads remain sequential and restart boundaries are per component.
 
@@ -69,7 +69,7 @@ This approach avoids copying tens of gigabytes into a second payload staging tre
 
 The core installer reads the release/component catalog and the selected workflow. It verifies sibling archive checksums, extracts each archive into a temporary component directory, validates every internal path and checksum, and computes the combined installation plan before changing the workspace.
 
-Components install from their unique payload roots into declared workspace paths. Identical duplicate paths are deduplicated. Different bytes at one destination fail with both component ids and the path. Sample and full real-world components are declared as alternatives; selecting both returns a corrective command rather than producing a mixed workspace. Installation records the release and installed component ids so reruns can verify compatible state and add a missing nonconflicting component.
+Components install from their unique payload roots into declared workspace paths. Identical duplicate paths are deduplicated. Different bytes at one destination fail with both component ids and the path. Sample and full real-world components are declared as alternatives. Selecting both returns a corrective command rather than producing a mixed workspace. Installation records the release and installed component ids so reruns can verify compatible state and add a missing nonconflicting component.
 
 The old `projects/ is nonempty` and `data/ is nonempty` shortcuts are removed. Existing unowned files at a planned destination block promotion rather than being overwritten or silently accepted.
 
@@ -97,7 +97,7 @@ Author-only export and release-build commands are excluded from packaged reviewe
 
 The release-tested baseline is Linux x86-64 with Docker Engine or Docker Desktop and Compose V2. The report analysis, PostgreSQL service, database UI when requested, and Java pipeline use images pinned by immutable digest. Locked dependency installation has no permissive fallback. Image digests, container architecture, and build provenance enter the release manifest and clean-acceptance record.
 
-The reviewer may pull declared images during setup. Once images and release components are present, smoke and results reproduction run without network access. An optional archived OCI image component may be published when its measured size is acceptable; it is not a substitute for Dockerfiles and locks. Apple Silicon through `linux/amd64` emulation is claimed only if the release acceptance matrix passes it. Native Windows outside WSL2 is not claimed.
+The reviewer may pull declared images during setup. Once images and release components are present, smoke and results reproduction run without network access. An optional archived OCI image component may be published when its measured size is acceptable. It is not a substitute for Dockerfiles and locks. Apple Silicon through `linux/amd64` emulation is claimed only if the release acceptance matrix passes it. Native Windows outside WSL2 is not claimed.
 
 Host-based `uv`, Nix, Java, or Gradle remain developer conveniences and do not appear as primary reviewer prerequisites. The Java collection container executes project builds in a disposable workspace without the Docker socket, host credentials, or writable mounts over the release source. Network access for third-party dependency resolution is isolated to the documented collection workflow.
 
@@ -107,7 +107,7 @@ Release assembly runs in a clean Git checkout and materializes `release-provenan
 
 The provenance resolver has two exclusive modes:
 
-- development mode uses Git exactly as the accepted specification requires;
+- development mode uses Git exactly as the accepted specification requires.
 - release mode first verifies the release and source-file checksum, then returns the embedded per-file revision.
 
 Release mode is entered only from verified release metadata, not merely because `.git` is absent. Missing, extra, or mismatched provenance fails report startup. The package does not ship repository history and does not synthesize a common release commit for every source.
@@ -126,13 +126,13 @@ A release declaration carries stable prose-independent facts: component roles, w
 
 The release builder renders the compact tables used by the top-level README, detailed `REQUIREMENTS.md`, release summary, and Zenodo metadata. Hand-authored sections explain purpose, limitations, reuse, and security. Validation checks every command in documentation against the packaged controller help and every named file/component/claim against its manifest. The source repository may retain TOSEM-style `INSTALL.md`, `STATUS.md`, and dedicated license files, while README remains complete enough for venues that request one consolidated artifact document.
 
-The new version DOI is reserved before the final candidate so it can be embedded consistently. The existing version DOI remains cited as version 1; `CITATION.cff` labels version and concept DOI correctly. Publication uploads the validated attempt directory without renaming or recompressing its members.
+The new version DOI is reserved before the final candidate so it can be embedded consistently. The existing version DOI remains cited as version 1. `CITATION.cff` labels version and concept DOI correctly. Publication uploads the validated attempt directory without renaming or recompressing its members.
 
 ### 10. Data reuse and redistribution are release gates
 
 Release assembly generates a data dictionary from the checked schema plus maintained semantic descriptions for tables, columns, units, null meanings, views, and exported result fields. Corpus documentation records selection, source, revision, transformation, and report use.
 
-Every redistributed project has a third-party record containing origin URL, commit, license classifier, retained license path and checksum, and redistribution decision. Unknown or incompatible rights exclude source bytes from the archive; the record may retain only distributable identity and retrieval information. Generated tests and reports are audited for material copied from third-party sources and are covered by an explicit component license decision.
+Every redistributed project has a third-party record containing origin URL, commit, license classifier, retained license path and checksum, and redistribution decision. Unknown or incompatible rights exclude source bytes from the archive. The record may retain only distributable identity and retrieval information. Generated tests and reports are audited for material copied from third-party sources and are covered by an explicit component license decision.
 
 This legal inventory is separate from corpus identity. It answers whether bytes may be redistributed, not which corpus or project produced a result.
 
@@ -142,12 +142,12 @@ Fast tests build tiny synthetic component archives to exercise schema validation
 
 The release gate then builds the real candidate and launches a clean acceptance job from only the staged upload files. The job uses a new path and empty Docker volumes, installs the workflow components, runs smoke, reproduces all reports through the read-only role, verifies every claim summary, tests cleanup and retry, records measurements, and repeats the no-network analysis path. A source-checkout test cannot satisfy this gate.
 
-Linux x86-64 is required for release. Apple Silicon compatibility is recorded only after a separate run on the actual environment. Full 12-hour and 100-hour collection are not release-gating reruns; their resumability and stage behavior are covered by the existing run ledgers plus reduced production-stage execution.
+Linux x86-64 is required for release. Apple Silicon compatibility is recorded only after a separate run on the actual environment. Full 12-hour and 100-hour collection are not release-gating reruns. Their resumability and stage behavior are covered by the existing run ledgers plus reduced production-stage execution.
 
 ## Risks / Trade-offs
 
-- **The new change overlaps unfinished corpus-publication work.** → Finish the non-destructive publication and clean-import tasks in `consolidate-evaluation-databases` first. Consume its manifest; do not fork its implementation.
-- **Archive manifests and release manifests drift into two registries.** → Component manifests describe payload bytes; the release manifest describes archive relationships; both reference corpus/report authorities rather than restating them.
+- **The new change overlaps unfinished corpus-publication work.** → Finish the non-destructive publication and clean-import tasks in `consolidate-evaluation-databases` first. Consume its manifest. Do not fork its implementation.
+- **Archive manifests and release manifests drift into two registries.** → Component manifests describe payload bytes. The release manifest describes archive relationships. Both reference corpus/report authorities rather than restating them.
 - **Exact outer archive facts are recursively self-referential.** → Keep final archive hashes and byte sizes only in the standalone release manifest and public summary. Internal component manifests bind payload facts.
 - **Pinned images remain hosted outside Zenodo.** → Record immutable digests and Dockerfiles, verify the offline-after-setup path, and publish an OCI archive component when size and licensing permit.
 - **The x86-64 Java stack is slow under Apple Silicon emulation.** → Make Linux x86-64 the release baseline, measure Apple compatibility separately, and do not promise the 30-minute bound on an unmeasured platform.
@@ -163,7 +163,7 @@ Linux x86-64 is required for release. Apple Silicon compatibility is recorded on
 2. Introduce the release declaration and schemas, then build fixture component/release manifests and atomic archive assembly without changing the published version.
 3. Add embedded per-source provenance and prove report generation from a Git-free fixture release.
 4. Replace shared-root archive extraction with staged component installation and add the root reviewer controller.
-5. Freeze the reviewer containers and move the primary analysis path off host `uv`; verify smoke and results workflows on clean Linux x86-64.
+5. Freeze the reviewer containers and move the primary analysis path off host `uv`. Verify smoke and results workflows on clean Linux x86-64.
 6. Define claims, output comparisons, data dictionaries, third-party notices, and generated public documentation. Remove or correct every retired command and unsupported claim.
 7. Build the complete candidate from the four-corpus package and all declared components. Run clean archive acceptance, capture exact measurements, and render final requirements and Zenodo metadata.
 8. Reserve a new Zenodo version DOI, rebuild and revalidate the frozen candidate with that DOI, and obtain human review of licenses, claims, paper metadata, and archive selection.

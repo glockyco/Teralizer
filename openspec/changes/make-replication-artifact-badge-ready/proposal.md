@@ -12,7 +12,7 @@ The published Zenodo artifact describes the retired notebook and two-database wo
 - Embed release provenance so report regeneration works after packaging removes Git metadata while preserving the exact producing source revisions required by the accepted provenance contract.
 - Document database and result schemas, corpus selection and provenance, third-party project licenses and attribution, redistribution decisions, and the security boundary for executing untrusted project builds.
 - Create a new immutable Zenodo version with version-specific DOI and synchronized landing-page, citation, license, checksum, and paper metadata. The existing published version remains unchanged.
-- Keep evaluation-host export and other author-only operations outside the reviewer path. This change consumes the complete corpus package produced by `consolidate-evaluation-databases`; it does not redesign corpus export.
+- Keep evaluation-host export and other author-only operations outside the reviewer path. This change consumes the complete corpus package produced by `consolidate-evaluation-databases`. It does not redesign corpus export.
 - **BREAKING**: release membership is declared by the release manifest, not by output-directory wildcards or whatever archives happen to exist. Optional archives use verified component identities instead of a shared-directory-nonempty shortcut.
 
 ## Capabilities
