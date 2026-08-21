@@ -37,12 +37,12 @@
 
 ## 5. Remove the unpushed package from history
 
-- [ ] 5.1 Require a clean worktree and an explicit operator checkpoint before rewriting; preserve the recovery reference and record all pre-rewrite commit ids.
-- [ ] 5.2 Rewrite unpushed commit `d8e1b7d5` so production dumps, generated manifest, generated checksum inventory, and obsolete package-tree changes are absent while its valid non-package intent is preserved or removed explicitly.
-- [ ] 5.3 Replay the remaining unpushed and implementation commits without changing their order, subjects, or effective patches outside the planned storage-boundary changes.
-- [ ] 5.4 Compare old and rewritten commit ranges by changed path and patch, and account for every difference before deleting any recovery reference.
-- [ ] 5.5 Confirm the rewritten tip tracks no production corpus payload or generated package output and introduces no new corpus LFS object.
-- [ ] 5.6 Leave `origin/master`, public tags, DOI-linked commit identities, existing Zenodo records, and remote LFS objects unchanged.
+- [x] 5.1 Require a clean worktree and an explicit operator checkpoint before rewriting; preserve the recovery reference and record all pre-rewrite commit ids.
+- [x] 5.2 Rewrite unpushed commit `d8e1b7d5` so production dumps, generated manifest, generated checksum inventory, and obsolete package-tree changes are absent while its valid non-package intent is preserved or removed explicitly.
+- [x] 5.3 Replay the remaining unpushed and implementation commits without changing their order, subjects, or effective patches outside the planned storage-boundary changes.
+- [x] 5.4 Compare old and rewritten commit ranges by changed path and patch, and account for every difference before deleting any recovery reference.
+- [x] 5.5 Confirm the rewritten tip tracks no production corpus payload or generated package output and introduces no new corpus LFS object.
+- [x] 5.6 Leave `origin/master`, public tags, DOI-linked commit identities, existing Zenodo records, and remote LFS objects unchanged.
 
 ## 6. Verify the complete boundary
 
