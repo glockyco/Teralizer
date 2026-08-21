@@ -113,7 +113,7 @@
       while complete publication from that workstation fails naming the missing corpora.
 - [x] 6.4 Confirm a corrupt dump, missing dump, wrong project count, stale derived-view revision, scratch
       report input, and unclassified database each fail with specific diagnostics.
-- [ ] 6.5 Run repository tests, lint, format, type checks, hooks, strict OpenSpec validation, and the
+- [x] 6.5 Run repository tests, lint, format, type checks, hooks, strict OpenSpec validation, and the
       physical-name positive-control scan with frozen Python dependency resolution. Require a clean
       source tree before and after validation.
 - [x] 6.6 Remove pandas chained-assignment warnings from a complete report run and verify behavior with
