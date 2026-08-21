@@ -44,7 +44,7 @@
       the registry accessor. No script may parse `corpora.toml` independently.
 - [x] 3.6 Record semantic corpus id, resolved physical name, source commit, dirty state, corpus inputs,
       and derived-view revision in run provenance.
-- [ ] 3.7 Regenerate all registered reports from the same corpora and compare with the canonical
+- [x] 3.7 Regenerate all registered reports from the same corpora and compare with the canonical
       baseline. Require measured values and rendered content to remain unchanged; review only explicit
       provenance-field differences.
 

@@ -27,7 +27,7 @@ Teralizer extracts its specification from a single execution. Generalized tests 
 
 _JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. For Teralizer, PVC includes the reconstructed original tests' values and the generalized tests' values. A dash marks a scenario Teralizer excludes from generalization._
 
-source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/749cc5c2f6afc62ab67178a09208af80fad3926e/analysis/src/teralizer/jarvis_scoreboard.py#L838)
+source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/6e602c3512eb03a6a4e9289c7fc46491ed46e4c5/analysis/src/teralizer/jarvis_scoreboard.py#L838)
 
 ## Applicability breadth
 
