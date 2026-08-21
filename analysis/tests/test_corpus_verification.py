@@ -53,6 +53,25 @@ def test_published_mode_requires_and_verifies_every_published_corpus():
     )
 
 
+def test_published_mode_requires_disposition_for_unclassified_database():
+    registry = corpora.load()
+    observed = tuple(entry.database for entry in registry.published_entries) + (
+        "postgres_unknown",
+    )
+
+    report = corpus_verification.verify(
+        registry,
+        observed,
+        published=True,
+        entry_verifier=lambda entry: entry.expected_projects,
+    )
+
+    assert report.errors == (
+        "database 'postgres_unknown' is unclassified and requires an explicit "
+        "retain, dump, or drop disposition",
+    )
+
+
 def test_verification_preserves_project_count_mismatch_diagnostic():
     registry = corpora.load()
 

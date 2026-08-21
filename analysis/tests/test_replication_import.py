@@ -68,7 +68,7 @@ elif [[ $args == *" pg_restore "* ]]; then
     [[ ${FAIL_DOCKER_AT:-} != restore ]] || exit 9
 elif [[ $args == *"SELECT count(*) FROM project"* ]]; then
     [[ ${FAIL_DOCKER_AT:-} != count ]] || exit 9
-    printf '2\n'
+    printf '%s\n' "${PROJECT_COUNT:-2}"
 elif [[ $args == *" rm -f "* ]]; then
     :
 elif [[ $args == *" dropdb "* ]]; then
@@ -163,6 +163,19 @@ def test_importer_removes_incomplete_database_after_failure(
 
     assert result.returncode != 0
     assert _line_index(lines, " createdb ") < _line_index(lines, " dropdb ")
+
+
+def test_importer_rejects_wrong_project_count_with_observed_value(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    result, lines = _run_importer(tmp_path, monkeypatch, PROJECT_COUNT="1")
+
+    assert result.returncode != 0
+    assert (
+        "Corpus 'controlled' expects 2 projects. The restored database has 1."
+        in result.stderr
+    )
+    assert any(" dropdb " in line for line in lines)
 
 
 def test_importer_ignores_author_database_environment(

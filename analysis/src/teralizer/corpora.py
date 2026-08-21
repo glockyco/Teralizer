@@ -77,6 +77,11 @@ class CorpusRegistry:
         for entry in entries:
             if entry.id in by_id:
                 raise ValueError(f"duplicate corpus id: {entry.id!r}")
+            if is_scratch_database(entry.database):
+                raise ValueError(
+                    f"corpus {entry.id!r} cannot use reserved scratch database "
+                    f"{entry.database!r} as report evidence"
+                )
             if previous := physical_owners.get(entry.database):
                 raise ValueError(
                     f"corpora {previous!r} and {entry.id!r} declare duplicate "

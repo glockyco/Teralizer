@@ -111,7 +111,7 @@
 - [x] 6.2 Run every registered report read-only and confirm it reproduces the published artifact set.
 - [x] 6.3 Confirm a partial workstation can verify and run an explicitly requested installed corpus,
       while complete publication from that workstation fails naming the missing corpora.
-- [ ] 6.4 Confirm a corrupt dump, missing dump, wrong project count, stale derived-view revision, scratch
+- [x] 6.4 Confirm a corrupt dump, missing dump, wrong project count, stale derived-view revision, scratch
       report input, and unclassified database each fail with specific diagnostics.
 - [ ] 6.5 Run repository tests, lint, format, type checks, hooks, strict OpenSpec validation, and the
       physical-name positive-control scan with frozen Python dependency resolution. Require a clean

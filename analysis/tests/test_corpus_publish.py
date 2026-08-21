@@ -192,6 +192,38 @@ def test_package_verification_checks_manifest_dumps_inputs_and_inventory(
         corpus_publish.verify_package(tmp_path)
 
 
+@pytest.mark.parametrize(
+    ("mutation", "error_type", "message"),
+    [
+        (
+            lambda path: path.write_bytes(b"corrupt"),
+            ValueError,
+            "dump fact disagrees for 'controlled'",
+        ),
+        (
+            lambda path: path.unlink(),
+            FileNotFoundError,
+            "controlled_db.dump",
+        ),
+    ],
+)
+def test_package_verification_rejects_corrupt_and_missing_dumps(
+    tmp_path: Path, monkeypatch, mutation, error_type, message
+):
+    document, registry = _manifest_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(corpus_publish.corpora, "load", lambda: registry)
+    (tmp_path / corpus_publish.MANIFEST_NAME).write_text(
+        json.dumps(document), encoding="utf-8"
+    )
+    (tmp_path / corpus_publish.CHECKSUMS_NAME).write_text(
+        corpus_publish._checksums(document), encoding="utf-8"
+    )
+    mutation(tmp_path / "controlled_db.dump")
+
+    with pytest.raises(error_type, match=message):
+        corpus_publish.verify_package(tmp_path)
+
+
 def test_assembly_consumes_explicit_dumps_without_exporting(
     tmp_path: Path, monkeypatch
 ):

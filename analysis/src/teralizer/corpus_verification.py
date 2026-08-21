@@ -96,7 +96,16 @@ def verify(
     )
     missing: list[corpora.CorpusEntry] = []
     verified: list[tuple[corpora.CorpusEntry, int]] = []
-    errors: list[str] = []
+    errors = (
+        [
+            f"database {classification.database!r} is unclassified and requires "
+            "an explicit retain, dump, or drop disposition"
+            for classification in classifications
+            if classification.kind is corpora.DatabaseKind.UNCLASSIFIED
+        ]
+        if published
+        else []
+    )
     for entry in selected:
         if entry.database not in observed_set:
             missing.append(entry)

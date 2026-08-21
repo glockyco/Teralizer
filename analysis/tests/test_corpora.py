@@ -47,6 +47,28 @@ def test_repository_registry_declares_each_published_corpus_once():
     assert registry.published_entries == registry.entries
 
 
+def test_registry_rejects_scratch_database_as_report_corpus():
+    entry = corpora.CorpusEntry(
+        "experiment",
+        "scratch_experiment",
+        None,
+        None,
+        1,
+        True,
+        "fixture",
+        False,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "corpus 'experiment' cannot use reserved scratch database "
+            "'scratch_experiment' as report evidence"
+        ),
+    ):
+        corpora.CorpusRegistry((entry,))
+
+
 def test_registry_classifies_registered_scratch_and_unclassified_databases():
     registry = corpora.load()
 
