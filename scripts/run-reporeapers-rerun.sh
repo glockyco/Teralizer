@@ -12,7 +12,8 @@
 # RETURNS, so a project interrupted mid-run has no marker and is re-run next time. Markers and the
 # status ledger are reset whenever the DB is created fresh (--reset-db or a missing DB).
 #
-# Usage: scripts/run-reporeapers-rerun.sh [--reset-db] [--limit N] [--start N] [--no-reduction]
+# Usage: scripts/run-reporeapers-rerun.sh [--corpus ID] [--reset-db] [--limit N] [--start N] [--no-reduction]
+#   --corpus ID  select the registered corpus definition (default: real-world)
 #   --reset-db   drop + recreate the scratch DB (clears markers + status) first, else resume/append
 #   --limit N    process at most N not-yet-done projects (spike)
 #   --start N    skip project configs numbered below N
@@ -32,19 +33,13 @@
 # The corpus runner itself requires Java 8 because its bundled JPF revision imports JDK 8 internals.
 # Override auto-detection with REPOREAPERS_JAVA_HOME.
 #
-# The target DB/data dir are dedicated (env overrides: REPOREAPERS_DB, REPOREAPERS_DATA_DIR).
-# The ambient DB_NAME/.env pin is deliberately NOT used, so this can never hit dev/test/timeout_retry.
+# The corpus id selects the registered project definition. Measurements go to a dedicated scratch
+# database and data directory, never to the resolved published endpoint. Environment overrides:
+# REPOREAPERS_CORPUS, REPOREAPERS_SCRATCH_DB, and REPOREAPERS_DATA_DIR.
 set -uo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-DB_NAME="${REPOREAPERS_DB:-postgres_reporeapers_scratch}"
-DATA_DIR="${REPOREAPERS_DATA_DIR:-data/reporeapers-rerun}"
-PROFILE="${REPOREAPERS_PROFILE:-project-configs/reporeapers-rerun.conf}"
-CONFIG_DIR="${REPOREAPERS_CONFIG_DIR:-project-configs/replication/extended}"
-DONE_DIR="$ROOT_DIR/$DATA_DIR/done"
-LOG_DIR="$ROOT_DIR/$DATA_DIR/run-logs"
-STATUS_TSV="$ROOT_DIR/$DATA_DIR/status.tsv"
-STOP_FILE="$ROOT_DIR/$DATA_DIR/STOP"
+CORPUS_ID="${REPOREAPERS_CORPUS:-real-world}"
 PROJECT_TIMEOUT="${REPOREAPERS_PROJECT_TIMEOUT:-1800}"
 
 java8_version() {
@@ -89,21 +84,35 @@ require_java8() {
   return 1
 }
 
-source "$ROOT_DIR/scripts/lib/db-guard.sh"
-DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
-
 reset_db=false; limit=0; start=1; no_reduction=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --corpus) CORPUS_ID="${2:?--corpus needs an id}"; shift 2 ;;
     --reset-db) reset_db=true; shift ;;
     --limit) limit="${2:?--limit needs a number}"; shift 2 ;;
     --start) start="${2:?--start needs a number}"; shift 2 ;;
     --no-reduction) no_reduction=true; shift ;;
-    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 
+corpus_exports=$("$ROOT_DIR/scripts/corpus-registry" export "$CORPUS_ID") || exit $?
+eval "$corpus_exports"
+RESOLVED_CORPUS_DATABASE="$DB_NAME"
+DB_NAME="${REPOREAPERS_SCRATCH_DB:-scratch_reporeapers_rerun}"
+DATA_DIR="${REPOREAPERS_DATA_DIR:-data/reporeapers-rerun}"
+PROFILE="${REPOREAPERS_PROFILE:-project-configs/reporeapers-rerun.conf}"
+CONFIG_DIR="${REPOREAPERS_CONFIG_DIR:-$CONFIG_DIR}"
+DONE_DIR="$ROOT_DIR/$DATA_DIR/done"
+LOG_DIR="$ROOT_DIR/$DATA_DIR/run-logs"
+STATUS_TSV="$ROOT_DIR/$DATA_DIR/status.tsv"
+STOP_FILE="$ROOT_DIR/$DATA_DIR/STOP"
+
+source "$ROOT_DIR/scripts/lib/db-guard.sh"
+DB_GUARD_ROOT="$ROOT_DIR" require_scratch_db "$DB_NAME"
+
+echo "==> Corpus: $CORPUS_ID (registered endpoint: $RESOLVED_CORPUS_DATABASE)"
 require_java8 || exit 1
 
 # shellcheck source=scripts/lib/run-supervisor.sh

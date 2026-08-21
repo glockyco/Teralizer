@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Compare the verification fixture DB rows with checked-in golden observations. The golden files are
-# observed truth from real full-pipeline runs; this script reports a unified diff so contract drift is
+# observed truth from real full-pipeline runs. This script reports a unified diff so contract drift is
 # reviewable instead of hidden in ad-hoc SQL.
 #
 # Usage: scripts/check-verification-corpus.sh [--update-goldens]
@@ -20,7 +20,7 @@ case "${1:-}" in
   "") ;;
   *) echo "unknown argument: $1" >&2; exit 2 ;;
 esac
-DB_NAME="${VERIFICATION_DB:-postgres_verification}"
+DB_NAME="${VERIFICATION_SCRATCH_DB:-scratch_verification}"
 GOLDEN_DIR="$ROOT_DIR/verification/golden"
 HEADER=$'fixture\tgen_count\tgen_index\tvariant\tis_included\texclusion_info\toutput_spec_class\tdiagnostic_kind\ttries\tdistinct_tuples'
 
@@ -99,7 +99,7 @@ if (( UPDATE_GOLDENS )); then
   for golden_file in "${golden_files[@]}"; do
     fixture=$(basename "$golden_file" .tsv)
     grep -qx "$fixture" <<< "$observed_fixtures" \
-      || echo "kept $fixture (no rows in this run; its fixture did not complete)" >&2
+      || echo "kept $fixture because its incomplete run produced no rows" >&2
   done
   exit 0
 fi

@@ -5,8 +5,8 @@
 # instead of carrying resumability markers that would hide stale partial state.
 #
 # Usage: scripts/run-verification-corpus.sh [--only <fixture-name>]
-#   --only  run a single fixture (fast iteration; the DB then holds only that fixture, so use
-#           ad-hoc SQL against it — the full golden check expects the whole corpus)
+#   --only  run a single fixture for fast iteration. The database then holds only that fixture, so
+#           use ad hoc SQL against it. The full golden check expects the whole corpus.
 #
 # Each fixture runs under a wall cap (VERIFICATION_FIXTURE_TIMEOUT, default 300 s, against a
 # normal fixture time of ~47 s). A capped fixture is a defect in the fixture or the pipeline,
@@ -14,7 +14,7 @@
 set -uo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-DB_NAME="${VERIFICATION_DB:-postgres_verification}"
+DB_NAME="${VERIFICATION_SCRATCH_DB:-scratch_verification}"
 DATA_DIR="${VERIFICATION_DATA_DIR:-data/verification}"
 PROFILE="project-configs/verification.conf"
 CONFIG_DIR="project-configs/verification"
@@ -53,8 +53,8 @@ recreate_scratch_db "$DB_NAME" || exit 1
 mkdir -p "$LOG_DIR"
 printf 'fixture\troot_path\texit_code\tlog\n' > "$STATUS_TSV"
 
-# Crashed prior runs can leave generated tests or persisted jqwik sidecars in fixture trees; remove
-# them before Spoon sees stale classes and before new executions append UUID-scoped diagnostics.
+# Crashed prior runs can leave generated tests or persisted jqwik sidecars in fixture trees.
+# Remove them before Spoon sees stale classes and before new executions append UUID-scoped diagnostics.
 find "$FIXTURE_ROOT" -type f \( \
   -name '_*_Generalized_*_Test.java' -o \
   -name '_*_Driver_*.java' -o \

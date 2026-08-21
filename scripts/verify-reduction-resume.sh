@@ -3,7 +3,7 @@
 set -uo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
-DB_NAME="${REDUCTION_RESUME_DB:-postgres_reduction_resume_verify}"
+DB_NAME="${REDUCTION_RESUME_SCRATCH_DB:-scratch_reduction_resume}"
 DATA_DIR="${REDUCTION_RESUME_DATA_DIR:-data/reduction-resume-verify}"
 PROFILE="project-configs/verification.conf"
 SINGLE_CONFIG="project-configs/verification/fixture-parse-predicate.conf"
