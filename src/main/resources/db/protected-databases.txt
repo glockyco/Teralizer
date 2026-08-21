@@ -1,8 +1,0 @@
-# Protected corpora: never a scratch/experiment target. One name or glob per line.
-# Read by teralizer.util.Configuration (Java startup guard) and scripts/lib/db-guard.sh.
-# A run may target one of these only with an explicit opt-in
-# (teralizer.database.allow-protected = true in the profile, or TERALIZER_ALLOW_PROTECTED=1 for scripts).
-postgres
-postgres_dev
-postgres_test
-*_replication

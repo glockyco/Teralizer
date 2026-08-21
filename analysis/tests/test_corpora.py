@@ -49,9 +49,10 @@ def test_repository_registry_declares_each_published_corpus_once():
 def test_registry_classifies_registered_scratch_and_unclassified_databases():
     registry = corpora.load()
 
-    assert registry.classify("postgres_dev") == corpora.DatabaseClassification(
-        "postgres_dev", corpora.DatabaseKind.CORPUS, "controlled"
-    )
+    for entry in registry.entries:
+        assert registry.classify(entry.database) == corpora.DatabaseClassification(
+            entry.database, corpora.DatabaseKind.CORPUS, entry.id
+        )
     assert registry.classify("scratch_verification") == corpora.DatabaseClassification(
         "scratch_verification", corpora.DatabaseKind.SCRATCH
     )
@@ -174,6 +175,13 @@ def test_registry_lookup_is_semantic_and_immutable():
 def test_registry_cli_returns_one_field_and_shell_safe_exports(capsys):
     corpora.main(["get", "real-world", "database"])
     assert capsys.readouterr().out == "postgres_reporeapers_rq6_v7\n"
+
+    corpora.main(["classify", "postgres_dev"])
+    assert capsys.readouterr().out == "registered corpus\n"
+    corpora.main(["classify", "scratch_verification"])
+    assert capsys.readouterr().out == "scratch\n"
+    corpora.main(["classify", "postgres_unknown"])
+    assert capsys.readouterr().out == "unclassified\n"
 
     corpora.main(["list", "--published"])
     assert capsys.readouterr().out.splitlines() == [

@@ -10,8 +10,6 @@ import com.typesafe.config.ConfigFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -24,27 +22,13 @@ class ConfigurationTest {
     }
 
     @Test
-    void isProtectedMatchesExactAndGlob() {
-        List<String> patterns = Arrays.asList("postgres_dev", "*_replication");
-        assertTrue(Configuration.isProtectedDatabase("postgres_dev", patterns));
-        assertTrue(Configuration.isProtectedDatabase("postgres_dev_replication", patterns));
-        assertFalse(Configuration.isProtectedDatabase("postgres_verification", patterns));
-    }
-
-    @Test
-    void loadsProtectedPatternsSkippingCommentsAndBlanks(@TempDir Path dir) throws IOException {
-        Path file = writeConf(dir, "protected.txt", "# comment\n\npostgres_dev\n*_replication\n");
-        assertEquals(Arrays.asList("postgres_dev", "*_replication"),
-            Configuration.loadProtectedDatabasePatterns(file));
-    }
-
-    @Test
-    void policyFileListsCanonicalProtectedNames() {
-        List<String> patterns = Configuration.loadProtectedDatabasePatterns(Configuration.PROTECTED_DB_PATH);
-        assertTrue(patterns.contains("postgres_dev"));
-        assertTrue(patterns.contains("postgres_test"));
-        assertTrue(patterns.contains("*_replication"));
-        assertFalse(patterns.contains("postgres_reporeapers_rerun"));
+    void acceptsOnlyReservedScratchDatabaseNames() {
+        assertTrue(Configuration.isScratchDatabase("scratch_verification"));
+        assertTrue(Configuration.isScratchDatabase("scratch_replication_controlled"));
+        assertFalse(Configuration.isScratchDatabase("scratch_"));
+        assertFalse(Configuration.isScratchDatabase("postgres_dev"));
+        assertFalse(Configuration.isScratchDatabase("postgres_reporeapers_rq6_v7"));
+        assertFalse(Configuration.isScratchDatabase("teralizer_codegen"));
     }
 
     @Test

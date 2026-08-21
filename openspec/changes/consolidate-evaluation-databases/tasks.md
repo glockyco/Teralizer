@@ -60,7 +60,7 @@
       `prepare-corpus`. Remove every ad hoc view-installation path after the shared command passes.
 - [x] 4.4 Point analysis connections at the read-only role and prove insert, update, delete, and schema
       changes fail while every registered report query succeeds.
-- [ ] 4.5 Replace `protected-databases.txt` with registry-backed corpus protection and reserved scratch
+- [x] 4.5 Replace `protected-databases.txt` with registry-backed corpus protection and reserved scratch
       handling. Test destructive refusal for every corpus and successful recreation of a valid scratch
       database.
 - [ ] 4.6 Confirm the four published corpus databases retain their current physical names. Perform no

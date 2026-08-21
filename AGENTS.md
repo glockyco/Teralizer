@@ -48,9 +48,9 @@ Do not bypass hooks. If `jpf-symbc` is absent, run `git submodule update --init 
 ## Protect data and generated state
 
 - `projects/` contains read-only submodules. Do not modify them as Teralizer source.
-- `src/main/resources/db/protected-databases.txt` owns the protected corpus list. Never use a
-  protected corpus for an experiment or destructive command.
-- Runner scripts own scratch databases. Create, reset, and drop them only through those runners.
+- `src/main/resources/db/corpora.toml` owns protected corpus identity. Never use a registered
+  corpus for an experiment or destructive command.
+- Runner scripts own `scratch_*` databases. Create, reset, and drop them only through those runners.
 - Never edit or commit PostgreSQL storage, generated datasets, run logs, or fixture residue.
 - The verification driver regenerates its run root and removes generated fixture sources. Delete
   residue only when no verification run is active.

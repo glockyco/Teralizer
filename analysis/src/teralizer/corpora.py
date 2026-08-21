@@ -283,7 +283,16 @@ def main(argv: list[str] | None = None) -> None:
     )
     prepare_parser.add_argument("corpus_id")
 
+    classify_parser = commands.add_parser(
+        "classify", help="classify one physical database name"
+    )
+    classify_parser.add_argument("database")
+
     args = parser.parse_args(argv)
+    if args.command == "classify":
+        classification = load().classify(args.database)
+        print(classification.kind.value)
+        return
     if args.command == "list":
         registry = load()
         entries = registry.published_entries if args.published else registry.entries

@@ -7,10 +7,10 @@ globs:
 
 # Database conventions
 
-- `src/main/resources/db/protected-databases.txt` owns the protected corpus list. Never drop,
-  truncate, rename, or write to a listed database. Never use one for an experiment.
-- Runner scripts own scratch databases through `scripts/lib/db-lifecycle.sh`. Use those runners for
-  creation and deletion.
+- `src/main/resources/db/corpora.toml` owns protected corpus identity. Never drop, truncate,
+  rename, or write to a registered corpus. Never use one for an experiment.
+- Runner scripts own `scratch_*` databases through `scripts/lib/db-lifecycle.sh`. Use those runners
+  for creation and deletion.
 - `src/main/resources/db/create-tables.sql` is the schema authority. Generated jOOQ bindings reflect
   that DDL.
 - `database/teralizer/` is PostgreSQL storage. Never edit or commit it.

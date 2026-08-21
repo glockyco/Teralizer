@@ -19,7 +19,7 @@ files. JVM system properties override both. `reference.conf` fills missing value
 
 - `reference.conf` must not define a database name or generalization variant. A profile or runner
   must supply both.
-- Do not target a database listed in `src/main/resources/db/protected-databases.txt`.
+- Do not target a corpus registered in `src/main/resources/db/corpora.toml`. Run profiles target only `scratch_*` databases.
 - HOCON merges object keys. A `teralizer.generalizations` block does not replace the earlier block.
   Inspect the merged configuration after changing either side.
 - `Configuration` freezes values when its class loads. Tests must put defaults in
