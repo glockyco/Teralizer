@@ -76,36 +76,36 @@ REQUIRES: tuple[Required, ...] = (
 
 def _coverage_table(df: pd.DataFrame) -> Table:
     result = df.copy()
-    result["test_inclusion_pct"] = (
+    result.loc[:, "test_inclusion_pct"] = (
         result["included_tests"] / result["total_tests"].replace(0, pd.NA) * 100
     ).fillna(0)
-    result["class_inclusion_pct"] = (
+    result.loc[:, "class_inclusion_pct"] = (
         result["included_classes"] / result["total_classes"].replace(0, pd.NA) * 100
     ).fillna(0)
-    result["covered_pct"] = (
+    result.loc[:, "covered_pct"] = (
         result["covered"] / result["total"].replace(0, pd.NA) * 100
     ).fillna(0)
-    result["uncovered_pct"] = (
+    result.loc[:, "uncovered_pct"] = (
         result["uncovered"] / result["total"].replace(0, pd.NA) * 100
     ).fillna(0)
-    result["display_project"] = (
+    result.loc[:, "display_project"] = (
         result["project"]
         .astype(str)
         .str.replace("-default", "", regex=False)
         .replace({"commons-utils": "commons-utils-dev"})
     )
-    result["included_tests_display"] = result.apply(
+    result.loc[:, "included_tests_display"] = result.apply(
         lambda row: f"{int(row['included_tests']):,} ({row['test_inclusion_pct']:.1f}%)",
         axis=1,
     )
-    result["included_classes_display"] = result.apply(
+    result.loc[:, "included_classes_display"] = result.apply(
         lambda row: f"{int(row['included_classes']):,} ({row['class_inclusion_pct']:.1f}%)",
         axis=1,
     )
-    result["covered_display"] = result.apply(
+    result.loc[:, "covered_display"] = result.apply(
         lambda row: f"{int(row['covered']):,} ({row['covered_pct']:.1f}%)", axis=1
     )
-    result["uncovered_display"] = result.apply(
+    result.loc[:, "uncovered_display"] = result.apply(
         lambda row: f"{int(row['uncovered']):,} ({row['uncovered_pct']:.1f}%)", axis=1
     )
     columns = [
@@ -144,13 +144,13 @@ def _coverage_table(df: pd.DataFrame) -> Table:
 
 def _mutator_table(df: pd.DataFrame) -> Table:
     result = df.copy()
-    result["mutator"] = (
+    result.loc[:, "mutator"] = (
         result["mutator"]
         .astype(str)
         .str.replace("Mutator", "", regex=False)
         .str.strip()
     )
-    result["mutator"] = result["mutator"].replace(
+    result.loc[:, "mutator"] = result["mutator"].replace(
         {
             "RemoveConditional_ORDER_ELSE": "RemoveConditionalOrderElse",
             "RemoveConditional_EQUAL_ELSE": "RemoveConditionalEqualElse",
@@ -158,13 +158,13 @@ def _mutator_table(df: pd.DataFrame) -> Table:
     )
     for column in ("detected_diff_naive_200_tries", "detected_diff_improved_200_tries"):
         if column not in result:
-            result[column] = 0
-    result["naive_delta_display"] = result["detected_diff_naive_200_tries"].map(
+            result.loc[:, column] = 0
+    result.loc[:, "naive_delta_display"] = result["detected_diff_naive_200_tries"].map(
         lambda value: "--" if abs(float(value)) < 1e-12 else f"({float(value):+.2f})"
     )
-    result["improved_delta_display"] = result["detected_diff_improved_200_tries"].map(
-        lambda value: "--" if abs(float(value)) < 1e-12 else f"({float(value):+.2f})"
-    )
+    result.loc[:, "improved_delta_display"] = result[
+        "detected_diff_improved_200_tries"
+    ].map(lambda value: "--" if abs(float(value)) < 1e-12 else f"({float(value):+.2f})")
     wanted = [
         "mutator",
         "total_mutants",
@@ -179,7 +179,7 @@ def _mutator_table(df: pd.DataFrame) -> Table:
     ]
     for column in wanted:
         if column not in result:
-            result[column] = 0
+            result.loc[:, column] = 0
     result = result[wanted]
     columns = [
         ColumnSpec("Mutator", "mutator"),
@@ -240,7 +240,7 @@ def _figure(data: pd.DataFrame) -> Figure:
             ax.set_title("Mutation detection comparison")
             return
         frame = data.copy()
-        frame["base_project"] = frame["project_name"].map(
+        frame.loc[:, "base_project"] = frame["project_name"].map(
             lambda name: re.sub(r"-\d+s$", "", str(name))
         )
         within_order = get_project_within_type_order()

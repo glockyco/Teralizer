@@ -207,7 +207,7 @@ def _fetch_filtering(conn: Connection) -> pd.DataFrame:
     """Return filter rejection counts normalized for the shared table builder."""
     df = read_sql(conn, FILTERING_SQL)
     for column in ("total", "accept", "defer", "reject"):
-        df[column] = df[column].astype(int)
+        df.loc[:, column] = df[column].astype(int)
     return pd.DataFrame(
         df, columns=["level", "filter", "total", "accept", "defer", "reject"]
     )
@@ -217,7 +217,7 @@ def _fetch_breakdown(conn: Connection) -> pd.DataFrame:
     """Return inclusion, filtering, and failure counts by level and strategy."""
     df = read_sql(conn, BREAKDOWN_SQL)
     for column in ("total", "included", "filtering", "failures"):
-        df[column] = df[column].astype(int)
+        df.loc[:, column] = df[column].astype(int)
     return pd.DataFrame(
         df, columns=["strategy", "level", "total", "included", "filtering", "failures"]
     )

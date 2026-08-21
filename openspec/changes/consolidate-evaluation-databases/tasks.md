@@ -116,7 +116,7 @@
 - [ ] 6.5 Run repository tests, lint, format, type checks, hooks, strict OpenSpec validation, and the
       physical-name positive-control scan with frozen Python dependency resolution. Require a clean
       source tree before and after validation.
-- [ ] 6.6 Remove pandas chained-assignment warnings from a complete report run and verify behavior with
+- [x] 6.6 Remove pandas chained-assignment warnings from a complete report run and verify behavior with
       copy-on-write enabled.
 
 ## 7. Retire only proven sprawl

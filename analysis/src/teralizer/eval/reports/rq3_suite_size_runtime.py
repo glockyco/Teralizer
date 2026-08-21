@@ -84,9 +84,11 @@ def _effects(conn: Connection, unit: str) -> pd.DataFrame:
         .map({variant: index for index, variant in enumerate(VARIANTS)})
         .fillna(len(VARIANTS))
     )
+    result = result.copy()
+    result.loc[:, "_project_order"] = project_order
+    result.loc[:, "_variant_order"] = variant_order
     return (
-        result.assign(_project_order=project_order, _variant_order=variant_order)
-        .sort_values(["_project_order", "_variant_order"], kind="stable")
+        result.sort_values(["_project_order", "_variant_order"], kind="stable")
         .drop(columns=["_project_order", "_variant_order"])
         .reset_index(drop=True)
     )
@@ -103,22 +105,22 @@ def _effects_table(key: str, df: pd.DataFrame, unit: str, label: str) -> Table:
     result = df.copy()
     delta = f"{prefix}_delta"
     delta_pct = f"{prefix}_delta_pct"
-    result["delta_display"] = result[delta].map(
+    result.loc[:, "delta_display"] = result[delta].map(
         lambda value: f"{float(value):+.2f}"
         if unit == "runtime"
         else f"{int(value):+d}"
     )
-    result["delta_pct_display"] = result[delta_pct].map(
+    result.loc[:, "delta_pct_display"] = result[delta_pct].map(
         lambda value: f"{float(value):+.1f}%"
     )
-    result["display_project"] = (
+    result.loc[:, "display_project"] = (
         result["project_name"]
         .astype(str)
         .str.replace("-default", "", regex=False)
         .replace({"commons-utils": "commons-utils-dev"})
     )
     # The legacy tables separate the EqBench, Commons-ES, and Commons-dev rows.
-    result["project_group"] = result["project_name"].map(get_project_type)
+    result.loc[:, "project_group"] = result["project_name"].map(get_project_type)
     numeric_fmt = "count" if unit in {"test", "line"} else "float2"
     group_header = {
         "test": "Tests",

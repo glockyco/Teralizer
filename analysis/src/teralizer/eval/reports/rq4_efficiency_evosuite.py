@@ -79,16 +79,16 @@ def _pareto_table(data: pd.DataFrame, project_name: str) -> Table:
         .sort_values("runtime_seconds")
         .reset_index(drop=True)
     )
-    result = result.assign(
-        point=np.arange(1, len(result) + 1),
-        teralizer_display=result.apply(
-            lambda row: _format_variant(row["teralizer_variant"], row["type"]),
-            axis=1,
-        ),
-        detection_display=result["detection_rate"].map(lambda value: f"{value:.1f}"),
-        runtime_display=result["runtime_seconds"].map(
-            lambda value: f"{int(round(value)):,}"
-        ),
+    result.loc[:, "point"] = np.arange(1, len(result) + 1)
+    result.loc[:, "teralizer_display"] = result.apply(
+        lambda row: _format_variant(row["teralizer_variant"], row["type"]),
+        axis=1,
+    )
+    result.loc[:, "detection_display"] = result["detection_rate"].map(
+        lambda value: f"{value:.1f}"
+    )
+    result.loc[:, "runtime_display"] = result["runtime_seconds"].map(
+        lambda value: f"{int(round(value)):,}"
     )
     columns = [
         ColumnSpec("Pt.", "point", "int", "r"),

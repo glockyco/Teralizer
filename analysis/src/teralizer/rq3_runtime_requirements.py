@@ -183,7 +183,7 @@ def compute_teralizer_runtime_statistics(df: pd.DataFrame) -> pd.DataFrame:
     df_sorted = sort_dataframe_by_project(df, "project_name")
 
     # Convert runtime to numeric for calculations
-    df_sorted["runtime"] = cast(
+    df_sorted.loc[:, "runtime"] = cast(
         pd.Series, pd.to_numeric(df_sorted["runtime"], errors="coerce")
     ).fillna(0.0)
 
@@ -209,7 +209,7 @@ def compute_stage_runtime_breakdown(df: pd.DataFrame) -> pd.DataFrame:
             return project_name
 
     df_processed = df.copy()
-    df_processed["base_project_name"] = df_processed["project_name"].apply(
+    df_processed.loc[:, "base_project_name"] = df_processed["project_name"].apply(
         get_base_project_name
     )
 
@@ -221,13 +221,13 @@ def compute_stage_runtime_breakdown(df: pd.DataFrame) -> pd.DataFrame:
         "Stage 5",
     ]
 
-    df_processed["stage_group"] = pd.Categorical(
+    df_processed.loc[:, "stage_group"] = pd.Categorical(
         df_processed["stage_group"], categories=ordered_groups, ordered=True
     )
-    df_processed["variant"] = pd.Categorical(df_processed["variant"])
+    df_processed.loc[:, "variant"] = pd.Categorical(df_processed["variant"])
 
     # Convert runtime to numeric
-    df_processed["total_runtime"] = cast(
+    df_processed.loc[:, "total_runtime"] = cast(
         pd.Series, pd.to_numeric(df_processed["total_runtime"], errors="coerce")
     ).fillna(0.0)
 
@@ -292,8 +292,8 @@ def compute_pareto_efficiency_analysis(df: pd.DataFrame) -> pd.DataFrame:
                 ]
             ],
         ).copy()
-        es_points["type"] = "ES_ONLY"
-        es_points["teralizer_variant"] = "ES_ONLY"
+        es_points.loc[:, "type"] = "ES_ONLY"
+        es_points.loc[:, "teralizer_variant"] = "ES_ONLY"
         es_points.rename(
             columns={
                 "evosuite_runtime": "total_runtime",
@@ -314,7 +314,7 @@ def compute_pareto_efficiency_analysis(df: pd.DataFrame) -> pd.DataFrame:
                 "teralizer_variant",
             ]
         ].copy()
-        naive_points["type"] = "NAIVE"
+        naive_points.loc[:, "type"] = "NAIVE"
         naive_points.rename(
             columns={"teralizer_detected": "detection_rate"}, inplace=True
         )
@@ -330,7 +330,7 @@ def compute_pareto_efficiency_analysis(df: pd.DataFrame) -> pd.DataFrame:
                 "teralizer_variant",
             ]
         ].copy()
-        improved_points["type"] = "IMPROVED"
+        improved_points.loc[:, "type"] = "IMPROVED"
         improved_points.rename(
             columns={"teralizer_detected": "detection_rate"}, inplace=True
         )
@@ -393,7 +393,7 @@ def compute_evosuite_phase_statistics(df: pd.DataFrame) -> pd.DataFrame:
     """
     # Convert search_budget to numeric
     df_processed = df.copy()
-    df_processed["search_budget"] = pd.to_numeric(
+    df_processed.loc[:, "search_budget"] = pd.to_numeric(
         df_processed["search_budget"], errors="coerce"
     )
 
@@ -415,7 +415,7 @@ def compute_evosuite_phase_statistics(df: pd.DataFrame) -> pd.DataFrame:
     # Convert runtime columns to numeric
     for col in runtime_columns:
         if col in df_processed.columns:
-            df_processed[col] = cast(
+            df_processed.loc[:, col] = cast(
                 pd.Series, pd.to_numeric(df_processed[col], errors="coerce")
             ).fillna(0.0)
 
@@ -424,7 +424,7 @@ def compute_evosuite_phase_statistics(df: pd.DataFrame) -> pd.DataFrame:
 
     for col in percentage_columns:
         if col in df_processed.columns:
-            df_processed[f"{col}_pct"] = (
+            df_processed.loc[:, f"{col}_pct"] = (
                 df_processed[col] / df_processed["total"]
             ) * 100
 

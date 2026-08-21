@@ -186,8 +186,10 @@ def _build_breadth_table(
     # JARVIS surveys all twelve projects but reports cases for only two, so the
     # rest have no published value. Defaulting them to zero would claim a
     # measurement of none where the paper simply makes none.
-    rows["jarvis_successful_pbt_pvc"] = rows["project"].map(JARVIS_PROJECT_PBT_PVC.get)
-    rows["jarvis_successful_muts"] = rows["project"].map(JARVIS_PROJECT_MUTS.get)
+    rows.loc[:, "jarvis_successful_pbt_pvc"] = rows["project"].map(
+        JARVIS_PROJECT_PBT_PVC.get
+    )
+    rows.loc[:, "jarvis_successful_muts"] = rows["project"].map(JARVIS_PROJECT_MUTS.get)
     project_rows = project_pvc[project_pvc["variant"].eq(CENSUS_VARIANT)]
     pvc_columns = ["project", "aggregate_pvc", "sound_muts"]
     if "sound_properties" in project_rows.columns:
@@ -198,7 +200,7 @@ def _build_breadth_table(
         how="left",
     )
     if "sound_properties" not in rows.columns:
-        rows["sound_properties"] = pd.NA
+        rows.loc[:, "sound_properties"] = pd.NA
     rows = rows.merge(
         ledger[["project", "generalization_status"]], on="project", how="left"
     )
@@ -237,11 +239,11 @@ def _build_breadth_table(
     # Reader-facing label drops the internal `-census` DB suffix and the corpus
     # snapshot date every fixture carries; the internal `project` identity stays
     # intact for merges and manifest metric slugs.
-    result["display_project"] = result["project"].map(
+    result.loc[:, "display_project"] = result["project"].map(
         lambda project: _SNAPSHOT_SUFFIX.sub("", str(project).removesuffix("-census"))
     )
     # The total is its own group, which is what puts a rule above it.
-    result["row_group"] = ["projects"] * len(rows) + ["total"] * len(total)
+    result.loc[:, "row_group"] = ["projects"] * len(rows) + ["total"] * len(total)
     return result
 
 
@@ -257,11 +259,14 @@ def _build_budget_table(
 ) -> pd.DataFrame:
     """Return generalized-test counts, PVC, and mutation outcomes by budget."""
     summary = summarize_variants(scoreboard, mutation)
-    summary["variant"] = pd.Categorical(
-        summary["variant"], categories=list(SWEEP_VARIANTS), ordered=True
+    summary.isetitem(
+        summary.columns.get_loc("variant"),
+        pd.Categorical(
+            summary["variant"], categories=list(_VARIANT_DISPLAY), ordered=True
+        ),
     )
     summary = summary.sort_values("variant").reset_index(drop=True)
-    summary["display_variant"] = (
+    summary.loc[:, "display_variant"] = (
         summary["variant"]
         .astype(str)
         .map(lambda variant: _VARIANT_DISPLAY.get(variant, variant))
@@ -315,8 +320,10 @@ def build(context: ReportContext) -> RQReport:
     table_parts = comparison["table_row"].astype(str).str.partition("::")
     has_method = table_parts[1].eq("::")
     scenario_names = table_parts[2].where(has_method, table_parts[0])
-    comparison["scenario_number"] = comparison["table_row"].map(_scenario_number)
-    comparison["scenario_name"] = scenario_names.map(lambda name: f"\\texttt{{{name}}}")
+    comparison.loc[:, "scenario_number"] = comparison["table_row"].map(_scenario_number)
+    comparison.loc[:, "scenario_name"] = scenario_names.map(
+        lambda name: f"\\texttt{{{name}}}"
+    )
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
     budget = _build_budget_table(full_scoreboard, mutation)
 

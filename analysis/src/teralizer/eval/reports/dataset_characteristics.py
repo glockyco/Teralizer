@@ -20,7 +20,7 @@ REQUIRES = (Required("project", "table", ("id",)),)
 
 def _table(df: pd.DataFrame) -> Table:
     result = df.copy()
-    result["project"] = result["project"].astype(str)
+    result.loc[:, "project"] = result["project"].astype(str)
     wanted = [
         "project",
         "main_files",
@@ -33,7 +33,7 @@ def _table(df: pd.DataFrame) -> Table:
     ]
     for col in wanted:
         if col not in result:
-            result[col] = 0
+            result.loc[:, col] = 0
     result = result[wanted]
     result = sort_dataframe_by_project(result, "project")
     result = replace_project_names_with_macros(result, "project")

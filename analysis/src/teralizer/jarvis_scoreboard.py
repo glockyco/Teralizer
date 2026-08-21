@@ -479,7 +479,7 @@ def get_mutation_scores(
         return pd.DataFrame(columns=columns)
     scores = scores.copy()
     for column in ("killed_mutants", "covered_mutants", "total_mutants"):
-        scores[column] = scores[column].astype(int)
+        scores.loc[:, column] = scores[column].astype(int)
     return cast(pd.DataFrame, scores[columns].reset_index(drop=True))
 
 
@@ -1041,8 +1041,8 @@ def summarize_variants(
         "total_mutants",
     )
     for column in int_columns:
-        summary[column] = summary[column].fillna(0).astype(int)
-    summary["covered_mutation_score"] = [
+        summary.loc[:, column] = summary[column].fillna(0).astype(int)
+    summary.loc[:, "covered_mutation_score"] = [
         round(killed / covered, 4) if covered else 0.0
         for killed, covered in zip(
             summary["killed_mutants"], summary["covered_mutants"]

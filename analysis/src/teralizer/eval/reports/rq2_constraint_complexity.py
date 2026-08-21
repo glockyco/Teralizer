@@ -53,12 +53,12 @@ def _table(df: pd.DataFrame) -> Table:
             ]
         ],
     ).copy()
-    result["avg_used_constraint_display"] = result["avg_used_constraint_pct"].map(
-        lambda value: f"{float(value):.0f}%"
-    )
-    result["median_used_constraint_display"] = result["median_used_constraint_pct"].map(
-        lambda value: f"{float(value):.0f}%"
-    )
+    result.loc[:, "avg_used_constraint_display"] = result[
+        "avg_used_constraint_pct"
+    ].map(lambda value: f"{float(value):.0f}%")
+    result.loc[:, "median_used_constraint_display"] = result[
+        "median_used_constraint_pct"
+    ].map(lambda value: f"{float(value):.0f}%")
     columns = [
         ColumnSpec("Project", "project_name"),
         ColumnSpec("Detected", "is_detected", align="c"),

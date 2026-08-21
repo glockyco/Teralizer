@@ -279,7 +279,7 @@ def _fetch_filtering(conn: Connection, variant: str) -> pd.DataFrame:
     """Return distinct-entity filter decision counts for the eligible corpus."""
     df = read_sql(conn, FILTERING_SQL, _query_params(variant))
     for column in ("total", "accept", "defer", "reject"):
-        df[column] = df[column].astype(int)
+        df.loc[:, column] = df[column].astype(int)
     return pd.DataFrame(
         df, columns=["level", "filter", "total", "accept", "defer", "reject"]
     )
@@ -297,7 +297,7 @@ def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
     """
     df = read_sql(conn, BREAKDOWN_SQL, _query_params(variant))
     for column in (*_BREAKDOWN_COLUMNS, "total", "uncoded"):
-        df[column] = df[column].astype(int)
+        df.loc[:, column] = df[column].astype(int)
     drifted = df[df["uncoded"] > 0]
     if not drifted.empty:
         levels = ", ".join(

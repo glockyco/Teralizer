@@ -192,13 +192,13 @@ def compute_test_suite_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
         "tests_delta",
     ]
     for col in numeric_cols:
-        df_sorted[col] = (
+        df_sorted.loc[:, col] = (
             cast(pd.Series, pd.to_numeric(df_sorted[col], errors="coerce"))
             .fillna(0)
             .astype(int)
         )
 
-    df_sorted["tests_delta_pct"] = cast(
+    df_sorted.loc[:, "tests_delta_pct"] = cast(
         pd.Series, pd.to_numeric(df_sorted["tests_delta_pct"], errors="coerce")
     ).fillna(0.0)
 
@@ -226,13 +226,13 @@ def compute_line_count_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
         "lines_delta",
     ]
     for col in numeric_cols:
-        df_sorted[col] = (
+        df_sorted.loc[:, col] = (
             cast(pd.Series, pd.to_numeric(df_sorted[col], errors="coerce"))
             .fillna(0)
             .astype(int)
         )
 
-    df_sorted["lines_delta_pct"] = cast(
+    df_sorted.loc[:, "lines_delta_pct"] = cast(
         pd.Series, pd.to_numeric(df_sorted["lines_delta_pct"], errors="coerce")
     ).fillna(0.0)
 
@@ -260,11 +260,11 @@ def compute_runtime_change_statistics(df: pd.DataFrame) -> pd.DataFrame:
         "runtime_delta",
     ]
     for col in numeric_cols:
-        df_sorted[col] = cast(
+        df_sorted.loc[:, col] = cast(
             pd.Series, pd.to_numeric(df_sorted[col], errors="coerce")
         ).fillna(0.0)
 
-    df_sorted["runtime_delta_pct"] = cast(
+    df_sorted.loc[:, "runtime_delta_pct"] = cast(
         pd.Series, pd.to_numeric(df_sorted["runtime_delta_pct"], errors="coerce")
     ).fillna(0.0)
 
@@ -289,9 +289,11 @@ def compute_test_vs_generalization_runtime_statistics(df: pd.DataFrame) -> pd.Da
         "mean_runtime_diff_per_try_ms",
     ]
     for col in numeric_cols:
-        df[col] = cast(pd.Series, pd.to_numeric(df[col], errors="coerce")).fillna(0.0)
+        df.loc[:, col] = cast(
+            pd.Series, pd.to_numeric(df[col], errors="coerce")
+        ).fillna(0.0)
 
-    df["tries"] = (
+    df.loc[:, "tries"] = (
         cast(pd.Series, pd.to_numeric(df["tries"], errors="coerce"))
         .fillna(0)
         .astype(int)
@@ -683,13 +685,13 @@ def compute_test_filtering_statistics(df: pd.DataFrame) -> pd.DataFrame:
     """
     # Calculate retention percentage
     df = df.copy()
-    df["retention_percentage"] = (
+    df.loc[:, "retention_percentage"] = (
         df["contributing_count"] / df["total_generated"] * 100
     ).round(1)
 
     # Add algorithm type for analysis
-    df["algorithm"] = df["variant"].str.extract(r"^(NAIVE|IMPROVED)")[0]
-    df["tries"] = df["variant"].str.extract(r"_(\d+)_TRIES")[0].astype(int)
+    df.loc[:, "algorithm"] = df["variant"].str.extract(r"^(NAIVE|IMPROVED)")[0]
+    df.loc[:, "tries"] = df["variant"].str.extract(r"_(\d+)_TRIES")[0].astype(int)
 
     return df
 

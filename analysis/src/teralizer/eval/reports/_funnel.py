@@ -769,11 +769,11 @@ def _build_table(
                 return text.replace(raw, macro)
         return text
 
-    display["cause_display"] = display["cause"].map(cause_display)
+    display.loc[:, "cause_display"] = display["cause"].map(cause_display)
     # Numbering is data, because this is where row order is decided. A band is not
     # a row of the frame, so it consumes no number, and the CSV keeps both the
     # number and the stage.
-    display["number"] = range(1, len(display) + 1)
+    display.loc[:, "number"] = range(1, len(display) + 1)
     return Table(
         key="tab-processing-failures",
         df=display,

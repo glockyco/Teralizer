@@ -108,9 +108,9 @@ def _normalized_rows(frame: pd.DataFrame) -> list[dict[str, object]]:
     if missing:
         raise ValueError(f"project source facts are missing columns {sorted(missing)}")
     normalized = frame.loc[:, list(_COLUMNS)].copy()
-    normalized["project"] = normalized["project"].astype(str)
+    normalized.loc[:, "project"] = normalized["project"].astype(str)
     for column in _COLUMNS[1:]:
-        normalized[column] = normalized[column].astype(int)
+        normalized.loc[:, column] = normalized[column].astype(int)
     return list(normalized.to_dict("records"))
 
 

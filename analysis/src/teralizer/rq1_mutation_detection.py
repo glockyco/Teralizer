@@ -323,7 +323,7 @@ def compute_mutator_statistics(
     project_data = pd.merge(project_data, project_totals, on="project_id")
 
     # Calculate percentage of each mutator within each project
-    project_data["project_percent"] = (
+    project_data.loc[:, "project_percent"] = (
         project_data["total"] / project_data["project_total"] * 100
     )
 
@@ -341,12 +341,12 @@ def compute_mutator_statistics(
 
     # Calculate overall percentage for each mutator
     initial_summary = initial_data.copy()
-    initial_summary["percent"] = (
+    initial_summary.loc[:, "percent"] = (
         initial_summary["total_mutants"] / total_initial_mutants * 100
     )
 
     # Calculate detected percentage for each variant
-    variant_data["detected_of_covered_pct"] = (
+    variant_data.loc[:, "detected_of_covered_pct"] = (
         variant_data["detected_mutants"] / variant_data["covered_mutants"] * 100
     ).fillna(0)
 
@@ -363,7 +363,9 @@ def compute_mutator_statistics(
 
     for variant in naive_variants + improved_variants:
         diff_col_name = f"detected_diff_{variant.lower()}"
-        variant_pivot[diff_col_name] = variant_pivot[variant] - variant_pivot["INITIAL"]
+        variant_pivot.loc[:, diff_col_name] = (
+            variant_pivot[variant] - variant_pivot["INITIAL"]
+        )
 
     # Merge all data
     result = pd.merge(
@@ -463,16 +465,18 @@ def compute_mutation_model_complexity(df: pd.DataFrame) -> pd.DataFrame:
     """
     # Convert is_detected boolean to categorical
     df = df.copy()
-    df["is_detected"] = df["is_detected"].map({True: "yes", False: "no"})
-    df["is_detected"] = pd.Categorical(
-        df["is_detected"], categories=["yes", "no"], ordered=True
+    is_detected = pd.Categorical(
+        df["is_detected"].map({True: "yes", False: "no"}),
+        categories=["yes", "no"],
+        ordered=True,
     )
+    df.isetitem(df.columns.get_loc("is_detected"), is_detected)
 
     # Calculate percent of mutants per project
     project_totals = df.groupby("project_name", observed=False)["count"].transform(
         "sum"
     )
-    df["mutant_percent"] = df["count"] / project_totals * 100
+    df.loc[:, "mutant_percent"] = df["count"] / project_totals * 100
 
     # Sort by project order
     df = sort_dataframe_by_project(df, "project_name")
@@ -744,11 +748,11 @@ def generate_detections_per_mutator_csv(df: pd.DataFrame) -> pd.DataFrame:
 
     # Clean up mutator names
     df = df.copy()
-    df["mutator"] = df["mutator"].str.replace("Mutator", "").str.strip()
-    df["mutator"] = df["mutator"].str.replace(
+    df.loc[:, "mutator"] = df["mutator"].str.replace("Mutator", "").str.strip()
+    df.loc[:, "mutator"] = df["mutator"].str.replace(
         "RemoveConditional_ORDER_ELSE", "RemoveConditionalOrderElse"
     )
-    df["mutator"] = df["mutator"].str.replace(
+    df.loc[:, "mutator"] = df["mutator"].str.replace(
         "RemoveConditional_EQUAL_ELSE", "RemoveConditionalEqualElse"
     )
 

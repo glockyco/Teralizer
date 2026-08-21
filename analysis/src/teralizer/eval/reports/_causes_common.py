@@ -56,7 +56,7 @@ def collapse_mechanisms(df: pd.DataFrame) -> pd.DataFrame:
     """Fold per-mechanism counts into the reader-facing three-way split."""
     out = df.copy()
     for target, sources in MECHANISM_COLLAPSE.items():
-        out[target] = sum(out[source] for source in sources)
+        out.loc[:, target] = sum(out[source] for source in sources)
     keep = ["level", "total", *MECHANISM_COLLAPSE]
     if "strategy" in out.columns:
         keep.insert(0, "strategy")
@@ -118,11 +118,9 @@ def build_filtering_table(
     """df columns: level, filter, total, accept, defer, reject (integer counts)."""
     out = df.copy()
     for decision in ("accept", "defer", "reject"):
-        out[f"{decision}_pct"] = out[decision] / out["total"]
-    out = out.assign(
-        _lvl=out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99)),
-        _fil=out["filter"].map(filter_sort_key),
-    )
+        out.loc[:, f"{decision}_pct"] = out[decision] / out["total"]
+    out.loc[:, "_lvl"] = out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99))
+    out.loc[:, "_fil"] = out["filter"].map(filter_sort_key)
     out = (
         out.sort_values(["_lvl", "_fil", "filter"])
         .drop(columns=["_lvl", "_fil"])
@@ -176,7 +174,7 @@ def build_breakdown_table(
     """df columns: level, total, one column per outcome (and optional strategy)."""
     out = df.copy()
     for outcome in outcomes:
-        out[f"{outcome.column}_pct"] = out[outcome.column] / out["total"]
+        out.loc[:, f"{outcome.column}_pct"] = out[outcome.column] / out["total"]
     columns = [
         ColumnSpec("Level", "level"),
         ColumnSpec("Total", "total", fmt="count", align="r"),
@@ -197,7 +195,7 @@ def build_breakdown_table(
         )
     group_by = None
     if include_strategy:
-        out["strategy_display"] = out["strategy"].map(
+        out.loc[:, "strategy_display"] = out["strategy"].map(
             lambda value: _VARIANT_MACROS.get(str(value), str(value))
         )
         columns = [
@@ -206,10 +204,8 @@ def build_breakdown_table(
         ]
         group_by = "level"
     if include_strategy:
-        out = out.assign(
-            _lvl=out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99)),
-            _var=out["strategy"].map(variant_sort_key),
-        )
+        out.loc[:, "_lvl"] = out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99))
+        out.loc[:, "_var"] = out["strategy"].map(variant_sort_key)
         out = (
             out.sort_values(["_lvl", "_var"])
             .drop(columns=["_lvl", "_var"])
