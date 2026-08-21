@@ -7,6 +7,12 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
 OUTPUT_DIR="${1:-$SCRIPT_DIR/../datasets}"
 DUMP_DIR="${CORPUS_EXPORT_DUMP_DIR:-$REPO_ROOT/analysis/build/corpus-exports}"
+if [[ "$OUTPUT_DIR" != /* ]]; then
+    OUTPUT_DIR="$PWD/$OUTPUT_DIR"
+fi
+if [[ "$DUMP_DIR" != /* ]]; then
+    DUMP_DIR="$PWD/$DUMP_DIR"
+fi
 
 require_setting() {
     local name="$1"

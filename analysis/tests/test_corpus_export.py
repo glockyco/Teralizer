@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import subprocess
 from pathlib import Path
 
 import pytest
 
 from teralizer import corpora, corpus_export
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_EXPORT_WRAPPER = _REPO_ROOT / "replication/scripts/export-databases.sh"
 
 
 def _entry(corpus_id: str = "controlled", database: str = "controlled_db"):
@@ -114,3 +118,38 @@ def test_transfer_uses_partial_file_then_reuses_verified_archive(tmp_path: Path)
         corpus_export.transfer_corpus(entry, fact, endpoint, output, runner=unexpected)
         == destination
     )
+
+
+def test_export_wrapper_resolves_paths_before_uv_changes_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    commands = tmp_path / "commands"
+    commands.mkdir()
+    log = tmp_path / "uv.log"
+    uv = commands / "uv"
+    uv.write_text(
+        '#!/bin/sh\nprintf \'%s\\n\' "$*" >> "${FAKE_LOG:?}"\n',
+        encoding="utf-8",
+    )
+    uv.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{commands}:{os.environ['PATH']}")
+    monkeypatch.setenv("FAKE_LOG", str(log))
+    monkeypatch.setenv("CORPUS_EXPORT_HOST", "data-host")
+    monkeypatch.setenv("CORPUS_EXPORT_SPOOL", "/exports")
+    monkeypatch.setenv("CORPUS_EXPORT_DOCKER", "/docker")
+    monkeypatch.setenv("CORPUS_EXPORT_CONTAINER", "postgres")
+    monkeypatch.setenv("CORPUS_EXPORT_DUMP_DIR", "staging")
+
+    result = subprocess.run(
+        [str(_EXPORT_WRAPPER), "package"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    lines = log.read_text(encoding="utf-8").splitlines()
+    assert f"--output-dir {tmp_path / 'staging'}" in lines[1]
+    assert f"--assemble-from {tmp_path / 'staging'}" in lines[2]
+    assert f"--output-dir {tmp_path / 'package'}" in lines[2]
