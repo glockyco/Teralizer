@@ -15,7 +15,6 @@ from teralizer import corpora
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _REMOTE_SCRIPT = _REPO_ROOT / "scripts/packaging/export-corpus-remote.sh"
-DEFAULT_OUTPUT_DIR = _REPO_ROOT / "analysis/build/corpus-exports"
 _SSH_OPTIONS = (
     "-T",
     "-o",
@@ -204,11 +203,14 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--docker", required=True, help="remote Docker executable")
     parser.add_argument("--postgres-container", required=True)
     parser.add_argument("--database-user", default="postgres")
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--corpus", action="append", default=[])
     parser.add_argument("--replace", action="store_true")
     args = parser.parse_args(argv)
 
+    output_dir = args.output_dir.resolve()
+    if output_dir == _REPO_ROOT or output_dir.is_relative_to(_REPO_ROOT):
+        parser.error("--output-dir must be outside the source checkout")
     if any(character.isspace() for character in args.remote_spool):
         parser.error("--remote-spool must not contain whitespace")
     registry = corpora.load()
@@ -228,7 +230,7 @@ def main(argv: list[str] | None = None) -> None:
         args.database_user,
     )
     for path in export_and_transfer(
-        entries, endpoint, args.output_dir, replace=args.replace
+        entries, endpoint, output_dir, replace=args.replace
     ):
         print(path)
 

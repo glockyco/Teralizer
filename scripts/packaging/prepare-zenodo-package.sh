@@ -15,7 +15,7 @@
 #
 # OPTIONS:
 #   --output-dir DIR         Output directory for archives (default: ~/zenodo-upload)
-#   --corpus-package DIR     Verified assembled corpus package (default: replication/datasets)
+#   --corpus-package DIR     Verified assembled corpus package (required)
 #   --projects-primary DIR   Primary projects directory
 #   --projects-extended DIR  Extended projects directory
 #   --data-primary DIR       Primary data directory (logs, tool reports)
@@ -71,7 +71,7 @@ SAMPLE_SIZE=100
 VERSION=""
 SKIP_EXTENDED_FULL=false
 DRY_RUN=false
-CORPUS_PACKAGE_DIR="${CORPUS_PACKAGE_DIR:-$REPO_ROOT/replication/datasets}"
+CORPUS_PACKAGE_DIR="${CORPUS_PACKAGE_DIR:-}"
 
 usage() {
     sed -n '2,50p' "$0"
@@ -113,6 +113,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate required paths exist
+if [[ -z "$CORPUS_PACKAGE_DIR" ]]; then
+    log_error "--corpus-package or CORPUS_PACKAGE_DIR is required"
+    exit 2
+fi
 if [[ ! -d "$REPO_ROOT/analysis/output/original" ]]; then
     log_error "Original outputs not found at $REPO_ROOT/analysis/output/original"
     log_error "Run ./replication/scripts/run-analysis.sh verify first to generate outputs."

@@ -133,6 +133,18 @@ def test_importer_verifies_then_restores_prepares_and_preflights(
     ]
 
 
+def test_importer_requires_package_directory():
+    result = subprocess.run(
+        [str(_IMPORTER), "--force"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 2
+    assert "verified corpus package directory is required" in result.stderr
+
+
 def test_importer_rejects_package_before_database_changes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):

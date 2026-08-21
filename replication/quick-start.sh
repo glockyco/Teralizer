@@ -22,6 +22,16 @@ cd "$SCRIPT_DIR"
 
 # Configuration
 REPLICATION_DB_USER="${REPLICATION_DB_USER:-teralizer}"
+CORPUS_PACKAGE_DIR="${CORPUS_PACKAGE_DIR:-}"
+if [[ -z "$CORPUS_PACKAGE_DIR" ]]; then
+    if [[ ! -e "$REPO_ROOT/.git" ]]; then
+        CORPUS_PACKAGE_DIR="$SCRIPT_DIR/datasets"
+    else
+        echo "CORPUS_PACKAGE_DIR is required in a source checkout" >&2
+        exit 2
+    fi
+fi
+export CORPUS_PACKAGE_DIR
 PACKAGE_VERIFIED=false
 
 # Colors for output
@@ -115,7 +125,7 @@ echo ""
 echo -e "${YELLOW}[2/4]${NC} Verifying corpus package..."
 if [[ "$PACKAGE_VERIFIED" != true ]]; then
     if ! uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
-        --summarize-package "$SCRIPT_DIR/datasets"; then
+        --summarize-package "$CORPUS_PACKAGE_DIR"; then
         echo "Extract a complete, untampered replication package before setup." >&2
         exit 1
     fi
@@ -144,7 +154,7 @@ echo ""
 
 # Step 4: Import databases
 echo -e "${YELLOW}[4/4]${NC} Importing databases (this may take a few minutes)..."
-if ! scripts/import-databases.sh --force datasets/; then
+if ! scripts/import-databases.sh --force "$CORPUS_PACKAGE_DIR"; then
     echo -e "${RED}Error: Database import failed${NC}"
     exit 1
 fi

@@ -20,7 +20,6 @@ from teralizer.eval.provenance import checkout_snapshot, require_publishable_tre
 from teralizer.report_basis import resolve_repo_path
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_OUTPUT_DIR = _REPO_ROOT / "replication/datasets"
 MANIFEST_NAME = "manifest.json"
 CHECKSUMS_NAME = "checksums.sha256"
 
@@ -408,7 +407,7 @@ def _promote(stage: Path, output_dir: Path, filenames: set[str]) -> None:
         raise
 
 
-def assemble(dump_dir: Path, output_dir: Path = DEFAULT_OUTPUT_DIR) -> Path:
+def assemble(dump_dir: Path, output_dir: Path) -> Path:
     """Build and atomically promote a package from explicit completed dumps."""
     registry = corpora.load()
     document = publication_plan()
@@ -440,9 +439,18 @@ def assemble(dump_dir: Path, output_dir: Path = DEFAULT_OUTPUT_DIR) -> Path:
     return output_dir / MANIFEST_NAME
 
 
+def _external_path(parser: argparse.ArgumentParser, path: Path, option: str) -> Path:
+    resolved = path.resolve()
+    if (_REPO_ROOT / ".git").exists() and (
+        resolved == _REPO_ROOT or resolved.is_relative_to(_REPO_ROOT)
+    ):
+        parser.error(f"{option} must be outside the source checkout")
+    return resolved
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="publish-corpora")
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--output-dir", type=Path)
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument(
         "--plan",
@@ -497,6 +505,28 @@ def main(argv: list[str] | None = None) -> None:
         help="verify the output package and copy its declared inputs to a repository tree",
     )
     args = parser.parse_args(argv)
+    output_actions = (
+        args.assemble_from is not None
+        or args.resolve_package_corpus is not None
+        or args.copy_complete_to is not None
+        or args.copy_package_to is not None
+        or args.copy_inputs_to is not None
+    )
+    if output_actions and args.output_dir is None:
+        parser.error("--output-dir is required for this action")
+    if args.output_dir is not None:
+        args.output_dir = _external_path(parser, args.output_dir, "--output-dir")
+    for option, path in (
+        ("--assemble-from", args.assemble_from),
+        ("--verify-package", args.verify_package),
+        ("--summarize-package", args.summarize_package),
+        ("--preflight-package", args.preflight_package),
+        ("--required-disk-bytes", args.required_disk_bytes),
+    ):
+        if path is not None:
+            setattr(
+                args, option[2:].replace("-", "_"), _external_path(parser, path, option)
+            )
     if args.plan:
         print(json.dumps(publication_plan(), indent=2, sort_keys=True))
     elif args.assemble_from is not None:

@@ -2,7 +2,7 @@
 # Restore and verify registered corpora from one published manifest set.
 #
 # Usage:
-#   ./import-databases.sh [--force] [--corpus ID]... [input_dir]
+#   ./import-databases.sh [--force] [--corpus ID]... input_dir
 #
 # Options:
 #   --corpus ID  Restore one registered corpus. Repeat to restore a subset.
@@ -60,7 +60,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-INPUT_DIR="${INPUT_DIR:-$SCRIPT_DIR/../datasets}"
+if [[ -z "$INPUT_DIR" ]]; then
+    echo "A verified corpus package directory is required" >&2
+    usage >&2
+    exit 2
+fi
 INPUT_DIR=$(cd "$INPUT_DIR" && pwd -P)
 
 uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \

@@ -153,3 +153,41 @@ def test_export_wrapper_resolves_paths_before_uv_changes_directory(
     assert f"--output-dir {tmp_path / 'staging'}" in lines[1]
     assert f"--assemble-from {tmp_path / 'staging'}" in lines[2]
     assert f"--output-dir {tmp_path / 'package'}" in lines[2]
+
+
+def test_export_cli_rejects_checkout_output():
+    with pytest.raises(SystemExit):
+        corpus_export.main(
+            [
+                "--ssh-host",
+                "data-host",
+                "--remote-spool",
+                "/exports",
+                "--docker",
+                "/docker",
+                "--postgres-container",
+                "postgres",
+                "--output-dir",
+                str(_REPO_ROOT / "analysis/build/corpus-exports"),
+            ]
+        )
+
+
+def test_export_wrapper_requires_explicit_dump_staging(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setenv("CORPUS_EXPORT_HOST", "data-host")
+    monkeypatch.setenv("CORPUS_EXPORT_SPOOL", "/exports")
+    monkeypatch.setenv("CORPUS_EXPORT_DOCKER", "/docker")
+    monkeypatch.setenv("CORPUS_EXPORT_CONTAINER", "postgres")
+    monkeypatch.delenv("CORPUS_EXPORT_DUMP_DIR", raising=False)
+
+    result = subprocess.run(
+        [str(_EXPORT_WRAPPER), str(tmp_path / "package")],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 2
+    assert "CORPUS_EXPORT_DUMP_DIR is required" in result.stderr

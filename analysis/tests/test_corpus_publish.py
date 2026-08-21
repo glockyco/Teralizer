@@ -11,6 +11,8 @@ import pytest
 
 from teralizer import corpora, corpus_publish
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 def test_producer_provenance_counts_each_commit_and_unattributed_projects():
     conn = MagicMock()
@@ -243,6 +245,18 @@ def test_assembly_consumes_explicit_dumps_without_exporting(
     assert manifest == output / corpus_publish.MANIFEST_NAME
     assert corpus_publish.verify_package(output) == manifest
     assert (tmp_path / "controlled_db.dump").is_file()
+
+
+def test_assemble_cli_requires_explicit_output(tmp_path: Path):
+    with pytest.raises(SystemExit):
+        corpus_publish.main(["--assemble-from", str(tmp_path)])
+
+
+def test_verify_cli_rejects_checkout_package():
+    with pytest.raises(SystemExit):
+        corpus_publish.main(
+            ["--verify-package", str(_REPO_ROOT / "replication/datasets")]
+        )
 
 
 def test_promotion_removes_stale_dumps_only_after_complete_stage(tmp_path: Path):

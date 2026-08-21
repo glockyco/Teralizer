@@ -18,13 +18,13 @@
 
 ## 3. Separate publication from the checkout
 
-- [ ] 3.1 Make database-local export and transfer promote complete dumps, manifest, and checksums only into an explicit external author-stage package directory.
-- [ ] 3.2 Make corpus package summarization and validation accept an explicit package directory and remove production fallbacks to `replication/datasets/` or filename discovery.
-- [ ] 3.3 Make release assembly require `CORPUS_PACKAGE_DIR` or its typed equivalent, validate it before archive creation, and ignore dump-like checkout residue.
-- [ ] 3.4 Make missing, partial, stale, fixture-only, wrong-revision, and checksum-mismatched external packages fail with corrective diagnostics before release staging changes.
-- [ ] 3.5 Keep the package manifest and checksum inventory beside the dumps throughout author staging, release assembly, and archival publication.
-- [ ] 3.6 Update importer and quick-start boundaries so source-development commands use fixtures while reviewer commands consume an installed, verified release component.
-- [ ] 3.7 Add focused tests proving an explicit complete package succeeds and no package, an ambient checkout package, and a synthetic fixture presented as production fail.
+- [x] 3.1 Make database-local export and transfer promote complete dumps, manifest, and checksums only into an explicit external author-stage package directory.
+- [x] 3.2 Make corpus package summarization and validation accept an explicit package directory and remove production fallbacks to `replication/datasets/` or filename discovery.
+- [x] 3.3 Make release assembly require `CORPUS_PACKAGE_DIR` or its typed equivalent, validate it before archive creation, and ignore dump-like checkout residue.
+- [x] 3.4 Make missing, partial, stale, fixture-only, wrong-revision, and checksum-mismatched external packages fail with corrective diagnostics before release staging changes.
+- [x] 3.5 Keep the package manifest and checksum inventory beside the dumps throughout author staging, release assembly, and archival publication.
+- [x] 3.6 Update importer and quick-start boundaries so source-development commands use fixtures while reviewer commands consume an installed, verified release component.
+- [x] 3.7 Add focused tests proving an explicit complete package succeeds and no package, an ambient checkout package, and a synthetic fixture presented as production fail.
 
 ## 4. Bind archival publication and retrieval
 

@@ -72,7 +72,7 @@ echo ""
 # Verify the package once. Reuse its inventory for disk and dump checks.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
-DUMPS_DIR="$SCRIPT_DIR/../datasets"
+DUMPS_DIR="${CORPUS_PACKAGE_DIR:-$SCRIPT_DIR/../datasets}"
 package_facts=""
 package_summary=""
 required_bytes=0
