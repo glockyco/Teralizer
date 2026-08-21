@@ -1,0 +1,322 @@
+{
+  "schema_version": 1,
+  "audited_on": "2026-08-21",
+  "evidence": {
+    "repository_consumer_scan": "no stale physical database literal in live tracked consumers on either checkout",
+    "active_connections": "no evaluation database had a live client on the evaluation host",
+    "published_artifacts": "registered provenance resolves only controlled, real-world, jarvis-benchmark, and jarvis-scenarios corpora",
+    "postgres_rows": "the 15 maintenance-database rows are two obsolete duplicates beyond the 13-row controlled corpus; no published artifact resolves to the postgres database"
+  },
+  "hosts": {
+    "evaluation": [
+      {
+        "database": "jooq_codegen_scratch",
+        "projects": 0,
+        "database_bytes": 9246387,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres",
+        "projects": 15,
+        "database_bytes": 2960996019,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "remove orphan evaluation schema; retain maintenance database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_detach_gate",
+        "projects": 1,
+        "database_bytes": 607237811,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_detach_gate_jason",
+        "projects": 1,
+        "database_bytes": 256366259,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_detach_gate_jason2",
+        "projects": 1,
+        "database_bytes": 256374451,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_detach_gate_slice",
+        "projects": 12,
+        "database_bytes": 1262671539,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_dev",
+        "projects": 13,
+        "database_bytes": 9011484339,
+        "consumer": "registered corpus consumers",
+        "retained_dump": "published corpus package",
+        "disposition": "retain registered corpus",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_jarvis_census",
+        "projects": 12,
+        "database_bytes": 507106995,
+        "consumer": "registered corpus consumers",
+        "retained_dump": "published corpus package",
+        "disposition": "retain registered corpus",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_jarvis_scoreboard",
+        "projects": 2,
+        "database_bytes": 18495155,
+        "consumer": "registered corpus consumers",
+        "retained_dump": "published corpus package",
+        "disposition": "retain registered corpus",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_reporeapers",
+        "projects": 1161,
+        "database_bytes": 1057035955,
+        "consumer": "none",
+        "retained_dump": "retirement/postgres_reporeapers.dump",
+        "disposition": "drop after retirement dump restores",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_reporeapers_rq6",
+        "projects": 1161,
+        "database_bytes": 2839271091,
+        "consumer": "none",
+        "retained_dump": "retirement/postgres_reporeapers_rq6.dump",
+        "disposition": "drop after retirement dump restores",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_reporeapers_rq6_v2",
+        "projects": 1048,
+        "database_bytes": 3957331635,
+        "consumer": "none",
+        "retained_dump": "retirement/postgres_reporeapers_rq6_v2.dump",
+        "disposition": "drop after retirement dump restores",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_reporeapers_rq6_v3",
+        "projects": 8,
+        "database_bytes": 363755187,
+        "consumer": "none",
+        "retained_dump": "retirement/postgres_reporeapers_rq6_v3.dump",
+        "disposition": "drop after retirement dump restores",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_reporeapers_rq6_v4",
+        "projects": 272,
+        "database_bytes": 2543408819,
+        "consumer": "none",
+        "retained_dump": "retirement/postgres_reporeapers_rq6_v4.dump",
+        "disposition": "drop after retirement dump restores",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_reporeapers_rq6_v5",
+        "projects": 8,
+        "database_bytes": 631133875,
+        "consumer": "none",
+        "retained_dump": "retirement/postgres_reporeapers_rq6_v5.dump",
+        "disposition": "drop after retirement dump restores",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_reporeapers_rq6_v6",
+        "projects": 1161,
+        "database_bytes": 7679243955,
+        "consumer": "none",
+        "retained_dump": "retirement/postgres_reporeapers_rq6_v6.dump",
+        "disposition": "drop after retirement dump restores",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_reporeapers_rq6_v7",
+        "projects": 1161,
+        "database_bytes": 6265714355,
+        "consumer": "registered corpus consumers",
+        "retained_dump": "published corpus package",
+        "disposition": "retain registered corpus",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_rq6_fix_smoke",
+        "projects": 5,
+        "database_bytes": 123819699,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_rq6_junit3_smoke",
+        "projects": 1,
+        "database_bytes": 263165619,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_shape_gate",
+        "projects": 1,
+        "database_bytes": 673674931,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_shape_gate_jason",
+        "projects": 1,
+        "database_bytes": 263067315,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_source_level_gate",
+        "projects": 1,
+        "database_bytes": 56415923,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_test",
+        "projects": 1161,
+        "database_bytes": 10212243123,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_verification",
+        "projects": 1,
+        "database_bytes": 10745523,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable unclassified database",
+        "status": "pending"
+      }
+    ],
+    "workstation": [
+      {
+        "database": "postgres",
+        "projects": null,
+        "database_bytes": 7780019,
+        "consumer": "PostgreSQL maintenance",
+        "retained_dump": null,
+        "disposition": "retain empty maintenance database",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_dev",
+        "projects": 13,
+        "database_bytes": 8733824691,
+        "consumer": "registered corpus consumers",
+        "retained_dump": "published corpus package",
+        "disposition": "retain registered corpus",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_jarvis_census",
+        "projects": 12,
+        "database_bytes": 348722867,
+        "consumer": "registered corpus consumers",
+        "retained_dump": "published corpus package",
+        "disposition": "retain registered corpus",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_jarvis_census_baseline",
+        "projects": 9,
+        "database_bytes": 2198886067,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable scratch, partial, or unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_jarvis_scoreboard",
+        "projects": 2,
+        "database_bytes": 18585267,
+        "consumer": "registered corpus consumers",
+        "retained_dump": "published corpus package",
+        "disposition": "retain registered corpus",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_reporeapers_rq6_v7",
+        "projects": 1161,
+        "database_bytes": 6016071347,
+        "consumer": "registered corpus consumers",
+        "retained_dump": "published corpus package",
+        "disposition": "retain registered corpus",
+        "status": "retained"
+      },
+      {
+        "database": "postgres_reporeapers_rq6_v7_local",
+        "projects": 451,
+        "database_bytes": 2414229171,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable scratch, partial, or unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_test",
+        "projects": 1161,
+        "database_bytes": 5478774451,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable scratch, partial, or unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "postgres_verification",
+        "projects": 1,
+        "database_bytes": 11089587,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable scratch, partial, or unclassified database",
+        "status": "pending"
+      },
+      {
+        "database": "scratch_verification",
+        "projects": 22,
+        "database_bytes": 12711603,
+        "consumer": "none",
+        "retained_dump": null,
+        "disposition": "drop disposable scratch, partial, or unclassified database",
+        "status": "pending"
+      }
+    ]
+  }
+}

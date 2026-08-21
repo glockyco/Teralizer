@@ -121,9 +121,9 @@
 
 ## 7. Retire only proven sprawl
 
-- [ ] 7.1 Trace the 15 project rows in the server's `postgres` database and record whether any published
+- [x] 7.1 Trace the 15 project rows in the server's `postgres` database and record whether any published
       artifact depends on them.
-- [ ] 7.2 Audit `postgres_test`, every superseded RepoReapers database, scratch families, and the partial
+- [x] 7.2 Audit `postgres_test`, every superseded RepoReapers database, scratch families, and the partial
       local v7 snapshot. Record current consumers, observed project count, required retained dump, and
       final disposition for each.
 - [ ] 7.3 Build and restore every dump required by a retirement record before trusting it.
