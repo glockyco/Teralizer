@@ -21,6 +21,7 @@ def _entry(corpus_id: str) -> corpora.CorpusEntry:
         data_dir=None,
         config_dir=None,
         expected_projects=1,
+        published=True,
         notes="fixture",
     )
 
@@ -106,6 +107,7 @@ def test_resolver_checks_declared_corpus_definition(monkeypatch, tmp_path: Path)
         data_dir="data/run",
         config_dir="project-configs/run",
         expected_projects=1,
+        published=True,
         notes="fixture",
     )
     connection = object()

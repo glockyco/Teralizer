@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import re
 import tomllib
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
 
@@ -17,6 +19,7 @@ from teralizer.report_basis import open_report_connection
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 REGISTRY_PATH = _REPO_ROOT / "src/main/resources/db/corpora.toml"
+SCRATCH_DATABASE_PATTERN = re.compile(r"^scratch_[a-z0-9][a-z0-9_]*$")
 _REQUIRED_FIELDS = frozenset(
     {
         "id",
@@ -24,9 +27,27 @@ _REQUIRED_FIELDS = frozenset(
         "data_dir",
         "config_dir",
         "expected_projects",
+        "published",
         "notes",
     }
 )
+
+
+class DatabaseKind(StrEnum):
+    """Lifecycle class assigned to an observed database."""
+
+    CORPUS = "registered corpus"
+    SCRATCH = "scratch"
+    UNCLASSIFIED = "unclassified"
+
+
+@dataclass(frozen=True)
+class DatabaseClassification:
+    """Lifecycle classification of one observed physical database."""
+
+    database: str
+    kind: DatabaseKind
+    corpus_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -38,6 +59,7 @@ class CorpusEntry:
     data_dir: str | None
     config_dir: str | None
     expected_projects: int
+    published: bool
     notes: str
 
 
@@ -59,10 +81,27 @@ class CorpusRegistry:
             physical_owners[entry.database] = entry.id
         self._entries = entries
         self._by_id: Mapping[str, CorpusEntry] = MappingProxyType(by_id)
+        self._physical_owners: Mapping[str, str] = MappingProxyType(physical_owners)
 
     @property
     def entries(self) -> tuple[CorpusEntry, ...]:
         return self._entries
+
+    @property
+    def published_entries(self) -> tuple[CorpusEntry, ...]:
+        return tuple(entry for entry in self._entries if entry.published)
+
+    def classify(self, database: str) -> DatabaseClassification:
+        if corpus_id := self._physical_owners.get(database):
+            return DatabaseClassification(database, DatabaseKind.CORPUS, corpus_id)
+        if SCRATCH_DATABASE_PATTERN.fullmatch(database):
+            return DatabaseClassification(database, DatabaseKind.SCRATCH)
+        return DatabaseClassification(database, DatabaseKind.UNCLASSIFIED)
+
+    def classify_all(
+        self, databases: Iterable[str]
+    ) -> tuple[DatabaseClassification, ...]:
+        return tuple(self.classify(database) for database in databases)
 
     def get(self, corpus_id: str) -> CorpusEntry:
         try:
@@ -97,6 +136,10 @@ def _entry(raw: Mapping[str, object], index: int) -> CorpusEntry:
             f"corpus {label!r} field 'expected_projects' must not be negative"
         )
 
+    published = raw["published"]
+    if not isinstance(published, bool):
+        raise ValueError(f"corpus {label!r} field 'published' must be a boolean")
+
     data_dir = _required_string(raw, "data_dir", label) or None
     config_dir = _required_string(raw, "config_dir", label) or None
     if (data_dir is None) != (config_dir is None):
@@ -110,6 +153,7 @@ def _entry(raw: Mapping[str, object], index: int) -> CorpusEntry:
         data_dir=data_dir,
         config_dir=config_dir,
         expected_projects=expected_projects,
+        published=published,
         notes=_required_string(raw, "notes", label),
     )
 

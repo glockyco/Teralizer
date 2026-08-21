@@ -6,7 +6,7 @@
 - [x] 1.2 Add a Python registry reader over `tomllib` that fails on a missing field or duplicate
       physical name, plus unit tests for both failures.
 - [x] 1.3 Add the shell accessor that reads the registry through the Python helper.
-- [ ] 1.4 Add explicit publication status, define the reserved `scratch_` pattern, and classify every
+- [x] 1.4 Add explicit publication status, define the reserved `scratch_` pattern, and classify every
       observed database as registered corpus, scratch, or unclassified.
 - [ ] 1.5 Extend `verify-corpora` with three modes: inventory all observed databases, fully verify an
       explicitly requested subset, and require every published corpus. Test a valid partial local

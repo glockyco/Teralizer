@@ -29,6 +29,30 @@ def test_repository_registry_declares_each_published_corpus_once():
     assert registry.get("real-world").expected_projects == 1161
     assert registry.get("real-world").data_dir == "data/reporeapers-rerun-v7"
     assert registry.get("controlled").data_dir is None
+    assert registry.published_entries == registry.entries
+
+
+def test_registry_classifies_registered_scratch_and_unclassified_databases():
+    registry = corpora.load()
+
+    assert registry.classify("postgres_dev") == corpora.DatabaseClassification(
+        "postgres_dev", corpora.DatabaseKind.CORPUS, "controlled"
+    )
+    assert registry.classify("scratch_verification") == corpora.DatabaseClassification(
+        "scratch_verification", corpora.DatabaseKind.SCRATCH
+    )
+    assert registry.classify("scratch_").kind is corpora.DatabaseKind.UNCLASSIFIED
+    assert registry.classify("postgres_test").kind is corpora.DatabaseKind.UNCLASSIFIED
+    assert tuple(
+        classification.kind
+        for classification in registry.classify_all(
+            ("postgres_dev", "scratch_verification", "postgres_test")
+        )
+    ) == (
+        corpora.DatabaseKind.CORPUS,
+        corpora.DatabaseKind.SCRATCH,
+        corpora.DatabaseKind.UNCLASSIFIED,
+    )
 
 
 def test_registry_rejects_a_missing_required_field(tmp_path: Path):
@@ -50,6 +74,39 @@ expected_projects = 13
         corpora.load(path)
 
 
+def test_registry_requires_boolean_publication_status(tmp_path: Path):
+    missing_path = _write_registry(
+        tmp_path / "missing-published.toml",
+        """
+[[corpus]]
+id = "controlled"
+database = "postgres_dev"
+data_dir = ""
+config_dir = ""
+expected_projects = 13
+notes = "fixture"
+""",
+    )
+    invalid_path = _write_registry(
+        tmp_path / "invalid-published.toml",
+        """
+[[corpus]]
+id = "controlled"
+database = "postgres_dev"
+data_dir = ""
+config_dir = ""
+expected_projects = 13
+published = "yes"
+notes = "fixture"
+""",
+    )
+
+    with pytest.raises(ValueError, match="missing required field 'published'"):
+        corpora.load(missing_path)
+    with pytest.raises(ValueError, match="field 'published' must be a boolean"):
+        corpora.load(invalid_path)
+
+
 def test_registry_rejects_duplicate_physical_database_names(tmp_path: Path):
     path = _write_registry(
         tmp_path / "corpora.toml",
@@ -60,6 +117,7 @@ database = "same_database"
 data_dir = ""
 config_dir = ""
 expected_projects = 13
+published = true
 notes = "first"
 
 [[corpus]]
@@ -68,6 +126,7 @@ database = "same_database"
 data_dir = "data/run"
 config_dir = "project-configs/run"
 expected_projects = 632
+published = true
 notes = "second"
 """,
     )
@@ -101,6 +160,7 @@ def test_project_count_validation_names_expected_and_observed_counts():
         data_dir=None,
         config_dir=None,
         expected_projects=2,
+        published=True,
         notes="fixture",
     )
     try:
