@@ -151,8 +151,15 @@ def _snapshot_file(role: str, relative: str, repo_root: Path) -> FileInputSnapsh
     path = repo_root / relative
     if not path.is_file():
         return FileInputSnapshot(role, relative, False, None, None, False)
-    commit: str | None = _git(repo_root, ["log", "-1", "--format=%H", "--", relative])
-    dirty = bool(_git(repo_root, ["status", "--porcelain", "--", relative]))
+    if (repo_root / ".git").exists():
+        commit: str | None = _git(
+            repo_root, ["log", "-1", "--format=%H", "--", relative]
+        )
+        dirty = bool(_git(repo_root, ["status", "--porcelain", "--", relative]))
+    else:
+        from teralizer.eval.provenance import checkout_snapshot
+
+        commit, dirty = checkout_snapshot()
     if not commit:
         commit = None
         dirty = True

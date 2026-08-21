@@ -56,6 +56,24 @@ def test_provenance_of_a_function_outside_this_repository():
     assert p.dirty is True
 
 
+def test_release_archive_uses_embedded_source_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    commit = "c" * 40
+    (tmp_path / ".teralizer-source.json").write_text(
+        json.dumps({"schema_version": 1, "source_commit": commit}), encoding="utf-8"
+    )
+    monkeypatch.setattr(provenance, "_REPO_ROOT", tmp_path)
+    provenance._git_snapshot.cache_clear()
+    provenance._file_snapshot.cache_clear()
+
+    assert provenance.checkout_snapshot() == (commit, False)
+    assert provenance._file_snapshot("analysis/src/example.py") == (commit, False)
+
+    provenance._git_snapshot.cache_clear()
+    provenance._file_snapshot.cache_clear()
+
+
 def test_file_snapshot_is_memoised_per_path():
     provenance._file_snapshot.cache_clear()
     provenance._file_snapshot(THIS_FILE)

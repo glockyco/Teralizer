@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from contextlib import contextmanager
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 
@@ -210,6 +211,41 @@ def test_registry_cli_returns_one_field_and_shell_safe_exports(capsys):
         "export CORPUS_PUBLISHED=false",
     ]
     assert corpora.field_value(entry, "published") == "false"
+
+
+def test_verify_corpus_resolves_evidence_paths_from_repository_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    entry = corpora.CorpusEntry(
+        id="real-world",
+        database="fixture",
+        data_dir="data/reporeapers-rerun-v7",
+        config_dir="project-configs/replication/extended",
+        expected_projects=1,
+        published=True,
+        notes="fixture",
+    )
+    observed: dict[str, Path] = {}
+
+    @contextmanager
+    def open_fixture(_corpus_id: str):
+        yield entry, object()
+
+    def require_fixture(_conn, *, data_dir: Path, config_dir: Path):
+        observed.update(data_dir=data_dir, config_dir=config_dir)
+
+    monkeypatch.setattr(corpora, "open_corpus", open_fixture)
+    monkeypatch.setattr(
+        "teralizer.report_basis.require_complete_corpus", require_fixture
+    )
+    monkeypatch.chdir(tmp_path)
+
+    corpora.main(["verify-corpus", "real-world"])
+
+    assert observed == {
+        "data_dir": corpora._REPO_ROOT / "data/reporeapers-rerun-v7",
+        "config_dir": corpora._REPO_ROOT / "project-configs/replication/extended",
+    }
 
 
 def test_project_count_validation_names_expected_and_observed_counts():

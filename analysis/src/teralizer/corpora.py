@@ -312,8 +312,8 @@ def main(argv: list[str] | None = None) -> None:
                 assert entry.config_dir is not None
                 require_complete_corpus(
                     conn,
-                    data_dir=Path(entry.data_dir),
-                    config_dir=Path(entry.config_dir),
+                    data_dir=_REPO_ROOT / entry.data_dir,
+                    config_dir=_REPO_ROOT / entry.config_dir,
                 )
             print(f"verified {entry.id}: {entry.database}")
         return

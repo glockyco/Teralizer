@@ -9,6 +9,7 @@ provenance records ``dirty=True`` so it remains self-describing.
 from __future__ import annotations
 
 import inspect
+import json
 import os
 import subprocess
 from collections.abc import Callable
@@ -20,6 +21,7 @@ from teralizer.eval.inputs import FileInputSnapshot, InputSnapshot
 
 # analysis/src/teralizer/eval/provenance.py -> repo root is parents[4]
 _REPO_ROOT = Path(__file__).resolve().parents[4]
+_ARCHIVE_PROVENANCE_PATH = ".teralizer-source.json"
 
 
 @dataclass(frozen=True)
@@ -39,14 +41,33 @@ class Provenance:
 DIRTY_PROVENANCE_ENV = "TERALIZER_ALLOW_DIRTY_PROVENANCE"
 
 
+def _archive_snapshot() -> tuple[str, bool]:
+    """Return the immutable source identity embedded in a release archive."""
+    path = _REPO_ROOT / _ARCHIVE_PROVENANCE_PATH
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+        commit = document["source_commit"]
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError) as error:
+        raise RuntimeError(
+            "source provenance is unavailable: expected a Git checkout or "
+            f"a valid {_ARCHIVE_PROVENANCE_PATH}"
+        ) from error
+    if document.get("schema_version") != 1:
+        raise RuntimeError(f"unsupported source provenance schema in {path}")
+    if (
+        not isinstance(commit, str)
+        or len(commit) != 40
+        or any(character not in "0123456789abcdef" for character in commit)
+    ):
+        raise RuntimeError(f"invalid source commit in {path}")
+    return commit, False
+
+
 @lru_cache(maxsize=1)
 def _git_snapshot() -> tuple[str, bool]:
-    """Where the checkout stands, and whether anything in it is uncommitted.
-
-    Used for the publish guard, which is an act of attribution across a
-    repository boundary, and as the fallback for a file with no commit. An
-    individual artifact resolves through :func:`_file_snapshot` instead.
-    """
+    """Where the source tree stands and whether it has uncommitted changes."""
+    if not (_REPO_ROOT / ".git").exists():
+        return _archive_snapshot()
     return _git(["rev-parse", "HEAD"]), bool(_git(["status", "--porcelain"]))
 
 
@@ -72,6 +93,8 @@ def _file_snapshot(path: str) -> tuple[str, bool]:
     file was committed. Using it made every artifact record an unrelated commit,
     and made every regeneration rewrite every artifact.
     """
+    if not (_REPO_ROOT / ".git").exists():
+        return _archive_snapshot()
     commit = _git(["log", "-1", "--format=%H", "--", path])
     if not commit:
         # Never committed. A blank commit would render a broken permalink, so

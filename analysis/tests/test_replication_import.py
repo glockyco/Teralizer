@@ -34,12 +34,14 @@ if [[ $args == *"--verify-package"* ]]; then
 elif [[ $args == *"--resolve-package-corpus controlled"* ]]; then
     printf 'controlled_db\tcontrolled_db.dump\t2\tcurrent\n'
 elif [[ $args == *"teralizer.corpora prepare-corpus controlled"* ]]; then
+    printf 'registry-cwd\t%s\n' "$PWD" >> "${FAKE_LOG:?}"
     [[ ${FAIL_CORPUS_COMMAND:-} != prepare ]] || exit 9
     printf 'connection\t%s\t%s\t%s\t%s\t%s\n' \
         "${DB_HOST:-}" "${DB_PORT:-}" "${DB_USER:-}" \
         "${REPORT_DB_USER:-}" "${REPORT_DB_PASSWORD:-}" >> "${FAKE_LOG:?}"
     printf 'prepared controlled\n'
 elif [[ $args == *"teralizer.corpora verify-corpus controlled"* ]]; then
+    printf 'registry-cwd\t%s\n' "$PWD" >> "${FAKE_LOG:?}"
     [[ ${FAIL_CORPUS_COMMAND:-} != verify ]] || exit 9
     printf 'verified controlled\n'
 else
@@ -125,6 +127,10 @@ def test_importer_verifies_then_restores_prepares_and_preflights(
         if line.startswith("docker\t")
     )
     assert all("postgres-teralizer" not in line for line in lines)
+    assert [line for line in lines if line.startswith("registry-cwd\t")] == [
+        f"registry-cwd\t{_REPO_ROOT}",
+        f"registry-cwd\t{_REPO_ROOT}",
+    ]
 
 
 def test_importer_rejects_package_before_database_changes(

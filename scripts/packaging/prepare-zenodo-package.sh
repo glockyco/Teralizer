@@ -210,6 +210,11 @@ if [[ "$DRY_RUN" == "false" ]]; then
     log_step "  Resolving LFS files..."
     (cd "$CORE_DIR/repo-temp" && git lfs pull 2>/dev/null)
 
+    # Preserve source identity after removing Git metadata.
+    source_commit=$(git -C "$CORE_DIR/repo-temp" rev-parse HEAD)
+    printf '{"schema_version":1,"source_commit":"%s"}\n' "$source_commit" \
+        > "$CORE_DIR/repo-temp/.teralizer-source.json"
+
     # Move contents up (excluding .git)
     shopt -s dotglob
     mv "$CORE_DIR/repo-temp"/* "$CORE_DIR/" 2>/dev/null || true

@@ -82,6 +82,19 @@ compose_exec() {
     docker compose -f "$COMPOSE_FILE" exec -T postgres "$@"
 }
 
+corpus_registry() {
+    (
+        cd "$REPO_ROOT"
+        DB_HOST="$REPLICATION_DB_HOST" \
+            DB_PORT="$REPLICATION_DB_PORT" \
+            DB_USER="$REPLICATION_DB_USER" \
+            DB_PASSWORD="$REPLICATION_DB_PASSWORD" \
+            REPORT_DB_USER="$REPLICATION_REPORT_DB_USER" \
+            REPORT_DB_PASSWORD="$REPLICATION_REPORT_DB_PASSWORD" \
+            "$REPO_ROOT/scripts/corpus-registry" "$@"
+    )
+}
+
 remove_restored_corpus() {
     local database="$1"
     compose_exec dropdb -U "$REPLICATION_DB_USER" --force "$database" >/dev/null 2>&1
@@ -156,25 +169,13 @@ restore_corpus() {
         return 1
     fi
 
-    if ! DB_HOST="$REPLICATION_DB_HOST" \
-        DB_PORT="$REPLICATION_DB_PORT" \
-        DB_USER="$REPLICATION_DB_USER" \
-        DB_PASSWORD="$REPLICATION_DB_PASSWORD" \
-        REPORT_DB_USER="$REPLICATION_REPORT_DB_USER" \
-        REPORT_DB_PASSWORD="$REPLICATION_REPORT_DB_PASSWORD" \
-        "$REPO_ROOT/scripts/corpus-registry" prepare-corpus "$corpus_id"; then
+    if ! corpus_registry prepare-corpus "$corpus_id"; then
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
     # Package verification binds the manifest's revision to the checked-in revision.
     # verify-corpus checks that installed revision through the report-only role.
-    if ! DB_HOST="$REPLICATION_DB_HOST" \
-        DB_PORT="$REPLICATION_DB_PORT" \
-        DB_USER="$REPLICATION_DB_USER" \
-        DB_PASSWORD="$REPLICATION_DB_PASSWORD" \
-        REPORT_DB_USER="$REPLICATION_REPORT_DB_USER" \
-        REPORT_DB_PASSWORD="$REPLICATION_REPORT_DB_PASSWORD" \
-        "$REPO_ROOT/scripts/corpus-registry" verify-corpus "$corpus_id"; then
+    if ! corpus_registry verify-corpus "$corpus_id"; then
         cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
