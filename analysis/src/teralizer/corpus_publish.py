@@ -231,6 +231,23 @@ def verify_package(input_dir: Path) -> Path:
     return manifest_path
 
 
+def package_corpus_fields(input_dir: Path, corpus_id: str) -> tuple[str, str, int, str]:
+    """Resolve one verified package entry without inferring its dump identity."""
+    _, document = _verified_document(input_dir)
+    records = document["corpora"]
+    assert isinstance(records, list)
+    matches = [record for record in records if record["corpus_id"] == corpus_id]
+    if len(matches) != 1:
+        raise ValueError(f"corpus package has no unique entry for {corpus_id!r}")
+    record = matches[0]
+    return (
+        str(record["database"]),
+        str(record["dump"]["path"]),
+        int(record["observed_projects"]),
+        str(record["derived_view_revision"] or ""),
+    )
+
+
 def _copy_package_artifacts(
     input_dir: Path, destination_dir: Path, document: dict[str, object]
 ) -> int:
@@ -440,6 +457,11 @@ def main(argv: list[str] | None = None) -> None:
         help="verify a package and print its required free disk bytes",
     )
     action.add_argument(
+        "--resolve-package-corpus",
+        metavar="CORPUS_ID",
+        help="verify the output package and print one corpus entry as tab-separated fields",
+    )
+    action.add_argument(
         "--copy-complete-to",
         type=Path,
         metavar="REPOSITORY_ROOT",
@@ -468,6 +490,15 @@ def main(argv: list[str] | None = None) -> None:
         print("\n".join(package_preflight(args.preflight_package)))
     elif args.required_disk_bytes is not None:
         print(required_disk_bytes(args.required_disk_bytes))
+    elif args.resolve_package_corpus is not None:
+        print(
+            "\t".join(
+                str(field)
+                for field in package_corpus_fields(
+                    args.output_dir, args.resolve_package_corpus
+                )
+            )
+        )
     elif args.copy_complete_to is not None:
         artifacts, inputs = copy_complete_package(
             args.output_dir, args.copy_complete_to

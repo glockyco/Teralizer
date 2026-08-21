@@ -94,7 +94,7 @@
 - [x] 5.9 Rewrite `prepare-zenodo-package.sh`, the quick start, README claims, and disk requirements to
       consume explicitly exported dumps and the verified assembled manifest. Document the data-host
       export, transfer, assembly, and recovery boundaries without author-specific service names.
-- [ ] 5.10 Rewrite `import-databases.sh` to verify dump checksum and identity before restore, run
+- [x] 5.10 Rewrite `import-databases.sh` to verify dump checksum and identity before restore, run
       `prepare-corpus`, verify project count and derived-view revision, and exercise read-only report
       preflight before success.
 - [ ] 5.11 Fix the replication container-name disagreement and prove import works with deployment names

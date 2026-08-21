@@ -130,6 +130,14 @@ def test_package_verification_checks_manifest_dumps_inputs_and_inventory(
     assert corpus_publish.verify_package(tmp_path) == (
         tmp_path / corpus_publish.MANIFEST_NAME
     )
+    assert corpus_publish.package_corpus_fields(tmp_path, "controlled") == (
+        "controlled_db",
+        "controlled_db.dump",
+        2,
+        "current",
+    )
+    with pytest.raises(ValueError, match="no unique entry"):
+        corpus_publish.package_corpus_fields(tmp_path, "missing")
     destination = tmp_path / "package-root"
     assert corpus_publish.copy_package_inputs(tmp_path, destination) == 1
     assert (destination / "src/main/resources/db/corpora.toml").is_file()

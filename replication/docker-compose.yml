@@ -67,7 +67,6 @@ services:
 
   adminer:
     image: adminer:4.8.1
-    container_name: adminer-replication
     ports:
       - "127.0.0.1:${ADMINER_PORT:-18080}:8080"
     environment:

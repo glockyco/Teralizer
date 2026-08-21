@@ -60,7 +60,7 @@ done
 INPUT_DIR="${INPUT_DIR:-$SCRIPT_DIR/../datasets}"
 INPUT_DIR=$(cd "$INPUT_DIR" && pwd -P)
 
-uv run --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
+uv run --frozen --directory "$REPO_ROOT/analysis" python -m teralizer.corpus_publish \
     --verify-package "$INPUT_DIR"
 
 if [[ ${#CORPUS_IDS[@]} -eq 0 ]]; then
@@ -81,17 +81,30 @@ compose_exec() {
 
 remove_restored_corpus() {
     local database="$1"
-    compose_exec dropdb -U "$DB_USER" --force "$database" >/dev/null 2>&1 || true
+    compose_exec dropdb -U "$DB_USER" --force "$database" >/dev/null 2>&1
+}
+
+cleanup_failed_restore() {
+    local database="$1"
+    local container_dump="$2"
+    compose_exec rm -f "$container_dump" >/dev/null 2>&1 || true
+    if ! remove_restored_corpus "$database"; then
+        echo "Import cleanup could not remove database '$database'" >&2
+        return 1
+    fi
 }
 
 restore_corpus() {
     local corpus_id="$1"
-    local exports database expected dump existing observed
-    exports=$("$REPO_ROOT/scripts/corpus-registry" export "$corpus_id") || return $?
-    eval "$exports"
-    database="$DB_NAME"
-    expected="$EXPECTED_PROJECTS"
-    dump="$INPUT_DIR/$database.dump"
+    local database dump_relative expected _manifest_revision dump container_dump existing observed
+    IFS=$'\t' read -r database dump_relative expected _manifest_revision < <(
+        uv run --frozen --directory "$REPO_ROOT/analysis" \
+            python -m teralizer.corpus_publish \
+            --output-dir "$INPUT_DIR" \
+            --resolve-package-corpus "$corpus_id"
+    )
+    dump="$INPUT_DIR/$dump_relative"
+    container_dump="/tmp/teralizer-${corpus_id}.dump"
 
     existing=$(compose_exec psql -U "$DB_USER" -d postgres -tA \
         -v name="$database" -c "SELECT 1 FROM pg_database WHERE datname = :'name'" 2>/dev/null || true)
@@ -104,24 +117,39 @@ restore_corpus() {
                 return 1
             fi
         fi
-        remove_restored_corpus "$database"
+        if ! remove_restored_corpus "$database"; then
+            echo "Could not replace corpus '$corpus_id' database '$database'" >&2
+            return 1
+        fi
     fi
 
     compose_exec createdb -U "$DB_USER" "$database"
-    docker compose -f "$COMPOSE_FILE" cp "$dump" "postgres:/tmp/corpus.dump"
-    if ! compose_exec pg_restore -U "$DB_USER" -d "$database" \
-        --no-owner --no-privileges /tmp/corpus.dump; then
-        compose_exec rm -f /tmp/corpus.dump
-        remove_restored_corpus "$database"
+    if ! docker compose -f "$COMPOSE_FILE" cp "$dump" "postgres:$container_dump"; then
+        echo "Could not copy the verified dump for corpus '$corpus_id'" >&2
+        cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
-    compose_exec rm -f /tmp/corpus.dump
+    if ! compose_exec pg_restore -U "$DB_USER" -d "$database" \
+        --no-owner --no-privileges "$container_dump"; then
+        echo "Could not restore corpus '$corpus_id'" >&2
+        cleanup_failed_restore "$database" "$container_dump" || true
+        return 1
+    fi
+    if ! compose_exec rm -f "$container_dump"; then
+        echo "Could not remove the temporary dump for corpus '$corpus_id'" >&2
+        cleanup_failed_restore "$database" "$container_dump" || true
+        return 1
+    fi
 
-    observed=$(compose_exec psql -U "$DB_USER" -d "$database" -tA \
-        -c "SELECT count(*) FROM project")
+    if ! observed=$(compose_exec psql -U "$DB_USER" -d "$database" -tA \
+        -c "SELECT count(*) FROM project"); then
+        echo "Could not count projects for restored corpus '$corpus_id'" >&2
+        cleanup_failed_restore "$database" "$container_dump" || true
+        return 1
+    fi
     if [[ "$observed" != "$expected" ]]; then
         echo "Corpus '$corpus_id' expects $expected projects. The restored database has $observed." >&2
-        remove_restored_corpus "$database"
+        cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
 
@@ -130,15 +158,17 @@ restore_corpus() {
         DB_USER="$DB_USER" \
         DB_PASSWORD="$DB_PASSWORD" \
         "$REPO_ROOT/scripts/corpus-registry" prepare-corpus "$corpus_id"; then
-        remove_restored_corpus "$database"
+        cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
+    # Package verification binds the manifest's revision to the checked-in revision.
+    # verify-corpus checks that installed revision through the report-only role.
     if ! DB_HOST="${DB_HOST:-127.0.0.1}" \
         DB_PORT="$DB_PORT" \
         DB_USER="$DB_USER" \
         DB_PASSWORD="$DB_PASSWORD" \
         "$REPO_ROOT/scripts/corpus-registry" verify-corpus "$corpus_id"; then
-        remove_restored_corpus "$database"
+        cleanup_failed_restore "$database" "$container_dump" || true
         return 1
     fi
     echo "Restored, prepared, and verified $corpus_id in $database"
