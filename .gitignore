@@ -409,6 +409,9 @@ project-configs/timeout-retry*.conf
 # published by scripts/publish-analysis.sh.
 analysis/build/
 
+# Generated production corpus packages live outside the source checkout.
+/replication/datasets/
+
 # direnv loads the flake dev shell and caches it here.
 .direnv/
 
