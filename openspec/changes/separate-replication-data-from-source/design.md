@@ -15,8 +15,8 @@ production outputs behind an explicit external path.
 **Goals:**
 
 - Make the source checkout complete for development and fixture-based validation without production corpus bytes.
-- Keep one explicit package boundary from verified export through release assembly and reviewer restore.
-- Use Zenodo as the public, immutable, DOI-addressed payload authority.
+- Keep one explicit package boundary from verified export through release assembly and installed-package restore.
+- Preserve Zenodo as the selected public authority while handing archival release and reviewer retrieval to `make-replication-artifact-badge-ready`.
 - Prevent generated corpus artifacts from returning through Git or Git LFS.
 - Remove the new package from unpushed history without changing the other unpushed work.
 
@@ -46,12 +46,12 @@ author staging
         | complete-package validation
         v
 release staging
-  immutable component archives and release manifest
+  verified corpus input for the release builder
         |
-        | archive-level acceptance
+        | owned by make-replication-artifact-badge-ready
         v
-Zenodo version
-  DOI-addressed public bytes
+archival release
+  immutable components, release manifest, and DOI-addressed public bytes
 ```
 
 Production payloads never move backward into the source zone. Author staging remains ignored and may be local, SSH-backed, or object-backed without changing the package contract. Release staging is attempt-scoped and promotes only a complete validated set.
@@ -62,7 +62,7 @@ Production payloads never move backward into the source zone. Author staging rem
 
 The generated corpus manifest and `checksums.sha256` remain authoritative for a particular package and travel beside its dumps. They are not committed as ambient source state. Git keeps the manifest schema, corpus registry, publisher, importer, and synthetic examples.
 
-After publication, Git may record a small handoff descriptor containing the artifact version, version DOI, release-manifest URL or record id, and expected release-manifest SHA-256. The release manifest remains authoritative for archive membership and binds the full corpus manifest.
+The release owner may later commit a small handoff descriptor containing the artifact version, version DOI, release-manifest URL or record id, and expected release-manifest SHA-256. The downstream release manifest remains authoritative for archive membership and binds the full corpus manifest.
 
 **Alternative considered:** Commit the generated manifest but not the dumps. Rejected because the manifest is a release output tied to exact payload bytes and producer revision. Keeping it in the source tree invites stale or recursively inconsistent provenance.
 
@@ -74,13 +74,13 @@ Developer and CI tests use generated or checked-in synthetic fixtures under a de
 
 **Alternative considered:** Automatically download the latest Zenodo corpus when no path is supplied. Rejected because “latest” is not reproducible, introduces network access into author builds, and can silently mix source and artifact versions.
 
-### 4. Make Zenodo the sole public payload authority
+### 4. Hand archival publication to the release owner
 
-The next public package is a new version under concept DOI `10.5281/zenodo.17950380`. Its version-specific DOI, release manifest, corpus manifest, archive checksums, and source revision identify one immutable release. Existing versions remain unchanged.
+This change stops at a complete verified corpus package and an explicit release-assembly input. `make-replication-artifact-badge-ready` owns component archives, the release manifest, source-controlled release metadata, reviewer retrieval, archive-level acceptance, and the next Zenodo version under concept DOI `10.5281/zenodo.17950380`. Existing versions remain unchanged.
 
-GitHub Releases may hold short-lived release-candidate artifacts only if automation needs them. They are not documented as the reviewer source and are deleted according to a declared retention policy after Zenodo publication. No DVC or object-store credentials appear in reviewer instructions.
+The handoff keeps one public authority without making this storage-boundary migration wait for release readiness. It also prevents a second implementation of version selection, manifests, installation, or publication.
 
-**Alternative considered:** Publish dumps as GitHub Release assets. Rejected as the authority because the project already has DOI versioning, preservation, licensing metadata, and a release acceptance design in Zenodo.
+**Alternative considered:** Implement corpus-specific publication and retrieval here. Rejected because the release owner already composes the corpus with source, reports, project/data components, licenses, citation metadata, and reviewer workflows.
 
 ### 5. Enforce the source boundary at ignore, attribute, and validation layers
 

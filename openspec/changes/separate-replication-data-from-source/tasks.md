@@ -26,14 +26,13 @@
 - [x] 3.6 Update importer and quick-start boundaries so source-development commands use fixtures while reviewer commands consume an installed, verified release component.
 - [x] 3.7 Add focused tests proving an explicit complete package succeeds and no package, an ambient checkout package, and a synthetic fixture presented as production fail.
 
-## 4. Bind archival publication and retrieval
+## 4. Bind the release handoff
 
-- [ ] 4.1 Define the small source-controlled release reference with artifact version, version DOI, concept DOI, release-manifest locator, and release-manifest SHA-256; keep payload membership in the release manifest.
-- [x] 4.2 Make release assembly bind the corpus manifest, dump identities, sizes, checksums, provenance, and source revision to one immutable candidate release.
-- [x] 4.3 Keep Zenodo under concept DOI `10.5281/zenodo.17950380` as the sole documented public payload authority and require a new version when any package byte changes.
-- [ ] 4.4 Make reviewer retrieval resolve an exact version, verify the release manifest and selected component, then verify every corpus dump before restore.
-- [x] 4.5 Ensure maintainer, reviewer, requirements, and Zenodo documentation distinguish source checkout, author staging, release staging, and published installation commands.
-- [x] 4.6 Prove normal source checkout, lint, format, build, and fixture CI complete without production dumps, Git LFS corpus downloads, Zenodo, or author credentials.
+- [x] 4.1 Make release assembly bind the corpus manifest, dump identities, sizes, checksums, provenance, and source revision to one verified candidate input.
+- [x] 4.2 Assign release references, component archives, reviewer retrieval, archive-level acceptance, and Zenodo publication to `make-replication-artifact-badge-ready` without duplicating its release contract.
+- [x] 4.3 Keep Zenodo under concept DOI `10.5281/zenodo.17950380` as the sole selected public payload authority while leaving creation of the next version to the release owner.
+- [x] 4.4 Ensure maintainer, reviewer, requirements, and release documentation distinguish source checkout, author staging, release staging, and published installation commands.
+- [x] 4.5 Prove normal source checkout, lint, format, build, and fixture CI complete without production dumps, Git LFS corpus downloads, Zenodo, or author credentials.
 
 ## 5. Remove the unpushed package from history
 
@@ -51,5 +50,5 @@
 - [x] 6.3 Run archive-level acceptance from staged downloadable files in a clean location with no source checkout, author database, author credentials, or hydrated corpus LFS objects.
 - [x] 6.4 Run `lefthook run pre-commit --all-files` and all repository checks required by the affected Python, shell, packaging, and documentation areas.
 - [x] 6.5 Run `openspec validate separate-replication-data-from-source --strict` and validate the coordinated active changes strictly.
-- [x] 6.6 Review the final source tree, Git attributes, ignored paths, release reference, package staging, documentation, and commit graph; remove incidental changes.
-- [ ] 6.7 Report source-repository state, candidate release state, old GitHub LFS state, old Zenodo state, and any blocked external publication action separately.
+- [x] 6.6 Review the final source tree, Git attributes, ignored paths, release handoff, package staging, documentation, and commit graph; remove incidental changes.
+- [x] 6.7 Report source-repository state, candidate release state, old GitHub LFS state, old Zenodo state, and future publication ownership separately.
