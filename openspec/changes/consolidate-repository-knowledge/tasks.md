@@ -72,9 +72,9 @@
 - [x] 6.1 Run the focused repository-state test module, including every positive control and the real
       repository assertion.
 - [x] 6.2 Run the complete non-database analysis test suite.
-- [ ] 6.3 Run the repository's formatting, lint, type, and file-hygiene commit hooks over all changed
+- [x] 6.3 Run the repository's formatting, lint, type, and file-hygiene commit hooks over all changed
       files.
-- [ ] 6.4 Run `openspec validate --all --strict` and confirm both this change and the reconciled
+- [x] 6.4 Run `openspec validate --all --strict` and confirm both this change and the reconciled
       database change are valid.
-- [ ] 6.5 Re-run the tracked-path and reference audit as a positive-control check, then review the
+- [x] 6.5 Re-run the tracked-path and reference audit as a positive-control check, then review the
       final diff for unresolved links, empty retired directories, and accidental evidence changes.
