@@ -12,6 +12,10 @@ import pandas as pd
 
 from teralizer.eval.entities import variant_ref
 from teralizer.eval.model import ColumnSpec, Table, ValueKind, share_value
+from teralizer.eval.reports._exclusion_evidence import (
+    MECHANISMS,
+    READER_COLLAPSE,
+)
 
 
 @dataclass(frozen=True)
@@ -33,23 +37,16 @@ LEGACY_OUTCOMES: tuple[Outcome, ...] = (
 
 # Internal only. Reports collapse this before rendering, so do not add a column
 # here expecting it to appear in a table.
-MECHANISM_OUTCOMES: tuple[Outcome, ...] = (
-    Outcome("included", "Included", "Incl. %"),
-    Outcome("filtered", "Filtered", "Filt. %"),
-    Outcome("refused", "Refused", "Ref. %"),
-    Outcome("unsupported", "Unsupported", "Unsup. %"),
-    Outcome("failed", "Failed", "Fail. %"),
+MECHANISM_OUTCOMES: tuple[Outcome, ...] = tuple(
+    Outcome(mechanism.key.value, mechanism.label, f"{mechanism.label[:4]}. %")
+    for mechanism in MECHANISMS
 )
 
-# The reported split. Filtering is the tool declining an unsuitable candidate.
-# Failures are breakage. Two mechanisms are easy to put on the wrong side: a
-# javac quarantine is breakage despite recording its verdict in `filter_result`,
-# and an unflattenable test shape is a decision despite nothing having failed.
-MECHANISM_COLLAPSE: dict[str, tuple[str, ...]] = {
-    "included": ("included",),
-    "filtering": ("filtered", "refused", "unsupported"),
-    "failures": ("failed",),
-}
+# The reader-facing split is part of the canonical mechanism registry. In
+# particular, quarantine remains a failure even though its producer writes a
+# filter_result row, while an unsupported capability remains a declined
+# candidate even though it has no filter_result row.
+MECHANISM_COLLAPSE: dict[str, tuple[str, ...]] = READER_COLLAPSE
 
 
 def collapse_mechanisms(df: pd.DataFrame) -> pd.DataFrame:

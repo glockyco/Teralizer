@@ -3,7 +3,6 @@
 from __future__ import annotations
 from dataclasses import replace
 
-import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
@@ -11,6 +10,7 @@ from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import Metric, Prose, RQReport, Section
 from teralizer.eval.provenance import Provenance, capture
 from teralizer.eval.registry import ReportSpec, register
+from teralizer.eval.reports import _exclusion_evidence as exclusion
 from teralizer.eval.reports import _funnel
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
@@ -32,229 +32,6 @@ from teralizer.eval.reports._widening import (
     widening_refusal_table,
 )
 
-# Map each persisted exclusion mechanism to the filtering or failure bucket reported below.
-# The name test matters: the javac quarantine writes REJECT rows to
-# `filter_result` without being a filter, so `decision = 'REJECT'` alone
-# overcounts filtering.
-FILTER_CLASS_PATTERN = r"filter\.\w+Filter$"
-GATE_CODES = ("ORACLE_NOT_WIDENABLE", "INPUT_SPEC_NOT_SATISFIED_BY_SEED")
-QUARANTINE_CODES = (
-    "UNCOMPILABLE_GENERALIZED_TEST",
-    "UNCOMPILABLE_INSTRUMENTED_WRAPPER",
-)
-CAPABILITY_PATTERN = "INHERITED_METHOD_NOT_FLATTENABLE%"
-
-
-def _query_params(variant: str) -> dict[str, object]:
-    return {
-        **_funnel.base_query_params(variant),
-        "filter_class_pattern": FILTER_CLASS_PATTERN,
-        "gate_codes": list(GATE_CODES),
-        "quarantine_codes": list(QUARANTINE_CODES),
-        "capability_pattern": CAPABILITY_PATTERN,
-    }
-
-
-FILTERING_SQL = rf"""
-{_funnel.ELIGIBILITY_CTE},
-base_data AS (
-    SELECT
-        CASE
-            WHEN fr.test_id IS NOT NULL THEN 'Test'
-            WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'
-            WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'
-        END AS level,
-        substring(fr.filter_name from 'filter\.(\w+)Filter$') AS filter_name,
-        fr.decision,
-        coalesce(fr.test_id, fr.assertion_id, fr.generalization_id) AS entity_id
-    FROM filter_result fr
-    JOIN eligible_projects ep ON ep.id = fr.project_id
-    LEFT JOIN generalization g ON g.id = fr.generalization_id
-    WHERE fr.test_id IS NOT NULL
-       OR fr.assertion_id IS NOT NULL
-       OR (fr.generalization_id IS NOT NULL AND g.variant = :variant)
-),
-pivoted AS (
-    SELECT
-        level,
-        filter_name,
-        count(DISTINCT entity_id)::bigint AS total,
-        count(DISTINCT entity_id) FILTER (WHERE decision = 'ACCEPT')::bigint AS accept,
-        count(DISTINCT entity_id) FILTER (WHERE decision = 'DEFER')::bigint AS defer,
-        count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT')::bigint AS reject
-    FROM base_data
-    WHERE filter_name IS NOT NULL
-    GROUP BY level, filter_name
-)
-SELECT
-    level,
-    CASE
-        WHEN filter_name = 'UnsupportedAssertion' THEN 'AssertionType'
-        ELSE filter_name
-    END AS filter,
-    total,
-    accept,
-    defer,
-    reject
-FROM pivoted
-WHERE reject > 0
-ORDER BY
-    CASE level
-        WHEN 'Test' THEN 1
-        WHEN 'Assertion' THEN 2
-        WHEN 'Generalization' THEN 3
-    END,
-    filter
-"""
-
-BREAKDOWN_SQL = f"""
-{_funnel.ELIGIBILITY_CTE},
-test_counts AS (
-    SELECT
-        'All' AS strategy,
-        'Test' AS level,
-        CASE
-            WHEN t.is_included
-             AND NOT EXISTS (
-                 SELECT 1
-                 FROM task ft
-                 WHERE ft.test_id = t.id
-                   AND ft.assertion_id IS NULL
-                   AND ft.generalization_id IS NULL
-                   AND ft.status <> 'SUCCEEDED'
-             ) THEN 'included'
-            WHEN t.exclusion_info LIKE :capability_pattern THEN 'unsupported'
-            WHEN EXISTS (
-                SELECT 1
-                FROM filter_result fr
-                WHERE fr.test_id = t.id
-                  AND fr.decision = 'REJECT'
-                  AND fr.filter_name ~ :filter_class_pattern
-            ) THEN 'filtered'
-            WHEN t.exclusion_info = ANY(:quarantine_codes)
-              OR t.exclusion_info LIKE 'Excluded by%'
-              OR EXISTS (
-                 SELECT 1
-                 FROM task ft
-                 WHERE ft.test_id = t.id
-                   AND ft.assertion_id IS NULL
-                   AND ft.generalization_id IS NULL
-                   AND ft.status <> 'SUCCEEDED'
-             ) THEN 'failed'
-            ELSE 'uncoded'
-        END AS bucket,
-        count(*) AS item_count
-    FROM test t
-    JOIN eligible_projects ep ON ep.id = t.project_id
-    GROUP BY bucket
-),
-assertion_counts AS (
-    SELECT
-        'All' AS strategy,
-        'Assertion' AS level,
-        CASE
-            WHEN a.is_included
-             AND NOT EXISTS (
-                 SELECT 1
-                 FROM task fa
-                 WHERE fa.assertion_id = a.id
-                   AND fa.generalization_id IS NULL
-                   AND fa.status <> 'SUCCEEDED'
-             ) THEN 'included'
-            WHEN EXISTS (
-                SELECT 1
-                FROM filter_result fr
-                WHERE fr.assertion_id = a.id
-                  AND fr.decision = 'REJECT'
-                  AND fr.filter_name ~ :filter_class_pattern
-            ) THEN 'filtered'
-            WHEN a.exclusion_info = ANY(:quarantine_codes)
-              OR a.exclusion_info LIKE 'Excluded by%'
-              OR EXISTS (
-                 SELECT 1
-                 FROM task fa
-                 WHERE fa.assertion_id = a.id
-                   AND fa.generalization_id IS NULL
-                   AND fa.status <> 'SUCCEEDED'
-             ) THEN 'failed'
-            ELSE 'uncoded'
-        END AS bucket,
-        count(*) AS item_count
-    FROM assertion a
-    JOIN eligible_projects ep ON ep.id = a.project_id
-    GROUP BY bucket
-),
-generalization_counts AS (
-    SELECT
-        g.variant AS strategy,
-        'Generalization' AS level,
-        CASE
-            WHEN l.generated_filter_passed THEN 'included'
-            WHEN g.exclusion_info = ANY(:gate_codes) THEN 'refused'
-            WHEN EXISTS (
-                SELECT 1
-                FROM filter_result fr
-                WHERE fr.generalization_id = g.id
-                  AND fr.decision = 'REJECT'
-                  AND fr.filter_name ~ :filter_class_pattern
-            ) THEN 'filtered'
-            WHEN g.exclusion_info = ANY(:quarantine_codes)
-              OR g.exclusion_info LIKE 'Excluded by%'
-              OR l.final_failure_stage IS NOT NULL
-              OR EXISTS (
-                 SELECT 1
-                 FROM task fg
-                 WHERE fg.generalization_id = g.id
-                   AND fg.status <> 'SUCCEEDED'
-             ) THEN 'failed'
-            ELSE 'uncoded'
-        END AS bucket,
-        count(*) AS item_count
-    FROM generalization g
-    JOIN eligible_projects ep ON ep.id = g.project_id
-    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id
-    WHERE g.variant = :variant
-    GROUP BY g.variant, bucket
-),
-combined AS (
-    SELECT strategy, level, bucket, item_count FROM test_counts
-    UNION ALL
-    SELECT strategy, level, bucket, item_count FROM assertion_counts
-    UNION ALL
-    SELECT strategy, level, bucket, item_count FROM generalization_counts
-),
-report_rows AS (
-    SELECT 'All' AS strategy, 'Test' AS level
-    UNION ALL
-    SELECT 'All' AS strategy, 'Assertion' AS level
-    UNION ALL
-    SELECT :variant AS strategy, 'Generalization' AS level
-)
-SELECT
-    report_rows.strategy,
-    report_rows.level,
-    coalesce(sum(item_count), 0)::bigint AS total,
-    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,
-    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtered'), 0)::bigint AS filtered,
-    coalesce(sum(item_count) FILTER (WHERE bucket = 'refused'), 0)::bigint AS refused,
-    coalesce(sum(item_count) FILTER (WHERE bucket = 'unsupported'), 0)::bigint
-        AS unsupported,
-    coalesce(sum(item_count) FILTER (WHERE bucket = 'failed'), 0)::bigint AS failed,
-    coalesce(sum(item_count) FILTER (WHERE bucket = 'uncoded'), 0)::bigint AS uncoded
-FROM report_rows
-LEFT JOIN combined
-    ON combined.strategy = report_rows.strategy
-   AND combined.level = report_rows.level
-GROUP BY report_rows.strategy, report_rows.level
-ORDER BY
-    CASE report_rows.level
-        WHEN 'Test' THEN 1
-        WHEN 'Assertion' THEN 2
-        WHEN 'Generalization' THEN 3
-    END,
-    report_rows.strategy
-"""
-
 
 UNRESOLVED_TELEMETRY_SQL = f"""
 {_funnel.ELIGIBILITY_CTE}
@@ -271,43 +48,8 @@ WHERE NOT EXISTS (
 
 def _fetch_assertions_without_resolution(conn: Connection, variant: str) -> int:
     """Assertions whose resolver telemetry was never persisted. Must be zero."""
-    df = read_sql(conn, UNRESOLVED_TELEMETRY_SQL, _query_params(variant))
+    df = read_sql(conn, UNRESOLVED_TELEMETRY_SQL, exclusion.query_params(variant))
     return int(df["assertions_without_resolution"].iloc[0])
-
-
-def _fetch_filtering(conn: Connection, variant: str) -> pd.DataFrame:
-    """Return distinct-entity filter decision counts for the eligible corpus."""
-    df = read_sql(conn, FILTERING_SQL, _query_params(variant))
-    for column in ("total", "accept", "defer", "reject"):
-        df.isetitem(df.columns.get_loc(column), df[column].astype(int))
-    return pd.DataFrame(
-        df, columns=["level", "filter", "total", "accept", "defer", "reject"]
-    )
-
-
-_BREAKDOWN_COLUMNS = ("included", "filtered", "refused", "unsupported", "failed")
-
-
-def _fetch_breakdown(conn: Connection, variant: str) -> pd.DataFrame:
-    """Return eligible-entity outcomes, one column per exclusion mechanism.
-
-    Raises when an entity matches no mechanism, which means the pipeline can
-    exclude something this SQL does not model. Add the mechanism rather than a
-    fallback branch, or the count lands in whichever column is written last.
-    """
-    df = read_sql(conn, BREAKDOWN_SQL, _query_params(variant))
-    for column in (*_BREAKDOWN_COLUMNS, "total", "uncoded"):
-        df.isetitem(df.columns.get_loc(column), df[column].astype(int))
-    drifted = df[df["uncoded"] > 0]
-    if not drifted.empty:
-        levels = ", ".join(
-            f"{row['level']}: {row['uncoded']}" for row in drifted.to_dict("records")
-        )
-        raise RuntimeError(
-            "unclassified exclusions; update the exclusion-accounting map for: "
-            + levels
-        )
-    return pd.DataFrame(df, columns=["strategy", "level", "total", *_BREAKDOWN_COLUMNS])
 
 
 def _stage_slug(stage: str) -> str:
@@ -363,7 +105,7 @@ def build(context: ReportContext) -> RQReport:
     conn = context.corpus("real-world")
     variant = _funnel.resolve_variant(conn)
     funnel = _funnel.build_funnel(conn, variant=variant)
-    breakdown_data = _fetch_breakdown(conn, variant)
+    breakdown_data = exclusion.fetch_mechanism_counts(conn, variant)
     jpf_exception_data = fetch_jpf_exception_causes(conn, variant)
     jpf_table = jpf_exception_table(jpf_exception_data)
     mut_choice_data = fetch_mut_choice_sensitivity(conn, variant)
@@ -382,10 +124,13 @@ def build(context: ReportContext) -> RQReport:
         include_strategy=False,
     )
     breakdown = replace(
-        breakdown, provenance=capture(_fetch_breakdown, query=BREAKDOWN_SQL)
+        breakdown,
+        provenance=capture(
+            exclusion.fetch_mechanism_counts, query=exclusion.MECHANISM_COUNTS_SQL
+        ),
     )
 
-    filtering_data = _fetch_filtering(conn, variant)
+    filtering_data = exclusion.fetch_filter_decisions(conn, variant)
     filtering = build_filtering_table(
         filtering_data,
         key="tab-exclusions-filtering-extended",
@@ -400,13 +145,17 @@ def build(context: ReportContext) -> RQReport:
     filtering = replace(
         filtering,
         latex_resize_to_width=True,
-        provenance=capture(_fetch_filtering, query=FILTERING_SQL),
+        provenance=capture(
+            exclusion.fetch_filter_decisions, query=exclusion.FILTER_DECISION_SQL
+        ),
     )
 
     funnel_provenance = capture(
         _funnel.build_funnel, query=_funnel._PROJECT_SIGNALS_SQL
     )
-    breakdown_provenance = capture(_fetch_breakdown, query=BREAKDOWN_SQL)
+    breakdown_provenance = capture(
+        exclusion.fetch_mechanism_counts, query=exclusion.MECHANISM_COUNTS_SQL
+    )
     levels = breakdown_data.set_index("level")
     assertions = levels.loc["Assertion"]
     generalizations = levels.loc["Generalization"]

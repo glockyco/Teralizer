@@ -1,37 +1,11 @@
-"""Invariants for the five persisted exclusion mechanisms used by the RQ6 report.
-
-The report classifies every excluded entity as filtering or failure. A failure here means
-that a mechanism grew, moved, or started writing somewhere new. Update the accepted
-`reporting/exclusion-accounting` capability and the report map before changing an assertion.
-"""
-
-import re
+"""Corpus invariants for the canonical RQ6 exclusion mechanisms."""
 
 import pytest
 from sqlalchemy import text
 
-from teralizer.eval.reports import _funnel, rq6_causes
+from teralizer.eval.reports import _exclusion_evidence as exclusion
+from teralizer.eval.reports import _funnel
 from teralizer.eval.reports._causes_common import MECHANISM_OUTCOMES
-
-# `FILTERING_SQL` recognises a filter by its class name. Anything else that writes to
-# `filter_result` is a different mechanism wearing a filter's clothes.
-FILTER_CLASS_NAME = re.compile(r"filter\.\w+Filter$")
-
-# Non-filters allowed to write `filter_result`. Adding a name here is a decision, not a
-# formality: `BREAKDOWN_SQL` must also stop counting it as a filter rejection.
-DECLARED_NON_FILTERS = frozenset({"GeneratedTestValidator"})
-
-# Typed exclusion codes, grouped by the mechanism that writes them.
-GENERATION_GATE_CODES = frozenset(
-    {"ORACLE_NOT_WIDENABLE", "INPUT_SPEC_NOT_SATISFIED_BY_SEED"}
-)
-QUARANTINE_CODES = frozenset(
-    {"UNCOMPILABLE_GENERALIZED_TEST", "UNCOMPILABLE_INSTRUMENTED_WRAPPER"}
-)
-CAPABILITY_CODES = frozenset({"INHERITED_METHOD_NOT_FLATTENABLE"})
-KNOWN_EXCLUSION_CODES = GENERATION_GATE_CODES | QUARANTINE_CODES | CAPABILITY_CODES
-
-ENTITY_TABLES = ("test", "assertion", "generalization")
 
 
 def _rows(conn, sql: str, **params) -> list[tuple]:
@@ -43,7 +17,143 @@ def _variant(conn) -> str:
 
 
 def _breakdown(conn):
-    return rq6_causes._fetch_breakdown(conn, _funnel.resolve_variant(conn))
+    return exclusion.fetch_mechanism_counts(conn, _funnel.resolve_variant(conn))
+
+
+def test_mechanism_registry_covers_reader_outcomes():
+    assert set(exclusion.MECHANISM_BY_KEY) == set(exclusion.MechanismKey)
+    assert exclusion.READER_COLLAPSE == {
+        "included": ("included",),
+        "filtering": (
+            "filter_rejection",
+            "generation_gate",
+            "inline_capability",
+        ),
+        "failures": ("build_quarantine", "task_exception"),
+    }
+
+
+def test_filter_result_storage_does_not_choose_the_mechanism():
+    assert (
+        exclusion.producer_mechanism(
+            "teralizer.processing.filter.ReturnTypeFilter",
+            "REJECT",
+            "UNSUPPORTED_RETURN_TYPE",
+        )
+        is exclusion.MechanismKey.FILTER_REJECTION
+    )
+    assert (
+        exclusion.producer_mechanism(
+            "GeneratedTestValidator",
+            "REJECT",
+            "UNCOMPILABLE_GENERALIZED_TEST",
+        )
+        is exclusion.MechanismKey.BUILD_QUARANTINE
+    )
+
+
+def test_unknown_filter_result_producer_fails_loudly():
+    with pytest.raises(
+        exclusion.ExclusionEvidenceError,
+        match="unknown filter-result producer: MysteryWriter",
+    ):
+        exclusion.producer_mechanism("MysteryWriter", "REJECT", "MYSTERY")
+
+
+@pytest.mark.parametrize(
+    ("decision", "reason_code", "message"),
+    (
+        ("MAYBE", "SOME_REASON", "unknown filter-result decision"),
+        ("REJECT", None, "missing rejection reason"),
+    ),
+)
+def test_invalid_filter_result_shape_fails_loudly(decision, reason_code, message):
+    with pytest.raises(exclusion.ExclusionEvidenceError, match=message):
+        exclusion.producer_mechanism(
+            "teralizer.processing.filter.ReturnTypeFilter",
+            decision,
+            reason_code,
+        )
+
+
+@pytest.mark.parametrize(
+    ("level", "code", "mechanism"),
+    (
+        (
+            "Generalization",
+            "ORACLE_NOT_WIDENABLE",
+            exclusion.MechanismKey.GENERATION_GATE,
+        ),
+        (
+            "Generalization",
+            "INPUT_SPEC_NOT_SATISFIED_BY_SEED",
+            exclusion.MechanismKey.GENERATION_GATE,
+        ),
+        (
+            "Assertion",
+            "UNCOMPILABLE_GENERALIZED_TEST",
+            exclusion.MechanismKey.BUILD_QUARANTINE,
+        ),
+        (
+            "Generalization",
+            "UNCOMPILABLE_INSTRUMENTED_WRAPPER",
+            exclusion.MechanismKey.BUILD_QUARANTINE,
+        ),
+        (
+            "Test",
+            "INHERITED_METHOD_NOT_FLATTENABLE",
+            exclusion.MechanismKey.INLINE_CAPABILITY,
+        ),
+    ),
+)
+def test_typed_code_is_bound_to_its_entity_level(level, code, mechanism):
+    assert exclusion.typed_code_mechanism(level, code) is mechanism
+
+
+def test_typed_code_at_wrong_level_fails_loudly():
+    with pytest.raises(
+        exclusion.ExclusionEvidenceError,
+        match="ORACLE_NOT_WIDENABLE is invalid at Test level",
+    ):
+        exclusion.typed_code_mechanism("Test", "ORACLE_NOT_WIDENABLE")
+
+
+def test_unknown_typed_code_fails_loudly():
+    with pytest.raises(
+        exclusion.ExclusionEvidenceError,
+        match="unknown Assertion exclusion code: MYSTERY_CODE",
+    ):
+        exclusion.typed_code_mechanism("Assertion", "MYSTERY_CODE")
+
+
+def test_duplicate_mechanism_attribution_fails_loudly():
+    with pytest.raises(
+        exclusion.ExclusionEvidenceError,
+        match="multiply classified entity: Assertion:7:filter_rejection,task_exception",
+    ):
+        exclusion.resolve_mechanism_candidates(
+            "Assertion",
+            7,
+            (
+                exclusion.MechanismKey.FILTER_REJECTION,
+                exclusion.MechanismKey.TASK_EXCEPTION,
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    "mechanism",
+    (exclusion.MechanismKey.INCLUDED, exclusion.MechanismKey.TASK_EXCEPTION),
+)
+def test_single_mechanism_candidate_is_retained(mechanism):
+    assert exclusion.resolve_mechanism_candidates("Test", 3, (mechanism,)) is mechanism
+
+
+def test_absent_mechanism_evidence_stays_absent():
+    assert (
+        exclusion.producer_mechanism("GeneratedTestValidator", "ACCEPT", None) is None
+    )
+    assert exclusion.resolve_mechanism_candidates("Test", 3, ()) is None
 
 
 def test_generalizations_partition_into_gated_and_emitted(rq6_conn):
@@ -58,7 +168,7 @@ def test_generalizations_partition_into_gated_and_emitted(rq6_conn):
         LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id
         WHERE g.variant = :variant
         """,
-        codes=sorted(GENERATION_GATE_CODES),
+        codes=sorted(exclusion.GATE_CODES),
         variant=_variant(rq6_conn),
     )[0]
     assert gated + emitted == attempts, (
@@ -80,7 +190,7 @@ def test_gated_generalizations_leave_no_downstream_rows(rq6_conn):
         LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id
         WHERE g.variant = :variant AND g.exclusion_info = ANY(:codes)
         """,
-        codes=sorted(GENERATION_GATE_CODES),
+        codes=sorted(exclusion.GATE_CODES),
         variant=_variant(rq6_conn),
     )[0]
     assert (lifecycle, filtered) == (0, 0), (
@@ -89,24 +199,29 @@ def test_gated_generalizations_leave_no_downstream_rows(rq6_conn):
     )
 
 
-def test_every_filter_result_writer_is_a_filter_or_declared_otherwise(rq6_conn):
-    """`filter_result` is shared with the javac quarantine. Nothing else may join."""
-    names = {
-        name
-        for (name,) in _rows(rq6_conn, "SELECT DISTINCT filter_name FROM filter_result")
-    }
-    unknown = {
-        n for n in names if not FILTER_CLASS_NAME.search(n)
-    } - DECLARED_NON_FILTERS
-    assert not unknown, (
-        f"{sorted(unknown)} write filter_result but are not filters; BREAKDOWN_SQL "
-        "counts every REJECT as filtering, so these are being misreported"
+def test_every_filter_result_writer_has_one_producer_semantics(rq6_conn):
+    """A shared storage row is classified by its producer and verdict."""
+    rows = _rows(
+        rq6_conn,
+        """
+        SELECT DISTINCT filter_name, decision, reason_code
+        FROM filter_result
+        """,
     )
+    for producer, decision, reason_code in rows:
+        exclusion.producer_mechanism(producer, decision, reason_code)
 
 
-@pytest.mark.parametrize("table", ENTITY_TABLES)
-def test_every_typed_exclusion_code_is_a_known_mechanism(table, rq6_conn):
-    """A new typed code means a new mechanism the breakdown does not model."""
+@pytest.mark.parametrize(
+    ("table", "level"),
+    (
+        ("test", "Test"),
+        ("assertion", "Assertion"),
+        ("generalization", "Generalization"),
+    ),
+)
+def test_every_typed_exclusion_code_is_a_known_mechanism(table, level, rq6_conn):
+    """A new typed code must have one valid level-specific mechanism."""
     codes = {
         code
         for (code,) in _rows(
@@ -119,17 +234,14 @@ def test_every_typed_exclusion_code_is_a_known_mechanism(table, rq6_conn):
             """,
         )
     }
-    unknown = codes - KNOWN_EXCLUSION_CODES
-    assert not unknown, (
-        f"{table} carries unmodelled exclusion codes {sorted(unknown)}; the breakdown "
-        "will absorb them into whichever bucket its predicates happen to match"
-    )
+    for code in codes:
+        exclusion.typed_code_mechanism(level, code)
 
 
 def test_breakdown_buckets_sum_to_level_total(rq6_conn):
     """Every entity lands in exactly one mechanism.
 
-    `_fetch_breakdown` already refuses to return an unclassified entity, so this
+    `fetch_mechanism_counts` refuses unclassified or multiply classified entities, so this
     also proves the classification is total rather than merely non-overlapping.
     """
     df = _breakdown(rq6_conn)

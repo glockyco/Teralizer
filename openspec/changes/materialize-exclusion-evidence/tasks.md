@@ -25,21 +25,21 @@
 
 ## 2. Build the mechanism mapping and typed evidence relations
 
-- [ ] 2.1 Implement one executable mechanism mapping and reader-facing collapse from the accepted
+- [x] 2.1 Implement one executable mechanism mapping and reader-facing collapse from the accepted
       exclusion-accounting semantics. Reuse its stable keys from every RQ6 evidence relation.
 - [ ] 2.2 Build separate typed relations for project and test lifecycle observations, assertions,
       filter adjudication, and generated-generalization lifecycle evidence. Carry stable entity and join
       keys plus only the stage and producer evidence that exists at each level; do not create one
       nullable universal row shape.
-- [ ] 2.3 Distinguish filter rejection, pre-emission refusal, unsupported capability, build quarantine,
+- [x] 2.3 Distinguish filter rejection, pre-emission refusal, unsupported capability, build quarantine,
       and task failure by producer semantics. Do not classify from the `filter_result` storage shape
       alone.
-- [ ] 2.4 Fail on every unknown exclusion code, record shape, non-filter producer, missing required
+- [x] 2.4 Fail on every unknown exclusion code, record shape, non-filter producer, missing required
       entity identity, or multiply classified entity. Name the offending evidence.
-- [ ] 2.5 Add focused fixtures for every known mechanism, the quarantine/filter-shape collision, unknown
+- [x] 2.5 Add focused fixtures for every known mechanism, the quarantine/filter-shape collision, unknown
       producer failure, duplicate attribution, an included entity, and absent evidence that must remain
       absent.
-- [ ] 2.6 Reconcile mechanism counts to eligible populations and existing collapsed headline outcomes
+- [x] 2.6 Reconcile mechanism counts to eligible populations and existing collapsed headline outcomes
       for each level that has compatible evidence. Compare cross-level aggregates only through explicit
       keys and declared population relationships.
 
