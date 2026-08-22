@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+
+import pandas as pd
 from teralizer.eval.artifacts import (
     ArtifactId,
     ArtifactSet,
@@ -9,10 +11,12 @@ from teralizer.eval.artifacts import (
 from teralizer.eval.inputs import CorpusInputSnapshot, FileInputSnapshot
 from teralizer.eval.model import (
     BuiltReport,
+    ColumnSpec,
     Metric,
     MetricPopulation,
     RQReport,
     Section,
+    Table,
     ValueKind,
 )
 from teralizer.eval.provenance import Provenance
@@ -94,6 +98,41 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
     }
     assert entry["numerator_key"] is None
     assert entry["denominator_key"] is None
+
+
+def test_manifest_records_table_row_identities(tmp_path: Path):
+    provenance = Provenance(
+        "teralizer.eval.reports.rq6_causes",
+        "build",
+        10,
+        "SELECT 1",
+        "a" * 40,
+        "analysis/src/teralizer/eval/reports/rq6_causes.py",
+    )
+    table = Table(
+        key="mechanisms",
+        df=pd.DataFrame(
+            {"row_key": ["test:included", "test:filter_rejection"], "count": [2, 1]}
+        ),
+        columns=[ColumnSpec("Count", "count", ValueKind.COUNT)],
+        caption="Mechanisms",
+        label="tab:mechanisms",
+        row_key="row_key",
+        provenance=provenance,
+    )
+    report = RQReport("rq6", "RQ6", [Section("S", [table])])
+
+    manifest = build_manifest(
+        BuiltReport(report, ()),
+        ArtifactSet(tmp_path),
+        repo_url="https://github.com/glockyco/Teralizer",
+    )
+
+    assert manifest["tables"]["mechanisms"]["row_key"] == "row_key"
+    assert manifest["tables"]["mechanisms"]["row_keys"] == [
+        "test:included",
+        "test:filter_rejection",
+    ]
 
 
 def test_manifest_records_all_corpus_file_and_absent_roles():

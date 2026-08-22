@@ -17,7 +17,7 @@ from teralizer.eval.artifacts import (
     RunAggregate,
 )
 from teralizer.eval.inputs import CorpusInputSnapshot, FileInputSnapshot, InputSnapshot
-from teralizer.eval.model import BuiltReport, Metric
+from teralizer.eval.model import BuiltReport, Metric, Table
 
 ANALYSIS_VERSION = version("teralizer-analysis")
 
@@ -59,6 +59,23 @@ def _metric_entry(metric: Metric, repo_url: str) -> dict[str, object]:
             ),
             "numerator_key": metric.numerator_key,
             "denominator_key": metric.denominator_key,
+        }
+    )
+    return entry
+
+
+def _table_entry(table: Table, repo_url: str) -> dict[str, object]:
+    if table.provenance is None:
+        raise ValueError(f"table {table.key} has no provenance")
+    entry = _entry(table.caption, table.provenance, repo_url)
+    entry.update(
+        {
+            "row_key": table.row_key,
+            "row_keys": (
+                [_json_value(value) for value in table.df[table.row_key].tolist()]
+                if table.row_key is not None
+                else []
+            ),
         }
     )
     return entry
@@ -118,9 +135,9 @@ def build_manifest(
             if metric.provenance
         },
         "tables": {
-            t.key: _entry(t.caption, t.provenance, repo_url)
-            for t in report.tables()
-            if t.provenance
+            table.key: _table_entry(table, repo_url)
+            for table in report.tables()
+            if table.provenance
         },
         "figures": {
             f.key: _entry(f.caption, f.provenance, repo_url)

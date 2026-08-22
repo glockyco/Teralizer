@@ -56,6 +56,25 @@ def test_export_uses_stable_semantic_source_names(tmp_path):
     ]
 
 
+def test_export_prepends_hidden_semantic_row_key(tmp_path):
+    table = _table([ColumnSpec("PVC", "pvc", ValueKind.COUNT)])
+    table = Table(
+        key=table.key,
+        df=table.df.assign(row_key=["first", "second"]),
+        columns=table.columns,
+        caption=table.caption,
+        label=table.label,
+        row_key="row_key",
+    )
+
+    path = render_table(table, tmp_path)
+
+    assert path.read_text(encoding="utf-8").splitlines()[:2] == [
+        "row_key,pvc",
+        "first,6",
+    ]
+
+
 def test_export_keeps_every_numeric_kind_machine_readable(tmp_path):
     numeric_sources = [
         "count",

@@ -218,8 +218,12 @@ def validate_retained_consumers(report: RQReport) -> None:
     if missing_tables:
         raise ValueError(f"RQ6 retained tables are missing: {missing_tables}")
     for table in report.tables():
-        if table.key in RETAINED_TABLE_KEYS and table.provenance is None:
+        if table.key not in RETAINED_TABLE_KEYS:
+            continue
+        if table.provenance is None:
             raise ValueError(f"RQ6 retained table lacks provenance: {table.key}")
+        if table.row_key is None:
+            raise ValueError(f"RQ6 retained table lacks row identities: {table.key}")
 
 
 def build(context: ReportContext) -> RQReport:
@@ -260,6 +264,7 @@ def build(context: ReportContext) -> RQReport:
     )
     breakdown = replace(
         breakdown,
+        row_key="level",
         provenance=mechanism_provenance,
     )
 
@@ -277,6 +282,10 @@ def build(context: ReportContext) -> RQReport:
     )
     filtering = replace(
         filtering,
+        df=filtering.df.assign(
+            row_key=filtering.df["level"] + ":" + filtering.df["filter"]
+        ),
+        row_key="row_key",
         latex_resize_to_width=True,
         provenance=capture(
             exclusion.fetch_filter_decisions, query=exclusion.FILTER_DECISION_SQL

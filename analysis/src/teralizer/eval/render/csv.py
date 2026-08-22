@@ -59,18 +59,27 @@ def render_table(table: Table, output_dir: Path) -> Path:
     with path.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream, lineterminator="\n")
         header: list[str] = []
+        value_columns: list[tuple[str, ValueKind]] = []
+        visible_sources = {
+            source
+            for column in table.columns
+            for source in (column.source, column.share_source)
+            if source is not None
+        }
+        if table.row_key is not None and table.row_key not in visible_sources:
+            header.append(table.row_key)
+            value_columns.append((table.row_key, ValueKind.IDENTIFIER))
         for column in table.columns:
             header.append(column.source)
+            value_columns.append((column.source, column.kind))
             if column.share_source is not None:
                 header.append(column.share_source)
+                value_columns.append((column.share_source, ValueKind.SHARE))
         writer.writerow(header)
         for _, row in table.df.iterrows():
-            fields: list[str] = []
-            for column in table.columns:
-                fields.append(_value(row[column.source], column.kind))
-                if column.share_source is not None:
-                    fields.append(_value(row[column.share_source], ValueKind.SHARE))
-            writer.writerow(fields)
+            writer.writerow(
+                [_value(row[source], kind) for source, kind in value_columns]
+            )
     return path
 
 

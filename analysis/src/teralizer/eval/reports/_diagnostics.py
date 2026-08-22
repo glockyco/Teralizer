@@ -129,6 +129,7 @@ def jpf_exception_table(df: pd.DataFrame) -> Table:
             "diagnostics from retained detail."
         ),
         label="tab:jpf-exception-causes",
+        row_key="category",
         note=(
             "This recovery changes cause attribution only; it does not change "
             "project eligibility or funnel outcomes."
@@ -213,6 +214,7 @@ def mut_choice_table(df: pd.DataFrame) -> Table:
             "retained MUT candidate details."
         ),
         label="tab:mut-choice-sensitivity",
+        row_key="category",
         note=(
             "Choice-dependent rows divided by all ParameterType rejections are "
             "a lower bound; rows without candidate detail remain unscored."

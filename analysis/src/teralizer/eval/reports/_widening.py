@@ -164,6 +164,7 @@ def widening_refusal_table(df: pd.DataFrame, provenance) -> Table:
             "in the real-world dataset."
         ),
         label="tab:widening-refusals",
+        row_key="code",
         note=(
             "Refusals are decided before a generalized test is written, so they "
             "carry no filter decision and no lifecycle record."
