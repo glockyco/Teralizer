@@ -8,15 +8,15 @@ _Source database: `postgres_dev`._
 
 | Project | Files | Classes | SLOC | Files | Classes | SLOC | Methods |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| \DatasetEqBenchA{} | 544 | 652 | 27,871 | 544 | 544 | 35,666 | 4,718 |
-| \DatasetEqBenchB{} | 544 | 652 | 27,871 | 543 | 543 | 36,937 | 4,875 |
-| \DatasetEqBenchC{} | 544 | 652 | 27,871 | 544 | 544 | 37,836 | 4,974 |
-| \DatasetCommonsA{} | 106 | 247 | 19,709 | 103 | 103 | 17,524 | 2,481 |
-| \DatasetCommonsB{} | 106 | 247 | 19,709 | 103 | 103 | 19,082 | 2,738 |
-| \DatasetCommonsC{} | 106 | 247 | 19,709 | 102 | 102 | 18,839 | 2,735 |
-| \DatasetCommonsDev{} | 106 | 247 | 19,709 | 80 | 119 | 14,389 | 725 |
-| \DatasetRepoReapers{} (total) | 38,916 | 47,334 | 2,552,342 | 20,948 | 28,990 | 1,867,904 | 85,368 |
-| \DatasetRepoReapers{} (mean) | 66 | 80 | 4,362 | 35 | 49 | 3,192 | 163 |
-| \DatasetRepoReapers{} (median) | 50 | 57 | 3,321 | 24 | 29 | 2,131 | 82 |
+| EqBench-ES (1 s) | 544 | 652 | 27,871 | 544 | 544 | 35,666 | 4,718 |
+| EqBench-ES (10 s) | 544 | 652 | 27,871 | 543 | 543 | 36,937 | 4,875 |
+| EqBench-ES (60 s) | 544 | 652 | 27,871 | 544 | 544 | 37,836 | 4,974 |
+| Commons-ES (1 s) | 106 | 247 | 19,709 | 103 | 103 | 17,524 | 2,481 |
+| Commons-ES (10 s) | 106 | 247 | 19,709 | 103 | 103 | 19,082 | 2,738 |
+| Commons-ES (60 s) | 106 | 247 | 19,709 | 102 | 102 | 18,839 | 2,735 |
+| Commons Utils | 106 | 247 | 19,709 | 80 | 119 | 14,389 | 725 |
+| RepoReapers (total) | 38,916 | 47,334 | 2,552,342 | 20,948 | 28,990 | 1,867,904 | 85,368 |
+| RepoReapers (mean) | 66 | 80 | 4,362 | 35 | 49 | 3,192 | 163 |
+| RepoReapers (median) | 50 | 57 | 3,321 | 24 | 29 | 2,131 | 82 |
 
-source: [`frame`](https://github.com/glockyco/Teralizer/blob/0ef9a91bee8787db60d33691db27ebe9493cc501/analysis/src/teralizer/eval/evidence/project_sources.py#L201)
+source: [`frame`](https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/eval/evidence/project_sources.py#L205)

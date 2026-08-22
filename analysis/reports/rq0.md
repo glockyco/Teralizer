@@ -10,24 +10,24 @@ The JARVIS implementation and template library are unavailable, so JARVIS is not
 
 Teralizer extracts its specification from a single execution. Generalized tests exercise the original inputs as their first samples by design, so coverage after generalization never falls below the original tests' values. The Teralizer column reports the measured value coverage after generalization, joining the captured original-suite values with the generalized tests' value logs.
 
-**PVC before generalization, after generalization with JARVIS, and after generalization with \ToolTeralizer{} for each of the 10 scenarios reported by JARVIS.**
+**PVC before generalization, after generalization with JARVIS, and after generalization with Teralizer for each of the 10 scenarios reported by JARVIS.**
 
-| \# | JARVIS scenario | CUT PVC | PBT PVC | PBT PVC |
+| # | JARVIS scenario | CUT PVC | PBT PVC | PBT PVC |
 | --- | --- | --- | --- | --- |
-| 1 | \texttt{isAscii} | 6 | 59 | 230 |
-| 2 | \texttt{isPrintable} | 195 | 45 | 197 |
-| 3 | \texttt{testMinMaxDouble} | 9 | 400 | 368 |
-| 4 | \texttt{toIntExact} | 2,001 | 65 | 2,074 |
-| 5 | \texttt{IntervalTest} | 2 | 2 | 172 |
-| 6 | \texttt{testConstants} | 5 | 105 | — |
-| 7 | \texttt{testfirstDerivativeComparison} | 7 | 264 | 105 |
-| 8 | \texttt{testLinear} | 5 | 160 | 104 |
-| 9 | \texttt{PrecisionTest} | 8 | 102 | — |
-| 10 | \texttt{testAbs} | 5 | 506 | — |
+| 1 | isAscii | 6 | 59 | 230 |
+| 2 | isPrintable | 195 | 45 | 197 |
+| 3 | testMinMaxDouble | 9 | 400 | 368 |
+| 4 | toIntExact | 2,001 | 65 | 2,074 |
+| 5 | IntervalTest | 2 | 2 | 172 |
+| 6 | testConstants | 5 | 105 | — |
+| 7 | testfirstDerivativeComparison | 7 | 264 | 105 |
+| 8 | testLinear | 5 | 160 | 104 |
+| 9 | PrecisionTest | 8 | 102 | — |
+| 10 | testAbs | 5 | 506 | — |
 
 _JARVIS CUT and PBT PVC are the published values, with PBT PVC measuring the synthesized properties alone. For Teralizer, PVC includes the reconstructed original tests' values and the generalized tests' values. A dash marks a scenario Teralizer excludes from generalization._
 
-source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/6e602c3512eb03a6a4e9289c7fc46491ed46e4c5/analysis/src/teralizer/jarvis_scoreboard.py#L838)
+source: [`compare_to_jarvis`](https://github.com/glockyco/Teralizer/blob/64ea009d9f9b630bd9301dfb2b2349a0074f23dd/analysis/src/teralizer/jarvis_scoreboard.py#L852)
 
 ## Applicability breadth
 
@@ -59,16 +59,16 @@ Census status partial. The census intended 12 projects: 7 completed, 3 failed, a
 
 ## PVC and mutation score
 
-A larger sampling budget can raise PVC by exercising more distinct values. In this sweep, the same 10 tests kill 51 of 80 covered mutants at every budget. Their covered mutation score therefore stays at 63.7%. More sampling effort does not change detection of the selected mutants in this sweep.
+A larger sampling budget can raise PVC by exercising more distinct values. In this sweep, the same 10 tests kill 51 of 80 covered mutants at every budget. Their covered mutation score therefore stays at 63.8%. More sampling effort does not change detection of the selected mutants in this sweep.
 
 **PVC and mutation testing results for the same 10 generalized tests at 3 sampling budgets. Only the sampling budget changes between the rows. PVC sums the distinct input values that the tests exercise, and Score is the killed mutants divided by the covered mutants.**
 
 | Sampling Budget | Tests | PVC | Killed | Covered | Score |
 | --- | --- | --- | --- | --- | --- |
-| 100 tries | 10 | 1,135 | 51 | 80 | 63.7% |
-| 200 tries | 10 | 2,152 | 51 | 80 | 63.7% |
-| 1,000 tries | 10 | 10,055 | 51 | 80 | 63.7% |
+| 100 tries | 10 | 1,135 | 51 | 80 | 63.8% |
+| 200 tries | 10 | 2,152 | 51 | 80 | 63.8% |
+| 1,000 tries | 10 | 10,055 | 51 | 80 | 63.8% |
 
 _The same mutant sets are covered and killed at every budget._
 
-source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/749cc5c2f6afc62ab67178a09208af80fad3926e/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L255)
+source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L267)
