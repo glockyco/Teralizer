@@ -8,10 +8,10 @@
       `make-report-runs-explicit` at `6409d66588c271ffdcd4b75229319fa7459579da`,
       `separate-report-values-from-presentation` at `2cb26ea0f852c0163a0805dd06d464399e6787ee`,
       and `declare-published-artifacts` at `595db740d4a8e2c860d5e658e9e0755467c54a33`.
-- [ ] 1.1c Map every overlapping implementation subject to one accepted owner. Fail the prerequisite
+- [x] 1.1c Map every overlapping implementation subject to one accepted owner. Fail the prerequisite
       review on an unarchived change, dirty producer revision, intermediate artifact, or duplicated
       implementation boundary; do not rediscover or alter the dependency order during apply.
-- [ ] 1.2 Read the six sources deleted by `consolidate-repository-knowledge` from their deletion parent
+- [x] 1.2 Read the six sources deleted by `consolidate-repository-knowledge` from their deletion parent
       only as a checklist. Create one change-local claim inventory with one normalized entry per
       substantive claim and no file-level blanket dispositions.
 - [ ] 1.3 Re-derive every initial disposition from current accepted specs, executable source,
