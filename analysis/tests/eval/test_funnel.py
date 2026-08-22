@@ -26,8 +26,11 @@ def test_processing_table_exports_plain_causes_without_ordinals(tmp_path):
     assert table.ordinal_header == "#"
     path = render_table(table, tmp_path)
     assert path.read_text(encoding="utf-8").splitlines() == [
-        "type,cause,count",
-        "External,PIT execution error during mutation testing,2",
+        "row_key,type,cause,count",
+        (
+            "5:PIT execution error during mutation testing,"
+            "External,PIT execution error during mutation testing,2"
+        ),
     ]
 
 
