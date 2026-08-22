@@ -14,7 +14,7 @@ from teralizer.eval.artifacts import (
 )
 from teralizer.eval.inputs import ReportContext
 from teralizer.eval.model import RQReport, Section
-from teralizer.eval.publish import FigureDeclaration, PublishError
+from teralizer.eval.publish import ArtifactDeclaration, PublishError
 
 
 @contextmanager
@@ -121,8 +121,13 @@ def test_consumer_preflight_failure_precedes_promotion(monkeypatch, tmp_path):
     sentinel = tmp_path / "reports" / "a.md"
     sentinel.parent.mkdir()
     sentinel.write_text("previous")
-    declaration = FigureDeclaration(
-        root=tmp_path, targets={"missing": tmp_path / "consumer" / "missing.pdf"}
+    declaration = ArtifactDeclaration(
+        root=tmp_path,
+        targets={
+            ArtifactId(RenderTarget.FIGURES, "missing"): (
+                tmp_path / "consumer" / "missing.pdf"
+            )
+        },
     )
     with pytest.raises(PublishError):
         run.execute(
@@ -134,7 +139,7 @@ def test_consumer_preflight_failure_precedes_promotion(monkeypatch, tmp_path):
             declaration=declaration,
         )
     assert sentinel.read_text() == "previous"
-    assert not declaration.targets["missing"].exists()
+    assert not declaration.targets[ArtifactId(RenderTarget.FIGURES, "missing")].exists()
 
 
 def test_partial_run_preserves_registered_unselected_manifest_entry(

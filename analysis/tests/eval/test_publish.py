@@ -11,7 +11,7 @@ from teralizer.eval.artifacts import (
 )
 from teralizer.eval.publish import (
     DECLARATION_NAME,
-    FigureDeclaration,
+    ArtifactDeclaration,
     PublishError,
     deliver,
     read_declaration,
@@ -30,7 +30,7 @@ def _consumer(tmp_path: Path, declaration: str | None = None) -> Path:
     return destination
 
 
-def _declaration(destination: Path) -> FigureDeclaration:
+def _declaration(destination: Path) -> ArtifactDeclaration:
     """Read a declaration the caller expects to exist."""
     declaration = read_declaration(destination)
     assert declaration is not None
@@ -81,22 +81,50 @@ def test_empty_figures_table_declares_no_figures(tmp_path: Path):
     assert read_declaration(_consumer(tmp_path, "[figures]\n")) is None
 
 
+def test_multi_target_declaration_preserves_target_identity(tmp_path: Path):
+    declaration = _declaration(
+        _consumer(
+            tmp_path,
+            '[figures]\nplot = "figures/plot.pdf"\n'
+            '[latex]\nsummary = "tables/summary.tex"\n'
+            '[csv]\nsummary = "data/summary.csv"\n',
+        )
+    )
+
+    assert declaration.required_targets == frozenset(
+        {RenderTarget.FIGURES, RenderTarget.LATEX, RenderTarget.CSV}
+    )
+    assert declaration.targets[ArtifactId(RenderTarget.LATEX, "summary")] == (
+        declaration.root / "tables" / "summary.tex"
+    )
+    assert declaration.targets[ArtifactId(RenderTarget.CSV, "summary")] == (
+        declaration.root / "data" / "summary.csv"
+    )
+
+
+def test_unknown_target_section_fails_and_names_it(tmp_path: Path):
+    with pytest.raises(PublishError, match=r"unknown render target section \[tablez\]"):
+        read_declaration(_consumer(tmp_path, '[tablez]\nk = "tables/k.tex"\n'))
+
+
 def test_declaration_resolves_against_the_consumer_root(tmp_path: Path):
     destination = _consumer(
         tmp_path,
         '[figures]\nteralizer_efficiency = "figures/teralizer-efficiency.pdf"\n',
     )
     declaration = _declaration(destination)
-    assert declaration.targets["teralizer_efficiency"] == (
-        declaration.root / "figures" / "teralizer-efficiency.pdf"
-    )
+    assert declaration.targets[
+        ArtifactId(RenderTarget.FIGURES, "teralizer_efficiency")
+    ] == (declaration.root / "figures" / "teralizer-efficiency.pdf")
 
 
 def test_paths_are_root_relative_not_file_relative(tmp_path: Path):
     """The thesis keeps figures above its publish destination. A root-relative
     path must not be read as relative to the declaration file."""
     declaration = _declaration(_consumer(tmp_path, '[figures]\nk = "figures/k.pdf"\n'))
-    assert "chapters" not in str(declaration.targets["k"])
+    assert "chapters" not in str(
+        declaration.targets[ArtifactId(RenderTarget.FIGURES, "k")]
+    )
 
 
 def test_malformed_toml_fails(tmp_path: Path):
@@ -120,12 +148,15 @@ def test_unresolvable_consumer_root_fails(tmp_path: Path):
 def test_escaping_path_fails_at_construction(tmp_path: Path):
     """Containment is static, so it must fail before a report run, not after."""
     with pytest.raises(PublishError, match="escapes"):
-        read_declaration(_consumer(tmp_path, '[figures]\nk = "../../outside.pdf"\n'))
+        read_declaration(_consumer(tmp_path, '[latex]\nk = "../../outside.tex"\n'))
 
 
 def test_escaping_path_cannot_be_constructed_directly(tmp_path: Path):
     with pytest.raises(PublishError, match="escapes"):
-        FigureDeclaration(root=tmp_path / "root", targets={"k": tmp_path / "other.pdf"})
+        ArtifactDeclaration(
+            root=tmp_path / "root",
+            targets={ArtifactId(RenderTarget.FIGURES, "k"): tmp_path / "other.pdf"},
+        )
 
 
 def test_deliver_copies_every_declared_figure(tmp_path: Path):
@@ -160,7 +191,9 @@ def test_missing_key_reports_every_failure(tmp_path: Path):
         deliver(declaration, _emitted(tmp_path, here="H"))
     reasons = _reasons(caught)
     assert len(reasons) == 2
-    assert {"gone", "also_gone"} == {r.split("'")[1] for r in reasons}
+    assert {"figures/gone", "figures/also_gone"} == {
+        reason.split("'")[1] for reason in reasons
+    }
 
 
 def test_nothing_is_copied_when_a_check_fails(tmp_path: Path):

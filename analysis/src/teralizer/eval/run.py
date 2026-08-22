@@ -207,7 +207,7 @@ def _stale_paths(
 def _validate_artifacts(
     artifacts: ArtifactSet,
     built_reports: tuple[BuiltReport, ...],
-    declaration: publish.FigureDeclaration | None,
+    declaration: publish.ArtifactDeclaration | None,
 ) -> None:
     owners = {built.report.rq for built in built_reports}
     for artifact in artifacts:
@@ -311,7 +311,7 @@ def execute(
     *,
     repo_url: str,
     full: bool,
-    declaration: publish.FigureDeclaration | None = None,
+    declaration: publish.ArtifactDeclaration | None = None,
     publishing: bool = False,
     replace: Replace = os.replace,
 ) -> RunResult:

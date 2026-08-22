@@ -15,18 +15,18 @@ and written there, not here.
 
 ## 2. Declare artifacts per render target
 
-- [ ] 2.1 Read a declaration section per render target, per design.md Decision 1. An existing
+- [x] 2.1 Read a declaration section per render target, per design.md Decision 1. An existing
       `[figures]` section keeps its current meaning and its current behaviour.
       Verification: a declaration carrying only `[figures]` behaves exactly as it does today.
-- [ ] 2.2 Fail on a section that names no known render target, naming the section, so a typo is not a
+- [x] 2.2 Fail on a section that names no known render target, naming the section, so a typo is not a
       silently empty declaration.
       Verification: an unknown section fails and names itself.
-- [ ] 2.3 Resolve every declared path against the consuming repository's root and refuse one that
+- [x] 2.3 Resolve every declared path against the consuming repository's root and refuse one that
       escapes it, for every kind.
       Verification: an escaping path fails for a table as it already does for a figure.
-- [ ] 2.4 Tests: a multi-kind declaration, an unknown section, a non-string value, an escaping path,
+- [x] 2.4 Tests: a multi-kind declaration, an unknown section, a non-string value, an escaping path,
       and a figures-only declaration that must keep working.
-- [ ] 2.5 Commit.
+- [x] 2.5 Commit.
       Message: `feat(eval): declare published artifacts per render target`
 
 ## 3. Validate and deliver one run artifact set
