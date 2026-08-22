@@ -34,6 +34,24 @@ _Eligible projects: 584. Stage 1 + 2: 584 entering, 182 included (31.2%), 402 ex
 
 source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/_funnel.py#L378)
 
+Generalization attempts are reported separately from emitted, filter-adjudicated, validated, reduced, and final-usable tests. A missing independent task record remains unknown.
+
+**Observed generalized-test populations for Improved (200 tries). Unknown means that no independent task record proves the reported failure stage ran.**
+
+| Population | Count | Entering | Excluded | Attempt known | Attempt unknown |
+| --- | --- | --- | --- | --- | --- |
+| Attempted | 5,356 | 5,356 | 0 | 0 | 0 |
+| Emitted | 2,057 | 5,356 | 3,299 | 3,299 | 0 |
+| Filter adjudicated | 2,035 | 2,057 | 22 | 22 | 0 |
+| Filter passed | 1,615 | 2,035 | 420 | 420 | 0 |
+| Validated | 1,615 | 1,615 | 0 | 0 | 0 |
+| Reduced | 1,435 | 1,615 | 180 | 32 | 148 |
+| Final usable | 1,435 | 1,435 | 0 | 0 | 0 |
+
+_A lifecycle failure stage without a matching task record remains unknown; later failure labels are not treated as attempt evidence._
+
+source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/5254da35aa030cf05f1cde42ae244f43d7340d89/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L268)
+
 Generic JPF uncaught-exception diagnostics are reclassified from their retained detail into application exceptions and JPF environment gaps.
 
 **Retrospective classification of generic JPF uncaught-exception diagnostics from retained detail.**
@@ -47,7 +65,7 @@ Generic JPF uncaught-exception diagnostics are reclassified from their retained 
 
 _This recovery changes cause attribution only; it does not change project eligibility or funnel outcomes._
 
-source: [`fetch_jpf_exception_causes`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/_diagnostics.py#L95)
+source: [`fetch_jpf_exception_causes`](https://github.com/glockyco/Teralizer/blob/2fc87b1642f4912e01d8c9dd2823e9ab1fdcea5a/analysis/src/teralizer/eval/reports/_diagnostics.py#L95)
 
 ParameterType choice sensitivity is reported conservatively: only a rejection with an observed argument-taking alternative is choice-dependent.
 
@@ -61,17 +79,37 @@ ParameterType choice sensitivity is reported conservatively: only a rejection wi
 
 _Choice-dependent rows divided by all ParameterType rejections are a lower bound; rows without candidate detail remain unscored._
 
-source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/_diagnostics.py#L179)
+source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/blob/2fc87b1642f4912e01d8c9dd2823e9ab1fdcea5a/analysis/src/teralizer/eval/reports/_diagnostics.py#L180)
+
+**Included entities and exclusion mechanisms for Improved (200 tries), with shares of each entity-level population.**
+
+| Level | Mechanism | Outcome | Entities | Level total |
+| --- | --- | --- | --- | --- |
+| Test | Included | included | 44,875 (52.6%) | 85,368 |
+| Test | Filter rejection | filtering | 37,363 (43.8%) | 85,368 |
+| Test | Unsupported capability | filtering | 2,835 (3.3%) | 85,368 |
+| Test | Task exception | failures | 295 (0.3%) | 85,368 |
+| Assertion | Included | included | 6,905 (3.8%) | 180,548 |
+| Assertion | Filter rejection | filtering | 166,602 (92.3%) | 180,548 |
+| Assertion | Build quarantine | failures | 182 (0.1%) | 180,548 |
+| Assertion | Task exception | failures | 6,859 (3.8%) | 180,548 |
+| Generalization | Included | included | 1,615 (30.2%) | 5,356 |
+| Generalization | Filter rejection | filtering | 420 (7.8%) | 5,356 |
+| Generalization | Generation-time gate | filtering | 3,299 (61.6%) | 5,356 |
+| Generalization | Build quarantine | failures | 5 (0.1%) | 5,356 |
+| Generalization | Task exception | failures | 17 (0.3%) | 5,356 |
+
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/5752d381bcfd4e9b10b87fa2091934d2e8765be4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Exclusion results for Improved (200 tries) in the RepoReapers projects.**
 
 | Level | Total | Included | Filtering | Failures |
 | --- | --- | --- | --- | --- |
-| Test | 85,368 | 44,875 (52.6%) | 40,198 (47.1%) | 295 (0.3%) |
 | Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
+| Test | 85,368 | 44,875 (52.6%) | 40,198 (47.1%) | 295 (0.3%) |
 | Generalization | 5,356 | 1,615 (30.2%) | 3,719 (69.4%) | 22 (0.4%) |
 
-source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq6_causes.py#L291)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/5752d381bcfd4e9b10b87fa2091934d2e8765be4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Filtering results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -91,21 +129,21 @@ source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/e6018372
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | — | 5,203 (2.9%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | — | 420 (20.6%) |
 
-source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq6_causes.py#L278)
+source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/5752d381bcfd4e9b10b87fa2091934d2e8765be4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
 
-Most of the generalization row's filtering column contains pre-emission soundness rejections rather than filter decisions.
+The reader-facing filtering column combines filter decisions, generation-gate refusals, and unsupported-capability declinations. The preceding table preserves the exact mechanisms.
 
 **Causes for generalization attempts that produce no generalized test in the real-world dataset.**
 
-| Refusal cause | Generalizations | Refusals | Attempts |
-| --- | --- | --- | --- |
-| Null output model, and the returned value is not a bytecode literal | 2,552 | 77.4% | 47.6% |
-| Null output model, and a native call received a symbolic argument | 488 | 14.8% | 9.1% |
-| Null output model, and no generated parameter reaches the path condition | 206 | 6.2% | 3.8% |
-| Null output model, and the path condition does not pin every generated parameter | 38 | 1.2% | 0.7% |
-| Exception oracle, concretized with a risk of divergence | 13 | 0.4% | 0.2% |
-| Exception oracle, and the path condition does not pin every generated parameter | 1 | 0.0% | 0.0% |
+| Refusal cause | Generalizations | All refusals | Refusals | All attempts | Attempts |
+| --- | --- | --- | --- | --- | --- |
+| Null output model, and the returned value is not a bytecode literal | 2,552 | 3,298 | 77.4% | 5,356 | 47.6% |
+| Null output model, and a native call received a symbolic argument | 488 | 3,298 | 14.8% | 5,356 | 9.1% |
+| Null output model, and no generated parameter reaches the path condition | 206 | 3,298 | 6.2% | 5,356 | 3.8% |
+| Null output model, and the path condition does not pin every generated parameter | 38 | 3,298 | 1.2% | 5,356 | 0.7% |
+| Exception oracle, concretized with a risk of divergence | 13 | 3,298 | 0.4% | 5,356 | 0.2% |
+| Exception oracle, and the path condition does not pin every generated parameter | 1 | 3,298 | 0.0% | 5,356 | 0.0% |
 
 _Refusals are decided before a generalized test is written, so they carry no filter decision and no lifecycle record._
 
-source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/_widening.py#L89)
+source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/2fc87b1642f4912e01d8c9dd2823e9ab1fdcea5a/analysis/src/teralizer/eval/reports/_widening.py#L98)

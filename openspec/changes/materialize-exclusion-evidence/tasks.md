@@ -108,12 +108,12 @@
 
 ## 7. Regenerate and prove the producer outputs
 
-- [ ] 7.1 Resolve the `real-world` corpus through the registry, verify its project count and derived-view
+- [x] 7.1 Resolve the `real-world` corpus through the registry, verify its project count and derived-view
       revision, and run every registered report once from one clean session.
-- [ ] 7.2 Prove all supported mechanism partitions, funnel identities, rate denominators,
+- [x] 7.2 Prove all supported mechanism partitions, funnel identities, rate denominators,
       retained-consumer key completeness, and provenance resolution against the generated artifact
       manifest.
-- [ ] 7.3 Review every retained generated RQ6 table, macro, CSV, and Markdown artifact. Confirm semantic
+- [x] 7.3 Review every retained generated RQ6 table, macro, CSV, and Markdown artifact. Confirm semantic
       row keys, typed values, plain CSV fields, readable Markdown, and no unregistered display
       recomputation.
 - [ ] 7.4 Exercise declaration-driven publication into a clean scratch thesis checkout. Confirm the
