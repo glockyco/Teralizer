@@ -31,6 +31,12 @@ A release has two audiences with different trust boundaries. Maintainers need to
 
 ## Decisions
 
+### 0. Release inputs freeze only after their owners are accepted
+
+Release assembly begins after every producer contract it consumes is validated, synced, and archived. `make-report-runs-explicit` owns complete registered runs and their artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `consolidate-repository-knowledge` owns exclusion-accounting semantics. `declare-published-artifacts` owns declared consumer delivery. `materialize-exclusion-evidence` owns the finalized mechanism, denominator, and claim-facing RQ6 surface.
+
+These are separately verified gates, not one aggregate planning checkbox. The release records each accepted revision and freezes the registered report run only after the last gate passes. It rejects an active change directory, dirty producer revision, mutable build directory, or intermediate manifest as release evidence. This change consumes those authorities and does not reopen or duplicate them.
+
 ### 1. Release assembly consumes three existing authorities
 
 The release builder consumes:

@@ -1,9 +1,14 @@
 ## 1. Reconcile prerequisites and one-time claim inventory
 
-- [ ] 1.1 Re-read the finalized artifacts for `consolidate-repository-knowledge`,
-      `consolidate-evaluation-databases`, `make-report-runs-explicit`,
-      `separate-report-values-from-presentation`, and `declare-published-artifacts`. Map each overlapping
-      implementation subject to one owner and record the dependency order without duplicating code.
+- [ ] 1.1a Confirm `consolidate-repository-knowledge` is validated, synced, and archived. Record the
+      accepted exclusion-accounting spec and exact archive revision that this change consumes.
+- [ ] 1.1b Confirm `consolidate-evaluation-databases`, `make-report-runs-explicit`,
+      `separate-report-values-from-presentation`, and `declare-published-artifacts` are validated,
+      synced, and archived. Record the exact accepted revisions and the corpus, report-run, rendering,
+      artifact-manifest, and delivery interfaces consumed from them.
+- [ ] 1.1c Map every overlapping implementation subject to one accepted owner. Fail the prerequisite
+      review on an unarchived change, dirty producer revision, intermediate artifact, or duplicated
+      implementation boundary; do not rediscover or alter the dependency order during apply.
 - [ ] 1.2 Read the six sources deleted by `consolidate-repository-knowledge` from their deletion parent
       only as a checklist. Create one change-local claim inventory with one normalized entry per
       substantive claim and no file-level blanket dispositions.

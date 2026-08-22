@@ -34,6 +34,12 @@ observations.
 
 ## Decisions
 
+### 0. Finalized upstream contracts are preconditions
+
+Implementation starts only after the changes that own its inputs are accepted. `consolidate-repository-knowledge` owns the exclusion-accounting semantics. `make-report-runs-explicit` owns complete report runs and artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `declare-published-artifacts` owns declaration validation and consumer delivery.
+
+Each prerequisite must be synced and archived before this change consumes it. The apply phase records the exact accepted revisions and verifies their interfaces; it does not discover a dependency order or duplicate their implementation. `materialize-exclusion-evidence` is then the sole producer of the finalized mechanism keys, denominator keys, and claim-facing RQ6 evidence consumed by downstream release and thesis changes.
+
 ### 1. The accepted accounting contract is the semantic authority
 
 The report consumes the exclusion-accounting mapping established by
