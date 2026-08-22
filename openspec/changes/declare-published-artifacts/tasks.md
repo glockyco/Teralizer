@@ -92,13 +92,13 @@ and written there, not here.
 
 ## 7. Verification
 
-- [ ] 7.1 Run the eval suite, the linter, the formatter check, and the type check.
+- [x] 7.1 Run the eval suite, the linter, the formatter check, and the type check.
       Expected: all pass.
-- [ ] 7.2 Publish into a scratch clone of the consuming repository and confirm the delivered set is
+- [x] 7.2 Publish into a scratch clone of the consuming repository and confirm the delivered set is
       exactly the declared set.
       Expected: no undeclared file is written, and every declared artifact lands at its declared path.
-- [ ] 7.3 Confirm figure delivery is unchanged by comparing delivered figures against the set the
+- [x] 7.3 Confirm figure delivery is unchanged by comparing delivered figures against the set the
       previous behaviour produced.
       Expected: identical set, identical paths.
-- [ ] 7.4 Commit any residue.
+- [x] 7.4 Commit any residue.
       Message: `chore(eval): record the delivery verification results`
