@@ -14,13 +14,13 @@
 - [x] 1.2 Read the six sources deleted by `consolidate-repository-knowledge` from their deletion parent
       only as a checklist. Create one change-local claim inventory with one normalized entry per
       substantive claim and no file-level blanket dispositions.
-- [ ] 1.3 Re-derive every initial disposition from current accepted specs, executable source,
+- [x] 1.3 Re-derive every initial disposition from current accepted specs, executable source,
       configuration, focused checks, registered reports, provenance, and read-only corpus observations.
       Historical prose and comments are not evidence.
-- [ ] 1.4 Assign each claim exactly one disposition: accepted contract, executable checked fact,
+- [x] 1.4 Assign each claim exactly one disposition: accepted contract, executable checked fact,
       registered empirical result, deterministic qualitative evidence, stale/disproved, or intentionally
       discarded. Name the current owner and evidence for every retained claim.
-- [ ] 1.5 Review the completed inventory before archive. Keep it as change evidence only; add no runtime
+- [x] 1.5 Review the completed inventory before archive. Keep it as change evidence only; add no runtime
       parser, permanent ledger, repository guard, or future-document workflow.
 
 ## 2. Build the mechanism mapping and typed evidence relations
