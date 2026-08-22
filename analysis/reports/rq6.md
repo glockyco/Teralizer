@@ -50,7 +50,7 @@ Generalization attempts are reported separately from emitted, filter-adjudicated
 
 _A lifecycle failure stage without a matching task record remains unknown; later failure labels are not treated as attempt evidence._
 
-source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/5254da35aa030cf05f1cde42ae244f43d7340d89/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L268)
+source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L268)
 
 Generic JPF uncaught-exception diagnostics are reclassified from their retained detail into application exceptions and JPF environment gaps.
 
@@ -99,17 +99,17 @@ source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/b
 | Generalization | Build quarantine | failures | 5 (0.1%) | 5,356 |
 | Generalization | Task exception | failures | 17 (0.3%) | 5,356 |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/5752d381bcfd4e9b10b87fa2091934d2e8765be4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Exclusion results for Improved (200 tries) in the RepoReapers projects.**
 
 | Level | Total | Included | Filtering | Failures |
 | --- | --- | --- | --- | --- |
-| Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
 | Test | 85,368 | 44,875 (52.6%) | 40,198 (47.1%) | 295 (0.3%) |
+| Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
 | Generalization | 5,356 | 1,615 (30.2%) | 3,719 (69.4%) | 22 (0.4%) |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/5752d381bcfd4e9b10b87fa2091934d2e8765be4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Filtering results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -129,7 +129,7 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | — | 5,203 (2.9%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | — | 420 (20.6%) |
 
-source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/5752d381bcfd4e9b10b87fa2091934d2e8765be4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
+source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
 
 The reader-facing filtering column combines filter decisions, generation-gate refusals, and unsupported-capability declinations. The preceding table preserves the exact mechanisms.
 
