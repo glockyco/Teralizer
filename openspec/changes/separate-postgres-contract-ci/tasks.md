@@ -35,7 +35,9 @@
 
 ## 6. Verify GitHub-hosted execution
 
-- [ ] 6.1 Commit the coherent workflow and contract change with one causal subject, push it, and inspect the actual GitHub Actions run rather than treating local service success as proof of hosted networking.
-- [ ] 6.2 Confirm the universal analysis job completes without a PostgreSQL service and reports hooks, strict OpenSpec validation, and marker-free tests independently.
-- [ ] 6.3 Confirm the workflow-changing push triggers the focused PostgreSQL contract and that its synthetic lifecycle, idempotence, read, and write-refusal checkpoints pass on the GitHub PostgreSQL service.
-- [ ] 6.4 Confirm manual dispatch is available for the focused workflow and that no branch rule requires its absent status on unrelated changes. Record the successful run URLs and archive only after every task is complete.
+- [x] 6.1 Commit the coherent workflow and contract change with one causal subject, push it, and inspect the actual GitHub Actions run rather than treating local service success as proof of hosted networking.
+- [x] 6.2 Confirm the universal analysis job completes without a PostgreSQL service and reports hooks, strict OpenSpec validation, and marker-free tests independently.
+- [x] 6.3 Confirm the workflow-changing push triggers the focused PostgreSQL contract and that its synthetic lifecycle, idempotence, read, and write-refusal checkpoints pass on the GitHub PostgreSQL service.
+- [x] 6.4 Confirm manual dispatch is available for the focused workflow and that no branch rule requires its absent status on unrelated changes. Record the successful run URLs and archive only after every task is complete.
+
+Hosted evidence: [universal analysis and build](https://github.com/glockyco/Teralizer/actions/runs/32591179873) and [PostgreSQL contract](https://github.com/glockyco/Teralizer/actions/runs/32591179881). The focused workflow is active with manual dispatch. The repository has no rulesets, and `master` has no branch protection.
