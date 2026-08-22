@@ -8,7 +8,9 @@
 assert_lefthook_installed: true
 
 pre-commit:
-  parallel: true
+  # Every Python job uses analysis/.venv. Serial execution prevents concurrent
+  # uv processes from replacing that environment on a clean checkout.
+  parallel: false
   jobs:
     - name: corpus-source-boundary
       run: /nix/var/nix/profiles/default/bin/nix develop --command uv run --frozen --directory analysis python -m teralizer.corpus_literal_check
