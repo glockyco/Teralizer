@@ -37,19 +37,28 @@ def _declaration(destination: Path) -> ArtifactDeclaration:
     return declaration
 
 
-def _emitted(tmp_path: Path, **keys: str) -> ArtifactSet:
+def _targeted_artifacts(
+    tmp_path: Path, *entries: tuple[RenderTarget, str, str, str]
+) -> ArtifactSet:
     build = tmp_path / "build"
     build.mkdir(exist_ok=True)
     artifacts = ArtifactSet(tmp_path)
-    for key, content in keys.items():
+    for target, key, suffix, content in entries:
         artifacts.add(
             RenderedArtifact(
-                ArtifactId(RenderTarget.FIGURES, key),
-                _written(build / f"{key}.pdf", content),
+                ArtifactId(target, key),
+                _written(build / f"{target.value}-{key}.{suffix}", content),
                 "rq",
             )
         )
     return artifacts
+
+
+def _emitted(tmp_path: Path, **keys: str) -> ArtifactSet:
+    return _targeted_artifacts(
+        tmp_path,
+        *((RenderTarget.FIGURES, key, "pdf", content) for key, content in keys.items()),
+    )
 
 
 def _written(path: Path, content: str) -> Path:
@@ -170,6 +179,27 @@ def test_deliver_copies_every_declared_figure(tmp_path: Path):
     assert (declaration.root / "deeper" / "nested" / "b.pdf").is_file()
 
 
+def test_deliver_uses_target_plus_key_identity_across_artifact_kinds(tmp_path: Path):
+    declaration = _declaration(
+        _consumer(
+            tmp_path,
+            '[latex]\nsummary = "tables/summary.tex"\n'
+            '[csv]\nsummary = "data/summary.csv"\n',
+        )
+    )
+    artifacts = _targeted_artifacts(
+        tmp_path,
+        (RenderTarget.LATEX, "summary", "tex", "table"),
+        (RenderTarget.CSV, "summary", "csv", "data"),
+        (RenderTarget.CSV, "undeclared", "csv", "extra"),
+    )
+
+    written = deliver(declaration, artifacts)
+
+    assert [path.read_text() for path in written] == ["data", "table"]
+    assert not (declaration.root / "data" / "undeclared.csv").exists()
+
+
 def test_undeclared_figure_is_not_an_error_and_is_not_delivered(tmp_path: Path):
     """A figure with no consumer is normal: evosuite_runtime_phases is printed by
     neither the thesis nor the paper."""
@@ -214,6 +244,49 @@ def test_uncommitted_consumer_figure_refuses_the_publish(tmp_path: Path):
     with pytest.raises(PublishError, match="uncommitted change"):
         deliver(declaration, _emitted(tmp_path, a="A"))
     assert target.read_text() == "hand edited"
+
+
+def test_uncommitted_table_refuses_every_delivery(tmp_path: Path):
+    declaration = _declaration(
+        _consumer(
+            tmp_path,
+            '[latex]\nsummary = "tables/summary.tex"\n'
+            '[csv]\nsummary = "data/summary.csv"\n',
+        )
+    )
+    table = declaration.root / "tables" / "summary.tex"
+    table.parent.mkdir(parents=True)
+    table.write_text("hand edited")
+    artifacts = _targeted_artifacts(
+        tmp_path,
+        (RenderTarget.LATEX, "summary", "tex", "generated"),
+        (RenderTarget.CSV, "summary", "csv", "data"),
+    )
+
+    with pytest.raises(PublishError, match="uncommitted change"):
+        deliver(declaration, artifacts)
+
+    assert table.read_text() == "hand edited"
+    assert not (declaration.root / "data" / "summary.csv").exists()
+
+
+def test_publish_preserves_undeclared_existing_file(tmp_path: Path):
+    declaration = _declaration(
+        _consumer(tmp_path, '[latex]\nsummary = "tables/summary.tex"\n')
+    )
+    undeclared = declaration.root / "tables" / "maintained.tex"
+    undeclared.parent.mkdir(parents=True)
+    undeclared.write_text("maintained")
+    _commit_all(declaration.root)
+
+    deliver(
+        declaration,
+        _targeted_artifacts(
+            tmp_path, (RenderTarget.LATEX, "summary", "tex", "generated")
+        ),
+    )
+
+    assert undeclared.read_text() == "maintained"
 
 
 def test_committed_consumer_figure_is_overwritten(tmp_path: Path):

@@ -31,33 +31,33 @@ and written there, not here.
 
 ## 3. Validate and deliver one run artifact set
 
-- [ ] 3.1 Depend on `make-report-runs-explicit` for renderer return types, target-plus-key identity,
+- [x] 3.1 Depend on `make-report-runs-explicit` for renderer return types, target-plus-key identity,
       collision detection, output containment, complete-run staging, manifest assembly, and generator
       promotion; add no nested emitted map or second report-run orchestrator.
-- [ ] 3.2 Validate a destination declaration directly against the supplied `ArtifactSet` before
+- [x] 3.2 Validate a destination declaration directly against the supplied `ArtifactSet` before
       generator promotion, without re-merging artifacts or repeating same-target collision checks.
       Verification: a table and CSV sharing a key validate together, and a missing declared artifact
       fails with its target and key.
-- [ ] 3.3 Deliver the validated declared subset once, after generator promotion succeeds.
+- [x] 3.3 Deliver the validated declared subset once, after generator promotion succeeds.
       Verification: an artifact owned by the final report is delivered, while an undeclared artifact
       remains only in generator output.
-- [ ] 3.4 Confirm a report, render, manifest, or declaration failure leaves the consuming repository
+- [x] 3.4 Confirm a report, render, manifest, or declaration failure leaves the consuming repository
       unchanged.
       Verification: failure injection at every pre-delivery boundary writes no consumer path.
-- [ ] 3.5 Tests for 3.2, 3.3, and 3.4 using `ArtifactSet` fixtures.
-- [ ] 3.6 Commit.
+- [x] 3.5 Tests for 3.2, 3.3, and 3.4 using `ArtifactSet` fixtures.
+- [x] 3.6 Commit.
       Message: `fix(eval): deliver the validated run artifact set`
 
 ## 4. Guard every delivered path
 
-- [ ] 4.1 Take the union of declared paths across kinds and ask the consuming repository once, refusing
+- [x] 4.1 Take the union of declared paths across kinds and ask the consuming repository once, refusing
       before the first write, per design.md Decision 4.
       Verification: an uncommitted change to a declared table refuses the publish and leaves every file
       untouched.
-- [ ] 4.2 Confirm publishing never removes a file, including one an earlier publish deposited.
+- [x] 4.2 Confirm publishing never removes a file, including one an earlier publish deposited.
       Verification: an undeclared file in a delivery directory survives a publish unchanged.
-- [ ] 4.3 Tests for both directions of 4.1 and for 4.2.
-- [ ] 4.4 Commit.
+- [x] 4.3 Tests for both directions of 4.1 and for 4.2.
+- [x] 4.4 Commit.
       Message: `fix(eval): guard every delivered path against consumer edits`
 
 ## 5. Fail before building when a declared kind is not requested

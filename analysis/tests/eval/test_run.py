@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -140,6 +141,31 @@ def test_consumer_preflight_failure_precedes_promotion(monkeypatch, tmp_path):
         )
     assert sentinel.read_text() == "previous"
     assert not declaration.targets[ArtifactId(RenderTarget.FIGURES, "missing")].exists()
+
+
+def test_artifact_owned_by_final_report_is_delivered_after_promotion(
+    monkeypatch, tmp_path
+):
+    install_reports(monkeypatch, "a", "b")
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    target = tmp_path / "consumer" / "b.md"
+    declaration = ArtifactDeclaration(
+        root=tmp_path,
+        targets={ArtifactId(RenderTarget.MARKDOWN, "b"): target},
+    )
+
+    result = run.execute(
+        ("a", "b"),
+        frozenset({RenderTarget.MARKDOWN}),
+        paths(tmp_path),
+        repo_url="https://example.test/repo",
+        full=True,
+        declaration=declaration,
+    )
+
+    assert result.delivered == (target,)
+    assert target.read_text() == (tmp_path / "reports" / "b.md").read_text()
+    assert not (tmp_path / "consumer" / "a.md").exists()
 
 
 def test_partial_run_preserves_registered_unselected_manifest_entry(
