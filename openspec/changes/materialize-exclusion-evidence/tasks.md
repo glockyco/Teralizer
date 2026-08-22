@@ -116,8 +116,10 @@
 - [x] 7.3 Review every retained generated RQ6 table, macro, CSV, and Markdown artifact. Confirm semantic
       row keys, typed values, plain CSV fields, readable Markdown, and no unregistered display
       recomputation.
-- [ ] 7.4 Exercise declaration-driven publication into a clean scratch thesis checkout. Confirm the
-      declared set lands transactionally and every undeclared evidence artifact remains producer-side.
+- [ ] 7.4 Exercise declaration-driven publication into a clean scratch thesis checkout using the
+      committed `publish.toml` prepared by `reconcile-reporeapers-claims`. Confirm the declared set lands
+      transactionally and every undeclared evidence artifact remains producer-side. The declaration is
+      consumer selection, not an evidence baseline, and the real thesis remains unchanged.
 - [ ] 7.5 Build the scratch thesis with strict LaTeX reference errors and inspect affected pages. This is
       a compatibility proof only; leave the real thesis untouched.
 - [x] 7.6 Run repository tests, lint, format, type checks, hooks, and strict OpenSpec validation.
@@ -127,8 +129,9 @@
 - [ ] 8.1 Record the finalized producer commit, artifact manifest, semantic corpus id, derived-view
       revision, metric keys, table row keys, denominator definitions, and known attempt-state limitation
       in this change's completion notes.
-- [ ] 8.2 Confirm `reconcile-reporeapers-claims` names this exact revision and consumes the artifacts
-      through `chapters/05-teralizer/publish.toml`, not by query or manual copy.
-- [ ] 8.3 Archive only after the one-time claim inventory is complete, any necessary conditional audit
-      is complete, and every overlapping requirement has one owner. Do not edit the thesis from this
-      repository.
+- [ ] 8.2 Confirm the active `reconcile-reporeapers-claims` change records this exact evidence revision
+      and its committed `chapters/05-teralizer/publish.toml` consumes the artifacts, not a query or manual
+      copy. It may remain active until this producer change is archived.
+- [ ] 8.3 Archive only after the scratch publication and compatibility proof pass, the one-time claim
+      inventory is complete, any necessary conditional audit is complete, and every overlapping
+      requirement has one owner. Do not edit the thesis from this repository.

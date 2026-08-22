@@ -141,7 +141,11 @@ delivery. This change supplies typed RQ6 evidence relations, retained metrics an
 conditional audit artifact only.
 
 All generated output remains in the producer build until a consumer declaration requests it. The
-thesis migration runs later from one finalized producer revision.
+thesis change may audit and commit that declaration against a clean producer candidate while this
+change remains active. The declaration records consumer selection only; it is not an evidence baseline.
+This change uses the committed declaration for scratch publication, freezes the evidence revision, and
+confirms that the thesis change records that exact revision before archive. The thesis claim and artifact
+migration starts only after this change is archived.
 
 ### 8. Commits follow causal subjects
 
@@ -186,9 +190,14 @@ baseline; regenerate from the reviewed corpus and source revision.
 5. If persisted codes and fixtures leave a retained causal explanation unsupported, run and retain the
    bounded deterministic audit.
 6. Correct stale source comments found by the inventory.
-7. Regenerate all registered reports once from the finalized producer revision and verify
-   reconciliation, provenance, and publication into a scratch consumer.
-8. Hand the exact revision and artifact manifest to `reconcile-reporeapers-claims`.
+7. Regenerate all registered reports once from a clean producer candidate and verify reconciliation
+   and provenance.
+8. Have `reconcile-reporeapers-claims` audit and commit its explicit consumer declaration against that
+   candidate without migrating thesis artifacts or claims.
+9. Use the committed declaration to prove transactional publication and thesis compatibility in a clean
+   scratch checkout.
+10. Freeze the exact producer evidence revision and manifest, confirm that the thesis change records
+    them, and archive this change before the thesis migration starts.
 
 Rollback is a normal revert of the responsible producer commit. Frozen corpus rows and historical Git
 state are never edited.
