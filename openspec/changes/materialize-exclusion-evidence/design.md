@@ -17,11 +17,13 @@ observations.
 
 **Goals:**
 
-- One canonical entity-to-mechanism fact relation for RQ6 evidence.
-- Every thesis-consumed RQ6 quantity is emitted with semantic identity, population, denominator, and
-  provenance.
-- Funnel counts and mechanism counts reconcile at every published entity level.
-- Causal explanations beyond persisted codes have deterministic, reviewable audit evidence.
+- One executable mechanism mapping and shared vocabulary for RQ6 evidence.
+- Separate typed relations preserve the evidence available at each entity level.
+- Every retained thesis RQ6 quantity is emitted with semantic identity, population, denominator where
+  applicable, and resolvable provenance.
+- Funnel counts and mechanism counts reconcile at each entity level that has the required evidence.
+- A surviving causal explanation beyond persisted codes and focused fixtures has deterministic,
+  reviewable audit evidence.
 - The retired-source checklist receives a complete one-time disposition.
 
 **Non-Goals:**
@@ -38,7 +40,15 @@ observations.
 
 Implementation starts only after the changes that own its inputs are accepted. `consolidate-repository-knowledge` owns the exclusion-accounting semantics. `make-report-runs-explicit` owns complete report runs and artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `declare-published-artifacts` owns declaration validation and consumer delivery.
 
-Each prerequisite must be synced and archived before this change consumes it. The apply phase records the exact accepted revisions and verifies their interfaces; it does not discover a dependency order or duplicate their implementation. `materialize-exclusion-evidence` is then the sole producer of the finalized mechanism keys, denominator keys, and claim-facing RQ6 evidence consumed by downstream release and thesis changes.
+All prerequisites are synced and archived. This change consumes `consolidate-evaluation-databases` at
+`edf5ae290a0659266fec28530c4873ab0db0a808`, `make-report-runs-explicit` at
+`6409d66588c271ffdcd4b75229319fa7459579da`, `separate-report-values-from-presentation` at
+`2cb26ea0f852c0163a0805dd06d464399e6787ee`, `consolidate-repository-knowledge` at
+`4042046a87e67048cdde506642320435a5865759`, and `declare-published-artifacts` at
+`595db740d4a8e2c860d5e658e9e0755467c54a33`. The apply phase verifies those accepted interfaces; it does
+not rediscover their dependency order or duplicate their implementation. `materialize-exclusion-evidence`
+is then the sole producer of the finalized mechanism keys, denominator keys, and retained claim-facing
+RQ6 evidence consumed by downstream release and thesis changes.
 
 ### 1. The accepted accounting contract is the semantic authority
 
@@ -49,20 +59,22 @@ prove it, but it does not redefine which mechanism owns an entity.
 Every entity-level fact resolves to one of the declared mechanisms or inclusion. Unknown exclusion
 codes, record shapes, and non-filter producers fail before aggregation. A catch-all bucket is forbidden.
 
-### 2. One canonical fact relation feeds every table and metric
+### 2. One semantic mapping feeds several typed evidence relations
 
-A normalized relation carries, at minimum:
+The executable mechanism mapping and reader-facing collapse are defined once. Each typed relation then
+carries only evidence that exists for its entity level. The expected relations cover project and test
+lifecycle observations, assertion observations, filter adjudication, and generated-generalization
+lifecycle observations. Their keys and joins are explicit; an absent attempt record is not manufactured
+from a later-stage row.
 
-- semantic corpus id and entity level;
-- stable entity identity;
-- mechanism identity and reader-facing outcome;
-- relevant stage and producer evidence;
-- attempted/emitted/adjudicated/filter-passed/validated/reduced/final-usable state; and
-- provenance identifiers needed to reproduce the row.
+A relation carries the stable entity identity, mechanism evidence, relevant stage or producer evidence,
+and the keys needed to join it to the owning report input. Corpus identity, source revision, and dirty
+state remain in the run-captured input snapshots and provenance manifest rather than being copied into
+every entity row.
 
-The fact relation is built once from typed writers and explicit joins. Headline collapse, detailed
-mechanism tables, funnel bands, composition metrics, and macros aggregate from it. No renderer or report
-section may recreate the mechanism mapping.
+Headline collapse, mechanism tables, funnel bands, retained metrics, and macros aggregate from the
+appropriate typed relations. Cross-level invariants compare compatible aggregates. No renderer, report
+section, or relation may recreate the mechanism mapping.
 
 Filter adjudication uses producer semantics, not storage shape alone. A quarantine record written
 through `filter_result` remains a build-quarantine outcome rather than filter rejection.
@@ -78,28 +90,31 @@ exists. A missing attempt record is reported as unknown attempt state, not infer
 failure. Final-use reporting remains valid where historical attempt state is incomplete, with that
 limitation recorded.
 
-### 4. Every metric key binds value, population, denominator, and provenance
+### 4. Metric metadata describes the measured fact; the run manifest describes its inputs
 
-A metric is not only a formatted scalar. It carries a stable key, raw value, unit, population, optional
-denominator key, semantic corpus id, and provenance record. Rate publication fails if its numerator and
-denominator do not belong to compatible populations.
+A metric carries a stable key, raw value, value kind, population, optional denominator key, and the
+existing code-provenance reference. Rate publication fails if its numerator and denominator do not
+belong to compatible populations. The owning report and run manifest resolve semantic corpus identity,
+repository-file input revisions, content identities, and dirty state. Copying those report-input facts
+into every scalar would duplicate the accepted provenance authority.
 
-The complete RQ6 consumer inventory is derived from current thesis citations and the retired-source
-audit. It includes mechanism and funnel facts plus assertion-kind composition, filter and failure
-causes, class-level cascades, test exclusions, output and exception-model splits, legacy and unresolved
-cases, parameter and return-type composition, symbolic-argument reach, and controlled-comparison
-quantities. Adding a thesis-consumed quantity later requires a registered metric or table key, never an
-ad hoc prose query.
+The downstream thesis claim inventory determines the retained RQ6 consumer surface. This producer emits
+the mechanism partition, funnel populations, their denominators, and only the comparison or causal
+quantities that the final thesis argument keeps. Current macros, table cells, and prose literals are
+candidate consumers, not an instruction to preserve every historical scalar. A retained quantity
+requires a registered metric or semantic table key, never an ad hoc prose query.
 
-### 5. The qualitative audit is deterministic evidence, not a hidden notebook
+### 5. A qualitative audit exists only for a surviving evidence gap
 
-Causal claims not already supported by persisted refusal codes or focused fixtures use a registered
-audit input. Selection records the corpus id, source revision, deterministic seed or complete candidate
-set, selected entity ids, observations, labels, reviewer rationale, and exclusions. The report validates
-and summarizes that input without rewriting it.
+First inventory the causal explanations the thesis proposes to retain. Persisted refusal codes own
+measured mechanism counts. Focused executable fixtures own deterministic mechanism behavior. If those
+sources support every retained explanation, record that result and create no qualitative audit input.
 
-The audit must be reproducible by another reviewer from the retained identifiers and source revision.
-A source sample without identities is not evidence and is discarded.
+If a retained explanation still requires reviewer interpretation, create one registered audit input for
+that bounded question. Selection records the corpus id, source revision, deterministic seed or complete
+candidate set, selected entity ids, observations, labels, reviewer rationale, and exclusions. The report
+validates and summarizes that input without rewriting it. Another reviewer must be able to reconstruct
+the selected entities. An identity-free source sample is not evidence and is discarded.
 
 ### 6. Retired knowledge receives one migration record
 
@@ -122,7 +137,8 @@ append to it.
 `make-report-runs-explicit` supplies `ReportContext`, `BuiltReport`, `ArtifactId`, and `ArtifactSet`.
 `separate-report-values-from-presentation` supplies typed values, semantic entities, row keys, and
 per-target rendering. `declare-published-artifacts` supplies consumer selection and transactional
-delivery. This change supplies normalized RQ6 facts, metrics, tables, and audit artifacts only.
+delivery. This change supplies typed RQ6 evidence relations, retained metrics and tables, and a
+conditional audit artifact only.
 
 All generated output remains in the producer build until a consumer declaration requests it. The
 thesis migration runs later from one finalized producer revision.
@@ -131,10 +147,10 @@ thesis migration runs later from one finalized producer revision.
 
 Recommended implementation subjects:
 
-1. normalized exclusion fact relation and invariant tests;
-2. denominator funnel and metric model;
-3. complete RQ6 registered metric/table surface;
-4. deterministic widening audit;
+1. executable mechanism mapping and typed evidence relations;
+2. denominator funnel and metric metadata;
+3. retained RQ6 registered metric and table surface;
+4. bounded causal audit, only if the claim inventory proves it necessary;
 5. report rendering and provenance integration;
 6. source-comment corrections that share the classification cause; and
 7. one-time retired-claim audit completion.
@@ -144,28 +160,32 @@ baseline; regenerate from the reviewed corpus and source revision.
 
 ## Risks / Trade-offs
 
-- **The normalized relation can become a second classifier.** -> It may only consume typed producer
-  evidence and the accepted mapping, with fail-loud unknowns and reconciliation against existing
+- **A typed evidence relation can become a second classifier.** -> Every relation consumes the one
+  executable mapping and typed producer evidence, fails on unknowns, and reconciles against accepted
   accounting totals.
+- **Separate relations can drift.** -> Share mechanism keys and compare only compatible keyed
+  aggregates. Do not align unrelated levels through nullable columns or synthetic rows.
 - **Historical attempt state is incomplete.** -> Publish unknown state explicitly and avoid claims
   about a stage running without an independent attempt record.
-- **The consumer inventory may miss a prose literal.** -> Build it from generated macro/table usage,
-  current thesis claim inventory, and the one-time audit. The final thesis reconciliation performs a
-  second complete consumer search.
+- **The retained consumer inventory may miss a claim.** -> Build it from the downstream thesis claim
+  inventory, generated macro and semantic-table usage, and the one-time retired-source audit. The final
+  thesis reconciliation performs a second complete consumer search.
 - **A permanent ledger feels safer.** -> Rejected. It would be another narrative authority that can go
   stale. Accepted specs, executable checks, registered outputs, and change history already provide the
   durable homes.
-- **The audit may overstate causality.** -> Separate persisted-code conclusions from human-reviewed
-  explanations and require retained entity identities and rationale for the latter.
+- **The audit may overstate causality or exist without need.** -> Prefer persisted codes and executable
+  fixtures. Create an audit only for a surviving bounded question, and retain identities and rationale.
 
 ## Migration Plan
 
-1. Finish and archive `consolidate-repository-knowledge`; consume its accounting contract unchanged.
-2. Land corpus identity, report-run, typed rendering, and declaration prerequisites.
-3. Implement and prove the canonical fact relation and denominator funnel.
-4. Materialize the complete registered RQ6 metric and artifact surface.
-5. Run and retain the deterministic causal audit.
-6. Complete the one-time retired-source disposition and correct any stale source comments found.
+1. Verify the five archived prerequisite revisions and consume their accepted contracts unchanged.
+2. Complete the one-time retired-source claim inventory and identify retained thesis quantities and
+   causal explanations.
+3. Implement and prove the shared mechanism mapping, typed evidence relations, and denominator funnel.
+4. Materialize the retained registered RQ6 metric and artifact surface.
+5. If persisted codes and fixtures leave a retained causal explanation unsupported, run and retain the
+   bounded deterministic audit.
+6. Correct stale source comments found by the inventory.
 7. Regenerate all registered reports once from the finalized producer revision and verify
    reconciliation, provenance, and publication into a scratch consumer.
 8. Hand the exact revision and artifact manifest to `reconcile-reporeapers-claims`.

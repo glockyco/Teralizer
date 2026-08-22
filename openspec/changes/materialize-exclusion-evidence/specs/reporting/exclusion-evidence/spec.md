@@ -8,11 +8,15 @@ semantics, so every reader-facing quantity and supported causal claim can be rep
 ### Requirement: Exclusion evidence materializes the accepted mechanism accounting
 
 The registered real-world report SHALL emit a citable partition of included entities and every known
-exclusion mechanism at each published entity level. The partition SHALL consume the accepted
-exclusion-accounting semantics and SHALL NOT hide a mechanism inside an unlabeled residual bucket.
+exclusion mechanism at each published entity level. One executable mapping SHALL own mechanism keys and
+the reader-facing collapse. Separate typed relations SHALL preserve the lifecycle, assertion,
+filter-adjudication, and generated-generalization evidence available at their respective levels. They
+SHALL NOT force absent evidence into one universal row shape or hide a mechanism inside an unlabeled
+residual bucket.
 
-Each entity SHALL be counted exactly once at a given level. Mechanism counts SHALL reconcile to the
-eligible population and to the report's collapsed reader-facing outcomes.
+Each entity SHALL be counted exactly once within a compatible relation and level. Mechanism counts SHALL
+reconcile to the eligible population and to the report's collapsed reader-facing outcomes wherever the
+required evidence exists.
 
 #### Scenario: Known mechanisms are present
 
@@ -58,10 +62,12 @@ counts MAY still be published when attempt history is incomplete, provided the l
 
 ### Requirement: Every published quantity states identity and denominator
 
-Each registered RQ6 metric SHALL carry a stable semantic key, raw value, unit, population, semantic
-corpus id, source revision, and provenance. A rate SHALL also identify its denominator. Report
-generation SHALL fail when a numerator and denominator belong to incompatible populations or when a
-thesis-declared metric key is missing.
+Each registered RQ6 metric SHALL carry a stable semantic key, raw value, value kind, population,
+optional denominator key, and the existing code-provenance reference. A rate SHALL identify its
+denominator. Semantic corpus identity, repository-file input revisions, content identities, and dirty
+state SHALL resolve through the owning report run's input snapshots and provenance manifest; the metric
+SHALL NOT duplicate those run-level input facts. Report generation SHALL fail when a numerator and
+denominator belong to incompatible populations or when a retained thesis-declared metric key is missing.
 
 #### Scenario: A rate is published
 
@@ -74,40 +80,54 @@ thesis-declared metric key is missing.
 - **WHEN** a declared thesis artifact refers to a metric key the finalized report does not emit
 - **THEN** publication fails naming that key
 
-### Requirement: The thesis-consumed RQ6 evidence surface is complete
+### Requirement: The retained thesis RQ6 evidence surface is complete
 
-The registered report SHALL materialize every RQ6 quantity declared for thesis consumption as a metric,
-macro, or table cell. The set SHALL cover project, test, assertion, and generalization populations;
-mechanism and funnel counts; filter and failure causes; assertion-kind and type composition;
-class-level cascades; output and exception-model outcomes; symbolic-argument reach; and declared
-controlled-comparison quantities.
+The registered report SHALL materialize each quantity retained by the downstream thesis claim inventory
+as a metric, macro, or semantically keyed table cell. The retained set SHALL cover the mechanism
+partition, supported funnel populations, denominators, and only the comparison or causal quantities
+needed by the final argument. Existing macros, table cells, and prose literals SHALL be treated as
+candidate consumers, not as a requirement to preserve every historical scalar.
 
-The values SHALL derive from the normalized evidence relation or an explicitly registered audit input.
-No thesis-consumed quantity may exist only as an ad hoc query or rendered prose literal.
+The values SHALL derive from the appropriate typed evidence relation or, when a surviving causal claim
+requires it, an explicitly registered audit input. No retained thesis quantity may exist only as an ad
+hoc query or rendered prose literal.
 
-#### Scenario: The consumer inventory is checked
+#### Scenario: The retained consumer inventory is checked
 
 - **WHEN** the finalized report run completes
-- **THEN** every declared thesis metric and table key is present exactly once
-- **AND** each carries its population, denominator where applicable, and provenance
+- **THEN** every retained thesis metric and table key is present exactly once
+- **AND** each carries its population, denominator where applicable, and resolvable provenance
+
+#### Scenario: A historical quantity is not retained
+
+- **WHEN** the thesis claim inventory removes a macro, table cell, or prose quantity
+- **THEN** this capability does not require a replacement metric solely to preserve that old output
 
 #### Scenario: Two outputs report the same fact
 
-- **WHEN** a macro and a table cell represent one semantic quantity
+- **WHEN** a macro and a table cell represent one retained semantic quantity
 - **THEN** both derive from the same metric identity rather than recomputing it independently
 
-### Requirement: Causal evidence is reproducible and scoped
+### Requirement: Causal evidence is reproducible, scoped, and conditional
 
-A causal claim not already proved by persisted codes or focused executable fixtures SHALL use a
-registered audit that records semantic corpus id, source revision, candidate or sampling rule, selected
-entity identities, observations, labels, and reviewer rationale.
+The claim inventory SHALL first resolve each retained causal explanation through persisted codes or
+focused executable fixtures. If those sources close every retained explanation, the change SHALL record
+that no qualitative audit is required and SHALL NOT create a placeholder audit input.
 
+A retained causal explanation that still requires reviewer interpretation SHALL use one registered audit
+for that bounded question. The audit SHALL record semantic corpus id, source revision, candidate or
+sampling rule, selected entity identities, observations, labels, exclusions, and reviewer rationale.
 The report SHALL distinguish a persisted-mechanism result from a reviewer interpretation. It SHALL NOT
 publish an unidentifiable source sample as current evidence.
 
+#### Scenario: Existing evidence closes the causal claims
+
+- **WHEN** persisted codes and focused fixtures support every retained causal explanation
+- **THEN** no qualitative audit input or summary is required
+
 #### Scenario: A reviewer explains a widening refusal
 
-- **WHEN** the explanation goes beyond the persisted refusal code
+- **WHEN** a retained explanation goes beyond the persisted refusal code and focused fixtures
 - **THEN** the supporting audit names the reviewed entities, source revision, observations, and rationale
 
 #### Scenario: An historical audit omitted identities
@@ -117,9 +137,11 @@ publish an unidentifiable source sample as current evidence.
 
 ### Requirement: Every emitted result carries reproducible provenance
 
-Every exclusion table, metric, macro, and audit summary SHALL carry or resolve to provenance that names
-the semantic corpus id, source revision, query or audit definition, and dirty state. Publication SHALL
-occur only after corpus-completeness and reconciliation checks pass.
+Every exclusion table, metric, macro, and conditional audit summary SHALL resolve through its owning
+report and run manifest to the semantic corpus id, declared repository-file inputs, source identities,
+query or audit definition, and dirty state. Code provenance SHALL remain attached through the existing
+provenance reference. Publication SHALL occur only after corpus-completeness and reconciliation checks
+pass.
 
 #### Scenario: Corpus inputs disagree
 
