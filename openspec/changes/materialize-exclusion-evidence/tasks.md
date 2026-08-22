@@ -120,7 +120,7 @@
       declared set lands transactionally and every undeclared evidence artifact remains producer-side.
 - [ ] 7.5 Build the scratch thesis with strict LaTeX reference errors and inspect affected pages. This is
       a compatibility proof only; leave the real thesis untouched.
-- [ ] 7.6 Run repository tests, lint, format, type checks, hooks, and strict OpenSpec validation.
+- [x] 7.6 Run repository tests, lint, format, type checks, hooks, and strict OpenSpec validation.
 
 ## 8. Hand off one finalized evidence revision
 
