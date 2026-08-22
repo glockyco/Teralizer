@@ -51,14 +51,15 @@ def test_filtering_table_shapes_columns_and_percentages():
 def test_breakdown_table_percentages_over_total():
     df = pd.DataFrame(
         {
-            "level": ["Test", "Assertion", "Generalization"],
-            "total": [81810, 122153, 239],
-            "included": [33385, 711, 206],
-            "filtering": [40583, 121060, 23],
-            "failures": [7842, 382, 10],
+            "level": ["Assertion", "Generalization", "Test"],
+            "total": [122153, 239, 81810],
+            "included": [711, 206, 33385],
+            "filtering": [121060, 23, 40583],
+            "failures": [382, 10, 7842],
         }
     )
     table = build_breakdown_table(df, key="breakdown", label="tab:y", caption="C")
+    assert table.df["level"].tolist() == ["Test", "Assertion", "Generalization"]
     row = table.df.set_index("level").loc["Test"]
     assert round(row["included_pct"], 3) == Decimal("0.408")
     assert round(row["filtering_pct"], 3) == Decimal("0.496")

@@ -244,14 +244,15 @@ def build_breakdown_table(
             *columns,
         ]
         group_by = "level"
+    out.loc[:, "_lvl"] = out["level"].map(lambda level: _LEVEL_ORDER.get(level, 99))
+    sort_columns = ["_lvl"]
     if include_strategy:
-        out.loc[:, "_lvl"] = out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99))
         out.loc[:, "_var"] = out["strategy"].map(variant_sort_key)
-        out = (
-            out.sort_values(["_lvl", "_var"])
-            .drop(columns=["_lvl", "_var"])
-            .reset_index(drop=True)
-        )
+        sort_columns.append("_var")
+    out = (
+        out.sort_values(sort_columns).drop(columns=sort_columns).reset_index(drop=True)
+    )
+    if include_strategy:
         out.loc[:, "strategy"] = out["strategy"].map(variant_ref)
     return Table(
         key=key,
