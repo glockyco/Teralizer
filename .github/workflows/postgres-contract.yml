@@ -1,0 +1,188 @@
+name: PostgreSQL contract
+
+# Trigger inventory:
+# - This workflow owns the hosted contract and its service configuration.
+# - create-tables.sql and create-views.sql own the base and derived schema.
+# - corpora.toml owns semantic identity, physical resolution, and project count.
+# - corpora.py, corpus_preparation.py, config.py, report_basis.py, and the package
+#   initializer own the Python registry, preparation, credential, and import path.
+# - pyproject.toml and uv.lock own the Python runtime dependency closure.
+# - corpus-registry and psql.sh own shell identity and connection translation.
+# - projects.sql owns the synthetic corpus rows.
+# - flake.nix and flake.lock own the pinned execution environment.
+# Report renderers are excluded because this contract neither imports nor runs them.
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - '.github/workflows/postgres-contract.yml'
+      - 'src/main/resources/db/create-tables.sql'
+      - 'src/main/resources/db/create-views.sql'
+      - 'src/main/resources/db/corpora.toml'
+      - 'analysis/src/teralizer/__init__.py'
+      - 'analysis/src/teralizer/config.py'
+      - 'analysis/src/teralizer/corpora.py'
+      - 'analysis/src/teralizer/corpus_preparation.py'
+      - 'analysis/src/teralizer/report_basis.py'
+      - 'analysis/pyproject.toml'
+      - 'analysis/uv.lock'
+      - 'scripts/corpus-registry'
+      - 'scripts/lib/psql.sh'
+      - 'verification/fixtures/corpus-package/projects.sql'
+      - 'flake.nix'
+      - 'flake.lock'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - '.github/workflows/postgres-contract.yml'
+      - 'src/main/resources/db/create-tables.sql'
+      - 'src/main/resources/db/create-views.sql'
+      - 'src/main/resources/db/corpora.toml'
+      - 'analysis/src/teralizer/__init__.py'
+      - 'analysis/src/teralizer/config.py'
+      - 'analysis/src/teralizer/corpora.py'
+      - 'analysis/src/teralizer/corpus_preparation.py'
+      - 'analysis/src/teralizer/report_basis.py'
+      - 'analysis/pyproject.toml'
+      - 'analysis/uv.lock'
+      - 'scripts/corpus-registry'
+      - 'scripts/lib/psql.sh'
+      - 'verification/fixtures/corpus-package/projects.sql'
+      - 'flake.nix'
+      - 'flake.lock'
+  workflow_dispatch:
+
+concurrency:
+  group: postgres-contract-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  postgres-contract:
+    runs-on: ubuntu-latest
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REPORT_DB_USER: teralizer_report
+      REPORT_DB_PASSWORD: teralizer-report
+    services:
+      postgres:
+        image: postgres:17.1
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Nix
+        uses: DeterminateSystems/determinate-nix-action@v3.21.9
+
+      - name: Verify the synthetic corpus lifecycle
+        run: |
+          nix develop --command bash <<'CONTRACT'
+          set -euo pipefail
+
+          fail() {
+            printf 'PostgreSQL contract failed at %s\n' "$1" >&2
+            exit 1
+          }
+
+          export TERALIZER_PSQL_TRANSPORT=native
+          if ! source scripts/lib/psql.sh; then
+            fail 'loading the PostgreSQL connection boundary'
+          fi
+          target="$(teralizer_psql_target)"
+
+          if ! DB_NAME="$(scripts/corpus-registry get controlled database)"; then
+            fail 'resolving semantic corpus id controlled'
+          fi
+          if [[ -z "$DB_NAME" ]]; then
+            fail 'resolving a non-empty physical database for controlled'
+          fi
+          if ! EXPECTED_PROJECTS="$(scripts/corpus-registry get controlled expected-projects)"; then
+            fail 'resolving the controlled project count'
+          fi
+
+          if ! PGPASSWORD="$DB_PASSWORD" createdb \
+            --host="$DB_HOST" \
+            --port="$DB_PORT" \
+            --username="$DB_USER" \
+            --owner="$DB_USER" \
+            "$DB_NAME"; then
+            fail "creating $DB_NAME through $target"
+          fi
+          if ! teralizer_psql -d "$DB_NAME" \
+            --set=ON_ERROR_STOP=1 \
+            -f src/main/resources/db/create-tables.sql; then
+            fail "installing the canonical base schema in $DB_NAME through $target"
+          fi
+          if ! teralizer_psql -d "$DB_NAME" \
+            --set=ON_ERROR_STOP=1 \
+            -f verification/fixtures/corpus-package/projects.sql; then
+            fail "installing the tracked synthetic fixture in $DB_NAME through $target"
+          fi
+
+          if ! first_result="$(scripts/corpus-registry prepare-corpus controlled)"; then
+            fail 'preparing the controlled corpus the first time'
+          fi
+          if ! second_result="$(scripts/corpus-registry prepare-corpus controlled)"; then
+            fail 'preparing the controlled corpus the second time'
+          fi
+          printf '%s\n' "$first_result"
+          if [[ "$first_result" != "$second_result" ]]; then
+            printf '%s\n' "$second_result" >&2
+            fail 'proving idempotent preparation output'
+          fi
+
+          if ! observed_projects="$(teralizer_psql -At -d "$DB_NAME" \
+            --set=ON_ERROR_STOP=1 -c 'SELECT count(*) FROM project')"; then
+            fail 'reading the prepared project count'
+          fi
+          if [[ "$observed_projects" != "$EXPECTED_PROJECTS" ]]; then
+            fail "matching project count $observed_projects to expected $EXPECTED_PROJECTS"
+          fi
+          if ! expected_revision="$(sha256sum src/main/resources/db/create-views.sql | cut -d ' ' -f 1)"; then
+            fail 'calculating the canonical derived-view revision'
+          fi
+          if ! installed_revision="$(teralizer_psql -At -d "$DB_NAME" \
+            --set=ON_ERROR_STOP=1 \
+            -c "SELECT value FROM teralizer_corpus_metadata WHERE key = 'derived_view_revision'")"; then
+            fail 'reading the installed derived-view revision'
+          fi
+          if [[ "$installed_revision" != "$expected_revision" ]]; then
+            fail "matching installed revision $installed_revision to expected $expected_revision"
+          fi
+
+          if ! report_projects="$(DB_USER="$REPORT_DB_USER" \
+            DB_PASSWORD="$REPORT_DB_PASSWORD" \
+            teralizer_psql -At -d "$DB_NAME" \
+            --set=ON_ERROR_STOP=1 -c 'SELECT count(*) FROM project')"; then
+            fail 'reading the synthetic corpus through the report role'
+          fi
+          if [[ "$report_projects" != "$EXPECTED_PROJECTS" ]]; then
+            fail "matching report-role count $report_projects to expected $EXPECTED_PROJECTS"
+          fi
+
+          if write_error="$(DB_USER="$REPORT_DB_USER" \
+            DB_PASSWORD="$REPORT_DB_PASSWORD" \
+            teralizer_psql -d "$DB_NAME" --set=ON_ERROR_STOP=1 \
+            -c 'DELETE FROM project' 2>&1)"; then
+            fail 'refusing a report-role write'
+          fi
+          if [[ "$write_error" != *'read-only transaction'* ]]; then
+            printf '%s\n' "$write_error" >&2
+            fail 'proving PostgreSQL refused the write as read-only'
+          fi
+          printf '%s\n' "$write_error"
+          printf 'PostgreSQL contract passed for controlled (%s projects, revision %s)\n' \
+            "$observed_projects" "$installed_revision"
+          CONTRACT
