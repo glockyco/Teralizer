@@ -183,7 +183,7 @@ def _build_table(
         key="rq6_generalization_funnel",
         df=pd.DataFrame(rows),
         columns=[
-            ColumnSpec("Population", "population", kind=ValueKind.ENTITY),
+            ColumnSpec("Population", "population", kind=ValueKind.TEXT),
             ColumnSpec("Count", "count", kind=ValueKind.COUNT, align="r"),
             ColumnSpec("Entering", "entering", kind=ValueKind.COUNT, align="r"),
             ColumnSpec("Excluded", "excluded", kind=ValueKind.COUNT, align="r"),

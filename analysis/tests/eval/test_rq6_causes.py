@@ -4,10 +4,12 @@ import pytest
 from sqlalchemy import text
 
 from teralizer.eval.inputs import CorpusInputSpec
+from teralizer.eval.model import BuiltReport
 from teralizer.eval.reports import _exclusion_evidence as exclusion
 from teralizer.eval.reports import _funnel
 
 from teralizer.eval.registry import get
+from teralizer.eval.render.markdown import render_str
 from teralizer.eval.reports import rq6_causes  # noqa: F401  (registers "rq6")
 from teralizer.eval.reports._causes_common import MECHANISM_COLLAPSE
 
@@ -123,6 +125,14 @@ def test_rq6_mechanism_rows_have_stable_keys_and_denominators(rq6_report):
     for _, rows in table.df.groupby("level"):
         assert int(rows["entity_count"].sum()) == int(rows["level_total"].iloc[0])
         assert float(rows["share"].sum()) == pytest.approx(1.0)
+
+
+def test_rq6_mechanism_table_renders_text_identities(rq6_report):
+    markdown = render_str(
+        BuiltReport(rq6_report, ()), repo_url="https://example.invalid"
+    )
+    assert "| Test | Included | included |" in markdown
+    assert "| Generalization | Generation-time gate | filtering |" in markdown
 
 
 def test_rq6_breakdown_matches_eligible_entity_denominators(rq6_report, rq6_conn):

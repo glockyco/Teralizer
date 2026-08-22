@@ -81,9 +81,9 @@ def build_mechanism_table(
         key="rq6_exclusion_mechanisms",
         df=out.reset_index(drop=True),
         columns=[
-            ColumnSpec("Level", "level", kind=ValueKind.ENTITY),
-            ColumnSpec("Mechanism", "mechanism_label"),
-            ColumnSpec("Outcome", "reader_outcome", kind=ValueKind.ENTITY),
+            ColumnSpec("Level", "level", kind=ValueKind.TEXT),
+            ColumnSpec("Mechanism", "mechanism_label", kind=ValueKind.TEXT),
+            ColumnSpec("Outcome", "reader_outcome", kind=ValueKind.TEXT),
             ColumnSpec(
                 "Entities",
                 "entity_count",
