@@ -210,3 +210,13 @@ The downstream claim inventory keeps four result groups. `RETAINED_METRIC_KEYS` 
 | Historical database names, row positions, stage labels, copied values, and ad hoc query results | removed | The registered run manifest and semantic keys replace these volatile identities. |
 
 Each rate metric names a numerator and denominator key. Each operand names its entity level and report input role. The run manifest owns corpus identity and source revision.
+
+## Conditional causal-audit decision
+
+The thesis retains two qualitative causal explanations: EXC-18 and EXC-20. Existing executable fixtures close both explanations on the pinned JPF/SPF stack:
+
+- `NullConcreteRefusalShapeTest` and `OutputSpecClassifierTest` distinguish computed booleans, local stores, concrete returns, field and array reads, callee returns, and loop accumulation.
+- `DivergenceRiskCaptureTest` and `TestGeneralizationListenerConcretizationTest` distinguish native-boundary concretization and later divergence risk.
+- `WideningLicenseTest` binds those observations to the current license verdict and stable refusal code.
+
+The focused fixture run passed on 2026-08-22. No retained causal explanation requires reviewer interpretation. Therefore, this change creates no audit sample, schema, report input, artifact, or placeholder registration. The identity-free historical source audit remains discarded under EXC-21.

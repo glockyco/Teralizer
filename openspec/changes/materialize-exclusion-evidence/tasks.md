@@ -78,19 +78,19 @@
 
 ## 5. Close surviving causal-evidence gaps
 
-- [ ] 5.1 Inventory the exact causal explanations retained by the thesis. Resolve each first through
+- [x] 5.1 Inventory the exact causal explanations retained by the thesis. Resolve each first through
       persisted refusal codes or focused executable fixtures, and reject the historical identity-free
       audit as current evidence.
-- [ ] 5.2 If existing evidence closes every retained explanation, record that result in the one-time
+- [x] 5.2 If existing evidence closes every retained explanation, record that result in the one-time
       claim inventory and create no audit input, schema, report artifact, or placeholder registration.
-- [ ] 5.3 If a bounded explanation still requires reviewer interpretation, build a deterministic
+- [x] 5.3 If a bounded explanation still requires reviewer interpretation, build a deterministic
       candidate set or sampling rule from the `real-world` corpus. Record source revision, seed where
       applicable, selected stable entity ids, observations, labels, exclusions, rationale, and
       disagreements.
-- [ ] 5.4 For that conditional case only, store the reviewed input as a versioned, schema-validated
+- [x] 5.4 For that conditional case only, store the reviewed input as a versioned, schema-validated
       report input and register its provenance. Ensure another reviewer can locate every selected source
       entity.
-- [ ] 5.5 For that conditional case only, emit the audit summary separately from persisted-mechanism
+- [x] 5.5 For that conditional case only, emit the audit summary separately from persisted-mechanism
       counts and label interpretations as reviewer evidence rather than pipeline facts.
 
 ## 6. Correct contradictions at their maintained owners
