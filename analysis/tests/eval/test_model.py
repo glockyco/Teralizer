@@ -1,8 +1,11 @@
 import pandas as pd
+import pytest
+
 from teralizer.eval.model import (
     ColumnSpec,
     Figure,
     Metric,
+    MetricPopulation,
     Prose,
     RQReport,
     Section,
@@ -28,6 +31,53 @@ def test_rqreport_collects_metrics_by_key():
     assert report.metric_map()["realworld.eligible_projects"] is m
 
 
+def test_metric_rate_resolves_compatible_operands():
+    attempted = MetricPopulation("attempted", "Generalization", "real-world")
+    validated = MetricPopulation("validated", "Generalization", "real-world")
+    report = RQReport(
+        rq="rq6",
+        title="RQ6",
+        sections=[],
+        metrics=[
+            Metric("attempts", 10, kind=ValueKind.COUNT, population=attempted),
+            Metric("validated", 4, kind=ValueKind.COUNT, population=validated),
+            Metric(
+                "validated_pct",
+                0.4,
+                kind=ValueKind.SHARE,
+                population=validated,
+                numerator_key="validated",
+                denominator_key="attempts",
+            ),
+        ],
+    )
+    report.validate_metric_relations()
+
+
+def test_metric_rate_rejects_incompatible_population():
+    projects = MetricPopulation("projects", "Project", "real-world")
+    assertions = MetricPopulation("assertions", "Assertion", "real-world")
+    report = RQReport(
+        rq="rq6",
+        title="RQ6",
+        sections=[],
+        metrics=[
+            Metric("projects", 10, kind=ValueKind.COUNT, population=projects),
+            Metric("assertions", 4, kind=ValueKind.COUNT, population=assertions),
+            Metric(
+                "bad_rate",
+                0.4,
+                kind=ValueKind.SHARE,
+                population=assertions,
+                numerator_key="assertions",
+                denominator_key="projects",
+            ),
+        ],
+    )
+    with pytest.raises(ValueError, match="incompatible denominator projects"):
+        report.validate_metric_relations()
+
+
 def test_table_and_figure_are_frozen_and_carry_keys():
     t = Table(
         key="funnel",
@@ -40,7 +90,6 @@ def test_table_and_figure_are_frozen_and_carry_keys():
     assert t.key == "funnel" and f.label == "fig:rq6-bar"
     # frozen: mutation raises
     import dataclasses
-    import pytest
 
     with pytest.raises(dataclasses.FrozenInstanceError):
         t.caption = "x"  # type: ignore[misc]

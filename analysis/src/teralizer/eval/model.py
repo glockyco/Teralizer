@@ -21,6 +21,21 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
+class MetricPopulation:
+    """Semantic population measured by a metric within one declared report input."""
+
+    key: str
+    entity_level: str
+    input_role: str
+
+    def is_compatible_with(self, other: "MetricPopulation") -> bool:
+        return (
+            self.entity_level == other.entity_level
+            and self.input_role == other.input_role
+        )
+
+
+@dataclass(frozen=True)
 class Metric:
     """A single named scalar the report cites. `key` is semantic and stable
     (`realworld.eligible_projects_pct`), never keyed on an RQ number."""
@@ -29,6 +44,10 @@ class Metric:
     value: float | int | str
     fmt: str = "int"
     provenance: "Provenance | None" = None
+    kind: "ValueKind | None" = None
+    population: MetricPopulation | None = None
+    numerator_key: str | None = None
+    denominator_key: str | None = None
 
 
 def decimal_value(value: object, places: int) -> Decimal:
@@ -175,6 +194,62 @@ class RQReport:
 
     def metric(self, key: str) -> Metric:
         return self.metric_map()[key]
+
+    def validate_metric_relations(self, *, require_metadata: bool = False) -> None:
+        metrics = self.metric_map()
+        for metric in metrics.values():
+            if require_metadata:
+                missing = [
+                    name
+                    for name, value in (
+                        ("kind", metric.kind),
+                        ("population", metric.population),
+                        ("provenance", metric.provenance),
+                    )
+                    if value is None
+                ]
+                if missing:
+                    raise ValueError(f"metric {metric.key} lacks {', '.join(missing)}")
+            if metric.denominator_key is None:
+                if metric.numerator_key is not None:
+                    raise ValueError(
+                        f"metric {metric.key} has a numerator without a denominator"
+                    )
+                continue
+            if metric.numerator_key is None:
+                raise ValueError(f"rate metric {metric.key} lacks a numerator key")
+            if metric.kind not in {ValueKind.SHARE, ValueKind.PERCENT}:
+                raise ValueError(
+                    f"metric {metric.key} has a denominator but is not a rate"
+                )
+            try:
+                numerator = metrics[metric.numerator_key]
+                denominator = metrics[metric.denominator_key]
+            except KeyError as error:
+                raise ValueError(
+                    f"metric {metric.key} references missing operand {error.args[0]}"
+                ) from error
+            if metric.population != numerator.population:
+                raise ValueError(
+                    f"metric {metric.key} population differs from its numerator"
+                )
+            if (
+                metric.population is None
+                or denominator.population is None
+                or not metric.population.is_compatible_with(denominator.population)
+            ):
+                raise ValueError(
+                    f"metric {metric.key} has incompatible denominator "
+                    f"{metric.denominator_key}"
+                )
+            denominator_value = float(denominator.value)
+            if denominator_value == 0:
+                raise ValueError(f"metric {metric.key} has a zero denominator")
+            expected = float(numerator.value) / denominator_value
+            if abs(float(metric.value) - expected) > 1e-12:
+                raise ValueError(
+                    f"metric {metric.key} does not equal its declared operands"
+                )
 
     def tables(self) -> list[Table]:
         return [b for s in self.sections for b in s.blocks if isinstance(b, Table)]

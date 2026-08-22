@@ -59,21 +59,21 @@
 
 ## 4. Register the retained thesis evidence surface
 
-- [ ] 4.1 Use the downstream thesis claim inventory, current semantic table and macro consumers, and the
+- [x] 4.1 Use the downstream thesis claim inventory, current semantic table and macro consumers, and the
       retired-source audit to classify each candidate RQ6 quantity as retained, corrected, or removed.
       Do not promote every current cell or prose literal into a metric.
-- [ ] 4.2 Add stable identities for the retained mechanism, funnel, denominator, and compatible
+- [x] 4.2 Add stable identities for the retained mechanism, funnel, denominator, and compatible
       controlled-comparison quantities. Add another composition or causal quantity only when the
       reviewed final argument keeps it and names its population.
-- [ ] 4.3 Make each metric carry raw value, value kind, population, optional denominator key, and the
+- [x] 4.3 Make each metric carry raw value, value kind, population, optional denominator key, and the
       existing code-provenance reference. Resolve corpus and repository-file input identity through the
       report run manifest. Reject incompatible rate operands and duplicated run-level provenance fields.
-- [ ] 4.4 Derive duplicate retained representations, such as a macro and a table cell, from one metric
+- [x] 4.4 Derive duplicate retained representations, such as a macro and a table cell, from one metric
       identity. Remove report-local recomputation of the same fact.
-- [ ] 4.5 Add a retained-consumer completeness test that fails when a required metric or table key is
+- [x] 4.5 Add a retained-consumer completeness test that fails when a required metric or table key is
       absent, duplicated, lacks resolvable provenance, or lacks its required denominator. Prove that a
       removed historical quantity does not require a replacement metric.
-- [ ] 4.6 Generate every retained RQ6 Markdown, LaTeX, CSV, and macro artifact through `ArtifactSet` and
+- [x] 4.6 Generate every retained RQ6 Markdown, LaTeX, CSV, and macro artifact through `ArtifactSet` and
       the typed renderer. Add no hand-formatted table or special publication path.
 
 ## 5. Close surviving causal-evidence gaps

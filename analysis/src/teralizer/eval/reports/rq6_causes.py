@@ -7,7 +7,14 @@ from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
 from teralizer.eval.inputs import CorpusInputSpec, ReportContext
-from teralizer.eval.model import Metric, Prose, RQReport, Section
+from teralizer.eval.model import (
+    Metric,
+    MetricPopulation,
+    Prose,
+    RQReport,
+    Section,
+    ValueKind,
+)
 from teralizer.eval.provenance import Provenance, capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.eval.reports import _exclusion_evidence as exclusion
@@ -16,6 +23,7 @@ from teralizer.eval.reports import _generalization_funnel as generation_funnel
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
     build_filtering_table,
+    build_mechanism_table,
     collapse_mechanisms,
 )
 from teralizer.eval.reports._diagnostics import (
@@ -27,6 +35,7 @@ from teralizer.eval.reports._diagnostics import (
     mut_choice_table,
 )
 from teralizer.eval.reports._widening import (
+    WIDENING_REFUSALS,
     WIDENING_REFUSAL_SQL,
     fetch_widening_refusals,
     widening_refusal_metrics,
@@ -53,13 +62,53 @@ def _fetch_assertions_without_resolution(conn: Connection, variant: str) -> int:
     return int(df["assertions_without_resolution"].iloc[0])
 
 
+def _population(key: str, entity_level: str) -> MetricPopulation:
+    return MetricPopulation(key, entity_level, "real-world")
+
+
+def _count_metric(
+    key: str,
+    value: int,
+    entity_level: str,
+    provenance: Provenance,
+) -> Metric:
+    return Metric(
+        key,
+        value,
+        fmt="count",
+        provenance=provenance,
+        kind=ValueKind.COUNT,
+        population=_population(key, entity_level),
+    )
+
+
+def _share_metric(
+    key: str,
+    value: float,
+    numerator_key: str,
+    denominator_key: str,
+    entity_level: str,
+    provenance: Provenance,
+) -> Metric:
+    return Metric(
+        key,
+        value,
+        fmt="pct1",
+        provenance=provenance,
+        kind=ValueKind.SHARE,
+        population=_population(numerator_key, entity_level),
+        numerator_key=numerator_key,
+        denominator_key=denominator_key,
+    )
+
+
 def _stage_slug(stage: str) -> str:
     """Stage label to metric-key segment ("1 + 2" -> "1_2")."""
     return "_".join(part for part in stage.replace("+", " ").split() if part)
 
 
 def _stage_metrics(
-    funnel: _funnel.FunnelResult, provenance: Provenance | None
+    funnel: _funnel.FunnelResult, provenance: Provenance
 ) -> list[Metric]:
     """One entering/included/excluded/rate quartet per pipeline stage.
 
@@ -71,35 +120,106 @@ def _stage_metrics(
     for band in funnel.stages:
         slug = _stage_slug(band.stage)
         rate = band.passing / band.entering if band.entering else 0.0
+        entering_key = f"realworld.stage_{slug}.entering"
+        included_key = f"realworld.stage_{slug}.included"
         metrics.extend(
             [
-                Metric(
-                    f"realworld.stage_{slug}.entering",
-                    band.entering,
-                    fmt="int",
-                    provenance=provenance,
-                ),
-                Metric(
-                    f"realworld.stage_{slug}.included",
-                    band.passing,
-                    fmt="int",
-                    provenance=provenance,
-                ),
-                Metric(
+                _count_metric(entering_key, band.entering, "Project", provenance),
+                _count_metric(included_key, band.passing, "Project", provenance),
+                _count_metric(
                     f"realworld.stage_{slug}.excluded",
                     band.exclusions,
-                    fmt="int",
-                    provenance=provenance,
+                    "Project",
+                    provenance,
                 ),
-                Metric(
+                _share_metric(
                     f"realworld.stage_{slug}.included_pct",
                     rate,
-                    fmt="pct1",
-                    provenance=provenance,
+                    included_key,
+                    entering_key,
+                    "Project",
+                    provenance,
                 ),
             ]
         )
     return metrics
+
+
+RETAINED_METRIC_KEYS = frozenset(
+    {
+        "realworld.selected_projects",
+        "realworld.initial_gate_excluded_projects",
+        "realworld.no_executed_test_excluded_projects",
+        "realworld.eligible_projects",
+        "realworld.applicability_projects",
+        "realworld.applicability_pct",
+        "realworld.assertions_total",
+        "realworld.assertions_without_resolution",
+        "realworld.assertions_included",
+        "realworld.assertions_included_pct",
+        "realworld.generalization_attempts",
+        "realworld.generalizations_emitted",
+        "realworld.generalizations_filter_adjudicated",
+        "realworld.generalizations_filter_passed",
+        "realworld.generalizations_validated",
+        "realworld.generalization_validated_pct",
+        "realworld.generalizations_reduced",
+        "realworld.generalizations_final_usable",
+        "realworld.generalization_unknown_attempt_state",
+        "realworld.stage4_projects",
+        "realworld.reduction_excluded_projects",
+        "realworld.reduction_excluded_baseline_side",
+        "realworld.jpf_uncaught_exception_diagnostics",
+        "realworld.jpf_uncaught_exception_reclassified",
+        "realworld.jpf_uncaught_exception_reclassified_pct",
+        "realworld.parameter_type_choice_observations",
+        "realworld.parameter_type_choice_dependent_lower_bound",
+        "realworld.parameter_type_choice_dependent_lower_bound_pct",
+        "realworld.widening_refusals",
+    }
+    | {
+        f"realworld.stage_{stage}.{suffix}"
+        for stage in ("1_2", "3", "4", "5")
+        for suffix in ("entering", "included", "excluded", "included_pct")
+    }
+    | {
+        f"realworld.widening_refusal_{slug}{suffix}"
+        for slug, _ in WIDENING_REFUSALS.values()
+        for suffix in ("", "_pct")
+    }
+)
+
+RETAINED_TABLE_KEYS = frozenset(
+    {
+        "tab-processing-failures",
+        "rq6_generalization_funnel",
+        "rq6_jpf_exception_causes",
+        "rq6_mut_choice_sensitivity",
+        "rq6_exclusion_mechanisms",
+        "tab-exclusions-breakdown-extended",
+        "tab-exclusions-filtering-extended",
+        "rq6_widening_refusals",
+    }
+)
+
+
+def validate_retained_consumers(report: RQReport) -> None:
+    """Require the reviewed RQ6 metric and table identities exactly once."""
+    metric_keys = [metric.key for metric in report.metrics]
+    missing_metrics = sorted(RETAINED_METRIC_KEYS - set(metric_keys))
+    if missing_metrics:
+        raise ValueError(f"RQ6 retained metrics are missing: {missing_metrics}")
+    report.validate_metric_relations(require_metadata=True)
+    table_keys = [table.key for table in report.tables()]
+    if len(table_keys) != len(set(table_keys)):
+        duplicates = sorted(key for key in set(table_keys) if table_keys.count(key) > 1)
+        raise ValueError(f"RQ6 table keys are duplicated: {duplicates}")
+    missing_tables = sorted(RETAINED_TABLE_KEYS - set(table_keys))
+    if missing_tables:
+        raise ValueError(f"RQ6 retained tables are missing: {missing_tables}")
+    for table in report.tables():
+        if table.key in RETAINED_TABLE_KEYS and table.provenance is None:
+            raise ValueError(f"RQ6 retained table lacks provenance: {table.key}")
 
 
 def build(context: ReportContext) -> RQReport:
@@ -113,11 +233,18 @@ def build(context: ReportContext) -> RQReport:
     generalizations_funnel = generation_funnel.build_generalization_funnel(
         conn, variant, generation_funnel_provenance
     )
-    breakdown_data = exclusion.fetch_mechanism_counts(conn, variant)
+    mechanism_partition = exclusion.fetch_mechanism_partition(conn, variant)
+    breakdown_data = exclusion.pivot_mechanism_partition(mechanism_partition)
     jpf_exception_data = fetch_jpf_exception_causes(conn, variant)
     jpf_table = jpf_exception_table(jpf_exception_data)
     mut_choice_data = fetch_mut_choice_sensitivity(conn, variant)
     mut_table = mut_choice_table(mut_choice_data)
+    mechanism_provenance = capture(
+        exclusion.fetch_mechanism_partition, query=exclusion.MECHANISM_COUNTS_SQL
+    )
+    mechanism_table = build_mechanism_table(
+        mechanism_partition, provenance=mechanism_provenance
+    )
 
     breakdown = build_breakdown_table(
         collapse_mechanisms(breakdown_data),
@@ -133,9 +260,7 @@ def build(context: ReportContext) -> RQReport:
     )
     breakdown = replace(
         breakdown,
-        provenance=capture(
-            exclusion.fetch_mechanism_counts, query=exclusion.MECHANISM_COUNTS_SQL
-        ),
+        provenance=mechanism_provenance,
     )
 
     filtering_data = exclusion.fetch_filter_decisions(conn, variant)
@@ -161,154 +286,153 @@ def build(context: ReportContext) -> RQReport:
     funnel_provenance = capture(
         _funnel.build_funnel, query=_funnel._PROJECT_SIGNALS_SQL
     )
-    breakdown_provenance = capture(
-        exclusion.fetch_mechanism_counts, query=exclusion.MECHANISM_COUNTS_SQL
-    )
+    breakdown_provenance = mechanism_provenance
     levels = breakdown_data.set_index("level")
     assertions = levels.loc["Assertion"]
+    applicability_key = "realworld.applicability_projects"
+    eligible_key = "realworld.eligible_projects"
+    assertion_total_key = "realworld.assertions_total"
+    assertion_included_key = "realworld.assertions_included"
+    generation_attempt_key = "realworld.generalization_attempts"
+    generation_validated_key = "realworld.generalizations_validated"
     metrics = [
-        Metric(
-            "realworld.selected_projects",
-            funnel.selected,
-            fmt="int",
-            provenance=funnel_provenance,
+        _count_metric(
+            "realworld.selected_projects", funnel.selected, "Project", funnel_provenance
         ),
-        Metric(
+        _count_metric(
             "realworld.initial_gate_excluded_projects",
             funnel.initial_gate_excluded,
-            fmt="int",
-            provenance=funnel_provenance,
+            "Project",
+            funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.no_executed_test_excluded_projects",
             funnel.no_executed_test_excluded,
-            fmt="int",
-            provenance=funnel_provenance,
+            "Project",
+            funnel_provenance,
         ),
-        Metric(
-            "realworld.eligible_projects",
-            funnel.eligible,
-            fmt="int",
-            provenance=funnel_provenance,
+        _count_metric(eligible_key, funnel.eligible, "Project", funnel_provenance),
+        _count_metric(
+            applicability_key, funnel.success_count, "Project", funnel_provenance
         ),
-        Metric(
-            "realworld.applicability_projects",
-            funnel.success_count,
-            fmt="int",
-            provenance=funnel_provenance,
-        ),
-        Metric(
+        _share_metric(
             "realworld.applicability_pct",
             funnel.success_count / funnel.eligible,
-            fmt="pct1",
-            provenance=funnel_provenance,
+            applicability_key,
+            eligible_key,
+            "Project",
+            funnel_provenance,
         ),
-        Metric(
-            "realworld.assertions_total",
+        _count_metric(
+            assertion_total_key,
             int(assertions["total"]),
-            fmt="count",
-            provenance=breakdown_provenance,
+            "Assertion",
+            breakdown_provenance,
         ),
         # Telemetry invariant: every stored assertion carries a resolver
         # observation. Non-zero is a persistence defect, never a category.
-        Metric(
+        _count_metric(
             "realworld.assertions_without_resolution",
             _fetch_assertions_without_resolution(conn, variant),
-            fmt="count",
-            provenance=capture(
+            "Assertion",
+            capture(
                 _fetch_assertions_without_resolution, query=UNRESOLVED_TELEMETRY_SQL
             ),
         ),
-        Metric(
-            "realworld.assertions_included",
+        _count_metric(
+            assertion_included_key,
             int(assertions["included"]),
-            fmt="count",
-            provenance=breakdown_provenance,
+            "Assertion",
+            breakdown_provenance,
         ),
-        Metric(
+        _share_metric(
             "realworld.assertions_included_pct",
             int(assertions["included"]) / int(assertions["total"]),
-            fmt="pct1",
-            provenance=breakdown_provenance,
+            assertion_included_key,
+            assertion_total_key,
+            "Assertion",
+            breakdown_provenance,
         ),
-        Metric(
-            "realworld.generalization_attempts",
+        _count_metric(
+            generation_attempt_key,
             generalizations_funnel.counts[generation_funnel.PopulationKey.ATTEMPTED],
-            fmt="count",
-            provenance=generation_funnel_provenance,
+            "Generalization",
+            generation_funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.generalizations_emitted",
             generalizations_funnel.counts[generation_funnel.PopulationKey.EMITTED],
-            fmt="count",
-            provenance=generation_funnel_provenance,
+            "Generalization",
+            generation_funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.generalizations_filter_adjudicated",
             generalizations_funnel.counts[
                 generation_funnel.PopulationKey.FILTER_ADJUDICATED
             ],
-            fmt="count",
-            provenance=generation_funnel_provenance,
+            "Generalization",
+            generation_funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.generalizations_filter_passed",
             generalizations_funnel.counts[
                 generation_funnel.PopulationKey.FILTER_PASSED
             ],
-            fmt="count",
-            provenance=generation_funnel_provenance,
+            "Generalization",
+            generation_funnel_provenance,
         ),
-        Metric(
-            "realworld.generalizations_validated",
+        _count_metric(
+            generation_validated_key,
             generalizations_funnel.counts[generation_funnel.PopulationKey.VALIDATED],
-            fmt="count",
-            provenance=generation_funnel_provenance,
+            "Generalization",
+            generation_funnel_provenance,
         ),
-        Metric(
+        _share_metric(
             "realworld.generalization_validated_pct",
             generalizations_funnel.counts[generation_funnel.PopulationKey.VALIDATED]
             / generalizations_funnel.counts[generation_funnel.PopulationKey.ATTEMPTED],
-            fmt="pct1",
-            provenance=generation_funnel_provenance,
+            generation_validated_key,
+            generation_attempt_key,
+            "Generalization",
+            generation_funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.generalizations_reduced",
             generalizations_funnel.counts[generation_funnel.PopulationKey.REDUCED],
-            fmt="count",
-            provenance=generation_funnel_provenance,
+            "Generalization",
+            generation_funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.generalizations_final_usable",
             generalizations_funnel.counts[generation_funnel.PopulationKey.FINAL_USABLE],
-            fmt="count",
-            provenance=generation_funnel_provenance,
+            "Generalization",
+            generation_funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.generalization_unknown_attempt_state",
             generalizations_funnel.unknown_attempt_state,
-            fmt="count",
-            provenance=generation_funnel_provenance,
+            "Generalization",
+            generation_funnel_provenance,
         ),
         # Projects holding a validated generalized test before reduction. Reported
         # beside the headline so the prose can state what reduction itself costs.
-        Metric(
+        _count_metric(
             "realworld.stage4_projects",
             funnel.reduction.entering,
-            fmt="int",
-            provenance=funnel_provenance,
+            "Project",
+            funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.reduction_excluded_projects",
             funnel.reduction.exclusions,
-            fmt="int",
-            provenance=funnel_provenance,
+            "Project",
+            funnel_provenance,
         ),
-        Metric(
+        _count_metric(
             "realworld.reduction_excluded_baseline_side",
             funnel.reduction_excluded_baseline_side,
-            fmt="int",
-            provenance=funnel_provenance,
+            "Project",
+            funnel_provenance,
         ),
     ]
     metrics.extend(_stage_metrics(funnel, funnel_provenance))
@@ -318,25 +442,25 @@ def build(context: ReportContext) -> RQReport:
             jpf_exception_data["category"].eq("Unparsed"), "count"
         ].sum()
     )
+    jpf_provenance = capture(fetch_jpf_exception_causes, query=JPF_EXCEPTION_DETAIL_SQL)
+    jpf_total_key = "realworld.jpf_uncaught_exception_diagnostics"
+    jpf_reclassified_key = "realworld.jpf_uncaught_exception_reclassified"
     metrics.extend(
         [
-            Metric(
-                "realworld.jpf_uncaught_exception_diagnostics",
-                jpf_rows,
-                fmt="count",
-                provenance=capture(
-                    fetch_jpf_exception_causes,
-                    query=JPF_EXCEPTION_DETAIL_SQL,
-                ),
+            _count_metric(jpf_total_key, jpf_rows, "Diagnostic", jpf_provenance),
+            _count_metric(
+                jpf_reclassified_key,
+                jpf_rows - jpf_unparsed,
+                "Diagnostic",
+                jpf_provenance,
             ),
-            Metric(
+            _share_metric(
                 "realworld.jpf_uncaught_exception_reclassified_pct",
                 (jpf_rows - jpf_unparsed) / jpf_rows if jpf_rows else 0.0,
-                fmt="pct1",
-                provenance=capture(
-                    fetch_jpf_exception_causes,
-                    query=JPF_EXCEPTION_DETAIL_SQL,
-                ),
+                jpf_reclassified_key,
+                jpf_total_key,
+                "Diagnostic",
+                jpf_provenance,
             ),
         ]
     )
@@ -346,25 +470,32 @@ def build(context: ReportContext) -> RQReport:
             mut_choice_data["category"].eq("Choice-dependent"), "count"
         ].sum()
     )
+    mut_choice_provenance = capture(
+        fetch_mut_choice_sensitivity, query=MUT_CHOICE_SENSITIVITY_SQL
+    )
+    mut_choice_total_key = "realworld.parameter_type_choice_observations"
+    mut_choice_dependent_key = "realworld.parameter_type_choice_dependent_lower_bound"
     metrics.extend(
         [
-            Metric(
-                "realworld.parameter_type_choice_dependent_lower_bound",
-                mut_choice_dependent,
-                fmt="count",
-                provenance=capture(
-                    fetch_mut_choice_sensitivity,
-                    query=MUT_CHOICE_SENSITIVITY_SQL,
-                ),
+            _count_metric(
+                mut_choice_total_key,
+                mut_choice_total,
+                "Assertion",
+                mut_choice_provenance,
             ),
-            Metric(
+            _count_metric(
+                mut_choice_dependent_key,
+                mut_choice_dependent,
+                "Assertion",
+                mut_choice_provenance,
+            ),
+            _share_metric(
                 "realworld.parameter_type_choice_dependent_lower_bound_pct",
                 mut_choice_dependent / mut_choice_total if mut_choice_total else 0.0,
-                fmt="pct1",
-                provenance=capture(
-                    fetch_mut_choice_sensitivity,
-                    query=MUT_CHOICE_SENSITIVITY_SQL,
-                ),
+                mut_choice_dependent_key,
+                mut_choice_total_key,
+                "Assertion",
+                mut_choice_provenance,
             ),
         ]
     )
@@ -398,6 +529,7 @@ def build(context: ReportContext) -> RQReport:
                 "is choice-dependent."
             ),
             mut_table,
+            mechanism_table,
             breakdown,
             filtering,
             Prose(
@@ -407,12 +539,14 @@ def build(context: ReportContext) -> RQReport:
             widening_table,
         ],
     )
-    return RQReport(
+    report = RQReport(
         rq="rq6",
         title="RQ6 - Causes of Unsuccessful Generalization (Real-World)",
         sections=[section],
         metrics=metrics,
     )
+    validate_retained_consumers(report)
+    return report
 
 
 register(

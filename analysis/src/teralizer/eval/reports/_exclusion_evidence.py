@@ -11,6 +11,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
+from teralizer.eval.model import share_value
 from teralizer.eval.reports import _funnel
 
 
@@ -532,13 +533,45 @@ def fetch_filter_decisions(conn: Connection, variant: str) -> pd.DataFrame:
     )
 
 
-def fetch_mechanism_counts(conn: Connection, variant: str) -> pd.DataFrame:
+def fetch_mechanism_partition(conn: Connection, variant: str) -> pd.DataFrame:
+    """Return one semantic row per entity level and exclusion mechanism."""
     validate_evidence(conn, variant)
     counts = read_sql(conn, MECHANISM_COUNTS_SQL, query_params(variant))
     counts.isetitem(
         counts.columns.get_loc("entity_count"), counts["entity_count"].astype(int)
     )
-    wide = counts.pivot(
+    counts.loc[:, "level_total"] = counts.groupby("level")["entity_count"].transform(
+        "sum"
+    )
+    counts.loc[:, "share"] = counts.apply(
+        lambda row: share_value(row["entity_count"], row["level_total"]), axis=1
+    )
+    counts.loc[:, "reader_outcome"] = counts["mechanism"].map(
+        lambda key: MECHANISM_BY_KEY[MechanismKey(key)].reader_outcome.value
+    )
+    counts.loc[:, "mechanism_label"] = counts["mechanism"].map(
+        lambda key: MECHANISM_BY_KEY[MechanismKey(key)].label
+    )
+    counts.loc[:, "row_key"] = counts["level"].str.lower() + "." + counts["mechanism"]
+    return pd.DataFrame(
+        counts,
+        columns=[
+            "row_key",
+            "strategy",
+            "level",
+            "mechanism",
+            "mechanism_label",
+            "reader_outcome",
+            "entity_count",
+            "level_total",
+            "share",
+        ],
+    )
+
+
+def pivot_mechanism_partition(partition: pd.DataFrame) -> pd.DataFrame:
+    """Pivot the normalized partition for the existing reader-facing collapse."""
+    wide = partition.pivot(
         index=["strategy", "level"], columns="mechanism", values="entity_count"
     ).fillna(0)
     wide = wide.reindex(columns=MECHANISM_COLUMNS, fill_value=0).astype(int)

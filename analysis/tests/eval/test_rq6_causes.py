@@ -1,7 +1,10 @@
+from dataclasses import replace
+
 import pytest
 from sqlalchemy import text
 
 from teralizer.eval.inputs import CorpusInputSpec
+from teralizer.eval.reports import _exclusion_evidence as exclusion
 from teralizer.eval.reports import _funnel
 
 from teralizer.eval.registry import get
@@ -24,6 +27,7 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
     assert {table.key for table in report.tables()} == {
         "tab-processing-failures",
         "rq6_generalization_funnel",
+        "rq6_exclusion_mechanisms",
         "tab-exclusions-breakdown-extended",
         "tab-exclusions-filtering-extended",
         "rq6_jpf_exception_causes",
@@ -103,6 +107,22 @@ def test_rq6_breakdown_conservation(rq6_report):
     # partition it folds is asserted in test_rq6_invariants.py.
     reconstructed = breakdown.df[list(MECHANISM_COLLAPSE)].sum(axis=1)
     assert (reconstructed == breakdown.df["total"]).all()
+
+
+def test_rq6_mechanism_rows_have_stable_keys_and_denominators(rq6_report):
+    table = next(
+        table
+        for table in rq6_report.tables()
+        if table.key == "rq6_exclusion_mechanisms"
+    )
+    assert table.row_key == "row_key"
+    assert table.df["row_key"].is_unique
+    assert set(table.df["mechanism"]) <= {
+        mechanism.key.value for mechanism in exclusion.MECHANISMS
+    }
+    for _, rows in table.df.groupby("level"):
+        assert int(rows["entity_count"].sum()) == int(rows["level_total"].iloc[0])
+        assert float(rows["share"].sum()) == pytest.approx(1.0)
 
 
 def test_rq6_breakdown_matches_eligible_entity_denominators(rq6_report, rq6_conn):
@@ -261,6 +281,39 @@ def test_rq6_metrics_cover_applicability_and_are_well_formed(rq6_report):
     assert float(report.metric("realworld.applicability_pct").value) == pytest.approx(
         applicable / eligible_projects
     )
+
+
+def test_rq6_metrics_have_population_denominator_and_provenance(rq6_report):
+    rq6_report.validate_metric_relations(require_metadata=True)
+    for metric in rq6_report.metrics:
+        assert metric.kind is not None
+        assert metric.population is not None
+        assert metric.population.input_role == "real-world"
+        assert metric.provenance is not None
+        if metric.fmt == "pct1":
+            assert metric.numerator_key is not None
+            assert metric.denominator_key is not None
+
+
+def test_rq6_retained_consumer_validation_names_missing_metric(rq6_report):
+    incomplete = replace(
+        rq6_report,
+        metrics=[
+            metric
+            for metric in rq6_report.metrics
+            if metric.key != "realworld.generalizations_validated"
+        ],
+    )
+    with pytest.raises(
+        ValueError,
+        match="RQ6 retained metrics are missing:.*generalizations_validated",
+    ):
+        rq6_causes.validate_retained_consumers(incomplete)
+
+
+def test_removed_call_shape_taxonomy_has_no_replacement_output(rq6_report):
+    assert not any("call_shape" in metric.key for metric in rq6_report.metrics)
+    assert not any("call_shape" in table.key for table in rq6_report.tables())
 
 
 def test_rq6_applicability_is_measured_after_reduction(rq6_report):

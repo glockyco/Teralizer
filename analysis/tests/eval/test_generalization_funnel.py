@@ -164,9 +164,9 @@ def test_corpus_funnel_reconciles_mechanisms_and_attempt_state(rq6_conn):
         variant,
         provenance=None,
     )
-    mechanism_counts = exclusion.fetch_mechanism_counts(rq6_conn, variant).set_index(
-        "level"
-    )
+    mechanism_counts = exclusion.pivot_mechanism_partition(
+        exclusion.fetch_mechanism_partition(rq6_conn, variant)
+    ).set_index("level")
     generalizations = mechanism_counts.loc["Generalization"]
 
     assert result.counts[funnel.PopulationKey.ATTEMPTED] == int(

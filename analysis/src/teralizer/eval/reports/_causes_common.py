@@ -12,6 +12,7 @@ import pandas as pd
 
 from teralizer.eval.entities import variant_ref
 from teralizer.eval.model import ColumnSpec, Table, ValueKind, share_value
+from teralizer.eval.provenance import Provenance
 from teralizer.eval.reports._exclusion_evidence import (
     MECHANISMS,
     READER_COLLAPSE,
@@ -58,6 +59,50 @@ def collapse_mechanisms(df: pd.DataFrame) -> pd.DataFrame:
     if "strategy" in out.columns:
         keep.insert(0, "strategy")
     return pd.DataFrame(out, columns=keep)
+
+
+def build_mechanism_table(
+    partition: pd.DataFrame,
+    *,
+    provenance: Provenance,
+) -> Table:
+    """Render the stable mechanism partition without recomputing its shares."""
+    out = partition.copy()
+    level_order = {"Test": 0, "Assertion": 1, "Generalization": 2}
+    mechanism_order = {
+        mechanism.key.value: index for index, mechanism in enumerate(MECHANISMS)
+    }
+    out.loc[:, "_level_order"] = out["level"].map(level_order)
+    out.loc[:, "_mechanism_order"] = out["mechanism"].map(mechanism_order)
+    out = out.sort_values(["_level_order", "_mechanism_order"]).drop(
+        columns=["_level_order", "_mechanism_order"]
+    )
+    return Table(
+        key="rq6_exclusion_mechanisms",
+        df=out.reset_index(drop=True),
+        columns=[
+            ColumnSpec("Level", "level", kind=ValueKind.ENTITY),
+            ColumnSpec("Mechanism", "mechanism_label"),
+            ColumnSpec("Outcome", "reader_outcome", kind=ValueKind.ENTITY),
+            ColumnSpec(
+                "Entities",
+                "entity_count",
+                kind=ValueKind.COUNT,
+                align="r",
+                share_source="share",
+            ),
+            ColumnSpec("Level total", "level_total", kind=ValueKind.COUNT, align="r"),
+        ],
+        caption=(
+            "Included entities and exclusion mechanisms for "
+            "{entity.variant.improved_c}, with shares of each entity-level population."
+        ),
+        label="tab:rq6-exclusion-mechanisms",
+        group_by="level",
+        row_key="row_key",
+        provenance=provenance,
+        full_width=True,
+    )
 
 
 _VARIANT_HEAD = {"ORIGINAL": 0, "INITIAL": 1, "SHARED": 2, "BASELINE": 3}

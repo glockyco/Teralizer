@@ -7,7 +7,14 @@ from teralizer.eval.artifacts import (
     RenderTarget,
 )
 from teralizer.eval.inputs import CorpusInputSnapshot, FileInputSnapshot
-from teralizer.eval.model import BuiltReport, Metric, RQReport, Section
+from teralizer.eval.model import (
+    BuiltReport,
+    Metric,
+    MetricPopulation,
+    RQReport,
+    Section,
+    ValueKind,
+)
 from teralizer.eval.provenance import Provenance
 from teralizer.eval.render.manifest import ANALYSIS_VERSION, build_manifest, render
 
@@ -25,7 +32,18 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
         "rq6",
         "T",
         [Section("S", [])],
-        metrics=[Metric("realworld.eligible_projects", 632, "int", provenance=prov)],
+        metrics=[
+            Metric(
+                "realworld.eligible_projects",
+                632,
+                "int",
+                provenance=prov,
+                kind=ValueKind.COUNT,
+                population=MetricPopulation(
+                    "realworld.eligible_projects", "Project", "real-world"
+                ),
+            )
+        ],
     )
     built = BuiltReport(
         report,
@@ -68,6 +86,14 @@ def test_manifest_maps_metric_to_source(tmp_path: Path):
     assert entry["dirty"] is False
     assert entry["qualname"] == "project_funnel"
     assert entry["source_url"].endswith("rq6_causes_realworld.py#L30")
+    assert entry["value_kind"] == "count"
+    assert entry["population"] == {
+        "key": "realworld.eligible_projects",
+        "entity_level": "Project",
+        "input_role": "real-world",
+    }
+    assert entry["numerator_key"] is None
+    assert entry["denominator_key"] is None
 
 
 def test_manifest_records_all_corpus_file_and_absent_roles():

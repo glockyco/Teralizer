@@ -17,7 +17,8 @@ def _variant(conn) -> str:
 
 
 def _breakdown(conn):
-    return exclusion.fetch_mechanism_counts(conn, _funnel.resolve_variant(conn))
+    partition = exclusion.fetch_mechanism_partition(conn, _funnel.resolve_variant(conn))
+    return exclusion.pivot_mechanism_partition(partition)
 
 
 def test_mechanism_registry_covers_reader_outcomes():
@@ -241,7 +242,7 @@ def test_every_typed_exclusion_code_is_a_known_mechanism(table, level, rq6_conn)
 def test_breakdown_buckets_sum_to_level_total(rq6_conn):
     """Every entity lands in exactly one mechanism.
 
-    `fetch_mechanism_counts` refuses unclassified or multiply classified entities, so this
+    `fetch_mechanism_partition` refuses unclassified or multiply classified entities, so this
     also proves the classification is total rather than merely non-overlapping.
     """
     df = _breakdown(rq6_conn)

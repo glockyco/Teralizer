@@ -17,7 +17,7 @@ from teralizer.eval.artifacts import (
     RunAggregate,
 )
 from teralizer.eval.inputs import CorpusInputSnapshot, FileInputSnapshot, InputSnapshot
-from teralizer.eval.model import BuiltReport
+from teralizer.eval.model import BuiltReport, Metric
 
 ANALYSIS_VERSION = version("teralizer-analysis")
 
@@ -39,6 +39,29 @@ def _entry(value, prov, repo_url: str) -> dict:
         "version": ANALYSIS_VERSION,
         "source_url": prov.source_url(repo_url),
     }
+
+
+def _metric_entry(metric: Metric, repo_url: str) -> dict[str, object]:
+    if metric.provenance is None:
+        raise ValueError(f"metric {metric.key} has no provenance")
+    entry = _entry(metric.value, metric.provenance, repo_url)
+    entry.update(
+        {
+            "value_kind": metric.kind.value if metric.kind is not None else None,
+            "population": (
+                {
+                    "key": metric.population.key,
+                    "entity_level": metric.population.entity_level,
+                    "input_role": metric.population.input_role,
+                }
+                if metric.population is not None
+                else None
+            ),
+            "numerator_key": metric.numerator_key,
+            "denominator_key": metric.denominator_key,
+        }
+    )
+    return entry
 
 
 def _input_entry(snapshot: InputSnapshot) -> dict[str, object]:
@@ -90,9 +113,9 @@ def build_manifest(
         "inputs": {snapshot.role: _input_entry(snapshot) for snapshot in built.inputs},
         "artifacts": artifact_records,
         "metrics": {
-            m.key: _entry(m.value, m.provenance, repo_url)
-            for m in report.metrics
-            if m.provenance
+            metric.key: _metric_entry(metric, repo_url)
+            for metric in report.metrics
+            if metric.provenance
         },
         "tables": {
             t.key: _entry(t.caption, t.provenance, repo_url)
