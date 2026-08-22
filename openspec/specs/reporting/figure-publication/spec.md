@@ -1,9 +1,8 @@
 # reporting/figure-publication Specification
 
 ## Purpose
-Governs how a figure declared by a report reaches a repository that prints it: which formats the
-generator emits, how a consumer states which figures it takes and under which names, and what happens
-when the declaration and the emitted set disagree.
+Governs the print and screen formats emitted for each report figure and the metadata those formats
+carry.
 
 ## Requirements
 
@@ -29,83 +28,3 @@ the keys the target format defines.
 - **WHEN** a metadata key is not defined for the output format
 - **THEN** the renderer uses the key that format defines for the same purpose
 - **AND** the run does not warn or fail on an unknown key
-
-### Requirement: The consumer declares which figures it takes
-
-A consuming repository SHALL declare the figures it takes and the path each figure is written to. The
-generator SHALL NOT derive a consumer's file name from the figure key, and SHALL NOT deliver a figure
-the consumer has not declared.
-
-A declaration SHALL be resolvable to a path inside the consuming repository. Two consumers MAY declare
-different names for the same figure.
-
-#### Scenario: A figure has no consumer
-
-- **WHEN** a report declares a figure that no consumer declares
-- **THEN** the figure is emitted into the build tree
-- **AND** it is not delivered to any consuming repository
-
-#### Scenario: Two consumers name one figure differently
-
-- **WHEN** two consuming repositories declare the same figure under different file names
-- **THEN** each receives the figure under the name it declared
-
-#### Scenario: Publishing without a declaration
-
-- **WHEN** a publish destination supplies no figure declaration
-- **THEN** no figure is delivered
-- **AND** the run does not fail for the absence of a declaration
-
-### Requirement: A declaration that disagrees with the emitted set fails the publish
-
-Publishing SHALL fail when a declared figure is not emitted by any report in the run, and when a
-declared path resolves outside the consuming repository.
-
-A failure SHALL name the figure and the disagreement. Publishing SHALL NOT deliver a partial figure
-set after detecting one.
-
-#### Scenario: A declared figure does not exist
-
-- **WHEN** a consumer declares a figure key no report emits
-- **THEN** the publish fails naming that key
-- **AND** no figure is written to the consumer
-
-#### Scenario: A declared path escapes the consumer
-
-- **WHEN** a declared path resolves outside the consuming repository
-- **THEN** the publish fails naming that path
-
-#### Scenario: A figure key is renamed in a report
-
-- **WHEN** a report changes a figure's key while a consumer still declares the old key
-- **THEN** the publish fails rather than silently leaving the consumer's figure stale
-
-### Requirement: A figure key identifies one figure across the whole report set
-
-No two reports SHALL emit the same figure key. A run that produces a duplicate key SHALL fail naming
-the key and the reports that claim it.
-
-A consumer declares a figure by key and not by report, so a duplicate key is an ambiguity the
-declaration cannot express, and report order would otherwise decide which figure a consumer prints.
-
-#### Scenario: Two reports emit one key
-
-- **WHEN** a report emits a figure key another report in the run already emitted
-- **THEN** the run fails naming that key
-- **AND** no figure is delivered
-
-### Requirement: Publishing a figure is subject to the same guards as publishing a table
-
-Figure delivery SHALL observe the preconditions that govern the delivery of other generated
-artifacts: a clean generator tree, so provenance names the code that ran, and no uncommitted changes
-to the delivered paths in the consuming repository.
-
-#### Scenario: The consumer has edited a published figure
-
-- **WHEN** a delivered figure path has uncommitted changes in the consuming repository
-- **THEN** the publish is refused before any file is overwritten
-
-#### Scenario: The generator tree is dirty
-
-- **WHEN** publishing runs from a dirty generator tree without the documented override
-- **THEN** the publish is refused, for figures as for tables

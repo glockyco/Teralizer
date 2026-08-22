@@ -6,7 +6,7 @@ and written there, not here.
 - [x] 1.1 Retire the outcome in the figure spec stating that tables and data are published when no
       declaration exists. Done at source before that change was archived, so the contradiction never
       entered the accepted spec set (`1487dae3`).
-- [ ] 1.2 When this change is archived and its specs merge, narrow the Purpose of
+- [x] 1.2 When this change is archived and its specs merge, narrow the Purpose of
       `reporting/figure-publication` to the formats a figure is emitted in. A requirement delta cannot
       restate a Purpose, so the removal of its four delivery requirements would otherwise leave a
       Purpose describing behaviour the capability no longer governs.
