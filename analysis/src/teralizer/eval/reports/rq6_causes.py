@@ -229,6 +229,7 @@ def validate_retained_consumers(report: RQReport) -> None:
 def build(context: ReportContext) -> RQReport:
     conn = context.corpus("real-world")
     variant = _funnel.resolve_variant(conn)
+    exclusion.validate_evidence(conn, variant)
     funnel = _funnel.build_funnel(conn, variant=variant)
     generation_funnel_provenance = capture(
         generation_funnel.build_generalization_funnel,

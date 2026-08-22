@@ -268,8 +268,7 @@ def build_generalization_funnel_from_observations(
 def build_generalization_funnel(
     conn: Connection, variant: str, provenance: Provenance | None
 ) -> GeneralizationFunnel:
-    """Read and aggregate observed lifecycle and independent task evidence."""
-    exclusion.validate_evidence(conn, variant)
+    """Read lifecycle evidence after report-level evidence validation."""
     frame = read_sql(
         conn, GENERALIZATION_LIFECYCLE_SQL, exclusion.query_params(variant)
     )

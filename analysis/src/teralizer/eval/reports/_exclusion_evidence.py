@@ -524,7 +524,7 @@ def validate_evidence(conn: Connection, variant: str) -> None:
 
 
 def fetch_filter_decisions(conn: Connection, variant: str) -> pd.DataFrame:
-    validate_evidence(conn, variant)
+    """Read filter decisions after report-level evidence validation."""
     frame = read_sql(conn, FILTER_DECISION_SQL, query_params(variant))
     for column in ("total", "accept", "defer", "reject"):
         frame.isetitem(frame.columns.get_loc(column), frame[column].astype(int))
@@ -534,8 +534,7 @@ def fetch_filter_decisions(conn: Connection, variant: str) -> pd.DataFrame:
 
 
 def fetch_mechanism_partition(conn: Connection, variant: str) -> pd.DataFrame:
-    """Return one semantic row per entity level and exclusion mechanism."""
-    validate_evidence(conn, variant)
+    """Read the mechanism partition after report-level evidence validation."""
     counts = read_sql(conn, MECHANISM_COUNTS_SQL, query_params(variant))
     counts.isetitem(
         counts.columns.get_loc("entity_count"), counts["entity_count"].astype(int)
