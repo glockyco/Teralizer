@@ -26,15 +26,23 @@ Across 27 completed hosted runs inspected on 2026-08-22, 18 succeeded, 4 failed,
 
 ### 1. Treat the workflow path list as an executable ownership boundary
 
-Add native push `paths` filters for these input groups:
+Add native push `paths` filters for the complete executable owner set:
 
-- `.github/workflows/verification-corpus.yml`;
-- `scripts/verify-pipeline.sh`, `scripts/run-verification-corpus.sh`, `scripts/check-verification-corpus.sh`, `scripts/corpus-registry`, and the `scripts/lib/` helpers they source;
-- `src/`, `jpf-symbc/`, and the Gradle wrapper and build declarations used by the hosted workflow;
-- `project-configs/verification.conf` and `project-configs/verification/`;
-- `verification/fixtures/` and `verification/golden/`.
+| Owner | Tracked paths | Why it can change the result |
+|---|---|---|
+| Hosted declaration | `.github/workflows/verification-corpus.yml` | Selects the runner, services, tools, and verification command. |
+| Corpus drivers | `scripts/verify-pipeline.sh`, `scripts/run-verification-corpus.sh`, `scripts/check-verification-corpus.sh` | Builds, runs, and compares the synthetic corpus. |
+| Database guards | `scripts/corpus-registry`, `scripts/lib/db-guard.sh`, `scripts/lib/run-supervisor.sh`, `scripts/lib/db-lifecycle.sh`, `scripts/lib/psql.sh` | Classifies the scratch database, routes PostgreSQL, and supervises each fixture. |
+| Registry runtime | `analysis/pyproject.toml`, `analysis/uv.lock`, `analysis/src/teralizer/__init__.py`, `analysis/src/teralizer/config.py`, `analysis/src/teralizer/corpora.py`, `analysis/src/teralizer/report_basis.py` | `db-guard.sh` invokes the Python corpus registry before every destructive reset. |
+| Java build | `build.gradle`, `settings.gradle`, `build-properties.xml`, `gradlew`, `gradle/wrapper/**` | Defines and launches the build and application classpaths. |
+| JPF build | `.gitmodules`, the `jpf-symbc` gitlink | Supplies both JPF projects compiled by the root Gradle build. |
+| Pipeline implementation | `src/**` | Contains Java sources, tests, templates, runtime configuration, database schema, and registry data used by the build and fixtures. |
+| Fixture configuration | `project-configs/verification.conf`, `project-configs/verification/**` | Selects pipeline behavior and each synthetic root. |
+| Corpus evidence | `verification/fixtures/**`, `verification/golden/**` | Provides the synthetic projects and their expected observations. |
 
-The implementation task must trace imports and file reads again before editing and add any missed transitive input. Broad owner roots are preferred over fragile lists of individual Java classes or fixture files.
+Do not broaden the registry runtime to `analysis/**`: report builders and renderers do not execute in this lane. Do not broaden the database helpers to `scripts/lib/**`: JARVIS and POM-extraction helpers are not sourced by the verification driver. Environment files and generated run data are not tracked inputs and therefore cannot participate in push filtering.
+
+Recent hosted regressions exercise every risky boundary: Java filter and collection fixes live under `src/**`; JPF fixes update the `jpf-symbc` gitlink; golden-order fixes touch the checker and `verification/golden/**`; the Python 3.14 repair changed `analysis/uv.lock`; and the missing-`uv` repair changed the workflow. Every one intersects this owner set.
 
 Scheduled and manual triggers do not use changed-path filtering. Keep both unchanged.
 
@@ -60,11 +68,13 @@ Keep `cancel-in-progress: true`, but include the workflow name and ref in the co
 
 ### 4. Check the trigger contract without calling GitHub
 
-Add a repository check that loads the workflow and evaluates its declared push path patterns against a table of representative paths. Positive cases must cover every owner group. Negative cases must include OpenSpec prose, thesis or documentation text, and analysis report-renderer files.
+Add a repository check that loads the workflow and evaluates its declared push path patterns against a table of representative paths. Positive cases must cover every owner group. Use `.github/workflows/verification-corpus.yml`, `scripts/run-verification-corpus.sh`, `scripts/lib/psql.sh`, `analysis/uv.lock`, `analysis/src/teralizer/corpora.py`, `build.gradle`, `gradle/wrapper/gradle-wrapper.properties`, `.gitmodules`, the `jpf-symbc` gitlink, `src/main/java/teralizer/TestGeneralizationRunner.java`, `project-configs/verification.conf`, `project-configs/verification/fixture-symbolic-int.conf`, `verification/fixtures/symbolic-int/pom.xml`, and `verification/golden/symbolic-int.tsv` as representative included paths.
+
+Use `openspec/changes/example/proposal.md`, `docs/architecture/example.md`, `analysis/src/teralizer/eval/reports/rq0.py`, `analysis/src/teralizer/eval/render.py`, and `scripts/lib/jarvis-run.sh` as representative excluded paths. These cases prove that planning, prose, report rendering, and unrelated shared helpers do not start the full corpus.
 
 The check also asserts the weekly schedule, manual dispatch, branch-scoped cancellation, and 35-minute timeout. It validates declarations; hosted execution remains the proof that GitHub accepts and runs the workflow.
 
-Use the repository's existing pinned Python/Nix environment and YAML parser. Do not add a third-party action or duplicate path detection inside the workflow.
+Run the check in the repository's pinned Python/Nix environment. Add PyYAML to the analysis development dependency group and use `yaml.BaseLoader`, which keeps GitHub's `on` key and scalar values as strings instead of applying YAML 1.1 boolean coercion. Do not add a third-party action or duplicate path detection inside the workflow.
 
 **Alternative:** Inspect the YAML manually. Rejected because owner-path drift would remain invisible until an expected run was absent.
 

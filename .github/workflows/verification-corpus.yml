@@ -2,23 +2,53 @@ name: Verification corpus
 
 # Deliberately not on pull_request. The corpus puts every fixture through the
 # real pipeline and takes tens of minutes, so gating review on it would trade a
-# fast signal for a slow one. It runs once the change is on the branch instead,
-# which still bounds how long a regression can hide to a single push.
+# fast signal for a slow one. Push filtering follows the executable owner
+# boundary checked by the repository contract; manual runs remain available.
 on:
   push:
     branches: [ main, master ]
+    paths:
+      - '.github/workflows/verification-corpus.yml'
+      - 'scripts/verify-pipeline.sh'
+      - 'scripts/run-verification-corpus.sh'
+      - 'scripts/check-verification-corpus.sh'
+      - 'scripts/corpus-registry'
+      - 'scripts/lib/db-guard.sh'
+      - 'scripts/lib/run-supervisor.sh'
+      - 'scripts/lib/db-lifecycle.sh'
+      - 'scripts/lib/psql.sh'
+      - 'analysis/pyproject.toml'
+      - 'analysis/uv.lock'
+      - 'analysis/src/teralizer/__init__.py'
+      - 'analysis/src/teralizer/config.py'
+      - 'analysis/src/teralizer/corpora.py'
+      - 'analysis/src/teralizer/report_basis.py'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'build-properties.xml'
+      - 'gradlew'
+      - 'gradle/wrapper/**'
+      - '.gitmodules'
+      - 'jpf-symbc'
+      - 'src/**'
+      - 'project-configs/verification.conf'
+      - 'project-configs/verification/**'
+      - 'verification/fixtures/**'
+      - 'verification/golden/**'
   workflow_dispatch:
-  # Catches drift that arrives without a commit, such as a new runner image.
+  # Catches weekly runner and dependency drift even when no owner path changes.
   schedule:
     - cron: '0 4 * * 1'
 
-# A newer push answers the same question, so the run already in flight is stale.
+# Only a newer run for the same ref supersedes the result already in flight.
 concurrency:
-  group: verification-corpus
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   corpus:
+    # Successful runs take about 20 minutes; bound stalled setup and pipeline work.
+    timeout-minutes: 35
     runs-on: ubuntu-latest
     services:
       postgres:

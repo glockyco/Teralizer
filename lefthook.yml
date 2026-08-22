@@ -12,6 +12,8 @@ pre-commit:
   jobs:
     - name: corpus-source-boundary
       run: /nix/var/nix/profiles/default/bin/nix develop --command uv run --frozen --directory analysis python -m teralizer.corpus_literal_check
+    - name: verification-corpus-contract
+      run: /nix/var/nix/profiles/default/bin/nix develop --command uv run --frozen --directory analysis python -m teralizer.verification_corpus_contract
     - name: ruff-format
       root: analysis/
       glob: "**/*.py"
