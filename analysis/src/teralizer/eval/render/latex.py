@@ -319,7 +319,12 @@ def render_table(table: Table) -> str:
     else:
         opening = f"  \\begin{{tabular}}{{{cols}}}"
     if table.row_key is not None:
-        lines.append("  \\setcounter{reporttablerow}{0}")
+        table_anchor = _label_component(table.key)
+        lines += [
+            "  \\renewcommand{\\theHreporttablerow}"
+            f"{{{table_anchor}.\\arabic{{reporttablerow}}}}",
+            "  \\setcounter{reporttablerow}{0}",
+        ]
     lines += [
         opening,
         "  \\toprule",

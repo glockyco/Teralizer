@@ -103,6 +103,10 @@ def test_render_table_labels_semantic_rows_independently_of_order():
 
     lines = render_table(table).splitlines()
 
+    assert (
+        "  \\renewcommand{\\theHreporttablerow}"
+        "{mechanisms.\\arabic{reporttablerow}}" in lines
+    )
     assert "  \\setcounter{reporttablerow}{0}" in lines
     assert (
         "  \\refstepcounter{reporttablerow}"
