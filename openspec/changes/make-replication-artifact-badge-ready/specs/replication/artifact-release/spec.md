@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines how a complete Teralizer replication release is identified, assembled, verified, documented, and installed without relying on the author's machines or on undeclared files.
+Defines how a complete Teralizer replication release is identified, assembled, verified, documented, extracted, and used without relying on the author's machines or on undeclared files.
 
 ## ADDED Requirements
 
@@ -31,7 +31,7 @@ Release membership SHALL come only from this declaration. A release builder SHAL
 
 A release SHALL be assembled from a committed source revision, every required submodule materialized at its recorded gitlink commit, a complete verified four-corpus package, a complete registered report run, every database and file input declared by that run, and explicitly declared workflow-specific project and data inputs. Assembly SHALL stage all release files separately, verify the staged set, and promote the complete set atomically.
 
-The release SHALL record every input revision and dirty state. It SHALL prove that each registered report's declared inputs resolve inside the staged release and that every producing source, nested source, configuration, report output, and workflow input has exactly one payload owner or an explicit non-payload disposition. Production release assembly SHALL reject dirty, unattributed, unresolved, or source-checkout-fallback inputs and SHALL NOT require access to a corpus database, author workstation, evaluation host, ambient ignored directory, or nested Git worktree after the verified inputs exist.
+The release SHALL record every input revision and dirty state. It SHALL prove that each registered report's declared inputs resolve inside the staged release and that every producing source, nested source, configuration, report output, and workflow input has one payload disposition or an explicit non-payload disposition. Every archive member path SHALL have exactly one owner. A source input MAY feed both alternative real-world scope components only under the declared sample-within-full rule, with matching identity, revision, configuration, bytes, and license metadata. Production release assembly SHALL reject dirty, unattributed, unresolved, source-checkout-fallback, or unintended duplicate inputs and SHALL NOT require access to a corpus database, author workstation, evaluation host, ambient ignored directory, or nested Git worktree after the verified inputs exist.
 
 #### Scenario: A release is built from verified inputs
 
@@ -62,11 +62,13 @@ The release SHALL record every input revision and dirty state. It SHALL prove th
 
 ### Requirement: Large independent payloads are fine-grained and components remain isolated
 
-Every downloadable archive SHALL contain a component manifest, release identity, citation and license mapping, purpose, payload inventory, dependencies, and concise instructions. Each archive SHALL use a unique semantic component identity independent of its filename and SHALL install only below its own component root.
+Every downloadable archive SHALL contain a component manifest, release identity, purpose, payload inventory, dependencies, and applicable retained license files. Each archive SHALL use a unique semantic component identity independent of its filename and SHALL contain one declared wrapper root. Core SHALL own the `teralizer/` workspace tree and complete reviewer guidance. Each optional archive SHALL write only one unique `teralizer/components/<component-id>/` subtree and SHALL include a short generated README that points to the standalone release manifest and core guidance.
 
 The release SHALL keep source, runtime support, registered results, compact report inputs, and small backing evidence in core. It SHALL publish each large semantic corpus and independent project family as a separate component when a documented workflow can omit that payload. It SHALL NOT split small or tightly coupled payloads without a measured download or redistribution benefit.
 
-Installation SHALL verify each selected archive before extraction and SHALL promote only that component directory after verification. It SHALL NOT merge component payload trees, maintain a package database, or infer that one installed component satisfies another. Workflow preflight SHALL name every missing or incompatible component before execution.
+A reviewer SHALL be able to extract core and then selected optional archives with standard ZIP tooling into one clean workspace. Archive validation SHALL reject unsafe members, duplicate members, paths outside each declared wrapper root, and component-root collisions before publication. The release SHALL NOT provide a component installer, package database, reinstall protocol, archive cache, ownership ledger, or custom extraction API.
+
+Workflow preflight SHALL verify the standalone release manifest, extracted component manifests, payload checksums, release identity, and explicit component roots. It SHALL name every missing, mixed-release, changed, or incomplete component before execution. Workflows SHALL write only to a separate disposable state root and SHALL NOT infer readiness from a nonempty shared directory.
 
 #### Scenario: A reviewer reproduces only RQ0
 
@@ -74,34 +76,40 @@ Installation SHALL verify each selected archive before extraction and SHALL prom
 - **THEN** the release documentation requires core and the two JARVIS corpus components
 - **AND** it does not require the controlled corpus, real-world corpus, or unrelated project components
 
-#### Scenario: A user adds one component
+#### Scenario: A user extracts several components
 
-- **WHEN** a verified release workspace already contains other components and a new component id is absent
-- **THEN** installation verifies and promotes only the new component directory
-- **AND** it does not rewrite or merge existing component payloads
+- **WHEN** core and selected optional archives are extracted into one clean workspace with standard ZIP tooling
+- **THEN** core writes the `teralizer/` workspace tree and each optional archive writes only its unique declared component subtree
+- **AND** no archive rewrites or merges another component's payload
 
-#### Scenario: A component id already exists with different bytes
+#### Scenario: Extraction is interrupted or a component changes
 
-- **WHEN** installation finds an existing component directory whose manifest or payload differs
-- **THEN** it fails with the component id and corrective action
-- **AND** it does not modify that directory
+- **WHEN** preflight finds an incomplete component root or bytes that differ from its manifest
+- **THEN** it fails with the component id and the remove-verify-reextract recovery procedure
+- **AND** it does not repair, merge, or overwrite that directory
 
 #### Scenario: Full real-world collection is selected
 
-- **WHEN** the full workflow uses a sample component plus a non-overlapping remainder component
-- **THEN** preflight requires both components
-- **AND** the release stores no duplicate sample project payload
+- **WHEN** the reviewer selects the full real-world collection workflow
+- **THEN** preflight requires the self-contained `projects-real-world-full` component
+- **AND** it does not require or combine `projects-real-world-sample`
+
+#### Scenario: Sample and full components overlap
+
+- **WHEN** the release contains both alternative real-world scopes
+- **THEN** every sample project is present in the full component
+- **AND** its identity, revision, configuration, source bytes, and license metadata match
 
 ### Requirement: JARVIS evidence has a complete, non-duplicated release chain
 
-The release SHALL bind the RQ0 JARVIS evidence to the `jarvis-scenarios` and `jarvis-benchmark` corpus packages, the two scorecard and twelve census fixture/config declarations, accepted run status and completion evidence, `jarvis-value-facts.json`, every source value log bound by its recorded counts and aggregate checksums (currently 1,494 census and 30 scorecard logs), `cut_values.tsv`, retained raw CUT-PVC captures, and every registered RQ0 report artifact. Each link SHALL record a checksum, provenance, payload owner, and whether the reviewer workflow inspects frozen evidence or regenerates it.
+The release SHALL bind the RQ0 JARVIS evidence to the `jarvis-scenarios` and `jarvis-benchmark` corpus packages, the declared scorecard and census fixture/config inventories, accepted run status and completion evidence, `jarvis-value-facts.json`, every source value log declared by its validated manifest and bound by recorded counts and aggregate checksums, `cut_values.tsv`, retained raw CUT-PVC captures, and every registered RQ0 report artifact. Each link SHALL record a checksum, provenance, payload owner, and whether the reviewer workflow inspects frozen evidence or regenerates it.
 
 The release SHALL NOT require the complete author working run roots when the selected source evidence and corpus packages close the declared lineage. It SHALL NOT use a stale detached completion marker, an alternate source-cache path, or a source-checkout file as an implicit substitute for declared payload.
 
 #### Scenario: A reviewer reproduces RQ0 reports
 
-- **WHEN** the reviewer installs core and the two declared JARVIS corpus components and runs RQ0 reproduction
-- **THEN** the report resolves every JARVIS database and file input inside that installation
+- **WHEN** the reviewer extracts core and the two declared JARVIS corpus components and runs RQ0 reproduction
+- **THEN** the report resolves every JARVIS database and file input from those verified component roots
 - **AND** verification compares every declared RQ0 report, table, CSV, macro, and provenance artifact
 
 #### Scenario: Compact facts have no backing logs
@@ -159,12 +167,14 @@ Publishing a revision SHALL create a new archival version. It SHALL NOT alter th
 
 The release SHALL contain a top-level license map covering source code, authored data and documentation, and third-party materials. Every redistributed project SHALL retain its original license and attribution and SHALL be listed with its origin URL, immutable source revision, license identity, and redistribution decision. A project without established redistribution permission SHALL NOT be included as though the artifact license covered it.
 
-The release SHALL document the corpus selection source, whether human-participant or sensitive data is present, and any ethical or legal constraint relevant to reuse. Core and every independently downloadable corpus or project component SHALL include the schema, provenance, license, and citation context applicable to its payload.
+The release SHALL document the corpus selection source, whether human-participant or sensitive data is present, and any ethical or legal constraint relevant to reuse. Core SHALL own shared schema, provenance, citation, and licensing guidance. Each independently downloadable corpus or project component SHALL carry its machine-readable identity and provenance in the component manifest, applicable retained license files, and a short generated README that points to the shared guidance.
 
-#### Scenario: A redistributed project has a recognized license
+The project inventory SHALL verify established license identifiers and retained upstream license files against the packaged bytes. It SHALL NOT require a new license-classification subsystem or repeated adjudication of unchanged declared inputs.
+
+#### Scenario: A redistributed project has an established license
 
 - **WHEN** a project archive contains that project
-- **THEN** its archive manifest and third-party notice identify the origin, revision, license, and retained license text
+- **THEN** its component manifest and third-party notice identify the origin, revision, license, attribution, redistribution decision, and retained license text
 
 #### Scenario: Redistribution permission is unclear
 
@@ -180,4 +190,5 @@ The release SHALL document the corpus selection source, whether human-participan
 #### Scenario: A user downloads one corpus component
 
 - **WHEN** a corpus archive is opened without core or the Zenodo page
-- **THEN** it identifies the study, release, semantic corpus, citation, licenses, schema, provenance, and required companion components
+- **THEN** its manifest identifies the release, semantic corpus, payload, provenance, licenses, and required companion components
+- **AND** its short README identifies the extraction root and points to the authoritative release manifest and core guidance

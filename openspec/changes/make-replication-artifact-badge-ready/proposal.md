@@ -1,12 +1,12 @@
 ## Why
 
-The published Zenodo artifact describes the retired notebook and two-database workflow, while the current repository uses registered reports, semantic corpus ids, and four published corpora. A new release must be independently installable, internally consistent, and demonstrably usable under the artifact-review criteria applied by TOSEM, ICSE, FSE, and ASE rather than relying on author-only publication machinery or unverified documentation.
+The published Zenodo artifact describes the retired notebook and two-database workflow, while the current repository uses registered reports, semantic corpus ids, and four published corpora. A new release must be independently usable after standard archive extraction, internally consistent, and demonstrably usable under the artifact-review criteria applied by TOSEM, ICSE, FSE, and ASE rather than relying on author-only publication machinery or unverified documentation.
 
 ## What Changes
 
 - Build one immutable release set from the verified four-corpus package, complete registered report run, every declared database and file input, committed source plus required submodules, workflow-specific project snapshots, licenses, citation metadata, and an explicit release manifest. Stage and validate the whole set before replacing or uploading anything.
 - Preserve the complete JARVIS RQ0 evidence chain: scorecard and census corpus dumps, fixture revisions and configs, run status/completion evidence, normalized value facts, their selected raw value logs, CUT-PVC aggregate and raw captures, report outputs, provenance, and the JARVIS publication reference. Distinguish frozen-evidence inspection from reduced or full collection.
-- Keep source, runtime support, registered results, compact inputs, and small backing evidence together in `core`. Publish the large corpus and project families as fine-grained, self-identifying components so each workflow downloads only the data it needs. Each component installs into its own immutable directory, and reviewer tools verify identities, checksums, and dependencies without merging archive trees.
+- Keep source, runtime support, registered results, compact inputs, and small backing evidence together in `core`. Publish the large corpus and project families as fine-grained, self-identifying components so each workflow downloads only the data it needs. Core extracts the `teralizer/` workspace tree, each optional archive extracts one unique immutable component subtree, and workflow preflight verifies identities, checksums, and dependencies without merging payload trees.
 - Publish exact, human-readable requirements and one authoritative reviewer route. A replicator can learn download, unpacked, peak-disk, memory, architecture, software, network, and runtime requirements without running project code.
 - Provide a clean, pinned reviewer environment with a setup and smoke path that completes within 30 minutes on the declared baseline, a bounded results-reproduction path, and reduced and full data-collection paths with progress and expected outcomes.
 - Map every supported paper claim to its inputs, command, output, expected comparison, tolerance, and runtime, and name claims that the artifact does not support. Verification covers report text and figure evidence as well as tables and CSV data.
@@ -20,7 +20,7 @@ The published Zenodo artifact describes the retired notebook and two-database wo
 
 ### New Capabilities
 
-- `replication/artifact-release`: immutable release-set composition, fine-grained archive identity and integrity, exact workflow download requirements, isolated component installation, and clean release validation.
+- `replication/artifact-release`: immutable release-set composition, fine-grained archive identity and integrity, exact workflow download requirements, collision-free component extraction, and clean release validation.
 - `replication/artifact-evaluation`: supported reviewer environments, bounded smoke and reproduction workflows, claims-to-evidence verification, clean-machine evidence, and documented reuse and security boundaries.
 
 ### Modified Capabilities

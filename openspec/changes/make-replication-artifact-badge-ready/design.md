@@ -33,9 +33,18 @@ A release has two audiences with different trust boundaries. Maintainers need to
 
 ### 0. Release inputs freeze only after their owners are accepted
 
-Release assembly begins after every producer contract it consumes is validated, synced, and archived. `make-report-runs-explicit` owns complete registered runs and their artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `consolidate-repository-knowledge` owns exclusion-accounting semantics. `declare-published-artifacts` owns declared consumer delivery. `materialize-exclusion-evidence` owns the finalized mechanism, denominator, and claim-facing RQ6 surface.
+Release assembly begins after every producer contract it consumes is validated, synced, and archived. `make-report-runs-explicit` owns complete registered runs and their artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `consolidate-repository-knowledge` owns exclusion-accounting semantics. `declare-published-artifacts` owns declared consumer delivery. `materialize-exclusion-evidence` owns the finalized mechanism, denominator, and retained claim-facing RQ6 surface.
 
-These are separately verified gates, not one aggregate planning checkbox. The release records each accepted revision and freezes the registered report run only after the last gate passes. It rejects an active change directory, dirty producer revision, mutable build directory, or intermediate manifest as release evidence. This change consumes those authorities and does not reopen or duplicate them.
+The archived prerequisites are consumed at exact accepted revisions: `consolidate-evaluation-databases`
+at `edf5ae290a0659266fec28530c4873ab0db0a808`, `make-report-runs-explicit` at
+`6409d66588c271ffdcd4b75229319fa7459579da`, `separate-report-values-from-presentation` at
+`2cb26ea0f852c0163a0805dd06d464399e6787ee`, `consolidate-repository-knowledge` at
+`4042046a87e67048cdde506642320435a5865759`, and `declare-published-artifacts` at
+`595db740d4a8e2c860d5e658e9e0755467c54a33`. These are separately verified gates, not one aggregate
+planning checkbox. The release freezes the registered report run only after
+`materialize-exclusion-evidence` is also accepted. It rejects an active change directory, dirty producer
+revision, mutable build directory, or intermediate manifest as release evidence. This change consumes
+those authorities and does not reopen or duplicate them.
 
 ### 1. Release assembly consumes three existing authorities
 
@@ -60,7 +69,7 @@ Release closure is computed from declarations, not from the files currently visi
 | Corpus data | Complete manifests and verified dumps for `controlled`, `real-world`, `jarvis-scenarios`, and `jarvis-benchmark` | Corpus registry and corpus package manifest | Corpus components |
 | Registered evidence | Every registered Markdown report, LaTeX table, CSV file, figure, macro file, and provenance record from one complete report run | `ReportSpec`, `ArtifactSet`, and report-run manifest | `core` |
 | Non-database report inputs | `project-source-facts.json`, `jarvis-value-facts.json`, `cut_values.tsv`, and accepted JARVIS completion evidence; no report may resolve a source-checkout fallback | Every registered `FileInputSpec` | `core` |
-| JARVIS backing evidence | The 1,494 census and 30 scorecard value logs bound by the compact-facts checksums; raw CUT-PVC captures bound to `cut_values.tsv`; scorecard and census status/provenance ledgers | JARVIS evidence extractors, capture plan, run ledgers, and checksums | `core` |
+| JARVIS backing evidence | Every source value log declared by the validated compact-facts manifest and bound by its counts and aggregate checksums; raw CUT-PVC captures bound to `cut_values.tsv`; scorecard and census status/provenance ledgers | JARVIS evidence extractors, capture plan, run ledgers, manifests, and checksums | `core` |
 | Project inputs | Redistributable source snapshots, exact revisions, configs, patches, licenses, and retrieval records for controlled, real-world, and JARVIS collection workflows, including the two scorecard and twelve census fixture roots | Corpus/config declarations plus the third-party rights ledger | Workflow-specific project components |
 | Runtime | Digest-pinned analysis, PostgreSQL, and collection image references; Dockerfiles; Compose declarations; lock files; architecture and network facts | Release declaration and container build records | `core` |
 | Public contract | Release and component manifests, checksums, schemas, requirements, citation, accepted-paper link, licenses, third-party notices, claim matrix, data dictionary, limitations, and acceptance record | Release declaration and measured release facts | Standalone release files and every independently downloadable component as applicable |
@@ -77,9 +86,9 @@ The upload set contains standalone `release-manifest.json`, `checksums.sha256`, 
 
 Only three formats are public contracts: the release manifest, the component manifest, and the acceptance record. Provenance, claims, evidence lineage, and path dispositions remain typed payload sections or build records. They do not become independent versioned schema families unless a separate consumer is demonstrated.
 
-Each archive has a unique component id and wrapper root. It contains `component-manifest.json`, a concise component README, applicable citation and license information, and one payload subtree. The component manifest records payload paths and checksums, release identity, purpose, dependencies, incompatibilities, and provenance. No component owns another component's payload.
+Each archive has a unique component id and declared wrapper root. It contains `component-manifest.json`, applicable retained license files, and one payload subtree. The core archive contains the complete reviewer guidance. Each optional archive adds a short generated README that points to the standalone release manifest and core guidance. The component manifest records payload paths and checksums, release identity, purpose, dependencies, incompatibilities, license mapping, and provenance. No component owns another component's archive path.
 
-The initial component graph is deliberately fine-grained:
+The initial component graph is manifest-declared and aligned with independently runnable workflows:
 
 | Component | Payload | Required by |
 |---|---|---|
@@ -90,15 +99,15 @@ The initial component graph is deliberately fine-grained:
 | `corpus-jarvis-benchmark` | Verified `jarvis-benchmark` corpus package | JARVIS scorecard report workflows |
 | `projects-controlled` | Redistributable controlled-project inputs, including `EqBench` | Controlled collection |
 | `projects-real-world-sample` | Redistributable reduced real-world subset | Reduced real-world collection |
-| `projects-real-world-remainder` | Redistributable full-set projects not present in the sample | Full real-world collection together with the sample |
+| `projects-real-world-full` | Complete redistributable real-world project set, including the sample projects | Full real-world collection |
 | `projects-jarvis-scoreboard` | Two pinned scorecard fixture roots and configs | JARVIS scorecard collection and CUT-PVC capture |
 | `projects-jarvis-census` | Twelve pinned census fixture roots and configs | JARVIS census collection |
 
-`core` is the default owner for source, runtime support, reports, compact inputs, and small backing evidence. A separate component is justified only when at least one documented workflow omits it and measured size or redistribution rights make that omission useful. A split must preserve semantic ownership and must not duplicate bytes already owned by another component. Small or tightly coupled payloads stay in core; archive count is not a goal.
+`core` is the default owner for source, runtime support, reports, compact inputs, and small backing evidence. A separate component is justified only when at least one documented workflow omits it and measured size or redistribution rights make that omission useful. A split must preserve semantic ownership. Payload bytes are unique across unrelated components. The one deliberate overlap is the reduced real-world sample inside `projects-real-world-full`: the full component is a self-contained alternative scope, and the builder proves that every shared project's identity, revision, configuration, source bytes, and license metadata match. Small or tightly coupled payloads stay in core; archive count is not a goal.
 
-The release declaration publishes an exact component set for each workflow. Reference inspection and JARVIS evidence audit require core only. Bounded smoke requires core plus the smallest corpus package that supports its representative report. RQ0 reproduction requires core plus the two JARVIS corpus components. All-report reproduction requires core plus all four corpus components. Collection requires core plus only the applicable project component; full real-world collection adds the remainder to the sample. The Zenodo description and release summary show each workflow's component names and total download, unpacked, restored, and peak-disk sizes. A user never needs to download an unrelated corpus or project family.
+The release declaration publishes an exact component set for each workflow. Reference inspection and JARVIS evidence audit require core only. Bounded smoke requires core plus the smallest corpus package that supports its representative report. RQ0 reproduction requires core plus the two JARVIS corpus components. All-report reproduction requires core plus all four corpus components. Collection requires core plus one applicable project component: reduced real-world collection selects `projects-real-world-sample`, while full real-world collection selects `projects-real-world-full`. The Zenodo description and release summary show each workflow's component names and total download, unpacked, restored, and peak-disk sizes. A user never needs to download or combine an unrelated corpus or project family.
 
-Every archive remains independently understandable. The small component README identifies its purpose, dependencies, contents, citation, license, and the release-manifest filename. Exact outer archive facts remain only in the standalone release manifest and release summary, which avoids recursive checksums.
+Every archive remains self-identifying. Its generated component manifest is authoritative. A short generated README names the component's purpose, release identity, required workflow companions, extraction root, and the authoritative release manifest. Applicable retained license files remain with the payload. Shared procedures, citation, provenance explanation, and detailed licensing guidance stay in core rather than being copied into every component. Exact outer archive facts remain only in the standalone release manifest and release summary, which avoids recursive checksums.
 
 **Alternative considered:** put every corpus in one data archive and every project in one source archive. Rejected because those are the large payload families and independent workflows use different subsets. The smaller executable, report, and evidence payloads remain together in core.
 
@@ -118,15 +127,15 @@ Streaming avoids a second tens-of-gigabytes payload tree. A small temporary file
 
 **Alternative considered:** implement a deterministic ZIP writer or reuse component archives by cache key. Rejected because both create new correctness mechanisms. A maintained Zip64 library and fresh release candidate are easier to verify.
 
-### 4. Components install independently into immutable component roots
+### 4. Standard extraction produces collision-free immutable component roots
 
-The core installer verifies one selected archive at a time against the standalone release manifest. It extracts the archive into a temporary directory, verifies every declared member, and renames that directory to `components/<component-id>` only after verification. It never merges payload trees or writes files owned by another component.
+The core archive owns the `teralizer/` workspace tree, including the root controller and shared guidance. Each optional archive writes only one unique subtree, `teralizer/components/<component-id>/`. A reviewer creates a clean workspace, extracts core, and extracts selected optional archives with standard ZIP tooling. The optional roots do not collide with one another or with core-owned files. The release builder rejects unsafe members, duplicate members, paths outside the archive's declared root, and ownership collisions before publication.
 
-A release workspace contains the immutable release manifest, installed component directories, and disposable workflow state. The presence of one component does not cause another selected component to be skipped. Installing a component whose directory already exists succeeds only when its component manifest and payload checksums already match. Otherwise the command fails and instructs the user to remove that component directory or create a new release workspace.
+Extraction is not an installation transaction. The release provides no component installer, package database, reinstall operation, archive cache, global ownership ledger, workspace transaction log, or custom extraction API. If extraction is interrupted or a component root is changed, the documented recovery is to remove that component root, verify the archive checksum, and extract it again into a clean workspace.
 
-Workflow preflight resolves installed component ids from their verified manifests. It reports every missing or incompatible component before starting services. The real-world full workflow requires both the sample and remainder components, so the release stores no duplicate sample payload. Components with no declared shared paths need no collision-deduplication engine.
+Workflow preflight reads the standalone release manifest and the extracted component manifests. It verifies release identity, component ids, manifest and payload checksums, required roots, and the complete workflow dependency set before starting services. It reports every missing, mixed-release, changed, or incomplete component together. Reduced real-world collection selects `projects-real-world-sample`; full real-world collection selects the self-contained `projects-real-world-full`. The two are alternative scopes and are never merged.
 
-The installer does not keep a package database, global ownership ledger, service inventory, or workspace transaction log. Existing corpus preparation records, run ledgers, Compose labels, and report manifests own mutable state. Cleanup addresses only the selected release's disposable workflow state and leaves immutable component directories intact unless the user explicitly removes them.
+Existing corpus preparation records, run ledgers, Compose labels, and report manifests own mutable state. Workflows receive immutable component roots explicitly and write generated state only under a separate disposable workspace root. Cleanup addresses that disposable state and does not remove extracted components.
 
 The old `projects/`-nonempty and `data/`-nonempty shortcuts are removed. Existing author files cannot satisfy a component dependency because workflows resolve only verified component roots.
 
@@ -194,7 +203,7 @@ The new version DOI is reserved before the final candidate so it can be embedded
 
 Release assembly generates a data dictionary from the checked schema plus maintained semantic descriptions for tables, columns, units, null meanings, views, and exported result fields. Corpus documentation records selection, source, revision, transformation, and report use.
 
-Every redistributed project has a third-party record containing origin URL, commit, license classifier, retained license path and checksum, and redistribution decision. Unknown or incompatible rights exclude source bytes from the archive. The record may retain only distributable identity and retrieval information. Generated tests and reports are audited for material copied from third-party sources and are covered by an explicit component license decision.
+Every redistributed project has a third-party record containing origin URL, commit, established license identifier, retained upstream license path and checksum, attribution, redistribution decision, and owning component. The release verifies this declared inventory against the packaged bytes; it does not build a license classifier or repeatedly adjudicate already established open-source inputs. A missing, changed, incompatible, or unverified license record excludes source bytes from the archive. The record may retain only distributable identity and retrieval information. Generated tests and reports are audited for material copied from third-party sources and are covered by an explicit component license decision.
 
 This legal inventory is separate from corpus identity. It answers whether bytes may be redistributed, not which corpus or project produced a result.
 
@@ -202,7 +211,7 @@ This legal inventory is separate from corpus identity. It answers whether bytes 
 
 Fast tests build tiny synthetic component archives. They cover the three public document formats, archive verification, isolated component extraction, missing workflow dependencies, stale-output exclusion, provenance release mode, structured documentation facts, and focused failure diagnostics. Recovery and resume behavior stays in the subsystem tests that own that state.
 
-The release gate builds the real candidate and launches a clean Linux x86-64 acceptance job from only the staged upload files. The job uses a new path and empty Docker volumes. It installs the documented smoke and all-report workflow component sets, runs smoke, reproduces all reports through the read-only role, verifies every claim summary, checks release-scoped cleanup, records measurements, and repeats results reproduction without network access. A source-checkout test cannot satisfy this gate.
+The release gate builds the real candidate and launches a clean Linux x86-64 acceptance job from only the staged upload files. The job uses a new path and empty Docker volumes. It extracts the documented smoke and all-report workflow component sets with standard ZIP tooling, runs preflight and smoke, reproduces all reports through the read-only role, verifies every claim summary, checks release-scoped cleanup, records measurements, and repeats results reproduction without network access. A source-checkout test cannot satisfy this gate.
 
 Reduced and full collection are not final-candidate acceptance reruns. Their stage behavior, resource controls, and resumability remain covered by their existing subsystem tests and run ledgers. One reduced production unit for each materially different collection path is exercised from packaged components before the release candidate freezes. Apple Silicon receives one separate compatibility run only when the public release claims that support.
 
@@ -222,16 +231,16 @@ Reduced and full collection are not final-candidate acceptance reruns. Their sta
 - **JARVIS path contracts currently disagree.** → Reconcile `data/detached/census-gen.complete` with the runner-owned completion path, and reconcile `data/jarvis-source-cache` in the CUT capture script with the fixture preparer's owned source cache before freezing evidence. A source-checkout fallback is not accepted.
 - **A source snapshot records gitlinks but omits nested repositories.** → Materialize every required submodule at its recorded commit, inventory its license and payload ownership, and prove the Git-free build from staged source bytes.
 - **Broad project and data directories hide unrelated or stale working state.** → Derive membership from corpus, report, and release declarations and require a path-disposition ledger with no unowned required path. Do not archive entire ignored roots as a shortcut.
-- **Fine-grained archives overwhelm reviewers or duplicate small payloads.** → Keep source, runtime support, reports, compact inputs, and small evidence in core. Split only large corpus and project families that at least one documented workflow omits.
+- **Fine-grained archives overwhelm reviewers or duplicate small payloads.** → Keep source, runtime support, reports, compact inputs, and small evidence in core. Split only large corpus and project families that at least one documented workflow omits. Permit only the verified real-world sample-within-full overlap because it makes both scopes self-contained.
 - **Many component choices make required downloads unclear.** → Publish named workflow sets with exact component lists, aggregate sizes, and copyable commands. Preflight reports the complete missing set before execution.
 
 ## Migration Plan
 
-1. Complete the corpus export, transfer, assembly, clean import, and read-only report tasks from `consolidate-evaluation-databases`; finish, validate, and archive the report/evidence changes that define the final published artifact set. Do not begin release assembly from a partial corpus or provisional report set.
+1. Consume the archived corpus, report-run, rendering, repository-authority, and artifact-delivery contracts. Finish, validate, and archive `materialize-exclusion-evidence`; do not begin release assembly from a provisional report set.
 2. Freeze a declaration-derived input ledger. Resolve every `ReportSpec` corpus and file input, all producing source and submodule bytes, all project/config inputs, and every output. Reconcile the JARVIS completion and source-cache path mismatches, retain selected value logs, regenerate and retain raw CUT captures, and prove the compact evidence lineage before archive work.
-3. Introduce the release declaration and schemas, then build fixture component/release manifests and atomic archive assembly without changing the published version.
+3. Introduce the release declaration and schemas, then build fixture component/release manifests and atomic archive assembly without changing the published version. Include the five fixed project scopes and prove that real-world sample is an exact subset of full.
 4. Add embedded per-source provenance and prove report generation from a Git-free fixture release.
-5. Replace shared-root archive extraction with verified component-local extraction and add the thin root reviewer controller.
+5. Replace shared-root archive layout with unique component wrapper roots, document standard extraction, implement strict manifest preflight, and add the thin root reviewer controller.
 6. Freeze the reviewer containers and move the primary analysis path off host `uv`. Verify smoke and results workflows on clean Linux x86-64.
 7. Define claims, output comparisons, data dictionaries, third-party notices, and generated public documentation. Remove or correct every retired command and unsupported claim.
 8. Build the complete candidate from the four-corpus package and all declared components. Run clean archive acceptance, capture exact measurements, and render final requirements and Zenodo metadata.

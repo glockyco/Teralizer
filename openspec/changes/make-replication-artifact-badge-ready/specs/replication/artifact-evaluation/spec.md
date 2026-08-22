@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the bounded, isolated, evidence-backed workflows by which an artifact reviewer or replicator installs Teralizer, checks its results, reruns representative collection, and understands its reuse and security boundaries.
+Defines the bounded, isolated, evidence-backed workflows by which an artifact reviewer or replicator extracts Teralizer, checks its results, reruns representative collection, and understands its reuse and security boundaries.
 
 ## ADDED Requirements
 
@@ -13,7 +13,7 @@ The artifact SHALL state the status of every additionally claimed architecture o
 #### Scenario: A reviewer uses the declared baseline
 
 - **WHEN** the reviewer starts from a clean machine that satisfies the published baseline
-- **THEN** the documented path installs and exercises the artifact without an undeclared host dependency
+- **THEN** the documented path extracts, verifies, and exercises the artifact without an undeclared host dependency
 
 #### Scenario: A locked dependency is unavailable or inconsistent
 
@@ -24,7 +24,7 @@ The artifact SHALL state the status of every additionally claimed architecture o
 #### Scenario: A user has an unsupported native architecture
 
 - **WHEN** the user runs preflight on an environment outside the declared support matrix
-- **THEN** preflight reports the unsupported or emulated status before installation
+- **THEN** preflight reports the unsupported or emulated status before workflow execution
 
 ### Requirement: Getting Started is bounded and proves useful behavior
 
@@ -119,13 +119,13 @@ Both reduced and full paths SHALL record progress, per-item outcomes, resumable 
 
 ### Requirement: Release acceptance executes the archive as a stranger would
 
-Before a release is eligible for publication, an automated acceptance run SHALL start from the staged downloadable archives in a new filesystem location, with empty service volumes and no access to the source checkout, author databases, author host, package-builder state, or undeclared credentials. It SHALL install the documented archive combination, complete Getting Started, reproduce all registered reports through read-only connections, verify the claims summary, test cleanup, and prove that the primary reviewer workflow remains usable without network access after declared setup dependencies are present.
+Before a release is eligible for publication, an automated acceptance run SHALL start from the staged downloadable archives in a new filesystem location, with empty service volumes and no access to the source checkout, author databases, author host, package-builder state, or undeclared credentials. It SHALL extract the documented archive combination with standard ZIP tooling, run preflight, complete Getting Started, reproduce all registered reports through read-only connections, verify the claims summary, test cleanup, and prove that the primary reviewer workflow remains usable without network access after declared setup dependencies are present.
 
 The acceptance record SHALL identify the release manifest checksum, host and container architecture, image digests, measured times and peak resources, commands, and results. Source-level tests or a run from the repository checkout SHALL NOT count as release acceptance.
 
 #### Scenario: Source tests pass but the archive omits a required file
 
-- **WHEN** the clean acceptance run installs the staged archive
+- **WHEN** the clean acceptance run extracts and verifies the staged archives
 - **THEN** it fails naming the missing packaged input
 - **AND** the release is ineligible for publication
 
