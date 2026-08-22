@@ -9,7 +9,13 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
-from teralizer.eval.model import ColumnSpec, Table
+from teralizer.eval.model import (
+    ColumnSpec,
+    Table,
+    ValueKind,
+    decimal_value,
+    share_value,
+)
 from teralizer.eval.provenance import capture
 from teralizer.eval.reports import _funnel
 
@@ -98,7 +104,11 @@ def fetch_jpf_exception_causes(conn: Connection, variant: str) -> pd.DataFrame:
             {
                 "category": category,
                 "count": int(counts.get(category, 0)),
-                "share": int(counts.get(category, 0)) / total if total else 0.0,
+                "share": (
+                    share_value(counts.get(category, 0), total)
+                    if total
+                    else decimal_value(0, 0)
+                ),
             }
             for category in _JPF_EXCEPTION_CATEGORIES
         ]
@@ -111,8 +121,8 @@ def jpf_exception_table(df: pd.DataFrame) -> Table:
         df=df,
         columns=[
             ColumnSpec("Recovered cause", "category"),
-            ColumnSpec("Diagnostics", "count", "count", "r"),
-            ColumnSpec("Share", "share", "pct1", "r"),
+            ColumnSpec("Diagnostics", "count", ValueKind.COUNT, "r"),
+            ColumnSpec("Share", "share", ValueKind.SHARE, "r"),
         ],
         caption=(
             "Retrospective classification of generic JPF uncaught-exception "
@@ -178,7 +188,11 @@ def fetch_mut_choice_sensitivity(conn: Connection, variant: str) -> pd.DataFrame
             {
                 "category": category,
                 "count": int(counts.get(category, 0)),
-                "share": int(counts.get(category, 0)) / total if total else 0.0,
+                "share": (
+                    share_value(counts.get(category, 0), total)
+                    if total
+                    else decimal_value(0, 0)
+                ),
             }
             for category in _MUT_CHOICE_CATEGORIES
         ]
@@ -191,8 +205,8 @@ def mut_choice_table(df: pd.DataFrame) -> Table:
         df=df,
         columns=[
             ColumnSpec("Candidate evidence", "category"),
-            ColumnSpec("Rejections", "count", "count", "r"),
-            ColumnSpec("Share of all", "share", "pct1", "r"),
+            ColumnSpec("Rejections", "count", ValueKind.COUNT, "r"),
+            ColumnSpec("Share of all", "share", ValueKind.SHARE, "r"),
         ],
         caption=(
             "Choice sensitivity of ParameterType rejections classified from "

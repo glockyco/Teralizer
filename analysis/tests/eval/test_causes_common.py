@@ -1,7 +1,9 @@
+from decimal import Decimal
+
 import pandas as pd
 
-from teralizer.eval.format import COUNT_SHARE
-from teralizer.eval.model import Table
+from teralizer.eval.entities import variant_ref
+from teralizer.eval.model import Table, ValueKind
 from teralizer.eval.render.latex import render_table
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
@@ -34,11 +36,11 @@ def test_filtering_table_shapes_columns_and_percentages():
     # The frame keeps numbers. Pairing a count with its share is the renderer's
     # job, because only a whole column can be aligned.
     decisions = {c.source: c for c in table.columns[3:]}
-    assert [c.fmt for c in decisions.values()] == [COUNT_SHARE] * 3
+    assert [c.kind for c in decisions.values()] == [ValueKind.COUNT] * 3
     assert decisions["accept"].share_source == "accept_pct"
     row = table.df.set_index("filter").loc["NonPassingTest"]
-    assert row["reject_pct"] == 0.12
-    assert row["accept_pct"] == 0.88
+    assert row["reject_pct"] == Decimal("0.12")
+    assert row["accept_pct"] == Decimal("0.88")
 
     latex = render_table(table)
     assert "88\\; (88.0\\%)" in latex
@@ -58,9 +60,9 @@ def test_breakdown_table_percentages_over_total():
     )
     table = build_breakdown_table(df, key="breakdown", label="tab:y", caption="C")
     row = table.df.set_index("level").loc["Test"]
-    assert round(row["included_pct"], 3) == 0.408
-    assert round(row["filtering_pct"], 3) == 0.496
-    assert round(row["failures_pct"], 3) == 0.096
+    assert round(row["included_pct"], 3) == Decimal("0.408")
+    assert round(row["filtering_pct"], 3) == Decimal("0.496")
+    assert round(row["failures_pct"], 3) == Decimal("0.096")
     assert [c.source for c in table.columns] == [
         "level",
         "total",
@@ -89,7 +91,7 @@ def test_breakdown_table_percentages_over_total():
 def test_breakdown_table_with_strategy_column():
     df = pd.DataFrame(
         {
-            "strategy": ["All", "All", "Baseline", "ImprovedC"],
+            "strategy": ["All", "All", "BASELINE", "IMPROVED_200_TRIES"],
             "level": ["Test", "Assertion", "Generalization", "Generalization"],
             "total": [100, 200, 50, 50],
             "included": [90, 150, 48, 40],
@@ -100,10 +102,10 @@ def test_breakdown_table_with_strategy_column():
     table = build_breakdown_table(
         df, key="b", label="tab:z", caption="C", include_strategy=True
     )
-    assert table.columns[0].source == "strategy_display"
-    assert table.columns[0].csv_source == "strategy"
+    assert table.columns[0].source == "strategy"
+    assert table.columns[0].kind is ValueKind.ENTITY
     assert table.columns[1].source == "level"
-    assert table.df.iloc[0]["strategy_display"] == r"\VariantAll{}"
+    assert table.df.iloc[0]["strategy"] == variant_ref("All")
     assert table.group_by == "level"
     # two generalization rows survive (per strategy), not collapsed
     assert (table.df["level"] == "Generalization").sum() == 2
@@ -151,13 +153,13 @@ def test_breakdown_strategy_rows_ordered():
     assert list(table.df["level"])[:2] == ["Test", "Assertion"]
     gen = table.df[table.df["level"] == "Generalization"]
     assert list(gen["strategy"]) == [
-        "BASELINE",
-        "NAIVE_10_TRIES",
-        "NAIVE_50_TRIES",
-        "NAIVE_200_TRIES",
-        "IMPROVED_10_TRIES",
-        "IMPROVED_50_TRIES",
-        "IMPROVED_200_TRIES",
+        variant_ref("BASELINE"),
+        variant_ref("NAIVE_10_TRIES"),
+        variant_ref("NAIVE_50_TRIES"),
+        variant_ref("NAIVE_200_TRIES"),
+        variant_ref("IMPROVED_10_TRIES"),
+        variant_ref("IMPROVED_50_TRIES"),
+        variant_ref("IMPROVED_200_TRIES"),
     ]
 
 

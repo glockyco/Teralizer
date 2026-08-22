@@ -5,14 +5,14 @@ import pandas as pd
 import pytest
 from teralizer.eval import cli, provenance, registry
 from teralizer.eval.inputs import CorpusInputSnapshot, ReportContext
-from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
+from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table, ValueKind
 
 
 def _fixture_report(_conn):
     t = Table(
         key="k",
         df=pd.DataFrame({"a": [1]}),
-        columns=[ColumnSpec("A", "a", "int")],
+        columns=[ColumnSpec("A", "a", ValueKind.COUNT)],
         caption="c",
         label="tab:k",
     )

@@ -1,12 +1,13 @@
 import pandas as pd
 from sqlalchemy import text
 
+from teralizer.eval.render.csv import render_table
 from teralizer.eval.reports import _funnel
 
 
 # Keep the database-specific integration assertions below separate from the
 # pure funnel arithmetic checks so failures identify the broken contract.
-def test_processing_table_keeps_raw_causes_for_csv():
+def test_processing_table_exports_plain_causes_without_ordinals(tmp_path):
     table = _funnel._build_table(
         pd.DataFrame(
             {
@@ -18,11 +19,16 @@ def test_processing_table_keeps_raw_causes_for_csv():
         ),
         "note",
     )
-    assert table.df.iloc[0]["cause"] == "PIT execution error during mutation testing"
-    assert table.df.iloc[0]["cause_display"] == (
-        r"\ToolPit{} execution error during mutation testing"
+    assert table.df.iloc[0]["cause"] == (
+        "{entity.tool.pit} execution error during mutation testing"
     )
-    assert table.columns[2].csv_source == "cause"
+    assert table.row_key == "row_key"
+    assert table.ordinal_header == "#"
+    path = render_table(table, tmp_path)
+    assert path.read_text(encoding="utf-8").splitlines() == [
+        "type,cause,count",
+        "External,PIT execution error during mutation testing,2",
+    ]
 
 
 def test_no_uncoded_attributions(funnel_result):

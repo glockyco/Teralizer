@@ -13,6 +13,7 @@ from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required, read_sql
 from teralizer.eval.evidence import project_sources
+from teralizer.eval.entities import ref_for_csv
 from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
 from teralizer.eval.model import (
     ColumnSpec,
@@ -21,10 +22,14 @@ from teralizer.eval.model import (
     RQReport,
     Section,
     Table,
+    ValueKind,
+    decimal_value,
+    share_value,
 )
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.exports import (
+    get_project_type,
     get_project_within_type_order,
     get_table_group_order,
     standardize_project_name,
@@ -76,57 +81,61 @@ REQUIRES: tuple[Required, ...] = (
 
 def _coverage_table(df: pd.DataFrame) -> Table:
     result = df.copy()
-    result.loc[:, "test_inclusion_pct"] = (
-        result["included_tests"] / result["total_tests"].replace(0, pd.NA) * 100
-    ).fillna(0)
-    result.loc[:, "class_inclusion_pct"] = (
-        result["included_classes"] / result["total_classes"].replace(0, pd.NA) * 100
-    ).fillna(0)
-    result.loc[:, "covered_pct"] = (
-        result["covered"] / result["total"].replace(0, pd.NA) * 100
-    ).fillna(0)
-    result.loc[:, "uncovered_pct"] = (
-        result["uncovered"] / result["total"].replace(0, pd.NA) * 100
-    ).fillna(0)
-    result.loc[:, "display_project"] = (
-        result["project"]
-        .astype(str)
-        .str.replace("-default", "", regex=False)
-        .replace({"commons-utils": "commons-utils-dev"})
-    )
-    result.loc[:, "included_tests_display"] = result.apply(
-        lambda row: f"{int(row['included_tests']):,} ({row['test_inclusion_pct']:.1f}%)",
-        axis=1,
-    )
-    result.loc[:, "included_classes_display"] = result.apply(
-        lambda row: f"{int(row['included_classes']):,} ({row['class_inclusion_pct']:.1f}%)",
-        axis=1,
-    )
-    result.loc[:, "covered_display"] = result.apply(
-        lambda row: f"{int(row['covered']):,} ({row['covered_pct']:.1f}%)", axis=1
-    )
-    result.loc[:, "uncovered_display"] = result.apply(
-        lambda row: f"{int(row['uncovered']):,} ({row['uncovered_pct']:.1f}%)", axis=1
+    for count, total, share in (
+        ("included_tests", "total_tests", "test_inclusion_share"),
+        ("included_classes", "total_classes", "class_inclusion_share"),
+        ("covered", "total", "covered_share"),
+        ("uncovered", "total", "uncovered_share"),
+    ):
+        result.loc[:, share] = result.apply(
+            lambda row: (
+                share_value(row[count], row[total])
+                if row[total]
+                else decimal_value(0, 0)
+            ),
+            axis=1,
+        )
+    result.loc[:, "project_group"] = result["project"].map(get_project_type)
+    result.loc[:, "project"] = result["project"].map(
+        lambda value: ref_for_csv("dataset", value)
     )
     columns = [
-        ColumnSpec("Project", "display_project"),
+        ColumnSpec("Project", "project", ValueKind.ENTITY),
         ColumnSpec(
             "Test Methods",
-            "included_tests_display",
+            "included_tests",
+            kind=ValueKind.COUNT,
             align="r",
+            share_source="test_inclusion_share",
             group_header="Included",
         ),
         ColumnSpec(
             "Impl. Classes",
-            "included_classes_display",
+            "included_classes",
+            kind=ValueKind.COUNT,
             align="r",
+            share_source="class_inclusion_share",
             # Keep the two singleton ``Included`` cells from being merged into
             # one span: the thesis distinguishes the two measures in this row.
             group_header="Included ",
         ),
-        ColumnSpec("Total", "total", "count", "r", group_header="Mutants"),
-        ColumnSpec("Covered", "covered_display", align="r", group_header="Mutants"),
-        ColumnSpec("Uncovered", "uncovered_display", align="r", group_header="Mutants"),
+        ColumnSpec("Total", "total", ValueKind.COUNT, "r", group_header="Mutants"),
+        ColumnSpec(
+            "Covered",
+            "covered",
+            ValueKind.COUNT,
+            "r",
+            group_header="Mutants",
+            share_source="covered_share",
+        ),
+        ColumnSpec(
+            "Uncovered",
+            "uncovered",
+            ValueKind.COUNT,
+            "r",
+            group_header="Mutants",
+            share_source="uncovered_share",
+        ),
     ]
     return Table(
         "tab-mutants-per-project",
@@ -134,6 +143,7 @@ def _coverage_table(df: pd.DataFrame) -> Table:
         columns,
         "Number of total, covered, and uncovered mutants in included classes per project.",
         "tab:mutants-per-project",
+        group_by="project_group",
         short_caption="Included tests and classes with covered and uncovered mutants per project",
         body_style="",
         float_spec="H",
@@ -159,12 +169,6 @@ def _mutator_table(df: pd.DataFrame) -> Table:
     for column in ("detected_diff_naive_200_tries", "detected_diff_improved_200_tries"):
         if column not in result:
             result.loc[:, column] = 0
-    result.loc[:, "naive_delta_display"] = result["detected_diff_naive_200_tries"].map(
-        lambda value: "--" if abs(float(value)) < 1e-12 else f"({float(value):+.2f})"
-    )
-    result.loc[:, "improved_delta_display"] = result[
-        "detected_diff_improved_200_tries"
-    ].map(lambda value: "--" if abs(float(value)) < 1e-12 else f"({float(value):+.2f})")
     wanted = [
         "mutator",
         "total_mutants",
@@ -174,56 +178,65 @@ def _mutator_table(df: pd.DataFrame) -> Table:
         "detected_diff_naive_200_tries",
         "IMPROVED_200_TRIES",
         "detected_diff_improved_200_tries",
-        "naive_delta_display",
-        "improved_delta_display",
     ]
     for column in wanted:
         if column not in result:
             result.loc[:, column] = 0
+    numeric_columns = [
+        column for column in wanted if column not in {"mutator", "total_mutants"}
+    ]
+    for column in numeric_columns:
+        result = result.assign(
+            **{column: result[column].map(lambda value: decimal_value(value, 2))}
+        )
     result = result[wanted]
     columns = [
         ColumnSpec("Mutator", "mutator"),
-        ColumnSpec("Total", "total_mutants", "count", "r"),
-        ColumnSpec("Total \\%", "percent", "float2", "r"),
+        ColumnSpec("Total", "total_mutants", ValueKind.COUNT, "r"),
+        ColumnSpec("Total %", "percent", ValueKind.DECIMAL, "r"),
         ColumnSpec(
-            "\\VariantInitial{}",
+            "{entity.variant.initial}",
             "INITIAL",
-            "float2",
+            ValueKind.DECIMAL,
             "c",
-            group_header="Detected \\%",
+            group_header="Detected %",
         ),
         ColumnSpec(
-            "\\VariantNaiveC{}",
+            "{entity.variant.naive_c}",
             "NAIVE_200_TRIES",
-            "float2",
+            ValueKind.DECIMAL,
             "r",
-            group_header="Detected \\%",
+            group_header="Detected %",
         ),
         ColumnSpec(
-            "\\VariantNaiveC{}",
-            "naive_delta_display",
+            "{entity.variant.naive_c}",
+            "detected_diff_naive_200_tries",
+            kind=ValueKind.DELTA,
             align="r",
-            group_header="Detected \\%",
+            group_header="Detected %",
+            zero_is_absent=True,
         ),
         ColumnSpec(
-            "\\VariantImprovedC{}",
+            "{entity.variant.improved_c}",
             "IMPROVED_200_TRIES",
-            "float2",
+            ValueKind.DECIMAL,
             "r",
-            group_header="Detected \\%",
+            group_header="Detected %",
         ),
         ColumnSpec(
-            "\\VariantImprovedC{}",
-            "improved_delta_display",
+            "{entity.variant.improved_c}",
+            "detected_diff_improved_200_tries",
+            kind=ValueKind.DELTA,
             align="r",
-            group_header="Detected \\%",
+            group_header="Detected %",
+            zero_is_absent=True,
         ),
     ]
     return Table(
         "tab-detections-per-mutator",
         result,
         columns,
-        "Number of mutants and percentage of detections per mutator in \\DatasetsEqBenchEs{} and \\DatasetsCommons{} projects.",
+        "Number of mutants and percentage of detections per mutator in {entity.dataset.eqbench_es} and {entity.dataset.commons} projects.",
         "tab:detections-per-mutator",
         short_caption="Mutants and detections by mutator and dataset",
         body_style="\\tabstyle",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from importlib.metadata import version
 from pathlib import Path
 
@@ -21,9 +22,15 @@ from teralizer.eval.model import BuiltReport
 ANALYSIS_VERSION = version("teralizer-analysis")
 
 
+def _json_value(value: object) -> object:
+    if isinstance(value, Decimal):
+        return int(value) if value == value.to_integral_value() else float(value)
+    return value
+
+
 def _entry(value, prov, repo_url: str) -> dict:
     return {
-        "value": value,
+        "value": _json_value(value),
         "module": prov.module,
         "qualname": prov.qualname,
         "query": prov.query,

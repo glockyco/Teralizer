@@ -15,7 +15,7 @@ Observed state, with evidence:
 | `Prose` already substitutes `{metric.key}` placeholders at render time | `model.py`, `Prose` docstring |
 | The problem predates the RQ0 work | `\VariantAll{}` present in `git show HEAD:analysis/reports/rq5.md` |
 | The generator took over the thesis's filenames without its format | `fix(eval): publish the exclusion tables under the names the thesis reads` (69b0bfe5) |
-| Format gaps, measured feature by feature against the thesis's committed tables | phantom padding, thin space, centred numeric headers, band rows, row numbering, body indentation |
+| Format gaps, measured feature by feature against the thesis's committed tables | composite-cell padding, thin space, centred spanning and composite headers, band rows, row numbering, body indentation |
 | The funnel band row is a spanned cell with a fixed-width label | `\multicolumn{4}{l}{\textit{\makebox[13.25em][l]{Stage 1 + 2 ...}}}` in the thesis table |
 | The renderer already has label rows, group spacing, spanned leaf headers, and full width | `render/latex.py` `group_style`, `_spanned_cells`, `full_width` |
 | The thesis already loads `siunitx` and no table uses an `S` column | `preamble/packages.tex:89`; no match for `S[table-format` |
@@ -52,9 +52,9 @@ is a local patch on one missing rule.
 
 ### 1. `ColumnSpec.fmt` becomes a value kind, not a format string
 
-Today `fmt` names a display formatter (`count`, `pct1`, `pvc`, `tex`). It becomes the column's kind: `count`, `share`, `decimal`, `delta`, `runtime`, `identifier`, `text`, `entity`. A kind states what the value *is*. Each renderer decides what it *looks like*.
+Today `fmt` names a display formatter (`count`, `pct1`, `pvc`, `tex`). It becomes the column's kind: `count`, `share`, `percent`, `percent_delta`, `decimal`, `delta`, `runtime`, `identifier`, `text`, `entity`. A kind states what the value *is*. Each renderer decides what it *looks like*.
 
-`decimal` covers ratios and fixed-precision measurements. `delta` covers signed integer or decimal differences. Its human-readable form needs an explicit sign. Both kinds store `Decimal` values at the intended significant precision. CSV emits their bare numeric form. Markdown and LaTeX preserve that precision. Only `delta` adds a positive sign. These kinds support current numeric fields without format strings or a general numeric-style system.
+`share` stores a ratio and human targets scale it by 100. `percent` stores an already scaled percentage-point value, such as `47`; human targets append `%` without scaling it. `percent_delta` stores an already scaled percentage-point difference, such as `574.5`; human targets render it as `+574.5%`. `decimal` covers fixed-precision measurements. `delta` covers signed integer or decimal differences without a unit suffix. Percentage-point, percentage-point-delta, decimal, and delta kinds store `Decimal` values at the intended significant precision. CSV emits their bare numeric form. Markdown and LaTeX preserve that precision. Delta kinds add a positive sign. These kinds support current numeric fields without format strings or a general numeric-style system.
 
 `format.py` stops being one formatter table shared by all targets and becomes three small kind-to-text
 maps, one per target, so the display rules sit beside the target that owns them.
@@ -70,8 +70,10 @@ other targets when the value is absent.
 
 `_VARIANT_MACROS` already maps a variant code to its thesis macro, but a report-specific causes module
 is the wrong owner for a repository-wide vocabulary. A neutral registry under `teralizer.eval` defines
-each entity's stable key, plain name, and LaTeX rendering. Variant, tool, dataset, stage, and cause
-references use that registry. Cells store the entity reference, not its rendering.
+each shared variant, tool, and dataset's stable key, plain name, and LaTeX rendering. Cells store the
+entity reference, not its rendering. Stage names remain plain semantic text because every target uses
+the same name. Composite cause sentences remain text and use explicit entity placeholders for the
+tools or variants that differ by target.
 
 For captions and notes, the placeholder mechanism `Prose` already uses for metrics is extended to
 entities, so a caption reads `... for the {variant.improved_c} strategy ...` and each target
@@ -91,7 +93,7 @@ of it.
 The last one is the largest edit and the most valuable: a combined cell is currently built inside a
 report's SQL-to-DataFrame step, which is why CSV had to route around it.
 
-### 4. The renderer computes alignment, because siunitx cannot align a composite cell
+### 4. The renderer computes alignment only inside composite cells
 
 An earlier draft proposed moving numeric columns to `siunitx` `S` columns and splitting each
 count-with-share into two columns, on the grounds that `\phantom` padding is a manual substitute for a
@@ -103,16 +105,19 @@ separator, `73,780 (89.5\%)` renders as `73,780 (` then a stretched gap then `89
 thin space instead has the same effect. An `S` column cannot take the composite whole, because it parses
 one number per cell.
 
-So the composite cell stays, and the renderer pads it. Padding a composite is the mechanism that fits
-the cell shape, not a workaround for a missing tool. Because one mechanism per table beats two, the
-renderer pads plain numeric columns the same way, and `siunitx` is not introduced.
+The composite cell therefore stays, and the renderer pads its two internal components from the widest
+count and share in that column. A renderer handed the finished string `73,780 (89.5%)` would have to
+parse it to recover those widths, which is why value/presentation separation comes first.
 
-This keeps the alignment computation in the renderer, which is exactly why the separation must come
-first: padding depends on the widest count and the widest share in a column, and a renderer handed the
-finished string `73,780 (89.5%)` would have to parse what it was given to compute either.
+Plain numeric cells need no corresponding mechanism. Their ordinary LaTeX column alignment already
+positions them, so adding invisible leading content has no page effect and only makes generated source
+harder to inspect. Plain leaf headers inherit their column alignment. A header centres only when it
+spans columns or describes the components of a composite cell. This follows the cell structure rather
+than special-casing particular value kinds.
 
-`siunitx` remains the better tool for a table of plain numbers, and the RQ0 tables may be worth
-revisiting on their own. Mixing both mechanisms inside one table would be worse than either.
+`siunitx` remains the better tool for a table of plain numbers, but introducing it is outside this
+change. Ordinary columns for plain values and internal padding for composites are not competing table
+alignment mechanisms: one aligns cells in a column, while the other aligns components inside one cell.
 
 The funnel's band row is a spanned cell carrying a fixed-width label plus the group's summary. The
 renderer already spans cells for group headers and already emits label rows with group spacing, so the
@@ -129,7 +134,26 @@ A removed referenced row becomes an undefined LaTeX reference, which the thesis'
 must reject. Exporting the current ordinal as data was rejected because it would turn presentation
 order into a false semantic identifier.
 
-### 5. Rendering semantics sit inside the common artifact contract
+### 5. Reports carry the semantic distinctions that renderers must preserve
+
+A renderer cannot infer a dataset-family boundary from a corrected project display name. Reports
+therefore store project datasets as entity references and supply the dataset-family grouping that the
+maintained table uses. The LaTeX renderer emits a separator only when that semantic group changes; it
+does not group by `project_name` or add a rule after every row.
+
+A paired delta is also structural, not a special string. When an absolute value and its delta share a
+merged heading, human renderers retain the delta's explicit sign and wrap it in parentheses. The CSV
+renderer sees the same numeric delta but emits neither presentation mark.
+
+Finally, rounding belongs where a report constructs the semantic value. A report creates one
+significant-precision `Decimal`, and table cells, prose metrics, and generated macros consume that same
+value. Renderers do not independently recompute or truncate it. Thus the reviewed ratio `51 / 80`
+becomes `63.8%` everywhere without changing either count or the underlying measurement.
+
+*Why not preserve current strings independently:* that is the mechanism this change removes. It allows
+a table, prose passage, and macro to disagree while each looks locally plausible.
+
+### 6. Rendering semantics sit inside the common artifact contract
 
 `make-report-runs-explicit` establishes `BuiltReport`, `RenderTarget`, `ArtifactId`,
 `RenderedArtifact`, and `ArtifactSet`, and supplies each renderer with a staging root. This change
@@ -148,17 +172,21 @@ The ownership boundary is strict:
 `ArtifactSet` later. Rejected because that would touch every renderer twice and create an intermediate
 return contract with no durable owner.
 
-### 6. Verification is staged, and each stage has one criterion
+### 7. Verification is staged, and each stage has one criterion
 
 Stage one, the separation: from one reviewed commit and one declared corpus set, run the complete
 report set into two clean temporary roots before and after the refactor. Require every corresponding
 artifact to be byte-identical. The mutable `analysis/build/` directory is never a baseline.
 
-Stage two, the deliberate format and label changes: compare generated LaTeX with the thesis's committed
-generated sources to explain every structural difference, then publish through the declared consumer
-mapping into a clean scratch thesis checkout. `scripts/pdf-page.swift` renders the affected pages. The
-source comparison catches accidental loss of maintained structure; the page decides whether numbers
-align, headers sit over their columns, row references resolve, and each group states its totals.
+Stage two, the deliberate format and label changes: compare every generated LaTeX table with the
+thesis's committed generated sources and explain each structural difference. The audit explicitly
+covers the RQ0 budget table, RQ1 mutator table, RQ2 complexity table, RQ3 runtime and line-count tables,
+and maintained source for the dormant mutants-per-project table. It checks percentage suffixes,
+rounding, paired-delta parentheses, dataset-family boundaries, entity-backed labels, and header and cell
+alignment. Then publish through the declared consumer mapping into a clean scratch thesis checkout.
+`scripts/pdf-page.swift` renders each affected page. Source comparison catches loss of maintained
+structure; the page decides whether numbers align, headers sit over their columns, row references
+resolve, and each semantic group remains distinct.
 
 Two standing checks keep the other targets clean: no backslash may appear in any rendered markdown,
 and every numeric CSV field must parse as a number. A complete manifest comparison proves that the
@@ -170,8 +198,9 @@ same artifact identities exist before and after the inert stage.
   build-time reader of `chapters/05-teralizer/data/*.csv`; selected files are retained evidence. → Treat
   the CSV change as a declared interface break, review every numeric field, and record any other known
   consumer before release.
-- **Padding is computed from the data, so a later corpus can change every cell in a column.** → It is
-  derived, not stated, so a regeneration recomputes it; the diff is noisier than the numbers alone.
+- **Composite padding is computed from the data, so a later corpus can change every composite cell in
+  a column.** → It is derived, not stated, and confined to count/share cells; plain numeric columns add
+  no phantom markup.
 - **A padded composite hides its alignment in invisible boxes**, which is harder to read in source than
   a plain number. → Accepted: it is the only mechanism that survives `\extracolsep{\fill}`, and it is
   confined to one renderer.
@@ -189,8 +218,9 @@ same artifact identities exist before and after the inert stage.
 2. Introduce value kinds and per-target maps, move combined-cell composition into the LaTeX renderer,
    and delete `*_display`, `csv_source`, and `fmt="tex"`; prove this stage byte-identical.
 3. Move entities into the neutral registry and extend prose placeholders.
-4. Add computed layout, band rows, semantic row keys, and LaTeX counter labels. Review every deliberate
-   source diff against the thesis's committed generated tables.
+4. Add computed composite layout, aligned headers, percentage-point rendering, maintained group
+   boundaries, paired deltas, band rows, semantic row keys, and LaTeX counter labels. Review every
+   deliberate source diff against the thesis's committed generated tables.
 5. Publish the complete declared set into a clean scratch thesis checkout through the common
    publication command. Run the strict thesis build and inspect affected pages. Do not copy any artifact
    by hand.

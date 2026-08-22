@@ -3,12 +3,12 @@
 The generator publishes under the filenames the thesis reads but does not reproduce the thesis's table
 format, so syncing regenerated tables silently degrades the chapter. The funnel table loses its
 numbered rows, its per-stage band rows carrying projects, inclusions, exclusions, and rate, and its
-overall row. The breakdown and filtering tables lose their centred numeric headers, the thin space
-between a count and its share, and the phantom padding that aligns digits across rows. One sync of
-correct v7 numbers had to be reverted for exactly this reason.
+overall row. The breakdown and filtering tables lose their centred composite headers, the thin space
+between a count and its share, and the internal phantom padding that aligns both components across
+rows. One sync of correct v7 numbers had to be reverted for exactly this reason.
 
-The format cannot be restored where the values are. Phantom padding needs the widest value in a
-column, and the current model hands the renderer a finished string such as `73,780 (89.5%)` built in
+The format cannot be restored where the values are. Composite padding needs the widest count and share
+in a column, and the current model hands the renderer a finished string such as `73,780 (89.5%)` built in
 the report's DataFrame step. A renderer cannot align what it would first have to parse.
 
 The same missing separation sends LaTeX to targets that cannot use it.
@@ -37,18 +37,21 @@ and regenerating it surfaced what the generator had been producing.
 
 ## What Changes
 
-- **LaTeX tables match the document's format**: body indentation, centred headers over numeric
-  columns, a thin space between a count and its share, and phantom padding that aligns digits and
-  sub-ten-percent shares within a column.
+- **LaTeX tables match the document's format**: plain leaf headers inherit their column alignment;
+  spanning and composite headers remain centred. A count and its share use a thin space and computed
+  internal padding so both parts align; plain numeric cells rely on their column alignment without
+  phantom markup.
 - **A table may carry band rows**: a row spanning every column that summarises the group beneath it,
   which is how the funnel states each stage's projects, inclusions, exclusions, and rate.
 - **A table may number its rows and label them by semantic key.** The funnel uses visible ordinals for
   readability and a stable table-key-plus-row-key label for citations. Reordering rows may change the
   displayed number without changing which cause a citation denotes.
-- A table column declares the **kind of value** it holds — count, share, decimal, delta, runtime,
-  identifier, text, or a named entity — instead of a display format string. Decimal values retain
-  their significant precision in the value. A delta also states that its human-readable form shows an
-  explicit sign.
+- A table column declares the **kind of value** it holds — count, share, percentage point,
+  percentage-point delta, decimal, delta, runtime, identifier, text, or a named entity — instead of a
+  display format string. These numeric kinds retain their significant precision in the value. Human
+  targets suffix a percentage-point value such as `47` with `%`. They render a percentage-point delta
+  such as `574.5` as `+574.5%`. CSV keeps each bare numeric value. Delta kinds use an explicit sign in
+  human targets.
 - Each render target owns its presentation:
   - **CSV** emits machine-readable values: `85368`, `0.526`, an empty field for a missing value, and a
     plain identifier. No thousands separators, no percent signs, no em dashes, no macros.
@@ -58,6 +61,10 @@ and regenerating it surfaced what the generator had been producing.
 - **Named entities replace baked-in macros.** A variant, a tool, or a dataset is stored as an entity
   reference and rendered per target, so markdown says `PIT` where LaTeX says `\ToolPit{}`. Captions
   reference entities through the placeholder syntax `Prose` already uses for metrics.
+- **Maintained table semantics survive regeneration.** Dataset-family group boundaries and
+  parenthesised paired deltas remain visible. One reviewed numeric value has one rounded presentation
+  across its table, prose, and macro uses; rendering `51 / 80` consistently as `63.8%` changes no
+  underlying measurement.
 - **BREAKING** for CSV consumers: numeric columns become raw numbers and missing values become empty
   fields. The thesis currently retains selected CSV files as evidence but does not read them during its
   build; the published CSV diff is still reviewed as a machine-readable interface change.

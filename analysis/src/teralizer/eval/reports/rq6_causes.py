@@ -373,9 +373,9 @@ def build(context: ReportContext) -> RQReport:
         collapse_mechanisms(breakdown_data),
         key="tab-exclusions-breakdown-extended",
         label="tab:exclusions-breakdown-extended",
-        caption="Exclusion results for \\VariantImprovedC{} in the RepoReapers projects.",
+        caption="Exclusion results for {entity.variant.improved_c} in the RepoReapers projects.",
         short_caption=(
-            "\\VariantImprovedC{} inclusion, filtering, and failure counts in RepoReapers"
+            "{entity.variant.improved_c} inclusion, filtering, and failure counts in RepoReapers"
         ),
         body_style="\\tabstyle",
         full_width=True,
@@ -390,9 +390,9 @@ def build(context: ReportContext) -> RQReport:
         filtering_data,
         key="tab-exclusions-filtering-extended",
         label="tab:exclusions-filtering-extended",
-        caption="Filtering results for \\VariantImprovedC{} in the RepoReapers projects.",
+        caption="Filtering results for {entity.variant.improved_c} in the RepoReapers projects.",
         short_caption=(
-            "RepoReapers filtering decisions for \\VariantImprovedC{} by level and filter"
+            "RepoReapers filtering decisions for {entity.variant.improved_c} by level and filter"
         ),
         body_style="\\tabstyle",
         full_width=True,

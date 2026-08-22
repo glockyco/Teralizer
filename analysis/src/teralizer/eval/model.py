@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from decimal import Decimal
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -29,28 +31,55 @@ class Metric:
     provenance: "Provenance | None" = None
 
 
+def decimal_value(value: object, places: int) -> Decimal:
+    """Return a numeric value with stable significant precision."""
+    return Decimal(format(value, f".{places}f"))
+
+
+def share_value(numerator: object, denominator: object) -> Decimal:
+    """Return an exact ratio for two integer counts."""
+    return Decimal(int(numerator)) / Decimal(int(denominator))
+
+
+class ValueKind(StrEnum):
+    COUNT = "count"
+    SHARE = "share"
+    PERCENT = "percent"
+    PERCENT_DELTA = "percent_delta"
+    DECIMAL = "decimal"
+    DELTA = "delta"
+    RUNTIME = "runtime"
+    IDENTIFIER = "identifier"
+    TEXT = "text"
+    ENTITY = "entity"
+
+
 @dataclass(frozen=True)
 class ColumnSpec:
-    """One rendered table column. Formatting is defined here once and reused by
-    every renderer, killing the table/CSV duplication of the old modules."""
+    """One table column: semantic values only, never target presentation."""
 
     header: str
     source: str  # source DataFrame column name
-    fmt: str = "str"
+    kind: ValueKind = ValueKind.TEXT
     align: str = "l"  # l | r | c
     group_header: str | None = None
-    # Where LaTeX grouping abbreviates a cell -- a label row lifting the shared
-    # prefix out of every member -- the rectangular CSV still owes readers the
-    # qualified value. Naming it here keeps the export unambiguous.
-    csv_source: str | None = None
-    # `fmt="count_share"` reads a count from `source` and the share it represents
-    # from here. Both stay numbers in the frame: LaTeX pairs them and aligns the
-    # column, markdown pairs them plainly, and CSV keeps them as two fields.
-    # Pairing them in the frame instead would hand every renderer one string and
-    # leave alignment to whoever could parse it back.
+    # A count and its share stay as two values in the frame. Human targets
+    # compose one cell. CSV exports both numeric fields.
     share_source: str | None = None
     # A decision a filter never takes reads as a dash rather than a zero share.
     zero_is_absent: bool = False
+
+    def __post_init__(self) -> None:
+        if self.share_source is not None and self.kind is not ValueKind.COUNT:
+            raise ValueError("share_source requires a count column")
+
+
+@dataclass(frozen=True)
+class BandSummary:
+    title: str
+    entering: int
+    inclusions: int
+    exclusions: int
 
 
 @dataclass(frozen=True)
@@ -62,12 +91,14 @@ class Table:
     label: str
     group_by: str | None = None  # column that drives midrules / section splits
     group_style: str = "midrule"
+    row_key: str | None = None
+    ordinal_header: str | None = None
     # A band is a row spanning every column that states the totals of the group
     # beneath it, keyed by that group's value. `overall_band` closes the table.
     # The report supplies the text, because only it knows what the group totals
     # mean; the renderer decides how a spanning row is typeset.
-    bands: dict[str, str] | None = None
-    overall_band: str | None = None
+    bands: dict[str, BandSummary] | None = None
+    overall_band: BandSummary | None = None
     latex_resize_to_width: bool = False
     # A consuming document sets its own house style. These carry the parts of it
     # that the generator must emit itself, because they sit inside the float it
@@ -86,6 +117,16 @@ class Table:
     note: str | None = None
     provenance: "Provenance | None" = None
 
+    def __post_init__(self) -> None:
+        if self.row_key is None:
+            return
+        if self.row_key not in self.df:
+            raise ValueError(f"row key column is missing: {self.row_key}")
+        duplicate = self.df[self.row_key].duplicated(keep=False)
+        if duplicate.any():
+            keys = self.df.loc[duplicate, self.row_key].tolist()
+            raise ValueError(f"row keys must be unique: {keys}")
+
 
 @dataclass(frozen=True)
 class Figure:
@@ -99,8 +140,11 @@ class Figure:
 
 @dataclass(frozen=True)
 class Prose:
-    """Markdown-flavored text. `{metric.key}` placeholders are substituted by the
-    markdown renderer; the LaTeX track ignores Prose (Plan 2)."""
+    """Markdown text with metric and ``{entity.<key>}`` placeholders.
+
+    The Markdown renderer substitutes both placeholder types. The LaTeX track
+    ignores prose because the consuming document owns its narrative text.
+    """
 
     text: str
 

@@ -1,5 +1,8 @@
+from decimal import Decimal
+
 import pandas as pd
 import pytest
+from teralizer.eval.entities import variant_ref
 from teralizer.eval.inputs import CorpusInputSnapshot
 from teralizer.eval.model import (
     BuiltReport,
@@ -8,6 +11,7 @@ from teralizer.eval.model import (
     RQReport,
     Section,
     Table,
+    ValueKind,
 )
 from teralizer.eval.render.latex import (
     render_macros,
@@ -50,8 +54,8 @@ def test_render_table_is_booktabs_with_formatted_cells():
         key="funnel",
         df=pd.DataFrame({"reason": ["A", "B"], "count": [3598, 12]}),
         columns=[
-            ColumnSpec("Reason", "reason", "str", align="l"),
-            ColumnSpec("Count", "count", "count", align="r"),
+            ColumnSpec("Reason", "reason", ValueKind.TEXT, align="l"),
+            ColumnSpec("Count", "count", ValueKind.COUNT, align="r"),
         ],
         caption="Cap",
         label="tab:funnel",
@@ -81,15 +85,42 @@ def test_render_table_is_booktabs_with_formatted_cells():
     )
 
 
+def test_render_table_formats_delta_sign_grouping_and_absent_zero():
+    table = Table(
+        key="deltas",
+        df=pd.DataFrame({"delta": [Decimal("10653"), Decimal("0.00")]}),
+        columns=[
+            ColumnSpec(
+                "Delta",
+                "delta",
+                ValueKind.DELTA,
+                zero_is_absent=True,
+            )
+        ],
+        caption="Deltas",
+        label="tab:deltas",
+    )
+
+    tex = render_table(table)
+
+    assert "+10,653" in tex
+    assert "  -- \\" in tex
+
+
 def test_render_table_stacks_headers_only_when_a_group_header_is_set():
     table = Table(
         key="stacked",
         df=pd.DataFrame({"reported": [1], "cut": [2], "jarvis": [3], "tool": [4]}),
         columns=[
-            ColumnSpec("Reported case", "reported", "int"),
-            ColumnSpec("CUT PVC", "cut", "int", group_header="Original"),
-            ColumnSpec("PBT PVC", "jarvis", "int", group_header="JARVIS"),
-            ColumnSpec("PBT PVC", "tool", "int", group_header="\\ToolTeralizer{}"),
+            ColumnSpec("Reported case", "reported", ValueKind.COUNT),
+            ColumnSpec("CUT PVC", "cut", ValueKind.COUNT, group_header="Original"),
+            ColumnSpec("PBT PVC", "jarvis", ValueKind.COUNT, group_header="JARVIS"),
+            ColumnSpec(
+                "PBT PVC",
+                "tool",
+                ValueKind.COUNT,
+                group_header="{entity.tool.teralizer}",
+            ),
         ],
         caption="Cap",
         label="tab:stacked",
@@ -109,8 +140,8 @@ def test_render_table_emits_the_consuming_documents_house_style():
         df=pd.DataFrame({"p": ["x"], "a": [1], "b": [2]}),
         columns=[
             ColumnSpec("Project", "p"),
-            ColumnSpec("Files", "a", "int", "r", group_header="Impl"),
-            ColumnSpec("SLOC", "b", "int", "r", group_header="Impl"),
+            ColumnSpec("Files", "a", ValueKind.COUNT, "r", group_header="Impl"),
+            ColumnSpec("SLOC", "b", ValueKind.COUNT, "r", group_header="Impl"),
         ],
         caption="Long caption.",
         label="tab:styled",
@@ -136,8 +167,8 @@ def test_render_table_emits_the_consuming_documents_house_style():
 def test_equal_leaf_headers_span_only_when_the_table_asks():
     columns = [
         ColumnSpec("Mutator", "m"),
-        ColumnSpec("Naive", "a", "int", "r"),
-        ColumnSpec("Naive", "b", "int", "r"),
+        ColumnSpec("Naive", "a", ValueKind.COUNT, "r"),
+        ColumnSpec("Naive", "b", ValueKind.COUNT, "r"),
     ]
     df = pd.DataFrame({"m": ["Math"], "a": [1], "b": [2]})
 
@@ -162,23 +193,58 @@ def test_equal_leaf_headers_span_only_when_the_table_asks():
     assert "  Mutator & Naive & Naive \\\\" in plain.splitlines()
 
 
-def test_tex_cells_keep_their_markup_while_others_stay_escaped():
+def test_equal_leaf_headers_parenthesize_their_paired_delta():
     table = Table(
-        key="tex",
-        df=pd.DataFrame({"v": ["IMPROVED$_{50}$"], "p": ["a_b 50%"]}),
-        columns=[ColumnSpec("Variant", "v", "tex"), ColumnSpec("Plain", "p")],
+        key="deltas",
+        df=pd.DataFrame(
+            {
+                "absolute": [Decimal("54.98"), Decimal("50.00")],
+                "delta": [Decimal("3.99"), Decimal("0.00")],
+            }
+        ),
+        columns=[
+            ColumnSpec("Detected", "absolute", ValueKind.DECIMAL, "r"),
+            ColumnSpec(
+                "Detected",
+                "delta",
+                ValueKind.DELTA,
+                "r",
+                zero_is_absent=True,
+            ),
+        ],
         caption="Cap",
-        label="tab:tex",
+        label="tab:deltas",
+        merge_equal_headers=True,
     )
-    body = [line for line in render_table(table).splitlines() if "IMPROVED" in line]
-    assert body == ["  IMPROVED$_{50}$ & a\\_b 50\\% \\\\"]
+
+    tex = render_table(table)
+
+    assert "  54.98 & (+3.99) \\\\" in tex.splitlines()
+    assert "  50.00 & -- \\\\" in tex.splitlines()
+
+
+def test_entity_cells_render_latex_while_plain_text_stays_escaped():
+    table = Table(
+        key="entity",
+        df=pd.DataFrame({"v": [variant_ref("IMPROVED_50_TRIES")], "p": ["a_b 50%"]}),
+        columns=[
+            ColumnSpec("Variant", "v", ValueKind.ENTITY),
+            ColumnSpec("Plain", "p"),
+        ],
+        caption="Cap",
+        label="tab:entity",
+    )
+    body = [
+        line for line in render_table(table).splitlines() if "VariantImprovedB" in line
+    ]
+    assert body == [r"  \VariantImprovedB{} & a\_b 50\% " + "\\\\"]
 
 
 def test_render_table_captions_itself_when_the_document_owns_the_float():
     table = Table(
         key="sidebyside",
         df=pd.DataFrame({"a": [1]}),
-        columns=[ColumnSpec("A", "a", "int")],
+        columns=[ColumnSpec("A", "a", ValueKind.COUNT)],
         caption="Pareto points.",
         label="tab:pareto",
         short_caption="Pareto",
@@ -197,7 +263,7 @@ def test_render_table_defaults_stay_on_the_plain_centred_float():
     table = Table(
         key="plain",
         df=pd.DataFrame({"a": [1]}),
-        columns=[ColumnSpec("A", "a", "int")],
+        columns=[ColumnSpec("A", "a", ValueKind.COUNT)],
         caption="Cap",
         label="tab:plain",
     )
@@ -215,10 +281,22 @@ def test_render_table_spans_and_rules_group_headers_shared_by_columns():
         df=pd.DataFrame({"p": ["x"], "a": [1], "b": [2], "c": [3], "d": [4]}),
         columns=[
             ColumnSpec("Benchmark project", "p"),
-            ColumnSpec("PBT PVC", "a", "int", "r", group_header="JARVIS"),
-            ColumnSpec("MUTs", "b", "int", "r", group_header="JARVIS"),
-            ColumnSpec("PBT PVC", "c", "int", "r", group_header="\\ToolTeralizer{}"),
-            ColumnSpec("MUTs", "d", "int", "r", group_header="\\ToolTeralizer{}"),
+            ColumnSpec("PBT PVC", "a", ValueKind.COUNT, "r", group_header="JARVIS"),
+            ColumnSpec("MUTs", "b", ValueKind.COUNT, "r", group_header="JARVIS"),
+            ColumnSpec(
+                "PBT PVC",
+                "c",
+                ValueKind.COUNT,
+                "r",
+                group_header="{entity.tool.teralizer}",
+            ),
+            ColumnSpec(
+                "MUTs",
+                "d",
+                ValueKind.COUNT,
+                "r",
+                group_header="{entity.tool.teralizer}",
+            ),
         ],
         caption="Cap",
         label="tab:spanned",
@@ -267,7 +345,7 @@ def test_render_table_label_rows_indent_members_and_flatten_empty_groups():
         ),
         columns=[
             ColumnSpec("Name", "name"),
-            ColumnSpec("Count", "count", "int", align="r"),
+            ColumnSpec("Count", "count", ValueKind.COUNT, align="r"),
         ],
         caption="Cap",
         label="tab:labels",
@@ -299,7 +377,7 @@ def test_render_table_midrule_group_style_preserves_existing_group_breaks():
     table = Table(
         key="groups",
         df=pd.DataFrame({"group": ["A", "A", "B"], "value": [1, 2, 3]}),
-        columns=[ColumnSpec("Value", "value", "int")],
+        columns=[ColumnSpec("Value", "value", ValueKind.COUNT)],
         caption="Cap",
         label="tab:groups",
         group_by="group",
@@ -318,7 +396,7 @@ def test_render_table_can_fit_text_width():
     table = Table(
         key="wide",
         df=pd.DataFrame({"value": [1]}),
-        columns=[ColumnSpec("Value", "value", "count", align="r")],
+        columns=[ColumnSpec("Value", "value", ValueKind.COUNT, align="r")],
         caption="Wide",
         label="tab:wide",
         latex_resize_to_width=True,

@@ -9,7 +9,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
-from teralizer.eval.model import ColumnSpec, Table
+from teralizer.eval.model import BandSummary, ColumnSpec, Table, ValueKind
 from teralizer.eval.provenance import capture
 from teralizer.eval.reports._taxonomy import (
     UNCODED,
@@ -443,7 +443,7 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
         success_count=success_count,
         stages=stages,
         table=_build_table(
-            table_df, note, *_stage_bands_text(stages, eligible, success_count)
+            table_df, note, *_stage_band_summaries(stages, eligible, success_count)
         ),
         uncoded_projects=uncoded_projects,
         eligibility_audit_unexpected=eligibility_audit_unexpected,
@@ -689,109 +689,76 @@ def _stage_bands(survivor_sets: list[set[int]]) -> list[StageBand]:
     return bands
 
 
-def _stage_band_text(
-    title: str, entering: int, passing: int, exclusions: int, widths: dict[str, int]
-) -> str:
-    """One band: a fixed-width title, then the stage's totals.
-
-    Every figure is padded to the widest in its position so the bands read down
-    the table as a column of totals rather than as ragged sentences.
-    """
-
-    def pad(value: str, key: str) -> str:
-        missing = widths[key] - len(value)
-        return f"\\phantom{{{'0' * missing}}}{value}" if missing > 0 else value
-
-    rate = f"{passing / entering:.1%}" if entering else "0.0%"
-    fields = [
-        f"{pad(f'{entering:,}', 'entering')} projects",
-        f"{pad(f'{passing:,}', 'passing')} inclusions",
-        f"{pad(f'{exclusions:,}', 'exclusions')} exclusions",
-        # Padded before escaping, because a width is counted in glyphs and `\%` is
-        # one glyph written as two characters. A bare `%` would comment out the
-        # rest of the row.
-        f"{pad(rate, 'rate').replace('%', chr(92) + '%')} inclusion rate",
-    ]
-    return f"{title}:\t" + "\\enspace{}".join(fields)
-
-
-def _stage_bands_text(
+def _stage_band_summaries(
     stages: "list[StageBand]", eligible: int, success_count: int
-) -> tuple[dict[str, str], str]:
-    """A band per stage plus the closing overall band, aligned as one block."""
-    entries = [
-        (_STAGE_TITLES[b.stage], b.stage, b.entering, b.passing, b.exclusions)
-        for b in stages
-    ]
-    entries.append(("Overall", "", eligible, success_count, eligible - success_count))
-    widths = {
-        "entering": max(len(f"{e:,}") for _, _, e, _, _ in entries),
-        "passing": max(len(f"{p:,}") for _, _, _, p, _ in entries),
-        "exclusions": max(len(f"{x:,}") for _, _, _, _, x in entries),
-        "rate": max(len(f"{p / e:.1%}" if e else "0.0%") for _, _, e, p, _ in entries),
-    }
+) -> tuple[dict[str, BandSummary], BandSummary]:
+    """Return typed stage summaries and the closing overall summary."""
     bands = {
-        stage: _stage_band_text(title, entering, passing, exclusions, widths)
-        for title, stage, entering, passing, exclusions in entries
-        if stage
+        band.stage: BandSummary(
+            _STAGE_TITLES[band.stage],
+            band.entering,
+            band.passing,
+            band.exclusions,
+        )
+        for band in stages
     }
-    title, _, entering, passing, exclusions = entries[-1]
-    overall = _stage_band_text(title, entering, passing, exclusions, widths)
+    overall = BandSummary(
+        "Overall",
+        eligible,
+        success_count,
+        eligible - success_count,
+    )
     return bands, overall
 
 
 def _build_table(
     df: pd.DataFrame,
     note: str,
-    bands: dict[str, str] | None = None,
-    overall_band: str | None = None,
+    bands: dict[str, BandSummary] | None = None,
+    overall_band: BandSummary | None = None,
 ) -> Table:
     display = df.copy()
-    cause_macros = {
+    cause_templates = {
         "PIT execution error during mutation testing": (
-            r"\ToolPit{} execution error during mutation testing"
+            r"{entity.tool.pit} execution error during mutation testing"
         ),
-        "PIT reports not found": r"\ToolPit{} reports not found",
-        "failed to process PIT reports": r"failed to process \ToolPit{} reports",
+        "PIT reports not found": r"{entity.tool.pit} reports not found",
+        "failed to process PIT reports": r"failed to process {entity.tool.pit} reports",
     }
-    timeout_macros = {
-        "per original test suite": r"per \VariantOriginal{} test suite",
-        "per initial test suite": r"per \VariantInitial{} test suite",
-        "per generalized test suite": r"per \VariantImprovedC{} test suite",
+    timeout_templates = {
+        "per original test suite": r"per {entity.variant.original} test suite",
+        "per initial test suite": r"per {entity.variant.initial} test suite",
+        "per generalized test suite": r"per {entity.variant.improved_c} test suite",
     }
 
-    def cause_display(cause: object) -> str:
+    def cause_text(cause: object) -> str:
         text = str(cause)
-        if text in cause_macros:
-            return cause_macros[text]
-        for raw, macro in timeout_macros.items():
+        if text in cause_templates:
+            return cause_templates[text]
+        for raw, macro in timeout_templates.items():
             if raw in text:
                 return text.replace(raw, macro)
         return text
 
-    display.loc[:, "cause_display"] = display["cause"].map(cause_display)
-    # Numbering is data, because this is where row order is decided. A band is not
-    # a row of the frame, so it consumes no number, and the CSV keeps both the
-    # number and the stage.
-    display.loc[:, "number"] = range(1, len(display) + 1)
+    display.loc[:, "row_key"] = display.apply(
+        lambda row: f"{row['stage']}:{row['cause']}", axis=1
+    )
+    display.loc[:, "cause"] = display["cause"].map(cause_text)
     return Table(
         key="tab-processing-failures",
         df=display,
         columns=[
-            ColumnSpec("\\#", "number", fmt="int", align="r"),
             ColumnSpec("Type", "type"),
-            ColumnSpec(
-                "Cause of Project-level Exclusion", "cause_display", csv_source="cause"
-            ),
-            ColumnSpec("Count", "count", fmt="int", align="r"),
+            ColumnSpec("Cause of Project-level Exclusion", "cause"),
+            ColumnSpec("Count", "count", kind=ValueKind.COUNT, align="r"),
         ],
         caption=(
             "Project-level exclusions by stage and cause for the "
-            "\\VariantImprovedC{} generalization strategy in RepoReapers projects. "
+            "{entity.variant.improved_c} generalization strategy in RepoReapers projects. "
             "Internal causes are due to configured resource limits or current "
-            "limitations of \\ToolTeralizer{}. External causes are due to "
-            "\\ToolTeralizer{}'s dependencies (i.e., JUnit, Spoon, "
-            "\\ToolJPF{} / \\ToolSPF{}, \\ToolJacoco{}, and \\ToolPit{}). "
+            "limitations of {entity.tool.teralizer}. External causes are due to "
+            "{entity.tool.teralizer}'s dependencies (i.e., JUnit, Spoon, "
+            "{entity.tool.jpf} / {entity.tool.spf}, {entity.tool.jacoco}, and {entity.tool.pit}). "
             "Mixed causes are influenced by both internal and external factors."
         ),
         label="tab:processing-failures",
@@ -800,6 +767,8 @@ def _build_table(
         float_spec="tbp",
         full_width=True,
         group_by="stage",
+        row_key="row_key",
+        ordinal_header="#",
         bands=bands,
         overall_band=overall_band,
         note=note,

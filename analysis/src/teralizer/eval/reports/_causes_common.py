@@ -10,8 +10,8 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from teralizer.eval.format import COUNT_SHARE
-from teralizer.eval.model import ColumnSpec, Table
+from teralizer.eval.entities import variant_ref
+from teralizer.eval.model import ColumnSpec, Table, ValueKind, share_value
 
 
 @dataclass(frozen=True)
@@ -65,16 +65,6 @@ def collapse_mechanisms(df: pd.DataFrame) -> pd.DataFrame:
 
 _VARIANT_HEAD = {"ORIGINAL": 0, "INITIAL": 1, "SHARED": 2, "BASELINE": 3}
 _VARIANT_GROUP = {"NAIVE": 4, "IMPROVED": 5}
-_VARIANT_MACROS = {
-    "All": r"\VariantAll{}",
-    "BASELINE": r"\VariantBaseline{}",
-    "NAIVE_10_TRIES": r"\VariantNaiveA{}",
-    "NAIVE_50_TRIES": r"\VariantNaiveB{}",
-    "NAIVE_200_TRIES": r"\VariantNaiveC{}",
-    "IMPROVED_10_TRIES": r"\VariantImprovedA{}",
-    "IMPROVED_50_TRIES": r"\VariantImprovedB{}",
-    "IMPROVED_200_TRIES": r"\VariantImprovedC{}",
-}
 _LEVEL_ORDER = {"Test": 0, "Assertion": 1, "Generalization": 2}
 # Paper/table display order for filters. This is the hand-curated order used in
 # the published tables, deliberately NOT the pipeline application order.
@@ -118,7 +108,9 @@ def build_filtering_table(
     """df columns: level, filter, total, accept, defer, reject (integer counts)."""
     out = df.copy()
     for decision in ("accept", "defer", "reject"):
-        out.loc[:, f"{decision}_pct"] = out[decision] / out["total"]
+        out.loc[:, f"{decision}_pct"] = out.apply(
+            lambda row: share_value(row[decision], row["total"]), axis=1
+        )
     out.loc[:, "_lvl"] = out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99))
     out.loc[:, "_fil"] = out["filter"].map(filter_sort_key)
     out = (
@@ -129,20 +121,28 @@ def build_filtering_table(
     columns = [
         ColumnSpec("Level", "level"),
         ColumnSpec("Filter Name", "filter"),
-        ColumnSpec("Total", "total", fmt="count", align="r"),
+        ColumnSpec("Total", "total", kind=ValueKind.COUNT, align="r"),
         ColumnSpec(
-            "Accept", "accept", fmt=COUNT_SHARE, align="r", share_source="accept_pct"
+            "Accept",
+            "accept",
+            kind=ValueKind.COUNT,
+            align="r",
+            share_source="accept_pct",
         ),
         ColumnSpec(
             "Defer",
             "defer",
-            fmt=COUNT_SHARE,
+            kind=ValueKind.COUNT,
             align="r",
             share_source="defer_pct",
             zero_is_absent=True,
         ),
         ColumnSpec(
-            "Reject", "reject", fmt=COUNT_SHARE, align="r", share_source="reject_pct"
+            "Reject",
+            "reject",
+            kind=ValueKind.COUNT,
+            align="r",
+            share_source="reject_pct",
         ),
     ]
     return Table(
@@ -174,10 +174,12 @@ def build_breakdown_table(
     """df columns: level, total, one column per outcome (and optional strategy)."""
     out = df.copy()
     for outcome in outcomes:
-        out.loc[:, f"{outcome.column}_pct"] = out[outcome.column] / out["total"]
+        out.loc[:, f"{outcome.column}_pct"] = out.apply(
+            lambda row: share_value(row[outcome.column], row["total"]), axis=1
+        )
     columns = [
         ColumnSpec("Level", "level"),
-        ColumnSpec("Total", "total", fmt="count", align="r"),
+        ColumnSpec("Total", "total", kind=ValueKind.COUNT, align="r"),
     ]
     for outcome in outcomes:
         group_header = (
@@ -187,7 +189,7 @@ def build_breakdown_table(
             ColumnSpec(
                 outcome.header,
                 outcome.column,
-                fmt=COUNT_SHARE,
+                kind=ValueKind.COUNT,
                 align="r",
                 group_header=group_header,
                 share_source=f"{outcome.column}_pct",
@@ -195,11 +197,8 @@ def build_breakdown_table(
         )
     group_by = None
     if include_strategy:
-        out.loc[:, "strategy_display"] = out["strategy"].map(
-            lambda value: _VARIANT_MACROS.get(str(value), str(value))
-        )
         columns = [
-            ColumnSpec("Strategy", "strategy_display", csv_source="strategy"),
+            ColumnSpec("Strategy", "strategy", kind=ValueKind.ENTITY),
             *columns,
         ]
         group_by = "level"
@@ -211,6 +210,7 @@ def build_breakdown_table(
             .drop(columns=["_lvl", "_var"])
             .reset_index(drop=True)
         )
+        out.loc[:, "strategy"] = out["strategy"].map(variant_ref)
     return Table(
         key=key,
         df=out,

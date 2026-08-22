@@ -3,6 +3,7 @@ import pytest
 
 import sqlalchemy.exc
 
+from teralizer.eval.entities import variant_ref
 from teralizer.eval.inputs import CorpusInputSpec, resolve_inputs
 from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
@@ -114,13 +115,13 @@ def test_rq5_generalization_strategy_order():
     breakdown = next(t for t in report.tables() if "breakdown" in t.label)
     gen = breakdown.df[breakdown.df["level"] == "Generalization"]
     assert list(gen["strategy"]) == [
-        "BASELINE",
-        "NAIVE_10_TRIES",
-        "NAIVE_50_TRIES",
-        "NAIVE_200_TRIES",
-        "IMPROVED_10_TRIES",
-        "IMPROVED_50_TRIES",
-        "IMPROVED_200_TRIES",
+        variant_ref("BASELINE"),
+        variant_ref("NAIVE_10_TRIES"),
+        variant_ref("NAIVE_50_TRIES"),
+        variant_ref("NAIVE_200_TRIES"),
+        variant_ref("IMPROVED_10_TRIES"),
+        variant_ref("IMPROVED_50_TRIES"),
+        variant_ref("IMPROVED_200_TRIES"),
     ]
 
 

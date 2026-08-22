@@ -1,7 +1,12 @@
+from decimal import Decimal
+
 import pandas as pd
 from matplotlib import pyplot as plt
 from sqlalchemy import create_engine
 
+from teralizer.eval.entities import ref
+from teralizer.eval.model import ValueKind
+from teralizer.eval.render.latex import render_table
 from teralizer.eval.reports.rq3_suite_size_runtime import (
     _effects,
     _effects_table,
@@ -43,20 +48,22 @@ def test_rq3_effects_preserve_thesis_test_counts():
     assert table.group_by == "project_group"
     assert [column.group_header for column in table.columns[2:]] == ["Tests"] * 6
     assert [column.align for column in table.columns] == ["l", "l"] + ["r"] * 6
-    assert table.columns[-1].header == r"Delta \%"
+    assert table.columns[-1].header == "Delta %"
     assert [column.source for column in table.columns] == [
-        "display_project",
+        "project",
         "b_variant",
         "tests_before",
         "added_tests",
         "removed_tests",
         "tests_after",
-        "delta_display",
-        "delta_pct_display",
+        "tests_delta",
+        "tests_delta_pct",
     ]
-    assert table.df.loc[0, "display_project"] == "eqbench-es-1s"
-    assert table.df.loc[0, "delta_display"] == "+0"
-    assert table.df.loc[0, "delta_pct_display"] == "+0.0%"
+    assert table.df.loc[0, "project"] == ref("dataset.eqbench_a")
+    assert table.df.loc[0, "project_group"] == "eqbench"
+    assert table.columns[0].kind is ValueKind.ENTITY
+    assert table.df.loc[0, "tests_delta"] == Decimal("0")
+    assert table.df.loc[0, "tests_delta_pct"] == Decimal("0.0")
 
 
 def test_rq3_runtime_effects_use_singular_runtime_columns():
@@ -93,19 +100,21 @@ def test_rq3_runtime_effects_use_singular_runtime_columns():
         "Runtime (in seconds)"
     ] * 6
     assert [column.align for column in table.columns] == ["l", "l"] + ["r"] * 6
-    assert table.columns[-1].header == r"Delta \%"
+    assert table.columns[-1].header == "Delta %"
     assert [column.source for column in table.columns] == [
-        "display_project",
+        "project",
         "b_variant",
         "runtime_before",
         "added_runtime",
         "removed_runtime",
         "runtime_after",
-        "delta_display",
-        "delta_pct_display",
+        "runtime_delta",
+        "runtime_delta_pct",
     ]
-    assert table.df.loc[0, "delta_display"] == "+100.20"
-    assert table.df.loc[0, "delta_pct_display"] == "+574.5%"
+    assert table.df.loc[0, "runtime_delta"] == Decimal("100.20")
+    assert table.df.loc[0, "runtime_delta_pct"] == Decimal("574.5")
+    assert table.columns[-1].kind is ValueKind.PERCENT_DELTA
+    assert "+574.5\\%" in render_table(table)
     data = pd.DataFrame(
         {
             "variant": [

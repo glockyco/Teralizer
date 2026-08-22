@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+from decimal import Decimal
 from pathlib import Path
 
 from teralizer.eval.artifacts import (
@@ -11,38 +12,64 @@ from teralizer.eval.artifacts import (
     RenderedArtifact,
     RenderTarget,
 )
-from teralizer.eval.format import COUNT_SHARE, render_value
-from teralizer.eval.model import RQReport, Table
+from teralizer.eval.entities import EntityRef, render as render_entity
+from teralizer.eval.entities import substitute as substitute_entities
+from teralizer.eval.format import is_missing
+from teralizer.eval.model import RQReport, Table, ValueKind
+
+
+def _decimal(value: object) -> str:
+    if not isinstance(value, Decimal):
+        raise TypeError(f"decimal value must use Decimal, got {type(value).__name__}")
+    return format(value, "f")
+
+
+def _value(value: object, kind: ValueKind) -> str:
+    if is_missing(value):
+        return ""
+    if kind is ValueKind.COUNT:
+        return str(int(value))
+    if kind in {
+        ValueKind.SHARE,
+        ValueKind.PERCENT,
+        ValueKind.PERCENT_DELTA,
+    }:
+        return _decimal(value)
+    if kind in {ValueKind.DECIMAL, ValueKind.DELTA}:
+        return _decimal(value)
+    if kind is ValueKind.RUNTIME:
+        return _decimal(value)
+    if kind is ValueKind.IDENTIFIER:
+        return str(value)
+    if kind is ValueKind.TEXT:
+        return substitute_entities(str(value), "csv")
+    if kind is ValueKind.ENTITY:
+        if not isinstance(value, EntityRef):
+            raise TypeError(
+                f"entity value must use EntityRef, got {type(value).__name__}"
+            )
+        return render_entity(value, "csv")
+    raise AssertionError(f"unsupported CSV value kind: {kind}")
 
 
 def render_table(table: Table, output_dir: Path) -> Path:
-    """Write one table using source-column names as the stable CSV schema."""
+    """Write one table with stable source-column names."""
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"{table.key}.csv"
     with path.open("w", encoding="utf-8", newline="") as stream:
-        # csv defaults to the RFC 4180 CRLF terminator. Every consumer of these
-        # files -- git, the thesis, the plotting macros -- is line-oriented Unix
-        # text, so the export matches the repository instead of the RFC.
         writer = csv.writer(stream, lineterminator="\n")
-        # A count and its share are two fields here. Pairing them into one string
-        # would hand a consumer a value it has to parse apart again.
         header: list[str] = []
         for column in table.columns:
-            header.append(column.csv_source or column.source)
-            if column.fmt == COUNT_SHARE:
-                assert column.share_source is not None
+            header.append(column.source)
+            if column.share_source is not None:
                 header.append(column.share_source)
         writer.writerow(header)
         for _, row in table.df.iterrows():
             fields: list[str] = []
             for column in table.columns:
-                source = column.csv_source or column.source
-                if column.fmt == COUNT_SHARE:
-                    fields.append(render_value(row[source], "count"))
-                    assert column.share_source is not None
-                    fields.append(render_value(row[column.share_source], "pct1"))
-                else:
-                    fields.append(render_value(row[source], column.fmt))
+                fields.append(_value(row[column.source], column.kind))
+                if column.share_source is not None:
+                    fields.append(_value(row[column.share_source], ValueKind.SHARE))
             writer.writerow(fields)
     return path
 

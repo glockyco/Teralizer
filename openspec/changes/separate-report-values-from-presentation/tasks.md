@@ -12,11 +12,13 @@
 
 ## 2. Value kinds
 
-- [ ] 2.1 Replace `ColumnSpec.fmt` display formats with value kinds: `count`, `share`, `decimal`,
-      `delta`, `runtime`, `identifier`, `text`, `entity`. Store decimal and delta values as `Decimal`
-      at their significant precision; do not add renderer format metadata.
+- [ ] 2.1 Replace `ColumnSpec.fmt` display formats with value kinds: `count`, `share`, `percent`,
+      `percent_delta`, `decimal`, `delta`, `runtime`, `identifier`, `text`, `entity`. Store
+      percentage-point, percentage-point-delta, decimal, and delta values as `Decimal` at their
+      significant precision; do not add renderer format metadata.
 - [ ] 2.2 Split `format.py` into one kind-to-text map per target, each inside the renderer contract
-      provided by `make-report-runs-explicit`
+      provided by `make-report-runs-explicit`. Human targets append `%` to `percent` without scaling
+      and render `percent_delta` with both a sign and `%`; CSV emits each bare numeric magnitude.
 - [ ] 2.3 Remove the `pvc` kind and make an absent `count` render as empty in CSV and as a dash in the
       other targets
 - [ ] 2.4 Update every `ColumnSpec` declaration across the report modules
@@ -33,8 +35,9 @@
 ## 4. Entities
 
 - [ ] 4.1 Create one neutral entity registry under `teralizer.eval` with a stable key, plain name, and
-      LaTeX rendering for each shared variant, tool, dataset, stage, and cause. Move report-local entity
-      maps into it; do not make `_causes_common.py` the global vocabulary owner.
+      LaTeX rendering for each shared variant, tool, and dataset. Keep target-invariant stage names as
+      text, and use entity placeholders inside composite cause text. Move report-local entity maps into
+      the registry; do not make `_causes_common.py` the global vocabulary owner.
 - [ ] 4.2 Store entity references in cells, and render them per target
 - [ ] 4.3 Replace the `\texttt{}` mapping and the `\#` header in `rq0_jarvis.py` with an identifier
       column and a plain header
@@ -52,11 +55,13 @@
 
 - [ ] 6.1 Compose a count with its share as one cell, `count\; (share)`, in the renderer rather than in
       a report's DataFrame step
-- [ ] 6.2 Compute padding per column from the widest count and the widest share, and apply it to plain
-      numeric columns by the same rule so one table uses one mechanism
+- [ ] 6.2 Compute internal padding for composite count/share cells from the widest count and share in
+      their column. Keep plain numeric cells on ordinary column alignment and assert that they emit no
+      phantom padding.
 - [ ] 6.3 Assert that no padding, thin space, or parenthesis pairing reaches markdown or CSV
-- [ ] 6.4 Centre a numeric column's header with `\multicolumn{1}{c}{...}`
-- [ ] 6.5 Keep the percent sign inline in every share cell
+- [ ] 6.4 Let plain leaf headers inherit their column alignment. Centre only spanning headers and
+      headers that describe composite cells.
+- [ ] 6.5 Keep the percent sign inline in every human-readable share, percentage-point, and percentage-point-delta cell
 - [ ] 6.6 Add band rows: a spanned row carrying a fixed-width label and the group's summary, plus a
       closing overall band, reusing the existing spanned-cell and label-row machinery
 - [ ] 6.7 Add a stable semantic row key to numbered data-row metadata and reject duplicate keys within
@@ -66,20 +71,40 @@
       failure, and label output.
 - [ ] 6.9 Declare the funnel's band summaries and row keys from the funnel result so stage figures and
       cause identities come from the same typed source as the macros.
-- [ ] 6.10 Compare every deliberate LaTeX source change with the corresponding committed thesis table,
-      publish through the declared consumer mapping into a clean scratch thesis checkout, run its strict
-      full build, and inspect each affected page with `scripts/pdf-page.swift`: references resolve,
-      numbers align, headers cover their columns, groups state totals, and nothing overflows.
+- [ ] 6.10 Add renderer tests for plain and composite header alignment, composite component widths,
+      plain numeric cells without phantom markup, and target-specific percent rendering.
 
-## 7. Verify the cleaned producer output
+## 7. Restore maintained table semantics
 
-- [ ] 7.1 Run a second complete report set into a clean temporary root and compare its artifact manifest
+- [ ] 7.1 Model RQ3 percentage-point deltas as `percent_delta` values so all three `Delta %` columns
+      keep their explicit sign and `%` suffix in LaTeX and markdown while CSV remains numeric.
+- [ ] 7.2 Render RQ1 deltas paired with absolute detection percentages as signed parenthesised values in
+      human targets, driven by the shared-header structure rather than preformatted strings.
+- [ ] 7.3 Construct the RQ0 `51 / 80` share once at reviewed significant precision and use its `63.8%`
+      rendering in the budget table, prose, and generated macros.
+- [ ] 7.4 Supply RQ2's dataset-family grouping independently of project display names so LaTeX separates
+      EqBench, Commons-ES, and Commons-dev groups without adding rules between projects.
+- [ ] 7.5 Restore the same dataset-family boundaries in the maintained dormant RQ1
+      mutants-per-project table source, even though the thesis does not currently include it.
+- [ ] 7.6 Replace literal project dataset strings in affected report frames with entity references while
+      preserving their target-specific visible names.
+- [ ] 7.7 Add focused producer and renderer tests for every repaired suffix, parenthesis, rounding,
+      grouping, and entity-reference contract.
+
+## 8. Verify the cleaned producer output
+
+- [ ] 8.1 Run a second complete report set into a clean temporary root and compare its artifact manifest
       with task 1.1. Account for every deliberate LaTeX diff and require every pre-format separation
       artifact to remain byte-identical.
-- [ ] 7.2 Review all 8 markdown reports and confirm each reads as plain text with no LaTeX residue.
-- [ ] 7.3 Review every CSV and confirm each numeric field is bare, each absence is empty, and no synthetic
+- [ ] 8.2 Review all 8 markdown reports and confirm each reads as plain text with no LaTeX residue.
+- [ ] 8.3 Review every CSV and confirm each numeric field is bare, each absence is empty, and no synthetic
       row ordinal appears.
-- [ ] 7.4 Run the full analysis suite, lint, format, type, file-hygiene, and positive-control guards.
-- [ ] 7.5 Exercise declaration-driven publication into a clean scratch thesis checkout and confirm the
+- [ ] 8.4 Run the full analysis suite, lint, format, type, file-hygiene, and positive-control guards.
+- [ ] 8.5 Exercise declaration-driven publication into a clean scratch thesis checkout and confirm the
       complete declared set lands transactionally. Leave the real thesis untouched; its
       `reconcile-reporeapers-claims` change owns the final publication and prose migration.
+- [ ] 8.6 Compare every deliberate LaTeX source change with the corresponding committed thesis table,
+      including the dormant mutants-per-project source. Run the strict scratch thesis build and inspect
+      the RQ0 through RQ3 affected pages with `scripts/pdf-page.swift`: percentage suffixes, rounding,
+      paired deltas, dataset-family boundaries, entity labels, references, numeric alignment, and
+      header alignment are correct, and nothing overflows.

@@ -6,7 +6,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
-from teralizer.eval.model import ColumnSpec, Metric, Table
+from teralizer.eval.model import ColumnSpec, Metric, Table, ValueKind, decimal_value
 from teralizer.eval.reports import _funnel
 
 
@@ -99,7 +99,10 @@ def fetch_widening_refusals(conn: Connection, variant: str) -> pd.DataFrame:
     df = read_sql(conn, WIDENING_REFUSAL_SQL, params)
     df.isetitem(df.columns.get_loc("refusals"), df["refusals"].astype(int))
     for column in ("attempts_pct", "refusals_pct"):
-        df.isetitem(df.columns.get_loc(column), df[column].astype(float))
+        df.isetitem(
+            df.columns.get_loc(column),
+            df[column].map(lambda value: decimal_value(value, 6)),
+        )
 
     unmapped = sorted(set(df["code"]) - set(WIDENING_REFUSALS))
     if unmapped:
@@ -117,9 +120,9 @@ def widening_refusal_table(df: pd.DataFrame, provenance) -> Table:
         df=df,
         columns=[
             ColumnSpec("Refusal cause", "cause"),
-            ColumnSpec("Generalizations", "refusals", fmt="count", align="r"),
-            ColumnSpec("Refusals", "refusals_pct", fmt="pct1", align="r"),
-            ColumnSpec("Attempts", "attempts_pct", fmt="pct1", align="r"),
+            ColumnSpec("Generalizations", "refusals", kind=ValueKind.COUNT, align="r"),
+            ColumnSpec("Refusals", "refusals_pct", kind=ValueKind.SHARE, align="r"),
+            ColumnSpec("Attempts", "attempts_pct", kind=ValueKind.SHARE, align="r"),
         ],
         caption=(
             "Causes for generalization attempts that produce no generalized test "

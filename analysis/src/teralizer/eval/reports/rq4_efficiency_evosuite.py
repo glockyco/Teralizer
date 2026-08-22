@@ -8,6 +8,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
 from teralizer.eval.data import Required
+from teralizer.eval.entities import variant_ref
 from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import (
     ColumnSpec,
@@ -16,6 +17,8 @@ from teralizer.eval.model import (
     RQReport,
     Section,
     Table,
+    ValueKind,
+    decimal_value,
 )
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
@@ -56,13 +59,13 @@ def _pareto_table(data: pd.DataFrame, project_name: str) -> Table:
     table_info = {
         "eqbench": (
             "tab-pareto-eqbench",
-            r"\ToolEvoSuite{} and \ToolTeralizer{} Pareto points for \DatasetEqBench{}",
+            r"{entity.tool.evosuite} and {entity.tool.teralizer} Pareto points for {entity.dataset.eqbench}",
             "Pareto points for eqbench.",
             "tab:pareto-eqbench",
         ),
         "commons-utils": (
             "tab-pareto-commons",
-            r"\ToolEvoSuite{} and \ToolTeralizer{} Pareto points for commons-utils",
+            r"{entity.tool.evosuite} and {entity.tool.teralizer} Pareto points for commons-utils",
             "Pareto points for commons-utils.",
             "tab:pareto-commons",
         ),
@@ -80,22 +83,26 @@ def _pareto_table(data: pd.DataFrame, project_name: str) -> Table:
         .reset_index(drop=True)
     )
     result.loc[:, "point"] = np.arange(1, len(result) + 1)
-    result.loc[:, "teralizer_display"] = result.apply(
-        lambda row: _format_variant(row["teralizer_variant"], row["type"]),
+    result.loc[:, "teralizer_variant"] = result.apply(
+        lambda row: (
+            None if row["type"] == "ES_ONLY" else variant_ref(row["teralizer_variant"])
+        ),
         axis=1,
     )
-    result.loc[:, "detection_display"] = result["detection_rate"].map(
-        lambda value: f"{value:.1f}"
+    result = result.assign(
+        detection_rate=result["detection_rate"].map(
+            lambda value: decimal_value(value, 1)
+        )
     )
-    result.loc[:, "runtime_display"] = result["runtime_seconds"].map(
-        lambda value: f"{int(round(value)):,}"
+    result.loc[:, "runtime_seconds"] = result["runtime_seconds"].map(
+        lambda value: int(round(value))
     )
     columns = [
-        ColumnSpec("Pt.", "point", "int", "r"),
+        ColumnSpec("Pt.", "point", ValueKind.COUNT, "r"),
         ColumnSpec("EvoSuite", "evosuite_budget", align="r"),
-        ColumnSpec("Teralizer", "teralizer_display", "tex", "l"),
-        ColumnSpec("Det. \\%", "detection_display", align="r"),
-        ColumnSpec("Runtime (s)", "runtime_display", align="r"),
+        ColumnSpec("Teralizer", "teralizer_variant", ValueKind.ENTITY, "l"),
+        ColumnSpec("Det. %", "detection_rate", ValueKind.DECIMAL, "r"),
+        ColumnSpec("Runtime (s)", "runtime_seconds", ValueKind.COUNT, "r"),
     ]
     return Table(
         key,
@@ -108,18 +115,6 @@ def _pareto_table(data: pd.DataFrame, project_name: str) -> Table:
         floating=False,
         provenance=capture(compute_pareto_efficiency_analysis),
     )
-
-
-def _format_variant(variant: object, approach_type: object) -> str:
-    if approach_type == "ES_ONLY":
-        return "-"
-    text = str(variant)
-    if "_" in text:
-        name, tries, suffix = text.rpartition("_")
-        if suffix == "TRIES" and name.rsplit("_", 1)[-1].isdigit():
-            variant_name, count = name.rsplit("_", 1)
-            return f"{variant_name}$_{{{count}}}$"
-    return text
 
 
 def _phase_table(data: pd.DataFrame) -> Table:
@@ -151,12 +146,17 @@ def _phase_table(data: pd.DataFrame) -> Table:
             .sort_values(["project_name", "search_budget"])
             .reset_index(drop=True)
         )
+    for column in wanted[1:]:
+        result = result.assign(
+            **{column: result[column].map(lambda value: decimal_value(value, 2))}
+        )
     cols = [
         ColumnSpec("Project", "project_name"),
-        ColumnSpec("Budget (s)", "search_budget", "float2"),
+        ColumnSpec("Budget (s)", "search_budget", ValueKind.DECIMAL),
     ]
     cols.extend(
-        ColumnSpec(col.replace("_", " ").title(), col, "float2") for col in wanted[2:]
+        ColumnSpec(col.replace("_", " ").title(), col, ValueKind.DECIMAL)
+        for col in wanted[2:]
     )
     return Table(
         "evosuite_runtime_analysis",

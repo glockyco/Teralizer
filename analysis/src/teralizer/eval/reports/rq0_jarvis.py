@@ -10,8 +10,18 @@ import pandas as pd
 
 from teralizer.cut_pvc import load_cut_values
 from teralizer.eval.evidence import jarvis_values
+from teralizer.eval.entities import ref_for_csv
 from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
-from teralizer.eval.model import ColumnSpec, Metric, Prose, RQReport, Section, Table
+from teralizer.eval.model import (
+    ColumnSpec,
+    Metric,
+    Prose,
+    RQReport,
+    Section,
+    Table,
+    ValueKind,
+    share_value,
+)
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.jarvis_scoreboard import (
@@ -239,7 +249,7 @@ def _build_breadth_table(
     # Reader-facing label drops the internal `-census` DB suffix and the corpus
     # snapshot date every fixture carries; the internal `project` identity stays
     # intact for merges and manifest metric slugs.
-    result.loc[:, "display_project"] = result["project"].map(
+    result.loc[:, "project_label"] = result["project"].map(
         lambda project: _SNAPSHOT_SUFFIX.sub("", str(project).removesuffix("-census"))
     )
     # The total is its own group, which is what puts a rule above it.
@@ -247,11 +257,11 @@ def _build_breadth_table(
     return result
 
 
-_VARIANT_DISPLAY = {
-    "IMPROVED_100_TRIES": "100 tries",
-    "IMPROVED_200_TRIES": "200 tries",
-    "IMPROVED_1000_TRIES": "1,000 tries",
-}
+_BUDGET_VARIANTS = (
+    "IMPROVED_100_TRIES",
+    "IMPROVED_200_TRIES",
+    "IMPROVED_1000_TRIES",
+)
 
 
 def _build_budget_table(
@@ -262,14 +272,12 @@ def _build_budget_table(
     summary.isetitem(
         summary.columns.get_loc("variant"),
         pd.Categorical(
-            summary["variant"], categories=list(_VARIANT_DISPLAY), ordered=True
+            summary["variant"], categories=list(_BUDGET_VARIANTS), ordered=True
         ),
     )
     summary = summary.sort_values("variant").reset_index(drop=True)
-    summary.loc[:, "display_variant"] = (
-        summary["variant"]
-        .astype(str)
-        .map(lambda variant: _VARIANT_DISPLAY.get(variant, variant))
+    summary.loc[:, "budget_entity"] = summary["variant"].map(
+        lambda variant: ref_for_csv("budget", variant)
     )
     available_variants = set(mutation["variant"].astype(str))
     for index, variant in enumerate(summary["variant"].astype(str)):
@@ -284,6 +292,18 @@ def _build_budget_table(
                 ],
             ] = None
 
+    summary = summary.assign(
+        covered_mutation_score=summary.apply(
+            lambda row: (
+                share_value(row["killed_mutants"], row["covered_mutants"])
+                if not pd.isna(row["killed_mutants"])
+                and not pd.isna(row["covered_mutants"])
+                and int(row["covered_mutants"]) != 0
+                else None
+            ),
+            axis=1,
+        )
+    )
     return summary
 
 
@@ -317,12 +337,9 @@ def build(context: ReportContext) -> RQReport:
     suite = suite_union_pvc(full_scoreboard, cut_values, variant=TABLE2_VARIANT)
     comparison = comparison.merge(suite, on="table_row", how="left")
     # Each published JARVIS scenario is one observation in the comparison table.
-    table_parts = comparison["table_row"].astype(str).str.partition("::")
-    has_method = table_parts[1].eq("::")
-    scenario_names = table_parts[2].where(has_method, table_parts[0])
     comparison.loc[:, "scenario_number"] = comparison["table_row"].map(_scenario_number)
-    comparison.loc[:, "scenario_name"] = scenario_names.map(
-        lambda name: f"\\texttt{{{name}}}"
+    comparison.loc[:, "scenario_entity"] = comparison["table_row"].map(
+        lambda value: ref_for_csv("scenario", value)
     )
     mutation = get_mutation_scores(conn, variants=SWEEP_VARIANTS)
     budget = _build_budget_table(full_scoreboard, mutation)
@@ -569,34 +586,38 @@ def build(context: ReportContext) -> RQReport:
                 )
             )
 
+    comparison_table = comparison.assign(table_row=comparison["scenario_entity"])
+    breadth_table_data = breadth.assign(project=breadth["project_label"])
+    budget_table_data = budget.assign(variant=budget["budget_entity"])
+
     table2 = Table(
         key="rq0-table2-comparison",
-        df=comparison,
+        df=comparison_table,
         columns=[
             # Both labels belong in the lower header row, where the thesis puts
             # the labels of columns that carry no spanning group header.
             ColumnSpec(
-                "\\#",
+                "#",
                 "scenario_number",
-                "count",
+                ValueKind.COUNT,
                 "r",
             ),
             ColumnSpec(
                 "JARVIS scenario",
-                "scenario_name",
-                csv_source="table_row",
+                "table_row",
+                kind=ValueKind.ENTITY,
             ),
             ColumnSpec(
                 "CUT PVC",
                 "original_cut_pvc",
-                "count",
+                ValueKind.COUNT,
                 "r",
                 group_header="Original",
             ),
             ColumnSpec(
                 "PBT PVC",
                 "jarvis_pbt_pvc",
-                "count",
+                ValueKind.COUNT,
                 "r",
                 group_header="JARVIS",
             ),
@@ -606,15 +627,15 @@ def build(context: ReportContext) -> RQReport:
             ColumnSpec(
                 "PBT PVC",
                 "suite_pvc",
-                "pvc",
+                ValueKind.COUNT,
                 "r",
-                group_header="\\ToolTeralizer{}",
+                group_header="{entity.tool.teralizer}",
             ),
         ],
         full_width=True,
         caption=(
             "PVC before generalization, after generalization with JARVIS, and "
-            "after generalization with \\ToolTeralizer{} for each of the 10 "
+            "after generalization with {entity.tool.teralizer} for each of the 10 "
             "scenarios reported by JARVIS."
         ),
         short_caption="PVC per JARVIS scenario before and after generalization",
@@ -631,36 +652,36 @@ def build(context: ReportContext) -> RQReport:
     )
     breadth_table = Table(
         key="rq0-breadth-summary",
-        df=breadth,
+        df=breadth_table_data,
         columns=[
-            ColumnSpec("Benchmark project", "display_project"),
+            ColumnSpec("Benchmark project", "project"),
             ColumnSpec(
                 "PBT PVC",
                 "jarvis_successful_pbt_pvc",
-                "pvc",
+                ValueKind.COUNT,
                 "r",
                 group_header="JARVIS",
             ),
             ColumnSpec(
                 "MUTs",
                 "jarvis_successful_muts",
-                "pvc",
+                ValueKind.COUNT,
                 "r",
                 group_header="JARVIS",
             ),
             ColumnSpec(
                 "PBT PVC",
                 "aggregate_pvc",
-                "pvc",
+                ValueKind.COUNT,
                 "r",
-                group_header="\\ToolTeralizer{}",
+                group_header="{entity.tool.teralizer}",
             ),
             ColumnSpec(
                 "MUTs",
                 "sound_muts",
-                "pvc",
+                ValueKind.COUNT,
                 "r",
-                group_header="\\ToolTeralizer{}",
+                group_header="{entity.tool.teralizer}",
             ),
         ],
         group_by="row_group",
@@ -686,35 +707,36 @@ def build(context: ReportContext) -> RQReport:
     )
     budget_table = Table(
         key="rq0-pvc-budget",
-        df=budget,
+        df=budget_table_data,
         columns=[
             ColumnSpec(
                 "Sampling Budget",
-                "display_variant",
+                "variant",
+                kind=ValueKind.ENTITY,
                 # Every row holds the input-selection strategy fixed, so the
                 # variant belongs over the budget column, not in each cell.
-                group_header="\\VariantImproved{}",
+                group_header="{entity.variant.improved}",
             ),
-            ColumnSpec("Tests", "probes", "count", "r"),
-            ColumnSpec("PVC", "total_pvc", "pvc", "r"),
+            ColumnSpec("Tests", "probes", ValueKind.COUNT, "r"),
+            ColumnSpec("PVC", "total_pvc", ValueKind.COUNT, "r"),
             ColumnSpec(
                 "Killed",
                 "killed_mutants",
-                "pvc",
+                ValueKind.COUNT,
                 "r",
                 group_header="Mutation Testing Results",
             ),
             ColumnSpec(
                 "Covered",
                 "covered_mutants",
-                "pvc",
+                ValueKind.COUNT,
                 "r",
                 group_header="Mutation Testing Results",
             ),
             ColumnSpec(
                 "Score",
                 "covered_mutation_score",
-                "pct1",
+                ValueKind.SHARE,
                 "r",
                 group_header="Mutation Testing Results",
             ),

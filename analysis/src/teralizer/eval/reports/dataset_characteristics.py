@@ -5,15 +5,13 @@ from __future__ import annotations
 import pandas as pd
 
 from teralizer.eval.data import Required
+from teralizer.eval.entities import ref_for_csv
 from teralizer.eval.evidence import project_sources
 from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
-from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table
+from teralizer.eval.model import ColumnSpec, Metric, RQReport, Section, Table, ValueKind
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
-from teralizer.formatting import (
-    replace_project_names_with_macros,
-    sort_dataframe_by_project,
-)
+from teralizer.formatting import sort_dataframe_by_project
 
 REQUIRES = (Required("project", "table", ("id",)),)
 
@@ -36,18 +34,32 @@ def _table(df: pd.DataFrame) -> Table:
             result.loc[:, col] = 0
     result = result[wanted]
     result = sort_dataframe_by_project(result, "project")
-    result = replace_project_names_with_macros(result, "project")
+    result.loc[:, "project"] = result["project"].map(
+        lambda value: ref_for_csv("dataset", value)
+    )
     columns = [
-        ColumnSpec("Project", "project"),
-        ColumnSpec("Files", "main_files", "count", "r", group_header="Implementation"),
+        ColumnSpec("Project", "project", ValueKind.ENTITY),
         ColumnSpec(
-            "Classes", "main_classes", "count", "r", group_header="Implementation"
+            "Files", "main_files", ValueKind.COUNT, "r", group_header="Implementation"
         ),
-        ColumnSpec("SLOC", "main_sloc", "count", "r", group_header="Implementation"),
-        ColumnSpec("Files", "test_files", "count", "r", group_header="Test"),
-        ColumnSpec("Classes", "test_classes", "count", "r", group_header="Test"),
-        ColumnSpec("SLOC", "test_sloc", "count", "r", group_header="Test"),
-        ColumnSpec("Methods", "test_methods", "count", "r", group_header="Test"),
+        ColumnSpec(
+            "Classes",
+            "main_classes",
+            ValueKind.COUNT,
+            "r",
+            group_header="Implementation",
+        ),
+        ColumnSpec(
+            "SLOC", "main_sloc", ValueKind.COUNT, "r", group_header="Implementation"
+        ),
+        ColumnSpec("Files", "test_files", ValueKind.COUNT, "r", group_header="Test"),
+        ColumnSpec(
+            "Classes", "test_classes", ValueKind.COUNT, "r", group_header="Test"
+        ),
+        ColumnSpec("SLOC", "test_sloc", ValueKind.COUNT, "r", group_header="Test"),
+        ColumnSpec(
+            "Methods", "test_methods", ValueKind.COUNT, "r", group_header="Test"
+        ),
     ]
     return Table(
         "tab-dataset-statistics",

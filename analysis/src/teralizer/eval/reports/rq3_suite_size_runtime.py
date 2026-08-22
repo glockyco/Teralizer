@@ -8,6 +8,7 @@ import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import Required
+from teralizer.eval.entities import ref_for_csv, variant_ref
 from teralizer.eval.inputs import CorpusInputSpec, ReportContext
 from teralizer.eval.model import (
     ColumnSpec,
@@ -16,6 +17,8 @@ from teralizer.eval.model import (
     RQReport,
     Section,
     Table,
+    ValueKind,
+    decimal_value,
 )
 from teralizer.eval.provenance import capture
 from teralizer.eval.registry import ReportSpec, register
@@ -105,46 +108,62 @@ def _effects_table(key: str, df: pd.DataFrame, unit: str, label: str) -> Table:
     result = df.copy()
     delta = f"{prefix}_delta"
     delta_pct = f"{prefix}_delta_pct"
-    result.loc[:, "delta_display"] = result[delta].map(
-        lambda value: f"{float(value):+.2f}"
-        if unit == "runtime"
-        else f"{int(value):+d}"
+    places = 2 if unit == "runtime" else 0
+    value_columns = [
+        f"{prefix}_before",
+        f"added_{prefix}",
+        f"removed_{prefix}",
+        f"{prefix}_after",
+        delta,
+    ]
+    for column in value_columns:
+        result = result.assign(
+            **{
+                column: result[column].map(
+                    lambda value: decimal_value(value, places)
+                    if unit == "runtime" or column == delta
+                    else int(value)
+                )
+            }
+        )
+    result = result.assign(
+        **{delta_pct: result[delta_pct].map(lambda value: decimal_value(value, 1))}
     )
-    result.loc[:, "delta_pct_display"] = result[delta_pct].map(
-        lambda value: f"{float(value):+.1f}%"
-    )
-    result.loc[:, "display_project"] = (
-        result["project_name"]
-        .astype(str)
-        .str.replace("-default", "", regex=False)
-        .replace({"commons-utils": "commons-utils-dev"})
-    )
-    # The legacy tables separate the EqBench, Commons-ES, and Commons-dev rows.
+    result.loc[:, "b_variant"] = result["b_variant"].map(variant_ref)
+    # Group on the source identity, then replace the displayed cell with a typed
+    # entity. The renderer must not infer family boundaries from presentation.
     result.loc[:, "project_group"] = result["project_name"].map(get_project_type)
-    numeric_fmt = "count" if unit in {"test", "line"} else "float2"
+    result.loc[:, "project"] = result["project_name"].map(
+        lambda value: ref_for_csv("dataset", value)
+    )
+    numeric_kind = ValueKind.COUNT if unit in {"test", "line"} else ValueKind.DECIMAL
     group_header = {
         "test": "Tests",
         "line": "Lines",
         "runtime": "Runtime (in seconds)",
     }[unit]
     columns = [
-        ColumnSpec("Project", "display_project"),
-        ColumnSpec("Variant", "b_variant"),
+        ColumnSpec("Project", "project", ValueKind.ENTITY),
+        ColumnSpec("Variant", "b_variant", ValueKind.ENTITY),
         ColumnSpec(
-            "Before", f"{prefix}_before", numeric_fmt, "r", group_header=group_header
+            "Before", f"{prefix}_before", numeric_kind, "r", group_header=group_header
         ),
         ColumnSpec(
-            "Added", f"added_{prefix}", numeric_fmt, "r", group_header=group_header
+            "Added", f"added_{prefix}", numeric_kind, "r", group_header=group_header
         ),
         ColumnSpec(
-            "Removed", f"removed_{prefix}", numeric_fmt, "r", group_header=group_header
+            "Removed", f"removed_{prefix}", numeric_kind, "r", group_header=group_header
         ),
         ColumnSpec(
-            "After", f"{prefix}_after", numeric_fmt, "r", group_header=group_header
+            "After", f"{prefix}_after", numeric_kind, "r", group_header=group_header
         ),
-        ColumnSpec("Delta", "delta_display", align="r", group_header=group_header),
+        ColumnSpec("Delta", delta, ValueKind.DELTA, "r", group_header=group_header),
         ColumnSpec(
-            "Delta \\%", "delta_pct_display", align="r", group_header=group_header
+            "Delta %",
+            delta_pct,
+            ValueKind.PERCENT_DELTA,
+            "r",
+            group_header=group_header,
         ),
     ]
     if unit == "runtime":
@@ -182,18 +201,36 @@ def _effects_table(key: str, df: pd.DataFrame, unit: str, label: str) -> Table:
 
 
 def _overhead_table(df: pd.DataFrame) -> Table:
+    result = df.copy()
+    result.loc[:, "variant"] = result["variant"].map(variant_ref)
+    decimal_columns = (
+        "mean_t_runtime_ms",
+        "mean_g_runtime_ms",
+        "mean_runtime_diff_ms",
+        "ratio_of_mean_runtimes",
+        "mean_runtime_diff_per_try_ms",
+    )
+    for column in decimal_columns:
+        result = result.assign(
+            **{column: result[column].map(lambda value: decimal_value(value, 2))}
+        )
+    result.loc[:, "tries"] = result["tries"].map(int)
     columns = [
-        ColumnSpec("Variant", "variant"),
-        ColumnSpec("Test mean (ms)", "mean_t_runtime_ms", "float2"),
-        ColumnSpec("Generalized mean (ms)", "mean_g_runtime_ms", "float2"),
-        ColumnSpec("Difference (ms)", "mean_runtime_diff_ms", "float2"),
-        ColumnSpec("Ratio", "ratio_of_mean_runtimes", "float2"),
-        ColumnSpec("Tries", "tries", "count"),
-        ColumnSpec("Difference / try (ms)", "mean_runtime_diff_per_try_ms", "float2"),
+        ColumnSpec("Variant", "variant", ValueKind.ENTITY),
+        ColumnSpec("Test mean (ms)", "mean_t_runtime_ms", ValueKind.DECIMAL),
+        ColumnSpec("Generalized mean (ms)", "mean_g_runtime_ms", ValueKind.DECIMAL),
+        ColumnSpec("Difference (ms)", "mean_runtime_diff_ms", ValueKind.DELTA),
+        ColumnSpec("Ratio", "ratio_of_mean_runtimes", ValueKind.DECIMAL),
+        ColumnSpec("Tries", "tries", ValueKind.COUNT),
+        ColumnSpec(
+            "Difference / try (ms)",
+            "mean_runtime_diff_per_try_ms",
+            ValueKind.DELTA,
+        ),
     ]
     return Table(
         "test_runtime_differences",
-        df,
+        result,
         columns,
         "Runtime overhead of generalized tests per test and per try.",
         "fig:test-runtime-differences",

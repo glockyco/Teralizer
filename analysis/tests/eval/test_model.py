@@ -7,6 +7,7 @@ from teralizer.eval.model import (
     RQReport,
     Section,
     Table,
+    ValueKind,
 )
 
 
@@ -31,7 +32,7 @@ def test_table_and_figure_are_frozen_and_carry_keys():
     t = Table(
         key="funnel",
         df=pd.DataFrame({"a": [1]}),
-        columns=[ColumnSpec(header="A", source="a", fmt="int")],
+        columns=[ColumnSpec(header="A", source="a", kind=ValueKind.COUNT)],
         caption="Funnel",
         label="tab:rq6-funnel",
     )

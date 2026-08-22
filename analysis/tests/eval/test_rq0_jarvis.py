@@ -1,10 +1,11 @@
 import sqlite3
+from decimal import Decimal
 
 import pandas as pd
 
 from teralizer.eval.evidence.jarvis_values import value_identity
 from teralizer.eval.render.csv import render_table
-from teralizer.eval.model import ColumnSpec, Table
+from teralizer.eval.model import ColumnSpec, Table, ValueKind
 from teralizer.eval.reports.rq0_jarvis import (
     TABLE1_PROJECTS,
     _build_breadth_table,
@@ -297,6 +298,29 @@ def test_budget_table_marks_missing_pit_variants_unavailable():
     assert budget.loc["IMPROVED_200_TRIES", "total_pvc"] == 200
 
 
+def test_budget_table_constructs_the_reviewed_score_from_counts():
+    scoreboard = pd.DataFrame(
+        {
+            "variant": ["IMPROVED_100_TRIES"],
+            "parameter_value_coverage": [100],
+        }
+    )
+    mutation = pd.DataFrame(
+        {
+            "variant": ["IMPROVED_100_TRIES"],
+            "killed_mutants": [51],
+            "covered_mutants": [80],
+            "total_mutants": [100],
+        }
+    )
+
+    budget = _build_budget_table(scoreboard, mutation).set_index("variant")
+
+    assert budget.loc["IMPROVED_100_TRIES", "covered_mutation_score"] == Decimal(
+        "0.6375"
+    )
+
+
 def test_budget_table_sorts_numeric_budgets_not_variant_text():
     variants = [
         "IMPROVED_1000_TRIES",
@@ -320,10 +344,10 @@ def test_budget_table_sorts_numeric_budgets_not_variant_text():
 
     budget = _build_budget_table(scoreboard, mutation)
 
-    assert budget["display_variant"].tolist() == [
-        "100 tries",
-        "200 tries",
-        "1,000 tries",
+    assert [value.key for value in budget["budget_entity"]] == [
+        "budget.improved_100",
+        "budget.improved_200",
+        "budget.improved_1000",
     ]
 
 
@@ -416,9 +440,9 @@ def test_csv_headers_follow_table_source_order(tmp_path):
         ),
         columns=[
             ColumnSpec("Reported case", "table_row"),
-            ColumnSpec("Original CUT PVC", "original_cut_pvc", "count"),
-            ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", "count"),
-            ColumnSpec("Teralizer PVC", "suite_pvc", "pvc"),
+            ColumnSpec("Original CUT PVC", "original_cut_pvc", ValueKind.COUNT),
+            ColumnSpec("JARVIS PBT PVC", "jarvis_pbt_pvc", ValueKind.COUNT),
+            ColumnSpec("Teralizer PVC", "suite_pvc", ValueKind.COUNT),
         ],
         caption="caption",
         label="tab:label",

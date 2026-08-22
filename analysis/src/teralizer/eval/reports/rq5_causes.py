@@ -231,7 +231,7 @@ def build(context: ReportContext) -> RQReport:
         label="tab:exclusions-filtering",
         caption=(
             "Filtering results for tests and assertions in the "
-            "\\DatasetsCommons{} and \\DatasetsEqBenchEs{} projects."
+            "{entity.dataset.commons} and {entity.dataset.eqbench_es} projects."
         ),
         short_caption="Filtering decisions by level and filter",
         body_style="\\tabstyle",
@@ -247,7 +247,7 @@ def build(context: ReportContext) -> RQReport:
         label="tab:exclusions-breakdown",
         caption=(
             "Exclusion results for tests, assertions, and generalizations in the "
-            "\\DatasetsCommons{} and \\DatasetsEqBenchEs{} projects."
+            "{entity.dataset.commons} and {entity.dataset.eqbench_es} projects."
         ),
         short_caption="Inclusion, filtering, and failure counts by level",
         body_style="\\tabstyle\\setlength{\\tabcolsep}{3pt}",

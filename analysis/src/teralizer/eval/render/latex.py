@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
+from decimal import Decimal
 from pathlib import Path
 
 from pandas import isna
@@ -15,24 +16,87 @@ from teralizer.eval.artifacts import (
     RenderTarget,
     RunAggregate,
 )
-from teralizer.eval.format import COUNT_SHARE, render_value
+from teralizer.eval.entities import EntityRef, render as render_entity
+from teralizer.eval.entities import substitute as substitute_entities
+from teralizer.eval.format import is_missing, render_metric
 from teralizer.eval.inputs import CorpusInputSnapshot
 from teralizer.eval.macros import macro_name
-from teralizer.eval.model import BuiltReport, ColumnSpec, RQReport, Table
+from teralizer.eval.model import (
+    BandSummary,
+    BuiltReport,
+    ColumnSpec,
+    RQReport,
+    Table,
+    ValueKind,
+)
 
 _ALIGN = {"l": "l", "r": "r", "c": "c"}
 
 
-def _cell(value: object, fmt: str) -> str:
-    text = render_value(value, fmt)
-    if fmt == "tex":
-        return text
-    if text == "—":
-        # An absent value renders as an en dash, matching the thesis's other
-        # tables. The formatter keeps the em dash as the renderer-agnostic
-        # marker, so CSV exports stay stable.
+def _decimal(value: object) -> str:
+    if not isinstance(value, Decimal):
+        raise TypeError(f"decimal value must use Decimal, got {type(value).__name__}")
+    return format(value, "f")
+
+
+def _escape(text: str) -> str:
+    return text.replace("%", "\\%").replace("_", "\\_").replace("#", "\\#")
+
+
+def _text(text: str) -> str:
+    return _escape(substitute_entities(text, "latex"))
+
+
+def _runtime(value: object) -> str:
+    if not isinstance(value, Decimal):
+        raise TypeError(f"runtime value must use Decimal, got {type(value).__name__}")
+    total = int(value.to_integral_value())
+    hours, remainder = divmod(total, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    parts: list[str] = []
+    if hours:
+        parts.append(f"{hours}h")
+    if hours or minutes:
+        parts.append(f"{minutes}m")
+    parts.append(f"{seconds}s")
+    return " ".join(parts)
+
+
+def _value(value: object, kind: ValueKind) -> str:
+    if is_missing(value):
         return "--"
-    return text.replace("%", "\\%").replace("_", "\\_")
+    if kind is ValueKind.COUNT:
+        return f"{int(value):,}"
+    if kind is ValueKind.SHARE:
+        return f"{Decimal(_decimal(value)) * 100:.1f}\\%"
+    if kind is ValueKind.PERCENT:
+        return f"{_decimal(value)}\\%"
+    if kind is ValueKind.PERCENT_DELTA:
+        return f"{Decimal(_decimal(value)):+f}\\%"
+    if kind is ValueKind.DECIMAL:
+        return _decimal(value)
+    if kind is ValueKind.DELTA:
+        return f"{Decimal(_decimal(value)):+,f}"
+    if kind is ValueKind.RUNTIME:
+        return _runtime(value)
+    if kind is ValueKind.IDENTIFIER:
+        return f"\\texttt{{{_escape(str(value))}}}"
+    if kind is ValueKind.TEXT:
+        return _text(str(value))
+    if kind is ValueKind.ENTITY:
+        if not isinstance(value, EntityRef):
+            raise TypeError(
+                f"entity value must use EntityRef, got {type(value).__name__}"
+            )
+        return render_entity(value, "latex")
+    raise AssertionError(f"unsupported LaTeX value kind: {kind}")
+
+
+def _metric_cell(value: object, fmt: str) -> str:
+    text = render_metric(value, fmt)
+    if text == "—":
+        return "--"
+    return _escape(text)
 
 
 def _pad_to(text: str, width: int) -> str:
@@ -53,8 +117,8 @@ def _count_share_parts(table: Table, column: ColumnSpec) -> list[tuple[str, str]
     assert column.share_source is not None
     return [
         (
-            _cell(row[column.source], "count"),
-            _cell(row[column.share_source], "pct1"),
+            _value(row[column.source], ValueKind.COUNT),
+            _value(row[column.share_source], ValueKind.SHARE),
         )
         for _, row in table.df.iterrows()
     ]
@@ -80,20 +144,55 @@ def _count_share_column(table: Table, column: ColumnSpec) -> list[str]:
 
 def _column_cells(table: Table, column: ColumnSpec) -> list[str]:
     """Render one column, which is the unit alignment is decided over."""
-    if column.fmt == COUNT_SHARE:
+    if column.share_source is not None:
         return _count_share_column(table, column)
-    return [_cell(row[column.source], column.fmt) for _, row in table.df.iterrows()]
+    return [
+        "--"
+        if column.zero_is_absent
+        and not is_missing(row[column.source])
+        and Decimal(str(row[column.source])) == 0
+        else _value(row[column.source], column.kind)
+        for _, row in table.df.iterrows()
+    ]
 
 
-def _band_row(text: str, columns: int, label_width: str = "13.25em") -> str:
-    """A row spanning the table that states the totals of the group beneath it.
+def _band_widths(table: Table) -> dict[str, int]:
+    summaries = list((table.bands or {}).values())
+    if table.overall_band is not None:
+        summaries.append(table.overall_band)
+    return {
+        "entering": max(len(f"{band.entering:,}") for band in summaries),
+        "inclusions": max(len(f"{band.inclusions:,}") for band in summaries),
+        "exclusions": max(len(f"{band.exclusions:,}") for band in summaries),
+        "rate": max(
+            len(f"{band.inclusions / band.entering:.1%}" if band.entering else "0.0%")
+            for band in summaries
+        ),
+    }
 
-    The label is set to a fixed width so the figures of every band line up down
-    the table, which is what makes the bands readable as a column of totals.
-    """
-    label, _, rest = text.partition("\t")
+
+def _band_row(
+    band: BandSummary,
+    columns: int,
+    widths: dict[str, int],
+    label_width: str = "13.25em",
+) -> str:
+    """Render one typed band as a table-spanning LaTeX row."""
+
+    def pad(value: str, key: str) -> str:
+        missing = widths[key] - len(value)
+        return f"\\phantom{{{'0' * missing}}}{value}" if missing > 0 else value
+
+    rate = f"{band.inclusions / band.entering:.1%}" if band.entering else "0.0%"
+    fields = [
+        f"{pad(f'{band.entering:,}', 'entering')} projects",
+        f"{pad(f'{band.inclusions:,}', 'inclusions')} inclusions",
+        f"{pad(f'{band.exclusions:,}', 'exclusions')} exclusions",
+        f"{pad(rate, 'rate').replace('%', chr(92) + '%')} inclusion rate",
+    ]
+    label = f"{_text(band.title)}:"
     boxed = f"\\makebox[{label_width}][l]{{{label}}}"
-    body = f"{boxed} {rest}" if rest else boxed
+    body = f"{boxed} " + "\\enspace{}".join(fields)
     return f"  \\multicolumn{{{columns}}}{{l}}{{\\textit{{{body}}}}} \\\\"
 
 
@@ -140,7 +239,13 @@ def _spanned_cells(
 
 
 def _group_header_rows(columns: Sequence[ColumnSpec], align: str) -> list[str]:
-    cells, rules = _spanned_cells([c.group_header for c in columns], align)
+    cells, rules = _spanned_cells(
+        [
+            _text(c.group_header) if c.group_header is not None else None
+            for c in columns
+        ],
+        align,
+    )
     rows = ["  " + " & ".join(cells) + " \\\\"]
     if rules:
         rows.append("  " + " ".join(rules))
@@ -148,16 +253,23 @@ def _group_header_rows(columns: Sequence[ColumnSpec], align: str) -> list[str]:
 
 
 def render_table(table: Table) -> str:
-    cols = "".join(_ALIGN[c.align] for c in table.columns)
+    columns = table.columns
+    if table.ordinal_header is not None:
+        columns = [
+            ColumnSpec(table.ordinal_header, "", ValueKind.COUNT, "r"),
+            *columns,
+        ]
+    cols = "".join(_ALIGN[c.align] for c in columns)
     command = "\\caption" if table.floating else "\\captionof{table}"
-    short = "" if table.short_caption is None else f"[{table.short_caption}]"
+    short = "" if table.short_caption is None else f"[{_text(table.short_caption)}]"
     # The trailing comment keeps the line break out of the caption, which would
     # otherwise put a stray space before the label.
     end = "%" if table.short_caption else ""
     indent = "  " if table.floating else ""
     style = "\n".join(f"{indent}{line}" for line in table.body_style.splitlines())
+    caption = _text(table.caption)
     lines = [
-        f"{indent}{command}{short}{{{table.caption}}}{end}",
+        f"{indent}{command}{short}{{{caption}}}{end}",
         f"{indent}\\label{{{table.label}}}",
         style,
     ]
@@ -168,23 +280,23 @@ def render_table(table: Table) -> str:
     if table.latex_resize_to_width:
         lines.append("  \\resizebox{\\textwidth}{!}{%")
     header_rows: list[str] = []
-    if any(c.group_header is not None for c in table.columns):
-        header_rows += _group_header_rows(table.columns, table.group_header_align)
+    if any(c.group_header is not None for c in columns):
+        header_rows += _group_header_rows(columns, table.group_header_align)
     if table.merge_equal_headers:
         # Where a label covers a pair of columns -- a value and its delta, say --
         # it sits on the leaf row itself. No rule: the group row above already
         # carries one, and a second would box the header in.
         leaf, _ = _spanned_cells(
-            [c.header for c in table.columns], table.group_header_align
+            [_text(c.header) for c in columns], table.group_header_align
         )
     else:
         # A composite cell is wider than its header, so the header reads centred
         # over the pair rather than pinned to the right edge of the column.
         leaf = [
-            f"\\multicolumn{{1}}{{c}}{{{c.header}}}"
-            if c.fmt == COUNT_SHARE
-            else c.header
-            for c in table.columns
+            f"\\multicolumn{{1}}{{c}}{{{_text(c.header)}}}"
+            if c.share_source is not None
+            else _text(c.header)
+            for c in columns
         ]
     header_rows.append("  " + " & ".join(leaf) + " \\\\")
     if table.full_width:
@@ -205,7 +317,23 @@ def render_table(table: Table) -> str:
     # Alignment is a property of a column, so every column is rendered before any
     # row is assembled. A row-at-a-time loop cannot know how wide its neighbours
     # below will be.
-    rendered = {c.source: _column_cells(table, c) for c in table.columns}
+    rendered: dict[str, list[str]] = {}
+    for position_in_table, column in enumerate(table.columns):
+        cells = _column_cells(table, column)
+        paired_delta = (
+            table.merge_equal_headers
+            and position_in_table > 0
+            and column.kind is ValueKind.DELTA
+            and column.header == table.columns[position_in_table - 1].header
+        )
+        if paired_delta:
+            cells = [f"({cell})" if cell != "--" else cell for cell in cells]
+        rendered[column.source] = cells
+    band_widths = (
+        _band_widths(table)
+        if table.bands is not None or table.overall_band is not None
+        else None
+    )
     prev_group = None
     has_previous_group = False
     for position, (_, row) in enumerate(table.df.iterrows()):
@@ -219,7 +347,7 @@ def render_table(table: Table) -> str:
                     if not has_previous_group or group != prev_group:
                         if lines[-1] != "  \\midrule":
                             lines.append("  \\addlinespace")
-                        lines.append("  " + _cell(group, "str") + " \\\\")
+                        lines.append("  " + _value(group, ValueKind.TEXT) + " \\\\")
                     prev_group = group
                     has_previous_group = True
                     indent = True
@@ -229,7 +357,9 @@ def render_table(table: Table) -> str:
                         lines.append("  \\midrule")
                     band = table.bands.get(str(group))
                     if band is not None:
-                        lines.append(_band_row(band, len(table.columns)))
+                        if band_widths is None:
+                            raise AssertionError("band widths are unavailable")
+                        lines.append(_band_row(band, len(columns), band_widths))
                         lines.append("  \\midrule")
                 prev_group = group
             else:
@@ -239,10 +369,14 @@ def render_table(table: Table) -> str:
         cells = [rendered[c.source][position] for c in table.columns]
         if indent:
             cells[0] = "\\qquad " + cells[0]
+        if table.ordinal_header is not None:
+            cells.insert(0, str(position + 1))
         lines.append("  " + " & ".join(cells) + " \\\\")
     if table.overall_band is not None:
+        if band_widths is None:
+            raise AssertionError("band widths are unavailable")
         lines.append("  \\midrule")
-        lines.append(_band_row(table.overall_band, len(table.columns)))
+        lines.append(_band_row(table.overall_band, len(columns), band_widths))
     lines += [
         "  \\bottomrule",
         "  \\end{tabular*}" if table.full_width else "  \\end{tabular}",
@@ -257,7 +391,7 @@ def render_table(table: Table) -> str:
 
 def render_macros(report: RQReport) -> str:
     lines = [
-        f"\\newcommand{{\\{macro_name(m.key)}}}{{{_cell(m.value, m.fmt)}}}"
+        f"\\newcommand{{\\{macro_name(m.key)}}}{{{_metric_cell(m.value, m.fmt)}}}"
         for m in report.metrics
     ]
     return "\n".join(lines) + ("\n" if lines else "")

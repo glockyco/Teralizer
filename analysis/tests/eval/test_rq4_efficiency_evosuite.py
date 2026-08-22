@@ -46,8 +46,8 @@ def test_rq4_pareto_tables_match_thesis_keys_and_nonfloating_layout():
         in eqbench_tex
     )
     assert "\\label{tab:pareto-eqbench}" in eqbench_tex
-    assert "1 & 1s & - & 48.1 & 26,479" in eqbench_tex
-    assert "2 & 10s & IMPROVED$_{50}$ & 51.4 & 37,457" in eqbench_tex
+    assert "1 & 1s & -- & 48.1 & 26,479" in eqbench_tex
+    assert "2 & 10s & \\VariantImprovedB{} & 51.4 & 37,457" in eqbench_tex
     assert "\\label{tab:pareto-commons}" in commons_tex
 
 

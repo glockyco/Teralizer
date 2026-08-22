@@ -8,9 +8,9 @@ for another.
 
 ### Requirement: A table model holds values, never presentation
 
-A table column MUST declare the kind of value it holds. Supported kinds SHALL be count, share, decimal, delta, runtime, identifier, text, and entity. A cell MUST hold the value itself, and MUST NOT hold a rendered string, a markup fragment, or a macro.
+A table column MUST declare the kind of value it holds. Supported kinds SHALL be count, share, percentage point, percentage-point delta, decimal, delta, runtime, identifier, text, and entity. A cell MUST hold the value itself, and MUST NOT hold a rendered string, a markup fragment, or a macro.
 
-A decimal or delta SHALL retain its significant precision in the numeric value. Renderer metadata SHALL NOT define this precision. A delta is numeric data whose human-readable form uses an explicit sign. Its CSV form remains a bare number.
+A percentage-point, percentage-point delta, decimal, or delta value SHALL retain its significant precision in the numeric value. Renderer metadata SHALL NOT define this precision. A percentage-point value stores the displayed magnitude before its `%` suffix, so `47` represents `47%` without target-side scaling. A percentage-point delta also stores this magnitude, but its human-readable form uses both an explicit sign and the `%` suffix. A delta uses an explicit sign without the suffix. Their CSV forms remain bare numbers.
 
 #### Scenario: A column is declared
 
@@ -69,11 +69,12 @@ numeric value. A missing value MUST be an empty field.
 - **THEN** the field holds its numeric value
 - **AND** it carries no percent sign
 
-#### Scenario: A decimal or delta is exported
+#### Scenario: A percentage point, percentage-point delta, decimal, or delta is exported
 
-- **WHEN** a decimal or delta is written to CSV
+- **WHEN** a percentage-point, percentage-point delta, decimal, or delta value is written to CSV
 - **THEN** the field holds the bare numeric value at its declared significant precision
 - **AND** it carries no grouping, unit, parentheses, or forced positive sign
+- **AND** a percentage-point value is not rescaled
 
 #### Scenario: A missing value is exported
 
@@ -103,8 +104,10 @@ markup that only a typesetter resolves.
 
 #### Scenario: A number is displayed
 
-- **WHEN** a count or a share is displayed in markdown
-- **THEN** it is grouped and suffixed for a human reader
+- **WHEN** a count, share, percentage-point, or percentage-point delta value is displayed in markdown
+- **THEN** it is grouped or suffixed as appropriate for a human reader
+- **AND** a percentage-point value keeps its stored magnitude and gains a `%` suffix
+- **AND** a percentage-point delta also gains an explicit sign
 - **AND** a missing value is shown as a dash
 
 #### Scenario: An identifier is displayed
@@ -147,16 +150,27 @@ the rendered page is authoritative for visual layout.
 - **THEN** both stay in one cell so the pair reads as one value
 - **AND** the pair aligns with the other cells of its column
 
-#### Scenario: Alignment is computed rather than stated
+#### Scenario: A composite cell needs internal alignment
 
-- **WHEN** a cell needs padding to align with its column
-- **THEN** the padding is derived from the column's widest value
+- **WHEN** a count and share occupy one cell
+- **THEN** padding for their internal components is derived from the column's widest values
 - **AND** no report states padding for an individual cell
 
-#### Scenario: A numeric column carries a header
+#### Scenario: A plain numeric cell is aligned
 
-- **WHEN** a numeric column carries a header
-- **THEN** the header is centred over the column while the values stay right-aligned
+- **WHEN** one numeric value occupies a right-aligned column
+- **THEN** the column alignment positions the value
+- **AND** the renderer adds no phantom padding to that cell
+
+#### Scenario: A plain column carries a leaf header
+
+- **WHEN** a plain column carries a leaf header
+- **THEN** the header inherits that column's alignment
+
+#### Scenario: A header spans or describes a composite
+
+- **WHEN** a header spans multiple columns or describes a composite cell
+- **THEN** the header is centred over its span or composite cell
 
 #### Scenario: A typeset result is claimed
 
@@ -167,6 +181,28 @@ the rendered page is authoritative for visual layout.
 
 - **WHEN** the same table is rendered to markdown or CSV
 - **THEN** no alignment artefact, spacing command, or column-pairing appears: each value is one field
+
+### Requirement: Maintained table distinctions survive regeneration
+
+A generated table MUST preserve grouping and paired-value distinctions from the consuming document's maintained table. One reviewed numeric fact MUST have one rounded presentation across every generated table, prose passage, and macro that cites it.
+
+#### Scenario: Dataset families form visual groups
+
+- **WHEN** a maintained table separates rows by dataset family
+- **THEN** regeneration preserves those family boundaries
+- **AND** it does not insert separators between every project within a family
+
+#### Scenario: A delta is paired with an absolute value
+
+- **WHEN** a human-readable table places a delta beside the absolute value it qualifies
+- **THEN** the delta keeps an explicit sign and parentheses that distinguish the pair
+- **AND** its CSV field remains a bare number without parentheses or a forced positive sign
+
+#### Scenario: One fact appears in multiple generated forms
+
+- **WHEN** a reviewed numeric fact appears in a table, prose, or macro
+- **THEN** every occurrence uses the same significant precision and rounding rule
+- **AND** `51 / 80` appears as `63.8%` wherever that fact is cited
 
 ### Requirement: A table may summarise groups and identify rows semantically
 

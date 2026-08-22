@@ -1,6 +1,11 @@
+from decimal import Decimal
+
 import pandas as pd
 from matplotlib import pyplot as plt
 
+from teralizer.eval.entities import ref
+from teralizer.eval.model import ValueKind
+from teralizer.eval.render.latex import render_table
 from teralizer.eval.reports.rq1_mutation_score import (
     _coverage_table,
     _figure,
@@ -12,7 +17,7 @@ def test_rq1_coverage_table_calculates_inclusion_percentages():
     table = _coverage_table(
         pd.DataFrame(
             {
-                "project": ["p"],
+                "project": ["eqbench-es-default-1s"],
                 "included_tests": [4],
                 "total_tests": [8],
                 "included_classes": [3],
@@ -24,10 +29,14 @@ def test_rq1_coverage_table_calculates_inclusion_percentages():
         )
     )
     row = table.df.iloc[0]
-    assert row["included_tests_display"] == "4 (50.0%)"
-    assert row["included_classes_display"] == "3 (50.0%)"
-    assert row["covered_display"] == "7 (70.0%)"
-    assert row["uncovered_display"] == "3 (30.0%)"
+    assert row["included_tests"] == 4
+    assert row["test_inclusion_share"] == Decimal("0.5")
+    assert row["included_classes"] == 3
+    assert row["class_inclusion_share"] == Decimal("0.5")
+    assert row["covered"] == 7
+    assert row["covered_share"] == Decimal("0.7")
+    assert row["uncovered"] == 3
+    assert row["uncovered_share"] == Decimal("0.3")
     assert table.key == "tab-mutants-per-project"
     assert table.label == "tab:mutants-per-project"
     assert table.short_caption == (
@@ -36,6 +45,10 @@ def test_rq1_coverage_table_calculates_inclusion_percentages():
     assert table.body_style == ""
     assert table.float_spec == "H"
     assert table.group_header_align == "r"
+    assert table.group_by == "project_group"
+    assert row["project_group"] == "eqbench"
+    assert row["project"] == ref("dataset.eqbench_a")
+    assert table.columns[0].kind is ValueKind.ENTITY
     assert [column.header for column in table.columns] == [
         "Project",
         "Test Methods",
@@ -44,6 +57,37 @@ def test_rq1_coverage_table_calculates_inclusion_percentages():
         "Covered",
         "Uncovered",
     ]
+
+
+def test_rq1_coverage_table_separates_only_dataset_families():
+    projects = [
+        "eqbench-es-default-1s",
+        "eqbench-es-default-10s",
+        "commons-utils-es-default-1s",
+        "commons-utils",
+    ]
+    size = len(projects)
+    table = _coverage_table(
+        pd.DataFrame(
+            {
+                "project": projects,
+                "included_tests": [4] * size,
+                "total_tests": [8] * size,
+                "included_classes": [3] * size,
+                "total_classes": [6] * size,
+                "total": [10] * size,
+                "covered": [7] * size,
+                "uncovered": [3] * size,
+            }
+        )
+    )
+
+    tex = render_table(table)
+
+    assert tex.splitlines().count("  \\midrule") == 3
+    assert r"\DatasetEqBenchA{}" in tex
+    assert r"\DatasetCommonsA{}" in tex
+    assert r"\DatasetCommonsDev{}" in tex
 
 
 def test_rq1_figure_matches_notebook_grid():
@@ -92,11 +136,13 @@ def test_rq1_mutator_table_keeps_missing_variant_columns_renderable():
     assert [column.header for column in table.columns] == [
         "Mutator",
         "Total",
-        r"Total \%",
-        r"\VariantInitial{}",
-        r"\VariantNaiveC{}",
-        r"\VariantNaiveC{}",
-        r"\VariantImprovedC{}",
-        r"\VariantImprovedC{}",
+        "Total %",
+        "{entity.variant.initial}",
+        "{entity.variant.naive_c}",
+        "{entity.variant.naive_c}",
+        "{entity.variant.improved_c}",
+        "{entity.variant.improved_c}",
     ]
-    assert [column.group_header for column in table.columns[3:]] == [r"Detected \%"] * 5
+    assert [column.group_header for column in table.columns[3:]] == ["Detected %"] * 5
+    assert table.columns[5].zero_is_absent
+    assert table.columns[7].zero_is_absent
