@@ -24,7 +24,7 @@
 
 ## 5. Prove Hosted Scheduling
 
-- [ ] 5.1 Obtain explicit operator approval for the corpus-starting push, commit the implementation as one causal change, and push it.
-- [ ] 5.2 Confirm that the workflow-file change schedules exactly one full verification-corpus run, that the run completes within 35 minutes, and that its checked-out revision equals the pushed revision; record the run URL.
+- [x] 5.1 Obtain explicit operator approval for the corpus-starting push, commit the implementation as one causal change, and push it.
+- [x] 5.2 Confirm that the workflow-file change schedules exactly one full verification-corpus run, that the run completes within 35 minutes, and that its checked-out revision equals the pushed revision; run `https://github.com/glockyco/Teralizer/actions/runs/32595768441` succeeded in 21m15s at revision `c696378491e8b0ad01d74c37975fb2c7b39dffbd`.
 - [ ] 5.3 Push the OpenSpec-only evidence update and confirm that no verification-corpus run is created for that unrelated revision while ordinary CI still reports independently; record the revision and inspected workflow-run range.
 - [ ] 5.4 Re-run strict OpenSpec validation and archive only after the relevant-path run and unrelated-path non-run are both recorded.
