@@ -85,6 +85,37 @@ def test_render_table_is_booktabs_with_formatted_cells():
     )
 
 
+def test_render_table_labels_semantic_rows_independently_of_order():
+    table = Table(
+        key="mechanisms",
+        df=pd.DataFrame(
+            {
+                "row_key": ["test.included", "stage 1:filter rejection"],
+                "cause": ["Included", "Filter rejection"],
+            }
+        ),
+        columns=[ColumnSpec("Cause", "cause", ValueKind.TEXT, align="l")],
+        caption="Mechanisms",
+        label="tab:mechanisms",
+        row_key="row_key",
+        ordinal_header="#",
+    )
+
+    lines = render_table(table).splitlines()
+
+    assert "  \\setcounter{reporttablerow}{0}" in lines
+    assert (
+        "  \\refstepcounter{reporttablerow}"
+        "\\label{tabrow:mechanisms:test.included}"
+        "\\thereporttablerow & Included \\\\" in lines
+    )
+    assert (
+        "  \\refstepcounter{reporttablerow}"
+        "\\label{tabrow:mechanisms:stage@201@3Afilter@20rejection}"
+        "\\thereporttablerow & Filter rejection \\\\" in lines
+    )
+
+
 def test_render_table_formats_delta_sign_grouping_and_absent_zero():
     table = Table(
         key="deltas",

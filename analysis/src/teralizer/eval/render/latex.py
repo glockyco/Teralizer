@@ -47,6 +47,16 @@ def _text(text: str) -> str:
     return _escape(substitute_entities(text, "latex"))
 
 
+def _label_component(value: object) -> str:
+    """Encode a semantic key as an unambiguous LaTeX label component."""
+    return "".join(
+        chr(byte)
+        if byte in b".-_" or 48 <= byte <= 57 or 65 <= byte <= 90 or 97 <= byte <= 122
+        else f"@{byte:02X}"
+        for byte in str(value).encode("utf-8")
+    )
+
+
 def _runtime(value: object) -> str:
     if not isinstance(value, Decimal):
         raise TypeError(f"runtime value must use Decimal, got {type(value).__name__}")
@@ -308,6 +318,8 @@ def render_table(table: Table) -> str:
         )
     else:
         opening = f"  \\begin{{tabular}}{{{cols}}}"
+    if table.row_key is not None:
+        lines.append("  \\setcounter{reporttablerow}{0}")
     lines += [
         opening,
         "  \\toprule",
@@ -369,7 +381,16 @@ def render_table(table: Table) -> str:
         cells = [rendered[c.source][position] for c in table.columns]
         if indent:
             cells[0] = "\\qquad " + cells[0]
-        if table.ordinal_header is not None:
+        if table.row_key is not None:
+            row_identity = (
+                "\\refstepcounter{reporttablerow}"
+                f"\\label{{tabrow:{_label_component(table.key)}:{_label_component(row[table.row_key])}}}"
+            )
+            if table.ordinal_header is not None:
+                cells.insert(0, row_identity + "\\thereporttablerow")
+            else:
+                cells[0] = row_identity + cells[0]
+        elif table.ordinal_header is not None:
             cells.insert(0, str(position + 1))
         lines.append("  " + " & ".join(cells) + " \\\\")
     if table.overall_band is not None:
