@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 
 import inspect
+import subprocess
 import pandas as pd
 import pytest
 from teralizer.eval import cli, provenance, registry
@@ -88,13 +89,19 @@ def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "_ANALYSIS", tmp_path)
     monkeypatch.setattr(cli, "REPORTS_DIR", tmp_path / "reports")
     monkeypatch.setattr(cli, "BUILD_DIR", tmp_path / "build")
+    paper = tmp_path / "paper"
+    paper.mkdir()
+    subprocess.run(["git", "init", "-q", str(paper)], check=True)
+    (paper / "publish.toml").write_text(
+        '[latex]\nk = "tables/k.tex"\n[csv]\nk = "data/k.csv"\n'
+    )
     cli.main(
         [
             "all",
             "--targets",
             "md,latex,csv",
             "--paper-out",
-            str(tmp_path / "paper"),
+            str(paper),
         ]
     )
     assert (tmp_path / "build" / "smoke_csv" / "k.csv").exists()
@@ -102,6 +109,35 @@ def test_cli_fans_out_csv_to_build_and_paper_data(monkeypatch, tmp_path):
     csv_path = tmp_path / "paper" / "data" / "k.csv"
     assert csv_path.exists()
     assert csv_path.read_text(encoding="utf-8").splitlines()[0] == "a"
+
+
+def test_publishing_omitted_declared_target_fails_before_build(monkeypatch, tmp_path):
+    events: list[str] = []
+
+    def build(_context):
+        events.append("build")
+        return _fixture_report(_context)
+
+    monkeypatch.setattr(registry, "REPORTS", {"smoke": registry.ReportSpec(build, ())})
+    paper = tmp_path / "paper"
+    paper.mkdir()
+    subprocess.run(["git", "init", "-q", str(paper)], check=True)
+    (paper / "publish.toml").write_text(
+        '[figures]\nplot = "plot.pdf"\n[csv]\nk = "k.csv"\n'
+    )
+
+    with pytest.raises(SystemExit):
+        cli.main(
+            [
+                "all",
+                "--targets",
+                "md,figures",
+                "--paper-out",
+                str(paper),
+            ]
+        )
+
+    assert events == []
 
 
 def test_publishing_dirty_tree_is_refused(monkeypatch, tmp_path):

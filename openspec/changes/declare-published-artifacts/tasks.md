@@ -62,14 +62,14 @@ and written there, not here.
 
 ## 5. Fail before building when a declared kind is not requested
 
-- [ ] 5.1 Generalise declaration inspection so it returns every render target the destination requires;
+- [x] 5.1 Generalise declaration inspection so it returns every render target the destination requires;
       the `make-report-runs-explicit` preflight uses that result to fail before any report is built when
       an invocation omits a declared target.
       Verification: a destination declaring figures and CSV files fails an invocation that omits CSV,
       and the failure names the missing target.
-- [ ] 5.2 Confirm an invocation covering every declared kind proceeds.
-- [ ] 5.3 Tests for 5.1 and 5.2.
-- [ ] 5.4 Commit.
+- [x] 5.2 Confirm an invocation covering every declared kind proceeds.
+- [x] 5.3 Tests for 5.1 and 5.2.
+- [x] 5.4 Commit.
       Message: `fix(eval): check the invocation against every declared kind`
 
 ## 6. Record what the consuming repository must declare
