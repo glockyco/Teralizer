@@ -864,6 +864,7 @@ register(
                 "completion-marker",
                 "data/detached/census-gen.complete",
                 required=False,
+                content_addressed=True,
             ),
         ),
     ),

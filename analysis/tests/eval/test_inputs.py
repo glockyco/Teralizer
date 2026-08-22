@@ -27,7 +27,11 @@ def _entry(corpus_id: str) -> corpora.CorpusEntry:
     )
 
 
-def _content_snapshot(role: str, relative: str, root: Path) -> inputs.FileInputSnapshot:
+def _content_snapshot(
+    declaration: inputs.FileInputSpec, root: Path
+) -> inputs.FileInputSnapshot:
+    role = declaration.role
+    relative = declaration.path
     path = root / relative
     if not path.is_file():
         return inputs.FileInputSnapshot(role, relative, False, None, None, False)
@@ -221,7 +225,8 @@ def test_file_snapshot_records_content_commit_and_dirty_state(
 
     monkeypatch.setattr(inputs, "_git", git)
 
-    assert inputs._snapshot_file("facts", "facts.json", tmp_path) == (
+    declaration = inputs.FileInputSpec("facts", "facts.json")
+    assert inputs._snapshot_file(declaration, tmp_path) == (
         inputs.FileInputSnapshot(
             role="facts",
             path="facts.json",
@@ -247,7 +252,9 @@ def test_archive_file_snapshot_uses_embedded_source_identity(
     monkeypatch.setattr(provenance, "_REPO_ROOT", tmp_path)
     provenance._git_snapshot.cache_clear()
 
-    snapshot = inputs._snapshot_file("facts", "facts.json", tmp_path)
+    snapshot = inputs._snapshot_file(
+        inputs.FileInputSpec("facts", "facts.json"), tmp_path
+    )
 
     assert snapshot.commit == commit
     assert snapshot.dirty is False
@@ -260,10 +267,27 @@ def test_untracked_file_has_no_fabricated_commit(monkeypatch, tmp_path: Path):
     (tmp_path / ".git").mkdir()
     monkeypatch.setattr(inputs, "_git", lambda _root, _args: "")
 
-    snapshot = inputs._snapshot_file("facts", "facts.json", tmp_path)
+    snapshot = inputs._snapshot_file(
+        inputs.FileInputSpec("facts", "facts.json"), tmp_path
+    )
 
     assert snapshot.commit is None
     assert snapshot.dirty is True
+
+
+def test_content_addressed_file_needs_no_git_commit(monkeypatch, tmp_path: Path):
+    path = tmp_path / "facts.json"
+    path.write_text("evidence", encoding="utf-8")
+    (tmp_path / ".git").mkdir()
+    monkeypatch.setattr(inputs, "_git", lambda _root, _args: "")
+
+    snapshot = inputs._snapshot_file(
+        inputs.FileInputSpec("facts", "facts.json", content_addressed=True), tmp_path
+    )
+
+    assert snapshot.sha256 == hashlib.sha256(b"evidence").hexdigest()
+    assert snapshot.commit is None
+    assert snapshot.dirty is False
 
 
 def test_context_rejects_a_role_with_the_wrong_input_kind(monkeypatch, tmp_path: Path):

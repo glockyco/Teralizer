@@ -42,6 +42,7 @@ class FileInputSpec:
     role: str
     path: str
     required: bool = True
+    content_addressed: bool = False
 
     def __post_init__(self) -> None:
         if not self.role:
@@ -147,11 +148,16 @@ def _git(repo_root: Path, args: list[str]) -> str:
     ).stdout.strip()
 
 
-def _snapshot_file(role: str, relative: str, repo_root: Path) -> FileInputSnapshot:
+def _snapshot_file(declaration: FileInputSpec, repo_root: Path) -> FileInputSnapshot:
+    role = declaration.role
+    relative = declaration.path
     path = repo_root / relative
     if not path.is_file():
         return FileInputSnapshot(role, relative, False, None, None, False)
-    if (repo_root / ".git").exists():
+    if declaration.content_addressed:
+        commit = None
+        dirty = False
+    elif (repo_root / ".git").exists():
         commit: str | None = _git(
             repo_root, ["log", "-1", "--format=%H", "--", relative]
         )
@@ -160,7 +166,7 @@ def _snapshot_file(role: str, relative: str, repo_root: Path) -> FileInputSnapsh
         from teralizer.eval.provenance import checkout_snapshot
 
         commit, dirty = checkout_snapshot()
-    if not commit:
+    if not commit and not declaration.content_addressed:
         commit = None
         dirty = True
     return FileInputSnapshot(
@@ -191,7 +197,7 @@ def _file_snapshots(
     declarations: tuple[ReportInputSpec, ...], repo_root: Path
 ) -> tuple[FileInputSnapshot, ...]:
     return tuple(
-        _snapshot_file(declaration.role, declaration.path, repo_root)
+        _snapshot_file(declaration, repo_root)
         for declaration in declarations
         if isinstance(declaration, FileInputSpec)
     )
@@ -238,9 +244,7 @@ def resolve_inputs(
             else:
                 file_input = _resolve_file(report, declaration, repo_root)
                 resolved.append(file_input)
-                snapshots.append(
-                    _snapshot_file(declaration.role, declaration.path, repo_root)
-                )
+                snapshots.append(_snapshot_file(declaration, repo_root))
 
         context = ReportContext(report, tuple(resolved), tuple(snapshots))
         yield context
