@@ -533,8 +533,9 @@ def build(context: ReportContext) -> RQReport:
             breakdown,
             filtering,
             Prose(
-                "Most of the generalization row's filtering column contains "
-                "pre-emission soundness rejections rather than filter decisions."
+                "The reader-facing filtering column combines filter decisions, "
+                "generation-gate refusals, and unsupported-capability declinations. "
+                "The preceding table preserves the exact mechanisms."
             ),
             widening_table,
         ],

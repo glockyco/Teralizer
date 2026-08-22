@@ -193,9 +193,9 @@ public class ProjectBuildTask extends AbstractTask {
     }
 
     /*
-     * A compile-based quarantine is an exclusion like any filter reject, so it leaves a filter_result
-     * row with a typed reason code. Without it these losses are invisible to the funnel analyses,
-     * which aggregate exclusions from filter_result.reason_code rather than the row's exclusion_info.
+     * Compile-based quarantine is not filtering. It uses filter_result as a shared evidence carrier
+     * with a registered non-filter producer and a typed reason code. Analysis classifies the producer's
+     * semantics instead of inferring the mechanism from the table or REJECT decision.
      */
     void recordQuarantineExclusion(DSLContext create, Long assertionId, Long generalizationId,
         String reasonCode, String reason) {

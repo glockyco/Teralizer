@@ -13,7 +13,7 @@ Each row records one normalized substantive claim. A row uses exactly one dispos
 - `stale/disproved`: current source, tests, or accepted contracts contradict the retired claim.
 - `intentionally discarded`: the material is volatile, duplicative, ownerless, or non-evidentiary.
 
-This initial inventory assigns the maintenance owner and evidence class. Rows that name a proof requirement still require task 1.3 re-derivation before the final task 1.5 review. No runtime code reads this file.
+The final review re-derived every row after implementation. Each retained row resolves to an accepted contract, a focused executable check, or deterministic fixture evidence. Stale and discarded rows are not retained claims. No runtime code reads this file.
 
 ## Prerequisite and owner boundaries
 
@@ -220,3 +220,7 @@ The thesis retains two qualitative causal explanations: EXC-18 and EXC-20. Exist
 - `WideningLicenseTest` binds those observations to the current license verdict and stable refusal code.
 
 The focused fixture run passed on 2026-08-22. No retained causal explanation requires reviewer interpretation. Therefore, this change creates no audit sample, schema, report input, artifact, or placeholder registration. The identity-free historical source audit remains discarded under EXC-21.
+
+## Final inventory review
+
+The final re-derivation found one unique, complete row for each normalized claim. Every row has one declared disposition, one owner key, and nonempty evidence or rationale. Retained rows resolve only to accepted contracts, executable checks, or deterministic fixtures. Historical measurements and identity-free observations remain stale or intentionally discarded; none is presented as a registered empirical result. The implementation introduced no unresolved owner or unclassified claim.

@@ -95,13 +95,13 @@
 
 ## 6. Correct contradictions at their maintained owners
 
-- [ ] 6.1 Find source comments, diagnostics, and report descriptions that contradict the accepted
+- [x] 6.1 Find source comments, diagnostics, and report descriptions that contradict the accepted
       mechanism mapping or denominator vocabulary. Correct each in the same causal commit as its owner;
       do not add a second narrative explanation.
-- [ ] 6.2 Re-run the complete one-time claim inventory after implementation. Every retained claim must
+- [x] 6.2 Re-run the complete one-time claim inventory after implementation. Every retained claim must
       resolve to an accepted contract, focused executable check, registered empirical result, or the
       conditional deterministic audit evidence when one was necessary.
-- [ ] 6.3 Confirm `consolidate-repository-knowledge` remains archived. If implementation reveals a
+- [x] 6.3 Confirm `consolidate-repository-knowledge` remains archived. If implementation reveals a
       contradiction in an accepted spec or maintained source owner, correct that owner separately; do
       not reopen the completed document-retirement tasks or create a permanent knowledge-retirement
       spec.
