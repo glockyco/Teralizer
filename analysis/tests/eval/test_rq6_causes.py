@@ -23,6 +23,7 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
     assert "tab:mut-choice-sensitivity" in labels
     assert {table.key for table in report.tables()} == {
         "tab-processing-failures",
+        "rq6_generalization_funnel",
         "tab-exclusions-breakdown-extended",
         "tab-exclusions-filtering-extended",
         "rq6_jpf_exception_causes",

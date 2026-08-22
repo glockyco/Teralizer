@@ -12,6 +12,7 @@ from teralizer.eval.provenance import Provenance, capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.eval.reports import _exclusion_evidence as exclusion
 from teralizer.eval.reports import _funnel
+from teralizer.eval.reports import _generalization_funnel as generation_funnel
 from teralizer.eval.reports._causes_common import (
     build_breakdown_table,
     build_filtering_table,
@@ -105,6 +106,13 @@ def build(context: ReportContext) -> RQReport:
     conn = context.corpus("real-world")
     variant = _funnel.resolve_variant(conn)
     funnel = _funnel.build_funnel(conn, variant=variant)
+    generation_funnel_provenance = capture(
+        generation_funnel.build_generalization_funnel,
+        query=generation_funnel.GENERALIZATION_LIFECYCLE_SQL,
+    )
+    generalizations_funnel = generation_funnel.build_generalization_funnel(
+        conn, variant, generation_funnel_provenance
+    )
     breakdown_data = exclusion.fetch_mechanism_counts(conn, variant)
     jpf_exception_data = fetch_jpf_exception_causes(conn, variant)
     jpf_table = jpf_exception_table(jpf_exception_data)
@@ -158,7 +166,6 @@ def build(context: ReportContext) -> RQReport:
     )
     levels = breakdown_data.set_index("level")
     assertions = levels.loc["Assertion"]
-    generalizations = levels.loc["Generalization"]
     metrics = [
         Metric(
             "realworld.selected_projects",
@@ -226,21 +233,62 @@ def build(context: ReportContext) -> RQReport:
         ),
         Metric(
             "realworld.generalization_attempts",
-            int(generalizations["total"]),
+            generalizations_funnel.counts[generation_funnel.PopulationKey.ATTEMPTED],
             fmt="count",
-            provenance=breakdown_provenance,
+            provenance=generation_funnel_provenance,
+        ),
+        Metric(
+            "realworld.generalizations_emitted",
+            generalizations_funnel.counts[generation_funnel.PopulationKey.EMITTED],
+            fmt="count",
+            provenance=generation_funnel_provenance,
+        ),
+        Metric(
+            "realworld.generalizations_filter_adjudicated",
+            generalizations_funnel.counts[
+                generation_funnel.PopulationKey.FILTER_ADJUDICATED
+            ],
+            fmt="count",
+            provenance=generation_funnel_provenance,
+        ),
+        Metric(
+            "realworld.generalizations_filter_passed",
+            generalizations_funnel.counts[
+                generation_funnel.PopulationKey.FILTER_PASSED
+            ],
+            fmt="count",
+            provenance=generation_funnel_provenance,
         ),
         Metric(
             "realworld.generalizations_validated",
-            int(generalizations["included"]),
+            generalizations_funnel.counts[generation_funnel.PopulationKey.VALIDATED],
             fmt="count",
-            provenance=breakdown_provenance,
+            provenance=generation_funnel_provenance,
         ),
         Metric(
             "realworld.generalization_validated_pct",
-            int(generalizations["included"]) / int(generalizations["total"]),
+            generalizations_funnel.counts[generation_funnel.PopulationKey.VALIDATED]
+            / generalizations_funnel.counts[generation_funnel.PopulationKey.ATTEMPTED],
             fmt="pct1",
-            provenance=breakdown_provenance,
+            provenance=generation_funnel_provenance,
+        ),
+        Metric(
+            "realworld.generalizations_reduced",
+            generalizations_funnel.counts[generation_funnel.PopulationKey.REDUCED],
+            fmt="count",
+            provenance=generation_funnel_provenance,
+        ),
+        Metric(
+            "realworld.generalizations_final_usable",
+            generalizations_funnel.counts[generation_funnel.PopulationKey.FINAL_USABLE],
+            fmt="count",
+            provenance=generation_funnel_provenance,
+        ),
+        Metric(
+            "realworld.generalization_unknown_attempt_state",
+            generalizations_funnel.unknown_attempt_state,
+            fmt="count",
+            provenance=generation_funnel_provenance,
         ),
         # Projects holding a validated generalized test before reduction. Reported
         # beside the headline so the prose can state what reduction itself costs.
@@ -332,6 +380,12 @@ def build(context: ReportContext) -> RQReport:
                 "filtering and downstream test, assertion, and generalization failures."
             ),
             funnel.table,
+            Prose(
+                "Generalization attempts are reported separately from emitted, "
+                "filter-adjudicated, validated, reduced, and final-usable tests. "
+                "A missing independent task record remains unknown."
+            ),
+            generalizations_funnel.table,
             Prose(
                 "Generic JPF uncaught-exception diagnostics are reclassified "
                 "from their retained detail into application exceptions and "

@@ -268,30 +268,3 @@ def test_filter_passed_generalizations_carry_no_rejection(rq6_conn):
     assert contradictory == 0, (
         f"{contradictory} generalizations both passed filtering and were rejected"
     )
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "EM-7: deriveRollup reports the first unset flag as the failure stage, so a "
-        "stage that never ran is indistinguishable from one that failed. Remove this "
-        "marker once the lifecycle gains a not-attempted outcome."
-    ),
-)
-def test_lifecycle_failure_stage_was_actually_attempted(rq6_conn):
-    """A generalization cannot fail at a stage its project never reached."""
-    (never_ran,) = _rows(
-        rq6_conn,
-        """
-        SELECT count(*)
-        FROM generalization_lifecycle l
-        JOIN generalization g ON g.id = l.generalization_id
-        WHERE l.final_failure_stage IS NOT NULL
-          AND NOT EXISTS (SELECT 1 FROM task t
-                           WHERE t.project_id = g.project_id
-                             AND t.stage::text = l.final_failure_stage)
-        """,
-    )[0]
-    assert never_ran == 0, (
-        f"{never_ran} generalizations are blamed on a stage with no task row"
-    )

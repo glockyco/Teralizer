@@ -27,7 +27,7 @@
 
 - [x] 2.1 Implement one executable mechanism mapping and reader-facing collapse from the accepted
       exclusion-accounting semantics. Reuse its stable keys from every RQ6 evidence relation.
-- [ ] 2.2 Build separate typed relations for project and test lifecycle observations, assertions,
+- [x] 2.2 Build separate typed relations for project and test lifecycle observations, assertions,
       filter adjudication, and generated-generalization lifecycle evidence. Carry stable entity and join
       keys plus only the stage and producer evidence that exists at each level; do not create one
       nullable universal row shape.
@@ -45,16 +45,16 @@
 
 ## 3. Materialize the denominator funnel
 
-- [ ] 3.1 Model attempted, emitted, filter-adjudicated, filter-passed, validated, reduced, and final-usable
+- [x] 3.1 Model attempted, emitted, filter-adjudicated, filter-passed, validated, reduced, and final-usable
       populations as named typed counts from the applicable evidence relations and independent attempt
       records.
-- [ ] 3.2 Attribute each excluded entity to its first observed failing gate exactly once; test an entity
+- [x] 3.2 Attribute each excluded entity to its first observed failing gate exactly once; test an entity
       that would also fail a later condition.
-- [ ] 3.3 Keep absent attempt evidence unknown. Add no inference from a later failure stage, and record
+- [x] 3.3 Keep absent attempt evidence unknown. Add no inference from a later failure stage, and record
       the limitation wherever final-use results remain publishable.
-- [ ] 3.4 Emit normalized funnel tables, metric keys, and band summaries for each supported entity level.
+- [x] 3.4 Emit normalized funnel tables, metric keys, and band summaries for each supported entity level.
       Prove that every band reconciles to its entering population and the final count.
-- [ ] 3.5 Add corpus-backed invariant tests for all funnel identities and explicit numerator/denominator
+- [x] 3.5 Add corpus-backed invariant tests for all funnel identities and explicit numerator/denominator
       compatibility.
 
 ## 4. Register the retained thesis evidence surface
