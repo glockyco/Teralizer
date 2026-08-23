@@ -475,14 +475,14 @@ def build(context: ReportContext) -> RQReport:
             int(project_pvc["project"].nunique()),
             "count",
             jarvis_values.census_project_frame,
+            kind=ValueKind.COUNT,
+            population=_project_population("rq0.census.populated_projects"),
         ),
         _metric(
             "rq0.census.completed_projects",
             int((ledger["generalization_status"] == "complete").sum()),
             "count",
             _census_status_ledger,
-            kind=ValueKind.COUNT,
-            population=_project_population("rq0.census.completed_projects"),
         ),
         _metric(
             "rq0.census.failed_projects",

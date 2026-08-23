@@ -16,7 +16,7 @@ HEADLINE_KEYS_BY_DIMENSION = {
         {
             "rq0.breadth.published_projects",
             "rq0.census.intended_projects",
-            "rq0.census.completed_projects",
+            "rq0.census.populated_projects",
             "realworld.eligible_projects",
             "realworld.applicability_projects",
             "realworld.applicability_pct",

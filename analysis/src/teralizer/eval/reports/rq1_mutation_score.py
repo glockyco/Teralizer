@@ -467,18 +467,18 @@ def _headline_effectiveness_values(frame: pd.DataFrame) -> dict[str, float]:
         generalized = frame[
             frame["project_name"].isin(projects) & frame["variant"].ne("INITIAL")
         ]
-        values[f"effectiveness.{cohort}.mutation_improvement_min_pp"] = float(
-            generalized["absolute_improvement"].min()
+        values[f"effectiveness.{cohort}.mutation_improvement_min_pp"] = round(
+            float(generalized["absolute_improvement"].min()), 2
         )
-        values[f"effectiveness.{cohort}.mutation_improvement_max_pp"] = float(
-            generalized["absolute_improvement"].max()
+        values[f"effectiveness.{cohort}.mutation_improvement_max_pp"] = round(
+            float(generalized["absolute_improvement"].max()), 2
         )
 
     developer_baseline = frame[
         frame["project_name"].eq("commons-utils") & frame["variant"].eq("INITIAL")
     ]
-    values["effectiveness.commons_developer.baseline_mutation_score_pct"] = float(
-        developer_baseline["detected_of_covered_pct"].iloc[0]
+    values["effectiveness.commons_developer.baseline_mutation_score_pct"] = round(
+        float(developer_baseline["detected_of_covered_pct"].iloc[0]), 2
     )
     return values
 
