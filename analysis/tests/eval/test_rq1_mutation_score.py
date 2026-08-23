@@ -2,15 +2,88 @@ from decimal import Decimal
 
 import pandas as pd
 from matplotlib import pyplot as plt
+import pytest
 
 from teralizer.eval.entities import ref
-from teralizer.eval.model import ValueKind
-from teralizer.eval.render.latex import render_table
+from teralizer.eval.model import RQReport, ValueKind
+from teralizer.eval.provenance import capture
+from teralizer.eval.render.latex import render_macros, render_table
 from teralizer.eval.reports.rq1_mutation_score import (
+    EFFECTIVENESS_METRIC_KEYS,
+    VARIANTS,
     _coverage_table,
+    _effectiveness_metrics,
     _figure,
+    _headline_effectiveness_values,
     _mutator_table,
 )
+
+
+def _effectiveness_frame() -> pd.DataFrame:
+    cohorts = {
+        "eqbench-es-default-1s": (50.0, (1.20, 3.90)),
+        "eqbench-es-default-10s": (50.0, (1.40, 3.70)),
+        "eqbench-es-default-60s": (50.0, (1.30, 3.80)),
+        "commons-utils-es-default-1s": (60.0, (0.82, 1.33)),
+        "commons-utils-es-default-10s": (60.0, (0.90, 1.20)),
+        "commons-utils-es-default-60s": (60.0, (0.95, 1.25)),
+        "commons-utils": (80.35, (0.05, 0.07)),
+    }
+    rows: list[dict[str, object]] = []
+    for project, (baseline, bounds) in cohorts.items():
+        improvements = [0.0, bounds[0], bounds[1], *([sum(bounds) / 2] * 4)]
+        for variant, improvement in zip(VARIANTS, improvements):
+            rows.append(
+                {
+                    "project_name": project,
+                    "variant": variant,
+                    "detected_of_covered_pct": baseline + improvement,
+                    "absolute_improvement": improvement,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def test_rq1_headline_values_preserve_cohorts_and_baseline():
+    values = _headline_effectiveness_values(_effectiveness_frame())
+
+    assert values == {
+        "effectiveness.eqbench_evosuite.mutation_improvement_min_pp": 1.20,
+        "effectiveness.eqbench_evosuite.mutation_improvement_max_pp": 3.90,
+        "effectiveness.commons_evosuite.mutation_improvement_min_pp": 0.82,
+        "effectiveness.commons_evosuite.mutation_improvement_max_pp": 1.33,
+        "effectiveness.commons_developer.mutation_improvement_min_pp": 0.05,
+        "effectiveness.commons_developer.mutation_improvement_max_pp": 0.07,
+        "effectiveness.commons_developer.baseline_mutation_score_pct": 80.35,
+    }
+
+
+def test_rq1_headline_values_reject_an_incomplete_matrix():
+    frame = _effectiveness_frame().iloc[1:].copy()
+
+    with pytest.raises(ValueError, match="missing=.*eqbench-es-default-1s.*INITIAL"):
+        _headline_effectiveness_values(frame)
+
+
+def test_rq1_headline_values_reject_duplicate_rows():
+    frame = pd.concat([_effectiveness_frame(), _effectiveness_frame().iloc[[0]]])
+
+    with pytest.raises(ValueError, match="effectiveness rows are duplicated"):
+        _headline_effectiveness_values(frame)
+
+
+def test_rq1_headline_metrics_are_typed_provenance_bearing_macros():
+    provenance = capture(_headline_effectiveness_values, query="SELECT controlled")
+    metrics = _effectiveness_metrics(_effectiveness_frame(), provenance)
+    report = RQReport("rq1", "RQ1", [], metrics)
+
+    assert {metric.key for metric in metrics} == EFFECTIVENESS_METRIC_KEYS
+    assert all(metric.population is not None for metric in metrics)
+    assert all(metric.population.input_role == "controlled" for metric in metrics)
+    assert all(metric.provenance == provenance for metric in metrics)
+    tex = render_macros(report)
+    assert "\\TzEffectivenessEqbenchEvosuiteMutationImprovementMinPp}{1.20}" in tex
+    assert "\\TzEffectivenessCommonsDeveloperBaselineMutationScorePct}{80.35\\%}" in tex
 
 
 def test_rq1_coverage_table_calculates_inclusion_percentages():

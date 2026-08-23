@@ -21,6 +21,8 @@ _METRIC_FORMATTERS: dict[str, Callable[[object], str]] = {
     "int": lambda value: str(int(value)),
     "count": lambda value: f"{int(value):,}",
     "pct1": lambda value: f"{Decimal(str(value)) * 100:.1f}%",
+    "decimal2": lambda value: f"{Decimal(str(value)):.2f}",
+    "percent2": lambda value: f"{Decimal(str(value)):.2f}%",
 }
 
 

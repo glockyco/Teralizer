@@ -31,6 +31,22 @@ from .report_basis import resolve_repo_relative_path
 # =============================================================================
 
 
+MUTATION_RESULTS_BY_PROJECT_VARIANT_SQL = """
+SELECT mr.project_id, mr.project_name, mr.variant,
+       mr.total, mr.covered, mr.uncovered,
+       mr.covered_pct, mr.uncovered_pct,
+       mr.survived_of_covered_pct, mr.detected_of_covered_pct,
+       mr.killed_of_covered_pct, mr.timed_out_of_covered_pct,
+       mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,
+       mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff,
+       mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff,
+       mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff
+FROM mv_mutation_results_by_project_variant mr
+JOIN v_projects_successes ps ON ps.project_id = mr.project_id
+WHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')
+"""
+
+
 def get_mutation_results_by_project_variant(conn) -> pd.DataFrame:
     """Get mutation results aggregated by project and variant.
 
@@ -41,21 +57,7 @@ def get_mutation_results_by_project_variant(conn) -> pd.DataFrame:
         DataFrame with columns: project_id, project_name, variant, total,
         covered, uncovered, covered_pct, uncovered_pct, detected, survived, etc.
     """
-    query = """
-    SELECT mr.project_id, mr.project_name, mr.variant, 
-           mr.total, mr.covered, mr.uncovered, 
-           mr.covered_pct, mr.uncovered_pct,
-           mr.survived_of_covered_pct, mr.detected_of_covered_pct, 
-           mr.killed_of_covered_pct, mr.timed_out_of_covered_pct, 
-           mr.memory_error_of_covered_pct, mr.run_error_of_covered_pct,
-           mr.survived_of_covered_pct_diff, mr.detected_of_covered_pct_diff, 
-           mr.killed_of_covered_pct_diff, mr.timed_out_of_covered_pct_diff, 
-           mr.memory_error_of_covered_pct_diff, mr.run_error_of_covered_pct_diff
-    FROM mv_mutation_results_by_project_variant mr
-    JOIN v_projects_successes ps ON ps.project_id = mr.project_id
-    WHERE mr.variant NOT IN ('ORIGINAL', 'BASELINE')
-    """
-    return pd.read_sql_query(query, conn)
+    return pd.read_sql_query(MUTATION_RESULTS_BY_PROJECT_VARIANT_SQL, conn)
 
 
 def get_mutation_results_by_mutator(conn, variants: List[str]) -> pd.DataFrame:

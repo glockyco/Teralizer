@@ -1,9 +1,9 @@
 ## 1. Publish Effectiveness Metrics
 
-- [ ] 1.1 Define the three RQ1 effectiveness cohorts, expected project/budget/variant matrix, and final semantic metric keys in the report module.
-- [ ] 1.2 Implement a pure RQ1 headline summary that rejects missing, duplicate, or unexpected cohort rows before calculating absolute-improvement range endpoints and the developer-written baseline.
-- [ ] 1.3 Attach typed populations, source-query provenance, and aggregate macro selection to every effectiveness metric.
-- [ ] 1.4 Add focused RQ1 tests for exact ranges, cohort separation, baseline selection, incomplete matrices, duplicate rows, and aggregate macro output.
+- [x] 1.1 Define the three RQ1 effectiveness cohorts, expected project/budget/variant matrix, and final semantic metric keys in the report module.
+- [x] 1.2 Implement a pure RQ1 headline summary that rejects missing, duplicate, or unexpected cohort rows before calculating absolute-improvement range endpoints and the developer-written baseline.
+- [x] 1.3 Attach typed populations, source-query provenance, and aggregate macro selection to every effectiveness metric.
+- [x] 1.4 Add focused RQ1 tests for exact ranges, cohort separation, baseline selection, incomplete matrices, duplicate rows, and aggregate macro output.
 
 ## 2. Publish Real-World Output Metrics
 

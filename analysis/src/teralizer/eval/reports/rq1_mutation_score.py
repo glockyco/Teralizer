@@ -19,6 +19,7 @@ from teralizer.eval.model import (
     ColumnSpec,
     Figure,
     Metric,
+    MetricPopulation,
     RQReport,
     Section,
     Table,
@@ -26,7 +27,7 @@ from teralizer.eval.model import (
     decimal_value,
     share_value,
 )
-from teralizer.eval.provenance import capture
+from teralizer.eval.provenance import Provenance, capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.exports import (
     get_project_type,
@@ -41,6 +42,7 @@ from teralizer.plotting import (
     get_variant_color,
 )
 from teralizer.rq1_mutation_detection import (
+    MUTATION_RESULTS_BY_PROJECT_VARIANT_SQL,
     compute_detection_improvements,
     compute_mutator_statistics,
     compute_project_mutation_coverage,
@@ -59,6 +61,28 @@ VARIANTS = (
     "IMPROVED_50_TRIES",
     "IMPROVED_200_TRIES",
 )
+
+_EFFECTIVENESS_COHORTS = {
+    "eqbench_evosuite": (
+        "eqbench-es-default-1s",
+        "eqbench-es-default-10s",
+        "eqbench-es-default-60s",
+    ),
+    "commons_evosuite": (
+        "commons-utils-es-default-1s",
+        "commons-utils-es-default-10s",
+        "commons-utils-es-default-60s",
+    ),
+    "commons_developer": ("commons-utils",),
+}
+_EFFECTIVENESS_RANGE_KEYS = frozenset(
+    f"effectiveness.{cohort}.mutation_improvement_{bound}_pp"
+    for cohort in _EFFECTIVENESS_COHORTS
+    for bound in ("min", "max")
+)
+EFFECTIVENESS_METRIC_KEYS = _EFFECTIVENESS_RANGE_KEYS | {
+    "effectiveness.commons_developer.baseline_mutation_score_pct"
+}
 
 REQUIRES: tuple[Required, ...] = (
     Required("project", "table", ("id", "use_test_generalization")),
@@ -401,6 +425,92 @@ def _source_class_counts(conn: Connection, facts_path: Path) -> pd.DataFrame:
     )
 
 
+def _headline_effectiveness_values(frame: pd.DataFrame) -> dict[str, float]:
+    """Validate the published RQ1 matrix and return its headline values."""
+    identity_columns = ["project_name", "variant"]
+    duplicate = frame.duplicated(identity_columns, keep=False)
+    if duplicate.any():
+        identities = sorted(
+            tuple(row)
+            for row in frame.loc[duplicate, identity_columns].itertuples(
+                index=False, name=None
+            )
+        )
+        raise ValueError(f"RQ1 effectiveness rows are duplicated: {identities}")
+
+    expected = {
+        (project, variant)
+        for projects in _EFFECTIVENESS_COHORTS.values()
+        for project in projects
+        for variant in VARIANTS
+    }
+    observed = set(frame.loc[:, identity_columns].itertuples(index=False, name=None))
+    missing = sorted(expected - observed)
+    unexpected = sorted(observed - expected)
+    if missing or unexpected:
+        raise ValueError(
+            "RQ1 effectiveness matrix differs from the declared cohorts: "
+            f"missing={missing}, unexpected={unexpected}"
+        )
+
+    required_values = frame.loc[:, ["detected_of_covered_pct", "absolute_improvement"]]
+    if required_values.isna().any().any():
+        identities = frame.loc[
+            required_values.isna().any(axis=1), identity_columns
+        ].itertuples(index=False, name=None)
+        raise ValueError(
+            f"RQ1 effectiveness rows contain missing values: {sorted(identities)}"
+        )
+
+    values: dict[str, float] = {}
+    for cohort, projects in _EFFECTIVENESS_COHORTS.items():
+        generalized = frame[
+            frame["project_name"].isin(projects) & frame["variant"].ne("INITIAL")
+        ]
+        values[f"effectiveness.{cohort}.mutation_improvement_min_pp"] = float(
+            generalized["absolute_improvement"].min()
+        )
+        values[f"effectiveness.{cohort}.mutation_improvement_max_pp"] = float(
+            generalized["absolute_improvement"].max()
+        )
+
+    developer_baseline = frame[
+        frame["project_name"].eq("commons-utils") & frame["variant"].eq("INITIAL")
+    ]
+    values["effectiveness.commons_developer.baseline_mutation_score_pct"] = float(
+        developer_baseline["detected_of_covered_pct"].iloc[0]
+    )
+    return values
+
+
+def _effectiveness_metrics(frame: pd.DataFrame, provenance: Provenance) -> list[Metric]:
+    values = _headline_effectiveness_values(frame)
+    metrics: list[Metric] = []
+    for key in sorted(_EFFECTIVENESS_RANGE_KEYS):
+        metrics.append(
+            Metric(
+                key,
+                values[key],
+                fmt="decimal2",
+                provenance=provenance,
+                kind=ValueKind.PERCENT_DELTA,
+                population=MetricPopulation(key, "Mutant", "controlled"),
+            )
+        )
+    baseline_key = "effectiveness.commons_developer.baseline_mutation_score_pct"
+    metrics.append(
+        Metric(
+            baseline_key,
+            values[baseline_key],
+            fmt="percent2",
+            provenance=provenance,
+            kind=ValueKind.PERCENT,
+            population=MetricPopulation(baseline_key, "Mutant", "controlled"),
+        )
+    )
+    return metrics
+
+
 def build(context: ReportContext) -> RQReport:
     conn = context.corpus("controlled")
     facts_path = context.file("project-source-facts")
@@ -417,6 +527,10 @@ def build(context: ReportContext) -> RQReport:
         get_project_mutator_data(conn),
     )
     tables = [_coverage_table(coverage), _mutator_table(mutator)]
+    effectiveness_provenance = capture(
+        get_mutation_results_by_project_variant,
+        query=MUTATION_RESULTS_BY_PROJECT_VARIANT_SQL,
+    )
     metrics = [
         Metric(
             "rq1.projects",
@@ -431,6 +545,7 @@ def build(context: ReportContext) -> RQReport:
             capture(compute_detection_improvements),
         ),
     ]
+    metrics.extend(_effectiveness_metrics(detection, effectiveness_provenance))
     section = Section(
         "Mutation score",
         [
