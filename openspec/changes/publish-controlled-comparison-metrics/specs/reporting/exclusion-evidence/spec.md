@@ -3,14 +3,17 @@
 ### Requirement: Cross-corpus comparisons declare a normalized evidence mapping
 
 A retained controlled-versus-real-world comparison SHALL define one normalized measure before it emits
-values. For each corpus, the mapping SHALL resolve the producer commit and reconstruct the pipeline graph
-that produced the data from executable stage declarations, planner scheduling, task dependencies, and
-persisted outcomes at that commit. It SHALL identify the source relation and fields, writer semantics,
-variant, eligibility rule, entity population, numerator predicate, denominator predicate, lifecycle
-boundary, and query provenance.
+values. For each corpus, the mapping SHALL record the complete set of producer revisions represented in
+the denominator, its representative-revision selection rule, and the selected revision. It SHALL
+reconstruct the representative pipeline graph from executable stage declarations, planner scheduling,
+task dependencies, and persisted outcomes at that revision. It SHALL identify the source relation and
+fields, writer semantics, variant, eligibility rule, entity population, numerator predicate,
+denominator predicate, lifecycle boundary, and query provenance.
 
 Stage numbers, names, or current ordering SHALL NOT establish equivalence across producer revisions. A
 mapping SHALL relate the underlying task transition and persisted evidence to the normalized boundary.
+When rows from non-representative revisions remain in a denominator, the mapping SHALL be qualified and
+SHALL name that limitation.
 
 A mapping SHALL be classified as:
 
@@ -36,11 +39,18 @@ convenient field or inferring missing lifecycle state.
 #### Scenario: Pipeline tasks moved between collection revisions
 
 - **WHEN** a task was split, reordered, or assigned to a different numbered stage between the controlled
-  and real-world producer commits
-- **THEN** the mapping reconstructs both historical planner graphs and task transitions
+  and real-world representative revisions
+- **THEN** the mapping reconstructs both historical scheduler graphs and task transitions
 - **AND** it compares the persisted outcome proved by those transitions rather than matching stage
   ordinals or current task placement
 - **AND** any transition whose historical evidence cannot be reconstructed is qualified or unmappable
+
+#### Scenario: One corpus contains several producer revisions
+
+- **WHEN** the corpus denominator contains rows produced by more than one tool revision
+- **THEN** the mapping records every revision and selects the latest recorded revision as representative
+- **AND** it preserves the full corpus denominator
+- **AND** the published comparison states that the representative graph was not the producer of every row
 
 #### Scenario: The corpora use different eligibility rules
 

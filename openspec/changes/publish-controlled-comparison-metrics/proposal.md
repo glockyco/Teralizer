@@ -8,10 +8,12 @@ would make unlike measures look comparable.
 
 ## What Changes
 
-- Resolve each corpus's producer commit and reconstruct its historical pipeline graph from
-  `ProcessingStage`, `PipelinePlanner`, scheduled task dependencies, and persisted outcomes. Inventory
-  schema fields, writer semantics, eligibility rules, variant selection, and lifecycle boundaries in
-  that commit rather than projecting the current Stage 1-5 organization onto RQ5.
+- Record every producer revision present in each corpus, select the latest recorded revision as its
+  representative pipeline, and reconstruct that historical graph from `ProcessingStage`, the available
+  scheduler, task dependencies, and persisted outcomes. Inventory schema fields, writer semantics,
+  eligibility rules, variant selection, and lifecycle boundaries at that revision rather than
+  projecting the current Stage 1-5 organization onto RQ5. Qualify the mapping because other revisions
+  contributed rows to both denominators.
 - Define one normalized comparison measure and map each corpus to it independently. Classify each mapping
   as exact, qualified, or unmappable, with executable invariants and an explicit interpretation bound.
 - Stop and present any unmappable or multiply plausible case to the operator. Do not choose the most

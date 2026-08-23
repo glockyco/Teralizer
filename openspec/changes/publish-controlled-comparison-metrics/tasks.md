@@ -1,32 +1,33 @@
 ## 1. Audit and approve the cross-schema mapping
 
-- [ ] 1.1 Resolve each database's exact producer commit independently from its later report-query commit,
-      plus its input snapshot, required schema objects, variant identity, and project eligibility
-      predicate. Use corpus manifests and run evidence; do not substitute the current checkout when a
-      producer revision is unknown.
-- [ ] 1.2 At the controlled producer commit, reconstruct the executable pipeline graph from
-      `ProcessingStage`, `PipelinePlanner`, scheduled tasks, prerequisites, and persisted task outcomes.
-      Record task transitions without assigning current or thesis RQ6 Stage 1-5 meanings.
-- [ ] 1.3 At the real-world producer commit, reconstruct the same executable graph and relate its cleaner
+- [x] 1.1 Record each database's complete producer-revision set independently from its later report-query
+      commit. Select the latest recorded non-null revision by project insertion order, record any missing
+      Git object and fallback to the latest recoverable recorded revision, and resolve the input snapshot,
+      schema objects, variant identity, and project eligibility predicate.
+- [x] 1.2 At the representative controlled revision, reconstruct the executable pipeline graph from
+      `ProcessingStage`, its scheduler, scheduled tasks, prerequisites, and persisted task outcomes.
+      Validate the graph against corpus task/stage rows and do not assign current or thesis RQ6 Stage 1-5
+      meanings.
+- [x] 1.3 At the representative real-world revision, reconstruct the same executable graph and relate its
       attempted, emitted, filter-passed, validated, reduced, and final-usable evidence to the tasks that
       produced each transition.
-- [ ] 1.4 Diff the two historical graphs. Record every task split, move, reorder, changed prerequisite,
-      and changed persistence boundary that can affect the retained generalization denominator or
-      numerator. Stage names and ordinals are not mapping keys.
-- [ ] 1.5 Trace every controlled-revision writer that initializes, clears, or interprets
+- [x] 1.4 Diff the two representative graphs. Record every task split, move, reorder, changed
+      prerequisite, and changed persistence boundary that can affect the retained denominator or
+      numerator. Stage names and ordinals are not mapping keys; retain a mixed-revision qualification.
+- [x] 1.5 Trace every controlled-revision writer that initializes, clears, or interprets
       `generalization.is_included`, then run read-only controlled-corpus audits against filter decisions,
       task outcomes, exclusion information, and the RQ5 table partition. Record which historical task
       transition the flag proves and which evidence is absent.
-- [ ] 1.6 Map the real-world side from its historical planner graph and accepted eligibility, lifecycle,
+- [x] 1.6 Map the real-world side from its historical planner graph and accepted eligibility, lifecycle,
       and exclusion relations. Prove which persisted transition, if any, matches the controlled boundary
       without relying on stage position or current count equality.
-- [ ] 1.7 Create the complete mapping matrix specified by the design. Classify each side and the combined
+- [x] 1.7 Create the complete mapping matrix specified by the design. Classify each side and the combined
       comparison as exact, qualified, or unmappable; record historical graph differences, denominator
       and project-population differences, and the strongest interpretation the evidence permits.
-- [ ] 1.8 Inspect the typed metric and provenance schema to determine whether producer commits, mapping
+- [x] 1.8 Inspect the typed metric and provenance schema to determine whether producer commits, mapping
       identity, and qualification survive manifest and macro publication. Propose the smallest typed
       metadata extension if the existing model cannot preserve them.
-- [ ] 1.9 Present both historical graphs, source evidence, mapping matrix, qualifications, all plausible
+- [x] 1.9 Present both historical graphs, source evidence, mapping matrix, qualifications, all plausible
       alternatives, and every unmappable case to the operator. Do not edit report code until the
       operator approves one normalized measure, its interpretation bound, and any metadata extension.
 

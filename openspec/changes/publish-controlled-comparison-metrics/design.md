@@ -31,8 +31,9 @@ mappings.
 
 **Goals:**
 
-- Reconstruct the actual pipeline graph at each corpus's producer commit.
-- Establish the strongest comparison measure both historical pipeline and schema shapes support.
+- Record every producer revision in each corpus and reconstruct the latest recorded revision as its
+  representative pipeline graph.
+- Establish the strongest comparison measure both representative pipeline and schema shapes support.
 - Make every translation from task transition and stored state to that measure explicit and executable.
 - Distinguish exact mappings, qualified descriptive mappings, and unmappable cases.
 - Stop for operator review whenever evidence supports more than one reasonable translation.
@@ -54,8 +55,9 @@ mappings.
 The first deliverable is a change-local mapping matrix with one row per candidate side. Each row records:
 
 - semantic corpus and physical input role;
-- producer commit, report revision, and required schema objects;
-- historical `ProcessingStage` order and `PipelinePlanner` scheduling graph;
+- complete producer-revision set, latest-revision selection evidence, representative revision, report
+  revision, and required schema objects;
+- representative historical `ProcessingStage` order and scheduler graph;
 - scheduled task dependencies and persisted success/failure evidence;
 - project eligibility predicate;
 - variant identity;
@@ -67,18 +69,22 @@ The first deliverable is a change-local mapping matrix with one row per candidat
 - mapping classification: exact, qualified, or unmappable; and
 - the interpretation wording allowed by that classification.
 
-For each side, first resolve the producer commit independently from the later report-query commit. At
-that Git tree, recover the declared processing-stage order, planner scheduling rules, task prerequisites,
-and every task that can create, reject, validate, reduce, or otherwise change a generalization outcome.
-Record a graph keyed by task and persisted transition, not by display stage number. Compare the graphs to
-identify task splits, moves, and reordered gates before inspecting similarly named columns.
+For each side, first record every `project.tool_git_version` independently from the later report-query
+commit. Project-id insertion order selects the latest recorded non-null revision as representative. At
+that Git tree, recover the declared processing-stage order, scheduler rules, task prerequisites, and
+every task that can create, reject, validate, reduce, or otherwise change a generalization outcome.
+Record a graph keyed by task and persisted transition, not by display stage number. Compare the two
+representative graphs to identify task splits, moves, and reordered gates before inspecting similarly
+named columns.
 
-The controlled audit then traces every writer of `generalization.is_included` in the controlled producer
-commit and reconciles included, filtering, and failure rows with filter and task evidence. The real-world
-audit uses its producer commit's planner plus the accepted eligibility, lifecycle, and mechanism
-relations rather than a same-named convenience field. If the exact producer commit cannot be resolved,
-or a historical task transition has no persisted evidence, the affected mapping is qualified or
-unmappable; the current source tree must not fill the gap.
+The controlled audit traces every writer of `generalization.is_included` in the latest recoverable
+controlled producer tree and reconciles included, filtering, and failure rows with filter and task
+evidence. The real-world audit uses its representative planner plus the accepted eligibility, lifecycle,
+and mechanism relations rather than a same-named convenience field. Both denominators retain rows from
+other recorded revisions, so the mapping is qualified even when corpus invariants agree. If a selected
+Git object cannot be recovered, use the latest recoverable recorded producer tree and validate it against
+persisted stage and task rows; record that additional qualification rather than substituting current
+source intent.
 
 No comparison code or metric key is finalized before this matrix is presented to and approved by the
 operator.
@@ -173,11 +179,13 @@ edits.
   more limited measure; do not choose the closest RQ6 count.
 - **Stage names survived while task order changed.** -> Reconstruct both historical planner graphs and
   map task transitions; never align by stage ordinal or the cleaner RQ6 presentation.
-- **The exact producer commit is missing or differs from the report revision.** -> Recover it from corpus
-  manifests and run evidence. If it remains unknown, qualify or reject the affected mapping rather than
-  substituting the current tree.
-- **Controlled writer code differs from the current source.** -> Use the recorded controlled source
-  revision and provenance, not current implementation intent.
+- **A corpus contains several producer revisions.** -> Preserve the full denominator, use the latest
+  recorded revision as representative, and publish the mixed-revision limitation as a qualification.
+- **The latest recorded producer object is no longer recoverable.** -> Use the latest recoverable
+  recorded producer tree, check it against persisted task/stage rows, and add a source-recovery
+  qualification rather than substituting the current tree.
+- **Controlled writer code differs from the current source.** -> Use the selected historical producer
+  revision and persisted evidence, not current implementation intent.
 - **The schemas support a common outcome but not common eligibility.** -> Publish a qualified,
   denominator-explicit descriptive comparison and prohibit paired or causal language.
 - **A table row disagrees with the approved adapter.** -> Treat the table or mapping as defective and
