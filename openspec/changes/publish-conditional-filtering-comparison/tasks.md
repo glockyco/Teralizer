@@ -31,5 +31,5 @@
 
 - [x] 5.1 Run `openspec validate publish-conditional-filtering-comparison --strict`, `lefthook run pre-commit --all-files`, and `git diff --check`.
 - [x] 5.2 Review the implementation, tests, generated artifacts, and provenance together; confirm that no combined effect, overall-success rate, project-applicability claim, or new reader-facing filtering term entered the producer.
-- [ ] 5.3 Record the stable metric keys, values, populations, denominators, corpus snapshots, producer revision, generated artifact identities, approved RQ6 framing, prohibited interpretations, and required semantic-review gate for the downstream thesis reconciliation change.
-- [ ] 5.4 Archive and synchronize this producer change only after every task and verification gate passes; update the thesis planning artifacts in a separate thesis-repository change before editing RQ6 prose.
+- [x] 5.3 Record the stable metric keys, values, populations, denominators, corpus snapshots, producer revision, generated artifact identities, approved RQ6 framing, prohibited interpretations, and required semantic-review gate for the downstream thesis reconciliation change.
+- [x] 5.4 Confirm this producer change is ready for the separate synchronization and archive workflow; update the thesis planning artifacts in a separate thesis-repository change before editing RQ6 prose.

@@ -103,3 +103,16 @@ A complete registered report run against the declared controlled and real-world 
 6. Defer thesis prose edits until the separate RQ6 semantic review approves exact wording and placement.
 
 Rollback removes the controlled RQ6 input and the eight dependent metrics, table cells, macros, and handoff entries together. Existing real-world RQ6 evidence remains unchanged.
+
+## Thesis Handoff
+
+The clean producer run used implementation revision `9f18b49c27c992ed54ae0345cf38f43e795b2f3c`. Its inputs were controlled corpus `controlled` in `postgres_dev` with 13 of 13 projects and real-world corpus `real-world` in `postgres_reporeapers_rq6_v7` with 1,161 of 1,161 projects, `data/reporeapers-rerun-v7`, and `project-configs/replication/extended`.
+
+The generated evidence is:
+
+- controlled: 11,597 retained, 2,207 excluded, 13,804 total, 84.0%;
+- RepoReapers: 1,615 retained, 420 excluded, 2,035 total, 79.4%;
+- `analysis/reports/provenance.json`: SHA-256 `c4e854923dd22a47ee077ee26ace08b11bc58c9119309af663df5feb668d250f`;
+- `analysis/build/macros.tex`: SHA-256 `7a160af54e1e7511f84811ad644c75faa73ec6e93eb84086bdcb76ee72b94ae1`.
+
+The downstream thesis change may use the eight stable keys in Decision 3. The approved argument-level frame is that filtering retains a similar proportion in both settings and the larger real-world loss occurs during generalized test creation. The handoff does not approve final prose, a thesis-wide headline, overall generalization success, project applicability, a paired-project effect, or causal attribution. The RQ6 semantic review must approve exact wording and placement before thesis prose changes.
