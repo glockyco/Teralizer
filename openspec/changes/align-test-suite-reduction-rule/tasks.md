@@ -15,5 +15,5 @@
 - [x] 3.1 Run the focused database-view test and confirm all single-, complete-multi-, partial-multi-, and redundant-generalization cases.
 - [x] 3.2 Query the finalized controlled database read-only to compare current and corrected removal identities and RQ3 measures.
 - [x] 3.3 Run `nix develop --command ./gradlew build`.
-- [ ] 3.4 Run `nix develop --command scripts/verify-pipeline.sh` once for the completed change wave.
-- [ ] 3.5 Run `nix develop --command lefthook run pre-commit --all-files`.
+- [x] 3.4 Run `nix develop --command scripts/verify-pipeline.sh` once for the completed change wave.
+- [x] 3.5 Run `nix develop --command lefthook run pre-commit --all-files`.
