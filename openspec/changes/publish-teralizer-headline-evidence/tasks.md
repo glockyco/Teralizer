@@ -26,11 +26,11 @@
 - [x] 4.4 Run the complete registered report set once against the recorded producer inputs and inspect the emitted headline values and denominators.
 - [x] 4.5 Update the generated tracked report and provenance artifacts and inspect the run-owned aggregate macro artifact from that single report run.
 - [x] 4.6 Run `uv run --directory analysis pytest`, `uv run --directory analysis ruff check .`, and `uv run --directory analysis ty check .`.
-- [ ] 4.7 Run `openspec validate publish-teralizer-headline-evidence --strict` and `lefthook run pre-commit --all-files`.
+- [x] 4.7 Run `openspec validate publish-teralizer-headline-evidence --strict` and `lefthook run pre-commit --all-files`.
 
 ## 5. Hand Off to Thesis Wording
 
-- [ ] 5.1 Record the four evidence dimensions, stable metric keys, values, populations, denominators, corpus snapshots, and producer commit in the thesis reconciliation change.
-- [ ] 5.2 Keep effectiveness and applicability marked primary and demonstrated output and mechanism insight marked supporting in the handoff.
-- [ ] 5.3 Block thesis abstract and repeated-summary edits until the separate wording-review session resolves reader-facing language and placement.
-- [ ] 5.4 Review implementation, tests, generated artifacts, and the thesis handoff together before archiving this producer change.
+- [x] 5.1 Record the four evidence dimensions, stable metric keys, values, populations, denominators, corpus snapshots, and producer commit in the thesis reconciliation change.
+- [x] 5.2 Keep effectiveness and applicability marked primary and demonstrated output and mechanism insight marked supporting in the handoff.
+- [x] 5.3 Block thesis abstract and repeated-summary edits until the separate wording-review session resolves reader-facing language and placement.
+- [x] 5.4 Review implementation, tests, generated artifacts, and the thesis handoff together before archiving this producer change.
