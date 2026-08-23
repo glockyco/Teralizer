@@ -33,18 +33,27 @@ A release has two audiences with different trust boundaries. Maintainers need to
 
 ### 0. Release inputs freeze only after their owners are accepted
 
-Release assembly begins after every producer contract it consumes is validated, synced, and archived. `make-report-runs-explicit` owns complete registered runs and their artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `consolidate-repository-knowledge` owns exclusion-accounting semantics. `declare-published-artifacts` owns declared consumer delivery. `materialize-exclusion-evidence` owns the finalized mechanism, denominator, and retained claim-facing RQ6 surface.
+Release assembly begins after every producer contract it consumes is validated, synced, and archived. `make-report-runs-explicit` owns complete registered runs and their artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `consolidate-repository-knowledge` owns exclusion-accounting semantics. `declare-published-artifacts` owns declared consumer delivery. `materialize-exclusion-evidence` owns the normalized mechanism, denominator, and retained claim-facing RQ6 surface. `publish-teralizer-headline-evidence` owns the four typed headline dimensions. `publish-conditional-filtering-comparison` owns the bounded controlled and RepoReapers filtering-retention evidence.
 
 The archived prerequisites are consumed at exact accepted revisions: `consolidate-evaluation-databases`
 at `edf5ae290a0659266fec28530c4873ab0db0a808`, `make-report-runs-explicit` at
 `6409d66588c271ffdcd4b75229319fa7459579da`, `separate-report-values-from-presentation` at
 `2cb26ea0f852c0163a0805dd06d464399e6787ee`, `consolidate-repository-knowledge` at
-`4042046a87e67048cdde506642320435a5865759`, and `declare-published-artifacts` at
-`595db740d4a8e2c860d5e658e9e0755467c54a33`. These are separately verified gates, not one aggregate
-planning checkbox. The release freezes the registered report run only after
-`materialize-exclusion-evidence` is also accepted. It rejects an active change directory, dirty producer
-revision, mutable build directory, or intermediate manifest as release evidence. This change consumes
-those authorities and does not reopen or duplicate them.
+`4042046a87e67048cdde506642320435a5865759`, `declare-published-artifacts` at
+`595db740d4a8e2c860d5e658e9e0755467c54a33`, `materialize-exclusion-evidence` at
+`6a0af0a526162e13e20aab11cf1756bec15f4426`, `publish-teralizer-headline-evidence` at
+`d1b2364ee1ed76c27d23c7632677af5833a82842`, and `publish-conditional-filtering-comparison` at
+`08c8cd8a9c136bba3a2e27bb2961943c1c5d5e73`. These are separately verified gates, not one aggregate
+planning checkbox.
+
+The latest complete registered report snapshot was generated from clean source revision
+`9f18b49c27c992ed54ae0345cf38f43e795b2f3c` and committed at
+`9517f255ac5b515be69a75a921f4f247ef12ceea`. Its `analysis/reports/provenance.json` SHA-256 is
+`c4e854923dd22a47ee077ee26ace08b11bc58c9119309af663df5feb668d250f`, and its aggregate macro artifact
+SHA-256 is `7a160af54e1e7511f84811ad644c75faa73ec6e93eb84086bdcb76ee72b94ae1`. The release input ledger must
+resolve the complete artifact manifest at that boundary. It rejects an active change directory, dirty
+producer revision, mutable build directory, or intermediate manifest as release evidence. This change
+consumes those authorities and does not reopen or duplicate them.
 
 ### 1. Release assembly consumes three existing authorities
 
@@ -236,7 +245,7 @@ Reduced and full collection are not final-candidate acceptance reruns. Their sta
 
 ## Migration Plan
 
-1. Consume the archived corpus, report-run, rendering, repository-authority, and artifact-delivery contracts. Finish, validate, and archive `materialize-exclusion-evidence`; do not begin release assembly from a provisional report set.
+1. Completed: consume the archived corpus, report-run, rendering, repository-authority, artifact-delivery, exclusion-evidence, headline-evidence, and filtering-comparison contracts. Freeze the latest complete registered report snapshot named in Decision 0; do not begin release assembly from an earlier or provisional report set.
 2. Freeze a declaration-derived input ledger. Resolve every `ReportSpec` corpus and file input, all producing source and submodule bytes, all project/config inputs, and every output. Reconcile the JARVIS completion and source-cache path mismatches, retain selected value logs, regenerate and retain raw CUT captures, and prove the compact evidence lineage before archive work.
 3. Introduce the release declaration and schemas, then build fixture component/release manifests and atomic archive assembly without changing the published version. Include the five fixed project scopes and prove that real-world sample is an exact subset of full.
 4. Add embedded per-source provenance and prove report generation from a Git-free fixture release.
