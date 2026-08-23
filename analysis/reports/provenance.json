@@ -64,8 +64,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "4ad36abd138b3163402bd5dd8c01e63c0ba0a432"
+      "dirty": true,
+      "source_commit": "600c4814b9f7aef1af68743fdb294d58f61d8809"
     },
     "tables": {
       "tab-dataset-statistics": {
@@ -2187,8 +2187,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "4ad36abd138b3163402bd5dd8c01e63c0ba0a432"
+      "dirty": true,
+      "source_commit": "600c4814b9f7aef1af68743fdb294d58f61d8809"
     },
     "tables": {
       "rq0-breadth-summary": {
@@ -2451,8 +2451,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "4ad36abd138b3163402bd5dd8c01e63c0ba0a432"
+      "dirty": true,
+      "source_commit": "600c4814b9f7aef1af68743fdb294d58f61d8809"
     },
     "tables": {
       "tab-detections-per-mutator": {
@@ -2529,8 +2529,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "4ad36abd138b3163402bd5dd8c01e63c0ba0a432"
+      "dirty": true,
+      "source_commit": "600c4814b9f7aef1af68743fdb294d58f61d8809"
     },
     "tables": {
       "tab-mutation-detection-comparison": {
@@ -2631,8 +2631,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "4ad36abd138b3163402bd5dd8c01e63c0ba0a432"
+      "dirty": true,
+      "source_commit": "600c4814b9f7aef1af68743fdb294d58f61d8809"
     },
     "tables": {
       "tab-lines-per-project": {
@@ -2804,8 +2804,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "4ad36abd138b3163402bd5dd8c01e63c0ba0a432"
+      "dirty": true,
+      "source_commit": "600c4814b9f7aef1af68743fdb294d58f61d8809"
     },
     "tables": {
       "evosuite_runtime_analysis": {
@@ -2884,8 +2884,8 @@
     "metrics": {},
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "4ad36abd138b3163402bd5dd8c01e63c0ba0a432"
+      "dirty": true,
+      "source_commit": "600c4814b9f7aef1af68743fdb294d58f61d8809"
     },
     "tables": {
       "tab-exclusions-breakdown": {
@@ -2924,6 +2924,11 @@
       {
         "key": "rq6_exclusion_mechanisms",
         "path": "build/rq6_exclusion_mechanisms.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6_filtering_comparison",
+        "path": "build/rq6_filtering_comparison.tex",
         "target": "latex"
       },
       {
@@ -2969,6 +2974,15 @@
     ],
     "figures": {},
     "inputs": {
+      "controlled": {
+        "config_dir": null,
+        "corpus_id": "controlled",
+        "data_dir": null,
+        "database": "postgres_dev",
+        "expected_projects": 13,
+        "kind": "corpus",
+        "observed_projects": 13
+      },
       "real-world": {
         "config_dir": "project-configs/replication/extended",
         "corpus_id": "real-world",
@@ -3073,7 +3087,7 @@
       "realworld.assertions_without_resolution": {
         "commit": "d3f3690dc17c9ef6cf6ffea3f15b5bddb7936ea4",
         "denominator_key": null,
-        "dirty": false,
+        "dirty": true,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -3083,7 +3097,7 @@
         },
         "qualname": "_fetch_assertions_without_resolution",
         "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT count(*) AS assertions_without_resolution\nFROM assertion a\nJOIN eligible_projects ep ON ep.id = a.project_id\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM mut_resolution_observation o\n    WHERE o.assertion_id = a.id\n)\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/d3f3690dc17c9ef6cf6ffea3f15b5bddb7936ea4/analysis/src/teralizer/eval/reports/rq6_causes.py#L59",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/d3f3690dc17c9ef6cf6ffea3f15b5bddb7936ea4/analysis/src/teralizer/eval/reports/rq6_causes.py#L60",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
@@ -4041,12 +4055,156 @@
         "value": 0.6157580283793876,
         "value_kind": "share",
         "version": "0.1.0"
+      },
+      "rq6.filtering.controlled.excluded": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "denominator_key": null,
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Generalization",
+          "input_role": "controlled",
+          "key": "rq6.filtering.controlled.excluded"
+        },
+        "qualname": "fetch_controlled_filtering",
+        "query": "\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN project p ON p.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE p.use_test_generalization\n  AND g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L178",
+        "value": 2207,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "rq6.filtering.controlled.retained": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "denominator_key": null,
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Generalization",
+          "input_role": "controlled",
+          "key": "rq6.filtering.controlled.retained"
+        },
+        "qualname": "fetch_controlled_filtering",
+        "query": "\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN project p ON p.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE p.use_test_generalization\n  AND g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L178",
+        "value": 11597,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "rq6.filtering.controlled.retained_pct": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "denominator_key": "rq6.filtering.controlled.total",
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "numerator_key": "rq6.filtering.controlled.retained",
+        "population": {
+          "entity_level": "Generalization",
+          "input_role": "controlled",
+          "key": "rq6.filtering.controlled.retained"
+        },
+        "qualname": "fetch_controlled_filtering",
+        "query": "\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN project p ON p.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE p.use_test_generalization\n  AND g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L178",
+        "value": 0.8401188061431469,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "rq6.filtering.controlled.total": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "denominator_key": null,
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Generalization",
+          "input_role": "controlled",
+          "key": "rq6.filtering.controlled.total"
+        },
+        "qualname": "fetch_controlled_filtering",
+        "query": "\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN project p ON p.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE p.use_test_generalization\n  AND g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L178",
+        "value": 13804,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "rq6.filtering.realworld.excluded": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "denominator_key": null,
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Generalization",
+          "input_role": "real-world",
+          "key": "rq6.filtering.realworld.excluded"
+        },
+        "qualname": "fetch_realworld_filtering",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN eligible_projects ep ON ep.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L191",
+        "value": 420,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "rq6.filtering.realworld.retained": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "denominator_key": null,
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Generalization",
+          "input_role": "real-world",
+          "key": "rq6.filtering.realworld.retained"
+        },
+        "qualname": "fetch_realworld_filtering",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN eligible_projects ep ON ep.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L191",
+        "value": 1615,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "rq6.filtering.realworld.retained_pct": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "denominator_key": "rq6.filtering.realworld.total",
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "numerator_key": "rq6.filtering.realworld.retained",
+        "population": {
+          "entity_level": "Generalization",
+          "input_role": "real-world",
+          "key": "rq6.filtering.realworld.retained"
+        },
+        "qualname": "fetch_realworld_filtering",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN eligible_projects ep ON ep.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L191",
+        "value": 0.7936117936117936,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "rq6.filtering.realworld.total": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "denominator_key": null,
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Generalization",
+          "input_role": "real-world",
+          "key": "rq6.filtering.realworld.total"
+        },
+        "qualname": "fetch_realworld_filtering",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN eligible_projects ep ON ep.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L191",
+        "value": 2035,
+        "value_kind": "count",
+        "version": "0.1.0"
       }
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "4ad36abd138b3163402bd5dd8c01e63c0ba0a432"
+      "dirty": true,
+      "source_commit": "600c4814b9f7aef1af68743fdb294d58f61d8809"
     },
     "tables": {
       "rq6_exclusion_mechanisms": {
@@ -4073,6 +4231,21 @@
         ],
         "source_url": "https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536",
         "value": "Included entities and exclusion mechanisms for {entity.variant.improved_c}, with shares of each entity-level population.",
+        "version": "0.1.0"
+      },
+      "rq6_filtering_comparison": {
+        "commit": "600c4814b9f7aef1af68743fdb294d58f61d8809",
+        "dirty": true,
+        "module": "teralizer.eval.reports._filtering_comparison",
+        "qualname": "build_filtering_comparison_table",
+        "query": "\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN project p ON p.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE p.use_test_generalization\n  AND g.variant = :variant\nORDER BY g.id, fr.id\n\n-- RepoReapers\n\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT\n    g.id AS generalization_id,\n    g.exclusion_info,\n    fr.id AS filter_result_id,\n    fr.filter_name,\n    fr.decision\nFROM generalization g\nJOIN eligible_projects ep ON ep.id = g.project_id\nLEFT JOIN filter_result fr\n    ON fr.generalization_id = g.id\n   AND fr.filter_name ~ :filter_class_pattern\nWHERE g.variant = :variant\nORDER BY g.id, fr.id\n",
+        "row_key": "dataset_key",
+        "row_keys": [
+          "controlled",
+          "realworld"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L227",
+        "value": "Filtering results for controlled and RepoReapers generalized tests.",
         "version": "0.1.0"
       },
       "rq6_generalization_funnel": {

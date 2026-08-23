@@ -18,6 +18,7 @@ from teralizer.eval.model import (
 from teralizer.eval.provenance import Provenance, capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.eval.reports import _exclusion_evidence as exclusion
+from teralizer.eval.reports import _filtering_comparison as filtering_comparison
 from teralizer.eval.reports import _funnel
 from teralizer.eval.reports import _generalization_funnel as generation_funnel
 from teralizer.eval.reports._causes_common import (
@@ -62,8 +63,10 @@ def _fetch_assertions_without_resolution(conn: Connection, variant: str) -> int:
     return int(df["assertions_without_resolution"].iloc[0])
 
 
-def _population(key: str, entity_level: str) -> MetricPopulation:
-    return MetricPopulation(key, entity_level, "real-world")
+def _population(
+    key: str, entity_level: str, input_role: str = "real-world"
+) -> MetricPopulation:
+    return MetricPopulation(key, entity_level, input_role)
 
 
 def _count_metric(
@@ -71,6 +74,7 @@ def _count_metric(
     value: int,
     entity_level: str,
     provenance: Provenance,
+    input_role: str = "real-world",
 ) -> Metric:
     return Metric(
         key,
@@ -78,7 +82,7 @@ def _count_metric(
         fmt="count",
         provenance=provenance,
         kind=ValueKind.COUNT,
-        population=_population(key, entity_level),
+        population=_population(key, entity_level, input_role),
     )
 
 
@@ -89,6 +93,7 @@ def _share_metric(
     denominator_key: str,
     entity_level: str,
     provenance: Provenance,
+    input_role: str = "real-world",
 ) -> Metric:
     return Metric(
         key,
@@ -96,10 +101,69 @@ def _share_metric(
         fmt="pct1",
         provenance=provenance,
         kind=ValueKind.SHARE,
-        population=_population(numerator_key, entity_level),
+        population=_population(numerator_key, entity_level, input_role),
         numerator_key=numerator_key,
         denominator_key=denominator_key,
     )
+
+
+def _filtering_metrics(
+    dataset: str,
+    input_role: str,
+    summary: filtering_comparison.FilteringSummary,
+    provenance: Provenance,
+) -> list[Metric]:
+    prefix = f"rq6.filtering.{dataset}"
+    total_key = f"{prefix}.total"
+    retained_key = f"{prefix}.retained"
+    return [
+        _count_metric(
+            total_key,
+            summary.total,
+            "Generalization",
+            provenance,
+            input_role,
+        ),
+        _count_metric(
+            retained_key,
+            summary.retained,
+            "Generalization",
+            provenance,
+            input_role,
+        ),
+        _count_metric(
+            f"{prefix}.excluded",
+            summary.excluded,
+            "Generalization",
+            provenance,
+            input_role,
+        ),
+        _share_metric(
+            f"{prefix}.retained_pct",
+            float(summary.retained_share),
+            retained_key,
+            total_key,
+            "Generalization",
+            provenance,
+            input_role,
+        ),
+    ]
+
+
+def _validate_filtering_funnel(
+    summary: filtering_comparison.FilteringSummary,
+    funnel: generation_funnel.GeneralizationFunnel,
+) -> None:
+    expected = (
+        funnel.counts[generation_funnel.PopulationKey.FILTER_ADJUDICATED],
+        funnel.counts[generation_funnel.PopulationKey.FILTER_PASSED],
+    )
+    observed = (summary.total, summary.retained)
+    if observed != expected:
+        raise exclusion.ExclusionEvidenceError(
+            "RepoReapers filtering comparison disagrees with the generalization funnel: "
+            f"observed={observed}, expected={expected}"
+        )
 
 
 def _validate_final_usable_projects(
@@ -157,6 +221,12 @@ def _stage_metrics(
     return metrics
 
 
+FILTERING_METRIC_KEYS = frozenset(
+    f"rq6.filtering.{dataset}.{suffix}"
+    for dataset in ("controlled", "realworld")
+    for suffix in ("total", "retained", "excluded", "retained_pct")
+)
+
 RETAINED_METRIC_KEYS = frozenset(
     {
         "realworld.selected_projects",
@@ -201,12 +271,14 @@ RETAINED_METRIC_KEYS = frozenset(
         for slug, _ in WIDENING_REFUSALS.values()
         for suffix in ("", "_pct")
     }
+    | FILTERING_METRIC_KEYS
 )
 
 RETAINED_TABLE_KEYS = frozenset(
     {
         "tab-processing-failures",
         "rq6_generalization_funnel",
+        "rq6_filtering_comparison",
         "rq6_jpf_exception_causes",
         "rq6_mut_choice_sensitivity",
         "rq6_exclusion_mechanisms",
@@ -242,8 +314,36 @@ def validate_retained_consumers(report: RQReport) -> None:
 
 def build(context: ReportContext) -> RQReport:
     conn = context.corpus("real-world")
+    controlled_conn = context.corpus("controlled")
     variant = _funnel.resolve_variant(conn)
     exclusion.validate_evidence(conn, variant)
+    controlled_filtering_provenance = capture(
+        filtering_comparison.fetch_controlled_filtering,
+        query=filtering_comparison.CONTROLLED_FILTERING_SQL,
+    )
+    realworld_filtering_provenance = capture(
+        filtering_comparison.fetch_realworld_filtering,
+        query=filtering_comparison.REALWORLD_FILTERING_SQL,
+    )
+    controlled_filtering = filtering_comparison.summarize_filtering(
+        filtering_comparison.fetch_controlled_filtering(controlled_conn)
+    )
+    realworld_filtering = filtering_comparison.summarize_filtering(
+        filtering_comparison.fetch_realworld_filtering(conn, variant)
+    )
+    filtering_table_provenance = capture(
+        filtering_comparison.build_filtering_comparison_table,
+        query=(
+            filtering_comparison.CONTROLLED_FILTERING_SQL
+            + "\n-- RepoReapers\n"
+            + filtering_comparison.REALWORLD_FILTERING_SQL
+        ),
+    )
+    filtering_comparison_table = filtering_comparison.build_filtering_comparison_table(
+        controlled_filtering,
+        realworld_filtering,
+        filtering_table_provenance,
+    )
     funnel = _funnel.build_funnel(conn, variant=variant)
     generation_funnel_provenance = capture(
         generation_funnel.build_generalization_funnel,
@@ -252,6 +352,7 @@ def build(context: ReportContext) -> RQReport:
     generalizations_funnel = generation_funnel.build_generalization_funnel(
         conn, variant, generation_funnel_provenance
     )
+    _validate_filtering_funnel(realworld_filtering, generalizations_funnel)
     final_usable_project_ids = generalizations_funnel.project_ids[
         generation_funnel.PopulationKey.FINAL_USABLE
     ]
@@ -470,6 +571,22 @@ def build(context: ReportContext) -> RQReport:
             funnel_provenance,
         ),
     ]
+    metrics.extend(
+        _filtering_metrics(
+            "controlled",
+            "controlled",
+            controlled_filtering,
+            controlled_filtering_provenance,
+        )
+    )
+    metrics.extend(
+        _filtering_metrics(
+            "realworld",
+            "real-world",
+            realworld_filtering,
+            realworld_filtering_provenance,
+        )
+    )
     metrics.extend(_stage_metrics(funnel, funnel_provenance))
     jpf_rows = int(jpf_exception_data["count"].sum())
     jpf_unparsed = int(
@@ -547,6 +664,12 @@ def build(context: ReportContext) -> RQReport:
             ),
             funnel.table,
             Prose(
+                "Filtering results use generalized tests that reach filtering as "
+                "each dataset's denominator. They do not measure overall success "
+                "or project applicability."
+            ),
+            filtering_comparison_table,
+            Prose(
                 "Generalization attempts are reported separately from emitted, "
                 "filter-adjudicated, validated, reduced, and final-usable tests. "
                 "A missing independent task record remains unknown."
@@ -587,5 +710,15 @@ def build(context: ReportContext) -> RQReport:
 
 register(
     "rq6",
-    ReportSpec(build, (CorpusInputSpec("real-world", "real-world"),)),
+    ReportSpec(
+        build,
+        (
+            CorpusInputSpec("real-world", "real-world"),
+            CorpusInputSpec(
+                "controlled",
+                "controlled",
+                filtering_comparison.CONTROLLED_REQUIRES,
+            ),
+        ),
+    ),
 )

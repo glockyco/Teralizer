@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import text
 
 from teralizer.eval.inputs import CorpusInputSpec
+from teralizer.eval.macros import macro_name
 from teralizer.eval.model import BuiltReport, ValueKind
 from teralizer.eval.reports import _exclusion_evidence as exclusion
 from teralizer.eval.reports import _funnel
@@ -18,9 +19,12 @@ from teralizer.eval.reports._causes_common import MECHANISM_COLLAPSE
 def test_rq6_has_funnel_and_shared_tables(rq6_report):
     report = rq6_report
     assert report.rq == "rq6"
-    input_spec = get("rq6").inputs[0]
-    assert isinstance(input_spec, CorpusInputSpec)
-    assert (input_spec.role, input_spec.corpus_id) == ("real-world", "real-world")
+    input_specs = get("rq6").inputs
+    assert all(isinstance(input_spec, CorpusInputSpec) for input_spec in input_specs)
+    assert [(input_spec.role, input_spec.corpus_id) for input_spec in input_specs] == [
+        ("real-world", "real-world"),
+        ("controlled", "controlled"),
+    ]
     labels = {t.label for t in report.tables()}
     assert any("processing-failures" in lbl for lbl in labels)
     assert any("exclusions-breakdown" in lbl for lbl in labels)
@@ -30,6 +34,7 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
     assert {table.key for table in report.tables()} == {
         "tab-processing-failures",
         "rq6_generalization_funnel",
+        "rq6_filtering_comparison",
         "rq6_exclusion_mechanisms",
         "tab-exclusions-breakdown-extended",
         "tab-exclusions-filtering-extended",
@@ -338,12 +343,45 @@ def test_rq6_widening_headline_uses_all_attempts(rq6_report):
     assert "\\TzRealworldWideningRefusalsPct" in tex
 
 
+def test_rq6_filtering_comparison_preserves_corpus_local_denominators(rq6_report):
+    report = rq6_report
+    expected = {
+        "controlled": (13_804, 11_597, 2_207),
+        "realworld": (2_035, 1_615, 420),
+    }
+    for dataset, (total, retained, excluded) in expected.items():
+        prefix = f"rq6.filtering.{dataset}"
+        total_metric = report.metric(f"{prefix}.total")
+        retained_metric = report.metric(f"{prefix}.retained")
+        excluded_metric = report.metric(f"{prefix}.excluded")
+        rate = report.metric(f"{prefix}.retained_pct")
+        assert (total_metric.value, retained_metric.value, excluded_metric.value) == (
+            total,
+            retained,
+            excluded,
+        )
+        assert retained + excluded == total
+        assert rate.numerator_key == retained_metric.key
+        assert rate.denominator_key == total_metric.key
+        assert rate.population == retained_metric.population
+        assert float(rate.value) == pytest.approx(retained / total)
+
+    table = next(
+        table for table in report.tables() if table.key == "rq6_filtering_comparison"
+    )
+    assert table.df["dataset_key"].tolist() == ["controlled", "realworld"]
+    assert table.df["dataset_key"].is_unique
+    tex = render_macros(report)
+    for key in rq6_causes.FILTERING_METRIC_KEYS:
+        assert tex.count(f"\\newcommand{{\\{macro_name(key)}}}") == 1
+
+
 def test_rq6_metrics_have_population_denominator_and_provenance(rq6_report):
     rq6_report.validate_metric_relations(require_metadata=True)
     for metric in rq6_report.metrics:
         assert metric.kind is not None
         assert metric.population is not None
-        assert metric.population.input_role == "real-world"
+        assert metric.population.input_role in {"real-world", "controlled"}
         assert metric.provenance is not None
         if metric.fmt == "pct1":
             assert metric.numerator_key is not None

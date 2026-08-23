@@ -34,6 +34,19 @@ _Eligible projects: 584. Stage 1 + 2: 584 entering, 182 included (31.2%), 402 ex
 
 source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/_funnel.py#L378)
 
+Filtering results use generalized tests that reach filtering as each dataset's denominator. They do not measure overall success or project applicability.
+
+**Filtering results for controlled and RepoReapers generalized tests.**
+
+| Dataset | Total | Retained | Excluded | Retained share |
+| --- | --- | --- | --- | --- |
+| Controlled | 13,804 | 11,597 | 2,207 | 84.0% |
+| RepoReapers | 2,035 | 1,615 | 420 | 79.4% |
+
+_Each share uses the generalized tests with a filtering result in that dataset as its denominator._
+
+source: [`build_filtering_comparison_table`](https://github.com/glockyco/Teralizer/blob/600c4814b9f7aef1af68743fdb294d58f61d8809/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L227)
+
 Generalization attempts are reported separately from emitted, filter-adjudicated, validated, reduced, and final-usable tests. A missing independent task record remains unknown.
 
 **Observed generalized-test populations for Improved (200 tries). Unknown means that no independent task record proves the reported failure stage ran.**
