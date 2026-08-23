@@ -28,7 +28,9 @@ on:
       - 'analysis/uv.lock'
       - 'scripts/corpus-registry'
       - 'scripts/lib/psql.sh'
+      - 'scripts/check-generalization-effects.sh'
       - 'verification/fixtures/corpus-package/projects.sql'
+      - 'verification/fixtures/generalization-effects.sql'
       - 'flake.nix'
       - 'flake.lock'
   pull_request:
@@ -47,7 +49,9 @@ on:
       - 'analysis/uv.lock'
       - 'scripts/corpus-registry'
       - 'scripts/lib/psql.sh'
+      - 'scripts/check-generalization-effects.sh'
       - 'verification/fixtures/corpus-package/projects.sql'
+      - 'verification/fixtures/generalization-effects.sql'
       - 'flake.nix'
       - 'flake.lock'
   workflow_dispatch:
@@ -160,6 +164,10 @@ jobs:
           fi
           if [[ "$installed_revision" != "$expected_revision" ]]; then
             fail "matching installed revision $installed_revision to expected $expected_revision"
+          fi
+
+          if ! scripts/check-generalization-effects.sh; then
+            fail 'verifying assertion-complete test-suite reduction'
           fi
 
           if ! report_projects="$(DB_USER="$REPORT_DB_USER" \

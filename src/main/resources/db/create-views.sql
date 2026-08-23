@@ -1156,6 +1156,7 @@ WITH
             nkm.b_variant,
             nkm.killing_generalization_id AS generalization_id,
             min(g.test_id) AS test_id,
+            min(g.assertion_id) AS assertion_id,
             min(nkm.killing_line_count) AS line_count,
             min(ge.runtime) AS runtime
         FROM newly_killed_mutations nkm
@@ -1163,18 +1164,36 @@ WITH
         JOIN mv_generalization_extension ge ON nkm.killing_generalization_id = ge.generalization_id
         GROUP BY 1, 2, 3, 4
     ),
-    generalized_tests AS (
+    assertion_counts AS (
         SELECT
-            kg.project_id,
-            kg.a_variant,
-            kg.b_variant,
-            kg.test_id,
-            t.line_count,
-            te.runtime,
-            (SELECT count(*) FROM assertion a WHERE a.test_id = kg.test_id) AS assertions
-        FROM killing_generalizations kg
-        JOIN test t ON kg.test_id = t.id
-        JOIN mv_test_extension te ON kg.test_id = te.test_id AND te.variant = kg.a_variant
+            test_id,
+            count(*) AS assertions
+        FROM assertion
+        GROUP BY test_id
+    ),
+    represented_assertions AS (
+        SELECT DISTINCT
+            project_id,
+            a_variant,
+            b_variant,
+            test_id,
+            assertion_id
+        FROM killing_generalizations
+    ),
+    replaceable_tests AS (
+        SELECT
+            ra.project_id,
+            ra.a_variant,
+            ra.b_variant,
+            ra.test_id,
+            min(t.line_count) AS line_count,
+            min(te.runtime) AS runtime
+        FROM represented_assertions ra
+        JOIN assertion_counts ac ON ra.test_id = ac.test_id
+        JOIN test t ON ra.test_id = t.id
+        JOIN mv_test_extension te ON ra.test_id = te.test_id AND te.variant = ra.a_variant
+        GROUP BY ra.project_id, ra.a_variant, ra.b_variant, ra.test_id, ac.assertions
+        HAVING ac.assertions > 0 AND count(*) = ac.assertions
     ),
     base_data AS (
         SELECT
@@ -1199,18 +1218,17 @@ WITH
     ),
     test_data AS (
         SELECT
-            gt.project_id,
-            gt.a_variant,
-            gt.b_variant,
-            count(*) AS tests,
-            sum(CASE WHEN assertions = 1 THEN 1 ELSE 0 END) AS tests_replaceable,
-            sum(gt.line_count) AS test_lines,
-            coalesce(sum(gt.line_count) FILTER (WHERE gt.assertions = 1), 0) AS test_lines_replaceable,
-            coalesce(sum(gt.line_count) FILTER (WHERE gt.assertions > 1), 0) AS test_lines_non_replaceable,
-            sum(gt.runtime) AS test_runtime,
-            coalesce(sum(gt.runtime) FILTER (WHERE gt.assertions = 1), 0) AS test_runtime_replaceable,
-            coalesce(sum(gt.runtime) FILTER (WHERE gt.assertions > 1), 0) AS test_runtime_non_replaceable
-        FROM generalized_tests gt
+            bd.project_id,
+            bd.a_variant,
+            bd.b_variant,
+            count(rt.test_id) AS tests_replaceable,
+            coalesce(sum(rt.line_count), 0) AS test_lines_replaceable,
+            coalesce(sum(rt.runtime), 0) AS test_runtime_replaceable
+        FROM base_data bd
+        LEFT JOIN replaceable_tests rt
+            ON bd.project_id = rt.project_id
+            AND bd.a_variant = rt.a_variant
+            AND bd.b_variant = rt.b_variant
         GROUP BY 1, 2, 3
     ),
     test_counts AS (
