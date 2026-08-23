@@ -85,9 +85,9 @@ def test_headline_metrics_are_unique_in_macros_and_provenance(
 
 
 def test_filtering_metrics_publish_once_without_becoming_headlines(
-    build_report, tmp_path: Path
+    rq6_report, tmp_path: Path
 ):
-    report = build_report("rq6")
+    report = rq6_report
     macros = render_macros(report)
     manifest = build_manifest(
         BuiltReport(report, ()),
