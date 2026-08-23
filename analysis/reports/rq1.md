@@ -16,13 +16,13 @@ _Source database: `postgres_dev`._
 | Commons-ES (60 s) | 2,326 (85.0%) | 112 (45.3%) | 8,354 | 8,109 (97.1%) | 245 (2.9%) |
 | Commons Utils | 461 (63.6%) | 90 (36.4%) | 8,096 | 5,215 (64.4%) | 2,881 (35.6%) |
 
-source: [`compute_project_mutation_coverage`](https://github.com/glockyco/Teralizer/blob/ed66703916b0bdce0cd692d3c2fb8698ad597817/analysis/src/teralizer/rq1_mutation_detection.py#L384)
+source: [`compute_project_mutation_coverage`](https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L386)
 
 ![Mutation detection rates and improvements across projects and variants.](figures/rq1/mutation_detection_comparison.png)
 
 **Mutation detection rates and improvements across projects and variants.**
 
-source: [`compute_detection_improvements`](https://github.com/glockyco/Teralizer/blob/ed66703916b0bdce0cd692d3c2fb8698ad597817/analysis/src/teralizer/rq1_mutation_detection.py#L406)
+source: [`compute_detection_improvements`](https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L408)
 
 **Number of mutants and percentage of detections per mutator in EqBench-ES and Commons projects.**
 
@@ -41,4 +41,4 @@ source: [`compute_detection_improvements`](https://github.com/glockyco/Teralizer
 | BooleanFalseReturnVals | 250 | 0.24 | 87.87 | 87.87 | — | 87.87 | — |
 | EmptyObjectReturnVals | 141 | 0.13 | 90.30 | 90.30 | — | 90.30 | — |
 
-source: [`compute_mutator_statistics`](https://github.com/glockyco/Teralizer/blob/ed66703916b0bdce0cd692d3c2fb8698ad597817/analysis/src/teralizer/rq1_mutation_detection.py#L306)
+source: [`compute_mutator_statistics`](https://github.com/glockyco/Teralizer/blob/b04623b632b0539dc516c39839662b43bc0c80ea/analysis/src/teralizer/rq1_mutation_detection.py#L308)

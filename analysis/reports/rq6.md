@@ -50,7 +50,7 @@ Generalization attempts are reported separately from emitted, filter-adjudicated
 
 _A lifecycle failure stage without a matching task record remains unknown; later failure labels are not treated as attempt evidence._
 
-source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L268)
+source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/d3f3690dc17c9ef6cf6ffea3f15b5bddb7936ea4/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L276)
 
 Generic JPF uncaught-exception diagnostics are reclassified from their retained detail into application exceptions and JPF environment gaps.
 
@@ -146,4 +146,4 @@ The reader-facing filtering column combines filter decisions, generation-gate re
 
 _Refusals are decided before a generalized test is written, so they carry no filter decision and no lifecycle record._
 
-source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/2fc87b1642f4912e01d8c9dd2823e9ab1fdcea5a/analysis/src/teralizer/eval/reports/_widening.py#L98)
+source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/d3f3690dc17c9ef6cf6ffea3f15b5bddb7936ea4/analysis/src/teralizer/eval/reports/_widening.py#L98)

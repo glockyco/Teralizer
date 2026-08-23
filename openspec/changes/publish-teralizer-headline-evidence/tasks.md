@@ -23,9 +23,9 @@
 - [x] 4.1 Add an integration test that asserts every approved effectiveness, applicability, real-world output, and mechanism key appears exactly once in aggregate macros and provenance.
 - [x] 4.2 Assert that no controlled-versus-real-world generalization-success comparison or composite applicability score enters the headline key set.
 - [x] 4.3 Run the focused RQ0, RQ1, RQ6, macro, and provenance tests in the pinned analysis environment.
-- [ ] 4.4 Run the complete registered report set once against the recorded producer inputs and inspect the emitted headline values and denominators.
-- [ ] 4.5 Update the generated tracked report, macro, and provenance artifacts from that single report run.
-- [ ] 4.6 Run `uv run --directory analysis pytest`, `uv run --directory analysis ruff check .`, and `uv run --directory analysis ty check .`.
+- [x] 4.4 Run the complete registered report set once against the recorded producer inputs and inspect the emitted headline values and denominators.
+- [x] 4.5 Update the generated tracked report and provenance artifacts and inspect the run-owned aggregate macro artifact from that single report run.
+- [x] 4.6 Run `uv run --directory analysis pytest`, `uv run --directory analysis ruff check .`, and `uv run --directory analysis ty check .`.
 - [ ] 4.7 Run `openspec validate publish-teralizer-headline-evidence --strict` and `lefthook run pre-commit --all-files`.
 
 ## 5. Hand Off to Thesis Wording
