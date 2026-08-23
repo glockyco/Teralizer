@@ -1,21 +1,28 @@
 ## Why
 
-The thesis retains one controlled-versus-RepoReapers comparison, but the controlled numerator,
-denominator, and rate exist only inside a rendered RQ5 table row. Without stable metric identities, the
-consumer cannot cite or publish that comparison under the accepted evidence contract.
+The thesis retains one controlled-versus-RepoReapers comparison, but RQ5 and RQ6 record generalized-test
+outcomes in different schema shapes. The controlled side exposes only a legacy terminal inclusion flag
+inside a rendered RQ5 table row, while RQ6 distinguishes attempt, emission, filter, validation, and
+reduction lifecycle states. Without an explicit evidence-backed mapping, stable metric identities alone
+would make unlike measures look comparable.
 
 ## What Changes
 
-- Emit controlled `Improved (200 tries)` generalization-inclusion numerator, denominator, and share as
-  registered RQ5 metrics with stable semantic keys.
-- Attach the `Generalization` population, controlled corpus identity, denominator key, and query
-  provenance to those metrics.
-- Derive the existing RQ5 breakdown table row and the new metrics from the same fetched result; do not
-  add a second query or duplicate the calculation.
-- Publish the metrics through the existing aggregate macro artifact so downstream consumers can use
-  generated values rather than table-position lookup or prose literals.
-- Verify that the registered report, provenance manifest, generated macros, and existing table remain
-  numerically consistent.
+- Inventory the controlled and real-world schema fields, writer semantics, eligibility rules, variant
+  selection, and lifecycle boundaries used by the retained comparison.
+- Define one normalized comparison measure and map each corpus to it independently. Classify each mapping
+  as exact, qualified, or unmappable, with executable invariants and an explicit interpretation bound.
+- Stop and present any unmappable or multiply plausible case to the operator. Do not choose the most
+  convenient signal, infer missing lifecycle state, or narrow the comparison silently.
+- Emit numerator, denominator, and share metrics for both sides from one registered cross-corpus
+  comparison implementation only after the mapping is approved.
+- Attach each side's `Generalization` population, corpus identity, denominator key, source-query
+  provenance, and mapping identity to the generated comparison.
+- Retain the existing RQ5 and RQ6 tables as their own presentations. Use table agreement as a checked
+  consequence where the mapped measure is equivalent, not as evidence that the schemas mean the same
+  thing.
+- Publish the approved comparison metrics through the existing aggregate macro artifact so downstream
+  consumers use generated values rather than table-position lookup or prose literals.
 
 ## Capabilities
 
@@ -30,8 +37,10 @@ None.
 
 ## Impact
 
-- `analysis/src/teralizer/eval/reports/rq5_causes.py` and its focused tests.
-- Registered RQ5 metric inventory, provenance output, and generated aggregate LaTeX macros.
-- The existing controlled exclusion table remains a presentation of the same source data.
-- No database schema, corpus contents, query semantics, report scheduling, or real-world RQ6 values
-  change.
+- Controlled RQ5 and real-world RQ6 report inputs, their focused evidence queries, and comparison tests.
+- Registered comparison metric inventory, provenance output, and generated aggregate LaTeX macros.
+- Existing controlled and real-world tables remain unchanged unless the mapping audit proves that a
+  current table claim is itself incorrect; that case requires operator review before scope changes.
+- No database schema, corpus contents, pipeline execution, or handwritten generated artifact changes.
+- The mapping may add read-only queries and a second declared corpus input to the owning registered
+  report. It does not alter either corpus or reinterpret an unmappable field as evidence.
