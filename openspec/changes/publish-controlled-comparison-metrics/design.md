@@ -16,6 +16,12 @@ schema shape:
   real-world eligibility CTE. The corpora contain different projects, so this is not a matched-project
   experiment.
 
+Pipeline order is also revision-dependent. Git history shows that test generation and post-processing
+were split, failing-test filtering moved relative to original-data collection, and reduction stages were
+later reordered after generalization. The thesis's clean RQ6 Stage 1-5 presentation therefore cannot be
+used as a historical execution model for RQ5. `ProcessingStage`, `PipelinePlanner`, task dependencies,
+and persisted task results at each corpus's producer commit are the executable evidence.
+
 The existing controlled row is therefore candidate evidence, not yet a normalized comparison metric.
 Equal current counts would not prove equal meaning. The accepted exclusion-accounting contract requires
 cross-corpus values to come from one registered implementation with explicit populations and source
@@ -25,15 +31,17 @@ mappings.
 
 **Goals:**
 
-- Establish the strongest comparison measure both schema shapes actually support.
-- Make every translation from stored state to that measure explicit and executable.
+- Reconstruct the actual pipeline graph at each corpus's producer commit.
+- Establish the strongest comparison measure both historical pipeline and schema shapes support.
+- Make every translation from task transition and stored state to that measure explicit and executable.
 - Distinguish exact mappings, qualified descriptive mappings, and unmappable cases.
 - Stop for operator review whenever evidence supports more than one reasonable translation.
 - Emit both sides from one registered implementation only after the mapping is approved.
 
 **Non-Goals:**
 
-- Treating a common column name or equal count as semantic equivalence.
+- Treating a common column name, stage number, current task order, or equal count as semantic equivalence.
+- Projecting the RQ6 Stage 1-5 presentation backward onto the RQ5 producer revision.
 - Inferring lifecycle stages absent from the controlled database.
 - Retrofitting controlled-run lifecycle records or changing either database.
 - Presenting disjoint corpora as paired projects or attributing a rate difference to one mechanism.
@@ -46,21 +54,31 @@ mappings.
 The first deliverable is a change-local mapping matrix with one row per candidate side. Each row records:
 
 - semantic corpus and physical input role;
-- source revision and required schema objects;
+- producer commit, report revision, and required schema objects;
+- historical `ProcessingStage` order and `PipelinePlanner` scheduling graph;
+- scheduled task dependencies and persisted success/failure evidence;
 - project eligibility predicate;
 - variant identity;
 - entity identity and denominator predicate;
 - numerator predicate;
 - writer operations that set or clear each source field;
-- lifecycle boundary the predicate proves;
+- task transition and lifecycle boundary the predicate proves;
 - contradictions and missing evidence found by executable audits;
 - mapping classification: exact, qualified, or unmappable; and
 - the interpretation wording allowed by that classification.
 
-The controlled audit traces every writer of `generalization.is_included` at the revision that produced
-the controlled database and reconciles included, filtering, and failure rows with filter and task
-evidence. The real-world audit uses the accepted eligibility, lifecycle, and mechanism relations rather
-than a same-named convenience field.
+For each side, first resolve the producer commit independently from the later report-query commit. At
+that Git tree, recover the declared processing-stage order, planner scheduling rules, task prerequisites,
+and every task that can create, reject, validate, reduce, or otherwise change a generalization outcome.
+Record a graph keyed by task and persisted transition, not by display stage number. Compare the graphs to
+identify task splits, moves, and reordered gates before inspecting similarly named columns.
+
+The controlled audit then traces every writer of `generalization.is_included` in the controlled producer
+commit and reconciles included, filtering, and failure rows with filter and task evidence. The real-world
+audit uses its producer commit's planner plus the accepted eligibility, lifecycle, and mechanism
+relations rather than a same-named convenience field. If the exact producer commit cannot be resolved,
+or a historical task transition has no persisted evidence, the affected mapping is qualified or
+unmappable; the current source tree must not fill the gap.
 
 No comparison code or metric key is finalized before this matrix is presented to and approved by the
 operator.
@@ -77,6 +95,10 @@ generated-test validation. The audit must determine whether controlled `generali
 proves one specific boundary and which RQ6 lifecycle predicate proves the same boundary. Candidate
 counterparts include filter passage and validation; the implementation must not choose between them from
 current count equality.
+
+**Alternative:** Align RQ5 and RQ6 by thesis Stage 1-5 labels or current `ProcessingStage` ordinals.
+Rejected because task placement and ordering changed between collection revisions; stage labels are
+presentation, not stable evidence identities.
 
 **Alternative:** Compare raw `is_included` values in both databases. Rejected because RQ6 explicitly
 separates that mutable flag from lifecycle evidence.
@@ -149,6 +171,11 @@ edits.
 
 - **The controlled flag has no single lifecycle meaning.** -> Mark it unmappable and discuss removal or a
   more limited measure; do not choose the closest RQ6 count.
+- **Stage names survived while task order changed.** -> Reconstruct both historical planner graphs and
+  map task transitions; never align by stage ordinal or the cleaner RQ6 presentation.
+- **The exact producer commit is missing or differs from the report revision.** -> Recover it from corpus
+  manifests and run evidence. If it remains unknown, qualify or reject the affected mapping rather than
+  substituting the current tree.
 - **Controlled writer code differs from the current source.** -> Use the recorded controlled source
   revision and provenance, not current implementation intent.
 - **The schemas support a common outcome but not common eligibility.** -> Publish a qualified,

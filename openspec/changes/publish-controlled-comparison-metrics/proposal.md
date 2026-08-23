@@ -8,8 +8,10 @@ would make unlike measures look comparable.
 
 ## What Changes
 
-- Inventory the controlled and real-world schema fields, writer semantics, eligibility rules, variant
-  selection, and lifecycle boundaries used by the retained comparison.
+- Resolve each corpus's producer commit and reconstruct its historical pipeline graph from
+  `ProcessingStage`, `PipelinePlanner`, scheduled task dependencies, and persisted outcomes. Inventory
+  schema fields, writer semantics, eligibility rules, variant selection, and lifecycle boundaries in
+  that commit rather than projecting the current Stage 1-5 organization onto RQ5.
 - Define one normalized comparison measure and map each corpus to it independently. Classify each mapping
   as exact, qualified, or unmappable, with executable invariants and an explicit interpretation bound.
 - Stop and present any unmappable or multiply plausible case to the operator. Do not choose the most
@@ -33,7 +35,8 @@ None.
 ### Modified Capabilities
 
 - `reporting/exclusion-evidence`: Requires the retained controlled comparison to expose stable,
-  denominator-explicit metric identities backed by the same evidence as the RQ5 table.
+  denominator-explicit metric identities backed by approved mappings from each corpus's historical
+  pipeline and persisted evidence.
 
 ## Impact
 

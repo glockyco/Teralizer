@@ -3,9 +3,14 @@
 ### Requirement: Cross-corpus comparisons declare a normalized evidence mapping
 
 A retained controlled-versus-real-world comparison SHALL define one normalized measure before it emits
-values. For each corpus, the mapping SHALL identify the source relation and fields, writer semantics,
+values. For each corpus, the mapping SHALL resolve the producer commit and reconstruct the pipeline graph
+that produced the data from executable stage declarations, planner scheduling, task dependencies, and
+persisted outcomes at that commit. It SHALL identify the source relation and fields, writer semantics,
 variant, eligibility rule, entity population, numerator predicate, denominator predicate, lifecycle
 boundary, and query provenance.
+
+Stage numbers, names, or current ordering SHALL NOT establish equivalence across producer revisions. A
+mapping SHALL relate the underlying task transition and persisted evidence to the normalized boundary.
 
 A mapping SHALL be classified as:
 
@@ -27,6 +32,15 @@ convenient field or inferring missing lifecycle state.
 - **AND** executable writer semantics and corpus invariants must identify one normalized lifecycle
   boundary before the mapping is exact or qualified
 - **AND** the unresolved case is presented for operator decision rather than silently mapped
+
+#### Scenario: Pipeline tasks moved between collection revisions
+
+- **WHEN** a task was split, reordered, or assigned to a different numbered stage between the controlled
+  and real-world producer commits
+- **THEN** the mapping reconstructs both historical planner graphs and task transitions
+- **AND** it compares the persisted outcome proved by those transitions rather than matching stage
+  ordinals or current task placement
+- **AND** any transition whose historical evidence cannot be reconstructed is qualified or unmappable
 
 #### Scenario: The corpora use different eligibility rules
 

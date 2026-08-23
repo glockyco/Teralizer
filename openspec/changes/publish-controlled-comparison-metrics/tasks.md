@@ -1,36 +1,44 @@
 ## 1. Audit and approve the cross-schema mapping
 
-- [ ] 1.1 Resolve the exact controlled and real-world source revisions, report input snapshots, required
-      schema objects, variant identities, and project eligibility predicates from registered provenance.
-      Do not use the current checkout as a substitute for the revision that produced either database.
-- [ ] 1.2 Trace every controlled-revision writer that initializes, clears, or interprets
-      `generalization.is_included`. Record which filters, task failures, and later stages can change it
-      and which lifecycle boundary it can prove without inference.
-- [ ] 1.3 Run read-only controlled-corpus audits that reconcile the retained `Improved (200 tries)`
-      generalization rows with filter decisions, task outcomes, exclusion information, and the RQ5
-      included/filtering/failure table partition. Record evidence that is absent from the legacy schema.
-- [ ] 1.4 Map the real-world side from the accepted eligibility, generalization-lifecycle, and exclusion
-      relations. Enumerate the attempted, emitted, filter-passed, validated, reduced, and final-usable
-      candidates and prove which predicate, if any, matches the controlled lifecycle boundary.
-- [ ] 1.5 Create the complete mapping matrix specified by the design. Classify each side and the combined
-      comparison as exact, qualified, or unmappable; record denominator and project-population
-      differences and the strongest interpretation the evidence permits.
-- [ ] 1.6 Inspect the typed metric and provenance schema to determine whether the approved mapping identity
-      and qualification survive manifest and macro publication. Propose the smallest typed metadata
-      extension if the existing model cannot preserve them.
-- [ ] 1.7 Present the source evidence, mapping matrix, qualifications, all plausible alternatives, and
-      every unmappable case to the operator. Do not edit report code until the operator approves one
-      normalized measure, its interpretation bound, and any required metadata extension.
+- [ ] 1.1 Resolve each database's exact producer commit independently from its later report-query commit,
+      plus its input snapshot, required schema objects, variant identity, and project eligibility
+      predicate. Use corpus manifests and run evidence; do not substitute the current checkout when a
+      producer revision is unknown.
+- [ ] 1.2 At the controlled producer commit, reconstruct the executable pipeline graph from
+      `ProcessingStage`, `PipelinePlanner`, scheduled tasks, prerequisites, and persisted task outcomes.
+      Record task transitions without assigning current or thesis RQ6 Stage 1-5 meanings.
+- [ ] 1.3 At the real-world producer commit, reconstruct the same executable graph and relate its cleaner
+      attempted, emitted, filter-passed, validated, reduced, and final-usable evidence to the tasks that
+      produced each transition.
+- [ ] 1.4 Diff the two historical graphs. Record every task split, move, reorder, changed prerequisite,
+      and changed persistence boundary that can affect the retained generalization denominator or
+      numerator. Stage names and ordinals are not mapping keys.
+- [ ] 1.5 Trace every controlled-revision writer that initializes, clears, or interprets
+      `generalization.is_included`, then run read-only controlled-corpus audits against filter decisions,
+      task outcomes, exclusion information, and the RQ5 table partition. Record which historical task
+      transition the flag proves and which evidence is absent.
+- [ ] 1.6 Map the real-world side from its historical planner graph and accepted eligibility, lifecycle,
+      and exclusion relations. Prove which persisted transition, if any, matches the controlled boundary
+      without relying on stage position or current count equality.
+- [ ] 1.7 Create the complete mapping matrix specified by the design. Classify each side and the combined
+      comparison as exact, qualified, or unmappable; record historical graph differences, denominator
+      and project-population differences, and the strongest interpretation the evidence permits.
+- [ ] 1.8 Inspect the typed metric and provenance schema to determine whether producer commits, mapping
+      identity, and qualification survive manifest and macro publication. Propose the smallest typed
+      metadata extension if the existing model cannot preserve them.
+- [ ] 1.9 Present both historical graphs, source evidence, mapping matrix, qualifications, all plausible
+      alternatives, and every unmappable case to the operator. Do not edit report code until the
+      operator approves one normalized measure, its interpretation bound, and any metadata extension.
 
 ## 2. Implement only the approved translation
 
 - [ ] 2.1 Add the approved mapping identity and qualification to the existing typed metric/provenance
-      model only if task 1.7 approved that extension. Do not store the qualification only in prose.
+      model only if task 1.9 approved that extension. Do not store the qualification only in prose.
 - [ ] 2.2 Implement separate read-only controlled and real-world adapters that emit the same typed
       normalized observation contract from their native schema shapes. Reject missing, duplicate,
       contradictory, or inferred source states.
 - [ ] 2.3 Make one registered comparison owner declare both corpus inputs and invoke both adapters in one
-      build. Keep existing RQ5 and RQ6 table queries and presentation unchanged unless task 1.7 approved
+      build. Keep existing RQ5 and RQ6 table queries and presentation unchanged unless task 1.9 approved
       a separately evidenced correction.
 - [ ] 2.4 Emit numerator, denominator, and share metrics for each corpus with stable keys named after the
       approved lifecycle boundary, `Generalization` population metadata, operand relations, source
