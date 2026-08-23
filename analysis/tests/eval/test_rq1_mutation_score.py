@@ -78,8 +78,10 @@ def test_rq1_headline_metrics_are_typed_provenance_bearing_macros():
     report = RQReport("rq1", "RQ1", [], metrics)
 
     assert {metric.key for metric in metrics} == EFFECTIVENESS_METRIC_KEYS
-    assert all(metric.population is not None for metric in metrics)
-    assert all(metric.population.input_role == "controlled" for metric in metrics)
+    assert all(
+        metric.population is not None and metric.population.input_role == "controlled"
+        for metric in metrics
+    )
     assert all(metric.provenance == provenance for metric in metrics)
     tex = render_macros(report)
     assert "\\TzEffectivenessEqbenchEvosuiteMutationImprovementMinPp}{1.20}" in tex
