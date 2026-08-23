@@ -7,16 +7,16 @@
 
 ## 2. Publish Real-World Output Metrics
 
-- [ ] 2.1 Extend the existing RQ6 lifecycle result to count distinct projects containing final-usable `IMPROVED_200_TRIES` generalizations without changing the accepted lifecycle predicate.
-- [ ] 2.2 Publish the final-usable generalization and project counts with typed populations, real-world input identity, source-query provenance, and aggregate macros.
-- [ ] 2.3 Fail report construction unless the final-usable project set equals the existing end-to-end applicable project set.
-- [ ] 2.4 Add focused RQ6 tests for final-usable entity counts, project-population equality, disagreement failures, and aggregate macro output.
+- [x] 2.1 Extend the existing RQ6 lifecycle result to count distinct projects containing final-usable `IMPROVED_200_TRIES` generalizations without changing the accepted lifecycle predicate.
+- [x] 2.2 Publish the final-usable generalization and project counts with typed populations, real-world input identity, source-query provenance, and aggregate macros.
+- [x] 2.3 Fail report construction unless the final-usable project set equals the existing end-to-end applicable project set.
+- [x] 2.4 Add focused RQ6 tests for final-usable entity counts, project-population equality, disagreement failures, and aggregate macro output.
 
 ## 3. Publish Mechanism Metrics
 
-- [ ] 3.1 Add the overall widening-refusal share using total widening refusals as numerator and all eligible generalization attempts as denominator; retain refusal-total denominators for branch shares.
-- [ ] 3.2 Promote the existing assertion-survival count/share and the new widening-refusal count/share to aggregate macros without duplicating their calculations.
-- [ ] 3.3 Add focused tests for value kinds, populations, numerator/denominator relations, attempt conservation, branch conservation, and aggregate macro output.
+- [x] 3.1 Add the overall widening-refusal share using total widening refusals as numerator and all eligible generalization attempts as denominator; retain refusal-total denominators for branch shares.
+- [x] 3.2 Promote the existing assertion-survival count/share and the new widening-refusal count/share to aggregate macros without duplicating their calculations.
+- [x] 3.3 Add focused tests for value kinds, populations, numerator/denominator relations, attempt conservation, branch conservation, and aggregate macro output.
 
 ## 4. Verify Headline Publication
 

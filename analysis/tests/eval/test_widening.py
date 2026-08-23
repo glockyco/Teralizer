@@ -43,7 +43,16 @@ def test_slugs_are_unique():
 
 def test_metrics_reject_a_code_the_table_does_not_know():
     df = pd.DataFrame(
-        [{"code": "NEW_REFUSAL_CODE", "cause": "?", "refusals": 1, "refusals_pct": 1.0}]
+        [
+            {
+                "code": "NEW_REFUSAL_CODE",
+                "cause": "?",
+                "refusals": 1,
+                "refusal_total": 1,
+                "refusals_pct": 1.0,
+                "attempts": 1,
+            }
+        ]
     )
     with pytest.raises(RuntimeError, match="unmapped widening refusal code"):
         widening_refusal_metrics(df, provenance=None)
@@ -56,11 +65,64 @@ def test_metrics_name_each_code_by_its_slug():
                 "code": "NULL_CONCRETE_OUTPUT_NOT_LITERAL",
                 "cause": "?",
                 "refusals": 7,
-                "refusals_pct": 0.5,
+                "refusal_total": 7,
+                "refusals_pct": 1.0,
+                "attempts": 14,
             }
         ]
     )
-    keys = {metric.key for metric in widening_refusal_metrics(df, provenance=None)}
+    metrics = widening_refusal_metrics(df, provenance=None)
+    keys = {metric.key for metric in metrics}
     assert "realworld.widening_refusal_output_not_literal" in keys
     assert "realworld.widening_refusal_output_not_literal_pct" in keys
     assert "realworld.widening_refusals" in keys
+    overall = next(
+        metric for metric in metrics if metric.key == "realworld.widening_refusals_pct"
+    )
+    assert overall.value == pytest.approx(0.5)
+    assert overall.numerator_key == "realworld.widening_refusals"
+    assert overall.denominator_key == "realworld.generalization_attempts"
+
+
+def test_metrics_reject_nonconserving_refusal_branches():
+    df = pd.DataFrame(
+        [
+            {
+                "code": "NULL_CONCRETE_OUTPUT_NOT_LITERAL",
+                "cause": "?",
+                "refusals": 1,
+                "refusal_total": 2,
+                "refusals_pct": 0.5,
+                "attempts": 3,
+            }
+        ]
+    )
+
+    with pytest.raises(RuntimeError, match="branches do not conserve"):
+        widening_refusal_metrics(df, provenance=None)
+
+
+def test_metrics_reject_inconsistent_attempt_denominators():
+    df = pd.DataFrame(
+        [
+            {
+                "code": "NULL_CONCRETE_OUTPUT_NOT_LITERAL",
+                "cause": "?",
+                "refusals": 1,
+                "refusal_total": 2,
+                "refusals_pct": 0.5,
+                "attempts": 2,
+            },
+            {
+                "code": "NULL_CONCRETE_PATH_CONDITION_NOT_COVERING_PARAMETERS",
+                "cause": "?",
+                "refusals": 1,
+                "refusal_total": 2,
+                "refusals_pct": 0.5,
+                "attempts": 3,
+            },
+        ]
+    )
+
+    with pytest.raises(RuntimeError, match="disagree on attempt count"):
+        widening_refusal_metrics(df, provenance=None)

@@ -4,11 +4,12 @@ import pytest
 from sqlalchemy import text
 
 from teralizer.eval.inputs import CorpusInputSpec
-from teralizer.eval.model import BuiltReport
+from teralizer.eval.model import BuiltReport, ValueKind
 from teralizer.eval.reports import _exclusion_evidence as exclusion
 from teralizer.eval.reports import _funnel
 
 from teralizer.eval.registry import get
+from teralizer.eval.render.latex import render_macros
 from teralizer.eval.render.markdown import render_str
 from teralizer.eval.reports import rq6_causes  # noqa: F401  (registers "rq6")
 from teralizer.eval.reports._causes_common import MECHANISM_COLLAPSE
@@ -291,6 +292,50 @@ def test_rq6_metrics_cover_applicability_and_are_well_formed(rq6_report):
     assert float(report.metric("realworld.applicability_pct").value) == pytest.approx(
         applicable / eligible_projects
     )
+
+
+def test_rq6_final_usable_output_matches_applicable_projects(rq6_report):
+    final_usable = rq6_report.metric("realworld.generalizations_final_usable")
+    final_usable_projects = rq6_report.metric("realworld.final_usable_projects")
+    applicable_projects = rq6_report.metric("realworld.applicability_projects")
+
+    assert int(final_usable.value) > int(final_usable_projects.value)
+    assert final_usable.kind is ValueKind.COUNT
+    assert final_usable.population.entity_level == "Generalization"
+    assert final_usable_projects.kind is ValueKind.COUNT
+    assert final_usable_projects.population.entity_level == "Project"
+    assert final_usable_projects.value == applicable_projects.value
+    tex = render_macros(rq6_report)
+    assert "\\TzRealworldGeneralizationsFinalUsable" in tex
+    assert "\\TzRealworldFinalUsableProjects" in tex
+
+
+def test_rq6_rejects_disagreeing_final_usable_projects():
+    with pytest.raises(
+        ValueError,
+        match=r"only_final_usable=\[3\], only_applicable=\[2\]",
+    ):
+        rq6_causes._validate_final_usable_projects(frozenset({1, 3}), frozenset({1, 2}))
+
+
+def test_rq6_widening_headline_uses_all_attempts(rq6_report):
+    refusals = rq6_report.metric("realworld.widening_refusals")
+    attempts = rq6_report.metric("realworld.generalization_attempts")
+    rate = rq6_report.metric("realworld.widening_refusals_pct")
+
+    assert rate.kind is ValueKind.SHARE
+    assert rate.population == refusals.population
+    assert rate.numerator_key == refusals.key
+    assert rate.denominator_key == attempts.key
+    assert float(rate.value) == pytest.approx(int(refusals.value) / int(attempts.value))
+    assert int(refusals.value) + (int(attempts.value) - int(refusals.value)) == int(
+        attempts.value
+    )
+    tex = render_macros(rq6_report)
+    assert "\\TzRealworldAssertionsIncluded" in tex
+    assert "\\TzRealworldAssertionsIncludedPct" in tex
+    assert "\\TzRealworldWideningRefusals" in tex
+    assert "\\TzRealworldWideningRefusalsPct" in tex
 
 
 def test_rq6_metrics_have_population_denominator_and_provenance(rq6_report):

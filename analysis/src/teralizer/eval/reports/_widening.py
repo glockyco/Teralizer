@@ -176,15 +176,42 @@ def widening_refusal_table(df: pd.DataFrame, provenance) -> Table:
 def widening_refusal_metrics(df: pd.DataFrame, provenance) -> list[Metric]:
     total_key = "realworld.widening_refusals"
     total_population = MetricPopulation(total_key, "Generalization", "real-world")
+    refusals = int(df["refusals"].sum())
+    refusal_totals = df["refusal_total"].astype(int).unique().tolist()
+    if refusal_totals != [refusals]:
+        raise RuntimeError(
+            "widening refusal branches do not conserve their total: "
+            f"rows={refusals}, declared={refusal_totals}"
+        )
+    attempts_values = df["attempts"].astype(int).unique().tolist()
+    if len(attempts_values) != 1:
+        raise RuntimeError(
+            f"widening refusal rows disagree on attempt count: {attempts_values}"
+        )
+    attempts = attempts_values[0]
+    if refusals > attempts:
+        raise RuntimeError(
+            f"widening refusals exceed generalization attempts: {refusals} > {attempts}"
+        )
     metrics = [
         Metric(
             total_key,
-            int(df["refusals"].sum()),
+            refusals,
             fmt="count",
             provenance=provenance,
             kind=ValueKind.COUNT,
             population=total_population,
-        )
+        ),
+        Metric(
+            "realworld.widening_refusals_pct",
+            float(share_value(refusals, attempts)),
+            fmt="pct1",
+            provenance=provenance,
+            kind=ValueKind.SHARE,
+            population=total_population,
+            numerator_key=total_key,
+            denominator_key="realworld.generalization_attempts",
+        ),
     ]
     for row in df.to_dict("records"):
         entry = WIDENING_REFUSALS.get(str(row["code"]))

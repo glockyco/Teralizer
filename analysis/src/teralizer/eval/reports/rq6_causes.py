@@ -102,6 +102,18 @@ def _share_metric(
     )
 
 
+def _validate_final_usable_projects(
+    final_usable: frozenset[int], applicable: frozenset[int]
+) -> None:
+    if final_usable == applicable:
+        return
+    raise ValueError(
+        "RQ6 final-usable and applicable project populations differ: "
+        f"only_final_usable={sorted(final_usable - applicable)}, "
+        f"only_applicable={sorted(applicable - final_usable)}"
+    )
+
+
 def _stage_slug(stage: str) -> str:
     """Stage label to metric-key segment ("1 + 2" -> "1_2")."""
     return "_".join(part for part in stage.replace("+", " ").split() if part)
@@ -165,6 +177,7 @@ RETAINED_METRIC_KEYS = frozenset(
         "realworld.generalization_validated_pct",
         "realworld.generalizations_reduced",
         "realworld.generalizations_final_usable",
+        "realworld.final_usable_projects",
         "realworld.generalization_unknown_attempt_state",
         "realworld.stage4_projects",
         "realworld.reduction_excluded_projects",
@@ -176,6 +189,7 @@ RETAINED_METRIC_KEYS = frozenset(
         "realworld.parameter_type_choice_dependent_lower_bound",
         "realworld.parameter_type_choice_dependent_lower_bound_pct",
         "realworld.widening_refusals",
+        "realworld.widening_refusals_pct",
     }
     | {
         f"realworld.stage_{stage}.{suffix}"
@@ -238,6 +252,11 @@ def build(context: ReportContext) -> RQReport:
     generalizations_funnel = generation_funnel.build_generalization_funnel(
         conn, variant, generation_funnel_provenance
     )
+    final_usable_project_ids = generalizations_funnel.project_ids[
+        generation_funnel.PopulationKey.FINAL_USABLE
+    ]
+    applicable_project_ids = funnel.survivor_project_ids[-1]
+    _validate_final_usable_projects(final_usable_project_ids, applicable_project_ids)
     mechanism_partition = exclusion.fetch_mechanism_partition(conn, variant)
     breakdown_data = exclusion.pivot_mechanism_partition(mechanism_partition)
     jpf_exception_data = fetch_jpf_exception_causes(conn, variant)
@@ -416,6 +435,12 @@ def build(context: ReportContext) -> RQReport:
             "realworld.generalizations_final_usable",
             generalizations_funnel.counts[generation_funnel.PopulationKey.FINAL_USABLE],
             "Generalization",
+            generation_funnel_provenance,
+        ),
+        _count_metric(
+            "realworld.final_usable_projects",
+            len(final_usable_project_ids),
+            "Project",
             generation_funnel_provenance,
         ),
         _count_metric(

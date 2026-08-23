@@ -9,6 +9,7 @@ from teralizer.eval.reports import _generalization_funnel as funnel
 def _observation(
     generalization_id: int,
     *,
+    project_id: int = 1,
     emitted: bool,
     adjudicated: bool,
     passed: bool,
@@ -19,7 +20,7 @@ def _observation(
     attempt_observed: bool | None = None,
 ) -> dict[str, object]:
     return {
-        "project_id": 1,
+        "project_id": project_id,
         "generalization_id": generalization_id,
         "variant": "IMPROVED_200_TRIES",
         "attempted": True,
@@ -109,6 +110,51 @@ def test_first_failing_gate_owns_each_exclusion_once():
     )
     assert result.unknown_attempt_state == 2
     assert sum(band.attempt_unknown_exclusions for band in result.bands) == 2
+
+
+def test_funnel_preserves_distinct_project_populations():
+    observations = pd.DataFrame(
+        [
+            _observation(
+                1,
+                project_id=11,
+                emitted=True,
+                adjudicated=True,
+                passed=True,
+                validated=True,
+                reduced=True,
+                usable=True,
+            ),
+            _observation(
+                2,
+                project_id=11,
+                emitted=True,
+                adjudicated=True,
+                passed=True,
+                validated=True,
+                reduced=True,
+                usable=True,
+            ),
+            _observation(
+                3,
+                project_id=12,
+                emitted=True,
+                adjudicated=True,
+                passed=True,
+                validated=True,
+                reduced=False,
+                usable=False,
+            ),
+        ]
+    )
+
+    result = funnel.build_generalization_funnel_from_observations(
+        observations, provenance=None
+    )
+
+    assert result.project_ids[funnel.PopulationKey.ATTEMPTED] == {11, 12}
+    assert result.project_ids[funnel.PopulationKey.FINAL_USABLE] == {11}
+    assert result.counts[funnel.PopulationKey.FINAL_USABLE] == 2
 
 
 def test_later_population_cannot_exist_without_earlier_population():

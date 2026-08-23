@@ -60,6 +60,7 @@ class FunnelBand:
 @dataclass(frozen=True)
 class GeneralizationFunnel:
     counts: dict[PopulationKey, int]
+    project_ids: dict[PopulationKey, frozenset[int]]
     bands: tuple[FunnelBand, ...]
     band_summaries: dict[str, BandSummary]
     table: Table
@@ -223,6 +224,12 @@ def build_generalization_funnel_from_observations(
     counts = {
         population: int(_bool_series(frame, population).sum()) for population in _ORDER
     }
+    project_ids = {
+        population: frozenset(
+            frame.loc[_bool_series(frame, population), "project_id"].astype(int)
+        )
+        for population in _ORDER
+    }
     bands: list[FunnelBand] = []
     for entering_population, population in zip(_ORDER, _ORDER[1:]):
         entering = _bool_series(frame, entering_population)
@@ -258,6 +265,7 @@ def build_generalization_funnel_from_observations(
     }
     return GeneralizationFunnel(
         counts=counts,
+        project_ids=project_ids,
         bands=result_bands,
         band_summaries=summaries,
         table=_build_table(counts, result_bands, provenance),
