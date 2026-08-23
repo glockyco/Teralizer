@@ -15,6 +15,7 @@ from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
 from teralizer.eval.model import (
     ColumnSpec,
     Metric,
+    MetricPopulation,
     Prose,
     RQReport,
     Section,
@@ -307,8 +308,27 @@ def _build_budget_table(
     return summary
 
 
-def _metric(key: str, value: float | int | str, fmt: str, source) -> Metric:
-    return Metric(key, value, fmt=fmt, provenance=capture(source))
+def _metric(
+    key: str,
+    value: float | int | str,
+    fmt: str,
+    source,
+    *,
+    kind: ValueKind | None = None,
+    population: MetricPopulation | None = None,
+) -> Metric:
+    return Metric(
+        key,
+        value,
+        fmt=fmt,
+        provenance=capture(source),
+        kind=kind,
+        population=population,
+    )
+
+
+def _project_population(key: str) -> MetricPopulation:
+    return MetricPopulation(key, "Project", "controlled")
 
 
 def _count_or_unavailable(value) -> str:
@@ -396,6 +416,8 @@ def build(context: ReportContext) -> RQReport:
             len(JARVIS_PROJECT_PBT_PVC),
             "count",
             _build_breadth_table,
+            kind=ValueKind.COUNT,
+            population=_project_population("rq0.breadth.published_projects"),
         ),
         _metric(
             "rq0.breadth.jarvis_total_pbt_pvc",
@@ -439,6 +461,8 @@ def build(context: ReportContext) -> RQReport:
             len(TABLE1_PROJECTS),
             "count",
             _census_status_ledger,
+            kind=ValueKind.COUNT,
+            population=_project_population("rq0.census.intended_projects"),
         ),
         _metric(
             "rq0.census.unresolved_mut_rows",
@@ -457,6 +481,8 @@ def build(context: ReportContext) -> RQReport:
             int((ledger["generalization_status"] == "complete").sum()),
             "count",
             _census_status_ledger,
+            kind=ValueKind.COUNT,
+            population=_project_population("rq0.census.completed_projects"),
         ),
         _metric(
             "rq0.census.failed_projects",
