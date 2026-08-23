@@ -173,6 +173,17 @@ present the competing translations and whether the retained comparison must be r
 supported by additional producer evidence. Record the operator's decision in this change before code
 edits.
 
+## Supersession
+
+The mapping audit established a qualified pre-reduction comparison, but later thesis review rejected it
+as a headline or cross-corpus effect. The controlled evidence cannot reconstruct the current widening
+license, and the real-world lifecycle applies later conditions that the controlled corpus does not
+record. The accepted `reporting/headline-evidence` capability therefore excludes this comparison.
+
+Do not implement the adapters, metadata extension, metrics, macros, or report owner described in this design.
+Keep the audit and design as historical rationale. Archive the change without syncing its delta
+specification.
+
 ## Risks / Trade-offs
 
 - **The controlled flag has no single lifecycle meaning.** -> Mark it unmappable and discuss removal or a

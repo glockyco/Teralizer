@@ -1,12 +1,24 @@
+## Disposition
+
+Superseded on 2026-08-22 after the thesis evidence review rejected the cross-corpus comparison. The
+accepted `reporting/headline-evidence` capability now prohibits this comparison, and the thesis
+reconciliation removes or rewrites claims that present the two corpus-local rates as one effect.
+
+No comparison code, metric metadata, generated output, or thesis claim was implemented from this
+proposal. Preserve the mapping audit as the reason for rejection. Archive this change without syncing
+its delta specification.
+
 ## Why
 
-The thesis retains one controlled-versus-RepoReapers comparison, but RQ5 and RQ6 record generalized-test
+The thesis retained one controlled-versus-RepoReapers comparison, but RQ5 and RQ6 record generalized-test
 outcomes in different schema shapes. The controlled side exposes only a legacy terminal inclusion flag
 inside a rendered RQ5 table row, while RQ6 distinguishes attempt, emission, filter, validation, and
 reduction lifecycle states. Without an explicit evidence-backed mapping, stable metric identities alone
 would make unlike measures look comparable.
 
 ## What Changes
+
+The following scope records the superseded implementation plan. It was not implemented.
 
 - Record every producer revision present in each corpus, select the latest recorded revision as its
   representative pipeline, and reconstruct that historical graph from `ProcessingStage`, the available

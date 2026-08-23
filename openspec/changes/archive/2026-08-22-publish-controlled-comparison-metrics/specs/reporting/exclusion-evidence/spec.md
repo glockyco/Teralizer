@@ -1,3 +1,5 @@
+<!-- Superseded. This proposed delta was not accepted and must not be synchronized. -->
+
 ## ADDED Requirements
 
 ### Requirement: Cross-corpus comparisons declare a normalized evidence mapping

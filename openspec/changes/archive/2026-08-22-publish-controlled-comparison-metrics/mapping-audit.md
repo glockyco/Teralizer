@@ -287,8 +287,14 @@ prose can state the detailed qualification, while controlled and real-world metr
 bound to each adapter's actual query. Existing `MetricPopulation`, operand relations, `Provenance`, and
 macro naming require no replacement.
 
-## Operator decision
+## Operator decisions
 
-Approved on 2026-08-22: implement the qualified pre-reduction comparison and the minimal typed mapping
-identity/classification extension exactly as audited above. Do not publish generic-flag or final-usability
-comparisons.
+The operator initially approved the qualified pre-reduction comparison on 2026-08-22. That decision
+permitted only the audited mapping and minimal typed mapping metadata. It prohibited generic-flag and
+final-usability comparisons.
+
+The later thesis evidence review superseded that approval on 2026-08-22. The operator selected a
+four-dimension results spine and rejected the cross-corpus comparison. The accepted
+`reporting/headline-evidence` capability now prohibits the comparison, and the thesis reconciliation
+removes or rewrites the old effect. Preserve this audit as evidence for the rejection. Do not implement
+or publish the mapped rates.

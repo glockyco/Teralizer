@@ -1,3 +1,9 @@
+## Disposition
+
+The audit tasks are complete and remain evidence. The later thesis evidence decision canceled the
+implementation, publication, and handoff tasks. Their unchecked state is intentional. Archive this
+change without syncing its rejected delta specification.
+
 ## 1. Audit and approve the cross-schema mapping
 
 - [x] 1.1 Record each database's complete producer-revision set independently from its later report-query
