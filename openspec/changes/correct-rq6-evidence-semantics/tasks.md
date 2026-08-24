@@ -27,10 +27,11 @@
 - [x] 4.2 Inspect the generated manifest, provenance, macros, tables, and audit CSVs. Stop on an undeclared artifact, missing declared artifact, retired identity, unsupported component count, or unrelated value drift.
 - [x] 4.3 Confirm the five anonymous or local-class picks carry the unpathable-source characterization, the seven constant-input parameter rejections remain supported by empty generated-input lists, and the two PIT failures name the import or persistence operation.
 - [x] 4.4 Run `uv run --directory analysis pytest`, `uv run --directory analysis ruff check .`, `uv run --directory analysis ty check .`, `./gradlew build`, and `lefthook run pre-commit --all-files` inside the pinned Nix environment.
-- [ ] 4.5 Commit regenerated artifacts, provenance, manifests, and accepted contract revisions as one atomic evidence-publication subject. Record the source commit, artifact commit, manifest identity, provenance hash, and macro hash in the change completion evidence.
+- [x] 4.5 Commit regenerated artifacts, provenance, manifests, and accepted contract revisions as one atomic evidence-publication subject. Record the source commit, artifact commit, manifest identity, provenance hash, and macro hash in the change completion evidence.
+  - Source commit: `c68f145cf43133776f13a9ed99f0931e817e814e`; artifact commit: `45019848`; manifest: the complete artifact sets in `analysis/reports/provenance.json`; provenance SHA-256: `10741888e6c7bc4a62571a48ca96a01377fb2f3515b8169cd85d082fdd080832`; aggregate macro SHA-256: `e54eb8dd70be5cddec55333fbb6b65f950adcfdee10287579659da483a14f3e7`.
 
 ## 5. Close the Producer Handoff
 
-- [ ] 5.1 Validate `correct-rq6-evidence-semantics` with `openspec validate correct-rq6-evidence-semantics --strict` and confirm every checklist item has direct evidence.
+- [x] 5.1 Validate `correct-rq6-evidence-semantics` with `openspec validate correct-rq6-evidence-semantics --strict` and confirm every checklist item has direct evidence.
 - [ ] 5.2 Archive only after all focused and repository-wide gates pass and no protected run was started or measurement record mutated.
 - [ ] 5.3 Update the thesis change task 1.5 with the archived producer change, exact commits, accepted contract revision, manifest, provenance hash, and macro hash in a separate thesis-planning commit.
