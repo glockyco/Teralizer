@@ -33,5 +33,5 @@
 ## 5. Close the Producer Handoff
 
 - [x] 5.1 Validate `correct-rq6-evidence-semantics` with `openspec validate correct-rq6-evidence-semantics --strict` and confirm every checklist item has direct evidence.
-- [ ] 5.2 Archive only after all focused and repository-wide gates pass and no protected run was started or measurement record mutated.
-- [ ] 5.3 Update the thesis change task 1.5 with the archived producer change, exact commits, accepted contract revision, manifest, provenance hash, and macro hash in a separate thesis-planning commit.
+- [x] 5.2 Archive only after all focused and repository-wide gates pass and no protected run was started or measurement record mutated.
+- [x] 5.3 Update the thesis change task 1.5 with the archived producer change, exact commits, accepted contract revision, manifest, provenance hash, and macro hash in a separate thesis-planning commit.
