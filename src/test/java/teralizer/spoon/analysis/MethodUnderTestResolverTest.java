@@ -479,6 +479,40 @@ public class MethodUnderTestResolverTest {
         + "}";
 
     @Example
+    void localClassMethod_isCharacterizationOnly() {
+        MutResolution resolution = resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() {\n"
+            + "    class Local { int value(String input) { return input.length(); } }\n"
+            + "    org.junit.Assert.assertEquals(3, new Local().value(\"abc\"));\n"
+            + "  }\n"
+            + "}");
+
+        Assert.assertEquals(MutResolution.Status.CHARACTERIZATION_ONLY, resolution.getStatus());
+        Assert.assertEquals(MutResolution.NoPickReason.UNPATHABLE_SOURCE_DECLARATION,
+            resolution.getNoPickReason());
+        Assert.assertEquals("value", resolution.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
+    void anonymousClassMethod_isCharacterizationOnly() {
+        MutResolution resolution = resolve(
+            "public class SubjectTest {\n"
+            + "  interface Value { int apply(String input); }\n"
+            + "  public void t() {\n"
+            + "    org.junit.Assert.assertEquals(3, new Value() {\n"
+            + "      public int apply(String input) { return input.length(); }\n"
+            + "    }.apply(\"abc\"));\n"
+            + "  }\n"
+            + "}");
+
+        Assert.assertEquals(MutResolution.Status.CHARACTERIZATION_ONLY, resolution.getStatus());
+        Assert.assertEquals(MutResolution.NoPickReason.UNPATHABLE_SOURCE_DECLARATION,
+            resolution.getNoPickReason());
+        Assert.assertEquals("apply", resolution.getPick().getExecutable().getSimpleName());
+    }
+
+    @Example
     void explicitConstructorInvocation_neverPicked() {
         // A local class whose constructor calls super() puts a CtInvocation with a
         // CONSTRUCTOR executable into the test method body. Picking it would blow up

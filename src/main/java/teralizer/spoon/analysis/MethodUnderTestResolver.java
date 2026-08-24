@@ -1141,14 +1141,28 @@ public final class MethodUnderTestResolver {
         if (pick == null) {
             return MutResolution.Status.NONE;
         }
-        return pick.getExecutable().getDeclaration() instanceof CtMethod<?>
+        return isGeneralizationPathable(pick)
             ? MutResolution.Status.RESOLVED
             : MutResolution.Status.CHARACTERIZATION_ONLY;
     }
 
+    private static boolean isGeneralizationPathable(CtInvocation<?> pick) {
+        if (!(pick.getExecutable().getDeclaration() instanceof CtMethod<?>)) {
+            return false;
+        }
+        CtMethod<?> method = (CtMethod<?>) pick.getExecutable().getDeclaration();
+        CtType<?> declaringType = method.getDeclaringType();
+        return declaringType != null && !declaringType.isLocalType() && !declaringType.isAnonymous();
+    }
+
     private static MutResolution.NoPickReason noPickReasonFor(CtInvocation<?> pick) {
-        if (pick == null || pick.getExecutable().getDeclaration() instanceof CtMethod<?>) {
+        if (pick == null) {
             return null;
+        }
+        if (pick.getExecutable().getDeclaration() instanceof CtMethod<?>) {
+            return isGeneralizationPathable(pick)
+                ? null
+                : MutResolution.NoPickReason.UNPATHABLE_SOURCE_DECLARATION;
         }
         // Declaration unresolved: JDK/classpath types have no source declaration in the model.
         if (pick.getExecutable().getDeclaringType() != null) {

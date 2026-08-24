@@ -23,6 +23,7 @@ public final class FilterReasonCodes {
     // group filter reasons and resolver observations without a translation table.
     public static final String MUT_LIBRARY_DECLARATION = "LIBRARY_DECLARATION";
     public static final String MUT_UNRESOLVED_SOURCE_DECLARATION = "UNRESOLVED_SOURCE_DECLARATION";
+    public static final String MUT_UNPATHABLE_SOURCE_DECLARATION = "UNPATHABLE_SOURCE_DECLARATION";
     public static final String MUT_NO_VISIBLE_CALL = "NO_VISIBLE_CALL";
     public static final String MUT_UNSUPPORTED_ASSERTION_SHAPE = "UNSUPPORTED_ASSERTION_SHAPE";
     public static final String MUT_RESOLUTION_NOT_RECORDED = "RESOLUTION_NOT_RECORDED";

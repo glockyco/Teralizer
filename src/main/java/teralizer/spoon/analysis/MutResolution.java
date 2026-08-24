@@ -34,6 +34,7 @@ public final class MutResolution {
     public enum NoPickReason {
         LIBRARY_DECLARATION,
         UNRESOLVED_SOURCE_DECLARATION,
+        UNPATHABLE_SOURCE_DECLARATION,
         NO_VISIBLE_CALL,
         UNSUPPORTED_ASSERTION_SHAPE
     }
