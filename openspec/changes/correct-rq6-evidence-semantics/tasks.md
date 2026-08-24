@@ -1,16 +1,16 @@
 ## 1. Establish Reproductions and Exact Migrations
 
-- [ ] 1.1 Add focused positive-control queries for the five resolved MUT picks with missing required fields and the seven `ParameterType` rejections that contradict supported retained parameters. Record the exact retained rows and expected corrected classification without mutating the database.
+- [ ] 1.1 Add focused positive-control queries for the five nominally resolved anonymous or local-class MUT picks and the seven `ParameterType` rejections with supported declarations but no generated inputs. Record the exact retained rows, actual generated-input state, and expected corrected classification without mutating the database.
 - [ ] 1.2 Inventory every implementation symbol, metric key, row key, generated label, macro, provenance entry, test, accepted requirement, and thesis handoff that uses the retired filter-boundary identity or generic inherited-test capability.
 - [ ] 1.3 Identify the two retained PIT tasks whose reports were produced before import or persistence failed, and record the failing operation and existing task evidence.
 
-## 2. Repair MUT Persistence Consistency
+## 2. Repair MUT Resolution Consistency
 
-- [ ] 2.1 Trace resolved MUT observations through tested-method field persistence and repair the source defect that leaves five selected methods incomplete.
-- [ ] 2.2 Make the resolved observation and required tested-method identity, declaration, parameter, and return fields persist atomically, or record an explicit persistence defect when that contract cannot be met.
-- [ ] 2.3 Resolve the seven contradictory `ParameterType` rows using the normalized supported-input predicate. Correct persistence or filtering rather than special-casing retained row identities.
-- [ ] 2.4 Add focused tests that reproduce both inconsistency classes, fail on the old behavior, and prove downstream filtering consumes the same persisted method shape.
-- [ ] 2.5 Run the focused Java tests and `./gradlew build`, then commit the persistence repair as one atomic subject with its causal tests and contract updates.
+- [ ] 2.1 Trace the five anonymous or local-class MUT picks through resolution and tested-method persistence; identify the shared pathability boundary before changing status assignment.
+- [ ] 2.2 Add an exact unpathable-source reason and classify a selected call as resolved only when every stable tested-method identity, declaration, parameter, and return field can be persisted atomically.
+- [ ] 2.3 Keep the seven `ParameterType` rejections and correct every audit query or interpretation that substitutes declaration-level supported types for persisted generated inputs. Do not special-case retained row identities.
+- [ ] 2.4 Add focused tests that reproduce both evidence classes, fail on the old classification or audit interpretation, and prove filtering uses the persisted generated-input shape.
+- [ ] 2.5 Run the focused Java and analysis tests plus their required static checks, then commit the resolution and audit repair as one atomic subject with its causal tests and contract updates.
 
 ## 3. Correct Evidence Identities and Attribution
 
@@ -25,7 +25,7 @@
 
 - [ ] 4.1 Run the complete registered report set once against the preserved first-run database with all declared render targets. Do not run a project, corpus, sentinel, hotspot, or JARVIS workflow.
 - [ ] 4.2 Inspect the generated manifest, provenance, macros, tables, and audit CSVs. Stop on an undeclared artifact, missing declared artifact, retired identity, unsupported component count, or unrelated value drift.
-- [ ] 4.3 Confirm the five incomplete resolved picks and seven contradictory parameter rows no longer violate the accepted contracts, and confirm the two PIT failures name the import or persistence operation.
+- [ ] 4.3 Confirm the five anonymous or local-class picks carry the unpathable-source characterization, the seven constant-input parameter rejections remain supported by empty generated-input lists, and the two PIT failures name the import or persistence operation.
 - [ ] 4.4 Run `uv run --directory analysis pytest`, `uv run --directory analysis ruff check .`, `uv run --directory analysis ty check .`, `./gradlew build`, and `lefthook run pre-commit --all-files` inside the pinned Nix environment.
 - [ ] 4.5 Commit regenerated artifacts, provenance, manifests, and accepted contract revisions as one atomic evidence-publication subject. Record the source commit, artifact commit, manifest identity, provenance hash, and macro hash in the change completion evidence.
 

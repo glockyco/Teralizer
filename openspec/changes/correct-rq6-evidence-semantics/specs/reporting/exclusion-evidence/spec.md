@@ -18,19 +18,19 @@ Every published filter boundary, mechanism, metric, row, label, aggregate macro,
 
 ### Requirement: Published filter evidence is internally consistent
 
-A published filter decision SHALL agree with the normalized evidence on which the decision depends. A resolved method-under-test observation SHALL preserve the required tested-method fields, and a type rejection SHALL NOT contradict a retained supported type without an explicit, separately evidenced reason.
+A published filter decision SHALL agree with the normalized evidence on which the decision depends. A method-under-test observation SHALL be resolved only when its declaration is stably addressable for generalization. Parameter capability evidence SHALL distinguish declared parameter types from the actual generated inputs persisted for the selected call.
 
-#### Scenario: A resolved MUT pick is persisted
+#### Scenario: A selected MUT declaration is unpathable
 
-- **WHEN** method resolution selects a production call
-- **THEN** the required tested-method identity, declaration, parameter, and return fields are persisted atomically with the observation
-- **AND** reporting does not classify absent required fields as an analysis limitation
+- **WHEN** a selected call belongs to an anonymous or local source declaration without a stable generalization path
+- **THEN** evidence records a characterization-only unpathable-source outcome
+- **AND** reporting does not count it as a resolved pick with missing persistence
 
-#### Scenario: A parameter rejection has a supported retained parameter
+#### Scenario: A declared parameter is supported but no generated input exists
 
-- **WHEN** retained resolver evidence contains a parameter in a supported generated-input domain
-- **THEN** the producer corrects the persistence or filter interpretation before publication
-- **AND** it omits any component count that the corrected evidence does not support
+- **WHEN** a selected call supplies every supported declared parameter with a constant or `null`
+- **THEN** parameter filtering may reject the assertion because its persisted generated-input list is empty
+- **AND** reporting does not classify that rejection as contradictory evidence
 
 ### Requirement: Failure attribution names the failed operation
 
