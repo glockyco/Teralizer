@@ -5,6 +5,7 @@ globs:
   - "src/test/java/teralizer/**/*.java"
   - "src/main/resources/reference.conf"
   - "src/main/resources/db/*.sql"
+  - "analysis/src/teralizer/stages.py"
 ---
 
 # Pipeline conventions
