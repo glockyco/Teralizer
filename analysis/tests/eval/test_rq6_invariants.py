@@ -28,7 +28,7 @@ def test_mechanism_registry_covers_reader_outcomes():
         "filtering": (
             "filter_rejection",
             "generation_gate",
-            "inline_capability",
+            "inherited_test_inlining_limit",
         ),
         "failures": ("build_quarantine", "task_exception"),
     }
@@ -103,7 +103,7 @@ def test_invalid_filter_result_shape_fails_loudly(decision, reason_code, message
         (
             "Test",
             "INHERITED_METHOD_NOT_FLATTENABLE",
-            exclusion.MechanismKey.INLINE_CAPABILITY,
+            exclusion.MechanismKey.INHERITED_TEST_INLINING_LIMIT,
         ),
     ),
 )
@@ -153,6 +153,14 @@ def test_single_mechanism_candidate_is_retained(mechanism):
 def test_absent_mechanism_evidence_stays_absent():
     assert (
         exclusion.producer_mechanism("GeneratedTestValidator", "ACCEPT", None) is None
+    )
+    assert (
+        exclusion.producer_mechanism(
+            "teralizer.processing.filter.NestedClassesFilter",
+            "DEFER",
+            "NESTED_CLASSES",
+        )
+        is None
     )
     assert exclusion.resolve_mechanism_candidates("Test", 3, ()) is None
 

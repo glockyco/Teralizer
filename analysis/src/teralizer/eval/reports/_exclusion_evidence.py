@@ -20,7 +20,7 @@ class MechanismKey(StrEnum):
     FILTER_REJECTION = "filter_rejection"
     BUILD_QUARANTINE = "build_quarantine"
     GENERATION_GATE = "generation_gate"
-    INLINE_CAPABILITY = "inline_capability"
+    INHERITED_TEST_INLINING_LIMIT = "inherited_test_inlining_limit"
     TASK_EXCEPTION = "task_exception"
 
 
@@ -50,8 +50,8 @@ MECHANISMS = (
         ReaderOutcome.FILTERING,
     ),
     Mechanism(
-        MechanismKey.INLINE_CAPABILITY,
-        "Unsupported capability",
+        MechanismKey.INHERITED_TEST_INLINING_LIMIT,
+        "Inherited-test inlining limit",
         ReaderOutcome.FILTERING,
     ),
     Mechanism(
@@ -125,7 +125,7 @@ def typed_code_mechanism(level: str, code: str) -> MechanismKey:
     if code in QUARANTINE_CODES and level in {"Assertion", "Generalization"}:
         return MechanismKey.BUILD_QUARANTINE
     if code in CAPABILITY_CODES and level == "Test":
-        return MechanismKey.INLINE_CAPABILITY
+        return MechanismKey.INHERITED_TEST_INLINING_LIMIT
     if code in KNOWN_TYPED_CODES:
         raise ExclusionEvidenceError(
             f"exclusion code {code} is invalid at {level} level"
@@ -166,7 +166,7 @@ def query_params(variant: str) -> dict[str, object]:
 # final UNION happens after each relation has resolved exactly one mechanism.
 _TYPED_RELATIONS_SQL = f"""
 {_funnel.ELIGIBILITY_CTE},
-filter_adjudication_evidence AS (
+filter_result_evidence AS (
     SELECT
         fr.id AS evidence_id,
         fr.project_id,
@@ -188,7 +188,7 @@ filter_adjudication_evidence AS (
 ),
 eligible_filter_evidence AS (
     SELECT fa.*
-    FROM filter_adjudication_evidence fa
+    FROM filter_result_evidence fa
     JOIN eligible_projects ep ON ep.id = fa.project_id
 ),
 test_lifecycle_evidence AS (
@@ -298,7 +298,7 @@ test_mechanism_candidates AS (
             CASE WHEN quarantined OR exclusion_code = ANY(:quarantine_codes)
                  THEN 'build_quarantine' END,
             CASE WHEN exclusion_code = ANY(:capability_codes)
-                 THEN 'inline_capability' END,
+                 THEN 'inherited_test_inlining_limit' END,
             CASE WHEN (task_failed OR exclusion_code LIKE 'Excluded by%')
                        AND NOT filter_rejected
                        AND NOT quarantined
@@ -442,7 +442,7 @@ FROM (
     SELECT
         'invalid filter-result identity' AS issue,
         'filter_result:' || evidence_id::text AS evidence
-    FROM filter_adjudication_evidence
+    FROM filter_result_evidence
     WHERE identity_count <> 1
 
     UNION ALL
@@ -450,7 +450,7 @@ FROM (
     SELECT
         'invalid filter-result decision',
         'filter_result:' || evidence_id::text || ':' || decision
-    FROM filter_adjudication_evidence
+    FROM filter_result_evidence
     WHERE decision NOT IN ('ACCEPT', 'DEFER', 'REJECT')
 
     UNION ALL
@@ -458,7 +458,7 @@ FROM (
     SELECT
         'missing filter-result rejection reason',
         'filter_result:' || evidence_id::text || ':' || producer
-    FROM filter_adjudication_evidence
+    FROM filter_result_evidence
     WHERE decision = 'REJECT' AND reason_code IS NULL
 
     UNION ALL
@@ -466,7 +466,7 @@ FROM (
     SELECT
         'unknown filter-result producer',
         'filter_result:' || evidence_id::text || ':' || producer
-    FROM filter_adjudication_evidence
+    FROM filter_result_evidence
     WHERE producer_mechanism IS NULL
 
     UNION ALL
@@ -475,7 +475,7 @@ FROM (
         'invalid build-quarantine verdict',
         'filter_result:' || evidence_id::text || ':' || decision || ':'
             || coalesce(reason_code, '<null>')
-    FROM filter_adjudication_evidence
+    FROM filter_result_evidence
     WHERE producer = :quarantine_producer
       AND (decision <> 'REJECT' OR reason_code IS NULL
            OR reason_code <> ALL(:quarantine_codes))

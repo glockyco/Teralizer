@@ -12,7 +12,7 @@ semantics, so every reader-facing quantity and supported causal claim can be rep
 The registered real-world report SHALL emit a citable partition of included entities and every known
 exclusion mechanism at each published entity level. One executable mapping SHALL own mechanism keys and
 the reader-facing collapse. Separate typed relations SHALL preserve the lifecycle, assertion,
-filter-adjudication, and generated-generalization evidence available at their respective levels. They
+filter-result, and generated-generalization evidence available at their respective levels. They
 SHALL NOT force absent evidence into one universal row shape or hide a mechanism inside an unlabeled
 residual bucket.
 
@@ -39,7 +39,7 @@ required evidence exists.
 
 ### Requirement: The generalization funnel names every observed population
 
-The report SHALL emit distinct counts for attempted, emitted, filter-adjudicated, filter-passed,
+The report SHALL emit distinct counts for attempted, emitted, filter-result-recorded, filter-passed,
 validated, reduced, and final-usable populations where those states are observed. Each exclusion SHALL
 be attributed to its first failing gate exactly once.
 

@@ -155,7 +155,7 @@ def _validate_filtering_funnel(
     funnel: generation_funnel.GeneralizationFunnel,
 ) -> None:
     expected = (
-        funnel.counts[generation_funnel.PopulationKey.FILTER_ADJUDICATED],
+        funnel.counts[generation_funnel.PopulationKey.FILTER_RESULT_RECORDED],
         funnel.counts[generation_funnel.PopulationKey.FILTER_PASSED],
     )
     observed = (summary.total, summary.retained)
@@ -241,7 +241,7 @@ RETAINED_METRIC_KEYS = frozenset(
         "realworld.assertions_included_pct",
         "realworld.generalization_attempts",
         "realworld.generalizations_emitted",
-        "realworld.generalizations_filter_adjudicated",
+        "realworld.generalizations_filter_result_recorded",
         "realworld.generalizations_filter_passed",
         "realworld.generalizations_validated",
         "realworld.generalization_validated_pct",
@@ -496,9 +496,9 @@ def build(context: ReportContext) -> RQReport:
             generation_funnel_provenance,
         ),
         _count_metric(
-            "realworld.generalizations_filter_adjudicated",
+            "realworld.generalizations_filter_result_recorded",
             generalizations_funnel.counts[
-                generation_funnel.PopulationKey.FILTER_ADJUDICATED
+                generation_funnel.PopulationKey.FILTER_RESULT_RECORDED
             ],
             "Generalization",
             generation_funnel_provenance,
@@ -671,7 +671,7 @@ def build(context: ReportContext) -> RQReport:
             filtering_comparison_table,
             Prose(
                 "Generalization attempts are reported separately from emitted, "
-                "filter-adjudicated, validated, reduced, and final-usable tests. "
+                "filter-result-recorded, validated, reduced, and final-usable tests. "
                 "A missing independent task record remains unknown."
             ),
             generalizations_funnel.table,
@@ -692,7 +692,7 @@ def build(context: ReportContext) -> RQReport:
             filtering,
             Prose(
                 "The reader-facing filtering column combines filter decisions, "
-                "generation-gate refusals, and unsupported-capability declinations. "
+                "generation-gate refusals, and inherited-test inlining limits. "
                 "The preceding table preserves the exact mechanisms."
             ),
             widening_table,

@@ -45,7 +45,7 @@ MECHANISM_OUTCOMES: tuple[Outcome, ...] = tuple(
 
 # The reader-facing split is part of the canonical mechanism registry. In
 # particular, quarantine remains a failure even though its producer writes a
-# filter_result row, while an unsupported capability remains a declined
+# filter_result row, while an inherited-test inlining limit remains a declined
 # candidate even though it has no filter_result row.
 MECHANISM_COLLAPSE: dict[str, tuple[str, ...]] = READER_COLLAPSE
 

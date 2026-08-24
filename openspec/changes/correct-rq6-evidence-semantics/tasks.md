@@ -10,16 +10,16 @@
 - [x] 2.2 Add an exact unpathable-source reason and classify a selected call as resolved only when every stable tested-method identity, declaration, parameter, and return field can be persisted atomically.
 - [x] 2.3 Keep the seven `ParameterType` rejections and correct every audit query or interpretation that substitutes declaration-level supported types for persisted generated inputs. Do not special-case retained row identities.
 - [x] 2.4 Add focused tests that reproduce both evidence classes, fail on the old classification or audit interpretation, and prove filtering uses the persisted generated-input shape.
-- [ ] 2.5 Run the focused Java and analysis tests plus their required static checks, then commit the resolution and audit repair as one atomic subject with its causal tests and contract updates.
+- [x] 2.5 Run the focused Java and analysis tests plus their required static checks, then commit the resolution and audit repair as one atomic subject with its causal tests and contract updates.
 
 ## 3. Correct Evidence Identities and Attribution
 
-- [ ] 3.1 Rename the filter-result boundary at its owning declarations and migrate every code, query, model, rendering, macro, provenance, test, and accepted-spec consumer. Remove the retired identity without an alias.
-- [ ] 3.2 Replace the generic test-level unsupported-capability key and label with the exact inherited-test inlining limit and migrate every consumer.
-- [ ] 3.3 Reclassify the two proven PIT report-import or persistence failures by the failed operation while preserving the original measured task outcomes.
-- [ ] 3.4 Ensure reader-facing mechanism partitions exclude diagnostic-only `DEFER` checks while audit evidence retains them.
-- [ ] 3.5 Add focused analysis and report tests for clean identity cutovers, exact inherited-test attribution, operation-level PIT attribution, and the diagnostic-versus-rejecting partition.
-- [ ] 3.6 Run the focused Java and analysis tests plus their required static checks, then commit the evidence semantics correction as one atomic subject with every migrated consumer.
+- [x] 3.1 Rename the filter-result boundary at its owning declarations and migrate every code, query, model, rendering, macro, provenance, test, and accepted-spec consumer. Remove the retired identity without an alias.
+- [x] 3.2 Replace the generic test-level unsupported-capability key and label with the exact inherited-test inlining limit and migrate every consumer.
+- [x] 3.3 Reclassify the two proven PIT report-import or persistence failures by the failed operation while preserving the original measured task outcomes.
+- [x] 3.4 Ensure reader-facing mechanism partitions exclude diagnostic-only `DEFER` checks while audit evidence retains them.
+- [x] 3.5 Add focused analysis and report tests for clean identity cutovers, exact inherited-test attribution, operation-level PIT attribution, and the diagnostic-versus-rejecting partition.
+- [x] 3.6 Run the focused Java and analysis tests plus their required static checks, then commit the evidence semantics correction as one atomic subject with every migrated consumer.
 
 ## 4. Regenerate and Verify the Preserved Evidence
 

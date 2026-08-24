@@ -47,7 +47,7 @@ SHALL have no emitted-test lifecycle record, and SHALL be attributed to its stab
 
 #### Scenario: Widening is refused
 - **WHEN** a soundness gate rejects an attempted generalization before writing source
-- **THEN** the report counts one attempt and one refusal, and counts no emitted or filter-adjudicated
+- **THEN** the report counts one attempt and one refusal, and counts no emitted or filter-result-recorded
   generalized test for it
 
 ### Requirement: Lifecycle fields define generalized-test yield
@@ -68,13 +68,13 @@ that a generated test completed a later stage.
 ### Requirement: Every quoted result identifies its measure and denominator
 
 A published result SHALL distinguish project eligibility, generalization attempts, emitted tests,
-filter-adjudicated tests, filter-passed tests, and final-usable tests. Cross-corpus comparisons SHALL
+filter-result-recorded tests, filter-passed tests, and final-usable tests. Cross-corpus comparisons SHALL
 apply the same registered report definition and join project identity by repository root rather than
 by database-local identifiers.
 
 #### Scenario: Generalization success is quoted
 - **WHEN** prose or a generated macro reports a generalization success rate
-- **THEN** it identifies whether the denominator is attempts, emitted tests, or adjudicated tests
+- **THEN** it identifies whether the denominator is attempts, emitted tests, or tests with a recorded filter result
 
 #### Scenario: Corpora are compared
 - **WHEN** the same measure is compared across two corpus databases

@@ -18,7 +18,7 @@ from teralizer.eval.reports import _funnel
 class PopulationKey(StrEnum):
     ATTEMPTED = "attempted"
     EMITTED = "emitted"
-    FILTER_ADJUDICATED = "filter_adjudicated"
+    FILTER_RESULT_RECORDED = "filter_result_recorded"
     FILTER_PASSED = "filter_passed"
     VALIDATED = "validated"
     REDUCED = "reduced"
@@ -28,7 +28,7 @@ class PopulationKey(StrEnum):
 POPULATION_LABELS = {
     PopulationKey.ATTEMPTED: "Attempted",
     PopulationKey.EMITTED: "Emitted",
-    PopulationKey.FILTER_ADJUDICATED: "Filter adjudicated",
+    PopulationKey.FILTER_RESULT_RECORDED: "Filter result recorded",
     PopulationKey.FILTER_PASSED: "Filter passed",
     PopulationKey.VALIDATED: "Validated",
     PopulationKey.REDUCED: "Reduced",
@@ -69,7 +69,7 @@ class GeneralizationFunnel:
 
 GENERALIZATION_LIFECYCLE_SQL = f"""
 {_funnel.ELIGIBILITY_CTE},
-filter_adjudicated AS (
+filter_result_recorded AS (
     SELECT DISTINCT fr.generalization_id
     FROM filter_result fr
     JOIN eligible_projects ep ON ep.id = fr.project_id
@@ -83,7 +83,7 @@ generalization_lifecycle_observation AS (
         g.variant,
         TRUE AS attempted,
         coalesce(l.generated_source_created, FALSE) AS emitted,
-        (fa.generalization_id IS NOT NULL) AS filter_adjudicated,
+        (fa.generalization_id IS NOT NULL) AS filter_result_recorded,
         coalesce(l.generated_filter_passed, FALSE) AS filter_passed,
         coalesce(
             l.generated_source_created
@@ -110,7 +110,7 @@ generalization_lifecycle_observation AS (
     FROM generalization g
     JOIN eligible_projects ep ON ep.id = g.project_id
     LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id
-    LEFT JOIN filter_adjudicated fa ON fa.generalization_id = g.id
+    LEFT JOIN filter_result_recorded fa ON fa.generalization_id = g.id
     WHERE g.variant = :variant
 )
 SELECT *

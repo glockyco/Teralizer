@@ -219,8 +219,10 @@ def classify(a: Attribution) -> Cause:
                 _timeout_cause(a.timeout_seconds, "during PIT mutation testing"),
                 "Internal",
             )
-        if a.reason_code in {"PIT_MAPPING_FAILURE"}:
-            return Cause("5", "failed to process PIT reports", "Internal")
+        if a.reason_code == "PIT_MAPPING_FAILURE":
+            return Cause("5", "failed to import PIT reports", "Internal")
+        if a.reason_code == "PIT_REPORT_PERSISTENCE_FAILURE":
+            return Cause("5", "failed to persist PIT coverage reports", "Internal")
         # Typed command failures, written by the classifier from the captured Maven output.
         # Each names what actually went wrong instead of the former catch-all.
         if a.reason_code == "MINION_DIED":

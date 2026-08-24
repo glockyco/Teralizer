@@ -209,6 +209,21 @@ def test_collect_jacoco_original_not_found_vs_error():
     assert "JaCoCo" in e.cause
 
 
+def test_pit_report_persistence_failure_names_failed_operation():
+    cause = classify(
+        Attribution(
+            "COLLECT_PIT_DATA_INITIAL",
+            "PIT_REPORT_PERSISTENCE_FAILURE",
+            at_ceiling=False,
+            included_tests=1,
+            included_assertions=1,
+            artifact_present=True,
+        )
+    )
+    assert cause.type == "Internal"
+    assert cause.cause == "failed to persist PIT coverage reports"
+
+
 def test_pit_listener_failure_is_execution_error():
     cause = classify(
         Attribution(

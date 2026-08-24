@@ -142,10 +142,11 @@ SELECT
     t.stage AS internal_stage,
     t.runtime,
     t.step,
-    td.reason_code
+    td.reason_code,
+    td.detail_json ->> 'message' AS diagnostic_message
 FROM task t
 LEFT JOIN LATERAL (
-    SELECT reason_code
+    SELECT reason_code, detail_json
     FROM task_diagnostic
     WHERE task_id = t.id
     ORDER BY id
@@ -490,8 +491,29 @@ def _audit_eligibility(
     return sorted(unexpected)
 
 
+def _normalize_task_reason(reason_code: object, diagnostic_message: object) -> object:
+    if (
+        reason_code == "LISTENER_BUG"
+        and isinstance(diagnostic_message, str)
+        and diagnostic_message.startswith(
+            'SQL [insert into "public"."pit_coverage_report"'
+        )
+    ):
+        return "PIT_REPORT_PERSISTENCE_FAILURE"
+    return reason_code
+
+
 def _fetch_project_failures(conn: Connection) -> pd.DataFrame:
-    return read_sql(conn, _PROJECT_FAILURES_SQL)
+    failures = read_sql(conn, _PROJECT_FAILURES_SQL)
+    normalized_reasons = failures.apply(
+        lambda row: _normalize_task_reason(
+            row["reason_code"], row["diagnostic_message"]
+        ),
+        axis=1,
+    )
+    return failures.assign(reason_code=normalized_reasons).drop(
+        columns=["diagnostic_message"]
+    )
 
 
 def _group_project_failures(

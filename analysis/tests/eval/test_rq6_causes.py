@@ -16,6 +16,21 @@ from teralizer.eval.reports import rq6_causes  # noqa: F401  (registers "rq6")
 from teralizer.eval.reports._causes_common import MECHANISM_COLLAPSE
 
 
+def test_pit_coverage_persistence_diagnostic_names_failed_operation():
+    message = (
+        'SQL [insert into "public"."pit_coverage_report" '
+        '("project_id", "covered_method_name") values (?, ?)]'
+    )
+
+    assert (
+        _funnel._normalize_task_reason("LISTENER_BUG", message)
+        == "PIT_REPORT_PERSISTENCE_FAILURE"
+    )
+    assert _funnel._normalize_task_reason("LISTENER_BUG", "listener failed") == (
+        "LISTENER_BUG"
+    )
+
+
 def test_rq6_has_funnel_and_shared_tables(rq6_report):
     report = rq6_report
     assert report.rq == "rq6"

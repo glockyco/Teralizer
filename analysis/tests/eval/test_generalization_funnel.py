@@ -11,7 +11,7 @@ def _observation(
     *,
     project_id: int = 1,
     emitted: bool,
-    adjudicated: bool,
+    result_recorded: bool,
     passed: bool,
     validated: bool,
     reduced: bool,
@@ -25,7 +25,7 @@ def _observation(
         "variant": "IMPROVED_200_TRIES",
         "attempted": True,
         "emitted": emitted,
-        "filter_adjudicated": adjudicated,
+        "filter_result_recorded": result_recorded,
         "filter_passed": passed,
         "validated": validated,
         "reduced": reduced,
@@ -41,7 +41,7 @@ def test_first_failing_gate_owns_each_exclusion_once():
             _observation(
                 1,
                 emitted=True,
-                adjudicated=True,
+                result_recorded=True,
                 passed=True,
                 validated=True,
                 reduced=True,
@@ -50,7 +50,7 @@ def test_first_failing_gate_owns_each_exclusion_once():
             _observation(
                 2,
                 emitted=False,
-                adjudicated=False,
+                result_recorded=False,
                 passed=False,
                 validated=False,
                 reduced=False,
@@ -59,7 +59,7 @@ def test_first_failing_gate_owns_each_exclusion_once():
             _observation(
                 3,
                 emitted=True,
-                adjudicated=False,
+                result_recorded=False,
                 passed=False,
                 validated=False,
                 reduced=False,
@@ -70,7 +70,7 @@ def test_first_failing_gate_owns_each_exclusion_once():
             _observation(
                 4,
                 emitted=True,
-                adjudicated=True,
+                result_recorded=True,
                 passed=False,
                 validated=False,
                 reduced=False,
@@ -81,7 +81,7 @@ def test_first_failing_gate_owns_each_exclusion_once():
             _observation(
                 5,
                 emitted=True,
-                adjudicated=True,
+                result_recorded=True,
                 passed=True,
                 validated=True,
                 reduced=False,
@@ -98,7 +98,7 @@ def test_first_failing_gate_owns_each_exclusion_once():
     exclusions = {band.population: band.exclusions for band in result.bands}
     assert exclusions == {
         funnel.PopulationKey.EMITTED: 1,
-        funnel.PopulationKey.FILTER_ADJUDICATED: 1,
+        funnel.PopulationKey.FILTER_RESULT_RECORDED: 1,
         funnel.PopulationKey.FILTER_PASSED: 1,
         funnel.PopulationKey.VALIDATED: 0,
         funnel.PopulationKey.REDUCED: 1,
@@ -119,7 +119,7 @@ def test_funnel_preserves_distinct_project_populations():
                 1,
                 project_id=11,
                 emitted=True,
-                adjudicated=True,
+                result_recorded=True,
                 passed=True,
                 validated=True,
                 reduced=True,
@@ -129,7 +129,7 @@ def test_funnel_preserves_distinct_project_populations():
                 2,
                 project_id=11,
                 emitted=True,
-                adjudicated=True,
+                result_recorded=True,
                 passed=True,
                 validated=True,
                 reduced=True,
@@ -139,7 +139,7 @@ def test_funnel_preserves_distinct_project_populations():
                 3,
                 project_id=12,
                 emitted=True,
-                adjudicated=True,
+                result_recorded=True,
                 passed=True,
                 validated=True,
                 reduced=False,
@@ -163,7 +163,7 @@ def test_later_population_cannot_exist_without_earlier_population():
             _observation(
                 7,
                 emitted=False,
-                adjudicated=True,
+                result_recorded=True,
                 passed=False,
                 validated=False,
                 reduced=False,
@@ -174,7 +174,7 @@ def test_later_population_cannot_exist_without_earlier_population():
 
     with pytest.raises(
         exclusion.ExclusionEvidenceError,
-        match=r"filter_adjudicated generalizations outside emitted: \[7\]",
+        match=r"filter_result_recorded generalizations outside emitted: \[7\]",
     ):
         funnel.build_generalization_funnel_from_observations(
             observations, provenance=None
@@ -191,8 +191,8 @@ def test_report_metrics_share_the_funnel_table_values(rq6_report):
     metric_keys = {
         funnel.PopulationKey.ATTEMPTED: "realworld.generalization_attempts",
         funnel.PopulationKey.EMITTED: "realworld.generalizations_emitted",
-        funnel.PopulationKey.FILTER_ADJUDICATED: (
-            "realworld.generalizations_filter_adjudicated"
+        funnel.PopulationKey.FILTER_RESULT_RECORDED: (
+            "realworld.generalizations_filter_result_recorded"
         ),
         funnel.PopulationKey.FILTER_PASSED: "realworld.generalizations_filter_passed",
         funnel.PopulationKey.VALIDATED: "realworld.generalizations_validated",
