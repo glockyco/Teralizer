@@ -24,15 +24,15 @@ Real-world exclusions separate project-level failures from filtering and downstr
 | Stage 4 - Gen. Test Creation: 176 projects, 98 inclusions, 78 exclusions, 55.7% inclusion rate |  |  |  |
 | 10 | Internal | all generalizations excluded due to filter rejections and failures | 78 |
 | Stage 5 - Test Suite Reduction: 98 projects, 85 inclusions, 13 exclusions, 86.7% inclusion rate |  |  |  |
-| 11 | External | PIT execution error during mutation testing | 2 |
-| 12 | Internal | JaCoCo outputs not found | 1 |
+| 11 | Internal | JaCoCo outputs not found | 1 |
+| 12 | Internal | failed to persist PIT coverage reports | 2 |
 | 13 | Internal | timeout exceeded (3600 seconds during PIT mutation testing) | 4 |
 | 14 | Mixed | unmutated test suite has failing tests | 6 |
 | Overall: 584 projects, 85 inclusions, 499 exclusions, 14.6% inclusion rate |  |  |  |
 
 _Eligible projects: 584. Stage 1 + 2: 584 entering, 182 included (31.2%), 402 excluded. Stage 3: 182 entering, 176 included (96.7%), 6 excluded. Stage 4: 176 entering, 98 included (55.7%), 78 excluded. Stage 5: 98 entering, 85 included (86.7%), 13 excluded. Overall: 85 of 584 included (14.6%)._
 
-source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/_funnel.py#L378)
+source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_funnel.py#L379)
 
 Filtering results use generalized tests that reach filtering as each dataset's denominator. They do not measure overall success or project applicability.
 
@@ -47,7 +47,7 @@ _Each share uses the generalized tests with a filtering result in that dataset a
 
 source: [`build_filtering_comparison_table`](https://github.com/glockyco/Teralizer/blob/9f18b49c27c992ed54ae0345cf38f43e795b2f3c/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L227)
 
-Generalization attempts are reported separately from emitted, filter-adjudicated, validated, reduced, and final-usable tests. A missing independent task record remains unknown.
+Generalization attempts are reported separately from emitted, filter-result-recorded, validated, reduced, and final-usable tests. A missing independent task record remains unknown.
 
 **Observed generalized-test populations for Improved (200 tries). Unknown means that no independent task record proves the reported failure stage ran.**
 
@@ -55,7 +55,7 @@ Generalization attempts are reported separately from emitted, filter-adjudicated
 | --- | --- | --- | --- | --- | --- |
 | Attempted | 5,356 | 5,356 | 0 | 0 | 0 |
 | Emitted | 2,057 | 5,356 | 3,299 | 3,299 | 0 |
-| Filter adjudicated | 2,035 | 2,057 | 22 | 22 | 0 |
+| Filter result recorded | 2,035 | 2,057 | 22 | 22 | 0 |
 | Filter passed | 1,615 | 2,035 | 420 | 420 | 0 |
 | Validated | 1,615 | 1,615 | 0 | 0 | 0 |
 | Reduced | 1,435 | 1,615 | 180 | 32 | 148 |
@@ -63,7 +63,7 @@ Generalization attempts are reported separately from emitted, filter-adjudicated
 
 _A lifecycle failure stage without a matching task record remains unknown; later failure labels are not treated as attempt evidence._
 
-source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/d3f3690dc17c9ef6cf6ffea3f15b5bddb7936ea4/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L276)
+source: [`build_generalization_funnel`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_generalization_funnel.py#L276)
 
 Generic JPF uncaught-exception diagnostics are reclassified from their retained detail into application exceptions and JPF environment gaps.
 
@@ -100,7 +100,7 @@ source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/b
 | --- | --- | --- | --- | --- |
 | Test | Included | included | 44,875 (52.6%) | 85,368 |
 | Test | Filter rejection | filtering | 37,363 (43.8%) | 85,368 |
-| Test | Unsupported capability | filtering | 2,835 (3.3%) | 85,368 |
+| Test | Inherited-test inlining limit | filtering | 2,835 (3.3%) | 85,368 |
 | Test | Task exception | failures | 295 (0.3%) | 85,368 |
 | Assertion | Included | included | 6,905 (3.8%) | 180,548 |
 | Assertion | Filter rejection | filtering | 166,602 (92.3%) | 180,548 |
@@ -112,7 +112,7 @@ source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/b
 | Generalization | Build quarantine | failures | 5 (0.1%) | 5,356 |
 | Generalization | Task exception | failures | 17 (0.3%) | 5,356 |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Exclusion results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -122,7 +122,7 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
 | Generalization | 5,356 | 1,615 (30.2%) | 3,719 (69.4%) | 22 (0.4%) |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Filtering results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -142,9 +142,9 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | — | 5,203 (2.9%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | — | 420 (20.6%) |
 
-source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/da8dfb508e363bd66c05e6739ddf0a5d3c63f6d2/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
+source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
 
-The reader-facing filtering column combines filter decisions, generation-gate refusals, and unsupported-capability declinations. The preceding table preserves the exact mechanisms.
+The reader-facing filtering column combines filter decisions, generation-gate refusals, and inherited-test inlining limits. The preceding table preserves the exact mechanisms.
 
 **Causes for generalization attempts that produce no generalized test in the real-world dataset.**
 

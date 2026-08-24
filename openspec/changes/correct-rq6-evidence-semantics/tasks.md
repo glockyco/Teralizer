@@ -23,10 +23,10 @@
 
 ## 4. Regenerate and Verify the Preserved Evidence
 
-- [ ] 4.1 Run the complete registered report set once against the preserved first-run database with all declared render targets. Do not run a project, corpus, sentinel, hotspot, or JARVIS workflow.
-- [ ] 4.2 Inspect the generated manifest, provenance, macros, tables, and audit CSVs. Stop on an undeclared artifact, missing declared artifact, retired identity, unsupported component count, or unrelated value drift.
-- [ ] 4.3 Confirm the five anonymous or local-class picks carry the unpathable-source characterization, the seven constant-input parameter rejections remain supported by empty generated-input lists, and the two PIT failures name the import or persistence operation.
-- [ ] 4.4 Run `uv run --directory analysis pytest`, `uv run --directory analysis ruff check .`, `uv run --directory analysis ty check .`, `./gradlew build`, and `lefthook run pre-commit --all-files` inside the pinned Nix environment.
+- [x] 4.1 Run the complete registered report set once against the preserved first-run database with all declared render targets. Do not run a project, corpus, sentinel, hotspot, or JARVIS workflow.
+- [x] 4.2 Inspect the generated manifest, provenance, macros, tables, and audit CSVs. Stop on an undeclared artifact, missing declared artifact, retired identity, unsupported component count, or unrelated value drift.
+- [x] 4.3 Confirm the five anonymous or local-class picks carry the unpathable-source characterization, the seven constant-input parameter rejections remain supported by empty generated-input lists, and the two PIT failures name the import or persistence operation.
+- [x] 4.4 Run `uv run --directory analysis pytest`, `uv run --directory analysis ruff check .`, `uv run --directory analysis ty check .`, `./gradlew build`, and `lefthook run pre-commit --all-files` inside the pinned Nix environment.
 - [ ] 4.5 Commit regenerated artifacts, provenance, manifests, and accepted contract revisions as one atomic evidence-publication subject. Record the source commit, artifact commit, manifest identity, provenance hash, and macro hash in the change completion evidence.
 
 ## 5. Close the Producer Handoff
