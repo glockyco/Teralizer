@@ -12,6 +12,19 @@
       "total": 24266,
       "unresolved": 24166,
       "unreviewed_population": 24166
+    },
+    {
+      "claim": "assertion-to-mut",
+      "incompatible": 0,
+      "method": "Deterministic stratified source review with n=100. The review selects 20 observations from each risk stratum. The strata are T3_SINGLE_WEAK, T4_GUESS, NO_VISIBLE_CALL, UNRESOLVED_SOURCE_DECLARATION, and ambiguous T1 or T2. The seed is reporeapers-v7-assertion-to-mut-review.",
+      "population_definition": "All 180,548 assertion-to-MUT resolution observations in eligible version 7 projects.",
+      "population_sha256": "31bb42a24303424beeac654f256e38afa9fbcf7f2b63991fdb27637cca561fa2",
+      "reason": "Of 100 targeted observations, 36 support the persisted mapping and 34 contradict it. Another 30 observations lack sufficient specification evidence. The design targets five risk strata with 37,669 observations. It does not estimate accuracy for the other 142,879 observations.",
+      "resolved": 70,
+      "status": "partially-supported",
+      "total": 180548,
+      "unresolved": 180478,
+      "unreviewed_population": 180448
     }
   ],
   "entities": [
@@ -3202,6 +3215,3206 @@
           "confidence": "T2_CORROBORATED",
           "label": "unsupported-oracle",
           "rationale": "The collected test contains an expected-exception, mock, rule, fluent, or other oracle that the filter did not recognize.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_beldenge_ZodiacGenetics/src/test/java/com/ciphertool/genetics/population/StandardPopulationTest.java\",\"com.ciphertool.genetics.population.StandardPopulationTest\",\"com.ciphertool.genetics.population.StandardPopulationTest.testClearIndividuals\",\"#body#statement[index=8]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.math.BigDecimal\\\",\\\"value\\\":\\\"BigDecimal.valueOf(10.0)\\\"},{\\\"type\\\":\\\"java.math.BigDecimal\\\",\\\"value\\\":\\\"population.getTotalFitness()\\\"}]\",\"assertEquals(BigDecimal.valueOf(10.0), population.getTotalFitness())\"]",
+        "project_revision": "5f89452b8a2e83ce50e8c735f1fb1df7e77c4e82",
+        "project_root": "projects/github_com_beldenge_ZodiacGenetics"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates population.addIndividual(chromosome2) with the state or value that assertEquals(BigDecimal.valueOf(10.0), population.getTotalFitness()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates population.addIndividual(chromosome2) with the state or value that assertEquals(BigDecimal.valueOf(10.0), population.getTotalFitness()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_Arci_Carcassonne/src/test/java/it/polimi/carcassonne/test/PlayerTest.java\",\"it.polimi.carcassonne.test.PlayerTest\",\"it.polimi.carcassonne.test.PlayerTest.markerTests\",\"#body#statement[index=3]#body#statement[index=0]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"i\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"player.getAvailableMarkerCount()\\\"}]\",\"assertEquals(i, player.getAvailableMarkerCount())\"]",
+        "project_revision": "6010fdb9ba7070162ebce384c5189fdfc7ba7fd5",
+        "project_root": "projects/github_com_Arci_Carcassonne"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates player.getMarker() with the state or value that assertEquals(i, player.getAvailableMarkerCount()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates player.getMarker() with the state or value that assertEquals(i, player.getAvailableMarkerCount()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_buddycloud_buddycloud-server-java/src/test/java/org/buddycloud/channelserver/packetprocessor/iq/namespace/pubsub/set/SubscribeSetTest.java\",\"org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSetTest\",\"org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSetTest.canSubscribeIfInvited\",\"#body#statement[index=8]\",\"assertEquals\",\"[{\\\"type\\\":\\\"org.xmpp.packet.IQ$Type\\\",\\\"value\\\":\\\"IQ.Type.result\\\"},{\\\"type\\\":\\\"org.xmpp.packet.IQ$Type\\\",\\\"value\\\":\\\"response.getType()\\\"}]\",\"Assert.assertEquals(IQ.Type.result, response.getType())\"]",
+        "project_revision": "11ddd92deb91142ac056b76546dc00a8e04e44c1",
+        "project_root": "projects/github_com_buddycloud_buddycloud-server-java"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates subscribe.process(element, new JID(\"francisco@denmark.lit\"), request, null) with the state or value that Assert.assertEquals(IQ.Type.result, response.getType()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates subscribe.process(element, new JID(\"francisco@denmark.lit\"), request, null) with the state or value that Assert.assertEquals(IQ.Type.result, response.getType()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_gburgett_XFlat/src/test/java/org/xflatdb/xflat/transaction/ThreadContextTransactionManagerTest.java\",\"org.xflatdb.xflat.transaction.ThreadContextTransactionManagerTest\",\"org.xflatdb.xflat.transaction.ThreadContextTransactionManagerTest.testNotSupportedPropagation_TransactionDoesntExist_OperatesNonTransactionally\",\"#body#statement[index=1]#body#statement[index=0]#body#statement[index=5]\",\"assertFalse\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"Revert on inner should not propagate to outer\\\\\\\"\\\"},{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"outer.isReverted()\\\"}]\",\"assertFalse(\\\"Revert on inner should not propagate to outer\\\", outer.isReverted())\"]",
+        "project_revision": "cf071f58a91df2499733c940a192be52653a1b97",
+        "project_root": "projects/github_com_gburgett_XFlat"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates instance.openTransaction(new TransactionOptions().withPropagation(Propagation.NOT_SUPPORTED)) with the state or value that assertFalse(\"Revert on inner should not propagate to outer\", outer.isReverted()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates instance.openTransaction(new TransactionOptions().withPropagation(Propagation.NOT_SUPPORTED)) with the state or value that assertFalse(\"Revert on inner should not propagate to outer\", outer.isReverted()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_urbanairship_java-library/src/test/java/com/urbanairship/api/push/parse/notification/ParseActionsTest.java\",\"com.urbanairship.api.push.parse.notification.ParseActionsTest\",\"com.urbanairship.api.push.parse.notification.ParseActionsTest.testOpenLandingPage\",\"#body#statement[index=0]#statement[index=8]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"Content-type not round-tripped.\\\\\\\"\\\"},{\\\"type\\\":\\\"java.util.Optional\\\",\\\"value\\\":\\\"expected.getContentType()\\\"},{\\\"type\\\":\\\"java.util.Optional\\\",\\\"value\\\":\\\"actual.getContentType()\\\"}]\",\"assertEquals(\\\"Content-type not round-tripped.\\\", expected.getContentType(), actual.getContentType())\"]",
+        "project_revision": "c6c08d7f8da86b71cfc1684725360f052b9b9bab",
+        "project_root": "projects/github_com_urbanairship_java-library"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates getAction(actions, ActionType.OPEN_LANDING_PAGE_WITH_CONTENT, OpenLandingPageWithContentAction.class) with the state or value that assertEquals(\"Content-type not round-tripped.\", expected.getContentType(), actual.getContentType()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates getAction(actions, ActionType.OPEN_LANDING_PAGE_WITH_CONTENT, OpenLandingPageWithContentAction.class) with the state or value that assertEquals(\"Content-type not round-tripped.\", expected.getContentType(), actual.getContentType()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_vladimirus_learnedsomething/src/test/java/com/learnedsomething/dao/impl/RedditParserTest.java\",\"com.learnedsomething.dao.impl.RedditParserTest\",\"com.learnedsomething.dao.impl.RedditParserTest.doSearchFromStaticFile01\",\"#body#statement[index=4]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"http://www.reddit.com/?count=25&after=t3_1toimn\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"searchResult.getNextPage()\\\"}]\",\"assertEquals(\\\"http://www.reddit.com/?count=25&after=t3_1toimn\\\", searchResult.getNextPage())\"]",
+        "project_revision": "ce41b2c3af5c2cbbefe29da1a8caa76b82154c5d",
+        "project_root": "projects/github_com_vladimirus_learnedsomething"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates // when redditParser.parse() with the state or value that assertEquals(\"http://www.reddit.com/?count=25&after=t3_1toimn\", searchResult.getNextPage()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates // when redditParser.parse() with the state or value that assertEquals(\"http://www.reddit.com/?count=25&after=t3_1toimn\", searchResult.getNextPage()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_42BV_pdf-library/src/test/java/org/toucanpdf/api/ImageTest.java\",\"org.toucanpdf.api.ImageTest\",\"org.toucanpdf.api.ImageTest.testCopy\",\"#body#statement[index=6]\",\"assertEquals\",\"[{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"b.getWidth()\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"i.getWidth()\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"FloatEqualityTester.EPSILON\\\"}]\",\"assertEquals(b.getWidth(), i.getWidth(), FloatEqualityTester.EPSILON)\"]",
+        "project_revision": "45360abdf5047896b903060aeabcb8862264da75",
+        "project_root": "projects/github_com_42BV_pdf-library"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The selected getImageParser call does not produce either width. The BaseImage constructor or copy operation produces the checked state.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The selected getImageParser call does not produce either width. The BaseImage constructor or copy operation produces the checked state.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_adamdubiel_jason/src/test/java/org/jasonjson/core/stream/JsonWriterTest.java\",\"org.jasonjson.core.stream.JsonWriterTest\",\"org.jasonjson.core.stream.JsonWriterTest.testBooleans\",\"#body#statement[index=6]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"[true,false]\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"stringWriter.toString()\\\"}]\",\"assertEquals(\\\"[true,false]\\\", stringWriter.toString())\"]",
+        "project_revision": "3f4db02925cbffa35c81a9fdaacd970c44796576",
+        "project_root": "projects/github_com_adamdubiel_jason"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates jsonWriter.endArray() with the state or value that assertEquals(\"[true,false]\", stringWriter.toString()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates jsonWriter.endArray() with the state or value that assertEquals(\"[true,false]\", stringWriter.toString()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_etcinitd_jalf/src/test/java/jalf/predicate/TestComparisonPredicate.java\",\"jalf.predicate.TestComparisonPredicate\",\"jalf.predicate.TestComparisonPredicate.testSplit\",\"#body#statement[index=15]\",\"assertEquals\",\"[{\\\"type\\\":\\\"jalf.Predicate\\\",\\\"value\\\":\\\"source\\\"},{\\\"type\\\":\\\"jalf.Predicate\\\",\\\"value\\\":\\\"split.left\\\"}]\",\"assertEquals(source, split.left)\"]",
+        "project_revision": "97ce174c46b8989a95cb2d03e241c28066692027",
+        "project_root": "projects/github_com_etcinitd_jalf"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates source.split(list) with the state or value that assertEquals(source, split.left) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates source.split(list) with the state or value that assertEquals(source, split.left) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_likethecolor_Alchemy-API/src/test/java/com/likethecolor/alchemy/api/params/RelationParamsTest.java\",\"com.likethecolor.alchemy.api.params.RelationParamsTest\",\"com.likethecolor.alchemy.api.params.RelationParamsTest.testShowSourceText\",\"#body#statement[index=5]\",\"assertFalse\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"params.isShowSourceText()\\\"}]\",\"assertFalse(params.isShowSourceText())\"]",
+        "project_revision": "5208cfc92a878ceeaff052787af29da92d98db7e",
+        "project_root": "projects/github_com_likethecolor_Alchemy-API"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates params.setIsShowSourceText(false) with the state or value that assertFalse(params.isShowSourceText()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates params.setIsShowSourceText(false) with the state or value that assertFalse(params.isShowSourceText()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_etcinitd_jalf/src/test/java/jalf/predicate/TestNotPredicate.java\",\"jalf.predicate.TestNotPredicate\",\"jalf.predicate.TestNotPredicate.testSplit\",\"#body#statement[index=17]\",\"assertEquals\",\"[{\\\"type\\\":\\\"jalf.Predicate\\\",\\\"value\\\":\\\"not\\\"},{\\\"type\\\":\\\"jalf.Predicate\\\",\\\"value\\\":\\\"got.left\\\"}]\",\"assertEquals(not, got.left)\"]",
+        "project_revision": "97ce174c46b8989a95cb2d03e241c28066692027",
+        "project_root": "projects/github_com_etcinitd_jalf"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates not.split(list) with the state or value that assertEquals(not, got.left) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates not.split(list) with the state or value that assertEquals(not, got.left) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_jericks_geometrycommands/src/test/java/org/geometrycommands/DrawBase64CommandTest.java\",\"org.geometrycommands.DrawBase64CommandTest\",\"org.geometrycommands.DrawBase64CommandTest.execute\",\"#body#statement[index=8]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"result.length() > 0\\\"}]\",\"assertTrue(result.length() > 0)\"]",
+        "project_revision": "596a289a74073796eed0f60185e0d136e5951e3b",
+        "project_root": "projects/github_com_jericks_geometrycommands"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates command.execute(options, reader, writer) with the state or value that assertTrue(result.length() > 0) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates command.execute(options, reader, writer) with the state or value that assertTrue(result.length() > 0) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_hofmeister_smartq/src/test/java/com/vonhof/smartq/WriteThroughQueueTest.java\",\"com.vonhof.smartq.WriteThroughQueueTest\",\"com.vonhof.smartq.WriteThroughQueueTest.can_do_subscriber_based_estimations\",\"#body#statement[index=12]\",\"assertEquals\",\"[{\\\"type\\\":\\\"long\\\",\\\"value\\\":\\\"queue.queueSize()\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"4\\\"}]\",\"assertEquals(queue.queueSize(), 4)\"]",
+        "project_revision": "eff4a13412f27a2c49f301d3beeef89e59d27366",
+        "project_root": "projects/github_com_hofmeister_smartq"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "setSubscribers does not add tasks. The four preceding submit calls determine queueSize.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "setSubscribers does not add tasks. The four preceding submit calls determine queueSize.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_Arci_Carcassonne/src/test/java/it/polimi/carcassonne/test/EnumsTest.java\",\"it.polimi.carcassonne.test.EnumsTest\",\"it.polimi.carcassonne.test.EnumsTest.commandsSocketTests\",\"#body#statement[index=117]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"leave\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"command.toString()\\\"}]\",\"assertEquals(\\\"leave\\\", command.toString())\"]",
+        "project_revision": "6010fdb9ba7070162ebce384c5189fdfc7ba7fd5",
+        "project_root": "projects/github_com_Arci_Carcassonne"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates Commands.getCommandByStringSocket(\"leave:N\") with the state or value that assertEquals(\"leave\", command.toString()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates Commands.getCommandByStringSocket(\"leave:N\") with the state or value that assertEquals(\"leave\", command.toString()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_DAT055-2_OpenFlisp/src/test/java/se/openflisp/sls/event/ComponentEventDelegatorTest.java\",\"se.openflisp.sls.event.ComponentEventDelegatorTest\",\"se.openflisp.sls.event.ComponentEventDelegatorTest.testAddingSeveralListeners\",\"#body#statement[index=9]\",\"assertThat\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"eventDelegator.getNormalListeners().size()\\\"},{\\\"type\\\":\\\"org.hamcrest.Matcher\\\",\\\"value\\\":\\\"is(2)\\\"}]\",\"assertThat(eventDelegator.getNormalListeners().size(), is(2))\"]",
+        "project_revision": "04d7c733cd1bbe6269367296f37722d9d3bcb021",
+        "project_root": "projects/github_com_DAT055-2_OpenFlisp"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getModelListeners does not produce the normal-listener count that the assertion checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getModelListeners does not produce the normal-listener count that the assertion checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_termd_termd/src/test/java/io/termd/core/readline/EventQueueTest.java\",\"io.termd.core.readline.EventQueueTest\",\"io.termd.core.readline.EventQueueTest.testBuffer\",\"#body#statement[index=10]\",\"assertEquals\",\"[{\\\"type\\\":\\\"char\\\",\\\"value\\\":\\\"'o'\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"buffer.get()\\\"}]\",\"assertEquals('o', buffer.get())\"]",
+        "project_revision": "c2aa8c4c54ef3fbb546bb9da4fed7681de657923",
+        "project_root": "projects/github_com_termd_termd"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates queue.getBuffer() with the state or value that assertEquals('o', buffer.get()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates queue.getBuffer() with the state or value that assertEquals('o', buffer.get()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_muga_msgpack-java-0_7/src/test/java/org/msgpack/simple/TestSimpleDynamicTyping.java\",\"org.msgpack.simple.TestSimpleDynamicTyping\",\"org.msgpack.simple.TestSimpleDynamicTyping.testTypes\",\"#body#statement[index=3]#then#statement[index=6]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"3\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"n2\\\"}]\",\"assertEquals(3, n2)\"]",
+        "project_revision": "fa48b47539e1f53558f5dbfd6d0540aa56592e65",
+        "project_root": "projects/github_com_muga_msgpack-java-0_7"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates array.get(2).asIntegerValue() with the state or value that assertEquals(3, n2) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates array.get(2).asIntegerValue() with the state or value that assertEquals(3, n2) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bandwidthcom_java-bandwidth/src/test/java/com/bandwidth/sdk/model/CallTest.java\",\"com.bandwidth.sdk.model.CallTest\",\"com.bandwidth.sdk.model.CallTest.shouldTransferCall\",\"#body#statement[index=15]\",\"assertThat\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"mockClient.requests.get(1).name\\\"},{\\\"type\\\":\\\"org.hamcrest.Matcher\\\",\\\"value\\\":\\\"equalTo(\\\\\\\"get\\\\\\\")\\\"}]\",\"assertThat(mockClient.requests.get(1).name, equalTo(\\\"get\\\"))\"]",
+        "project_revision": "8f7ef1fce8ac5842d19a2a80b3fde3122f5f99df",
+        "project_root": "projects/github_com_bandwidthcom_java-bandwidth"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates call.callTransferBuilder(\"8917727272\") with the state or value that assertThat(mockClient.requests.get(1).name, equalTo(\"get\")) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates call.callTransferBuilder(\"8917727272\") with the state or value that assertThat(mockClient.requests.get(1).name, equalTo(\"get\")) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_mangstadt_ez-vcard/src/test/java/ezvcard/property/TimezoneTest.java\",\"ezvcard.property.TimezoneTest\",\"ezvcard.property.TimezoneTest.set_value\",\"#body#statement[index=5]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.time.ZoneOffset\\\",\\\"value\\\":\\\"ZoneOffset.ofHours(1)\\\"},{\\\"type\\\":\\\"java.time.ZoneOffset\\\",\\\"value\\\":\\\"property.getOffset()\\\"}]\",\"assertEquals(ZoneOffset.ofHours(1), property.getOffset())\"]",
+        "project_revision": "3de4d56527f7160de1b1e05fba2f4dce2466c243",
+        "project_root": "projects/github_com_mangstadt_ez-vcard"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates property.setText(\"text\") with the state or value that assertEquals(ZoneOffset.ofHours(1), property.getOffset()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates property.setText(\"text\") with the state or value that assertEquals(ZoneOffset.ofHours(1), property.getOffset()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t3-single-weak",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_TwoGuysFromKabul_xenqtt/src/test/java/net/xenqtt/message/PubMessageTest.java\",\"net.xenqtt.message.PubMessageTest\",\"net.xenqtt.message.PubMessageTest.testOutboundCtor_Qos1_DuplicateNotRetain\",\"#body#statement[index=4]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"net.sf/message/topic\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"message.getTopicName()\\\"}]\",\"assertEquals(\\\"net.sf/message/topic\\\", message.getTopicName())\"]",
+        "project_revision": "19ba26fed369e087e5d69a385c8f1876c587f39e",
+        "project_root": "projects/github_com_TwoGuysFromKabul_xenqtt"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getMessageId does not produce the topic name. Distinct PubMessage accessors return these values.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getMessageId does not produce the topic name. Distinct PubMessage accessors return these values.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_ESAPI_esapi-java-legacy/src/test/java/org/owasp/esapi/filters/SecurityWrapperRequestTest.java\",\"org.owasp.esapi.filters.SecurityWrapperRequestTest\",\"org.owasp.esapi.filters.SecurityWrapperRequestTest.testGetCookieSkipOnBadName\",\"#body#statement[index=13]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"0\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"cookies.length\\\"}]\",\"assertEquals(0, cookies.length)\"]",
+        "project_revision": "e2183d6170a250ad97289e4090e3faeec1eecadf",
+        "project_root": "projects/github_com_ESAPI_esapi-java-legacy"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The selected getValidInput expression configures a mock. request.getCookies produces the checked array.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The selected getValidInput expression configures a mock. request.getCookies produces the checked array.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_mpatric_mp3agic/src/test/java/com/mpatric/mp3agic/ID3v1TagTest.java\",\"com.mpatric.mp3agic.ID3v1TagTest\",\"com.mpatric.mp3agic.ID3v1TagTest.shouldReadTagFieldsFromMp3\",\"#body#statement[index=10]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"COMMENT123456789012345678901\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"id3tag.getComment()\\\"}]\",\"assertEquals(\\\"COMMENT123456789012345678901\\\", id3tag.getComment())\"]",
+        "project_revision": "bf3a1ab46bf542734712bad27fdb0fe5470621fe",
+        "project_root": "projects/github_com_mpatric_mp3agic"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getGenreDescription does not produce the comment that getComment returns.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getGenreDescription does not produce the comment that getComment returns.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_chamelaeon_Dicebot/src/test/java/com/chamelaeon/dicebot/commands/HelpCommandTest.java\",\"com.chamelaeon.dicebot.commands.HelpCommandTest\",\"com.chamelaeon.dicebot.commands.HelpCommandTest.testHelpDetails\",\"#body#statement[index=6]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.util.List\\\",\\\"value\\\":\\\"list\\\"},{\\\"type\\\":\\\"java.util.List\\\",\\\"value\\\":\\\"details.getExamples()\\\"}]\",\"assertEquals(list, details.getExamples())\"]",
+        "project_revision": "fd1da04026115f82e4276b4e638c88a625c83afc",
+        "project_root": "projects/github_com_chamelaeon_Dicebot"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getType does not produce the examples list that getExamples returns.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getType does not produce the examples list that getExamples returns.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_frizbog_gedcom4j/src/test/java/org/gedcom4j/writer/GedcomWriter551Test.java\",\"org.gedcom4j.writer.GedcomWriter551Test\",\"org.gedcom4j.writer.GedcomWriter551Test.testMultilineCopyrightWith551Good\",\"#body#statement[index=6]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"gw.lines.isEmpty()\\\"}]\",\"assertTrue(gw.lines.isEmpty())\"]",
+        "project_revision": "e0aa5da86699cdcd5bc6be995a22a07dcbe25f7f",
+        "project_root": "projects/github_com_frizbog_gedcom4j"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "setValidationSuppressed configures the writer. It does not produce the empty lines collection that the test checks before write.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "setValidationSuppressed configures the writer. It does not produce the empty lines collection that the test checks before write.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_nclarkekb_antiaction-common-json/src/test/java/com/antiaction/common/json/TestJSONStreamMarshaller_ParametrizedCollectionFields.java\",\"com.antiaction.common.json.TestJSONStreamMarshaller_ParametrizedCollectionFields\",\"com.antiaction.common.json.TestJSONStreamMarshaller_ParametrizedCollectionFields.test_jsonobjectmapper_array_tojson\",\"#body#statement[index=8]#body#statement[index=17]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"json_compact.length\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"json_pretty.length\\\"}]\",\"Assert.assertEquals(json_compact.length, json_pretty.length)\"]",
+        "project_revision": "a6aded117fd94c06261a2bb754e5982d91c0365b",
+        "project_root": "projects/github_com_nclarkekb_antiaction-common-json"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getStreamUnmarshaller does not determine the serialized byte-array lengths. The marshaller and whitespace filter determine them.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getStreamUnmarshaller does not determine the serialized byte-array lengths. The marshaller and whitespace filter determine them.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_muga_msgpack-java-0_7/src/test/java/org/msgpack/TestPackConvert.java\",\"org.msgpack.TestPackConvert\",\"org.msgpack.TestPackConvert.testPackValuePassedAsObject\",\"#body#statement[index=7]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"text.length() + 1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"bytes.length\\\"}]\",\"Assert.assertEquals(text.length() + 1, bytes.length)\"]",
+        "project_revision": "fa48b47539e1f53558f5dbfd6d0540aa56592e65",
+        "project_root": "projects/github_com_muga_msgpack-java-0_7"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates packer.write(value)// passed as object  with the state or value that Assert.assertEquals(text.length() + 1, bytes.length) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates packer.write(value)// passed as object  with the state or value that Assert.assertEquals(text.length() + 1, bytes.length) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_shiguera_gpxparser/src/test/java/com/mlab/gpx/test/impl/TestSimpleWayPoint.java\",\"com.mlab.gpx.test.impl.TestSimpleWayPoint\",\"com.mlab.gpx.test.impl.TestSimpleWayPoint.test\",\"#body#statement[index=16]\",\"assertEquals\",\"[{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"-3.5\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"wp3.getLongitude()\\\"}]\",\"Assert.assertEquals(-3.5, wp3.getLongitude())\"]",
+        "project_revision": "8db1644f51b52b76aace0170e86a23e11f3891a8",
+        "project_root": "projects/github_com_shiguera_gpxparser"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getDescription does not produce the longitude that getLongitude returns.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getDescription does not produce the longitude that getLongitude returns.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_Bombe_ams/src/test/java/net/pterodactylus/ams/core/commands/ParseCommandTest.java\",\"net.pterodactylus.ams.core.commands.ParseCommandTest\",\"net.pterodactylus.ams.core.commands.ParseCommandTest.filenameIsParsedAccordingToPattern\",\"#body#statement[index=3]\",\"assertThat\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"file.getTag().getName().get()\\\"},{\\\"type\\\":\\\"org.hamcrest.Matcher\\\",\\\"value\\\":\\\"Matchers.is(\\\\\\\"the-song\\\\\\\")\\\"}]\",\"MatcherAssert.assertThat(file.getTag().getName().get(), Matchers.is(\\\"the-song\\\"))\"]",
+        "project_revision": "ed765ce3965895976398537a54ed48d4d44ab1d0",
+        "project_root": "projects/github_com_Bombe_ams"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getArtist does not produce the parsed song name. command.execute populates the tag.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getArtist does not produce the parsed song name. command.execute populates the tag.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_jhalterman_fabrique/src/test/java/org/jodah/fabrique/Examples.java\",\"org.jodah.fabrique.Examples\",\"org.jodah.fabrique.Examples.example4\",\"#body#statement[index=4]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.Object\\\",\\\"value\\\":\\\"_testObject1\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"Int\\\\\\\" + 5\\\"}]\",\"assertEquals(_testObject1, \\\"Int\\\" + 5)\"]",
+        "project_revision": "7c7e7431812d54c9ebffb8d5c83e7b5ec8d023e6",
+        "project_root": "projects/github_com_jhalterman_fabrique"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates ObjectFactory.getInstance(Object.class, 5) with the state or value that assertEquals(_testObject1, \"Int\" + 5) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates ObjectFactory.getInstance(Object.class, 5) with the state or value that assertEquals(_testObject1, \"Int\" + 5) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_erchu_bean-cp/src/test/java/com/github/erchu/beancp/commons/NameBasedConventionFlateningFeatureTest.java\",\"com.github.erchu.beancp.commons.NameBasedConventionFlateningFeatureTest\",\"com.github.erchu.beancp.commons.NameBasedConventionFlateningFeatureTest.when_flatening_is_enabled_then_convention_should_look_for_matching_inner_members\",\"#body#statement[index=6]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"Invalid result.secondName value\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"sourceInstance.getSecond().getName()\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"result.secondName\\\"}]\",\"assertEquals(\\\"Invalid result.secondName value\\\", sourceInstance.getSecond().getName(), result.secondName)\"]",
+        "project_revision": "675bbdbf22d1c9b69ce59bd113c8e13c2b3d1002",
+        "project_root": "projects/github_com_erchu_bean-cp"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "sourceInstance.getSecond supplies an expected operand. mapper.map produces the destination value under test.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "sourceInstance.getSecond supplies an expected operand. mapper.map produces the destination value under test.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_alwex_JBoy/src/test/java/com/alwex/jboy/hardware/OpCodesTest.java\",\"com.alwex.jboy.hardware.OpCodesTest\",\"com.alwex.jboy.hardware.OpCodesTest.test_0x05_DEC\",\"#body#statement[index=18]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"0x101\\\"},{\\\"type\\\":\\\"short\\\",\\\"value\\\":\\\"OpCodesTest.theCpu.PC\\\"}]\",\"assertEquals(0x101, OpCodesTest.theCpu.PC)\"]",
+        "project_revision": "e1caecf2c2ace05d1dd3ad8c4eb57a00d017a508",
+        "project_root": "projects/github_com_alwex_JBoy"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getF reads a flag. It does not produce the program counter that processOpCode advances.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getF reads a flag. It does not produce the program counter that processOpCode advances.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_Mause_snakeyaml/src/test/java/org/yaml/snakeyaml/issues/issue95/ArrayInGenericCollectionTest.java\",\"org.yaml.snakeyaml.issues.issue95.ArrayInGenericCollectionTest\",\"org.yaml.snakeyaml.issues.issue95.ArrayInGenericCollectionTest.testArrayAsMapValueWithTypeDespriptor\",\"#body#statement[index=11]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"data.meta.size()\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"loaded.meta.size()\\\"}]\",\"assertEquals(data.meta.size(), loaded.meta.size())\"]",
+        "project_revision": "e158f73868d247fc53c7badf011e6be13df9256c",
+        "project_root": "projects/github_com_Mause_snakeyaml"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates ((A) (yaml2load.load(dump))) with the state or value that assertEquals(data.meta.size(), loaded.meta.size()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates ((A) (yaml2load.load(dump))) with the state or value that assertEquals(data.meta.size(), loaded.meta.size()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_urbanairship_java-library/src/test/java/com/urbanairship/api/push/parse/notification/android/PayloadDeserializerTest.java\",\"com.urbanairship.api.push.parse.notification.android.PayloadDeserializerTest\",\"com.urbanairship.api.push.parse.notification.android.PayloadDeserializerTest.testStyle\",\"#body#statement[index=7]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.Object\\\",\\\"value\\\":\\\"bigTextPayload.getStyle().get().getTitle().get()\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"A title\\\\\\\"\\\"}]\",\"assertEquals(bigTextPayload.getStyle().get().getTitle().get(), \\\"A title\\\")\"]",
+        "project_revision": "c6c08d7f8da86b71cfc1684725360f052b9b9bab",
+        "project_root": "projects/github_com_urbanairship_java-library"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getSummary does not produce the title that getTitle returns.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getSummary does not produce the title that getTitle returns.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_hofmeister_smartq/src/test/java/com/vonhof/smartq/server/ClientServerTest.java\",\"com.vonhof.smartq.server.ClientServerTest\",\"com.vonhof.smartq.server.ClientServerTest.when_server_goes_away_it_moves_running_to_queued_when_restarted\",\"#body#statement[index=29]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"Client auto reconnects\\\\\\\"\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"newServer.getClientCount()\\\"}]\",\"assertEquals(\\\"Client auto reconnects\\\", 1, newServer.getClientCount())\"]",
+        "project_revision": "eff4a13412f27a2c49f301d3beeef89e59d27366",
+        "project_root": "projects/github_com_hofmeister_smartq"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates proxy.reopen() with the state or value that assertEquals(\"Client auto reconnects\", 1, newServer.getClientCount()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates proxy.reopen() with the state or value that assertEquals(\"Client auto reconnects\", 1, newServer.getClientCount()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_crazycode_morphia/src/test/java/com/google/code/morphia/TestMapping.java\",\"com.google.code.morphia.TestMapping\",\"com.google.code.morphia.TestMapping.testFinalFieldNotPersisted\",\"#body#statement[index=6]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"foo\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"loaded.name\\\"}]\",\"assertEquals(\\\"foo\\\", loaded.name)\"]",
+        "project_revision": "20f6d3ce503d374d74309c35b264c4728cbb74f8",
+        "project_root": "projects/github_com_crazycode_morphia"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates ds.get(ContainsFinalField.class, savedKey.getId()) with the state or value that assertEquals(\"foo\", loaded.name) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates ds.get(ContainsFinalField.class, savedKey.getId()) with the state or value that assertEquals(\"foo\", loaded.name) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_alwex_JBoy/src/test/java/com/alwex/jboy/hardware/OpCodesTest.java\",\"com.alwex.jboy.hardware.OpCodesTest\",\"com.alwex.jboy.hardware.OpCodesTest.test_0x83_ADD\",\"#body#statement[index=27]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"0x101\\\"},{\\\"type\\\":\\\"short\\\",\\\"value\\\":\\\"OpCodesTest.theCpu.PC\\\"}]\",\"assertEquals(0x101, OpCodesTest.theCpu.PC)\"]",
+        "project_revision": "e1caecf2c2ace05d1dd3ad8c4eb57a00d017a508",
+        "project_root": "projects/github_com_alwex_JBoy"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getF reads a flag. It does not produce the program counter that processOpCode advances.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getF reads a flag. It does not produce the program counter that processOpCode advances.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_FIWARE-Middleware_KIARA/src/test/java/org/fiware/kiara/serialization/CDRAlignmentTest.java\",\"org.fiware.kiara.serialization.CDRAlignmentTest\",\"org.fiware.kiara.serialization.CDRAlignmentTest.BooleanAlignDeserializeTest\",\"#body#statement[index=5]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"(cin == cout) && (iin == iout)\\\"}]\",\"assertTrue((cin == cout) && (iin == iout))\"]",
+        "project_revision": "d21dc7e9ff233e9265bdde0ee2b1d670c9104fb7",
+        "project_root": "projects/github_com_FIWARE-Middleware_KIARA"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The assertion combines char and boolean round trips. The test source does not identify one exclusive method under test.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The assertion combines char and boolean round trips. The test source does not identify one exclusive method under test.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_isparkes_OpenRateProv/src/test/java/OpenRate/customerinterface/webservices/EffDateZeroTest.java\",\"OpenRate.customerinterface.webservices.EffDateZeroTest\",\"OpenRate.customerinterface.webservices.EffDateZeroTest.testEffDate0\",\"#body#statement[index=29]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"createCustomerMethodReturnTypeObj.getMessage()\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"OK\\\\\\\"\\\"}]\",\"Assert.assertEquals(createCustomerMethodReturnTypeObj.getMessage(), \\\"OK\\\")\"]",
+        "project_revision": "cd7c7418396d6d69c966a4510edd13ced288b1d1",
+        "project_root": "projects/github_com_isparkes_OpenRateProv"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getReturnCode does not produce the message that getMessage returns.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getReturnCode does not produce the message that getMessage returns.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_AdSpore_Tinder/src/test/java/org/xmpp/packet/JIDDelimiterCharsTest.java\",\"org.xmpp.packet.JIDDelimiterCharsTest\",\"org.xmpp.packet.JIDDelimiterCharsTest.testAtCharInResource_I\",\"#body#statement[index=3]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"res@ource\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"jid.getResource()\\\"}]\",\"assertEquals(\\\"res@ource\\\", jid.getResource())\"]",
+        "project_revision": "6eedb36f5ad2bbbd8499c6a6cf1bc87fd2bd6001",
+        "project_root": "projects/github_com_AdSpore_Tinder"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getDomain does not produce the resource that getResource returns.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getDomain does not produce the resource that getResource returns.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "t4-guess",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_jmrozanec_cron-utils/src/test/java/com/cronutils/model/time/ExecutionTimeQuartzIntegrationTest.java\",\"com.cronutils.model.time.ExecutionTimeQuartzIntegrationTest\",\"com.cronutils.model.time.ExecutionTimeQuartzIntegrationTest.testIllegalQuestionMarkValue\",\"#body#statement[index=0]\",\"assertThrows\",\"[{\\\"type\\\":\\\"java.lang.Class\\\",\\\"value\\\":\\\"IllegalArgumentException.class\\\"},{\\\"type\\\":\\\"org.junit.jupiter.api.function.Executable\\\",\\\"value\\\":\\\"() -> ExecutionTime.forCron(parser.parse(\\\\\\\"0 0 12 1W ? *\\\\\\\"))\\\"}]\",\"assertThrows(IllegalArgumentException.class, () -> ExecutionTime.forCron(parser.parse(\\\"0 0 12 1W ? *\\\")))// s,m,H,DoM,M,DoW\\n\"]",
+        "project_revision": "d31697ec4c30d4f43a1b528e5781d1d00ea1c967",
+        "project_root": "projects/github_com_jmrozanec_cron-utils"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "Either parser.parse or ExecutionTime.forCron can raise the expected exception. The test source does not identify the throwing declaration.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "Either parser.parse or ExecutionTime.forCron can raise the expected exception. The test source does not identify the throwing declaration.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bfh-evg_unicrypt/src/test/java/ch/bfh/unicrypt/helper/sequence/SingletonSequenceTest.java\",\"ch.bfh.unicrypt.helper.sequence.SingletonSequenceTest\",\"ch.bfh.unicrypt.helper.sequence.SingletonSequenceTest.testGetInstance\",\"#body#statement[index=3]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"i\\\"}]\",\"Assert.assertEquals(1, i)\"]",
+        "project_revision": "2270dc25b55202134217da1de85fe922b6a31a57",
+        "project_root": "projects/github_com_bfh-evg_unicrypt"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The assertion checks the iteration count after a Sequence traversal. The observation omits this construction and traversal behavior.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The assertion checks the iteration count after a Sequence traversal. The observation omits this construction and traversal behavior.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_pulseenergy_harmony-treemap/src/test/java/org/apache/harmony/java/util/TreeMapExtendTest.java\",\"org.apache.harmony.java.util.TreeMapExtendTest\",\"org.apache.harmony.java.util.TreeMapExtendTest.test_DescendingSubMapKeySet_headSet\",\"#body#statement[index=182]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"109\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"index\\\"}]\",\"assertEquals(109, index)\"]",
+        "project_revision": "47da10d5688ddd1e7a9a727543fa1a33d81768cd",
+        "project_root": "projects/github_com_pulseenergy_harmony-treemap"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The assertion checks an accumulated local index. The test context does not identify one exclusive source call as its method under test.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The assertion checks an accumulated local index. The test context does not identify one exclusive source call as its method under test.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_chamelaeon_Dicebot/src/test/java/com/chamelaeon/dicebot/api/CardBaseTest.java\",\"com.chamelaeon.dicebot.api.CardBaseTest\",\"com.chamelaeon.dicebot.api.CardBaseTest.testDrawProbability\",\"#body#statement[index=6]\",\"assertEquals\",\"[{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"0.5\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"commonCount / cardsToDraw\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"0.001\\\"}]\",\"assertEquals(0.5, commonCount / cardsToDraw, 0.001)\"]",
+        "project_revision": "fd1da04026115f82e4276b4e638c88a625c83afc",
+        "project_root": "projects/github_com_chamelaeon_Dicebot"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The assertion checks counts from repeated cardBase.draw calls. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The assertion checks counts from repeated cardBase.draw calls. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_urbanairship_java-library/src/test/java/com/urbanairship/api/attributelists/AttributeListsCreateRequestTest.java\",\"com.urbanairship.api.attributelists.AttributeListsCreateRequestTest\",\"com.urbanairship.api.attributelists.AttributeListsCreateRequestTest.testContentType\",\"#body#statement[index=0]\",\"assertEquals\",\"[{\\\"type\\\":\\\"org.apache.http.entity.ContentType\\\",\\\"value\\\":\\\"createRequest.getContentType()\\\"},{\\\"type\\\":\\\"org.apache.http.entity.ContentType\\\",\\\"value\\\":\\\"ContentType.APPLICATION_JSON\\\"}]\",\"assertEquals(createRequest.getContentType(), ContentType.APPLICATION_JSON)\"]",
+        "project_revision": "c6c08d7f8da86b71cfc1684725360f052b9b9bab",
+        "project_root": "projects/github_com_urbanairship_java-library"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "createRequest.getContentType is visible in the assertion. The collected source contradicts NO_VISIBLE_CALL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "createRequest.getContentType is visible in the assertion. The collected source contradicts NO_VISIBLE_CALL.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_frizbog_gedcom4j/src/test/java/org/gedcom4j/model/NoteRecordTest.java\",\"org.gedcom4j.model.NoteRecordTest\",\"org.gedcom4j.model.NoteRecordTest.testEquals\",\"#body#statement[index=31]\",\"assertEquals\",\"[{\\\"type\\\":\\\"org.gedcom4j.model.NoteRecord\\\",\\\"value\\\":\\\"n1\\\"},{\\\"type\\\":\\\"org.gedcom4j.model.NoteRecord\\\",\\\"value\\\":\\\"n2\\\"}]\",\"assertEquals(n1, n2)\"]",
+        "project_revision": "e0aa5da86699cdcd5bc6be995a22a07dcbe25f7f",
+        "project_root": "projects/github_com_frizbog_gedcom4j"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "assertEquals invokes equals implicitly. No explicit eligible call or resolved declaration identifies the intended method under test.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "assertEquals invokes equals implicitly. No explicit eligible call or resolved declaration identifies the intended method under test.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_Themis-J_Themis-Service/src/test/java/com/jdc/themis/dealer/data/dao/hibernate/TestIncomeJournalDAOImpl.java\",\"com.jdc.themis.dealer.data.dao.hibernate.TestIncomeJournalDAOImpl\",\"com.jdc.themis.dealer.data.dao.hibernate.TestIncomeJournalDAOImpl.insertOneGeneralJournal\",\"#body#statement[index=10]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"hasJournal\\\"}]\",\"Assert.assertEquals(1, hasJournal)\"]",
+        "project_revision": "0b3ab5b52fd3ad1c6f31b106b4dcef962c360733",
+        "project_root": "projects/github_com_Themis-J_Themis-Service"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The saveGeneralJournal and getGeneralJournal operations produce the local count. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The saveGeneralJournal and getGeneralJournal operations produce the local count. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_frizbog_gedcom4j/src/test/java/org/gedcom4j/model/SourceTest.java\",\"org.gedcom4j.model.SourceTest\",\"org.gedcom4j.model.SourceTest.testEqualsObject\",\"#body#statement[index=26]\",\"assertEquals\",\"[{\\\"type\\\":\\\"org.gedcom4j.model.Source\\\",\\\"value\\\":\\\"s1\\\"},{\\\"type\\\":\\\"org.gedcom4j.model.Source\\\",\\\"value\\\":\\\"s2\\\"}]\",\"assertEquals(s1, s2)\"]",
+        "project_revision": "e0aa5da86699cdcd5bc6be995a22a07dcbe25f7f",
+        "project_root": "projects/github_com_frizbog_gedcom4j"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "assertEquals invokes equals implicitly. No explicit eligible call or resolved declaration identifies the intended method under test.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "assertEquals invokes equals implicitly. No explicit eligible call or resolved declaration identifies the intended method under test.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_crazycode_morphia/src/test/java/com/google/code/morphia/callbacks/TestCallbackEscalation.java\",\"com.google.code.morphia.callbacks.TestCallbackEscalation\",\"com.google.code.morphia.callbacks.TestCallbackEscalation.testPrePersistEscalation\",\"#body#statement[index=3]\",\"assertFalse\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"a.prePersist\\\"}]\",\"Assert.assertFalse(a.prePersist)\"]",
+        "project_revision": "20f6d3ce503d374d74309c35b264c4728cbb74f8",
+        "project_root": "projects/github_com_crazycode_morphia"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The assertion checks constructor-initialized field state. No explicit eligible call or resolved declaration identifies a method under test.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The assertion checks constructor-initialized field state. No explicit eligible call or resolved declaration identifies a method under test.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bojantomic_jeff/src/test/java/org/goodoldai/jeff/explanation/builder/SimpleDataExplanationChunkBuilderTest.java\",\"org.goodoldai.jeff.explanation.builder.SimpleDataExplanationChunkBuilderTest\",\"org.goodoldai.jeff.explanation.builder.SimpleDataExplanationChunkBuilderTest.testBuildChunkWrongTypeContent\",\"#body#statement[index=1]#catch[index=0]#body#statement[index=2]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"e instanceof ExplanationException\\\"}]\",\"assertTrue(e instanceof ExplanationException)\"]",
+        "project_revision": "bba2bb68e73c21c8e5f873f4c4c69c799ca75fd3",
+        "project_root": "projects/github_com_bojantomic_jeff"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "instance.buildChunk produces the caught exception. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "instance.buildChunk produces the caught exception. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_q-programming_tasq/src/test/java/com/qprogramming/tasq/projects/ProjectControllerTest.java\",\"com.qprogramming.tasq.projects.ProjectControllerTest\",\"com.qprogramming.tasq.projects.ProjectControllerTest.removeParticipantAuthErrorTest\",\"#body#statement[index=3]\",\"assertTrue\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"TASQ_AUTH_MSG\\\"},{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"catched\\\"}]\",\"Assert.assertTrue(TASQ_AUTH_MSG, catched)\"]",
+        "project_revision": "bcb986ab99596174ab8b0a2cd53705648ad794c5",
+        "project_root": "projects/github_com_q-programming_tasq"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "projectCtr.removeParticipant produces the caught authorization exception. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "projectCtr.removeParticipant produces the caught authorization exception. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_rhuss_docker-maven-plugin/src/test/java/io/fabric8/maven/docker/assembly/DockerAssemblyConfigurationSourceTest.java\",\"io.fabric8.maven.docker.assembly.DockerAssemblyConfigurationSourceTest\",\"io.fabric8.maven.docker.assembly.DockerAssemblyConfigurationSourceTest.testEmptyAssemblyConfig\",\"#body#statement[index=1]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"0\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"source.getDescriptors().length\\\"}]\",\"assertEquals(0, source.getDescriptors().length)\"]",
+        "project_revision": "2d926fe57c81397d37ebdc04a11de381c3203b79",
+        "project_root": "projects/github_com_rhuss_docker-maven-plugin"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "source.getDescriptors is visible in the assertion. The collected source contradicts NO_VISIBLE_CALL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "source.getDescriptors is visible in the assertion. The collected source contradicts NO_VISIBLE_CALL.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_oregami_oregami-server/src/test/java/org/oregami/service/TestServiceError.java\",\"org.oregami.service.TestServiceError\",\"org.oregami.service.TestServiceError.testEquals\",\"#body#statement[index=2]\",\"assertEquals\",\"[{\\\"type\\\":\\\"org.oregami.service.ServiceError\\\",\\\"value\\\":\\\"c1\\\"},{\\\"type\\\":\\\"org.oregami.service.ServiceError\\\",\\\"value\\\":\\\"c1\\\"}]\",\"Assert.assertEquals(c1, c1)\"]",
+        "project_revision": "ed4fabb7b6b24ef72bc606eb0da2ca59bdb37e2b",
+        "project_root": "projects/github_com_oregami_oregami-server"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "assertEquals invokes equals implicitly. No explicit eligible call or resolved declaration identifies the intended method under test.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "assertEquals invokes equals implicitly. No explicit eligible call or resolved declaration identifies the intended method under test.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bojantomic_jeff/src/test/java/org/goodoldai/jeff/wizard/JEFFWizardTest.java\",\"org.goodoldai.jeff.wizard.JEFFWizardTest\",\"org.goodoldai.jeff.wizard.JEFFWizardTest.testFailAddTextWarning_Content\",\"#body#statement[index=0]#catch[index=0]#body#statement[index=2]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"e instanceof ExplanationException\\\"}]\",\"assertTrue(e instanceof ExplanationException)\"]",
+        "project_revision": "bba2bb68e73c21c8e5f873f4c4c69c799ca75fd3",
+        "project_root": "projects/github_com_bojantomic_jeff"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "simpleWizard.addTextWarning produces the caught exception. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "simpleWizard.addTextWarning produces the caught exception. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_RobertoIA_PLQuiz/src/test/java/es/ubu/inf/tfg/regex/asu/AhoSethiUllmanGeneradorTest.java\",\"es.ubu.inf.tfg.regex.asu.AhoSethiUllmanGeneradorTest\",\"es.ubu.inf.tfg.regex.asu.AhoSethiUllmanGeneradorTest.testNuevoNoVacio\",\"#body#statement[index=7]\",\"assertTrue\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"(\\\\\\\"Probabilidad insuficiente de generar problemas v\\u00e1lidos: \\\\\\\" + ((correctos * 100) / N_ITERACIONES)) + \\\\\\\"%\\\\\\\"\\\"},{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"((correctos * 100) / N_ITERACIONES) >= MIN_CORRECTOS\\\"}]\",\"assertTrue((\\\"Probabilidad insuficiente de generar problemas v\\u00e1lidos: \\\" + ((correctos * 100) / N_ITERACIONES)) + \\\"%\\\", ((correctos * 100) / N_ITERACIONES) >= MIN_CORRECTOS)\"]",
+        "project_revision": "522b9224e09c54fe45f24288a426ad1cfd7abe1e",
+        "project_root": "projects/github_com_RobertoIA_PLQuiz"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The test accumulates the success count from generador.nuevo results. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The test accumulates the success count from generador.nuevo results. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_nishihatapalmer_byteseek/src/test/java/net/byteseek/matcher/sequence/ByteSequenceMatcherTest.java\",\"net.byteseek.matcher.sequence.ByteSequenceMatcherTest\",\"net.byteseek.matcher.sequence.ByteSequenceMatcherTest.testConstructByteArray\",\"#body#statement[index=0]#body#statement[index=3]#body#statement[index=3]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"number of bytes matched=1\\\\\\\"\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"matchingBytes.length\\\"}]\",\"assertEquals(\\\"number of bytes matched=1\\\", 1, matchingBytes.length)\"]",
+        "project_revision": "2600c05a06ea81a942f0b6b81981da1b6bf40cae",
+        "project_root": "projects/github_com_nishihatapalmer_byteseek"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "getMatchingBytes produces matchingBytes. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "getMatchingBytes produces matchingBytes. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_tomgibara_bits/src/test/java/com/tomgibara/bits/BitVectorTest.java\",\"com.tomgibara.bits.BitVectorTest\",\"com.tomgibara.bits.BitVectorTest.testBitIterator\",\"#body#statement[index=11]\",\"assertEquals\",\"[{\\\"type\\\":\\\"com.tomgibara.bits.BitVector\\\",\\\"value\\\":\\\"new BitVector(\\\\\\\"0110\\\\\\\")\\\"},{\\\"type\\\":\\\"com.tomgibara.bits.BitVector\\\",\\\"value\\\":\\\"v\\\"}]\",\"assertEquals(new BitVector(\\\"0110\\\"), v)\"]",
+        "project_revision": "56c32c0a30efd3d7c4e7c6600a0ca39e51eecc97",
+        "project_root": "projects/github_com_tomgibara_bits"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The preceding iterator operations produce the checked BitVector state. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The preceding iterator operations produce the checked BitVector state. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_frizbog_gedcom4j/src/test/java/org/gedcom4j/io/writer/ProgressTrackingOutputStreamTest.java\",\"org.gedcom4j.io.writer.ProgressTrackingOutputStreamTest\",\"org.gedcom4j.io.writer.ProgressTrackingOutputStreamTest.testGetBytesWritten\",\"#body#statement[index=0]#body#statement[index=1]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"4\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"ptos.bytesWritten\\\"}]\",\"assertEquals(4, ptos.bytesWritten)\"]",
+        "project_revision": "e0aa5da86699cdcd5bc6be995a22a07dcbe25f7f",
+        "project_root": "projects/github_com_frizbog_gedcom4j"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "ptos.write changes bytesWritten. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "ptos.write changes bytesWritten. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_Normegil_Librarium-Server/src/test/java/be/normegil/librarium/model/data/video/UTMovieSerieEquality.java\",\"be.normegil.librarium.model.data.video.UTMovieSerieEquality\",\"be.normegil.librarium.model.data.video.UTMovieSerieEquality.testSameObject\",\"#body#statement[index=0]\",\"assertEquals\",\"[{\\\"type\\\":\\\"E\\\",\\\"value\\\":\\\"entity\\\"},{\\\"type\\\":\\\"E\\\",\\\"value\\\":\\\"entity\\\"}]\",\"assertEquals(entity, entity)\"]",
+        "project_revision": "27eb274d600df5cbc2e049b52f19372db9396f3a",
+        "project_root": "projects/github_com_Normegil_Librarium-Server"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The self-equality assertion has no explicit eligible source call or resolved declaration for review.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The self-equality assertion has no explicit eligible source call or resolved declaration for review.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_ManfredTremmel_gwt-commons-codec/src/test/java/org/apache/commons/codec/binary/BinaryCodecTest.java\",\"org.apache.commons.codec.binary.BinaryCodecTest\",\"org.apache.commons.codec.binary.BinaryCodecTest.testToAsciiBytes\",\"#body#statement[index=22]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"00011111\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"l_encoded\\\"}]\",\"assertEquals(\\\"00011111\\\", l_encoded)\"]",
+        "project_revision": "def79800e7a546458c8f1074b5f314f09d89fa70",
+        "project_root": "projects/github_com_ManfredTremmel_gwt-commons-codec"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "BinaryCodec.toAsciiBytes produces l_encoded. The observation records no mapping.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "BinaryCodec.toAsciiBytes produces l_encoded. The observation records no mapping.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "no-visible-call",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_searchisko_elasticsearch-river-remote/src/test/java/org/jboss/elasticsearch/river/remote/SpaceIndexerCoordinatorTest.java\",\"org.jboss.elasticsearch.river.remote.SpaceIndexerCoordinatorTest\",\"org.jboss.elasticsearch.river.remote.SpaceIndexerCoordinatorTest.spaceIndexFullUpdateNecessary\",\"#body#statement[index=3]\",\"assertEquals\",\"[{\\\"type\\\":\\\"org.jboss.elasticsearch.river.remote.SpaceIndexingMode\\\",\\\"value\\\":\\\"SpaceIndexingMode.SIMPLE\\\"},{\\\"type\\\":\\\"org.jboss.elasticsearch.river.remote.SpaceIndexingMode\\\",\\\"value\\\":\\\"tested.spaceIndexingMode\\\"}]\",\"Assert.assertEquals(SpaceIndexingMode.SIMPLE, tested.spaceIndexingMode)\"]",
+        "project_revision": "b11c332ea156febd9345d770c823d56a22c71668",
+        "project_root": "projects/github_com_searchisko_elasticsearch-river-remote"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The assertion checks constructor-initialized field state. No explicit eligible call or resolved declaration identifies a method under test.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The assertion checks constructor-initialized field state. No explicit eligible call or resolved declaration identifies a method under test.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_epsilony_terse-meshfree/src/test/java/net/epsilony/mf/process/assemblier/MechanicalPenaltyWeakformAssemblierTest.java\",\"net.epsilony.mf.process.assemblier.MechanicalPenaltyWeakformAssemblierTest\",\"net.epsilony.mf.process.assemblier.MechanicalPenaltyWeakformAssemblierTest.testVolumeNeumann\",\"#body#statement[index=3]#body#statement[index=7]#body#statement[index=0]\",\"assertEquals\",\"[{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"(exps_v[i] * 3) * weight\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"act_v.get(i)\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"1.0E-10\\\"}]\",\"assertEquals((exps_v[i] * 3) * weight, act_v.get(i), 1.0E-10)\"]",
+        "project_revision": "d05c305d811a396eba3fe9d704b8633311c2e568",
+        "project_root": "projects/github_com_epsilony_terse-meshfree"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_jitsi_dnssecjava/src/test/java/org/jitsi/dnssec/TestNonExistence.java\",\"org.jitsi.dnssec.TestNonExistence\",\"org.jitsi.dnssec.TestNonExistence.testNoDataWithInvalidNsecSignature\",\"#body#statement[index=4]\",\"assertFalse\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"response.getHeader().getFlag(Flags.AD)\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"AD flag must not be set\\\\\\\"\\\"}]\",\"assertFalse(response.getHeader().getFlag(Flags.AD), \\\"AD flag must not be set\\\")\"]",
+        "project_revision": "763611656eaaa6a091bd3104168eee10442bf91b",
+        "project_root": "projects/github_com_jitsi_dnssecjava"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_mboudreau_Alternator/src/test/java/com/michelboudreau/testv2/AlternatorItemTest.java\",\"com.michelboudreau.testv2.AlternatorItemTest\",\"com.michelboudreau.testv2.AlternatorItemTest.updateItemWithoutTableNameTest\",\"#body#statement[index=9]#body#statement[index=1]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"false\\\"}]\",\"Assert.assertTrue(false)// Should have thrown an exception\\n\"]",
+        "project_revision": "4b230ac843494cb10e46ddc2848f5b5d377d7b72",
+        "project_root": "projects/github_com_mboudreau_Alternator"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_epsilony_terse-meshfree/src/test/java/net/epsilony/mf/process/assemblier/MechanicalPenaltyWeakformAssemblierTest.java\",\"net.epsilony.mf.process.assemblier.MechanicalPenaltyWeakformAssemblierTest\",\"net.epsilony.mf.process.assemblier.MechanicalPenaltyWeakformAssemblierTest.testVolumeNeumann\",\"#body#statement[index=3]#body#statement[index=1]#body#statement[index=5]#body#statement[index=0]#body#statement[index=2]#body#statement[index=0]\",\"assertEquals\",\"[{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"exp\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"act\\\"},{\\\"type\\\":\\\"double\\\",\\\"value\\\":\\\"1.0E-7\\\"}]\",\"assertEquals(exp, act, 1.0E-7)\"]",
+        "project_revision": "d05c305d811a396eba3fe9d704b8633311c2e568",
+        "project_root": "projects/github_com_epsilony_terse-meshfree"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_jodal_mmfplanner/src/test/java/no/ntnu/mmfplanner/ui/model/MmfTableModelTest.java\",\"no.ntnu.mmfplanner.ui.model.MmfTableModelTest\",\"no.ntnu.mmfplanner.ui.model.MmfTableModelTest.testIsCellEditable\",\"#body#statement[index=0]\",\"assertFalse\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"model.isCellEditable(0, 0)\\\"}]\",\"assertFalse(model.isCellEditable(0, 0))\"]",
+        "project_revision": "ff1f4778d34cb5e8d5864ed25fc4cfa8a83721d6",
+        "project_root": "projects/github_com_jodal_mmfplanner"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_digitalfondue_lavagna/src/test/java/io/lavagna/service/PermissionServiceTest.java\",\"io.lavagna.service.PermissionServiceTest\",\"io.lavagna.service.PermissionServiceTest.testAddRoleToUserInProject\",\"#body#statement[index=4]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"<unresolved>\\\",\\\"value\\\":\\\"permissionService.findRoleAndPermissionByUserIdInProjectId(user1.getId(), project.getId()).size()\\\"}]\",\"assertEquals(1, permissionService.findRoleAndPermissionByUserIdInProjectId(user1.getId(), project.getId()).size())\"]",
+        "project_revision": "b76487305e5191bc32b0422244d7b648ffcb8530",
+        "project_root": "projects/github_com_digitalfondue_lavagna"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_olgaalex_ipharm/src/test/java/biol/ipharm/controller/admin/ProducerControllerAdminTest.java\",\"biol.ipharm.controller.admin.ProducerControllerAdminTest\",\"biol.ipharm.controller.admin.ProducerControllerAdminTest.addProducer_BindingResultHasNoErrorButProducerAlreadyExists_AddProducerPageReturned\",\"#body#statement[index=6]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"defaultErrorMessage\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"result.getFieldError(\\\\\\\"producerName\\\\\\\").getDefaultMessage()\\\"}]\",\"assertEquals(defaultErrorMessage, result.getFieldError(\\\"producerName\\\").getDefaultMessage())\"]",
+        "project_revision": "ce269fbca12e6b87059cad2dac6acb43762808ff",
+        "project_root": "projects/github_com_olgaalex_ipharm"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_agouge_Java-Network-Analyzer/src/test/java/org/javanetworkanalyzer/alg/DijkstraCormenTest.java\",\"org.javanetworkanalyzer.alg.DijkstraCormenTest\",\"org.javanetworkanalyzer.alg.DijkstraCormenTest.testWU\",\"#body#statement[index=11]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"sPT.containsEdge(v1, v5)\\\"}]\",\"assertTrue(sPT.containsEdge(v1, v5))\"]",
+        "project_revision": "386445683b91d186bc2ee241e9e0727db1832c74",
+        "project_root": "projects/github_com_agouge_Java-Network-Analyzer"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bojantomic_jeff/src/test/java/org/goodoldai/jeff/wizard/JEFFWizardTest.java\",\"org.goodoldai.jeff.wizard.JEFFWizardTest\",\"org.goodoldai.jeff.wizard.JEFFWizardTest.testGenerateXMLReport_FilePath\",\"#body#statement[index=31]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"root.element(\\\\\\\"imageExplanation\\\\\\\").element(\\\\\\\"content\\\\\\\").element(\\\\\\\"imageUrl\\\\\\\").attributeCount()\\\"}]\",\"assertEquals(1, root.element(\\\"imageExplanation\\\").element(\\\"content\\\").element(\\\"imageUrl\\\").attributeCount())\"]",
+        "project_revision": "bba2bb68e73c21c8e5f873f4c4c69c799ca75fd3",
+        "project_root": "projects/github_com_bojantomic_jeff"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_agouge_Java-Network-Analyzer/src/test/java/org/javanetworkanalyzer/alg/DijkstraCormenTest.java\",\"org.javanetworkanalyzer.alg.DijkstraCormenTest\",\"org.javanetworkanalyzer.alg.DijkstraCormenTest.testD\",\"#body#statement[index=28]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"sPT.edgeSet().size() == 5\\\"}]\",\"assertTrue(sPT.edgeSet().size() == 5)\"]",
+        "project_revision": "386445683b91d186bc2ee241e9e0727db1832c74",
+        "project_root": "projects/github_com_agouge_Java-Network-Analyzer"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_cognitivabrasil_obaa/src/test/java/cognitivabrasil/obaa/general/StructureTest.java\",\"cognitivabrasil.obaa.general.StructureTest\",\"cognitivabrasil.obaa.general.StructureTest.testDeserializeStructure\",\"#body#statement[index=3]\",\"assertThat\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"obj.getText()\\\"},{\\\"type\\\":\\\"org.hamcrest.Matcher\\\",\\\"value\\\":\\\"equalTo(Structure.ATOMIC)\\\"}]\",\"assertThat(obj.getText(), equalTo(Structure.ATOMIC))\"]",
+        "project_revision": "939fd04b03f7e9593dc67cf5f5b73a90ec6dbb6c",
+        "project_root": "projects/github_com_cognitivabrasil_obaa"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_urbanairship_java-library/src/test/java/com/urbanairship/api/push/parse/notification/adm/PayloadDeserializerTest.java\",\"com.urbanairship.api.push.parse.notification.adm.PayloadDeserializerTest\",\"com.urbanairship.api.push.parse.notification.adm.PayloadDeserializerTest.templatePushRoundTripTest\",\"#body#statement[index=9]\",\"assertEquals\",\"[{\\\"type\\\":\\\"com.urbanairship.api.push.model.notification.adm.ADMDevicePayload\\\",\\\"value\\\":\\\"admDevicePayload\\\"},{\\\"type\\\":\\\"com.urbanairship.api.push.model.notification.adm.ADMDevicePayload\\\",\\\"value\\\":\\\"roundTripPayload\\\"}]\",\"assertEquals(admDevicePayload, roundTripPayload)\"]",
+        "project_revision": "c6c08d7f8da86b71cfc1684725360f052b9b9bab",
+        "project_root": "projects/github_com_urbanairship_java-library"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_berinle_jawr-core/src/test/java/test/net/jawr/web/resource/bundle/generator/variant/css/CssSkinGeneratorTestCase.java\",\"test.net.jawr.web.resource.bundle.generator.variant.css.CssSkinGeneratorTestCase\",\"test.net.jawr.web.resource.bundle.generator.variant.css.CssSkinGeneratorTestCase.testCssSkinReaderProviderBasicDefaultSkin\",\"#body#statement[index=21]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"FileUtils.readFile(new File(baseDir, \\\\\\\"/css/panel/basic/default/temp1.css\\\\\\\"))\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"writer.getBuffer().toString()\\\"}]\",\"assertEquals(FileUtils.readFile(new File(baseDir, \\\"/css/panel/basic/default/temp1.css\\\")), writer.getBuffer().toString())\"]",
+        "project_revision": "d88bb6871f3c2243e8f4f6885fd1bc7940e6bab3",
+        "project_root": "projects/github_com_berinle_jawr-core"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_neo4j-contrib_graph-collections/src/test/java/org/neo4j/collections/indexprovider/TimelineIndexProviderTest.java\",\"org.neo4j.collections.indexprovider.TimelineIndexProviderTest\",\"org.neo4j.collections.indexprovider.TimelineIndexProviderTest.testAddToIndex\",\"#body#statement[index=20]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"2\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"hits.size()\\\"}]\",\"assertEquals(2, hits.size())\"]",
+        "project_revision": "5f9d32dedb441da388e3f0b8c6fa84104b9a5572",
+        "project_root": "projects/github_com_neo4j-contrib_graph-collections"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_laforge49_JID/src/test/java/org/agilewiki/jid/scalar/vlens/actor/RootJidTest.java\",\"org.agilewiki.jid.scalar.vlens.actor.RootJidTest\",\"org.agilewiki.jid.scalar.vlens.actor.RootJidTest.test\",\"#body#statement[index=1]#body#statement[index=40]\",\"assertEquals\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"false\\\"},{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"made\\\"}]\",\"assertEquals(false, made)\"]",
+        "project_revision": "1dde11d72a17f3c3c3a690b8b17e3d27f3333e3a",
+        "project_root": "projects/github_com_laforge49_JID"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_urbanairship_java-library/src/test/java/com/urbanairship/api/client/UrbanAirshipClientTest.java\",\"com.urbanairship.api.client.UrbanAirshipClientTest\",\"com.urbanairship.api.client.UrbanAirshipClientTest.testTimeInAppReport\",\"#body#statement[index=8]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"requests.size()\\\"}]\",\"assertEquals(1, requests.size())\"]",
+        "project_revision": "c6c08d7f8da86b71cfc1684725360f052b9b9bab",
+        "project_root": "projects/github_com_urbanairship_java-library"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_tobyweston_simple-http/src/test/java/simplehttp/matchers/HttpMessageContentStringMatcherTest.java\",\"simplehttp.matchers.HttpMessageContentStringMatcherTest\",\"simplehttp.matchers.HttpMessageContentStringMatcherTest.doesNotMatch\",\"#body#statement[index=0]\",\"assertThat\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"content(equalTo(\\\\\\\"first+name=james\\\\\\\")).matches(message)\\\"},{\\\"type\\\":\\\"org.hamcrest.Matcher\\\",\\\"value\\\":\\\"is(false)\\\"}]\",\"assertThat(content(equalTo(\\\"first+name=james\\\")).matches(message), is(false))\"]",
+        "project_revision": "2faaf6cc48bb29df8885afd02ee04d8cd6258447",
+        "project_root": "projects/github_com_tobyweston_simple-http"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_crazycode_morphia/src/test/java/com/google/code/morphia/TestDatastore.java\",\"com.google.code.morphia.TestDatastore\",\"com.google.code.morphia.TestDatastore.testLowlevelbyteArray\",\"#body#statement[index=11]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"eliot\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"new String(b)\\\"}]\",\"assertEquals(\\\"eliot\\\", new String(b))\"]",
+        "project_revision": "20f6d3ce503d374d74309c35b264c4728cbb74f8",
+        "project_root": "projects/github_com_crazycode_morphia"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_johanlelan_lightweightCMISserver/src/test/java/org/apache/chemistry/opencmis/inmemory/ObjectServiceTest.java\",\"org.apache.chemistry.opencmis.inmemory.ObjectServiceTest\",\"org.apache.chemistry.opencmis.inmemory.ObjectServiceTest.testRenditionIcon\",\"#body#statement[index=1]#body#statement[index=18]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"rd.getMimeType()\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"renditionContent.getMimeType()\\\"}]\",\"assertEquals(rd.getMimeType(), renditionContent.getMimeType())\"]",
+        "project_revision": "09ead52f87e83244cb12af93dbe9f6f1957fe6da",
+        "project_root": "projects/github_com_johanlelan_lightweightCMISserver"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "unresolved-source-declaration",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_carlosvillademor_fonti/src/test/java/com/carlos/projects/billing/ui/controllers/LoadComponentsControllerTest.java\",\"com.carlos.projects.billing.ui.controllers.LoadComponentsControllerTest\",\"com.carlos.projects.billing.ui.controllers.LoadComponentsControllerTest.shouldLoadComponentsAndFamilyNameForAGivenFamilyCode\",\"#body#statement[index=10]\",\"assertThat\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"modelAndView.getViewName()\\\"},{\\\"type\\\":\\\"org.hamcrest.Matcher\\\",\\\"value\\\":\\\"is(controller.getViewName())\\\"}]\",\"assertThat(modelAndView.getViewName(), is(controller.getViewName()))\"]",
+        "project_revision": "174269a18740df8e88517d8f2cbe7444574a1ce8",
+        "project_root": "projects/github_com_carlosvillademor_fonti"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "The persisted observation lacks a resolved source declaration. Test source and call text cannot verify the selected method identity.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_AlexRNL_Commons/src/test/java/com/alexrnl/commons/time/TimeSecTest.java\",\"com.alexrnl.commons.time.TimeSecTest\",\"com.alexrnl.commons.time.TimeSecTest.testGetSeconds\",\"#body#statement[index=2]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"0\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"timeNoon.getSeconds()\\\"}]\",\"assertEquals(0, timeNoon.getSeconds())\"]",
+        "project_revision": "e65e42f3649d6381a6f644beb03304c2ae4ad524",
+        "project_root": "projects/github_com_AlexRNL_Commons"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The selected call reads timeMorning. The assertion reads timeNoon.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The selected call reads timeMorning. The assertion reads timeNoon.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bill-brown_rsspect/src/test/java/com/colorfulsoftware/rss/RSSDocTest.java\",\"com.colorfulsoftware.rss.RSSDocTest\",\"com.colorfulsoftware.rss.RSSDocTest.testWriteRSSDocOutputStreamRSSStringString\",\"#body#statement[index=1]#catch[index=0]#body#statement[index=1]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"e.getMessage()\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"The rss feed object cannot be null.\\\\\\\"\\\"}]\",\"assertEquals(e.getMessage(), \\\"The rss feed object cannot be null.\\\")\"]",
+        "project_revision": "b195884948dafbfea385f22bc08b3d8eb79f8cbd",
+        "project_root": "projects/github_com_bill-brown_rsspect"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The selected successful write uses rss1. It is not the null-RSS write that produces the checked exception message.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The selected successful write uses rss1. It is not the null-RSS write that produces the checked exception message.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_shaunjohnson_suafe/src/test/java/net/lmxm/suafe/api/beans/DocumentTest.java\",\"net.lmxm.suafe.api.beans.DocumentTest\",\"net.lmxm.suafe.api.beans.DocumentTest.testDeleteGroups\",\"#body#statement[index=2]#body#statement[index=1]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"document.getGroups() != null\\\"}]\",\"assertTrue(document.getGroups() != null)\"]",
+        "project_revision": "975938b29216b59cfb41b501b8602ca90766bc36",
+        "project_root": "projects/github_com_shaunjohnson_suafe"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The selected deleteGroups call is in an earlier try block. The assertion checks state after a later initialize call.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The selected deleteGroups call is in an earlier try block. The assertion checks state after a later initialize call.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_hampelratte_svdrp4j/src/test/java/org/hampelratte/svdrp/commands/REMOTest.java\",\"org.hampelratte.svdrp.commands.REMOTest\",\"org.hampelratte.svdrp.commands.REMOTest.testSetState\",\"#body#statement[index=5]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"on\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"remo.getState()\\\"}]\",\"assertEquals(\\\"on\\\", remo.getState())\"]",
+        "project_revision": "9a80037d8f94abe86073eeae407479956fae3113",
+        "project_root": "projects/github_com_hampelratte_svdrp4j"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates remo.setState(REMO.ON) with the state or value that assertEquals(\"on\", remo.getState()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates remo.setState(REMO.ON) with the state or value that assertEquals(\"on\", remo.getState()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_shaunjohnson_suafe/src/test/java/net/lmxm/suafe/api/beans/DocumentTest.java\",\"net.lmxm.suafe.api.beans.DocumentTest\",\"net.lmxm.suafe.api.beans.DocumentTest.testDeleteUsers\",\"#body#statement[index=2]#body#statement[index=7]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"document.getUsers() != null\\\"}]\",\"assertTrue(document.getUsers() != null)\"]",
+        "project_revision": "975938b29216b59cfb41b501b8602ca90766bc36",
+        "project_root": "projects/github_com_shaunjohnson_suafe"
+      },
+      "label": "contradicted-mapping",
+      "rationale": "The selected deleteUsers call is in an earlier try block. The assertion checks state after a later initialize call.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "contradicted-mapping",
+          "rationale": "The selected deleteUsers call is in an earlier try block. The assertion checks state after a later initialize call.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_frizbog_gedcom4j/src/test/java/org/gedcom4j/model/CustomFactTest.java\",\"org.gedcom4j.model.CustomFactTest\",\"org.gedcom4j.model.CustomFactTest.testHashcode\",\"#body#statement[index=62]\",\"assertFalse\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"cf1.hashCode() == cf2.hashCode()\\\"}]\",\"assertFalse(cf1.hashCode() == cf2.hashCode())\"]",
+        "project_revision": "e0aa5da86699cdcd5bc6be995a22a07dcbe25f7f",
+        "project_root": "projects/github_com_frizbog_gedcom4j"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates cf1.hashCode() with the state or value that assertFalse(cf1.hashCode() == cf2.hashCode()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates cf1.hashCode() with the state or value that assertFalse(cf1.hashCode() == cf2.hashCode()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bojantomic_jeff/src/test/java/org/goodoldai/jeff/wizard/JEFFWizardTest.java\",\"org.goodoldai.jeff.wizard.JEFFWizardTest\",\"org.goodoldai.jeff.wizard.JEFFWizardTest.testAddText_ContentRuleAndGroup_SimpleBuilder\",\"#body#statement[index=2]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"simpleWizard.getExplanation().getChunks().size()\\\"}]\",\"// assert that one chunk was added and that it is a TextExplanationChunk\\nassertEquals(1, simpleWizard.getExplanation().getChunks().size())\"]",
+        "project_revision": "bba2bb68e73c21c8e5f873f4c4c69c799ca75fd3",
+        "project_root": "projects/github_com_bojantomic_jeff"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates // adding explanation chunk simpleWizard.addText(group, rule, textContent) with the state or value that // assert that one chunk was added and that it is a TextExplanationChunk assertEquals(1, simpleWizard.getExplanation().getChunks().size()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates // adding explanation chunk simpleWizard.addText(group, rule, textContent) with the state or value that // assert that one chunk was added and that it is a TextExplanationChunk assertEquals(1, simpleWizard.getExplanation().getChunks().size()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_curtcox_Rambaldi/src/test/java/net/rambaldi/process/StreamTransactionProcessorTest.java\",\"net.rambaldi.process.StreamTransactionProcessorTest\",\"net.rambaldi.process.StreamTransactionProcessorTest.call_echo_writes_requests_to_out\",\"#body#statement[index=3]\",\"assertFalse\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"outQueue.isEmpty()\\\"}]\",\"assertFalse(outQueue.isEmpty())\"]",
+        "project_revision": "a89e73775c0bfb3d40be50240e311936d2e48886",
+        "project_root": "projects/github_com_curtcox_Rambaldi"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates processor().call() with the state or value that assertFalse(outQueue.isEmpty()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates processor().call() with the state or value that assertFalse(outQueue.isEmpty()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_jericks_geoserver-shell/src/test/java/org/geoserver/shell/DataStoreCommandsTest.java\",\"org.geoserver.shell.DataStoreCommandsTest\",\"org.geoserver.shell.DataStoreCommandsTest.uploadDataStore\",\"#body#statement[index=16]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"configure\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"params.get(\\\\\\\"configure\\\\\\\")[0]\\\"}]\",\"assertEquals(configure, params.get(\\\"configure\\\")[0])\"]",
+        "project_revision": "56699b2b09eaf8ffb501dec7d86c605a735d9ccd",
+        "project_root": "projects/github_com_jericks_geoserver-shell"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates commands.upload(workspace, name, type, file, configure, target, update, charset) with the state or value that assertEquals(configure, params.get(\"configure\")[0]) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates commands.upload(workspace, name, type, file, configure, target, update, charset) with the state or value that assertEquals(configure, params.get(\"configure\")[0]) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "NONE",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_q-programming_tasq/src/test/java/com/qprogramming/tasq/projects/ProjectControllerTest.java\",\"com.qprogramming.tasq.projects.ProjectControllerTest\",\"com.qprogramming.tasq.projects.ProjectControllerTest.createProjectErrorsTest\",\"#body#statement[index=4]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"errors.hasErrors()\\\"}]\",\"Assert.assertTrue(errors.hasErrors())\"]",
+        "project_revision": "bcb986ab99596174ab8b0a2cd53705648ad794c5",
+        "project_root": "projects/github_com_q-programming_tasq"
+      },
+      "label": "insufficient-specification-evidence",
+      "rationale": "errors contains a rejected value before createProject runs. The assertion cannot establish if createProject is responsible for hasErrors.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "insufficient-specification-evidence",
+          "rationale": "errors contains a rejected value before createProject runs. The assertion cannot establish if createProject is responsible for hasErrors.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "unresolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bojantomic_jeff/src/test/java/org/goodoldai/jeff/wizard/JEFFWizardTest.java\",\"org.goodoldai.jeff.wizard.JEFFWizardTest\",\"org.goodoldai.jeff.wizard.JEFFWizardTest.testAddTextWarning_ContentRuleAndGroup_SimpleBuilder\",\"#body#statement[index=2]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"1\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"simpleWizard.getExplanation().getChunks().size()\\\"}]\",\"// assert that one chunk was added and that it is a TextExplanationChunk\\nassertEquals(1, simpleWizard.getExplanation().getChunks().size())\"]",
+        "project_revision": "bba2bb68e73c21c8e5f873f4c4c69c799ca75fd3",
+        "project_root": "projects/github_com_bojantomic_jeff"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates // adding explanation chunk simpleWizard.addTextWarning(group, rule, textContent) with the state or value that // assert that one chunk was added and that it is a TextExplanationChunk assertEquals(1, simpleWizard.getExplanation().getChunks().size()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates // adding explanation chunk simpleWizard.addTextWarning(group, rule, textContent) with the state or value that // assert that one chunk was added and that it is a TextExplanationChunk assertEquals(1, simpleWizard.getExplanation().getChunks().size()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_metamx_java-util/src/test/java/com/metamx/common/CompressionUtilsTest.java\",\"com.metamx.common.CompressionUtilsTest\",\"com.metamx.common.CompressionUtilsTest.testGoodGzipWithException\",\"#body#statement[index=12]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"4\\\"},{\\\"type\\\":\\\"long\\\",\\\"value\\\":\\\"flushes.get()\\\"}]\",\"Assert.assertEquals(4, flushes.get())// 2 for suppressed closes, 2 for manual calls to shake out errors\\n\"]",
+        "project_revision": "02dccb0bab36c3acaa3a8911ced34c9becf2ff50",
+        "project_root": "projects/github_com_metamx_java-util"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates CompressionUtils.gzip(Files.asByteSource(testFile), new ByteSink() {     @Override     public OutputStream openStream() throws IOException {         return new FilterOutputStream(new FileOutputStream(gzFile)) {             @Override             public void flush() throws IOException {                 if (flushes.getAndIncrement() > 0) {                     super.flush();                 } else {                     throw new IOException(\"Haven't flushed enough\");                 }             }         };     } }, Predicates.<Throwable>alwaysTrue()) with the state or value that Assert.assertEquals(4, flushes.get())// 2 for suppressed closes, 2 for manual calls to shake out errors  checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates CompressionUtils.gzip(Files.asByteSource(testFile), new ByteSink() {     @Override     public OutputStream openStream() throws IOException {         return new FilterOutputStream(new FileOutputStream(gzFile)) {             @Override             public void flush() throws IOException {                 if (flushes.getAndIncrement() > 0) {                     super.flush();                 } else {                     throw new IOException(\"Haven't flushed enough\");                 }             }         };     } }, Predicates.<Throwable>alwaysTrue()) with the state or value that Assert.assertEquals(4, flushes.get())// 2 for suppressed closes, 2 for manual calls to shake out errors  checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bandwidthcom_java-bandwidth/src/test/java/com/bandwidth/sdk/model/CallTest.java\",\"com.bandwidth.sdk.model.CallTest\",\"com.bandwidth.sdk.model.CallTest.shouldGetGatherById\",\"#body#statement[index=11]\",\"assertThat\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"mockClient.requests.get(0).uri\\\"},{\\\"type\\\":\\\"org.hamcrest.Matcher\\\",\\\"value\\\":\\\"equalTo((\\\\\\\"users/\\\\\\\" + TestsHelper.TEST_USER_ID) + \\\\\\\"/calls/c-11111111111111111111111/gather/gtr-kj4xloaq5vbpfxyeypndgxa\\\\\\\")\\\"}]\",\"assertThat(mockClient.requests.get(0).uri, equalTo((\\\"users/\\\" + TestsHelper.TEST_USER_ID) + \\\"/calls/c-11111111111111111111111/gather/gtr-kj4xloaq5vbpfxyeypndgxa\\\"))\"]",
+        "project_revision": "8f7ef1fce8ac5842d19a2a80b3fde3122f5f99df",
+        "project_root": "projects/github_com_bandwidthcom_java-bandwidth"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates call.getGather(\"gtr-kj4xloaq5vbpfxyeypndgxa\") with the state or value that assertThat(mockClient.requests.get(0).uri, equalTo((\"users/\" + TestsHelper.TEST_USER_ID) + \"/calls/c-11111111111111111111111/gather/gtr-kj4xloaq5vbpfxyeypndgxa\")) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates call.getGather(\"gtr-kj4xloaq5vbpfxyeypndgxa\") with the state or value that assertThat(mockClient.requests.get(0).uri, equalTo((\"users/\" + TestsHelper.TEST_USER_ID) + \"/calls/c-11111111111111111111111/gather/gtr-kj4xloaq5vbpfxyeypndgxa\")) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_shiguera_gpxparser/src/test/java/com/mlab/gpx/test/impl/tserie/TestDoublesList.java\",\"com.mlab.gpx.test.impl.tserie.TestDoublesList\",\"com.mlab.gpx.test.impl.tserie.TestDoublesList.testGet\",\"#body#statement[index=12]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"list.getDimension()\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"d.length\\\"}]\",\"assertEquals(list.getDimension(), d.length)\"]",
+        "project_revision": "8db1644f51b52b76aace0170e86a23e11f3891a8",
+        "project_root": "projects/github_com_shiguera_gpxparser"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates list.get(2) with the state or value that assertEquals(list.getDimension(), d.length) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates list.get(2) with the state or value that assertEquals(list.getDimension(), d.length) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_emamedov_smscenter/src/test/java/org/eminmamedov/smscenter/senders/SmsSendersManagerTest.java\",\"org.eminmamedov.smscenter.senders.SmsSendersManagerTest\",\"org.eminmamedov.smscenter.senders.SmsSendersManagerTest.testStartSender_SendersExist_SenderFound\",\"#body#statement[index=7]\",\"assertEquals\",\"[{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"2\\\"},{\\\"type\\\":\\\"int\\\",\\\"value\\\":\\\"manager.getSmsSenders().size()\\\"}]\",\"assertEquals(2, manager.getSmsSenders().size())\"]",
+        "project_revision": "91431a77bab442cd83f0fde1a34d23ca206d9b17",
+        "project_root": "projects/github_com_emamedov_smscenter"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates manager.startSender(createChannel(\"SENDER2\")) with the state or value that assertEquals(2, manager.getSmsSenders().size()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates manager.startSender(createChannel(\"SENDER2\")) with the state or value that assertEquals(2, manager.getSmsSenders().size()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_waldheinz_fat32-lib/src/test/java/de/waldheinz/fs/fat/FatFileTest.java\",\"de.waldheinz.fs.fat.FatFileTest\",\"de.waldheinz.fs.fat.FatFileTest.testWrite\",\"#body#statement[index=9]\",\"assertEquals\",\"[{\\\"type\\\":\\\"long\\\",\\\"value\\\":\\\"origCreated\\\"},{\\\"type\\\":\\\"long\\\",\\\"value\\\":\\\"entry.getCreated()\\\"}]\",\"assertEquals(origCreated, entry.getCreated())\"]",
+        "project_revision": "3d8f1a986339573576e02eb0b6ea49bfdc9cce26",
+        "project_root": "projects/github_com_waldheinz_fat32-lib"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates ff.write(0, data) with the state or value that assertEquals(origCreated, entry.getCreated()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates ff.write(0, data) with the state or value that assertEquals(origCreated, entry.getCreated()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_nishihatapalmer_byteseek/src/test/java/net/byteseek/io/reader/ReaderInputStreamTest.java\",\"net.byteseek.io.reader.ReaderInputStreamTest\",\"net.byteseek.io.reader.ReaderInputStreamTest.testClose\",\"#body#statement[index=17]\",\"assertTrue\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"Reader is now closed.\\\\\\\"\\\"},{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"reader.closed\\\"}]\",\"assertTrue(\\\"Reader is now closed.\\\", reader.closed)\"]",
+        "project_revision": "2600c05a06ea81a942f0b6b81981da1b6bf40cae",
+        "project_root": "projects/github_com_nishihatapalmer_byteseek"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates is.close() with the state or value that assertTrue(\"Reader is now closed.\", reader.closed) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates is.close() with the state or value that assertTrue(\"Reader is now closed.\", reader.closed) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_cognitivabrasil_obaa/src/test/java/cognitivabrasil/obaa/OBAATest.java\",\"cognitivabrasil.obaa.OBAATest\",\"cognitivabrasil.obaa.OBAATest.testIsEmpty\",\"#body#statement[index=22]\",\"assertThat\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"obaa.isEmpty()\\\"},{\\\"type\\\":\\\"org.hamcrest.Matcher\\\",\\\"value\\\":\\\"equalTo(false)\\\"}]\",\"assertThat(obaa.isEmpty(), equalTo(false))\"]",
+        "project_revision": "939fd04b03f7e9593dc67cf5f5b73a90ec6dbb6c",
+        "project_root": "projects/github_com_cognitivabrasil_obaa"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates obaa.isEmpty() with the state or value that assertThat(obaa.isEmpty(), equalTo(false)) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates obaa.isEmpty() with the state or value that assertThat(obaa.isEmpty(), equalTo(false)) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_bojantomic_jeff/src/test/java/org/goodoldai/jeff/wizard/JEFFWizardTest.java\",\"org.goodoldai.jeff.wizard.JEFFWizardTest\",\"org.goodoldai.jeff.wizard.JEFFWizardTest.testGenerateTXTReport_FilePath\",\"#body#statement[index=30]\",\"assertEquals\",\"[{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"\\\\\\\"\\\\\\\"\\\"},{\\\"type\\\":\\\"java.lang.String\\\",\\\"value\\\":\\\"br.readLine()\\\"}]\",\"assertEquals(\\\"\\\", br.readLine())\"]",
+        "project_revision": "bba2bb68e73c21c8e5f873f4c4c69c799ca75fd3",
+        "project_root": "projects/github_com_bojantomic_jeff"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates // generates the report simpleWizard.generateTXTReport(filePathTXT, true) with the state or value that assertEquals(\"\", br.readLine()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates // generates the report simpleWizard.generateTXTReport(filePathTXT, true) with the state or value that assertEquals(\"\", br.readLine()) checks.",
+          "reviewer": "omp-gpt-5.6-sol",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "assertion-to-mut",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "ambiguous-high-confidence",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "Assertion",
+        "local_key": "[\"projects/github_com_searchisko_elasticsearch-river-jira/src/test/java/org/jboss/elasticsearch/river/jira/JIRAProjectIndexerCoordinatorTest.java\",\"org.jboss.elasticsearch.river.jira.JIRAProjectIndexerCoordinatorTest\",\"org.jboss.elasticsearch.river.jira.JIRAProjectIndexerCoordinatorTest.run\",\"#body#statement[index=6]#statement[index=5]\",\"assertTrue\",\"[{\\\"type\\\":\\\"boolean\\\",\\\"value\\\":\\\"tested.projectIndexerThreads.isEmpty()\\\"}]\",\"Assert.assertTrue(tested.projectIndexerThreads.isEmpty())\"]",
+        "project_revision": "487a9d8804165ad02264f4300b3ebd11346df6df",
+        "project_root": "projects/github_com_searchisko_elasticsearch-river-jira"
+      },
+      "label": "supported-mapping",
+      "rationale": "The collected test associates tested.run() with the state or value that Assert.assertTrue(tested.projectIndexerThreads.isEmpty()) checks.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "supported-mapping",
+          "rationale": "The collected test associates tested.run() with the state or value that Assert.assertTrue(tested.projectIndexerThreads.isEmpty()) checks.",
           "reviewer": "omp-gpt-5.6-sol",
           "source_ids": [
             "version-seven-database-export",

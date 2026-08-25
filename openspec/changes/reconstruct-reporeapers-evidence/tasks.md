@@ -42,13 +42,13 @@
 
 ## 5. Reconstruct Assertion-to-MUT Evidence
 
-- [ ] 5.1 Freeze the version 7 assertion-resolution population from `mut_resolution_observation` and compatible filter evidence.
-- [ ] 5.2 Define “insufficient specification evidence” before inspecting weak or unresolved mappings.
-- [ ] 5.3 Preserve status, confidence tier, no-pick reason, source provenance, and filter outcome for every entity.
-- [ ] 5.4 Generate review packets for T3, T4, `NO_VISIBLE_CALL`, `UNRESOLVED_SOURCE_DECLARATION`, and ambiguous shapes.
-- [ ] 5.5 Complete manual review of the declared strata and preserve unresolved decisions.
-- [ ] 5.6 Emit the normalized assertion-to-MUT audit input with mechanism, confidence, and review partitions.
-- [ ] 5.7 Reconcile audit totals with version 7 observations and eligible report populations.
+- [x] 5.1 Freeze the version 7 assertion-resolution population from `mut_resolution_observation` and compatible filter evidence.
+- [x] 5.2 Define “insufficient specification evidence” before inspecting weak or unresolved mappings.
+- [x] 5.3 Preserve status, confidence tier, no-pick reason, source provenance, and filter outcome for every entity.
+- [x] 5.4 Generate review packets for T3, T4, `NO_VISIBLE_CALL`, `UNRESOLVED_SOURCE_DECLARATION`, and ambiguous shapes.
+- [x] 5.5 Complete manual review of the declared strata and preserve unresolved decisions.
+- [x] 5.6 Emit the normalized assertion-to-MUT audit input with mechanism, confidence, and review partitions.
+- [x] 5.7 Reconcile audit totals with version 7 observations and eligible report populations.
 
 ## 6. Reconstruct Output-Directory Evidence
 

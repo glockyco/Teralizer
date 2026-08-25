@@ -168,42 +168,81 @@ def test_shipped_no_assertions_audit_preserves_sample_results():
         json.loads(_AUDIT.read_text(encoding="utf-8"))
     )
 
-    claims = _records(audit, "claims")
-    assert claims == [
-        {
-            "claim": "no-assertions",
-            "status": "partially-supported",
-            "population_definition": (
-                "All 24,266 tests in eligible version 7 projects rejected by "
-                "NoAssertionsFilter."
-            ),
-            "population_sha256": (
-                "c684b2a43326de906b514f9af7732af238702d0f9537e42a100a2fc2be05c485"
-            ),
-            "resolved": 100,
-            "unresolved": 24_166,
-            "unreviewed_population": 24_166,
-            "incompatible": 0,
-            "total": 24_266,
-            "method": (
-                "Deterministic stratified simple random sample without replacement: "
-                "n=100; project-burden strata N=(35,261,1286,22684), "
-                "n=(4,4,8,84); seed reporeapers-v7-no-assertions-review."
-            ),
-            "reason": (
-                "The reviewed sample contradicts the filter interpretation: weighted "
-                "estimate 10.53% genuine absences (95% normal CI 4.38%-16.69%) "
-                "and 89.47% false positives with reachable or unsupported oracles "
-                "(95% CI 83.31%-95.62%). The other 24,166 population members "
-                "remain unreviewed."
-            ),
-        }
-    ]
-    labels = Counter(entity["label"] for entity in _records(audit, "entities"))
+    claim = next(
+        record
+        for record in _records(audit, "claims")
+        if record["claim"] == "no-assertions"
+    )
+    assert claim == {
+        "claim": "no-assertions",
+        "status": "partially-supported",
+        "population_definition": (
+            "All 24,266 tests in eligible version 7 projects rejected by "
+            "NoAssertionsFilter."
+        ),
+        "population_sha256": (
+            "c684b2a43326de906b514f9af7732af238702d0f9537e42a100a2fc2be05c485"
+        ),
+        "resolved": 100,
+        "unresolved": 24_166,
+        "unreviewed_population": 24_166,
+        "incompatible": 0,
+        "total": 24_266,
+        "method": (
+            "Deterministic stratified simple random sample without replacement: "
+            "n=100; project-burden strata N=(35,261,1286,22684), "
+            "n=(4,4,8,84); seed reporeapers-v7-no-assertions-review."
+        ),
+        "reason": (
+            "The reviewed sample contradicts the filter interpretation: weighted "
+            "estimate 10.53% genuine absences (95% normal CI 4.38%-16.69%) "
+            "and 89.47% false positives with reachable or unsupported oracles "
+            "(95% CI 83.31%-95.62%). The other 24,166 population members "
+            "remain unreviewed."
+        ),
+    }
+    labels = Counter(
+        entity["label"]
+        for entity in _records(audit, "entities")
+        if entity["claim"] == "no-assertions"
+    )
     assert labels == {
         "genuine-absence": 12,
         "reachable-helper-assertion": 34,
         "unsupported-oracle": 54,
+    }
+
+
+def test_shipped_mapping_audit_preserves_targeted_review_results():
+    audit = reconstruction.validate_audit(
+        json.loads(_AUDIT.read_text(encoding="utf-8"))
+    )
+
+    claim = next(
+        record
+        for record in _records(audit, "claims")
+        if record["claim"] == "assertion-to-mut"
+    )
+    assert claim["population_sha256"] == (
+        "31bb42a24303424beeac654f256e38afa9fbcf7f2b63991fdb27637cca561fa2"
+    )
+    assert claim["resolved"] == 70
+    assert claim["unresolved"] == 180_478
+    assert claim["unreviewed_population"] == 180_448
+    assert claim["total"] == 180_548
+
+    entities = [
+        entity
+        for entity in _records(audit, "entities")
+        if entity["claim"] == "assertion-to-mut"
+    ]
+    assert Counter(entity["label"] for entity in entities) == {
+        "supported-mapping": 36,
+        "contradicted-mapping": 34,
+        "insufficient-specification-evidence": 30,
+    }
+    assert Counter(entity["filter_outcome"] for entity in entities) == {
+        stratum: 20 for stratum in populations.ASSERTION_TO_MUT_REVIEW_ALLOCATION
     }
 
 
@@ -556,6 +595,87 @@ def test_no_assertions_sample_is_deterministic_and_stratified():
     )
 
 
+def _mapping_row(stratum: str, index: int) -> dict[str, object]:
+    row = dict.fromkeys(populations.ASSERTION_TO_MUT.fields)
+    row.update(
+        {
+            "project_root": f"projects/{stratum}",
+            "project_revision": _REVISION,
+            "test_file_path": f"projects/{stratum}/src/test/ExampleTest.java",
+            "test_class_qualified_name": "ExampleTest",
+            "test_method_qualified_name": f"ExampleTest.works{index}",
+            "assertion_relative_path": f"#method[signature=works{index}()]",
+            "assertion_name": "assertEquals",
+            "assertion_arguments": f"{index}, actual",
+            "assertion_source_code": f"assertEquals({index}, actual)",
+            "resolution_status": "RESOLVED",
+            "confidence_tier": "T1_PROVEN",
+            "candidate_count": 2,
+            "resolved_call_source": "subject.value()",
+            "resolved_method_name": "value",
+            "resolved_declaring_type": "example.Subject",
+        }
+    )
+    if stratum == "t3-single-weak":
+        row.update(confidence_tier="T3_SINGLE_WEAK", candidate_count=1)
+    elif stratum == "t4-guess":
+        row.update(confidence_tier="T4_GUESS", candidate_count=2)
+    elif stratum == "no-visible-call":
+        row.update(
+            resolution_status="CHARACTERIZATION_ONLY",
+            confidence_tier="T5_NONE",
+            no_pick_reason="NO_VISIBLE_CALL",
+            candidate_count=0,
+            resolved_call_source=None,
+            resolved_method_name=None,
+            resolved_declaring_type=None,
+        )
+    elif stratum == "unresolved-source-declaration":
+        row.update(
+            resolution_status="CHARACTERIZATION_ONLY",
+            confidence_tier="T5_NONE",
+            no_pick_reason="UNRESOLVED_SOURCE_DECLARATION",
+            candidate_count=1,
+            resolved_declaring_type=None,
+        )
+    return row
+
+
+def test_assertion_to_mut_sample_is_deterministic_and_stratified():
+    rows = [
+        _mapping_row(stratum, index)
+        for stratum in populations.ASSERTION_TO_MUT_REVIEW_ALLOCATION
+        for index in range(25)
+    ]
+    population = populations.freeze_population(populations.ASSERTION_TO_MUT, rows)
+
+    first = populations.sample_assertion_to_mut(population)
+    second = populations.sample_assertion_to_mut(population)
+
+    assert first == second
+    assert first["sample_size"] == 100
+    assert first["allocation"] == populations.ASSERTION_TO_MUT_REVIEW_ALLOCATION
+    assert Counter(
+        selection["stratum"] for selection in _records(first, "selections")
+    ) == Counter(populations.ASSERTION_TO_MUT_REVIEW_ALLOCATION)
+
+
+def test_assertion_to_mut_sufficiency_requires_corroborated_source_identity():
+    proven = _mapping_row("ambiguous-high-confidence", 1)
+    assert populations.assertion_to_mut_evidence_is_sufficient(proven)
+
+    for field, value in (
+        ("resolution_status", "CHARACTERIZATION_ONLY"),
+        ("confidence_tier", "T3_SINGLE_WEAK"),
+        ("resolved_call_source", None),
+        ("resolved_method_name", None),
+        ("resolved_declaring_type", None),
+    ):
+        insufficient = dict(proven)
+        insufficient[field] = value
+        assert not populations.assertion_to_mut_evidence_is_sufficient(insufficient)
+
+
 def _source_query() -> populations.PopulationQuery:
     return populations.PopulationQuery(
         claim="source-fixture",
@@ -604,6 +724,18 @@ def _decision(
         "confidence": confidence,
         "source_ids": ["version-seven-project-checkouts"],
     }
+
+
+def test_decision_import_preserves_single_reviewer_rationale():
+    result = populations.adjudicate_decisions(
+        _source_query(),
+        _source_row(),
+        [_decision(reviewer="first", label="genuine-absence")],
+        {"genuine-absence": reconstruction.EntityStatus.RESOLVED},
+    )
+
+    assert result["rationale"] == "first inspected the collected source."
+    assert result["review_state"] == "single-reviewed"
 
 
 def test_decision_import_preserves_reviewer_disagreement():

@@ -61,6 +61,27 @@ NO_ASSERTIONS_LABEL_STATUSES = {
 }
 
 
+class AssertionToMutLabel(StrEnum):
+    """Closed outcomes for source review of one persisted mapping."""
+
+    SUPPORTED_MAPPING = "supported-mapping"
+    CONTRADICTED_MAPPING = "contradicted-mapping"
+    INSUFFICIENT_SPECIFICATION_EVIDENCE = "insufficient-specification-evidence"
+
+
+ASSERTION_TO_MUT_LABEL_STATUSES = {
+    AssertionToMutLabel.SUPPORTED_MAPPING.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    AssertionToMutLabel.CONTRADICTED_MAPPING.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    AssertionToMutLabel.INSUFFICIENT_SPECIFICATION_EVIDENCE.value: (
+        reporeapers_reconstruction.EntityStatus.UNRESOLVED
+    ),
+}
+
+
 @dataclass(frozen=True)
 class PopulationQuery:
     """One fixed read-only query and its stable cross-source identity fields."""
@@ -434,6 +455,107 @@ def sample_no_assertions(
     }
 
 
+ASSERTION_TO_MUT_REVIEW_SEED = "reporeapers-v7-assertion-to-mut-review"
+ASSERTION_TO_MUT_REVIEW_ALLOCATION = {
+    "t3-single-weak": 20,
+    "t4-guess": 20,
+    "no-visible-call": 20,
+    "unresolved-source-declaration": 20,
+    "ambiguous-high-confidence": 20,
+}
+
+
+def assertion_to_mut_evidence_is_sufficient(row: Mapping[str, object]) -> bool:
+    """Apply the declared sufficient-specification evidence boundary."""
+    return (
+        row.get("resolution_status") == "RESOLVED"
+        and row.get("confidence_tier") in {"T1_PROVEN", "T2_CORROBORATED"}
+        and isinstance(row.get("resolved_call_source"), str)
+        and isinstance(row.get("resolved_method_name"), str)
+        and isinstance(row.get("resolved_declaring_type"), str)
+    )
+
+
+def _assertion_to_mut_stratum(row: Mapping[str, object]) -> str | None:
+    if row.get("no_pick_reason") == "NO_VISIBLE_CALL":
+        return "no-visible-call"
+    if row.get("no_pick_reason") == "UNRESOLVED_SOURCE_DECLARATION":
+        return "unresolved-source-declaration"
+    if row.get("resolution_status") != "RESOLVED":
+        return None
+    confidence = row.get("confidence_tier")
+    if confidence == "T3_SINGLE_WEAK":
+        return "t3-single-weak"
+    if confidence == "T4_GUESS":
+        return "t4-guess"
+    candidate_count = row.get("candidate_count")
+    if (
+        confidence in {"T1_PROVEN", "T2_CORROBORATED"}
+        and isinstance(candidate_count, int)
+        and candidate_count > 1
+    ):
+        return "ambiguous-high-confidence"
+    return None
+
+
+def sample_assertion_to_mut(
+    population: Mapping[str, object],
+) -> dict[str, object]:
+    """Select 20 stable entities from each declared weak mapping stratum."""
+    if population.get("claim") != ASSERTION_TO_MUT.claim:
+        raise PopulationError("mapping sampling requires its frozen population")
+    rows = population.get("rows")
+    identity_fields = population.get("identity_fields")
+    if not isinstance(rows, list) or not isinstance(identity_fields, list):
+        raise PopulationError("frozen population lacks rows or identity fields")
+    strata: dict[str, list[tuple[str, Mapping[str, object]]]] = {
+        name: [] for name in ASSERTION_TO_MUT_REVIEW_ALLOCATION
+    }
+    for index, row in enumerate(rows):
+        if not isinstance(row, Mapping):
+            raise PopulationError(f"assertion-to-MUT row {index} must be an object")
+        stratum = _assertion_to_mut_stratum(row)
+        if stratum is None:
+            continue
+        identity = [row[field] for field in identity_fields]
+        rank = hashlib.sha256(
+            (
+                ASSERTION_TO_MUT_REVIEW_SEED
+                + json.dumps(identity, ensure_ascii=True, separators=(",", ":"))
+            ).encode()
+        ).hexdigest()
+        strata[stratum].append((rank, row))
+
+    selected: list[dict[str, object]] = []
+    stratum_sizes: dict[str, int] = {}
+    for stratum, requested in ASSERTION_TO_MUT_REVIEW_ALLOCATION.items():
+        ranked = sorted(strata[stratum], key=lambda item: item[0])
+        if len(ranked) < requested:
+            raise PopulationError(
+                f"assertion-to-MUT stratum {stratum} has {len(ranked)} rows; "
+                f"review requires {requested}"
+            )
+        stratum_sizes[stratum] = len(ranked)
+        selected.extend(
+            {
+                "stratum": stratum,
+                "selection_sha256": rank,
+                "identity": {field: row[field] for field in identity_fields},
+            }
+            for rank, row in ranked[:requested]
+        )
+    return {
+        "method": "stratified source review of weak and ambiguous mappings",
+        "seed": ASSERTION_TO_MUT_REVIEW_SEED,
+        "population_identity_sha256": population.get("identity_sha256"),
+        "population_size": len(rows),
+        "stratum_sizes": stratum_sizes,
+        "allocation": dict(ASSERTION_TO_MUT_REVIEW_ALLOCATION),
+        "sample_size": len(selected),
+        "selections": selected,
+    }
+
+
 def extract_population(
     connection: Connection, query: PopulationQuery, variant: str
 ) -> dict[str, object]:
@@ -651,11 +773,16 @@ def adjudicate_decisions(
         if len(reviews) == 1
         else reporeapers_reconstruction.ReviewState.AGREED
     )
+    rationale = (
+        str(reviews[0]["rationale"])
+        if len(reviews) == 1
+        else "Reviewer decisions agree."
+    )
     return {
         "status": status.value,
         "label": accepted_label,
         "confidence": confidence,
-        "rationale": "Reviewer decisions agree.",
+        "rationale": rationale,
         "source_ids": source_ids,
         "reviews": reviews,
         "review_state": review_state.value,
