@@ -33,7 +33,7 @@ A release has two audiences with different trust boundaries. Maintainers need to
 
 ### 0. Release inputs freeze only after their owners are accepted
 
-Release assembly begins after every producer contract it consumes is validated, synced, and archived. `make-report-runs-explicit` owns complete registered runs and their artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `consolidate-repository-knowledge` owns exclusion-accounting semantics. `declare-published-artifacts` owns declared consumer delivery. `materialize-exclusion-evidence` owns the normalized mechanism, denominator, and retained claim-facing RQ6 surface. `publish-teralizer-headline-evidence` owns the four typed headline dimensions. `publish-conditional-filtering-comparison` owns the bounded controlled and RepoReapers filtering-retention evidence.
+Release assembly begins after every producer contract it consumes is validated, synced, and archived. `make-report-runs-explicit` owns complete registered runs and their artifact manifests. `separate-report-values-from-presentation` owns typed values and target rendering. `consolidate-repository-knowledge` owns exclusion-accounting semantics. `declare-published-artifacts` owns declared consumer delivery. `materialize-exclusion-evidence` owns the normalized mechanism, denominator, and retained claim-facing RQ6 surface. `publish-teralizer-headline-evidence` owns the four typed headline dimensions. `publish-conditional-filtering-comparison` owns the bounded controlled and RepoReapers filtering-retention evidence. `reconstruct-reporeapers-evidence` owns the observation-only version 7 audit, its content-addressed source inventory, the output-directory population input, and the typed reconstruction metrics.
 
 The archived prerequisites are consumed at exact accepted revisions: `consolidate-evaluation-databases`
 at `edf5ae290a0659266fec28530c4873ab0db0a808`, `make-report-runs-explicit` at
@@ -42,15 +42,16 @@ at `edf5ae290a0659266fec28530c4873ab0db0a808`, `make-report-runs-explicit` at
 `4042046a87e67048cdde506642320435a5865759`, `declare-published-artifacts` at
 `595db740d4a8e2c860d5e658e9e0755467c54a33`, `materialize-exclusion-evidence` at
 `6a0af0a526162e13e20aab11cf1756bec15f4426`, `publish-teralizer-headline-evidence` at
-`d1b2364ee1ed76c27d23c7632677af5833a82842`, and `publish-conditional-filtering-comparison` at
-`08c8cd8a9c136bba3a2e27bb2961943c1c5d5e73`. These are separately verified gates, not one aggregate
+`d1b2364ee1ed76c27d23c7632677af5833a82842`, `publish-conditional-filtering-comparison` at
+`08c8cd8a9c136bba3a2e27bb2961943c1c5d5e73`, and `reconstruct-reporeapers-evidence` at
+`6155049c5532fc8aaecb63b754481902981ea033`. These are separately verified gates, not one aggregate
 planning checkbox.
 
 The latest complete registered report snapshot was generated from clean source revision
-`9f18b49c27c992ed54ae0345cf38f43e795b2f3c` and committed at
-`9517f255ac5b515be69a75a921f4f247ef12ceea`. Its `analysis/reports/provenance.json` SHA-256 is
-`c4e854923dd22a47ee077ee26ace08b11bc58c9119309af663df5feb668d250f`, and its aggregate macro artifact
-SHA-256 is `7a160af54e1e7511f84811ad644c75faa73ec6e93eb84086bdcb76ee72b94ae1`. The release input ledger must
+`d1740e87306f876a22a865db51bf5c9fd298af6d` and committed at
+`e9cf56d5646cca4782c1e52c544dc0cfadd1c837`. Its `analysis/reports/provenance.json` SHA-256 is
+`40ffbcc46340918cd3e34212688884f6e07b8aeea60be969f2d0dde6edd825fc`, and its aggregate macro artifact
+SHA-256 is `055ffee9ac6ea6c6c921b8c1da45b5f0903b98d929ea3a540434c26e0e335cb4`. The release input ledger must
 resolve the complete artifact manifest at that boundary. It rejects an active change directory, dirty
 producer revision, mutable build directory, or intermediate manifest as release evidence. This change
 consumes those authorities and does not reopen or duplicate them.
@@ -77,11 +78,14 @@ Release closure is computed from declarations, not from the files currently visi
 | Controlled project source | `projects/EqBench` and other controlled inputs at recorded revisions, without nested Git metadata | Corpus/config declarations and project commits | `projects-controlled` |
 | Corpus data | Complete manifests and verified dumps for `controlled`, `real-world`, `jarvis-scenarios`, and `jarvis-benchmark` | Corpus registry and corpus package manifest | Corpus components |
 | Registered evidence | Every registered Markdown report, LaTeX table, CSV file, figure, macro file, and provenance record from one complete report run | `ReportSpec`, `ArtifactSet`, and report-run manifest | `core` |
-| Non-database report inputs | `project-source-facts.json`, `jarvis-value-facts.json`, `cut_values.tsv`, and accepted JARVIS completion evidence; no report may resolve a source-checkout fallback | Every registered `FileInputSpec` | `core` |
+| Non-database report inputs | `project-source-facts.json`, `jarvis-value-facts.json`, `cut_values.tsv`, accepted JARVIS completion evidence, `reporeapers-reconstruction-audit.json`, `reporeapers-reconstruction-inventory.json`, and `reporeapers-output-directories-population.json`; no report may resolve a source-checkout fallback | Every registered `FileInputSpec` | `core` |
+| RepoReapers reconstruction evidence | Every version 7 database export, facts record, run-status record, project log, configuration, project checkout, run artifact, and project-mapping source declared by the reconstruction inventory, with stable content identity and a payload or explicit non-payload disposition | Accepted evidence-reconstruction contract, normalized audit, content-addressed inventory, source revisions, and checksums | `core`, the existing corpus or project component that owns the bytes, or an explicit non-payload disposition |
 | JARVIS backing evidence | Every source value log declared by the validated compact-facts manifest and bound by its counts and aggregate checksums; raw CUT-PVC captures bound to `cut_values.tsv`; scorecard and census status/provenance ledgers | JARVIS evidence extractors, capture plan, run ledgers, manifests, and checksums | `core` |
 | Project inputs | Redistributable source snapshots, exact revisions, configs, patches, licenses, and retrieval records for controlled, real-world, and JARVIS collection workflows, including the two scorecard and twelve census fixture roots | Corpus/config declarations plus the third-party rights ledger | Workflow-specific project components |
 | Runtime | Digest-pinned analysis, PostgreSQL, and collection image references; Dockerfiles; Compose declarations; lock files; architecture and network facts | Release declaration and container build records | `core` |
 | Public contract | Release and component manifests, checksums, schemas, requirements, citation, accepted-paper link, licenses, third-party notices, claim matrix, data dictionary, limitations, and acceptance record | Release declaration and measured release facts | Standalone release files and every independently downloadable component as applicable |
+
+The three RepoReapers reconstruction documents are compact report inputs and belong in `core`. Their source inventory describes collected evidence used to audit the claims; it is not permission to omit those sources silently or to copy author-machine paths into the release. The release ledger resolves each source identity to bytes already owned by a corpus or project component, a separate core evidence payload, or an explicit non-payload disposition with the resulting claim-verification boundary. Report reproduction consumes the normalized audit and does not rerun reconstruction or project analysis.
 
 The JARVIS inventory is deliberate. `jarvis-value-facts.json` is sufficient to inspect the published RQ0 values but not to repeat its extraction from source logs. The release therefore retains the selected raw value logs, not the complete 13 GiB author run roots. `cut_values.tsv` currently has no retained raw capture tree; the release work must rerun the capture from pinned fixtures, retain the raw TSVs, and bind the aggregate to them before claiming that evidence as regenerable. The current optional marker `data/detached/census-gen.complete` and the runner-owned `data/jarvis-census/complete` are competing completion paths. They must become one declared completion-evidence record validated against the census status ledger and corpus database before the final report run is frozen.
 
@@ -236,6 +240,7 @@ Reduced and full collection are not final-candidate acceptance reruns. Their sta
 - **A new DOI is embedded before publication but the deposit changes.** → Reserve the version DOI, freeze the candidate, upload the exact validated files, then verify the downloaded record. Any byte change creates a new candidate and, after publication, a new version.
 - **Venue document layouts differ.** → Keep README as the complete entry point and retain plain-text requirements, status, install, and license documents. Venue submission wrappers may select documents but do not change artifact behavior or bytes.
 - **A reduced collection run passes while the full run has environment-dependent failures.** → State the reduced scope precisely, retain full-run ledgers and expected failure semantics, and never present reduced execution as independent reproduction of full empirical results.
+- **Normalized reconstruction inputs make RQ6 runnable while collected audit sources are omitted.** → Package the audit, inventory, and output-directory population in core. Resolve every inventory source to owned bytes or an explicit non-payload disposition, and distinguish report reproduction from observation-only reconstruction and manual review.
 - **Compact JARVIS facts make a report runnable while their source evidence is omitted.** → Package the selected value logs and regenerated raw CUT captures with checksums and lineage; classify frozen-fact inspection separately from collection.
 - **JARVIS path contracts currently disagree.** → Reconcile `data/detached/census-gen.complete` with the runner-owned completion path, and reconcile `data/jarvis-source-cache` in the CUT capture script with the fixture preparer's owned source cache before freezing evidence. A source-checkout fallback is not accepted.
 - **A source snapshot records gitlinks but omits nested repositories.** → Materialize every required submodule at its recorded commit, inventory its license and payload ownership, and prove the Git-free build from staged source bytes.
@@ -245,8 +250,8 @@ Reduced and full collection are not final-candidate acceptance reruns. Their sta
 
 ## Migration Plan
 
-1. Completed: consume the archived corpus, report-run, rendering, repository-authority, artifact-delivery, exclusion-evidence, headline-evidence, and filtering-comparison contracts. Freeze the latest complete registered report snapshot named in Decision 0; do not begin release assembly from an earlier or provisional report set.
-2. Freeze a declaration-derived input ledger. Resolve every `ReportSpec` corpus and file input, all producing source and submodule bytes, all project/config inputs, and every output. Reconcile the JARVIS completion and source-cache path mismatches, retain selected value logs, regenerate and retain raw CUT captures, and prove the compact evidence lineage before archive work.
+1. Completed: consume the archived corpus, report-run, rendering, repository-authority, artifact-delivery, exclusion-evidence, headline-evidence, filtering-comparison, and RepoReapers reconstruction contracts. Freeze the latest complete registered report snapshot named in Decision 0; do not begin release assembly from an earlier or provisional report set.
+2. Freeze a declaration-derived input ledger. Resolve every `ReportSpec` corpus and file input, all producing source and submodule bytes, all project/config inputs, and every output. Resolve all reconstruction-inventory source identities to a payload or explicit non-payload disposition. Reconcile the JARVIS completion and source-cache path mismatches, retain selected value logs, regenerate and retain raw CUT captures, and prove both reconstruction and JARVIS evidence lineage before archive work.
 3. Introduce the release declaration and schemas, then build fixture component/release manifests and atomic archive assembly without changing the published version. Include the five fixed project scopes and prove that real-world sample is an exact subset of full.
 4. Add embedded per-source provenance and prove report generation from a Git-free fixture release.
 5. Replace shared-root archive layout with unique component wrapper roots, document standard extraction, implement strict manifest preflight, and add the thin root reviewer controller.
