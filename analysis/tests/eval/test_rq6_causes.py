@@ -3,7 +3,7 @@ from dataclasses import replace
 import pytest
 from sqlalchemy import text
 
-from teralizer.eval.inputs import CorpusInputSpec
+from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec
 from teralizer.eval.macros import macro_name
 from teralizer.eval.model import BuiltReport, ValueKind
 from teralizer.eval.reports import _exclusion_evidence as exclusion
@@ -35,10 +35,35 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
     report = rq6_report
     assert report.rq == "rq6"
     input_specs = get("rq6").inputs
-    assert all(isinstance(input_spec, CorpusInputSpec) for input_spec in input_specs)
-    assert [(input_spec.role, input_spec.corpus_id) for input_spec in input_specs] == [
+    corpus_inputs = [
+        input_spec
+        for input_spec in input_specs
+        if isinstance(input_spec, CorpusInputSpec)
+    ]
+    file_inputs = [
+        input_spec
+        for input_spec in input_specs
+        if isinstance(input_spec, FileInputSpec)
+    ]
+    assert [
+        (input_spec.role, input_spec.corpus_id) for input_spec in corpus_inputs
+    ] == [
         ("real-world", "real-world"),
         ("controlled", "controlled"),
+    ]
+    assert [(input_spec.role, input_spec.path) for input_spec in file_inputs] == [
+        (
+            "reconstruction-audit",
+            "analysis/data/report-inputs/reporeapers-reconstruction-audit.json",
+        ),
+        (
+            "reconstruction-inventory",
+            "analysis/data/report-inputs/reporeapers-reconstruction-inventory.json",
+        ),
+        (
+            "output-directory-population",
+            "analysis/data/report-inputs/reporeapers-output-directories-population.json",
+        ),
     ]
     labels = {t.label for t in report.tables()}
     assert any("processing-failures" in lbl for lbl in labels)
@@ -56,6 +81,8 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
         "rq6_jpf_exception_causes",
         "rq6_mut_choice_sensitivity",
         "rq6_widening_refusals",
+        "rq6_reconstruction_summary",
+        "rq6_reconstruction_outcomes",
     }
     choice = next(
         table
@@ -68,6 +95,41 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
     assert float(
         report.metric("realworld.parameter_type_choice_dependent_lower_bound_pct").value
     ) == pytest.approx(counts["Choice-dependent"] / total)
+
+
+def test_rq6_publishes_reconstructed_evidence_without_exact_rates(rq6_report):
+    summary = next(
+        table
+        for table in rq6_report.tables()
+        if table.key == "rq6_reconstruction_summary"
+    )
+    outcomes = next(
+        table
+        for table in rq6_report.tables()
+        if table.key == "rq6_reconstruction_outcomes"
+    )
+
+    claims = summary.df.set_index("claim_key")
+    assert claims.loc["no-assertions", "resolved"] == 100
+    assert claims.loc["no-assertions", "unresolved"] == 24_166
+    assert "10.53% genuine absences" in claims.loc["no-assertions", "finding"]
+    assert "95% normal CI" in claims.loc["no-assertions", "finding"]
+    assert claims.loc["output-directories", "incompatible"] == 3
+    assert {
+        "supported-mapping",
+        "contradicted-mapping",
+        "insufficient-specification-evidence",
+        "incompatible-evidence",
+    } <= set(outcomes.df["outcome"])
+
+    reconstruction_metrics = [
+        metric
+        for metric in rq6_report.metrics
+        if metric.key.startswith("rq6.reconstruction.")
+    ]
+    assert len(reconstruction_metrics) == 12
+    assert all(metric.kind is ValueKind.COUNT for metric in reconstruction_metrics)
+    assert not any("pct" in metric.key for metric in reconstruction_metrics)
 
 
 def test_rq6_stage_metrics_chain_the_funnel(rq6_report, funnel_result):
@@ -396,7 +458,11 @@ def test_rq6_metrics_have_population_denominator_and_provenance(rq6_report):
     for metric in rq6_report.metrics:
         assert metric.kind is not None
         assert metric.population is not None
-        assert metric.population.input_role in {"real-world", "controlled"}
+        assert metric.population.input_role in {
+            "real-world",
+            "controlled",
+            "reconstruction-audit",
+        }
         assert metric.provenance is not None
         if metric.fmt == "pct1":
             assert metric.numerator_key is not None

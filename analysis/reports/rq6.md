@@ -160,3 +160,36 @@ The reader-facing filtering column combines filter decisions, generation-gate re
 _Refusals are decided before a generalized test is written, so they carry no filter decision and no lifecycle record._
 
 source: [`fetch_widening_refusals`](https://github.com/glockyco/Teralizer/blob/d3f3690dc17c9ef6cf6ffea3f15b5bddb7936ea4/analysis/src/teralizer/eval/reports/_widening.py#L98)
+
+Reconstructed evidence distinguishes resolved findings from unresolved and incompatible records. Exact rates are omitted because none of the three claims has a complete compatible classification. Sample estimates retain their method and confidence interval.
+
+**Status of reconstructed RepoReapers evidence claims.**
+
+| Claim | Status | Resolved | Unresolved | Incompatible | Total | Method | Finding |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| no-assertions | partially-supported | 100 | 24,166 | 0 | 24,266 | Deterministic stratified simple random sample without replacement: n=100; project-burden strata N=(35,261,1286,22684), n=(4,4,8,84); seed reporeapers-v7-no-assertions-review. | The reviewed sample contradicts the filter interpretation: weighted estimate 10.53% genuine absences (95% normal CI 4.38%-16.69%) and 89.47% false positives with reachable or unsupported oracles (95% CI 83.31%-95.62%). The other 24,166 population members remain unreviewed. |
+| assertion-to-mut | partially-supported | 70 | 180,478 | 0 | 180,548 | Deterministic stratified source review with n=100. The review selects 20 observations from each risk stratum. The strata are T3_SINGLE_WEAK, T4_GUESS, NO_VISIBLE_CALL, UNRESOLVED_SOURCE_DECLARATION, and ambiguous T1 or T2. The seed is reporeapers-v7-assertion-to-mut-review. | Of 100 targeted observations, 36 support the persisted mapping and 34 contradict it. Another 30 observations lack sufficient specification evidence. The design targets five risk strata with 37,669 observations. It does not estimate accuracy for the other 142,879 observations. |
+| output-directories | partially-supported | 40 | 0 | 3 | 43 | Complete classification of the frozen project population from preserved command records, project checkouts, and task failures. | Forty projects have a classified output-discovery cause. Three preserved command outputs are incompatible with the UTF-8 evidence reader and remain incompatible evidence. |
+
+_Resolved, unresolved, and incompatible are audit partitions. Sample findings are estimates with the stated method and confidence interval. They are not exact population rates._
+
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
+
+**Reviewed outcomes in the reconstructed RepoReapers evidence.**
+
+| Claim | Evidence status | Reviewed outcome | Count |
+| --- | --- | --- | --- |
+| assertion-to-mut | resolved | contradicted-mapping | 34 |
+| assertion-to-mut | resolved | supported-mapping | 36 |
+| assertion-to-mut | unresolved | insufficient-specification-evidence | 30 |
+| no-assertions | resolved | genuine-absence | 12 |
+| no-assertions | resolved | reachable-helper-assertion | 34 |
+| no-assertions | resolved | unsupported-oracle | 54 |
+| output-directories | incompatible | incompatible-evidence | 3 |
+| output-directories | resolved | absent-artifact | 32 |
+| output-directories | resolved | default-directory-mismatch | 1 |
+| output-directories | resolved | earlier-build-failure | 7 |
+
+_Counts describe reviewed records. For sampled claims, these counts do not describe the full population._
+
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)

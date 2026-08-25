@@ -1,18 +1,27 @@
 """RQ6 real-world exclusion causes report."""
 
 from __future__ import annotations
-from dataclasses import replace
 
+import json
+from collections import Counter
+from dataclasses import replace
+from pathlib import Path
+from typing import cast
+
+import pandas as pd
 from sqlalchemy.engine import Connection
 
 from teralizer.eval.data import read_sql
-from teralizer.eval.inputs import CorpusInputSpec, ReportContext
+from teralizer.eval.evidence import reporeapers_reconstruction as reconstruction
+from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec, ReportContext
 from teralizer.eval.model import (
+    ColumnSpec,
     Metric,
     MetricPopulation,
     Prose,
     RQReport,
     Section,
+    Table,
     ValueKind,
 )
 from teralizer.eval.provenance import Provenance, capture
@@ -221,6 +230,158 @@ def _stage_metrics(
     return metrics
 
 
+RECONSTRUCTION_CLAIMS = (
+    "no-assertions",
+    "assertion-to-mut",
+    "output-directories",
+)
+
+
+def _load_reconstruction_audit(path: Path) -> dict[str, object]:
+    return reconstruction.validate_audit(json.loads(path.read_text(encoding="utf-8")))
+
+
+def _validate_reconstruction_inputs(
+    audit: dict[str, object], inventory_path: Path, output_population_path: Path
+) -> None:
+    inventory = reconstruction.validate_inventory(
+        json.loads(inventory_path.read_text(encoding="utf-8"))
+    )
+    if audit["inventory"] != inventory:
+        raise ValueError("reconstruction audit inventory differs from its report input")
+    population_document = json.loads(output_population_path.read_text(encoding="utf-8"))
+    populations = population_document.get("populations")
+    if not isinstance(populations, list) or len(populations) != 1:
+        raise ValueError(
+            "output-directory population input must contain one population"
+        )
+    population = cast(dict[str, object], populations[0])
+    output_claim = next(
+        claim
+        for claim in cast(list[dict[str, object]], audit["claims"])
+        if claim["claim"] == "output-directories"
+    )
+    if population.get("claim") != "output-directories":
+        raise ValueError("output-directory population has the wrong claim")
+    if population.get("identity_sha256") != output_claim["population_sha256"]:
+        raise ValueError("output-directory population identity differs from the audit")
+    if population.get("row_count") != output_claim["total"]:
+        raise ValueError("output-directory population total differs from the audit")
+
+
+def _reconstruction_claims(audit: dict[str, object]) -> list[dict[str, object]]:
+    claims = audit["claims"]
+    if not isinstance(claims, list):
+        raise TypeError("reconstruction audit claims must be an array")
+    records = [cast(dict[str, object], claim) for claim in claims]
+    by_name = {str(claim["claim"]): claim for claim in records}
+    if set(by_name) != set(RECONSTRUCTION_CLAIMS):
+        raise ValueError(
+            "RQ6 reconstruction claims differ: "
+            f"expected={sorted(RECONSTRUCTION_CLAIMS)}, "
+            f"actual={sorted(by_name)}"
+        )
+    return [by_name[name] for name in RECONSTRUCTION_CLAIMS]
+
+
+def _reconstruction_summary_table(
+    claims: list[dict[str, object]], provenance: Provenance
+) -> Table:
+    frame = pd.DataFrame(claims).rename(
+        columns={
+            "claim": "claim_key",
+            "status": "claim_status",
+            "reason": "finding",
+        }
+    )
+    return Table(
+        key="rq6_reconstruction_summary",
+        df=frame,
+        columns=[
+            ColumnSpec("Claim", "claim_key", kind=ValueKind.TEXT),
+            ColumnSpec("Status", "claim_status", kind=ValueKind.TEXT),
+            ColumnSpec("Resolved", "resolved", kind=ValueKind.COUNT),
+            ColumnSpec("Unresolved", "unresolved", kind=ValueKind.COUNT),
+            ColumnSpec("Incompatible", "incompatible", kind=ValueKind.COUNT),
+            ColumnSpec("Total", "total", kind=ValueKind.COUNT),
+            ColumnSpec("Method", "method", kind=ValueKind.TEXT),
+            ColumnSpec("Finding", "finding", kind=ValueKind.TEXT),
+        ],
+        caption="Status of reconstructed RepoReapers evidence claims.",
+        label="tab:rq6-reconstruction-summary",
+        row_key="claim_key",
+        provenance=provenance,
+        note=(
+            "Resolved, unresolved, and incompatible are audit partitions. "
+            "Sample findings are estimates with the stated method and confidence "
+            "interval. They are not exact population rates."
+        ),
+    )
+
+
+def _reconstruction_outcomes_table(
+    audit: dict[str, object], provenance: Provenance
+) -> Table:
+    entities = audit["entities"]
+    if not isinstance(entities, list):
+        raise TypeError("reconstruction audit entities must be an array")
+    counts = Counter(
+        (
+            str(cast(dict[str, object], entity)["claim"]),
+            str(cast(dict[str, object], entity)["status"]),
+            str(cast(dict[str, object], entity)["label"]),
+        )
+        for entity in entities
+    )
+    rows = [
+        {
+            "row_key": f"{claim}:{status}:{outcome}",
+            "claim": claim,
+            "status": status,
+            "outcome": outcome,
+            "reviewed_count": count,
+        }
+        for (claim, status, outcome), count in sorted(counts.items())
+    ]
+    return Table(
+        key="rq6_reconstruction_outcomes",
+        df=pd.DataFrame(rows),
+        columns=[
+            ColumnSpec("Claim", "claim", kind=ValueKind.TEXT),
+            ColumnSpec("Evidence status", "status", kind=ValueKind.TEXT),
+            ColumnSpec("Reviewed outcome", "outcome", kind=ValueKind.TEXT),
+            ColumnSpec("Count", "reviewed_count", kind=ValueKind.COUNT),
+        ],
+        caption="Reviewed outcomes in the reconstructed RepoReapers evidence.",
+        label="tab:rq6-reconstruction-outcomes",
+        row_key="row_key",
+        provenance=provenance,
+        note=(
+            "Counts describe reviewed records. For sampled claims, these counts "
+            "do not describe the full population."
+        ),
+    )
+
+
+def _reconstruction_metrics(
+    claims: list[dict[str, object]], provenance: Provenance
+) -> list[Metric]:
+    metrics: list[Metric] = []
+    for claim in claims:
+        claim_key = str(claim["claim"]).replace("-", "_")
+        for partition in ("resolved", "unresolved", "incompatible", "total"):
+            metrics.append(
+                _count_metric(
+                    f"rq6.reconstruction.{claim_key}.{partition}",
+                    int(claim[partition]),
+                    "Audit entity",
+                    provenance,
+                    "reconstruction-audit",
+                )
+            )
+    return metrics
+
+
 FILTERING_METRIC_KEYS = frozenset(
     f"rq6.filtering.{dataset}.{suffix}"
     for dataset in ("controlled", "realworld")
@@ -272,6 +433,11 @@ RETAINED_METRIC_KEYS = frozenset(
         for suffix in ("", "_pct")
     }
     | FILTERING_METRIC_KEYS
+    | {
+        f"rq6.reconstruction.{claim.replace('-', '_')}.{partition}"
+        for claim in RECONSTRUCTION_CLAIMS
+        for partition in ("resolved", "unresolved", "incompatible", "total")
+    }
 )
 
 RETAINED_TABLE_KEYS = frozenset(
@@ -285,6 +451,8 @@ RETAINED_TABLE_KEYS = frozenset(
         "tab-exclusions-breakdown-extended",
         "tab-exclusions-filtering-extended",
         "rq6_widening_refusals",
+        "rq6_reconstruction_summary",
+        "rq6_reconstruction_outcomes",
     }
 )
 
@@ -315,6 +483,27 @@ def validate_retained_consumers(report: RQReport) -> None:
 def build(context: ReportContext) -> RQReport:
     conn = context.corpus("real-world")
     controlled_conn = context.corpus("controlled")
+    reconstruction_path = context.file("reconstruction-audit")
+    reconstruction_inventory_path = context.file("reconstruction-inventory")
+    output_population_path = context.file("output-directory-population")
+    if (
+        reconstruction_path is None
+        or reconstruction_inventory_path is None
+        or output_population_path is None
+    ):
+        raise AssertionError("required reconstruction evidence resolved as absent")
+    reconstruction_audit = _load_reconstruction_audit(reconstruction_path)
+    _validate_reconstruction_inputs(
+        reconstruction_audit, reconstruction_inventory_path, output_population_path
+    )
+    reconstruction_claims = _reconstruction_claims(reconstruction_audit)
+    reconstruction_provenance = capture(_load_reconstruction_audit)
+    reconstruction_summary = _reconstruction_summary_table(
+        reconstruction_claims, reconstruction_provenance
+    )
+    reconstruction_outcomes = _reconstruction_outcomes_table(
+        reconstruction_audit, reconstruction_provenance
+    )
     variant = _funnel.resolve_variant(conn)
     exclusion.validate_evidence(conn, variant)
     controlled_filtering_provenance = capture(
@@ -655,6 +844,9 @@ def build(context: ReportContext) -> RQReport:
     widening_provenance = capture(fetch_widening_refusals, query=WIDENING_REFUSAL_SQL)
     widening_table = widening_refusal_table(widening_data, widening_provenance)
     metrics.extend(widening_refusal_metrics(widening_data, widening_provenance))
+    metrics.extend(
+        _reconstruction_metrics(reconstruction_claims, reconstruction_provenance)
+    )
     section = Section(
         title="Project-level exclusions",
         blocks=[
@@ -696,6 +888,15 @@ def build(context: ReportContext) -> RQReport:
                 "The preceding table preserves the exact mechanisms."
             ),
             widening_table,
+            Prose(
+                "Reconstructed evidence distinguishes resolved findings from "
+                "unresolved and incompatible records. Exact rates are omitted "
+                "because none of the three claims has a complete compatible "
+                "classification. Sample estimates retain their method and "
+                "confidence interval."
+            ),
+            reconstruction_summary,
+            reconstruction_outcomes,
         ],
     )
     report = RQReport(
@@ -718,6 +919,18 @@ register(
                 "controlled",
                 "controlled",
                 filtering_comparison.CONTROLLED_REQUIRES,
+            ),
+            FileInputSpec(
+                "reconstruction-audit",
+                "analysis/data/report-inputs/reporeapers-reconstruction-audit.json",
+            ),
+            FileInputSpec(
+                "reconstruction-inventory",
+                "analysis/data/report-inputs/reporeapers-reconstruction-inventory.json",
+            ),
+            FileInputSpec(
+                "output-directory-population",
+                "analysis/data/report-inputs/reporeapers-output-directories-population.json",
             ),
         ),
     ),

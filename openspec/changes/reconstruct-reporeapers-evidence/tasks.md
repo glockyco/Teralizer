@@ -61,13 +61,13 @@
 
 ## 7. Integrate Reconstructed Evidence
 
-- [ ] 7.1 Declare each accepted audit file as a versioned report input with validated upstream identities.
-- [ ] 7.2 Extend the registered RQ6 report to publish reconstruction status and resolved, unresolved, and incompatible populations.
-- [ ] 7.3 Publish exact rates only for complete version 7 classifications with compatible denominators.
-- [ ] 7.4 Publish sample estimates with their sampling method and confidence interval instead of exact population counts.
-- [ ] 7.5 Publish `contradicted` and `evidence-gap` outcomes without an unsupported replacement number.
-- [ ] 7.6 Add provenance checks that prevent report-time access to the Air or remote project state.
-- [ ] 7.7 Update retained metric and table inventories to include only reconstructed values that downstream thesis claims retain.
+- [x] 7.1 Declare each accepted audit file as a versioned report input with validated upstream identities.
+- [x] 7.2 Extend the registered RQ6 report to publish reconstruction status and resolved, unresolved, and incompatible populations.
+- [x] 7.3 Publish exact rates only for complete version 7 classifications with compatible denominators.
+- [x] 7.4 Publish sample estimates with their sampling method and confidence interval instead of exact population counts.
+- [x] 7.5 Publish `contradicted` and `evidence-gap` outcomes without an unsupported replacement number.
+- [x] 7.6 Add provenance checks that prevent report-time access to the Air or remote project state.
+- [x] 7.7 Update retained metric and table inventories to include only reconstructed values that downstream thesis claims retain.
 
 ## 8. Verify the Complete Change
 
