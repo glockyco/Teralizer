@@ -71,13 +71,13 @@
 
 ## 8. Verify the Complete Change
 
-- [ ] 8.1 Run focused reconstruction and report tests with synthetic evidence fixtures.
-- [ ] 8.2 Run `uv run --directory analysis pytest`.
-- [ ] 8.3 Run `uv run --directory analysis ruff check .`.
-- [ ] 8.4 Run `uv run --directory analysis ty check .`.
-- [ ] 8.5 Verify that the real-world corpus registry still resolves only to `postgres_reporeapers_rq6_v7`.
-- [ ] 8.6 Verify that version 7 base tables and the preserved Air evidence remain unchanged.
-- [ ] 8.7 Verify that every target claim has one final reconstruction status and reconciled evidence totals.
-- [ ] 8.8 Run `lefthook run pre-commit --all-files`.
-- [ ] 8.9 Run `openspec validate reconstruct-reporeapers-evidence --strict`.
-- [ ] 8.10 Review the final command record and prove that no pipeline, project, task, build, or retry occurred.
+- [x] 8.1 Run focused reconstruction and report tests with synthetic evidence fixtures.
+- [x] 8.2 Run `uv run --directory analysis pytest`.
+- [x] 8.3 Run `uv run --directory analysis ruff check .`.
+- [x] 8.4 Run `uv run --directory analysis ty check .`.
+- [x] 8.5 Verify that the real-world corpus registry still resolves only to `postgres_reporeapers_rq6_v7`.
+- [x] 8.6 Verify that version 7 base tables and the preserved Air evidence remain unchanged.
+- [x] 8.7 Verify that every target claim has one final reconstruction status and reconciled evidence totals.
+- [x] 8.8 Run `lefthook run pre-commit --all-files`.
+- [x] 8.9 Run `openspec validate reconstruct-reporeapers-evidence --strict`.
+- [x] 8.10 Review the final command record and prove that no pipeline, project, task, build, or retry occurred.
