@@ -53,7 +53,7 @@ RQ0 uses a separate, pinned fixture set reproducing the twelve Apache Commons pr
 
 _A dash in the JARVIS columns marks a project that the publication reports no case for. A dash in the Teralizer columns marks a project for which the pipeline produced no generalized test. Teralizer aggregate PVC counts distinct values exercised by generalized tests for each MUT and parameter. Generalized MUTs have at least one generalized test._
 
-source: [`census_project_frame`](https://github.com/glockyco/Teralizer/blob/0ef9a91bee8787db60d33691db27ebe9493cc501/analysis/src/teralizer/eval/evidence/jarvis_values.py#L223)
+source: [`census_project_frame`](https://github.com/glockyco/Teralizer/blob/5edcc9cf661f9d8013ee3a9d2b45dd88f3ab0275/analysis/src/teralizer/eval/evidence/jarvis_values.py#L223)
 
 Census status partial. The census intended 12 projects: 7 completed, 3 failed, and the run did not reach 2. 9 projects carry persisted PVC rows. Completion marker present.
 
