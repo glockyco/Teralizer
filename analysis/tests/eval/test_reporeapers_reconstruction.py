@@ -9,6 +9,7 @@ from typing import cast
 import pytest
 
 from teralizer import corpora
+from teralizer.eval.evidence import reporeapers_populations as populations
 from teralizer.eval.evidence import reporeapers_reconstruction as reconstruction
 
 _REVISION = "a" * 40
@@ -374,6 +375,64 @@ def test_audit_rejects_unreconciled_claim_summary(tmp_path: Path):
 
     with pytest.raises(reconstruction.ReconstructionError, match="does not reconcile"):
         reconstruction.validate_audit(audit)
+
+
+def _population_query() -> populations.PopulationQuery:
+    return populations.PopulationQuery(
+        claim="fixture",
+        definition="Complete fixture rows.",
+        sql="WITH fixture AS (SELECT 1) SELECT * FROM fixture",
+        identity_fields=("project_root", "local_key"),
+        fields=("project_root", "local_key", "evidence"),
+    )
+
+
+def test_population_identity_digest_is_order_independent():
+    first = {
+        "project_root": "/projects/first",
+        "local_key": "Example#first",
+        "evidence": {"signals": ["A", "B"]},
+    }
+    second = {
+        "project_root": "/projects/second",
+        "local_key": "Example#second",
+        "evidence": None,
+    }
+
+    forward = populations.freeze_population(_population_query(), [first, second])
+    reverse = populations.freeze_population(_population_query(), [second, first])
+
+    assert forward["identity_sha256"] == reverse["identity_sha256"]
+    assert forward["rows"] == reverse["rows"]
+
+
+def test_population_rejects_duplicate_stable_identity():
+    row = {
+        "project_root": "/projects/example",
+        "local_key": "Example#works",
+        "evidence": "first",
+    }
+    duplicate = dict(row, evidence="second")
+
+    with pytest.raises(populations.PopulationError, match="duplicate identity"):
+        populations.freeze_population(_population_query(), [row, duplicate])
+
+
+def test_population_rejects_missing_query_field():
+    incomplete = {
+        "project_root": "/projects/example",
+        "local_key": "Example#works",
+    }
+
+    with pytest.raises(populations.PopulationError, match="fields differ"):
+        populations.freeze_population(_population_query(), [incomplete])
+
+
+def test_registered_population_queries_emit_no_database_surrogate_ids():
+    for query in populations.REGISTERED_QUERIES:
+        assert "id" not in query.fields
+        assert "project_root" in query.identity_fields
+        assert "project_revision" in query.identity_fields
 
 
 @pytest.mark.parametrize("forbidden", ["pipeline", "project", "task", "build", "retry"])
