@@ -140,6 +140,26 @@ Implement and commit the work in these units:
 
 Each unit uses focused fixtures and analysis checks. No checkpoint runs the pipeline or a project.
 
+### 9. Publish thesis quantities through the existing aggregate macro artifact
+
+The RQ6 report already emits reconstruction partition counts and two producer-side audit tables. Extend
+that report with the minimum structured metrics needed by the thesis:
+
+- the stratified `NoAssertions` genuine-absence estimate and its lower and upper confidence bounds;
+- the reviewed assertion-to-MUT counts for supported mappings, contradicted mappings, and insufficient
+  specification evidence; and
+- the complete output-discovery counts for default-directory mismatch, absent artifact, earlier build
+  failure, and incompatible evidence.
+
+Metrics derive from the normalized audit input, not its prose `reason` field. The estimate values remain
+rates with estimate semantics; reviewed and complete outcomes remain counts with explicit population
+boundaries. Add every metric to the retained metric inventory so the existing aggregate LaTeX renderer
+emits stable macros in `analysis/build/macros.tex`.
+
+Do not publish `rq6_reconstruction_summary` or `rq6_reconstruction_outcomes` into the thesis. They remain
+review surfaces. The aggregate macro artifact is the consumer API. This keeps one report authoritative
+and avoids a second report or a thesis-only export path.
+
 ## Risks / Trade-offs
 
 - **An Air path changes after inventory.** The digest and logical key preserve identity. Reacquisition must match the recorded digest.

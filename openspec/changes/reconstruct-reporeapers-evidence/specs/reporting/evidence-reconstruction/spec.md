@@ -97,7 +97,7 @@ An `evidence-gap` SHALL replace an unsupported numeric claim in downstream consu
 
 ### Requirement: Accepted reconstruction results are versioned audit inputs
 
-A supported or partially supported reconstruction SHALL produce a normalized, versioned audit input. The input SHALL contain its manifest identity, population definition, entity decisions, summary totals, unresolved totals, and reconstruction status.
+A supported or partially supported reconstruction SHALL produce a normalized, versioned audit input. The input SHALL contain its manifest identity, population definition, entity decisions, summary totals, unresolved totals, and reconstruction status. A sample estimate used by a downstream report SHALL be stored as structured estimate data with its value, confidence bounds, estimator, and confidence method. A report SHALL NOT recover those values by parsing narrative rationale.
 
 A registered report MAY consume this audit input together with version 7. It SHALL verify the audit schema and reconciliation totals. It SHALL NOT query remote logs or remote project state during report execution.
 

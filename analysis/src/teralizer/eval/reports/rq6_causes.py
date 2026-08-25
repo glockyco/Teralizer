@@ -320,13 +320,13 @@ def _reconstruction_summary_table(
     )
 
 
-def _reconstruction_outcomes_table(
-    audit: dict[str, object], provenance: Provenance
-) -> Table:
+def _reconstruction_outcome_counts(
+    audit: dict[str, object],
+) -> Counter[tuple[str, str, str]]:
     entities = audit["entities"]
     if not isinstance(entities, list):
         raise TypeError("reconstruction audit entities must be an array")
-    counts = Counter(
+    return Counter(
         (
             str(cast(dict[str, object], entity)["claim"]),
             str(cast(dict[str, object], entity)["status"]),
@@ -334,6 +334,11 @@ def _reconstruction_outcomes_table(
         )
         for entity in entities
     )
+
+
+def _reconstruction_outcomes_table(
+    counts: Counter[tuple[str, str, str]], provenance: Provenance
+) -> Table:
     rows = [
         {
             "row_key": f"{claim}:{status}:{outcome}",
@@ -364,8 +369,43 @@ def _reconstruction_outcomes_table(
     )
 
 
+RECONSTRUCTION_ESTIMATE_METRIC_KEYS = frozenset(
+    {
+        "rq6.reconstruction.no_assertions.genuine_absence_estimate_pct",
+        "rq6.reconstruction.no_assertions.genuine_absence_ci_lower_pct",
+        "rq6.reconstruction.no_assertions.genuine_absence_ci_upper_pct",
+    }
+)
+
+RECONSTRUCTION_OUTCOME_METRIC_KEYS = {
+    ("assertion-to-mut", "resolved", "supported-mapping"): (
+        "rq6.reconstruction.assertion_to_mut.reviewed_supported_mapping"
+    ),
+    ("assertion-to-mut", "resolved", "contradicted-mapping"): (
+        "rq6.reconstruction.assertion_to_mut.reviewed_contradicted_mapping"
+    ),
+    ("assertion-to-mut", "unresolved", "insufficient-specification-evidence"): (
+        "rq6.reconstruction.assertion_to_mut.reviewed_insufficient_specification_evidence"
+    ),
+    ("output-directories", "resolved", "default-directory-mismatch"): (
+        "rq6.reconstruction.output_directories.default_directory_mismatch"
+    ),
+    ("output-directories", "resolved", "absent-artifact"): (
+        "rq6.reconstruction.output_directories.absent_artifact"
+    ),
+    ("output-directories", "resolved", "earlier-build-failure"): (
+        "rq6.reconstruction.output_directories.earlier_build_failure"
+    ),
+    ("output-directories", "incompatible", "incompatible-evidence"): (
+        "rq6.reconstruction.output_directories.incompatible_evidence"
+    ),
+}
+
+
 def _reconstruction_metrics(
-    claims: list[dict[str, object]], provenance: Provenance
+    claims: list[dict[str, object]],
+    outcome_counts: Counter[tuple[str, str, str]],
+    provenance: Provenance,
 ) -> list[Metric]:
     metrics: list[Metric] = []
     for claim in claims:
@@ -380,6 +420,52 @@ def _reconstruction_metrics(
                     "reconstruction-audit",
                 )
             )
+
+    no_assertions = next(claim for claim in claims if claim["claim"] == "no-assertions")
+    estimate = no_assertions["estimate"]
+    if not isinstance(estimate, dict) or estimate.get("quantity") != "genuine-absence":
+        raise ValueError("NoAssertions reconstruction lacks its structured estimate")
+    estimate_population = MetricPopulation(
+        "rq6.reconstruction.no_assertions.reviewed",
+        "Test",
+        "reconstruction-audit",
+    )
+    for key, field in (
+        (
+            "rq6.reconstruction.no_assertions.genuine_absence_estimate_pct",
+            "value_pct",
+        ),
+        (
+            "rq6.reconstruction.no_assertions.genuine_absence_ci_lower_pct",
+            "lower_bound_pct",
+        ),
+        (
+            "rq6.reconstruction.no_assertions.genuine_absence_ci_upper_pct",
+            "upper_bound_pct",
+        ),
+    ):
+        metrics.append(
+            Metric(
+                key,
+                float(estimate[field]),
+                fmt="percent2",
+                provenance=provenance,
+                kind=ValueKind.PERCENT,
+                population=estimate_population,
+            )
+        )
+
+    for outcome, key in RECONSTRUCTION_OUTCOME_METRIC_KEYS.items():
+        claim, _, _ = outcome
+        metrics.append(
+            _count_metric(
+                key,
+                outcome_counts[outcome],
+                "Assertion-to-MUT review" if claim == "assertion-to-mut" else "Project",
+                provenance,
+                "reconstruction-audit",
+            )
+        )
     return metrics
 
 
@@ -439,6 +525,8 @@ RETAINED_METRIC_KEYS = frozenset(
         for claim in RECONSTRUCTION_CLAIMS
         for partition in ("resolved", "unresolved", "incompatible", "total")
     }
+    | RECONSTRUCTION_ESTIMATE_METRIC_KEYS
+    | frozenset(RECONSTRUCTION_OUTCOME_METRIC_KEYS.values())
 )
 
 RETAINED_TABLE_KEYS = frozenset(
@@ -502,8 +590,9 @@ def build(context: ReportContext) -> RQReport:
     reconstruction_summary = _reconstruction_summary_table(
         reconstruction_claims, reconstruction_provenance
     )
+    reconstruction_outcome_counts = _reconstruction_outcome_counts(reconstruction_audit)
     reconstruction_outcomes = _reconstruction_outcomes_table(
-        reconstruction_audit, reconstruction_provenance
+        reconstruction_outcome_counts, reconstruction_provenance
     )
     variant = _funnel.resolve_variant(conn)
     exclusion.validate_evidence(conn, variant)
@@ -846,7 +935,11 @@ def build(context: ReportContext) -> RQReport:
     widening_table = widening_refusal_table(widening_data, widening_provenance)
     metrics.extend(widening_refusal_metrics(widening_data, widening_provenance))
     metrics.extend(
-        _reconstruction_metrics(reconstruction_claims, reconstruction_provenance)
+        _reconstruction_metrics(
+            reconstruction_claims,
+            reconstruction_outcome_counts,
+            reconstruction_provenance,
+        )
     )
     section = Section(
         title="Project-level exclusions",

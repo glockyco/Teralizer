@@ -1,4 +1,6 @@
+from copy import deepcopy
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 from sqlalchemy import text
@@ -130,9 +132,75 @@ def test_rq6_publishes_reconstructed_evidence_without_exact_rates(rq6_report):
         for metric in rq6_report.metrics
         if metric.key.startswith("rq6.reconstruction.")
     ]
-    assert len(reconstruction_metrics) == 12
-    assert all(metric.kind is ValueKind.COUNT for metric in reconstruction_metrics)
-    assert not any("pct" in metric.key for metric in reconstruction_metrics)
+    assert len(reconstruction_metrics) == 22
+
+    estimate_values = {
+        "rq6.reconstruction.no_assertions.genuine_absence_estimate_pct": (
+            10.532765813817491
+        ),
+        "rq6.reconstruction.no_assertions.genuine_absence_ci_lower_pct": (
+            4.378705783971964
+        ),
+        "rq6.reconstruction.no_assertions.genuine_absence_ci_upper_pct": (
+            16.686825843663016
+        ),
+    }
+    for key, value in estimate_values.items():
+        metric = rq6_report.metric(key)
+        assert metric.value == pytest.approx(value)
+        assert metric.kind is ValueKind.PERCENT
+        assert metric.fmt == "percent2"
+        assert metric.population.entity_level == "Test"
+        assert metric.population.input_role == "reconstruction-audit"
+
+    outcome_values = {
+        "rq6.reconstruction.assertion_to_mut.reviewed_supported_mapping": 36,
+        "rq6.reconstruction.assertion_to_mut.reviewed_contradicted_mapping": 34,
+        "rq6.reconstruction.assertion_to_mut.reviewed_insufficient_specification_evidence": 30,
+        "rq6.reconstruction.output_directories.default_directory_mismatch": 1,
+        "rq6.reconstruction.output_directories.absent_artifact": 32,
+        "rq6.reconstruction.output_directories.earlier_build_failure": 7,
+        "rq6.reconstruction.output_directories.incompatible_evidence": 3,
+    }
+    for key, value in outcome_values.items():
+        metric = rq6_report.metric(key)
+        assert metric.value == value
+        assert metric.kind is ValueKind.COUNT
+        assert metric.population.input_role == "reconstruction-audit"
+
+    tex = render_macros(rq6_report)
+    for key in estimate_values | outcome_values:
+        assert tex.count(f"\\newcommand{{\\{macro_name(key)}}}") == 1
+
+
+def test_reconstruction_metrics_do_not_parse_claim_reason(rq6_report):
+    audit = rq6_causes._load_reconstruction_audit(
+        Path("data/report-inputs/reporeapers-reconstruction-audit.json")
+    )
+    claims = rq6_causes._reconstruction_claims(audit)
+    outcome_counts = rq6_causes._reconstruction_outcome_counts(audit)
+    provenance = rq6_report.metric(
+        "rq6.reconstruction.no_assertions.genuine_absence_estimate_pct"
+    ).provenance
+    assert provenance is not None
+    expected = [
+        (metric.key, metric.value)
+        for metric in rq6_causes._reconstruction_metrics(
+            claims, outcome_counts, provenance
+        )
+    ]
+
+    changed_claims = deepcopy(claims)
+    for claim in changed_claims:
+        claim["reason"] = "Narrative text changed without changing evidence."
+    actual = [
+        (metric.key, metric.value)
+        for metric in rq6_causes._reconstruction_metrics(
+            changed_claims, outcome_counts, provenance
+        )
+    ]
+
+    assert actual == expected
 
 
 def test_rq6_stage_metrics_chain_the_funnel(rq6_report, funnel_result):

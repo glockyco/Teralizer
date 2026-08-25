@@ -81,3 +81,23 @@
 - [x] 8.8 Run `lefthook run pre-commit --all-files`.
 - [x] 8.9 Run `openspec validate reconstruct-reporeapers-evidence --strict`.
 - [x] 8.10 Review the final command record and prove that no pipeline, project, task, build, or retry occurred.
+
+## 9. Publish Thesis-Facing Reconstruction Metrics
+
+- [x] 9.1 Add structured estimate fields to the normalized `NoAssertions` audit summary. Record the
+      genuine-absence estimate, lower confidence bound, upper confidence bound, estimator, and
+      confidence method without parsing the prose reason field.
+- [x] 9.2 Extend the registered RQ6 report with structured metrics for the `NoAssertions` estimate and
+      confidence bounds, reviewed assertion-to-MUT outcomes, and complete output-discovery outcomes.
+- [x] 9.3 Add every new quantity to the retained metric inventory and verify that the existing aggregate
+      LaTeX renderer emits stable macros. Do not add a new report, thesis-only export, CSV, or TeX table.
+- [x] 9.4 Add focused tests for exact metric keys, value kinds, values, provenance, estimate semantics,
+      outcome partitions, and generated macro names. Prove that changing the audit reason text does not
+      change the metrics.
+- [ ] 9.5 Run the focused RQ6 and reconstruction report tests. Then run the complete analysis test, Ruff,
+      and ty checks, regenerate all registered reports and provenance, and run repository pre-commit
+      hooks.
+- [ ] 9.6 Commit the report implementation and audit-schema update as one coherent unit. Commit the
+      regenerated report artifacts as a separate coherent unit. Use `personal_commit` for both.
+- [ ] 9.7 Validate this change and both delta specs with strict OpenSpec validation. Sync the delta specs
+      into `openspec/specs/`, archive the change, and confirm strict validation after the archive.

@@ -29,7 +29,7 @@ def _records(document: dict[str, object], key: str) -> list[dict[str, object]]:
 
 def _inventory_spec(path: Path) -> dict[str, object]:
     return {
-        "schema_version": 1,
+        "schema_version": reconstruction.SCHEMA_VERSION,
         "population": {
             "corpus_id": "real-world",
             "database": corpora.resolve("real-world").database,
@@ -52,7 +52,7 @@ def _inventory_spec(path: Path) -> dict[str, object]:
 
 def _audit(inventory: dict[str, object]) -> dict[str, object]:
     return {
-        "schema_version": 1,
+        "schema_version": reconstruction.SCHEMA_VERSION,
         "inventory": inventory,
         "entities": [
             {
@@ -113,6 +113,7 @@ def _audit(inventory: dict[str, object]) -> dict[str, object]:
                 "total": 1,
                 "method": "complete classification",
                 "reason": "One frozen entity was reconstructed.",
+                "estimate": None,
             },
             {
                 "claim": "assertion-to-mut",
@@ -126,6 +127,7 @@ def _audit(inventory: dict[str, object]) -> dict[str, object]:
                 "total": 1,
                 "method": "complete classification",
                 "reason": "The only frozen entity lacks source evidence.",
+                "estimate": None,
             },
         ],
         "integrity_issues": [],
@@ -200,6 +202,14 @@ def test_shipped_no_assertions_audit_preserves_sample_results():
             "(95% CI 83.31%-95.62%). The other 24,166 population members "
             "remain unreviewed."
         ),
+        "estimate": {
+            "quantity": "genuine-absence",
+            "value_pct": 10.532765813817491,
+            "lower_bound_pct": 4.378705783971964,
+            "upper_bound_pct": 16.686825843663016,
+            "estimator": "stratified sample proportion",
+            "confidence_method": "95% normal approximation",
+        },
     }
     labels = Counter(
         entity["label"]
@@ -516,6 +526,26 @@ def test_audit_rejects_unreviewed_population_above_unresolved(tmp_path: Path):
     with pytest.raises(
         reconstruction.ReconstructionError,
         match="unreviewed_population exceeds unresolved",
+    ):
+        reconstruction.validate_audit(audit)
+
+
+def test_audit_rejects_estimate_outside_confidence_bounds(tmp_path: Path):
+    source = tmp_path / "project.log"
+    source.write_text("collected", encoding="utf-8")
+    audit = _audit(reconstruction.build_inventory(_inventory_spec(source)))
+    _records(audit, "claims")[0]["estimate"] = {
+        "quantity": "genuine-absence",
+        "value_pct": 10.0,
+        "lower_bound_pct": 11.0,
+        "upper_bound_pct": 12.0,
+        "estimator": "stratified sample proportion",
+        "confidence_method": "95% normal approximation",
+    }
+
+    with pytest.raises(
+        reconstruction.ReconstructionError,
+        match="confidence bounds do not contain its value",
     ):
         reconstruction.validate_audit(audit)
 

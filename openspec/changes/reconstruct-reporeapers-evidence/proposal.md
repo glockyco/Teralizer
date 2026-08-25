@@ -11,6 +11,7 @@ Some version 7 RepoReapers claims depend on manual inspection, preserved logs, o
 - Record each reconstructed claim with its population, method, source identities, adjudication, uncertainty, and verification result.
 - Record an explicit evidence gap when collected artifacts cannot support a claim. Do not replace missing evidence with a rerun or an inferred value.
 - Normalize accepted reconstruction results into versioned audit inputs that registered reports can consume with provenance.
+- Publish the minimum thesis-facing reconstruction estimates and outcome counts as structured RQ6 metrics and aggregate LaTeX macros. Keep the audit tables and entity records producer-side.
 
 ## Capabilities
 
@@ -24,4 +25,4 @@ Some version 7 RepoReapers claims depend on manual inspection, preserved logs, o
 
 ## Impact
 
-This change affects analysis commands, audit-input schemas, report provenance, focused tests, and evidence documentation. It reads preserved version 7 evidence from the Air and `postgres_reporeapers_rq6_v7`. It does not run Teralizer, rerun projects, retry failed tasks, modify preserved project state, or replace the corpus.
+This change affects analysis commands, audit-input schemas, structured report metrics, aggregate LaTeX macros, report provenance, focused tests, and evidence documentation. It reads preserved version 7 evidence from the Air and `postgres_reporeapers_rq6_v7`. It does not run Teralizer, rerun projects, retry failed tasks, modify preserved project state, or replace the corpus.

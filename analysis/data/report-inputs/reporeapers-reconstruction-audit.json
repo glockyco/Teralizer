@@ -2,6 +2,14 @@
   "claims": [
     {
       "claim": "no-assertions",
+      "estimate": {
+        "confidence_method": "95% normal approximation",
+        "estimator": "stratified sample proportion",
+        "lower_bound_pct": 4.378705783971964,
+        "quantity": "genuine-absence",
+        "upper_bound_pct": 16.686825843663016,
+        "value_pct": 10.532765813817491
+      },
       "incompatible": 0,
       "method": "Deterministic stratified simple random sample without replacement: n=100; project-burden strata N=(35,261,1286,22684), n=(4,4,8,84); seed reporeapers-v7-no-assertions-review.",
       "population_definition": "All 24,266 tests in eligible version 7 projects rejected by NoAssertionsFilter.",
@@ -15,6 +23,7 @@
     },
     {
       "claim": "assertion-to-mut",
+      "estimate": null,
       "incompatible": 0,
       "method": "Deterministic stratified source review with n=100. The review selects 20 observations from each risk stratum. The strata are T3_SINGLE_WEAK, T4_GUESS, NO_VISIBLE_CALL, UNRESOLVED_SOURCE_DECLARATION, and ambiguous T1 or T2. The seed is reporeapers-v7-assertion-to-mut-review.",
       "population_definition": "All 180,548 assertion-to-MUT resolution observations in eligible version 7 projects.",
@@ -28,6 +37,7 @@
     },
     {
       "claim": "output-directories",
+      "estimate": null,
       "incompatible": 3,
       "method": "Complete classification of the frozen project population from preserved command records, project checkouts, and task failures.",
       "population_definition": "All 43 version 7 projects whose failed output-collection task reported a missing test, coverage, or mutation report artifact.",
@@ -8248,7 +8258,7 @@
       ],
       "variant": "rq6-v7"
     },
-    "schema_version": 1,
+    "schema_version": 2,
     "sources": [
       {
         "attributes": {
@@ -13920,5 +13930,5 @@
       }
     ]
   },
-  "schema_version": 1
+  "schema_version": 2
 }

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import stat
 from collections import Counter
@@ -16,7 +17,7 @@ from pathlib import Path, PurePosixPath
 from teralizer import corpora
 from teralizer.eval.evidence import write_atomic
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 CANONICAL_CORPUS_ID = "real-world"
 CANONICAL_DATA_DIR = "data/reporeapers-rerun-v7"
 
@@ -259,6 +260,18 @@ def _integer(item: Mapping[str, object], key: str, label: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
         raise ReconstructionError(f"{label}.{key} must be a non-negative integer")
     return value
+
+
+def _percentage(item: Mapping[str, object], key: str, label: str) -> float:
+    value = item.get(key)
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not math.isfinite(value)
+        or not 0.0 <= value <= 100.0
+    ):
+        raise ReconstructionError(f"{label}.{key} must be a finite percentage")
+    return float(value)
 
 
 def _boolean(item: Mapping[str, object], key: str, label: str) -> bool:
@@ -703,6 +716,7 @@ def validate_audit(document: object) -> dict[str, object]:
                 "total",
                 "method",
                 "reason",
+                "estimate",
             },
             label,
         )
@@ -733,6 +747,32 @@ def validate_audit(document: object) -> dict[str, object]:
             )
         _string(claim, "method", label)
         _string(claim, "reason", label)
+        estimate = claim["estimate"]
+        if estimate is not None:
+            estimate_label = f"{label}.estimate"
+            estimate_record = _mapping(estimate, estimate_label)
+            _exact_keys(
+                estimate_record,
+                {
+                    "quantity",
+                    "value_pct",
+                    "lower_bound_pct",
+                    "upper_bound_pct",
+                    "estimator",
+                    "confidence_method",
+                },
+                estimate_label,
+            )
+            _string(estimate_record, "quantity", estimate_label)
+            value = _percentage(estimate_record, "value_pct", estimate_label)
+            lower = _percentage(estimate_record, "lower_bound_pct", estimate_label)
+            upper = _percentage(estimate_record, "upper_bound_pct", estimate_label)
+            _string(estimate_record, "estimator", estimate_label)
+            _string(estimate_record, "confidence_method", estimate_label)
+            if not lower <= value <= upper:
+                raise ReconstructionError(
+                    f"{estimate_label} confidence bounds do not contain its value"
+                )
         actual = {
             EntityStatus.RESOLVED.value: entity_counts[
                 (name, EntityStatus.RESOLVED.value)
