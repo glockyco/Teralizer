@@ -173,7 +173,7 @@ Reconstructed evidence distinguishes resolved findings from unresolved and incom
 
 _Resolved, unresolved, and incompatible are audit partitions. Sample findings are estimates with the stated method and confidence interval. They are not exact population rates._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
 
 **Reviewed outcomes in the reconstructed RepoReapers evidence.**
 
@@ -192,4 +192,4 @@ source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blo
 
 _Counts describe reviewed records. For sampled claims, these counts do not describe the full population._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)

@@ -3244,9 +3244,9 @@
         "version": "0.1.0"
       },
       "realworld.assertions_without_resolution": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -3256,7 +3256,7 @@
         },
         "qualname": "_fetch_assertions_without_resolution",
         "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT count(*) AS assertions_without_resolution\nFROM assertion a\nJOIN eligible_projects ep ON ep.id = a.project_id\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM mut_resolution_observation o\n    WHERE o.assertion_id = a.id\n)\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L69",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L69",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
@@ -4360,9 +4360,9 @@
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.incompatible": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4372,15 +4372,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.resolved": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4390,15 +4390,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 70,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.total": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4408,15 +4408,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 180548,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.unresolved": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4426,15 +4426,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 180478,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.incompatible": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4444,15 +4444,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.resolved": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4462,15 +4462,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 100,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.total": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4480,15 +4480,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 24266,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.unresolved": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4498,15 +4498,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 24166,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.incompatible": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4516,15 +4516,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 3,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.resolved": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4534,15 +4534,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 40,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.total": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4552,15 +4552,15 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 43,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.unresolved": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
         "denominator_key": null,
-        "dirty": true,
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "numerator_key": null,
         "population": {
@@ -4570,7 +4570,7 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
@@ -4578,8 +4578,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": true,
-      "source_commit": "5c10d314d083250f39e44075a45be74b6443857a"
+      "dirty": false,
+      "source_commit": "04a41446de3138eb343b649f048ee35f71fde938"
     },
     "tables": {
       "rq6_exclusion_mechanisms": {
@@ -4677,8 +4677,8 @@
         "version": "0.1.0"
       },
       "rq6_reconstruction_outcomes": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
-        "dirty": true,
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "qualname": "_load_reconstruction_audit",
         "query": null,
@@ -4695,13 +4695,13 @@
           "output-directories:resolved:default-directory-mismatch",
           "output-directories:resolved:earlier-build-failure"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": "Reviewed outcomes in the reconstructed RepoReapers evidence.",
         "version": "0.1.0"
       },
       "rq6_reconstruction_summary": {
-        "commit": "c68f145cf43133776f13a9ed99f0931e817e814e",
-        "dirty": true,
+        "commit": "743fd2c0f38378a93aed0dd0de65b3d8f14dc477",
+        "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "qualname": "_load_reconstruction_audit",
         "query": null,
@@ -4711,7 +4711,7 @@
           "assertion-to-mut",
           "output-directories"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/743fd2c0f38378a93aed0dd0de65b3d8f14dc477/analysis/src/teralizer/eval/reports/rq6_causes.py#L240",
         "value": "Status of reconstructed RepoReapers evidence claims.",
         "version": "0.1.0"
       },
