@@ -6,7 +6,7 @@ import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
@@ -322,6 +322,195 @@ def extract_population(
     result = connection.execute(text(query.sql), _funnel.base_query_params(variant))
     rows = [dict(row) for row in result.mappings()]
     return freeze_population(query, rows)
+
+
+def _identity(query: PopulationQuery, row: Mapping[str, object]) -> dict[str, object]:
+    return {field: row[field] for field in query.identity_fields}
+
+
+def build_source_review_packet(
+    query: PopulationQuery,
+    row: Mapping[str, object],
+    checkout_root: Path,
+) -> dict[str, object]:
+    """Read one collected test source without invoking project tooling."""
+    normalized = freeze_population(query, [row])
+    record = normalized["rows"]
+    if not isinstance(record, list) or len(record) != 1:
+        raise PopulationError("source review requires exactly one population row")
+    evidence = record[0]
+    if not isinstance(evidence, Mapping):
+        raise PopulationError("normalized population row must be an object")
+    project_value = evidence.get("project_root")
+    source_value = evidence.get("test_file_path")
+    if not isinstance(project_value, str) or not isinstance(source_value, str):
+        raise PopulationError("source review row lacks project and test source paths")
+    project_path = PurePosixPath(project_value)
+    source_path = PurePosixPath(source_value)
+    if (
+        project_path.is_absolute()
+        or source_path.is_absolute()
+        or ".." in project_path.parts
+        or ".." in source_path.parts
+        or source_path.parts[: len(project_path.parts)] != project_path.parts
+    ):
+        raise PopulationError("test source is outside its recorded project root")
+    resolved_project = (checkout_root / project_path).resolve(strict=True)
+    resolved_source = (checkout_root / source_path).resolve(strict=True)
+    if (
+        not resolved_source.is_relative_to(resolved_project)
+        or not resolved_source.is_file()
+    ):
+        raise PopulationError("test source is outside the collected project checkout")
+    content = resolved_source.read_bytes()
+    try:
+        text_content = content.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise PopulationError(f"test source is not UTF-8: {source_value}") from error
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "claim": query.claim,
+        "identity": _identity(query, evidence),
+        "evidence": dict(evidence),
+        "sources": [
+            {
+                "role": "test-source",
+                "path": source_value,
+                "sha256": hashlib.sha256(content).hexdigest(),
+                "content": text_content,
+            }
+        ],
+    }
+
+
+def adjudicate_decisions(
+    query: PopulationQuery,
+    row: Mapping[str, object],
+    decisions: Sequence[Mapping[str, object]],
+    label_statuses: Mapping[str, reporeapers_reconstruction.EntityStatus],
+) -> dict[str, object]:
+    """Validate reviewer decisions and preserve agreement or disagreement."""
+    normalized = freeze_population(query, [row])
+    records = normalized["rows"]
+    if not isinstance(records, list) or len(records) != 1:
+        raise PopulationError("adjudication requires exactly one population row")
+    record = records[0]
+    if not isinstance(record, Mapping):
+        raise PopulationError("normalized population row must be an object")
+    expected_identity = _identity(query, record)
+    reviewers: set[str] = set()
+    reviews: list[dict[str, object]] = []
+    for index, raw in enumerate(decisions):
+        expected_fields = {
+            "identity",
+            "reviewer",
+            "label",
+            "rationale",
+            "confidence",
+            "source_ids",
+        }
+        if set(raw) != expected_fields:
+            raise PopulationError(f"decision {index} fields differ")
+        identity = raw["identity"]
+        if not isinstance(identity, Mapping) or dict(identity) != expected_identity:
+            raise PopulationError(
+                f"decision {index} does not join to its population row"
+            )
+        reviewer = raw["reviewer"]
+        if not isinstance(reviewer, str) or not reviewer:
+            raise PopulationError(f"decision {index} reviewer must be non-empty")
+        if reviewer in reviewers:
+            raise PopulationError(f"duplicate reviewer decision: {reviewer}")
+        reviewers.add(reviewer)
+        decision_label = raw["label"]
+        if not isinstance(decision_label, str) or decision_label not in label_statuses:
+            raise PopulationError(f"decision {index} has an unknown label")
+        rationale = raw["rationale"]
+        if not isinstance(rationale, str) or not rationale:
+            raise PopulationError(f"decision {index} rationale must be non-empty")
+        confidence = raw["confidence"]
+        try:
+            tier = reporeapers_reconstruction.ConfidenceTier(confidence)
+        except (TypeError, ValueError) as error:
+            raise PopulationError(f"decision {index} has unknown confidence") from error
+        decision_status = label_statuses[decision_label]
+        if (
+            decision_status is not reporeapers_reconstruction.EntityStatus.RESOLVED
+            and tier is not reporeapers_reconstruction.ConfidenceTier.NONE
+        ):
+            raise PopulationError(
+                f"decision {index} confidence must be NONE for {decision_status.value}"
+            )
+        source_ids = raw["source_ids"]
+        if (
+            not isinstance(source_ids, list)
+            or any(
+                not isinstance(source_id, str) or not source_id
+                for source_id in source_ids
+            )
+            or len(source_ids) != len(set(source_ids))
+        ):
+            raise PopulationError(f"decision {index} source_ids are invalid")
+        reviews.append(
+            {
+                "reviewer": reviewer,
+                "label": decision_label,
+                "rationale": rationale,
+                "confidence": tier.value,
+                "source_ids": source_ids,
+            }
+        )
+    if not reviews:
+        return {
+            "status": reporeapers_reconstruction.EntityStatus.UNRESOLVED.value,
+            "label": "unresolved",
+            "confidence": reporeapers_reconstruction.ConfidenceTier.NONE.value,
+            "rationale": "No reviewer decision is available.",
+            "source_ids": [],
+            "reviews": [],
+            "review_state": reporeapers_reconstruction.ReviewState.UNREVIEWED.value,
+        }
+    labels = {str(review["label"]) for review in reviews}
+    reviewed_source_ids: set[str] = set()
+    for review in reviews:
+        review_source_ids = review["source_ids"]
+        if not isinstance(review_source_ids, list):
+            raise AssertionError("validated review source ids changed type")
+        reviewed_source_ids.update(str(source_id) for source_id in review_source_ids)
+    source_ids = sorted(reviewed_source_ids)
+    if len(labels) > 1:
+        return {
+            "status": reporeapers_reconstruction.EntityStatus.UNRESOLVED.value,
+            "label": "unresolved",
+            "confidence": reporeapers_reconstruction.ConfidenceTier.NONE.value,
+            "rationale": "Reviewer decisions disagree; individual decisions are preserved.",
+            "source_ids": source_ids,
+            "reviews": reviews,
+            "review_state": reporeapers_reconstruction.ReviewState.DISPUTED.value,
+        }
+    accepted_label = labels.pop()
+    status = label_statuses[accepted_label]
+    confidence_order = tuple(reporeapers_reconstruction.ConfidenceTier)
+    confidence = max(
+        (str(review["confidence"]) for review in reviews),
+        key=lambda value: confidence_order.index(
+            reporeapers_reconstruction.ConfidenceTier(value)
+        ),
+    )
+    review_state = (
+        reporeapers_reconstruction.ReviewState.SINGLE_REVIEWED
+        if len(reviews) == 1
+        else reporeapers_reconstruction.ReviewState.AGREED
+    )
+    return {
+        "status": status.value,
+        "label": accepted_label,
+        "confidence": confidence,
+        "rationale": "Reviewer decisions agree.",
+        "source_ids": source_ids,
+        "reviews": reviews,
+        "review_state": review_state.value,
+    }
 
 
 _SCHEMA_OBJECTS = (

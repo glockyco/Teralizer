@@ -54,7 +54,7 @@ def _audit(inventory: dict[str, object]) -> dict[str, object]:
             {
                 "identity": {
                     "corpus_id": "real-world",
-                    "project_root": "/projects/example",
+                    "project_root": "projects/example",
                     "project_revision": _REVISION,
                     "level": "Test",
                     "local_key": "ExampleTest#works",
@@ -66,13 +66,21 @@ def _audit(inventory: dict[str, object]) -> dict[str, object]:
                 "rationale": "The source and preserved log agree.",
                 "source_ids": ["project-logs-v7"],
                 "filter_outcome": "NO_ASSERTIONS",
-                "reviewer": "fixture-reviewer",
+                "reviews": [
+                    {
+                        "reviewer": "fixture-reviewer",
+                        "label": "true-positive",
+                        "rationale": "The source and preserved log agree.",
+                        "confidence": "T2_CORROBORATED",
+                        "source_ids": ["project-logs-v7"],
+                    }
+                ],
                 "review_state": "single-reviewed",
             },
             {
                 "identity": {
                     "corpus_id": "real-world",
-                    "project_root": "/projects/example",
+                    "project_root": "projects/example",
                     "project_revision": _REVISION,
                     "level": "Assertion",
                     "local_key": "ExampleTest#works:12:assertThat",
@@ -84,8 +92,8 @@ def _audit(inventory: dict[str, object]) -> dict[str, object]:
                 "rationale": "The preserved source declaration is absent.",
                 "source_ids": [],
                 "filter_outcome": "UNRESOLVED_SOURCE_DECLARATION",
-                "reviewer": "fixture-reviewer",
-                "review_state": "single-reviewed",
+                "reviews": [],
+                "review_state": "unreviewed",
             },
         ],
         "claims": [
@@ -408,7 +416,7 @@ def test_population_identity_digest_is_order_independent():
 
 def test_population_rejects_duplicate_stable_identity():
     row = {
-        "project_root": "/projects/example",
+        "project_root": "projects/example",
         "local_key": "Example#works",
         "evidence": "first",
     }
@@ -420,7 +428,7 @@ def test_population_rejects_duplicate_stable_identity():
 
 def test_population_rejects_missing_query_field():
     incomplete = {
-        "project_root": "/projects/example",
+        "project_root": "projects/example",
         "local_key": "Example#works",
     }
 
@@ -433,6 +441,110 @@ def test_registered_population_queries_emit_no_database_surrogate_ids():
         assert "id" not in query.fields
         assert "project_root" in query.identity_fields
         assert "project_revision" in query.identity_fields
+
+
+def _source_query() -> populations.PopulationQuery:
+    return populations.PopulationQuery(
+        claim="source-fixture",
+        definition="One source fixture.",
+        sql="WITH fixture AS (SELECT 1) SELECT * FROM fixture",
+        identity_fields=("project_root", "test_file_path"),
+        fields=("project_root", "test_file_path", "filter_outcome"),
+    )
+
+
+def _source_row() -> dict[str, object]:
+    return {
+        "project_root": "projects/example",
+        "test_file_path": "projects/example/src/test/ExampleTest.java",
+        "filter_outcome": "NO_ASSERTIONS",
+    }
+
+
+def test_source_review_packet_reads_text_without_executing_it(tmp_path: Path):
+    source = tmp_path / "projects/example/src/test/ExampleTest.java"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        'class ExampleTest { String command = "touch executed"; }', encoding="utf-8"
+    )
+
+    packet = populations.build_source_review_packet(
+        _source_query(), _source_row(), tmp_path
+    )
+
+    sources = _records(packet, "sources")
+    assert sources[0]["content"] == source.read_text(encoding="utf-8")
+    assert not (tmp_path / "executed").exists()
+
+
+def _decision(
+    *, reviewer: str, label: str, confidence: str = "T2_CORROBORATED"
+) -> dict[str, object]:
+    return {
+        "identity": {
+            "project_root": "projects/example",
+            "test_file_path": "projects/example/src/test/ExampleTest.java",
+        },
+        "reviewer": reviewer,
+        "label": label,
+        "rationale": f"{reviewer} inspected the collected source.",
+        "confidence": confidence,
+        "source_ids": ["version-seven-project-checkouts"],
+    }
+
+
+def test_decision_import_preserves_reviewer_disagreement():
+    labels = {
+        "genuine-absence": reconstruction.EntityStatus.RESOLVED,
+        "reachable-helper-assertion": reconstruction.EntityStatus.RESOLVED,
+    }
+
+    result = populations.adjudicate_decisions(
+        _source_query(),
+        _source_row(),
+        [
+            _decision(reviewer="first", label="genuine-absence"),
+            _decision(reviewer="second", label="reachable-helper-assertion"),
+        ],
+        labels,
+    )
+
+    assert result["status"] == "unresolved"
+    assert result["review_state"] == "disputed"
+    assert len(cast(list[object], result["reviews"])) == 2
+
+
+def test_decision_import_emits_evidence_gap_for_unreviewed_entity():
+    result = populations.adjudicate_decisions(
+        _source_query(),
+        _source_row(),
+        [],
+        {"genuine-absence": reconstruction.EntityStatus.RESOLVED},
+    )
+
+    assert result == {
+        "status": "unresolved",
+        "label": "unresolved",
+        "confidence": "NONE",
+        "rationale": "No reviewer decision is available.",
+        "source_ids": [],
+        "reviews": [],
+        "review_state": "unreviewed",
+    }
+
+
+def test_decision_import_rejects_invalid_population_join():
+    decision = _decision(reviewer="first", label="genuine-absence")
+    identity = cast(dict[str, object], decision["identity"])
+    identity["test_file_path"] = "projects/example/src/test/OtherTest.java"
+
+    with pytest.raises(populations.PopulationError, match="does not join"):
+        populations.adjudicate_decisions(
+            _source_query(),
+            _source_row(),
+            [decision],
+            {"genuine-absence": reconstruction.EntityStatus.RESOLVED},
+        )
 
 
 @pytest.mark.parametrize("forbidden", ["pipeline", "project", "task", "build", "retry"])

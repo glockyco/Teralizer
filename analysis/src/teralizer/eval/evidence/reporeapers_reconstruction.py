@@ -39,6 +39,7 @@ class EntityStatus(StrEnum):
 
 
 class ReviewState(StrEnum):
+    UNREVIEWED = "unreviewed"
     SINGLE_REVIEWED = "single-reviewed"
     AGREED = "agreed"
     DISPUTED = "disputed"
@@ -106,8 +107,16 @@ class EntityIdentity:
             raise ReconstructionError(
                 f"{label}.corpus_id must be {CANONICAL_CORPUS_ID!r}"
             )
-        if not identity.project_root.startswith("/"):
-            raise ReconstructionError(f"{label}.project_root must be absolute")
+        project_root = PurePosixPath(identity.project_root)
+        if (
+            project_root.is_absolute()
+            or not project_root.parts
+            or project_root.parts[0] != "projects"
+            or ".." in project_root.parts
+        ):
+            raise ReconstructionError(
+                f"{label}.project_root must be a canonical projects/ path"
+            )
         return identity
 
     def key(self) -> tuple[str, str, str | None, str, str]:
@@ -575,7 +584,7 @@ def validate_audit(document: object) -> dict[str, object]:
                 "rationale",
                 "source_ids",
                 "filter_outcome",
-                "reviewer",
+                "reviews",
                 "review_state",
             },
             label,
@@ -588,15 +597,14 @@ def validate_audit(document: object) -> dict[str, object]:
         try:
             entity_status = EntityStatus(_string(entity, "status", label))
             confidence = ConfidenceTier(_string(entity, "confidence", label))
-            ReviewState(_string(entity, "review_state", label))
+            review_state = ReviewState(_string(entity, "review_state", label))
         except ValueError as error:
             raise ReconstructionError(
                 f"{label} has an unknown status, confidence, or review state"
             ) from error
-        _string(entity, "label", label)
+        entity_label = _string(entity, "label", label)
         _string(entity, "rationale", label)
         _string(entity, "filter_outcome", label)
-        _string(entity, "reviewer", label)
         if (
             entity_status is not EntityStatus.RESOLVED
             and confidence is not ConfidenceTier.NONE
@@ -618,6 +626,64 @@ def validate_audit(document: object) -> dict[str, object]:
             raise ReconstructionError(f"{label}.source_ids contains duplicates")
         if entity_status is not EntityStatus.UNRESOLVED and not references:
             raise ReconstructionError(f"{label} requires at least one evidence source")
+        reviews = _sequence(entity["reviews"], f"{label}.reviews")
+        reviewer_ids: set[str] = set()
+        review_labels: set[str] = set()
+        for review_index, raw_review in enumerate(reviews):
+            review_label = f"{label}.reviews[{review_index}]"
+            review = _mapping(raw_review, review_label)
+            _exact_keys(
+                review,
+                {"reviewer", "label", "rationale", "confidence", "source_ids"},
+                review_label,
+            )
+            reviewer = _string(review, "reviewer", review_label)
+            if reviewer in reviewer_ids:
+                raise ReconstructionError(f"{label} has duplicate reviewer: {reviewer}")
+            reviewer_ids.add(reviewer)
+            review_labels.add(_string(review, "label", review_label))
+            _string(review, "rationale", review_label)
+            try:
+                ConfidenceTier(_string(review, "confidence", review_label))
+            except ValueError as error:
+                raise ReconstructionError(
+                    f"{review_label}.confidence is unknown"
+                ) from error
+            review_references = _sequence(
+                review["source_ids"], f"{review_label}.source_ids"
+            )
+            if len(review_references) != len(set(review_references)):
+                raise ReconstructionError(
+                    f"{review_label}.source_ids contains duplicates"
+                )
+            if any(reference not in references for reference in review_references):
+                raise ReconstructionError(
+                    f"{review_label} cites evidence absent from the entity"
+                )
+        if review_state is ReviewState.UNREVIEWED:
+            valid_review_state = not reviews
+        elif review_state is ReviewState.SINGLE_REVIEWED:
+            valid_review_state = len(reviews) == 1
+        elif review_state is ReviewState.AGREED:
+            valid_review_state = len(reviews) >= 2 and len(review_labels) == 1
+        else:
+            valid_review_state = len(reviews) >= 2 and len(review_labels) > 1
+        if not valid_review_state:
+            raise ReconstructionError(
+                f"{label}.review_state does not match its reviewer decisions"
+            )
+        if review_state in {ReviewState.UNREVIEWED, ReviewState.DISPUTED}:
+            if (
+                entity_status is not EntityStatus.UNRESOLVED
+                or entity_label != "unresolved"
+            ):
+                raise ReconstructionError(
+                    f"{label} must remain unresolved while unreviewed or disputed"
+                )
+        elif entity_label not in review_labels:
+            raise ReconstructionError(
+                f"{label}.label does not match its accepted reviewer decision"
+            )
         entity_counts[(claim_name, entity_status.value)] += 1
     seen_claims: set[str] = set()
     for index, raw in enumerate(_sequence(root["claims"], "claims")):
