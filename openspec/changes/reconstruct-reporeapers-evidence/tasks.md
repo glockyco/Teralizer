@@ -52,12 +52,12 @@
 
 ## 6. Reconstruct Output-Directory Evidence
 
-- [ ] 6.1 Freeze the version 7 project population whose failures can involve test, coverage, or mutation output discovery.
-- [ ] 6.2 Join each project to its preserved command logs, run root, configuration, build files, and recorded output paths.
-- [ ] 6.3 Define labels for default-directory mismatch, absent artifact, earlier build failure, unsupported layout, incompatible evidence, and unresolved evidence.
-- [ ] 6.4 Inspect whether each required artifact existed at failure time without running its project or build.
-- [ ] 6.5 Record the searched path, observed artifact path, failure stage, source identity, and rationale for each decision.
-- [ ] 6.6 Emit the normalized output-directory audit input and reconcile it with the frozen project population.
+- [x] 6.1 Freeze the version 7 project population whose failures can involve test, coverage, or mutation output discovery.
+- [x] 6.2 Join each project to its preserved command logs, run root, configuration, build files, and recorded output paths.
+- [x] 6.3 Define labels for default-directory mismatch, absent artifact, earlier build failure, unsupported layout, incompatible evidence, and unresolved evidence.
+- [x] 6.4 Inspect whether each required artifact existed at failure time without running its project or build.
+- [x] 6.5 Record the searched path, observed artifact path, failure stage, source identity, and rationale for each decision.
+- [x] 6.6 Emit the normalized output-directory audit input and reconcile it with the frozen project population.
 
 ## 7. Integrate Reconstructed Evidence
 

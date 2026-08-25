@@ -25,6 +25,19 @@
       "total": 180548,
       "unresolved": 180478,
       "unreviewed_population": 180448
+    },
+    {
+      "claim": "output-directories",
+      "incompatible": 3,
+      "method": "Complete classification of the frozen project population from preserved command records, project checkouts, and task failures.",
+      "population_definition": "All 43 version 7 projects whose failed output-collection task reported a missing test, coverage, or mutation report artifact.",
+      "population_sha256": "3fff1d0dbe423c1ad430b1f3d954538bf47c1a7365fac9313424efd8389a6fc3",
+      "reason": "Forty projects have a classified output-discovery cause. Three preserved command outputs are incompatible with the UTF-8 evidence reader and remain incompatible evidence.",
+      "resolved": 40,
+      "status": "partially-supported",
+      "total": 43,
+      "unresolved": 0,
+      "unreviewed_population": 0
     }
   ],
   "entities": [
@@ -6425,6 +6438,1468 @@
       "source_ids": [
         "version-seven-database-export",
         "version-seven-project-checkouts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "9d30d7969e09d620b54c12b25bcca6084fb30093",
+        "project_root": "projects/github_com_FibreFoX_i-can-see-aliens-JSP"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_FibreFoX_i-can-see-aliens-JSP/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_FibreFoX_i-can-see-aliens-JSP/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "68a9d3b9f1c0c00a4f0c8172bd250c9c5cadd2c2",
+        "project_root": "projects/github_com_Groupe2_Groupe2"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_Groupe2_Groupe2/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_Groupe2_Groupe2/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JACOCO_DATA_INITIAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JACOCO_DATA_INITIAL",
+        "project_revision": "7f954514298f76afff8a75723bc25205bfe30d1b",
+        "project_root": "projects/github_com_HaraldWalker_user-agent-utils"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_HaraldWalker_user-agent-utils/target/site/jacoco/jacoco.csv. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JACOCO_DATA_INITIAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_HaraldWalker_user-agent-utils/target/site/jacoco/jacoco.csv. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JACOCO_DATA_INITIAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "8ab0b86b56990048082912ef45a2760c82fe1a28",
+        "project_root": "projects/github_com_IISH_file-validation"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_IISH_file-validation/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_IISH_file-validation/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "NONE",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "0cd1f309d3bf10d2baadd1d0e0c2874a1c49e1a5",
+        "project_root": "projects/github_com_JoshCode_UFM-Reckoning"
+      },
+      "label": "incompatible-evidence",
+      "rationale": "The failed collector searched projects/github_com_JoshCode_UFM-Reckoning/target/surefire-reports. The preserved original test output is not UTF-8 and cannot be inspected through the evidence reader. Observed artifact path: indeterminate. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "incompatible-evidence",
+          "rationale": "The failed collector searched projects/github_com_JoshCode_UFM-Reckoning/target/surefire-reports. The preserved original test output is not UTF-8 and cannot be inspected through the evidence reader. Observed artifact path: indeterminate. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "incompatible"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "NONE",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "0cd1f309d3bf10d2baadd1d0e0c2874a1c49e1a5",
+        "project_root": "projects/github_com_JoshCode_UFMGame"
+      },
+      "label": "incompatible-evidence",
+      "rationale": "The failed collector searched projects/github_com_JoshCode_UFMGame/target/surefire-reports. The preserved original test output is not UTF-8 and cannot be inspected through the evidence reader. Observed artifact path: indeterminate. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "incompatible-evidence",
+          "rationale": "The failed collector searched projects/github_com_JoshCode_UFMGame/target/surefire-reports. The preserved original test output is not UTF-8 and cannot be inspected through the evidence reader. Observed artifact path: indeterminate. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "incompatible"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "73aaf09f53e935845093e6b9e47e615ea7061499",
+        "project_root": "projects/github_com_KunkkaCoco_dsaij"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_KunkkaCoco_dsaij/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_KunkkaCoco_dsaij/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "20a2a201652ac5c2bca04fdbedf19bbbf303b2e7",
+        "project_root": "projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "1c47f8b55eeba8d5953ad269093824de18f05a47",
+        "project_root": "projects/github_com_acciente_oacc-core"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_acciente_oacc-core/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_acciente_oacc-core/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "228ddfc3530705ed901ef112290ddf3e8f32c7fb",
+        "project_root": "projects/github_com_bluebibi_springframe"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_bluebibi_springframe/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_bluebibi_springframe/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T1_PROVEN",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "4e5aeb2cbb93f1acd4349027d05804303e949a70",
+        "project_root": "projects/github_com_codereligion_beast"
+      },
+      "label": "earlier-build-failure",
+      "rationale": "The failed collector searched projects/github_com_codereligion_beast/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T1_PROVEN",
+          "label": "earlier-build-failure",
+          "rationale": "The failed collector searched projects/github_com_codereligion_beast/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "5e32945d17996f6f0941a524c36a10526948cd8f",
+        "project_root": "projects/github_com_fit2cloud_qingcloud-api-java-wrapper"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_fit2cloud_qingcloud-api-java-wrapper/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_fit2cloud_qingcloud-api-java-wrapper/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T1_PROVEN",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "3c96d8eb8c1e0760ed358e142879565044fe1d1e",
+        "project_root": "projects/github_com_flourscent_jollyday"
+      },
+      "label": "earlier-build-failure",
+      "rationale": "The failed collector searched projects/github_com_flourscent_jollyday/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T1_PROVEN",
+          "label": "earlier-build-failure",
+          "rationale": "The failed collector searched projects/github_com_flourscent_jollyday/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "3514752194f0c4e48898483f79dd3ac020b8fe6f",
+        "project_root": "projects/github_com_git4sinu_proDesi"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_git4sinu_proDesi/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_git4sinu_proDesi/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "b590e8bd6cf0843db8d7688974fbaf5ca4d4fdaf",
+        "project_root": "projects/github_com_halafi_msg-system"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_halafi_msg-system/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_halafi_msg-system/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "7e644f1ba497104421f5572ad909910a2848d650",
+        "project_root": "projects/github_com_happyfish100_fastdfs-client-java"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_happyfish100_fastdfs-client-java/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_happyfish100_fastdfs-client-java/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "868aa554303205cfb1b1ee965c59d38d2b6fd06b",
+        "project_root": "projects/github_com_injcristianrojas_swsec-intro"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_injcristianrojas_swsec-intro/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_injcristianrojas_swsec-intro/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "9ecdc9be30544619e85a3321dc5984386993b3bf",
+        "project_root": "projects/github_com_jpvetterli_time2lib"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_jpvetterli_time2lib/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_jpvetterli_time2lib/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "d6b8c7f61feac6caade9dde218fefec48de139d5",
+        "project_root": "projects/github_com_ltemal94_SpringMVCMovies"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_ltemal94_SpringMVCMovies/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_ltemal94_SpringMVCMovies/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "50df0ad12710a844f243b9e7206d618afc3afaf9",
+        "project_root": "projects/github_com_lucachaves_lattesHyperjaxb3"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_lucachaves_lattesHyperjaxb3/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_lucachaves_lattesHyperjaxb3/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "0803ca15dc48e9273b394f011d14216b47c83e61",
+        "project_root": "projects/github_com_madwenoma_tadu-jedis"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_madwenoma_tadu-jedis/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_madwenoma_tadu-jedis/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T1_PROVEN",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "5df812990a111c23c36e6b45b2a8df1e8133e652",
+        "project_root": "projects/github_com_mangobin_SSNOC"
+      },
+      "label": "default-directory-mismatch",
+      "rationale": "The failed collector searched projects/github_com_mangobin_SSNOC/target/surefire-reports. The preserved Maven command record and project configuration both identify shippable/testresults as the observed Surefire report directory. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T1_PROVEN",
+          "label": "default-directory-mismatch",
+          "rationale": "The failed collector searched projects/github_com_mangobin_SSNOC/target/surefire-reports. The preserved Maven command record and project configuration both identify shippable/testresults as the observed Surefire report directory. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T1_PROVEN",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "15696dae9e4ae00f31baf77374f263449295062d",
+        "project_root": "projects/github_com_mhogrefe_haskellesque"
+      },
+      "label": "earlier-build-failure",
+      "rationale": "The failed collector searched projects/github_com_mhogrefe_haskellesque/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T1_PROVEN",
+          "label": "earlier-build-failure",
+          "rationale": "The failed collector searched projects/github_com_mhogrefe_haskellesque/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T1_PROVEN",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "15696dae9e4ae00f31baf77374f263449295062d",
+        "project_root": "projects/github_com_mhogrefe_wheels"
+      },
+      "label": "earlier-build-failure",
+      "rationale": "The failed collector searched projects/github_com_mhogrefe_wheels/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T1_PROVEN",
+          "label": "earlier-build-failure",
+          "rationale": "The failed collector searched projects/github_com_mhogrefe_wheels/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "b128954450578d8748efcf568883a2ffaef40b00",
+        "project_root": "projects/github_com_mikolai_HomeMultimediaStorage"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_mikolai_HomeMultimediaStorage/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_mikolai_HomeMultimediaStorage/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "a56589d1110052eabd42f34037d984bc69ca6fe4",
+        "project_root": "projects/github_com_mirage22_miko-spring-mongodb"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_mirage22_miko-spring-mongodb/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_mirage22_miko-spring-mongodb/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "8649a36aa727a4132f146ecccfd211c15ae8779e",
+        "project_root": "projects/github_com_mirage22_miko-spring-postgresql"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_mirage22_miko-spring-postgresql/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_mirage22_miko-spring-postgresql/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "16e5f6716cee16b72226fa0763508a63f78175e0",
+        "project_root": "projects/github_com_mtedone_podam"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_mtedone_podam/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_mtedone_podam/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "NONE",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "0cd1f309d3bf10d2baadd1d0e0c2874a1c49e1a5",
+        "project_root": "projects/github_com_nocomment_UFMGame"
+      },
+      "label": "incompatible-evidence",
+      "rationale": "The failed collector searched projects/github_com_nocomment_UFMGame/target/surefire-reports. The preserved original test output is not UTF-8 and cannot be inspected through the evidence reader. Observed artifact path: indeterminate. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "NONE",
+          "label": "incompatible-evidence",
+          "rationale": "The failed collector searched projects/github_com_nocomment_UFMGame/target/surefire-reports. The preserved original test output is not UTF-8 and cannot be inspected through the evidence reader. Observed artifact path: indeterminate. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "incompatible"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "1973e402f5d4c1442ad34a1d38ed0758079f7773",
+        "project_root": "projects/github_com_perwendel_spark"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_perwendel_spark/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_perwendel_spark/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T1_PROVEN",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "085d183d085749a356f43544025b01852b1da4db",
+        "project_root": "projects/github_com_photon-infotech_phresco-pom"
+      },
+      "label": "earlier-build-failure",
+      "rationale": "The failed collector searched projects/github_com_photon-infotech_phresco-pom/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T1_PROVEN",
+          "label": "earlier-build-failure",
+          "rationale": "The failed collector searched projects/github_com_photon-infotech_phresco-pom/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "5f15665a998f634921734959ca506e8e6f73abd0",
+        "project_root": "projects/github_com_santo74_vertx-arangodb"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_santo74_vertx-arangodb/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_santo74_vertx-arangodb/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "bcf0a0493324c7e3e075b78b4dd5906e4208c9d8",
+        "project_root": "projects/github_com_sbunciak_test-result-tracking-system"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_sbunciak_test-result-tracking-system/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_sbunciak_test-result-tracking-system/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "6f50471166ff2d1f1f6adfb1bc97ef7c00e6a7e7",
+        "project_root": "projects/github_com_sebprunier_concours-devoxx-france-2013"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_sebprunier_concours-devoxx-france-2013/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_sebprunier_concours-devoxx-france-2013/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "3a56b678140a81b26b4f16180b2f8fe7be2ed8fc",
+        "project_root": "projects/github_com_sistar_woodle_backend"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_sistar_woodle_backend/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_sistar_woodle_backend/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "039109c26df4f9b3a83000ca294bf0a883459599",
+        "project_root": "projects/github_com_spstorey_hicksfamilyhistory"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_spstorey_hicksfamilyhistory/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_spstorey_hicksfamilyhistory/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "46965aeb802054080be885daa5f79cfd8e19bab2",
+        "project_root": "projects/github_com_sscdotopen_aim3"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_sscdotopen_aim3/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_sscdotopen_aim3/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "8125c28d61ca2480f34dba7e551c898a35bbda31",
+        "project_root": "projects/github_com_stacksync_java-cloudfiles"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_stacksync_java-cloudfiles/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_stacksync_java-cloudfiles/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "7753b56a9039dc6534cb93d232fe4b042df6d323",
+        "project_root": "projects/github_com_svanimpe_reminders"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_svanimpe_reminders/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_svanimpe_reminders/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T1_PROVEN",
+      "filter_outcome": "COLLECT_JACOCO_DATA_INITIAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JACOCO_DATA_INITIAL",
+        "project_revision": "c2aa8c4c54ef3fbb546bb9da4fed7681de657923",
+        "project_root": "projects/github_com_termd_termd"
+      },
+      "label": "earlier-build-failure",
+      "rationale": "The failed collector searched projects/github_com_termd_termd/target/site/jacoco/jacoco.csv. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JACOCO_DATA_INITIAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T1_PROVEN",
+          "label": "earlier-build-failure",
+          "rationale": "The failed collector searched projects/github_com_termd_termd/target/site/jacoco/jacoco.csv. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JACOCO_DATA_INITIAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "517b512618f3bdafd38be3d9de9c22077170dc45",
+        "project_root": "projects/github_com_unisgn_nova"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_unisgn_nova/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_unisgn_nova/target/surefire-reports. The complete preserved original test command did not report a successful goal that produced this artifact at another path. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T1_PROVEN",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "1c5e2965aa1184815052babc69055174589592c2",
+        "project_root": "projects/github_com_vesin_fabut"
+      },
+      "label": "earlier-build-failure",
+      "rationale": "The failed collector searched projects/github_com_vesin_fabut/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T1_PROVEN",
+          "label": "earlier-build-failure",
+          "rationale": "The failed collector searched projects/github_com_vesin_fabut/target/surefire-reports. The preserved original test command ended with BUILD FAILURE before the requested report artifact could be produced. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
+      ],
+      "status": "resolved"
+    },
+    {
+      "claim": "output-directories",
+      "confidence": "T2_CORROBORATED",
+      "filter_outcome": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+      "identity": {
+        "corpus_id": "real-world",
+        "level": "project",
+        "local_key": "output-discovery:COLLECT_JUNIT_REPORTS_ORIGINAL",
+        "project_revision": "c378ae2b33eae3b8aef9957e0090df9ff137c48e",
+        "project_root": "projects/github_com_yiminliu_ims-mvc"
+      },
+      "label": "absent-artifact",
+      "rationale": "The failed collector searched projects/github_com_yiminliu_ims-mvc/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+      "review_state": "single-reviewed",
+      "reviews": [
+        {
+          "confidence": "T2_CORROBORATED",
+          "label": "absent-artifact",
+          "rationale": "The failed collector searched projects/github_com_yiminliu_ims-mvc/target/surefire-reports. The complete preserved original test command reported that tests were skipped and did not report a generated artifact. Observed artifact path: none. Failure stage: COLLECT_JUNIT_REPORTS_ORIGINAL.",
+          "reviewer": "manual-output-evidence-review",
+          "source_ids": [
+            "version-seven-database-export",
+            "version-seven-project-checkouts",
+            "version-seven-run-artifacts"
+          ]
+        }
+      ],
+      "source_ids": [
+        "version-seven-database-export",
+        "version-seven-project-checkouts",
+        "version-seven-run-artifacts"
       ],
       "status": "resolved"
     }

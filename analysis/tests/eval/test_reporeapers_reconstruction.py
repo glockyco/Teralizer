@@ -246,6 +246,49 @@ def test_shipped_mapping_audit_preserves_targeted_review_results():
     }
 
 
+def test_shipped_output_directory_audit_reconciles_complete_population():
+    audit = reconstruction.validate_audit(
+        json.loads(_AUDIT.read_text(encoding="utf-8"))
+    )
+    population_document = json.loads(
+        (
+            _REPO_ROOT
+            / "analysis/data/report-inputs/reporeapers-output-directories-population.json"
+        ).read_text(encoding="utf-8")
+    )
+    population = population_document["populations"][0]
+    claim = next(
+        record
+        for record in _records(audit, "claims")
+        if record["claim"] == "output-directories"
+    )
+    entities = [
+        entity
+        for entity in _records(audit, "entities")
+        if entity["claim"] == "output-directories"
+    ]
+
+    assert claim["population_sha256"] == population["identity_sha256"]
+    assert claim["resolved"] == 40
+    assert claim["unresolved"] == 0
+    assert claim["unreviewed_population"] == 0
+    assert claim["incompatible"] == 3
+    assert claim["total"] == 43
+    assert len(entities) == population["row_count"] == 43
+    assert Counter(entity["label"] for entity in entities) == {
+        "default-directory-mismatch": 1,
+        "absent-artifact": 32,
+        "earlier-build-failure": 7,
+        "incompatible-evidence": 3,
+    }
+    assert {
+        (entity["identity"]["project_root"], entity["identity"]["project_revision"])
+        for entity in entities
+    } == {(row["project_root"], row["project_revision"]) for row in population["rows"]}
+    assert all("searched" in entity["rationale"] for entity in entities)
+    assert all("Failure stage:" in entity["rationale"] for entity in entities)
+
+
 def test_inventory_hashes_collected_sources_without_copying_contents(tmp_path: Path):
     source = tmp_path / "logs"
     source.mkdir()
@@ -543,6 +586,40 @@ def test_registered_population_queries_emit_no_database_surrogate_ids():
         assert "id" not in query.fields
         assert "project_root" in query.identity_fields
         assert "project_revision" in query.identity_fields
+
+
+def test_output_directory_population_has_fixed_failure_contract():
+    query = populations.OUTPUT_DIRECTORIES
+
+    assert query.claim == "output-directories"
+    assert query.identity_fields == ("project_root", "project_revision")
+    assert {
+        "failure_stage",
+        "failure_variant",
+        "failure_info",
+        "searched_path",
+        "run_artifact_path",
+        "build_status",
+        "test_execution_status",
+    } <= set(query.fields)
+    assert "t.status = 'FAILED'" in query.sql
+    assert "COLLECT_JUNIT_REPORTS" in query.sql
+    assert "COLLECT_JACOCO_DATA" in query.sql
+    assert "COLLECT_PIT_DATA" in query.sql
+
+
+def test_output_directory_labels_have_explicit_entity_statuses():
+    assert set(populations.OUTPUT_DIRECTORY_LABEL_STATUSES) == {
+        label.value for label in populations.OutputDirectoryLabel
+    }
+    assert (
+        populations.OUTPUT_DIRECTORY_LABEL_STATUSES["incompatible-evidence"]
+        is reconstruction.EntityStatus.INCOMPATIBLE
+    )
+    assert (
+        populations.OUTPUT_DIRECTORY_LABEL_STATUSES["unresolved-evidence"]
+        is reconstruction.EntityStatus.UNRESOLVED
+    )
 
 
 def _no_assertions_row(project_root: str, index: int) -> dict[str, object]:

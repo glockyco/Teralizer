@@ -82,6 +82,39 @@ ASSERTION_TO_MUT_LABEL_STATUSES = {
 }
 
 
+class OutputDirectoryLabel(StrEnum):
+    """Closed outcomes for one output-discovery failure."""
+
+    DEFAULT_DIRECTORY_MISMATCH = "default-directory-mismatch"
+    ABSENT_ARTIFACT = "absent-artifact"
+    EARLIER_BUILD_FAILURE = "earlier-build-failure"
+    UNSUPPORTED_LAYOUT = "unsupported-layout"
+    INCOMPATIBLE_EVIDENCE = "incompatible-evidence"
+    UNRESOLVED_EVIDENCE = "unresolved-evidence"
+
+
+OUTPUT_DIRECTORY_LABEL_STATUSES = {
+    OutputDirectoryLabel.DEFAULT_DIRECTORY_MISMATCH.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    OutputDirectoryLabel.ABSENT_ARTIFACT.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    OutputDirectoryLabel.EARLIER_BUILD_FAILURE.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    OutputDirectoryLabel.UNSUPPORTED_LAYOUT.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    OutputDirectoryLabel.INCOMPATIBLE_EVIDENCE.value: (
+        reporeapers_reconstruction.EntityStatus.INCOMPATIBLE
+    ),
+    OutputDirectoryLabel.UNRESOLVED_EVIDENCE.value: (
+        reporeapers_reconstruction.EntityStatus.UNRESOLVED
+    ),
+}
+
+
 @dataclass(frozen=True)
 class PopulationQuery:
     """One fixed read-only query and its stable cross-source identity fields."""
@@ -112,7 +145,18 @@ _INPUTS = (
         role="version-seven",
         corpus_id=CORPUS_ID,
         requires=(
-            Required("project", "table", ("root_path", "git_version")),
+            Required(
+                "project",
+                "table",
+                (
+                    "root_path",
+                    "git_version",
+                    "type",
+                    "test_reports_path",
+                    "coverage_reports_path",
+                    "mutation_reports_path",
+                ),
+            ),
             Required(
                 "test",
                 "table",
@@ -166,7 +210,9 @@ _INPUTS = (
                     "assertion_id",
                     "generalization_id",
                     "stage",
+                    "variant",
                     "status",
+                    "info",
                 ),
             ),
         ),
@@ -302,7 +348,104 @@ ORDER BY
     ),
 )
 
-REGISTERED_QUERIES = (NO_ASSERTIONS, ASSERTION_TO_MUT)
+OUTPUT_DIRECTORIES = PopulationQuery(
+    claim="output-directories",
+    definition=(
+        "Version 7 projects with a failed task that searched for a missing "
+        "test, coverage, or mutation report artifact."
+    ),
+    sql="""
+WITH output_failures AS (
+    SELECT
+        p.id AS project_id,
+        p.root_path AS project_root,
+        p.git_version AS project_revision,
+        p.type AS project_type,
+        p.test_reports_path,
+        p.coverage_reports_path,
+        p.mutation_reports_path,
+        t.stage AS failure_stage,
+        t.variant AS failure_variant,
+        t.info AS failure_info,
+        CASE
+            WHEN t.stage LIKE 'COLLECT_JUNIT_REPORTS%%'
+                THEN p.test_reports_path
+            WHEN t.stage LIKE 'COLLECT_JACOCO_DATA%%'
+                THEN p.coverage_reports_path || '/jacoco.csv'
+            WHEN t.info LIKE '%%linecoverage.xml%%'
+                THEN p.mutation_reports_path || '/linecoverage.xml'
+            ELSE p.mutation_reports_path || '/mutations.xml'
+        END AS searched_path
+    FROM project p
+    JOIN task t ON t.project_id = p.id
+    WHERE p.use_test_generalization
+      AND t.status = 'FAILED'
+      AND (
+          (
+              t.stage LIKE 'COLLECT_JUNIT_REPORTS%%'
+              AND t.info LIKE '%%Report directory%does not exist%%'
+          )
+          OR (
+              t.stage LIKE 'COLLECT_JACOCO_DATA%%'
+              AND t.info LIKE '%%Report file%does not exist%%'
+          )
+          OR (
+              t.stage LIKE 'COLLECT_PIT_DATA%%'
+              AND t.info LIKE '%%Report file%does not exist%%'
+          )
+      )
+)
+SELECT
+    failure.project_root,
+    failure.project_revision,
+    failure.project_type,
+    failure.test_reports_path,
+    failure.coverage_reports_path,
+    failure.mutation_reports_path,
+    failure.failure_stage,
+    failure.failure_variant,
+    failure.failure_info,
+    failure.searched_path,
+    'data/reporeapers-rerun-v7/'
+        || regexp_replace(failure.project_root, '^projects/', '')
+        || '/project-id-' || failure.project_id AS run_artifact_path,
+    (
+        SELECT task.status
+        FROM task
+        WHERE task.project_id = failure.project_id
+          AND task.stage = 'BUILD_PROJECT_ORIGINAL'
+        ORDER BY task.id DESC
+        LIMIT 1
+    ) AS build_status,
+    (
+        SELECT task.status
+        FROM task
+        WHERE task.project_id = failure.project_id
+          AND task.stage = 'EXECUTE_TESTS_ORIGINAL'
+        ORDER BY task.id DESC
+        LIMIT 1
+    ) AS test_execution_status
+FROM output_failures failure
+ORDER BY failure.project_root
+""",
+    identity_fields=_PROJECT_FIELDS,
+    fields=_PROJECT_FIELDS
+    + (
+        "project_type",
+        "test_reports_path",
+        "coverage_reports_path",
+        "mutation_reports_path",
+        "failure_stage",
+        "failure_variant",
+        "failure_info",
+        "searched_path",
+        "run_artifact_path",
+        "build_status",
+        "test_execution_status",
+    ),
+)
+
+REGISTERED_QUERIES = (NO_ASSERTIONS, ASSERTION_TO_MUT, OUTPUT_DIRECTORIES)
 
 
 def _json_value(value: object, label: str) -> object:

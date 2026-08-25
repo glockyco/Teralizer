@@ -1,0 +1,1612 @@
+{
+  "corpus": {
+    "config_dir": "project-configs/replication/extended",
+    "corpus_id": "real-world",
+    "data_dir": "data/reporeapers-rerun-v7",
+    "database": "postgres_reporeapers_rq6_v7",
+    "dump": {
+      "sha256": "f758da97806de197f42eab2e790897869b1a80e5634b1a4e975f580852c8de04",
+      "source_id": "version-seven-database-export"
+    },
+    "expected_projects": 1161,
+    "inspection_method": "registered read-only repeatable-read transaction",
+    "observed_projects": 1161,
+    "schema": {
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 1,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "project_id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 2,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "test_id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 3,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "assertion_name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 4,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "assertion_arguments",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 5,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "assertion_source_code",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 6,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "assertion_absolute_path",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 7,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "assertion_relative_path",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 8,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_file_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 9,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_class_qualified_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 10,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_qualified_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 11,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_package_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 12,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_class_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 13,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 14,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_parameters",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 15,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_return_type",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 16,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_absolute_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 17,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_relative_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 18,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_call_arguments",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 19,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_call_source_code",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 20,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_call_absolute_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 21,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "tested_method_call_relative_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 22,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "generalization_recipe",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 23,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "instrumented_file_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 24,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "instrumented_class_qualified_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 25,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "instrumented_method_qualified_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 26,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "instrumented_package_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 27,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "instrumented_class_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 28,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "instrumented_method_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 29,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "driver_file_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 30,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "driver_class_qualified_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 31,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "driver_package_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 32,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "driver_class_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 33,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "jpf_config_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 34,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "input_values_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 35,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "output_value_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 36,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "input_specification_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 37,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "output_specification_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 38,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "equivalent_assertions",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 39,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "input_model_statistics",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 40,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "output_model_statistics",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 41,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "output_spec_class",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 42,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "output_is_literal",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "ordinal_position": 43,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "concretization_events",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "ordinal_position": 44,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "post_concretization_divergence_risk",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "ordinal_position": 45,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "concretized_methods",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 46,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "is_included",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "ordinal_position": 47,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "exclusion_info",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 48,
+          "table_name": "assertion"
+        },
+        {
+          "column_name": "id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 1,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "project_id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 2,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "test_id",
+          "data_type": "bigint",
+          "is_nullable": "YES",
+          "ordinal_position": 3,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "assertion_id",
+          "data_type": "bigint",
+          "is_nullable": "YES",
+          "ordinal_position": 4,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "generalization_id",
+          "data_type": "bigint",
+          "is_nullable": "YES",
+          "ordinal_position": 5,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "filter_name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 6,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "decision",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 7,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "reason",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 8,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "reason_code",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 9,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "depends_on",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 10,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "detail_json",
+          "data_type": "jsonb",
+          "is_nullable": "YES",
+          "ordinal_position": 11,
+          "table_name": "filter_result"
+        },
+        {
+          "column_name": "id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 1,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "assertion_id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 2,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "project_id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 3,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "test_id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 4,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "status",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 5,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "confidence_tier",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 6,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "deciding_signal",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 7,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "corroborating_signals",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 8,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "no_pick_reason",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 9,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "candidate_count",
+          "data_type": "integer",
+          "is_nullable": "NO",
+          "ordinal_position": 10,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "resolved_call_source",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 11,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "resolved_method_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 12,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "resolved_declaring_type",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 13,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "resolved_parameter_types",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 14,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "resolved_return_type",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 15,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "inspector_unwrapped",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "ordinal_position": 16,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "shallow_inspector_pick",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "ordinal_position": 17,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "focal_type",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 18,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "focal_type_source",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 19,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "focal_agreement",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "ordinal_position": 20,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "candidate_param_count",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "ordinal_position": 21,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "candidate_param_supported",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "ordinal_position": 22,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "candidate_return_supported",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "ordinal_position": 23,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "oracle_agreement",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 24,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "candidate_details",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 25,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "actual_shape",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 26,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "receiver_provenance",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 27,
+          "table_name": "mut_resolution_observation"
+        },
+        {
+          "column_name": "id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 1,
+          "table_name": "project"
+        },
+        {
+          "column_name": "type",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 2,
+          "table_name": "project"
+        },
+        {
+          "column_name": "test_framework",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 3,
+          "table_name": "project"
+        },
+        {
+          "column_name": "test_framework_version",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 4,
+          "table_name": "project"
+        },
+        {
+          "column_name": "root_path",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 5,
+          "table_name": "project"
+        },
+        {
+          "column_name": "data_path",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 6,
+          "table_name": "project"
+        },
+        {
+          "column_name": "main_source_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 7,
+          "table_name": "project"
+        },
+        {
+          "column_name": "test_source_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 8,
+          "table_name": "project"
+        },
+        {
+          "column_name": "main_compiled_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 9,
+          "table_name": "project"
+        },
+        {
+          "column_name": "test_compiled_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 10,
+          "table_name": "project"
+        },
+        {
+          "column_name": "test_reports_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 11,
+          "table_name": "project"
+        },
+        {
+          "column_name": "coverage_reports_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 12,
+          "table_name": "project"
+        },
+        {
+          "column_name": "mutation_reports_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 13,
+          "table_name": "project"
+        },
+        {
+          "column_name": "classpath",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 14,
+          "table_name": "project"
+        },
+        {
+          "column_name": "git_version",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 15,
+          "table_name": "project"
+        },
+        {
+          "column_name": "tool_git_version",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 16,
+          "table_name": "project"
+        },
+        {
+          "column_name": "use_test_generation",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "ordinal_position": 17,
+          "table_name": "project"
+        },
+        {
+          "column_name": "use_test_generalization",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "ordinal_position": 18,
+          "table_name": "project"
+        },
+        {
+          "column_name": "use_test_reduction",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "ordinal_position": 19,
+          "table_name": "project"
+        },
+        {
+          "column_name": "configuration",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 20,
+          "table_name": "project"
+        },
+        {
+          "column_name": "runtime",
+          "data_type": "real",
+          "is_nullable": "YES",
+          "ordinal_position": 21,
+          "table_name": "project"
+        },
+        {
+          "column_name": "id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 1,
+          "table_name": "task"
+        },
+        {
+          "column_name": "project_id",
+          "data_type": "bigint",
+          "is_nullable": "YES",
+          "ordinal_position": 2,
+          "table_name": "task"
+        },
+        {
+          "column_name": "test_id",
+          "data_type": "bigint",
+          "is_nullable": "YES",
+          "ordinal_position": 3,
+          "table_name": "task"
+        },
+        {
+          "column_name": "assertion_id",
+          "data_type": "bigint",
+          "is_nullable": "YES",
+          "ordinal_position": 4,
+          "table_name": "task"
+        },
+        {
+          "column_name": "generalization_id",
+          "data_type": "bigint",
+          "is_nullable": "YES",
+          "ordinal_position": 5,
+          "table_name": "task"
+        },
+        {
+          "column_name": "step",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "ordinal_position": 6,
+          "table_name": "task"
+        },
+        {
+          "column_name": "stage",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 7,
+          "table_name": "task"
+        },
+        {
+          "column_name": "variant",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 8,
+          "table_name": "task"
+        },
+        {
+          "column_name": "status",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 9,
+          "table_name": "task"
+        },
+        {
+          "column_name": "runtime",
+          "data_type": "real",
+          "is_nullable": "YES",
+          "ordinal_position": 10,
+          "table_name": "task"
+        },
+        {
+          "column_name": "info",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 11,
+          "table_name": "task"
+        },
+        {
+          "column_name": "id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 1,
+          "table_name": "test"
+        },
+        {
+          "column_name": "project_id",
+          "data_type": "bigint",
+          "is_nullable": "NO",
+          "ordinal_position": 2,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_file_path",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 3,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_class_qualified_name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 4,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_method_qualified_name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 5,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_package_name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 6,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_class_name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 7,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_method_name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "ordinal_position": 8,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_method_absolute_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 9,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_method_relative_path",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 10,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_annotation_name",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 11,
+          "table_name": "test"
+        },
+        {
+          "column_name": "test_annotations_source_code",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 12,
+          "table_name": "test"
+        },
+        {
+          "column_name": "line_count",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "ordinal_position": 13,
+          "table_name": "test"
+        },
+        {
+          "column_name": "is_included",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "ordinal_position": 14,
+          "table_name": "test"
+        },
+        {
+          "column_name": "exclusion_info",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "ordinal_position": 15,
+          "table_name": "test"
+        }
+      ],
+      "sha256": "7cabe02d74a2f246238dfea31a373d2ce1e1811bfafe74651ba27f41a72c4f05"
+    },
+    "variant": "IMPROVED_200_TRIES"
+  },
+  "populations": [
+    {
+      "claim": "output-directories",
+      "definition": "Version 7 projects with a failed task that searched for a missing test, coverage, or mutation report artifact.",
+      "identity_fields": [
+        "project_root",
+        "project_revision"
+      ],
+      "identity_sha256": "3fff1d0dbe423c1ad430b1f3d954538bf47c1a7365fac9313424efd8389a6fc3",
+      "row_count": 43,
+      "rows": [
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_FibreFoX_i-can-see-aliens-JSP/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_FibreFoX_i-can-see-aliens-JSP/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_FibreFoX_i-can-see-aliens-JSP/target/pit-reports",
+          "project_revision": "9d30d7969e09d620b54c12b25bcca6084fb30093",
+          "project_root": "projects/github_com_FibreFoX_i-can-see-aliens-JSP",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_FibreFoX_i-can-see-aliens-JSP/project-id-484",
+          "searched_path": "projects/github_com_FibreFoX_i-can-see-aliens-JSP/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_FibreFoX_i-can-see-aliens-JSP/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_Groupe2_Groupe2/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_Groupe2_Groupe2/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_Groupe2_Groupe2/target/pit-reports",
+          "project_revision": "68a9d3b9f1c0c00a4f0c8172bd250c9c5cadd2c2",
+          "project_root": "projects/github_com_Groupe2_Groupe2",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_Groupe2_Groupe2/project-id-185",
+          "searched_path": "projects/github_com_Groupe2_Groupe2/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_Groupe2_Groupe2/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_HaraldWalker_user-agent-utils/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect coverage data. Report file 'projects/github_com_HaraldWalker_user-agent-utils/target/site/jacoco/jacoco.csv' does not exist.\n\tat teralizer.processing.task.JacocoDataCollectionTask.collectCoverageData(JacocoDataCollectionTask.java:78)\n\tat teralizer.processing.task.JacocoDataCollectionTask.createCoverageReportRecords(JacocoDataCollectionTask.java:50)\n\tat teralizer.processing.task.JacocoDataCollectionTask.executeInternal(JacocoDataCollectionTask.java:44)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JACOCO_DATA_INITIAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_HaraldWalker_user-agent-utils/target/pit-reports",
+          "project_revision": "7f954514298f76afff8a75723bc25205bfe30d1b",
+          "project_root": "projects/github_com_HaraldWalker_user-agent-utils",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_HaraldWalker_user-agent-utils/project-id-777",
+          "searched_path": "projects/github_com_HaraldWalker_user-agent-utils/target/site/jacoco/jacoco.csv",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_HaraldWalker_user-agent-utils/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_IISH_file-validation/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_IISH_file-validation/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_IISH_file-validation/target/pit-reports",
+          "project_revision": "8ab0b86b56990048082912ef45a2760c82fe1a28",
+          "project_root": "projects/github_com_IISH_file-validation",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_IISH_file-validation/project-id-612",
+          "searched_path": "projects/github_com_IISH_file-validation/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_IISH_file-validation/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_JoshCode_UFM-Reckoning/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_JoshCode_UFM-Reckoning/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_JoshCode_UFM-Reckoning/target/pit-reports",
+          "project_revision": "0cd1f309d3bf10d2baadd1d0e0c2874a1c49e1a5",
+          "project_root": "projects/github_com_JoshCode_UFM-Reckoning",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_JoshCode_UFM-Reckoning/project-id-85",
+          "searched_path": "projects/github_com_JoshCode_UFM-Reckoning/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_JoshCode_UFM-Reckoning/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_JoshCode_UFMGame/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_JoshCode_UFMGame/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_JoshCode_UFMGame/target/pit-reports",
+          "project_revision": "0cd1f309d3bf10d2baadd1d0e0c2874a1c49e1a5",
+          "project_root": "projects/github_com_JoshCode_UFMGame",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_JoshCode_UFMGame/project-id-70",
+          "searched_path": "projects/github_com_JoshCode_UFMGame/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_JoshCode_UFMGame/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_KunkkaCoco_dsaij/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_KunkkaCoco_dsaij/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_KunkkaCoco_dsaij/target/pit-reports",
+          "project_revision": "73aaf09f53e935845093e6b9e47e615ea7061499",
+          "project_root": "projects/github_com_KunkkaCoco_dsaij",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_KunkkaCoco_dsaij/project-id-162",
+          "searched_path": "projects/github_com_KunkkaCoco_dsaij/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_KunkkaCoco_dsaij/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient/target/pit-reports",
+          "project_revision": "20a2a201652ac5c2bca04fdbedf19bbbf303b2e7",
+          "project_root": "projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient/project-id-257",
+          "searched_path": "projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_PersistentSystemsLimitedSoftLayer_SoftLayerRestClient/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_acciente_oacc-core/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_acciente_oacc-core/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_acciente_oacc-core/target/pit-reports",
+          "project_revision": "1c47f8b55eeba8d5953ad269093824de18f05a47",
+          "project_root": "projects/github_com_acciente_oacc-core",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_acciente_oacc-core/project-id-141",
+          "searched_path": "projects/github_com_acciente_oacc-core/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_acciente_oacc-core/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_bluebibi_springframe/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_bluebibi_springframe/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_bluebibi_springframe/target/pit-reports",
+          "project_revision": "228ddfc3530705ed901ef112290ddf3e8f32c7fb",
+          "project_root": "projects/github_com_bluebibi_springframe",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_bluebibi_springframe/project-id-19",
+          "searched_path": "projects/github_com_bluebibi_springframe/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_bluebibi_springframe/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_codereligion_beast/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_codereligion_beast/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_codereligion_beast/target/pit-reports",
+          "project_revision": "4e5aeb2cbb93f1acd4349027d05804303e949a70",
+          "project_root": "projects/github_com_codereligion_beast",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_codereligion_beast/project-id-991",
+          "searched_path": "projects/github_com_codereligion_beast/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_codereligion_beast/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_fit2cloud_qingcloud-api-java-wrapper/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_fit2cloud_qingcloud-api-java-wrapper/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_fit2cloud_qingcloud-api-java-wrapper/target/pit-reports",
+          "project_revision": "5e32945d17996f6f0941a524c36a10526948cd8f",
+          "project_root": "projects/github_com_fit2cloud_qingcloud-api-java-wrapper",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_fit2cloud_qingcloud-api-java-wrapper/project-id-228",
+          "searched_path": "projects/github_com_fit2cloud_qingcloud-api-java-wrapper/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_fit2cloud_qingcloud-api-java-wrapper/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_flourscent_jollyday/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_flourscent_jollyday/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_flourscent_jollyday/target/pit-reports",
+          "project_revision": "3c96d8eb8c1e0760ed358e142879565044fe1d1e",
+          "project_root": "projects/github_com_flourscent_jollyday",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_flourscent_jollyday/project-id-130",
+          "searched_path": "projects/github_com_flourscent_jollyday/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_flourscent_jollyday/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_git4sinu_proDesi/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_git4sinu_proDesi/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_git4sinu_proDesi/target/pit-reports",
+          "project_revision": "3514752194f0c4e48898483f79dd3ac020b8fe6f",
+          "project_root": "projects/github_com_git4sinu_proDesi",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_git4sinu_proDesi/project-id-390",
+          "searched_path": "projects/github_com_git4sinu_proDesi/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_git4sinu_proDesi/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_halafi_msg-system/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_halafi_msg-system/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_halafi_msg-system/target/pit-reports",
+          "project_revision": "b590e8bd6cf0843db8d7688974fbaf5ca4d4fdaf",
+          "project_root": "projects/github_com_halafi_msg-system",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_halafi_msg-system/project-id-337",
+          "searched_path": "projects/github_com_halafi_msg-system/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_halafi_msg-system/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_happyfish100_fastdfs-client-java/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_happyfish100_fastdfs-client-java/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_happyfish100_fastdfs-client-java/target/pit-reports",
+          "project_revision": "7e644f1ba497104421f5572ad909910a2848d650",
+          "project_root": "projects/github_com_happyfish100_fastdfs-client-java",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_happyfish100_fastdfs-client-java/project-id-106",
+          "searched_path": "projects/github_com_happyfish100_fastdfs-client-java/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_happyfish100_fastdfs-client-java/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_injcristianrojas_swsec-intro/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_injcristianrojas_swsec-intro/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_injcristianrojas_swsec-intro/target/pit-reports",
+          "project_revision": "868aa554303205cfb1b1ee965c59d38d2b6fd06b",
+          "project_root": "projects/github_com_injcristianrojas_swsec-intro",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_injcristianrojas_swsec-intro/project-id-1039",
+          "searched_path": "projects/github_com_injcristianrojas_swsec-intro/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_injcristianrojas_swsec-intro/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_jpvetterli_time2lib/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_jpvetterli_time2lib/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_jpvetterli_time2lib/target/pit-reports",
+          "project_revision": "9ecdc9be30544619e85a3321dc5984386993b3bf",
+          "project_root": "projects/github_com_jpvetterli_time2lib",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_jpvetterli_time2lib/project-id-983",
+          "searched_path": "projects/github_com_jpvetterli_time2lib/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_jpvetterli_time2lib/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_ltemal94_SpringMVCMovies/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_ltemal94_SpringMVCMovies/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_ltemal94_SpringMVCMovies/target/pit-reports",
+          "project_revision": "d6b8c7f61feac6caade9dde218fefec48de139d5",
+          "project_root": "projects/github_com_ltemal94_SpringMVCMovies",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_ltemal94_SpringMVCMovies/project-id-458",
+          "searched_path": "projects/github_com_ltemal94_SpringMVCMovies/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_ltemal94_SpringMVCMovies/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_lucachaves_lattesHyperjaxb3/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_lucachaves_lattesHyperjaxb3/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_lucachaves_lattesHyperjaxb3/target/pit-reports",
+          "project_revision": "50df0ad12710a844f243b9e7206d618afc3afaf9",
+          "project_root": "projects/github_com_lucachaves_lattesHyperjaxb3",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_lucachaves_lattesHyperjaxb3/project-id-68",
+          "searched_path": "projects/github_com_lucachaves_lattesHyperjaxb3/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_lucachaves_lattesHyperjaxb3/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_madwenoma_tadu-jedis/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_madwenoma_tadu-jedis/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_madwenoma_tadu-jedis/target/pit-reports",
+          "project_revision": "0803ca15dc48e9273b394f011d14216b47c83e61",
+          "project_root": "projects/github_com_madwenoma_tadu-jedis",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_madwenoma_tadu-jedis/project-id-38",
+          "searched_path": "projects/github_com_madwenoma_tadu-jedis/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_madwenoma_tadu-jedis/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_mangobin_SSNOC/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_mangobin_SSNOC/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_mangobin_SSNOC/target/pit-reports",
+          "project_revision": "5df812990a111c23c36e6b45b2a8df1e8133e652",
+          "project_root": "projects/github_com_mangobin_SSNOC",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_mangobin_SSNOC/project-id-10",
+          "searched_path": "projects/github_com_mangobin_SSNOC/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_mangobin_SSNOC/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_mhogrefe_haskellesque/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_mhogrefe_haskellesque/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_mhogrefe_haskellesque/target/pit-reports",
+          "project_revision": "15696dae9e4ae00f31baf77374f263449295062d",
+          "project_root": "projects/github_com_mhogrefe_haskellesque",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_mhogrefe_haskellesque/project-id-208",
+          "searched_path": "projects/github_com_mhogrefe_haskellesque/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_mhogrefe_haskellesque/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_mhogrefe_wheels/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_mhogrefe_wheels/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_mhogrefe_wheels/target/pit-reports",
+          "project_revision": "15696dae9e4ae00f31baf77374f263449295062d",
+          "project_root": "projects/github_com_mhogrefe_wheels",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_mhogrefe_wheels/project-id-148",
+          "searched_path": "projects/github_com_mhogrefe_wheels/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_mhogrefe_wheels/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_mikolai_HomeMultimediaStorage/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_mikolai_HomeMultimediaStorage/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_mikolai_HomeMultimediaStorage/target/pit-reports",
+          "project_revision": "b128954450578d8748efcf568883a2ffaef40b00",
+          "project_root": "projects/github_com_mikolai_HomeMultimediaStorage",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_mikolai_HomeMultimediaStorage/project-id-182",
+          "searched_path": "projects/github_com_mikolai_HomeMultimediaStorage/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_mikolai_HomeMultimediaStorage/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_mirage22_miko-spring-mongodb/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_mirage22_miko-spring-mongodb/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_mirage22_miko-spring-mongodb/target/pit-reports",
+          "project_revision": "a56589d1110052eabd42f34037d984bc69ca6fe4",
+          "project_root": "projects/github_com_mirage22_miko-spring-mongodb",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_mirage22_miko-spring-mongodb/project-id-556",
+          "searched_path": "projects/github_com_mirage22_miko-spring-mongodb/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_mirage22_miko-spring-mongodb/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_mirage22_miko-spring-postgresql/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_mirage22_miko-spring-postgresql/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_mirage22_miko-spring-postgresql/target/pit-reports",
+          "project_revision": "8649a36aa727a4132f146ecccfd211c15ae8779e",
+          "project_root": "projects/github_com_mirage22_miko-spring-postgresql",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_mirage22_miko-spring-postgresql/project-id-555",
+          "searched_path": "projects/github_com_mirage22_miko-spring-postgresql/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_mirage22_miko-spring-postgresql/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_mtedone_podam/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_mtedone_podam/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_mtedone_podam/target/pit-reports",
+          "project_revision": "16e5f6716cee16b72226fa0763508a63f78175e0",
+          "project_root": "projects/github_com_mtedone_podam",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_mtedone_podam/project-id-1030",
+          "searched_path": "projects/github_com_mtedone_podam/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_mtedone_podam/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_nocomment_UFMGame/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_nocomment_UFMGame/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_nocomment_UFMGame/target/pit-reports",
+          "project_revision": "0cd1f309d3bf10d2baadd1d0e0c2874a1c49e1a5",
+          "project_root": "projects/github_com_nocomment_UFMGame",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_nocomment_UFMGame/project-id-62",
+          "searched_path": "projects/github_com_nocomment_UFMGame/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_nocomment_UFMGame/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_perwendel_spark/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_perwendel_spark/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_perwendel_spark/target/pit-reports",
+          "project_revision": "1973e402f5d4c1442ad34a1d38ed0758079f7773",
+          "project_root": "projects/github_com_perwendel_spark",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_perwendel_spark/project-id-1034",
+          "searched_path": "projects/github_com_perwendel_spark/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_perwendel_spark/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_photon-infotech_phresco-pom/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_photon-infotech_phresco-pom/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_photon-infotech_phresco-pom/target/pit-reports",
+          "project_revision": "085d183d085749a356f43544025b01852b1da4db",
+          "project_root": "projects/github_com_photon-infotech_phresco-pom",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_photon-infotech_phresco-pom/project-id-749",
+          "searched_path": "projects/github_com_photon-infotech_phresco-pom/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_photon-infotech_phresco-pom/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_santo74_vertx-arangodb/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_santo74_vertx-arangodb/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_santo74_vertx-arangodb/target/pit-reports",
+          "project_revision": "5f15665a998f634921734959ca506e8e6f73abd0",
+          "project_root": "projects/github_com_santo74_vertx-arangodb",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_santo74_vertx-arangodb/project-id-366",
+          "searched_path": "projects/github_com_santo74_vertx-arangodb/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_santo74_vertx-arangodb/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_sbunciak_test-result-tracking-system/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_sbunciak_test-result-tracking-system/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_sbunciak_test-result-tracking-system/target/pit-reports",
+          "project_revision": "bcf0a0493324c7e3e075b78b4dd5906e4208c9d8",
+          "project_root": "projects/github_com_sbunciak_test-result-tracking-system",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_sbunciak_test-result-tracking-system/project-id-811",
+          "searched_path": "projects/github_com_sbunciak_test-result-tracking-system/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_sbunciak_test-result-tracking-system/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_sebprunier_concours-devoxx-france-2013/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_sebprunier_concours-devoxx-france-2013/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_sebprunier_concours-devoxx-france-2013/target/pit-reports",
+          "project_revision": "6f50471166ff2d1f1f6adfb1bc97ef7c00e6a7e7",
+          "project_root": "projects/github_com_sebprunier_concours-devoxx-france-2013",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_sebprunier_concours-devoxx-france-2013/project-id-1090",
+          "searched_path": "projects/github_com_sebprunier_concours-devoxx-france-2013/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_sebprunier_concours-devoxx-france-2013/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_sistar_woodle_backend/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_sistar_woodle_backend/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_sistar_woodle_backend/target/pit-reports",
+          "project_revision": "3a56b678140a81b26b4f16180b2f8fe7be2ed8fc",
+          "project_root": "projects/github_com_sistar_woodle_backend",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_sistar_woodle_backend/project-id-823",
+          "searched_path": "projects/github_com_sistar_woodle_backend/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_sistar_woodle_backend/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_spstorey_hicksfamilyhistory/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_spstorey_hicksfamilyhistory/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_spstorey_hicksfamilyhistory/target/pit-reports",
+          "project_revision": "039109c26df4f9b3a83000ca294bf0a883459599",
+          "project_root": "projects/github_com_spstorey_hicksfamilyhistory",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_spstorey_hicksfamilyhistory/project-id-387",
+          "searched_path": "projects/github_com_spstorey_hicksfamilyhistory/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_spstorey_hicksfamilyhistory/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_sscdotopen_aim3/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_sscdotopen_aim3/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_sscdotopen_aim3/target/pit-reports",
+          "project_revision": "46965aeb802054080be885daa5f79cfd8e19bab2",
+          "project_root": "projects/github_com_sscdotopen_aim3",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_sscdotopen_aim3/project-id-178",
+          "searched_path": "projects/github_com_sscdotopen_aim3/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_sscdotopen_aim3/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_stacksync_java-cloudfiles/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_stacksync_java-cloudfiles/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_stacksync_java-cloudfiles/target/pit-reports",
+          "project_revision": "8125c28d61ca2480f34dba7e551c898a35bbda31",
+          "project_root": "projects/github_com_stacksync_java-cloudfiles",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_stacksync_java-cloudfiles/project-id-580",
+          "searched_path": "projects/github_com_stacksync_java-cloudfiles/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_stacksync_java-cloudfiles/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_svanimpe_reminders/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_svanimpe_reminders/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_svanimpe_reminders/target/pit-reports",
+          "project_revision": "7753b56a9039dc6534cb93d232fe4b042df6d323",
+          "project_root": "projects/github_com_svanimpe_reminders",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_svanimpe_reminders/project-id-280",
+          "searched_path": "projects/github_com_svanimpe_reminders/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_svanimpe_reminders/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_termd_termd/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect coverage data. Report file 'projects/github_com_termd_termd/target/site/jacoco/jacoco.csv' does not exist.\n\tat teralizer.processing.task.JacocoDataCollectionTask.collectCoverageData(JacocoDataCollectionTask.java:78)\n\tat teralizer.processing.task.JacocoDataCollectionTask.createCoverageReportRecords(JacocoDataCollectionTask.java:50)\n\tat teralizer.processing.task.JacocoDataCollectionTask.executeInternal(JacocoDataCollectionTask.java:44)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JACOCO_DATA_INITIAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_termd_termd/target/pit-reports",
+          "project_revision": "c2aa8c4c54ef3fbb546bb9da4fed7681de657923",
+          "project_root": "projects/github_com_termd_termd",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_termd_termd/project-id-1098",
+          "searched_path": "projects/github_com_termd_termd/target/site/jacoco/jacoco.csv",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_termd_termd/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_unisgn_nova/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_unisgn_nova/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_unisgn_nova/target/pit-reports",
+          "project_revision": "517b512618f3bdafd38be3d9de9c22077170dc45",
+          "project_root": "projects/github_com_unisgn_nova",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_unisgn_nova/project-id-314",
+          "searched_path": "projects/github_com_unisgn_nova/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_unisgn_nova/target/surefire-reports"
+        },
+        {
+          "build_status": "FAILED",
+          "coverage_reports_path": "projects/github_com_vesin_fabut/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_vesin_fabut/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_vesin_fabut/target/pit-reports",
+          "project_revision": "1c5e2965aa1184815052babc69055174589592c2",
+          "project_root": "projects/github_com_vesin_fabut",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_vesin_fabut/project-id-704",
+          "searched_path": "projects/github_com_vesin_fabut/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_vesin_fabut/target/surefire-reports"
+        },
+        {
+          "build_status": "SUCCEEDED",
+          "coverage_reports_path": "projects/github_com_yiminliu_ims-mvc/target/site/jacoco",
+          "failure_info": "java.lang.RuntimeException: Failed to collect test data. Report directory 'projects/github_com_yiminliu_ims-mvc/target/surefire-reports' does not exist.\n\tat teralizer.processing.task.JunitDataCollectionTask.executeInternal(JunitDataCollectionTask.java:88)\n\tat teralizer.processing.task.AbstractTask.execute(AbstractTask.java:55)\n\tat teralizer.processing.ProcessingPipeline.executeNext(ProcessingPipeline.java:85)\n\tat teralizer.processing.ProcessingPipeline.executeAll(ProcessingPipeline.java:47)\n\tat teralizer.processing.PipelinePlanner.runPhases(PipelinePlanner.java:35)\n\tat teralizer.processing.PipelinePlanner.run(PipelinePlanner.java:24)\n\tat teralizer.TestGeneralizationRunner.run(TestGeneralizationRunner.java:79)\n\tat teralizer.TestGeneralizationRunner.main(TestGeneralizationRunner.java:27)\n",
+          "failure_stage": "COLLECT_JUNIT_REPORTS_ORIGINAL",
+          "failure_variant": null,
+          "mutation_reports_path": "projects/github_com_yiminliu_ims-mvc/target/pit-reports",
+          "project_revision": "c378ae2b33eae3b8aef9957e0090df9ff137c48e",
+          "project_root": "projects/github_com_yiminliu_ims-mvc",
+          "project_type": "MAVEN",
+          "run_artifact_path": "data/reporeapers-rerun-v7/github_com_yiminliu_ims-mvc/project-id-80",
+          "searched_path": "projects/github_com_yiminliu_ims-mvc/target/surefire-reports",
+          "test_execution_status": "SUCCEEDED",
+          "test_reports_path": "projects/github_com_yiminliu_ims-mvc/target/surefire-reports"
+        }
+      ]
+    }
+  ],
+  "schema_version": 1
+}
