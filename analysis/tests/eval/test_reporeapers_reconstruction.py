@@ -54,47 +54,61 @@ def _audit(inventory: dict[str, object]) -> dict[str, object]:
                 "identity": {
                     "corpus_id": "real-world",
                     "project_root": "/projects/example",
+                    "project_revision": _REVISION,
                     "level": "Test",
                     "local_key": "ExampleTest#works",
                 },
                 "claim": "no-assertions",
-                "status": "reconstructed",
+                "status": "resolved",
+                "label": "true-positive",
                 "confidence": "T2_CORROBORATED",
-                "reason": "The source and preserved log agree.",
+                "rationale": "The source and preserved log agree.",
                 "source_ids": ["project-logs-v7"],
                 "filter_outcome": "NO_ASSERTIONS",
                 "reviewer": "fixture-reviewer",
+                "review_state": "single-reviewed",
             },
             {
                 "identity": {
                     "corpus_id": "real-world",
                     "project_root": "/projects/example",
+                    "project_revision": _REVISION,
                     "level": "Assertion",
                     "local_key": "ExampleTest#works:12:assertThat",
                 },
                 "claim": "assertion-to-mut",
-                "status": "evidence-gap",
+                "status": "unresolved",
+                "label": "unresolved",
                 "confidence": "NONE",
-                "reason": "The preserved source declaration is absent.",
+                "rationale": "The preserved source declaration is absent.",
                 "source_ids": [],
                 "filter_outcome": "UNRESOLVED_SOURCE_DECLARATION",
                 "reviewer": "fixture-reviewer",
+                "review_state": "single-reviewed",
             },
         ],
         "claims": [
             {
                 "claim": "no-assertions",
-                "status": "reconstructed",
-                "numerator": 1,
-                "denominator": 1,
+                "status": "supported",
+                "population_definition": "Version 7 NO_ASSERTIONS exclusions.",
+                "population_sha256": "a" * 64,
+                "resolved": 1,
+                "unresolved": 0,
+                "incompatible": 0,
+                "total": 1,
                 "method": "complete classification",
                 "reason": "One frozen entity was reconstructed.",
             },
             {
                 "claim": "assertion-to-mut",
                 "status": "evidence-gap",
-                "numerator": 1,
-                "denominator": 1,
+                "population_definition": "Version 7 unresolved assertions.",
+                "population_sha256": "b" * 64,
+                "resolved": 0,
+                "unresolved": 1,
+                "incompatible": 0,
+                "total": 1,
                 "method": "complete classification",
                 "reason": "The only frozen entity lacks source evidence.",
             },
@@ -303,8 +317,41 @@ def test_audit_reconciles_entity_statuses_and_source_ids(tmp_path: Path):
     actual = reconstruction.validate_audit(_audit(inventory))
 
     claims = _records(actual, "claims")
-    assert claims[0]["numerator"] == 1
+    assert claims[0]["resolved"] == 1
     assert claims[1]["status"] == "evidence-gap"
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("status", "reconstructed", "unknown status"),
+        ("review_state", "accepted", "unknown status, confidence, or review state"),
+        ("confidence", "HIGH", "unknown status, confidence, or review state"),
+    ],
+)
+def test_audit_rejects_unknown_entity_vocabulary(
+    tmp_path: Path, field: str, value: str, message: str
+):
+    source = tmp_path / "project.log"
+    source.write_text("collected", encoding="utf-8")
+    audit = _audit(reconstruction.build_inventory(_inventory_spec(source)))
+    _records(audit, "entities")[0][field] = value
+
+    with pytest.raises(reconstruction.ReconstructionError, match=message):
+        reconstruction.validate_audit(audit)
+
+
+def test_audit_rejects_project_identity_without_revision_field(tmp_path: Path):
+    source = tmp_path / "project.log"
+    source.write_text("collected", encoding="utf-8")
+    audit = _audit(reconstruction.build_inventory(_inventory_spec(source)))
+    identity = cast(dict[str, object], _records(audit, "entities")[0]["identity"])
+    del identity["project_revision"]
+
+    with pytest.raises(
+        reconstruction.ReconstructionError, match="identity.*keys differ"
+    ):
+        reconstruction.validate_audit(audit)
 
 
 def test_audit_rejects_surrogate_identity_fields(tmp_path: Path):
@@ -323,7 +370,7 @@ def test_audit_rejects_unreconciled_claim_summary(tmp_path: Path):
     source = tmp_path / "project.log"
     source.write_text("collected", encoding="utf-8")
     audit = _audit(reconstruction.build_inventory(_inventory_spec(source)))
-    _records(audit, "claims")[0]["numerator"] = 0
+    _records(audit, "claims")[0]["resolved"] = 0
 
     with pytest.raises(reconstruction.ReconstructionError, match="does not reconcile"):
         reconstruction.validate_audit(audit)

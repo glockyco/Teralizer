@@ -20,9 +20,9 @@
 
 ## 3. Build the Reconstruction Record Pipeline
 
-- [ ] 3.1 Implement the common claim, population, source, entity-decision, reviewer, and evidence-gap records.
-- [ ] 3.2 Implement schema-version and closed-vocabulary validation for normalized audit inputs.
-- [ ] 3.3 Implement reconciliation checks for resolved, unresolved, incompatible, and total populations.
+- [x] 3.1 Implement the common claim, population, source, entity-decision, reviewer, and evidence-gap records.
+- [x] 3.2 Implement schema-version and closed-vocabulary validation for normalized audit inputs.
+- [x] 3.3 Implement reconciliation checks for resolved, unresolved, incompatible, and total populations.
 - [ ] 3.4 Implement read-only version 7 population extraction through the registered corpus input.
 - [ ] 3.5 Record the version 7 dump digest, schema identity, and read-only inspection method in derived provenance.
 - [ ] 3.6 Implement source-review packet generation without compiling or executing project code.

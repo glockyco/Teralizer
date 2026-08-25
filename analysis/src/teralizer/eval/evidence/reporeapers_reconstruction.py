@@ -25,12 +25,23 @@ class ReconstructionError(ValueError):
     """The evidence record cannot support a reproducible reconstruction."""
 
 
-class ReconstructionStatus(StrEnum):
-    RECONSTRUCTED = "reconstructed"
-    REPLICATED = "replicated"
-    ESTIMATED = "estimated"
-    EVIDENCE_GAP = "evidence-gap"
+class ClaimStatus(StrEnum):
+    SUPPORTED = "supported"
+    PARTIALLY_SUPPORTED = "partially-supported"
     CONTRADICTED = "contradicted"
+    EVIDENCE_GAP = "evidence-gap"
+
+
+class EntityStatus(StrEnum):
+    RESOLVED = "resolved"
+    UNRESOLVED = "unresolved"
+    INCOMPATIBLE = "incompatible"
+
+
+class ReviewState(StrEnum):
+    SINGLE_REVIEWED = "single-reviewed"
+    AGREED = "agreed"
+    DISPUTED = "disputed"
 
 
 class ConfidenceTier(StrEnum):
@@ -58,17 +69,36 @@ class EntityIdentity:
 
     corpus_id: str
     project_root: str
+    project_revision: str | None
     level: str
     local_key: str
 
     @classmethod
     def parse(cls, raw: object, label: str) -> EntityIdentity:
         item = _mapping(raw, label)
-        allowed = {"corpus_id", "project_root", "level", "local_key"}
+        allowed = {
+            "corpus_id",
+            "project_root",
+            "project_revision",
+            "level",
+            "local_key",
+        }
         _exact_keys(item, allowed, label)
+        project_revision = item["project_revision"]
+        if project_revision is not None and (
+            not isinstance(project_revision, str)
+            or len(project_revision) != 40
+            or any(
+                character not in "0123456789abcdef" for character in project_revision
+            )
+        ):
+            raise ReconstructionError(
+                f"{label}.project_revision must be null or a lowercase Git commit"
+            )
         identity = cls(
             corpus_id=_string(item, "corpus_id", label),
             project_root=_string(item, "project_root", label),
+            project_revision=project_revision,
             level=_string(item, "level", label),
             local_key=_string(item, "local_key", label),
         )
@@ -80,8 +110,14 @@ class EntityIdentity:
             raise ReconstructionError(f"{label}.project_root must be absolute")
         return identity
 
-    def key(self) -> tuple[str, str, str, str]:
-        return (self.corpus_id, self.project_root, self.level, self.local_key)
+    def key(self) -> tuple[str, str, str | None, str, str]:
+        return (
+            self.corpus_id,
+            self.project_root,
+            self.project_revision,
+            self.level,
+            self.local_key,
+        )
 
 
 @dataclass(frozen=True)
@@ -523,9 +559,8 @@ def validate_audit(document: object) -> dict[str, object]:
         _string(_mapping(item, "source"), "source_id", "source")
         for item in _sequence(inventory["sources"], "inventory.sources")
     }
-
-    entity_keys: set[tuple[str, str, str, str]] = set()
-    claim_counts: Counter[tuple[str, str]] = Counter()
+    entity_keys: set[tuple[str, str, str | None, str, str]] = set()
+    entity_counts: Counter[tuple[str, str]] = Counter()
     for index, raw in enumerate(_sequence(root["entities"], "entities")):
         label = f"entities[{index}]"
         entity = _mapping(raw, label)
@@ -535,11 +570,13 @@ def validate_audit(document: object) -> dict[str, object]:
                 "identity",
                 "claim",
                 "status",
+                "label",
                 "confidence",
-                "reason",
+                "rationale",
                 "source_ids",
                 "filter_outcome",
                 "reviewer",
+                "review_state",
             },
             label,
         )
@@ -547,17 +584,26 @@ def validate_audit(document: object) -> dict[str, object]:
         if identity.key() in entity_keys:
             raise ReconstructionError(f"duplicate entity identity: {identity.key()}")
         entity_keys.add(identity.key())
-        claim = _string(entity, "claim", label)
+        claim_name = _string(entity, "claim", label)
         try:
-            status = ReconstructionStatus(_string(entity, "status", label))
-            ConfidenceTier(_string(entity, "confidence", label))
+            entity_status = EntityStatus(_string(entity, "status", label))
+            confidence = ConfidenceTier(_string(entity, "confidence", label))
+            ReviewState(_string(entity, "review_state", label))
         except ValueError as error:
             raise ReconstructionError(
-                f"{label} has an unknown status or confidence"
+                f"{label} has an unknown status, confidence, or review state"
             ) from error
-        _string(entity, "reason", label)
+        _string(entity, "label", label)
+        _string(entity, "rationale", label)
         _string(entity, "filter_outcome", label)
         _string(entity, "reviewer", label)
+        if (
+            entity_status is not EntityStatus.RESOLVED
+            and confidence is not ConfidenceTier.NONE
+        ):
+            raise ReconstructionError(
+                f"{label}.confidence must be NONE unless the entity is resolved"
+            )
         references = _sequence(entity["source_ids"], f"{label}.source_ids")
         invalid_references = [
             reference
@@ -570,17 +616,27 @@ def validate_audit(document: object) -> dict[str, object]:
             )
         if len(references) != len(set(references)):
             raise ReconstructionError(f"{label}.source_ids contains duplicates")
-        if status is not ReconstructionStatus.EVIDENCE_GAP and not references:
+        if entity_status is not EntityStatus.UNRESOLVED and not references:
             raise ReconstructionError(f"{label} requires at least one evidence source")
-        claim_counts[(claim, status.value)] += 1
-
+        entity_counts[(claim_name, entity_status.value)] += 1
     seen_claims: set[str] = set()
     for index, raw in enumerate(_sequence(root["claims"], "claims")):
         label = f"claims[{index}]"
         claim = _mapping(raw, label)
         _exact_keys(
             claim,
-            {"claim", "status", "numerator", "denominator", "method", "reason"},
+            {
+                "claim",
+                "status",
+                "population_definition",
+                "population_sha256",
+                "resolved",
+                "unresolved",
+                "incompatible",
+                "total",
+                "method",
+                "reason",
+            },
             label,
         )
         name = _string(claim, "claim", label)
@@ -588,33 +644,65 @@ def validate_audit(document: object) -> dict[str, object]:
             raise ReconstructionError(f"duplicate claim summary: {name}")
         seen_claims.add(name)
         try:
-            status = ReconstructionStatus(_string(claim, "status", label))
+            claim_status = ClaimStatus(_string(claim, "status", label))
         except ValueError as error:
             raise ReconstructionError(f"{label}.status is unknown") from error
-        numerator = _integer(claim, "numerator", label)
-        denominator = _integer(claim, "denominator", label)
-        if numerator > denominator:
-            raise ReconstructionError(f"{label}.numerator exceeds denominator")
+        _string(claim, "population_definition", label)
+        population_sha256 = _string(claim, "population_sha256", label)
+        if len(population_sha256) != 64 or any(
+            character not in "0123456789abcdef" for character in population_sha256
+        ):
+            raise ReconstructionError(
+                f"{label}.population_sha256 is not a lowercase SHA-256"
+            )
+        resolved = _integer(claim, "resolved", label)
+        unresolved = _integer(claim, "unresolved", label)
+        incompatible = _integer(claim, "incompatible", label)
+        total = _integer(claim, "total", label)
         _string(claim, "method", label)
         _string(claim, "reason", label)
-        matching_entities = sum(
-            count
-            for (entity_claim, _), count in claim_counts.items()
-            if entity_claim == name
-        )
-        matching_status = claim_counts[(name, status.value)]
-        if denominator != matching_entities or numerator != matching_status:
+        actual = {
+            EntityStatus.RESOLVED.value: entity_counts[
+                (name, EntityStatus.RESOLVED.value)
+            ],
+            EntityStatus.UNRESOLVED.value: entity_counts[
+                (name, EntityStatus.UNRESOLVED.value)
+            ],
+            EntityStatus.INCOMPATIBLE.value: entity_counts[
+                (name, EntityStatus.INCOMPATIBLE.value)
+            ],
+        }
+        expected = {
+            EntityStatus.RESOLVED.value: resolved,
+            EntityStatus.UNRESOLVED.value: unresolved,
+            EntityStatus.INCOMPATIBLE.value: incompatible,
+        }
+        if expected != actual or total != sum(actual.values()):
             raise ReconstructionError(
-                f"{label} does not reconcile: expected numerator={matching_status}, "
-                f"denominator={matching_entities}"
+                f"{label} does not reconcile: expected={expected}, actual={actual}, total={total}"
             )
-    entity_claims = {claim for claim, _ in claim_counts}
+        if claim_status in {ClaimStatus.SUPPORTED, ClaimStatus.CONTRADICTED}:
+            valid_status = resolved == total
+        elif claim_status is ClaimStatus.PARTIALLY_SUPPORTED:
+            valid_status = 0 < resolved < total
+        else:
+            valid_status = resolved == 0
+        if not valid_status:
+            raise ReconstructionError(
+                f"{label}.status does not match its resolved population"
+            )
+    entity_claims = {claim for claim, _ in entity_counts}
     if entity_claims != seen_claims:
         raise ReconstructionError(
-            f"claim coverage differs: missing={sorted(entity_claims - seen_claims)}, "
-            f"extra={sorted(seen_claims - entity_claims)}"
+            f"claim coverage differs: missing={sorted(entity_claims - seen_claims)}, extra={sorted(seen_claims - entity_claims)}"
         )
-    _sequence(root["integrity_issues"], "integrity_issues")
+    for issue_index, issue in enumerate(
+        _sequence(root["integrity_issues"], "integrity_issues")
+    ):
+        if not isinstance(issue, str) or not issue:
+            raise ReconstructionError(
+                f"integrity_issues[{issue_index}] must be a non-empty string"
+            )
     return dict(root)
 
 
