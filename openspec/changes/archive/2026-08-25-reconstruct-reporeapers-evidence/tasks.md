@@ -94,10 +94,14 @@
 - [x] 9.4 Add focused tests for exact metric keys, value kinds, values, provenance, estimate semantics,
       outcome partitions, and generated macro names. Prove that changing the audit reason text does not
       change the metrics.
-- [ ] 9.5 Run the focused RQ6 and reconstruction report tests. Then run the complete analysis test, Ruff,
+- [x] 9.5 Run the focused RQ6 and reconstruction report tests. Then run the complete analysis test, Ruff,
       and ty checks, regenerate all registered reports and provenance, and run repository pre-commit
       hooks.
-- [ ] 9.6 Commit the report implementation and audit-schema update as one coherent unit. Commit the
+- [x] 9.6 Commit the report implementation and audit-schema update as one coherent unit. Commit the
       regenerated report artifacts as a separate coherent unit. Use `personal_commit` for both.
-- [ ] 9.7 Validate this change and both delta specs with strict OpenSpec validation. Sync the delta specs
+      Verification: implementation commit `d1740e87306f876a22a865db51bf5c9fd298af6d`; generated-report
+      commit `e9cf56d5646cca4782c1e52c544dc0cfadd1c837`; 65 focused tests and 560 complete analysis
+      tests pass; Ruff, ty, and repository pre-commit hooks pass. Complete report generation used
+      `md,figures,latex,csv`; provenance records the clean implementation revision.
+- [x] 9.7 Validate this change and both delta specs with strict OpenSpec validation. Sync the delta specs
       into `openspec/specs/`, archive the change, and confirm strict validation after the archive.
