@@ -1,11 +1,11 @@
 ## 1. Lock the Evidence Boundary
 
-- [ ] 1.1 Define the versioned evidence-manifest schema, logical source roles, digest rules, and compatibility checks.
-- [ ] 1.2 Add the reconstruction status vocabulary and entity-identity contract.
-- [ ] 1.3 Add a guard that refuses pipeline, project, task, build, and retry execution from reconstruction commands.
-- [ ] 1.4 Add focused tests that prove reconstruction cannot invoke Teralizer, corpus runners, Gradle, Maven, JPF, or PIT.
-- [ ] 1.5 Add validation that current RepoReapers quantities resolve only to `postgres_reporeapers_rq6_v7`.
-- [ ] 1.6 Add validation that historical databases cannot become corpus aliases or version 7 population inputs.
+- [x] 1.1 Define the versioned evidence-manifest schema, logical source roles, digest rules, and compatibility checks.
+- [x] 1.2 Add the reconstruction status vocabulary and entity-identity contract.
+- [x] 1.3 Add a guard that refuses pipeline, project, task, build, and retry execution from reconstruction commands.
+- [x] 1.4 Add focused tests that prove reconstruction cannot invoke Teralizer, corpus runners, Gradle, Maven, JPF, or PIT.
+- [x] 1.5 Add validation that current RepoReapers quantities resolve only to `postgres_reporeapers_rq6_v7`.
+- [x] 1.6 Add validation that historical databases cannot become corpus aliases or version 7 population inputs.
 
 ## 2. Inventory the Collected Evidence
 
