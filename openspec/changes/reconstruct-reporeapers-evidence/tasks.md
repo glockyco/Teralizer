@@ -31,14 +31,14 @@
 
 ## 4. Reconstruct `NoAssertions` Evidence
 
-- [ ] 4.1 Freeze the version 7 eligible `NO_ASSERTIONS` population and its stable identity digest.
-- [ ] 4.2 Define labels for genuine absence, reachable helper assertion, unsupported oracle, incompatible source, and unresolved evidence.
-- [ ] 4.3 Generate source-review packets with the exact test source, reachable collected context, and existing assertion evidence.
-- [ ] 4.4 Select and record an exhaustive or statistically justified stratified review design before labeling.
-- [ ] 4.5 Complete manual labels and record source locations, call paths, reviewer state, and rationale.
-- [ ] 4.6 Resolve reviewer disagreements without forcing ambiguous cases into true-positive or false-positive counts.
-- [ ] 4.7 Emit the normalized `NoAssertions` audit input with exact counts or a labeled sample estimate and confidence interval.
-- [ ] 4.8 Verify that resolved plus unresolved plus incompatible entities reconcile to the frozen population.
+- [x] 4.1 Freeze the version 7 eligible `NO_ASSERTIONS` population and its stable identity digest.
+- [x] 4.2 Define labels for genuine absence, reachable helper assertion, unsupported oracle, incompatible source, and unresolved evidence.
+- [x] 4.3 Generate source-review packets with the exact test source, reachable collected context, and existing assertion evidence.
+- [x] 4.4 Select and record an exhaustive or statistically justified stratified review design before labeling.
+- [x] 4.5 Complete manual labels and record source locations, call paths, reviewer state, and rationale.
+- [x] 4.6 Resolve reviewer disagreements without forcing ambiguous cases into true-positive or false-positive counts.
+- [x] 4.7 Emit the normalized `NoAssertions` audit input with exact counts or a labeled sample estimate and confidence interval.
+- [x] 4.8 Verify that resolved plus unresolved plus incompatible entities reconcile to the frozen population.
 
 ## 5. Reconstruct Assertion-to-MUT Evidence
 

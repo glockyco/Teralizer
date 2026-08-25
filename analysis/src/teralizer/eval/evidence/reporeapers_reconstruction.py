@@ -698,6 +698,7 @@ def validate_audit(document: object) -> dict[str, object]:
                 "population_sha256",
                 "resolved",
                 "unresolved",
+                "unreviewed_population",
                 "incompatible",
                 "total",
                 "method",
@@ -723,8 +724,13 @@ def validate_audit(document: object) -> dict[str, object]:
             )
         resolved = _integer(claim, "resolved", label)
         unresolved = _integer(claim, "unresolved", label)
+        unreviewed_population = _integer(claim, "unreviewed_population", label)
         incompatible = _integer(claim, "incompatible", label)
         total = _integer(claim, "total", label)
+        if unreviewed_population > unresolved:
+            raise ReconstructionError(
+                f"{label}.unreviewed_population exceeds unresolved"
+            )
         _string(claim, "method", label)
         _string(claim, "reason", label)
         actual = {
@@ -738,14 +744,18 @@ def validate_audit(document: object) -> dict[str, object]:
                 (name, EntityStatus.INCOMPATIBLE.value)
             ],
         }
-        expected = {
+        expected_entities = {
             EntityStatus.RESOLVED.value: resolved,
-            EntityStatus.UNRESOLVED.value: unresolved,
+            EntityStatus.UNRESOLVED.value: unresolved - unreviewed_population,
             EntityStatus.INCOMPATIBLE.value: incompatible,
         }
-        if expected != actual or total != sum(actual.values()):
+        if expected_entities != actual or total != (
+            resolved + unresolved + incompatible
+        ):
             raise ReconstructionError(
-                f"{label} does not reconcile: expected={expected}, actual={actual}, total={total}"
+                f"{label} does not reconcile: expected={expected_entities}, "
+                f"actual={actual}, total={total}, "
+                f"unreviewed_population={unreviewed_population}"
             )
         if claim_status in {ClaimStatus.SUPPORTED, ClaimStatus.CONTRADICTED}:
             valid_status = resolved == total

@@ -6,6 +6,7 @@ import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path, PurePosixPath
 
 from sqlalchemy import text
@@ -29,6 +30,35 @@ _REPO_ROOT = Path(__file__).resolve().parents[5]
 
 class PopulationError(ValueError):
     """A query result cannot identify a reconstruction population."""
+
+
+class NoAssertionsLabel(StrEnum):
+    """Closed outcomes for review of a NoAssertionsFilter rejection."""
+
+    GENUINE_ABSENCE = "genuine-absence"
+    REACHABLE_HELPER_ASSERTION = "reachable-helper-assertion"
+    UNSUPPORTED_ORACLE = "unsupported-oracle"
+    INCOMPATIBLE_SOURCE = "incompatible-source"
+    UNRESOLVED_EVIDENCE = "unresolved-evidence"
+
+
+NO_ASSERTIONS_LABEL_STATUSES = {
+    NoAssertionsLabel.GENUINE_ABSENCE.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    NoAssertionsLabel.REACHABLE_HELPER_ASSERTION.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    NoAssertionsLabel.UNSUPPORTED_ORACLE.value: (
+        reporeapers_reconstruction.EntityStatus.RESOLVED
+    ),
+    NoAssertionsLabel.INCOMPATIBLE_SOURCE.value: (
+        reporeapers_reconstruction.EntityStatus.INCOMPATIBLE
+    ),
+    NoAssertionsLabel.UNRESOLVED_EVIDENCE.value: (
+        reporeapers_reconstruction.EntityStatus.UNRESOLVED
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -155,6 +185,7 @@ SELECT
     t.test_method_qualified_name,
     t.test_method_absolute_path,
     t.test_method_relative_path,
+    (SELECT count(*) FROM assertion a WHERE a.test_id = t.id) AS recorded_assertion_count,
     t.exclusion_info AS filter_outcome,
     fr.reason AS filter_reason,
     fr.reason_code AS filter_reason_code,
@@ -177,6 +208,7 @@ ORDER BY
     + (
         "test_method_absolute_path",
         "test_method_relative_path",
+        "recorded_assertion_count",
         "filter_outcome",
         "filter_reason",
         "filter_reason_code",
@@ -315,6 +347,93 @@ def freeze_population(
     }
 
 
+NO_ASSERTIONS_REVIEW_SEED = "reporeapers-v7-no-assertions-review"
+NO_ASSERTIONS_REVIEW_ALLOCATION = {
+    "one-per-project": 4,
+    "two-to-five-per-project": 4,
+    "six-to-twenty-per-project": 8,
+    "more-than-twenty-per-project": 84,
+}
+
+
+def _no_assertions_stratum(project_count: int) -> str:
+    if project_count == 1:
+        return "one-per-project"
+    if project_count <= 5:
+        return "two-to-five-per-project"
+    if project_count <= 20:
+        return "six-to-twenty-per-project"
+    return "more-than-twenty-per-project"
+
+
+def sample_no_assertions(
+    population: Mapping[str, object],
+) -> dict[str, object]:
+    """Select the declared deterministic stratified review sample."""
+    if population.get("claim") != NO_ASSERTIONS.claim:
+        raise PopulationError("no-assertions sampling requires its frozen population")
+    rows = population.get("rows")
+    identity_fields = population.get("identity_fields")
+    if not isinstance(rows, list) or not isinstance(identity_fields, list):
+        raise PopulationError("frozen population lacks rows or identity fields")
+
+    project_counts: dict[str, int] = {}
+    for index, row in enumerate(rows):
+        if not isinstance(row, Mapping):
+            raise PopulationError(f"no-assertions row {index} must be an object")
+        project_root = row.get("project_root")
+        if not isinstance(project_root, str):
+            raise PopulationError(f"no-assertions row {index} lacks project_root")
+        project_counts[project_root] = project_counts.get(project_root, 0) + 1
+
+    strata: dict[str, list[tuple[str, Mapping[str, object]]]] = {
+        name: [] for name in NO_ASSERTIONS_REVIEW_ALLOCATION
+    }
+    for row in rows:
+        project_root = row["project_root"]
+        if not isinstance(project_root, str):
+            raise AssertionError("validated project_root changed type")
+        identity = [row[field] for field in identity_fields]
+        rank = hashlib.sha256(
+            (
+                NO_ASSERTIONS_REVIEW_SEED
+                + json.dumps(identity, ensure_ascii=True, separators=(",", ":"))
+            ).encode()
+        ).hexdigest()
+        stratum = _no_assertions_stratum(project_counts[project_root])
+        strata[stratum].append((rank, row))
+
+    selected: list[dict[str, object]] = []
+    stratum_sizes: dict[str, int] = {}
+    for stratum, requested in NO_ASSERTIONS_REVIEW_ALLOCATION.items():
+        ranked = sorted(strata[stratum], key=lambda item: item[0])
+        if len(ranked) < requested:
+            raise PopulationError(
+                f"no-assertions stratum {stratum} has {len(ranked)} rows; "
+                f"review requires {requested}"
+            )
+        stratum_sizes[stratum] = len(ranked)
+        selected.extend(
+            {
+                "stratum": stratum,
+                "selection_sha256": rank,
+                "identity": {field: row[field] for field in identity_fields},
+            }
+            for rank, row in ranked[:requested]
+        )
+
+    return {
+        "method": "stratified simple random sample without replacement",
+        "seed": NO_ASSERTIONS_REVIEW_SEED,
+        "population_identity_sha256": population.get("identity_sha256"),
+        "population_size": len(rows),
+        "stratum_sizes": stratum_sizes,
+        "allocation": dict(NO_ASSERTIONS_REVIEW_ALLOCATION),
+        "sample_size": len(selected),
+        "selections": selected,
+    }
+
+
 def extract_population(
     connection: Connection, query: PopulationQuery, variant: str
 ) -> dict[str, object]:
@@ -326,6 +445,36 @@ def extract_population(
 
 def _identity(query: PopulationQuery, row: Mapping[str, object]) -> dict[str, object]:
     return {field: row[field] for field in query.identity_fields}
+
+
+def audit_identity(
+    query: PopulationQuery, row: Mapping[str, object]
+) -> dict[str, object]:
+    """Map a population row to the report audit's stable entity identity."""
+    normalized = freeze_population(query, [row])
+    records = normalized["rows"]
+    if not isinstance(records, list) or len(records) != 1:
+        raise PopulationError("audit identity requires exactly one population row")
+    record = records[0]
+    if not isinstance(record, Mapping):
+        raise PopulationError("normalized population row must be an object")
+    level = "Assertion" if query.claim == ASSERTION_TO_MUT.claim else "Test"
+    local_fields = [
+        field
+        for field in query.identity_fields
+        if field not in {"project_root", "project_revision"}
+    ]
+    return {
+        "corpus_id": CORPUS_ID,
+        "project_root": record["project_root"],
+        "project_revision": record["project_revision"],
+        "level": level,
+        "local_key": json.dumps(
+            [record[field] for field in local_fields],
+            ensure_ascii=True,
+            separators=(",", ":"),
+        ),
+    }
 
 
 def build_source_review_packet(

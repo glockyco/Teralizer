@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from pathlib import Path
 from typing import cast
 
@@ -16,6 +17,9 @@ _REVISION = "a" * 40
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _INVENTORY = (
     _REPO_ROOT / "analysis/data/report-inputs/reporeapers-reconstruction-inventory.json"
+)
+_AUDIT = (
+    _REPO_ROOT / "analysis/data/report-inputs/reporeapers-reconstruction-audit.json"
 )
 
 
@@ -104,6 +108,7 @@ def _audit(inventory: dict[str, object]) -> dict[str, object]:
                 "population_sha256": "a" * 64,
                 "resolved": 1,
                 "unresolved": 0,
+                "unreviewed_population": 0,
                 "incompatible": 0,
                 "total": 1,
                 "method": "complete classification",
@@ -116,6 +121,7 @@ def _audit(inventory: dict[str, object]) -> dict[str, object]:
                 "population_sha256": "b" * 64,
                 "resolved": 0,
                 "unresolved": 1,
+                "unreviewed_population": 0,
                 "incompatible": 0,
                 "total": 1,
                 "method": "complete classification",
@@ -155,6 +161,50 @@ def test_shipped_inventory_contains_only_version_seven_evidence():
         if record["source_id"] == "version-seven-facts-record"
     )
     assert cast(dict[str, object], facts["attributes"])["project_count"] == 1161
+
+
+def test_shipped_no_assertions_audit_preserves_sample_results():
+    audit = reconstruction.validate_audit(
+        json.loads(_AUDIT.read_text(encoding="utf-8"))
+    )
+
+    claims = _records(audit, "claims")
+    assert claims == [
+        {
+            "claim": "no-assertions",
+            "status": "partially-supported",
+            "population_definition": (
+                "All 24,266 tests in eligible version 7 projects rejected by "
+                "NoAssertionsFilter."
+            ),
+            "population_sha256": (
+                "c684b2a43326de906b514f9af7732af238702d0f9537e42a100a2fc2be05c485"
+            ),
+            "resolved": 100,
+            "unresolved": 24_166,
+            "unreviewed_population": 24_166,
+            "incompatible": 0,
+            "total": 24_266,
+            "method": (
+                "Deterministic stratified simple random sample without replacement: "
+                "n=100; project-burden strata N=(35,261,1286,22684), "
+                "n=(4,4,8,84); seed reporeapers-v7-no-assertions-review."
+            ),
+            "reason": (
+                "The reviewed sample contradicts the filter interpretation: weighted "
+                "estimate 10.53% genuine absences (95% normal CI 4.38%-16.69%) "
+                "and 89.47% false positives with reachable or unsupported oracles "
+                "(95% CI 83.31%-95.62%). The other 24,166 population members "
+                "remain unreviewed."
+            ),
+        }
+    ]
+    labels = Counter(entity["label"] for entity in _records(audit, "entities"))
+    assert labels == {
+        "genuine-absence": 12,
+        "reachable-helper-assertion": 34,
+        "unsupported-oracle": 54,
+    }
 
 
 def test_inventory_hashes_collected_sources_without_copying_contents(tmp_path: Path):
@@ -375,6 +425,19 @@ def test_audit_rejects_surrogate_identity_fields(tmp_path: Path):
         reconstruction.validate_audit(audit)
 
 
+def test_audit_rejects_unreviewed_population_above_unresolved(tmp_path: Path):
+    source = tmp_path / "project.log"
+    source.write_text("collected", encoding="utf-8")
+    audit = _audit(reconstruction.build_inventory(_inventory_spec(source)))
+    _records(audit, "claims")[0]["unreviewed_population"] = 1
+
+    with pytest.raises(
+        reconstruction.ReconstructionError,
+        match="unreviewed_population exceeds unresolved",
+    ):
+        reconstruction.validate_audit(audit)
+
+
 def test_audit_rejects_unreconciled_claim_summary(tmp_path: Path):
     source = tmp_path / "project.log"
     source.write_text("collected", encoding="utf-8")
@@ -441,6 +504,56 @@ def test_registered_population_queries_emit_no_database_surrogate_ids():
         assert "id" not in query.fields
         assert "project_root" in query.identity_fields
         assert "project_revision" in query.identity_fields
+
+
+def _no_assertions_row(project_root: str, index: int) -> dict[str, object]:
+    method = f"ExampleTest#works{index}"
+    return {
+        "project_root": project_root,
+        "project_revision": _REVISION,
+        "test_file_path": f"{project_root}/src/test/ExampleTest.java",
+        "test_class_qualified_name": "ExampleTest",
+        "test_method_qualified_name": method,
+        "test_method_absolute_path": f"#method[signature=works{index}()]",
+        "test_method_relative_path": f"#method[signature=works{index}()]",
+        "recorded_assertion_count": 0,
+        "filter_outcome": "NO_ASSERTIONS",
+        "filter_reason": f"No assertions found in test: {method}",
+        "filter_reason_code": "NO_ASSERTIONS",
+        "filter_detail": None,
+    }
+
+
+def test_no_assertions_sample_is_deterministic_and_stratified():
+    rows = [_no_assertions_row(f"projects/single-{index}", 0) for index in range(8)]
+    rows += [
+        _no_assertions_row(f"projects/small-{project}", index)
+        for project in range(2)
+        for index in range(5)
+    ]
+    rows += [
+        _no_assertions_row(f"projects/medium-{project}", index)
+        for project in range(2)
+        for index in range(20)
+    ]
+    rows += [
+        _no_assertions_row(f"projects/large-{project}", index)
+        for project in range(2)
+        for index in range(100)
+    ]
+    population = populations.freeze_population(populations.NO_ASSERTIONS, rows)
+
+    first = populations.sample_no_assertions(population)
+    second = populations.sample_no_assertions(population)
+
+    assert first == second
+    assert first["sample_size"] == 100
+    assert first["allocation"] == populations.NO_ASSERTIONS_REVIEW_ALLOCATION
+    selections = _records(first, "selections")
+    assert (
+        len({json.dumps(item["identity"], sort_keys=True) for item in selections})
+        == 100
+    )
 
 
 def _source_query() -> populations.PopulationQuery:
