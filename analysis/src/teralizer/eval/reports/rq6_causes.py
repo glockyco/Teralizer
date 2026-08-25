@@ -302,6 +302,7 @@ def _reconstruction_summary_table(
             ColumnSpec("Status", "claim_status", kind=ValueKind.TEXT),
             ColumnSpec("Resolved", "resolved", kind=ValueKind.COUNT),
             ColumnSpec("Unresolved", "unresolved", kind=ValueKind.COUNT),
+            ColumnSpec("Unreviewed", "unreviewed_population", kind=ValueKind.COUNT),
             ColumnSpec("Incompatible", "incompatible", kind=ValueKind.COUNT),
             ColumnSpec("Total", "total", kind=ValueKind.COUNT),
             ColumnSpec("Method", "method", kind=ValueKind.TEXT),

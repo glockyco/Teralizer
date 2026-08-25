@@ -112,6 +112,9 @@ def test_rq6_publishes_reconstructed_evidence_without_exact_rates(rq6_report):
     claims = summary.df.set_index("claim_key")
     assert claims.loc["no-assertions", "resolved"] == 100
     assert claims.loc["no-assertions", "unresolved"] == 24_166
+    assert claims.loc["no-assertions", "unreviewed_population"] == 24_166
+    assert claims.loc["assertion-to-mut", "unreviewed_population"] == 180_448
+    assert claims.loc["output-directories", "unreviewed_population"] == 0
     assert "10.53% genuine absences" in claims.loc["no-assertions", "finding"]
     assert "95% normal CI" in claims.loc["no-assertions", "finding"]
     assert claims.loc["output-directories", "incompatible"] == 3
