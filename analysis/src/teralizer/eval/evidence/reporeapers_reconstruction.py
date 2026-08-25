@@ -12,10 +12,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
-from typing import cast
 
 from teralizer import corpora
-from teralizer.eval.evidence.project_sources import write_atomic
+from teralizer.eval.evidence import write_atomic
 
 SCHEMA_VERSION = 1
 CANONICAL_CORPUS_ID = "real-world"
@@ -44,6 +43,7 @@ class ConfidenceTier(StrEnum):
 
 class SourceRole(StrEnum):
     DATABASE_EXPORT = "database-export"
+    FACTS_RECORD = "facts-record"
     PROJECT_LOGS = "project-logs"
     PROJECT_CHECKOUT = "project-checkout"
     RUN_ROOT = "run-root"
@@ -88,10 +88,13 @@ class EntityIdentity:
 class SourceSpec:
     """One collected source to inventory without copying its contents."""
 
+    source_id: str
     role: SourceRole
     path: Path
     configured_path: str
-    producer_revision: str
+    producer_revisions: tuple[str, ...]
+    expected_paths: tuple[str, ...]
+    attributes: Mapping[str, str | int | bool | None]
 
     @classmethod
     def parse(cls, raw: object, index: int) -> SourceSpec:
@@ -99,9 +102,18 @@ class SourceSpec:
         item = _mapping(raw, label)
         _exact_keys(
             item,
-            {"role", "path", "configured_path", "producer_revision"},
+            {
+                "source_id",
+                "role",
+                "path",
+                "configured_path",
+                "producer_revisions",
+                "expected_paths",
+                "attributes",
+            },
             label,
         )
+        source_id = _string(item, "source_id", label)
         try:
             role = SourceRole(_string(item, "role", label))
         except ValueError as error:
@@ -114,26 +126,80 @@ class SourceSpec:
         configured_path = _string(item, "configured_path", label)
         if not PurePosixPath(configured_path).is_absolute():
             raise ReconstructionError(f"{label}.configured_path must be absolute")
-        producer_revision = _string(item, "producer_revision", label)
-        if len(producer_revision) != 40 or any(
-            character not in "0123456789abcdef" for character in producer_revision
-        ):
-            raise ReconstructionError(
-                f"{label}.producer_revision must be a lowercase Git commit"
+        producer_revisions = _git_revisions(
+            item["producer_revisions"], f"{label}.producer_revisions"
+        )
+        expected_paths = tuple(
+            _expected_path(value, f"{label}.expected_paths[{path_index}]")
+            for path_index, value in enumerate(
+                _sequence(item["expected_paths"], f"{label}.expected_paths")
             )
-        return cls(role, path, configured_path, producer_revision)
+        )
+        if len(expected_paths) != len(set(expected_paths)):
+            raise ReconstructionError(f"{label}.expected_paths contains duplicates")
+        attributes = _attributes(item["attributes"], f"{label}.attributes")
+        return cls(
+            source_id,
+            role,
+            path,
+            configured_path,
+            producer_revisions,
+            expected_paths,
+            attributes,
+        )
 
 
 def _mapping(value: object, label: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
         raise ReconstructionError(f"{label} must be an object")
-    return cast(Mapping[str, object], value)
+    return value
 
 
 def _sequence(value: object, label: str) -> Sequence[object]:
     if not isinstance(value, list):
         raise ReconstructionError(f"{label} must be an array")
-    return cast(Sequence[object], value)
+    return value
+
+
+def _git_revisions(value: object, label: str) -> tuple[str, ...]:
+    raw_revisions = _sequence(value, label)
+    if not raw_revisions:
+        raise ReconstructionError(f"{label} must contain at least one Git commit")
+    revisions: list[str] = []
+    for index, revision in enumerate(raw_revisions):
+        if (
+            not isinstance(revision, str)
+            or len(revision) != 40
+            or any(character not in "0123456789abcdef" for character in revision)
+        ):
+            raise ReconstructionError(
+                f"{label}[{index}] must be a lowercase Git commit"
+            )
+        revisions.append(revision)
+    if len(revisions) != len(set(revisions)):
+        raise ReconstructionError(f"{label} contains duplicates")
+    return tuple(revisions)
+
+
+def _attributes(value: object, label: str) -> dict[str, str | int | bool | None]:
+    attributes = _mapping(value, label)
+    result: dict[str, str | int | bool | None] = {}
+    for key, item in sorted(attributes.items()):
+        if not isinstance(key, str) or not key:
+            raise ReconstructionError(f"{label} keys must be non-empty strings")
+        if item is not None and not isinstance(item, (str, int, bool)):
+            raise ReconstructionError(f"{label}.{key} must be a JSON scalar")
+        result[key] = item
+    return result
+
+
+def _expected_path(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ReconstructionError(f"{label} must be a non-empty string")
+    path = PurePosixPath(value)
+    if path.is_absolute() or ".." in path.parts:
+        raise ReconstructionError(f"{label} must be source-relative")
+    return value
 
 
 def _string(item: Mapping[str, object], key: str, label: str) -> str:
@@ -147,6 +213,13 @@ def _integer(item: Mapping[str, object], key: str, label: str) -> int:
     value = item.get(key)
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
         raise ReconstructionError(f"{label}.{key} must be a non-negative integer")
+    return value
+
+
+def _boolean(item: Mapping[str, object], key: str, label: str) -> bool:
+    value = item.get(key)
+    if not isinstance(value, bool):
+        raise ReconstructionError(f"{label}.{key} must be a boolean")
     return value
 
 
@@ -177,27 +250,30 @@ def _tree_entries(root: Path) -> Iterable[tuple[str, Path]]:
             yield path.relative_to(root).as_posix(), path
 
 
-def _digest_source(path: Path) -> tuple[str, int, int, str]:
+def _digest_source(path: Path) -> tuple[str, int, int, str, tuple[str, ...]]:
     if not path.exists():
         raise ReconstructionError(f"collected source is missing: {path}")
     if path.is_file():
-        return _digest_file(path), 1, path.stat().st_size, "file"
+        return _digest_file(path), 1, path.stat().st_size, "file", (".",)
     if not path.is_dir():
         raise ReconstructionError(f"collected source has unsupported type: {path}")
 
     digest = hashlib.sha256()
     file_count = 0
     total_bytes = 0
+    observed_paths: list[str] = []
     for relative, member in _tree_entries(path):
         mode = member.lstat().st_mode
         if stat.S_ISLNK(mode):
             kind = "symlink"
             payload = os.readlink(member).encode()
+            observed_paths.append(relative)
         elif stat.S_ISREG(mode):
             kind = "file"
             payload = bytes.fromhex(_digest_file(member))
             file_count += 1
             total_bytes += member.stat().st_size
+            observed_paths.append(relative)
         elif stat.S_ISDIR(mode):
             kind = "directory"
             payload = b""
@@ -209,7 +285,13 @@ def _digest_source(path: Path) -> tuple[str, int, int, str]:
         digest.update(b"\0")
         digest.update(payload)
         digest.update(b"\0")
-    return digest.hexdigest(), file_count, total_bytes, "directory"
+    return (
+        digest.hexdigest(),
+        file_count,
+        total_bytes,
+        "directory",
+        tuple(observed_paths),
+    )
 
 
 def validate_canonical_registry(path: Path = corpora.REGISTRY_PATH) -> None:
@@ -248,7 +330,7 @@ def build_inventory(specification: object) -> dict[str, object]:
     population = _mapping(root["population"], "population")
     _exact_keys(
         population,
-        {"corpus_id", "database", "variant", "producer_revision"},
+        {"corpus_id", "database", "variant", "producer_revisions"},
         "population",
     )
     if _string(population, "corpus_id", "population") != CANONICAL_CORPUS_ID:
@@ -261,37 +343,79 @@ def build_inventory(specification: object) -> dict[str, object]:
             "inventory population must use the registered real-world database"
         )
     _string(population, "variant", "population")
-    _string(population, "producer_revision", "population")
+    _git_revisions(population["producer_revisions"], "population.producer_revisions")
 
     source_specs = tuple(
         SourceSpec.parse(raw, index)
         for index, raw in enumerate(_sequence(root["sources"], "sources"))
     )
-    role_counts = Counter(spec.role for spec in source_specs)
-    duplicates = sorted(role.value for role, count in role_counts.items() if count > 1)
-    if duplicates:
-        raise ReconstructionError(f"duplicate collected-source roles: {duplicates}")
+    id_counts = Counter(spec.source_id for spec in source_specs)
+    duplicate_ids = sorted(
+        source_id for source_id, count in id_counts.items() if count > 1
+    )
+    if duplicate_ids:
+        raise ReconstructionError(f"duplicate collected-source ids: {duplicate_ids}")
 
+    issues: list[str] = []
+    location_counts = Counter(str(spec.path) for spec in source_specs)
+    for location, count in sorted(location_counts.items()):
+        if count > 1:
+            issues.append(f"duplicate collected-source location: {location}")
+
+    population_revisions = set(
+        _git_revisions(
+            population["producer_revisions"], "population.producer_revisions"
+        )
+    )
     source_records: list[dict[str, object]] = []
     for source in source_specs:
-        sha256, file_count, total_bytes, kind = _digest_source(source.path)
+        if not set(source.producer_revisions).issubset(population_revisions):
+            issues.append(
+                f"{source.source_id}: producer revisions differ from the population"
+            )
+        try:
+            sha256, file_count, total_bytes, kind, observed_paths = _digest_source(
+                source.path
+            )
+            available = True
+        except ReconstructionError as error:
+            sha256 = None
+            file_count = 0
+            total_bytes = 0
+            kind = "missing"
+            observed_paths = ()
+            available = False
+            issues.append(f"{source.source_id}: {error}")
+        if source.expected_paths:
+            expected = set(source.expected_paths)
+            observed = set(observed_paths)
+            missing = sorted(expected - observed)
+            unexpected = sorted(observed - expected)
+            if missing:
+                issues.append(f"{source.source_id}: missing paths: {missing}")
+            if unexpected:
+                issues.append(f"{source.source_id}: unexpected paths: {unexpected}")
         source_records.append(
             {
+                "source_id": source.source_id,
                 "role": source.role.value,
                 "location": str(source.path),
                 "configured_path": source.configured_path,
-                "producer_revision": source.producer_revision,
+                "producer_revisions": list(source.producer_revisions),
+                "available": available,
                 "kind": kind,
                 "file_count": file_count,
                 "total_bytes": total_bytes,
+                "paths": list(observed_paths),
                 "sha256": sha256,
+                "attributes": dict(source.attributes),
             }
         )
     inventory = {
         "schema_version": SCHEMA_VERSION,
         "population": dict(population),
         "sources": source_records,
-        "integrity_issues": [],
+        "integrity_issues": issues,
     }
     validate_inventory(inventory)
     return inventory
@@ -309,7 +433,7 @@ def validate_inventory(document: object) -> dict[str, object]:
     population = _mapping(root["population"], "population")
     _exact_keys(
         population,
-        {"corpus_id", "database", "variant", "producer_revision"},
+        {"corpus_id", "database", "variant", "producer_revisions"},
         "population",
     )
     if _string(population, "corpus_id", "population") != CANONICAL_CORPUS_ID:
@@ -320,42 +444,67 @@ def validate_inventory(document: object) -> dict[str, object]:
             "inventory database is not the registered real-world corpus"
         )
     _string(population, "variant", "population")
-    _string(population, "producer_revision", "population")
+    _git_revisions(population["producer_revisions"], "population.producer_revisions")
 
-    roles: set[str] = set()
+    source_ids: set[str] = set()
     for index, raw in enumerate(_sequence(root["sources"], "sources")):
         label = f"sources[{index}]"
         source = _mapping(raw, label)
         _exact_keys(
             source,
             {
+                "source_id",
                 "role",
                 "location",
                 "configured_path",
-                "producer_revision",
+                "producer_revisions",
+                "available",
                 "kind",
                 "file_count",
                 "total_bytes",
+                "paths",
                 "sha256",
+                "attributes",
             },
             label,
         )
+        source_id = _string(source, "source_id", label)
+        if source_id in source_ids:
+            raise ReconstructionError(f"duplicate source id: {source_id}")
+        source_ids.add(source_id)
         role = _string(source, "role", label)
         try:
             SourceRole(role)
         except ValueError as error:
             raise ReconstructionError(f"{label}.role is unknown: {role!r}") from error
-        if role in roles:
-            raise ReconstructionError(f"duplicate source role: {role}")
-        roles.add(role)
-        for key in ("location", "configured_path", "producer_revision", "kind"):
+        for key in ("location", "configured_path", "kind"):
             _string(source, key, label)
+        _git_revisions(source["producer_revisions"], f"{label}.producer_revisions")
+        available = _boolean(source, "available", label)
         _integer(source, "file_count", label)
         _integer(source, "total_bytes", label)
-        sha256 = _string(source, "sha256", label)
-        if len(sha256) != 64 or any(c not in "0123456789abcdef" for c in sha256):
-            raise ReconstructionError(f"{label}.sha256 is not a lowercase SHA-256")
-    _sequence(root["integrity_issues"], "integrity_issues")
+        for path_index, value in enumerate(
+            _sequence(source["paths"], f"{label}.paths")
+        ):
+            _expected_path(value, f"{label}.paths[{path_index}]")
+        _attributes(source["attributes"], f"{label}.attributes")
+        sha256 = source.get("sha256")
+        if available:
+            if (
+                not isinstance(sha256, str)
+                or len(sha256) != 64
+                or any(c not in "0123456789abcdef" for c in sha256)
+            ):
+                raise ReconstructionError(f"{label}.sha256 is not a lowercase SHA-256")
+        elif sha256 is not None:
+            raise ReconstructionError(f"{label}.sha256 must be null when unavailable")
+    for issue_index, issue in enumerate(
+        _sequence(root["integrity_issues"], "integrity_issues")
+    ):
+        if not isinstance(issue, str) or not issue:
+            raise ReconstructionError(
+                f"integrity_issues[{issue_index}] must be a non-empty string"
+            )
     return dict(root)
 
 
@@ -370,8 +519,8 @@ def validate_audit(document: object) -> dict[str, object]:
     if root.get("schema_version") != SCHEMA_VERSION:
         raise ReconstructionError(f"audit schema_version must be {SCHEMA_VERSION}")
     inventory = validate_inventory(root["inventory"])
-    source_roles = {
-        cast(str, _mapping(item, "source")["role"])
+    source_ids = {
+        _string(_mapping(item, "source"), "source_id", "source")
         for item in _sequence(inventory["sources"], "inventory.sources")
     }
 
@@ -388,7 +537,7 @@ def validate_audit(document: object) -> dict[str, object]:
                 "status",
                 "confidence",
                 "reason",
-                "source_roles",
+                "source_ids",
                 "filter_outcome",
                 "reviewer",
             },
@@ -409,17 +558,19 @@ def validate_audit(document: object) -> dict[str, object]:
         _string(entity, "reason", label)
         _string(entity, "filter_outcome", label)
         _string(entity, "reviewer", label)
-        roles = _sequence(entity["source_roles"], f"{label}.source_roles")
-        unknown_roles = sorted(
-            role
-            for role in roles
-            if not isinstance(role, str) or role not in source_roles
-        )
-        if unknown_roles:
+        references = _sequence(entity["source_ids"], f"{label}.source_ids")
+        invalid_references = [
+            reference
+            for reference in references
+            if not isinstance(reference, str) or reference not in source_ids
+        ]
+        if invalid_references:
             raise ReconstructionError(
-                f"{label} cites unknown source roles: {unknown_roles}"
+                f"{label} cites unknown source ids: {invalid_references}"
             )
-        if status is not ReconstructionStatus.EVIDENCE_GAP and not roles:
+        if len(references) != len(set(references)):
+            raise ReconstructionError(f"{label}.source_ids contains duplicates")
+        if status is not ReconstructionStatus.EVIDENCE_GAP and not references:
             raise ReconstructionError(f"{label} requires at least one evidence source")
         claim_counts[(claim, status.value)] += 1
 
@@ -481,6 +632,8 @@ def parser() -> argparse.ArgumentParser:
     inventory = subcommands.add_parser("inventory")
     inventory.add_argument("specification", type=Path)
     inventory.add_argument("output", type=Path)
+    validate_inventory_command = subcommands.add_parser("validate-inventory")
+    validate_inventory_command.add_argument("inventory", type=Path)
     validate = subcommands.add_parser("validate")
     validate.add_argument("audit", type=Path)
     validate_registry = subcommands.add_parser("validate-registry")
@@ -496,6 +649,9 @@ def main(argv: list[str] | None = None) -> None:
         inventory = build_inventory(_load(args.specification))
         write_atomic(args.output, inventory)
         print(args.output)
+    elif args.command == "validate-inventory":
+        validate_inventory(_load(args.inventory))
+        print(args.inventory)
     elif args.command == "validate":
         validate_audit(_load(args.audit))
         print(args.audit)

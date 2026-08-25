@@ -2,9 +2,9 @@
 
 ### Requirement: Retained manual claims use reconstructed audit evidence
 
-A retained RQ6 claim that depends on manual inspection or historical run state SHALL derive from a declared evidence-reconstruction audit input. The report SHALL publish the reconstruction status, resolved population, unresolved population, and source identity with each such claim.
+A retained RQ6 claim that depends on manual inspection or preserved version 7 run state SHALL derive from a declared evidence-reconstruction audit input. The report SHALL publish the reconstruction status, resolved population, unresolved population, and source identity with each such claim.
 
-The report SHALL NOT convert `partially-supported`, `contradicted`, or `evidence-gap` status into a complete-population numeric claim. It SHALL NOT substitute a historical corpus quantity for a version 7 quantity.
+The report SHALL NOT convert `partially-supported`, `contradicted`, or `evidence-gap` status into a complete-population numeric claim.
 
 #### Scenario: Manual classifications cover the complete population
 

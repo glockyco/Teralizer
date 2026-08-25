@@ -12,7 +12,7 @@ from typing import Any, cast
 import pandas as pd
 from sqlalchemy.engine import Connection
 
-from teralizer.eval.evidence.project_sources import write_atomic
+from teralizer.eval.evidence import write_atomic
 from teralizer.jarvis_scoreboard import (
     get_census_by_mut,
     get_census_project_pvc,
