@@ -238,7 +238,12 @@ def build(context: ReportContext) -> RQReport:
         full_width=True,
     )
     filtering = replace(
-        filtering, provenance=capture(_fetch_filtering, query=FILTERING_SQL)
+        filtering,
+        df=filtering.df.assign(
+            row_key=filtering.df["level"] + ":" + filtering.df["filter"]
+        ),
+        row_key="row_key",
+        provenance=capture(_fetch_filtering, query=FILTERING_SQL),
     )
 
     breakdown = build_breakdown_table(

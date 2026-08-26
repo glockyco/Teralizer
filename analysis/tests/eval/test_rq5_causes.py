@@ -7,6 +7,7 @@ from teralizer.eval.entities import variant_ref
 from teralizer.eval.inputs import CorpusInputSpec, resolve_inputs
 from teralizer.eval.model import RQReport
 from teralizer.eval.registry import get
+from teralizer.eval.render.latex import render_table
 import teralizer.eval.reports.rq5_causes  # noqa: F401  (registers "rq5")
 
 
@@ -139,3 +140,8 @@ def test_rq5_filtering_row_order():
         ("Assertion", "ParameterType"),
         ("Assertion", "VoidReturnType"),
     ]
+    assert filtering.row_key == "row_key"
+    assert (
+        "\\label{tabrow:tab-exclusions-filtering:Assertion@3AExcludedTest}"
+        in render_table(filtering)
+    )
