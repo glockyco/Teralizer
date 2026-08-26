@@ -70,7 +70,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "d1740e87306f876a22a865db51bf5c9fd298af6d"
+      "source_commit": "602adc5e886819c8c391c46e4432c172843e182e"
     },
     "tables": {
       "tab-dataset-statistics": {
@@ -2208,7 +2208,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "d1740e87306f876a22a865db51bf5c9fd298af6d"
+      "source_commit": "602adc5e886819c8c391c46e4432c172843e182e"
     },
     "tables": {
       "rq0-breadth-summary": {
@@ -2482,7 +2482,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "d1740e87306f876a22a865db51bf5c9fd298af6d"
+      "source_commit": "602adc5e886819c8c391c46e4432c172843e182e"
     },
     "tables": {
       "tab-detections-per-mutator": {
@@ -2565,7 +2565,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "d1740e87306f876a22a865db51bf5c9fd298af6d"
+      "source_commit": "602adc5e886819c8c391c46e4432c172843e182e"
     },
     "tables": {
       "tab-mutation-detection-comparison": {
@@ -2687,7 +2687,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "d1740e87306f876a22a865db51bf5c9fd298af6d"
+      "source_commit": "602adc5e886819c8c391c46e4432c172843e182e"
     },
     "tables": {
       "tab-lines-per-project": {
@@ -2875,7 +2875,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "d1740e87306f876a22a865db51bf5c9fd298af6d"
+      "source_commit": "602adc5e886819c8c391c46e4432c172843e182e"
     },
     "tables": {
       "evosuite_runtime_analysis": {
@@ -2965,30 +2965,39 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "d1740e87306f876a22a865db51bf5c9fd298af6d"
+      "source_commit": "602adc5e886819c8c391c46e4432c172843e182e"
     },
     "tables": {
       "tab-exclusions-breakdown": {
-        "commit": "e6018372bcf463c65b1e2eb3c92e0c2d6078405c",
+        "commit": "602adc5e886819c8c391c46e4432c172843e182e",
         "dirty": false,
         "module": "teralizer.eval.reports.rq5_causes",
         "qualname": "_fetch_breakdown",
         "query": "\nWITH\n    test_counts AS (\n        SELECT\n            'All' AS strategy,\n            'Test' AS level,\n            CASE\n                WHEN t.is_included THEN 'included'\n                WHEN t.exclusion_info LIKE '%%TestFilteringTask%%'\n                    AND EXISTS (\n                        SELECT 1\n                        FROM filter_result fr\n                        WHERE fr.test_id = t.id\n                          AND fr.decision = 'REJECT'\n                    ) THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM test t\n        JOIN project p ON t.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY bucket\n    ),\n    assertion_counts AS (\n        SELECT\n            'All' AS strategy,\n            'Assertion' AS level,\n            CASE\n                WHEN a.is_included THEN 'included'\n                WHEN a.exclusion_info LIKE '%%TestFilteringTask%%'\n                    AND EXISTS (\n                        SELECT 1\n                        FROM filter_result fr\n                        WHERE fr.assertion_id = a.id\n                          AND fr.decision = 'REJECT'\n                    ) THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM assertion a\n        JOIN test t ON a.test_id = t.id\n        JOIN project p ON t.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY bucket\n    ),\n    generalization_counts AS (\n        SELECT\n            g.variant AS strategy,\n            'Generalization' AS level,\n            CASE\n                WHEN g.is_included THEN 'included'\n                WHEN g.exclusion_info LIKE '%%TestFilteringTask%%' THEN 'filtering'\n                ELSE 'failures'\n            END AS bucket,\n            count(*) AS item_count\n        FROM generalization g\n        JOIN project p ON g.project_id = p.id\n        WHERE p.use_test_generalization\n        GROUP BY g.variant, bucket\n    ),\n    combined AS (\n        SELECT strategy, level, bucket, item_count FROM test_counts\n        UNION ALL\n        SELECT strategy, level, bucket, item_count FROM assertion_counts\n        UNION ALL\n        SELECT strategy, level, bucket, item_count FROM generalization_counts\n    ),\n    report_rows AS (\n        SELECT 'All' AS strategy, 'Test' AS level\n        UNION ALL\n        SELECT 'All' AS strategy, 'Assertion' AS level\n        UNION ALL\n        SELECT DISTINCT g.variant AS strategy, 'Generalization' AS level\n        FROM generalization g\n        JOIN project p ON g.project_id = p.id\n        WHERE p.use_test_generalization\n    )\nSELECT\n    report_rows.strategy,\n    report_rows.level,\n    coalesce(sum(item_count), 0)::bigint AS total,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'included'), 0)::bigint AS included,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'filtering'), 0)::bigint AS filtering,\n    coalesce(sum(item_count) FILTER (WHERE bucket = 'failures'), 0)::bigint AS failures\nFROM report_rows\nLEFT JOIN combined\n    ON combined.strategy = report_rows.strategy\n   AND combined.level = report_rows.level\nGROUP BY report_rows.strategy, report_rows.level\nORDER BY\n    CASE report_rows.level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    report_rows.strategy\n",
         "row_key": null,
         "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq5_causes.py#L216",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/602adc5e886819c8c391c46e4432c172843e182e/analysis/src/teralizer/eval/reports/rq5_causes.py#L216",
         "value": "Exclusion results for tests, assertions, and generalizations in the {entity.dataset.commons} and {entity.dataset.eqbench_es} projects.",
         "version": "0.1.0"
       },
       "tab-exclusions-filtering": {
-        "commit": "e6018372bcf463c65b1e2eb3c92e0c2d6078405c",
+        "commit": "602adc5e886819c8c391c46e4432c172843e182e",
         "dirty": false,
         "module": "teralizer.eval.reports.rq5_causes",
         "qualname": "_fetch_filtering",
         "query": "\nWITH\n    base_data AS (\n        SELECT\n            CASE\n                WHEN fr.test_id IS NOT NULL THEN 'Test'\n                WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'\n                WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'\n            END AS level,\n            substring(fr.filter_name from 'filter\\.(\\w+)Filter$') AS filter_name,\n            fr.decision,\n            count(*) AS count\n        FROM filter_result fr\n        JOIN project p ON fr.project_id = p.id\n        LEFT JOIN generalization g ON fr.generalization_id = g.id\n        WHERE p.use_test_generalization\n        GROUP BY\n            g.variant,\n            fr.filter_name,\n            CASE\n                WHEN fr.test_id IS NOT NULL THEN 'Test'\n                WHEN fr.assertion_id IS NOT NULL THEN 'Assertion'\n                WHEN fr.generalization_id IS NOT NULL THEN 'Generalization'\n            END,\n            fr.decision\n    ),\n    pivoted AS (\n        SELECT\n            level,\n            filter_name,\n            sum(count)::bigint AS total,\n            sum(CASE WHEN decision = 'ACCEPT' THEN count ELSE 0 END)::bigint AS accept,\n            sum(CASE WHEN decision = 'DEFER' THEN count ELSE 0 END)::bigint AS defer,\n            sum(CASE WHEN decision = 'REJECT' THEN count ELSE 0 END)::bigint AS reject\n        FROM base_data\n        GROUP BY level, filter_name\n    )\nSELECT\n    level,\n    CASE\n        WHEN filter_name = 'UnsupportedAssertion' THEN 'AssertionType'\n        ELSE filter_name\n    END AS filter,\n    total,\n    accept,\n    defer,\n    reject\nFROM pivoted\nWHERE reject > 0\n  AND level IN ('Test', 'Assertion')\nORDER BY\n    CASE level\n        WHEN 'Test' THEN 1\n        WHEN 'Assertion' THEN 2\n        WHEN 'Generalization' THEN 3\n    END,\n    filter\n",
-        "row_key": null,
-        "row_keys": [],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/e6018372bcf463c65b1e2eb3c92e0c2d6078405c/analysis/src/teralizer/eval/reports/rq5_causes.py#L206",
+        "row_key": "row_key",
+        "row_keys": [
+          "Test:NonPassingTest",
+          "Test:TestType",
+          "Test:NoAssertions",
+          "Assertion:AssertionType",
+          "Assertion:ExcludedTest",
+          "Assertion:MissingValue",
+          "Assertion:ParameterType",
+          "Assertion:VoidReturnType"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/602adc5e886819c8c391c46e4432c172843e182e/analysis/src/teralizer/eval/reports/rq5_causes.py#L206",
         "value": "Filtering results for tests and assertions in the {entity.dataset.commons} and {entity.dataset.eqbench_es} projects.",
         "version": "0.1.0"
       }
@@ -4769,7 +4778,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "d1740e87306f876a22a865db51bf5c9fd298af6d"
+      "source_commit": "602adc5e886819c8c391c46e4432c172843e182e"
     },
     "tables": {
       "rq6_exclusion_mechanisms": {
