@@ -6,33 +6,33 @@ _Source database: `postgres_reporeapers_rq6_v7`._
 
 Real-world exclusions separate project-level failures from filtering and downstream test, assertion, and generalization failures.
 
-**Project-level exclusions by stage and cause for the Improved (200 tries) generalization strategy in RepoReapers projects. Internal causes are due to configured resource limits or current limitations of Teralizer. External causes are due to Teralizer's dependencies (i.e., JUnit, Spoon, JPF / SPF, JaCoCo, and PIT). Mixed causes are influenced by both internal and external factors.**
+**Project-level exclusions by stage and cause for the Improved (200 tries) generalization strategy in RepoReapers projects.**
 
-| # | Type | Cause of Project-level Exclusion | Count |
-| --- | --- | --- | --- |
-| Stage 1 + 2 - Project Analysis: 584 projects, 182 inclusions, 402 exclusions, 31.2% inclusion rate |  |  |  |
-| 1 | External | JUnit execution error during test execution | 13 |
-| 2 | External | Spoon execution error during test analysis | 8 |
-| 3 | Internal | JUnit reports not found | 5 |
-| 4 | Internal | timeout exceeded (300 seconds per Original test suite) | 26 |
-| 5 | Mixed | all assertions excluded due to filter rejections | 151 |
-| 6 | Mixed | all assertions excluded due to filter rejections and failures | 105 |
-| 7 | Mixed | all tests excluded due to filter rejections and failures | 94 |
-| Stage 3 - Spec. Extraction: 182 projects, 176 inclusions, 6 exclusions, 96.7% inclusion rate |  |  |  |
-| 8 | External | Spoon execution error during test instrumentation | 5 |
-| 9 | Mixed | all assertions excluded due to earlier filter rejections and new failures | 1 |
-| Stage 4 - Gen. Test Creation: 176 projects, 98 inclusions, 78 exclusions, 55.7% inclusion rate |  |  |  |
-| 10 | Internal | all generalizations excluded due to filter rejections and failures | 78 |
-| Stage 5 - Test Suite Reduction: 98 projects, 85 inclusions, 13 exclusions, 86.7% inclusion rate |  |  |  |
-| 11 | Internal | JaCoCo outputs not found | 1 |
-| 12 | Internal | failed to persist PIT coverage reports | 2 |
-| 13 | Internal | timeout exceeded (3600 seconds during PIT mutation testing) | 4 |
-| 14 | Mixed | unmutated test suite has failing tests | 6 |
-| Overall: 584 projects, 85 inclusions, 499 exclusions, 14.6% inclusion rate |  |  |  |
+| # | Cause of Project-level Exclusion | Count |
+| --- | --- | --- |
+| Stage 1 + 2 - Project Analysis: 584 projects, 182 inclusions, 402 exclusions, 31.2% inclusion rate |  |  |
+| 1 | all assertions excluded due to filter rejections | 151 |
+| 2 | all assertions excluded due to filter rejections and failures | 105 |
+| 3 | all tests excluded due to filter rejections and failures | 94 |
+| 4 | timeout exceeded (300 seconds per Original test suite) | 26 |
+| 5 | JUnit execution error during test execution | 13 |
+| 6 | Spoon execution error during test analysis | 8 |
+| 7 | JUnit reports not found | 5 |
+| Stage 3 - Spec. Extraction: 182 projects, 176 inclusions, 6 exclusions, 96.7% inclusion rate |  |  |
+| 8 | Spoon execution error during test instrumentation | 5 |
+| 9 | all assertions excluded due to earlier filter rejections and new failures | 1 |
+| Stage 4 - Gen. Test Creation: 176 projects, 98 inclusions, 78 exclusions, 55.7% inclusion rate |  |  |
+| 10 | all generalizations excluded due to filter rejections and failures | 78 |
+| Stage 5 - Test Suite Reduction: 98 projects, 85 inclusions, 13 exclusions, 86.7% inclusion rate |  |  |
+| 11 | unmutated test suite has failing tests | 6 |
+| 12 | timeout exceeded (3600 seconds during PIT mutation testing) | 4 |
+| 13 | failed to persist PIT coverage reports | 2 |
+| 14 | JaCoCo outputs not found | 1 |
+| Overall: 584 projects, 85 inclusions, 499 exclusions, 14.6% inclusion rate |  |  |
 
 _Eligible projects: 584. Stage 1 + 2: 584 entering, 182 included (31.2%), 402 excluded. Stage 3: 182 entering, 176 included (96.7%), 6 excluded. Stage 4: 176 entering, 98 included (55.7%), 78 excluded. Stage 5: 98 entering, 85 included (86.7%), 13 excluded. Overall: 85 of 584 included (14.6%)._
 
-source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_funnel.py#L379)
+source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/5fda00831a273a097b626515ada7432601645726/analysis/src/teralizer/eval/reports/_funnel.py#L379)
 
 Filtering results use generalized tests that reach filtering as each dataset's denominator. They do not measure overall success or project applicability.
 

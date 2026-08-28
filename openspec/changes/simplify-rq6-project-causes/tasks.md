@@ -14,8 +14,8 @@
 
 ## 3. Regenerate Publication Artifacts
 
-- [ ] 3.1 Run the registered RQ6 report against its declared pinned corpus and inputs.
-- [ ] 3.2 Inspect generated CSV, TeX, macro, manifest, and provenance diffs; confirm that the taxonomy removal causes every changed artifact.
+- [x] 3.1 Run the registered RQ6 report against its declared pinned corpus and inputs.
+- [x] 3.2 Inspect generated CSV, TeX, macro, manifest, and provenance diffs; confirm that the taxonomy removal causes every changed artifact.
 - [ ] 3.3 Provide the regenerated project-exclusion table and producing revision to the thesis change `restore-rq6-narrative`.
 
 ## 4. Verify and Commit
