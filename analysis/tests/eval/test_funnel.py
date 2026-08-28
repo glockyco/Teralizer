@@ -12,7 +12,6 @@ def test_processing_table_exports_plain_causes_without_ordinals(tmp_path):
         pd.DataFrame(
             {
                 "stage": ["5"],
-                "type": ["External"],
                 "cause": ["PIT execution error during mutation testing"],
                 "count": [2],
             }
@@ -26,11 +25,9 @@ def test_processing_table_exports_plain_causes_without_ordinals(tmp_path):
     assert table.ordinal_header == "#"
     path = render_table(table, tmp_path)
     assert path.read_text(encoding="utf-8").splitlines() == [
-        "row_key,type,cause,count",
-        (
-            "5:PIT execution error during mutation testing,"
-            "External,PIT execution error during mutation testing,2"
-        ),
+        "row_key,cause,count",
+        "5:PIT execution error during mutation testing,"
+        "PIT execution error during mutation testing,2",
     ]
 
 
@@ -70,9 +67,11 @@ def test_funnel_arithmetic_is_consistent(funnel_result):
     assert result.reduction.entering > result.success_count
 
 
-def test_every_cause_row_has_a_known_type(funnel_result):
+def test_every_cause_row_has_stage_and_description(funnel_result):
     result = funnel_result
-    assert set(result.table.df["type"]) <= {"Internal", "External", "Mixed"}
+    assert list(result.table.df.columns) == ["stage", "cause", "count", "row_key"]
+    assert result.table.df["stage"].notna().all()
+    assert result.table.df["cause"].str.len().gt(0).all()
     assert (result.table.df["count"] > 0).all()
 
 

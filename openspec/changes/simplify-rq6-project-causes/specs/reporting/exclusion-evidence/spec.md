@@ -4,7 +4,7 @@
 
 The RQ6 project-level exclusion table SHALL publish each observed exclusion stage, concrete cause description, and count. It SHALL use `Cause of Project-level Exclusion` as the cause-column heading. It SHALL NOT publish an internal, external, or mixed type for a project-level row.
 
-Removing the type SHALL NOT change the row set, recorded stage, cause description, count, corpus, or provenance. Generated metrics, table cells, validation, and downstream publication artifacts SHALL use the reduced schema consistently, with no compatibility alias for the removed type.
+Removing the type SHALL NOT change the row set, recorded stage, cause description, count, corpus, or provenance. The table SHALL retain pipeline-stage order and SHALL order causes within each stage by descending count, then ascending cause text. Generated metrics, table cells, validation, and downstream publication artifacts SHALL use the reduced schema consistently, with no compatibility alias for the removed type.
 
 #### Scenario: Project exclusions are rendered
 
@@ -15,7 +15,8 @@ Removing the type SHALL NOT change the row set, recorded stage, cause descriptio
 #### Scenario: Taxonomy removal changes evidence
 
 - **WHEN** the report migrates from the typed table to the reduced table
-- **THEN** the ordered stage, cause, and count rows equal the corresponding fields in the prior evidence
+- **THEN** the stage, cause, and count rows equal the corresponding field projection from the prior evidence
+- **AND** causes within each stage appear by descending count, then ascending cause text
 - **AND** generation fails if removing the type changes a count or drops a cause row
 
 #### Scenario: A consumer expects the removed type

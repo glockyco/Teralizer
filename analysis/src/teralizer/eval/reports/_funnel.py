@@ -599,33 +599,24 @@ def _fallback_cause(stage: str, project_row: pd.Series) -> Cause:
     if stage == "1 + 2":
         if int(project_row["included_tests"]) == 0:
             return Cause(
-                "1 + 2",
-                "all tests excluded due to filter rejections and failures",
-                "Mixed",
+                "1 + 2", "all tests excluded due to filter rejections and failures"
             )
         if _assertions_all_filtered(project_row):
-            return Cause(
-                "1 + 2", "all assertions excluded due to filter rejections", "Mixed"
-            )
+            return Cause("1 + 2", "all assertions excluded due to filter rejections")
         return Cause(
-            "1 + 2",
-            "all assertions excluded due to filter rejections and failures",
-            "Mixed",
+            "1 + 2", "all assertions excluded due to filter rejections and failures"
         )
     if stage == "3":
         return Cause(
             "3",
             "all assertions excluded due to earlier filter rejections and new failures",
-            "Mixed",
         )
     if stage == "4":
         return Cause(
-            "4",
-            "all generalizations excluded due to filter rejections and failures",
-            "Internal",
+            "4", "all generalizations excluded due to filter rejections and failures"
         )
-    # No guess for reduction. A reduction exclusion the taxonomy cannot type is a defect to
-    # investigate, so it surfaces as UNCODED rather than being labelled plausibly.
+    # Do not guess a reduction cause. An unclassified reduction exclusion is a defect,
+    # so surface it as UNCODED instead of assigning a plausible description.
     return UNCODED
 
 
@@ -675,18 +666,16 @@ def _artifact_present(internal_stage: str, project_row: pd.Series) -> bool:
 
 def _cause_table_df(causes: list[Cause]) -> pd.DataFrame:
     if not causes:
-        return pd.DataFrame(columns=["stage", "type", "cause", "count"])
+        return pd.DataFrame(columns=["stage", "cause", "count"])
     df = pd.DataFrame(
-        [
-            {"stage": cause.stage, "type": cause.type, "cause": cause.cause}
-            for cause in causes
-        ]
+        [{"stage": cause.stage, "cause": cause.cause} for cause in causes]
     )
     return (
-        df.groupby(["stage", "type", "cause"], as_index=False)
+        df.groupby(["stage", "cause"], as_index=False)
         .agg(count=("cause", "size"))
         .sort_values(
-            by=["stage", "type", "cause"],
+            by=["stage", "count", "cause"],
+            ascending=[True, False, True],
             key=lambda column: column.map(STAGE_ORDER).fillna(99)
             if column.name == "stage"
             else column,
@@ -770,18 +759,12 @@ def _build_table(
         key="tab-processing-failures",
         df=display,
         columns=[
-            ColumnSpec("Type", "type"),
             ColumnSpec("Cause of Project-level Exclusion", "cause"),
             ColumnSpec("Count", "count", kind=ValueKind.COUNT, align="r"),
         ],
         caption=(
             "Project-level exclusions by stage and cause for the "
-            "{entity.variant.improved_c} generalization strategy in RepoReapers projects. "
-            "Internal causes are due to configured resource limits or current "
-            "limitations of {entity.tool.teralizer}. External causes are due to "
-            "{entity.tool.teralizer}'s dependencies (i.e., JUnit, Spoon, "
-            "{entity.tool.jpf} / {entity.tool.spf}, {entity.tool.jacoco}, and {entity.tool.pit}). "
-            "Mixed causes are influenced by both internal and external factors."
+            "{entity.variant.improved_c} generalization strategy in RepoReapers projects."
         ),
         label="tab:processing-failures",
         short_caption="RepoReapers exclusions by stage and cause",

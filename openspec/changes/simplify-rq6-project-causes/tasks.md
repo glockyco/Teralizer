@@ -1,16 +1,16 @@
 ## 1. Remove the Project Type Taxonomy
 
-- [ ] 1.1 Capture the current ordered project-exclusion stage, cause, type, and count rows as the migration baseline.
-- [ ] 1.2 Remove the internal/external/mixed type from the project-cause model, classifier, and row construction in the RQ6 report.
-- [ ] 1.3 Remove the type column from the project-exclusion table declaration and retain `Cause of Project-level Exclusion` as the cause heading.
-- [ ] 1.4 Remove type-derived metric identities, validation, and provenance fields without a compatibility alias or placeholder.
-- [ ] 1.5 Search every report, test, publication declaration, and generated-artifact consumer for the retired taxonomy and migrate each caller.
+- [x] 1.1 Capture the current ordered project-exclusion stage, cause, type, and count rows as the migration baseline.
+- [x] 1.2 Remove the internal/external/mixed type from the project-cause model, classifier, and row construction in the RQ6 report.
+- [x] 1.3 Remove the type column from the project-exclusion table declaration and retain `Cause of Project-level Exclusion` as the cause heading.
+- [x] 1.4 Remove type-derived metric identities, validation, and provenance fields without a compatibility alias or placeholder.
+- [x] 1.5 Search every report, test, publication declaration, and generated-artifact consumer for the retired taxonomy and migrate each caller.
 
 ## 2. Defend the Reduced Contract
 
-- [ ] 2.1 Update focused RQ6 report tests to assert the exact ordered stage, cause, and count rows and the absence of a type field.
-- [ ] 2.2 Add a migration assertion that the reduced rows equal the baseline projection and that project funnel reconciliation remains unchanged.
-- [ ] 2.3 Run the focused report tests that cover project exclusion construction, table rendering, metric identities, and reconciliation.
+- [x] 2.1 Update focused RQ6 report tests to assert the complete stage, cause, and count rows, the count-based within-stage order, and the absence of a type field.
+- [x] 2.2 Add a migration assertion that the reduced row set equals the baseline projection and that project funnel reconciliation remains unchanged.
+- [x] 2.3 Run the focused report tests that cover project exclusion construction, table rendering, metric identities, and reconciliation.
 
 ## 3. Regenerate Publication Artifacts
 

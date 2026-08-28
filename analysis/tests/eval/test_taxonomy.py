@@ -31,9 +31,7 @@ def test_execute_tests_original_timeout_vs_error():
         included_tests=5,
         included_assertions=5,
     )
-    assert classify(timeout).type == "Internal"
     assert "timeout" in classify(timeout).cause
-    assert classify(err).type == "External"
     assert "JUnit" in classify(err).cause
 
 
@@ -87,10 +85,9 @@ def test_no_input_spec_reattributes_upstream():
     assert "all tests excluded" in classify(all_tests).cause
     assert classify(all_asserts).stage == "1 + 2"
     assert "all assertions excluded" in classify(all_asserts).cause
-    assert classify(all_asserts).type == "Mixed"
 
 
-def test_spoon_error_external():
+def test_spoon_error_names_failed_operation():
     a = Attribution(
         "BUILD_SPOON_MODEL",
         None,
@@ -98,7 +95,6 @@ def test_spoon_error_external():
         included_tests=0,
         included_assertions=0,
     )
-    assert classify(a).type == "External"
     assert "Spoon" in classify(a).cause
 
 
@@ -125,7 +121,6 @@ def test_no_input_spec_stage3_new_failures():
     c = classify(a)
     assert c.stage == "3"
     assert "new failures" in c.cause
-    assert c.type == "Mixed"
 
 
 def test_stage4_terminal_failures_map_to_single_cause():
@@ -166,7 +161,7 @@ def test_stage4_terminal_failures_map_to_single_cause():
     for a in cases:
         c = classify(a)
         assert c.stage == "4", a
-        assert c.type == "Internal", a
+
         assert "all generalizations excluded" in c.cause, a
 
 
@@ -201,11 +196,9 @@ def test_collect_jacoco_original_not_found_vs_error():
     )
     nf = classify(not_found)
     assert nf.stage == "5"
-    assert nf.type == "Internal"
     assert "JaCoCo" in nf.cause and "not found" in nf.cause
     e = classify(err)
     assert e.stage == "5"
-    assert e.type == "External"
     assert "JaCoCo" in e.cause
 
 
@@ -220,7 +213,6 @@ def test_pit_report_persistence_failure_names_failed_operation():
             artifact_present=True,
         )
     )
-    assert cause.type == "Internal"
     assert cause.cause == "failed to persist PIT coverage reports"
 
 
@@ -235,11 +227,10 @@ def test_pit_listener_failure_is_execution_error():
             artifact_present=False,
         )
     )
-    assert cause.type == "External"
     assert "PIT execution error" in cause.cause
 
 
-def test_restore_original_build_is_stage5_internal():
+def test_restore_original_build_is_stage5():
     a = Attribution(
         "RESTORE_ORIGINAL_BUILD",
         None,
@@ -249,7 +240,6 @@ def test_restore_original_build_is_stage5_internal():
     )
     c = classify(a)
     assert c.stage == "5"
-    assert c.type == "Internal"
     assert "build" in c.cause.lower()
 
 
@@ -263,7 +253,6 @@ def test_build_project_instrumented_is_stage3_spoon():
     )
     c = classify(a)
     assert c.stage == "3"
-    assert c.type == "External"
     assert "Spoon" in c.cause and "instrumentation" in c.cause
 
 
@@ -277,11 +266,11 @@ def test_collect_junit_reports_folds_to_single_cause():
             included_assertions=1,
         )
         c = classify(a)
-        assert c.stage == "1 + 2" and c.type == "Internal"
+        assert c.stage == "1 + 2"
         assert "JUnit reports not found" in c.cause
 
 
-def test_typed_reduction_command_failures_get_named_causes():
+def test_diagnosed_reduction_command_failures_get_named_causes():
     cases = {
         "MINION_DIED": "PIT coverage minion exited abnormally",
         "PLUGIN_UNUSABLE": "PIT plugin version cannot run",
@@ -301,4 +290,3 @@ def test_typed_reduction_command_failures_get_named_causes():
         )
         assert cause.stage == "5"
         assert cause.cause == expected
-        assert cause.type in {"Internal", "External", "Mixed"}

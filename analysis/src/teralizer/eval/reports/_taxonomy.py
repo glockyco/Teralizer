@@ -84,10 +84,9 @@ class Attribution:
 class Cause:
     stage: str
     cause: str
-    type: str  # "Internal" | "External" | "Mixed"
 
 
-UNCODED = Cause(stage="?", cause="UNCODED", type="?")
+UNCODED = Cause(stage="?", cause="UNCODED")
 
 
 def _timeout_cause(seconds: float | None, subject: str) -> str:
@@ -106,65 +105,48 @@ def classify(a: Attribution) -> Cause:
     if a.reason_code == "NO_INPUT_SPEC":
         if a.included_tests == 0:
             return Cause(
-                "1 + 2",
-                "all tests excluded due to filter rejections and failures",
-                "Mixed",
+                "1 + 2", "all tests excluded due to filter rejections and failures"
             )
         if a.included_assertions == 0:
             if a.assertion_exclusions_all_filtered:
                 return Cause(
-                    "1 + 2", "all assertions excluded due to filter rejections", "Mixed"
+                    "1 + 2", "all assertions excluded due to filter rejections"
                 )
             return Cause(
                 "3",
                 "all assertions excluded due to earlier filter rejections and new failures",
-                "Mixed",
             )
         return UNCODED
 
     if a.internal_stage == "EXECUTE_TESTS_ORIGINAL":
         if a.at_ceiling:
             return Cause(
-                "1 + 2",
-                _timeout_cause(a.timeout_seconds, "per original test suite"),
-                "Internal",
+                "1 + 2", _timeout_cause(a.timeout_seconds, "per original test suite")
             )
-        return Cause("1 + 2", "JUnit execution error during test execution", "External")
+        return Cause("1 + 2", "JUnit execution error during test execution")
     if a.internal_stage == "BUILD_SPOON_MODEL":
-        return Cause("1 + 2", "Spoon execution error during test analysis", "External")
+        return Cause("1 + 2", "Spoon execution error during test analysis")
     if a.internal_stage == "COLLECT_JUNIT_REPORTS_ORIGINAL":
-        return Cause("1 + 2", "JUnit reports not found", "Internal")
+        return Cause("1 + 2", "JUnit reports not found")
     if a.internal_stage == "COLLECT_JACOCO_DATA_ORIGINAL":
         if a.artifact_present:
-            return Cause(
-                "5",
-                "JaCoCo execution error during coverage collection",
-                "External",
-            )
-        return Cause("5", "JaCoCo outputs not found", "Internal")
+            return Cause("5", "JaCoCo execution error during coverage collection")
+        return Cause("5", "JaCoCo outputs not found")
 
     if a.internal_stage in {"ADD_JPF_INSTRUMENTATION", "BUILD_PROJECT_INSTRUMENTED"}:
-        return Cause(
-            "3", "Spoon execution error during test instrumentation", "External"
-        )
+        return Cause("3", "Spoon execution error during test instrumentation")
     if a.internal_stage == "EXECUTE_TESTS_INITIAL":
         if a.at_ceiling:
             return Cause(
-                "3",
-                _timeout_cause(a.timeout_seconds, "per initial test suite"),
-                "Internal",
+                "3", _timeout_cause(a.timeout_seconds, "per initial test suite")
             )
-        return Cause(
-            "3", "JUnit execution error during initial test execution", "External"
-        )
+        return Cause("3", "JUnit execution error during initial test execution")
     if a.internal_stage == "COLLECT_JUNIT_REPORTS_INITIAL":
-        return Cause("3", "JUnit reports not found", "Internal")
+        return Cause("3", "JUnit reports not found")
 
     if a.internal_stage == "EXECUTE_TESTS_GENERALIZED" and a.at_ceiling:
         return Cause(
-            "4",
-            _timeout_cause(a.timeout_seconds, "per generalized test suite"),
-            "Internal",
+            "4", _timeout_cause(a.timeout_seconds, "per generalized test suite")
         )
 
     if (
@@ -184,13 +166,11 @@ def classify(a: Attribution) -> Cause:
         )
     ):
         return Cause(
-            "4",
-            "all generalizations excluded due to filter rejections and failures",
-            "Internal",
+            "4", "all generalizations excluded due to filter rejections and failures"
         )
 
     if a.internal_stage in {"RESTORE_ORIGINAL_BUILD", "RESTORE_GENERALIZED_BUILD"}:
-        return Cause("5", "build restore failed", "Internal")
+        return Cause("5", "build restore failed")
 
     if a.internal_stage in {
         "COLLECT_JACOCO_DATA_ORIGINAL",
@@ -201,13 +181,10 @@ def classify(a: Attribution) -> Cause:
             return Cause(
                 "5",
                 _timeout_cause(a.timeout_seconds, "during JaCoCo coverage collection"),
-                "Internal",
             )
         if not a.artifact_present:
-            return Cause("5", "JaCoCo outputs not found", "Internal")
-        return Cause(
-            "5", "JaCoCo execution error during coverage collection", "External"
-        )
+            return Cause("5", "JaCoCo outputs not found")
+        return Cause("5", "JaCoCo execution error during coverage collection")
     if a.internal_stage in {
         "COLLECT_PIT_DATA_ORIGINAL",
         "COLLECT_PIT_DATA_INITIAL",
@@ -215,28 +192,26 @@ def classify(a: Attribution) -> Cause:
     }:
         if a.at_ceiling:
             return Cause(
-                "5",
-                _timeout_cause(a.timeout_seconds, "during PIT mutation testing"),
-                "Internal",
+                "5", _timeout_cause(a.timeout_seconds, "during PIT mutation testing")
             )
         if a.reason_code == "PIT_MAPPING_FAILURE":
-            return Cause("5", "failed to import PIT reports", "Internal")
+            return Cause("5", "failed to import PIT reports")
         if a.reason_code == "PIT_REPORT_PERSISTENCE_FAILURE":
-            return Cause("5", "failed to persist PIT coverage reports", "Internal")
-        # Typed command failures, written by the classifier from the captured Maven output.
-        # Each names what actually went wrong instead of the former catch-all.
+            return Cause("5", "failed to persist PIT coverage reports")
+        # Diagnosed command failures come from the captured Maven output. Each cause
+        # names the failed operation instead of using the former catch-all.
         if a.reason_code == "MINION_DIED":
-            return Cause("5", "PIT coverage minion exited abnormally", "External")
+            return Cause("5", "PIT coverage minion exited abnormally")
         if a.reason_code == "PLUGIN_UNUSABLE":
-            return Cause("5", "PIT plugin version cannot run", "Mixed")
+            return Cause("5", "PIT plugin version cannot run")
         if a.reason_code == "SUITE_NOT_GREEN":
-            return Cause("5", "unmutated test suite has failing tests", "Mixed")
+            return Cause("5", "unmutated test suite has failing tests")
         if a.reason_code == "NO_TESTS_FOUND":
-            return Cause("5", "PIT found no tests to mutate", "External")
+            return Cause("5", "PIT found no tests to mutate")
         if a.reason_code == "LISTENER_BUG":
-            return Cause("5", "PIT execution error during mutation testing", "External")
+            return Cause("5", "PIT execution error during mutation testing")
         if not a.artifact_present:
-            return Cause("5", "PIT reports not found", "Internal")
-        return Cause("5", "PIT execution error during mutation testing", "External")
+            return Cause("5", "PIT reports not found")
+        return Cause("5", "PIT execution error during mutation testing")
 
     return UNCODED

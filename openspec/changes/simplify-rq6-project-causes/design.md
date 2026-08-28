@@ -9,7 +9,7 @@ The sibling thesis change `restore-rq6-narrative` will consume the regenerated t
 **Goals:**
 
 - Remove the inferred type from report construction, validation, metrics, and publication.
-- Preserve the exact ordered stage, cause, and count evidence.
+- Preserve the complete stage, cause, and count evidence.
 - Produce the canonical three-column thesis table through the existing report path.
 
 **Non-Goals:**
@@ -29,11 +29,13 @@ Hiding the column only in the TeX renderer was rejected because other consumers 
 
 ### 2. Preserve concrete cause wording
 
-Keep `Cause of Project-level Exclusion` as the table heading and retain each concrete cause description. `Exclusion condition` was considered, but rejected for this change because the report rows already record specific terminal descriptions and the approved thesis contract retains the established heading. The thesis will avoid interpreting those descriptions as exclusive blame.
+Keep `Cause of Project-level Exclusion` as the table heading and retain each concrete cause description. Retain pipeline-stage order. Within each stage, sort by descending count and then ascending cause text. This factual order foregrounds frequent observations without preserving the removed ownership classes. It does not rank actionability or expected project recovery.
+
+`Exclusion condition` was considered, but rejected for this change because the report rows already record specific terminal descriptions and the approved thesis contract retains the established heading. The thesis will avoid interpreting those descriptions as exclusive blame.
 
 ### 3. Prove evidence invariance
 
-A focused report test will assert the complete ordered stage/cause/count row set and the absence of the type column and type metrics. Existing report reconciliation must continue to prove that project-level counts match the funnel.
+A focused report test will assert the complete stage/cause/count row set, the count-based within-stage order, and the absence of the type column and type metrics. Existing report reconciliation must continue to prove that project-level counts match the funnel.
 
 Generated artifacts will be compared on semantic rows, not raw TeX layout, because removal necessarily changes column widths and markup.
 

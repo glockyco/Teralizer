@@ -249,10 +249,41 @@ def test_rq6_eligibility_partition_is_complete(rq6_report):
     assert selected == initial_gate + no_executed_test + eligible
 
 
-def test_rq6_funnel_causes_are_typed(rq6_report):
+def test_rq6_funnel_causes_use_reduced_schema(rq6_report):
     report = rq6_report
     funnel = next(t for t in report.tables() if "processing-failures" in t.label)
-    assert set(funnel.df["type"]) <= {"Internal", "External", "Mixed"}
+    assert list(funnel.df.columns) == ["stage", "cause", "count", "row_key"]
+    assert [column.source for column in funnel.columns] == ["cause", "count"]
+    assert list(
+        funnel.df[["stage", "cause", "count"]].itertuples(index=False, name=None)
+    ) == [
+        ("1 + 2", "all assertions excluded due to filter rejections", 151),
+        (
+            "1 + 2",
+            "all assertions excluded due to filter rejections and failures",
+            105,
+        ),
+        ("1 + 2", "all tests excluded due to filter rejections and failures", 94),
+        (
+            "1 + 2",
+            "timeout exceeded (300 seconds per {entity.variant.original} test suite)",
+            26,
+        ),
+        ("1 + 2", "JUnit execution error during test execution", 13),
+        ("1 + 2", "Spoon execution error during test analysis", 8),
+        ("1 + 2", "JUnit reports not found", 5),
+        ("3", "Spoon execution error during test instrumentation", 5),
+        (
+            "3",
+            "all assertions excluded due to earlier filter rejections and new failures",
+            1,
+        ),
+        ("4", "all generalizations excluded due to filter rejections and failures", 78),
+        ("5", "unmutated test suite has failing tests", 6),
+        ("5", "timeout exceeded (3600 seconds during PIT mutation testing)", 4),
+        ("5", "failed to persist PIT coverage reports", 2),
+        ("5", "JaCoCo outputs not found", 1),
+    ]
 
 
 def test_rq6_breakdown_conservation(rq6_report):
