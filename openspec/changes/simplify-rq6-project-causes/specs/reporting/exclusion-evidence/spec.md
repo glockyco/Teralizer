@@ -94,6 +94,56 @@ The report SHALL preserve separate corpus identities, inputs, numerators, denomi
 - **THEN** the evidence supports only the bounded finding that filtering includes a similar proportion in both settings
 - **AND** it does not represent overall generalization success, project applicability, a paired-project effect, or a causal estimate
 
+### Requirement: Test-type explanations match recorded declarations
+
+The registered RQ6 report SHALL publish provenance-backed counts for each recorded declaration category rejected by `TestType`. The categories SHALL distinguish unsupported execution models from declaration-resolution failures, and their counts SHALL sum to the `TestType` rejection population.
+
+The thesis SHALL NOT describe an inherited JUnit test resolved to an overridden declaration as an unsupported JUnit test type. It SHALL distinguish that declaration-resolution limitation from unsupported JUnit theories and TestNG tests.
+
+#### Scenario: TestType rejects several declaration mechanisms
+
+- **WHEN** `TestType` rejects JUnit theories, inherited tests resolved to overridden declarations, and TestNG tests
+- **THEN** the report publishes a separate count for each category
+- **AND** the category counts sum to the `TestType` rejection count
+- **AND** the thesis describes each mechanism with its recorded semantics
+
+### Requirement: Oracle-recovery directions preserve distinct mechanisms
+
+Reader-facing improvement prose SHALL distinguish assertion recognition, tested-method identification, and assertion-to-MUT mapping. Support for interprocedural assertions or additional assertion libraries SHALL NOT be presented as a repair for tested-method identification or assertion-to-MUT mapping.
+
+The thesis MAY propose an explicit `does not throw` oracle for tests with no explicit assertion because a passing test already requires no unexpected exception. It SHALL present this as an unimplemented extension, preserve framework-declared expected-exception semantics, and SHALL NOT convert the reconstruction estimate into a measured recovery count.
+
+#### Scenario: A test has no explicit assertion
+
+- **WHEN** future-work prose proposes a `does not throw` oracle
+- **THEN** it identifies the proposal as an extension of the current implementation
+- **AND** it requires expected-exception behavior to remain distinct
+- **AND** it does not claim that the extension recovers a measured number of tests
+
+#### Scenario: An assertion becomes recognizable
+
+- **WHEN** interprocedural analysis or assertion-library support exposes an assertion
+- **THEN** the prose still identifies tested-method identification and assertion-to-MUT mapping as separate required improvements
+- **AND** it does not treat assertion recognition as proof that a sound generalization candidate exists
+
+### Requirement: Stage-local conclusions retain their population boundary
+
+A reader-facing Stage 4 conclusion SHALL name the projects or generalization attempts that reach that boundary. It MAY identify widening refusal as the most frequent recorded Stage 4 exclusion mechanism. It SHALL NOT infer that fixing widening would recover the most projects or preserve the same distribution after earlier-stage support changes.
+
+The established project-completion framing remains survivor-based: a project completes a stage when at least one relevant entity crosses its boundary. Failures of other entities in that project do not negate the completed transition.
+
+#### Scenario: Widening dominates recorded Stage 4 exclusions
+
+- **WHEN** widening refusal has the largest recorded count among Stage 4 exclusion mechanisms
+- **THEN** the thesis scopes the statement to the population that enters Stage 4
+- **AND** it does not rank expected project recovery across stages
+
+#### Scenario: A surviving project also has entity failures
+
+- **WHEN** at least one entity crosses every stage boundary while other entities fail
+- **THEN** the project counts as completing all five stages
+- **AND** the thesis does not require every entity or task in that project to succeed
+
 ## REMOVED Requirements
 
 ### Requirement: Filtering retention is comparable only at the shared filtering boundary

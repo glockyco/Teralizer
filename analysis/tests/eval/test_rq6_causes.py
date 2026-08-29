@@ -542,6 +542,35 @@ def test_rq6_test_filtering_flow_reconciles_persisted_populations(rq6_report):
     )
 
 
+def test_rq6_test_type_categories_partition_rejections(rq6_report):
+    categories = {
+        category: int(rq6_report.metric(f"realworld.test_type.{category}").value)
+        for category in rq6_causes.TEST_TYPE_CATEGORIES
+    }
+    assert categories == {
+        "junit_theory": 163,
+        "overridden_declaration": 35,
+        "testng": 1,
+    }
+
+    filtering = next(
+        table
+        for table in rq6_report.tables()
+        if table.key == "tab-exclusions-filtering-extended"
+    )
+    rejected = int(
+        filtering.df.loc[
+            filtering.df["level"].eq("Test") & filtering.df["filter"].eq("TestType"),
+            "reject",
+        ].iloc[0]
+    )
+    assert sum(categories.values()) == rejected
+
+    tex = render_macros(rq6_report)
+    for key in rq6_causes.TEST_TYPE_CATEGORY_METRIC_KEYS:
+        assert tex.count(f"\\newcommand{{\\{macro_name(key)}}}") == 1
+
+
 def test_rq6_every_assertion_carries_resolver_telemetry(rq6_report):
     # MethodUnderTestResolver.resolve runs unconditionally before the assertion
     # row is stored and MutResolution is total, so a missing observation row is

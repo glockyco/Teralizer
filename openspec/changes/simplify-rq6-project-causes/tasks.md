@@ -104,3 +104,12 @@
 - [x] 14.2 Run the complete analysis tests, Ruff, Ty, repository hooks, and strict OpenSpec validation.
 - [x] 14.3 Build the thesis and run its style checks, then inspect Tables 5.13 through 5.17 and their page boundaries in the rendered PDF.
 - [x] 14.4 Commit the producer and thesis changes as separate atomic commits with causal bodies.
+
+## 15. Reconcile the Reader-facing Semantic Audit
+
+- [x] 15.1 Publish provenance-backed `TestType` declaration-category metrics and prove that they partition the rejection population.
+- [x] 15.2 Correct the RQ6 result and discussion descriptions of JUnit theories, overridden inherited declarations, and TestNG tests.
+- [x] 15.3 Distinguish assertion recognition, tested-method identification, and assertion-to-MUT mapping; bound the proposed `does not throw` extension.
+- [x] 15.4 Scope widening conclusions to the Stage 4 population and remove the invalid attempt-to-validation comparison.
+- [ ] 15.5 Regenerate producer artifacts, publish the new macros, build the thesis, and inspect the affected RQ6 pages.
+- [ ] 15.6 Run complete producer and thesis quality gates, then commit each repository separately with causal bodies.

@@ -20,6 +20,10 @@ The RQ6 project-exclusion table classifies each row as internal, external, or mi
 - Use `included` and `excluded` for filtering outcomes while preserving `Accept`, `Defer`, and `Reject` for individual filter verdicts.
 - Publish provenance-backed test-flow counts that reconcile source screening, pre-filter failures, both filter rounds, overlaps, and intervening failures.
 - Correct the reader-facing `ExcludedTest` mechanism without publishing a diagnostic cause breakdown in the thesis.
+- Publish provenance-backed `TestType` declaration categories that separate unsupported execution models from declaration-resolution failures.
+- Separate oracle recognition, tested-method identification, and assertion-to-MUT mapping in the `NoAssertions` interpretation.
+- Present implicit `does not throw` generation as an extension that must preserve framework exception semantics.
+- Keep widening conclusions within the population that reaches Stage 4, and keep filtering comparisons separate from attempt-to-validation yield.
 - Center the summary-table `Excluded` spanner and give the long filter-detail table an explicit compact-density contract.
 
 ## Capabilities

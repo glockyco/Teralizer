@@ -65,11 +65,68 @@ WHERE NOT EXISTS (
 )
 """
 
+TEST_TYPE_CATEGORY_SQL = f"""
+{_funnel.ELIGIBILITY_CTE}
+SELECT CASE
+           WHEN t.test_annotations_source_code = '@Theory' THEN 'junit_theory'
+           WHEN t.test_annotations_source_code = '@Override' THEN 'overridden_declaration'
+           WHEN t.test_annotation_name = 'TestNG' THEN 'testng'
+           ELSE 'unknown'
+       END AS category,
+       count(DISTINCT t.id) AS count
+FROM filter_result fr
+JOIN eligible_projects ep ON ep.id = fr.project_id
+JOIN test t ON t.id = fr.test_id
+WHERE fr.decision = 'REJECT'
+  AND fr.filter_name LIKE '%%TestTypeFilter'
+GROUP BY category
+ORDER BY category
+"""
+TEST_TYPE_CATEGORIES = (
+    "junit_theory",
+    "overridden_declaration",
+    "testng",
+)
+TEST_TYPE_CATEGORY_METRIC_KEYS = frozenset(
+    f"realworld.test_type.{category}" for category in TEST_TYPE_CATEGORIES
+)
+
 
 def _fetch_assertions_without_resolution(conn: Connection, variant: str) -> int:
     """Assertions whose resolver telemetry was never persisted. Must be zero."""
     df = read_sql(conn, UNRESOLVED_TELEMETRY_SQL, exclusion.query_params(variant))
     return int(df["assertions_without_resolution"].iloc[0])
+
+
+def _fetch_test_type_categories(conn: Connection, variant: str) -> dict[str, int]:
+    """Return the recorded declaration categories rejected by TestType."""
+    df = read_sql(conn, TEST_TYPE_CATEGORY_SQL, exclusion.query_params(variant))
+    categories = {str(row["category"]): int(row["count"]) for _, row in df.iterrows()}
+    if set(categories) != set(TEST_TYPE_CATEGORIES):
+        raise exclusion.ExclusionEvidenceError(
+            "TestType declaration categories differ: "
+            f"expected={sorted(TEST_TYPE_CATEGORIES)}, "
+            f"actual={sorted(categories)}"
+        )
+    return categories
+
+
+def _validate_test_type_categories(
+    categories: dict[str, int], filtering: pd.DataFrame
+) -> None:
+    row = filtering.loc[
+        filtering["level"].eq("Test") & filtering["filter"].eq("TestType")
+    ]
+    if len(row) != 1:
+        raise exclusion.ExclusionEvidenceError(
+            f"expected one TestType filtering row, found {len(row)}"
+        )
+    rejected = int(row["reject"].iloc[0])
+    if sum(categories.values()) != rejected:
+        raise exclusion.ExclusionEvidenceError(
+            "TestType declaration categories do not partition its rejections: "
+            f"categories={sum(categories.values())}, rejected={rejected}"
+        )
 
 
 def _population(
@@ -551,6 +608,7 @@ RETAINED_METRIC_KEYS = frozenset(
     }
     | FILTERING_METRIC_KEYS
     | TEST_FILTERING_FLOW_METRIC_KEYS
+    | TEST_TYPE_CATEGORY_METRIC_KEYS
     | {
         f"rq6.reconstruction.{claim.replace('-', '_')}.{partition}"
         for claim in RECONSTRUCTION_CLAIMS
@@ -707,6 +765,8 @@ def build(context: ReportContext) -> RQReport:
 
     filtering_data = exclusion.fetch_filter_decisions(conn, variant)
     exclusion.validate_filtering_reconciliation(filtering_data, mechanism_partition)
+    test_type_categories = _fetch_test_type_categories(conn, variant)
+    _validate_test_type_categories(test_type_categories, filtering_data)
     filtering = build_filtering_table(
         filtering_data,
         key="tab-exclusions-filtering-extended",
@@ -909,6 +969,18 @@ def build(context: ReportContext) -> RQReport:
         _test_filtering_flow_metrics(
             test_filtering_flow, test_filtering_flow_provenance
         )
+    )
+    test_type_provenance = capture(
+        _fetch_test_type_categories, query=TEST_TYPE_CATEGORY_SQL
+    )
+    metrics.extend(
+        _count_metric(
+            f"realworld.test_type.{category}",
+            test_type_categories[category],
+            "Test",
+            test_type_provenance,
+        )
+        for category in TEST_TYPE_CATEGORIES
     )
     metrics.extend(_stage_metrics(funnel, funnel_provenance))
     jpf_rows = int(jpf_exception_data["count"].sum())

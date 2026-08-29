@@ -130,6 +130,16 @@ Describe `ExcludedTest` as rejecting an assertion whose test was already exclude
 
 Give the long real-world filter-detail table an explicit local compact density through the table-style interface. Preserve semantic midrules and the shared source boundary with the summary table. Do not change global float parameters, add negative spacing, or hand-edit generated TeX.
 
+### 15. Reconcile the reader-facing semantic audit
+
+Publish the recorded `TestType` declaration categories as provenance-backed metrics. Separate JUnit theories, inherited tests resolved to overridden declarations, and TestNG tests. The categories must partition the `TestType` rejection population. Do not describe all three as unsupported JUnit test types: the overridden declarations expose a declaration-resolution limitation.
+
+Keep three mechanisms distinct in the discussion: assertion recognition, tested-method identification, and assertion-to-MUT mapping. Interprocedural analysis and assertion-library support improve recognition but do not repair the other two mechanisms. Tests with no explicit assertion still carry the framework's default no-unexpected-exception behavior. The thesis may propose an explicit `does not throw` oracle for those tests, but it must preserve expected-exception semantics and present this as an unimplemented extension rather than a measured recovery count.
+
+Keep the established survivor-based project framing. A project completes a stage when at least one relevant entity crosses its boundary; failures of other entities do not invalidate that result. Scope widening statements to the projects or attempts that reach Stage 4. Describe widening as the most frequent recorded Stage 4 mechanism, not as evidence that fixing it would recover the most projects.
+
+Remove the attempt-to-validation comparison with controlled filtering inclusion. Preserve the bounded controlled-versus-RepoReapers comparison only at the shared filtering-result boundary, with each corpus-local denominator. Scope broad symbolic-analysis claims to the evaluated implementation and toolchain.
+
 ## Risks / Trade-offs
 
 - **A downstream consumer still expects four columns.** Search generated declarations, tests, and thesis publication references; require a clean cutover rather than an alias.
