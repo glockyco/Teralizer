@@ -25,6 +25,7 @@ The RQ6 project-exclusion table classifies each row as internal, external, or mi
 - Present implicit `does not throw` generation as an extension that must preserve framework exception semantics.
 - Keep widening conclusions within the population that reaches Stage 4, and keep filtering comparisons separate from attempt-to-validation yield.
 - Center the summary-table `Excluded` spanner and give the long filter-detail table an explicit compact-density contract.
+- Use the TOSEM narrative as the baseline only for the test-, assertion-, and generalization-level RQ6 results and their later interpretation; keep the RQ6 introduction and project-level results unchanged.
 
 ## Capabilities
 
@@ -39,4 +40,4 @@ None.
 
 ## Impact
 
-The change affects the shared RQ5/RQ6 exclusion renderers, RQ5 and RQ6 report builders, filtering models and metric identities, report tests, accepted terminology contracts, and regenerated publication artifacts. The thesis consumes the revised tables, metrics, and concise mechanism corrections. No database schema or corpus input changes. Project-funnel totals remain stable. Test-flow counts and filter decisions must reconcile from persisted evidence before publication.
+The change affects the shared RQ5/RQ6 exclusion renderers, RQ5 and RQ6 report builders, filtering models and metric identities, report tests, accepted terminology contracts, and regenerated publication artifacts. The thesis consumes the revised tables, metrics, concise mechanism corrections, and the bounded restoration of entity-level RQ6 results and later interpretations. No database schema or corpus input changes. Project-funnel totals remain stable. Test-flow counts and filter decisions must reconcile from persisted evidence before publication.

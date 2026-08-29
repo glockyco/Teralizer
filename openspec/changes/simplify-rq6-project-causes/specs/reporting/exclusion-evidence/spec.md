@@ -144,6 +144,56 @@ The established project-completion framing remains survivor-based: a project com
 - **THEN** the project counts as completing all five stages
 - **AND** the thesis does not require every entity or task in that project to succeed
 
+### Requirement: Entity-level RQ6 revisions preserve the established source narrative
+
+The thesis SHALL use the TOSEM source in the thesis `projects/teralizer-paper` submodule as the narrative baseline for the `Test, Assertion, and Generalization Exclusions` results and their later interpretation in the Chapter 5 discussion, Chapter 6 reflections, and Chapter 7 conclusion. A revision SHALL preserve established wording, paragraph order, and narrative progression unless the current corpus, generated values, pipeline semantics, or accepted interpretation requires a change. The RQ6 introduction and `Project-Level Exclusions` results SHALL remain unchanged.
+
+Every restored numerical claim SHALL trace to registered metrics, generated reports, or an existing reconstruction audit for the accepted RQ6 population. When the source narrative requires a quantity that those owners do not publish, the change SHALL register provenance-backed evidence for that population before publishing the claim. It SHALL NOT omit or weaken the claim only to avoid the evidence work.
+
+Within the immediate discussion of the filtering-results table, the thesis SHALL identify an entry by its filter name and SHALL NOT add a generated row reference for that entry. A claim outside that context MAY use a row reference when the filter name and population are not otherwise established. A reference to an unnumbered heading SHALL NOT use a bare `\cref` when the compiled reference resolves to a broader numbered parent. The prose SHALL name the topic and, when a citation is needed, use a useful numbered section or table owner.
+
+#### Scenario: Frozen RQ6 text is encountered
+
+- **WHEN** a revision compares the thesis with the TOSEM source
+- **THEN** it excludes the RQ6 introduction and `Project-Level Exclusions` results from the mutable scope
+- **AND** it does not change their wording, structure, or references
+
+#### Scenario: Existing evidence supplies an updated quantity
+
+- **WHEN** the mutable RQ6 text needs a quantity that already exists in a registered metric, generated table, or reconstruction audit
+- **THEN** the thesis uses that evidence
+- **AND** the implementation does not create a duplicate analysis or sample
+
+#### Scenario: A required quantity is missing
+
+- **WHEN** supported source wording requires a quantity that is absent from the accepted RQ6 evidence
+- **THEN** the reporting system registers provenance-backed evidence for the accepted RQ6 population before publication
+- **AND** the thesis does not avoid the evidence gap by dropping or weakening the claim
+
+#### Scenario: Source wording remains supported
+
+- **WHEN** the TOSEM wording remains accurate for the current population and interpretation within the mutable scope
+- **THEN** the thesis preserves that wording and its narrative position
+- **AND** it does not replace the wording only for stylistic variation
+
+#### Scenario: Current evidence requires a departure
+
+- **WHEN** current populations, values, pipeline semantics, or accepted interpretation contradict the TOSEM wording
+- **THEN** the thesis preserves the evidence-required correction
+- **AND** it does not restore the contradicted source claim
+
+#### Scenario: A filter is discussed beside its result table
+
+- **WHEN** the surrounding RQ6 paragraph establishes the filtering-results table and names the filter
+- **THEN** the filter name uniquely identifies the result
+- **AND** the paragraph does not cite the generated table row
+
+#### Scenario: Later prose names an unnumbered topic
+
+- **WHEN** later interpretation must refer to an unnumbered subsubsection or paragraph
+- **THEN** the prose names the topic directly
+- **AND** any cross-reference identifies a useful numbered section or table rather than the broader parent number alone
+
 ## REMOVED Requirements
 
 ### Requirement: Filtering retention is comparable only at the shared filtering boundary

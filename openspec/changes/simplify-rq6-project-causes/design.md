@@ -140,6 +140,16 @@ Keep the established survivor-based project framing. A project completes a stage
 
 Remove the attempt-to-validation comparison with controlled filtering inclusion. Preserve the bounded controlled-versus-RepoReapers comparison only at the shared filtering-result boundary, with each corpus-local denominator. Scope broad symbolic-analysis claims to the evaluated implementation and toolchain.
 
+### 16. Restore only the mutable entity-level narrative
+
+Use the TOSEM RQ6 text in the thesis `projects/teralizer-paper` submodule as the narrative baseline for the `Test, Assertion, and Generalization Exclusions` results and their later interpretation in the Chapter 5 discussion, Chapter 6 reflections, and Chapter 7 conclusion. Freeze the RQ6 introduction and `Project-Level Exclusions` results. Do not change their wording, structure, or references during this restoration.
+
+Within the mutable scope, preserve source wording, paragraph order, and progression when the current corpus and accepted interpretation still support them. Retain evidence-required departures, including the recorded `TestType` declaration categories, the stratified `NoAssertions` estimate, the distinction between assertion recognition, tested-method identification, and assertion-to-MUT mapping, the Stage 4 generalization lifecycle, and the corpus-local filtering comparison.
+
+Reuse registered metrics, generated tables, and existing reconstruction audits before adding analysis. In particular, use the existing stratified `NoAssertions` review instead of creating a second sample. If supported source wording requires a quantity that is unavailable for the accepted RQ6 population, register provenance-backed evidence for that population before restoring the claim. Do not remove or weaken the claim merely to avoid collecting the required evidence.
+
+Within the immediate filtering-results discussion, a filter name identifies its table entry; do not add a generated row reference. Keep useful row references for later claims whose filter or population is not otherwise established. Do not use a bare `\cref` to an unnumbered heading when it compiles as the broader parent number. Name the topic in prose and cite a useful numbered section or table when the later claim needs a reference.
+
 ## Risks / Trade-offs
 
 - **A downstream consumer still expects four columns.** Search generated declarations, tests, and thesis publication references; require a clean cutover rather than an alias.

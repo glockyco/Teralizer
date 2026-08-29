@@ -113,3 +113,11 @@
 - [x] 15.4 Scope widening conclusions to the Stage 4 population and remove the invalid attempt-to-validation comparison.
 - [x] 15.5 Regenerate producer artifacts, publish the new macros, build the thesis, and inspect the affected RQ6 pages.
 - [x] 15.6 Run complete producer and thesis quality gates, then commit each repository separately with causal bodies.
+
+## 16. Restore the Entity-level Source Narrative Conservatively
+
+- [ ] 16.1 Compare the `Test, Assertion, and Generalization Exclusions` results and their later Chapter 5–7 interpretations with the TOSEM source; exclude the RQ6 introduction and project-level results from the mutable scope.
+- [ ] 16.2 Inventory registered RQ6 metrics, generated tables, and reconstruction audits; identify genuine accepted-population quantity gaps before adding or rerunning analysis.
+- [ ] 16.3 Collect and register any missing accepted-population quantities, then restore supported source wording, paragraph order, and narrative progression without changing the frozen text.
+- [ ] 16.4 Remove redundant filter-row references from the immediate table discussion and replace misleading unnumbered-heading references in later text while preserving useful numbered section, table, and row references.
+- [ ] 16.5 Build the thesis, inspect every affected RQ6 and later-interpretation page, run thesis quality gates, and commit the revision separately.
