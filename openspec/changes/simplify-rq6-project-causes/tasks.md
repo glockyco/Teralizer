@@ -67,3 +67,10 @@
 - [x] 9.3 Add focused tests for exact filter names, complete row arithmetic, pre-emission ordering, inherited-method evidence, and generalization filtering reconciliation.
 - [x] 9.4 Regenerate the registered RQ6 artifacts and update the thesis table and interpretation without changing column terminology.
 - [x] 9.5 Run complete analysis checks, repository hooks, strict OpenSpec validation, thesis build, and page inspection; commit each repository separately.
+
+## 10. Group and Rank Filter Decisions
+
+- [x] 10.1 Replace the hand-curated filter-name order with semantic decision groups and descending rejection counts.
+- [x] 10.2 Insert a midrule at every group boundary, including between the two test-filter rounds.
+- [x] 10.3 Add focused regressions for group membership, rejection-count ordering, and rendered test-round separation.
+- [ ] 10.4 Regenerate affected reports, update both thesis filter-detail tables, run all quality gates, and commit each repository separately.

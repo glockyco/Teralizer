@@ -112,25 +112,14 @@ _FILTER_DISPLAY_NAMES = {
     "InheritedTestCase": "InheritedTest",
     "MockingFramework": "Mocking",
 }
-# Paper/table display order for filters. This is the hand-curated order used in
-# the published tables, deliberately NOT the pipeline application order.
-_FILTER_ORDER = {
-    "SeedSpecConsistency": -2,
-    "WideningLicense": -1,
-    "NonPassingTest": 0,
-    "TestType": 1,
-    "NoAssertions": 2,
-    "AssertionType": 0,
-    "ExcludedTest": 1,
-    "MissingValue": 2,
-    "ParameterType": 3,
-    "ReturnType": 4,
-    "VoidReturnType": 4,
-}
+_FIRST_ROUND_TEST_FILTERS = frozenset({"NonPassingTest", "TestType"})
 
 
-def filter_sort_key(filter_name: str) -> int:
-    return _FILTER_ORDER.get(filter_name, 99)
+def filter_group_key(level: str, filter_name: str) -> int:
+    """Group filter decisions by their entity level and test-filter round."""
+    if level == "Test":
+        return 0 if filter_name in _FIRST_ROUND_TEST_FILTERS else 1
+    return {"Assertion": 2, "Generalization": 3}.get(level, 99)
 
 
 def variant_sort_key(variant: str) -> int:
@@ -159,13 +148,13 @@ def build_filtering_table(
         out.loc[:, f"{decision}_pct"] = out.apply(
             lambda row: share_value(row[decision], row["total"]), axis=1
         )
-    out.loc[:, "_lvl"] = out["level"].map(lambda lvl: _LEVEL_ORDER.get(lvl, 99))
-    out.loc[:, "_fil"] = out["filter"].map(filter_sort_key)
-    out = (
-        out.sort_values(["_lvl", "_fil", "filter"])
-        .drop(columns=["_lvl", "_fil"])
-        .reset_index(drop=True)
+    out.loc[:, "_filter_group"] = out.apply(
+        lambda row: filter_group_key(row["level"], row["filter"]), axis=1
     )
+    out = out.sort_values(
+        ["_filter_group", "reject", "filter"],
+        ascending=[True, False, True],
+    ).reset_index(drop=True)
     out.loc[:, "filter"] = out["filter"].replace(_FILTER_DISPLAY_NAMES)
     columns = [
         ColumnSpec("Level", "level"),
@@ -200,7 +189,7 @@ def build_filtering_table(
         columns=columns,
         caption=caption,
         label=label,
-        group_by="level",
+        group_by="_filter_group",
         short_caption=short_caption,
         body_style="\\centering" if body_style is None else body_style,
         full_width=full_width,

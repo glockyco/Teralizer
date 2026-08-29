@@ -482,7 +482,7 @@ def test_rq6_filtering_table_is_entity_conservative(rq6_report):
     ]
     assert filtering.df.loc[
         filtering.df["level"] == "Generalization", "filter"
-    ].tolist() == ["SeedSpecConsistency", "WideningLicense", "NonPassingTest"]
+    ].tolist() == ["WideningLicense", "NonPassingTest", "SeedSpecConsistency"]
     assert "InheritedTestMethod" in set(filtering.df["filter"])
     reconstructed = filtering.df[["accept", "defer", "reject"]].sum(axis=1)
     assert (reconstructed == filtering.df["total"]).all()

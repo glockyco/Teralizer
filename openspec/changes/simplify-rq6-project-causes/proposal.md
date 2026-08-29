@@ -15,6 +15,7 @@ The RQ6 project-exclusion table classifies each row as internal, external, or mi
 - Keep project, test, assertion, and generalization populations distinct; use selected concrete examples in the thesis prose and leave complete subtype distributions in the replication package.
 - Classify proactive exclusions as filters by behavior, independent of their pipeline stage, producer class, or persistence shape.
 - Add `InheritedTestMethod`, `SeedSpecConsistency`, and `WideningLicense` to the filter-detail table with evidence-derived verdict populations.
+- Separate the two test-filter rounds with a rule and order each decision subgroup by descending rejection count.
 
 ## Capabilities
 

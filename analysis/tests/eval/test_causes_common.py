@@ -181,53 +181,54 @@ def test_breakdown_strategy_rows_ordered():
     ]
 
 
-def test_filtering_table_orders_level_then_filter():
-    df = pd.DataFrame(
-        {
-            "level": [
-                "Assertion",
-                "Test",
-                "Assertion",
-                "Test",
-                "Assertion",
-                "Test",
-                "Assertion",
-                "Assertion",
-                "Generalization",
-                "Generalization",
-                "Generalization",
-            ],
-            "filter": [
-                "ParameterType",
-                "NoAssertions",
-                "AssertionType",
-                "NonPassingTest",
-                "MissingValue",
-                "TestType",
-                "VoidReturnType",
-                "ExcludedTest",
-                "NonPassingTest",
-                "WideningLicense",
-                "SeedSpecConsistency",
-            ],
-            "total": [1] * 11,
-            "accept": [1] * 11,
-            "defer": [0] * 11,
-            "reject": [1] * 11,
-        }
-    )
+def test_filtering_table_groups_rounds_and_orders_by_rejections():
+    rows = [
+        ("Assertion", "ParameterType", 7),
+        ("Test", "NoAssertions", 10),
+        ("Assertion", "AssertionType", 4),
+        ("Test", "NonPassingTest", 8),
+        ("Assertion", "MissingValue", 9),
+        ("Test", "TestType", 2),
+        ("Assertion", "VoidReturnType", 1),
+        ("Assertion", "ExcludedTest", 4),
+        ("Generalization", "NonPassingTest", 3),
+        ("Generalization", "WideningLicense", 9),
+        ("Generalization", "SeedSpecConsistency", 1),
+        ("Test", "MockingFramework", 8),
+        ("Test", "InheritedTestMethod", 6),
+        ("Test", "InheritedTestCase", 4),
+        ("Test", "DisabledTest", 1),
+    ]
+    df = pd.DataFrame(rows, columns=["level", "filter", "reject"])
+    df.loc[:, "total"] = 20
+    df.loc[:, "accept"] = df["total"] - df["reject"]
+    df.loc[:, "defer"] = 0
+
     table = build_filtering_table(df, key="f", label="tab:z", caption="C")
-    order = list(zip(table.df["level"], table.df["filter"]))
-    assert order == [
+
+    assert table.group_by == "_filter_group"
+    assert table.df["_filter_group"].tolist() == [
+        0,
+        0,
+        *([1] * 5),
+        *([2] * 5),
+        *([3] * 3),
+    ]
+    assert list(zip(table.df["level"], table.df["filter"])) == [
         ("Test", "NonPassingTest"),
         ("Test", "TestType"),
         ("Test", "NoAssertions"),
-        ("Assertion", "AssertionType"),
-        ("Assertion", "ExcludedTest"),
+        ("Test", "Mocking"),
+        ("Test", "InheritedTestMethod"),
+        ("Test", "InheritedTest"),
+        ("Test", "DisabledTest"),
         ("Assertion", "MissingValue"),
         ("Assertion", "ParameterType"),
+        ("Assertion", "AssertionType"),
+        ("Assertion", "ExcludedTest"),
         ("Assertion", "VoidReturnType"),
-        ("Generalization", "SeedSpecConsistency"),
         ("Generalization", "WideningLicense"),
         ("Generalization", "NonPassingTest"),
+        ("Generalization", "SeedSpecConsistency"),
     ]
+    assert render_table(table).count("  \\midrule") == 4

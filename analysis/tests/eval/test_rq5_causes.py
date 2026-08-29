@@ -134,12 +134,13 @@ def test_rq5_filtering_row_order():
         ("Test", "NonPassingTest"),
         ("Test", "TestType"),
         ("Test", "NoAssertions"),
-        ("Assertion", "AssertionType"),
-        ("Assertion", "ExcludedTest"),
         ("Assertion", "MissingValue"),
         ("Assertion", "ParameterType"),
+        ("Assertion", "ExcludedTest"),
+        ("Assertion", "AssertionType"),
         ("Assertion", "VoidReturnType"),
     ]
+    assert filtering.df["_filter_group"].tolist() == [0, 0, 1, 2, 2, 2, 2, 2]
     assert filtering.row_key == "row_key"
     assert (
         "\\label{tabrow:tab-exclusions-filtering:Assertion@3AExcludedTest}"

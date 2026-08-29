@@ -14,6 +14,21 @@ The report SHALL classify a decision as filtering when it proactively excludes a
 
 The filter-detail table SHALL retain the columns `Level`, `Filter Name`, `Total`, `Accept`, `Defer`, and `Reject`. Filter names SHALL use the established PascalCase form and SHALL omit only an implementation `Filter` suffix. Each row SHALL derive its evaluated population and verdicts from persisted evidence. `Total` SHALL equal `Accept` plus `Defer` plus `Reject`.
 
+The table SHALL group rows as first-round test filters, second-round test decisions, assertion filters, and generalization filters. It SHALL insert a midrule between adjacent groups, including between the two test groups. Within each group, rows SHALL appear by descending `Reject`, then ascending filter name.
+
+#### Scenario: Test filtering rounds are separated
+
+- **WHEN** the filter-detail table contains both first-round and second-round test decisions
+- **THEN** a midrule separates the two test groups
+- **AND** `NonPassingTest` and `TestType` appear in the first group
+- **AND** all remaining test decisions appear in the second group
+
+#### Scenario: Filter subgroups are ranked
+
+- **WHEN** the report renders a filter-detail subgroup
+- **THEN** rows appear by descending `Reject`
+- **AND** equal rejection counts appear by ascending filter name
+
 #### Scenario: Pre-emission checks filter generalization attempts
 
 - **WHEN** `SeedSpecConsistency` or `WideningLicense` proactively rejects a generalization attempt before source emission

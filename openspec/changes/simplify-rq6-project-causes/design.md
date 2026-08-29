@@ -96,6 +96,14 @@ Keep `InheritedTestMethod` distinct from `InheritedTest`. The former evaluates w
 
 Deriving the new rows from `is_included` was rejected because later tasks can mutate that flag. Writing synthetic database rows was rejected because the report is read-only and producer storage does not define filtering semantics.
 
+### 11. Group and rank filter decisions by rejection count
+
+Use four semantic row groups: first-round test filters, second-round test decisions, assertion filters, and generalization filters. Place `NonPassingTest` and `TestType` in the first test round. Place all other test-level decisions, including `InheritedTestMethod`, in the second test group. Insert a midrule whenever the row group changes, including between the two test groups.
+
+Within each group, sort by descending `Reject`, then ascending filter name. Derive the order from the count columns before display-name replacement. Apply the same grouping and ordering in every table built through the shared filter-detail renderer so controlled and real-world evidence use one presentation contract.
+
+Keeping the hand-curated filter-name order was rejected because it hides the dominant rejection causes. Adding a rule only to the checked-in TeX was rejected because regeneration would remove it and the other filter-detail table would retain a conflicting convention.
+
 ## Risks / Trade-offs
 
 - **A downstream consumer still expects four columns.** Search generated declarations, tests, and thesis publication references; require a clean cutover rather than an alias.
