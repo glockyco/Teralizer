@@ -73,4 +73,4 @@
 - [x] 10.1 Replace the hand-curated filter-name order with semantic decision groups and descending rejection counts.
 - [x] 10.2 Insert a midrule at every group boundary, including between the two test-filter rounds.
 - [x] 10.3 Add focused regressions for group membership, rejection-count ordering, and rendered test-round separation.
-- [ ] 10.4 Regenerate affected reports, update both thesis filter-detail tables, run all quality gates, and commit each repository separately.
+- [x] 10.4 Regenerate affected reports, update both thesis filter-detail tables, run all quality gates, and commit each repository separately.
