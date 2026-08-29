@@ -70,7 +70,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "1f548089c89899b497b57d56ec02cda1e0b2de07"
+      "source_commit": "76de5820175f4e83dd55baf50018b12515729739"
     },
     "tables": {
       "tab-dataset-statistics": {
@@ -2208,7 +2208,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "1f548089c89899b497b57d56ec02cda1e0b2de07"
+      "source_commit": "76de5820175f4e83dd55baf50018b12515729739"
     },
     "tables": {
       "rq0-breadth-summary": {
@@ -2482,7 +2482,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "1f548089c89899b497b57d56ec02cda1e0b2de07"
+      "source_commit": "76de5820175f4e83dd55baf50018b12515729739"
     },
     "tables": {
       "tab-detections-per-mutator": {
@@ -2565,7 +2565,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "1f548089c89899b497b57d56ec02cda1e0b2de07"
+      "source_commit": "76de5820175f4e83dd55baf50018b12515729739"
     },
     "tables": {
       "tab-mutation-detection-comparison": {
@@ -2687,7 +2687,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "1f548089c89899b497b57d56ec02cda1e0b2de07"
+      "source_commit": "76de5820175f4e83dd55baf50018b12515729739"
     },
     "tables": {
       "tab-lines-per-project": {
@@ -2875,7 +2875,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "1f548089c89899b497b57d56ec02cda1e0b2de07"
+      "source_commit": "76de5820175f4e83dd55baf50018b12515729739"
     },
     "tables": {
       "evosuite_runtime_analysis": {
@@ -2965,7 +2965,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "1f548089c89899b497b57d56ec02cda1e0b2de07"
+      "source_commit": "76de5820175f4e83dd55baf50018b12515729739"
     },
     "tables": {
       "tab-exclusions-breakdown": {
@@ -3006,6 +3006,11 @@
   "rq6": {
     "artifacts": [
       {
+        "key": "rq6_assertion_type_rejections",
+        "path": "build/rq6/rq6_assertion_type_rejections.csv",
+        "target": "csv"
+      },
+      {
         "key": "rq6_exclusion_mechanisms",
         "path": "build/rq6/rq6_exclusion_mechanisms.csv",
         "target": "csv"
@@ -3026,8 +3031,28 @@
         "target": "csv"
       },
       {
+        "key": "rq6_missing_value_causes",
+        "path": "build/rq6/rq6_missing_value_causes.csv",
+        "target": "csv"
+      },
+      {
         "key": "rq6_mut_choice_sensitivity",
         "path": "build/rq6/rq6_mut_choice_sensitivity.csv",
+        "target": "csv"
+      },
+      {
+        "key": "rq6_non_passing_failure_types",
+        "path": "build/rq6/rq6_non_passing_failure_types.csv",
+        "target": "csv"
+      },
+      {
+        "key": "rq6_non_passing_outcomes",
+        "path": "build/rq6/rq6_non_passing_outcomes.csv",
+        "target": "csv"
+      },
+      {
+        "key": "rq6_parameter_type_rejections",
+        "path": "build/rq6/rq6_parameter_type_rejections.csv",
         "target": "csv"
       },
       {
@@ -3038,6 +3063,11 @@
       {
         "key": "rq6_reconstruction_summary",
         "path": "build/rq6/rq6_reconstruction_summary.csv",
+        "target": "csv"
+      },
+      {
+        "key": "rq6_return_type_rejections",
+        "path": "build/rq6/rq6_return_type_rejections.csv",
         "target": "csv"
       },
       {
@@ -5869,8 +5899,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": true,
-      "source_commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1"
+      "dirty": false,
+      "source_commit": "76de5820175f4e83dd55baf50018b12515729739"
     },
     "tables": {
       "rq6_assertion_type_rejections": {
