@@ -124,7 +124,7 @@ def _filtering_metrics(
 ) -> list[Metric]:
     prefix = f"rq6.filtering.{dataset}"
     total_key = f"{prefix}.total"
-    retained_key = f"{prefix}.retained"
+    included_key = f"{prefix}.included"
     return [
         _count_metric(
             total_key,
@@ -134,8 +134,8 @@ def _filtering_metrics(
             input_role,
         ),
         _count_metric(
-            retained_key,
-            summary.retained,
+            included_key,
+            summary.included,
             "Generalization",
             provenance,
             input_role,
@@ -148,14 +148,44 @@ def _filtering_metrics(
             input_role,
         ),
         _share_metric(
-            f"{prefix}.retained_pct",
-            float(summary.retained_share),
-            retained_key,
+            f"{prefix}.included_pct",
+            float(summary.included_share),
+            included_key,
             total_key,
             "Generalization",
             provenance,
             input_role,
         ),
+    ]
+
+
+TEST_FILTERING_FLOW_FIELDS = (
+    ("identified", "identified"),
+    ("inherited_method_evaluated", "inherited_method_evaluated"),
+    ("inherited_method_rejected", "inherited_method_rejected"),
+    ("pre_filter_failures", "pre_filter_failures"),
+    ("round_one_evaluated", "round_one_evaluated"),
+    ("round_one_rejected", "round_one_rejected"),
+    ("round_one_overlap", "round_one_overlap"),
+    ("inter_round_failures", "inter_round_failures"),
+    ("round_two_evaluated", "round_two_evaluated"),
+)
+TEST_FILTERING_FLOW_METRIC_KEYS = frozenset(
+    f"realworld.test_filtering.{suffix}" for suffix, _ in TEST_FILTERING_FLOW_FIELDS
+)
+
+
+def _test_filtering_flow_metrics(
+    flow: exclusion.TestFilteringFlow, provenance: Provenance
+) -> list[Metric]:
+    return [
+        _count_metric(
+            f"realworld.test_filtering.{suffix}",
+            getattr(flow, field),
+            "Test",
+            provenance,
+        )
+        for suffix, field in TEST_FILTERING_FLOW_FIELDS
     ]
 
 
@@ -167,7 +197,7 @@ def _validate_filtering_funnel(
         funnel.counts[generation_funnel.PopulationKey.FILTER_RESULT_RECORDED],
         funnel.counts[generation_funnel.PopulationKey.FILTER_PASSED],
     )
-    observed = (summary.total, summary.retained)
+    observed = (summary.total, summary.included)
     if observed != expected:
         raise exclusion.ExclusionEvidenceError(
             "RepoReapers filtering comparison disagrees with the generalization funnel: "
@@ -472,7 +502,7 @@ def _reconstruction_metrics(
 FILTERING_METRIC_KEYS = frozenset(
     f"rq6.filtering.{dataset}.{suffix}"
     for dataset in ("controlled", "realworld")
-    for suffix in ("total", "retained", "excluded", "retained_pct")
+    for suffix in ("total", "included", "excluded", "included_pct")
 )
 
 RETAINED_METRIC_KEYS = frozenset(
@@ -520,6 +550,7 @@ RETAINED_METRIC_KEYS = frozenset(
         for suffix in ("", "_pct")
     }
     | FILTERING_METRIC_KEYS
+    | TEST_FILTERING_FLOW_METRIC_KEYS
     | {
         f"rq6.reconstruction.{claim.replace('-', '_')}.{partition}"
         for claim in RECONSTRUCTION_CLAIMS
@@ -596,6 +627,11 @@ def build(context: ReportContext) -> RQReport:
     )
     variant = _funnel.resolve_variant(conn)
     exclusion.validate_evidence(conn, variant)
+    test_filtering_flow_provenance = capture(
+        exclusion.fetch_test_filtering_flow,
+        query=exclusion.TEST_FILTERING_FLOW_SQL,
+    )
+    test_filtering_flow = exclusion.fetch_test_filtering_flow(conn, variant)
     controlled_filtering_provenance = capture(
         filtering_comparison.fetch_controlled_filtering,
         query=filtering_comparison.CONTROLLED_FILTERING_SQL,
@@ -679,7 +715,7 @@ def build(context: ReportContext) -> RQReport:
         short_caption=(
             "RepoReapers filtering decisions for {entity.variant.improved_c} by level and filter"
         ),
-        body_style="\\tabstyle",
+        body_style="\\tabstyle\n\\renewcommand{\\arraystretch}{1.1}",
         full_width=False,
     )
     filtering = replace(
@@ -867,6 +903,11 @@ def build(context: ReportContext) -> RQReport:
             "real-world",
             realworld_filtering,
             realworld_filtering_provenance,
+        )
+    )
+    metrics.extend(
+        _test_filtering_flow_metrics(
+            test_filtering_flow, test_filtering_flow_provenance
         )
     )
     metrics.extend(_stage_metrics(funnel, funnel_provenance))

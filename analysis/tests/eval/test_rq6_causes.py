@@ -472,20 +472,74 @@ def test_rq6_filtering_table_is_entity_conservative(rq6_report):
     assert filtering.float_spec == "!t"
     assert filtering.latex_resize_to_width
     assert not filtering.full_width
+    assert filtering.body_style == "\\tabstyle\n\\renewcommand{\\arraystretch}{1.1}"
     assert [column.header for column in filtering.columns] == [
         "Level",
         "Filter Name",
-        "Total",
+        "Evaluated",
         "Accept",
         "Defer",
         "Reject",
     ]
     assert filtering.df.loc[
         filtering.df["level"] == "Generalization", "filter"
-    ].tolist() == ["WideningLicense", "NonPassingTest", "SeedSpecConsistency"]
-    assert "InheritedTestMethod" in set(filtering.df["filter"])
+    ].tolist() == ["SeedSpecConsistency", "WideningLicense", "NonPassingTest"]
+    inherited = filtering.df.loc[filtering.df["filter"] == "InheritedTestMethod"]
+    assert inherited["_filter_group"].tolist() == [0]
     reconstructed = filtering.df[["accept", "defer", "reject"]].sum(axis=1)
     assert (reconstructed == filtering.df["total"]).all()
+
+
+def test_rq6_test_filtering_flow_reconciles_persisted_populations(rq6_report):
+    report = rq6_report
+    values = {
+        suffix: int(report.metric(f"realworld.test_filtering.{suffix}").value)
+        for suffix in (
+            "identified",
+            "inherited_method_evaluated",
+            "inherited_method_rejected",
+            "pre_filter_failures",
+            "round_one_evaluated",
+            "round_one_rejected",
+            "round_one_overlap",
+            "inter_round_failures",
+            "round_two_evaluated",
+        )
+    }
+    assert values == {
+        "identified": 85_368,
+        "inherited_method_evaluated": 6_259,
+        "inherited_method_rejected": 2_835,
+        "pre_filter_failures": 88,
+        "round_one_evaluated": 82_445,
+        "round_one_rejected": 8_782,
+        "round_one_overlap": 82,
+        "inter_round_failures": 1,
+        "round_two_evaluated": 73_662,
+    }
+    assert values["round_one_evaluated"] == (
+        values["identified"]
+        - values["inherited_method_rejected"]
+        - values["pre_filter_failures"]
+    )
+    assert values["round_two_evaluated"] == (
+        values["round_one_evaluated"]
+        - values["round_one_rejected"]
+        - values["inter_round_failures"]
+    )
+
+    filtering = next(
+        table
+        for table in report.tables()
+        if table.key == "tab-exclusions-filtering-extended"
+    )
+    first_round = filtering.df.loc[
+        (filtering.df["level"] == "Test")
+        & filtering.df["filter"].isin(exclusion.FIRST_ROUND_TEST_FILTERS)
+    ]
+    assert values["round_one_rejected"] == (
+        int(first_round["reject"].sum()) - values["round_one_overlap"]
+    )
 
 
 def test_rq6_every_assertion_carries_resolver_telemetry(rq6_report):
@@ -576,22 +630,22 @@ def test_rq6_filtering_comparison_preserves_corpus_local_denominators(rq6_report
         "controlled": (13_804, 11_597, 2_207),
         "realworld": (2_035, 1_615, 420),
     }
-    for dataset, (total, retained, excluded) in expected.items():
+    for dataset, (total, included, excluded) in expected.items():
         prefix = f"rq6.filtering.{dataset}"
         total_metric = report.metric(f"{prefix}.total")
-        retained_metric = report.metric(f"{prefix}.retained")
+        included_metric = report.metric(f"{prefix}.included")
         excluded_metric = report.metric(f"{prefix}.excluded")
-        rate = report.metric(f"{prefix}.retained_pct")
-        assert (total_metric.value, retained_metric.value, excluded_metric.value) == (
+        rate = report.metric(f"{prefix}.included_pct")
+        assert (total_metric.value, included_metric.value, excluded_metric.value) == (
             total,
-            retained,
+            included,
             excluded,
         )
-        assert retained + excluded == total
-        assert rate.numerator_key == retained_metric.key
+        assert included + excluded == total
+        assert rate.numerator_key == included_metric.key
         assert rate.denominator_key == total_metric.key
-        assert rate.population == retained_metric.population
-        assert float(rate.value) == pytest.approx(retained / total)
+        assert rate.population == included_metric.population
+        assert float(rate.value) == pytest.approx(included / total)
 
     table = next(
         table for table in report.tables() if table.key == "rq6_filtering_comparison"

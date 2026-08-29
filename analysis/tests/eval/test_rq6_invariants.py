@@ -212,6 +212,40 @@ def test_proactive_filter_rows_use_persisted_populations(rq6_conn):
     assert int(generalization["reject"].sum()) == 3_719
 
 
+def test_test_filtering_flow_uses_persisted_stage_populations(rq6_conn):
+    flow = exclusion.fetch_test_filtering_flow(rq6_conn, _variant(rq6_conn))
+
+    assert flow == exclusion.TestFilteringFlow(
+        identified=85_368,
+        inherited_method_evaluated=6_259,
+        inherited_method_rejected=2_835,
+        pre_filter_failures=88,
+        round_one_evaluated=82_445,
+        round_one_rejected=8_782,
+        round_one_overlap=82,
+        inter_round_failures=1,
+        round_two_evaluated=73_662,
+    )
+
+
+def test_filtering_flow_rejects_nonconserving_populations():
+    with pytest.raises(
+        exclusion.ExclusionEvidenceError,
+        match="first-round test population does not reconcile",
+    ):
+        exclusion.TestFilteringFlow(
+            identified=100,
+            inherited_method_evaluated=10,
+            inherited_method_rejected=5,
+            pre_filter_failures=2,
+            round_one_evaluated=94,
+            round_one_rejected=10,
+            round_one_overlap=1,
+            inter_round_failures=1,
+            round_two_evaluated=83,
+        )
+
+
 def test_filtering_reconciliation_rejects_missing_semantic_filter():
     decisions = pd.DataFrame(
         [

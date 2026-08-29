@@ -14,19 +14,17 @@ The report SHALL classify a decision as filtering when it proactively excludes a
 
 The filter-detail table SHALL use the columns `Level`, `Filter Name`, `Evaluated`, `Accept`, `Defer`, and `Reject`. Filter names SHALL use the established PascalCase form and SHALL omit only an implementation `Filter` suffix. Each row SHALL derive its applicable population and verdicts from persisted evidence. `Evaluated` SHALL equal `Accept` plus `Defer` plus `Reject`.
 
-The table SHALL group rows as first-round test filters, second-round test filters, inherited-method screening, assertion filters, and generalization filters. It SHALL insert a midrule between adjacent groups. `InheritedTestMethod` SHALL be separate from both test-filter rounds. The table SHALL preserve test, assertion, and generalization level order. Within each group, rows SHALL appear by descending `Evaluated`, descending `Reject`, then ascending filter name.
+The table SHALL group rows by test, assertion, and generalization level. It SHALL insert a midrule only when the entity level changes. It SHALL NOT insert rules between test-filter rounds or around `InheritedTestMethod`. Within each level, rows SHALL appear by descending `Evaluated`, descending `Reject`, then ascending filter name.
 
-#### Scenario: Test decision populations are separated
+#### Scenario: Entity levels are separated
 
-- **WHEN** the filter-detail table contains both test-filter rounds and inherited-method screening
-- **THEN** midrules separate all three test-level groups
-- **AND** `NonPassingTest` and `TestType` appear in the first-round group
-- **AND** `InheritedTestMethod` appears only in the inherited-method group
-- **AND** the remaining test filters appear in the second-round group
+- **WHEN** the filter-detail table contains test, assertion, and generalization decisions
+- **THEN** midrules separate the three entity levels
+- **AND** no midrule separates test decisions with different evaluated populations
 
-#### Scenario: Filter subgroups are ranked
+#### Scenario: Decisions within a level are ranked
 
-- **WHEN** the report renders a filter-detail subgroup
+- **WHEN** the report renders one entity level
 - **THEN** rows appear by descending `Evaluated`
 - **AND** equal evaluated populations appear by descending `Reject`
 - **AND** equal rejection counts appear by ascending filter name
@@ -87,7 +85,7 @@ The registered report SHALL publish provenance-backed test-flow counts for ident
 
 ### Requirement: Exclusion tables preserve semantic layout
 
-Entity summary tables SHALL center the `Excluded` spanner over `Filtering` and `Failures`. Filter-detail tables SHALL render a midrule at each semantic group boundary. A long filter-detail table MAY use an explicit local compact density, but it SHALL preserve readable text, semantic rules, and the adjacent summary-table source boundary.
+Entity summary tables SHALL center the `Excluded` spanner over `Filtering` and `Failures`. Filter-detail tables SHALL render a midrule at each entity-level boundary. A long filter-detail table MAY use an explicit local compact density, but it SHALL preserve readable text, semantic rules, and the adjacent summary-table source boundary.
 
 #### Scenario: The paired RQ6 exclusion tables are rendered
 
@@ -97,7 +95,7 @@ Entity summary tables SHALL center the `Excluded` spanner over `Filtering` and `
 
 ### Requirement: Excluded-test explanations match the executable predicate
 
-A reader-facing explanation of `ExcludedTest` SHALL state that it rejects an assertion whose test was already excluded during collection, filtering, or processing. A concise discussion MAY omit the stage list, but it SHALL NOT attribute the mechanism only to an earlier test filter.
+A reader-facing explanation of `ExcludedTest` SHALL state that it rejects an assertion whose test has already been excluded. It SHALL NOT attribute the mechanism only to an earlier test filter.
 
 #### Scenario: The thesis explains ExcludedTest
 

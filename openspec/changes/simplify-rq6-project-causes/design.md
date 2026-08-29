@@ -98,13 +98,13 @@ Deriving the new rows from `is_included` was rejected because later tasks can mu
 
 ### 11. Group filter decisions by their evaluated population
 
-Use five semantic row groups: first-round test filters, second-round test filters, inherited-method screening, assertion filters, and generalization filters. `NonPassingTest` and `TestType` form the first test round. The remaining ordinary test filters form the second round. `InheritedTestMethod` forms a separate source-screening group because its conditional population is not a test-filter round. Insert a midrule whenever the group changes.
+Use three semantic row groups: test filters, assertion filters, and generalization filters. Insert a midrule only when the entity level changes. Do not add rules between the two test-filter rounds or around inherited-method screening.
 
-Preserve the entity-level order: test, assertion, then generalization. Within each group, sort by descending `Evaluated`, descending `Reject`, and ascending filter name. The first key makes conditional denominators visible. The second key ranks decisions that evaluate the same population. Apply the same grouping and ordering through the shared renderer so controlled and real-world tables use one contract.
+Preserve the entity-level order: test, assertion, then generalization. Within each level, sort by descending `Evaluated`, descending `Reject`, and ascending filter name. The first key exposes the distinct round and inherited-screen populations without extra visual groups. The second key ranks decisions that evaluate the same population. Apply the same grouping and ordering through the shared renderer so controlled and real-world tables use one contract.
 
 Rename `Total` to `Evaluated`. The value counts entities for which the decision was applicable and a verdict was reconstructed or recorded. Keep `Accept`, `Defer`, and `Reject` as per-filter verdicts. Do not use `included` or `excluded` for those three columns because one entity can receive decisions from multiple filters.
 
-Keeping the hand-curated filter-name order was rejected because it hides both denominator differences and dominant rejection causes. Grouping `InheritedTestMethod` with the second round was rejected because its 6,259-test population is conditional on inherited source methods. Adding rules only to checked-in TeX was rejected because regeneration would remove them.
+Keeping the hand-curated filter-name order was rejected because it hides both denominator differences and dominant rejection causes. Separate rules for test-filter rounds and inherited-method screening were rejected because the denominator column already distinguishes those populations. Adding rules only to checked-in TeX was rejected because regeneration would remove them.
 
 ### 12. Use included and excluded for aggregate filtering outcomes
 
@@ -138,6 +138,6 @@ Give the long real-world filter-detail table an explicit local compact density t
 - **Fine-grained project rows duplicate entity tables.** Aggregate internal combinations by material reader-facing cause; leave complete subtype distributions in generated evidence and the replication package.
 - **The cause heading is overread as sole responsibility.** Preserve the established evidence label, but leave responsibility and actionability interpretation to bounded thesis prose.
 - **A text-wide terminology replacement changes valid uses of `retained`.** Migrate only filtering-outcome symbols and reader-facing consumers; keep retention and test-suite-reduction language unchanged.
-- **A denominator-first order obscures semantic stages.** Keep the five decision groups and entity-level order fixed; apply denominator ranking only within a group.
-- **One extra rule splits the paired tables.** Use a local compact-density contract and inspect the rendered page; do not weaken group boundaries.
+- **A denominator-first order obscures entity levels.** Keep the three entity-level groups fixed and apply denominator ranking only within a level.
+- **Additional rules split the paired tables without adding information.** Use rules only at entity-level boundaries and inspect the rendered page.
 - **Generated artifacts drift for unrelated reasons.** Regenerate from the pinned corpus and inspect the artifact diff before committing.

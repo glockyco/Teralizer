@@ -90,10 +90,60 @@ GENERALIZATION_FILTERS = (
     "WideningLicense",
     "NonPassingTest",
 )
+FIRST_ROUND_TEST_FILTERS = frozenset({"NonPassingTest", "TestType"})
+INHERITED_METHOD_FILTER = "InheritedTestMethod"
 
 
 class ExclusionEvidenceError(RuntimeError):
     """Raised when persisted evidence has no unique accepted interpretation."""
+
+
+@dataclass(frozen=True)
+class TestFilteringFlow:
+    """Persisted populations at the inherited screen and two test-filter rounds."""
+
+    identified: int
+    inherited_method_evaluated: int
+    inherited_method_rejected: int
+    pre_filter_failures: int
+    round_one_evaluated: int
+    round_one_rejected: int
+    round_one_overlap: int
+    inter_round_failures: int
+    round_two_evaluated: int
+
+    def __post_init__(self) -> None:
+        counts = tuple(self.__dict__.values())
+        if any(count < 0 for count in counts):
+            raise ExclusionEvidenceError(
+                "test-filtering flow contains a negative count"
+            )
+        if self.inherited_method_rejected > self.inherited_method_evaluated:
+            raise ExclusionEvidenceError(
+                "inherited-method rejections exceed the evaluated population"
+            )
+        expected_round_one = (
+            self.identified - self.inherited_method_rejected - self.pre_filter_failures
+        )
+        if self.round_one_evaluated != expected_round_one:
+            raise ExclusionEvidenceError(
+                "first-round test population does not reconcile: "
+                f"observed={self.round_one_evaluated}, expected={expected_round_one}"
+            )
+        if self.round_one_overlap > self.round_one_rejected:
+            raise ExclusionEvidenceError(
+                "first-round overlap exceeds the rejected population"
+            )
+        expected_round_two = (
+            self.round_one_evaluated
+            - self.round_one_rejected
+            - self.inter_round_failures
+        )
+        if self.round_two_evaluated != expected_round_two:
+            raise ExclusionEvidenceError(
+                "second-round test population does not reconcile: "
+                f"observed={self.round_two_evaluated}, expected={expected_round_two}"
+            )
 
 
 def producer_mechanism(
@@ -164,6 +214,7 @@ def query_params(variant: str) -> dict[str, object]:
         "quarantine_codes": sorted(QUARANTINE_CODES),
         "capability_codes": sorted(CAPABILITY_CODES),
         "known_typed_codes": sorted(KNOWN_TYPED_CODES),
+        "first_round_test_filters": sorted(FIRST_ROUND_TEST_FILTERS),
     }
 
 
@@ -409,6 +460,22 @@ generalization_proactive_filter_evidence AS (
     LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id
     WHERE g.variant = :variant
 ),
+recorded_filter_evidence AS (
+    SELECT
+        fa.level,
+        CASE
+            WHEN substring(fa.producer from 'filter\\.(\\w+)Filter$') = 'UnsupportedAssertion'
+                THEN 'AssertionType'
+            ELSE substring(fa.producer from 'filter\\.(\\w+)Filter$')
+        END AS filter,
+        fa.entity_id,
+        fa.decision
+    FROM eligible_filter_evidence fa
+    LEFT JOIN generalization g
+        ON fa.level = 'Generalization' AND g.id = fa.entity_id
+    WHERE fa.producer_mechanism = 'filter_rejection'
+      AND (fa.level <> 'Generalization' OR g.variant = :variant)
+),
 proactive_filter_evidence AS (
     SELECT
         'Test' AS level,
@@ -451,22 +518,6 @@ proactive_filter_evidence AS (
 
 FILTER_DECISION_SQL = f"""
 {_PROACTIVE_FILTER_RELATIONS_SQL},
-recorded_filter_evidence AS (
-    SELECT
-        fa.level,
-        CASE
-            WHEN substring(fa.producer from 'filter\\.(\\w+)Filter$') = 'UnsupportedAssertion'
-                THEN 'AssertionType'
-            ELSE substring(fa.producer from 'filter\\.(\\w+)Filter$')
-        END AS filter,
-        fa.entity_id,
-        fa.decision
-    FROM eligible_filter_evidence fa
-    LEFT JOIN generalization g
-        ON fa.level = 'Generalization' AND g.id = fa.entity_id
-    WHERE fa.producer_mechanism = 'filter_rejection'
-      AND (fa.level <> 'Generalization' OR g.variant = :variant)
-),
 all_filter_evidence AS (
     SELECT * FROM recorded_filter_evidence
     UNION ALL
@@ -489,6 +540,83 @@ ORDER BY
         WHEN 'Generalization' THEN 3
     END,
     filter
+"""
+
+
+TEST_FILTERING_FLOW_SQL = f"""
+{_PROACTIVE_FILTER_RELATIONS_SQL},
+identified_test_evidence AS (
+    SELECT t.id AS entity_id
+    FROM test t
+    JOIN eligible_projects ep ON ep.id = t.project_id
+),
+inherited_method_evidence AS (
+    SELECT entity_id, decision
+    FROM proactive_filter_evidence
+    WHERE level = 'Test'
+      AND filter = 'InheritedTestMethod'
+),
+pre_filter_failure_evidence AS (
+    SELECT DISTINCT failed.test_id AS entity_id
+    FROM task failed
+    JOIN identified_test_evidence identified
+        ON identified.entity_id = failed.test_id
+    WHERE failed.status <> 'SUCCEEDED'
+      AND failed.assertion_id IS NULL
+      AND failed.generalization_id IS NULL
+      AND failed.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'
+),
+first_round_filter_evidence AS (
+    SELECT entity_id, filter, decision
+    FROM recorded_filter_evidence
+    WHERE level = 'Test'
+      AND filter = ANY(:first_round_test_filters)
+),
+first_round_rejected_tests AS (
+    SELECT DISTINCT entity_id
+    FROM first_round_filter_evidence
+    WHERE decision = 'REJECT'
+),
+first_round_overlap AS (
+    SELECT entity_id
+    FROM first_round_filter_evidence
+    WHERE decision = 'REJECT'
+    GROUP BY entity_id
+    HAVING count(DISTINCT filter) > 1
+),
+inter_round_failure_evidence AS (
+    SELECT DISTINCT failed.test_id AS entity_id
+    FROM task failed
+    JOIN identified_test_evidence identified
+        ON identified.entity_id = failed.test_id
+    WHERE failed.status <> 'SUCCEEDED'
+      AND failed.assertion_id IS NULL
+      AND failed.generalization_id IS NULL
+      AND failed.stage = 'FILTER_TESTS'
+),
+second_round_filter_evidence AS (
+    SELECT entity_id, filter, decision
+    FROM recorded_filter_evidence
+    WHERE level = 'Test'
+      AND filter <> ALL(:first_round_test_filters)
+)
+SELECT
+    (SELECT count(*) FROM identified_test_evidence)::bigint AS identified,
+    (SELECT count(DISTINCT entity_id) FROM inherited_method_evidence)::bigint
+        AS inherited_method_evaluated,
+    (SELECT count(DISTINCT entity_id) FROM inherited_method_evidence
+        WHERE decision = 'REJECT')::bigint AS inherited_method_rejected,
+    (SELECT count(*) FROM pre_filter_failure_evidence)::bigint
+        AS pre_filter_failures,
+    (SELECT count(DISTINCT entity_id) FROM first_round_filter_evidence)::bigint
+        AS round_one_evaluated,
+    (SELECT count(*) FROM first_round_rejected_tests)::bigint
+        AS round_one_rejected,
+    (SELECT count(*) FROM first_round_overlap)::bigint AS round_one_overlap,
+    (SELECT count(*) FROM inter_round_failure_evidence)::bigint
+        AS inter_round_failures,
+    (SELECT count(DISTINCT entity_id) FROM second_round_filter_evidence)::bigint
+        AS round_two_evaluated
 """
 
 
@@ -663,6 +791,27 @@ def fetch_filter_decisions(conn: Connection, variant: str) -> pd.DataFrame:
         frame.isetitem(frame.columns.get_loc(column), frame[column].astype(int))
     return pd.DataFrame(
         frame, columns=["level", "filter", "total", "accept", "defer", "reject"]
+    )
+
+
+def fetch_test_filtering_flow(conn: Connection, variant: str) -> TestFilteringFlow:
+    """Read and reconcile persisted populations across test filtering."""
+    frame = read_sql(conn, TEST_FILTERING_FLOW_SQL, query_params(variant))
+    if len(frame) != 1:
+        raise ExclusionEvidenceError(
+            f"test-filtering flow query returned {len(frame)} rows"
+        )
+    row = frame.iloc[0]
+    return TestFilteringFlow(
+        identified=int(row["identified"]),
+        inherited_method_evaluated=int(row["inherited_method_evaluated"]),
+        inherited_method_rejected=int(row["inherited_method_rejected"]),
+        pre_filter_failures=int(row["pre_filter_failures"]),
+        round_one_evaluated=int(row["round_one_evaluated"]),
+        round_one_rejected=int(row["round_one_rejected"]),
+        round_one_overlap=int(row["round_one_overlap"]),
+        inter_round_failures=int(row["inter_round_failures"]),
+        round_two_evaluated=int(row["round_two_evaluated"]),
     )
 
 

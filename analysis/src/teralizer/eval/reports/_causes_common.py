@@ -13,10 +13,7 @@ import pandas as pd
 from teralizer.eval.entities import variant_ref
 from teralizer.eval.model import ColumnSpec, Table, ValueKind, share_value
 from teralizer.eval.provenance import Provenance
-from teralizer.eval.reports._exclusion_evidence import (
-    MECHANISMS,
-    READER_COLLAPSE,
-)
+from teralizer.eval.reports._exclusion_evidence import MECHANISMS, READER_COLLAPSE
 
 
 @dataclass(frozen=True)
@@ -112,14 +109,6 @@ _FILTER_DISPLAY_NAMES = {
     "InheritedTestCase": "InheritedTest",
     "MockingFramework": "Mocking",
 }
-_FIRST_ROUND_TEST_FILTERS = frozenset({"NonPassingTest", "TestType"})
-
-
-def filter_group_key(level: str, filter_name: str) -> int:
-    """Group filter decisions by their entity level and test-filter round."""
-    if level == "Test":
-        return 0 if filter_name in _FIRST_ROUND_TEST_FILTERS else 1
-    return {"Assertion": 2, "Generalization": 3}.get(level, 99)
 
 
 def variant_sort_key(variant: str) -> int:
@@ -142,24 +131,27 @@ def build_filtering_table(
     body_style: str | None = None,
     full_width: bool = False,
 ) -> Table:
-    """df columns: level, filter, total, accept, defer, reject (integer counts)."""
+    """Render evaluated populations and verdict counts for each filter."""
     out = df.copy()
     for decision in ("accept", "defer", "reject"):
         out.loc[:, f"{decision}_pct"] = out.apply(
             lambda row: share_value(row[decision], row["total"]), axis=1
         )
-    out.loc[:, "_filter_group"] = out.apply(
-        lambda row: filter_group_key(row["level"], row["filter"]), axis=1
+    out.loc[:, "_filter_group"] = (
+        out["level"]
+        .map({"Test": 0, "Assertion": 1, "Generalization": 2})
+        .fillna(99)
+        .astype(int)
     )
     out = out.sort_values(
-        ["_filter_group", "reject", "filter"],
-        ascending=[True, False, True],
+        ["_filter_group", "total", "reject", "filter"],
+        ascending=[True, False, False, True],
     ).reset_index(drop=True)
     out.loc[:, "filter"] = out["filter"].replace(_FILTER_DISPLAY_NAMES)
     columns = [
         ColumnSpec("Level", "level"),
         ColumnSpec("Filter Name", "filter"),
-        ColumnSpec("Total", "total", kind=ValueKind.COUNT, align="r"),
+        ColumnSpec("Evaluated", "total", kind=ValueKind.COUNT, align="r"),
         ColumnSpec(
             "Accept",
             "accept",

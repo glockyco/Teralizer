@@ -32,7 +32,7 @@ CONTROLLED_REQUIRES: tuple[Required, ...] = (
 
 
 class FilteringOutcome(StrEnum):
-    RETAINED = "retained"
+    INCLUDED = "included"
     EXCLUDED = "excluded"
     PRE_FILTER_FAILURE = "pre_filter_failure"
     UNKNOWN = "unknown"
@@ -41,7 +41,7 @@ class FilteringOutcome(StrEnum):
 @dataclass(frozen=True)
 class FilteringSummary:
     total: int
-    retained: int
+    included: int
     excluded: int
 
     def __post_init__(self) -> None:
@@ -49,15 +49,15 @@ class FilteringSummary:
             raise exclusion.ExclusionEvidenceError(
                 "filtering population must contain at least one generalized test"
             )
-        if self.total != self.retained + self.excluded:
+        if self.total != self.included + self.excluded:
             raise exclusion.ExclusionEvidenceError(
                 "filtering counts do not conserve: "
-                f"total={self.total}, retained={self.retained}, excluded={self.excluded}"
+                f"total={self.total}, included={self.included}, excluded={self.excluded}"
             )
 
     @property
-    def retained_share(self):
-        return share_value(self.retained, self.total)
+    def included_share(self):
+        return share_value(self.included, self.total)
 
 
 CONTROLLED_FILTERING_SQL = """
@@ -148,7 +148,7 @@ def _classify_rows(frame: pd.DataFrame) -> pd.DataFrame:
                 )
             decision = str(row["decision"])
             if decision == "ACCEPT":
-                outcome = FilteringOutcome.RETAINED
+                outcome = FilteringOutcome.INCLUDED
             elif decision == "REJECT":
                 outcome = FilteringOutcome.EXCLUDED
             else:
@@ -202,7 +202,7 @@ def fetch_realworld_filtering(conn: Connection, variant: str) -> pd.DataFrame:
 
 
 def summarize_filtering(observations: pd.DataFrame) -> FilteringSummary:
-    """Summarize only generalized tests with retained or excluded filter results."""
+    """Summarize only generalized tests with included or excluded filter results."""
     if observations["generalization_id"].duplicated().any():
         duplicates = (
             observations.loc[
@@ -217,11 +217,11 @@ def summarize_filtering(observations: pd.DataFrame) -> FilteringSummary:
         )
     outcomes = observations["outcome"]
     known = outcomes.isin(
-        {FilteringOutcome.RETAINED.value, FilteringOutcome.EXCLUDED.value}
+        {FilteringOutcome.INCLUDED.value, FilteringOutcome.EXCLUDED.value}
     )
-    retained = int(outcomes.eq(FilteringOutcome.RETAINED.value).sum())
+    included = int(outcomes.eq(FilteringOutcome.INCLUDED.value).sum())
     excluded = int(outcomes.eq(FilteringOutcome.EXCLUDED.value).sum())
-    return FilteringSummary(int(known.sum()), retained, excluded)
+    return FilteringSummary(int(known.sum()), included, excluded)
 
 
 def build_filtering_comparison_table(
@@ -236,17 +236,17 @@ def build_filtering_comparison_table(
                 "dataset_key": "controlled",
                 "dataset": "Controlled",
                 "total": controlled.total,
-                "retained": controlled.retained,
+                "included": controlled.included,
                 "excluded": controlled.excluded,
-                "retained_share": controlled.retained_share,
+                "included_share": controlled.included_share,
             },
             {
                 "dataset_key": "realworld",
                 "dataset": "RepoReapers",
                 "total": realworld.total,
-                "retained": realworld.retained,
+                "included": realworld.included,
                 "excluded": realworld.excluded,
-                "retained_share": realworld.retained_share,
+                "included_share": realworld.included_share,
             },
         ]
     )
@@ -256,11 +256,11 @@ def build_filtering_comparison_table(
         columns=[
             ColumnSpec("Dataset", "dataset", kind=ValueKind.TEXT),
             ColumnSpec("Total", "total", kind=ValueKind.COUNT, align="r"),
-            ColumnSpec("Retained", "retained", kind=ValueKind.COUNT, align="r"),
+            ColumnSpec("Included", "included", kind=ValueKind.COUNT, align="r"),
             ColumnSpec("Excluded", "excluded", kind=ValueKind.COUNT, align="r"),
             ColumnSpec(
-                "Retained share",
-                "retained_share",
+                "Included share",
+                "included_share",
                 kind=ValueKind.SHARE,
                 align="r",
             ),

@@ -111,6 +111,14 @@ def test_rq5_filtering_is_test_and_assertion_only():
     assert set(filtering.df["level"]) == {"Test", "Assertion"}
 
 
+def test_rq5_breakdown_centers_excluded_spanner():
+    report = _report()
+    breakdown = next(t for t in report.tables() if "breakdown" in t.label)
+
+    assert breakdown.group_header_align == "c"
+    assert "\\multicolumn{2}{c}{Excluded}" in render_table(breakdown)
+
+
 def test_rq5_generalization_strategy_order():
     report = _report()
     breakdown = next(t for t in report.tables() if "breakdown" in t.label)
@@ -140,7 +148,7 @@ def test_rq5_filtering_row_order():
         ("Assertion", "AssertionType"),
         ("Assertion", "VoidReturnType"),
     ]
-    assert filtering.df["_filter_group"].tolist() == [0, 0, 1, 2, 2, 2, 2, 2]
+    assert filtering.df["_filter_group"].tolist() == [0, 0, 0, 1, 1, 1, 1, 1]
     assert filtering.row_key == "row_key"
     assert (
         "\\label{tabrow:tab-exclusions-filtering:Assertion@3AExcludedTest}"

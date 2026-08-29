@@ -33,6 +33,14 @@ def test_filtering_table_shapes_columns_and_percentages():
         "defer",
         "reject",
     ]
+    assert [c.header for c in table.columns] == [
+        "Level",
+        "Filter Name",
+        "Evaluated",
+        "Accept",
+        "Defer",
+        "Reject",
+    ]
     # The frame keeps numbers. Pairing a count with its share is the renderer's
     # job, because only a whole column can be aligned.
     decisions = {c.source: c for c in table.columns[3:]}
@@ -181,26 +189,25 @@ def test_breakdown_strategy_rows_ordered():
     ]
 
 
-def test_filtering_table_groups_rounds_and_orders_by_rejections():
+def test_filtering_table_groups_populations_and_orders_decisions():
     rows = [
-        ("Assertion", "ParameterType", 7),
-        ("Test", "NoAssertions", 10),
-        ("Assertion", "AssertionType", 4),
-        ("Test", "NonPassingTest", 8),
-        ("Assertion", "MissingValue", 9),
-        ("Test", "TestType", 2),
-        ("Assertion", "VoidReturnType", 1),
-        ("Assertion", "ExcludedTest", 4),
-        ("Generalization", "NonPassingTest", 3),
-        ("Generalization", "WideningLicense", 9),
-        ("Generalization", "SeedSpecConsistency", 1),
-        ("Test", "MockingFramework", 8),
-        ("Test", "InheritedTestMethod", 6),
-        ("Test", "InheritedTestCase", 4),
-        ("Test", "DisabledTest", 1),
+        ("Assertion", "ParameterType", 30, 7),
+        ("Test", "NoAssertions", 30, 10),
+        ("Assertion", "AssertionType", 20, 4),
+        ("Test", "NonPassingTest", 20, 8),
+        ("Assertion", "MissingValue", 20, 9),
+        ("Test", "TestType", 20, 2),
+        ("Assertion", "VoidReturnType", 20, 1),
+        ("Assertion", "ExcludedTest", 20, 4),
+        ("Generalization", "NonPassingTest", 10, 3),
+        ("Generalization", "WideningLicense", 20, 9),
+        ("Generalization", "SeedSpecConsistency", 30, 1),
+        ("Test", "MockingFramework", 20, 8),
+        ("Test", "InheritedTestMethod", 6, 6),
+        ("Test", "InheritedTestCase", 20, 4),
+        ("Test", "DisabledTest", 20, 1),
     ]
-    df = pd.DataFrame(rows, columns=["level", "filter", "reject"])
-    df.loc[:, "total"] = 20
+    df = pd.DataFrame(rows, columns=["level", "filter", "total", "reject"])
     df.loc[:, "accept"] = df["total"] - df["reject"]
     df.loc[:, "defer"] = 0
 
@@ -208,27 +215,26 @@ def test_filtering_table_groups_rounds_and_orders_by_rejections():
 
     assert table.group_by == "_filter_group"
     assert table.df["_filter_group"].tolist() == [
-        0,
-        0,
+        *([0] * 7),
         *([1] * 5),
-        *([2] * 5),
-        *([3] * 3),
+        *([2] * 3),
     ]
     assert list(zip(table.df["level"], table.df["filter"])) == [
-        ("Test", "NonPassingTest"),
-        ("Test", "TestType"),
         ("Test", "NoAssertions"),
         ("Test", "Mocking"),
-        ("Test", "InheritedTestMethod"),
+        ("Test", "NonPassingTest"),
         ("Test", "InheritedTest"),
+        ("Test", "TestType"),
         ("Test", "DisabledTest"),
-        ("Assertion", "MissingValue"),
+        ("Test", "InheritedTestMethod"),
         ("Assertion", "ParameterType"),
+        ("Assertion", "MissingValue"),
         ("Assertion", "AssertionType"),
         ("Assertion", "ExcludedTest"),
         ("Assertion", "VoidReturnType"),
+        ("Generalization", "SeedSpecConsistency"),
         ("Generalization", "WideningLicense"),
         ("Generalization", "NonPassingTest"),
-        ("Generalization", "SeedSpecConsistency"),
     ]
-    assert render_table(table).count("  \\midrule") == 4
+    # One header rule plus rules before assertion and generalization decisions.
+    assert render_table(table).count("  \\midrule") == 3

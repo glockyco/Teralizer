@@ -77,30 +77,30 @@
 
 ## 11. Correct the Filtering Contract
 
-- [ ] 11.1 Replace the four-group model with first-round tests, second-round tests, inherited-method screening, assertions, and generalizations.
-- [ ] 11.2 Rename the filter-detail `Total` column to `Evaluated` and sort each group by descending evaluated population, descending rejection count, then ascending filter name.
-- [ ] 11.3 Rename filtering-outcome symbols, metrics, macros, provenance, generated labels, tests, and reader-facing consumers from retained to included without changing unrelated retention terms.
-- [ ] 11.4 Align accepted producer and thesis terminology contracts with included and excluded filtering outcomes and per-filter Accept, Defer, and Reject verdicts.
+- [x] 11.1 Replace the five-group model with test, assertion, and generalization level groups; insert rules only at level boundaries.
+- [x] 11.2 Rename the filter-detail `Total` column to `Evaluated` and sort each level by descending evaluated population, descending rejection count, then ascending filter name.
+- [x] 11.3 Rename filtering-outcome symbols, metrics, macros, provenance, generated labels, tests, and reader-facing consumers from retained to included without changing unrelated retention terms.
+- [x] 11.4 Align accepted producer and thesis terminology contracts with included and excluded filtering outcomes and per-filter Accept, Defer, and Reject verdicts.
 
 ## 12. Register Flow and Rendering Evidence
 
-- [ ] 12.1 Materialize provenance-backed test-flow metrics for inherited-method screening, pre-filter failures, both rounds, first-round overlap, and intervening failures.
-- [ ] 12.2 Add focused reconciliation tests that derive each round population from persisted set evidence instead of summed rejection counts.
-- [ ] 12.3 Remove the RQ5 summary-table alignment override and assert that the shared renderer centers the `Excluded` spanner.
-- [ ] 12.4 Add an explicit local compact-density style for the long RQ6 filter-detail table without changing global float behavior or generated TeX.
-- [ ] 12.5 Add focused shared-renderer and report tests for five groups, evaluated-population ordering, centered headers, and compact density.
+- [x] 12.1 Materialize provenance-backed test-flow metrics for inherited-method screening, pre-filter failures, both rounds, first-round overlap, and intervening failures.
+- [x] 12.2 Add focused reconciliation tests that derive each round population from persisted set evidence instead of summed rejection counts.
+- [x] 12.3 Remove the RQ5 summary-table alignment override and assert that the shared renderer centers the `Excluded` spanner.
+- [x] 12.4 Add an explicit local compact-density style for the long RQ6 filter-detail table without changing global float behavior or generated TeX.
+- [x] 12.5 Add focused shared-renderer and report tests for three level groups, evaluated-population ordering, centered headers, and compact density.
 
 ## 13. Republish the Corrected Evidence
 
-- [ ] 13.1 Regenerate the registered RQ5 and RQ6 reports from their declared inputs and inspect every artifact and provenance change.
-- [ ] 13.2 Update thesis Tables 5.13, 5.14, 5.16, and 5.17 from generated artifacts without hand-editing producer output.
-- [ ] 13.3 Correct both thesis `ExcludedTest` explanations and cite its rows without publishing an unregistered cause breakdown.
-- [ ] 13.4 Replace retained-as-outcome and proactive-exclusion prose with included, excluded, and filtering while leaving valid retention language unchanged.
-- [ ] 13.5 Keep the test-flow narrative concise: preserve the two-round explanation and explain inherited-method screening as a separate conditional population.
+- [x] 13.1 Regenerate the registered RQ5 and RQ6 reports from their declared inputs and inspect every artifact and provenance change.
+- [x] 13.2 Update thesis Tables 5.13, 5.14, 5.16, and 5.17 from generated artifacts without hand-editing producer output.
+- [x] 13.3 Correct both thesis `ExcludedTest` explanations and cite its rows without publishing an unregistered cause breakdown.
+- [x] 13.4 Replace retained-as-outcome and proactive-exclusion prose with included, excluded, and filtering while leaving valid retention language unchanged.
+- [x] 13.5 Keep the test-flow narrative concise: preserve the two-round explanation and explain inherited-method screening as a separate conditional population.
 
 ## 14. Verify the Complete Correction
 
-- [ ] 14.1 Run focused filtering, rendering, metric, reconciliation, and RQ5/RQ6 report tests.
-- [ ] 14.2 Run the complete analysis tests, Ruff, Ty, repository hooks, and strict OpenSpec validation.
-- [ ] 14.3 Build the thesis and run its style checks, then inspect Tables 5.13 through 5.17 and their page boundaries in the rendered PDF.
-- [ ] 14.4 Commit the producer and thesis changes as separate atomic commits with causal bodies.
+- [x] 14.1 Run focused filtering, rendering, metric, reconciliation, and RQ5/RQ6 report tests.
+- [x] 14.2 Run the complete analysis tests, Ruff, Ty, repository hooks, and strict OpenSpec validation.
+- [x] 14.3 Build the thesis and run its style checks, then inspect Tables 5.13 through 5.17 and their page boundaries in the rendered PDF.
+- [x] 14.4 Commit the producer and thesis changes as separate atomic commits with causal bodies.

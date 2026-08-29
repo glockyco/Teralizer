@@ -257,7 +257,6 @@ def build(context: ReportContext) -> RQReport:
         short_caption="Inclusion, filtering, and failure counts by level",
         body_style="\\tabstyle\\setlength{\\tabcolsep}{3pt}",
         full_width=True,
-        group_header_align="r",
         include_strategy=True,
     )
     breakdown = replace(

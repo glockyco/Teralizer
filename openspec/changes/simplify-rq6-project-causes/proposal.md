@@ -15,8 +15,8 @@ The RQ6 project-exclusion table classifies each row as internal, external, or mi
 - Keep project, test, assertion, and generalization populations distinct; use selected concrete examples in the thesis prose and leave complete subtype distributions in the replication package.
 - Classify proactive exclusions as filters by behavior, independent of their pipeline stage, producer class, or persistence shape.
 - Add `InheritedTestMethod`, `SeedSpecConsistency`, and `WideningLicense` to the filter-detail table with evidence-derived verdict populations.
-- Separate first-round tests, second-round tests, inherited-method screening, assertions, and generalizations with rules.
-- Rename the filter-detail denominator from `Total` to `Evaluated` and order each group by evaluated population, rejection count, and filter name.
+- Separate test, assertion, and generalization decisions with rules. Let evaluated-population ordering expose different test decision points without extra subgroup rules.
+- Rename the filter-detail denominator from `Total` to `Evaluated` and order each level by evaluated population, rejection count, and filter name.
 - Use `included` and `excluded` for filtering outcomes while preserving `Accept`, `Defer`, and `Reject` for individual filter verdicts.
 - Publish provenance-backed test-flow counts that reconcile source screening, pre-filter failures, both filter rounds, overlaps, and intervening failures.
 - Correct the reader-facing `ExcludedTest` mechanism without publishing a diagnostic cause breakdown in the thesis.

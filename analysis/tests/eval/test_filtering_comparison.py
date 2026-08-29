@@ -48,15 +48,15 @@ def _observations() -> pd.DataFrame:
 def test_filtering_summary_uses_only_explicit_filter_results():
     observations = _observations()
     assert observations.to_dict("records") == [
-        {"generalization_id": 1, "outcome": "retained"},
+        {"generalization_id": 1, "outcome": "included"},
         {"generalization_id": 2, "outcome": "excluded"},
         {"generalization_id": 3, "outcome": "pre_filter_failure"},
         {"generalization_id": 4, "outcome": "unknown"},
     ]
 
     summary = filtering.summarize_filtering(observations)
-    assert (summary.total, summary.retained, summary.excluded) == (2, 1, 1)
-    assert float(summary.retained_share) == pytest.approx(0.5)
+    assert (summary.total, summary.included, summary.excluded) == (2, 1, 1)
+    assert float(summary.included_share) == pytest.approx(0.5)
 
 
 def test_later_exclusion_does_not_override_a_filtering_result():
@@ -75,7 +75,7 @@ def test_later_exclusion_does_not_override_a_filtering_result():
     )
     assert observations.iloc[0].to_dict() == {
         "generalization_id": 1,
-        "outcome": "retained",
+        "outcome": "included",
     }
 
 
@@ -148,7 +148,7 @@ def test_filtering_summary_rejects_nonconserving_counts():
 def test_duplicate_observation_id_fails_before_summary():
     observations = pd.DataFrame(
         [
-            {"generalization_id": 1, "outcome": "retained"},
+            {"generalization_id": 1, "outcome": "included"},
             {"generalization_id": 1, "outcome": "excluded"},
         ]
     )
@@ -166,17 +166,17 @@ def test_filtering_table_preserves_separate_denominators():
         None,
     )
     rows = table.df.set_index("dataset_key")
-    assert rows.loc["controlled", ["total", "retained", "excluded"]].tolist() == [
+    assert rows.loc["controlled", ["total", "included", "excluded"]].tolist() == [
         4,
         3,
         1,
     ]
-    assert rows.loc["realworld", ["total", "retained", "excluded"]].tolist() == [
+    assert rows.loc["realworld", ["total", "included", "excluded"]].tolist() == [
         5,
         4,
         1,
     ]
-    assert float(rows.loc["controlled", "retained_share"]) == pytest.approx(0.75)
-    assert float(rows.loc["realworld", "retained_share"]) == pytest.approx(0.8)
+    assert float(rows.loc["controlled", "included_share"]) == pytest.approx(0.75)
+    assert float(rows.loc["realworld", "included_share"]) == pytest.approx(0.8)
     assert table.note is not None
     assert "that dataset" in table.note
