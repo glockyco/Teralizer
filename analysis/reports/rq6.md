@@ -38,14 +38,14 @@ Filtering results use generalized tests that reach filtering as each dataset's d
 
 **Filtering results for controlled and RepoReapers generalized tests.**
 
-| Dataset | Total | Retained | Excluded | Retained share |
+| Dataset | Total | Included | Excluded | Included share |
 | --- | --- | --- | --- | --- |
 | Controlled | 13,804 | 11,597 | 2,207 | 84.0% |
 | RepoReapers | 2,035 | 1,615 | 420 | 79.4% |
 
 _Each share uses the generalized tests with a filtering result in that dataset as its denominator._
 
-source: [`build_filtering_comparison_table`](https://github.com/glockyco/Teralizer/blob/9f18b49c27c992ed54ae0345cf38f43e795b2f3c/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L227)
+source: [`build_filtering_comparison_table`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/_filtering_comparison.py#L227)
 
 Generalization attempts are reported separately from emitted, filter-result-recorded, validated, reduced, and final-usable tests. A missing independent task record remains unknown.
 
@@ -112,7 +112,7 @@ source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/b
 | Generalization | Compilation failure | failures | 5 (0.1%) | 5,356 |
 | Generalization | Processing failure | failures | 17 (0.3%) | 5,356 |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L705)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L854)
 
 **Exclusion results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -122,30 +122,30 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
 | Generalization | 5,356 | 1,615 (30.2%) | 3,719 (69.4%) | 22 (0.4%) |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L705)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L854)
 
 **Filtering results for Improved (200 tries) in the RepoReapers projects.**
 
-| Level | Filter Name | Total | Accept | Defer | Reject |
+| Level | Filter Name | Evaluated | Accept | Defer | Reject |
 | --- | --- | --- | --- | --- | --- |
 | Test | NonPassingTest | 82,445 | 73,780 (89.5%) | — | 8,665 (10.5%) |
 | Test | TestType | 82,445 | 82,246 (99.8%) | — | 199 (0.2%) |
 | Test | NoAssertions | 73,662 | 49,396 (67.1%) | — | 24,266 (32.9%) |
 | Test | Mocking | 73,662 | 66,689 (90.5%) | — | 6,973 (9.5%) |
-| Test | InheritedTestMethod | 6,259 | 3,424 (54.7%) | — | 2,835 (45.3%) |
 | Test | InheritedTest | 73,662 | 72,609 (98.6%) | — | 1,053 (1.4%) |
 | Test | DisabledTest | 73,662 | 73,657 (100.0%) | — | 5 (0.0%) |
+| Test | InheritedTestMethod | 6,259 | 3,424 (54.7%) | — | 2,835 (45.3%) |
 | Assertion | MissingValue | 180,548 | 109,865 (60.9%) | — | 70,683 (39.1%) |
 | Assertion | ParameterType | 180,548 | 48,992 (27.1%) | 65,706 (36.4%) | 65,850 (36.5%) |
 | Assertion | ReturnType | 180,548 | 52,400 (29.0%) | 70,683 (39.1%) | 57,465 (31.8%) |
 | Assertion | ExcludedTest | 180,548 | 141,764 (78.5%) | — | 38,784 (21.5%) |
 | Assertion | AssertionType | 180,548 | 148,901 (82.5%) | — | 31,647 (17.5%) |
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | — | 5,203 (2.9%) |
+| Generalization | SeedSpecConsistency | 5,356 | 5,355 (100.0%) | — | 1 (0.0%) |
 | Generalization | WideningLicense | 5,355 | 2,057 (38.4%) | — | 3,298 (61.6%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | — | 420 (20.6%) |
-| Generalization | SeedSpecConsistency | 5,356 | 5,355 (100.0%) | — | 1 (0.0%) |
 
-source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L659)
+source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L787)
 
 The reader-facing filtering column combines filter decisions, generation-gate refusals, and inherited-test inlining limits. The preceding table preserves the exact mechanisms.
 
@@ -176,7 +176,7 @@ Reconstructed evidence distinguishes resolved findings from unresolved and incom
 
 _Resolved, unresolved, and incompatible are audit partitions. Sample findings are estimates with the stated method and confidence interval. They are not exact population rates._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/rq6_causes.py#L270)
 
 **Reviewed outcomes in the reconstructed RepoReapers evidence.**
 
@@ -195,4 +195,4 @@ source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blo
 
 _Counts describe reviewed records. For sampled claims, these counts do not describe the full population._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/rq6_causes.py#L270)

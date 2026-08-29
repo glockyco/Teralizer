@@ -20,11 +20,11 @@ Controlled-dataset exclusions separate successful inclusions from proactive filt
 | Improved (50 tries) | Generalization | 13,836 | 11,660 (84.3%) | 2,144 (15.5%) | 32 (0.2%) |
 | Improved (200 tries) | Generalization | 13,836 | 11,597 (83.8%) | 2,207 (16.0%) | 32 (0.2%) |
 
-source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/602adc5e886819c8c391c46e4432c172843e182e/analysis/src/teralizer/eval/reports/rq5_causes.py#L216)
+source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/rq5_causes.py#L216)
 
 **Filtering results for tests and assertions in the Commons and EqBench-ES projects.**
 
-| Level | Filter Name | Total | Accept | Defer | Reject |
+| Level | Filter Name | Evaluated | Accept | Defer | Reject |
 | --- | --- | --- | --- | --- | --- |
 | Test | NonPassingTest | 23,246 | 21,719 (93.4%) | — | 1,527 (6.6%) |
 | Test | TestType | 23,246 | 23,066 (99.2%) | — | 180 (0.8%) |
@@ -35,4 +35,4 @@ source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/602adc5e
 | Assertion | AssertionType | 28,923 | 28,180 (97.4%) | — | 743 (2.6%) |
 | Assertion | VoidReturnType | 28,923 | 21,763 (75.2%) | 7,157 (24.7%) | 3 (0.0%) |
 
-source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/602adc5e886819c8c391c46e4432c172843e182e/analysis/src/teralizer/eval/reports/rq5_causes.py#L206)
+source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/rq5_causes.py#L206)
