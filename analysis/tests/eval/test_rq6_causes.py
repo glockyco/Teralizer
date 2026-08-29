@@ -9,6 +9,7 @@ from teralizer.eval.inputs import CorpusInputSpec, FileInputSpec
 from teralizer.eval.macros import macro_name
 from teralizer.eval.model import BuiltReport, ValueKind
 from teralizer.eval.reports import _exclusion_evidence as exclusion
+from teralizer.eval.reports import _filter_details as filter_details
 from teralizer.eval.reports import _funnel
 
 from teralizer.eval.registry import get
@@ -82,6 +83,12 @@ def test_rq6_has_funnel_and_shared_tables(rq6_report):
         "tab-exclusions-filtering-extended",
         "rq6_jpf_exception_causes",
         "rq6_mut_choice_sensitivity",
+        "rq6_non_passing_outcomes",
+        "rq6_non_passing_failure_types",
+        "rq6_assertion_type_rejections",
+        "rq6_missing_value_causes",
+        "rq6_parameter_type_rejections",
+        "rq6_return_type_rejections",
         "rq6_widening_refusals",
         "rq6_reconstruction_summary",
         "rq6_reconstruction_outcomes",
@@ -545,7 +552,7 @@ def test_rq6_test_filtering_flow_reconciles_persisted_populations(rq6_report):
 def test_rq6_test_type_categories_partition_rejections(rq6_report):
     categories = {
         category: int(rq6_report.metric(f"realworld.test_type.{category}").value)
-        for category in rq6_causes.TEST_TYPE_CATEGORIES
+        for category in filter_details.TEST_TYPE_CATEGORIES
     }
     assert categories == {
         "junit_theory": 163,
@@ -567,8 +574,27 @@ def test_rq6_test_type_categories_partition_rejections(rq6_report):
     assert sum(categories.values()) == rejected
 
     tex = render_macros(rq6_report)
-    for key in rq6_causes.TEST_TYPE_CATEGORY_METRIC_KEYS:
+    for key in filter_details.TEST_TYPE_CATEGORY_METRIC_KEYS:
         assert tex.count(f"\\newcommand{{\\{macro_name(key)}}}") == 1
+
+
+def test_rq6_publishes_filter_detail_metrics(rq6_report):
+    expected = {
+        "realworld.non_passing.rejected_tests": 8_665,
+        "realworld.non_passing.rejected_classes": 1_087,
+        "realworld.non_passing.nonpassed": 4_797,
+        "realworld.non_passing.passed": 3_868,
+        "realworld.assertion_type.assert_not_null": 9_610,
+        "realworld.missing_value.unsupported_assertion_shape": 31_656,
+        "realworld.parameter_type.no_arguments": 65_850,
+        "realworld.parameter_type.unsupported_types": 0,
+        "realworld.return_type.void": 9_054,
+    }
+
+    assert {key: int(rq6_report.metric(key).value) for key in expected} == expected
+    assert float(
+        rq6_report.metric("realworld.non_passing.nonpassed_pct").value
+    ) == pytest.approx(4_797 / 8_665)
 
 
 def test_rq6_every_assertion_carries_resolver_telemetry(rq6_report):

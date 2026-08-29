@@ -27,6 +27,7 @@ from teralizer.eval.model import (
 from teralizer.eval.provenance import Provenance, capture
 from teralizer.eval.registry import ReportSpec, register
 from teralizer.eval.reports import _exclusion_evidence as exclusion
+from teralizer.eval.reports import _filter_details as filter_details
 from teralizer.eval.reports import _filtering_comparison as filtering_comparison
 from teralizer.eval.reports import _funnel
 from teralizer.eval.reports import _generalization_funnel as generation_funnel
@@ -65,68 +66,11 @@ WHERE NOT EXISTS (
 )
 """
 
-TEST_TYPE_CATEGORY_SQL = f"""
-{_funnel.ELIGIBILITY_CTE}
-SELECT CASE
-           WHEN t.test_annotations_source_code = '@Theory' THEN 'junit_theory'
-           WHEN t.test_annotations_source_code = '@Override' THEN 'overridden_declaration'
-           WHEN t.test_annotation_name = 'TestNG' THEN 'testng'
-           ELSE 'unknown'
-       END AS category,
-       count(DISTINCT t.id) AS count
-FROM filter_result fr
-JOIN eligible_projects ep ON ep.id = fr.project_id
-JOIN test t ON t.id = fr.test_id
-WHERE fr.decision = 'REJECT'
-  AND fr.filter_name LIKE '%%TestTypeFilter'
-GROUP BY category
-ORDER BY category
-"""
-TEST_TYPE_CATEGORIES = (
-    "junit_theory",
-    "overridden_declaration",
-    "testng",
-)
-TEST_TYPE_CATEGORY_METRIC_KEYS = frozenset(
-    f"realworld.test_type.{category}" for category in TEST_TYPE_CATEGORIES
-)
-
 
 def _fetch_assertions_without_resolution(conn: Connection, variant: str) -> int:
     """Assertions whose resolver telemetry was never persisted. Must be zero."""
     df = read_sql(conn, UNRESOLVED_TELEMETRY_SQL, exclusion.query_params(variant))
     return int(df["assertions_without_resolution"].iloc[0])
-
-
-def _fetch_test_type_categories(conn: Connection, variant: str) -> dict[str, int]:
-    """Return the recorded declaration categories rejected by TestType."""
-    df = read_sql(conn, TEST_TYPE_CATEGORY_SQL, exclusion.query_params(variant))
-    categories = {str(row["category"]): int(row["count"]) for _, row in df.iterrows()}
-    if set(categories) != set(TEST_TYPE_CATEGORIES):
-        raise exclusion.ExclusionEvidenceError(
-            "TestType declaration categories differ: "
-            f"expected={sorted(TEST_TYPE_CATEGORIES)}, "
-            f"actual={sorted(categories)}"
-        )
-    return categories
-
-
-def _validate_test_type_categories(
-    categories: dict[str, int], filtering: pd.DataFrame
-) -> None:
-    row = filtering.loc[
-        filtering["level"].eq("Test") & filtering["filter"].eq("TestType")
-    ]
-    if len(row) != 1:
-        raise exclusion.ExclusionEvidenceError(
-            f"expected one TestType filtering row, found {len(row)}"
-        )
-    rejected = int(row["reject"].iloc[0])
-    if sum(categories.values()) != rejected:
-        raise exclusion.ExclusionEvidenceError(
-            "TestType declaration categories do not partition its rejections: "
-            f"categories={sum(categories.values())}, rejected={rejected}"
-        )
 
 
 def _population(
@@ -562,6 +506,43 @@ FILTERING_METRIC_KEYS = frozenset(
     for suffix in ("total", "included", "excluded", "included_pct")
 )
 
+FILTER_DETAIL_METRIC_KEYS = frozenset(
+    {
+        "realworld.non_passing.rejected_tests",
+        "realworld.non_passing.rejected_classes",
+        "realworld.non_passing.nonpassed",
+        "realworld.non_passing.nonpassed_pct",
+        "realworld.missing_value.rejected",
+        "realworld.parameter_type.rejected",
+        "realworld.return_type.rejected",
+    }
+    | {
+        f"realworld.non_passing.{outcome}{suffix}"
+        for outcome in filter_details.NON_PASSING_OUTCOMES
+        for suffix in ("", "_pct")
+    }
+    | {
+        f"realworld.assertion_type.{metric_name}{suffix}"
+        for metric_name in filter_details.ASSERTION_TYPE_METRIC_NAMES.values()
+        for suffix in ("", "_pct")
+    }
+    | {
+        f"realworld.missing_value.{metric_name}{suffix}"
+        for metric_name in filter_details.MISSING_VALUE_METRIC_NAMES.values()
+        for suffix in ("", "_pct")
+    }
+    | {
+        f"realworld.parameter_type.{category}{suffix}"
+        for category in filter_details.PARAMETER_TYPE_CATEGORIES
+        for suffix in ("", "_pct")
+    }
+    | {
+        f"realworld.return_type.{metric_name}{suffix}"
+        for metric_name in filter_details.RETURN_TYPE_METRIC_NAMES.values()
+        for suffix in ("", "_pct")
+    }
+)
+
 RETAINED_METRIC_KEYS = frozenset(
     {
         "realworld.selected_projects",
@@ -607,8 +588,9 @@ RETAINED_METRIC_KEYS = frozenset(
         for suffix in ("", "_pct")
     }
     | FILTERING_METRIC_KEYS
+    | FILTER_DETAIL_METRIC_KEYS
     | TEST_FILTERING_FLOW_METRIC_KEYS
-    | TEST_TYPE_CATEGORY_METRIC_KEYS
+    | filter_details.TEST_TYPE_CATEGORY_METRIC_KEYS
     | {
         f"rq6.reconstruction.{claim.replace('-', '_')}.{partition}"
         for claim in RECONSTRUCTION_CLAIMS
@@ -625,6 +607,12 @@ RETAINED_TABLE_KEYS = frozenset(
         "rq6_filtering_comparison",
         "rq6_jpf_exception_causes",
         "rq6_mut_choice_sensitivity",
+        "rq6_non_passing_outcomes",
+        "rq6_non_passing_failure_types",
+        "rq6_assertion_type_rejections",
+        "rq6_missing_value_causes",
+        "rq6_parameter_type_rejections",
+        "rq6_return_type_rejections",
         "rq6_exclusion_mechanisms",
         "tab-exclusions-breakdown-extended",
         "tab-exclusions-filtering-extended",
@@ -765,8 +753,46 @@ def build(context: ReportContext) -> RQReport:
 
     filtering_data = exclusion.fetch_filter_decisions(conn, variant)
     exclusion.validate_filtering_reconciliation(filtering_data, mechanism_partition)
-    test_type_categories = _fetch_test_type_categories(conn, variant)
-    _validate_test_type_categories(test_type_categories, filtering_data)
+    test_type_categories = filter_details.fetch_test_type_categories(conn, variant)
+    non_passing_outcomes = filter_details.fetch_non_passing_outcomes(conn, variant)
+    non_passing_failure_types = filter_details.fetch_non_passing_failure_types(
+        conn, variant
+    )
+    assertion_type_rejections = filter_details.fetch_assertion_type_rejections(
+        conn, variant
+    )
+    missing_value_causes = filter_details.fetch_missing_value_causes(conn, variant)
+    parameter_type_rejections = filter_details.fetch_parameter_type_rejections(
+        conn, variant
+    )
+    return_type_rejections = filter_details.fetch_return_type_rejections(conn, variant)
+    filter_details.validate_filter_partitions(
+        filtering_data,
+        test_types=test_type_categories,
+        non_passing=non_passing_outcomes,
+        assertion_types=assertion_type_rejections,
+        missing_values=missing_value_causes,
+        parameter_types=parameter_type_rejections,
+        return_types=return_type_rejections,
+    )
+    non_passing_outcome_table = filter_details.non_passing_outcome_table(
+        non_passing_outcomes
+    )
+    non_passing_failure_type_table = filter_details.non_passing_failure_type_table(
+        non_passing_failure_types
+    )
+    assertion_type_rejection_table = filter_details.assertion_type_rejection_table(
+        assertion_type_rejections
+    )
+    missing_value_cause_table = filter_details.missing_value_cause_table(
+        missing_value_causes
+    )
+    parameter_type_rejection_table = filter_details.parameter_type_rejection_table(
+        parameter_type_rejections
+    )
+    return_type_rejection_table = filter_details.return_type_rejection_table(
+        return_type_rejections
+    )
     filtering = build_filtering_table(
         filtering_data,
         key="tab-exclusions-filtering-extended",
@@ -971,7 +997,8 @@ def build(context: ReportContext) -> RQReport:
         )
     )
     test_type_provenance = capture(
-        _fetch_test_type_categories, query=TEST_TYPE_CATEGORY_SQL
+        filter_details.fetch_test_type_categories,
+        query=filter_details.TEST_TYPE_CATEGORY_SQL,
     )
     metrics.extend(
         _count_metric(
@@ -980,8 +1007,188 @@ def build(context: ReportContext) -> RQReport:
             "Test",
             test_type_provenance,
         )
-        for category in TEST_TYPE_CATEGORIES
+        for category in filter_details.TEST_TYPE_CATEGORIES
     )
+    non_passing_provenance = capture(
+        filter_details.fetch_non_passing_outcomes,
+        query=filter_details.NON_PASSING_OUTCOME_SQL,
+    )
+    non_passing_by_outcome = non_passing_outcomes.set_index("outcome")
+    non_passing_total_key = "realworld.non_passing.rejected_tests"
+    non_passing_total = int(non_passing_outcomes["tests"].sum())
+    non_passing_nonpassed_key = "realworld.non_passing.nonpassed"
+    non_passing_nonpassed = sum(
+        int(non_passing_by_outcome.loc[outcome, "tests"])
+        for outcome in ("skipped", "failed", "error")
+    )
+    metrics.extend(
+        [
+            _count_metric(
+                non_passing_total_key,
+                non_passing_total,
+                "Test",
+                non_passing_provenance,
+            ),
+            _count_metric(
+                "realworld.non_passing.rejected_classes",
+                int(non_passing_outcomes["classes"].iloc[0]),
+                "Test class",
+                non_passing_provenance,
+            ),
+            _count_metric(
+                non_passing_nonpassed_key,
+                non_passing_nonpassed,
+                "Test",
+                non_passing_provenance,
+            ),
+            _share_metric(
+                "realworld.non_passing.nonpassed_pct",
+                non_passing_nonpassed / non_passing_total,
+                non_passing_nonpassed_key,
+                non_passing_total_key,
+                "Test",
+                non_passing_provenance,
+            ),
+        ]
+    )
+    for outcome in filter_details.NON_PASSING_OUTCOMES:
+        count_key = f"realworld.non_passing.{outcome}"
+        count = int(non_passing_by_outcome.loc[outcome, "tests"])
+        metrics.extend(
+            [
+                _count_metric(count_key, count, "Test", non_passing_provenance),
+                _share_metric(
+                    f"{count_key}_pct",
+                    count / non_passing_total,
+                    count_key,
+                    non_passing_total_key,
+                    "Test",
+                    non_passing_provenance,
+                ),
+            ]
+        )
+
+    assertion_type_provenance = capture(
+        filter_details.fetch_assertion_type_rejections,
+        query=filter_details.ASSERTION_TYPE_REJECTION_SQL,
+    )
+    assertion_type_by_name = assertion_type_rejections.set_index("assertion_name")
+    for (
+        assertion_name,
+        metric_name,
+    ) in filter_details.ASSERTION_TYPE_METRIC_NAMES.items():
+        count_key = f"realworld.assertion_type.{metric_name}"
+        count = int(assertion_type_by_name.loc[assertion_name, "assertions"])
+        metrics.extend(
+            [
+                _count_metric(count_key, count, "Assertion", assertion_type_provenance),
+                _share_metric(
+                    f"{count_key}_pct",
+                    count / int(assertions["total"]),
+                    count_key,
+                    assertion_total_key,
+                    "Assertion",
+                    assertion_type_provenance,
+                ),
+            ]
+        )
+
+    missing_value_provenance = capture(
+        filter_details.fetch_missing_value_causes,
+        query=filter_details.MISSING_VALUE_CAUSE_SQL,
+    )
+    missing_value_by_cause = missing_value_causes.set_index("reason_code")
+    missing_value_total_key = "realworld.missing_value.rejected"
+    missing_value_total = int(missing_value_causes["rejected_assertions"].iloc[0])
+    metrics.append(
+        _count_metric(
+            missing_value_total_key,
+            missing_value_total,
+            "Assertion",
+            missing_value_provenance,
+        )
+    )
+    for reason_code, metric_name in filter_details.MISSING_VALUE_METRIC_NAMES.items():
+        count_key = f"realworld.missing_value.{metric_name}"
+        count = int(missing_value_by_cause.loc[reason_code, "assertions"])
+        metrics.extend(
+            [
+                _count_metric(count_key, count, "Assertion", missing_value_provenance),
+                _share_metric(
+                    f"{count_key}_pct",
+                    count / missing_value_total,
+                    count_key,
+                    missing_value_total_key,
+                    "Assertion",
+                    missing_value_provenance,
+                ),
+            ]
+        )
+
+    parameter_type_provenance = capture(
+        filter_details.fetch_parameter_type_rejections,
+        query=filter_details.PARAMETER_TYPE_REJECTION_SQL,
+    )
+    parameter_type_by_category = parameter_type_rejections.set_index("category")
+    parameter_type_total_key = "realworld.parameter_type.rejected"
+    parameter_type_total = int(parameter_type_rejections["rejected_assertions"].iloc[0])
+    metrics.append(
+        _count_metric(
+            parameter_type_total_key,
+            parameter_type_total,
+            "Assertion",
+            parameter_type_provenance,
+        )
+    )
+    for category in filter_details.PARAMETER_TYPE_CATEGORIES:
+        count_key = f"realworld.parameter_type.{category}"
+        count = int(parameter_type_by_category.loc[category, "assertions"])
+        metrics.extend(
+            [
+                _count_metric(count_key, count, "Assertion", parameter_type_provenance),
+                _share_metric(
+                    f"{count_key}_pct",
+                    count / parameter_type_total,
+                    count_key,
+                    parameter_type_total_key,
+                    "Assertion",
+                    parameter_type_provenance,
+                ),
+            ]
+        )
+
+    return_type_provenance = capture(
+        filter_details.fetch_return_type_rejections,
+        query=filter_details.RETURN_TYPE_REJECTION_SQL,
+    )
+    return_type_by_name = return_type_rejections.set_index("return_type")
+    return_type_total_key = "realworld.return_type.rejected"
+    return_type_total = int(return_type_rejections["rejected_assertions"].iloc[0])
+    metrics.append(
+        _count_metric(
+            return_type_total_key,
+            return_type_total,
+            "Assertion",
+            return_type_provenance,
+        )
+    )
+    for return_type, metric_name in filter_details.RETURN_TYPE_METRIC_NAMES.items():
+        count_key = f"realworld.return_type.{metric_name}"
+        count = int(return_type_by_name.loc[return_type, "assertions"])
+        metrics.extend(
+            [
+                _count_metric(count_key, count, "Assertion", return_type_provenance),
+                _share_metric(
+                    f"{count_key}_pct",
+                    count / return_type_total,
+                    count_key,
+                    return_type_total_key,
+                    "Assertion",
+                    return_type_provenance,
+                ),
+            ]
+        )
+
     metrics.extend(_stage_metrics(funnel, funnel_provenance))
     jpf_rows = int(jpf_exception_data["count"].sum())
     jpf_unparsed = int(
@@ -1092,6 +1299,12 @@ def build(context: ReportContext) -> RQReport:
             mechanism_table,
             breakdown,
             filtering,
+            non_passing_outcome_table,
+            non_passing_failure_type_table,
+            assertion_type_rejection_table,
+            missing_value_cause_table,
+            parameter_type_rejection_table,
+            return_type_rejection_table,
             Prose(
                 "The reader-facing filtering column combines filter decisions, "
                 "generation-gate refusals, and inherited-test inlining limits. "

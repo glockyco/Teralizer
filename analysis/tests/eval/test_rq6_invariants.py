@@ -5,6 +5,7 @@ import pytest
 from sqlalchemy import text
 
 from teralizer.eval.reports import _exclusion_evidence as exclusion
+from teralizer.eval.reports import _filter_details as filter_details
 from teralizer.eval.reports import _funnel
 from teralizer.eval.reports._causes_common import MECHANISM_OUTCOMES
 
@@ -226,6 +227,80 @@ def test_test_filtering_flow_uses_persisted_stage_populations(rq6_conn):
         inter_round_failures=1,
         round_two_evaluated=73_662,
     )
+
+
+def test_non_passing_detail_uses_recorded_original_outcomes(rq6_conn):
+    outcomes = filter_details.fetch_non_passing_outcomes(
+        rq6_conn, _variant(rq6_conn)
+    ).set_index("outcome")
+
+    assert outcomes["tests"].to_dict() == {
+        "passed": 3_868,
+        "skipped": 891,
+        "failed": 889,
+        "error": 3_017,
+    }
+    assert outcomes["classes"].nunique() == 1
+    assert int(outcomes["classes"].iloc[0]) == 1_087
+
+
+def test_assertion_filter_details_partition_accepted_rejections(rq6_conn):
+    variant = _variant(rq6_conn)
+    assertion_types = filter_details.fetch_assertion_type_rejections(
+        rq6_conn, variant
+    ).set_index("assertion_name")
+    missing_values = filter_details.fetch_missing_value_causes(
+        rq6_conn, variant
+    ).set_index("reason_code")
+
+    assert assertion_types["assertions"].to_dict() == {
+        "assertNotNull": 9_610,
+        "fail": 7_548,
+        "assertNull": 5_705,
+        "assertThat": 4_076,
+        "assertSame": 1_810,
+        "assertArrayEquals": 1_425,
+        "assertNotSame": 995,
+        "assertNotEquals": 472,
+        "getName": 4,
+        "assertIterableEquals": 2,
+    }
+    assert missing_values["assertions"].to_dict() == {
+        "UNSUPPORTED_ASSERTION_SHAPE": 31_656,
+        "LIBRARY_DECLARATION": 25_439,
+        "UNRESOLVED_SOURCE_DECLARATION": 7_821,
+        "NO_VISIBLE_CALL": 5_762,
+        "MISSING_TESTED_FILE": 5,
+    }
+
+
+def test_type_filter_details_use_the_rejecting_metadata(rq6_conn):
+    variant = _variant(rq6_conn)
+    parameter_types = filter_details.fetch_parameter_type_rejections(
+        rq6_conn, variant
+    ).set_index("category")
+    return_types = filter_details.fetch_return_type_rejections(
+        rq6_conn, variant
+    ).set_index("return_type")
+
+    assert parameter_types["assertions"].to_dict() == {
+        "no_arguments": 65_850,
+        "unsupported_types": 0,
+        "unknown": 0,
+    }
+    assert int(return_types["rejected_assertions"].iloc[0]) == 57_465
+    assert return_types["assertions"].to_dict() == {
+        "void": 9_054,
+        "java.util.List": 4_654,
+        "java.lang.Object": 4_251,
+        "T": 3_318,
+        "java.util.Map": 896,
+        "byte[]": 894,
+        "java.util.Set": 779,
+        "com.uaihebert.model.EasyCriteria": 677,
+        "fi.foyt.foursquare.api.Result": 648,
+        "com.tagtraum.perf.gcviewer.model.GCModel": 637,
+    }
 
 
 def test_filtering_flow_rejects_nonconserving_populations():
