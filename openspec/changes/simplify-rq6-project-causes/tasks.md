@@ -57,4 +57,4 @@
 - [x] 8.1 Make resize-to-width and full-width stretching mutually exclusive, and render resized tables from their measured natural width without paragraph indentation.
 - [x] 8.2 Add focused renderer and RQ6 report tests for the width-strategy invariant, natural-width resize output, and local float placement.
 - [x] 8.3 Regenerate the RQ6 artifacts and place Tables 5.16 and 5.17 together at one source boundary before the assertion-level discussion.
-- [ ] 8.4 Run the complete analysis checks, repository hooks, strict OpenSpec validation, thesis build, and page inspection; commit each repository separately.
+- [x] 8.4 Run the complete analysis checks, repository hooks, strict OpenSpec validation, thesis build, and page inspection; commit each repository separately.
