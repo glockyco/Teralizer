@@ -291,7 +291,7 @@ def render_table(table: Table) -> str:
             0, "\\begin{table}" + (f"[{table.float_spec}]" if table.float_spec else "")
         )
     if table.latex_resize_to_width:
-        lines.append("  \\resizebox{\\textwidth}{!}{%")
+        lines.append("  \\noindent\\resizebox{\\linewidth}{!}{%")
     header_rows: list[str] = []
     if any(c.group_header is not None for c in columns):
         header_rows += _group_header_rows(columns, table.group_header_align)

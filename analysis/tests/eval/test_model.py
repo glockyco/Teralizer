@@ -78,6 +78,21 @@ def test_metric_rate_rejects_incompatible_population():
         report.validate_metric_relations()
 
 
+def test_table_rejects_conflicting_width_strategies():
+    with pytest.raises(
+        ValueError, match="resize-to-width and full-width are mutually exclusive"
+    ):
+        Table(
+            key="wide",
+            df=pd.DataFrame({"a": [1]}),
+            columns=[ColumnSpec(header="A", source="a", kind=ValueKind.COUNT)],
+            caption="Wide",
+            label="tab:wide",
+            latex_resize_to_width=True,
+            full_width=True,
+        )
+
+
 def test_table_and_figure_are_frozen_and_carry_keys():
     t = Table(
         key="funnel",

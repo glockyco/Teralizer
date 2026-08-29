@@ -462,7 +462,16 @@ def test_rq6_generalization_reduction_attrition_stays_included(rq6_report, rq6_c
 
 def test_rq6_filtering_table_is_entity_conservative(rq6_report):
     report = rq6_report
+    breakdown = next(
+        table
+        for table in report.tables()
+        if table.key == "tab-exclusions-breakdown-extended"
+    )
     filtering = next(t for t in report.tables() if "exclusions-filtering" in t.label)
+    assert breakdown.float_spec == "!t"
+    assert filtering.float_spec == "!t"
+    assert filtering.latex_resize_to_width
+    assert not filtering.full_width
     assert "Generalization" in set(filtering.df["level"])
     reconstructed = filtering.df[["accept", "defer", "reject"]].sum(axis=1)
     assert (reconstructed == filtering.df["total"]).all()

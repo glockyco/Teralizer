@@ -461,7 +461,9 @@ def test_render_table_can_fit_text_width():
         latex_resize_to_width=True,
     )
     tex = render_table(table)
-    assert "\\resizebox{\\textwidth}{!}{%" in tex
+    assert "\\noindent\\resizebox{\\linewidth}{!}{%" in tex
+    assert "\\begin{tabular}{r}" in tex
+    assert "tabular*" not in tex
     assert "  \\end{tabular}\n  }\n\\end{table}" in tex
 
 

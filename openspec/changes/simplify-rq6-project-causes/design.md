@@ -76,6 +76,12 @@ Treat a recorded outcome or catch-all diagnostic as evidence requiring further c
 
 Use the normal RQ6 report command and declared corpus inputs. Do not hand-edit generated CSV, TeX, macro, manifest, or provenance files. Update every checked-in consumer emitted by that command in the same commit.
 
+### 9. Fit and pair the entity-exclusion tables
+
+Use one width strategy for each generated table. A table that needs scaling SHALL use a natural-width `tabular` inside an unindented `\\resizebox{\\linewidth}{!}`. It SHALL NOT also use `tabular*` full-width stretching. Reject that conflicting renderer state so another report cannot reproduce the hidden overflow.
+
+Place the entity-exclusion summary and filter-detail inputs at the same source boundary before the assertion-level discussion. Give both floats local top placement so LaTeX queues them together after the preceding page break and can place them together. Do not change the document-wide float policy or shorten additional evidence labels to compensate for layout defects.
+
 ## Risks / Trade-offs
 
 - **A downstream consumer still expects four columns.** Search generated declarations, tests, and thesis publication references; require a clean cutover rather than an alias.

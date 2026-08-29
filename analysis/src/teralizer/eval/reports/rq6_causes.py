@@ -665,6 +665,7 @@ def build(context: ReportContext) -> RQReport:
     breakdown = replace(
         breakdown,
         row_key="level",
+        float_spec="!t",
         provenance=mechanism_provenance,
     )
 
@@ -678,7 +679,7 @@ def build(context: ReportContext) -> RQReport:
             "RepoReapers filtering decisions for {entity.variant.improved_c} by level and filter"
         ),
         body_style="\\tabstyle",
-        full_width=True,
+        full_width=False,
     )
     filtering = replace(
         filtering,
@@ -686,6 +687,7 @@ def build(context: ReportContext) -> RQReport:
             row_key=filtering.df["level"] + ":" + filtering.df["filter"]
         ),
         row_key="row_key",
+        float_spec="!t",
         latex_resize_to_width=True,
         provenance=capture(
             exclusion.fetch_filter_decisions, query=exclusion.FILTER_DECISION_SQL

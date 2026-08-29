@@ -137,6 +137,8 @@ class Table:
     provenance: "Provenance | None" = None
 
     def __post_init__(self) -> None:
+        if self.latex_resize_to_width and self.full_width:
+            raise ValueError("resize-to-width and full-width are mutually exclusive")
         if self.row_key is None:
             return
         if self.row_key not in self.df:
