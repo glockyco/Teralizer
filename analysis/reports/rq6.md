@@ -112,7 +112,7 @@ source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/b
 | Generalization | Compilation failure | failures | 5 (0.1%) | 5,356 |
 | Generalization | Processing failure | failures | 17 (0.3%) | 5,356 |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L705)
 
 **Exclusion results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -122,7 +122,7 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
 | Generalization | 5,356 | 1,615 (30.2%) | 3,719 (69.4%) | 22 (0.4%) |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L705)
 
 **Filtering results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -133,6 +133,7 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Test | NoAssertions | 73,662 | 49,396 (67.1%) | — | 24,266 (32.9%) |
 | Test | DisabledTest | 73,662 | 73,657 (100.0%) | — | 5 (0.0%) |
 | Test | InheritedTest | 73,662 | 72,609 (98.6%) | — | 1,053 (1.4%) |
+| Test | InheritedTestMethod | 6,259 | 3,424 (54.7%) | — | 2,835 (45.3%) |
 | Test | Mocking | 73,662 | 66,689 (90.5%) | — | 6,973 (9.5%) |
 | Assertion | AssertionType | 180,548 | 148,901 (82.5%) | — | 31,647 (17.5%) |
 | Assertion | ExcludedTest | 180,548 | 141,764 (78.5%) | — | 38,784 (21.5%) |
@@ -140,9 +141,11 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | ParameterType | 180,548 | 48,992 (27.1%) | 65,706 (36.4%) | 65,850 (36.5%) |
 | Assertion | ReturnType | 180,548 | 52,400 (29.0%) | 70,683 (39.1%) | 57,465 (31.8%) |
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | — | 5,203 (2.9%) |
+| Generalization | SeedSpecConsistency | 5,356 | 5,355 (100.0%) | — | 1 (0.0%) |
+| Generalization | WideningLicense | 5,355 | 2,057 (38.4%) | — | 3,298 (61.6%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | — | 420 (20.6%) |
 
-source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
+source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L659)
 
 The reader-facing filtering column combines filter decisions, generation-gate refusals, and inherited-test inlining limits. The preceding table preserves the exact mechanisms.
 
@@ -173,7 +176,7 @@ Reconstructed evidence distinguishes resolved findings from unresolved and incom
 
 _Resolved, unresolved, and incompatible are audit partitions. Sample findings are estimates with the stated method and confidence interval. They are not exact population rates._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/1b06ebdd3e6766da180ec25451a376bb2e887150/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
 
 **Reviewed outcomes in the reconstructed RepoReapers evidence.**
 
@@ -192,4 +195,4 @@ source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blo
 
 _Counts describe reviewed records. For sampled claims, these counts do not describe the full population._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/1b06ebdd3e6766da180ec25451a376bb2e887150/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/rq6_causes.py#L240)
