@@ -32,7 +32,7 @@ Real-world exclusions separate project-level failures from filtering and downstr
 
 _Eligible projects: 584. Stage 1 + 2: 584 entering, 293 included (50.2%), 291 excluded. Stage 3: 293 entering, 179 included (61.1%), 114 excluded. Stage 4: 179 entering, 98 included (54.7%), 81 excluded. Stage 5: 98 entering, 85 included (86.7%), 13 excluded. Overall: 85 of 584 included (14.6%)._
 
-source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/766bb9ad963d2fdd6d602d97460c1aec492c35cd/analysis/src/teralizer/eval/reports/_funnel.py#L533)
+source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_funnel.py#L533)
 
 Filtering results use generalized tests that reach filtering as each dataset's denominator. They do not measure overall success or project applicability.
 
@@ -112,7 +112,7 @@ source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/b
 | Generalization | Compilation failure | failures | 5 (0.1%) | 5,356 |
 | Generalization | Processing failure | failures | 17 (0.3%) | 5,356 |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/766bb9ad963d2fdd6d602d97460c1aec492c35cd/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Exclusion results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -122,7 +122,7 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
 | Generalization | 5,356 | 1,615 (30.2%) | 3,719 (69.4%) | 22 (0.4%) |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/766bb9ad963d2fdd6d602d97460c1aec492c35cd/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Filtering results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -132,8 +132,8 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Test | TestType | 82,445 | 82,246 (99.8%) | — | 199 (0.2%) |
 | Test | NoAssertions | 73,662 | 49,396 (67.1%) | — | 24,266 (32.9%) |
 | Test | DisabledTest | 73,662 | 73,657 (100.0%) | — | 5 (0.0%) |
-| Test | InheritedTestCase | 73,662 | 72,609 (98.6%) | — | 1,053 (1.4%) |
-| Test | MockingFramework | 73,662 | 66,689 (90.5%) | — | 6,973 (9.5%) |
+| Test | InheritedTest | 73,662 | 72,609 (98.6%) | — | 1,053 (1.4%) |
+| Test | Mocking | 73,662 | 66,689 (90.5%) | — | 6,973 (9.5%) |
 | Assertion | AssertionType | 180,548 | 148,901 (82.5%) | — | 31,647 (17.5%) |
 | Assertion | ExcludedTest | 180,548 | 141,764 (78.5%) | — | 38,784 (21.5%) |
 | Assertion | MissingValue | 180,548 | 109,865 (60.9%) | — | 70,683 (39.1%) |
@@ -142,7 +142,7 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | — | 5,203 (2.9%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | — | 420 (20.6%) |
 
-source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/766bb9ad963d2fdd6d602d97460c1aec492c35cd/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
+source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
 
 The reader-facing filtering column combines filter decisions, generation-gate refusals, and inherited-test inlining limits. The preceding table preserves the exact mechanisms.
 

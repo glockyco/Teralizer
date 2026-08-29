@@ -108,6 +108,10 @@ def build_mechanism_table(
 _VARIANT_HEAD = {"ORIGINAL": 0, "INITIAL": 1, "SHARED": 2, "BASELINE": 3}
 _VARIANT_GROUP = {"NAIVE": 4, "IMPROVED": 5}
 _LEVEL_ORDER = {"Test": 0, "Assertion": 1, "Generalization": 2}
+_FILTER_DISPLAY_NAMES = {
+    "InheritedTestCase": "InheritedTest",
+    "MockingFramework": "Mocking",
+}
 # Paper/table display order for filters. This is the hand-curated order used in
 # the published tables, deliberately NOT the pipeline application order.
 _FILTER_ORDER = {
@@ -160,6 +164,7 @@ def build_filtering_table(
         .drop(columns=["_lvl", "_fil"])
         .reset_index(drop=True)
     )
+    out.loc[:, "filter"] = out["filter"].replace(_FILTER_DISPLAY_NAMES)
     columns = [
         ColumnSpec("Level", "level"),
         ColumnSpec("Filter Name", "filter"),

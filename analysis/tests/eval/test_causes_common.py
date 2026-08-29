@@ -48,6 +48,23 @@ def test_filtering_table_shapes_columns_and_percentages():
     assert "& -- &" in latex
 
 
+def test_filtering_table_uses_reader_facing_filter_names():
+    frame = pd.DataFrame(
+        {
+            "level": ["Test", "Test"],
+            "filter": ["InheritedTestCase", "MockingFramework"],
+            "total": [1, 1],
+            "accept": [1, 1],
+            "defer": [0, 0],
+            "reject": [0, 0],
+        }
+    )
+
+    table = build_filtering_table(frame, key="filtering", label="tab:x", caption="C")
+
+    assert table.df["filter"].tolist() == ["InheritedTest", "Mocking"]
+
+
 def test_breakdown_table_percentages_over_total():
     df = pd.DataFrame(
         {
