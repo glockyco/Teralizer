@@ -147,6 +147,98 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 
 source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/2aabc2dad7d53adeb7dfcb279fb89533f315e216/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L787)
 
+**Recorded outcomes of tests rejected by NonPassingTest.**
+
+| Recorded outcome | Rejected tests | Share |
+| --- | --- | --- |
+| passed | 3,868 | 44.6% |
+| skipped | 891 | 10.3% |
+| failed | 889 | 10.3% |
+| error | 3,017 | 34.8% |
+
+_Each test appears once. When repeated executions disagree, the table uses error, failed, skipped, then passed precedence._
+
+source: [`fetch_non_passing_outcomes`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308)
+
+**Most frequent failure types among NonPassingTest rejections.**
+
+| Result | Failure type | Rejected tests |
+| --- | --- | --- |
+| SKIPPED | skipped | 892 |
+| ERROR | java.lang.NoClassDefFoundError | 889 |
+| FAILED | java.lang.AssertionError | 442 |
+| ERROR | redis.clients.jedis.exceptions.JedisConnectionException | 378 |
+| ERROR | java.lang.IllegalStateException | 350 |
+| ERROR | java.lang.RuntimeException | 186 |
+| ERROR | java.lang.NullPointerException | 159 |
+| ERROR | com.mongodb.MongoException$Network | 146 |
+| FAILED | junit.framework.ComparisonFailure | 117 |
+| FAILED | org.junit.ComparisonFailure | 116 |
+
+_Rows count distinct tests. A test can appear under more than one type when repeated executions recorded different failures._
+
+source: [`fetch_non_passing_failure_types`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L323)
+
+**Assertion names rejected by AssertionType.**
+
+| Assertion | Rejections | All assertions |
+| --- | --- | --- |
+| assertNotNull | 9,610 | 5.3% |
+| fail | 7,548 | 4.2% |
+| assertNull | 5,705 | 3.2% |
+| assertThat | 4,076 | 2.3% |
+| assertSame | 1,810 | 1.0% |
+| assertArrayEquals | 1,425 | 0.8% |
+| assertNotSame | 995 | 0.6% |
+| assertNotEquals | 472 | 0.3% |
+| getName | 4 | 0.0% |
+| assertIterableEquals | 2 | 0.0% |
+
+source: [`fetch_assertion_type_rejections`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330)
+
+**Recorded resolver causes for MissingValue rejections.**
+
+| Resolver cause | Rejections | Share |
+| --- | --- | --- |
+| UNSUPPORTED_ASSERTION_SHAPE | 31,656 | 44.8% |
+| LIBRARY_DECLARATION | 25,439 | 36.0% |
+| UNRESOLVED_SOURCE_DECLARATION | 7,821 | 11.1% |
+| NO_VISIBLE_CALL | 5,762 | 8.2% |
+| MISSING_TESTED_FILE | 5 | 0.0% |
+
+_The resolver reason is the primary cause. detail_json can record additional missing fields for the same assertion._
+
+source: [`fetch_missing_value_causes`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344)
+
+**Observed branches of ParameterType rejections.**
+
+| Rejection branch | Rejections | Share |
+| --- | --- | --- |
+| no_arguments | 65,850 | 100.0% |
+| unsupported_types | 0 | 0.0% |
+| unknown | 0 | 0.0% |
+
+source: [`fetch_parameter_type_rejections`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355)
+
+**Most frequent encoded types rejected by ReturnType.**
+
+| Return type | Rejections | Share |
+| --- | --- | --- |
+| void | 9,054 | 15.8% |
+| java.util.List | 4,654 | 8.1% |
+| java.lang.Object | 4,251 | 7.4% |
+| T | 3,318 | 5.8% |
+| java.util.Map | 896 | 1.6% |
+| byte[] | 894 | 1.6% |
+| java.util.Set | 779 | 1.4% |
+| com.uaihebert.model.EasyCriteria | 677 | 1.2% |
+| fi.foyt.foursquare.api.Result | 648 | 1.1% |
+| com.tagtraum.perf.gcviewer.model.GCModel | 637 | 1.1% |
+
+_The table shows the ten most frequent of all recorded rejected types._
+
+source: [`fetch_return_type_rejections`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368)
+
 The reader-facing filtering column combines filter decisions, generation-gate refusals, and inherited-test inlining limits. The preceding table preserves the exact mechanisms.
 
 **Causes for generalization attempts that produce no generalized test in the real-world dataset.**
@@ -176,7 +268,7 @@ Reconstructed evidence distinguishes resolved findings from unresolved and incom
 
 _Resolved, unresolved, and incompatible are audit partitions. Sample findings are estimates with the stated method and confidence interval. They are not exact population rates._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271)
 
 **Reviewed outcomes in the reconstructed RepoReapers evidence.**
 
@@ -195,4 +287,4 @@ source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blo
 
 _Counts describe reviewed records. For sampled claims, these counts do not describe the full population._
 
-source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327)
+source: [`_load_reconstruction_audit`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271)

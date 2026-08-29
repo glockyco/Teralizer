@@ -3066,6 +3066,11 @@
         "target": "latex"
       },
       {
+        "key": "rq6_assertion_type_rejections",
+        "path": "build/rq6_assertion_type_rejections.tex",
+        "target": "latex"
+      },
+      {
         "key": "rq6_exclusion_mechanisms",
         "path": "build/rq6_exclusion_mechanisms.tex",
         "target": "latex"
@@ -3086,8 +3091,28 @@
         "target": "latex"
       },
       {
+        "key": "rq6_missing_value_causes",
+        "path": "build/rq6_missing_value_causes.tex",
+        "target": "latex"
+      },
+      {
         "key": "rq6_mut_choice_sensitivity",
         "path": "build/rq6_mut_choice_sensitivity.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6_non_passing_failure_types",
+        "path": "build/rq6_non_passing_failure_types.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6_non_passing_outcomes",
+        "path": "build/rq6_non_passing_outcomes.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6_parameter_type_rejections",
+        "path": "build/rq6_parameter_type_rejections.tex",
         "target": "latex"
       },
       {
@@ -3098,6 +3123,11 @@
       {
         "key": "rq6_reconstruction_summary",
         "path": "build/rq6_reconstruction_summary.tex",
+        "target": "latex"
+      },
+      {
+        "key": "rq6_return_type_rejections",
+        "path": "build/rq6_return_type_rejections.tex",
         "target": "latex"
       },
       {
@@ -3208,6 +3238,150 @@
         "value_kind": "count",
         "version": "0.1.0"
       },
+      "realworld.assertion_type.assert_not_null": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.assertion_type.assert_not_null"
+        },
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": 9610,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.assertion_type.assert_not_null_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.assertions_total",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.assertion_type.assert_not_null",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.assertion_type.assert_not_null"
+        },
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": 0.05322684272326473,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.assertion_type.assert_null": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.assertion_type.assert_null"
+        },
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": 5705,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.assertion_type.assert_null_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.assertions_total",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.assertion_type.assert_null",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.assertion_type.assert_null"
+        },
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": 0.031598245341958923,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.assertion_type.assert_that": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.assertion_type.assert_that"
+        },
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": 4076,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.assertion_type.assert_that_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.assertions_total",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.assertion_type.assert_that",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.assertion_type.assert_that"
+        },
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": 0.02257571393756785,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.assertion_type.fail": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.assertion_type.fail"
+        },
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": 7548,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.assertion_type.fail_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.assertions_total",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.assertion_type.fail",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.assertion_type.fail"
+        },
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": 0.04180605711500543,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
       "realworld.assertions_included": {
         "commit": "2aabc2dad7d53adeb7dfcb279fb89533f315e216",
         "denominator_key": null,
@@ -3263,7 +3437,7 @@
         "version": "0.1.0"
       },
       "realworld.assertions_without_resolution": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -3275,7 +3449,7 @@
         },
         "qualname": "_fetch_assertions_without_resolution",
         "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT count(*) AS assertions_without_resolution\nFROM assertion a\nJOIN eligible_projects ep ON ep.id = a.project_id\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM mut_resolution_observation o\n    WHERE o.assertion_id = a.id\n)\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L95",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L70",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
@@ -3550,6 +3724,204 @@
         "value_kind": "share",
         "version": "0.1.0"
       },
+      "realworld.missing_value.library_declaration": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.library_declaration"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 25439,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.library_declaration_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.missing_value.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.missing_value.library_declaration",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.library_declaration"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 0.35990266400690407,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.missing_tested_file": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.missing_tested_file"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 5,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.missing_tested_file_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.missing_value.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.missing_value.missing_tested_file",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.missing_tested_file"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 7.073836707553442e-05,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.no_visible_call": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.no_visible_call"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 5762,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.no_visible_call_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.missing_value.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.missing_value.no_visible_call",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.no_visible_call"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 0.08151889421784587,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.rejected": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.rejected"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 70683,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.unresolved_source_declaration": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.unresolved_source_declaration"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 7821,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.unresolved_source_declaration_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.missing_value.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.missing_value.unresolved_source_declaration",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.unresolved_source_declaration"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 0.11064895377955095,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.unsupported_assertion_shape": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.unsupported_assertion_shape"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 31656,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.missing_value.unsupported_assertion_shape_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.missing_value.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.missing_value.unsupported_assertion_shape",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.missing_value.unsupported_assertion_shape"
+        },
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": 0.4478587496286236,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
       "realworld.no_executed_test_excluded_projects": {
         "commit": "3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4",
         "denominator_key": null,
@@ -3566,6 +3938,348 @@
         "source_url": "https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_funnel.py#L533",
         "value": 27,
         "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.error": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.error"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 3017,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.error_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.non_passing.rejected_tests",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.non_passing.error",
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.error"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 0.34818234275822274,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.failed": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.failed"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 889,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.failed_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.non_passing.rejected_tests",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.non_passing.failed",
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.failed"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 0.10259665320253895,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.nonpassed": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.nonpassed"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 4797,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.nonpassed_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.non_passing.rejected_tests",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.non_passing.nonpassed",
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.nonpassed"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 0.5536064627813041,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.passed": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.passed"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 3868,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.passed_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.non_passing.rejected_tests",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.non_passing.passed",
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.passed"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 0.4463935372186959,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.rejected_classes": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Test class",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.rejected_classes"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 1087,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.rejected_tests": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.rejected_tests"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 8665,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.skipped": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.skipped"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 891,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.non_passing.skipped_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.non_passing.rejected_tests",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.non_passing.skipped",
+        "population": {
+          "entity_level": "Test",
+          "input_role": "real-world",
+          "key": "realworld.non_passing.skipped"
+        },
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": 0.10282746682054242,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.parameter_type.no_arguments": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.parameter_type.no_arguments"
+        },
+        "qualname": "fetch_parameter_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncategories(category) AS (\n    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')\n),\nrejections AS (\n    SELECT DISTINCT\n        a.id AS assertion_id,\n        CASE\n            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb\n                THEN 'no_arguments'\n            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0\n                THEN 'unsupported_types'\n            ELSE 'unknown'\n        END AS category\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ParameterTypeFilter'\n)\nSELECT\n    categories.category,\n    count(rejections.assertion_id)::bigint AS assertions,\n    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions\nFROM categories\nLEFT JOIN rejections USING (category)\nGROUP BY categories.category\nORDER BY CASE categories.category\n    WHEN 'no_arguments' THEN 1\n    WHEN 'unsupported_types' THEN 2\n    ELSE 3\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355",
+        "value": 65850,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.parameter_type.no_arguments_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.parameter_type.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.parameter_type.no_arguments",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.parameter_type.no_arguments"
+        },
+        "qualname": "fetch_parameter_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncategories(category) AS (\n    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')\n),\nrejections AS (\n    SELECT DISTINCT\n        a.id AS assertion_id,\n        CASE\n            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb\n                THEN 'no_arguments'\n            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0\n                THEN 'unsupported_types'\n            ELSE 'unknown'\n        END AS category\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ParameterTypeFilter'\n)\nSELECT\n    categories.category,\n    count(rejections.assertion_id)::bigint AS assertions,\n    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions\nFROM categories\nLEFT JOIN rejections USING (category)\nGROUP BY categories.category\nORDER BY CASE categories.category\n    WHEN 'no_arguments' THEN 1\n    WHEN 'unsupported_types' THEN 2\n    ELSE 3\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355",
+        "value": 1.0,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.parameter_type.rejected": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.parameter_type.rejected"
+        },
+        "qualname": "fetch_parameter_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncategories(category) AS (\n    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')\n),\nrejections AS (\n    SELECT DISTINCT\n        a.id AS assertion_id,\n        CASE\n            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb\n                THEN 'no_arguments'\n            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0\n                THEN 'unsupported_types'\n            ELSE 'unknown'\n        END AS category\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ParameterTypeFilter'\n)\nSELECT\n    categories.category,\n    count(rejections.assertion_id)::bigint AS assertions,\n    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions\nFROM categories\nLEFT JOIN rejections USING (category)\nGROUP BY categories.category\nORDER BY CASE categories.category\n    WHEN 'no_arguments' THEN 1\n    WHEN 'unsupported_types' THEN 2\n    ELSE 3\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355",
+        "value": 65850,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.parameter_type.unknown": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.parameter_type.unknown"
+        },
+        "qualname": "fetch_parameter_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncategories(category) AS (\n    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')\n),\nrejections AS (\n    SELECT DISTINCT\n        a.id AS assertion_id,\n        CASE\n            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb\n                THEN 'no_arguments'\n            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0\n                THEN 'unsupported_types'\n            ELSE 'unknown'\n        END AS category\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ParameterTypeFilter'\n)\nSELECT\n    categories.category,\n    count(rejections.assertion_id)::bigint AS assertions,\n    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions\nFROM categories\nLEFT JOIN rejections USING (category)\nGROUP BY categories.category\nORDER BY CASE categories.category\n    WHEN 'no_arguments' THEN 1\n    WHEN 'unsupported_types' THEN 2\n    ELSE 3\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355",
+        "value": 0,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.parameter_type.unknown_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.parameter_type.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.parameter_type.unknown",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.parameter_type.unknown"
+        },
+        "qualname": "fetch_parameter_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncategories(category) AS (\n    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')\n),\nrejections AS (\n    SELECT DISTINCT\n        a.id AS assertion_id,\n        CASE\n            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb\n                THEN 'no_arguments'\n            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0\n                THEN 'unsupported_types'\n            ELSE 'unknown'\n        END AS category\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ParameterTypeFilter'\n)\nSELECT\n    categories.category,\n    count(rejections.assertion_id)::bigint AS assertions,\n    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions\nFROM categories\nLEFT JOIN rejections USING (category)\nGROUP BY categories.category\nORDER BY CASE categories.category\n    WHEN 'no_arguments' THEN 1\n    WHEN 'unsupported_types' THEN 2\n    ELSE 3\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355",
+        "value": 0.0,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.parameter_type.unsupported_types": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.parameter_type.unsupported_types"
+        },
+        "qualname": "fetch_parameter_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncategories(category) AS (\n    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')\n),\nrejections AS (\n    SELECT DISTINCT\n        a.id AS assertion_id,\n        CASE\n            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb\n                THEN 'no_arguments'\n            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0\n                THEN 'unsupported_types'\n            ELSE 'unknown'\n        END AS category\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ParameterTypeFilter'\n)\nSELECT\n    categories.category,\n    count(rejections.assertion_id)::bigint AS assertions,\n    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions\nFROM categories\nLEFT JOIN rejections USING (category)\nGROUP BY categories.category\nORDER BY CASE categories.category\n    WHEN 'no_arguments' THEN 1\n    WHEN 'unsupported_types' THEN 2\n    ELSE 3\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355",
+        "value": 0,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.parameter_type.unsupported_types_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.parameter_type.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.parameter_type.unsupported_types",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.parameter_type.unsupported_types"
+        },
+        "qualname": "fetch_parameter_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncategories(category) AS (\n    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')\n),\nrejections AS (\n    SELECT DISTINCT\n        a.id AS assertion_id,\n        CASE\n            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb\n                THEN 'no_arguments'\n            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0\n                THEN 'unsupported_types'\n            ELSE 'unknown'\n        END AS category\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ParameterTypeFilter'\n)\nSELECT\n    categories.category,\n    count(rejections.assertion_id)::bigint AS assertions,\n    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions\nFROM categories\nLEFT JOIN rejections USING (category)\nGROUP BY categories.category\nORDER BY CASE categories.category\n    WHEN 'no_arguments' THEN 1\n    WHEN 'unsupported_types' THEN 2\n    ELSE 3\nEND\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355",
+        "value": 0.0,
+        "value_kind": "share",
         "version": "0.1.0"
       },
       "realworld.parameter_type_choice_dependent_lower_bound": {
@@ -3656,6 +4370,168 @@
         "source_url": "https://github.com/glockyco/Teralizer/blob/3a5a9ad857e5d1cc4d8017fa70a6ab5a31bd0bd4/analysis/src/teralizer/eval/reports/_funnel.py#L533",
         "value": 13,
         "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.list": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.list"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 4654,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.list_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.return_type.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.return_type.list",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.list"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 0.08098842773862351,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.object": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.object"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 4251,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.object_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.return_type.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.return_type.object",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.object"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 0.07397546332550248,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.rejected": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.rejected"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 57465,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.type_variable_t": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.type_variable_t"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 3318,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.type_variable_t_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.return_type.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.return_type.type_variable_t",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.type_variable_t"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 0.057739493604802926,
+        "value_kind": "share",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.void": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": null,
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": null,
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.void"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 9054,
+        "value_kind": "count",
+        "version": "0.1.0"
+      },
+      "realworld.return_type.void_pct": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "denominator_key": "realworld.return_type.rejected",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "numerator_key": "realworld.return_type.void",
+        "population": {
+          "entity_level": "Assertion",
+          "input_role": "real-world",
+          "key": "realworld.return_type.void"
+        },
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": 0.15755677368833204,
+        "value_kind": "share",
         "version": "0.1.0"
       },
       "realworld.selected_projects": {
@@ -4145,55 +5021,55 @@
         "version": "0.1.0"
       },
       "realworld.test_type.junit_theory": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
-        "module": "teralizer.eval.reports.rq6_causes",
+        "module": "teralizer.eval.reports._filter_details",
         "numerator_key": null,
         "population": {
           "entity_level": "Test",
           "input_role": "real-world",
           "key": "realworld.test_type.junit_theory"
         },
-        "qualname": "_fetch_test_type_categories",
+        "qualname": "fetch_test_type_categories",
         "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT CASE\n           WHEN t.test_annotations_source_code = '@Theory' THEN 'junit_theory'\n           WHEN t.test_annotations_source_code = '@Override' THEN 'overridden_declaration'\n           WHEN t.test_annotation_name = 'TestNG' THEN 'testng'\n           ELSE 'unknown'\n       END AS category,\n       count(DISTINCT t.id) AS count\nFROM filter_result fr\nJOIN eligible_projects ep ON ep.id = fr.project_id\nJOIN test t ON t.id = fr.test_id\nWHERE fr.decision = 'REJECT'\n  AND fr.filter_name LIKE '%%TestTypeFilter'\nGROUP BY category\nORDER BY category\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L101",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L293",
         "value": 163,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "realworld.test_type.overridden_declaration": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
-        "module": "teralizer.eval.reports.rq6_causes",
+        "module": "teralizer.eval.reports._filter_details",
         "numerator_key": null,
         "population": {
           "entity_level": "Test",
           "input_role": "real-world",
           "key": "realworld.test_type.overridden_declaration"
         },
-        "qualname": "_fetch_test_type_categories",
+        "qualname": "fetch_test_type_categories",
         "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT CASE\n           WHEN t.test_annotations_source_code = '@Theory' THEN 'junit_theory'\n           WHEN t.test_annotations_source_code = '@Override' THEN 'overridden_declaration'\n           WHEN t.test_annotation_name = 'TestNG' THEN 'testng'\n           ELSE 'unknown'\n       END AS category,\n       count(DISTINCT t.id) AS count\nFROM filter_result fr\nJOIN eligible_projects ep ON ep.id = fr.project_id\nJOIN test t ON t.id = fr.test_id\nWHERE fr.decision = 'REJECT'\n  AND fr.filter_name LIKE '%%TestTypeFilter'\nGROUP BY category\nORDER BY category\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L101",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L293",
         "value": 35,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "realworld.test_type.testng": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
-        "module": "teralizer.eval.reports.rq6_causes",
+        "module": "teralizer.eval.reports._filter_details",
         "numerator_key": null,
         "population": {
           "entity_level": "Test",
           "input_role": "real-world",
           "key": "realworld.test_type.testng"
         },
-        "qualname": "_fetch_test_type_categories",
+        "qualname": "fetch_test_type_categories",
         "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n\nSELECT CASE\n           WHEN t.test_annotations_source_code = '@Theory' THEN 'junit_theory'\n           WHEN t.test_annotations_source_code = '@Override' THEN 'overridden_declaration'\n           WHEN t.test_annotation_name = 'TestNG' THEN 'testng'\n           ELSE 'unknown'\n       END AS category,\n       count(DISTINCT t.id) AS count\nFROM filter_result fr\nJOIN eligible_projects ep ON ep.id = fr.project_id\nJOIN test t ON t.id = fr.test_id\nWHERE fr.decision = 'REJECT'\n  AND fr.filter_name LIKE '%%TestTypeFilter'\nGROUP BY category\nORDER BY category\n",
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L101",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L293",
         "value": 1,
         "value_kind": "count",
         "version": "0.1.0"
@@ -4595,7 +5471,7 @@
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.incompatible": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4607,13 +5483,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.resolved": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4625,13 +5501,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 70,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.reviewed_contradicted_mapping": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4643,13 +5519,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 34,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.reviewed_insufficient_specification_evidence": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4661,13 +5537,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 30,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.reviewed_supported_mapping": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4679,13 +5555,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 36,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.total": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4697,13 +5573,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 180548,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.assertion_to_mut.unresolved": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4715,13 +5591,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 180478,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.genuine_absence_ci_lower_pct": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4733,13 +5609,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 4.378705783971964,
         "value_kind": "percent",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.genuine_absence_ci_upper_pct": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4751,13 +5627,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 16.686825843663016,
         "value_kind": "percent",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.genuine_absence_estimate_pct": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4769,13 +5645,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 10.532765813817491,
         "value_kind": "percent",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.incompatible": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4787,13 +5663,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.resolved": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4805,13 +5681,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 100,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.total": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4823,13 +5699,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 24266,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.no_assertions.unresolved": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4841,13 +5717,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 24166,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.absent_artifact": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4859,13 +5735,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 32,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.default_directory_mismatch": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4877,13 +5753,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 1,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.earlier_build_failure": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4895,13 +5771,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 7,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.incompatible": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4913,13 +5789,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 3,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.incompatible_evidence": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4931,13 +5807,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 3,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.resolved": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4949,13 +5825,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 40,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.total": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4967,13 +5843,13 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 43,
         "value_kind": "count",
         "version": "0.1.0"
       },
       "rq6.reconstruction.output_directories.unresolved": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "denominator_key": null,
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
@@ -4985,7 +5861,7 @@
         },
         "qualname": "_load_reconstruction_audit",
         "query": null,
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": 0,
         "value_kind": "count",
         "version": "0.1.0"
@@ -4993,10 +5869,33 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "1f548089c89899b497b57d56ec02cda1e0b2de07"
+      "dirty": true,
+      "source_commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1"
     },
     "tables": {
+      "rq6_assertion_type_rejections": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "qualname": "fetch_assertion_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nassertion_population AS (\n    SELECT count(*)::bigint AS assertions\n    FROM assertion a\n    JOIN eligible_projects ep ON ep.id = a.project_id\n),\ncounts AS (\n    SELECT\n        a.assertion_name,\n        count(DISTINCT a.id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%UnsupportedAssertionFilter'\n    GROUP BY a.assertion_name\n)\nSELECT\n    assertion_name,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions,\n    (SELECT assertions FROM assertion_population) AS total_assertions\nFROM counts\nORDER BY assertions DESC, assertion_name\n",
+        "row_key": "assertion_name",
+        "row_keys": [
+          "assertNotNull",
+          "fail",
+          "assertNull",
+          "assertThat",
+          "assertSame",
+          "assertArrayEquals",
+          "assertNotSame",
+          "assertNotEquals",
+          "getName",
+          "assertIterableEquals"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330",
+        "value": "Assertion names rejected by AssertionType.",
+        "version": "0.1.0"
+      },
       "rq6_exclusion_mechanisms": {
         "commit": "2aabc2dad7d53adeb7dfcb279fb89533f315e216",
         "dirty": false,
@@ -5075,6 +5974,24 @@
         "value": "Retrospective classification of generic JPF uncaught-exception diagnostics from retained detail.",
         "version": "0.1.0"
       },
+      "rq6_missing_value_causes": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "qualname": "fetch_missing_value_causes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.reason_code, '<missing>') AS reason_code,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%MissingValueFilter'\n    GROUP BY coalesce(fr.reason_code, '<missing>')\n)\nSELECT\n    reason_code,\n    assertions,\n    sum(assertions) OVER ()::bigint AS rejected_assertions\nFROM counts\nORDER BY assertions DESC, reason_code\n",
+        "row_key": "reason_code",
+        "row_keys": [
+          "UNSUPPORTED_ASSERTION_SHAPE",
+          "LIBRARY_DECLARATION",
+          "UNRESOLVED_SOURCE_DECLARATION",
+          "NO_VISIBLE_CALL",
+          "MISSING_TESTED_FILE"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344",
+        "value": "Recorded resolver causes for MissingValue rejections.",
+        "version": "0.1.0"
+      },
       "rq6_mut_choice_sensitivity": {
         "commit": "2fc87b1642f4912e01d8c9dd2823e9ab1fdcea5a",
         "dirty": false,
@@ -5091,8 +6008,64 @@
         "value": "Choice sensitivity of ParameterType rejections classified from retained MUT candidate details.",
         "version": "0.1.0"
       },
+      "rq6_non_passing_failure_types": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "qualname": "fetch_non_passing_failure_types",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT t.id AS test_id\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n)\nSELECT\n    jtr.result,\n    coalesce(jtr.failure_type, '<missing>') AS failure_type,\n    count(DISTINCT rt.test_id)::bigint AS tests\nFROM rejected_tests rt\nJOIN junit_test_report jtr\n    ON jtr.test_id = rt.test_id\n   AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\nWHERE jtr.result <> 'PASSED'\nGROUP BY jtr.result, coalesce(jtr.failure_type, '<missing>')\nORDER BY tests DESC, jtr.result, failure_type\nLIMIT 10\n",
+        "row_key": "failure_type",
+        "row_keys": [
+          "skipped",
+          "java.lang.NoClassDefFoundError",
+          "java.lang.AssertionError",
+          "redis.clients.jedis.exceptions.JedisConnectionException",
+          "java.lang.IllegalStateException",
+          "java.lang.RuntimeException",
+          "java.lang.NullPointerException",
+          "com.mongodb.MongoException$Network",
+          "junit.framework.ComparisonFailure",
+          "org.junit.ComparisonFailure"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L323",
+        "value": "Most frequent failure types among NonPassingTest rejections.",
+        "version": "0.1.0"
+      },
+      "rq6_non_passing_outcomes": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "qualname": "fetch_non_passing_outcomes",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\nrejected_tests AS (\n    SELECT DISTINCT\n        t.id AS test_id,\n        t.project_id,\n        t.test_package_name,\n        t.test_class_name\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN test t ON t.id = fr.test_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%NonPassingTestFilter'\n),\nrejected_classes AS (\n    SELECT DISTINCT project_id, test_package_name, test_class_name\n    FROM rejected_tests\n),\nobserved_outcomes AS (\n    SELECT\n        rt.test_id,\n        bool_or(jtr.result = 'ERROR') AS has_error,\n        bool_or(jtr.result = 'FAILED') AS has_failure,\n        bool_or(jtr.result = 'SKIPPED') AS has_skip,\n        bool_or(jtr.result = 'PASSED') AS has_pass\n    FROM rejected_tests rt\n    LEFT JOIN junit_test_report jtr\n        ON jtr.test_id = rt.test_id\n       AND jtr.stage = 'COLLECT_JUNIT_REPORTS_ORIGINAL'\n    GROUP BY rt.test_id\n),\nclassified AS (\n    SELECT\n        test_id,\n        CASE\n            WHEN has_error THEN 'error'\n            WHEN has_failure THEN 'failed'\n            WHEN has_skip THEN 'skipped'\n            WHEN has_pass THEN 'passed'\n            ELSE 'unobserved'\n        END AS outcome\n    FROM observed_outcomes\n)\nSELECT\n    outcome,\n    count(*)::bigint AS tests,\n    (SELECT count(*) FROM rejected_classes)::bigint AS classes\nFROM classified\nGROUP BY outcome\nORDER BY CASE outcome\n    WHEN 'passed' THEN 1\n    WHEN 'skipped' THEN 2\n    WHEN 'failed' THEN 3\n    WHEN 'error' THEN 4\n    ELSE 5\nEND\n",
+        "row_key": "outcome",
+        "row_keys": [
+          "passed",
+          "skipped",
+          "failed",
+          "error"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308",
+        "value": "Recorded outcomes of tests rejected by NonPassingTest.",
+        "version": "0.1.0"
+      },
+      "rq6_parameter_type_rejections": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "qualname": "fetch_parameter_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncategories(category) AS (\n    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')\n),\nrejections AS (\n    SELECT DISTINCT\n        a.id AS assertion_id,\n        CASE\n            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb\n                THEN 'no_arguments'\n            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0\n                THEN 'unsupported_types'\n            ELSE 'unknown'\n        END AS category\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    JOIN assertion a ON a.id = fr.assertion_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ParameterTypeFilter'\n)\nSELECT\n    categories.category,\n    count(rejections.assertion_id)::bigint AS assertions,\n    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions\nFROM categories\nLEFT JOIN rejections USING (category)\nGROUP BY categories.category\nORDER BY CASE categories.category\n    WHEN 'no_arguments' THEN 1\n    WHEN 'unsupported_types' THEN 2\n    ELSE 3\nEND\n",
+        "row_key": "category",
+        "row_keys": [
+          "no_arguments",
+          "unsupported_types",
+          "unknown"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355",
+        "value": "Observed branches of ParameterType rejections.",
+        "version": "0.1.0"
+      },
       "rq6_reconstruction_outcomes": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "qualname": "_load_reconstruction_audit",
@@ -5110,12 +6083,12 @@
           "output-directories:resolved:default-directory-mismatch",
           "output-directories:resolved:earlier-build-failure"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": "Reviewed outcomes in the reconstructed RepoReapers evidence.",
         "version": "0.1.0"
       },
       "rq6_reconstruction_summary": {
-        "commit": "1f548089c89899b497b57d56ec02cda1e0b2de07",
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
         "dirty": false,
         "module": "teralizer.eval.reports.rq6_causes",
         "qualname": "_load_reconstruction_audit",
@@ -5126,8 +6099,31 @@
           "assertion-to-mut",
           "output-directories"
         ],
-        "source_url": "https://github.com/glockyco/Teralizer/blob/1f548089c89899b497b57d56ec02cda1e0b2de07/analysis/src/teralizer/eval/reports/rq6_causes.py#L327",
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/rq6_causes.py#L271",
         "value": "Status of reconstructed RepoReapers evidence claims.",
+        "version": "0.1.0"
+      },
+      "rq6_return_type_rejections": {
+        "commit": "6b618f7e06f89f41f76630091e0f8dfb134d98b1",
+        "dirty": false,
+        "module": "teralizer.eval.reports._filter_details",
+        "qualname": "fetch_return_type_rejections",
+        "query": "\n\nWITH eligible_projects AS MATERIALIZED (\n    SELECT p.id\n    FROM project p\n    WHERE p.use_test_generalization\n      AND p.root_path != ALL(:no_executed_test_projects)\n      AND NOT EXISTS (\n          SELECT 1\n          FROM task t\n          WHERE t.project_id = p.id\n            AND t.test_id IS NULL\n            AND t.assertion_id IS NULL\n            AND t.generalization_id IS NULL\n            AND t.status <> 'SUCCEEDED'\n            AND t.stage = ANY(:ineligible_stages)\n      )\n)\n,\ncounts AS (\n    SELECT\n        coalesce(fr.detail_json->>'return_type', '<missing>') AS return_type,\n        count(DISTINCT fr.assertion_id)::bigint AS assertions\n    FROM filter_result fr\n    JOIN eligible_projects ep ON ep.id = fr.project_id\n    WHERE fr.decision = 'REJECT'\n      AND fr.filter_name LIKE '%%ReturnTypeFilter'\n    GROUP BY coalesce(fr.detail_json->>'return_type', '<missing>')\n),\nranked AS (\n    SELECT\n        return_type,\n        assertions,\n        sum(assertions) OVER ()::bigint AS rejected_assertions,\n        row_number() OVER (ORDER BY assertions DESC, return_type) AS rank\n    FROM counts\n)\nSELECT return_type, assertions, rejected_assertions\nFROM ranked\nWHERE rank <= 10\nORDER BY rank\n",
+        "row_key": "return_type",
+        "row_keys": [
+          "void",
+          "java.util.List",
+          "java.lang.Object",
+          "T",
+          "java.util.Map",
+          "byte[]",
+          "java.util.Set",
+          "com.uaihebert.model.EasyCriteria",
+          "fi.foyt.foursquare.api.Result",
+          "com.tagtraum.perf.gcviewer.model.GCModel"
+        ],
+        "source_url": "https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368",
+        "value": "Most frequent encoded types rejected by ReturnType.",
         "version": "0.1.0"
       },
       "rq6_widening_refusals": {
