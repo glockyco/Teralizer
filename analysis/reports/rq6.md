@@ -11,28 +11,36 @@ Real-world exclusions separate project-level failures from filtering and downstr
 | # | Cause of Project-level Exclusion | Count |
 | --- | --- | --- |
 | Stage 1 + 2 - Project Analysis: 584 projects, 182 inclusions, 402 exclusions, 31.2% inclusion rate |  |  |
-| 1 | all assertions excluded due to filter rejections | 151 |
-| 2 | all assertions excluded due to filter rejections and failures | 105 |
-| 3 | all tests excluded due to filter rejections and failures | 94 |
+| 1 | all assertions excluded due to filter rejections | 150 |
+| 2 | all assertions excluded due to filter rejections and processing failures | 106 |
+| 3 | all tests excluded due to filter rejections | 78 |
 | 4 | timeout exceeded (300 seconds per Original test suite) | 26 |
 | 5 | JUnit execution error during test execution | 13 |
-| 6 | Spoon execution error during test analysis | 8 |
-| 7 | JUnit reports not found | 5 |
+| 6 | no test records collected | 10 |
+| 7 | Spoon execution error during test analysis | 8 |
+| 8 | all tests excluded due to filter rejections and task failures | 6 |
+| 9 | unsupported JUnit report layout | 4 |
+| 10 | JUnit report directory not found | 1 |
 | Stage 3 - Spec. Extraction: 182 projects, 176 inclusions, 6 exclusions, 96.7% inclusion rate |  |  |
-| 8 | Spoon execution error during test instrumentation | 5 |
-| 9 | all assertions excluded due to earlier filter rejections and new failures | 1 |
+| 11 | Spoon execution error during test instrumentation | 5 |
+| 12 | all assertions excluded due to earlier filter rejections and new failures | 1 |
 | Stage 4 - Gen. Test Creation: 176 projects, 98 inclusions, 78 exclusions, 55.7% inclusion rate |  |  |
-| 10 | all generalizations excluded due to filter rejections and failures | 78 |
+| 13 | all generalizations excluded due to widening refusals | 59 |
+| 14 | all generalizations excluded due to widening refusals and filter rejections | 10 |
+| 15 | all generalizations excluded due to filter rejections | 4 |
+| 16 | all generalizations excluded due to widening refusals and processing failures | 2 |
+| 17 | no generalization attempts recorded | 2 |
+| 18 | all generalizations excluded due to processing failures | 1 |
 | Stage 5 - Test Suite Reduction: 98 projects, 85 inclusions, 13 exclusions, 86.7% inclusion rate |  |  |
-| 11 | unmutated test suite has failing tests | 6 |
-| 12 | timeout exceeded (3600 seconds during PIT mutation testing) | 4 |
-| 13 | failed to persist PIT coverage reports | 2 |
-| 14 | JaCoCo outputs not found | 1 |
+| 19 | unmutated test suite has failing tests | 6 |
+| 20 | timeout exceeded (3600 seconds during PIT mutation testing) | 4 |
+| 21 | failed to persist PIT coverage reports | 2 |
+| 22 | JaCoCo outputs not found | 1 |
 | Overall: 584 projects, 85 inclusions, 499 exclusions, 14.6% inclusion rate |  |  |
 
 _Eligible projects: 584. Stage 1 + 2: 584 entering, 182 included (31.2%), 402 excluded. Stage 3: 182 entering, 176 included (96.7%), 6 excluded. Stage 4: 176 entering, 98 included (55.7%), 78 excluded. Stage 5: 98 entering, 85 included (86.7%), 13 excluded. Overall: 85 of 584 included (14.6%)._
 
-source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/5fda00831a273a097b626515ada7432601645726/analysis/src/teralizer/eval/reports/_funnel.py#L379)
+source: [`build_funnel`](https://github.com/glockyco/Teralizer/blob/ea801209ac11b3bc55b77e1cd4d6c1bb3e21f023/analysis/src/teralizer/eval/reports/_funnel.py#L500)
 
 Filtering results use generalized tests that reach filtering as each dataset's denominator. They do not measure overall success or project applicability.
 
@@ -112,7 +120,7 @@ source: [`fetch_mut_choice_sensitivity`](https://github.com/glockyco/Teralizer/b
 | Generalization | Build quarantine | failures | 5 (0.1%) | 5,356 |
 | Generalization | Task exception | failures | 17 (0.3%) | 5,356 |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/ea801209ac11b3bc55b77e1cd4d6c1bb3e21f023/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Exclusion results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -122,7 +130,7 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | 180,548 | 6,905 (3.8%) | 166,602 (92.3%) | 7,041 (3.9%) |
 | Generalization | 5,356 | 1,615 (30.2%) | 3,719 (69.4%) | 22 (0.4%) |
 
-source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
+source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob/ea801209ac11b3bc55b77e1cd4d6c1bb3e21f023/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L536)
 
 **Filtering results for Improved (200 tries) in the RepoReapers projects.**
 
@@ -142,7 +150,7 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | — | 5,203 (2.9%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | — | 420 (20.6%) |
 
-source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/c68f145cf43133776f13a9ed99f0931e817e814e/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
+source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/ea801209ac11b3bc55b77e1cd4d6c1bb3e21f023/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L526)
 
 The reader-facing filtering column combines filter decisions, generation-gate refusals, and inherited-test inlining limits. The preceding table preserves the exact mechanisms.
 

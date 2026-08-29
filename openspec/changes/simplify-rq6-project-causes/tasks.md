@@ -18,13 +18,13 @@
 
 ## 3. Regenerate Publication Artifacts
 
-- [ ] 3.1 Run the registered RQ6 report against its declared pinned corpus and inputs.
-- [ ] 3.2 Inspect generated CSV, TeX, macro, manifest, and provenance diffs; confirm that every change follows from taxonomy removal or an evidence-backed cause correction.
-- [ ] 3.3 Provide the regenerated project-exclusion table and producing revision to the thesis change `restore-rq6-narrative`.
+- [x] 3.1 Run the registered RQ6 report against its declared pinned corpus and inputs.
+- [x] 3.2 Inspect generated CSV, TeX, macro, manifest, and provenance diffs; confirm that every change follows from taxonomy removal or an evidence-backed cause correction.
+- [x] 3.3 Provide the regenerated project-exclusion table and producing revision to the thesis change `restore-rq6-narrative`.
 
 ## 4. Verify and Commit
 
-- [ ] 4.1 Run `uv run --directory analysis pytest`.
-- [ ] 4.2 Run `uv run --directory analysis ruff check .` and `uv run --directory analysis ty check .`.
-- [ ] 4.3 Run `lefthook run pre-commit --all-files` and `openspec validate simplify-rq6-project-causes --strict`.
-- [ ] 4.4 Stage only the report change, inspect the staged diff, and commit the verified producer cutover with a causal body.
+- [x] 4.1 Run `uv run --directory analysis pytest`.
+- [x] 4.2 Run `uv run --directory analysis ruff check .` and `uv run --directory analysis ty check .`.
+- [x] 4.3 Run `lefthook run pre-commit --all-files` and `openspec validate simplify-rq6-project-causes --strict`.
+- [x] 4.4 Stage only the report change, inspect the staged diff, and commit the verified producer cutover with a causal body.
