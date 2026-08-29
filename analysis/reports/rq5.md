@@ -29,10 +29,10 @@ source: [`_fetch_breakdown`](https://github.com/glockyco/Teralizer/blob/602adc5e
 | Test | NonPassingTest | 23,246 | 21,719 (93.4%) | — | 1,527 (6.6%) |
 | Test | TestType | 23,246 | 23,066 (99.2%) | — | 180 (0.8%) |
 | Test | NoAssertions | 21,532 | 19,306 (89.7%) | — | 2,226 (10.3%) |
-| Assertion | AssertionType | 28,923 | 28,180 (97.4%) | — | 743 (2.6%) |
-| Assertion | ExcludedTest | 28,923 | 27,326 (94.5%) | — | 1,597 (5.5%) |
 | Assertion | MissingValue | 28,923 | 21,766 (75.3%) | — | 7,157 (24.7%) |
 | Assertion | ParameterType | 28,923 | 17,835 (61.7%) | 6,630 (22.9%) | 4,458 (15.4%) |
+| Assertion | ExcludedTest | 28,923 | 27,326 (94.5%) | — | 1,597 (5.5%) |
+| Assertion | AssertionType | 28,923 | 28,180 (97.4%) | — | 743 (2.6%) |
 | Assertion | VoidReturnType | 28,923 | 21,763 (75.2%) | 7,157 (24.7%) | 3 (0.0%) |
 
 source: [`_fetch_filtering`](https://github.com/glockyco/Teralizer/blob/602adc5e886819c8c391c46e4432c172843e182e/analysis/src/teralizer/eval/reports/rq5_causes.py#L206)

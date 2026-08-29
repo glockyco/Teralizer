@@ -2965,7 +2965,7 @@
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
       "dirty": false,
-      "source_commit": "ea801209ac11b3bc55b77e1cd4d6c1bb3e21f023"
+      "source_commit": "05aa044fea0a8eb1228c934fd7235bb3cde85d6f"
     },
     "tables": {
       "tab-exclusions-breakdown": {
@@ -2991,10 +2991,10 @@
           "Test:NonPassingTest",
           "Test:TestType",
           "Test:NoAssertions",
-          "Assertion:AssertionType",
-          "Assertion:ExcludedTest",
           "Assertion:MissingValue",
           "Assertion:ParameterType",
+          "Assertion:ExcludedTest",
+          "Assertion:AssertionType",
           "Assertion:VoidReturnType"
         ],
         "source_url": "https://github.com/glockyco/Teralizer/blob/602adc5e886819c8c391c46e4432c172843e182e/analysis/src/teralizer/eval/reports/rq5_causes.py#L206",
@@ -4777,8 +4777,8 @@
     },
     "run": {
       "derived_view_revision": "f6ec3c68973b33dae75c228622464e4bf940cc14f8f634b6792b8dd89250e1e6",
-      "dirty": false,
-      "source_commit": "dbaf5bed47972b3f8f1a15c8e51603fb440c6434"
+      "dirty": true,
+      "source_commit": "05aa044fea0a8eb1228c934fd7235bb3cde85d6f"
     },
     "tables": {
       "rq6_exclusion_mechanisms": {
@@ -4960,19 +4960,19 @@
           "Test:NonPassingTest",
           "Test:TestType",
           "Test:NoAssertions",
-          "Test:DisabledTest",
-          "Test:InheritedTest",
-          "Test:InheritedTestMethod",
           "Test:Mocking",
-          "Assertion:AssertionType",
-          "Assertion:ExcludedTest",
+          "Test:InheritedTestMethod",
+          "Test:InheritedTest",
+          "Test:DisabledTest",
           "Assertion:MissingValue",
           "Assertion:ParameterType",
           "Assertion:ReturnType",
+          "Assertion:ExcludedTest",
+          "Assertion:AssertionType",
           "Assertion:StringOperation",
-          "Generalization:SeedSpecConsistency",
           "Generalization:WideningLicense",
-          "Generalization:NonPassingTest"
+          "Generalization:NonPassingTest",
+          "Generalization:SeedSpecConsistency"
         ],
         "source_url": "https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L659",
         "value": "Filtering results for {entity.variant.improved_c} in the RepoReapers projects.",

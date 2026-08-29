@@ -131,19 +131,19 @@ source: [`fetch_mechanism_partition`](https://github.com/glockyco/Teralizer/blob
 | Test | NonPassingTest | 82,445 | 73,780 (89.5%) | — | 8,665 (10.5%) |
 | Test | TestType | 82,445 | 82,246 (99.8%) | — | 199 (0.2%) |
 | Test | NoAssertions | 73,662 | 49,396 (67.1%) | — | 24,266 (32.9%) |
-| Test | DisabledTest | 73,662 | 73,657 (100.0%) | — | 5 (0.0%) |
-| Test | InheritedTest | 73,662 | 72,609 (98.6%) | — | 1,053 (1.4%) |
-| Test | InheritedTestMethod | 6,259 | 3,424 (54.7%) | — | 2,835 (45.3%) |
 | Test | Mocking | 73,662 | 66,689 (90.5%) | — | 6,973 (9.5%) |
-| Assertion | AssertionType | 180,548 | 148,901 (82.5%) | — | 31,647 (17.5%) |
-| Assertion | ExcludedTest | 180,548 | 141,764 (78.5%) | — | 38,784 (21.5%) |
+| Test | InheritedTestMethod | 6,259 | 3,424 (54.7%) | — | 2,835 (45.3%) |
+| Test | InheritedTest | 73,662 | 72,609 (98.6%) | — | 1,053 (1.4%) |
+| Test | DisabledTest | 73,662 | 73,657 (100.0%) | — | 5 (0.0%) |
 | Assertion | MissingValue | 180,548 | 109,865 (60.9%) | — | 70,683 (39.1%) |
 | Assertion | ParameterType | 180,548 | 48,992 (27.1%) | 65,706 (36.4%) | 65,850 (36.5%) |
 | Assertion | ReturnType | 180,548 | 52,400 (29.0%) | 70,683 (39.1%) | 57,465 (31.8%) |
+| Assertion | ExcludedTest | 180,548 | 141,764 (78.5%) | — | 38,784 (21.5%) |
+| Assertion | AssertionType | 180,548 | 148,901 (82.5%) | — | 31,647 (17.5%) |
 | Assertion | StringOperation | 180,548 | 175,345 (97.1%) | — | 5,203 (2.9%) |
-| Generalization | SeedSpecConsistency | 5,356 | 5,355 (100.0%) | — | 1 (0.0%) |
 | Generalization | WideningLicense | 5,355 | 2,057 (38.4%) | — | 3,298 (61.6%) |
 | Generalization | NonPassingTest | 2,035 | 1,615 (79.4%) | — | 420 (20.6%) |
+| Generalization | SeedSpecConsistency | 5,356 | 5,355 (100.0%) | — | 1 (0.0%) |
 
 source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/dbaf5bed47972b3f8f1a15c8e51603fb440c6434/analysis/src/teralizer/eval/reports/_exclusion_evidence.py#L659)
 
