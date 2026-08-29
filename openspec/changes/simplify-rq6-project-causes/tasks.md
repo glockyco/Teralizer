@@ -58,3 +58,4 @@
 - [x] 8.2 Add focused renderer and RQ6 report tests for the width-strategy invariant, natural-width resize output, and local float placement.
 - [x] 8.3 Regenerate the RQ6 artifacts and place Tables 5.16 and 5.17 together at one source boundary before the assertion-level discussion.
 - [x] 8.4 Run the complete analysis checks, repository hooks, strict OpenSpec validation, thesis build, and page inspection; commit each repository separately.
+- [x] 8.5 Remove setup and trailing whitespace from the measured resize box, target the explicit text width, rebuild Table 5.17, and verify that both rule endpoints align with Table 5.16.

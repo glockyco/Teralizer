@@ -454,17 +454,20 @@ def test_render_table_midrule_group_style_preserves_existing_group_breaks():
 def test_render_table_can_fit_text_width():
     table = Table(
         key="wide",
-        df=pd.DataFrame({"value": [1]}),
+        df=pd.DataFrame({"key": ["one"], "value": [1]}),
         columns=[ColumnSpec("Value", "value", ValueKind.COUNT, align="r")],
         caption="Wide",
         label="tab:wide",
+        row_key="key",
         latex_resize_to_width=True,
     )
     tex = render_table(table)
-    assert "\\noindent\\resizebox{\\linewidth}{!}{%" in tex
+    resize = "\\noindent\\resizebox{\\textwidth}{!}{%"
+    assert resize in tex
+    assert tex.index("\\setcounter{reporttablerow}{0}") < tex.index(resize)
     assert "\\begin{tabular}{r}" in tex
     assert "tabular*" not in tex
-    assert "  \\end{tabular}\n  }\n\\end{table}" in tex
+    assert "  \\end{tabular}%\n  }\n\\end{table}" in tex
 
 
 def test_render_macros_one_newcommand_per_metric():

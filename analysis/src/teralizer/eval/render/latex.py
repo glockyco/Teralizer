@@ -290,8 +290,15 @@ def render_table(table: Table) -> str:
         lines.insert(
             0, "\\begin{table}" + (f"[{table.float_spec}]" if table.float_spec else "")
         )
+    if table.row_key is not None:
+        table_anchor = _label_component(table.key)
+        lines += [
+            "  \\renewcommand{\\theHreporttablerow}"
+            f"{{{table_anchor}.\\arabic{{reporttablerow}}}}",
+            "  \\setcounter{reporttablerow}{0}",
+        ]
     if table.latex_resize_to_width:
-        lines.append("  \\noindent\\resizebox{\\linewidth}{!}{%")
+        lines.append("  \\noindent\\resizebox{\\textwidth}{!}{%")
     header_rows: list[str] = []
     if any(c.group_header is not None for c in columns):
         header_rows += _group_header_rows(columns, table.group_header_align)
@@ -321,13 +328,6 @@ def render_table(table: Table) -> str:
         )
     else:
         opening = f"  \\begin{{tabular}}{{{cols}}}"
-    if table.row_key is not None:
-        table_anchor = _label_component(table.key)
-        lines += [
-            "  \\renewcommand{\\theHreporttablerow}"
-            f"{{{table_anchor}.\\arabic{{reporttablerow}}}}",
-            "  \\setcounter{reporttablerow}{0}",
-        ]
     lines += [
         opening,
         "  \\toprule",
@@ -406,10 +406,10 @@ def render_table(table: Table) -> str:
             raise AssertionError("band widths are unavailable")
         lines.append("  \\midrule")
         lines.append(_band_row(table.overall_band, len(columns), band_widths))
-    lines += [
-        "  \\bottomrule",
-        "  \\end{tabular*}" if table.full_width else "  \\end{tabular}",
-    ]
+    closing = "  \\end{tabular*}" if table.full_width else "  \\end{tabular}"
+    if table.latex_resize_to_width:
+        closing += "%"
+    lines += ["  \\bottomrule", closing]
     if table.latex_resize_to_width:
         lines.append("  }")
     if table.floating:

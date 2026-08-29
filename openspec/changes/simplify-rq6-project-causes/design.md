@@ -78,7 +78,7 @@ Use the normal RQ6 report command and declared corpus inputs. Do not hand-edit g
 
 ### 9. Fit and pair the entity-exclusion tables
 
-Use one width strategy for each generated table. A table that needs scaling SHALL use a natural-width `tabular` inside an unindented `\\resizebox{\\linewidth}{!}`. It SHALL NOT also use `tabular*` full-width stretching. Reject that conflicting renderer state so another report cannot reproduce the hidden overflow.
+Use one width strategy for each generated table. A table that needs scaling SHALL use a natural-width `tabular` inside an unindented `\\resizebox{\\textwidth}{!}`. The explicit target matches the full-width `tabular*` contract used by adjacent tables. Keep counter setup outside the resize argument, and suppress whitespace between the inner table and the closing brace. Otherwise, interword glue becomes part of the measured box and leaves both table rules inset after scaling. The scaled table SHALL NOT also use `tabular*` full-width stretching. Reject that conflicting renderer state so another report cannot reproduce the hidden overflow.
 
 Place the entity-exclusion summary and filter-detail inputs at the same source boundary before the assertion-level discussion. Give both floats local top placement so LaTeX queues them together after the preceding page break and can place them together. Do not change the document-wide float policy or shorten additional evidence labels to compensate for layout defects.
 
