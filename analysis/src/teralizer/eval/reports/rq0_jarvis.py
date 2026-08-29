@@ -660,7 +660,8 @@ def build(context: ReportContext) -> RQReport:
         ],
         full_width=True,
         caption=(
-            "PVC before generalization, after generalization with JARVIS, and "
+            "Parameter value coverage (PVC) before generalization, after "
+            "generalization with JARVIS, and "
             "after generalization with {entity.tool.teralizer} for each of the 10 "
             "scenarios reported by JARVIS."
         ),
