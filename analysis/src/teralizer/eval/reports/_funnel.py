@@ -178,6 +178,32 @@ WITH
         WHERE is_included
         GROUP BY project_id
     ),
+    stage12_test_survivors AS (
+        SELECT t.project_id, count(*) AS stage12_surviving_tests
+        FROM test t
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM filter_result fr
+            WHERE fr.test_id = t.id
+              AND fr.decision = 'REJECT'
+              AND fr.filter_name ~ :filter_class_pattern
+        )
+          AND (split_part(t.exclusion_info, ':', 1) IS NULL
+               OR split_part(t.exclusion_info, ':', 1) <> ALL(:capability_codes))
+        GROUP BY t.project_id
+    ),
+    stage12_assertion_survivors AS (
+        SELECT a.project_id, count(*) AS stage12_surviving_assertions
+        FROM assertion a
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM filter_result fr
+            WHERE fr.assertion_id = a.id
+              AND fr.decision = 'REJECT'
+              AND fr.filter_name ~ :filter_class_pattern
+        )
+        GROUP BY a.project_id
+    ),
     spec_assertions AS (
         SELECT project_id, count(*) AS spec_surviving_assertions
         FROM assertion
@@ -247,47 +273,47 @@ WITH
         FROM assertion a
         WHERE NOT a.is_included
     ),
+    assertion_evidence AS (
+        SELECT
+            ea.*,
+            EXISTS (
+                SELECT 1
+                FROM filter_result fr
+                WHERE fr.assertion_id = ea.id
+                  AND fr.decision = 'REJECT'
+                  AND fr.filter_name ~ :filter_class_pattern
+            ) AS filter_rejected,
+            EXISTS (
+                SELECT 1
+                FROM filter_result fr
+                WHERE fr.assertion_id = ea.id
+                  AND fr.decision = 'REJECT'
+                  AND fr.filter_name = :quarantine_producer
+            ) OR ea.exclusion_code = ANY(:quarantine_codes) AS build_quarantined,
+            EXISTS (
+                SELECT 1
+                FROM task failed
+                WHERE failed.assertion_id = ea.id
+                  AND failed.generalization_id IS NULL
+                  AND failed.status <> 'SUCCEEDED'
+                  AND failed.stage = ANY(:assertion_failure_stages)
+            ) OR ea.exclusion_code LIKE 'Excluded by%' AS task_failed
+        FROM excluded_assertions ea
+    ),
     assertion_exclusions AS (
         SELECT
-            ea.project_id,
+            project_id,
             count(*) AS excluded_assertions,
+            count(*) FILTER (WHERE filter_rejected) AS filter_rejected_assertions,
+            count(*) FILTER (WHERE build_quarantined)
+                AS build_quarantined_assertions,
             count(*) FILTER (
-                WHERE EXISTS (
-                    SELECT 1
-                    FROM filter_result fr
-                    WHERE fr.assertion_id = ea.id
-                      AND fr.decision = 'REJECT'
-                      AND fr.filter_name ~ :filter_class_pattern
-                )
-            ) AS filter_rejected_assertions,
-            count(*) FILTER (
-                WHERE EXISTS (
-                    SELECT 1
-                    FROM filter_result fr
-                    WHERE fr.assertion_id = ea.id
-                      AND fr.decision = 'REJECT'
-                      AND fr.filter_name = :quarantine_producer
-                ) OR (
-                    EXISTS (
-                        SELECT 1
-                        FROM task t
-                        WHERE t.assertion_id = ea.id
-                          AND t.status <> 'SUCCEEDED'
-                          AND t.stage = ANY(:assertion_failure_stages)
-                    )
-                    AND NOT EXISTS (
-                        SELECT 1
-                        FROM filter_result fr
-                        WHERE fr.assertion_id = ea.id
-                          AND fr.decision = 'REJECT'
-                          AND fr.filter_name ~ :filter_class_pattern
-                    )
-                    AND (ea.exclusion_code IS NULL
-                         OR ea.exclusion_code <> ALL(:quarantine_codes))
-                )
-            ) AS failure_excluded_assertions
-        FROM excluded_assertions ea
-        GROUP BY ea.project_id
+                WHERE task_failed
+                  AND NOT filter_rejected
+                  AND NOT build_quarantined
+            ) AS task_exception_assertions
+        FROM assertion_evidence
+        GROUP BY project_id
     ),
     generalization_exclusions AS (
         SELECT
@@ -376,6 +402,9 @@ SELECT
     p.root_path = ANY(:no_executed_test_projects) AS no_executed_test,
     coalesce(it.included_tests, 0) AS included_tests,
     coalesce(ia.included_assertions, 0) AS included_assertions,
+    coalesce(s12t.stage12_surviving_tests, 0) AS stage12_surviving_tests,
+    coalesce(s12a.stage12_surviving_assertions, 0)
+        AS stage12_surviving_assertions,
     coalesce(sa.spec_surviving_assertions, 0) AS spec_surviving_assertions,
     coalesce(gfp.generated_filter_passed, 0) AS generated_filter_passed,
     coalesce(fu.final_usable, 0) AS final_usable,
@@ -384,7 +413,9 @@ SELECT
     coalesce(te.has_test_failure, false) AS has_test_failure,
     coalesce(ae.excluded_assertions, 0) AS excluded_assertions,
     coalesce(ae.filter_rejected_assertions, 0) AS filter_rejected_assertions,
-    coalesce(ae.failure_excluded_assertions, 0) AS failure_excluded_assertions,
+    coalesce(ae.build_quarantined_assertions, 0)
+        AS build_quarantined_assertions,
+    coalesce(ae.task_exception_assertions, 0) AS task_exception_assertions,
     coalesce(ge.generalization_attempts, 0) AS generalization_attempts,
     coalesce(ge.has_widening_refusal, false) AS has_widening_refusal,
     coalesce(ge.has_generalization_filter_rejection, false)
@@ -399,6 +430,8 @@ SELECT
 FROM project p
 LEFT JOIN included_tests it ON it.project_id = p.id
 LEFT JOIN included_assertions ia ON ia.project_id = p.id
+LEFT JOIN stage12_test_survivors s12t ON s12t.project_id = p.id
+LEFT JOIN stage12_assertion_survivors s12a ON s12a.project_id = p.id
 LEFT JOIN spec_assertions sa ON sa.project_id = p.id
 LEFT JOIN generated_filter_passed gfp ON gfp.project_id = p.id
 LEFT JOIN final_usable fu ON fu.project_id = p.id
@@ -539,11 +572,13 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
         if stage == _REDUCTION_STAGE:
             reduction_excluded = excluded
         for project_id in sorted(excluded):
-            cause = _cause_for_exclusion(
-                stage,
-                project_rows[project_id],
-                failures_by_project.get(project_id, ()),
-                lifecycle_by_project.get(project_id, ()),
+            cause = _reader_facing_cause(
+                _cause_for_exclusion(
+                    stage,
+                    project_rows[project_id],
+                    failures_by_project.get(project_id, ()),
+                    lifecycle_by_project.get(project_id, ()),
+                )
             )
             if cause == UNCODED:
                 uncoded_projects.append(project_id)
@@ -680,15 +715,120 @@ def _group_lifecycle_failures(
 
 def _survivor_sets(signals: pd.DataFrame) -> list[set[int]]:
     project_ids = signals["project_id"].astype(int)
-    stage12 = set(
-        project_ids[
-            (signals["included_tests"] > 0) & (signals["included_assertions"] > 0)
-        ]
-    )
-    stage3 = stage12 & set(project_ids[signals["spec_surviving_assertions"] > 0])
-    stage4 = stage3 & set(project_ids[signals["generated_filter_passed"] > 0])
-    stage5 = stage4 & set(project_ids[signals["final_usable"] > 0])
-    return [set(project_ids), stage12, stage3, stage4, stage5]
+    survivors = [
+        set(project_ids),
+        set(project_ids[signals["stage12_surviving_assertions"] > 0]),
+        set(project_ids[signals["generalization_attempts"] > 0]),
+        set(project_ids[signals["generated_filter_passed"] > 0]),
+        set(project_ids[signals["final_usable"] > 0]),
+    ]
+    for stage, earlier, later in zip(_PIPELINE_STAGES, survivors, survivors[1:]):
+        bypassed = sorted(later - earlier)
+        if bypassed:
+            raise RuntimeError(
+                f"Stage {stage} transition evidence bypasses its input: {bypassed[:10]}"
+            )
+    return survivors
+
+
+def _reader_facing_cause(cause: Cause) -> Cause:
+    if cause == UNCODED:
+        return cause
+
+    stage12_groups = {
+        "all assertions excluded due to filter rejections": (
+            "all tests or assertions excluded due to filter rejections"
+        ),
+        "all tests excluded due to filter rejections": (
+            "all tests or assertions excluded due to filter rejections"
+        ),
+        "timeout exceeded (300 seconds per original test suite)": (
+            "JUnit execution of the original test suite exceeds 300 seconds"
+        ),
+        "JUnit execution error during test execution": (
+            "JUnit test execution or Spoon test analysis fails"
+        ),
+        "Spoon execution error during test analysis": (
+            "JUnit test execution or Spoon test analysis fails"
+        ),
+        "no test records collected": "no test or assertion records collected",
+        "no assertion records collected": "no test or assertion records collected",
+        "unsupported JUnit report layout": "JUnit report collection fails",
+        "JUnit report directory not found": "JUnit report collection fails",
+    }
+    if cause.stage == "1 + 2":
+        if cause.cause in stage12_groups:
+            return Cause(cause.stage, stage12_groups[cause.cause])
+        raise RuntimeError(f"Unmapped Stage 1 + 2 project cause: {cause.cause}")
+
+    if cause.stage == "3":
+        if cause.cause in {
+            "no generalization attempts recorded",
+            "no specifications extracted from retained assertions",
+        }:
+            return Cause(
+                cause.stage,
+                "no generalization attempt recorded despite retained assertions",
+            )
+        processing_causes = {
+            "instrumented project compilation failed",
+            "JUnit execution error during initial test execution",
+            "no specifications extracted due to earlier filter rejections and task exceptions",
+            "no specifications extracted due to earlier filter rejections and build quarantines",
+            "no specifications extracted due to earlier filter rejections, build quarantines, and task exceptions",
+        }
+        if cause.cause in processing_causes:
+            return Cause(
+                cause.stage, "processing failures prevent specification extraction"
+            )
+        raise RuntimeError(f"Unmapped Stage 3 project cause: {cause.cause}")
+
+    if cause.stage == "4":
+        widening_causes = {
+            "all generalizations excluded due to widening refusals",
+            "all generalizations excluded due to widening refusals and filter rejections",
+            "all generalizations excluded due to widening refusals and task exceptions",
+        }
+        if cause.cause in widening_causes:
+            return Cause(
+                cause.stage,
+                "widening refusals contribute to exclusion of all generalization attempts",
+            )
+        stage4_groups = {
+            "all generalizations excluded due to filter rejections": (
+                "filter rejections alone exclude all generalization attempts"
+            ),
+            "all generalizations excluded due to task exceptions": (
+                "processing failures alone exclude all generalization attempts"
+            ),
+        }
+        if cause.cause in stage4_groups:
+            return Cause(cause.stage, stage4_groups[cause.cause])
+        raise RuntimeError(f"Unmapped Stage 4 project cause: {cause.cause}")
+
+    stage5_groups = {
+        "timeout exceeded (3600 seconds during PIT mutation testing for the initial test suite)": (
+            "PIT mutation testing of the initial test suite exceeds 3,600 seconds"
+        ),
+        "failed to persist PIT reports for the initial test suite": (
+            "required PIT reports or JaCoCo outputs unavailable for the initial test suite"
+        ),
+        "JaCoCo outputs not found for the initial test suite": (
+            "required PIT reports or JaCoCo outputs unavailable for the initial test suite"
+        ),
+    }
+    if cause.stage == "5":
+        if cause.cause in stage5_groups:
+            return Cause(cause.stage, stage5_groups[cause.cause])
+        passthrough_causes = {
+            "generalized test suite has failing tests before mutation",
+            "initial test suite has failing tests before mutation",
+        }
+        if cause.cause in passthrough_causes:
+            return cause
+        raise RuntimeError(f"Unmapped Stage 5 project cause: {cause.cause}")
+
+    raise RuntimeError(f"Unmapped project cause stage: {cause.stage}")
 
 
 def _cause_for_exclusion(
@@ -723,18 +863,43 @@ def _cause_for_exclusion(
 
 def _fallback_cause(stage: str, project_row: pd.Series) -> Cause:
     if stage == "1 + 2":
-        if int(project_row["included_tests"]) == 0:
-            return _complete_test_loss_cause(project_row)
-        if _assertions_all_filtered(project_row):
-            return Cause("1 + 2", "all assertions excluded due to filter rejections")
-        return Cause(
-            "1 + 2",
-            "all assertions excluded due to filter rejections and processing failures",
+        test_records = int(project_row["included_tests"]) + int(
+            project_row["excluded_tests"]
         )
+        assertion_records = int(project_row["included_assertions"]) + int(
+            project_row["excluded_assertions"]
+        )
+        if test_records == 0:
+            return Cause("1 + 2", "no test records collected")
+        if int(project_row["stage12_surviving_tests"]) == 0:
+            if bool(project_row["has_test_filter_rejection"]):
+                return Cause("1 + 2", "all tests excluded due to filter rejections")
+            return UNCODED
+        if assertion_records == 0:
+            return Cause("1 + 2", "no assertion records collected")
+        if (
+            int(project_row["stage12_surviving_assertions"]) == 0
+            and int(project_row["filter_rejected_assertions"]) == assertion_records
+        ):
+            return Cause("1 + 2", "all assertions excluded due to filter rejections")
+        return UNCODED
     if stage == "3":
+        if int(project_row["spec_surviving_assertions"]) > 0:
+            return Cause("3", "no generalization attempts recorded")
+        if int(project_row["included_assertions"]) > 0:
+            return Cause("3", "no specifications extracted from retained assertions")
+        mechanisms = []
+        if int(project_row["filter_rejected_assertions"]) > 0:
+            mechanisms.append("earlier filter rejections")
+        if int(project_row["build_quarantined_assertions"]) > 0:
+            mechanisms.append("build quarantines")
+        if int(project_row["task_exception_assertions"]) > 0:
+            mechanisms.append("task exceptions")
+        if not mechanisms:
+            return UNCODED
         return Cause(
             "3",
-            "all assertions excluded due to earlier filter rejections and new failures",
+            f"no specifications extracted due to {_join_causes(mechanisms)}",
         )
     if stage == "4":
         return _complete_generalization_loss_cause(project_row)
@@ -743,46 +908,30 @@ def _fallback_cause(stage: str, project_row: pd.Series) -> Cause:
     return UNCODED
 
 
-def _complete_test_loss_cause(project_row: pd.Series) -> Cause:
-    if int(project_row["excluded_tests"]) == 0:
-        return Cause("1 + 2", "no test records collected")
-    filtering = bool(project_row["has_test_filter_rejection"])
-    failures = bool(project_row["has_test_failure"])
-    if filtering and failures:
-        description = "all tests excluded due to filter rejections and task failures"
-    elif filtering:
-        description = "all tests excluded due to filter rejections"
-    elif failures:
-        description = "all tests excluded due to task failures"
-    else:
-        return UNCODED
-    return Cause("1 + 2", description)
-
-
 def _complete_generalization_loss_cause(project_row: pd.Series) -> Cause:
     if int(project_row["generalization_attempts"]) == 0:
-        return Cause("4", "no generalization attempts recorded")
+        return UNCODED
     mechanisms = []
     if bool(project_row["has_widening_refusal"]):
         mechanisms.append("widening refusals")
     if bool(project_row["has_generalization_filter_rejection"]):
         mechanisms.append("filter rejections")
     if bool(project_row["has_generalization_failure"]):
-        mechanisms.append("processing failures")
+        mechanisms.append("task exceptions")
     if not mechanisms:
         return UNCODED
-    if len(mechanisms) == 1:
-        description = mechanisms[0]
-    else:
-        description = ", ".join(mechanisms[:-1]) + f" and {mechanisms[-1]}"
-    return Cause("4", f"all generalizations excluded due to {description}")
+    return Cause(
+        "4",
+        f"all generalizations excluded due to {_join_causes(mechanisms)}",
+    )
 
 
-def _assertions_all_filtered(project_row: pd.Series) -> bool:
-    excluded = int(project_row["excluded_assertions"])
-    rejected = int(project_row["filter_rejected_assertions"])
-    failures = int(project_row["failure_excluded_assertions"])
-    return excluded > 0 and rejected == excluded and failures == 0
+def _join_causes(causes: list[str]) -> str:
+    if len(causes) == 1:
+        return causes[0]
+    if len(causes) == 2:
+        return f"{causes[0]} and {causes[1]}"
+    return f"{', '.join(causes[:-1])}, and {causes[-1]}"
 
 
 def _attribution(project_row: pd.Series, failure: ProjectFailure) -> Attribution:
@@ -793,7 +942,6 @@ def _attribution(project_row: pd.Series, failure: ProjectFailure) -> Attribution
         included_tests=int(project_row["included_tests"]),
         included_assertions=int(project_row["included_assertions"]),
         included_generalizations=int(project_row["generated_filter_passed"]),
-        assertion_exclusions_all_filtered=_assertions_all_filtered(project_row),
         artifact_present=_artifact_present(failure.internal_stage, project_row),
         timeout_seconds=(
             _TIMEOUT_BUDGETS.get(failure.internal_stage)
@@ -894,19 +1042,18 @@ def _build_table(
         "PIT reports not found": r"{entity.tool.pit} reports not found",
         "failed to process PIT reports": r"failed to process {entity.tool.pit} reports",
     }
-    timeout_templates = {
-        "per original test suite": r"per {entity.variant.original} test suite",
-        "per initial test suite": r"per {entity.variant.initial} test suite",
-        "per generalized test suite": r"per {entity.variant.improved_c} test suite",
+    suite_templates = {
+        "original test suite": r"{entity.variant.original} test suite",
+        "initial test suite": r"{entity.variant.initial} test suite",
+        "generalized test suite": r"{entity.variant.improved_c} test suite",
     }
 
     def cause_text(cause: object) -> str:
         text = str(cause)
         if text in cause_templates:
             return cause_templates[text]
-        for raw, macro in timeout_templates.items():
-            if raw in text:
-                return text.replace(raw, macro)
+        for raw, macro in suite_templates.items():
+            text = text.replace(raw, macro)
         return text
 
     display.loc[:, "row_key"] = display.apply(

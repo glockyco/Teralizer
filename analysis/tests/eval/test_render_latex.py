@@ -5,6 +5,7 @@ import pytest
 from teralizer.eval.entities import variant_ref
 from teralizer.eval.inputs import CorpusInputSnapshot
 from teralizer.eval.model import (
+    BandSummary,
     BuiltReport,
     ColumnSpec,
     Metric,
@@ -83,6 +84,29 @@ def test_render_table_is_booktabs_with_formatted_cells():
         )
         + "\n"
     )
+
+
+def test_full_width_band_distributes_fields_within_table_width():
+    table = Table(
+        key="funnel",
+        df=pd.DataFrame({"stage": ["1"], "count": [1]}),
+        columns=[
+            ColumnSpec("Stage", "stage", ValueKind.TEXT, align="l"),
+            ColumnSpec("Count", "count", ValueKind.COUNT, align="r"),
+        ],
+        caption="Funnel",
+        label="tab:funnel",
+        group_by="stage",
+        bands={"1": BandSummary("Stage 1 + 2 - Project Analysis", 584, 293, 291)},
+        full_width=True,
+    )
+
+    tex = render_table(table)
+
+    assert "\\multicolumn{2}{@{}l@{}}" in tex
+    assert "\\makebox[\\textwidth][l]" in tex
+    assert tex.count("\\hfill{}") == 4
+    assert "\\enspace{}" not in tex
 
 
 def test_render_table_labels_semantic_rows_independently_of_order():

@@ -64,12 +64,12 @@ MECHANISMS = (
     ),
     Mechanism(
         MechanismKey.BUILD_QUARANTINE,
-        "Build quarantine",
+        "Compilation failure",
         ReaderOutcome.FAILURES,
     ),
     Mechanism(
         MechanismKey.TASK_EXCEPTION,
-        "Task exception",
+        "Processing failure",
         ReaderOutcome.FAILURES,
     ),
 )

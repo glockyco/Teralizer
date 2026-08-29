@@ -202,8 +202,11 @@ def _band_row(
     ]
     label = f"{_text(band.title)}:"
     boxed = f"\\makebox[{label_width}][l]{{{label}}}"
-    body = f"{boxed} " + "\\enspace{}".join(fields)
-    return f"  \\multicolumn{{{columns}}}{{l}}{{\\textit{{{body}}}}} \\\\"
+    body = boxed + "\\hfill{}" + "\\hfill{}".join(fields)
+    return (
+        f"  \\multicolumn{{{columns}}}{{@{{}}l@{{}}}}"
+        f"{{\\textit{{\\makebox[\\textwidth][l]{{{body}}}}}}} \\\\"
+    )
 
 
 def _is_empty_group(value: object) -> bool:

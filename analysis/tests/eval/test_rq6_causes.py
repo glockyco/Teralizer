@@ -249,7 +249,7 @@ def test_rq6_eligibility_partition_is_complete(rq6_report):
     assert selected == initial_gate + no_executed_test + eligible
 
 
-def test_rq6_funnel_causes_use_reduced_schema(rq6_report):
+def test_rq6_funnel_causes_use_reader_facing_categories(rq6_report):
     report = rq6_report
     funnel = next(t for t in report.tables() if "processing-failures" in t.label)
     assert list(funnel.df.columns) == ["stage", "cause", "count", "row_key"]
@@ -257,52 +257,60 @@ def test_rq6_funnel_causes_use_reduced_schema(rq6_report):
     assert list(
         funnel.df[["stage", "cause", "count"]].itertuples(index=False, name=None)
     ) == [
-        ("1 + 2", "all assertions excluded due to filter rejections", 150),
         (
             "1 + 2",
-            "all assertions excluded due to filter rejections and processing failures",
-            106,
+            "all tests or assertions excluded due to filter rejections",
+            228,
         ),
-        ("1 + 2", "all tests excluded due to filter rejections", 78),
         (
             "1 + 2",
-            "timeout exceeded (300 seconds per {entity.variant.original} test suite)",
+            "JUnit execution of the {entity.variant.original} test suite exceeds 300 seconds",
             26,
         ),
-        ("1 + 2", "JUnit execution error during test execution", 13),
-        ("1 + 2", "no test records collected", 10),
-        ("1 + 2", "Spoon execution error during test analysis", 8),
-        (
-            "1 + 2",
-            "all tests excluded due to filter rejections and task failures",
-            6,
-        ),
-        ("1 + 2", "unsupported JUnit report layout", 4),
-        ("1 + 2", "JUnit report directory not found", 1),
-        ("3", "Spoon execution error during test instrumentation", 5),
+        ("1 + 2", "JUnit test execution or Spoon test analysis fails", 21),
+        ("1 + 2", "no test or assertion records collected", 11),
+        ("1 + 2", "JUnit report collection fails", 5),
+        ("3", "processing failures prevent specification extraction", 112),
         (
             "3",
-            "all assertions excluded due to earlier filter rejections and new failures",
-            1,
-        ),
-        ("4", "all generalizations excluded due to widening refusals", 59),
-        (
-            "4",
-            "all generalizations excluded due to widening refusals and filter rejections",
-            10,
-        ),
-        ("4", "all generalizations excluded due to filter rejections", 4),
-        (
-            "4",
-            "all generalizations excluded due to widening refusals and processing failures",
+            "no generalization attempt recorded despite retained assertions",
             2,
         ),
-        ("4", "no generalization attempts recorded", 2),
-        ("4", "all generalizations excluded due to processing failures", 1),
-        ("5", "unmutated test suite has failing tests", 6),
-        ("5", "timeout exceeded (3600 seconds during PIT mutation testing)", 4),
-        ("5", "failed to persist PIT coverage reports", 2),
-        ("5", "JaCoCo outputs not found", 1),
+        (
+            "4",
+            "widening refusals contribute to exclusion of all generalization attempts",
+            74,
+        ),
+        (
+            "4",
+            "filter rejections alone exclude all generalization attempts",
+            4,
+        ),
+        (
+            "4",
+            "processing failures alone exclude all generalization attempts",
+            3,
+        ),
+        (
+            "5",
+            "PIT mutation testing of the {entity.variant.initial} test suite exceeds 3,600 seconds",
+            4,
+        ),
+        (
+            "5",
+            "{entity.variant.improved_c} test suite has failing tests before mutation",
+            3,
+        ),
+        (
+            "5",
+            "{entity.variant.initial} test suite has failing tests before mutation",
+            3,
+        ),
+        (
+            "5",
+            "required PIT reports or JaCoCo outputs unavailable for the {entity.variant.initial} test suite",
+            3,
+        ),
     ]
 
 

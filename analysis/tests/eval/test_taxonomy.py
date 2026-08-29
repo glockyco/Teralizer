@@ -65,25 +65,16 @@ def test_timeout_label_uses_observed_budget():
     assert "3600 seconds" in classify(pit).cause
 
 
-def test_no_input_spec_requires_entity_evidence_for_zero_tests():
-    all_tests = Attribution(
-        "ANALYZE_JPF",
-        "NO_INPUT_SPEC",
-        at_ceiling=False,
-        included_tests=0,
-        included_assertions=0,
-    )
-    all_asserts = Attribution(
-        "ANALYZE_JPF",
-        "NO_INPUT_SPEC",
-        at_ceiling=False,
-        included_tests=4,
-        included_assertions=0,
-        assertion_exclusions_all_filtered=True,
-    )
-    assert classify(all_tests) is UNCODED
-    assert classify(all_asserts).stage == "1 + 2"
-    assert "all assertions excluded" in classify(all_asserts).cause
+def test_no_input_spec_requires_entity_evidence():
+    for included_tests in (0, 4):
+        attribution = Attribution(
+            "ANALYZE_JPF",
+            "NO_INPUT_SPEC",
+            at_ceiling=False,
+            included_tests=included_tests,
+            included_assertions=0,
+        )
+        assert classify(attribution) is UNCODED
 
 
 def test_spoon_error_names_failed_operation():
@@ -106,20 +97,6 @@ def test_unknown_signal_is_uncoded():
         included_assertions=1,
     )
     assert classify(a) is UNCODED
-
-
-def test_no_input_spec_stage3_new_failures():
-    a = Attribution(
-        "ANALYZE_JPF",
-        "NO_INPUT_SPEC",
-        at_ceiling=False,
-        included_tests=4,
-        included_assertions=0,
-        assertion_exclusions_all_filtered=False,
-    )
-    c = classify(a)
-    assert c.stage == "3"
-    assert "new failures" in c.cause
 
 
 def test_stage4_terminal_failures_require_entity_mechanisms():
@@ -209,7 +186,7 @@ def test_pit_report_persistence_failure_names_failed_operation():
             artifact_present=True,
         )
     )
-    assert cause.cause == "failed to persist PIT coverage reports"
+    assert cause.cause == "failed to persist PIT reports for the initial test suite"
 
 
 def test_pit_listener_failure_is_execution_error():
@@ -239,17 +216,17 @@ def test_restore_original_build_is_stage5():
     assert "build" in c.cause.lower()
 
 
-def test_build_project_instrumented_is_stage3_spoon():
-    a = Attribution(
+def test_build_project_instrumented_names_compilation():
+    attribution = Attribution(
         "BUILD_PROJECT_INSTRUMENTED",
         "OTHER_COMPILE_FAILURE",
         at_ceiling=False,
         included_tests=1,
         included_assertions=1,
     )
-    c = classify(a)
-    assert c.stage == "3"
-    assert "Spoon" in c.cause and "instrumentation" in c.cause
+    cause = classify(attribution)
+    assert cause.stage == "3"
+    assert cause.cause == "instrumented project compilation failed"
 
 
 def test_collect_junit_reports_preserves_diagnosed_cause():
@@ -273,10 +250,10 @@ def test_collect_junit_reports_preserves_diagnosed_cause():
 
 def test_diagnosed_reduction_command_failures_get_named_causes():
     cases = {
-        "MINION_DIED": "PIT coverage minion exited abnormally",
-        "PLUGIN_UNUSABLE": "PIT plugin version cannot run",
-        "SUITE_NOT_GREEN": "unmutated test suite has failing tests",
-        "NO_TESTS_FOUND": "PIT found no tests to mutate",
+        "MINION_DIED": "PIT coverage minion exited for the generalized test suite",
+        "PLUGIN_UNUSABLE": "PIT plugin cannot run for the generalized test suite",
+        "SUITE_NOT_GREEN": "generalized test suite has failing tests before mutation",
+        "NO_TESTS_FOUND": "PIT found no tests in the generalized test suite",
     }
     for reason_code, expected in cases.items():
         cause = _taxonomy.classify(

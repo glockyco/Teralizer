@@ -84,7 +84,6 @@ class Attribution:
     included_tests: int
     included_assertions: int
     included_generalizations: int = 0
-    assertion_exclusions_all_filtered: bool = False
     artifact_present: bool = True
     timeout_seconds: float | None = None
 
@@ -106,23 +105,19 @@ def _timeout_cause(seconds: float | None, subject: str) -> str:
     return f"timeout exceeded ({rendered} seconds {subject})"
 
 
+def _suite_name(internal_stage: str) -> str:
+    if internal_stage.endswith("_ORIGINAL"):
+        return "original test suite"
+    if internal_stage.endswith("_INITIAL"):
+        return "initial test suite"
+    if internal_stage.endswith("_GENERALIZED"):
+        return "generalized test suite"
+    raise ValueError(f"stage has no suite side: {internal_stage}")
+
+
 def classify(a: Attribution) -> Cause:
     stage = paper_stage(a.internal_stage)
     if stage is None:
-        return UNCODED
-
-    if a.reason_code == "NO_INPUT_SPEC":
-        if a.included_tests == 0:
-            return UNCODED
-        if a.included_assertions == 0:
-            if a.assertion_exclusions_all_filtered:
-                return Cause(
-                    "1 + 2", "all assertions excluded due to filter rejections"
-                )
-            return Cause(
-                "3",
-                "all assertions excluded due to earlier filter rejections and new failures",
-            )
         return UNCODED
 
     if a.internal_stage == "EXECUTE_TESTS_ORIGINAL":
@@ -139,13 +134,11 @@ def classify(a: Attribution) -> Cause:
         if a.reason_code == "UNSUPPORTED_REPORT_LAYOUT":
             return Cause("1 + 2", "unsupported JUnit report layout")
         return Cause("1 + 2", "JUnit report collection error")
-    if a.internal_stage == "COLLECT_JACOCO_DATA_ORIGINAL":
-        if a.artifact_present:
-            return Cause("5", "JaCoCo execution error during coverage collection")
-        return Cause("5", "JaCoCo outputs not found")
 
-    if a.internal_stage in {"ADD_JPF_INSTRUMENTATION", "BUILD_PROJECT_INSTRUMENTED"}:
+    if a.internal_stage == "ADD_JPF_INSTRUMENTATION":
         return Cause("3", "Spoon execution error during test instrumentation")
+    if a.internal_stage == "BUILD_PROJECT_INSTRUMENTED":
+        return Cause("3", "instrumented project compilation failed")
     if a.internal_stage == "EXECUTE_TESTS_INITIAL":
         if a.at_ceiling:
             return Cause(
@@ -186,41 +179,50 @@ def classify(a: Attribution) -> Cause:
         "COLLECT_JACOCO_DATA_INITIAL",
         "COLLECT_JACOCO_DATA_GENERALIZED",
     }:
+        suite = _suite_name(a.internal_stage)
         if a.at_ceiling:
             return Cause(
                 "5",
-                _timeout_cause(a.timeout_seconds, "during JaCoCo coverage collection"),
+                _timeout_cause(
+                    a.timeout_seconds,
+                    f"during JaCoCo coverage collection for the {suite}",
+                ),
             )
         if not a.artifact_present:
-            return Cause("5", "JaCoCo outputs not found")
-        return Cause("5", "JaCoCo execution error during coverage collection")
+            return Cause("5", f"JaCoCo outputs not found for the {suite}")
+        return Cause("5", f"JaCoCo execution error while measuring the {suite}")
     if a.internal_stage in {
         "COLLECT_PIT_DATA_ORIGINAL",
         "COLLECT_PIT_DATA_INITIAL",
         "COLLECT_PIT_DATA_GENERALIZED",
     }:
+        suite = _suite_name(a.internal_stage)
         if a.at_ceiling:
             return Cause(
-                "5", _timeout_cause(a.timeout_seconds, "during PIT mutation testing")
+                "5",
+                _timeout_cause(
+                    a.timeout_seconds,
+                    f"during PIT mutation testing for the {suite}",
+                ),
             )
         if a.reason_code == "PIT_MAPPING_FAILURE":
-            return Cause("5", "failed to import PIT reports")
+            return Cause("5", f"failed to import PIT reports for the {suite}")
         if a.reason_code == "PIT_REPORT_PERSISTENCE_FAILURE":
-            return Cause("5", "failed to persist PIT coverage reports")
+            return Cause("5", f"failed to persist PIT reports for the {suite}")
         # Diagnosed command failures come from the captured Maven output. Each cause
-        # names the failed operation instead of using the former catch-all.
+        # names the failed operation and suite side instead of using a catch-all.
         if a.reason_code == "MINION_DIED":
-            return Cause("5", "PIT coverage minion exited abnormally")
+            return Cause("5", f"PIT coverage minion exited for the {suite}")
         if a.reason_code == "PLUGIN_UNUSABLE":
-            return Cause("5", "PIT plugin version cannot run")
+            return Cause("5", f"PIT plugin cannot run for the {suite}")
         if a.reason_code == "SUITE_NOT_GREEN":
-            return Cause("5", "unmutated test suite has failing tests")
+            return Cause("5", f"{suite} has failing tests before mutation")
         if a.reason_code == "NO_TESTS_FOUND":
-            return Cause("5", "PIT found no tests to mutate")
+            return Cause("5", f"PIT found no tests in the {suite}")
         if a.reason_code == "LISTENER_BUG":
-            return Cause("5", "PIT execution error during mutation testing")
+            return Cause("5", f"PIT execution error for the {suite}")
         if not a.artifact_present:
-            return Cause("5", "PIT reports not found")
-        return Cause("5", "PIT execution error during mutation testing")
+            return Cause("5", f"PIT reports not found for the {suite}")
+        return Cause("5", f"PIT execution error for the {suite}")
 
     return UNCODED

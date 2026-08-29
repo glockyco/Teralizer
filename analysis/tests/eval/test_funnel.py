@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 from sqlalchemy import text
 
 from teralizer.eval.render.csv import render_table
@@ -67,6 +68,18 @@ def test_funnel_arithmetic_is_consistent(funnel_result):
     assert result.reduction.entering > result.success_count
 
 
+def test_stage_bands_use_boundary_evidence(funnel_result):
+    assert [
+        (stage.stage, stage.entering, stage.passing, stage.exclusions)
+        for stage in funnel_result.stages
+    ] == [
+        ("1 + 2", 584, 293, 291),
+        ("3", 293, 179, 114),
+        ("4", 179, 98, 81),
+        ("5", 98, 85, 13),
+    ]
+
+
 def test_every_cause_row_has_stage_and_description(funnel_result):
     result = funnel_result
     assert list(result.table.df.columns) == ["stage", "cause", "count", "row_key"]
@@ -87,33 +100,66 @@ def test_funnel_table_has_band_summary_note(funnel_result):
         assert str(band.exclusions) in note
 
 
-def test_survivorship_band_overrides_upstream_taxonomy_stage():
-    row = pd.Series(
+def test_survivor_sets_use_historical_transitions_not_final_status():
+    signals = pd.DataFrame(
         {
-            "included_tests": 4,
-            "included_assertions": 0,
-            "generated_filter_passed": 0,
-            "excluded_assertions": 4,
-            "filter_rejected_assertions": 0,
-            "failure_excluded_assertions": 4,
-            "has_jacoco_original": False,
-            "has_jacoco_initial": False,
-            "has_jacoco_generalized": False,
-            "has_pit_original": False,
-            "has_pit_initial": False,
-            "has_pit_generalized": False,
+            "project_id": [1, 2, 3],
+            "stage12_surviving_assertions": [1, 1, 1],
+            "generalization_attempts": [0, 1, 1],
+            "generated_filter_passed": [0, 0, 1],
+            "final_usable": [0, 0, 1],
         }
     )
-    failure = _funnel.ProjectFailure(
-        project_id=1,
-        internal_stage="ANALYZE_JPF",
-        reason_code="NO_INPUT_SPEC",
-        runtime=None,
-        step=1,
+    assert _funnel._survivor_sets(signals) == [
+        {1, 2, 3},
+        {1, 2, 3},
+        {2, 3},
+        {3},
+        {3},
+    ]
+
+
+def test_survivor_sets_reject_bypassed_stage():
+    signals = pd.DataFrame(
+        {
+            "project_id": [1],
+            "stage12_surviving_assertions": [0],
+            "generalization_attempts": [1],
+            "generated_filter_passed": [0],
+            "final_usable": [0],
+        }
     )
-    cause = _funnel._cause_for_exclusion("1 + 2", row, (failure,), ())
-    assert cause.stage == "1 + 2"
-    assert "all assertions excluded" in cause.cause
+    with pytest.raises(RuntimeError, match="bypasses its input"):
+        _funnel._survivor_sets(signals)
+
+
+@pytest.mark.parametrize(
+    ("build_quarantines", "task_exceptions", "expected"),
+    (
+        (0, 1, "earlier filter rejections and task exceptions"),
+        (1, 0, "earlier filter rejections and build quarantines"),
+        (
+            1,
+            1,
+            "earlier filter rejections, build quarantines, and task exceptions",
+        ),
+    ),
+)
+def test_stage3_complete_loss_preserves_mechanism_set(
+    build_quarantines, task_exceptions, expected
+):
+    row = pd.Series(
+        {
+            "spec_surviving_assertions": 0,
+            "included_assertions": 0,
+            "filter_rejected_assertions": 1,
+            "build_quarantined_assertions": build_quarantines,
+            "task_exception_assertions": task_exceptions,
+        }
+    )
+    cause = _funnel._fallback_cause("3", row)
+    assert cause.stage == "3"
+    assert expected in cause.cause
 
 
 def test_funnel_survivors_match_independent_sql(funnel_result, rq6_conn):
@@ -148,22 +194,26 @@ def test_funnel_survivors_match_independent_sql(funnel_result, rq6_conn):
                     SELECT e.id
                     FROM eligible e
                     WHERE EXISTS (
-                        SELECT 1 FROM test t
-                        WHERE t.project_id = e.id AND t.is_included
-                    )
-                      AND EXISTS (
-                        SELECT 1 FROM assertion a
-                        WHERE a.project_id = e.id AND a.is_included
+                        SELECT 1
+                        FROM assertion a
+                        WHERE a.project_id = e.id
+                          AND NOT EXISTS (
+                              SELECT 1
+                              FROM filter_result fr
+                              WHERE fr.assertion_id = a.id
+                                AND fr.decision = 'REJECT'
+                                AND fr.filter_name ~ :filter_class_pattern
+                          )
                     )
                 ),
                 stage3 AS (
                     SELECT s.id
                     FROM stage12 s
                     WHERE EXISTS (
-                        SELECT 1 FROM assertion a
-                        WHERE a.project_id = s.id
-                          AND a.is_included
-                          AND a.output_spec_class IS NOT NULL
+                        SELECT 1
+                        FROM generalization g
+                        WHERE g.project_id = s.id
+                          AND g.variant = :variant
                     )
                 ),
                 stage4 AS (
@@ -202,6 +252,7 @@ def test_funnel_survivors_match_independent_sql(funnel_result, rq6_conn):
             ),
             {
                 "variant": variant,
+                "filter_class_pattern": _funnel.FILTER_CLASS_PATTERN,
                 "no_executed_test_projects": sorted(_funnel._NO_EXECUTED_TEST_PROJECTS),
             },
         ).one()
@@ -230,16 +281,22 @@ def test_funnel_stage3_and_stage5_ids_match_direct_oracles(funnel_result, rq6_co
             for row in conn.execute(
                 text(
                     """
-                    SELECT DISTINCT a.project_id
-                    FROM assertion a
-                    JOIN project p ON p.id = a.project_id
+                    SELECT DISTINCT g.project_id
+                    FROM generalization g
+                    JOIN project p ON p.id = g.project_id
                     WHERE p.use_test_generalization
-                      AND a.is_included
-                      AND a.output_spec_class IS NOT NULL
+                      AND g.variant = :variant
                       AND EXISTS (
                           SELECT 1
-                          FROM test it
-                          WHERE it.project_id = p.id AND it.is_included
+                          FROM assertion a
+                          WHERE a.project_id = p.id
+                            AND NOT EXISTS (
+                                SELECT 1
+                                FROM filter_result fr
+                                WHERE fr.assertion_id = a.id
+                                  AND fr.decision = 'REJECT'
+                                  AND fr.filter_name ~ :filter_class_pattern
+                            )
                       )
                       AND NOT EXISTS (
                           SELECT 1
@@ -256,7 +313,11 @@ def test_funnel_stage3_and_stage5_ids_match_direct_oracles(funnel_result, rq6_co
                             )
                       )
                     """
-                )
+                ),
+                {
+                    "variant": variant,
+                    "filter_class_pattern": _funnel.FILTER_CLASS_PATTERN,
+                },
             )
         }
         stage5_ids = {
