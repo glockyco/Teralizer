@@ -12,21 +12,23 @@
 
 The report SHALL classify a decision as filtering when it proactively excludes a candidate to prevent an unsupported, unsafe, or predictably failing downstream operation. The classification SHALL NOT depend on the pipeline stage, producer class, or persistence shape.
 
-The filter-detail table SHALL retain the columns `Level`, `Filter Name`, `Total`, `Accept`, `Defer`, and `Reject`. Filter names SHALL use the established PascalCase form and SHALL omit only an implementation `Filter` suffix. Each row SHALL derive its evaluated population and verdicts from persisted evidence. `Total` SHALL equal `Accept` plus `Defer` plus `Reject`.
+The filter-detail table SHALL use the columns `Level`, `Filter Name`, `Evaluated`, `Accept`, `Defer`, and `Reject`. Filter names SHALL use the established PascalCase form and SHALL omit only an implementation `Filter` suffix. Each row SHALL derive its applicable population and verdicts from persisted evidence. `Evaluated` SHALL equal `Accept` plus `Defer` plus `Reject`.
 
-The table SHALL group rows as first-round test filters, second-round test decisions, assertion filters, and generalization filters. It SHALL insert a midrule between adjacent groups, including between the two test groups. Within each group, rows SHALL appear by descending `Reject`, then ascending filter name.
+The table SHALL group rows as first-round test filters, second-round test filters, inherited-method screening, assertion filters, and generalization filters. It SHALL insert a midrule between adjacent groups. `InheritedTestMethod` SHALL be separate from both test-filter rounds. The table SHALL preserve test, assertion, and generalization level order. Within each group, rows SHALL appear by descending `Evaluated`, descending `Reject`, then ascending filter name.
 
-#### Scenario: Test filtering rounds are separated
+#### Scenario: Test decision populations are separated
 
-- **WHEN** the filter-detail table contains both first-round and second-round test decisions
-- **THEN** a midrule separates the two test groups
-- **AND** `NonPassingTest` and `TestType` appear in the first group
-- **AND** all remaining test decisions appear in the second group
+- **WHEN** the filter-detail table contains both test-filter rounds and inherited-method screening
+- **THEN** midrules separate all three test-level groups
+- **AND** `NonPassingTest` and `TestType` appear in the first-round group
+- **AND** `InheritedTestMethod` appears only in the inherited-method group
+- **AND** the remaining test filters appear in the second-round group
 
 #### Scenario: Filter subgroups are ranked
 
 - **WHEN** the report renders a filter-detail subgroup
-- **THEN** rows appear by descending `Reject`
+- **THEN** rows appear by descending `Evaluated`
+- **AND** equal evaluated populations appear by descending `Reject`
 - **AND** equal rejection counts appear by ascending filter name
 
 #### Scenario: Pre-emission checks filter generalization attempts
@@ -66,3 +68,39 @@ The table SHALL group rows as first-round test filters, second-round test decisi
 - **WHEN** multiple filters evaluate and reject the same entity
 - **THEN** each filter row records its decision
 - **AND** the entity contributes only once to the exclusion outcome total
+
+### Requirement: Test filtering populations reconcile from persisted evidence
+
+The registered report SHALL publish provenance-backed test-flow counts for identified tests, inherited-method screening, pre-filter failures, both test-filter rounds, overlapping first-round rejections, and intervening failures. It SHALL derive each population from persisted set membership and SHALL NOT add overlapping rejection counts.
+
+#### Scenario: The first test-filter round is reached
+
+- **WHEN** identified tests include inherited methods that cannot be flattened and tests that fail before filtering
+- **THEN** the first-round population equals identified tests minus inherited-method rejections and pre-filter failures
+- **AND** accepted inherited methods remain eligible for the first round
+
+#### Scenario: The second test-filter round is reached
+
+- **WHEN** first-round filters can reject the same test and a test can fail between rounds
+- **THEN** the second-round population equals the first-round population minus the union of first-round rejections and intervening failures
+- **AND** the overlap and intervening-failure counts remain registered evidence
+
+### Requirement: Exclusion tables preserve semantic layout
+
+Entity summary tables SHALL center the `Excluded` spanner over `Filtering` and `Failures`. Filter-detail tables SHALL render a midrule at each semantic group boundary. A long filter-detail table MAY use an explicit local compact density, but it SHALL preserve readable text, semantic rules, and the adjacent summary-table source boundary.
+
+#### Scenario: The paired RQ6 exclusion tables are rendered
+
+- **WHEN** the generated filter-detail table needs compact density to remain with its summary table
+- **THEN** the renderer applies the density through its table-style contract
+- **AND** it does not use negative spacing, global float changes, or generated-file edits
+
+### Requirement: Excluded-test explanations match the executable predicate
+
+A reader-facing explanation of `ExcludedTest` SHALL state that it rejects an assertion whose test was already excluded during collection, filtering, or processing. A concise discussion MAY omit the stage list, but it SHALL NOT attribute the mechanism only to an earlier test filter.
+
+#### Scenario: The thesis explains ExcludedTest
+
+- **WHEN** RQ6 or its discussion describes `ExcludedTest`
+- **THEN** the description matches the complete parent-test exclusion predicate
+- **AND** the discussion cites the `ExcludedTest` evidence rows

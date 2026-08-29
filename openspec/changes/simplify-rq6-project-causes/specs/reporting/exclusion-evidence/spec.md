@@ -66,3 +66,51 @@ Removing the type SHALL NOT by itself change the row set, recorded stage, cause 
 - **WHEN** report validation or publication encounters a metric, table declaration, or artifact that still requires the project exclusion type
 - **THEN** the change remains incomplete until that consumer uses the reduced schema
 - **AND** the producer does not emit a placeholder or deprecated type
+
+### Requirement: Filtering inclusion is comparable only at the shared filtering boundary
+
+The reporting system SHALL publish controlled and RepoReapers filtering evidence as two corpus-local observations with the same entity type and boundary. Each observation SHALL count generalized tests that have a filtering result. It SHALL partition that count into included and excluded tests and publish the included share with the filtering total as its denominator.
+
+The controlled observation SHALL derive its boundary from explicit filtering and generation-task evidence rather than from `generalization.is_included` alone. The RepoReapers observation SHALL use the accepted real-world generalization relation and its filtering result. For each corpus, included plus excluded SHALL equal the filtering total.
+
+The report SHALL preserve separate corpus identities, inputs, numerators, denominators, and provenance. It SHALL NOT combine the two observations into one effect size. It SHALL NOT treat either filtering denominator as the complete generalization-attempt or project population.
+
+#### Scenario: Both corpus-local filtering observations are complete
+
+- **WHEN** the controlled and RepoReapers inputs contain supported generalized tests with included and excluded filtering results
+- **THEN** the report emits filtering total, included count, excluded count, and included share for each corpus
+- **AND** each included share names its own corpus-local filtering total as denominator
+- **AND** included plus excluded equals that filtering total
+
+#### Scenario: A controlled generated test lacks a filtering result
+
+- **WHEN** controlled evidence shows that generalized test creation or its task failed before filtering produced a result
+- **THEN** that test is excluded from the controlled filtering denominator
+- **AND** it is not inferred to be included or excluded from `generalization.is_included`
+
+#### Scenario: Corpus-local results are interpreted together
+
+- **WHEN** downstream RQ6 analysis compares the two included shares
+- **THEN** the evidence supports only the bounded finding that filtering includes a similar proportion in both settings
+- **AND** it does not represent overall generalization success, project applicability, a paired-project effect, or a causal estimate
+
+## REMOVED Requirements
+
+### Requirement: Filtering retention is comparable only at the shared filtering boundary
+
+**Reason**: `Retained` is not the approved outcome at the filtering-result boundary. The replacement requirement uses `included` and `excluded` without changing the corpus-local comparison semantics.
+
+**Migration**: Rename filtering-outcome symbols, metrics, generated artifacts, accepted contracts, and prose to `included`. Do not change unrelated retention or test-suite-reduction terminology.
+
+## MODIFIED Requirements
+
+### Requirement: Filtering comparison artifacts use established thesis terms
+
+Generated tables, metric labels, macro documentation, provenance, handoff records, accepted specifications, and thesis prose SHALL describe this boundary with **filtering**, **filter results**, **included**, **excluded**, and **generalized tests**. They SHALL use `Accept`, `Defer`, and `Reject` only for individual filter verdicts. They SHALL NOT use `retained` as a filtering outcome or introduce a new reader-facing process term.
+
+#### Scenario: Filtering comparison artifacts are rendered
+
+- **WHEN** the registered report publishes the comparison and its aggregate macros
+- **THEN** reader-facing labels use the established filtering vocabulary
+- **AND** producer symbols and metric identities use the corresponding included outcome
+- **AND** unrelated retention and test-suite-reduction terms remain unchanged

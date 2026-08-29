@@ -15,7 +15,12 @@ The RQ6 project-exclusion table classifies each row as internal, external, or mi
 - Keep project, test, assertion, and generalization populations distinct; use selected concrete examples in the thesis prose and leave complete subtype distributions in the replication package.
 - Classify proactive exclusions as filters by behavior, independent of their pipeline stage, producer class, or persistence shape.
 - Add `InheritedTestMethod`, `SeedSpecConsistency`, and `WideningLicense` to the filter-detail table with evidence-derived verdict populations.
-- Separate the two test-filter rounds with a rule and order each decision subgroup by descending rejection count.
+- Separate first-round tests, second-round tests, inherited-method screening, assertions, and generalizations with rules.
+- Rename the filter-detail denominator from `Total` to `Evaluated` and order each group by evaluated population, rejection count, and filter name.
+- Use `included` and `excluded` for filtering outcomes while preserving `Accept`, `Defer`, and `Reject` for individual filter verdicts.
+- Publish provenance-backed test-flow counts that reconcile source screening, pre-filter failures, both filter rounds, overlaps, and intervening failures.
+- Correct the reader-facing `ExcludedTest` mechanism without publishing a diagnostic cause breakdown in the thesis.
+- Center the summary-table `Excluded` spanner and give the long filter-detail table an explicit compact-density contract.
 
 ## Capabilities
 
@@ -25,9 +30,9 @@ None.
 
 ### Modified Capabilities
 
-- `reporting/exclusion-evidence`: Project-level exclusion evidence reports the observed stage, cause description, and count without assigning an internal/external/mixed ownership class.
-- `reporting/exclusion-accounting`: Filter evidence follows proactive exclusion behavior instead of implementation-stage or storage-shape boundaries.
+- `reporting/exclusion-evidence`: Project-level exclusions omit inferred ownership classes. Filtering comparisons use included and excluded outcomes with corpus-local denominators and provenance.
+- `reporting/exclusion-accounting`: Filter evidence follows proactive exclusion behavior. Detail tables expose evaluated populations and decision-group boundaries without conflating per-filter verdicts with aggregate outcomes.
 
 ## Impact
 
-The change affects the RQ6 cause and exclusion-evidence report builders, the project-exclusion and filter-detail contracts and tests, and regenerated RQ6 report and thesis artifacts. The thesis change `restore-rq6-narrative` consumes the revised table and removes the same taxonomy from prose. No database schema or corpus input changes. The eligible-project total, final inclusion count, and total exclusions remain stable. Intermediate stage bands, cause rows, and stage attribution can change when transition evidence contradicts the legacy use of final entity status.
+The change affects the shared RQ5/RQ6 exclusion renderers, RQ5 and RQ6 report builders, filtering models and metric identities, report tests, accepted terminology contracts, and regenerated publication artifacts. The thesis consumes the revised tables, metrics, and concise mechanism corrections. No database schema or corpus input changes. Project-funnel totals remain stable. Test-flow counts and filter decisions must reconcile from persisted evidence before publication.

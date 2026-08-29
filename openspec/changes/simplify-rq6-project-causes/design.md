@@ -96,13 +96,39 @@ Keep `InheritedTestMethod` distinct from `InheritedTest`. The former evaluates w
 
 Deriving the new rows from `is_included` was rejected because later tasks can mutate that flag. Writing synthetic database rows was rejected because the report is read-only and producer storage does not define filtering semantics.
 
-### 11. Group and rank filter decisions by rejection count
+### 11. Group filter decisions by their evaluated population
 
-Use four semantic row groups: first-round test filters, second-round test decisions, assertion filters, and generalization filters. Place `NonPassingTest` and `TestType` in the first test round. Place all other test-level decisions, including `InheritedTestMethod`, in the second test group. Insert a midrule whenever the row group changes, including between the two test groups.
+Use five semantic row groups: first-round test filters, second-round test filters, inherited-method screening, assertion filters, and generalization filters. `NonPassingTest` and `TestType` form the first test round. The remaining ordinary test filters form the second round. `InheritedTestMethod` forms a separate source-screening group because its conditional population is not a test-filter round. Insert a midrule whenever the group changes.
 
-Within each group, sort by descending `Reject`, then ascending filter name. Derive the order from the count columns before display-name replacement. Apply the same grouping and ordering in every table built through the shared filter-detail renderer so controlled and real-world evidence use one presentation contract.
+Preserve the entity-level order: test, assertion, then generalization. Within each group, sort by descending `Evaluated`, descending `Reject`, and ascending filter name. The first key makes conditional denominators visible. The second key ranks decisions that evaluate the same population. Apply the same grouping and ordering through the shared renderer so controlled and real-world tables use one contract.
 
-Keeping the hand-curated filter-name order was rejected because it hides the dominant rejection causes. Adding a rule only to the checked-in TeX was rejected because regeneration would remove it and the other filter-detail table would retain a conflicting convention.
+Rename `Total` to `Evaluated`. The value counts entities for which the decision was applicable and a verdict was reconstructed or recorded. Keep `Accept`, `Defer`, and `Reject` as per-filter verdicts. Do not use `included` or `excluded` for those three columns because one entity can receive decisions from multiple filters.
+
+Keeping the hand-curated filter-name order was rejected because it hides both denominator differences and dominant rejection causes. Grouping `InheritedTestMethod` with the second round was rejected because its 6,259-test population is conditional on inherited source methods. Adding rules only to checked-in TeX was rejected because regeneration would remove them.
+
+### 12. Use included and excluded for aggregate filtering outcomes
+
+Use `included` and `excluded` at the filtering-result boundary. Rename producer symbols, metric keys, macro documentation, generated labels, tests, provenance, accepted reporting contracts, and thesis contracts that use `retained` as that outcome. Preserve unrelated uses of `retain`, such as repository artifact retention and mutation-useful test-suite reduction.
+
+Keep `filtering` as the approved process term. Keep the entity summary partition `Included`, `Filtering`, and `Failures`, where the last two columns sit under the centered `Excluded` spanner. Do not introduce `proactive exclusion` as reader-facing thesis terminology. That phrase can describe the internal classification rule only.
+
+A compatibility alias was rejected because it would leave two names for one outcome and allow stale generated consumers to survive the cutover.
+
+### 13. Materialize test-flow reconciliation without expanding the thesis narrative
+
+Publish registered metrics and provenance for identified tests, inherited-method screening, pre-filter failures, both test rounds, overlapping first-round rejections, and intervening failures. Reconcile the first-round population from identified tests minus inherited-method rejections and pre-filter failures. Reconcile the second-round population from the first-round population minus the union of first-round rejections and intervening failures.
+
+Use set identities from persisted evidence. Do not add rejection counts because the two first-round filters can reject the same test. Keep these counts as generated evidence and focused regression invariants. The thesis needs only the existing concise two-round explanation and the separate conditional inherited-method paragraph.
+
+Hand-written thesis arithmetic was rejected because it would duplicate report logic and lack registered provenance. Publishing every diagnostic count in the prose was rejected because it would obscure the result.
+
+### 14. Correct shared rendering and mechanism prose at their owners
+
+Remove the RQ5-only right-alignment override so the shared renderer centers the `Excluded` spanner in both summary tables. Add a focused rendered-header regression. Do not hand-edit generated TeX.
+
+Describe `ExcludedTest` as rejecting an assertion whose test was already excluded during collection, filtering, or processing. Use the shorter equivalent in the discussion and cite the `ExcludedTest` rows. Do not publish the diagnostic cause split unless it becomes registered evidence required by a reader-facing claim.
+
+Give the long real-world filter-detail table an explicit local compact density through the table-style interface. Preserve semantic midrules and the shared source boundary with the summary table. Do not change global float parameters, add negative spacing, or hand-edit generated TeX.
 
 ## Risks / Trade-offs
 
@@ -111,4 +137,7 @@ Keeping the hand-curated filter-name order was rejected because it hides the dom
 - **A later entity failure is assigned to an earlier stage.** Assert each survivor set from boundary evidence and require nested survivor sets before rendering counts.
 - **Fine-grained project rows duplicate entity tables.** Aggregate internal combinations by material reader-facing cause; leave complete subtype distributions in generated evidence and the replication package.
 - **The cause heading is overread as sole responsibility.** Preserve the established evidence label, but leave responsibility and actionability interpretation to bounded thesis prose.
+- **A text-wide terminology replacement changes valid uses of `retained`.** Migrate only filtering-outcome symbols and reader-facing consumers; keep retention and test-suite-reduction language unchanged.
+- **A denominator-first order obscures semantic stages.** Keep the five decision groups and entity-level order fixed; apply denominator ranking only within a group.
+- **One extra rule splits the paired tables.** Use a local compact-density contract and inspect the rendered page; do not weaken group boundaries.
 - **Generated artifacts drift for unrelated reasons.** Regenerate from the pinned corpus and inspect the artifact diff before committing.
