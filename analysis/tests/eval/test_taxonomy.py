@@ -65,7 +65,7 @@ def test_timeout_label_uses_observed_budget():
     assert "3600 seconds" in classify(pit).cause
 
 
-def test_no_input_spec_reattributes_upstream():
+def test_no_input_spec_requires_entity_evidence_for_zero_tests():
     all_tests = Attribution(
         "ANALYZE_JPF",
         "NO_INPUT_SPEC",
@@ -81,8 +81,7 @@ def test_no_input_spec_reattributes_upstream():
         included_assertions=0,
         assertion_exclusions_all_filtered=True,
     )
-    assert classify(all_tests).stage == "1 + 2"
-    assert "all tests excluded" in classify(all_tests).cause
+    assert classify(all_tests) is UNCODED
     assert classify(all_asserts).stage == "1 + 2"
     assert "all assertions excluded" in classify(all_asserts).cause
 
@@ -123,7 +122,7 @@ def test_no_input_spec_stage3_new_failures():
     assert "new failures" in c.cause
 
 
-def test_stage4_terminal_failures_map_to_single_cause():
+def test_stage4_terminal_failures_require_entity_mechanisms():
     cases = [
         Attribution(
             "BUILD_PROJECT_GENERALIZED",
@@ -158,11 +157,8 @@ def test_stage4_terminal_failures_map_to_single_cause():
             included_generalizations=0,
         ),
     ]
-    for a in cases:
-        c = classify(a)
-        assert c.stage == "4", a
-
-        assert "all generalizations excluded" in c.cause, a
+    for attribution in cases:
+        assert classify(attribution) is UNCODED, attribution
 
 
 def test_unenumerated_stage4_signal_is_uncoded():
@@ -256,18 +252,23 @@ def test_build_project_instrumented_is_stage3_spoon():
     assert "Spoon" in c.cause and "instrumentation" in c.cause
 
 
-def test_collect_junit_reports_folds_to_single_cause():
-    for rc in ("MISSING_REPORT_FILE", "UNSUPPORTED_REPORT_LAYOUT", None):
-        a = Attribution(
+def test_collect_junit_reports_preserves_diagnosed_cause():
+    expected = {
+        "MISSING_REPORT_FILE": "JUnit report directory not found",
+        "UNSUPPORTED_REPORT_LAYOUT": "unsupported JUnit report layout",
+        None: "JUnit report collection error",
+    }
+    for reason_code, description in expected.items():
+        attribution = Attribution(
             "COLLECT_JUNIT_REPORTS_ORIGINAL",
-            rc,
+            reason_code,
             at_ceiling=False,
             included_tests=1,
             included_assertions=1,
         )
-        c = classify(a)
-        assert c.stage == "1 + 2"
-        assert "JUnit reports not found" in c.cause
+        cause = classify(attribution)
+        assert cause.stage == "1 + 2"
+        assert cause.cause == description
 
 
 def test_diagnosed_reduction_command_failures_get_named_causes():

@@ -11,11 +11,15 @@
 - [x] 2.1 Update focused RQ6 report tests to assert the complete stage, cause, and count rows, the count-based within-stage order, and the absence of a type field.
 - [x] 2.2 Add a migration assertion that the reduced row set equals the baseline projection and that project funnel reconciliation remains unchanged.
 - [x] 2.3 Run the focused report tests that cover project exclusion construction, table rendering, metric identities, and reconciliation.
+- [x] 2.4 Replace the zero-included-test fallback with separate filter-only, filter-plus-failure, and no-test-evidence rows.
+- [x] 2.5 Preserve missing-report-file and unsupported-report-layout diagnostics as separate project causes.
+- [x] 2.6 Add focused tests for the evidence-derived cause splits and unchanged funnel reconciliation.
+- [x] 2.7 Search all entity-level exclusion construction for equivalent zero-count or cause-collapsing fallbacks and correct each occurrence.
 
 ## 3. Regenerate Publication Artifacts
 
-- [x] 3.1 Run the registered RQ6 report against its declared pinned corpus and inputs.
-- [x] 3.2 Inspect generated CSV, TeX, macro, manifest, and provenance diffs; confirm that the taxonomy removal causes every changed artifact.
+- [ ] 3.1 Run the registered RQ6 report against its declared pinned corpus and inputs.
+- [ ] 3.2 Inspect generated CSV, TeX, macro, manifest, and provenance diffs; confirm that every change follows from taxonomy removal or an evidence-backed cause correction.
 - [ ] 3.3 Provide the regenerated project-exclusion table and producing revision to the thesis change `restore-rq6-narrative`.
 
 ## 4. Verify and Commit

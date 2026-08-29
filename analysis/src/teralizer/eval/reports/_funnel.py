@@ -14,7 +14,12 @@ from teralizer.eval.provenance import capture
 from teralizer.eval.reports._taxonomy import (
     UNCODED,
     Attribution,
+    CAPABILITY_CODES,
     Cause,
+    FILTER_CLASS_PATTERN,
+    GATE_CODES,
+    QUARANTINE_CODES,
+    QUARANTINE_PRODUCER,
     STAGE_ORDER,
     classify,
     paper_stage,
@@ -198,8 +203,47 @@ WITH
           AND l.final_usable
         GROUP BY g.project_id
     ),
+    excluded_tests AS (
+        SELECT t.id, t.project_id, split_part(t.exclusion_info, ':', 1) AS exclusion_code
+        FROM test t
+        WHERE NOT t.is_included
+    ),
+    test_exclusions AS (
+        SELECT
+            et.project_id,
+            count(*) AS excluded_tests,
+            bool_or(EXISTS (
+                SELECT 1
+                FROM filter_result fr
+                WHERE fr.test_id = et.id
+                  AND fr.decision = 'REJECT'
+                  AND fr.filter_name ~ :filter_class_pattern
+            )) AS has_test_filter_rejection,
+            bool_or(
+                EXISTS (
+                    SELECT 1
+                    FROM task failed
+                    WHERE failed.test_id = et.id
+                      AND failed.assertion_id IS NULL
+                      AND failed.generalization_id IS NULL
+                      AND failed.status <> 'SUCCEEDED'
+                )
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM filter_result fr
+                    WHERE fr.test_id = et.id
+                      AND fr.decision = 'REJECT'
+                      AND fr.filter_name ~ :filter_class_pattern
+                )
+                AND (et.exclusion_code IS NULL
+                     OR et.exclusion_code <> ALL(:capability_codes))
+            ) AS has_test_failure
+        FROM excluded_tests et
+        GROUP BY et.project_id
+    ),
     excluded_assertions AS (
-        SELECT a.id, a.project_id
+        SELECT a.id, a.project_id,
+               split_part(a.exclusion_info, ':', 1) AS exclusion_code
         FROM assertion a
         WHERE NOT a.is_included
     ),
@@ -213,19 +257,86 @@ WITH
                     FROM filter_result fr
                     WHERE fr.assertion_id = ea.id
                       AND fr.decision = 'REJECT'
+                      AND fr.filter_name ~ :filter_class_pattern
                 )
             ) AS filter_rejected_assertions,
             count(*) FILTER (
                 WHERE EXISTS (
                     SELECT 1
-                    FROM task t
-                    WHERE t.assertion_id = ea.id
-                      AND t.status <> 'SUCCEEDED'
-                      AND t.stage = ANY(:assertion_failure_stages)
+                    FROM filter_result fr
+                    WHERE fr.assertion_id = ea.id
+                      AND fr.decision = 'REJECT'
+                      AND fr.filter_name = :quarantine_producer
+                ) OR (
+                    EXISTS (
+                        SELECT 1
+                        FROM task t
+                        WHERE t.assertion_id = ea.id
+                          AND t.status <> 'SUCCEEDED'
+                          AND t.stage = ANY(:assertion_failure_stages)
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM filter_result fr
+                        WHERE fr.assertion_id = ea.id
+                          AND fr.decision = 'REJECT'
+                          AND fr.filter_name ~ :filter_class_pattern
+                    )
+                    AND (ea.exclusion_code IS NULL
+                         OR ea.exclusion_code <> ALL(:quarantine_codes))
                 )
             ) AS failure_excluded_assertions
         FROM excluded_assertions ea
         GROUP BY ea.project_id
+    ),
+    generalization_exclusions AS (
+        SELECT
+            g.project_id,
+            count(*) AS generalization_attempts,
+            bool_or(split_part(g.exclusion_info, ':', 1) = 'ORACLE_NOT_WIDENABLE')
+                AS has_widening_refusal,
+            bool_or(EXISTS (
+                SELECT 1
+                FROM filter_result fr
+                WHERE fr.generalization_id = g.id
+                  AND fr.decision = 'REJECT'
+                  AND fr.filter_name ~ :filter_class_pattern
+            )) AS has_generalization_filter_rejection,
+            bool_or(
+                EXISTS (
+                    SELECT 1
+                    FROM filter_result fr
+                    WHERE fr.generalization_id = g.id
+                      AND fr.decision = 'REJECT'
+                      AND fr.filter_name = :quarantine_producer
+                )
+                OR (
+                    (
+                        l.final_failure_stage IS NOT NULL
+                        OR EXISTS (
+                            SELECT 1
+                            FROM task failed
+                            WHERE failed.generalization_id = g.id
+                              AND failed.status <> 'SUCCEEDED'
+                        )
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM filter_result fr
+                        WHERE fr.generalization_id = g.id
+                          AND fr.decision = 'REJECT'
+                          AND fr.filter_name ~ :filter_class_pattern
+                    )
+                    AND (split_part(g.exclusion_info, ':', 1) IS NULL
+                         OR split_part(g.exclusion_info, ':', 1) <> ALL(:gate_codes))
+                    AND (split_part(g.exclusion_info, ':', 1) IS NULL
+                         OR split_part(g.exclusion_info, ':', 1) <> ALL(:quarantine_codes))
+                )
+            ) AS has_generalization_failure
+        FROM generalization g
+        LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id
+        WHERE g.variant = :variant
+        GROUP BY g.project_id
     ),
     jacoco_artifacts AS (
         SELECT
@@ -268,9 +379,17 @@ SELECT
     coalesce(sa.spec_surviving_assertions, 0) AS spec_surviving_assertions,
     coalesce(gfp.generated_filter_passed, 0) AS generated_filter_passed,
     coalesce(fu.final_usable, 0) AS final_usable,
+    coalesce(te.excluded_tests, 0) AS excluded_tests,
+    coalesce(te.has_test_filter_rejection, false) AS has_test_filter_rejection,
+    coalesce(te.has_test_failure, false) AS has_test_failure,
     coalesce(ae.excluded_assertions, 0) AS excluded_assertions,
     coalesce(ae.filter_rejected_assertions, 0) AS filter_rejected_assertions,
     coalesce(ae.failure_excluded_assertions, 0) AS failure_excluded_assertions,
+    coalesce(ge.generalization_attempts, 0) AS generalization_attempts,
+    coalesce(ge.has_widening_refusal, false) AS has_widening_refusal,
+    coalesce(ge.has_generalization_filter_rejection, false)
+        AS has_generalization_filter_rejection,
+    coalesce(ge.has_generalization_failure, false) AS has_generalization_failure,
     coalesce(ja.jacoco_original, false) AS has_jacoco_original,
     coalesce(ja.jacoco_initial, false) AS has_jacoco_initial,
     coalesce(ja.jacoco_generalized, false) AS has_jacoco_generalized,
@@ -283,7 +402,9 @@ LEFT JOIN included_assertions ia ON ia.project_id = p.id
 LEFT JOIN spec_assertions sa ON sa.project_id = p.id
 LEFT JOIN generated_filter_passed gfp ON gfp.project_id = p.id
 LEFT JOIN final_usable fu ON fu.project_id = p.id
+LEFT JOIN test_exclusions te ON te.project_id = p.id
 LEFT JOIN assertion_exclusions ae ON ae.project_id = p.id
+LEFT JOIN generalization_exclusions ge ON ge.project_id = p.id
 LEFT JOIN jacoco_artifacts ja ON ja.project_id = p.id
 LEFT JOIN pit_artifacts pa ON pa.project_id = p.id
 WHERE p.use_test_generalization
@@ -384,6 +505,11 @@ def build_funnel(conn: Connection, variant: str | None = None) -> FunnelResult:
         {
             "variant": selected_variant,
             "assertion_failure_stages": list(_ASSERTION_FAILURE_STAGES),
+            "capability_codes": sorted(CAPABILITY_CODES),
+            "filter_class_pattern": FILTER_CLASS_PATTERN,
+            "gate_codes": sorted(GATE_CODES),
+            "quarantine_codes": sorted(QUARANTINE_CODES),
+            "quarantine_producer": QUARANTINE_PRODUCER,
             "ineligible_stages": list(INELIGIBLE_STAGES),
             "no_executed_test_projects": sorted(_NO_EXECUTED_TEST_PROJECTS),
         },
@@ -598,13 +724,12 @@ def _cause_for_exclusion(
 def _fallback_cause(stage: str, project_row: pd.Series) -> Cause:
     if stage == "1 + 2":
         if int(project_row["included_tests"]) == 0:
-            return Cause(
-                "1 + 2", "all tests excluded due to filter rejections and failures"
-            )
+            return _complete_test_loss_cause(project_row)
         if _assertions_all_filtered(project_row):
             return Cause("1 + 2", "all assertions excluded due to filter rejections")
         return Cause(
-            "1 + 2", "all assertions excluded due to filter rejections and failures"
+            "1 + 2",
+            "all assertions excluded due to filter rejections and processing failures",
         )
     if stage == "3":
         return Cause(
@@ -612,12 +737,45 @@ def _fallback_cause(stage: str, project_row: pd.Series) -> Cause:
             "all assertions excluded due to earlier filter rejections and new failures",
         )
     if stage == "4":
-        return Cause(
-            "4", "all generalizations excluded due to filter rejections and failures"
-        )
+        return _complete_generalization_loss_cause(project_row)
     # Do not guess a reduction cause. An unclassified reduction exclusion is a defect,
     # so surface it as UNCODED instead of assigning a plausible description.
     return UNCODED
+
+
+def _complete_test_loss_cause(project_row: pd.Series) -> Cause:
+    if int(project_row["excluded_tests"]) == 0:
+        return Cause("1 + 2", "no test records collected")
+    filtering = bool(project_row["has_test_filter_rejection"])
+    failures = bool(project_row["has_test_failure"])
+    if filtering and failures:
+        description = "all tests excluded due to filter rejections and task failures"
+    elif filtering:
+        description = "all tests excluded due to filter rejections"
+    elif failures:
+        description = "all tests excluded due to task failures"
+    else:
+        return UNCODED
+    return Cause("1 + 2", description)
+
+
+def _complete_generalization_loss_cause(project_row: pd.Series) -> Cause:
+    if int(project_row["generalization_attempts"]) == 0:
+        return Cause("4", "no generalization attempts recorded")
+    mechanisms = []
+    if bool(project_row["has_widening_refusal"]):
+        mechanisms.append("widening refusals")
+    if bool(project_row["has_generalization_filter_rejection"]):
+        mechanisms.append("filter rejections")
+    if bool(project_row["has_generalization_failure"]):
+        mechanisms.append("processing failures")
+    if not mechanisms:
+        return UNCODED
+    if len(mechanisms) == 1:
+        description = mechanisms[0]
+    else:
+        description = ", ".join(mechanisms[:-1]) + f" and {mechanisms[-1]}"
+    return Cause("4", f"all generalizations excluded due to {description}")
 
 
 def _assertions_all_filtered(project_row: pd.Series) -> bool:

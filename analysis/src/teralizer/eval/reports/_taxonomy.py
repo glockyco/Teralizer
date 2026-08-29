@@ -52,6 +52,15 @@ _STAGE_5 = {
 }
 STAGE_ORDER = {"1 + 2": 0, "3": 1, "4": 2, "5": 3}
 
+FILTER_CLASS_PATTERN = r"filter\.\w+Filter$"
+QUARANTINE_PRODUCER = "GeneratedTestValidator"
+GATE_CODES = frozenset({"ORACLE_NOT_WIDENABLE", "INPUT_SPEC_NOT_SATISFIED_BY_SEED"})
+QUARANTINE_CODES = frozenset(
+    {"UNCOMPILABLE_GENERALIZED_TEST", "UNCOMPILABLE_INSTRUMENTED_WRAPPER"}
+)
+CAPABILITY_CODES = frozenset({"INHERITED_METHOD_NOT_FLATTENABLE"})
+KNOWN_TYPED_CODES = GATE_CODES | QUARANTINE_CODES | CAPABILITY_CODES
+
 
 def paper_stage(internal_stage: str) -> str | None:
     for group, members in (
@@ -104,9 +113,7 @@ def classify(a: Attribution) -> Cause:
 
     if a.reason_code == "NO_INPUT_SPEC":
         if a.included_tests == 0:
-            return Cause(
-                "1 + 2", "all tests excluded due to filter rejections and failures"
-            )
+            return UNCODED
         if a.included_assertions == 0:
             if a.assertion_exclusions_all_filtered:
                 return Cause(
@@ -127,7 +134,11 @@ def classify(a: Attribution) -> Cause:
     if a.internal_stage == "BUILD_SPOON_MODEL":
         return Cause("1 + 2", "Spoon execution error during test analysis")
     if a.internal_stage == "COLLECT_JUNIT_REPORTS_ORIGINAL":
-        return Cause("1 + 2", "JUnit reports not found")
+        if a.reason_code == "MISSING_REPORT_FILE":
+            return Cause("1 + 2", "JUnit report directory not found")
+        if a.reason_code == "UNSUPPORTED_REPORT_LAYOUT":
+            return Cause("1 + 2", "unsupported JUnit report layout")
+        return Cause("1 + 2", "JUnit report collection error")
     if a.internal_stage == "COLLECT_JACOCO_DATA_ORIGINAL":
         if a.artifact_present:
             return Cause("5", "JaCoCo execution error during coverage collection")
@@ -165,9 +176,7 @@ def classify(a: Attribution) -> Cause:
             and a.reason_code == "LISTENER_BUG"
         )
     ):
-        return Cause(
-            "4", "all generalizations excluded due to filter rejections and failures"
-        )
+        return UNCODED
 
     if a.internal_stage in {"RESTORE_ORIGINAL_BUILD", "RESTORE_GENERALIZED_BUILD"}:
         return Cause("5", "build restore failed")

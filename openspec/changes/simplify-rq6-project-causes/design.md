@@ -10,11 +10,13 @@ The sibling thesis change `restore-rq6-narrative` will consume the regenerated t
 
 - Remove the inferred type from report construction, validation, metrics, and publication.
 - Preserve the complete stage, cause, and count evidence.
+- Replace zero-count fallbacks with classifications derived from entity evidence and task diagnostics.
+- Preserve diagnosed JUnit report-collection distinctions.
 - Produce the canonical three-column thesis table through the existing report path.
 
 **Non-Goals:**
 
-- Reclassify causes, change stage attribution, or alter exclusion counts.
+- Change the project-funnel population or exclusion total.
 - Change database schema or pipeline persistence.
 - Add a replacement ownership or actionability taxonomy.
 - Rewrite thesis prose in this repository.
@@ -33,13 +35,19 @@ Keep `Cause of Project-level Exclusion` as the table heading and retain each con
 
 `Exclusion condition` was considered, but rejected for this change because the report rows already record specific terminal descriptions and the approved thesis contract retains the established heading. The thesis will avoid interpreting those descriptions as exclusive blame.
 
-### 3. Prove evidence invariance
+### 3. Prove evidence reconciliation
 
-A focused report test will assert the complete stage/cause/count row set, the count-based within-stage order, and the absence of the type column and type metrics. Existing report reconciliation must continue to prove that project-level counts match the funnel.
+A focused report test will assert the complete stage/cause/count row set, the count-based within-stage order, and the absence of the type column and type metrics. It will also assert the evidence-derived complete-test-loss and report-collection splits. Existing report reconciliation must continue to prove that project-level counts match the funnel.
 
-Generated artifacts will be compared on semantic rows, not raw TeX layout, because removal necessarily changes column widths and markup.
+Generated artifacts will be compared on semantic rows, not raw TeX layout. Each intentional row correction must trace to entity evidence or a task diagnostic.
 
-### 4. Regenerate through the registered report
+### 4. Classify from observed evidence
+
+Construct complete-loss rows from the canonical entity-mechanism relations and task diagnostics. Do not infer filter rejection or task failure from a zero included-entity count. Keep projects with no persisted test entities in a separate row so that missing evidence is visible.
+
+Preserve `MISSING_REPORT_FILE` and `UNSUPPORTED_REPORT_LAYOUT` as separate reader-facing causes. These diagnostics describe different report-collection assumptions and support different interpretations.
+
+### 5. Regenerate through the registered report
 
 Use the normal RQ6 report command and declared corpus inputs. Do not hand-edit generated CSV, TeX, macro, manifest, or provenance files. Update every checked-in consumer emitted by that command in the same commit.
 

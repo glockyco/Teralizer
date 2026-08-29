@@ -13,6 +13,14 @@ from sqlalchemy.engine import Connection
 from teralizer.eval.data import read_sql
 from teralizer.eval.model import share_value
 from teralizer.eval.reports import _funnel
+from teralizer.eval.reports._taxonomy import (
+    CAPABILITY_CODES,
+    FILTER_CLASS_PATTERN,
+    GATE_CODES,
+    KNOWN_TYPED_CODES,
+    QUARANTINE_CODES,
+    QUARANTINE_PRODUCER,
+)
 
 
 class MechanismKey(StrEnum):
@@ -76,15 +84,7 @@ READER_COLLAPSE = {
     for outcome in ReaderOutcome
 }
 
-FILTER_CLASS_PATTERN = r"filter\.\w+Filter$"
 FILTER_CLASS_RE = re.compile(FILTER_CLASS_PATTERN)
-QUARANTINE_PRODUCER = "GeneratedTestValidator"
-GATE_CODES = frozenset({"ORACLE_NOT_WIDENABLE", "INPUT_SPEC_NOT_SATISFIED_BY_SEED"})
-QUARANTINE_CODES = frozenset(
-    {"UNCOMPILABLE_GENERALIZED_TEST", "UNCOMPILABLE_INSTRUMENTED_WRAPPER"}
-)
-CAPABILITY_CODES = frozenset({"INHERITED_METHOD_NOT_FLATTENABLE"})
-KNOWN_TYPED_CODES = GATE_CODES | QUARANTINE_CODES | CAPABILITY_CODES
 
 
 class ExclusionEvidenceError(RuntimeError):
