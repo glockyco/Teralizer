@@ -65,5 +65,5 @@
 - [x] 9.1 Replace the implementation-stage filter boundary with a normalized proactive-filter evidence relation while keeping reactive failures excluded.
 - [x] 9.2 Add `InheritedTestMethod`, `SeedSpecConsistency`, and `WideningLicense` rows with evidence-derived evaluated populations and verdicts.
 - [x] 9.3 Add focused tests for exact filter names, complete row arithmetic, pre-emission ordering, inherited-method evidence, and generalization filtering reconciliation.
-- [ ] 9.4 Regenerate the registered RQ6 artifacts and update the thesis table and interpretation without changing column terminology.
-- [ ] 9.5 Run complete analysis checks, repository hooks, strict OpenSpec validation, thesis build, and page inspection; commit each repository separately.
+- [x] 9.4 Regenerate the registered RQ6 artifacts and update the thesis table and interpretation without changing column terminology.
+- [x] 9.5 Run complete analysis checks, repository hooks, strict OpenSpec validation, thesis build, and page inspection; commit each repository separately.
