@@ -10,7 +10,7 @@ The JARVIS implementation and template library are unavailable, so JARVIS is not
 
 Teralizer extracts its specification from a single execution. Generalized tests exercise the original inputs as their first samples by design, so coverage after generalization never falls below the original tests' values. The Teralizer column reports the measured value coverage after generalization, joining the captured original-suite values with the generalized tests' value logs.
 
-**PVC before generalization, after generalization with JARVIS, and after generalization with Teralizer for each of the 10 scenarios reported by JARVIS.**
+**Parameter value coverage (PVC) before generalization, after generalization with JARVIS, and after generalization with Teralizer for each of the 10 scenarios reported by JARVIS.**
 
 | # | JARVIS scenario | CUT PVC | PBT PVC | PBT PVC |
 | --- | --- | --- | --- | --- |
@@ -71,4 +71,4 @@ A larger sampling budget can raise PVC by exercising more distinct values. In th
 
 _The same mutant sets are covered and killed at every budget._
 
-source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/4ad36abd138b3163402bd5dd8c01e63c0ba0a432/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268)
+source: [`_build_budget_table`](https://github.com/glockyco/Teralizer/blob/6e7cc89432427cf6f9b2fcb8ce7daba7cb087fcc/analysis/src/teralizer/eval/reports/rq0_jarvis.py#L268)
