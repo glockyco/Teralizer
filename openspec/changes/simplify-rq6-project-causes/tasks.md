@@ -111,5 +111,5 @@
 - [x] 15.2 Correct the RQ6 result and discussion descriptions of JUnit theories, overridden inherited declarations, and TestNG tests.
 - [x] 15.3 Distinguish assertion recognition, tested-method identification, and assertion-to-MUT mapping; bound the proposed `does not throw` extension.
 - [x] 15.4 Scope widening conclusions to the Stage 4 population and remove the invalid attempt-to-validation comparison.
-- [ ] 15.5 Regenerate producer artifacts, publish the new macros, build the thesis, and inspect the affected RQ6 pages.
-- [ ] 15.6 Run complete producer and thesis quality gates, then commit each repository separately with causal bodies.
+- [x] 15.5 Regenerate producer artifacts, publish the new macros, build the thesis, and inspect the affected RQ6 pages.
+- [x] 15.6 Run complete producer and thesis quality gates, then commit each repository separately with causal bodies.
