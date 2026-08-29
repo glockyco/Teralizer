@@ -85,6 +85,11 @@ READER_COLLAPSE = {
 }
 
 FILTER_CLASS_RE = re.compile(FILTER_CLASS_PATTERN)
+GENERALIZATION_FILTERS = (
+    "SeedSpecConsistency",
+    "WideningLicense",
+    "NonPassingTest",
+)
 
 
 class ExclusionEvidenceError(RuntimeError):
@@ -369,28 +374,116 @@ mechanism_evidence AS (
 """
 
 
+_PROACTIVE_FILTER_RELATIONS_SQL = f"""
+{_TYPED_RELATIONS_SQL},
+resolved_test_method_evidence AS (
+    SELECT
+        t.id AS entity_id,
+        t.test_class_qualified_name,
+        rtrim(
+            regexp_replace(
+                regexp_replace(
+                    substring(t.test_method_absolute_path from '^(.*)#method'),
+                    '#subPackage\\[name=([^]]+)\\]',
+                    '\\1.',
+                    'g'
+                ),
+                '#containedType\\[name=([^]]+)\\]',
+                '\\1.',
+                'g'
+            ),
+            '.'
+        ) AS declaring_type,
+        split_part(t.exclusion_info, ':', 1) AS exclusion_code
+    FROM test t
+    JOIN eligible_projects ep ON ep.id = t.project_id
+    WHERE t.test_method_absolute_path IS NOT NULL
+),
+generalization_proactive_filter_evidence AS (
+    SELECT
+        g.id AS entity_id,
+        split_part(g.exclusion_info, ':', 1) AS exclusion_code,
+        coalesce(l.generated_source_created, FALSE) AS generated_source_created
+    FROM generalization g
+    JOIN eligible_projects ep ON ep.id = g.project_id
+    LEFT JOIN generalization_lifecycle l ON l.generalization_id = g.id
+    WHERE g.variant = :variant
+),
+proactive_filter_evidence AS (
+    SELECT
+        'Test' AS level,
+        'InheritedTestMethod' AS filter,
+        entity_id,
+        CASE
+            WHEN exclusion_code = 'INHERITED_METHOD_NOT_FLATTENABLE' THEN 'REJECT'
+            ELSE 'ACCEPT'
+        END AS decision
+    FROM resolved_test_method_evidence
+    WHERE declaring_type <> test_class_qualified_name
+
+    UNION ALL
+
+    SELECT
+        'Generalization',
+        'SeedSpecConsistency',
+        entity_id,
+        CASE
+            WHEN exclusion_code = 'INPUT_SPEC_NOT_SATISFIED_BY_SEED' THEN 'REJECT'
+            ELSE 'ACCEPT'
+        END
+    FROM generalization_proactive_filter_evidence
+
+    UNION ALL
+
+    SELECT
+        'Generalization',
+        'WideningLicense',
+        entity_id,
+        CASE
+            WHEN exclusion_code = 'ORACLE_NOT_WIDENABLE' THEN 'REJECT'
+            WHEN generated_source_created THEN 'ACCEPT'
+        END
+    FROM generalization_proactive_filter_evidence
+    WHERE exclusion_code IS DISTINCT FROM 'INPUT_SPEC_NOT_SATISFIED_BY_SEED'
+)
+"""
+
+
 FILTER_DECISION_SQL = f"""
-{_TYPED_RELATIONS_SQL}
+{_PROACTIVE_FILTER_RELATIONS_SQL},
+recorded_filter_evidence AS (
+    SELECT
+        fa.level,
+        CASE
+            WHEN substring(fa.producer from 'filter\\.(\\w+)Filter$') = 'UnsupportedAssertion'
+                THEN 'AssertionType'
+            ELSE substring(fa.producer from 'filter\\.(\\w+)Filter$')
+        END AS filter,
+        fa.entity_id,
+        fa.decision
+    FROM eligible_filter_evidence fa
+    LEFT JOIN generalization g
+        ON fa.level = 'Generalization' AND g.id = fa.entity_id
+    WHERE fa.producer_mechanism = 'filter_rejection'
+      AND (fa.level <> 'Generalization' OR g.variant = :variant)
+),
+all_filter_evidence AS (
+    SELECT * FROM recorded_filter_evidence
+    UNION ALL
+    SELECT * FROM proactive_filter_evidence
+)
 SELECT
-    fa.level,
-    CASE
-        WHEN substring(fa.producer from 'filter\\.(\\w+)Filter$') = 'UnsupportedAssertion'
-            THEN 'AssertionType'
-        ELSE substring(fa.producer from 'filter\\.(\\w+)Filter$')
-    END AS filter,
-    count(DISTINCT fa.entity_id)::bigint AS total,
-    count(DISTINCT fa.entity_id) FILTER (WHERE fa.decision = 'ACCEPT')::bigint AS accept,
-    count(DISTINCT fa.entity_id) FILTER (WHERE fa.decision = 'DEFER')::bigint AS defer,
-    count(DISTINCT fa.entity_id) FILTER (WHERE fa.decision = 'REJECT')::bigint AS reject
-FROM eligible_filter_evidence fa
-LEFT JOIN generalization g
-    ON fa.level = 'Generalization' AND g.id = fa.entity_id
-WHERE fa.producer_mechanism = 'filter_rejection'
-  AND (fa.level <> 'Generalization' OR g.variant = :variant)
-GROUP BY fa.level, filter
-HAVING count(DISTINCT fa.entity_id) FILTER (WHERE fa.decision = 'REJECT') > 0
+    level,
+    filter,
+    count(DISTINCT entity_id)::bigint AS total,
+    count(DISTINCT entity_id) FILTER (WHERE decision = 'ACCEPT')::bigint AS accept,
+    count(DISTINCT entity_id) FILTER (WHERE decision = 'DEFER')::bigint AS defer,
+    count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT')::bigint AS reject
+FROM all_filter_evidence
+GROUP BY level, filter
+HAVING count(DISTINCT entity_id) FILTER (WHERE decision = 'REJECT') > 0
 ORDER BY
-    CASE fa.level
+    CASE level
         WHEN 'Test' THEN 1
         WHEN 'Assertion' THEN 2
         WHEN 'Generalization' THEN 3
@@ -419,7 +512,7 @@ ORDER BY
 
 
 EVIDENCE_ISSUES_SQL = f"""
-{_TYPED_RELATIONS_SQL},
+{_PROACTIVE_FILTER_RELATIONS_SQL},
 typed_exclusion_evidence AS (
     SELECT 'Test' AS level, id AS entity_id,
            split_part(exclusion_info, ':', 1) AS code
@@ -483,6 +576,46 @@ FROM (
     UNION ALL
 
     SELECT
+        'unparsed test method path',
+        'Test:' || entity_id::text
+    FROM resolved_test_method_evidence
+    WHERE declaring_type IS NULL
+
+    UNION ALL
+
+    SELECT
+        'inherited-method exclusion without inherited path',
+        'Test:' || typed.entity_id::text
+    FROM typed_exclusion_evidence typed
+    WHERE typed.level = 'Test'
+      AND typed.code = 'INHERITED_METHOD_NOT_FLATTENABLE'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM resolved_test_method_evidence resolved
+          WHERE resolved.entity_id = typed.entity_id
+            AND resolved.declaring_type <> resolved.test_class_qualified_name
+      )
+
+    UNION ALL
+
+    SELECT
+        'incomplete proactive filter decision',
+        level || ':' || filter || ':' || entity_id::text
+    FROM proactive_filter_evidence
+    WHERE decision IS NULL
+
+    UNION ALL
+
+    SELECT
+        'pre-emission rejection created source',
+        'Generalization:' || entity_id::text || ':' || exclusion_code
+    FROM generalization_proactive_filter_evidence
+    WHERE exclusion_code = ANY(:gate_codes)
+      AND generated_source_created
+
+    UNION ALL
+
+    SELECT
         'unknown typed exclusion code',
         level || ':' || entity_id::text || ':' || code
     FROM typed_exclusion_evidence
@@ -531,6 +664,42 @@ def fetch_filter_decisions(conn: Connection, variant: str) -> pd.DataFrame:
     return pd.DataFrame(
         frame, columns=["level", "filter", "total", "accept", "defer", "reject"]
     )
+
+
+def validate_filtering_reconciliation(
+    decisions: pd.DataFrame, partition: pd.DataFrame
+) -> None:
+    """Require complete generalization filter rows and outcome reconciliation."""
+    reconstructed = decisions[["accept", "defer", "reject"]].sum(axis=1)
+    invalid_totals = decisions.loc[reconstructed != decisions["total"], "filter"]
+    if not invalid_totals.empty:
+        raise ExclusionEvidenceError(
+            "filter decision totals do not reconcile: "
+            + ",".join(sorted(invalid_totals.astype(str)))
+        )
+
+    generalization = decisions.loc[decisions["level"] == "Generalization"]
+    observed_filters = frozenset(generalization["filter"].astype(str))
+    expected_filters = frozenset(GENERALIZATION_FILTERS)
+    if observed_filters != expected_filters:
+        raise ExclusionEvidenceError(
+            "generalization filter set disagrees with the semantic registry: "
+            f"observed={sorted(observed_filters)}, expected={sorted(expected_filters)}"
+        )
+
+    expected_rejections = int(
+        partition.loc[
+            (partition["level"] == "Generalization")
+            & (partition["reader_outcome"] == ReaderOutcome.FILTERING.value),
+            "entity_count",
+        ].sum()
+    )
+    observed_rejections = int(generalization["reject"].sum())
+    if observed_rejections != expected_rejections:
+        raise ExclusionEvidenceError(
+            "generalization filter rejections disagree with the mechanism partition: "
+            f"observed={observed_rejections}, expected={expected_rejections}"
+        )
 
 
 def fetch_mechanism_partition(conn: Connection, variant: str) -> pd.DataFrame:

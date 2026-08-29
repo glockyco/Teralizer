@@ -13,6 +13,8 @@ The RQ6 project-exclusion table classifies each row as internal, external, or mi
 - Aggregate project rows into reader-facing causes when internal mechanism combinations do not change the interpretation.
 - Preserve detailed diagnostics in generated evidence while keeping the project table focused on material distinctions.
 - Keep project, test, assertion, and generalization populations distinct; use selected concrete examples in the thesis prose and leave complete subtype distributions in the replication package.
+- Classify proactive exclusions as filters by behavior, independent of their pipeline stage, producer class, or persistence shape.
+- Add `InheritedTestMethod`, `SeedSpecConsistency`, and `WideningLicense` to the filter-detail table with evidence-derived verdict populations.
 
 ## Capabilities
 
@@ -23,7 +25,8 @@ None.
 ### Modified Capabilities
 
 - `reporting/exclusion-evidence`: Project-level exclusion evidence reports the observed stage, cause description, and count without assigning an internal/external/mixed ownership class.
+- `reporting/exclusion-accounting`: Filter evidence follows proactive exclusion behavior instead of implementation-stage or storage-shape boundaries.
 
 ## Impact
 
-The change affects `analysis/src/teralizer/eval/reports/rq6.py`, the project-exclusion table contract and tests, and regenerated RQ6 report and thesis artifacts. The thesis change `restore-rq6-narrative` consumes the revised table and removes the same taxonomy from prose. No database schema or corpus input changes. The eligible-project total, final inclusion count, and total exclusions remain stable. Intermediate stage bands, cause rows, and stage attribution can change when transition evidence contradicts the legacy use of final entity status.
+The change affects the RQ6 cause and exclusion-evidence report builders, the project-exclusion and filter-detail contracts and tests, and regenerated RQ6 report and thesis artifacts. The thesis change `restore-rq6-narrative` consumes the revised table and removes the same taxonomy from prose. No database schema or corpus input changes. The eligible-project total, final inclusion count, and total exclusions remain stable. Intermediate stage bands, cause rows, and stage attribution can change when transition evidence contradicts the legacy use of final entity status.

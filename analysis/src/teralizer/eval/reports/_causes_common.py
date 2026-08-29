@@ -115,6 +115,8 @@ _FILTER_DISPLAY_NAMES = {
 # Paper/table display order for filters. This is the hand-curated order used in
 # the published tables, deliberately NOT the pipeline application order.
 _FILTER_ORDER = {
+    "SeedSpecConsistency": -2,
+    "WideningLicense": -1,
     "NonPassingTest": 0,
     "TestType": 1,
     "NoAssertions": 2,

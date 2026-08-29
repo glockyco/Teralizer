@@ -82,6 +82,20 @@ Use one width strategy for each generated table. A table that needs scaling SHAL
 
 Place the entity-exclusion summary and filter-detail inputs at the same source boundary before the assertion-level discussion. Give both floats local top placement so LaTeX queues them together after the preceding page break and can place them together. Do not change the document-wide float policy or shorten additional evidence labels to compensate for layout defects.
 
+### 10. Classify filters by proactive exclusion behavior
+
+Keep the filter-detail columns and established PascalCase names. Add `InheritedTestMethod`, `SeedSpecConsistency`, and `WideningLicense` without creating synthetic `filter_result` records.
+
+Build one normalized filter-evidence relation from persisted decisions. Existing filter producers supply their recorded `ACCEPT`, `DEFER`, and `REJECT` verdicts. A stored method path identifies inherited-test-method evaluations. Generalization attempt codes and lifecycle evidence identify the ordered seed-consistency and widening-license verdicts.
+
+Require complete evidence before aggregation. Every persisted method path must expose its declaring type. Every non-seed-rejected generalization attempt must either record a widening refusal or create generated source. Fail report generation on an unparsed path, contradictory verdict, or incomplete pre-emission transition.
+
+Use the execution order for the new generalization rows. `SeedSpecConsistency` evaluates all attempts. `WideningLicense` evaluates attempts that pass seed consistency. `NonPassingTest` evaluates emitted tests that survive intervening processing. The three rejection sets are disjoint and must reconcile to the generalization-level filtering outcome.
+
+Keep `InheritedTestMethod` distinct from `InheritedTest`. The former evaluates whether an inherited method can be flattened during collection. The latter is an existing later filter with a different predicate and population.
+
+Deriving the new rows from `is_included` was rejected because later tasks can mutate that flag. Writing synthetic database rows was rejected because the report is read-only and producer storage does not define filtering semantics.
+
 ## Risks / Trade-offs
 
 - **A downstream consumer still expects four columns.** Search generated declarations, tests, and thesis publication references; require a clean cutover rather than an alias.

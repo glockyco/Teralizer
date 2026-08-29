@@ -59,3 +59,11 @@
 - [x] 8.3 Regenerate the RQ6 artifacts and place Tables 5.16 and 5.17 together at one source boundary before the assertion-level discussion.
 - [x] 8.4 Run the complete analysis checks, repository hooks, strict OpenSpec validation, thesis build, and page inspection; commit each repository separately.
 - [x] 8.5 Remove setup and trailing whitespace from the measured resize box, target the explicit text width, rebuild Table 5.17, and verify that both rule endpoints align with Table 5.16.
+
+## 9. Include Every Proactive Filter
+
+- [x] 9.1 Replace the implementation-stage filter boundary with a normalized proactive-filter evidence relation while keeping reactive failures excluded.
+- [x] 9.2 Add `InheritedTestMethod`, `SeedSpecConsistency`, and `WideningLicense` rows with evidence-derived evaluated populations and verdicts.
+- [x] 9.3 Add focused tests for exact filter names, complete row arithmetic, pre-emission ordering, inherited-method evidence, and generalization filtering reconciliation.
+- [ ] 9.4 Regenerate the registered RQ6 artifacts and update the thesis table and interpretation without changing column terminology.
+- [ ] 9.5 Run complete analysis checks, repository hooks, strict OpenSpec validation, thesis build, and page inspection; commit each repository separately.

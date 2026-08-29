@@ -1,5 +1,6 @@
 """Corpus invariants for the canonical RQ6 exclusion mechanisms."""
 
+import pandas as pd
 import pytest
 from sqlalchemy import text
 
@@ -184,6 +185,51 @@ def test_generalizations_partition_into_gated_and_emitted(rq6_conn):
         f"{attempts} attempts != {gated} gated + {emitted} emitted; "
         "the exclusion-accounting contract has an unclassified third outcome"
     )
+
+
+def test_proactive_filter_rows_use_persisted_populations(rq6_conn):
+    variant = _variant(rq6_conn)
+    exclusion.validate_evidence(rq6_conn, variant)
+    decisions = exclusion.fetch_filter_decisions(rq6_conn, variant)
+    partition = exclusion.fetch_mechanism_partition(rq6_conn, variant)
+
+    rows = decisions.set_index(["level", "filter"])
+    expected = {
+        ("Test", "InheritedTestMethod"): (6_259, 3_424, 0, 2_835),
+        ("Generalization", "SeedSpecConsistency"): (5_356, 5_355, 0, 1),
+        ("Generalization", "WideningLicense"): (5_355, 2_057, 0, 3_298),
+        ("Generalization", "NonPassingTest"): (2_035, 1_615, 0, 420),
+    }
+    for key, counts in expected.items():
+        row = rows.loc[key]
+        assert (
+            tuple(int(row[column]) for column in ("total", "accept", "defer", "reject"))
+            == counts
+        )
+
+    exclusion.validate_filtering_reconciliation(decisions, partition)
+    generalization = decisions.loc[decisions["level"] == "Generalization"]
+    assert int(generalization["reject"].sum()) == 3_719
+
+
+def test_filtering_reconciliation_rejects_missing_semantic_filter():
+    decisions = pd.DataFrame(
+        [
+            ("Generalization", "SeedSpecConsistency", 2, 1, 0, 1),
+            ("Generalization", "NonPassingTest", 1, 0, 0, 1),
+        ],
+        columns=["level", "filter", "total", "accept", "defer", "reject"],
+    )
+    partition = pd.DataFrame(
+        [("Generalization", "filtering", 2)],
+        columns=["level", "reader_outcome", "entity_count"],
+    )
+
+    with pytest.raises(
+        exclusion.ExclusionEvidenceError,
+        match="generalization filter set disagrees with the semantic registry",
+    ):
+        exclusion.validate_filtering_reconciliation(decisions, partition)
 
 
 def test_gated_generalizations_leave_no_downstream_rows(rq6_conn):

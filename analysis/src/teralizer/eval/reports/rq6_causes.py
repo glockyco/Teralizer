@@ -670,6 +670,7 @@ def build(context: ReportContext) -> RQReport:
     )
 
     filtering_data = exclusion.fetch_filter_decisions(conn, variant)
+    exclusion.validate_filtering_reconciliation(filtering_data, mechanism_partition)
     filtering = build_filtering_table(
         filtering_data,
         key="tab-exclusions-filtering-extended",

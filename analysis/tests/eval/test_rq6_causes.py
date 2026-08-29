@@ -472,7 +472,18 @@ def test_rq6_filtering_table_is_entity_conservative(rq6_report):
     assert filtering.float_spec == "!t"
     assert filtering.latex_resize_to_width
     assert not filtering.full_width
-    assert "Generalization" in set(filtering.df["level"])
+    assert [column.header for column in filtering.columns] == [
+        "Level",
+        "Filter Name",
+        "Total",
+        "Accept",
+        "Defer",
+        "Reject",
+    ]
+    assert filtering.df.loc[
+        filtering.df["level"] == "Generalization", "filter"
+    ].tolist() == ["SeedSpecConsistency", "WideningLicense", "NonPassingTest"]
+    assert "InheritedTestMethod" in set(filtering.df["filter"])
     reconstructed = filtering.df[["accept", "defer", "reject"]].sum(axis=1)
     assert (reconstructed == filtering.df["total"]).all()
 

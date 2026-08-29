@@ -193,6 +193,9 @@ def test_filtering_table_orders_level_then_filter():
                 "Test",
                 "Assertion",
                 "Assertion",
+                "Generalization",
+                "Generalization",
+                "Generalization",
             ],
             "filter": [
                 "ParameterType",
@@ -203,11 +206,14 @@ def test_filtering_table_orders_level_then_filter():
                 "TestType",
                 "VoidReturnType",
                 "ExcludedTest",
+                "NonPassingTest",
+                "WideningLicense",
+                "SeedSpecConsistency",
             ],
-            "total": [1] * 8,
-            "accept": [1] * 8,
-            "defer": [0] * 8,
-            "reject": [1] * 8,
+            "total": [1] * 11,
+            "accept": [1] * 11,
+            "defer": [0] * 11,
+            "reject": [1] * 11,
         }
     )
     table = build_filtering_table(df, key="f", label="tab:z", caption="C")
@@ -221,4 +227,7 @@ def test_filtering_table_orders_level_then_filter():
         ("Assertion", "MissingValue"),
         ("Assertion", "ParameterType"),
         ("Assertion", "VoidReturnType"),
+        ("Generalization", "SeedSpecConsistency"),
+        ("Generalization", "WideningLicense"),
+        ("Generalization", "NonPassingTest"),
     ]
