@@ -50,4 +50,4 @@
 - [x] 7.1 Run the registered RQ6 report and inspect every generated artifact change against the reader-facing causes.
 - [x] 7.2 Update the thesis table, macros, and cross-chapter project-level narrative from the registered report.
 - [x] 7.3 Run the focused and complete analysis checks, repository hooks, strict OpenSpec validation, and the thesis build and page inspection.
-- [ ] 7.4 Commit the verified producer and thesis changes as separate atomic commits with causal bodies.
+- [x] 7.4 Commit the verified producer and thesis changes as separate atomic commits with causal bodies.
