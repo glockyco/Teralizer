@@ -591,12 +591,17 @@ def test_rq6_publishes_filter_detail_metrics(rq6_report):
         "realworld.parameter_type.missing_declaration": 4_977,
         "realworld.parameter_type.derivation_gap": 7,
         "realworld.return_type.void": 9_054,
+        "realworld.return_type.evaluated": 109_865,
     }
 
     assert {key: int(rq6_report.metric(key).value) for key in expected} == expected
     assert float(
         rq6_report.metric("realworld.non_passing.nonpassed_pct").value
     ) == pytest.approx(4_797 / 8_665)
+    return_type_rate = rq6_report.metric("realworld.return_type.rejected_pct")
+    assert float(return_type_rate.value) == pytest.approx(57_465 / 109_865)
+    assert return_type_rate.numerator_key == "realworld.return_type.rejected"
+    assert return_type_rate.denominator_key == "realworld.return_type.evaluated"
 
 
 def test_rq6_every_assertion_carries_resolver_telemetry(rq6_report):

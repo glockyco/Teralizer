@@ -515,6 +515,8 @@ FILTER_DETAIL_METRIC_KEYS = frozenset(
         "realworld.missing_value.rejected",
         "realworld.parameter_type.rejected",
         "realworld.return_type.rejected",
+        "realworld.return_type.evaluated",
+        "realworld.return_type.rejected_pct",
     }
     | {
         f"realworld.non_passing.{outcome}{suffix}"
@@ -1171,6 +1173,33 @@ def build(context: ReportContext) -> RQReport:
             "Assertion",
             return_type_provenance,
         )
+    )
+    return_type_decision = filtering_data.loc[
+        filtering_data["level"].eq("Assertion")
+        & filtering_data["filter"].eq("ReturnType")
+    ].iloc[0]
+    return_type_evaluated_key = "realworld.return_type.evaluated"
+    return_type_evaluated = int(return_type_decision["accept"]) + return_type_total
+    return_type_filtering_provenance = capture(
+        exclusion.fetch_filter_decisions, query=exclusion.FILTER_DECISION_SQL
+    )
+    metrics.extend(
+        [
+            _count_metric(
+                return_type_evaluated_key,
+                return_type_evaluated,
+                "Assertion",
+                return_type_filtering_provenance,
+            ),
+            _share_metric(
+                "realworld.return_type.rejected_pct",
+                return_type_total / return_type_evaluated,
+                return_type_total_key,
+                return_type_evaluated_key,
+                "Assertion",
+                return_type_filtering_provenance,
+            ),
+        ]
     )
     for return_type, metric_name in filter_details.RETURN_TYPE_METRIC_NAMES.items():
         count_key = f"realworld.return_type.{metric_name}"
