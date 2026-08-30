@@ -586,8 +586,10 @@ def test_rq6_publishes_filter_detail_metrics(rq6_report):
         "realworld.non_passing.passed": 3_868,
         "realworld.assertion_type.assert_not_null": 9_610,
         "realworld.missing_value.unsupported_assertion_shape": 31_656,
-        "realworld.parameter_type.no_arguments": 65_850,
-        "realworld.parameter_type.unsupported_types": 0,
+        "realworld.parameter_type.unsupported_types": 33_498,
+        "realworld.parameter_type.zero_parameters": 27_368,
+        "realworld.parameter_type.missing_declaration": 4_977,
+        "realworld.parameter_type.derivation_gap": 7,
         "realworld.return_type.void": 9_054,
     }
 

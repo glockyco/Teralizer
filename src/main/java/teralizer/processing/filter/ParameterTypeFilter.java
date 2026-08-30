@@ -5,7 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.List;
 import org.jooq.generated.tables.records.AssertionRecord;
-import teralizer.domain.MethodArgument;
+import org.jooq.generated.tables.records.MutResolutionObservationRecord;
 import teralizer.domain.MethodParameter;
 import teralizer.util.TypeCapability;
 
@@ -13,26 +13,30 @@ public class ParameterTypeFilter extends AbstractFilter {
 
     private final Gson gson;
     private final AssertionRecord assertionRecord;
+    private final MutResolutionObservationRecord resolutionObservation;
 
-    public ParameterTypeFilter(Gson gson, AssertionRecord assertionRecord) {
+    public ParameterTypeFilter(
+        Gson gson,
+        AssertionRecord assertionRecord,
+        MutResolutionObservationRecord resolutionObservation
+    ) {
         this.gson = gson;
         this.assertionRecord = assertionRecord;
+        this.resolutionObservation = resolutionObservation;
     }
 
     @Override
     public FilterResult check() {
-        String testedMethodCallArgumentsString = this.assertionRecord.getTestedMethodCallArguments();
-        if (testedMethodCallArgumentsString == null) {
-            return new FilterResult(this.getName(), FilterDecision.DEFER, "The test.tested_method_call_arguments column is null.",
-                FilterReasonCodes.MISSING_TESTED_PARAMS, FilterReasonCodes.DEPENDS_ON_MISSING_MUT);
+        if (this.resolutionObservation == null) {
+            return new FilterResult(this.getName(), FilterDecision.DEFER, "The MUT resolution observation is missing.",
+                FilterReasonCodes.MUT_RESOLUTION_NOT_RECORDED, FilterReasonCodes.DEPENDS_ON_MISSING_MUT);
         }
 
-        Type argumentsType = new TypeToken<List<MethodArgument>>() {}.getType();
-        List<MethodParameter> testedMethodCallArguments = this.gson.fromJson(testedMethodCallArgumentsString, argumentsType);
-
-        if (testedMethodCallArguments.isEmpty()) {
-            return new FilterResult(this.getName(), FilterDecision.REJECT, "The tested method has no parameters.",
-                FilterReasonCodes.NO_GENERALIZABLE_PARAMETERS);
+        if (this.resolutionObservation.getCandidateParamCount() == null
+            || this.resolutionObservation.getCandidateParamSupported() == null
+            || this.resolutionObservation.getResolvedParameterTypes() == null) {
+            return new FilterResult(this.getName(), FilterDecision.DEFER, "The selected MUT declaration is unavailable.",
+                FilterReasonCodes.MISSING_TESTED_PARAMS, FilterReasonCodes.DEPENDS_ON_MISSING_MUT);
         }
 
         String testedMethodParametersString = this.assertionRecord.getTestedMethodParameters();

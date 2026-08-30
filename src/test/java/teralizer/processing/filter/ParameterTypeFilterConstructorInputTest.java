@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import net.jqwik.api.Example;
 import org.jooq.generated.tables.records.AssertionRecord;
+import org.jooq.generated.tables.records.MutResolutionObservationRecord;
 import org.junit.Assert;
 import teralizer.domain.MethodArgument;
 import teralizer.domain.MethodParameter;
@@ -29,11 +30,21 @@ public class ParameterTypeFilterConstructorInputTest {
     private static final Type ARGUMENTS_TYPE = new TypeToken<List<MethodArgument>>() {}.getType();
     private static final Type PARAMETERS_TYPE = new TypeToken<List<MethodParameter>>() {}.getType();
 
-    private static ParameterTypeFilter filter(List<MethodArgument> callArguments, List<MethodParameter> methodParameters) {
+    private static ParameterTypeFilter filter(
+        List<MethodArgument> callArguments,
+        List<MethodParameter> methodParameters,
+        int declaredParameterCount,
+        boolean declaredParameterSupported
+    ) {
         AssertionRecord record = new AssertionRecord();
         record.setTestedMethodCallArguments(GSON.toJson(callArguments, ARGUMENTS_TYPE));
         record.setTestedMethodParameters(GSON.toJson(methodParameters, PARAMETERS_TYPE));
-        return new ParameterTypeFilter(GSON, record);
+
+        MutResolutionObservationRecord observation = new MutResolutionObservationRecord();
+        observation.setCandidateParamCount(declaredParameterCount);
+        observation.setCandidateParamSupported(declaredParameterSupported);
+        observation.setResolvedParameterTypes("[]");
+        return new ParameterTypeFilter(GSON, record, observation);
     }
 
     @Example
@@ -52,7 +63,7 @@ public class ParameterTypeFilterConstructorInputTest {
             new MethodParameter("int", "value")
         );
 
-        FilterResult result = filter(callArguments, methodParameters).check();
+        FilterResult result = filter(callArguments, methodParameters, 2, true).check();
 
         Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
     }
@@ -71,9 +82,36 @@ public class ParameterTypeFilterConstructorInputTest {
             new MethodParameter("double", "_ctor_receiver_one_upper")
         );
 
-        FilterResult result = filter(callArguments, methodParameters).check();
+        FilterResult result = filter(callArguments, methodParameters, 0, false).check();
 
         Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
+    void acceptsSupportedLiftForUnsupportedFormalParameter() {
+        List<MethodArgument> callArguments = Collections.singletonList(
+            new MethodArgument("int", "1")
+        );
+        List<MethodParameter> methodParameters = Collections.singletonList(
+            new MethodParameter("int", "_ctor_value")
+        );
+
+        FilterResult result = filter(callArguments, methodParameters, 1, false).check();
+
+        Assert.assertEquals(FilterDecision.ACCEPT, result.getDecision());
+    }
+
+    @Example
+    void rejectsWhenSupportedFormalParameterProducesNoRecipeInput() {
+        FilterResult result = filter(
+            Collections.emptyList(),
+            Collections.emptyList(),
+            1,
+            true
+        ).check();
+
+        Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.NO_GENERALIZABLE_PARAMETERS, result.getReasonCode());
     }
 
     @Example
@@ -81,7 +119,7 @@ public class ParameterTypeFilterConstructorInputTest {
         List<MethodArgument> callArguments = Collections.singletonList(new MethodArgument("java.lang.Object", "x"));
         List<MethodParameter> methodParameters = Collections.singletonList(new MethodParameter("java.lang.Object", "value"));
 
-        FilterResult result = filter(callArguments, methodParameters).check();
+        FilterResult result = filter(callArguments, methodParameters, 1, false).check();
 
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
     }

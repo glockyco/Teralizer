@@ -202,39 +202,82 @@ MISSING_VALUE_METRIC_NAMES = {
 
 PARAMETER_TYPE_REJECTION_SQL = f"""
 {_funnel.ELIGIBILITY_CTE},
-categories(category) AS (
-    VALUES ('no_arguments'), ('unsupported_types'), ('unknown')
+categories(category, rank) AS (
+    VALUES
+        ('unsupported_types', 1),
+        ('zero_parameters', 2),
+        ('missing_declaration', 3),
+        ('derivation_gap', 4)
 ),
 rejections AS (
     SELECT DISTINCT
         a.id AS assertion_id,
-        CASE
-            WHEN a.tested_method_call_arguments::jsonb = '[]'::jsonb
-                THEN 'no_arguments'
-            WHEN jsonb_array_length(a.tested_method_call_arguments::jsonb) > 0
-                THEN 'unsupported_types'
-            ELSE 'unknown'
-        END AS category
+        a.project_id,
+        a.test_id
     FROM filter_result fr
     JOIN eligible_projects ep ON ep.id = fr.project_id
     JOIN assertion a ON a.id = fr.assertion_id
     WHERE fr.decision = 'REJECT'
       AND fr.filter_name LIKE '%%ParameterTypeFilter'
+),
+observation_evidence AS (
+    SELECT
+        r.assertion_id,
+        count(o.id)::bigint AS observation_count,
+        min(o.candidate_param_count) AS candidate_param_count,
+        bool_and(o.candidate_param_supported) AS candidate_param_supported,
+        min(o.resolved_parameter_types) AS resolved_parameter_types
+    FROM rejections r
+    LEFT JOIN mut_resolution_observation o
+        ON o.assertion_id = r.assertion_id
+       AND o.project_id = r.project_id
+       AND o.test_id = r.test_id
+    GROUP BY r.assertion_id
+),
+classified AS (
+    SELECT
+        assertion_id,
+        CASE
+            WHEN observation_count <> 1 THEN '<invalid_evidence>'
+            WHEN candidate_param_count IS NULL
+             AND candidate_param_supported IS NULL
+             AND resolved_parameter_types IS NULL
+                THEN 'missing_declaration'
+            WHEN candidate_param_count IS NULL
+              OR candidate_param_supported IS NULL
+              OR resolved_parameter_types IS NULL
+                THEN '<invalid_evidence>'
+            WHEN candidate_param_count < 0
+              OR jsonb_typeof(resolved_parameter_types::jsonb) <> 'array'
+              OR jsonb_array_length(resolved_parameter_types::jsonb) <> candidate_param_count
+                THEN '<invalid_evidence>'
+            WHEN candidate_param_count = 0 AND candidate_param_supported
+                THEN '<invalid_evidence>'
+            WHEN candidate_param_count = 0 THEN 'zero_parameters'
+            WHEN NOT candidate_param_supported THEN 'unsupported_types'
+            ELSE 'derivation_gap'
+        END AS category
+    FROM observation_evidence
 )
 SELECT
     categories.category,
-    count(rejections.assertion_id)::bigint AS assertions,
-    sum(count(rejections.assertion_id)) OVER ()::bigint AS rejected_assertions
+    count(classified.assertion_id) FILTER (
+        WHERE classified.category = categories.category
+    )::bigint AS assertions,
+    (SELECT count(*) FROM rejections)::bigint AS rejected_assertions,
+    (SELECT count(*) FROM classified WHERE category = '<invalid_evidence>')::bigint
+        AS evidence_errors
 FROM categories
-LEFT JOIN rejections USING (category)
-GROUP BY categories.category
-ORDER BY CASE categories.category
-    WHEN 'no_arguments' THEN 1
-    WHEN 'unsupported_types' THEN 2
-    ELSE 3
-END
+LEFT JOIN classified ON classified.category = categories.category
+GROUP BY categories.category, categories.rank
+ORDER BY categories.rank
 """
-PARAMETER_TYPE_CATEGORIES = ("no_arguments", "unsupported_types", "unknown")
+PARAMETER_TYPE_CATEGORIES = (
+    "unsupported_types",
+    "zero_parameters",
+    "missing_declaration",
+    "derivation_gap",
+)
 
 RETURN_TYPE_REJECTION_SQL = f"""
 {_funnel.ELIGIBILITY_CTE},
@@ -353,15 +396,28 @@ def fetch_missing_value_causes(conn: Connection, variant: str) -> pd.DataFrame:
 
 
 def fetch_parameter_type_rejections(conn: Connection, variant: str) -> pd.DataFrame:
-    """Partition ParameterType rejections by the branch that rejected them."""
+    """Partition ParameterType rejections by selected-MUT declaration evidence."""
     frame = _integer_columns(
         read_sql(conn, PARAMETER_TYPE_REJECTION_SQL, _params(variant)),
         "assertions",
         "rejected_assertions",
+        "evidence_errors",
     )
     _require_categories(
         frame, "category", PARAMETER_TYPE_CATEGORIES, "ParameterType rejection"
     )
+    evidence_errors = int(frame["evidence_errors"].iloc[0])
+    if evidence_errors:
+        raise exclusion.ExclusionEvidenceError(
+            f"ParameterType evidence has {evidence_errors} invalid observations"
+        )
+    rejected = int(frame["rejected_assertions"].iloc[0])
+    classified = int(frame["assertions"].sum())
+    if classified != rejected:
+        raise exclusion.ExclusionEvidenceError(
+            "ParameterType rejection partition does not reconcile: "
+            f"classified={classified}, rejected={rejected}"
+        )
     return frame
 
 
@@ -522,11 +578,11 @@ def parameter_type_rejection_table(frame: pd.DataFrame) -> Table:
         key="rq6_parameter_type_rejections",
         df=data,
         columns=[
-            ColumnSpec("Rejection branch", "category", kind=ValueKind.TEXT),
+            ColumnSpec("Selected-MUT evidence", "category", kind=ValueKind.TEXT),
             ColumnSpec("Rejections", "assertions", kind=ValueKind.COUNT, align="r"),
             ColumnSpec("Share", "share", kind=ValueKind.SHARE, align="r"),
         ],
-        caption="Observed branches of ParameterType rejections.",
+        caption="Selected-MUT evidence for ParameterType rejections.",
         label="tab:rq6-parameter-type-rejections",
         row_key="category",
         provenance=capture(

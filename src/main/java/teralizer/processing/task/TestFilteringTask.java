@@ -150,14 +150,15 @@ public class TestFilteringTask extends AbstractTask {
         Gson gson = context.get(TaskContext.GSON);
         Launcher spoonLauncher = context.get(this.assertionRecord.getProjectId(), TaskContext.SPOON_LAUNCHER);
 
-        String resolverReasonCode = resolverReasonCode(create);
+        MutResolutionObservationRecord resolutionObservation = resolutionObservation(create);
+        String resolverReasonCode = resolverReasonCode(resolutionObservation);
 
         List<Filter> filters = Arrays.asList(
             new ExcludedTestFilter(this.testRecord),
             new MissingValueFilter(resolverReasonCode, this.assertionRecord),
             new ReturnTypeFilter(this.assertionRecord),
             new UnsupportedAssertionFilter(spoonLauncher, this.assertionRecord),
-            new ParameterTypeFilter(gson, this.assertionRecord),
+            new ParameterTypeFilter(gson, this.assertionRecord, resolutionObservation),
             new StringOperationFilter(spoonLauncher, this.assertionRecord),
             new AssertionInLoopFilter(spoonLauncher, this.assertionRecord),
             new TestedMethodInLoopFilter(spoonLauncher, this.assertionRecord)
@@ -185,11 +186,14 @@ public class TestFilteringTask extends AbstractTask {
      * honest answer (see the all-or-nothing invariant in TestAnalysisTask). No
      * observation row at all: a persistence defect, surfaced as its own code.
      */
-    private String resolverReasonCode(DSLContext create) {
-        MutResolutionObservationRecord observation = create
+    private MutResolutionObservationRecord resolutionObservation(DSLContext create) {
+        return create
             .selectFrom(Tables.MUT_RESOLUTION_OBSERVATION)
             .where(Tables.MUT_RESOLUTION_OBSERVATION.ASSERTION_ID.eq(this.assertionRecord.getId()))
-            .fetchAny();
+            .fetchOne();
+    }
+
+    private String resolverReasonCode(MutResolutionObservationRecord observation) {
         if (observation == null) {
             return FilterReasonCodes.MUT_RESOLUTION_NOT_RECORDED;
         }

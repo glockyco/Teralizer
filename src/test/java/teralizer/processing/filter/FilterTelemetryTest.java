@@ -14,6 +14,7 @@ import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.generated.tables.records.AssertionRecord;
 import org.jooq.generated.tables.records.GeneralizationRecord;
+import org.jooq.generated.tables.records.MutResolutionObservationRecord;
 import org.jooq.generated.tables.records.TestRecord;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.MockConnection;
@@ -36,6 +37,14 @@ public class FilterTelemetryTest {
     private static final Gson GSON = new Gson();
     private static final Type ARGUMENTS_TYPE = new TypeToken<List<MethodArgument>>() {}.getType();
     private static final Type PARAMETERS_TYPE = new TypeToken<List<MethodParameter>>() {}.getType();
+
+    private static MutResolutionObservationRecord completeObservation() {
+        MutResolutionObservationRecord observation = new MutResolutionObservationRecord();
+        observation.setCandidateParamCount(1);
+        observation.setCandidateParamSupported(true);
+        observation.setResolvedParameterTypes("[\"int\"]");
+        return observation;
+    }
 
     @Example
     void missingValueUsesFirstStableReasonCodeAndRecordsShadowedCodes() {
@@ -90,7 +99,32 @@ public class FilterTelemetryTest {
         AssertionRecord record = new AssertionRecord();
         record.setTestedMethodCallArguments(null);
 
-        FilterResult result = new ParameterTypeFilter(GSON, record).check();
+        FilterResult result = new ParameterTypeFilter(GSON, record, completeObservation()).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.MISSING_TESTED_PARAMS, result.getReasonCode());
+        Assert.assertEquals(FilterReasonCodes.DEPENDS_ON_MISSING_MUT, result.getDependsOn());
+    }
+
+    @Example
+    void absentResolutionObservationDefersParameterFiltering() {
+        AssertionRecord record = new AssertionRecord();
+        record.setTestedMethodParameters("[]");
+
+        FilterResult result = new ParameterTypeFilter(GSON, record, null).check();
+
+        Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
+        Assert.assertEquals(FilterReasonCodes.MUT_RESOLUTION_NOT_RECORDED, result.getReasonCode());
+        Assert.assertEquals(FilterReasonCodes.DEPENDS_ON_MISSING_MUT, result.getDependsOn());
+    }
+
+    @Example
+    void incompleteDeclarationObservationDefersBeforeRecipeEmptiness() {
+        AssertionRecord record = new AssertionRecord();
+        record.setTestedMethodParameters("[]");
+        MutResolutionObservationRecord observation = new MutResolutionObservationRecord();
+
+        FilterResult result = new ParameterTypeFilter(GSON, record, observation).check();
 
         Assert.assertEquals(FilterDecision.DEFER, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.MISSING_TESTED_PARAMS, result.getReasonCode());
@@ -188,7 +222,7 @@ public class FilterTelemetryTest {
         record.setTestedMethodCallArguments(GSON.toJson(callArguments, ARGUMENTS_TYPE));
         record.setTestedMethodParameters(GSON.toJson(methodParameters, PARAMETERS_TYPE));
 
-        FilterResult result = new ParameterTypeFilter(GSON, record).check();
+        FilterResult result = new ParameterTypeFilter(GSON, record, completeObservation()).check();
 
         Assert.assertEquals(FilterDecision.REJECT, result.getDecision());
         Assert.assertEquals(FilterReasonCodes.NO_GENERALIZABLE_PARAMETERS, result.getReasonCode());

@@ -30,7 +30,43 @@ public class MutResolutionObservationMapperTest {
         Assert.assertEquals(Integer.valueOf(1), record.getCandidateCount());
         Assert.assertNull(record.getNoPickReason());
         Assert.assertEquals("[\"int\",\"int\"]", record.getResolvedParameterTypes());
+        Assert.assertEquals(Integer.valueOf(2), record.getCandidateParamCount());
+        Assert.assertTrue(record.getCandidateParamSupported());
         Assert.assertEquals("int", record.getResolvedReturnType());
+    }
+
+    @Example
+    void mapsZeroParameterDeclaration() {
+        MutResolution resolution = MethodUnderTestResolverTest.resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertEquals(1, new Subject().size()); }\n"
+            + "}",
+            "public class Subject { public int size() { return 1; } }"
+        );
+
+        MutResolutionObservationRecord record = new MutResolutionObservationRecord();
+        MutResolutionObservationMapper.map(resolution, 1L, 2L, 3L, new Gson(), record);
+
+        Assert.assertEquals(Integer.valueOf(0), record.getCandidateParamCount());
+        Assert.assertFalse(record.getCandidateParamSupported());
+        Assert.assertEquals("[]", record.getResolvedParameterTypes());
+    }
+
+    @Example
+    void mapsUnsupportedParameterDeclaration() {
+        MutResolution resolution = MethodUnderTestResolverTest.resolve(
+            "public class SubjectTest {\n"
+            + "  public void t() { org.junit.Assert.assertEquals(1, new Subject().id(new Object())); }\n"
+            + "}",
+            "public class Subject { public int id(Object value) { return 1; } }"
+        );
+
+        MutResolutionObservationRecord record = new MutResolutionObservationRecord();
+        MutResolutionObservationMapper.map(resolution, 1L, 2L, 3L, new Gson(), record);
+
+        Assert.assertEquals(Integer.valueOf(1), record.getCandidateParamCount());
+        Assert.assertFalse(record.getCandidateParamSupported());
+        Assert.assertEquals("[\"java.lang.Object\"]", record.getResolvedParameterTypes());
     }
 
     @Example
@@ -48,6 +84,9 @@ public class MutResolutionObservationMapperTest {
         Assert.assertEquals("T5_NONE", record.getConfidenceTier());
         Assert.assertEquals("NO_VISIBLE_CALL", record.getNoPickReason());
         Assert.assertNull(record.getResolvedMethodName());
+        Assert.assertNull(record.getResolvedParameterTypes());
+        Assert.assertNull(record.getCandidateParamCount());
+        Assert.assertNull(record.getCandidateParamSupported());
         Assert.assertEquals("VARIABLE", record.getActualShape());
         Assert.assertEquals("NONE", record.getReceiverProvenance());
     }

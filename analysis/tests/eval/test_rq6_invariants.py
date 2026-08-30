@@ -284,9 +284,10 @@ def test_type_filter_details_use_the_rejecting_metadata(rq6_conn):
     ).set_index("return_type")
 
     assert parameter_types["assertions"].to_dict() == {
-        "no_arguments": 65_850,
-        "unsupported_types": 0,
-        "unknown": 0,
+        "unsupported_types": 33_498,
+        "zero_parameters": 27_368,
+        "missing_declaration": 4_977,
+        "derivation_gap": 7,
     }
     assert int(return_types["rejected_assertions"].iloc[0]) == 57_465
     assert return_types["assertions"].to_dict() == {
