@@ -158,7 +158,7 @@ source: [`fetch_filter_decisions`](https://github.com/glockyco/Teralizer/blob/2a
 
 _Each test appears once. When repeated executions disagree, the table uses error, failed, skipped, then passed precedence._
 
-source: [`fetch_non_passing_outcomes`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L308)
+source: [`fetch_non_passing_outcomes`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L351)
 
 **Most frequent failure types among NonPassingTest rejections.**
 
@@ -177,7 +177,7 @@ source: [`fetch_non_passing_outcomes`](https://github.com/glockyco/Teralizer/blo
 
 _Rows count distinct tests. A test can appear under more than one type when repeated executions recorded different failures._
 
-source: [`fetch_non_passing_failure_types`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L323)
+source: [`fetch_non_passing_failure_types`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L366)
 
 **Assertion names rejected by AssertionType.**
 
@@ -194,7 +194,7 @@ source: [`fetch_non_passing_failure_types`](https://github.com/glockyco/Teralize
 | getName | 4 | 0.0% |
 | assertIterableEquals | 2 | 0.0% |
 
-source: [`fetch_assertion_type_rejections`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L330)
+source: [`fetch_assertion_type_rejections`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L373)
 
 **Recorded resolver causes for MissingValue rejections.**
 
@@ -208,17 +208,18 @@ source: [`fetch_assertion_type_rejections`](https://github.com/glockyco/Teralize
 
 _The resolver reason is the primary cause. detail_json can record additional missing fields for the same assertion._
 
-source: [`fetch_missing_value_causes`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L344)
+source: [`fetch_missing_value_causes`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L387)
 
-**Observed branches of ParameterType rejections.**
+**Selected-MUT evidence for ParameterType rejections.**
 
-| Rejection branch | Rejections | Share |
+| Selected-MUT evidence | Rejections | Share |
 | --- | --- | --- |
-| no_arguments | 65,850 | 100.0% |
-| unsupported_types | 0 | 0.0% |
-| unknown | 0 | 0.0% |
+| unsupported_types | 33,498 | 50.9% |
+| zero_parameters | 27,368 | 41.6% |
+| missing_declaration | 4,977 | 7.6% |
+| derivation_gap | 7 | 0.0% |
 
-source: [`fetch_parameter_type_rejections`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L355)
+source: [`fetch_parameter_type_rejections`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L398)
 
 **Most frequent encoded types rejected by ReturnType.**
 
@@ -237,7 +238,7 @@ source: [`fetch_parameter_type_rejections`](https://github.com/glockyco/Teralize
 
 _The table shows the ten most frequent of all recorded rejected types._
 
-source: [`fetch_return_type_rejections`](https://github.com/glockyco/Teralizer/blob/6b618f7e06f89f41f76630091e0f8dfb134d98b1/analysis/src/teralizer/eval/reports/_filter_details.py#L368)
+source: [`fetch_return_type_rejections`](https://github.com/glockyco/Teralizer/blob/4e0888996f17939a359e3efb2d53a6ccb8c149cb/analysis/src/teralizer/eval/reports/_filter_details.py#L424)
 
 The reader-facing filtering column combines filter decisions, generation-gate refusals, and inherited-test inlining limits. The preceding table preserves the exact mechanisms.
 
